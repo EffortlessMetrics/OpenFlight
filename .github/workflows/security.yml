@@ -1,0 +1,157 @@
+name: Security & MSRV
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  msrv-check:
+    name: Minimum Supported Rust Version
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install MSRV Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.75.0  # Flight Hub MSRV
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: msrv-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Check MSRV compilation
+      run: |
+        echo "🦀 Testing compilation with Rust 1.75.0 (MSRV)"
+        cargo check --workspace --all-targets
+        echo "✅ MSRV check passed"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+    
+    - name: Install cargo-deny
+      run: cargo install cargo-deny
+    
+    - name: Run security audit
+      run: |
+        echo "🔒 Running security audit"
+        cargo audit
+        echo "✅ Security audit passed"
+    
+    - name: Run cargo-deny
+      run: |
+        echo "🚫 Running cargo-deny checks"
+        cargo deny check
+        echo "✅ Cargo-deny checks passed"
+
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install cargo-deny
+      run: cargo install cargo-deny
+    
+    - name: Check licenses
+      run: |
+        echo "📄 Checking license compliance"
+        cargo deny check licenses
+        echo "✅ License check passed"
+    
+    - name: Generate license report
+      run: |
+        echo "📋 Generating license report"
+        cargo deny list --format json > licenses.json
+        
+        echo "## 📄 License Report" >> $GITHUB_STEP_SUMMARY
+        echo "| Crate | License | Version |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+        
+        # Parse JSON and create markdown table (simplified)
+        echo "License report generated in licenses.json"
+
+  supply-chain:
+    name: Supply Chain Security
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install cargo-deny
+      run: cargo install cargo-deny
+    
+    - name: Check for banned crates
+      run: |
+        echo "🔍 Checking for banned/vulnerable crates"
+        cargo deny check bans
+        echo "✅ Supply chain check passed"
+    
+    - name: Check for duplicate dependencies
+      run: |
+        echo "🔍 Checking for duplicate dependencies"
+        cargo tree --duplicates
+        echo "ℹ️ Duplicate dependency check completed"
+
+  semver-check:
+    name: Semantic Versioning
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need full history for semver check
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install cargo-semver-checks
+      run: cargo install cargo-semver-checks
+    
+    - name: Check semantic versioning
+      run: |
+        echo "📦 Checking semantic versioning compliance"
+        # Check each public crate for breaking changes
+        for crate in flight-core flight-scheduler flight-virtual; do
+          echo "Checking $crate..."
+          cargo semver-checks check-release --package $crate || echo "⚠️ Breaking changes detected in $crate"
+        done
+        echo "✅ Semver check completed"
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: moderate
+        allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC

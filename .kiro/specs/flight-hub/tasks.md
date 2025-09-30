@@ -66,19 +66,28 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build comprehensive determinism validation across machines
   - _Requirements: PRF-01, PRF-02_
 
-- [ ] 4. Virtual device & perf gate (flight-virtual, flight-scheduler)
+- [x] 4. Virtual device & perf gate (flight-virtual, flight-scheduler)
+
+
+
+
+
   - Create loopback HID device for CI testing without hardware
   - Implement flight-scheduler with ABS timer + busy-spin tail for both platforms
   - Build jitter measurement harness with 250Hz loop targeting p99 ≤0.5ms
   - Set up CI perf gate that fails build on timing regressions
   - _Requirements: NFR-01, QG-AX-Jitter_
 
-- [ ] 4.1 Scheduler PLL & drop policy (flight-scheduler)
+- [x] 4.1 Scheduler PLL & drop policy (flight-scheduler)
+
+
   - Implement ABS schedule + PLL that trims phase ≤0.1%/s with busy-spin tail (50-80μs)
   - Create bounded SPSC rings with drop-tail policy for non-RT streams with counters
   - Add overload testing to verify no RT blocking under consumer pressure
   - Build comprehensive timing discipline validation over 10+ minute runs
   - _Requirements: NFR-01, QG-AX-Jitter_
+
+
 
 - [ ] 4.2 ADRs & MSRV/semver guardrails
   - Create ADRs for RT spine, writers-as-data, plugin classes with clear rationale

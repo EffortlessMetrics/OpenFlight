@@ -1,0 +1,119 @@
+name: Performance Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  perf-gate-quick:
+    name: Quick Performance Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Run quick performance gate
+      run: |
+        echo "🚀 Running Quick Performance Gate"
+        cargo test --package flight-scheduler --lib test_scheduler_basic_timing -- --nocapture
+        cargo test --package flight-virtual --lib test_ci_benchmark -- --nocapture
+        echo "✅ Quick performance gate completed"
+
+  perf-gate-full:
+    name: Full Performance Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Run full performance validation
+      run: |
+        echo "🚀 Running Full Performance Validation"
+        cargo test --package flight-scheduler --lib -- --nocapture
+        cargo test --package flight-virtual --lib -- --nocapture
+        echo "✅ Full performance validation completed"
+    
+    - name: Extract performance metrics
+      run: |
+        echo "📈 Performance Metrics:"
+        echo "JITTER_P99_US=${FLIGHT_HUB_JITTER_P99_US:-unknown}" >> $GITHUB_ENV
+        echo "HID_P99_US=${FLIGHT_HUB_HID_P99_US:-unknown}" >> $GITHUB_ENV
+        echo "MISS_RATE=${FLIGHT_HUB_MISS_RATE:-unknown}" >> $GITHUB_ENV
+    
+    - name: Comment performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const jitter = process.env.JITTER_P99_US;
+          const hidLatency = process.env.HID_P99_US;
+          const missRate = process.env.MISS_RATE;
+          
+          const body = `## 📊 Performance Gate Results
+          
+          | Metric | Value | Limit |
+          |--------|-------|-------|
+          | Jitter p99 | ${jitter}μs | 500μs |
+          | HID Latency p99 | ${hidLatency}μs | 300μs |
+          | Miss Rate | ${(parseFloat(missRate) * 100).toFixed(3)}% | 0.1% |
+          
+          ${jitter !== 'unknown' && parseFloat(jitter) > 500 ? '⚠️ Jitter exceeds limit' : '✅ Jitter within limits'}
+          ${hidLatency !== 'unknown' && parseFloat(hidLatency) > 300 ? '⚠️ HID latency exceeds limit' : '✅ HID latency within limits'}
+          ${missRate !== 'unknown' && parseFloat(missRate) > 0.001 ? '⚠️ Miss rate exceeds limit' : '✅ Miss rate within limits'}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+
+  # Physical runner for hardware-specific tests (would be self-hosted)
+  perf-gate-physical:
+    name: Physical Hardware Validation
+    runs-on: self-hosted # This would be a dedicated physical machine
+    if: false # Disabled until physical runner is available
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Run hardware-specific tests
+      run: |
+        echo "🔧 Running tests on physical hardware"
+        # These tests would run with actual USB devices and measure real timing
+        cargo test --package flight-scheduler --lib test_extended_timing_discipline -- --nocapture --ignored
+        cargo test --package flight-virtual --lib test_extended_integration -- --nocapture --ignored
+        echo "✅ Physical hardware tests completed"

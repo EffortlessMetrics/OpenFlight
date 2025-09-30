@@ -1,11 +1,68 @@
-//! Virtual device implementation for testing
+//! Virtual HID device implementation for CI testing
+//!
+//! Provides loopback HID devices that simulate real hardware
+//! without requiring physical devices for testing.
 
-pub struct VirtualDevice {
-    pub name: String,
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
+use std::time::{Duration, Instant};
+use parking_lot::Mutex;
+use crossbeam::channel;
+use flight_scheduler::{Scheduler, SchedulerConfig, SpscRing};
+
+pub mod device;
+pub mod loopback;
+pub mod perf_gate;
+
+pub use device::{VirtualDevice, VirtualDeviceConfig, DeviceType};
+pub use loopback::{LoopbackHid, HidReport};
+pub use perf_gate::{PerfGate, PerfGateConfig, PerfResult};
+
+#[cfg(test)]
+mod integration_tests;
+
+/// Virtual device manager for testing
+pub struct VirtualDeviceManager {
+    devices: Mutex<Vec<Arc<VirtualDevice>>>,
+    loopback: Option<LoopbackHid>,
 }
 
-impl VirtualDevice {
-    pub fn new(name: String) -> Self {
-        Self { name }
+impl VirtualDeviceManager {
+    /// Create new virtual device manager
+    pub fn new() -> Self {
+        Self {
+            devices: Mutex::new(Vec::new()),
+            loopback: None,
+        }
+    }
+
+    /// Create virtual device with specified configuration
+    pub fn create_device(&self, config: VirtualDeviceConfig) -> Arc<VirtualDevice> {
+        let device = Arc::new(VirtualDevice::new(config));
+        self.devices.lock().push(device.clone());
+        device
+    }
+
+    /// Enable HID loopback for testing
+    pub fn enable_loopback(&mut self) -> &mut LoopbackHid {
+        self.loopback = Some(LoopbackHid::new());
+        self.loopback.as_mut().unwrap()
+    }
+
+    /// Get all virtual devices
+    pub fn devices(&self) -> Vec<Arc<VirtualDevice>> {
+        self.devices.lock().clone()
+    }
+
+    /// Run performance gate test
+    pub fn run_perf_gate(&self, config: PerfGateConfig) -> PerfResult {
+        let mut gate = PerfGate::new(config);
+        gate.run()
+    }
+}
+
+impl Default for VirtualDeviceManager {
+    fn default() -> Self {
+        Self::new()
     }
 }

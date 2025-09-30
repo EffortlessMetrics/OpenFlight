@@ -9,4 +9,11 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-scheduler = { path = "../flight-scheduler" }
 tracing.workspace = true
+serde.workspace = true
+crossbeam.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true

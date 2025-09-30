@@ -2,21 +2,43 @@
 //!
 //! Provides precise timing for the 250Hz axis processing loop with
 //! platform-specific optimizations for Windows and Linux.
+//!
+//! Features:
+//! - ABS (Absolute) scheduling with PLL phase correction
+//! - Bounded SPSC rings with drop-tail policy
+//! - Jitter measurement and monitoring
+//! - Platform-specific high-precision timing
 
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
 mod windows;
 
+pub mod pll;
+pub mod ring;
+pub mod metrics;
+
 use std::time::{Duration, Instant};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+pub use pll::Pll;
+pub use ring::{SpscRing, RingStats};
+pub use metrics::{JitterMetrics, TimingStats};
+
+#[cfg(test)]
+mod tests;
 
 /// Real-time scheduler configuration
 #[derive(Debug, Clone)]
 pub struct SchedulerConfig {
     /// Target frequency in Hz
     pub frequency_hz: u32,
-    /// Busy-spin tail duration in microseconds
+    /// Busy-spin tail duration in microseconds (50-80μs recommended)
     pub busy_spin_us: u32,
+    /// PLL gain for phase correction (0.001 = 0.1%/s)
+    pub pll_gain: f64,
+    /// Enable jitter measurement
+    pub measure_jitter: bool,
 }
 
 impl Default for SchedulerConfig {
@@ -24,35 +46,59 @@ impl Default for SchedulerConfig {
         Self {
             frequency_hz: 250,
             busy_spin_us: 65, // 50-80μs range
+            pll_gain: 0.001,  // 0.1%/s phase correction
+            measure_jitter: true,
         }
     }
 }
 
-/// Real-time scheduler
+/// Real-time scheduler with PLL and jitter measurement
 pub struct Scheduler {
     config: SchedulerConfig,
     period_ns: u64,
     next_tick: Instant,
+    pll: Pll,
+    metrics: Option<JitterMetrics>,
+    tick_count: AtomicU64,
+    missed_ticks: AtomicU64,
 }
 
 impl Scheduler {
     /// Create new scheduler
     pub fn new(config: SchedulerConfig) -> Self {
         let period_ns = 1_000_000_000 / config.frequency_hz as u64;
+        let pll = Pll::new(config.pll_gain, period_ns as f64);
+        let metrics = if config.measure_jitter {
+            Some(JitterMetrics::new(config.frequency_hz))
+        } else {
+            None
+        };
 
         Self {
             config,
             period_ns,
             next_tick: Instant::now(),
+            pll,
+            metrics,
+            tick_count: AtomicU64::new(0),
+            missed_ticks: AtomicU64::new(0),
         }
     }
 
-    /// Wait for next tick
-    pub fn wait_for_tick(&mut self) -> Instant {
-        let now = Instant::now();
+    /// Wait for next tick with PLL correction
+    pub fn wait_for_tick(&mut self) -> TickResult {
+        let tick_start = Instant::now();
+        let tick_number = self.tick_count.fetch_add(1, Ordering::Relaxed);
+        
+        // Check if we missed the deadline
+        let missed = tick_start >= self.next_tick + Duration::from_nanos(self.period_ns / 2);
+        if missed {
+            self.missed_ticks.fetch_add(1, Ordering::Relaxed);
+        }
 
-        if now < self.next_tick {
-            let sleep_duration = self.next_tick - now;
+        // Sleep until close to target time
+        if tick_start < self.next_tick {
+            let sleep_duration = self.next_tick - tick_start;
             let busy_spin_duration = Duration::from_micros(self.config.busy_spin_us as u64);
 
             if sleep_duration > busy_spin_duration {
@@ -66,10 +112,59 @@ impl Scheduler {
             }
         }
 
-        let tick_time = Instant::now();
-        self.next_tick += Duration::from_nanos(self.period_ns);
+        let actual_tick = Instant::now();
+        
+        // Update PLL with timing error
+        let error_ns = if actual_tick >= self.next_tick {
+            (actual_tick - self.next_tick).as_nanos() as i64
+        } else {
+            -((self.next_tick - actual_tick).as_nanos() as i64)
+        };
+        
+        let corrected_period = self.pll.update(error_ns as f64);
+        
+        // Schedule next tick with PLL correction
+        self.next_tick += Duration::from_nanos(corrected_period as u64);
 
-        tick_time
+        // Update jitter metrics
+        if let Some(ref mut metrics) = self.metrics {
+            metrics.record_tick(actual_tick, error_ns);
+        }
+
+        TickResult {
+            tick_number,
+            timestamp: actual_tick,
+            error_ns,
+            missed,
+        }
+    }
+
+    /// Get current timing statistics
+    pub fn get_stats(&self) -> TimingStats {
+        let total_ticks = self.tick_count.load(Ordering::Relaxed);
+        let missed_ticks = self.missed_ticks.load(Ordering::Relaxed);
+        
+        let jitter_stats = self.metrics.as_ref().map(|m| m.get_stats());
+
+        TimingStats {
+            total_ticks,
+            missed_ticks,
+            miss_rate: if total_ticks > 0 {
+                missed_ticks as f64 / total_ticks as f64
+            } else {
+                0.0
+            },
+            jitter_stats,
+        }
+    }
+
+    /// Reset statistics
+    pub fn reset_stats(&mut self) {
+        self.tick_count.store(0, Ordering::Relaxed);
+        self.missed_ticks.store(0, Ordering::Relaxed);
+        if let Some(ref mut metrics) = self.metrics {
+            metrics.reset();
+        }
     }
 
     #[cfg(windows)]
@@ -81,4 +176,17 @@ impl Scheduler {
     fn platform_sleep(&self, duration: Duration) {
         unix::platform_sleep(duration);
     }
+}
+
+/// Result of a scheduler tick
+#[derive(Debug, Clone)]
+pub struct TickResult {
+    /// Tick sequence number
+    pub tick_number: u64,
+    /// Actual timestamp when tick occurred
+    pub timestamp: Instant,
+    /// Timing error in nanoseconds (positive = late, negative = early)
+    pub error_ns: i64,
+    /// Whether this tick was considered missed (>1.5x period late)
+    pub missed: bool,
 }
