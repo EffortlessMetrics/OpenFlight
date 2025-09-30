@@ -22,7 +22,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 0: Foundation (M0) - Contracts, CI, Virtual Device
 
-- [ ] 1. Workspace & CI bootstrap
+- [x] 1. Workspace & CI bootstrap
+
+
+
+
+
   - Create Cargo workspace with proper crate structure and dependencies
   - Set up GitHub Actions with Windows+Linux matrices, caching, and lint enforcement
   - Configure rustfmt, clippy, cargo-deny for supply chain security

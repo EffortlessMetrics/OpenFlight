@@ -1,0 +1,20 @@
+[package]
+name = "flight-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "flightctl"
+path = "src/main.rs"
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+flight-ipc = { path = "../flight-ipc" }
+clap = { version = "4.4", features = ["derive"] }
+tokio.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true

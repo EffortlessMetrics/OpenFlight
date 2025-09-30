@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package flight.v1;
+
+// Core flight service
+service FlightService {
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  rpc HealthSubscribe(HealthSubscribeRequest) returns (stream HealthEvent);
+  rpc ApplyProfile(ApplyProfileRequest) returns (ApplyProfileResponse);
+}
+
+// Device management
+message ListDevicesRequest {}
+
+message ListDevicesResponse {
+  repeated Device devices = 1;
+}
+
+message Device {
+  string id = 1;
+  string name = 2;
+  DeviceType type = 3;
+  DeviceStatus status = 4;
+}
+
+enum DeviceType {
+  DEVICE_TYPE_UNSPECIFIED = 0;
+  DEVICE_TYPE_JOYSTICK = 1;
+  DEVICE_TYPE_THROTTLE = 2;
+  DEVICE_TYPE_RUDDER = 3;
+  DEVICE_TYPE_PANEL = 4;
+}
+
+enum DeviceStatus {
+  DEVICE_STATUS_UNSPECIFIED = 0;
+  DEVICE_STATUS_CONNECTED = 1;
+  DEVICE_STATUS_DISCONNECTED = 2;
+  DEVICE_STATUS_ERROR = 3;
+}
+
+// Health monitoring
+message HealthSubscribeRequest {}
+
+message HealthEvent {
+  int64 timestamp = 1;
+  HealthEventType type = 2;
+  string message = 3;
+  map<string, string> metadata = 4;
+}
+
+enum HealthEventType {
+  HEALTH_EVENT_TYPE_UNSPECIFIED = 0;
+  HEALTH_EVENT_TYPE_INFO = 1;
+  HEALTH_EVENT_TYPE_WARNING = 2;
+  HEALTH_EVENT_TYPE_ERROR = 3;
+  HEALTH_EVENT_TYPE_FAULT = 4;
+}
+
+// Profile management
+message ApplyProfileRequest {
+  string profile_json = 1;
+}
+
+message ApplyProfileResponse {
+  bool success = 1;
+  string error_message = 2;
+}

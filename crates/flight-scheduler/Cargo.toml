@@ -1,0 +1,23 @@
+[package]
+name = "flight-scheduler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+tracing.workspace = true
+crossbeam.workspace = true
+parking_lot.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+nix.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
