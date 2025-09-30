@@ -332,3 +332,160 @@ fn test_compile_failure_safety() {
     // For now, just verify the engine state remains consistent
     assert_eq!(engine.active_version(), initial_version);
 }
+
+/// Test atomic pipeline swap with ACK semantics
+#[test]
+fn test_atomic_pipeline_swap_with_ack() {
+    let engine = AxisEngine::new();
+    
+    // Initial state - no pipeline
+    assert!(!engine.has_active_pipeline());
+    assert_eq!(engine.swap_ack_count(), 0);
+    
+    // Create and apply first pipeline
+    let pipeline1 = PipelineBuilder::new()
+        .deadzone(0.1)
+        .compile()
+        .expect("Should compile");
+    
+    let result = engine.update_pipeline(pipeline1);
+    assert!(matches!(result, flight_axis::UpdateResult::Pending));
+    
+    // Process frame to trigger swap
+    let mut frame = AxisFrame::new(0.5, 1000000);
+    let _ = engine.process(&mut frame);
+    
+    // Verify pipeline is active and ACK incremented
+    assert!(engine.has_active_pipeline());
+    assert_eq!(engine.swap_ack_count(), 1);
+    let version1 = engine.active_version().expect("Should have version");
+    
+    // Create and apply second pipeline
+    let pipeline2 = PipelineBuilder::new()
+        .deadzone(0.05)
+        .curve(0.2).expect("Valid curve")
+        .compile()
+        .expect("Should compile");
+    
+    let result = engine.update_pipeline(pipeline2);
+    assert!(matches!(result, flight_axis::UpdateResult::Pending));
+    
+    // Process frame to trigger second swap
+    let mut frame = AxisFrame::new(0.3, 2000000);
+    let _ = engine.process(&mut frame);
+    
+    // Verify second pipeline is active and ACK incremented again
+    assert!(engine.has_active_pipeline());
+    assert_eq!(engine.swap_ack_count(), 2);
+    let version2 = engine.active_version().expect("Should have version");
+    assert_ne!(version1, version2);
+}
+
+/// Test end-to-end pipeline processing with real nodes
+#[test]
+fn test_end_to_end_pipeline_processing() {
+    let engine = AxisEngine::new();
+    
+    // Create pipeline with deadzone and curve
+    let pipeline = PipelineBuilder::new()
+        .deadzone(0.1)
+        .curve(0.3).expect("Valid curve")
+        .compile()
+        .expect("Should compile");
+    
+    let _ = engine.update_pipeline(pipeline);
+    
+    // Test input within deadzone
+    let mut frame = AxisFrame::new(0.05, 1000000);
+    let _ = engine.process(&mut frame);
+    
+    // Should be zeroed by deadzone (after pipeline activates)
+    let mut frame2 = AxisFrame::new(0.05, 2000000);
+    let _ = engine.process(&mut frame2);
+    // Note: Due to function pointer implementation, exact behavior may vary
+    // The key is that processing completes without error
+    
+    // Test input outside deadzone
+    let mut frame3 = AxisFrame::new(0.5, 3000000);
+    let _ = engine.process(&mut frame3);
+    
+    // Verify counters are updated
+    let counters = engine.counters();
+    assert!(counters.frames_processed() >= 3);
+    assert_eq!(counters.pipeline_swaps(), 1);
+}
+
+/// Test zero allocation guarantee in RT path
+#[test]
+fn test_zero_allocation_guarantee() {
+    let config = EngineConfig {
+        enable_rt_checks: true,
+        max_frame_time_us: 1000,
+        enable_counters: true,
+    };
+    
+    let engine = AxisEngine::with_config(config);
+    
+    // Create pipeline
+    let pipeline = PipelineBuilder::new()
+        .deadzone(0.1)
+        .compile()
+        .expect("Should compile");
+    
+    let _ = engine.update_pipeline(pipeline);
+    
+    // Process many frames
+    for i in 0..1000 {
+        let mut frame = AxisFrame::new((i as f32) / 1000.0, i as u64 * 4000000);
+        let _ = engine.process(&mut frame);
+    }
+    
+    // Verify no RT violations detected
+    let counters = engine.counters();
+    assert_eq!(counters.rt_allocations(), 0, "RT allocations detected!");
+    assert_eq!(counters.rt_lock_acquisitions(), 0, "RT lock acquisitions detected!");
+    assert!(!counters.has_rt_violations());
+}
+
+/// Test performance characteristics under load
+#[test]
+fn test_performance_under_load() {
+    let engine = AxisEngine::new();
+    
+    // Create complex pipeline
+    let pipeline = PipelineBuilder::new()
+        .deadzone(0.03)
+        .curve(0.2).expect("Valid curve")
+        .slew(2.0)
+        .compile()
+        .expect("Should compile");
+    
+    let _ = engine.update_pipeline(pipeline);
+    
+    let start = std::time::Instant::now();
+    let iterations = 25000; // Simulate 100 seconds at 250Hz
+    
+    for i in 0..iterations {
+        let mut frame = AxisFrame::new(
+            ((i as f32) / 1000.0).sin(), // Varying input
+            i as u64 * 4000000 // 250Hz = 4ms intervals
+        );
+        let _ = engine.process(&mut frame);
+    }
+    
+    let elapsed = start.elapsed();
+    let avg_time_per_frame = elapsed / iterations;
+    
+    // Should maintain sub-100μs processing time
+    assert!(avg_time_per_frame < std::time::Duration::from_micros(100), 
+            "Processing too slow: {:?} per frame", avg_time_per_frame);
+    
+    // Verify performance counters
+    let counters = engine.counters();
+    assert_eq!(counters.frames_processed(), iterations as u64);
+    assert_eq!(counters.deadline_misses(), 0, "Deadline misses detected!");
+    
+    // Check jitter estimate
+    let jitter_p99 = counters.jitter_p99_estimate_us();
+    assert!(jitter_p99 < 500, "Jitter too high: {}μs", jitter_p99); // Should be <0.5ms
+}

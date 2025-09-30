@@ -182,9 +182,9 @@ pub struct SlewNode {
 /// State for slew rate limiter (8 bytes aligned)
 #[repr(C, align(8))]
 #[derive(Debug, Clone, Copy)]
-struct SlewState {
-    last_output: f32,
-    last_time_ns: u64,
+pub struct SlewState {
+    pub last_output: f32,
+    pub last_time_ns: u64,
 }
 
 impl SlewNode {

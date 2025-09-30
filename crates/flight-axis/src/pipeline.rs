@@ -18,6 +18,8 @@ pub struct Pipeline {
     node_metadata: Vec<NodeMetadata>,
     /// Total state size needed for SoA layout
     total_state_size: usize,
+    /// Source nodes for state initialization
+    source_nodes: Option<Vec<Arc<dyn Node>>>,
 }
 
 /// Metadata for pipeline nodes
@@ -45,7 +47,13 @@ impl Pipeline {
             step_functions: Vec::new(),
             node_metadata: Vec::new(),
             total_state_size: 0,
+            source_nodes: None,
         }
+    }
+
+    /// Set source nodes for state initialization
+    pub(crate) fn set_source_nodes(&mut self, nodes: Vec<Arc<dyn Node>>) {
+        self.source_nodes = Some(nodes);
     }
 
     /// Add compiled node to pipeline
@@ -73,26 +81,43 @@ impl Pipeline {
     pub fn create_state(&self) -> PipelineState {
         let aligned_size = align_to_64(self.total_state_size.max(64));
         
-        // Allocate with extra space to ensure alignment
-        let mut raw_buffer = vec![0u8; aligned_size + 64];
-        let ptr = raw_buffer.as_mut_ptr();
-        let aligned_ptr = ((ptr as usize + 63) & !63) as *mut u8;
-        let offset = aligned_ptr as usize - ptr as usize;
-        
         // Create properly aligned buffer
-        let state_buffer = unsafe {
-            std::slice::from_raw_parts_mut(aligned_ptr, aligned_size)
-        }.to_vec();
+        let mut state_buffer = vec![0u8; aligned_size];
+        
+        // Ensure buffer is aligned to 64-byte boundary
+        let ptr = state_buffer.as_mut_ptr();
+        let alignment = ptr as usize % 64;
+        if alignment != 0 {
+            // Reallocate with proper alignment
+            let extra = 64 - alignment;
+            state_buffer.reserve(extra);
+            state_buffer.resize(aligned_size + extra, 0);
+            
+            // Find aligned start within buffer
+            let new_ptr = state_buffer.as_mut_ptr();
+            let aligned_offset = ((new_ptr as usize + 63) & !63) - new_ptr as usize;
+            state_buffer.drain(0..aligned_offset);
+            state_buffer.truncate(aligned_size);
+        }
 
         let state_offsets = self.node_metadata
             .iter()
             .map(|meta| meta.state_offset)
             .collect();
 
-        PipelineState {
+        let mut state = PipelineState {
             state_buffer,
             state_offsets,
+        };
+
+        // Initialize state with source nodes if available
+        if let Some(ref nodes) = self.source_nodes {
+            unsafe {
+                state.init_with_nodes(nodes);
+            }
         }
+
+        state
     }
 
     /// Process frame through compiled pipeline (zero allocations)

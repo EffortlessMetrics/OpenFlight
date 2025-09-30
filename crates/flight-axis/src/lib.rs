@@ -17,7 +17,7 @@ pub mod compiler;
 pub mod counters;
 
 pub use frame::AxisFrame;
-pub use nodes::{Node, NodeId, DeadzoneNode, CurveNode, SlewNode};
+pub use nodes::{Node, NodeId, DeadzoneNode, CurveNode, SlewNode, SlewState};
 pub use pipeline::{Pipeline, PipelineState};
 pub use engine::{AxisEngine, UpdateResult, EngineConfig, ProcessError, CompileError as EngineCompileError};
 pub use compiler::{PipelineCompiler, PipelineBuilder, CompileError};

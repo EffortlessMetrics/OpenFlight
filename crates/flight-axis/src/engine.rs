@@ -44,24 +44,44 @@ pub enum UpdateResult {
 
 /// Real-time axis processing engine with atomic swaps
 pub struct AxisEngine {
-    /// Current active pipeline version
-    active_version: AtomicU64,
+    /// Current active pipeline (atomic pointer)
+    active_pipeline: parking_lot::RwLock<Option<Arc<CompiledPipeline>>>,
     /// Pending pipeline for atomic swap
     pending_pipeline: RwLock<Option<Arc<CompiledPipeline>>>,
     /// Engine configuration
     config: EngineConfig,
     /// Runtime performance counters
-    counters: RuntimeCounters,
+    counters: Arc<RuntimeCounters>,
     /// Last frame for derivative calculation
     last_frame: RwLock<Option<AxisFrame>>,
+    /// Swap acknowledgment counter
+    swap_ack_counter: AtomicU64,
 }
 
 /// Compiled pipeline with state
 struct CompiledPipeline {
     pipeline: Pipeline,
-    state: PipelineState,
+    state: parking_lot::Mutex<PipelineState>,
     compile_time: Instant,
     version: u64,
+}
+
+impl CompiledPipeline {
+    /// Process frame through pipeline (RT-safe)
+    /// 
+    /// # Safety
+    /// This function assumes exclusive access to the pipeline state
+    /// and must not allocate or block.
+    #[inline(always)]
+    unsafe fn process_frame(&self, frame: &mut AxisFrame) {
+        // Try to get state without blocking - if we can't, skip processing
+        // This maintains RT guarantees even under contention
+        if let Some(mut state) = self.state.try_lock() {
+            self.pipeline.process(frame, &mut state);
+        }
+        // If we can't get the lock, frame passes through unchanged
+        // This is better than blocking in RT context
+    }
 }
 
 impl AxisEngine {
@@ -73,11 +93,12 @@ impl AxisEngine {
     /// Create new axis engine with custom configuration
     pub fn with_config(config: EngineConfig) -> Self {
         Self {
-            active_version: AtomicU64::new(0),
+            active_pipeline: parking_lot::RwLock::new(None),
             pending_pipeline: RwLock::new(None),
             config,
-            counters: RuntimeCounters::new(),
+            counters: Arc::new(RuntimeCounters::new()),
             last_frame: RwLock::new(None),
+            swap_ack_counter: AtomicU64::new(0),
         }
     }
 
@@ -108,8 +129,23 @@ impl AxisEngine {
         // Check for pending pipeline swap at tick boundary
         self.try_swap_pipeline();
 
-        // Process through active pipeline (simplified for now)
-        let result = Ok(());
+        // Process through active pipeline
+        let result = if let Some(pipeline) = self.active_pipeline.read().as_ref() {
+            // SAFETY: We have exclusive access to the pipeline state through the engine
+            unsafe {
+                pipeline.process_frame(frame);
+            }
+            Ok(())
+        } else {
+            // No pipeline active - pass through unchanged
+            Ok(())
+        };
+
+        // Check for RT violations if guard is active
+        if self.config.enable_rt_checks && AllocationGuard::allocations_detected() {
+            self.counters.increment_rt_allocations();
+            AllocationGuard::reset();
+        }
 
         // Update counters and timing
         if let Some(start) = start_time {
@@ -147,6 +183,11 @@ impl AxisEngine {
         &self.counters
     }
 
+    /// Get shared reference to counters for external monitoring
+    pub fn counters_shared(&self) -> Arc<RuntimeCounters> {
+        Arc::clone(&self.counters)
+    }
+
     /// Reset runtime counters
     pub fn reset_counters(&self) {
         self.counters.reset();
@@ -154,22 +195,30 @@ impl AxisEngine {
 
     /// Check if pipeline is active
     pub fn has_active_pipeline(&self) -> bool {
-        self.active_version.load(Ordering::Relaxed) > 0
+        self.active_pipeline.read().is_some()
     }
 
     /// Get active pipeline version
     pub fn active_version(&self) -> Option<u64> {
-        let version = self.active_version.load(Ordering::Relaxed);
-        if version > 0 { Some(version) } else { None }
+        self.active_pipeline.read().as_ref().map(|p| p.version)
+    }
+
+    /// Get swap acknowledgment counter (increments on each successful swap)
+    pub fn swap_ack_count(&self) -> u64 {
+        self.swap_ack_counter.load(Ordering::Relaxed)
     }
 
     /// Try to swap pending pipeline atomically (RT-safe)
     #[inline(always)]
     fn try_swap_pipeline(&self) {
+        // Try to acquire pending pipeline without blocking
         if let Some(mut pending) = self.pending_pipeline.try_write() {
             if let Some(new_pipeline) = pending.take() {
-                // Update active version atomically
-                self.active_version.store(new_pipeline.version, Ordering::Relaxed);
+                // Atomic swap at tick boundary
+                *self.active_pipeline.write() = Some(new_pipeline);
+                
+                // Increment acknowledgment counter
+                self.swap_ack_counter.fetch_add(1, Ordering::Relaxed);
                 
                 // Update counters
                 self.counters.increment_pipeline_swaps();
@@ -194,7 +243,7 @@ impl AxisEngine {
         
         Ok(Arc::new(CompiledPipeline {
             pipeline,
-            state,
+            state: parking_lot::Mutex::new(state),
             compile_time: Instant::now(),
             version,
         }))

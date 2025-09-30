@@ -107,6 +107,11 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 
 
+
+
+
+
+
 - [ ] 5. flight-axis: frame, node API, atomic swap & no-alloc guard
 
   - Define AxisFrame struct with explicit units and Node trait
