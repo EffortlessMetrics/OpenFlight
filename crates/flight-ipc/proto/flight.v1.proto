@@ -4,16 +4,70 @@ package flight.v1;
 
 // Core flight service
 service FlightService {
+  // Feature negotiation - must be called first
+  rpc NegotiateFeatures(NegotiateFeaturesRequest) returns (NegotiateFeaturesResponse);
+  
+  // Device management
   rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  
+  // Health monitoring
   rpc HealthSubscribe(HealthSubscribeRequest) returns (stream HealthEvent);
+  
+  // Profile management
   rpc ApplyProfile(ApplyProfileRequest) returns (ApplyProfileResponse);
+  
+  // Service health
+  rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
+}
+
+// Feature negotiation
+message NegotiateFeaturesRequest {
+  string client_version = 1;
+  repeated string supported_features = 2;
+  TransportType preferred_transport = 3;
+}
+
+message NegotiateFeaturesResponse {
+  bool success = 1;
+  string server_version = 2;
+  repeated string enabled_features = 3;
+  TransportType negotiated_transport = 4;
+  string error_message = 5;
+}
+
+enum TransportType {
+  TRANSPORT_TYPE_UNSPECIFIED = 0;
+  TRANSPORT_TYPE_NAMED_PIPES = 1;  // Windows
+  TRANSPORT_TYPE_UNIX_SOCKETS = 2; // Linux/macOS
+}
+
+// Service information
+message GetServiceInfoRequest {}
+
+message GetServiceInfoResponse {
+  string version = 1;
+  int64 uptime_seconds = 2;
+  ServiceStatus status = 3;
+  map<string, string> capabilities = 4;
+}
+
+enum ServiceStatus {
+  SERVICE_STATUS_UNSPECIFIED = 0;
+  SERVICE_STATUS_STARTING = 1;
+  SERVICE_STATUS_RUNNING = 2;
+  SERVICE_STATUS_DEGRADED = 3;
+  SERVICE_STATUS_STOPPING = 4;
 }
 
 // Device management
-message ListDevicesRequest {}
+message ListDevicesRequest {
+  bool include_disconnected = 1;
+  repeated DeviceType filter_types = 2;
+}
 
 message ListDevicesResponse {
   repeated Device devices = 1;
+  int32 total_count = 2;
 }
 
 message Device {
@@ -21,6 +75,26 @@ message Device {
   string name = 2;
   DeviceType type = 3;
   DeviceStatus status = 4;
+  DeviceCapabilities capabilities = 5;
+  DeviceHealth health = 6;
+  map<string, string> metadata = 7;
+}
+
+message DeviceCapabilities {
+  bool supports_force_feedback = 1;
+  bool supports_raw_torque = 2;
+  uint32 max_torque_nm = 3;
+  uint32 min_period_us = 4;
+  bool has_health_stream = 5;
+  repeated string supported_protocols = 6;
+}
+
+message DeviceHealth {
+  float temperature_celsius = 1;
+  float current_amperes = 2;
+  uint32 packet_loss_count = 3;
+  int64 last_seen_timestamp = 4;
+  repeated string active_faults = 5;
 }
 
 enum DeviceType {
@@ -29,6 +103,8 @@ enum DeviceType {
   DEVICE_TYPE_THROTTLE = 2;
   DEVICE_TYPE_RUDDER = 3;
   DEVICE_TYPE_PANEL = 4;
+  DEVICE_TYPE_FORCE_FEEDBACK = 5;
+  DEVICE_TYPE_STREAMDECK = 6;
 }
 
 enum DeviceStatus {
@@ -36,16 +112,33 @@ enum DeviceStatus {
   DEVICE_STATUS_CONNECTED = 1;
   DEVICE_STATUS_DISCONNECTED = 2;
   DEVICE_STATUS_ERROR = 3;
+  DEVICE_STATUS_FAULTED = 4;
 }
 
 // Health monitoring
-message HealthSubscribeRequest {}
+message HealthSubscribeRequest {
+  repeated HealthEventType filter_types = 1;
+  repeated string device_ids = 2; // Empty = all devices
+  bool include_performance_metrics = 3;
+}
 
 message HealthEvent {
   int64 timestamp = 1;
   HealthEventType type = 2;
   string message = 3;
-  map<string, string> metadata = 4;
+  string device_id = 4;
+  string error_code = 5; // Stable error codes for KB lookup
+  map<string, string> metadata = 6;
+  PerformanceMetrics performance = 7;
+}
+
+message PerformanceMetrics {
+  float jitter_p99_ms = 1;
+  float hid_latency_p99_us = 2;
+  uint32 missed_ticks = 3;
+  uint32 dropped_frames = 4;
+  float cpu_usage_percent = 5;
+  uint64 memory_usage_bytes = 6;
 }
 
 enum HealthEventType {
@@ -54,14 +147,36 @@ enum HealthEventType {
   HEALTH_EVENT_TYPE_WARNING = 2;
   HEALTH_EVENT_TYPE_ERROR = 3;
   HEALTH_EVENT_TYPE_FAULT = 4;
+  HEALTH_EVENT_TYPE_PERFORMANCE = 5;
 }
 
 // Profile management
 message ApplyProfileRequest {
   string profile_json = 1;
+  bool validate_only = 2;
+  bool force_apply = 3; // Skip safety checks (for testing)
 }
 
 message ApplyProfileResponse {
   bool success = 1;
   string error_message = 2;
+  repeated ValidationError validation_errors = 3;
+  string effective_profile_hash = 4;
+  int64 compile_time_ms = 5;
+}
+
+message ValidationError {
+  string field_path = 1;
+  uint32 line_number = 2;
+  uint32 column_number = 3;
+  string error_message = 4;
+  ValidationErrorType error_type = 5;
+}
+
+enum ValidationErrorType {
+  VALIDATION_ERROR_TYPE_UNSPECIFIED = 0;
+  VALIDATION_ERROR_TYPE_SCHEMA = 1;
+  VALIDATION_ERROR_TYPE_MONOTONIC = 2;
+  VALIDATION_ERROR_TYPE_RANGE = 3;
+  VALIDATION_ERROR_TYPE_CONFLICT = 4;
 }

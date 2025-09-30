@@ -33,7 +33,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Configure rustfmt, clippy, cargo-deny for supply chain security
   - _Requirements: NFR-02, NFR-03_
 
-- [ ] 2. IPC schema & codegen (flight-ipc)
+- [x] 2. IPC schema & codegen (flight-ipc)
+
+
+
+
+
   - Define schemas/ipc/flight.v1.proto with core service definitions
   - Generate prost/tonic types with feature-gated transports (pipes/UDS)
   - Implement feature negotiation RPC and breaking-change CI checks

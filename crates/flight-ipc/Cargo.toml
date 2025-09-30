@@ -7,13 +7,42 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+default = ["named-pipes", "unix-sockets"]
+named-pipes = ["tokio/net"]
+unix-sockets = ["tokio/net"]
+client = []
+server = []
+
 [dependencies]
 prost.workspace = true
 tonic.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
 anyhow.workspace = true
 thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tracing.workspace = true
+tokio-stream = { version = "0.1", features = ["sync"] }
+
+# Platform-specific dependencies
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_System_Pipes",
+    "Win32_Storage_FileSystem",
+    "Win32_Foundation"
+] }
+
+[target.'cfg(unix)'.dependencies]
+nix.workspace = true
 
 [build-dependencies]
-protobuf-codegen.workspace = true
-tonic-build = "0.10"
+tonic-build.workspace = true
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile.workspace = true
+criterion.workspace = true
+chrono = "0.4"
+tokio-stream = { version = "0.1", features = ["sync"] }
+tracing-subscriber.workspace = true
