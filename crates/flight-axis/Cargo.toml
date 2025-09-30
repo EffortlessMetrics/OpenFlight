@@ -11,6 +11,12 @@ repository.workspace = true
 flight-core = { path = "../flight-core" }
 tracing.workspace = true
 once_cell.workspace = true
+crossbeam.workspace = true
+parking_lot.workspace = true
+
+[features]
+default = []
+rt-checks = []  # Enable runtime allocation/lock checking
 
 [dev-dependencies]
 criterion.workspace = true

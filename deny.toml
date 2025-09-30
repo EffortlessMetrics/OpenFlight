@@ -59,8 +59,9 @@ deny = [
     { name = "openssl", version = "*" },
     { name = "native-tls", version = "*" },
     
-    # Crates that could compromise RT performance
-    { name = "tokio", version = "*", use-instead = "async-std" },
+    # Crates that could compromise RT performance  
+    # Note: We actually use tokio, this is just an example
+    # { name = "tokio", version = "*", use-instead = "async-std" },
 ]
 
 # Certain crates/versions that will be skipped when doing duplicate detection.
@@ -110,3 +111,17 @@ allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 
 # List of URLs for allowed Git repositories
 allow-git = []
+
+# Additional configuration for Flight Hub
+[metadata]
+# Flight Hub MSRV Policy
+# We maintain compatibility with Rust 1.75.0 for stability
+# This is enforced by CI and documented in README.md
+msrv = "1.75.0"
+
+# Security contact for vulnerability reports
+security-contact = "security@flight-hub.dev"
+
+# License policy: Only permissive licenses allowed
+# GPL and copyleft licenses are explicitly denied
+license-policy = "permissive-only"

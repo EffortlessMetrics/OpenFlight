@@ -89,7 +89,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 
 
-- [ ] 4.2 ADRs & MSRV/semver guardrails
+- [x] 4.2 ADRs & MSRV/semver guardrails
+
+
+
+
+
   - Create ADRs for RT spine, writers-as-data, plugin classes with clear rationale
   - Pin MSRV with CI job validation, configure cargo-deny and cargo-audit
   - Add CI gates that fail on advisory/deny violations
@@ -97,8 +102,11 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - _Requirements: Documentation, Security_
 
 ### Milestone 1: Axis Engine Spine (M1) - Real-Time Core
+- [-] 5. flight-axis: frame, node API, atomic swap & no-alloc guard
+
 
 - [ ] 5. flight-axis: frame, node API, atomic swap & no-alloc guard
+
   - Define AxisFrame struct with explicit units and Node trait
   - Implement core pipeline nodes: deadzone, curve, slew with zero-alloc guarantee
   - Create compile-to-function-pointer system with SoA state layout

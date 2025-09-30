@@ -45,6 +45,19 @@ jobs:
       
     - name: Run doc tests
       run: cargo test --doc --workspace
+      
+    - name: Validate ADR links
+      run: |
+        echo "🔍 Validating ADR files exist..."
+        for adr in docs/adr/001-rt-spine-architecture.md docs/adr/002-writers-as-data.md docs/adr/003-plugin-classes.md docs/adr/004-zero-allocation-constraint.md docs/adr/005-pll-timing-discipline.md; do
+          if [ ! -f "$adr" ]; then
+            echo "❌ Missing ADR: $adr"
+            exit 1
+          else
+            echo "✅ Found: $adr"
+          fi
+        done
+        echo "✅ All referenced ADRs exist"
 
   security:
     name: Security Audit
@@ -66,10 +79,10 @@ jobs:
       run: cargo install cargo-deny
       
     - name: Run security audit
-      run: cargo audit
+      run: cargo audit --deny warnings
       
     - name: Run cargo-deny
-      run: cargo deny check
+      run: cargo deny check --hide-inclusion-graph
 
   build:
     name: Build Release

@@ -57,13 +57,13 @@ jobs:
     - name: Run security audit
       run: |
         echo "🔒 Running security audit"
-        cargo audit
+        cargo audit --deny warnings
         echo "✅ Security audit passed"
     
     - name: Run cargo-deny
       run: |
         echo "🚫 Running cargo-deny checks"
-        cargo deny check
+        cargo deny check --hide-inclusion-graph
         echo "✅ Cargo-deny checks passed"
 
   license-check:

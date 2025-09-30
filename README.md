@@ -22,13 +22,27 @@ Flight Hub is built as a modular Rust workspace with the following components:
 - `flight-service` - Main service daemon (`flightd`)
 - `flight-cli` - Command-line interface (`flightctl`)
 
+### Architecture Decisions
+
+Key architectural decisions are documented in [Architecture Decision Records (ADRs)](docs/adr/):
+
+- **[ADR-001: Real-Time Spine Architecture](docs/adr/001-rt-spine-architecture.md)** - Protected RT core with atomic state swaps
+- **[ADR-002: Writers as Data Pattern](docs/adr/002-writers-as-data.md)** - Table-driven configuration management
+- **[ADR-003: Plugin Classification System](docs/adr/003-plugin-classes.md)** - WASM and native plugin isolation
+- **[ADR-004: Zero-Allocation Constraint](docs/adr/004-zero-allocation-constraint.md)** - Strict no-allocation policy for RT code
+- **[ADR-005: PLL Timing Discipline](docs/adr/005-pll-timing-discipline.md)** - Phase-locked loop for timing stability
+
 ## Building
 
 ### Prerequisites
 
-- Rust 1.75.0 or later
+- **Rust 1.75.0 or later** (MSRV enforced by CI)
 - On Windows: Windows SDK for HID support
 - On Linux: libudev development headers
+
+### Minimum Supported Rust Version (MSRV)
+
+Flight Hub requires Rust 1.75.0 or later. This is enforced by CI and ensures compatibility with required language features and dependencies.
 
 ### Build Commands
 
@@ -47,7 +61,7 @@ cargo fmt --check
 cargo clippy --workspace -- -D warnings
 
 # Security audit
-cargo audit
+cargo audit --deny warnings
 cargo deny check
 ```
 
@@ -72,6 +86,18 @@ The system maintains strict performance requirements:
 - Jitter ≤ 0.5ms p99 at 250Hz
 - Zero allocations on real-time hot paths
 - CPU usage < 3% of one core during normal operation
+
+### Security
+
+Flight Hub follows security best practices:
+
+- **Supply Chain Security**: `cargo-deny` enforces approved licenses and bans vulnerable crates
+- **Security Auditing**: `cargo-audit` checks for known vulnerabilities in dependencies
+- **Local-Only Operation**: No network listeners by default, IPC uses local pipes/sockets only
+- **Signed Binaries**: All distributed binaries are code-signed (production builds)
+- **Plugin Sandboxing**: WASM plugins run in sandbox, native plugins in isolated processes
+
+Security configuration is managed in [`deny.toml`](deny.toml) and enforced by CI.
 
 ## License
 
