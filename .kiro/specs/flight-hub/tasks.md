@@ -186,14 +186,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 2: Safety & Watchdogs (M2) - Critical Safety Systems
 
-- [ ] 9. flight-ffb: safety state machine & interlock
+- [x] 9. flight-ffb: safety state machine & interlock
+
+
+
+
+
   - Implement SafeTorque/HighTorque/Faulted state machine
   - Create physical button-combo challenge/ACK system with rolling tokens
   - Add UI consent verification and persistence until power-cycle
   - Build comprehensive negative tests for safety violations
   - _Requirements: FFB-01, SAFE-01_
 
-- [ ] 9.1 Physical interlock token (device echo)
+- [x] 9.1 Physical interlock token (device echo)
+
+
   - Implement challenge (blink/pattern) with rolling token returned by device
   - Create service validation before arming high torque with token verification
   - Add negative tests proving unlock impossible without device echo
