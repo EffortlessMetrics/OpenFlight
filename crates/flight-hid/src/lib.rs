@@ -1,3 +1,596 @@
-//! HID device management
+//! HID device management with watchdog integration
+//!
+//! Provides USB HID device monitoring, endpoint management, and integration
+//! with the watchdog system for fault detection and quarantine.
 
-pub struct HidAdapter;
+use flight_core::{
+    WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEvent, WatchdogEventType,
+    FlightError, Result
+};
+use std::time::{Duration, Instant};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use tracing::{debug, warn, error, info};
+
+/// HID device endpoint identifier
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct EndpointId {
+    pub device_path: String,
+    pub endpoint_type: EndpointType,
+}
+
+/// Types of HID endpoints
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum EndpointType {
+    Input,
+    Output,
+    Feature,
+}
+
+/// HID device information
+#[derive(Debug, Clone)]
+pub struct HidDeviceInfo {
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub serial_number: Option<String>,
+    pub manufacturer: Option<String>,
+    pub product_name: Option<String>,
+    pub device_path: String,
+    pub usage_page: u16,
+    pub usage: u16,
+}
+
+/// HID endpoint state tracking
+#[derive(Debug)]
+struct EndpointState {
+    /// Last successful operation
+    last_success: Instant,
+    /// Consecutive failure count
+    consecutive_failures: u32,
+    /// Whether endpoint is currently stalled
+    is_stalled: bool,
+    /// Frame stall counter
+    frame_stall_count: u32,
+    /// Total bytes transferred
+    bytes_transferred: u64,
+    /// Operation count
+    operation_count: u64,
+}
+
+/// HID operation result
+#[derive(Debug)]
+pub enum HidOperationResult {
+    Success { bytes_transferred: usize },
+    Stall,
+    Timeout,
+    Error { error_code: i32, description: String },
+}
+
+/// HID adapter with watchdog integration
+pub struct HidAdapter {
+    /// Watchdog system for monitoring
+    watchdog: Arc<Mutex<WatchdogSystem>>,
+    /// Connected devices
+    devices: HashMap<String, HidDeviceInfo>,
+    /// Endpoint states
+    endpoint_states: HashMap<EndpointId, EndpointState>,
+    /// Whether adapter is running
+    is_running: bool,
+}
+
+impl HidAdapter {
+    /// Create new HID adapter with watchdog integration
+    pub fn new(watchdog: Arc<Mutex<WatchdogSystem>>) -> Self {
+        Self {
+            watchdog,
+            devices: HashMap::new(),
+            endpoint_states: HashMap::new(),
+            is_running: false,
+        }
+    }
+
+    /// Start the HID adapter
+    pub fn start(&mut self) -> Result<()> {
+        if self.is_running {
+            return Ok(());
+        }
+
+        info!("Starting HID adapter with watchdog integration");
+        
+        // Enumerate existing devices
+        self.enumerate_devices()?;
+        
+        self.is_running = true;
+        Ok(())
+    }
+
+    /// Stop the HID adapter
+    pub fn stop(&mut self) {
+        if !self.is_running {
+            return;
+        }
+
+        info!("Stopping HID adapter");
+        
+        // Unregister all endpoints from watchdog
+        for endpoint_id in self.endpoint_states.keys() {
+            let component = ComponentType::UsbEndpoint(endpoint_id.device_path.clone());
+            if let Ok(mut watchdog) = self.watchdog.lock() {
+                watchdog.unregister_component(&component);
+            }
+        }
+        
+        self.devices.clear();
+        self.endpoint_states.clear();
+        self.is_running = false;
+    }
+
+    /// Enumerate and register HID devices
+    fn enumerate_devices(&mut self) -> Result<()> {
+        debug!("Enumerating HID devices");
+        
+        // This would normally use platform-specific HID enumeration
+        // For now, we'll simulate device discovery
+        
+        // Example device registration
+        let device_info = HidDeviceInfo {
+            vendor_id: 0x046d,
+            product_id: 0xc262,
+            serial_number: Some("123456789".to_string()),
+            manufacturer: Some("Logitech".to_string()),
+            product_name: Some("Flight Yoke".to_string()),
+            device_path: "/dev/hidraw0".to_string(),
+            usage_page: 0x01,
+            usage: 0x04,
+        };
+        
+        self.register_device(device_info)?;
+        
+        Ok(())
+    }
+
+    /// Register a new HID device
+    pub fn register_device(&mut self, device_info: HidDeviceInfo) -> Result<()> {
+        info!("Registering HID device: {} (VID:{:04X} PID:{:04X})", 
+              device_info.product_name.as_deref().unwrap_or("Unknown"),
+              device_info.vendor_id, 
+              device_info.product_id);
+
+        let device_path = device_info.device_path.clone();
+        
+        // Register endpoints with watchdog
+        let endpoints = vec![
+            EndpointId { device_path: device_path.clone(), endpoint_type: EndpointType::Input },
+            EndpointId { device_path: device_path.clone(), endpoint_type: EndpointType::Output },
+        ];
+
+        for endpoint_id in &endpoints {
+            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
+            
+            let config = WatchdogConfig {
+                usb_timeout: Duration::from_millis(100),
+                max_consecutive_failures: 3,
+                max_failures_per_window: 10,
+                failure_rate_window: Duration::from_secs(60),
+                enable_nan_guards: false, // Not applicable for USB endpoints
+                is_critical: true, // USB endpoints are critical for operation
+                ..Default::default()
+            };
+
+            if let Ok(mut watchdog) = self.watchdog.lock() {
+                watchdog.register_component(component, config);
+            }
+
+            // Initialize endpoint state
+            self.endpoint_states.insert(endpoint_id.clone(), EndpointState {
+                last_success: Instant::now(),
+                consecutive_failures: 0,
+                is_stalled: false,
+                frame_stall_count: 0,
+                bytes_transferred: 0,
+                operation_count: 0,
+            });
+        }
+
+        self.devices.insert(device_path, device_info);
+        Ok(())
+    }
+
+    /// Unregister a HID device
+    pub fn unregister_device(&mut self, device_path: &str) -> Result<()> {
+        info!("Unregistering HID device: {}", device_path);
+
+        // Remove from devices
+        self.devices.remove(device_path);
+
+        // Remove endpoint states and unregister from watchdog
+        let endpoints_to_remove: Vec<_> = self.endpoint_states.keys()
+            .filter(|id| id.device_path == device_path)
+            .cloned()
+            .collect();
+
+        for endpoint_id in endpoints_to_remove {
+            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
+            
+            if let Ok(mut watchdog) = self.watchdog.lock() {
+                watchdog.unregister_component(&component);
+            }
+            
+            self.endpoint_states.remove(&endpoint_id);
+        }
+
+        Ok(())
+    }
+
+    /// Perform HID input operation with watchdog monitoring
+    pub fn read_input(&mut self, device_path: &str, buffer: &mut [u8]) -> Result<HidOperationResult> {
+        let endpoint_id = EndpointId {
+            device_path: device_path.to_string(),
+            endpoint_type: EndpointType::Input,
+        };
+
+        self.perform_operation(&endpoint_id, |_| {
+            // Simulate HID read operation
+            // In real implementation, this would call platform-specific HID APIs
+            
+            // Simulate occasional stalls for testing
+            if rand::random::<f32>() < 0.01 { // 1% chance of stall
+                HidOperationResult::Stall
+            } else if rand::random::<f32>() < 0.005 { // 0.5% chance of error
+                HidOperationResult::Error {
+                    error_code: -1,
+                    description: "Simulated USB error".to_string(),
+                }
+            } else {
+                // Simulate successful read
+                let bytes_read = std::cmp::min(buffer.len(), 8);
+                HidOperationResult::Success { bytes_transferred: bytes_read }
+            }
+        })
+    }
+
+    /// Perform HID output operation with watchdog monitoring
+    pub fn write_output(&mut self, device_path: &str, data: &[u8]) -> Result<HidOperationResult> {
+        let endpoint_id = EndpointId {
+            device_path: device_path.to_string(),
+            endpoint_type: EndpointType::Output,
+        };
+
+        self.perform_operation(&endpoint_id, |_| {
+            // Simulate HID write operation
+            // In real implementation, this would call platform-specific HID APIs
+            
+            // Check if component is quarantined
+            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
+            
+            // Simulate occasional stalls for testing
+            if rand::random::<f32>() < 0.02 { // 2% chance of stall for output
+                HidOperationResult::Stall
+            } else if rand::random::<f32>() < 0.01 { // 1% chance of error
+                HidOperationResult::Error {
+                    error_code: -2,
+                    description: "Simulated USB write error".to_string(),
+                }
+            } else {
+                // Simulate successful write
+                HidOperationResult::Success { bytes_transferred: data.len() }
+            }
+        })
+    }
+
+    /// Perform a HID operation with watchdog monitoring
+    fn perform_operation<F>(&mut self, endpoint_id: &EndpointId, operation: F) -> Result<HidOperationResult>
+    where
+        F: FnOnce(&EndpointId) -> HidOperationResult,
+    {
+        let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
+        
+        // Check if component is quarantined
+        if let Ok(watchdog) = self.watchdog.lock() {
+            if watchdog.is_quarantined(&component) {
+                return Err(FlightError::Configuration(format!(
+                    "USB endpoint {} is quarantined", 
+                    endpoint_id.device_path
+                )));
+            }
+        }
+
+        let start_time = Instant::now();
+        let result = operation(endpoint_id);
+        let operation_time = start_time.elapsed();
+
+        // Update endpoint state and notify watchdog
+        if let Some(state) = self.endpoint_states.get_mut(endpoint_id) {
+            state.operation_count += 1;
+
+            match &result {
+                HidOperationResult::Success { bytes_transferred } => {
+                    state.last_success = Instant::now();
+                    state.consecutive_failures = 0;
+                    state.is_stalled = false;
+                    state.frame_stall_count = 0;
+                    state.bytes_transferred += *bytes_transferred as u64;
+
+                    // Notify watchdog of success
+                    if let Ok(mut watchdog) = self.watchdog.lock() {
+                        watchdog.record_usb_success(&endpoint_id.device_path);
+                    }
+
+                    debug!("USB operation successful: {} bytes in {:?}", bytes_transferred, operation_time);
+                }
+                HidOperationResult::Stall => {
+                    state.consecutive_failures += 1;
+                    state.is_stalled = true;
+                    state.frame_stall_count += 1;
+
+                    // Notify watchdog of stall
+                    if let Ok(mut watchdog) = self.watchdog.lock() {
+                        if let Some(event) = watchdog.record_usb_stall(&endpoint_id.device_path) {
+                            warn!("USB stall detected and reported to watchdog: {:?}", event);
+                        }
+                    }
+
+                    warn!("USB endpoint stalled: {}", endpoint_id.device_path);
+                }
+                HidOperationResult::Timeout => {
+                    state.consecutive_failures += 1;
+
+                    // Check for timeout with watchdog
+                    if let Ok(mut watchdog) = self.watchdog.lock() {
+                        if let Some(event) = watchdog.check_usb_timeout(&endpoint_id.device_path) {
+                            error!("USB timeout detected and reported to watchdog: {:?}", event);
+                        }
+                    }
+
+                    error!("USB endpoint timeout: {}", endpoint_id.device_path);
+                }
+                HidOperationResult::Error { error_code, description } => {
+                    state.consecutive_failures += 1;
+
+                    // Notify watchdog of error
+                    if let Ok(mut watchdog) = self.watchdog.lock() {
+                        let context = format!("Error {}: {}", error_code, description);
+                        let event = watchdog.record_usb_error(&endpoint_id.device_path, &context);
+                        error!("USB error detected and reported to watchdog: {:?}", event);
+                    }
+
+                    error!("USB endpoint error: {} - {}", error_code, description);
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Get device information
+    pub fn get_device_info(&self, device_path: &str) -> Option<&HidDeviceInfo> {
+        self.devices.get(device_path)
+    }
+
+    /// Get all connected devices
+    pub fn get_all_devices(&self) -> Vec<&HidDeviceInfo> {
+        self.devices.values().collect()
+    }
+
+    /// Get endpoint state
+    pub fn get_endpoint_state(&self, endpoint_id: &EndpointId) -> Option<&EndpointState> {
+        self.endpoint_states.get(endpoint_id)
+    }
+
+    /// Check endpoint health
+    pub fn check_endpoint_health(&mut self, device_path: &str) -> Result<Vec<WatchdogEvent>> {
+        let mut events = Vec::new();
+
+        // Check all endpoints for this device
+        let endpoints: Vec<_> = self.endpoint_states.keys()
+            .filter(|id| id.device_path == device_path)
+            .cloned()
+            .collect();
+
+        for endpoint_id in endpoints {
+            if let Some(state) = self.endpoint_states.get(&endpoint_id) {
+                // Check for timeout
+                if let Ok(mut watchdog) = self.watchdog.lock() {
+                    if let Some(event) = watchdog.check_usb_timeout(&endpoint_id.device_path) {
+                        events.push(event);
+                    }
+
+                    // Check for endpoint wedge condition
+                    let is_responsive = state.last_success.elapsed() < Duration::from_millis(100);
+                    if let Some(event) = watchdog.check_endpoint_wedge(is_responsive) {
+                        events.push(event);
+                    }
+                }
+            }
+        }
+
+        Ok(events)
+    }
+
+    /// Get adapter statistics
+    pub fn get_statistics(&self) -> HidAdapterStats {
+        let total_devices = self.devices.len();
+        let total_endpoints = self.endpoint_states.len();
+        
+        let total_operations: u64 = self.endpoint_states.values()
+            .map(|state| state.operation_count)
+            .sum();
+        
+        let total_bytes: u64 = self.endpoint_states.values()
+            .map(|state| state.bytes_transferred)
+            .sum();
+        
+        let failed_endpoints = self.endpoint_states.values()
+            .filter(|state| state.consecutive_failures > 0)
+            .count();
+
+        let stalled_endpoints = self.endpoint_states.values()
+            .filter(|state| state.is_stalled)
+            .count();
+
+        HidAdapterStats {
+            total_devices,
+            total_endpoints,
+            total_operations,
+            total_bytes,
+            failed_endpoints,
+            stalled_endpoints,
+        }
+    }
+
+    /// Attempt to recover a quarantined endpoint
+    pub fn attempt_endpoint_recovery(&mut self, device_path: &str) -> Result<bool> {
+        let component = ComponentType::UsbEndpoint(device_path.to_string());
+        
+        if let Ok(mut watchdog) = self.watchdog.lock() {
+            if watchdog.attempt_recovery(&component) {
+                info!("Attempting recovery for USB endpoint: {}", device_path);
+                
+                // Reset local endpoint state
+                let endpoints_to_reset: Vec<_> = self.endpoint_states.keys()
+                    .filter(|id| id.device_path == device_path)
+                    .cloned()
+                    .collect();
+
+                for endpoint_id in endpoints_to_reset {
+                    if let Some(state) = self.endpoint_states.get_mut(&endpoint_id) {
+                        state.consecutive_failures = 0;
+                        state.is_stalled = false;
+                        state.frame_stall_count = 0;
+                        state.last_success = Instant::now();
+                    }
+                }
+                
+                return Ok(true);
+            }
+        }
+        
+        Ok(false)
+    }
+}
+
+/// HID adapter statistics
+#[derive(Debug, Clone)]
+pub struct HidAdapterStats {
+    pub total_devices: usize,
+    pub total_endpoints: usize,
+    pub total_operations: u64,
+    pub total_bytes: u64,
+    pub failed_endpoints: usize,
+    pub stalled_endpoints: usize,
+}
+
+impl EndpointState {
+    /// Get success rate for this endpoint
+    pub fn success_rate(&self) -> f64 {
+        if self.operation_count == 0 {
+            return 1.0;
+        }
+        
+        let successful_operations = self.operation_count.saturating_sub(self.consecutive_failures as u64);
+        successful_operations as f64 / self.operation_count as f64
+    }
+
+    /// Get average bytes per operation
+    pub fn avg_bytes_per_operation(&self) -> f64 {
+        if self.operation_count == 0 {
+            return 0.0;
+        }
+        
+        self.bytes_transferred as f64 / self.operation_count as f64
+    }
+}
+
+// Add rand dependency for simulation
+extern crate rand;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    fn create_test_adapter() -> HidAdapter {
+        let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
+        HidAdapter::new(watchdog)
+    }
+
+    #[test]
+    fn test_device_registration() {
+        let mut adapter = create_test_adapter();
+        
+        let device_info = HidDeviceInfo {
+            vendor_id: 0x1234,
+            product_id: 0x5678,
+            serial_number: Some("TEST123".to_string()),
+            manufacturer: Some("Test Manufacturer".to_string()),
+            product_name: Some("Test Device".to_string()),
+            device_path: "/dev/test0".to_string(),
+            usage_page: 0x01,
+            usage: 0x04,
+        };
+
+        assert!(adapter.register_device(device_info.clone()).is_ok());
+        assert!(adapter.get_device_info(&device_info.device_path).is_some());
+        assert_eq!(adapter.get_all_devices().len(), 1);
+    }
+
+    #[test]
+    fn test_device_unregistration() {
+        let mut adapter = create_test_adapter();
+        
+        let device_info = HidDeviceInfo {
+            vendor_id: 0x1234,
+            product_id: 0x5678,
+            serial_number: Some("TEST123".to_string()),
+            manufacturer: Some("Test Manufacturer".to_string()),
+            product_name: Some("Test Device".to_string()),
+            device_path: "/dev/test0".to_string(),
+            usage_page: 0x01,
+            usage: 0x04,
+        };
+
+        adapter.register_device(device_info.clone()).unwrap();
+        assert!(adapter.unregister_device(&device_info.device_path).is_ok());
+        assert!(adapter.get_device_info(&device_info.device_path).is_none());
+        assert_eq!(adapter.get_all_devices().len(), 0);
+    }
+
+    #[test]
+    fn test_endpoint_operations() {
+        let mut adapter = create_test_adapter();
+        
+        let device_info = HidDeviceInfo {
+            vendor_id: 0x1234,
+            product_id: 0x5678,
+            serial_number: Some("TEST123".to_string()),
+            manufacturer: Some("Test Manufacturer".to_string()),
+            product_name: Some("Test Device".to_string()),
+            device_path: "/dev/test0".to_string(),
+            usage_page: 0x01,
+            usage: 0x04,
+        };
+
+        adapter.register_device(device_info.clone()).unwrap();
+
+        // Test read operation
+        let mut buffer = [0u8; 64];
+        let result = adapter.read_input(&device_info.device_path, &mut buffer);
+        assert!(result.is_ok());
+
+        // Test write operation
+        let data = [1, 2, 3, 4];
+        let result = adapter.write_output(&device_info.device_path, &data);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_adapter_statistics() {
+        let adapter = create_test_adapter();
+        let stats = adapter.get_statistics();
+        
+        assert_eq!(stats.total_devices, 0);
+        assert_eq!(stats.total_endpoints, 0);
+        assert_eq!(stats.total_operations, 0);
+        assert_eq!(stats.total_bytes, 0);
+    }
+}

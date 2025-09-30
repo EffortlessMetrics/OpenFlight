@@ -9,3 +9,8 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+tracing.workspace = true
+rand = "0.8"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

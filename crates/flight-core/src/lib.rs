@@ -8,7 +8,13 @@ pub mod profile;
 pub mod rules;
 pub mod units;
 pub mod writers;
+pub mod watchdog;
 
 pub use error::{FlightError, Result};
 pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};
 pub use profile::{CapabilityMode, CapabilityLimits, CapabilityContext};
+pub use watchdog::{
+    WatchdogSystem, WatchdogConfig, WatchdogEvent, WatchdogEventType, WatchdogAction,
+    ComponentType, QuarantineStatus, SyntheticFault, WatchdogError,
+    PluginOverrunStats, WatchdogHealthSummary
+};

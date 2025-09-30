@@ -11,10 +11,15 @@ path = "profile_demo.rs"
 name = "capability_demo"
 path = "capability_demo.rs"
 
+[[bin]]
+name = "watchdog_integration_demo"
+path = "watchdog_integration_demo.rs"
+
 [dependencies]
 flight-core = { path = "../crates/flight-core" }
 flight-panels = { path = "../crates/flight-panels" }
 flight-axis = { path = "../crates/flight-axis" }
 flight-service = { path = "../crates/flight-service" }
+flight-hid = { path = "../crates/flight-hid" }
 tracing = "0.1"
 tracing-subscriber = "0.3"

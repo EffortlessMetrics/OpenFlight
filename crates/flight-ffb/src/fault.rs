@@ -2,9 +2,11 @@
 //!
 //! Implements comprehensive fault detection matrix with immediate safety responses.
 //! All faults trigger torque-to-zero within 50ms and appropriate recovery actions.
+//! Includes pre-fault capture system for diagnostics and stable error codes.
 
 use std::time::{Duration, Instant};
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
+use std::sync::Arc;
 
 /// Types of faults that can be detected
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -21,6 +23,12 @@ pub enum FaultType {
     OverCurrent,
     /// Plugin exceeded time budget
     PluginOverrun,
+    /// USB endpoint completely wedged
+    EndpointWedged,
+    /// Device encoder providing invalid readings
+    EncoderInvalid,
+    /// General device communication timeout
+    DeviceTimeout,
 }
 
 impl FaultType {
@@ -33,6 +41,24 @@ impl FaultType {
             FaultType::OverTemp => "FFB_OVER_TEMP",
             FaultType::OverCurrent => "FFB_OVER_CURRENT",
             FaultType::PluginOverrun => "PLUG_OVERRUN",
+            FaultType::EndpointWedged => "HID_ENDPOINT_WEDGED",
+            FaultType::EncoderInvalid => "ENCODER_INVALID",
+            FaultType::DeviceTimeout => "DEVICE_TIMEOUT",
+        }
+    }
+
+    /// Get knowledge base article URL for this fault
+    pub fn kb_article_url(&self) -> &'static str {
+        match self {
+            FaultType::UsbStall => "https://docs.flight-hub.dev/kb/hid-out-stall",
+            FaultType::EndpointError => "https://docs.flight-hub.dev/kb/hid-endpoint-error",
+            FaultType::NanValue => "https://docs.flight-hub.dev/kb/axis-nan-value",
+            FaultType::OverTemp => "https://docs.flight-hub.dev/kb/ffb-over-temp",
+            FaultType::OverCurrent => "https://docs.flight-hub.dev/kb/ffb-over-current",
+            FaultType::PluginOverrun => "https://docs.flight-hub.dev/kb/plug-overrun",
+            FaultType::EndpointWedged => "https://docs.flight-hub.dev/kb/hid-endpoint-wedged",
+            FaultType::EncoderInvalid => "https://docs.flight-hub.dev/kb/encoder-invalid",
+            FaultType::DeviceTimeout => "https://docs.flight-hub.dev/kb/device-timeout",
         }
     }
 
@@ -45,6 +71,9 @@ impl FaultType {
             FaultType::OverTemp => "Device over-temperature protection",
             FaultType::OverCurrent => "Device over-current protection",
             FaultType::PluginOverrun => "Plugin exceeded time budget",
+            FaultType::EndpointWedged => "USB endpoint completely wedged",
+            FaultType::EncoderInvalid => "Device encoder providing invalid readings",
+            FaultType::DeviceTimeout => "Device communication timeout",
         }
     }
 
@@ -55,7 +84,10 @@ impl FaultType {
             FaultType::EndpointError |
             FaultType::NanValue |
             FaultType::OverTemp |
-            FaultType::OverCurrent => true,
+            FaultType::OverCurrent |
+            FaultType::EndpointWedged |
+            FaultType::EncoderInvalid |
+            FaultType::DeviceTimeout => true,
             FaultType::PluginOverrun => false, // Plugin faults don't affect FFB
         }
     }
@@ -67,10 +99,40 @@ impl FaultType {
             FaultType::EndpointError |
             FaultType::NanValue |
             FaultType::OverTemp |
-            FaultType::OverCurrent => Duration::from_millis(50),
+            FaultType::OverCurrent |
+            FaultType::EncoderInvalid |
+            FaultType::DeviceTimeout => Duration::from_millis(50),
+            FaultType::EndpointWedged => Duration::from_millis(100),
             FaultType::PluginOverrun => Duration::from_millis(100),
         }
     }
+
+    /// Get detection threshold for this fault type
+    pub fn detection_threshold(&self) -> FaultThreshold {
+        match self {
+            FaultType::UsbStall => FaultThreshold::FrameCount(3),
+            FaultType::EndpointError => FaultThreshold::Immediate,
+            FaultType::NanValue => FaultThreshold::Immediate,
+            FaultType::OverTemp => FaultThreshold::Immediate,
+            FaultType::OverCurrent => FaultThreshold::Immediate,
+            FaultType::PluginOverrun => FaultThreshold::Duration(Duration::from_micros(100)),
+            FaultType::EndpointWedged => FaultThreshold::Duration(Duration::from_millis(100)),
+            FaultType::EncoderInvalid => FaultThreshold::Immediate,
+            FaultType::DeviceTimeout => FaultThreshold::Duration(Duration::from_secs(1)),
+        }
+    }
+}
+}
+
+/// Fault detection thresholds
+#[derive(Debug, Clone, PartialEq)]
+pub enum FaultThreshold {
+    /// Immediate detection (single occurrence)
+    Immediate,
+    /// Frame count threshold (e.g., 3 USB frames)
+    FrameCount(u32),
+    /// Duration threshold
+    Duration(Duration),
 }
 
 /// Fault detection and response actions
@@ -84,6 +146,61 @@ pub enum FaultAction {
     QuarantineComponent,
     /// Log and continue operation
     LogAndContinue,
+}
+
+/// Pre-fault capture data for diagnostics
+#[derive(Debug, Clone)]
+pub struct PreFaultCapture {
+    /// Timestamp when capture started
+    pub capture_start: Instant,
+    /// Duration of pre-fault data captured
+    pub capture_duration: Duration,
+    /// Axis data samples before fault
+    pub axis_samples: VecDeque<AxisSample>,
+    /// FFB state samples before fault
+    pub ffb_samples: VecDeque<FfbSample>,
+    /// System events before fault
+    pub system_events: VecDeque<SystemEvent>,
+    /// Maximum samples to keep
+    max_samples: usize,
+}
+
+/// Axis data sample for pre-fault capture
+#[derive(Debug, Clone)]
+pub struct AxisSample {
+    pub timestamp: Instant,
+    pub device_id: String,
+    pub raw_input: f32,
+    pub processed_output: f32,
+    pub pipeline_stage: String,
+}
+
+/// FFB state sample for pre-fault capture
+#[derive(Debug, Clone)]
+pub struct FfbSample {
+    pub timestamp: Instant,
+    pub torque_setpoint: f32,
+    pub actual_torque: f32,
+    pub safety_state: String,
+    pub device_health: Option<String>,
+}
+
+/// System event for pre-fault capture
+#[derive(Debug, Clone)]
+pub struct SystemEvent {
+    pub timestamp: Instant,
+    pub event_type: String,
+    pub details: String,
+    pub severity: EventSeverity,
+}
+
+/// Event severity levels
+#[derive(Debug, Clone, PartialEq)]
+pub enum EventSeverity {
+    Info,
+    Warning,
+    Error,
+    Critical,
 }
 
 /// Record of a detected fault
@@ -101,6 +218,12 @@ pub struct FaultRecord {
     pub context: String,
     /// Whether fault caused safety state transition
     pub caused_safety_transition: bool,
+    /// Pre-fault capture data (2s before fault)
+    pub pre_fault_capture: Option<PreFaultCapture>,
+    /// Stable error code for KB lookup
+    pub error_code: String,
+    /// KB article URL
+    pub kb_article_url: String,
 }
 
 /// Soft-stop event record
@@ -128,9 +251,104 @@ pub struct FaultDetector {
     /// Maximum history size
     max_history_size: usize,
     /// Fault counters by type
-    fault_counters: std::collections::HashMap<FaultType, u32>,
+    fault_counters: HashMap<FaultType, u32>,
     /// Last fault detection time
     last_fault_time: Option<Instant>,
+    /// Pre-fault capture system
+    pre_fault_capture: PreFaultCapture,
+    /// USB frame stall counter
+    usb_stall_counter: u32,
+    /// Endpoint wedge detection timer
+    endpoint_wedge_timer: Option<Instant>,
+    /// Plugin overrun counters by plugin ID
+    plugin_overrun_counters: HashMap<String, u32>,
+}
+
+impl PreFaultCapture {
+    /// Create new pre-fault capture system
+    pub fn new(capture_duration: Duration) -> Self {
+        Self {
+            capture_start: Instant::now(),
+            capture_duration,
+            axis_samples: VecDeque::new(),
+            ffb_samples: VecDeque::new(),
+            system_events: VecDeque::new(),
+            max_samples: 1000, // Limit memory usage
+        }
+    }
+
+    /// Add axis sample to pre-fault capture
+    pub fn add_axis_sample(&mut self, sample: AxisSample) {
+        self.axis_samples.push_back(sample);
+        
+        // Keep only samples within capture duration
+        let cutoff = Instant::now() - self.capture_duration;
+        while let Some(front) = self.axis_samples.front() {
+            if front.timestamp < cutoff {
+                self.axis_samples.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        // Enforce max samples limit
+        if self.axis_samples.len() > self.max_samples {
+            self.axis_samples.pop_front();
+        }
+    }
+
+    /// Add FFB sample to pre-fault capture
+    pub fn add_ffb_sample(&mut self, sample: FfbSample) {
+        self.ffb_samples.push_back(sample);
+        
+        // Keep only samples within capture duration
+        let cutoff = Instant::now() - self.capture_duration;
+        while let Some(front) = self.ffb_samples.front() {
+            if front.timestamp < cutoff {
+                self.ffb_samples.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        // Enforce max samples limit
+        if self.ffb_samples.len() > self.max_samples {
+            self.ffb_samples.pop_front();
+        }
+    }
+
+    /// Add system event to pre-fault capture
+    pub fn add_system_event(&mut self, event: SystemEvent) {
+        self.system_events.push_back(event);
+        
+        // Keep only events within capture duration
+        let cutoff = Instant::now() - self.capture_duration;
+        while let Some(front) = self.system_events.front() {
+            if front.timestamp < cutoff {
+                self.system_events.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        // Enforce max samples limit
+        if self.system_events.len() > self.max_samples {
+            self.system_events.pop_front();
+        }
+    }
+
+    /// Get snapshot of current pre-fault data
+    pub fn get_snapshot(&self) -> PreFaultCapture {
+        self.clone()
+    }
+
+    /// Clear all captured data
+    pub fn clear(&mut self) {
+        self.axis_samples.clear();
+        self.ffb_samples.clear();
+        self.system_events.clear();
+        self.capture_start = Instant::now();
+    }
 }
 
 impl FaultDetector {
@@ -141,8 +359,12 @@ impl FaultDetector {
             fault_history: VecDeque::new(),
             soft_stop_history: VecDeque::new(),
             max_history_size: 1000,
-            fault_counters: std::collections::HashMap::new(),
+            fault_counters: HashMap::new(),
             last_fault_time: None,
+            pre_fault_capture: PreFaultCapture::new(Duration::from_secs(2)),
+            usb_stall_counter: 0,
+            endpoint_wedge_timer: None,
+            plugin_overrun_counters: HashMap::new(),
         }
     }
 
@@ -160,8 +382,18 @@ impl FaultDetector {
             FaultType::EndpointError | 
             FaultType::NanValue | 
             FaultType::OverTemp | 
-            FaultType::OverCurrent => FaultAction::TorqueZero50ms,
+            FaultType::OverCurrent |
+            FaultType::EndpointWedged |
+            FaultType::EncoderInvalid |
+            FaultType::DeviceTimeout => FaultAction::TorqueZero50ms,
             FaultType::PluginOverrun => FaultAction::QuarantineComponent,
+        };
+
+        // Capture pre-fault data (2s before fault)
+        let pre_fault_capture = if fault_type.requires_torque_cutoff() {
+            Some(self.pre_fault_capture.get_snapshot())
+        } else {
+            None
         };
 
         let record = FaultRecord {
@@ -171,6 +403,9 @@ impl FaultDetector {
             response_time: None, // Will be filled in when response completes
             context: format!("Fault detected: {}", fault_type.description()),
             caused_safety_transition: fault_type.requires_torque_cutoff(),
+            pre_fault_capture,
+            error_code: fault_type.error_code().to_string(),
+            kb_article_url: fault_type.kb_article_url().to_string(),
         };
 
         // Add to history
@@ -265,6 +500,118 @@ impl FaultDetector {
         self.soft_stop_history.clear();
         self.fault_counters.clear();
         self.last_fault_time = None;
+        self.pre_fault_capture.clear();
+        self.usb_stall_counter = 0;
+        self.endpoint_wedge_timer = None;
+        self.plugin_overrun_counters.clear();
+    }
+
+    /// Record USB frame stall
+    pub fn record_usb_stall(&mut self) -> Option<FaultRecord> {
+        self.usb_stall_counter += 1;
+        
+        // Trigger fault after 3 stalls
+        if self.usb_stall_counter >= 3 {
+            self.usb_stall_counter = 0; // Reset counter
+            Some(self.record_fault(FaultType::UsbStall))
+        } else {
+            None
+        }
+    }
+
+    /// Reset USB stall counter (called on successful frame)
+    pub fn reset_usb_stall_counter(&mut self) {
+        self.usb_stall_counter = 0;
+    }
+
+    /// Check for endpoint wedge condition
+    pub fn check_endpoint_wedge(&mut self, endpoint_responsive: bool) -> Option<FaultRecord> {
+        if !endpoint_responsive {
+            if self.endpoint_wedge_timer.is_none() {
+                self.endpoint_wedge_timer = Some(Instant::now());
+            } else if let Some(timer) = self.endpoint_wedge_timer {
+                if timer.elapsed() >= Duration::from_millis(100) {
+                    self.endpoint_wedge_timer = None;
+                    return Some(self.record_fault(FaultType::EndpointWedged));
+                }
+            }
+        } else {
+            self.endpoint_wedge_timer = None;
+        }
+        None
+    }
+
+    /// Record plugin overrun
+    pub fn record_plugin_overrun(&mut self, plugin_id: String, execution_time: Duration) -> Option<FaultRecord> {
+        if execution_time > Duration::from_micros(100) {
+            *self.plugin_overrun_counters.entry(plugin_id.clone()).or_insert(0) += 1;
+            
+            // Add system event to pre-fault capture
+            self.pre_fault_capture.add_system_event(SystemEvent {
+                timestamp: Instant::now(),
+                event_type: "PLUGIN_OVERRUN".to_string(),
+                details: format!("Plugin {} exceeded 100μs budget: {:?}", plugin_id, execution_time),
+                severity: EventSeverity::Warning,
+            });
+            
+            Some(self.record_fault(FaultType::PluginOverrun))
+        } else {
+            None
+        }
+    }
+
+    /// Add axis sample to pre-fault capture
+    pub fn add_axis_sample(&mut self, device_id: String, raw_input: f32, processed_output: f32, pipeline_stage: String) {
+        let sample = AxisSample {
+            timestamp: Instant::now(),
+            device_id,
+            raw_input,
+            processed_output,
+            pipeline_stage,
+        };
+        self.pre_fault_capture.add_axis_sample(sample);
+    }
+
+    /// Add FFB sample to pre-fault capture
+    pub fn add_ffb_sample(&mut self, torque_setpoint: f32, actual_torque: f32, safety_state: String, device_health: Option<String>) {
+        let sample = FfbSample {
+            timestamp: Instant::now(),
+            torque_setpoint,
+            actual_torque,
+            safety_state,
+            device_health,
+        };
+        self.pre_fault_capture.add_ffb_sample(sample);
+    }
+
+    /// Add system event to pre-fault capture
+    pub fn add_system_event(&mut self, event_type: String, details: String, severity: EventSeverity) {
+        let event = SystemEvent {
+            timestamp: Instant::now(),
+            event_type,
+            details,
+            severity,
+        };
+        self.pre_fault_capture.add_system_event(event);
+    }
+
+    /// Check for NaN values in axis data
+    pub fn check_nan_value(&mut self, value: f32, context: &str) -> Option<FaultRecord> {
+        if value.is_nan() || value.is_infinite() {
+            self.add_system_event(
+                "NAN_DETECTED".to_string(),
+                format!("NaN/Infinite value detected in {}: {}", context, value),
+                EventSeverity::Critical,
+            );
+            Some(self.record_fault(FaultType::NanValue))
+        } else {
+            None
+        }
+    }
+
+    /// Get plugin overrun counters
+    pub fn get_plugin_overrun_counters(&self) -> &HashMap<String, u32> {
+        &self.plugin_overrun_counters
     }
 
     /// Get time since last fault
@@ -337,10 +684,20 @@ mod tests {
         assert_eq!(FaultType::UsbStall.error_code(), "HID_OUT_STALL");
         assert!(FaultType::UsbStall.requires_torque_cutoff());
         assert_eq!(FaultType::UsbStall.max_response_time(), Duration::from_millis(50));
+        assert_eq!(FaultType::UsbStall.kb_article_url(), "https://docs.flight-hub.dev/kb/hid-out-stall");
         
         assert_eq!(FaultType::PluginOverrun.error_code(), "PLUG_OVERRUN");
         assert!(!FaultType::PluginOverrun.requires_torque_cutoff());
         assert_eq!(FaultType::PluginOverrun.max_response_time(), Duration::from_millis(100));
+        assert_eq!(FaultType::PluginOverrun.kb_article_url(), "https://docs.flight-hub.dev/kb/plug-overrun");
+        
+        // Test new fault types
+        assert_eq!(FaultType::EndpointWedged.error_code(), "HID_ENDPOINT_WEDGED");
+        assert!(FaultType::EndpointWedged.requires_torque_cutoff());
+        assert_eq!(FaultType::EndpointWedged.max_response_time(), Duration::from_millis(100));
+        
+        assert_eq!(FaultType::EncoderInvalid.error_code(), "ENCODER_INVALID");
+        assert!(FaultType::EncoderInvalid.requires_torque_cutoff());
     }
 
     #[test]
@@ -352,6 +709,9 @@ mod tests {
         assert_eq!(record.fault_type, FaultType::UsbStall);
         assert_eq!(record.action_taken, FaultAction::TorqueZero50ms);
         assert!(record.caused_safety_transition);
+        assert_eq!(record.error_code, "HID_OUT_STALL");
+        assert_eq!(record.kb_article_url, "https://docs.flight-hub.dev/kb/hid-out-stall");
+        assert!(record.pre_fault_capture.is_some()); // Should have pre-fault capture for torque cutoff faults
         
         assert_eq!(detector.get_fault_history().len(), 1);
         assert_eq!(detector.get_fault_counters()[&FaultType::UsbStall], 1);

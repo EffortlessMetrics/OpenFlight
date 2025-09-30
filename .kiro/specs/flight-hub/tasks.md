@@ -231,14 +231,24 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Ensure clamped outputs are logged for audit trail
   - _Requirements: SAFE-01_
 
-- [ ] 12. Watchdogs & quarantine system
+- [x] 12. Watchdogs & quarantine system
+
+
+
+
+
+
+
+
   - Implement USB stall timeout, NaN guards, and endpoint error detection
   - Create plugin overrun counters and PLUG-OVERRUN event system
   - Build quarantine mechanism that isolates failed components
   - Add synthetic fault injection tests for validation
   - _Requirements: SAFE-01, PLUG-01_
 
-- [ ] 12.1 Fault matrix & pre-fault capture
+
+- [x] 12.1 Fault matrix & pre-fault capture
+
   - Implement fault table (USB stall ≥3 frames, endpoint wedged, NaN, over-temp, plugin overrun)
   - Create action matrix (torque→0 ≤50ms) with 2s pre-fault .fbb capture
   - Add stable error codes for all fault conditions with KB article links
@@ -247,7 +257,9 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 3: Sim Adapters, Bus, Writers, Auto-Profiles (M3) - Integration Layer
 
-- [ ] 13. flight-bus: normalized model & publisher
+- [-] 13. flight-bus: normalized model & publisher
+
+
   - Define BusSnapshot structure with comprehensive telemetry model
   - Implement pub/sub system with 30-60Hz rate limiting
   - Create fixtures for consistent snapshot publishing
