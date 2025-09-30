@@ -13,6 +13,7 @@ tracing.workspace = true
 once_cell.workspace = true
 crossbeam.workspace = true
 parking_lot.workspace = true
+thiserror.workspace = true
 
 [features]
 default = []

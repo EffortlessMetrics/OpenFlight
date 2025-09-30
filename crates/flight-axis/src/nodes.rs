@@ -207,7 +207,7 @@ impl SlewNode {
 
 impl Node for SlewNode {
     #[inline(always)]
-    fn step(&mut self, frame: &mut AxisFrame) {
+    fn step(&mut self, _frame: &mut AxisFrame) {
         // This implementation is for compatibility only
         // Real RT path uses step_soa with SoA state layout
         unimplemented!("SlewNode requires SoA state layout - use step_soa()");

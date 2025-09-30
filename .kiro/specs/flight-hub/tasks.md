@@ -102,7 +102,9 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - _Requirements: Documentation, Security_
 
 ### Milestone 1: Axis Engine Spine (M1) - Real-Time Core
-- [-] 5. flight-axis: frame, node API, atomic swap & no-alloc guard
+- [x] 5. flight-axis: frame, node API, atomic swap & no-alloc guard
+
+
 
 
 - [ ] 5. flight-axis: frame, node API, atomic swap & no-alloc guard

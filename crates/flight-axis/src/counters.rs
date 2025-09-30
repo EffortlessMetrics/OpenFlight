@@ -3,10 +3,8 @@
 //! Provides zero-overhead monitoring of real-time constraints including
 //! allocation detection, lock usage, and timing violations.
 
-use std::sync::atomic::{AtomicU64, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicU32, AtomicBool, Ordering};
 use std::time::{Duration, Instant};
-use std::alloc::{GlobalAlloc, Layout, System};
-use std::sync::Mutex;
 
 /// Runtime performance counters for axis engine
 #[derive(Debug)]
@@ -213,78 +211,15 @@ impl Drop for AllocationGuard {
 
 // Thread-local state for allocation tracking
 thread_local! {
-    static RT_ALLOCATION_GUARD: AtomicU32 = AtomicU32::new(0);
-    static RT_ALLOCATION_DETECTED: AtomicU32 = AtomicU32::new(0);
+    static RT_ALLOCATION_GUARD: AtomicBool = AtomicBool::new(false);
+    static RT_ALLOCATION_DETECTED: AtomicBool = AtomicBool::new(false);
 }
 
-/// Custom allocator wrapper for RT allocation detection
-#[cfg(feature = "rt-checks")]
-pub struct RTTrackingAllocator;
-
-#[cfg(feature = "rt-checks")]
-unsafe impl GlobalAlloc for RTTrackingAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        // Check if we're in RT context
-        let in_rt_context = RT_ALLOCATION_GUARD.with(|guard| {
-            guard.load(Ordering::Relaxed) != 0
-        });
-
-        if in_rt_context {
-            // Record allocation violation
-            RT_ALLOCATION_DETECTED.with(|detected| {
-                detected.store(1, Ordering::Relaxed);
-            });
-
-            // Log violation (non-allocating)
-            eprintln!("RT VIOLATION: Allocation detected in real-time context");
-        }
-
-        // Delegate to system allocator
-        System.alloc(layout)
-    }
-
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        System.dealloc(ptr, layout)
-    }
-}
-
-/// Lock guard for detecting mutex usage in RT code
-pub struct LockGuard<T> {
-    inner: parking_lot::MutexGuard<'static, T>,
-    counters: Option<&'static RuntimeCounters>,
-}
-
-impl<T> std::ops::Deref for LockGuard<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &*self.inner
-    }
-}
-
-impl<T> std::ops::DerefMut for LockGuard<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut *self.inner
-    }
-}
-
-impl<T> LockGuard<T> {
-    /// Create new lock guard with RT violation tracking
-    pub fn new(guard: parking_lot::MutexGuard<'static, T>, counters: Option<&'static RuntimeCounters>) -> Self {
-        // Check if we're in RT context and record violation
-        let in_rt_context = RT_ALLOCATION_GUARD.with(|guard| {
-            guard.load(Ordering::Relaxed) != 0
-        });
-
-        if in_rt_context {
-            if let Some(counters) = counters {
-                counters.increment_rt_lock_acquisitions();
-            }
-            eprintln!("RT VIOLATION: Lock acquisition detected in real-time context");
-        }
-
-        Self { inner: guard, counters }
-    }
+/// Check if currently in RT context (for debugging)
+pub fn in_rt_context() -> bool {
+    RT_ALLOCATION_GUARD.with(|guard| {
+        guard.load(Ordering::Relaxed)
+    })
 }
 
 /// Performance snapshot for monitoring

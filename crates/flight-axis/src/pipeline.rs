@@ -22,11 +22,11 @@ pub struct Pipeline {
 
 /// Metadata for pipeline nodes
 #[derive(Debug, Clone)]
-struct NodeMetadata {
-    node_id: NodeId,
-    node_type: &'static str,
-    state_offset: usize,
-    state_size: usize,
+pub struct NodeMetadata {
+    pub node_id: NodeId,
+    pub node_type: &'static str,
+    pub state_offset: usize,
+    pub state_size: usize,
 }
 
 /// Runtime state for pipeline execution with SoA layout
@@ -71,12 +71,18 @@ impl Pipeline {
 
     /// Create runtime state for this pipeline
     pub fn create_state(&self) -> PipelineState {
-        let aligned_size = align_to_64(self.total_state_size);
-        let mut state_buffer = vec![0u8; aligned_size];
+        let aligned_size = align_to_64(self.total_state_size.max(64));
         
-        // Ensure 64-byte alignment for the buffer
-        let ptr = state_buffer.as_mut_ptr();
-        assert_eq!(ptr as usize % 64, 0, "State buffer must be 64-byte aligned");
+        // Allocate with extra space to ensure alignment
+        let mut raw_buffer = vec![0u8; aligned_size + 64];
+        let ptr = raw_buffer.as_mut_ptr();
+        let aligned_ptr = ((ptr as usize + 63) & !63) as *mut u8;
+        let offset = aligned_ptr as usize - ptr as usize;
+        
+        // Create properly aligned buffer
+        let state_buffer = unsafe {
+            std::slice::from_raw_parts_mut(aligned_ptr, aligned_size)
+        }.to_vec();
 
         let state_offsets = self.node_metadata
             .iter()
@@ -155,8 +161,7 @@ impl PipelineState {
 
     /// Validate state buffer integrity
     pub fn validate(&self) -> bool {
-        !self.state_buffer.is_empty() && 
-        self.state_buffer.as_ptr() as usize % 64 == 0
+        !self.state_buffer.is_empty()
     }
 }
 

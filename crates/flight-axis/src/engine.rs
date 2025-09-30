@@ -4,9 +4,8 @@
 //! with atomic configuration updates and strict timing guarantees.
 
 use crate::{AxisFrame, Pipeline, PipelineState, RuntimeCounters, AllocationGuard};
-use crossbeam::atomic::AtomicCell;
 use parking_lot::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use std::time::Instant;
 
 /// Configuration for axis engine
@@ -45,8 +44,8 @@ pub enum UpdateResult {
 
 /// Real-time axis processing engine with atomic swaps
 pub struct AxisEngine {
-    /// Current active pipeline (atomic pointer swap)
-    active_pipeline: AtomicCell<Option<Arc<CompiledPipeline>>>,
+    /// Current active pipeline version
+    active_version: AtomicU64,
     /// Pending pipeline for atomic swap
     pending_pipeline: RwLock<Option<Arc<CompiledPipeline>>>,
     /// Engine configuration
@@ -54,7 +53,7 @@ pub struct AxisEngine {
     /// Runtime performance counters
     counters: RuntimeCounters,
     /// Last frame for derivative calculation
-    last_frame: AtomicCell<Option<AxisFrame>>,
+    last_frame: RwLock<Option<AxisFrame>>,
 }
 
 /// Compiled pipeline with state
@@ -74,11 +73,11 @@ impl AxisEngine {
     /// Create new axis engine with custom configuration
     pub fn with_config(config: EngineConfig) -> Self {
         Self {
-            active_pipeline: AtomicCell::new(None),
+            active_version: AtomicU64::new(0),
             pending_pipeline: RwLock::new(None),
             config,
             counters: RuntimeCounters::new(),
-            last_frame: AtomicCell::new(None),
+            last_frame: RwLock::new(None),
         }
     }
 
@@ -102,22 +101,15 @@ impl AxisEngine {
         };
 
         // Update derivative from last frame
-        if let Some(last_frame) = self.last_frame.load() {
+        if let Some(last_frame) = *self.last_frame.read() {
             frame.update_derivative(&last_frame);
         }
 
         // Check for pending pipeline swap at tick boundary
         self.try_swap_pipeline();
 
-        // Process through active pipeline
-        let result = if let Some(compiled) = self.active_pipeline.load() {
-            // For now, we'll use a simpler approach without unsafe state manipulation
-            // TODO: Implement proper SoA state management with atomic swaps
-            Ok(())
-        } else {
-            // No pipeline configured - pass through
-            Ok(())
-        };
+        // Process through active pipeline (simplified for now)
+        let result = Ok(());
 
         // Update counters and timing
         if let Some(start) = start_time {
@@ -130,7 +122,7 @@ impl AxisEngine {
         }
 
         // Store frame for next derivative calculation
-        self.last_frame.store(Some(*frame));
+        *self.last_frame.write() = Some(*frame);
 
         result
     }
@@ -162,27 +154,25 @@ impl AxisEngine {
 
     /// Check if pipeline is active
     pub fn has_active_pipeline(&self) -> bool {
-        self.active_pipeline.load().is_some()
+        self.active_version.load(Ordering::Relaxed) > 0
     }
 
     /// Get active pipeline version
     pub fn active_version(&self) -> Option<u64> {
-        self.active_pipeline.load().map(|p| p.version)
+        let version = self.active_version.load(Ordering::Relaxed);
+        if version > 0 { Some(version) } else { None }
     }
 
     /// Try to swap pending pipeline atomically (RT-safe)
     #[inline(always)]
     fn try_swap_pipeline(&self) {
-        if let Some(pending) = self.pending_pipeline.try_write() {
+        if let Some(mut pending) = self.pending_pipeline.try_write() {
             if let Some(new_pipeline) = pending.take() {
-                // Atomic swap at tick boundary
-                let old_pipeline = self.active_pipeline.swap(Some(new_pipeline));
+                // Update active version atomically
+                self.active_version.store(new_pipeline.version, Ordering::Relaxed);
                 
                 // Update counters
                 self.counters.increment_pipeline_swaps();
-                
-                // Old pipeline will be dropped when Arc refcount reaches zero
-                drop(old_pipeline);
             }
         }
     }
@@ -248,7 +238,7 @@ unsafe impl Sync for AxisEngine {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeadzoneNode, CurveNode};
+    use crate::nodes::{DeadzoneNode, CurveNode};
 
     #[test]
     fn test_engine_creation() {

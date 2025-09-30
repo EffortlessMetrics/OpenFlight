@@ -4,6 +4,7 @@
 //! function pointer pipelines with Structure-of-Arrays state layout.
 
 use crate::{Node, NodeId, Pipeline, AxisFrame};
+use crate::nodes::{DeadzoneNode, CurveNode, SlewNode};
 use std::sync::Arc;
 
 /// No-op step function for compilation placeholder
@@ -108,17 +109,17 @@ impl PipelineBuilder {
 
     /// Add deadzone node
     pub fn deadzone(self, threshold: f32) -> Self {
-        self.add_node(crate::DeadzoneNode::new(threshold))
+        self.add_node(DeadzoneNode::new(threshold))
     }
 
     /// Add exponential curve node
     pub fn curve(self, expo: f32) -> Result<Self, &'static str> {
-        Ok(self.add_node(crate::CurveNode::exponential(expo)?))
+        Ok(self.add_node(CurveNode::exponential(expo)?))
     }
 
     /// Add slew rate limiter
     pub fn slew(self, rate_limit: f32) -> Self {
-        self.add_node(crate::SlewNode::new(rate_limit))
+        self.add_node(SlewNode::new(rate_limit))
     }
 
     /// Add custom node
@@ -163,7 +164,7 @@ pub fn validate_node_config<N: Node>(node: &N) -> Result<(), CompileError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeadzoneNode, CurveNode, SlewNode};
+    use crate::nodes::{DeadzoneNode, CurveNode, SlewNode};
 
     #[test]
     fn test_empty_pipeline_compilation() {
