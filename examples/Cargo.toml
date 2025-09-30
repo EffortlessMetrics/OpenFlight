@@ -7,6 +7,14 @@ edition = "2024"
 name = "profile_demo"
 path = "profile_demo.rs"
 
+[[bin]]
+name = "capability_demo"
+path = "capability_demo.rs"
+
 [dependencies]
 flight-core = { path = "../crates/flight-core" }
 flight-panels = { path = "../crates/flight-panels" }
+flight-axis = { path = "../crates/flight-axis" }
+flight-service = { path = "../crates/flight-service" }
+tracing = "0.1"
+tracing-subscriber = "0.3"

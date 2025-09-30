@@ -38,6 +38,22 @@ pub enum BlackboxEvent {
         capture_duration_ms: u64,
         sample_count: usize,
     },
+    /// Capability mode changed
+    CapabilityModeChanged {
+        timestamp: u64,
+        axis_name: String,
+        old_mode: String,
+        new_mode: String,
+    },
+    /// Output clamped due to capability limits
+    OutputClamped {
+        timestamp: u64,
+        axis_name: String,
+        original_output: f32,
+        clamped_output: f32,
+        capability_mode: String,
+        limit_type: String,
+    },
 }
 
 /// Serializable conflict data for blackbox
@@ -314,6 +330,30 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Pre-fault capture"
                     );
                 }
+                BlackboxEvent::CapabilityModeChanged { timestamp, axis_name, old_mode, new_mode } => {
+                    info!(
+                        target: "blackbox",
+                        timestamp = timestamp,
+                        axis = axis_name,
+                        event_type = "capability_mode_changed",
+                        old_mode = old_mode,
+                        new_mode = new_mode,
+                        "BLACKBOX: Capability mode changed"
+                    );
+                }
+                BlackboxEvent::OutputClamped { timestamp, axis_name, original_output, clamped_output, capability_mode, limit_type } => {
+                    info!(
+                        target: "blackbox",
+                        timestamp = timestamp,
+                        axis = axis_name,
+                        event_type = "output_clamped",
+                        original_output = original_output,
+                        clamped_output = clamped_output,
+                        capability_mode = capability_mode,
+                        limit_type = limit_type,
+                        "BLACKBOX: Output clamped"
+                    );
+                }
             }
         }
 
@@ -339,6 +379,82 @@ impl BlackboxAnnotator {
         if self.event_buffer.len() >= size {
             self.flush();
         }
+    }
+
+    /// Annotate capability mode change
+    pub fn annotate_capability_mode_changed(&mut self, axis_name: &str, new_mode: flight_core::profile::CapabilityMode) {
+        if !self.enabled {
+            return;
+        }
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        let new_mode_str = match new_mode {
+            flight_core::profile::CapabilityMode::Full => "full",
+            flight_core::profile::CapabilityMode::Demo => "demo",
+            flight_core::profile::CapabilityMode::Kid => "kid",
+        };
+
+        let event = BlackboxEvent::CapabilityModeChanged {
+            timestamp,
+            axis_name: axis_name.to_string(),
+            old_mode: "unknown".to_string(), // We don't track previous mode for now
+            new_mode: new_mode_str.to_string(),
+        };
+
+        self.add_event(event);
+
+        info!(
+            axis = axis_name,
+            new_mode = new_mode_str,
+            "Capability mode changed"
+        );
+    }
+
+    /// Annotate output clamping due to capability limits
+    pub fn annotate_output_clamped(
+        &mut self,
+        axis_name: &str,
+        original_output: f32,
+        clamped_output: f32,
+        capability_mode: flight_core::profile::CapabilityMode,
+    ) {
+        if !self.enabled {
+            return;
+        }
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
+        let mode_str = match capability_mode {
+            flight_core::profile::CapabilityMode::Full => "full",
+            flight_core::profile::CapabilityMode::Demo => "demo",
+            flight_core::profile::CapabilityMode::Kid => "kid",
+        };
+
+        let event = BlackboxEvent::OutputClamped {
+            timestamp,
+            axis_name: axis_name.to_string(),
+            original_output,
+            clamped_output,
+            capability_mode: mode_str.to_string(),
+            limit_type: "max_axis_output".to_string(),
+        };
+
+        self.add_event(event);
+
+        debug!(
+            axis = axis_name,
+            original = original_output,
+            clamped = clamped_output,
+            mode = mode_str,
+            "Output clamped due to capability limits"
+        );
     }
 }
 

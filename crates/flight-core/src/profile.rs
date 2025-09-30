@@ -16,6 +16,116 @@ pub struct Profile {
     pub pof_overrides: Option<HashMap<String, PofOverride>>,
 }
 
+/// Capability enforcement modes for safety
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CapabilityMode {
+    /// Full capabilities - no restrictions
+    Full,
+    /// Demo mode - reduced force feedback and limited axis response
+    Demo,
+    /// Kid mode - heavily restricted for safety
+    Kid,
+}
+
+impl Default for CapabilityMode {
+    fn default() -> Self {
+        Self::Full
+    }
+}
+
+/// Capability limits for different modes
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapabilityLimits {
+    /// Maximum axis output magnitude (0.0-1.0)
+    pub max_axis_output: f32,
+    /// Maximum force feedback torque (Nm)
+    pub max_ffb_torque: f32,
+    /// Maximum slew rate (units/second)
+    pub max_slew_rate: f32,
+    /// Maximum curve expo magnitude
+    pub max_curve_expo: f32,
+    /// Whether high torque mode is allowed
+    pub allow_high_torque: bool,
+    /// Whether custom curves are allowed
+    pub allow_custom_curves: bool,
+}
+
+impl CapabilityLimits {
+    /// Get limits for a specific capability mode
+    pub fn for_mode(mode: CapabilityMode) -> Self {
+        match mode {
+            CapabilityMode::Full => Self {
+                max_axis_output: 1.0,
+                max_ffb_torque: 50.0, // Reasonable max for consumer devices
+                max_slew_rate: 100.0,
+                max_curve_expo: 1.0,
+                allow_high_torque: true,
+                allow_custom_curves: true,
+            },
+            CapabilityMode::Demo => Self {
+                max_axis_output: 0.8, // 80% max output
+                max_ffb_torque: 15.0, // Reduced torque
+                max_slew_rate: 5.0,   // Slower response
+                max_curve_expo: 0.5,  // Limited curve strength
+                allow_high_torque: false,
+                allow_custom_curves: true,
+            },
+            CapabilityMode::Kid => Self {
+                max_axis_output: 0.5, // 50% max output
+                max_ffb_torque: 5.0,  // Very low torque
+                max_slew_rate: 2.0,   // Very slow response
+                max_curve_expo: 0.2,  // Minimal curve strength
+                allow_high_torque: false,
+                allow_custom_curves: false,
+            },
+        }
+    }
+}
+
+/// Capability enforcement context
+#[derive(Debug, Clone)]
+pub struct CapabilityContext {
+    pub mode: CapabilityMode,
+    pub limits: CapabilityLimits,
+    pub audit_enabled: bool,
+}
+
+impl Default for CapabilityContext {
+    fn default() -> Self {
+        Self {
+            mode: CapabilityMode::Full,
+            limits: CapabilityLimits::for_mode(CapabilityMode::Full),
+            audit_enabled: true,
+        }
+    }
+}
+
+impl CapabilityContext {
+    /// Create context for specific mode
+    pub fn for_mode(mode: CapabilityMode) -> Self {
+        Self {
+            mode,
+            limits: CapabilityLimits::for_mode(mode),
+            audit_enabled: true,
+        }
+    }
+
+    /// Set audit logging enabled/disabled
+    pub fn with_audit(mut self, enabled: bool) -> Self {
+        self.audit_enabled = enabled;
+        self
+    }
+
+    /// Get human-readable mode name
+    pub fn mode_name(&self) -> &'static str {
+        match self.mode {
+            CapabilityMode::Full => "full",
+            CapabilityMode::Demo => "demo",
+            CapabilityMode::Kid => "kid",
+        }
+    }
+}
+
 /// Canonical representation of a profile for deterministic hashing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalProfile {
@@ -111,8 +221,18 @@ impl Profile {
         self.validate_with_location().map(|_| ())
     }
 
+    /// Validate profile with capability enforcement
+    pub fn validate_with_capabilities(&self, context: &CapabilityContext) -> Result<()> {
+        self.validate_with_location_and_capabilities(context).map(|_| ())
+    }
+
     /// Validate profile with line/column error reporting
     pub fn validate_with_location(&self) -> Result<ValidationResult> {
+        self.validate_with_location_and_capabilities(&CapabilityContext::default())
+    }
+
+    /// Validate profile with line/column error reporting and capability enforcement
+    pub fn validate_with_location_and_capabilities(&self, context: &CapabilityContext) -> Result<ValidationResult> {
         let mut result = ValidationResult::new();
 
         if self.schema != "flight.profile/1" {
@@ -126,7 +246,7 @@ impl Profile {
 
         // Validate axis configurations
         for (axis_name, config) in &self.axes {
-            if let Err(errors) = self.validate_axis_config(axis_name, config) {
+            if let Err(errors) = self.validate_axis_config_with_capabilities(axis_name, config, context) {
                 result.errors.extend(errors);
             }
         }
@@ -139,6 +259,10 @@ impl Profile {
     }
 
     fn validate_axis_config(&self, name: &str, config: &AxisConfig) -> std::result::Result<(), Vec<ValidationError>> {
+        self.validate_axis_config_with_capabilities(name, config, &CapabilityContext::default())
+    }
+
+    fn validate_axis_config_with_capabilities(&self, name: &str, config: &AxisConfig, context: &CapabilityContext) -> std::result::Result<(), Vec<ValidationError>> {
         let mut errors = Vec::new();
 
         // Validate deadzone range
@@ -152,7 +276,7 @@ impl Profile {
             }
         }
 
-        // Validate expo range
+        // Validate expo range and capability limits
         if let Some(expo) = config.expo {
             if !(-1.0..=1.0).contains(&expo) {
                 errors.push(ValidationError {
@@ -161,11 +285,46 @@ impl Profile {
                     message: format!("Axis '{}': expo must be between -1.0 and 1.0", name),
                 });
             }
+            
+            // Check capability limits
+            if expo.abs() > context.limits.max_curve_expo {
+                errors.push(ValidationError {
+                    line: 0,
+                    column: 0,
+                    message: format!(
+                        "Axis '{}': expo magnitude {} exceeds {} mode limit of {}",
+                        name, expo.abs(), context.mode_name(), context.limits.max_curve_expo
+                    ),
+                });
+            }
         }
 
-        // Validate curve monotonicity
+        // Validate slew rate capability limits
+        if let Some(slew_rate) = config.slew_rate {
+            if slew_rate > context.limits.max_slew_rate {
+                errors.push(ValidationError {
+                    line: 0,
+                    column: 0,
+                    message: format!(
+                        "Axis '{}': slew rate {} exceeds {} mode limit of {}",
+                        name, slew_rate, context.mode_name(), context.limits.max_slew_rate
+                    ),
+                });
+            }
+        }
+
+        // Validate curve capability limits
         if let Some(curve) = &config.curve {
-            if let Err(msg) = validate_curve_monotonic(curve) {
+            if !context.limits.allow_custom_curves {
+                errors.push(ValidationError {
+                    line: 0,
+                    column: 0,
+                    message: format!(
+                        "Axis '{}': custom curves not allowed in {} mode",
+                        name, context.mode_name()
+                    ),
+                });
+            } else if let Err(msg) = validate_curve_monotonic(curve) {
                 errors.push(ValidationError {
                     line: 0,
                     column: 0,
@@ -654,6 +813,92 @@ mod tests {
         assert_eq!(pitch_config.deadzone, Some(0.03)); // From base
         assert_eq!(pitch_config.expo, Some(0.3)); // From override
         assert_eq!(pitch_config.slew_rate, Some(1.5)); // From override
+    }
+
+    #[test]
+    fn test_capability_limits() {
+        let full_limits = CapabilityLimits::for_mode(CapabilityMode::Full);
+        let demo_limits = CapabilityLimits::for_mode(CapabilityMode::Demo);
+        let kid_limits = CapabilityLimits::for_mode(CapabilityMode::Kid);
+
+        // Full mode should have highest limits
+        assert_eq!(full_limits.max_axis_output, 1.0);
+        assert!(full_limits.allow_high_torque);
+        assert!(full_limits.allow_custom_curves);
+
+        // Demo mode should be more restrictive
+        assert!(demo_limits.max_axis_output < full_limits.max_axis_output);
+        assert!(demo_limits.max_ffb_torque < full_limits.max_ffb_torque);
+        assert!(!demo_limits.allow_high_torque);
+
+        // Kid mode should be most restrictive
+        assert!(kid_limits.max_axis_output < demo_limits.max_axis_output);
+        assert!(kid_limits.max_ffb_torque < demo_limits.max_ffb_torque);
+        assert!(!kid_limits.allow_high_torque);
+        assert!(!kid_limits.allow_custom_curves);
+    }
+
+    #[test]
+    fn test_capability_enforcement_validation() {
+        let mut axes = HashMap::new();
+        axes.insert("pitch".to_string(), AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.8), // High expo that should be rejected in kid mode
+            slew_rate: Some(10.0), // High slew rate that should be rejected
+            detents: vec![],
+            curve: Some(vec![
+                CurvePoint { input: 0.0, output: 0.0 },
+                CurvePoint { input: 1.0, output: 1.0 },
+            ]),
+        });
+
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: Some("msfs".to_string()),
+            aircraft: Some(AircraftId { icao: "C172".to_string() }),
+            axes,
+            pof_overrides: None,
+        };
+
+        // Should pass in full mode
+        let full_context = CapabilityContext::for_mode(CapabilityMode::Full);
+        assert!(profile.validate_with_capabilities(&full_context).is_ok());
+
+        // Should fail in kid mode due to high expo, slew rate, and custom curve
+        let kid_context = CapabilityContext::for_mode(CapabilityMode::Kid);
+        let result = profile.validate_with_location_and_capabilities(&kid_context);
+        match &result {
+            Ok(validation_result) => {
+                if !validation_result.has_errors() {
+                    panic!("Expected validation errors in kid mode, but got none");
+                }
+            }
+            Err(e) => {
+                // This is actually what we expect - validation should fail
+                println!("Validation failed as expected: {}", e);
+                return; // Test passes
+            }
+        }
+        let validation_result = result.unwrap();
+        
+        // Should have multiple errors
+        let errors = &validation_result.errors;
+        assert!(errors.len() >= 3); // expo, slew_rate, and custom curve errors
+        
+        // Check that error messages mention the capability mode
+        let error_messages: Vec<String> = errors.iter().map(|e| e.message.clone()).collect();
+        assert!(error_messages.iter().any(|msg| msg.contains("kid mode")));
+    }
+
+    #[test]
+    fn test_capability_context_creation() {
+        let context = CapabilityContext::for_mode(CapabilityMode::Demo);
+        assert_eq!(context.mode, CapabilityMode::Demo);
+        assert_eq!(context.mode_name(), "demo");
+        assert!(context.audit_enabled);
+
+        let context_no_audit = context.with_audit(false);
+        assert!(!context_no_audit.audit_enabled);
     }
 
     proptest! {

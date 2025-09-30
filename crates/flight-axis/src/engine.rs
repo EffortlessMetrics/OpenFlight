@@ -4,6 +4,7 @@
 //! with atomic configuration updates and strict timing guarantees.
 
 use crate::{AxisFrame, Pipeline, PipelineState, RuntimeCounters, AllocationGuard, CurveConflictDetector, ConflictDetectorConfig, CurveConflict, BlackboxAnnotator};
+use flight_core::profile::{CapabilityContext, CapabilityMode};
 use parking_lot::RwLock;
 use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use std::time::Instant;
@@ -68,6 +69,8 @@ pub struct AxisEngine {
     blackbox_annotator: RwLock<BlackboxAnnotator>,
     /// Axis name for conflict detection
     axis_name: String,
+    /// Capability enforcement context
+    capability_context: RwLock<CapabilityContext>,
 }
 
 /// Compiled pipeline with state
@@ -124,6 +127,7 @@ impl AxisEngine {
             conflict_detector: RwLock::new(conflict_detector),
             blackbox_annotator: RwLock::new(BlackboxAnnotator::new()),
             axis_name,
+            capability_context: RwLock::new(CapabilityContext::default()),
         }
     }
 
@@ -165,6 +169,9 @@ impl AxisEngine {
             // No pipeline active - pass through unchanged
             Ok(())
         };
+
+        // Apply capability enforcement clamps
+        let _ = self.apply_capability_clamps(frame);
 
         // Check for RT violations if guard is active
         if self.config.enable_rt_checks && AllocationGuard::allocations_detected() {
@@ -295,6 +302,27 @@ impl AxisEngine {
         }
     }
 
+    /// Set capability mode for safety enforcement
+    pub fn set_capability_mode(&self, mode: CapabilityMode) {
+        let new_context = CapabilityContext::for_mode(mode);
+        *self.capability_context.write() = new_context;
+        
+        // Log capability mode change for audit trail
+        if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+            annotator.annotate_capability_mode_changed(&self.axis_name, mode);
+        }
+    }
+
+    /// Get current capability mode
+    pub fn capability_mode(&self) -> CapabilityMode {
+        self.capability_context.read().mode
+    }
+
+    /// Get current capability context
+    pub fn capability_context(&self) -> CapabilityContext {
+        self.capability_context.read().clone()
+    }
+
     /// Try to swap pending pipeline atomically (RT-safe)
     #[inline(always)]
     fn try_swap_pipeline(&self) {
@@ -311,6 +339,37 @@ impl AxisEngine {
                 self.counters.increment_pipeline_swaps();
             }
         }
+    }
+
+    /// Apply capability enforcement clamps to frame output (RT-safe)
+    #[inline(always)]
+    fn apply_capability_clamps(&self, frame: &mut AxisFrame) -> Result<(), ProcessError> {
+        // Try to get capability context without blocking
+        if let Some(context) = self.capability_context.try_read() {
+            let original_output = frame.out;
+            
+            // Clamp output magnitude to capability limits
+            let max_output = context.limits.max_axis_output;
+            if frame.out.abs() > max_output {
+                frame.out = frame.out.signum() * max_output;
+                
+                // Log clamping event for audit trail if enabled
+                if context.audit_enabled {
+                    // Try to annotate without blocking RT thread
+                    if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+                        annotator.annotate_output_clamped(
+                            &self.axis_name,
+                            original_output,
+                            frame.out,
+                            context.mode,
+                        );
+                    }
+                }
+            }
+        }
+        // If we can't get the context, skip clamping to maintain RT guarantees
+        
+        Ok(())
     }
 
     /// Compile and validate new pipeline (non-RT)
@@ -400,5 +459,87 @@ mod tests {
         assert_eq!(counters.frames_processed(), 0);
         assert_eq!(counters.pipeline_swaps(), 0);
         assert_eq!(counters.deadline_misses(), 0);
+    }
+
+    #[test]
+    fn test_capability_mode_setting() {
+        let engine = AxisEngine::new_for_axis("test_axis".to_string());
+        
+        // Default should be full mode
+        assert_eq!(engine.capability_mode(), CapabilityMode::Full);
+        
+        // Set to demo mode
+        engine.set_capability_mode(CapabilityMode::Demo);
+        assert_eq!(engine.capability_mode(), CapabilityMode::Demo);
+        
+        // Set to kid mode
+        engine.set_capability_mode(CapabilityMode::Kid);
+        assert_eq!(engine.capability_mode(), CapabilityMode::Kid);
+    }
+
+    #[test]
+    fn test_output_clamping() {
+        let engine = AxisEngine::new_for_axis("test_axis".to_string());
+        
+        // Set to kid mode (50% max output)
+        engine.set_capability_mode(CapabilityMode::Kid);
+        
+        // Test frame with high output
+        let mut frame = AxisFrame::new(0.8, 1000); // 80% input
+        frame.out = 0.8; // Simulate pipeline output
+        
+        // Process frame - should clamp output to 50%
+        let result = engine.process(&mut frame);
+        assert!(result.is_ok());
+        assert_eq!(frame.out, 0.5); // Should be clamped to kid mode limit
+        
+        // Test negative output
+        let mut frame = AxisFrame::new(-0.8, 2000);
+        frame.out = -0.8;
+        
+        let result = engine.process(&mut frame);
+        assert!(result.is_ok());
+        assert_eq!(frame.out, -0.5); // Should be clamped to -50%
+    }
+
+    #[test]
+    fn test_no_clamping_in_full_mode() {
+        let engine = AxisEngine::new_for_axis("test_axis".to_string());
+        
+        // Default is full mode
+        assert_eq!(engine.capability_mode(), CapabilityMode::Full);
+        
+        // Test frame with high output
+        let mut frame = AxisFrame::new(0.9, 1000);
+        frame.out = 0.9;
+        
+        // Process frame - should not clamp in full mode
+        let result = engine.process(&mut frame);
+        assert!(result.is_ok());
+        assert_eq!(frame.out, 0.9); // Should remain unchanged
+    }
+
+    #[test]
+    fn test_demo_mode_clamping() {
+        let engine = AxisEngine::new_for_axis("test_axis".to_string());
+        
+        // Set to demo mode (80% max output)
+        engine.set_capability_mode(CapabilityMode::Demo);
+        
+        // Test frame with output within demo limits
+        let mut frame = AxisFrame::new(0.7, 1000);
+        frame.out = 0.7;
+        
+        let result = engine.process(&mut frame);
+        assert!(result.is_ok());
+        assert_eq!(frame.out, 0.7); // Should remain unchanged
+        
+        // Test frame with output exceeding demo limits
+        let mut frame = AxisFrame::new(0.9, 2000);
+        frame.out = 0.9;
+        
+        let result = engine.process(&mut frame);
+        assert!(result.is_ok());
+        assert_eq!(frame.out, 0.8); // Should be clamped to demo mode limit
     }
 }

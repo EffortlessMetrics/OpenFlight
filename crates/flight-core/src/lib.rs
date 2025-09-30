@@ -11,3 +11,4 @@ pub mod writers;
 
 pub use error::{FlightError, Result};
 pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};
+pub use profile::{CapabilityMode, CapabilityLimits, CapabilityContext};

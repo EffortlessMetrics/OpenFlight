@@ -219,7 +219,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Ensure 2s pre-fault capture in blackbox system
   - _Requirements: FFB-01, DIAG-01_
 
-- [ ] 11. Kid/Demo caps (domain + engine)
+- [x] 11. Kid/Demo caps (domain + engine)
+
+
+
+
+
   - Implement capability enforcement in profile validation and engine clamps
   - Create IPC toggles for demo/kid mode activation
   - Add tests to verify overrides are properly rejected

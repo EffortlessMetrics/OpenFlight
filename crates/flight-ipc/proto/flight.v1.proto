@@ -21,6 +21,10 @@ service FlightService {
   rpc ResolveCurveConflict(ResolveCurveConflictRequest) returns (ResolveCurveConflictResponse);
   rpc OneClickResolve(OneClickResolveRequest) returns (OneClickResolveResponse);
   
+  // Capability management
+  rpc SetCapabilityMode(SetCapabilityModeRequest) returns (SetCapabilityModeResponse);
+  rpc GetCapabilityMode(GetCapabilityModeRequest) returns (GetCapabilityModeResponse);
+  
   // Service health
   rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
 }
@@ -337,4 +341,53 @@ message ResolutionStep {
   bool success = 3;
   uint64 duration_ms = 4;
   string error = 5; // Optional error message
+}
+
+// Capability management
+message SetCapabilityModeRequest {
+  CapabilityMode mode = 1;
+  repeated string axis_names = 2; // Empty = all axes
+  bool audit_enabled = 3; // Enable audit logging for clamped outputs
+}
+
+message SetCapabilityModeResponse {
+  bool success = 1;
+  string error_message = 2;
+  repeated string affected_axes = 3;
+  CapabilityLimits applied_limits = 4;
+}
+
+message GetCapabilityModeRequest {
+  repeated string axis_names = 1; // Empty = all axes
+}
+
+message GetCapabilityModeResponse {
+  bool success = 1;
+  string error_message = 2;
+  repeated AxisCapabilityStatus axis_status = 3;
+}
+
+message AxisCapabilityStatus {
+  string axis_name = 1;
+  CapabilityMode mode = 2;
+  CapabilityLimits limits = 3;
+  bool audit_enabled = 4;
+  uint64 clamp_events_count = 5; // Number of times output was clamped
+  int64 last_clamp_timestamp = 6; // Last time output was clamped
+}
+
+enum CapabilityMode {
+  CAPABILITY_MODE_UNSPECIFIED = 0;
+  CAPABILITY_MODE_FULL = 1;        // Full capabilities - no restrictions
+  CAPABILITY_MODE_DEMO = 2;        // Demo mode - reduced limits for safety
+  CAPABILITY_MODE_KID = 3;         // Kid mode - heavily restricted for safety
+}
+
+message CapabilityLimits {
+  float max_axis_output = 1;       // Maximum axis output magnitude (0.0-1.0)
+  float max_ffb_torque = 2;        // Maximum force feedback torque (Nm)
+  float max_slew_rate = 3;         // Maximum slew rate (units/second)
+  float max_curve_expo = 4;        // Maximum curve expo magnitude
+  bool allow_high_torque = 5;      // Whether high torque mode is allowed
+  bool allow_custom_curves = 6;    // Whether custom curves are allowed
 }

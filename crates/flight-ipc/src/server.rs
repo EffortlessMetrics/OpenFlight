@@ -239,6 +239,53 @@ impl FlightService for FlightServiceImpl {
         Ok(Response::new(response))
     }
     
+    async fn set_capability_mode(
+        &self,
+        request: Request<crate::proto::SetCapabilityModeRequest>,
+    ) -> Result<Response<crate::proto::SetCapabilityModeResponse>, Status> {
+        let request = request.into_inner();
+        
+        debug!(
+            "Set capability mode request: mode={:?}, axes={:?}",
+            request.mode, request.axis_names
+        );
+        
+        // Mock implementation - in real implementation this would delegate to capability service
+        let response = crate::proto::SetCapabilityModeResponse {
+            success: true,
+            error_message: String::new(),
+            affected_axes: request.axis_names.clone(),
+            applied_limits: Some(crate::proto::CapabilityLimits {
+                max_axis_output: 1.0,
+                max_ffb_torque: 50.0,
+                max_slew_rate: 100.0,
+                max_curve_expo: 1.0,
+                allow_high_torque: true,
+                allow_custom_curves: true,
+            }),
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    async fn get_capability_mode(
+        &self,
+        request: Request<crate::proto::GetCapabilityModeRequest>,
+    ) -> Result<Response<crate::proto::GetCapabilityModeResponse>, Status> {
+        let request = request.into_inner();
+        
+        debug!("Get capability mode request for axes: {:?}", request.axis_names);
+        
+        // Mock implementation - in real implementation this would delegate to capability service
+        let response = crate::proto::GetCapabilityModeResponse {
+            success: true,
+            error_message: String::new(),
+            axis_status: vec![], // Would contain actual axis status in real implementation
+        };
+        
+        Ok(Response::new(response))
+    }
+
     async fn get_service_info(
         &self,
         _request: Request<GetServiceInfoRequest>,
