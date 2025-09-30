@@ -8,6 +8,9 @@ pub enum FlightError {
     #[error("Profile validation error: {0}")]
     ProfileValidation(String),
 
+    #[error("Rules validation error: {0}")]
+    RulesValidation(String),
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 

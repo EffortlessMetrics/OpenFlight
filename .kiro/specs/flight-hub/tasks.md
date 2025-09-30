@@ -45,14 +45,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Create round-trip tests and examples for list-devices, health-subscribe
   - _Requirements: IFC-01, XPLAT-01_
 
-- [ ] 3. Profile & rules schemas (flight-core, flight-panels)
+- [x] 3. Profile & rules schemas (flight-core, flight-panels)
+
+
+
+
+
   - Implement flight.profile/1 JSON Schema with validation and line/column errors
   - Create monotonic curve checker and deterministic profile merging
   - Design rules DSL schema with minimal parser (stub implementation)
   - Add property tests for profile canonicalization and merge determinism
   - _Requirements: PRF-01, PNL-01_
 
-- [ ] 3.1 Profile canonicalization & hash (flight-core)
+
+- [x] 3.1 Profile canonicalization & hash (flight-core)
+
   - Implement canonical JSON (sorted keys, normalized float precision) + effective profile hash
   - Create merge property tests ensuring same inputs produce identical hash
   - Add rejection of non-monotonic curves with line/column error reporting

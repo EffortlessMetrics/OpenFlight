@@ -16,8 +16,11 @@ members = [
     "crates/flight-streamdeck",
     "crates/flight-service",
     "crates/flight-cli",
-    "crates/flight-ui"
+    "crates/flight-ui",
+    "examples"
 ]
+
+
 
 [workspace.package]
 version = "0.1.0"

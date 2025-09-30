@@ -5,6 +5,7 @@
 
 pub mod error;
 pub mod profile;
+pub mod rules;
 pub mod units;
 
 pub use error::{FlightError, Result};

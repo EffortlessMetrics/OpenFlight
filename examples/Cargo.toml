@@ -1,0 +1,12 @@
+[package]
+name = "flight-hub-examples"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "profile_demo"
+path = "profile_demo.rs"
+
+[dependencies]
+flight-core = { path = "../crates/flight-core" }
+flight-panels = { path = "../crates/flight-panels" }
