@@ -7,5 +7,7 @@ pub mod error;
 pub mod profile;
 pub mod rules;
 pub mod units;
+pub mod writers;
 
 pub use error::{FlightError, Result};
+pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};

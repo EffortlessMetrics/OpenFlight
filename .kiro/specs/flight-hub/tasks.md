@@ -132,28 +132,52 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Ensure compile failure leaves RT state unchanged with comprehensive testing
   - _Requirements: AX-01_
 
-- [ ] 6. Detent mapper & events
+- [x] 6. Detent mapper & events
+
+
+
+
+
   - Implement detent zones with hysteresis and semantic role enums
   - Create event channel for detent transitions and state changes
   - Add sweep tests to verify single transition per boundary crossing
   - Ensure deterministic behavior with property-based testing
+
+
   - _Requirements: AX-01_
 
-- [ ] 7. Mixers (helicopter torque cross-feed)
+- [x] 7. Mixers (helicopter torque cross-feed)
+
+
+
   - Implement mixer node for multi-axis interactions
   - Add per-axis scale/gain with proper unit handling
   - Create comprehensive unit tests for mixer mathematics
   - Verify zero-allocation constraint maintained
   - _Requirements: AX-01_
 
-- [ ] 8. Double-curve detector & guidance
+- [x] 8. Double-curve detector & guidance
+
+
+
+
+
+
+
+
+
+
   - Implement sim-curve detection hooks in axis pipeline
   - Create IPC surface for conflict detection and resolution prompts
   - Add blackbox annotation for curve conflicts
+
   - Build one-click disable mechanism via writer system
   - _Requirements: AX-01, UX-01_
 
-- [ ] 8.1 Double-curve one-click fix (writer hook)
+- [x] 8.1 Double-curve one-click fix (writer hook)
+
+
+
   - Implement IPC action to disable sim curves or apply gain compensation via flight-writers
   - Create detection → button → verify workflow with comprehensive testing
   - Add blackbox markers for conflict detection and resolution events

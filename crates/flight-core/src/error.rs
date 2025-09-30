@@ -19,6 +19,9 @@ pub enum FlightError {
 
     #[error("Configuration error: {0}")]
     Configuration(String),
+
+    #[error("Writer error: {0}")]
+    Writer(String),
 }
 
 /// Result type alias for Flight Hub operations

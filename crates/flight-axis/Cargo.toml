@@ -14,6 +14,7 @@ once_cell.workspace = true
 crossbeam.workspace = true
 parking_lot.workspace = true
 thiserror.workspace = true
+serde = { workspace = true, features = ["derive"] }
 
 [features]
 default = []
@@ -25,5 +26,9 @@ proptest.workspace = true
 
 [[bench]]
 name = "axis_performance"
+harness = false
+
+[[bench]]
+name = "detent_performance"
 harness = false
 

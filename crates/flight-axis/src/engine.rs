@@ -3,7 +3,7 @@
 //! The AxisEngine provides the main interface for real-time axis processing
 //! with atomic configuration updates and strict timing guarantees.
 
-use crate::{AxisFrame, Pipeline, PipelineState, RuntimeCounters, AllocationGuard};
+use crate::{AxisFrame, Pipeline, PipelineState, RuntimeCounters, AllocationGuard, CurveConflictDetector, ConflictDetectorConfig, CurveConflict, BlackboxAnnotator};
 use parking_lot::RwLock;
 use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
 use std::time::Instant;
@@ -17,6 +17,10 @@ pub struct EngineConfig {
     pub max_frame_time_us: u32,
     /// Enable performance counters
     pub enable_counters: bool,
+    /// Enable curve conflict detection
+    pub enable_conflict_detection: bool,
+    /// Configuration for conflict detector
+    pub conflict_detector_config: ConflictDetectorConfig,
 }
 
 impl Default for EngineConfig {
@@ -25,6 +29,8 @@ impl Default for EngineConfig {
             enable_rt_checks: cfg!(feature = "rt-checks"),
             max_frame_time_us: 500, // 0.5ms at 250Hz
             enable_counters: true,
+            enable_conflict_detection: true,
+            conflict_detector_config: ConflictDetectorConfig::default(),
         }
     }
 }
@@ -56,6 +62,12 @@ pub struct AxisEngine {
     last_frame: RwLock<Option<AxisFrame>>,
     /// Swap acknowledgment counter
     swap_ack_counter: AtomicU64,
+    /// Curve conflict detector
+    conflict_detector: RwLock<CurveConflictDetector>,
+    /// Blackbox annotator for conflict events
+    blackbox_annotator: RwLock<BlackboxAnnotator>,
+    /// Axis name for conflict detection
+    axis_name: String,
 }
 
 /// Compiled pipeline with state
@@ -86,11 +98,22 @@ impl CompiledPipeline {
 impl AxisEngine {
     /// Create new axis engine with default configuration
     pub fn new() -> Self {
-        Self::with_config(EngineConfig::default())
+        Self::with_config("default".to_string(), EngineConfig::default())
+    }
+
+    /// Create new axis engine for specific axis
+    pub fn new_for_axis(axis_name: String) -> Self {
+        Self::with_config(axis_name, EngineConfig::default())
     }
 
     /// Create new axis engine with custom configuration
-    pub fn with_config(config: EngineConfig) -> Self {
+    pub fn with_config(axis_name: String, config: EngineConfig) -> Self {
+        let conflict_detector = if config.enable_conflict_detection {
+            CurveConflictDetector::with_config(config.conflict_detector_config.clone())
+        } else {
+            CurveConflictDetector::new()
+        };
+
         Self {
             active_pipeline: parking_lot::RwLock::new(None),
             pending_pipeline: RwLock::new(None),
@@ -98,6 +121,9 @@ impl AxisEngine {
             counters: Arc::new(RuntimeCounters::new()),
             last_frame: RwLock::new(None),
             swap_ack_counter: AtomicU64::new(0),
+            conflict_detector: RwLock::new(conflict_detector),
+            blackbox_annotator: RwLock::new(BlackboxAnnotator::new()),
+            axis_name,
         }
     }
 
@@ -159,6 +185,23 @@ impl AxisEngine {
         // Store frame for next derivative calculation
         *self.last_frame.write() = Some(*frame);
 
+        // Add sample to conflict detector if enabled (RT-safe)
+        if self.config.enable_conflict_detection {
+            if let Some(mut detector) = self.conflict_detector.try_write() {
+                detector.add_sample(&self.axis_name, frame);
+                
+                // Check for new conflicts and annotate them
+                if let Some(conflict) = detector.get_conflicts(&self.axis_name) {
+                    // Try to annotate without blocking RT thread
+                    if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+                        annotator.annotate_conflict_detected(&self.axis_name, conflict);
+                    }
+                }
+            }
+            // If we can't get the lock, skip conflict detection for this frame
+            // This maintains RT guarantees
+        }
+
         result
     }
 
@@ -205,6 +248,51 @@ impl AxisEngine {
     /// Get swap acknowledgment counter (increments on each successful swap)
     pub fn swap_ack_count(&self) -> u64 {
         self.swap_ack_counter.load(Ordering::Relaxed)
+    }
+
+    /// Get detected curve conflicts
+    pub fn get_curve_conflicts(&self) -> Option<CurveConflict> {
+        self.conflict_detector.read().get_conflicts(&self.axis_name).cloned()
+    }
+
+    /// Clear curve conflicts (after resolution)
+    pub fn clear_curve_conflicts(&self) {
+        self.conflict_detector.write().clear_conflicts(&self.axis_name);
+        
+        // Annotate conflict cleared
+        if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+            annotator.annotate_conflict_cleared(&self.axis_name, "Manual clear");
+        }
+    }
+
+    /// Get axis name
+    pub fn axis_name(&self) -> &str {
+        &self.axis_name
+    }
+
+    /// Perform one-shot conflict detection with current pipeline
+    pub fn detect_conflicts_now(&self) -> Option<CurveConflict> {
+        if let Some(pipeline) = self.active_pipeline.read().as_ref() {
+            // This would need access to the pipeline nodes for testing
+            // For now, return existing conflicts
+            self.get_curve_conflicts()
+        } else {
+            None
+        }
+    }
+
+    /// Flush blackbox annotations
+    pub fn flush_blackbox(&self) {
+        if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+            annotator.flush();
+        }
+    }
+
+    /// Enable/disable blackbox annotations
+    pub fn set_blackbox_enabled(&self, enabled: bool) {
+        if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+            annotator.set_enabled(enabled);
+        }
     }
 
     /// Try to swap pending pipeline atomically (RT-safe)

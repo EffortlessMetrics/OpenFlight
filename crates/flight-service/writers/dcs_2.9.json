@@ -1,0 +1,23 @@
+{
+  "sim": "dcs",
+  "version": "2.9",
+  "description": "Disable DCS control curves via options.lua",
+  "diffs": [
+    {
+      "file": "DCS World/Config/options.lua",
+      "section": "options = {",
+      "changes": {
+        "useLinearCurves": "true"
+      },
+      "operation": "Set"
+    }
+  ],
+  "verification_tests": [
+    {
+      "name": "check_dcs_linear",
+      "description": "Verify DCS uses linear curves",
+      "test_type": "FileContains",
+      "expected_result": "useLinearCurves = true"
+    }
+  ]
+}

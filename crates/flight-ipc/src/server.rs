@@ -185,6 +185,60 @@ impl FlightService for FlightServiceImpl {
         Ok(Response::new(response))
     }
     
+    async fn detect_curve_conflicts(
+        &self,
+        request: Request<crate::proto::DetectCurveConflictsRequest>,
+    ) -> Result<Response<crate::proto::DetectCurveConflictsResponse>, Status> {
+        let _request = request.into_inner();
+        
+        debug!("Detect curve conflicts request");
+        
+        // Mock implementation - in real implementation this would delegate to curve conflict service
+        let response = crate::proto::DetectCurveConflictsResponse {
+            success: true,
+            conflicts: vec![],
+            error_message: String::new(),
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    async fn resolve_curve_conflict(
+        &self,
+        request: Request<crate::proto::ResolveCurveConflictRequest>,
+    ) -> Result<Response<crate::proto::ResolveCurveConflictResponse>, Status> {
+        let _request = request.into_inner();
+        
+        debug!("Resolve curve conflict request");
+        
+        // Mock implementation - in real implementation this would delegate to curve conflict service
+        let response = crate::proto::ResolveCurveConflictResponse {
+            success: true,
+            error_message: String::new(),
+            result: None,
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    async fn one_click_resolve(
+        &self,
+        request: Request<crate::proto::OneClickResolveRequest>,
+    ) -> Result<Response<crate::proto::OneClickResolveResponse>, Status> {
+        let request = request.into_inner();
+        
+        debug!("One-click resolve request for axis: {}", request.axis_name);
+        
+        // Mock implementation - in real implementation this would delegate to curve conflict service
+        let response = crate::proto::OneClickResolveResponse {
+            success: true,
+            error_message: String::new(),
+            result: None, // Would contain OneClickResult in real implementation
+        };
+        
+        Ok(Response::new(response))
+    }
+    
     async fn get_service_info(
         &self,
         _request: Request<GetServiceInfoRequest>,

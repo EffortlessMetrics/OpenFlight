@@ -129,14 +129,24 @@ impl Pipeline {
             "Pipeline and state mismatch"
         );
 
-        let frame_ptr = frame as *mut AxisFrame;
         let base_ptr = state.state_buffer.as_mut_ptr();
 
-        // Execute each pipeline step with SoA state
-        for (step_fn, &state_offset) in self.step_functions.iter().zip(&state.state_offsets) {
-            unsafe {
-                let state_ptr = base_ptr.add(state_offset);
-                step_fn(frame_ptr, state_ptr);
+        // If we have source nodes, use them directly for better integration
+        if let Some(ref nodes) = self.source_nodes {
+            for (node, &state_offset) in nodes.iter().zip(&state.state_offsets) {
+                unsafe {
+                    let state_ptr = base_ptr.add(state_offset);
+                    node.step_soa(frame, state_ptr);
+                }
+            }
+        } else {
+            // Fallback to function pointers
+            let frame_ptr = frame as *mut AxisFrame;
+            for (step_fn, &state_offset) in self.step_functions.iter().zip(&state.state_offsets) {
+                unsafe {
+                    let state_ptr = base_ptr.add(state_offset);
+                    step_fn(frame_ptr, state_ptr);
+                }
             }
         }
     }

@@ -16,6 +16,11 @@ service FlightService {
   // Profile management
   rpc ApplyProfile(ApplyProfileRequest) returns (ApplyProfileResponse);
   
+  // Curve conflict detection and resolution
+  rpc DetectCurveConflicts(DetectCurveConflictsRequest) returns (DetectCurveConflictsResponse);
+  rpc ResolveCurveConflict(ResolveCurveConflictRequest) returns (ResolveCurveConflictResponse);
+  rpc OneClickResolve(OneClickResolveRequest) returns (OneClickResolveResponse);
+  
   // Service health
   rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
 }
@@ -148,6 +153,8 @@ enum HealthEventType {
   HEALTH_EVENT_TYPE_ERROR = 3;
   HEALTH_EVENT_TYPE_FAULT = 4;
   HEALTH_EVENT_TYPE_PERFORMANCE = 5;
+  HEALTH_EVENT_TYPE_CURVE_CONFLICT = 6;
+  HEALTH_EVENT_TYPE_CURVE_RESOLUTION = 7;
 }
 
 // Profile management
@@ -179,4 +186,155 @@ enum ValidationErrorType {
   VALIDATION_ERROR_TYPE_MONOTONIC = 2;
   VALIDATION_ERROR_TYPE_RANGE = 3;
   VALIDATION_ERROR_TYPE_CONFLICT = 4;
+}
+
+// Curve conflict detection and resolution
+message DetectCurveConflictsRequest {
+  repeated string axis_names = 1; // Empty = all axes
+  string sim_id = 2; // Current simulator
+  string aircraft_id = 3; // Current aircraft
+}
+
+message DetectCurveConflictsResponse {
+  bool success = 1;
+  repeated CurveConflict conflicts = 2;
+  string error_message = 3;
+}
+
+message CurveConflict {
+  string axis_name = 1;
+  ConflictType conflict_type = 2;
+  ConflictSeverity severity = 3;
+  string description = 4;
+  repeated ConflictResolution suggested_resolutions = 5;
+  ConflictMetadata metadata = 6;
+}
+
+message ConflictMetadata {
+  float sim_curve_strength = 1; // 0.0-1.0, detected non-linearity
+  float profile_curve_strength = 2; // 0.0-1.0, profile curve strength
+  float combined_nonlinearity = 3; // 0.0-1.0, total system non-linearity
+  repeated float test_inputs = 4; // Input values used for detection
+  repeated float expected_outputs = 5; // Expected linear outputs
+  repeated float actual_outputs = 6; // Actual measured outputs
+  int64 detection_timestamp = 7;
+}
+
+enum ConflictType {
+  CONFLICT_TYPE_UNSPECIFIED = 0;
+  CONFLICT_TYPE_DOUBLE_CURVE = 1; // Both sim and profile have curves
+  CONFLICT_TYPE_EXCESSIVE_NONLINEARITY = 2; // Combined effect too strong
+  CONFLICT_TYPE_OPPOSING_CURVES = 3; // Curves work against each other
+}
+
+enum ConflictSeverity {
+  CONFLICT_SEVERITY_UNSPECIFIED = 0;
+  CONFLICT_SEVERITY_LOW = 1; // Detectable but minor impact
+  CONFLICT_SEVERITY_MEDIUM = 2; // Noticeable impact on control
+  CONFLICT_SEVERITY_HIGH = 3; // Significant control issues
+  CONFLICT_SEVERITY_CRITICAL = 4; // Unusable control response
+}
+
+message ConflictResolution {
+  ResolutionType resolution_type = 1;
+  string description = 2;
+  ResolutionAction action = 3;
+  float estimated_improvement = 4; // 0.0-1.0, expected improvement
+  bool requires_sim_restart = 5;
+}
+
+enum ResolutionType {
+  RESOLUTION_TYPE_UNSPECIFIED = 0;
+  RESOLUTION_TYPE_DISABLE_SIM_CURVE = 1;
+  RESOLUTION_TYPE_DISABLE_PROFILE_CURVE = 2;
+  RESOLUTION_TYPE_APPLY_GAIN_COMPENSATION = 3;
+  RESOLUTION_TYPE_REDUCE_CURVE_STRENGTH = 4;
+}
+
+message ResolutionAction {
+  ResolutionType type = 1;
+  map<string, string> parameters = 2; // Type-specific parameters
+  repeated string affected_files = 3; // Files that will be modified
+  string backup_info = 4; // Backup/rollback information
+}
+
+message ResolveCurveConflictRequest {
+  string axis_name = 1;
+  ResolutionAction resolution = 2;
+  bool apply_immediately = 3;
+  bool create_backup = 4;
+}
+
+message ResolveCurveConflictResponse {
+  bool success = 1;
+  string error_message = 2;
+  ResolutionResult result = 3;
+}
+
+message ResolutionResult {
+  ResolutionType applied_resolution = 1;
+  repeated string modified_files = 2;
+  string backup_path = 3;
+  ConflictMetadata before_metrics = 4;
+  ConflictMetadata after_metrics = 5;
+  bool verification_passed = 6;
+  string verification_details = 7;
+}
+
+// One-click resolution
+message OneClickResolveRequest {
+  string axis_name = 1;
+  bool create_backup = 2; // Optional: override default backup behavior
+  bool verify_resolution = 3; // Optional: override default verification behavior
+}
+
+message OneClickResolveResponse {
+  bool success = 1;
+  string error_message = 2;
+  OneClickResult result = 3;
+}
+
+message OneClickResult {
+  ResolutionType resolution_type = 1;
+  repeated string modified_files = 2;
+  BackupInfo backup_info = 3;
+  VerificationOutcome verification = 4;
+  ResolutionMetrics metrics = 5;
+  repeated ResolutionStep steps_performed = 6;
+}
+
+message BackupInfo {
+  uint64 timestamp = 1;
+  string description = 2;
+  repeated string affected_files = 3;
+  string backup_dir = 4;
+  string writer_config = 5;
+}
+
+message VerificationOutcome {
+  bool passed = 1;
+  string details = 2;
+  uint64 duration_ms = 3;
+  bool conflict_resolved = 4;
+}
+
+message ResolutionMetrics {
+  ConflictMetrics before = 1;
+  ConflictMetrics after = 2;
+  float improvement = 3; // 0.0-1.0, percentage improvement
+}
+
+message ConflictMetrics {
+  float nonlinearity = 1; // 0.0-1.0
+  float sim_curve_strength = 2; // 0.0-1.0
+  float profile_curve_strength = 3; // 0.0-1.0
+  int64 timestamp = 4;
+}
+
+message ResolutionStep {
+  string name = 1;
+  string description = 2;
+  bool success = 3;
+  uint64 duration_ms = 4;
+  string error = 5; // Optional error message
 }
