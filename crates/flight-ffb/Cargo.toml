@@ -9,4 +9,6 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-panels = { path = "../flight-panels" }
 thiserror = "1.0"
+tracing = "0.1"
