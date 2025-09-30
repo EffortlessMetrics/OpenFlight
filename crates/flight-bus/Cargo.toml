@@ -9,3 +9,13 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+crossbeam = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+proptest = { workspace = true }

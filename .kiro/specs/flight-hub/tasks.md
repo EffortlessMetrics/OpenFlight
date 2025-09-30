@@ -257,7 +257,10 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 3: Sim Adapters, Bus, Writers, Auto-Profiles (M3) - Integration Layer
 
-- [-] 13. flight-bus: normalized model & publisher
+- [x] 13. flight-bus: normalized model & publisher
+
+
+
 
 
   - Define BusSnapshot structure with comprehensive telemetry model
@@ -266,14 +269,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Add subscriber validation for stable data delivery
   - _Requirements: GI-01_
 
-- [ ] 13.1 Bus type/units schema
+- [x] 13.1 Bus type/units schema
+
+
   - Implement typed fields (kt, deg, g, %) with unit validation
   - Create unit tests per adapter with converter helpers
   - Add validation preventing out-of-range/wrong units publication
   - Build comprehensive type safety for telemetry data
   - _Requirements: GI-01_
 
-- [ ] 14. MSFS (SimConnect) adapter (flight-simconnect(-sys))
+- [x] 14. MSFS (SimConnect) adapter (flight-simconnect(-sys))
+
+
+
+
+
   - Create FFI wrapper or dynamic linking for SimConnect SDK
   - Implement variable/event mapping with aircraft detection
   - Build integration tests with recorded session fixtures

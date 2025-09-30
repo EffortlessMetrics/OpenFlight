@@ -9,3 +9,17 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
+flight-simconnect-sys = { path = "../flight-simconnect-sys" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+crossbeam = { workspace = true }
+regex = "1.10"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+proptest = { workspace = true }

@@ -9,6 +9,7 @@ members = [
     "crates/flight-ffb",
     "crates/flight-hid",
     "crates/flight-bus",
+    "crates/flight-simconnect-sys",
     "crates/flight-simconnect",
     "crates/flight-xplane",
     "crates/flight-dcs-export",
@@ -67,6 +68,7 @@ proptest = "1.4"
 tempfile = "3.8"
 clap = { version = "4.4", features = ["derive"] }
 tonic-build = "0.10"
+cc = "1.0"
 
 
 
