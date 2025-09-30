@@ -62,7 +62,6 @@ pub struct AxisEngine {
 struct CompiledPipeline {
     pipeline: Pipeline,
     state: parking_lot::Mutex<PipelineState>,
-    compile_time: Instant,
     version: u64,
 }
 
@@ -244,7 +243,6 @@ impl AxisEngine {
         Ok(Arc::new(CompiledPipeline {
             pipeline,
             state: parking_lot::Mutex::new(state),
-            compile_time: Instant::now(),
             version,
         }))
     }
@@ -287,7 +285,7 @@ unsafe impl Sync for AxisEngine {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nodes::{DeadzoneNode, CurveNode};
+    // use crate::nodes::{DeadzoneNode, CurveNode};
 
     #[test]
     fn test_engine_creation() {

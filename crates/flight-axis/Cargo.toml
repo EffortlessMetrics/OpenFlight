@@ -23,3 +23,7 @@ rt-checks = []  # Enable runtime allocation/lock checking
 criterion.workspace = true
 proptest.workspace = true
 
+[[bench]]
+name = "axis_performance"
+harness = false
+

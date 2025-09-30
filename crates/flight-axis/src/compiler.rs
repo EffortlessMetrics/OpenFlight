@@ -7,15 +7,12 @@ use crate::{Node, NodeId, Pipeline, AxisFrame};
 use crate::nodes::{DeadzoneNode, CurveNode, SlewNode};
 use std::sync::Arc;
 
-/// No-op step function for compilation placeholder
-unsafe fn noop_step_function(_frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
-    // Placeholder implementation
-}
+
 
 /// Generate specialized step function for deadzone nodes
 fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
     // Capture node configuration at compile time
-    let node_clone = node.clone();
+    let _node_clone = node.clone();
     
     // Return a closure that captures the node configuration
     // This is a simplified approach - in a full implementation, we'd generate
@@ -39,7 +36,7 @@ fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *
 }
 
 /// Generate specialized step function for curve nodes
-fn generate_curve_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+fn generate_curve_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
     unsafe fn curve_step(frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         let frame = &mut *frame_ptr;
         let expo = 0.2f32; // This should come from the captured node config
@@ -59,7 +56,7 @@ fn generate_curve_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut
 }
 
 /// Generate specialized step function for slew nodes
-fn generate_slew_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
     unsafe fn slew_step(frame_ptr: *mut AxisFrame, state_ptr: *mut u8) {
         // Delegate to the node's SoA implementation
         // This is a bridge between the function pointer system and the trait system
@@ -97,7 +94,6 @@ fn generate_slew_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut 
 /// Pipeline compiler for function pointer generation
 pub struct PipelineCompiler {
     nodes: Vec<Arc<dyn Node>>,
-    next_node_id: u32,
 }
 
 /// Compilation errors
@@ -118,7 +114,6 @@ impl PipelineCompiler {
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
-            next_node_id: 1,
         }
     }
 
@@ -253,7 +248,7 @@ pub fn validate_node_config<N: Node>(node: &N) -> Result<(), CompileError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nodes::{DeadzoneNode, CurveNode, SlewNode};
+    use crate::nodes::DeadzoneNode;
 
     #[test]
     fn test_empty_pipeline_compilation() {
