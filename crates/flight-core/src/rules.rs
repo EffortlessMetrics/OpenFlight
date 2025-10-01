@@ -84,10 +84,54 @@ pub struct RulesCompiler {
     hysteresis_defaults: HashMap<String, f32>,
 }
 
-/// Compiled rules bytecode (stub)
+/// Bytecode instruction for rules evaluation
+#[derive(Debug, Clone)]
+pub enum BytecodeOp {
+    /// Load variable value onto stack: LOAD var_index
+    LoadVar(u16),
+    /// Load constant value onto stack: LOAD_CONST value
+    LoadConst(f32),
+    /// Compare top two stack values: CMP op
+    Compare(CompareOp),
+    /// Apply hysteresis: HYST hysteresis_key_index
+    Hysteresis(u16),
+    /// Logical AND: pop two values, push result
+    And,
+    /// Logical OR: pop two values, push result
+    Or,
+    /// Logical NOT: pop one value, push negated result
+    Not,
+    /// Jump if false: JMP_FALSE offset
+    JumpFalse(u16),
+    /// Jump unconditionally: JMP offset
+    Jump(u16),
+    /// Execute action: ACTION action_index
+    Action(u16),
+    /// No operation
+    Nop,
+}
+
+/// Compiled bytecode program
+#[derive(Debug, Clone)]
+pub struct BytecodeProgram {
+    /// Bytecode instructions
+    pub instructions: Vec<BytecodeOp>,
+    /// Variable name to index mapping
+    pub variable_map: HashMap<String, u16>,
+    /// Hysteresis key to index mapping
+    pub hysteresis_map: HashMap<String, u16>,
+    /// Hysteresis bands by index
+    pub hysteresis_bands: Vec<f32>,
+    /// Actions by index
+    pub actions: Vec<Action>,
+    /// Pre-allocated evaluation stack size
+    pub stack_size: usize,
+}
+
+/// Compiled rules bytecode
 #[derive(Debug, Clone)]
 pub struct CompiledRules {
-    pub rules: Vec<CompiledRule>,
+    pub bytecode: BytecodeProgram,
     pub hysteresis_bands: HashMap<String, f32>,
 }
 
@@ -151,17 +195,24 @@ impl RulesCompiler {
         }
     }
 
-    /// Compile rules schema to bytecode (stub implementation)
+    /// Compile rules schema to bytecode
     pub fn compile(&self, schema: &RulesSchema) -> Result<CompiledRules> {
-        let mut compiled_rules = Vec::new();
-
-        for rule in &schema.rules {
-            let compiled_rule = self.compile_rule(rule)?;
-            compiled_rules.push(compiled_rule);
+        let mut compiler = BytecodeCompiler::new();
+        
+        // Add hysteresis defaults
+        for (key, band) in &self.hysteresis_defaults {
+            compiler.add_hysteresis_key(key.clone(), *band);
         }
 
+        // Compile each rule
+        for rule in &schema.rules {
+            compiler.compile_rule(rule)?;
+        }
+
+        let bytecode = compiler.finalize();
+        
         Ok(CompiledRules {
-            rules: compiled_rules,
+            bytecode,
             hysteresis_bands: self.hysteresis_defaults.clone(),
         })
     }
@@ -296,11 +347,216 @@ impl RulesCompiler {
     }
 }
 
+/// Bytecode compiler for rules
+struct BytecodeCompiler {
+    instructions: Vec<BytecodeOp>,
+    variable_map: HashMap<String, u16>,
+    hysteresis_map: HashMap<String, u16>,
+    hysteresis_bands: Vec<f32>,
+    actions: Vec<Action>,
+    next_var_index: u16,
+    next_hyst_index: u16,
+    next_action_index: u16,
+    max_stack_depth: usize,
+    current_stack_depth: usize,
+}
+
+impl BytecodeCompiler {
+    fn new() -> Self {
+        Self {
+            instructions: Vec::new(),
+            variable_map: HashMap::new(),
+            hysteresis_map: HashMap::new(),
+            hysteresis_bands: Vec::new(),
+            actions: Vec::new(),
+            next_var_index: 0,
+            next_hyst_index: 0,
+            next_action_index: 0,
+            max_stack_depth: 0,
+            current_stack_depth: 0,
+        }
+    }
+
+    fn add_hysteresis_key(&mut self, key: String, band: f32) {
+        if !self.hysteresis_map.contains_key(&key) {
+            self.hysteresis_map.insert(key, self.next_hyst_index);
+            self.hysteresis_bands.push(band);
+            self.next_hyst_index += 1;
+        }
+    }
+
+    fn get_or_add_variable(&mut self, name: &str) -> u16 {
+        if let Some(&index) = self.variable_map.get(name) {
+            index
+        } else {
+            let index = self.next_var_index;
+            self.variable_map.insert(name.to_string(), index);
+            self.next_var_index += 1;
+            index
+        }
+    }
+
+    fn add_action(&mut self, action: Action) -> u16 {
+        let index = self.next_action_index;
+        self.actions.push(action);
+        self.next_action_index += 1;
+        index
+    }
+
+    fn emit(&mut self, op: BytecodeOp) {
+        // Track stack depth for pre-allocation
+        match &op {
+            BytecodeOp::LoadVar(_) | BytecodeOp::LoadConst(_) => {
+                self.current_stack_depth += 1;
+                self.max_stack_depth = self.max_stack_depth.max(self.current_stack_depth);
+            }
+            BytecodeOp::Compare(_) | BytecodeOp::And | BytecodeOp::Or => {
+                // These ops consume 2 values and produce 1
+                self.current_stack_depth = self.current_stack_depth.saturating_sub(1);
+            }
+            BytecodeOp::Not => {
+                // Consumes 1, produces 1 - no change
+            }
+            BytecodeOp::Hysteresis(_) => {
+                // Consumes 2 (value, threshold), produces 1 (bool)
+                self.current_stack_depth = self.current_stack_depth.saturating_sub(1);
+            }
+            BytecodeOp::JumpFalse(_) => {
+                // Consumes 1 value for condition
+                self.current_stack_depth = self.current_stack_depth.saturating_sub(1);
+            }
+            BytecodeOp::Action(_) => {
+                // Actions don't affect stack
+            }
+            BytecodeOp::Jump(_) | BytecodeOp::Nop => {
+                // No stack effect
+            }
+        }
+        
+        self.instructions.push(op);
+    }
+
+    fn compile_rule(&mut self, rule: &Rule) -> Result<()> {
+        // Parse condition and action
+        let condition = self.parse_condition(&rule.when)?;
+        let action = self.parse_action(&rule.action)?;
+        
+        // Compile condition to bytecode
+        self.compile_condition(&condition)?;
+        
+        // Jump over action if condition is false
+        let jump_addr = self.instructions.len();
+        self.emit(BytecodeOp::JumpFalse(0)); // Placeholder, will be patched
+        
+        // Emit action
+        let action_index = self.add_action(action);
+        self.emit(BytecodeOp::Action(action_index));
+        
+        // Patch jump address
+        let end_addr = self.instructions.len() as u16;
+        if let BytecodeOp::JumpFalse(ref mut addr) = &mut self.instructions[jump_addr] {
+            *addr = end_addr;
+        }
+        
+        Ok(())
+    }
+
+    fn compile_condition(&mut self, condition: &Condition) -> Result<()> {
+        match condition {
+            Condition::Boolean { variable, negate } => {
+                let var_index = self.get_or_add_variable(variable);
+                self.emit(BytecodeOp::LoadVar(var_index));
+                self.emit(BytecodeOp::LoadConst(0.0));
+                self.emit(BytecodeOp::Compare(CompareOp::NotEqual));
+                
+                if *negate {
+                    self.emit(BytecodeOp::Not);
+                }
+            }
+            Condition::Compare { variable, operator, value } => {
+                let var_index = self.get_or_add_variable(variable);
+                self.emit(BytecodeOp::LoadVar(var_index));
+                self.emit(BytecodeOp::LoadConst(*value));
+                
+                // Apply hysteresis if configured
+                if let Some(&hyst_index) = self.hysteresis_map.get(variable) {
+                    self.emit(BytecodeOp::Hysteresis(hyst_index));
+                } else {
+                    self.emit(BytecodeOp::Compare(operator.clone()));
+                }
+            }
+            Condition::And(conditions) => {
+                if conditions.is_empty() {
+                    self.emit(BytecodeOp::LoadConst(1.0)); // True
+                    return Ok(());
+                }
+                
+                // Compile first condition
+                self.compile_condition(&conditions[0])?;
+                
+                // For each additional condition, compile and AND
+                for condition in &conditions[1..] {
+                    // Short-circuit: if current result is false, skip remaining
+                    let skip_addr = self.instructions.len();
+                    self.emit(BytecodeOp::JumpFalse(0)); // Placeholder
+                    
+                    self.compile_condition(condition)?;
+                    self.emit(BytecodeOp::And);
+                    
+                    // Patch skip address
+                    let end_addr = self.instructions.len() as u16;
+                    if let BytecodeOp::JumpFalse(ref mut addr) = &mut self.instructions[skip_addr] {
+                        *addr = end_addr;
+                    }
+                }
+            }
+            Condition::Or(conditions) => {
+                if conditions.is_empty() {
+                    self.emit(BytecodeOp::LoadConst(0.0)); // False
+                    return Ok(());
+                }
+                
+                // Compile first condition
+                self.compile_condition(&conditions[0])?;
+                
+                // For each additional condition, compile and OR
+                for condition in &conditions[1..] {
+                    self.compile_condition(condition)?;
+                    self.emit(BytecodeOp::Or);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn parse_condition(&self, condition_str: &str) -> Result<Condition> {
+        // Reuse the existing parser from RulesCompiler
+        let compiler = RulesCompiler::new(HashMap::new());
+        compiler.parse_condition(condition_str)
+    }
+
+    fn parse_action(&self, action_str: &str) -> Result<Action> {
+        // Reuse the existing parser from RulesCompiler
+        let compiler = RulesCompiler::new(HashMap::new());
+        compiler.parse_action(action_str)
+    }
+
+    fn finalize(self) -> BytecodeProgram {
+        BytecodeProgram {
+            instructions: self.instructions,
+            variable_map: self.variable_map,
+            hysteresis_map: self.hysteresis_map,
+            hysteresis_bands: self.hysteresis_bands,
+            actions: self.actions,
+            stack_size: self.max_stack_depth.max(8), // Minimum stack size
+        }
+    }
+}
+
 impl CompiledRules {
-    /// Evaluate rules against telemetry data (stub implementation)
-    pub fn evaluate(&self, _telemetry: &HashMap<String, f32>) -> Vec<Action> {
-        // Stub implementation - would evaluate conditions and return actions
-        Vec::new()
+    /// Get the bytecode program for zero-allocation evaluation
+    pub fn bytecode(&self) -> &BytecodeProgram {
+        &self.bytecode
     }
 }
 

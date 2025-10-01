@@ -689,8 +689,9 @@ impl AircraftAutoSwitch {
         profile.validate()?;
         
         Ok(profile)
-    }    ///
- Compile profile for axis engine
+    }
+    
+    /// Compile profile for axis engine
     fn compile_profile(profile: Profile) -> Result<CompiledProfile> {
         let effective_hash = profile.effective_hash();
         

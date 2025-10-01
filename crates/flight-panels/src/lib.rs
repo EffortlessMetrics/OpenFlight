@@ -8,6 +8,12 @@ use std::time::Instant;
 pub mod evaluator;
 pub mod led;
 
+#[cfg(test)]
+mod allocation_test;
+
+#[cfg(test)]
+mod integration_test;
+
 pub use evaluator::RulesEvaluator;
 pub use led::{LedController, LedTarget};
 
@@ -32,6 +38,10 @@ impl PanelManager {
     pub fn load_rules(&mut self, rules: RulesSchema) -> Result<()> {
         rules.validate()?;
         let compiled = rules.compile()?;
+        
+        // Initialize evaluator for the new bytecode program
+        self.evaluator.initialize_for_program(&compiled.bytecode);
+        
         self.compiled_rules = Some(compiled);
         Ok(())
     }
@@ -40,7 +50,7 @@ impl PanelManager {
     pub fn update(&mut self, telemetry: &HashMap<String, f32>) -> Result<()> {
         if let Some(rules) = &self.compiled_rules {
             let actions = self.evaluator.evaluate(rules, telemetry);
-            self.led_controller.execute_actions(&actions)?;
+            self.led_controller.execute_actions(actions)?;
         }
         Ok(())
     }

@@ -83,7 +83,7 @@ impl CapabilityLimits {
 }
 
 /// Capability enforcement context
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CapabilityContext {
     pub mode: CapabilityMode,
     pub limits: CapabilityLimits,

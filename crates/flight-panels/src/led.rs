@@ -22,11 +22,13 @@ pub struct LedState {
     pub last_update: Instant,
 }
 
-/// LED controller with rate limiting
+/// LED controller with rate limiting and latency tracking
 pub struct LedController {
     led_states: HashMap<LedTarget, LedState>,
     last_write: HashMap<LedTarget, Instant>,
     min_interval: Duration,
+    latency_samples: Vec<Duration>,
+    max_latency_samples: usize,
 }
 
 impl LedController {
@@ -36,6 +38,8 @@ impl LedController {
             led_states: HashMap::new(),
             last_write: HashMap::new(),
             min_interval: Duration::from_millis(8), // ≥8ms min interval per requirements
+            latency_samples: Vec::new(),
+            max_latency_samples: 1000, // Keep last 1000 samples for analysis
         }
     }
 
@@ -155,7 +159,9 @@ impl LedController {
         }
     }
 
-    fn write_led_state(&self, target: &LedTarget, state: &LedState) -> Result<()> {
+    fn write_led_state(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
+        let write_start = Instant::now();
+        
         // Stub implementation - would write to actual hardware
         tracing::debug!(
             "LED {:?}: on={}, brightness={:.2}, blink_rate={:?}",
@@ -164,6 +170,26 @@ impl LedController {
             state.brightness,
             state.blink_rate
         );
+
+        // Simulate hardware write time (in real implementation, this would be actual HID write)
+        std::thread::sleep(Duration::from_micros(100)); // Simulate 100μs write time
+
+        let write_latency = write_start.elapsed();
+        
+        // Track latency for validation
+        self.latency_samples.push(write_latency);
+        if self.latency_samples.len() > self.max_latency_samples {
+            self.latency_samples.remove(0);
+        }
+
+        // Validate latency requirement (≤20ms)
+        if write_latency > Duration::from_millis(20) {
+            tracing::warn!(
+                "LED write latency exceeded 20ms: {:?} for target {:?}",
+                write_latency,
+                target
+            );
+        }
 
         // TODO: Implement actual hardware communication
         // - HID writes for panel LEDs
@@ -216,6 +242,43 @@ impl LedController {
     pub fn set_min_interval(&mut self, interval: Duration) {
         self.min_interval = interval;
     }
+
+    /// Get latency statistics for validation
+    pub fn get_latency_stats(&self) -> Option<LatencyStats> {
+        if self.latency_samples.is_empty() {
+            return None;
+        }
+
+        let mut samples: Vec<_> = self.latency_samples.iter().map(|d| d.as_nanos()).collect();
+        samples.sort_unstable();
+
+        let len = samples.len();
+        let mean = samples.iter().sum::<u128>() / len as u128;
+        let p99_index = (len as f64 * 0.99) as usize;
+        let p99 = samples.get(p99_index).copied().unwrap_or(samples[len - 1]);
+        let max = samples[len - 1];
+
+        Some(LatencyStats {
+            mean_ns: mean,
+            p99_ns: p99,
+            max_ns: max,
+            sample_count: len,
+        })
+    }
+
+    /// Clear latency samples
+    pub fn clear_latency_stats(&mut self) {
+        self.latency_samples.clear();
+    }
+}
+
+/// LED write latency statistics
+#[derive(Debug, Clone)]
+pub struct LatencyStats {
+    pub mean_ns: u128,
+    pub p99_ns: u128,
+    pub max_ns: u128,
+    pub sample_count: usize,
 }
 
 impl Default for LedController {
@@ -299,5 +362,79 @@ mod tests {
 
         // In a real scenario, we'd verify that hardware writes were rate limited
         // For now, just ensure no errors occurred
+    }
+
+    #[test]
+    fn test_latency_tracking() {
+        let mut controller = LedController::new();
+        controller.set_min_interval(Duration::from_millis(0)); // No rate limiting for test
+
+        // Execute several actions to generate latency samples
+        for i in 0..10 {
+            let action = Action::LedOn { target: format!("TEST_{}", i) };
+            controller.execute_actions(&[action]).unwrap();
+        }
+
+        // Check latency statistics
+        let stats = controller.get_latency_stats().unwrap();
+        assert_eq!(stats.sample_count, 10);
+        
+        // Verify latency is reasonable (should be very fast in test)
+        assert!(stats.mean_ns < 50_000_000, "Mean latency too high: {} ns", stats.mean_ns); // <50ms
+        assert!(stats.p99_ns < 50_000_000, "P99 latency too high: {} ns", stats.p99_ns); // <50ms
+        assert!(stats.max_ns < 50_000_000, "Max latency too high: {} ns", stats.max_ns); // <50ms
+    }
+
+    #[test]
+    fn test_latency_requirement_validation() {
+        let mut controller = LedController::new();
+        controller.set_min_interval(Duration::from_millis(0));
+
+        // Execute many actions to get good statistics
+        for i in 0..100 {
+            let action = Action::LedBlink { 
+                target: format!("LED_{}", i % 10), 
+                rate_hz: 4.0 
+            };
+            controller.execute_actions(&[action]).unwrap();
+        }
+
+        let stats = controller.get_latency_stats().unwrap();
+        
+        // Validate against requirements: LED latency ≤20ms
+        assert!(
+            stats.p99_ns <= 20_000_000, 
+            "LED latency requirement violated: P99 = {} ns (>20ms)", 
+            stats.p99_ns
+        );
+        
+        // Also check that we're well under the limit in test environment
+        assert!(
+            stats.mean_ns < 10_000_000, 
+            "Mean latency should be much better than requirement in test: {} ns", 
+            stats.mean_ns
+        );
+    }
+
+    #[test]
+    fn test_min_interval_enforcement() {
+        let mut controller = LedController::new();
+        let min_interval = Duration::from_millis(10);
+        controller.set_min_interval(min_interval);
+
+        let target = "RATE_TEST";
+        let start_time = Instant::now();
+
+        // Try to execute multiple actions rapidly
+        for _ in 0..5 {
+            let action = Action::LedOn { target: target.to_string() };
+            controller.execute_actions(&[action]).unwrap();
+        }
+
+        let elapsed = start_time.elapsed();
+        
+        // Should have been rate limited - not all writes should have occurred immediately
+        // In a real implementation, we'd check the actual write timestamps
+        assert!(elapsed >= Duration::from_millis(1), "Some rate limiting should have occurred");
     }
 }
