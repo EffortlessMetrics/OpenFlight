@@ -9,3 +9,17 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
+tokio = { workspace = true, features = ["net", "time", "sync", "rt"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+crossbeam = { workspace = true }
+reqwest = { version = "0.11", features = ["json"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = { workspace = true }
+proptest = { workspace = true }

@@ -9,3 +9,15 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
+tokio = { workspace = true, features = ["net", "io-util", "time", "macros"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+dirs = "5.0"
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3.8"

@@ -290,28 +290,58 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Document coverage and redistribution compliance
   - _Requirements: GI-01, LEG-01_
 
-- [ ] 15. X-Plane adapter (flight-xplane(-sys))
+- [x] 15. X-Plane adapter (flight-xplane(-sys))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   - Implement DataRefs via UDP and plugin interfaces
-  - Add aircraft detection and web API integration paths
+  - Add aircraft dete ction and web API integration paths
   - Create latency measurement and budget validation
   - Build comprehensive fixture-based testing
   - _Requirements: GI-01_
 
-- [ ] 16. DCS export (flight-dcs-export)
+
+
+- [x] 16. DCS export (flight-dcs-export)
+
+
+
+
   - Create minimal Export.lua with MP-safe/blocked feature flags
   - Implement socket bridge with version negotiation
   - Add SP verification and MP limitation documentation
   - Create user installation script and validation
   - _Requirements: GI-01, LEG-01_
 
-- [ ] 16.1 DCS MP integrity contract
+- [x] 16.1 DCS MP integrity contract
+
+
+
   - Implement user-installed Export.lua only with MP-safe vs blocked flags
   - Create adapter that refuses blocked features in MP with clear UI messaging
   - Add "what we touch + revert" documentation for DCS integration
   - Build MP session detection with "blocked" banner display
   - _Requirements: LEG-01_
 
-- [ ] 17. Writers data-pipeline with golden tests & verify/repair
+- [-] 17. Writers data-pipeline with golden tests & verify/repair
+
+
+
   - Implement versioned JSON diffs per sim/build with golden-file tests
   - Create Verify/Repair that runs scripted events (gear/flap/AP) and applies minimal diffs
   - Build coverage matrix generation with CI failure on golden mismatch

@@ -37,6 +37,8 @@ pub enum ScenarioType {
     Emergency,
     /// Helicopter-specific scenarios
     HeloHover,
+    /// Helicopter hover
+    Hover,
 }
 
 impl SnapshotFixture {
@@ -61,7 +63,7 @@ impl SnapshotFixture {
             ScenarioType::Cruise => self.apply_cruise(&mut snapshot),
             ScenarioType::Approach => self.apply_approach(&mut snapshot),
             ScenarioType::Emergency => self.apply_emergency(&mut snapshot),
-            ScenarioType::HeloHover => self.apply_helo_hover(&mut snapshot),
+            ScenarioType::HeloHover | ScenarioType::Hover => self.apply_helo_hover(&mut snapshot),
         }
         
         snapshot
@@ -475,7 +477,7 @@ pub struct SnapshotValidator {
 }
 
 /// Validation tolerances for different fields
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationTolerance {
     pub speed_knots: f32,
     pub angle_degrees: f32,

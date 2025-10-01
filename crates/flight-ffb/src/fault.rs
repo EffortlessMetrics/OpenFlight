@@ -122,7 +122,6 @@ impl FaultType {
         }
     }
 }
-}
 
 /// Fault detection thresholds
 #[derive(Debug, Clone, PartialEq)]

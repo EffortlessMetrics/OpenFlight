@@ -1,0 +1,38 @@
+[package]
+name = "flight-writers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+# Core dependencies
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+
+# File system operations
+tempfile.workspace = true
+regex = "1.10"
+
+# Testing
+proptest = { workspace = true, optional = true }
+
+# Internal dependencies
+flight-core = { path = "../flight-core" }
+flight-ipc = { path = "../flight-ipc" }
+
+[dev-dependencies]
+proptest.workspace = true
+tempfile.workspace = true
+tokio-test = "0.4"
+
+[features]
+default = []
+testing = ["proptest"]
