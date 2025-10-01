@@ -65,7 +65,7 @@ impl WriterApplier {
     }
 
     /// Apply a single file diff
-    async fn apply_diff(&self, diff: &FileDiff, backup_path: &Path) -> Result<PathBuf> {
+    pub async fn apply_diff(&self, diff: &FileDiff, backup_path: &Path) -> Result<PathBuf> {
         debug!("Applying diff to {:?}", diff.file);
 
         // Create backup if requested
@@ -148,14 +148,15 @@ impl WriterApplier {
         let mut in_target_section = false;
         let mut section_found = false;
         let mut applied_changes = HashMap::new();
+        let mut line_modifications = Vec::new();
 
-        // Find and modify existing keys in the target section
-        for line in &mut lines {
-            let trimmed = line.trim();
+        // Find lines that need modification
+        for (line_idx, line) in lines.iter().enumerate() {
+            let line_trimmed = line.trim();
             
             // Check for section headers
-            if trimmed.starts_with('[') && trimmed.ends_with(']') {
-                let section_name = &trimmed[1..trimmed.len()-1];
+            if line_trimmed.starts_with('[') && line_trimmed.ends_with(']') {
+                let section_name = &line_trimmed[1..line_trimmed.len()-1];
                 in_target_section = section_name == target_section;
                 if in_target_section {
                     section_found = true;
@@ -164,16 +165,21 @@ impl WriterApplier {
             }
 
             // If we're in the target section and this is a key=value line
-            if in_target_section && trimmed.contains('=') {
-                let parts: Vec<&str> = trimmed.splitn(2, '=').collect();
+            if in_target_section && line_trimmed.contains('=') {
+                let parts: Vec<&str> = line_trimmed.splitn(2, '=').collect();
                 if parts.len() == 2 {
                     let key = parts[0].trim();
                     if let Some(new_value) = changes.get(key) {
-                        *line = format!("{}={}", key, new_value);
+                        line_modifications.push((line_idx, format!("{}={}", key, new_value)));
                         applied_changes.insert(key.to_string(), new_value.clone());
                     }
                 }
             }
+        }
+
+        // Apply the modifications
+        for (line_idx, new_content) in line_modifications {
+            lines[line_idx] = new_content;
         }
 
         // If section wasn't found, add it

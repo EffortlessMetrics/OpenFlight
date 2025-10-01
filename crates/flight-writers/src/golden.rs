@@ -87,7 +87,7 @@ impl GoldenFileTester {
     /// Run a single test case
     async fn run_test_case(
         &self,
-        sim: SimulatorType,
+        _sim: SimulatorType,
         test_name: &str,
         test_dir: &Path,
     ) -> Result<GoldenTestCase> {

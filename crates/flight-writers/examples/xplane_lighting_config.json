@@ -1,0 +1,58 @@
+{
+  "schema": "flight.writer/1",
+  "sim": "xplane",
+  "version": "12.1.0",
+  "description": "X-Plane lighting configuration for better visibility",
+  "diffs": [
+    {
+      "file": "Aircraft/Laminar Research/Cessna 172SP/Cessna_172SP.acf",
+      "type": "line_replace",
+      "pattern": "_lnav_light_brightness\\s+\\d+\\.\\d+",
+      "replacement": "_lnav_light_brightness 1.0",
+      "regex": true,
+      "backup": true
+    },
+    {
+      "file": "Aircraft/Laminar Research/Cessna 172SP/cockpit_3d/-PANELS-/Panel.png",
+      "type": "replace",
+      "content": "# Placeholder for panel texture replacement\n# This would normally be a binary file operation\n",
+      "backup": true
+    }
+  ],
+  "verify_scripts": [
+    {
+      "name": "lighting_test",
+      "description": "Test aircraft lighting systems",
+      "actions": [
+        {
+          "type": "sim_event",
+          "event": "LANDING_LIGHTS_TOGGLE"
+        },
+        {
+          "type": "wait",
+          "duration_ms": 200
+        },
+        {
+          "type": "sim_event",
+          "event": "NAV_LIGHTS_TOGGLE"
+        },
+        {
+          "type": "wait",
+          "duration_ms": 200
+        }
+      ],
+      "expected": [
+        {
+          "variable": "LIGHT_LANDING",
+          "value": 1.0,
+          "tolerance": 0.1
+        },
+        {
+          "variable": "LIGHT_NAV",
+          "value": 1.0,
+          "tolerance": 0.1
+        }
+      ]
+    }
+  ]
+}

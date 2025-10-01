@@ -338,7 +338,9 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build MP session detection with "blocked" banner display
   - _Requirements: LEG-01_
 
-- [-] 17. Writers data-pipeline with golden tests & verify/repair
+- [x] 17. Writers data-pipeline with golden tests & verify/repair
+
+
 
 
 

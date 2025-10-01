@@ -1,0 +1,88 @@
+{
+  "schema": "flight.writer/1",
+  "sim": "msfs",
+  "version": "1.36.0",
+  "description": "MSFS Autopilot configuration for enhanced functionality",
+  "diffs": [
+    {
+      "file": "MSFS/SimObjects/Airplanes/Asobo_C172sp_AS1000/panel/panel.cfg",
+      "type": "ini_section",
+      "section": "AUTOPILOT",
+      "changes": {
+        "autopilot_available": "1",
+        "flight_director_available": "1",
+        "default_vertical_speed": "700",
+        "autothrottle_available": "1",
+        "autothrottle_arming_required": "1",
+        "autothrottle_takeoff_ga": "1",
+        "pitch_takeoff_ga": "8"
+      },
+      "backup": true
+    },
+    {
+      "file": "MSFS/SimObjects/Airplanes/Asobo_C172sp_AS1000/flight_model/flight_model.cfg",
+      "type": "ini_section", 
+      "section": "FLIGHT_TUNING",
+      "changes": {
+        "cruise_lift_scalar": "1.0",
+        "parasite_drag_scalar": "1.0",
+        "induced_drag_scalar": "1.0",
+        "elevator_effectiveness": "1.0",
+        "elevator_maxangle_scalar": "1.0"
+      },
+      "backup": true
+    }
+  ],
+  "verify_scripts": [
+    {
+      "name": "autopilot_engagement_test",
+      "description": "Test autopilot engagement and basic functionality",
+      "actions": [
+        {
+          "type": "sim_event",
+          "event": "AP_MASTER",
+          "value": 1
+        },
+        {
+          "type": "wait",
+          "duration_ms": 500
+        },
+        {
+          "type": "sim_event", 
+          "event": "AP_ALT_HOLD",
+          "value": 1
+        },
+        {
+          "type": "wait",
+          "duration_ms": 500
+        },
+        {
+          "type": "sim_event",
+          "event": "AP_HDG_HOLD", 
+          "value": 1
+        },
+        {
+          "type": "wait",
+          "duration_ms": 1000
+        }
+      ],
+      "expected": [
+        {
+          "variable": "AUTOPILOT_MASTER",
+          "value": 1.0,
+          "tolerance": 0.1
+        },
+        {
+          "variable": "AUTOPILOT_ALTITUDE_LOCK",
+          "value": 1.0,
+          "tolerance": 0.1
+        },
+        {
+          "variable": "AUTOPILOT_HEADING_LOCK",
+          "value": 1.0,
+          "tolerance": 0.1
+        }
+      ]
+    }
+  ]
+}
