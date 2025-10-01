@@ -350,7 +350,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Add one-click rollback functionality with comprehensive validation
   - _Requirements: GI-01, GI-02, GI-05_
 
-- [ ] 18. Aircraft auto-switch ≤500ms
+- [x] 18. Aircraft auto-switch ≤500ms
+
+
+
+
+
   - Implement process+aircraft detection across all sim adapters
   - Create profile resolution with merge hierarchy enforcement
   - Build compile-and-swap system for profile changes

@@ -22,6 +22,9 @@ pub enum FlightError {
 
     #[error("Writer error: {0}")]
     Writer(String),
+
+    #[error("Aircraft auto-switch error: {0}")]
+    AutoSwitch(String),
 }
 
 /// Result type alias for Flight Hub operations

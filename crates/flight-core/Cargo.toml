@@ -14,8 +14,17 @@ anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 once_cell.workspace = true
+tokio.workspace = true
 sha2 = "0.10"
 indexmap = { version = "2.0", features = ["serde"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_ProcessStatus", 
+    "Win32_System_Threading"
+] }
 
 [dev-dependencies]
 proptest.workspace = true
