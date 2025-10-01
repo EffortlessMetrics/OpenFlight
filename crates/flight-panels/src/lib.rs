@@ -7,6 +7,7 @@ use std::collections::HashMap;
 pub mod evaluator;
 pub mod led;
 pub mod saitek;
+pub mod cougar;
 pub mod verify_matrix;
 
 #[cfg(test)]
@@ -18,6 +19,7 @@ mod integration_test;
 pub use evaluator::RulesEvaluator;
 pub use led::{LedController, LedTarget};
 pub use saitek::{SaitekPanelWriter, PanelType, VerifyTestResult, PanelHealthStatus};
+pub use cougar::{CougarMfdWriter, CougarMfdType, CougarVerifyTestResult, CougarMfdHealthStatus, MfdLedState};
 pub use verify_matrix::{VerifyMatrix, MatrixTestResult, DriftAnalysis, DriftAction};
 
 /// Panel manager for LED control and rules evaluation
@@ -26,6 +28,7 @@ pub struct PanelManager {
     led_controller: LedController,
     evaluator: RulesEvaluator,
     saitek_writer: Option<SaitekPanelWriter>,
+    cougar_writer: Option<CougarMfdWriter>,
     verify_matrix: Option<VerifyMatrix>,
 }
 
@@ -37,6 +40,7 @@ impl PanelManager {
             led_controller: LedController::new(),
             evaluator: RulesEvaluator::new(),
             saitek_writer: None,
+            cougar_writer: None,
             verify_matrix: None,
         }
     }
@@ -46,6 +50,14 @@ impl PanelManager {
         let mut writer = SaitekPanelWriter::new(hid_adapter);
         writer.start()?;
         self.saitek_writer = Some(writer);
+        Ok(())
+    }
+
+    /// Initialize Cougar MFD writer with HID adapter
+    pub fn initialize_cougar_writer(&mut self, hid_adapter: flight_hid::HidAdapter) -> Result<()> {
+        let mut writer = CougarMfdWriter::new(hid_adapter);
+        writer.start()?;
+        self.cougar_writer = Some(writer);
         Ok(())
     }
 
@@ -85,6 +97,11 @@ impl PanelManager {
         } else if let Some(matrix) = &mut self.verify_matrix {
             // If writer is in matrix, update through matrix
             // Note: In a real implementation, we'd need better access patterns
+        }
+
+        // Update Cougar MFD blink states
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.update_blink_states()?;
         }
 
         Ok(())
@@ -201,6 +218,60 @@ impl PanelManager {
         }
     }
 
+    /// Start verify test for a Cougar MFD
+    pub fn start_cougar_verify_test(&mut self, mfd_path: &str) -> Result<()> {
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.start_verify_test(mfd_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+        }
+    }
+
+    /// Update Cougar verify test and get result if complete
+    pub fn update_cougar_verify_test(&mut self) -> Result<Option<CougarVerifyTestResult>> {
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.update_verify_test()
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get Cougar MFD health status
+    pub fn check_cougar_mfd_health(&mut self, mfd_path: &str) -> Result<CougarMfdHealthStatus> {
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.check_mfd_health(mfd_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+        }
+    }
+
+    /// Repair Cougar MFD configuration drift
+    pub fn repair_cougar_mfd_drift(&mut self, mfd_path: &str) -> Result<()> {
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.repair_mfd_drift(mfd_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+        }
+    }
+
+    /// Get connected Cougar MFDs
+    pub fn get_cougar_mfds(&self) -> Vec<&cougar::MfdInfo> {
+        if let Some(cougar_writer) = &self.cougar_writer {
+            cougar_writer.get_mfds()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Get Cougar MFD latency statistics
+    pub fn get_cougar_latency_stats(&self) -> Option<led::LatencyStats> {
+        if let Some(cougar_writer) = &self.cougar_writer {
+            cougar_writer.get_latency_stats()
+        } else {
+            None
+        }
+    }
+
     /// Run full verify matrix for all panels
     pub fn run_verify_matrix(&mut self) -> Result<Vec<MatrixTestResult>> {
         if let Some(matrix) = &mut self.verify_matrix {
@@ -248,6 +319,9 @@ impl Drop for PanelManager {
     fn drop(&mut self) {
         if let Some(saitek_writer) = &mut self.saitek_writer {
             saitek_writer.stop();
+        }
+        if let Some(cougar_writer) = &mut self.cougar_writer {
+            cougar_writer.stop();
         }
     }
 }
