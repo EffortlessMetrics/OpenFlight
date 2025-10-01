@@ -25,6 +25,9 @@ pub enum FlightError {
 
     #[error("Aircraft auto-switch error: {0}")]
     AutoSwitch(String),
+
+    #[error("Hardware error: {0}")]
+    Hardware(String),
 }
 
 /// Result type alias for Flight Hub operations

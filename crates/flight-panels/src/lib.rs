@@ -3,10 +3,11 @@
 use flight_core::rules::{RulesSchema, CompiledRules};
 use flight_core::Result;
 use std::collections::HashMap;
-use std::time::Instant;
 
 pub mod evaluator;
 pub mod led;
+pub mod saitek;
+pub mod verify_matrix;
 
 #[cfg(test)]
 mod allocation_test;
@@ -16,12 +17,16 @@ mod integration_test;
 
 pub use evaluator::RulesEvaluator;
 pub use led::{LedController, LedTarget};
+pub use saitek::{SaitekPanelWriter, PanelType, VerifyTestResult, PanelHealthStatus};
+pub use verify_matrix::{VerifyMatrix, MatrixTestResult, DriftAnalysis, DriftAction};
 
 /// Panel manager for LED control and rules evaluation
 pub struct PanelManager {
     compiled_rules: Option<CompiledRules>,
     led_controller: LedController,
     evaluator: RulesEvaluator,
+    saitek_writer: Option<SaitekPanelWriter>,
+    verify_matrix: Option<VerifyMatrix>,
 }
 
 impl PanelManager {
@@ -31,6 +36,27 @@ impl PanelManager {
             compiled_rules: None,
             led_controller: LedController::new(),
             evaluator: RulesEvaluator::new(),
+            saitek_writer: None,
+            verify_matrix: None,
+        }
+    }
+
+    /// Initialize Saitek panel writer with HID adapter
+    pub fn initialize_saitek_writer(&mut self, hid_adapter: flight_hid::HidAdapter) -> Result<()> {
+        let mut writer = SaitekPanelWriter::new(hid_adapter);
+        writer.start()?;
+        self.saitek_writer = Some(writer);
+        Ok(())
+    }
+
+    /// Initialize verify matrix (requires Saitek writer to be initialized first)
+    pub fn initialize_verify_matrix(&mut self) -> Result<()> {
+        if let Some(writer) = self.saitek_writer.take() {
+            let matrix = VerifyMatrix::new(writer);
+            self.verify_matrix = Some(matrix);
+            Ok(())
+        } else {
+            Err(flight_core::FlightError::Configuration("Saitek writer must be initialized before verify matrix".to_string()))
         }
     }
 
@@ -52,6 +78,15 @@ impl PanelManager {
             let actions = self.evaluator.evaluate(rules, telemetry);
             self.led_controller.execute_actions(actions)?;
         }
+
+        // Update Saitek panel blink states
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.update_blink_states()?;
+        } else if let Some(matrix) = &mut self.verify_matrix {
+            // If writer is in matrix, update through matrix
+            // Note: In a real implementation, we'd need better access patterns
+        }
+
         Ok(())
     }
 
@@ -111,10 +146,108 @@ impl PanelManager {
         self.led_controller.execute_actions(&clear_actions)?;
         Ok(())
     }
+
+    /// Start verify test for a Saitek panel
+    pub fn start_saitek_verify_test(&mut self, panel_path: &str) -> Result<()> {
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.start_verify_test(panel_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+        }
+    }
+
+    /// Update Saitek verify test and get result if complete
+    pub fn update_saitek_verify_test(&mut self) -> Result<Option<VerifyTestResult>> {
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.update_verify_test()
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get Saitek panel health status
+    pub fn check_saitek_panel_health(&mut self, panel_path: &str) -> Result<PanelHealthStatus> {
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.check_panel_health(panel_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+        }
+    }
+
+    /// Repair Saitek panel configuration drift
+    pub fn repair_saitek_panel_drift(&mut self, panel_path: &str) -> Result<()> {
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.repair_panel_drift(panel_path)
+        } else {
+            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+        }
+    }
+
+    /// Get connected Saitek panels
+    pub fn get_saitek_panels(&self) -> Vec<&saitek::PanelInfo> {
+        if let Some(saitek_writer) = &self.saitek_writer {
+            saitek_writer.get_panels()
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Get Saitek panel latency statistics
+    pub fn get_saitek_latency_stats(&self) -> Option<led::LatencyStats> {
+        if let Some(saitek_writer) = &self.saitek_writer {
+            saitek_writer.get_latency_stats()
+        } else {
+            None
+        }
+    }
+
+    /// Run full verify matrix for all panels
+    pub fn run_verify_matrix(&mut self) -> Result<Vec<MatrixTestResult>> {
+        if let Some(matrix) = &mut self.verify_matrix {
+            matrix.run_full_matrix()
+        } else {
+            Err(flight_core::FlightError::Configuration("Verify matrix not initialized".to_string()))
+        }
+    }
+
+    /// Run verify matrix for specific panel
+    pub fn run_panel_verify_matrix(&mut self, panel_path: &str, panel_type: PanelType) -> Result<MatrixTestResult> {
+        if let Some(matrix) = &mut self.verify_matrix {
+            matrix.run_panel_matrix(panel_path, panel_type)
+        } else {
+            Err(flight_core::FlightError::Configuration("Verify matrix not initialized".to_string()))
+        }
+    }
+
+    /// Check if verify matrix run is needed
+    pub fn needs_verify_matrix_run(&self) -> bool {
+        if let Some(matrix) = &self.verify_matrix {
+            matrix.needs_matrix_run()
+        } else {
+            false
+        }
+    }
+
+    /// Get verify matrix drift analysis for panel
+    pub fn get_drift_analysis(&self, panel_path: &str) -> Option<&Vec<VerifyTestResult>> {
+        if let Some(matrix) = &self.verify_matrix {
+            matrix.get_test_history(panel_path)
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for PanelManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Drop for PanelManager {
+    fn drop(&mut self) {
+        if let Some(saitek_writer) = &mut self.saitek_writer {
+            saitek_writer.stop();
+        }
     }
 }
