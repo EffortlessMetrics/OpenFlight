@@ -15,11 +15,17 @@ path = "capability_demo.rs"
 name = "watchdog_integration_demo"
 path = "watchdog_integration_demo.rs"
 
+[[bin]]
+name = "telemetry_synth_demo"
+path = "telemetry_synth_demo.rs"
+
 [dependencies]
 flight-core = { path = "../crates/flight-core" }
 flight-panels = { path = "../crates/flight-panels" }
 flight-axis = { path = "../crates/flight-axis" }
 flight-service = { path = "../crates/flight-service" }
 flight-hid = { path = "../crates/flight-hid" }
+flight-ffb = { path = "../crates/flight-ffb" }
+flight-bus = { path = "../crates/flight-bus" }
 tracing = "0.1"
 tracing-subscriber = "0.3"

@@ -468,14 +468,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Create development and validation environment for raw-torque mode
   - _Requirements: IFC-04_
 
-- [ ] 26. Telemetry-synth effects
+- [x] 26. Telemetry-synth effects
+
+
+
+
+
   - Implement stall buffet vs α, touchdown impulse, ground roll effects
   - Add gear warning and rotor Nr/Np synthesis
   - Create rate-limiting and off-RT scheduling
   - Build user tuning interface with blackbox markers
   - _Requirements: FFB-01_
 
-- [ ] 27. Force-trim correctness validation
+- [-] 27. Force-trim correctness validation
+
+
   - Implement non-FFB recentre illusion with trim-hold freeze
   - Add FFB setpoint change with rate/jerk limiting
   - Create HIL tests for trim behavior validation

@@ -45,6 +45,14 @@ pub enum BlackboxEntry {
         event_type: String,
         details: String,
     },
+    /// Telemetry synthesis output
+    TelemetrySynth {
+        timestamp: Instant,
+        torque_nm: f32,
+        frequency_hz: f32,
+        intensity: f32,
+        active_effects: String,
+    },
 }
 
 impl BlackboxEntry {
@@ -55,7 +63,8 @@ impl BlackboxEntry {
             BlackboxEntry::FfbState { timestamp, .. } |
             BlackboxEntry::Fault { timestamp, .. } |
             BlackboxEntry::SoftStop { timestamp, .. } |
-            BlackboxEntry::SystemEvent { timestamp, .. } => *timestamp,
+            BlackboxEntry::SystemEvent { timestamp, .. } |
+            BlackboxEntry::TelemetrySynth { timestamp, .. } => *timestamp,
         }
     }
 
@@ -67,6 +76,7 @@ impl BlackboxEntry {
             BlackboxEntry::Fault { .. } => "Fault",
             BlackboxEntry::SoftStop { .. } => "SoftStop",
             BlackboxEntry::SystemEvent { .. } => "SystemEvent",
+            BlackboxEntry::TelemetrySynth { .. } => "TelemetrySynth",
         }
     }
 
@@ -92,6 +102,10 @@ impl BlackboxEntry {
             BlackboxEntry::SystemEvent { timestamp, event_type, details } => {
                 format!("SYSTEM,{:?},{},{}", 
                     timestamp.elapsed(), event_type, details)
+            }
+            BlackboxEntry::TelemetrySynth { timestamp, torque_nm, frequency_hz, intensity, active_effects } => {
+                format!("TELEMETRY,{:?},{},{},{},{}", 
+                    timestamp.elapsed(), torque_nm, frequency_hz, intensity, active_effects)
             }
         }
     }

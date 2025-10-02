@@ -15,6 +15,7 @@ pub mod audio;
 pub mod blackbox;
 pub mod mode_negotiation;
 pub mod ofp1_integration;
+pub mod telemetry_synth;
 #[cfg(test)]
 pub mod hil_tests;
 #[cfg(test)]
@@ -36,6 +37,7 @@ pub use audio::*;
 pub use blackbox::*;
 pub use mode_negotiation::*;
 pub use ofp1_integration::*;
+pub use telemetry_synth::*;
 #[cfg(test)]
 pub use hil_tests::*;
 #[cfg(test)]
@@ -53,6 +55,7 @@ pub struct FfbEngine {
     soft_stop_controller: SoftStopController,
     audio_system: AudioCueSystem,
     blackbox_recorder: BlackboxRecorder,
+    telemetry_synth: Option<TelemetrySynthEngine>,
     last_heartbeat: Instant,
     device_capabilities: Option<DeviceCapabilities>,
 }
@@ -149,6 +152,7 @@ impl FfbEngine {
             soft_stop_controller,
             audio_system,
             blackbox_recorder,
+            telemetry_synth: None,
             last_heartbeat: Instant::now(),
             device_capabilities: None,
         })
@@ -439,6 +443,61 @@ impl FfbEngine {
         }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
         
         Ok(())
+    }
+
+    /// Enable telemetry synthesis with configuration
+    pub fn enable_telemetry_synthesis(&mut self, config: TelemetrySynthConfig) -> Result<()> {
+        // Only enable telemetry synthesis if mode is TelemetrySynth
+        if self.config.mode == FfbMode::TelemetrySynth {
+            self.telemetry_synth = Some(TelemetrySynthEngine::new(config));
+            tracing::info!("Telemetry synthesis enabled");
+        } else {
+            return Err(FfbError::ConfigError { 
+                message: format!("Telemetry synthesis requires FfbMode::TelemetrySynth, current mode: {:?}", self.config.mode)
+            });
+        }
+        Ok(())
+    }
+
+    /// Disable telemetry synthesis
+    pub fn disable_telemetry_synthesis(&mut self) {
+        self.telemetry_synth = None;
+        tracing::info!("Telemetry synthesis disabled");
+    }
+
+    /// Update telemetry synthesis with flight data
+    pub fn update_telemetry_synthesis(&mut self, snapshot: &flight_bus::BusSnapshot) -> Result<Option<EffectOutput>> {
+        if let Some(ref mut synth_engine) = self.telemetry_synth {
+            let output = synth_engine.update(snapshot)?;
+            
+            // Record telemetry synthesis output in blackbox
+            self.blackbox_recorder.record(BlackboxEntry::TelemetrySynth {
+                timestamp: Instant::now(),
+                torque_nm: output.torque_nm,
+                frequency_hz: output.frequency_hz,
+                intensity: output.intensity,
+                active_effects: output.active_effects.join(","),
+            }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
+            
+            Ok(Some(output))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get telemetry synthesis engine for configuration
+    pub fn get_telemetry_synth(&self) -> Option<&TelemetrySynthEngine> {
+        self.telemetry_synth.as_ref()
+    }
+
+    /// Get mutable telemetry synthesis engine for configuration
+    pub fn get_telemetry_synth_mut(&mut self) -> Option<&mut TelemetrySynthEngine> {
+        self.telemetry_synth.as_mut()
+    }
+
+    /// Check if telemetry synthesis is enabled
+    pub fn is_telemetry_synthesis_enabled(&self) -> bool {
+        self.telemetry_synth.is_some()
     }
 }
 

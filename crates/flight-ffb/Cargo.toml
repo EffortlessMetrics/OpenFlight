@@ -9,9 +9,11 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
 flight-panels = { path = "../flight-panels" }
 flight-hid = { path = "../flight-hid" }
 flight-virtual = { path = "../flight-virtual" }
 thiserror = "1.0"
 tracing = "0.1"
 crossbeam.workspace = true
+serde = { version = "1.0", features = ["derive"] }
