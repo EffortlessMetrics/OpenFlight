@@ -17,6 +17,7 @@ members = [
     "crates/flight-streamdeck",
     "crates/flight-tactile",
     "crates/flight-writers",
+    "crates/flight-replay",
     "crates/flight-service",
     "crates/flight-cli",
     "crates/flight-ui",

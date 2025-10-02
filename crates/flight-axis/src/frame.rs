@@ -2,7 +2,7 @@
 
 /// Real-time axis processing frame with explicit units
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct AxisFrame {
     /// Raw input value [-1.0, 1.0] (normalized units)
     pub in_raw: f32,
