@@ -521,14 +521,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build comprehensive replay validation suite
   - _Requirements: DIAG-01_
 
-- [ ] 30. Tracing & perf counters
+- [x] 30. Tracing & perf counters
+
+
+
+
+
   - Implement ETW provider (Win) / tracepoints (Linux) hooks
   - Add TickStart/End, HidWrite, DeadlineMiss instrumentation
   - Create counter reporting for CI perf gate consumption
   - Build regression detection and failure mechanisms
   - _Requirements: NFR-01, QG-AX-Jitter_
 
-- [ ] 30.1 CI perf dashboard
+- [x] 30.1 CI perf dashboard
+
+
   - Scrape counters (jitter p50/p99, HID p99, drops) from ETW/tracepoints
   - Publish trend graphs with CI failure on regression thresholds
   - Create visible performance monitoring with automated alerting

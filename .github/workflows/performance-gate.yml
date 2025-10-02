@@ -1,0 +1,258 @@
+name: Performance Quality Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  performance-test:
+    name: Performance Quality Gate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+        
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Setup tracing (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        # Enable tracepoints (requires sudo)
+        sudo chmod 666 /sys/kernel/debug/tracing/trace_marker || true
+        sudo chmod 666 /sys/kernel/debug/tracing/tracing_on || true
+        
+    - name: Build flight-tracing
+      run: |
+        cargo build --release -p flight-tracing
+        
+    - name: Run performance tests
+      run: |
+        # Run the CI performance gate example
+        cargo run --release --example ci_perf_gate
+        
+    - name: Collect performance metrics
+      run: |
+        # Run the dashboard script to collect metrics
+        cargo run --bin ci_perf_dashboard -- --collect --output target/perf-metrics
+        
+    - name: Load baseline metrics
+      id: baseline
+      run: |
+        # Download baseline from previous successful runs
+        mkdir -p target/perf-baseline
+        
+        # Try to download baseline from artifacts (if available)
+        # For first run, create empty baseline
+        echo "baseline_exists=false" >> $GITHUB_OUTPUT
+        
+    - name: Analyze performance trends
+      id: analysis
+      run: |
+        # Run trend analysis and regression detection
+        if [ "${{ steps.baseline.outputs.baseline_exists }}" = "true" ]; then
+          cargo run --bin ci_perf_dashboard -- --analyze --baseline target/perf-baseline/baseline.json --output target/perf-metrics
+        else
+          cargo run --bin ci_perf_dashboard -- --analyze --output target/perf-metrics
+        fi
+        
+        # Check if analysis passed
+        if [ $? -eq 0 ]; then
+          echo "performance_passed=true" >> $GITHUB_OUTPUT
+        else
+          echo "performance_passed=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Generate performance dashboard
+      if: always()
+      run: |
+        cargo run --bin ci_perf_dashboard -- --publish --output target/perf-metrics
+        
+    - name: Upload performance artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-metrics-${{ matrix.os }}
+        path: |
+          target/perf-metrics/
+          !target/perf-metrics/*.tmp
+          
+    - name: Upload performance dashboard
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-dashboard-${{ matrix.os }}
+        path: target/perf-metrics/index.html
+        
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read analysis results
+          let analysisResults = '';
+          try {
+            const analysis = JSON.parse(fs.readFileSync('target/perf-metrics/analysis.json', 'utf8'));
+            
+            if (analysis.regression_detected) {
+              analysisResults = '🚨 **Performance Regression Detected**\n\n';
+              for (const alert of analysis.alerts) {
+                analysisResults += `- **${alert.metric}**: ${alert.message}\n`;
+              }
+            } else {
+              analysisResults = '✅ **No Performance Regression Detected**\n\n';
+            }
+            
+            // Add trend information
+            analysisResults += `**Trend Statistics:**\n`;
+            analysisResults += `- Sample count: ${analysis.trends.sample_count}\n`;
+            analysisResults += `- Jitter trend: ${analysis.trends.jitter_trend.toFixed(2)}μs/build\n`;
+            analysisResults += `- HID trend: ${analysis.trends.hid_trend.toFixed(2)}μs/build\n`;
+            
+          } catch (error) {
+            analysisResults = '⚠️ Could not read performance analysis results';
+          }
+          
+          // Read latest metrics
+          let metricsTable = '';
+          try {
+            const metrics = JSON.parse(fs.readFileSync('target/perf-metrics/latest.json', 'utf8'));
+            
+            metricsTable = `
+| Metric | Value | Threshold | Status |
+|--------|-------|-----------|--------|
+| Jitter p99 | ${metrics.jitter_p99_us.toFixed(1)}μs | 500μs | ${metrics.jitter_p99_us <= 500 ? '✅' : '❌'} |
+| HID p99 | ${metrics.hid_p99_us.toFixed(1)}μs | 300μs | ${metrics.hid_p99_us <= 300 ? '✅' : '❌'} |
+| Miss Rate | ${(metrics.miss_rate * 100).toFixed(3)}% | 1% | ${metrics.miss_rate <= 0.01 ? '✅' : '❌'} |
+| Writer Drops | ${metrics.writer_drops} | 100 | ${metrics.writer_drops <= 100 ? '✅' : '❌'} |
+`;
+          } catch (error) {
+            metricsTable = 'Could not read metrics data';
+          }
+          
+          const comment = `## Performance Test Results (${{ matrix.os }})
+          
+${analysisResults}
+
+### Quality Gate Results
+${metricsTable}
+
+### Details
+- **Platform**: ${{ matrix.os }}
+- **Commit**: ${context.sha.substring(0, 8)}
+- **Build**: ${{ github.run_number }}
+
+[View detailed dashboard](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+          
+    - name: Fail on performance regression
+      if: steps.analysis.outputs.performance_passed == 'false'
+      run: |
+        echo "❌ Performance regression detected - failing build"
+        exit 1
+        
+    - name: Update baseline (main branch only)
+      if: github.ref == 'refs/heads/main' && steps.analysis.outputs.performance_passed == 'true'
+      run: |
+        # Copy current metrics as new baseline
+        mkdir -p target/perf-baseline
+        cp target/perf-metrics/latest.json target/perf-baseline/baseline.json
+        
+    - name: Upload new baseline
+      if: github.ref == 'refs/heads/main' && steps.analysis.outputs.performance_passed == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-baseline-${{ matrix.os }}
+        path: target/perf-baseline/baseline.json
+
+  # Aggregate results from all platforms
+  performance-summary:
+    name: Performance Summary
+    needs: performance-test
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download all performance artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Generate cross-platform summary
+      run: |
+        echo "# Performance Test Summary" > performance-summary.md
+        echo "" >> performance-summary.md
+        
+        # Check if any platform failed
+        failed_platforms=""
+        
+        for os in windows-latest ubuntu-latest; do
+          if [ -f "performance-metrics-${os}/analysis.json" ]; then
+            regression=$(jq -r '.regression_detected' "performance-metrics-${os}/analysis.json")
+            if [ "$regression" = "true" ]; then
+              failed_platforms="${failed_platforms} ${os}"
+            fi
+            
+            echo "## ${os}" >> performance-summary.md
+            echo "" >> performance-summary.md
+            
+            # Add metrics table
+            if [ -f "performance-metrics-${os}/latest.json" ]; then
+              jitter=$(jq -r '.jitter_p99_us' "performance-metrics-${os}/latest.json")
+              hid=$(jq -r '.hid_p99_us' "performance-metrics-${os}/latest.json")
+              miss_rate=$(jq -r '.miss_rate' "performance-metrics-${os}/latest.json")
+              
+              echo "- Jitter p99: ${jitter}μs" >> performance-summary.md
+              echo "- HID p99: ${hid}μs" >> performance-summary.md
+              echo "- Miss rate: $(echo "$miss_rate * 100" | bc -l)%" >> performance-summary.md
+              echo "" >> performance-summary.md
+            fi
+          fi
+        done
+        
+        if [ -n "$failed_platforms" ]; then
+          echo "❌ Performance regressions detected on:$failed_platforms"
+          echo "regression_detected=true" >> $GITHUB_ENV
+        else
+          echo "✅ All platforms passed performance tests"
+          echo "regression_detected=false" >> $GITHUB_ENV
+        fi
+        
+    - name: Upload summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-summary
+        path: performance-summary.md
+        
+    - name: Fail on any regression
+      if: env.regression_detected == 'true'
+      run: |
+        echo "Performance regression detected on one or more platforms"
+        exit 1
