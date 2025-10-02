@@ -11,6 +11,7 @@ pub mod writers;
 pub mod watchdog;
 pub mod aircraft_switch;
 pub mod process_detection;
+pub mod blackbox;
 
 pub use error::{FlightError, Result};
 pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};
@@ -26,4 +27,8 @@ pub use aircraft_switch::{
 };
 pub use process_detection::{
     ProcessDetector, ProcessDetectionConfig, ProcessDefinition, DetectedProcess, DetectionMetrics
+};
+pub use blackbox::{
+    BlackboxWriter, BlackboxReader, BlackboxConfig, BlackboxStats, BlackboxError,
+    BlackboxHeader, BlackboxFooter, IndexEntry, StreamType, BlackboxRecord
 };

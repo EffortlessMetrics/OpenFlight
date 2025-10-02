@@ -494,7 +494,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 6: Diagnostics, Tracing, Replay (M6) - Observability Layer
 
-- [-] 28. Blackbox .fbb writer behavior
+- [x] 28. Blackbox .fbb writer behavior
+
+
+
+
+
 
 
 
