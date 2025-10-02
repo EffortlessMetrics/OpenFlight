@@ -14,6 +14,7 @@ pub mod soft_stop;
 pub mod audio;
 pub mod blackbox;
 pub mod mode_negotiation;
+pub mod ofp1_integration;
 #[cfg(test)]
 pub mod hil_tests;
 #[cfg(test)]
@@ -34,6 +35,7 @@ pub use soft_stop::*;
 pub use audio::*;
 pub use blackbox::*;
 pub use mode_negotiation::*;
+pub use ofp1_integration::*;
 #[cfg(test)]
 pub use hil_tests::*;
 #[cfg(test)]

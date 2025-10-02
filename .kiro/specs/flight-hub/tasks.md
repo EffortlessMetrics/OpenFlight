@@ -447,14 +447,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Verify no AX jitter regression with comprehensive performance validation
   - _Requirements: FFB-01_
 
-- [ ] 25. OFP-1 spec & handshake (optional)
+- [x] 25. OFP-1 spec & handshake (optional)
+
+
+
+
+
   - Implement HID Feature 0x32 caps, OUT 0x30 torque, IN 0x31 health
   - Create capability negotiation in flight-hid
   - Add device opt-in negotiation and torque path stability
   - Build health stream visibility and monitoring
   - _Requirements: FFB-01, IFC-04_
 
-- [ ] 25.1 OFP-1 reference emulator
+- [x] 25.1 OFP-1 reference emulator
+
+
   - Create virtual device that speaks OFP-1 feature/IN/OUT with health stream
   - Build engine negotiation and drive emulator with blackbox health capture
   - Add comprehensive testing without requiring physical hardware

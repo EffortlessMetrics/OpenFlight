@@ -11,6 +11,9 @@ repository.workspace = true
 flight-core = { path = "../flight-core" }
 tracing.workspace = true
 rand = "0.8"
+serde.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
+flight-virtual = { path = "../flight-virtual" }
 tokio = { workspace = true, features = ["test-util"] }

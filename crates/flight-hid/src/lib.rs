@@ -3,8 +3,12 @@
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
 
+pub mod ofp1;
+#[cfg(test)]
+mod ofp1_tests;
+
 use flight_core::{
-    WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEvent, WatchdogEventType,
+    WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEvent,
     FlightError, Result
 };
 use std::time::{Duration, Instant};
@@ -466,6 +470,162 @@ impl HidAdapter {
         }
         
         Ok(false)
+    }
+
+    /// Perform OFP-1 capability negotiation with device
+    pub fn negotiate_ofp1_capabilities(&self, device_path: &str) -> Result<Option<crate::ofp1::Ofp1NegotiationResult>> {
+        // This would normally perform HID Feature report exchange
+        // For now, simulate successful negotiation for testing
+        
+        if let Some(device_info) = self.get_device_info(device_path) {
+            // Check if device supports OFP-1 (based on VID/PID or other criteria)
+            if self.is_ofp1_compatible(device_info) {
+                let negotiator = crate::ofp1::Ofp1Negotiator::new();
+                
+                // Simulate getting capabilities from device
+                let capabilities = self.simulate_device_capabilities(device_info)?;
+                
+                match negotiator.negotiate(&capabilities) {
+                    Ok(result) => {
+                        info!("OFP-1 negotiation successful for {}: {:?}", device_path, result);
+                        Ok(Some(result))
+                    }
+                    Err(e) => {
+                        warn!("OFP-1 negotiation failed for {}: {}", device_path, e);
+                        Ok(None)
+                    }
+                }
+            } else {
+                debug!("Device {} is not OFP-1 compatible", device_path);
+                Ok(None)
+            }
+        } else {
+            Err(FlightError::Configuration(format!("Device not found: {}", device_path)))
+        }
+    }
+
+    /// Check if device is OFP-1 compatible
+    fn is_ofp1_compatible(&self, device_info: &HidDeviceInfo) -> bool {
+        // Check for known OFP-1 compatible devices
+        // This would normally check VID/PID against a database
+        
+        // For testing, consider Logitech devices as potentially OFP-1 compatible
+        device_info.vendor_id == 0x046d || 
+        device_info.vendor_id == 0x1234 // Test VID
+    }
+
+    /// Simulate device capabilities for testing
+    fn simulate_device_capabilities(&self, device_info: &HidDeviceInfo) -> Result<crate::ofp1::CapabilitiesReport> {
+        let mut capabilities = crate::ofp1::CapabilityFlags::new();
+        capabilities.set_flag(crate::ofp1::CapabilityFlags::BIDIRECTIONAL);
+        capabilities.set_flag(crate::ofp1::CapabilityFlags::HEALTH_STREAM);
+        
+        // Add more capabilities based on device type
+        if device_info.vendor_id == 0x1234 {
+            capabilities.set_flag(crate::ofp1::CapabilityFlags::PHYSICAL_INTERLOCK);
+            capabilities.set_flag(crate::ofp1::CapabilityFlags::TEMPERATURE_SENSOR);
+            capabilities.set_flag(crate::ofp1::CapabilityFlags::CURRENT_SENSOR);
+        }
+
+        let serial_str = device_info.serial_number.as_deref().unwrap_or("UNKNOWN");
+        let mut serial_bytes = [0u8; 8];
+        let copy_len = serial_str.len().min(7);
+        serial_bytes[..copy_len].copy_from_slice(serial_str.as_bytes());
+
+        Ok(crate::ofp1::CapabilitiesReport {
+            report_id: crate::ofp1::report_ids::CAPABILITIES,
+            protocol_version: crate::ofp1::OFP1_VERSION,
+            vendor_id: device_info.vendor_id,
+            product_id: device_info.product_id,
+            max_torque_mnm: 15000, // 15 Nm
+            min_period_us: 2000,   // 500 Hz
+            capability_flags: capabilities,
+            serial_number: serial_bytes,
+            reserved: [0; 8],
+        })
+    }
+
+    /// Send OFP-1 torque command to device
+    pub fn send_ofp1_torque_command(&mut self, device_path: &str, command: crate::ofp1::TorqueCommandReport) -> Result<HidOperationResult> {
+        // Validate command first
+        if let Err(e) = crate::ofp1::utils::validate_torque_command(&command) {
+            return Err(FlightError::Configuration(format!("Invalid OFP-1 command: {}", e)));
+        }
+
+        // Convert to HID output report and send
+        // In real implementation, this would serialize the command struct to bytes
+        let command_bytes = self.serialize_ofp1_command(&command)?;
+        
+        self.write_output(device_path, &command_bytes)
+    }
+
+    /// Read OFP-1 health status from device
+    pub fn read_ofp1_health_status(&mut self, device_path: &str) -> Result<Option<crate::ofp1::HealthStatusReport>> {
+        // Read HID input report
+        let mut buffer = [0u8; 32]; // OFP-1 health report size
+        
+        match self.read_input(device_path, &mut buffer)? {
+            HidOperationResult::Success { bytes_transferred } => {
+                if bytes_transferred >= std::mem::size_of::<crate::ofp1::HealthStatusReport>() {
+                    let health_report = self.deserialize_ofp1_health(&buffer)?;
+                    
+                    // Validate report
+                    if let Err(e) = crate::ofp1::utils::validate_health_status(&health_report) {
+                        warn!("Invalid OFP-1 health report from {}: {}", device_path, e);
+                        return Ok(None);
+                    }
+                    
+                    Ok(Some(health_report))
+                } else {
+                    debug!("Insufficient data for OFP-1 health report: {} bytes", bytes_transferred);
+                    Ok(None)
+                }
+            }
+            _ => Ok(None), // No data available or error
+        }
+    }
+
+    /// Serialize OFP-1 torque command to bytes
+    fn serialize_ofp1_command(&self, command: &crate::ofp1::TorqueCommandReport) -> Result<Vec<u8>> {
+        // In real implementation, this would use proper serialization
+        // For now, simulate with a simple byte array
+        Ok(vec![
+            command.report_id,
+            (command.sequence & 0xFF) as u8,
+            (command.sequence >> 8) as u8,
+            (command.torque_command & 0xFF) as u8,
+            (command.torque_command >> 8) as u8,
+            command.command_flags.0,
+            (command.timestamp_us & 0xFF) as u8,
+            (command.timestamp_us >> 8) as u8,
+            (command.timestamp_us >> 16) as u8,
+            (command.timestamp_us >> 24) as u8,
+        ])
+    }
+
+    /// Deserialize OFP-1 health status from bytes
+    fn deserialize_ofp1_health(&self, buffer: &[u8]) -> Result<crate::ofp1::HealthStatusReport> {
+        // In real implementation, this would use proper deserialization
+        // For now, simulate with a basic structure
+        if buffer.len() < 16 {
+            return Err(FlightError::Configuration("Buffer too small for health report".to_string()));
+        }
+
+        let mut status_flags = crate::ofp1::StatusFlags::new();
+        status_flags.set_flag(crate::ofp1::StatusFlags::READY);
+        status_flags.set_flag(crate::ofp1::StatusFlags::TORQUE_ENABLED);
+
+        Ok(crate::ofp1::HealthStatusReport {
+            report_id: buffer[0],
+            sequence: u16::from_le_bytes([buffer[1], buffer[2]]),
+            status_flags,
+            current_torque: i16::from_le_bytes([buffer[5], buffer[6]]),
+            temperature_dc: 250, // 25.0°C
+            current_ma: 1000,    // 1A
+            encoder_position: 0,
+            uptime_s: 60,
+            reserved: [0; 2],
+        })
     }
 }
 

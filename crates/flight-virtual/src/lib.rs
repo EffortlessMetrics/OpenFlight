@@ -13,10 +13,12 @@ use flight_scheduler::{Scheduler, SchedulerConfig, SpscRing};
 pub mod device;
 pub mod loopback;
 pub mod perf_gate;
+pub mod ofp1_emulator;
 
 pub use device::{VirtualDevice, VirtualDeviceConfig, DeviceType};
 pub use loopback::{LoopbackHid, HidReport};
 pub use perf_gate::{PerfGate, PerfGateConfig, PerfResult};
+pub use ofp1_emulator::{Ofp1Emulator, Ofp1EmulatorConfig, EmulatorFaultType, EmulatorStatistics};
 
 #[cfg(test)]
 mod integration_tests;
