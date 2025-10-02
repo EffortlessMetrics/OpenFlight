@@ -202,7 +202,7 @@ impl SimConnectSession {
                     // No more messages
                     break;
                 }
-                Err(SimConnectError::ApiError(0x80004005u32 as i32)) => {
+                Err(SimConnectError::ApiError(val)) if val == 0x80004005u32 as i32 => {
                     // E_FAIL - connection lost
                     error!("SimConnect connection lost");
                     self.handle = None;

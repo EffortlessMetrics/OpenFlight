@@ -22,7 +22,7 @@ jobs:
     - name: Install MSRV Rust
       uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: 1.75.0  # Flight Hub MSRV
+        toolchain: 1.89.0  # Flight Hub MSRV
     
     - name: Cache cargo registry
       uses: actions/cache@v3
@@ -35,7 +35,7 @@ jobs:
     
     - name: Check MSRV compilation
       run: |
-        echo "🦀 Testing compilation with Rust 1.75.0 (MSRV)"
+        echo "🦀 Testing compilation with Rust 1.89.0 (MSRV)"
         cargo check --workspace --all-targets
         echo "✅ MSRV check passed"
 

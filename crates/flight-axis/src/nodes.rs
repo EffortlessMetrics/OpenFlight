@@ -218,15 +218,17 @@ impl Node for SlewNode {
     }
 
     unsafe fn init_state(&self, state_ptr: *mut u8) {
-        let state = state_ptr as *mut SlewState;
-        *state = SlewState {
-            last_output: 0.0,
-            last_time_ns: 0,
-        };
+        unsafe {
+            let state = state_ptr as *mut SlewState;
+            *state = SlewState {
+                last_output: 0.0,
+                last_time_ns: 0,
+            };
+        }
     }
 
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
-        let state = &mut *(state_ptr as *mut SlewState);
+        let state = unsafe { &mut *(state_ptr as *mut SlewState) };
 
         if state.last_time_ns == 0 {
             state.last_output = frame.out;

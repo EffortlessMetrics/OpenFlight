@@ -345,7 +345,7 @@ pub mod platform {
         {
             // Use Windows Beep API
             use std::os::raw::c_ulong;
-            extern "system" {
+            unsafe extern "system" {
                 fn Beep(frequency: c_ulong, duration: c_ulong) -> i32;
             }
             

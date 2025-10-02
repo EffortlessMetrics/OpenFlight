@@ -36,13 +36,13 @@ Key architectural decisions are documented in [Architecture Decision Records (AD
 
 ### Prerequisites
 
-- **Rust 1.75.0 or later** (MSRV enforced by CI)
+- **Rust 1.89.0 or later** (MSRV enforced by CI)
 - On Windows: Windows SDK for HID support
 - On Linux: libudev development headers
 
 ### Minimum Supported Rust Version (MSRV)
 
-Flight Hub requires Rust 1.75.0 or later. This is enforced by CI and ensures compatibility with required language features and dependencies.
+Flight Hub requires Rust 1.89.0 or later. This is enforced by CI and ensures compatibility with required language features and dependencies including Rust 2024 edition features.
 
 ### Build Commands
 

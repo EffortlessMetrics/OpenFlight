@@ -454,7 +454,7 @@ impl BytecodeCompiler {
         
         // Patch jump address
         let end_addr = self.instructions.len() as u16;
-        if let BytecodeOp::JumpFalse(ref mut addr) = &mut self.instructions[jump_addr] {
+        if let BytecodeOp::JumpFalse(addr) = &mut self.instructions[jump_addr] {
             *addr = end_addr;
         }
         
@@ -505,7 +505,7 @@ impl BytecodeCompiler {
                     
                     // Patch skip address
                     let end_addr = self.instructions.len() as u16;
-                    if let BytecodeOp::JumpFalse(ref mut addr) = &mut self.instructions[skip_addr] {
+                    if let BytecodeOp::JumpFalse(addr) = &mut self.instructions[skip_addr] {
                         *addr = end_addr;
                     }
                 }

@@ -391,7 +391,7 @@ impl TactileBridge {
         let outputs = channel_router.process_events(events.clone());
 
         // Send to SimShaker bridge
-        if let Some(ref mut bridge) = simshaker_bridge {
+        if let Some(bridge) = simshaker_bridge {
             if let Err(e) = bridge.update(&outputs) {
                 warn!("Failed to update SimShaker bridge: {}", e);
             }
@@ -422,7 +422,7 @@ impl TactileBridge {
         simshaker_bridge: &mut Option<SimShakerBridge>,
     ) {
         if let Ok(outputs) = channel_router.test_effect(effect_type, intensity) {
-            if let Some(ref mut bridge) = simshaker_bridge {
+            if let Some(bridge) = simshaker_bridge {
                 if let Err(e) = bridge.update(&outputs) {
                     warn!("Failed to send test effect to SimShaker: {}", e);
                 }

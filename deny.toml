@@ -115,9 +115,9 @@ allow-git = []
 # Additional configuration for Flight Hub
 [metadata]
 # Flight Hub MSRV Policy
-# We maintain compatibility with Rust 1.75.0 for stability
+# We maintain compatibility with Rust 1.89.0 for modern language features
 # This is enforced by CI and documented in README.md
-msrv = "1.75.0"
+msrv = "1.89.0"
 
 # Security contact for vulnerability reports
 security-contact = "security@flight-hub.dev"
