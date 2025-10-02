@@ -9,3 +9,42 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
+flight-ipc = { path = "../flight-ipc" }
+flight-panels = { path = "../flight-panels" }
+
+# Web API dependencies
+tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+hyper = "1.0"
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling and logging
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# Version handling
+semver = "1.0"
+
+# Async utilities
+futures = "0.3"
+tokio-util = "0.7"
+
+# UUID generation
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Random number generation
+fastrand = "2.0"
+
+[dev-dependencies]
+tempfile = { workspace = true }
+criterion = { workspace = true }
+proptest = { workspace = true }
+tokio-test = "0.4"
+axum-test = "14.0"

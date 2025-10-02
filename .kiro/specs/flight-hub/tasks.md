@@ -400,21 +400,33 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Create comprehensive hardware validation suite
   - _Requirements: PNL-01_
 
-- [ ] 22. StreamDeck plugin (flight-streamdeck)
+- [x] 22. StreamDeck plugin (flight-streamdeck)
+
+
+
+
+
   - Create local Web API for StreamDeck integration
   - Build plugin with sample profiles for GA/Airbus/Helo
   - Add verify event round-trip testing
   - Document installation process and port requirements
+
   - _Requirements: PNL-01_
 
-- [ ] 22.1 StreamDeck version posture
+- [x] 22.1 StreamDeck version posture
+
   - Implement supported app version range with degrade-gracefully behavior
   - Add detection & warning for out-of-range versions without crashing
   - Create compatibility matrix and user guidance for version management
   - Build comprehensive version compatibility testing
   - _Requirements: PNL-01_
 
-- [ ] 23. Tactile bridge (optional)
+- [x] 23. Tactile bridge (optional)
+
+
+
+
+
   - Implement basic channel routing for touchdown/rumble/stall effects
   - Create rate-limited thread with SimShaker-class app bridge
   - Add user toggle functionality for independent control

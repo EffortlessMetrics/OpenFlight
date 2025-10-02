@@ -15,6 +15,7 @@ members = [
     "crates/flight-dcs-export",
     "crates/flight-panels",
     "crates/flight-streamdeck",
+    "crates/flight-tactile",
     "crates/flight-writers",
     "crates/flight-service",
     "crates/flight-cli",
