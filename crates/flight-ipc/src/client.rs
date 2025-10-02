@@ -111,19 +111,7 @@ impl FlightClient {
         self.negotiation_result.as_ref()
     }
     
-    /// List connected devices
-    pub async fn list_devices(&mut self) -> Result<Vec<crate::proto::Device>, IpcError> {
-        self.require_feature("device-management")?;
-        
-        let request = ListDevicesRequest {
-            include_disconnected: false,
-            filter_types: vec![],
-        };
-        
-        let response = self.client.list_devices(request).await?.into_inner();
-        
-        Ok(response.devices)
-    }
+
     
     /// Subscribe to health events
     pub async fn subscribe_health(
@@ -152,16 +140,64 @@ impl FlightClient {
     }
     
     /// Apply a profile
-    pub async fn apply_profile(&mut self, profile_json: String) -> Result<crate::proto::ApplyProfileResponse, IpcError> {
+    pub async fn apply_profile(&mut self, request: crate::proto::ApplyProfileRequest) -> Result<crate::proto::ApplyProfileResponse, IpcError> {
         self.require_feature("profile-management")?;
         
-        let request = crate::proto::ApplyProfileRequest {
-            profile_json,
-            validate_only: false,
-            force_apply: false,
-        };
-        
         let response = self.client.apply_profile(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// List devices with full request parameters
+    pub async fn list_devices(&mut self, request: crate::proto::ListDevicesRequest) -> Result<crate::proto::ListDevicesResponse, IpcError> {
+        self.require_feature("device-management")?;
+        
+        let response = self.client.list_devices(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// Detect curve conflicts
+    pub async fn detect_curve_conflicts(&mut self, request: crate::proto::DetectCurveConflictsRequest) -> Result<crate::proto::DetectCurveConflictsResponse, IpcError> {
+        self.require_feature("profile-management")?;
+        
+        let response = self.client.detect_curve_conflicts(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// Resolve curve conflict
+    pub async fn resolve_curve_conflict(&mut self, request: crate::proto::ResolveCurveConflictRequest) -> Result<crate::proto::ResolveCurveConflictResponse, IpcError> {
+        self.require_feature("profile-management")?;
+        
+        let response = self.client.resolve_curve_conflict(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// One-click resolve curve conflict
+    pub async fn one_click_resolve(&mut self, request: crate::proto::OneClickResolveRequest) -> Result<crate::proto::OneClickResolveResponse, IpcError> {
+        self.require_feature("profile-management")?;
+        
+        let response = self.client.one_click_resolve(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// Set capability mode
+    pub async fn set_capability_mode(&mut self, request: crate::proto::SetCapabilityModeRequest) -> Result<crate::proto::SetCapabilityModeResponse, IpcError> {
+        self.require_feature("force-feedback")?;
+        
+        let response = self.client.set_capability_mode(request).await?.into_inner();
+        
+        Ok(response)
+    }
+    
+    /// Get capability mode
+    pub async fn get_capability_mode(&mut self, request: crate::proto::GetCapabilityModeRequest) -> Result<crate::proto::GetCapabilityModeResponse, IpcError> {
+        self.require_feature("force-feedback")?;
+        
+        let response = self.client.get_capability_mode(request).await?.into_inner();
         
         Ok(response)
     }

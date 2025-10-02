@@ -565,7 +565,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build safe boot validation and RT privilege detection
   - _Requirements: UX-01, XPLAT-01_
 
-- [ ] 32. CLI parity (flight-cli)
+- [x] 32. CLI parity (flight-cli)
+
+
+
+
+
   - Implement devices list|info, profile apply, sim configure commands
   - Add panels verify, torque unlock, diag record/replay functionality
   - Create --json output format with non-zero error codes
