@@ -52,14 +52,14 @@ mod tests {
         assert!(high_end_selection.supports_high_torque);
         assert_eq!(high_end_selection.update_rate_hz, 1000);
         assert!(high_end_selection.trim_limits.max_rate_nm_per_s > 10.0); // Aggressive limits
-        assert!(high_end_selection.trim_limits.validate().is_ok());
+        assert!(high_end_selection.trim_limits.validate_trim_limits().is_ok());
 
         // Test mid-range device - should select DirectInput
         let mid_range_selection = negotiator.negotiate_mode(&mid_range_device);
         assert_eq!(mid_range_selection.mode, FfbMode::DirectInput);
         assert!(mid_range_selection.supports_high_torque);
         assert!(mid_range_selection.trim_limits.max_rate_nm_per_s < high_end_selection.trim_limits.max_rate_nm_per_s);
-        assert!(mid_range_selection.trim_limits.validate().is_ok());
+        assert!(mid_range_selection.trim_limits.validate_trim_limits().is_ok());
 
         // Test low-end device - should select telemetry synthesis
         let low_end_selection = negotiator.negotiate_mode(&low_end_device);
@@ -67,7 +67,7 @@ mod tests {
         assert!(!low_end_selection.supports_high_torque);
         assert_eq!(low_end_selection.update_rate_hz, 60);
         assert!(low_end_selection.trim_limits.max_rate_nm_per_s <= 2.0); // Conservative limits
-        assert!(low_end_selection.trim_limits.validate().is_ok());
+        assert!(low_end_selection.trim_limits.validate_trim_limits().is_ok());
 
         // Test FFB engine integration with mode negotiation
         let config = FfbConfig {
@@ -343,7 +343,7 @@ mod tests {
             );
             
             // Verify trim limits are appropriate for the mode
-            assert!(selection.trim_limits.validate().is_ok(), "Invalid trim limits for {}", name);
+            assert!(selection.trim_limits.validate_trim_limits().is_ok(), "Invalid trim limits for {}", name);
             
             match selection.mode {
                 FfbMode::RawTorque => {

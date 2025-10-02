@@ -32,6 +32,26 @@ impl Default for TrimLimits {
     }
 }
 
+impl TrimLimits {
+    /// Validate that limits are reasonable
+    pub fn validate_trim_limits(&self) -> Result<(), String> {
+        if self.max_rate_nm_per_s <= 0.0 {
+            return Err("max_rate_nm_per_s must be positive".to_string());
+        }
+        
+        if self.max_jerk_nm_per_s2 <= 0.0 {
+            return Err("max_jerk_nm_per_s2 must be positive".to_string());
+        }
+        
+        // Sanity check: jerk should be reasonable relative to rate
+        if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s {
+            return Err("max_jerk_nm_per_s2 should be >= max_rate_nm_per_s for reasonable behavior".to_string());
+        }
+        
+        Ok(())
+    }
+}
+
 /// Setpoint change request
 #[derive(Debug, Clone)]
 pub struct SetpointChange {
@@ -81,6 +101,10 @@ pub struct TrimController {
     spring_config: SpringConfig,
     /// Whether spring is currently frozen
     spring_frozen: bool,
+    /// Spring ramp start time (for gradual re-enable)
+    spring_ramp_start: Option<Instant>,
+    /// Spring ramp duration
+    spring_ramp_duration: Duration,
     /// Last update timestamp
     last_update: Instant,
     /// Active setpoint change
@@ -99,6 +123,8 @@ impl TrimController {
             limits: TrimLimits::default(),
             spring_config: SpringConfig::default(),
             spring_frozen: false,
+            spring_ramp_start: None,
+            spring_ramp_duration: Duration::from_millis(150),
             last_update: Instant::now(),
             active_change: None,
         }
@@ -113,6 +139,7 @@ impl TrimController {
         self.target_setpoint_nm = 0.0;
         self.current_rate_nm_per_s = 0.0;
         self.spring_frozen = false;
+        self.spring_ramp_start = None;
         self.active_change = None;
     }
 
@@ -229,13 +256,36 @@ impl TrimController {
     }
 
     /// Update spring trim with freeze/ramp logic
-    fn update_spring(&mut self, _dt: f32) -> TrimOutput {
-        if self.spring_frozen {
+    fn update_spring(&mut self, dt: f32) -> TrimOutput {
+        // Handle spring ramp if active
+        if let Some(ramp_start) = self.spring_ramp_start {
+            let ramp_elapsed = ramp_start.elapsed();
+            
+            if ramp_elapsed >= self.spring_ramp_duration {
+                // Ramp complete - unfreeze spring
+                self.spring_frozen = false;
+                self.spring_ramp_start = None;
+                self.active_change = None;
+            } else {
+                // Ramp in progress - gradually increase spring strength
+                let ramp_progress = ramp_elapsed.as_secs_f32() / self.spring_ramp_duration.as_secs_f32();
+                let target_strength = self.spring_config.strength;
+                
+                // Create ramped config with gradually increasing strength
+                let mut ramped_config = self.spring_config.clone();
+                ramped_config.strength = target_strength * ramp_progress;
+                
+                return TrimOutput::SpringCentered {
+                    config: ramped_config,
+                    frozen: false, // Not frozen during ramp, just reduced strength
+                };
+            }
+        } else if self.spring_frozen {
             // Check if we should start ramping spring back
             if let Some(_change) = &self.active_change {
                 // Start ramping after a brief hold period
                 if self.last_update.elapsed() > Duration::from_millis(100) {
-                    self.ramp_spring_enable(Duration::from_millis(150));
+                    self.spring_ramp_start = Some(Instant::now());
                 }
             }
         }
@@ -254,12 +304,12 @@ impl TrimController {
     }
 
     /// Ramp spring re-enable over specified duration
-    pub fn ramp_spring_enable(&mut self, _ramp_duration: Duration) {
+    pub fn ramp_spring_enable(&mut self, ramp_duration: Duration) {
         if self.mode == TrimMode::SpringCentered && self.spring_frozen {
-            // In a real implementation, this would start a gradual ramp
-            // For now, we'll just unfreeze after the duration
-            self.spring_frozen = false;
-            self.active_change = None;
+            // Start gradual ramp by setting up a ramp state
+            self.spring_ramp_start = Some(Instant::now());
+            self.spring_ramp_duration = ramp_duration;
+            // Don't unfreeze immediately - let update() handle the ramp
         }
     }
 
@@ -307,6 +357,60 @@ impl TrimController {
             None
         }
     }
+
+    /// Check if spring is currently ramping
+    pub fn is_spring_ramping(&self) -> bool {
+        self.spring_ramp_start.is_some()
+    }
+
+    /// Get spring ramp progress (0.0 to 1.0)
+    pub fn get_spring_ramp_progress(&self) -> Option<f32> {
+        if let Some(ramp_start) = self.spring_ramp_start {
+            let elapsed = ramp_start.elapsed().as_secs_f32();
+            let total = self.spring_ramp_duration.as_secs_f32();
+            Some((elapsed / total).min(1.0))
+        } else {
+            None
+        }
+    }
+
+    /// Validate that no torque steps occur during setpoint changes
+    pub fn validate_no_torque_steps(&self, previous_output: f32, current_output: f32, dt: f32) -> Result<(), String> {
+        if dt <= 0.0 {
+            return Ok(()); // Skip validation for invalid dt
+        }
+
+        let torque_change = (current_output - previous_output).abs();
+        let rate = torque_change / dt;
+        
+        // Check against rate limit with some tolerance for discrete sampling
+        let tolerance_factor = 1.1; // 10% tolerance
+        if rate > self.limits.max_rate_nm_per_s * tolerance_factor {
+            return Err(format!(
+                "Torque step detected: rate {} Nm/s exceeds limit {} Nm/s",
+                rate, self.limits.max_rate_nm_per_s
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Get detailed trim state for diagnostics
+    pub fn get_trim_state(&self) -> TrimState {
+        TrimState {
+            mode: self.mode,
+            current_setpoint_nm: self.current_setpoint_nm,
+            target_setpoint_nm: self.target_setpoint_nm,
+            current_rate_nm_per_s: self.current_rate_nm_per_s,
+            limits: self.limits.clone(),
+            spring_config: self.spring_config.clone(),
+            spring_frozen: self.spring_frozen,
+            spring_ramping: self.is_spring_ramping(),
+            spring_ramp_progress: self.get_spring_ramp_progress(),
+            is_changing: self.is_changing(),
+            estimated_completion: self.estimated_completion_time(),
+        }
+    }
 }
 
 /// Output from trim controller
@@ -326,6 +430,33 @@ pub enum TrimOutput {
         /// Whether spring is frozen
         frozen: bool,
     },
+}
+
+/// Detailed trim state for diagnostics and validation
+#[derive(Debug, Clone)]
+pub struct TrimState {
+    /// Current trim mode
+    pub mode: TrimMode,
+    /// Current setpoint in Nm
+    pub current_setpoint_nm: f32,
+    /// Target setpoint in Nm
+    pub target_setpoint_nm: f32,
+    /// Current rate in Nm/s
+    pub current_rate_nm_per_s: f32,
+    /// Trim limits
+    pub limits: TrimLimits,
+    /// Spring configuration
+    pub spring_config: SpringConfig,
+    /// Whether spring is frozen
+    pub spring_frozen: bool,
+    /// Whether spring is ramping
+    pub spring_ramping: bool,
+    /// Spring ramp progress (0.0 to 1.0)
+    pub spring_ramp_progress: Option<f32>,
+    /// Whether trim change is in progress
+    pub is_changing: bool,
+    /// Estimated completion time
+    pub estimated_completion: Option<Duration>,
 }
 
 #[cfg(test)]

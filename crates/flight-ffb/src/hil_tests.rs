@@ -139,7 +139,7 @@ impl HilTestSuite {
         }
 
         // Validate trim limits are reasonable
-        if let Err(validation_error) = selection.trim_limits.validate() {
+        if let Err(validation_error) = selection.trim_limits.validate_trim_limits() {
             return Err(format!("Invalid trim limits: {}", validation_error));
         }
 

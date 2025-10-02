@@ -444,7 +444,7 @@ mod tests {
             );
             
             // Validate trim limits
-            assert!(selection.trim_limits.validate().is_ok(),
+            assert!(selection.trim_limits.validate_trim_limits().is_ok(),
                 "Invalid trim limits for test case: {}", test_case.name);
         }
     }
@@ -516,25 +516,25 @@ mod tests {
             max_rate_nm_per_s: 10.0,
             max_jerk_nm_per_s2: 40.0,
         };
-        assert!(valid_limits.validate().is_ok());
+        assert!(valid_limits.validate_trim_limits().is_ok());
         
         let invalid_rate = TrimLimits {
             max_rate_nm_per_s: 0.0,
             max_jerk_nm_per_s2: 20.0,
         };
-        assert!(invalid_rate.validate().is_err());
+        assert!(invalid_rate.validate_trim_limits().is_err());
         
         let excessive_rate = TrimLimits {
             max_rate_nm_per_s: 60.0,
             max_jerk_nm_per_s2: 120.0,
         };
-        assert!(excessive_rate.validate().is_err());
+        assert!(excessive_rate.validate_trim_limits().is_err());
         
         let insufficient_jerk = TrimLimits {
             max_rate_nm_per_s: 10.0,
             max_jerk_nm_per_s2: 15.0, // Less than 2x rate
         };
-        assert!(insufficient_jerk.validate().is_err());
+        assert!(insufficient_jerk.validate_trim_limits().is_err());
     }
 
     #[test]
@@ -542,8 +542,8 @@ mod tests {
         let conservative = TrimLimits::conservative();
         let aggressive = TrimLimits::aggressive();
         
-        assert!(conservative.validate().is_ok());
-        assert!(aggressive.validate().is_ok());
+        assert!(conservative.validate_trim_limits().is_ok());
+        assert!(aggressive.validate_trim_limits().is_ok());
         
         assert!(conservative.max_rate_nm_per_s < aggressive.max_rate_nm_per_s);
         assert!(conservative.max_jerk_nm_per_s2 < aggressive.max_jerk_nm_per_s2);

@@ -584,13 +584,7 @@ impl PerformanceValidator {
     }
 }
 
-impl FfbEngine {
-    /// Get mutable reference to trim controller for testing
-    #[cfg(test)]
-    pub fn get_trim_controller_mut(&mut self) -> &mut crate::TrimController {
-        &mut self.trim_controller
-    }
-}
+
 
 impl Default for PerformanceValidator {
     fn default() -> Self {

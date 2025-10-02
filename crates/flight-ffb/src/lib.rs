@@ -10,6 +10,9 @@ pub mod safety;
 pub mod interlock;
 pub mod fault;
 pub mod trim;
+pub mod trim_validation;
+#[cfg(test)]
+pub mod trim_hil_tests;
 pub mod soft_stop;
 pub mod audio;
 pub mod blackbox;
@@ -32,6 +35,9 @@ pub use safety::*;
 pub use interlock::*;
 pub use fault::*;
 pub use trim::*;
+pub use trim_validation::*;
+#[cfg(test)]
+pub use trim_hil_tests::*;
 pub use soft_stop::*;
 pub use audio::*;
 pub use blackbox::*;
@@ -498,6 +504,62 @@ impl FfbEngine {
     /// Check if telemetry synthesis is enabled
     pub fn is_telemetry_synthesis_enabled(&self) -> bool {
         self.telemetry_synth.is_some()
+    }
+
+    /// Get trim controller for validation and testing
+    pub fn get_trim_controller(&self) -> &TrimController {
+        &self.trim_controller
+    }
+
+    /// Get mutable trim controller for validation and testing
+    pub fn get_trim_controller_mut(&mut self) -> &mut TrimController {
+        &mut self.trim_controller
+    }
+
+    /// Apply trim setpoint change through engine
+    pub fn apply_trim_setpoint_change(&mut self, change: SetpointChange) -> Result<()> {
+        let target_nm = change.target_nm;
+        self.trim_controller.apply_setpoint_change(change)
+            .map_err(|e| FfbError::ConfigError { message: e })?;
+        
+        // Record trim change in blackbox
+        self.blackbox_recorder.record(BlackboxEntry::SystemEvent {
+            timestamp: Instant::now(),
+            event_type: "TRIM_SETPOINT_CHANGE".to_string(),
+            details: format!("Target: {} Nm", target_nm),
+        }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
+        
+        Ok(())
+    }
+
+    /// Update trim controller and get output
+    pub fn update_trim_controller(&mut self) -> TrimOutput {
+        let output = self.trim_controller.update();
+        
+        // Record trim state in blackbox
+        let state = self.trim_controller.get_trim_state();
+        if let Err(e) = self.blackbox_recorder.record(BlackboxEntry::SystemEvent {
+            timestamp: Instant::now(),
+            event_type: "TRIM_UPDATE".to_string(),
+            details: format!("Mode: {:?}, Setpoint: {} Nm, Rate: {} Nm/s", 
+                state.mode, state.current_setpoint_nm, state.current_rate_nm_per_s),
+        }) {
+            tracing::warn!("Failed to record trim update in blackbox: {}", e);
+        }
+        
+        output
+    }
+
+    /// Run trim validation suite
+    pub fn run_trim_validation(&mut self) -> Vec<TrimValidationResult> {
+        let mut validation_suite = TrimValidationSuite::default();
+        validation_suite.run_complete_validation()
+    }
+
+    /// Run trim validation with custom configuration
+    pub fn run_trim_validation_with_config(&mut self, config: TrimValidationConfig) -> Vec<TrimValidationResult> {
+        let mut validation_suite = TrimValidationSuite::new(config);
+        validation_suite.run_complete_validation()
     }
 }
 

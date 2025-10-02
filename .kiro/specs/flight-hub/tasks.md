@@ -480,7 +480,10 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build user tuning interface with blackbox markers
   - _Requirements: FFB-01_
 
-- [-] 27. Force-trim correctness validation
+- [x] 27. Force-trim correctness validation
+
+
+
 
 
   - Implement non-FFB recentre illusion with trim-hold freeze
@@ -491,7 +494,10 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 6: Diagnostics, Tracing, Replay (M6) - Observability Layer
 
-- [ ] 28. Blackbox .fbb writer behavior
+- [-] 28. Blackbox .fbb writer behavior
+
+
+
   - Implement chunked writes (4-8KB), index every 100ms, CRC32C footer
   - Create flush at stop or 1s cadence with no fsync per chunk
   - Add 10-minute capture: 0 drops; size <30MB/3min; corruption detection
