@@ -1,6 +1,6 @@
-# flight-service
+# Flight Hub Service
 
-Main service orchestration for Flight Hub, coordinating real-time engines, adapters, and user interfaces.
+This crate provides the main service implementation for Flight Hub, including the app/use-cases layer with port orchestration, profile application, safety gates, auto-profiles functionality, health stream, and error taxonomy with stable codes.
 
 ## Overview
 

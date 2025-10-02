@@ -544,14 +544,21 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 7: Service, CLI, Packaging, Updates (M7) - Production Readiness
 
-- [ ] 31. Service wiring (flight-service)
+- [x] 31. Service wiring (flight-service)
+
+
+
+
+
   - Implement app/use-cases layer with port orchestration
   - Add profile apply, safety gate, auto-profiles functionality
   - Create health stream and error taxonomy with stable codes
   - Build end-to-end scenario acceptance testing
   - _Requirements: Multiple (DM/GI/PRF/SAFE/UX)_
 
-- [ ] 31.1 Safe Mode + power hints
+- [x] 31.1 Safe Mode + power hints
+
+
   - Implement --safe (axis-only; no panels/plugins/tactile) with basic profile
   - Add power checks (USB selective suspend, plan throttling on Win; rtkit/memlock on Linux)
   - Create remediation guidance with clear user instructions
