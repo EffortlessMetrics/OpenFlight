@@ -577,19 +577,25 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build comprehensive CLI parity validation with IPC
   - _Requirements: UX-01_
 
-- [ ] 33. Packaging & updates
+- [-] 33. Packaging & updates
+
+
+
   - Create MSI (signed) and systemd user units
   - Implement udev rules and delta update system
   - Add rollback functionality and signature verification
   - Ensure install without admin/root at runtime
   - _Requirements: XPLAT-01, SEC-01_
 
-- [ ] 33.1 Channels & rollback
+- [x] 33.1 Channels & rollback
+
+
   - Implement stable/beta/canary channels with signed delta updates
   - Create auto-rollback on startup crash with prior 2 versions kept
   - Add update simulator tests (upgrade→crash→rollback) validation
   - Build comprehensive update reliability and recovery system
   - _Requirements: REL-01_
+
 
 - [ ] 33.2 "What we touch" docs surfaced
   - Create per-sim page listing files/ports/vars and revert steps

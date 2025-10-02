@@ -22,6 +22,7 @@ members = [
     "crates/flight-service",
     "crates/flight-cli",
     "crates/flight-ui",
+    "crates/flight-updater",
     "examples"
 ]
 
