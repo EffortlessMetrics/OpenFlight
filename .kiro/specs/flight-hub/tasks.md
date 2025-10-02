@@ -435,7 +435,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ### Milestone 5: Force Feedback Modes (M5) - Advanced FFB Features
 
-- [ ] 24. FFB mode negotiation & trim limits
+- [x] 24. FFB mode negotiation & trim limits
+
+
+
+
+
   - Implement device caps (supports_pid, supports_raw_torque, min_period_us, max_torque_nm, health_stream)
   - Create policy that selects DI/Raw/Synth with trim rate/jerk limits (no torque step)
   - Add selection matrix tests with HIL trim tests matching FP tolerance

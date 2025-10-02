@@ -13,6 +13,13 @@ pub mod trim;
 pub mod soft_stop;
 pub mod audio;
 pub mod blackbox;
+pub mod mode_negotiation;
+#[cfg(test)]
+pub mod hil_tests;
+#[cfg(test)]
+pub mod performance_validation;
+#[cfg(test)]
+pub mod integration_test;
 #[cfg(test)]
 pub mod usb_yank_test;
 
@@ -26,6 +33,11 @@ pub use trim::*;
 pub use soft_stop::*;
 pub use audio::*;
 pub use blackbox::*;
+pub use mode_negotiation::*;
+#[cfg(test)]
+pub use hil_tests::*;
+#[cfg(test)]
+pub use performance_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
 
@@ -74,11 +86,17 @@ pub enum FfbMode {
 /// Device capabilities for mode negotiation
 #[derive(Debug, Clone)]
 pub struct DeviceCapabilities {
+    /// Device supports DirectInput PID effects
     pub supports_pid: bool,
+    /// Device supports raw torque commands (OFP-1 protocol)
     pub supports_raw_torque: bool,
+    /// Maximum torque output in Newton-meters
     pub max_torque_nm: f32,
+    /// Minimum update period in microseconds (0 if not applicable)
     pub min_period_us: u32,
+    /// Device provides health/status stream
     pub has_health_stream: bool,
+    /// Device supports physical interlock for high-torque mode
     pub supports_interlock: bool,
 }
 
@@ -144,24 +162,47 @@ impl FfbEngine {
         &self.config
     }
 
-    /// Set device capabilities after negotiation
+    /// Set device capabilities and negotiate FFB mode
     pub fn set_device_capabilities(&mut self, capabilities: DeviceCapabilities) -> Result<()> {
         self.device_capabilities = Some(capabilities.clone());
         
-        // Auto-select mode based on capabilities if in Auto mode
+        // Use mode negotiator to select appropriate mode and limits
+        let negotiator = ModeNegotiator::new();
+        let selection = negotiator.negotiate_mode(&capabilities);
+        
+        // Update configuration based on negotiation result
         if self.config.mode == FfbMode::Auto {
-            let selected_mode = if capabilities.supports_raw_torque {
-                FfbMode::RawTorque
-            } else if capabilities.supports_pid {
-                FfbMode::DirectInput
-            } else {
-                FfbMode::TelemetrySynth
-            };
-            
-            self.config.mode = selected_mode;
+            self.config.mode = selection.mode;
         }
         
+        // Update trim controller with negotiated limits
+        self.trim_controller.set_limits(selection.trim_limits);
+        
+        // Log negotiation result
+        tracing::info!(
+            "FFB mode negotiated: {:?} at {} Hz, high_torque={}, rationale={}",
+            selection.mode,
+            selection.update_rate_hz,
+            selection.supports_high_torque,
+            selection.rationale
+        );
+        
         Ok(())
+    }
+
+    /// Get device capabilities
+    pub fn device_capabilities(&self) -> Option<&DeviceCapabilities> {
+        self.device_capabilities.as_ref()
+    }
+
+    /// Negotiate mode with custom policy
+    pub fn negotiate_mode_with_policy(&self, policy: ModeSelectionPolicy) -> Option<ModeSelection> {
+        if let Some(capabilities) = &self.device_capabilities {
+            let negotiator = ModeNegotiator::with_policy(policy);
+            Some(negotiator.negotiate_mode(capabilities))
+        } else {
+            None
+        }
     }
 
     /// Generate interlock challenge for device
@@ -233,9 +274,12 @@ impl FfbEngine {
         match fault {
             FaultType::UsbStall | 
             FaultType::EndpointError | 
+            FaultType::EndpointWedged |
             FaultType::NanValue | 
+            FaultType::EncoderInvalid |
             FaultType::OverTemp | 
-            FaultType::OverCurrent => {
+            FaultType::OverCurrent |
+            FaultType::DeviceTimeout => {
                 // Transition to faulted state
                 self.safety_state = SafetyState::Faulted;
                 
