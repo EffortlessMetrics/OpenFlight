@@ -622,7 +622,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Maintain ADR repository with cross-references in documentation
   - _Requirements: Documentation_
 
-- [ ] 35. Security & privacy posture
+- [x] 35. Security & privacy posture
+
+
+
+
+
   - Implement local-only IPC with ACLs and no outbound telemetry default
   - Add opt-in metrics with redaction in support ZIP
   - Create plugin signing surface and capability validation

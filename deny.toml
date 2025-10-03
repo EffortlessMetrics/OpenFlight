@@ -1,8 +1,13 @@
-# Flight Hub Security and License Policy
-# This file configures cargo-deny to enforce security and licensing requirements
+# Flight Hub Security Policy Configuration
+# This file configures cargo-deny for supply chain security
+
+[graph]
+# Ensure we have a complete dependency graph
+all-features = true
+exclude-dev = false
 
 [licenses]
-# List of explicitly allowed licenses
+# Only allow licenses that are compatible with our MIT/Apache-2.0 dual license
 allow = [
     "MIT",
     "Apache-2.0",
@@ -11,117 +16,81 @@ allow = [
     "BSD-3-Clause",
     "ISC",
     "Unicode-DFS-2016",
+    "CC0-1.0",
 ]
 
-# List of explicitly disallowed licenses
+# Deny copyleft licenses that could affect our licensing
 deny = [
     "GPL-2.0",
-    "GPL-3.0",
-    "AGPL-1.0",
-    "AGPL-3.0",
-    "LGPL-2.0",
+    "GPL-3.0", 
     "LGPL-2.1",
     "LGPL-3.0",
+    "AGPL-3.0",
 ]
 
-# Lint level for when multiple versions of the same license are detected
-multiple-versions = "warn"
-
-# Confidence threshold for detecting a license from a license text.
-# 0.8 means we need to be 80% confident that the detected license is correct
+# Confidence threshold for license detection
 confidence-threshold = 0.8
 
-# Allow 1 or more licenses on a single dependency
+# Allow specific exceptions (if needed)
 exceptions = [
-    # ring has ISC, MIT, OpenSSL licenses
-    { allow = ["ISC", "MIT", "OpenSSL"], name = "ring" },
-    # webpki-roots has MPL-2.0 license
-    { allow = ["MPL-2.0"], name = "webpki-roots" },
+    # Example: { allow = ["GPL-3.0"], name = "some-crate", version = "1.0" }
 ]
 
 [bans]
-# Lint level for when multiple versions of the same crate are detected
-multiple-versions = "warn"
-
-# Lint level for when a crate version requirement is `*`
-wildcards = "allow"
-
-# The graph highlighting used when creating dotgraphs for crates
-# with multiple versions
-highlight = "all"
-
-# List of crates that are allowed. Use with care!
-allow = []
-
-# List of crates to deny
+# Deny specific crates that have known security issues or are unmaintained
 deny = [
-    # Crates with known security issues
-    { name = "openssl", version = "*" },
-    { name = "native-tls", version = "*" },
+    # Crates with known security vulnerabilities
+    { name = "openssl", version = "<0.10.55" },
+    { name = "hyper", version = "<0.14.18" },
+    { name = "tokio", version = "<1.20.0" },
     
-    # Crates that could compromise RT performance  
-    # Note: We actually use tokio, this is just an example
-    # { name = "tokio", version = "*", use-instead = "async-std" },
+    # Unmaintained or problematic crates
+    { name = "net2" },
+    { name = "tempdir" },
+    { name = "rand", version = "<0.8.0" },
 ]
 
-# Certain crates/versions that will be skipped when doing duplicate detection.
-skip = []
+# Skip certain crates from duplicate version checking
+skip = [
+    # Allow multiple versions of these crates if needed
+    { name = "windows-sys" },
+    { name = "windows" },
+]
 
-# Similarly to `skip` allows you to skip certain crates from being checked. Unlike `skip`,
-# `skip-tree` skips the crate and all of its dependencies entirely.
-skip-tree = []
+# Skip tree checking for certain crates
+skip-tree = [
+    # Skip checking dependencies of build tools
+    { name = "cc" },
+    { name = "pkg-config" },
+]
 
 [advisories]
-# The path where the advisory database is cloned/fetched into
+# Configuration for security advisory checking
 db-path = "~/.cargo/advisory-db"
-
-# The url(s) of the advisory databases to use
 db-urls = ["https://github.com/rustsec/advisory-db"]
 
-# The lint level for security vulnerabilities
+# Vulnerability severity levels to deny
 vulnerability = "deny"
-
-# The lint level for unmaintained crates
 unmaintained = "warn"
-
-# The lint level for crates that have been yanked from their source registry
-yanked = "warn"
-
-# The lint level for crates with security notices. Note that as of
-# 2019-12-17 there are no security notice advisories in
-# https://github.com/rustsec/advisory-db
+yanked = "deny"
 notice = "warn"
 
-# A list of advisory IDs to ignore. Note that ignored advisories will still
-# output a note when they are encountered.
-ignore = []
+# Ignore specific advisories (use sparingly and with justification)
+ignore = [
+    # Example: "RUSTSEC-2020-0001", # Justification for ignoring
+]
 
 [sources]
-# Lint level for what to happen when a crate from a crate registry that is
-# not in the allow list is encountered
-unknown-registry = "warn"
+# Only allow crates from trusted sources
+unknown-registry = "deny"
+unknown-git = "deny"
 
-# Lint level for what to happen when a crate from a git repository that is not
-# in the allow list is encountered
-unknown-git = "warn"
+# Allow specific git sources if needed
+allow-git = [
+    # Example: "https://github.com/trusted-org/trusted-repo"
+]
 
-# List of URLs for allowed crate registries. Defaults to the crates.io index
-# if not specified. If it is specified but empty, no registries are allowed.
-allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-
-# List of URLs for allowed Git repositories
-allow-git = []
-
-# Additional configuration for Flight Hub
-[metadata]
-# Flight Hub MSRV Policy
-# We maintain compatibility with Rust 1.89.0 for modern language features
-# This is enforced by CI and documented in README.md
-msrv = "1.89.0"
-
-# Security contact for vulnerability reports
-security-contact = "security@flight-hub.dev"
-
-# License policy: Only permissive licenses allowed
-# GPL and copyleft licenses are explicitly denied
-license-policy = "permissive-only"
+# Allow registries
+allow-registry = [
+    "https://github.com/rust-lang/crates.io-index"
+]

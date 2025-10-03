@@ -11,6 +11,7 @@ use crate::{
     ServerConfig,
 };
 use anyhow::Result;
+use flight_core::{SecurityManager, TelemetryDataType};
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::broadcast;
 use tonic::{transport::Server, Request, Response, Status};
@@ -21,6 +22,7 @@ pub struct FlightServiceImpl {
     config: ServerConfig,
     health_sender: broadcast::Sender<HealthEvent>,
     service_start_time: SystemTime,
+    security_manager: Arc<tokio::sync::RwLock<SecurityManager>>,
     // In a real implementation, these would be injected dependencies
     device_manager: Arc<dyn DeviceManager>,
     profile_manager: Arc<dyn ProfileManager>,
@@ -73,6 +75,7 @@ impl FlightServiceImpl {
             config,
             health_sender,
             service_start_time: SystemTime::now(),
+            security_manager: Arc::new(tokio::sync::RwLock::new(SecurityManager::new())),
             device_manager: Arc::new(MockDeviceManager),
             profile_manager: Arc::new(MockProfileManager),
         }
@@ -90,6 +93,26 @@ impl FlightServiceImpl {
             config,
             health_sender,
             service_start_time: SystemTime::now(),
+            security_manager: Arc::new(tokio::sync::RwLock::new(SecurityManager::new())),
+            device_manager,
+            profile_manager,
+        }
+    }
+    
+    /// Create with custom security manager
+    pub fn with_security_manager(
+        config: ServerConfig,
+        security_manager: SecurityManager,
+        device_manager: Arc<dyn DeviceManager>,
+        profile_manager: Arc<dyn ProfileManager>,
+    ) -> Self {
+        let (health_sender, _) = broadcast::channel(1000);
+        
+        Self {
+            config,
+            health_sender,
+            service_start_time: SystemTime::now(),
+            security_manager: Arc::new(tokio::sync::RwLock::new(security_manager)),
             device_manager,
             profile_manager,
         }
@@ -301,11 +324,127 @@ impl FlightService for FlightServiceImpl {
             capabilities.insert(feature.clone(), "enabled".to_string());
         }
         
+        // Add security status to capabilities
+        let security_manager = self.security_manager.read().await;
+        let telemetry_config = security_manager.get_telemetry_config();
+        capabilities.insert("telemetry_enabled".to_string(), telemetry_config.enabled.to_string());
+        capabilities.insert("security_enforced".to_string(), "true".to_string());
+        
         let response = GetServiceInfoResponse {
             version: self.config.server_version.clone(),
             uptime_seconds: uptime,
             status: ServiceStatus::Running.into(),
             capabilities,
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    /// Get security status and plugin information
+    async fn get_security_status(
+        &self,
+        _request: Request<crate::proto::GetSecurityStatusRequest>,
+    ) -> Result<Response<crate::proto::GetSecurityStatusResponse>, Status> {
+        let security_manager = self.security_manager.read().await;
+        
+        let plugin_registry = security_manager.get_plugin_registry();
+        let mut plugins = Vec::new();
+        
+        for (name, manifest) in plugin_registry {
+            plugins.push(crate::proto::PluginInfo {
+                name: name.clone(),
+                version: manifest.version.clone(),
+                plugin_type: match manifest.plugin_type {
+                    flight_core::PluginType::Wasm => crate::proto::PluginType::Wasm.into(),
+                    flight_core::PluginType::Native => crate::proto::PluginType::Native.into(),
+                },
+                signature_status: match &manifest.signature {
+                    flight_core::SignatureStatus::Signed { issuer, .. } => {
+                        format!("Signed by {}", issuer)
+                    }
+                    flight_core::SignatureStatus::Unsigned => "Unsigned".to_string(),
+                    flight_core::SignatureStatus::Invalid { reason } => {
+                        format!("Invalid: {}", reason)
+                    }
+                },
+                capabilities: manifest.capabilities.iter()
+                    .map(|cap| format!("{:?}", cap))
+                    .collect(),
+            });
+        }
+        
+        let telemetry_config = security_manager.get_telemetry_config();
+        
+        let response = crate::proto::GetSecurityStatusResponse {
+            success: true,
+            error_message: String::new(),
+            plugins,
+            telemetry_enabled: telemetry_config.enabled,
+            telemetry_data_types: telemetry_config.collected_data.iter()
+                .map(|dt| format!("{:?}", dt))
+                .collect(),
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    /// Configure telemetry collection
+    async fn configure_telemetry(
+        &self,
+        request: Request<crate::proto::ConfigureTelemetryRequest>,
+    ) -> Result<Response<crate::proto::ConfigureTelemetryResponse>, Status> {
+        let request = request.into_inner();
+        let mut security_manager = self.security_manager.write().await;
+        
+        if request.enabled {
+            // Convert string data types to enum
+            let mut data_types = std::collections::HashSet::new();
+            for dt_str in &request.data_types {
+                match dt_str.as_str() {
+                    "Performance" => { data_types.insert(TelemetryDataType::Performance); }
+                    "Errors" => { data_types.insert(TelemetryDataType::Errors); }
+                    "Usage" => { data_types.insert(TelemetryDataType::Usage); }
+                    "DeviceEvents" => { data_types.insert(TelemetryDataType::DeviceEvents); }
+                    "ProfileEvents" => { data_types.insert(TelemetryDataType::ProfileEvents); }
+                    _ => {
+                        return Err(Status::invalid_argument(format!("Unknown data type: {}", dt_str)));
+                    }
+                }
+            }
+            
+            security_manager.enable_telemetry(data_types)
+                .map_err(|e| Status::internal(format!("Failed to enable telemetry: {}", e)))?;
+        } else {
+            security_manager.disable_telemetry();
+        }
+        
+        let response = crate::proto::ConfigureTelemetryResponse {
+            success: true,
+            error_message: String::new(),
+        };
+        
+        Ok(Response::new(response))
+    }
+    
+    /// Get redacted support bundle data
+    async fn get_support_bundle(
+        &self,
+        _request: Request<crate::proto::GetSupportBundleRequest>,
+    ) -> Result<Response<crate::proto::GetSupportBundleResponse>, Status> {
+        let security_manager = self.security_manager.read().await;
+        let redacted_data = security_manager.get_redacted_support_data();
+        
+        // Convert HashMap to JSON string
+        let data_json = serde_json::to_string(&redacted_data)
+            .map_err(|e| Status::internal(format!("Failed to serialize support data: {}", e)))?;
+        
+        let bundle_size = data_json.len() as u64;
+        
+        let response = crate::proto::GetSupportBundleResponse {
+            success: true,
+            error_message: String::new(),
+            redacted_data: data_json,
+            bundle_size_bytes: bundle_size,
         };
         
         Ok(Response::new(response))

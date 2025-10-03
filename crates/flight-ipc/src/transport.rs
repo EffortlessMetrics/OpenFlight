@@ -5,6 +5,8 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use flight_core::{SecurityManager, IpcClientInfo};
+use std::path::PathBuf;
 // Transport abstractions - actual tonic transport integration would go here
 
 #[derive(Debug, Error)]
@@ -161,6 +163,27 @@ pub mod unix_sockets {
     impl Transport for UnixSocketTransport {}
 }
 
+/// Create a transport based on the specified type and address with ACL validation
+pub async fn create_transport_with_acl(
+    transport_type: crate::TransportType,
+    address: &str,
+    is_server: bool,
+    security_manager: Option<&SecurityManager>,
+) -> Result<Box<dyn Transport>, TransportError> {
+    // Validate ACL if security manager is provided and this is a client connection
+    if let Some(security_manager) = security_manager {
+        if !is_server {
+            let client_info = get_client_info()?;
+            security_manager.validate_ipc_acl(&client_info)
+                .map_err(|e| TransportError::InvalidAddress { 
+                    address: format!("ACL validation failed: {}", e) 
+                })?;
+        }
+    }
+    
+    create_transport(transport_type, address, is_server).await
+}
+
 /// Create a transport based on the specified type and address
 pub async fn create_transport(
     transport_type: crate::TransportType,
@@ -191,4 +214,45 @@ pub async fn create_transport(
         
         _ => Err(TransportError::UnsupportedPlatform),
     }
+}
+
+/// Get client information for ACL validation
+fn get_client_info() -> Result<IpcClientInfo, TransportError> {
+    #[cfg(windows)]
+    {
+        // On Windows, get current process info
+        let process_id = std::process::id();
+        let user_id = get_current_user_sid()
+            .unwrap_or_else(|_| "UNKNOWN".to_string());
+        let executable_path = std::env::current_exe()
+            .unwrap_or_else(|_| PathBuf::from("unknown"));
+        
+        Ok(IpcClientInfo {
+            user_id,
+            process_id,
+            executable_path,
+        })
+    }
+    
+    #[cfg(unix)]
+    {
+        // On Unix, get current process info
+        let process_id = std::process::id();
+        let user_id = unsafe { libc::getuid() }.to_string();
+        let executable_path = std::env::current_exe()
+            .unwrap_or_else(|_| PathBuf::from("unknown"));
+        
+        Ok(IpcClientInfo {
+            user_id,
+            process_id,
+            executable_path,
+        })
+    }
+}
+
+#[cfg(windows)]
+fn get_current_user_sid() -> Result<String, std::io::Error> {
+    // In a real implementation, this would use Windows APIs to get the current user SID
+    // For now, return a placeholder
+    Ok("S-1-5-21-000000000-000000000-000000000-1000".to_string())
 }

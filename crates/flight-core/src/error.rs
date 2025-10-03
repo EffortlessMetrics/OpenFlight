@@ -28,6 +28,9 @@ pub enum FlightError {
 
     #[error("Hardware error: {0}")]
     Hardware(String),
+
+    #[error("Security error: {0}")]
+    Security(#[from] crate::security::SecurityError),
 }
 
 /// Result type alias for Flight Hub operations

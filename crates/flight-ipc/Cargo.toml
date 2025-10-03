@@ -24,6 +24,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tracing.workspace = true
 tokio-stream = { version = "0.1", features = ["sync"] }
+flight-core = { path = "../flight-core" }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]
@@ -35,6 +36,7 @@ windows = { workspace = true, features = [
 
 [target.'cfg(unix)'.dependencies]
 nix.workspace = true
+libc.workspace = true
 
 [build-dependencies]
 tonic-build.workspace = true

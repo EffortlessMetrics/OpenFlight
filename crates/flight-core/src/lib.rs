@@ -12,6 +12,7 @@ pub mod watchdog;
 pub mod aircraft_switch;
 pub mod process_detection;
 pub mod blackbox;
+pub mod security;
 
 pub use error::{FlightError, Result};
 pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};
@@ -31,4 +32,9 @@ pub use process_detection::{
 pub use blackbox::{
     BlackboxWriter, BlackboxReader, BlackboxConfig, BlackboxStats, BlackboxError,
     BlackboxHeader, BlackboxFooter, IndexEntry, StreamType, BlackboxRecord
+};
+pub use security::{
+    SecurityManager, SecurityConfig, TelemetryConfig, AclConfig, PluginCapabilityManifest,
+    PluginCapability, PluginType, SignatureStatus, TelemetryDataType, IpcClientInfo,
+    SecurityError
 };

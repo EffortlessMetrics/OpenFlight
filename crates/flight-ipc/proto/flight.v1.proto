@@ -27,6 +27,11 @@ service FlightService {
   
   // Service health
   rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
+  
+  // Security and privacy
+  rpc GetSecurityStatus(GetSecurityStatusRequest) returns (GetSecurityStatusResponse);
+  rpc ConfigureTelemetry(ConfigureTelemetryRequest) returns (ConfigureTelemetryResponse);
+  rpc GetSupportBundle(GetSupportBundleRequest) returns (GetSupportBundleResponse);
 }
 
 // Feature negotiation
@@ -390,4 +395,48 @@ message CapabilityLimits {
   float max_curve_expo = 4;        // Maximum curve expo magnitude
   bool allow_high_torque = 5;      // Whether high torque mode is allowed
   bool allow_custom_curves = 6;    // Whether custom curves are allowed
+}
+
+// Security and privacy management
+message GetSecurityStatusRequest {}
+
+message GetSecurityStatusResponse {
+  bool success = 1;
+  string error_message = 2;
+  repeated PluginInfo plugins = 3;
+  bool telemetry_enabled = 4;
+  repeated string telemetry_data_types = 5;
+}
+
+message PluginInfo {
+  string name = 1;
+  string version = 2;
+  PluginType plugin_type = 3;
+  string signature_status = 4; // Human-readable signature status
+  repeated string capabilities = 5;
+}
+
+enum PluginType {
+  PLUGIN_TYPE_UNSPECIFIED = 0;
+  PLUGIN_TYPE_WASM = 1;
+  PLUGIN_TYPE_NATIVE = 2;
+}
+
+message ConfigureTelemetryRequest {
+  bool enabled = 1;
+  repeated string data_types = 2; // Performance, Errors, Usage, DeviceEvents, ProfileEvents
+}
+
+message ConfigureTelemetryResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message GetSupportBundleRequest {}
+
+message GetSupportBundleResponse {
+  bool success = 1;
+  string error_message = 2;
+  string redacted_data = 3; // JSON string with redacted support data
+  uint64 bundle_size_bytes = 4;
 }
