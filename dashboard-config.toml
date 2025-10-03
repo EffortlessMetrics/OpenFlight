@@ -1,0 +1,119 @@
+# Supply Chain Health Dashboard Configuration
+
+[dashboard]
+# Enable/disable different report types
+enable_weekly_reports = true
+enable_quarterly_reports = true
+enable_on_demand_reports = true
+
+# Artifact retention settings
+artifact_retention_days = 90
+max_historical_runs = 50
+
+# SLO targets and thresholds
+[slo]
+license_gate_duration_ms = 45000  # 45 seconds
+dependency_count_threshold = 150
+security_advisories_target = 0
+license_compliance_target = 100.0  # percentage
+advisory_response_time_hours = 72
+
+# Metrics collection settings
+[metrics]
+# Gate status metrics (scm.gate.status{gate=*})
+collect_gate_status = true
+
+# Performance metrics (scm.gate.duration_ms{gate=*})
+collect_gate_durations = true
+
+# Dependency metrics (scm.deps.direct_nondev_total)
+collect_dependency_count = true
+
+# License metrics (scm.licenses.completeness, scm.licenses.unified_http_ok)
+collect_license_metrics = true
+
+# Security metrics (scm.security.advisories_open_total)
+collect_security_metrics = true
+
+# Trend analysis settings
+[trends]
+# Number of historical data points to use for trend analysis
+trend_analysis_window = 12  # weeks
+
+# Minimum percentage change to consider significant
+trend_significance_threshold = 5.0  # percent
+
+# Notification settings
+[notifications]
+# Slack integration
+slack_enabled = true
+slack_channel = "#devsecops"
+
+# Email integration  
+email_enabled = false
+email_smtp_server = ""
+email_from = "devsecops@company.com"
+
+# Notification triggers
+notify_on_failures = true
+notify_on_slo_violations = true
+notify_on_trend_degradation = true
+notify_on_weekly_reports = true
+notify_on_quarterly_reports = true
+
+# Critical thresholds for immediate alerts
+[alerts]
+critical_security_advisories = 1
+critical_dependency_count = 200
+critical_license_compliance = 90.0  # percentage
+critical_gate_duration_ms = 90000  # 90 seconds
+
+# Report customization
+[reports]
+# Include sections in reports
+include_executive_summary = true
+include_key_metrics = true
+include_gate_status = true
+include_trend_analysis = true
+include_recommendations = true
+include_security_response_metrics = true
+
+# Report formatting
+markdown_format = true
+json_format = true
+include_charts = false  # Future enhancement
+
+# Dashboard integration
+[integration]
+# CI/CD integration
+integrate_with_ci_gates = true
+fail_ci_on_critical_issues = true
+generate_pr_comments = true
+
+# External systems
+prometheus_metrics_enabled = false
+grafana_dashboard_enabled = false
+jira_integration_enabled = false
+
+# Tool versions (pinned for consistency)
+[tools]
+cargo_deny_version = "0.14.23"
+cargo_about_version = "0.6.4"
+cargo_audit_version = "latest"
+
+# Validation settings
+[validation]
+# HTTP stack unification checks
+validate_http_unification = true
+banned_http_crates = ["native-tls", "hyper-tls", "openssl"]
+required_hyper_version = "1.x"
+
+# Source validation
+validate_registry_sources = true
+allowed_registries = ["https://github.com/rust-lang/crates.io-index"]
+allow_git_dependencies = false
+
+# MSRV and edition enforcement
+validate_msrv_edition = true
+required_edition = "2024"
+required_rust_version = "1.89.0"

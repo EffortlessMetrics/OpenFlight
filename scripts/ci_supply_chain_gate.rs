@@ -1911,3 +1911,153 @@ fn parse_metrics_json(json_str: &str) -> Result<Vec<GateMetrics>, String> {
     
     Ok(metrics)
 }
+fn pa
+rse_deny_json(json_output: &str) -> Result<DenyReport, String> {
+    // Simple JSON parsing without serde dependency
+    let mut diagnostics = Vec::new();
+    let mut current_severity = String::new();
+    let mut current_message = String::new();
+    let mut in_diagnostic = false;
+    
+    for line in json_output.lines() {
+        let trimmed = line.trim();
+        
+        if trimmed.contains("\"severity\":") {
+            if let Some(sev_start) = trimmed.find("\"severity\": \"") {
+                let sev_part = &trimmed[sev_start + 13..];
+                if let Some(sev_end) = sev_part.find('"') {
+                    current_severity = sev_part[..sev_end].to_string();
+                    in_diagnostic = true;
+                }
+            }
+        }
+        
+        if in_diagnostic && trimmed.contains("\"message\":") {
+            if let Some(msg_start) = trimmed.find("\"message\": \"") {
+                let msg_part = &trimmed[msg_start + 12..];
+                if let Some(msg_end) = msg_part.find('"') {
+                    current_message = msg_part[..msg_end].to_string();
+                }
+            }
+        }
+        
+        if in_diagnostic && trimmed == "}" && !current_severity.is_empty() {
+            diagnostics.push(Diagnostic {
+                severity: current_severity.clone(),
+                message: current_message.clone(),
+            });
+            current_severity.clear();
+            current_message.clear();
+            in_diagnostic = false;
+        }
+    }
+    
+    Ok(DenyReport { diagnostics })
+}
+
+fn parse_metrics_json(json_content: &str) -> Result<Vec<GateMetrics>, String> {
+    // Simple JSON parsing for gate metrics
+    let mut metrics = Vec::new();
+    let mut in_gates_array = false;
+    let mut current_gate = String::new();
+    let mut current_duration = 0u64;
+    let mut current_timestamp = 0u64;
+    let mut current_passed = false;
+    
+    for line in json_content.lines() {
+        let trimmed = line.trim();
+        
+        if trimmed.contains("\"gates\":") {
+            in_gates_array = true;
+            continue;
+        }
+        
+        if in_gates_array && trimmed == "]" {
+            break;
+        }
+        
+        if in_gates_array {
+            if trimmed.contains("\"gate\":") {
+                if let Some(gate_start) = trimmed.find("\"gate\": \"") {
+                    let gate_part = &trimmed[gate_start + 9..];
+                    if let Some(gate_end) = gate_part.find('"') {
+                        current_gate = gate_part[..gate_end].to_string();
+                    }
+                }
+            }
+            
+            if trimmed.contains("\"duration_ms\":") {
+                if let Some(dur_start) = trimmed.find("\"duration_ms\": ") {
+                    let dur_part = &trimmed[dur_start + 15..];
+                    if let Some(dur_end) = dur_part.find(',') {
+                        if let Ok(duration) = dur_part[..dur_end].parse::<u64>() {
+                            current_duration = duration;
+                        }
+                    }
+                }
+            }
+            
+            if trimmed.contains("\"timestamp\":") {
+                if let Some(ts_start) = trimmed.find("\"timestamp\": ") {
+                    let ts_part = &trimmed[ts_start + 13..];
+                    if let Some(ts_end) = ts_part.find(',') {
+                        if let Ok(timestamp) = ts_part[..ts_end].parse::<u64>() {
+                            current_timestamp = timestamp;
+                        }
+                    }
+                }
+            }
+            
+            if trimmed.contains("\"passed\":") {
+                current_passed = trimmed.contains("true");
+            }
+            
+            if trimmed == "}" && !current_gate.is_empty() {
+                metrics.push(GateMetrics {
+                    gate_name: current_gate.clone(),
+                    duration_ms: current_duration,
+                    timestamp: current_timestamp,
+                    passed: current_passed,
+                });
+                current_gate.clear();
+                current_duration = 0;
+                current_timestamp = 0;
+                current_passed = false;
+            }
+        }
+    }
+    
+    Ok(metrics)
+}
+
+fn format_tool_versions(versions: &std::collections::HashMap<String, String>) -> String {
+    let mut formatted = String::from("{");
+    let mut first = true;
+    
+    for (tool, version) in versions {
+        if !first {
+            formatted.push(',');
+        }
+        formatted.push_str(&format!("\"{}\":\"{}\"", tool, version));
+        first = false;
+    }
+    
+    formatted.push('}');
+    formatted
+}
+
+fn get_rustc_version() -> String {
+    Command::new("rustc")
+        .args(&["--version"])
+        .output()
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_else(|_| "unknown".to_string())
+}
+
+fn get_cargo_version() -> String {
+    Command::new("cargo")
+        .args(&["--version"])
+        .output()
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_else(|_| "unknown".to_string())
+}

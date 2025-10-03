@@ -1,0 +1,335 @@
+name: Supply Chain Health Dashboard
+
+on:
+  # Run after supply chain gates complete
+  workflow_run:
+    workflows: ["Supply Chain Security"]
+    types:
+      - completed
+  
+  # Manual trigger for on-demand reports
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Type of report to generate'
+        required: true
+        default: 'on-demand'
+        type: choice
+        options:
+          - on-demand
+          - weekly
+          - quarterly
+      
+      send_notifications:
+        description: 'Send notifications'
+        required: false
+        default: true
+        type: boolean
+
+  # Scheduled runs for automated reporting
+  schedule:
+    # Weekly reports on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+    # Quarterly reports on the 1st of Jan, Apr, Jul, Oct at 10 AM UTC
+    - cron: '0 10 1 1,4,7,10 *'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Dashboard configuration
+  ENABLE_WEEKLY_REPORTS: true
+  ENABLE_QUARTERLY_REPORTS: true
+  ARTIFACT_RETENTION_DAYS: 90
+  # Notification configuration (set in repository secrets)
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+
+jobs:
+  dashboard-automation:
+    name: Supply Chain Health Dashboard
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for trend analysis
+          
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy, rustfmt
+          
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: supply-chain-dashboard
+          
+      - name: Install required tools
+        run: |
+          # Install cargo-deny with pinned version
+          cargo install cargo-deny --locked --version 0.14.23
+          
+          # Install cargo-about with pinned version  
+          cargo install cargo-about --locked --version 0.6.4
+          
+          # Install cargo-audit
+          cargo install cargo-audit --locked
+          
+      - name: Create artifacts directory
+        run: mkdir -p target/ci-artifacts
+        
+      - name: Download previous artifacts for trend analysis
+        uses: actions/download-artifact@v4
+        with:
+          name: supply-chain-metrics
+          path: target/ci-artifacts
+        continue-on-error: true
+        
+      - name: Determine report type
+        id: report-type
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "type=${{ github.event.inputs.report_type }}" >> $GITHUB_OUTPUT
+            echo "notifications=${{ github.event.inputs.send_notifications }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # Determine if it's weekly or quarterly based on cron
+            if [[ "${{ github.event.schedule }}" == "0 9 * * 1" ]]; then
+              echo "type=weekly" >> $GITHUB_OUTPUT
+            else
+              echo "type=quarterly" >> $GITHUB_OUTPUT
+            fi
+            echo "notifications=true" >> $GITHUB_OUTPUT
+          else
+            # Workflow run trigger - generate on-demand report
+            echo "type=on-demand" >> $GITHUB_OUTPUT
+            echo "notifications=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Run supply chain health dashboard
+        id: dashboard
+        run: |
+          echo "🏥 Running Supply Chain Health Dashboard"
+          echo "Report Type: ${{ steps.report-type.outputs.type }}"
+          
+          # Run the dashboard with appropriate mode
+          if [[ "${{ steps.report-type.outputs.type }}" == "on-demand" && "${{ github.event_name }}" == "workflow_run" ]]; then
+            # CI integration mode - run gates and dashboard together
+            cargo +nightly -Zscript scripts/ci_dashboard_automation.rs ci-integration
+          else
+            # Direct dashboard generation
+            cargo +nightly -Zscript scripts/supply_chain_dashboard.rs ${{ steps.report-type.outputs.type }}
+          fi
+          
+      - name: Upload dashboard artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-metrics
+          path: target/ci-artifacts/
+          retention-days: 90
+          
+      - name: Upload dashboard reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-reports-${{ github.run_number }}
+          path: |
+            target/ci-artifacts/supply-chain-*.md
+            target/ci-artifacts/supply-chain-*.json
+          retention-days: 365
+          
+      - name: Generate job summary
+        if: always()
+        run: |
+          echo "# Supply Chain Health Dashboard Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Report Type:** ${{ steps.report-type.outputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated At:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Find the latest report file
+          LATEST_REPORT=$(find target/ci-artifacts -name "supply-chain-*.md" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
+          
+          if [[ -f "$LATEST_REPORT" ]]; then
+            echo "## Dashboard Report" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract key metrics from the report
+            if grep -q "## Key Metrics" "$LATEST_REPORT"; then
+              sed -n '/## Key Metrics/,/## /p' "$LATEST_REPORT" | head -n -1 >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Full Report:** [Download Artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No dashboard report generated" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+      - name: Send Slack notification
+        if: steps.report-type.outputs.notifications == 'true' && env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#devsecops'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "text": "Supply Chain Health Dashboard - ${{ steps.report-type.outputs.type }} Report",
+              "attachments": [{
+                "color": "${{ job.status == 'success' && 'good' || 'danger' }}",
+                "fields": [{
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                }, {
+                  "title": "Report Type", 
+                  "value": "${{ steps.report-type.outputs.type }}",
+                  "short": true
+                }, {
+                  "title": "Status",
+                  "value": "${{ job.status }}",
+                  "short": true
+                }, {
+                  "title": "Workflow",
+                  "value": "${{ github.workflow }}",
+                  "short": true
+                }],
+                "actions": [{
+                  "type": "button",
+                  "text": "View Report",
+                  "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                }]
+              }]
+            }
+            
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find the PR associated with this workflow run
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`,
+              state: 'open'
+            });
+            
+            if (prs.length > 0) {
+              const pr = prs[0];
+              
+              // Find the latest dashboard report
+              const fs = require('fs');
+              const path = require('path');
+              
+              const artifactsDir = 'target/ci-artifacts';
+              if (fs.existsSync(artifactsDir)) {
+                const files = fs.readdirSync(artifactsDir)
+                  .filter(f => f.startsWith('supply-chain-') && f.endsWith('.md'))
+                  .map(f => ({
+                    name: f,
+                    time: fs.statSync(path.join(artifactsDir, f)).mtime.getTime()
+                  }))
+                  .sort((a, b) => b.time - a.time);
+                
+                if (files.length > 0) {
+                  const reportPath = path.join(artifactsDir, files[0].name);
+                  const reportContent = fs.readFileSync(reportPath, 'utf8');
+                  
+                  // Extract executive summary
+                  const summaryMatch = reportContent.match(/## Executive Summary\n\n(.*?)\n\n## /s);
+                  const summary = summaryMatch ? summaryMatch[1] : 'Report generated successfully';
+                  
+                  const comment = `## 🏥 Supply Chain Health Dashboard
+            
+            A supply chain health report has been generated for this PR.
+            
+            ${summary}
+            
+            📄 **Full Report:** Available in the [workflow artifacts](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            
+            ---
+            *This comment was automatically generated by the Supply Chain Health Dashboard*`;
+            
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: comment
+                  });
+                }
+              }
+            }
+            
+      - name: Cleanup old artifacts
+        if: always()
+        run: |
+          echo "🧹 Cleaning up old artifacts..."
+          cargo +nightly -Zscript scripts/ci_dashboard_automation.rs cleanup
+          
+  security-posture-check:
+    name: Security Posture Validation
+    runs-on: ubuntu-latest
+    needs: dashboard-automation
+    if: always()
+    
+    steps:
+      - name: Download dashboard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: supply-chain-reports-${{ github.run_number }}
+          path: reports/
+          
+      - name: Validate security posture
+        run: |
+          echo "🔒 Validating Security Posture"
+          
+          # Find the latest JSON report
+          LATEST_JSON=$(find reports -name "supply-chain-*.json" -type f | head -1)
+          
+          if [[ -f "$LATEST_JSON" ]]; then
+            echo "📊 Analyzing metrics from: $LATEST_JSON"
+            
+            # Extract key security metrics using jq or simple parsing
+            SECURITY_ADVISORIES=$(grep -o '"security_advisories_open":[0-9]*' "$LATEST_JSON" | cut -d':' -f2 || echo "0")
+            LICENSE_COMPLIANCE=$(grep -o '"license_completeness_slo":[a-z]*' "$LATEST_JSON" | cut -d':' -f2 || echo "false")
+            DEPENDENCY_COUNT=$(grep -o '"dependency_count":[0-9]*' "$LATEST_JSON" | cut -d':' -f2 || echo "999")
+            
+            echo "Security Advisories: $SECURITY_ADVISORIES"
+            echo "License Compliance: $LICENSE_COMPLIANCE" 
+            echo "Dependency Count: $DEPENDENCY_COUNT"
+            
+            # Set security posture status
+            SECURITY_ISSUES=0
+            
+            if [[ "$SECURITY_ADVISORIES" != "0" ]]; then
+              echo "❌ Security advisories detected: $SECURITY_ADVISORIES"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            fi
+            
+            if [[ "$LICENSE_COMPLIANCE" != "true" ]]; then
+              echo "❌ License compliance issues detected"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            fi
+            
+            if [[ "$DEPENDENCY_COUNT" -gt 150 ]]; then
+              echo "⚠️ Dependency count exceeds threshold: $DEPENDENCY_COUNT > 150"
+              SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+            fi
+            
+            if [[ "$SECURITY_ISSUES" -eq 0 ]]; then
+              echo "✅ Security posture is healthy"
+              exit 0
+            else
+              echo "❌ Security posture has $SECURITY_ISSUES issues"
+              exit 1
+            fi
+          else
+            echo "⚠️ No JSON report found - cannot validate security posture"
+            exit 1
+          fi
