@@ -59,14 +59,23 @@
     - Verify only hyper v1.x versions present with cargo tree -i hyper
     - _Requirements: SC-02.4, SC-02.5, SC-02.6_
 
-- [ ] 3. Update gRPC dependencies to unified versions
-  - [ ] 3.1 Update entire gRPC stack to 0.14.x with version alignment
+- [x] 3. Update gRPC dependencies to unified versions
+
+
+
+
+
+  - [x] 3.1 Update entire gRPC stack to 0.14.x with version alignment
+
+
     - Update workspace dependencies: tonic, prost, tonic-build, prost-build all to 0.14.x
     - Add prost-types if used, ensuring same minor version across all gRPC crates
     - Create gate check to verify all gRPC crates use identical 0.14.x versions
     - _Requirements: SC-03.1, SC-03.2, SC-03.5_
 
-  - [ ] 3.2 Configure tonic features based on transport usage
+  - [x] 3.2 Configure tonic features based on transport usage
+
+
     - For built-in transport: tonic = { version = "0.14", features = ["transport", "codegen", "prost"] }
     - For custom transport: tonic = { version = "0.14", default-features = false, features = ["codegen", "prost"] }
     - Document transport configuration choice in workspace dependencies

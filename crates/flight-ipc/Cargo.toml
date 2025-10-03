@@ -44,6 +44,7 @@ libc.workspace = true
 
 [build-dependencies]
 tonic-build.workspace = true
+prost-build.workspace = true
 
 [dev-dependencies]
 tokio-test = "0.4"

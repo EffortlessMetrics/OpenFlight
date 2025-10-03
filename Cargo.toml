@@ -47,9 +47,15 @@ thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# IPC and serialization
-prost = "0.14"
-tonic = "0.14"
+# IPC and serialization - gRPC stack unified to 0.14.x
+prost = "0.14.1"
+# tonic configured with built-in transport features based on usage in flight-ipc
+# Uses tonic::transport::Server and tonic::transport::Channel for IPC communication
+# Features: transport (includes client/server), codegen (for proto compilation)
+tonic = { version = "0.14.2", features = ["transport", "codegen"] }
+tonic-build = "0.14.2"
+prost-build = "0.14.1"
+prost-types = "0.14.1"
 protobuf-codegen = "4.32.1-release"
 
 # HTTP client
@@ -75,7 +81,7 @@ criterion = "0.7"
 proptest = "1.4"
 tempfile = "3.8"
 clap = { version = "4.4", features = ["derive"] }
-tonic-build = "0.14"
+
 cc = "1.0"
 
 
