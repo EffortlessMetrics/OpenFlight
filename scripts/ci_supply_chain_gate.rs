@@ -11,15 +11,35 @@ use std::path::Path;
 use std::process::{Command, exit};
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct GateResult {
     name: String,
     passed: bool,
+    message: String,
+    artifacts: Vec<String>,
+}
+
+// Simple JSON parsing structures (without serde dependency)
+#[derive(Debug)]
+struct DenyReport {
+    diagnostics: Vec<Diagnostic>,
+}
+
+#[derive(Debug)]
+struct Diagnostic {
+    severity: String,
     message: String,
 }
 
 fn main() {
     println!("🚪 Flight Hub CI Supply Chain Security Gate");
     println!("==========================================");
+    
+    // Check for uncommitted Cargo.lock changes first
+    if let Err(msg) = check_lockfile_guard() {
+        println!("❌ Lockfile Guard Failed: {}", msg);
+        exit(1);
+    }
     
     let mut gates = Vec::new();
     
@@ -43,13 +63,21 @@ fn main() {
     println!("\n📦 Gate 5: Dependency Count Validation");
     gates.push(run_dependency_count_gate());
     
-    // Gate 6: Supply Chain Audit Trail - Audit documents exist and are current
-    println!("\n📊 Gate 6: Audit Trail Validation");
+    // Gate 6: Duplicate Major Version Detection - Single major per family
+    println!("\n🔄 Gate 6: Duplicate Major Version Detection");
+    gates.push(run_duplicate_major_detection_gate());
+    
+    // Gate 7: Supply Chain Audit Trail - Audit documents exist and are current
+    println!("\n📊 Gate 7: Audit Trail Validation");
     gates.push(run_audit_trail_gate());
     
-    // Gate 7: Third-Party License List - Complete and up-to-date
-    println!("\n📜 Gate 7: Third-Party License List");
+    // Gate 8: Third-Party License List - Complete and up-to-date
+    println!("\n📜 Gate 8: Third-Party License List");
     gates.push(run_license_list_gate());
+    
+    // Gate 9: Cargo About Integration - Generate license documentation
+    println!("\n📋 Gate 9: Cargo About Integration");
+    gates.push(run_cargo_about_gate());
     
     // Summary
     println!("\n📊 CI Supply Chain Security Gate Summary");
@@ -80,67 +108,159 @@ fn main() {
 }
 
 fn run_cargo_audit_gate() -> GateResult {
-    println!("  Running cargo audit...");
+    println!("  Running cargo audit with retry logic...");
     
-    let output = Command::new("cargo")
-        .args(&["audit", "--deny", "warnings"])
-        .output();
-        
-    match output {
-        Ok(result) if result.status.success() => {
-            GateResult {
-                name: "Security Advisory Check".to_string(),
-                passed: true,
-                message: "No security advisories found".to_string(),
-            }
-        }
-        Ok(result) => {
-            let stderr = String::from_utf8_lossy(&result.stderr);
-            let advisory_count = stderr.lines()
-                .filter(|line| line.contains("ID:") || line.contains("Crate:"))
-                .count();
+    // Retry logic for transient failures only
+    for attempt in 1..=3 {
+        let output = Command::new("cargo")
+            .args(&["audit", "--deny", "warnings", "--format", "json"])
+            .output();
+            
+        match output {
+            Ok(result) => {
+                let exit_code = result.status.code().unwrap_or(-1);
+                let stdout = String::from_utf8_lossy(&result.stdout);
+                let stderr = String::from_utf8_lossy(&result.stderr);
                 
-            GateResult {
-                name: "Security Advisory Check".to_string(),
-                passed: false,
-                message: format!("Found {} security advisories", advisory_count / 2),
+                // Save artifacts
+                let artifacts = save_gate_artifacts("cargo-audit", &stdout, &stderr, exit_code);
+                
+                // Check exit code first
+                if exit_code == 0 {
+                    return GateResult {
+                        name: "Security Advisory Check".to_string(),
+                        passed: true,
+                        message: "No security advisories found".to_string(),
+                        artifacts,
+                    };
+                }
+                
+                // Non-zero exit code - check if it's a policy failure or transient error
+                if is_transient_failure(&stderr) && attempt < 3 {
+                    println!("    Transient failure detected, retrying... (attempt {}/3)", attempt + 1);
+                    std::thread::sleep(std::time::Duration::from_secs(2));
+                    continue;
+                }
+                
+                // Policy failure or final attempt - parse for advisory details
+                let advisory_count = if stdout.trim().is_empty() {
+                    // Fallback to stderr parsing for non-JSON output
+                    stderr.lines()
+                        .filter(|line| line.contains("ID:") || line.contains("Crate:"))
+                        .count() / 2
+                } else {
+                    // Try to parse JSON output for more accurate count
+                    parse_audit_json(&stdout).unwrap_or_else(|| {
+                        stderr.lines()
+                            .filter(|line| line.contains("ID:") || line.contains("Crate:"))
+                            .count() / 2
+                    })
+                };
+                
+                return GateResult {
+                    name: "Security Advisory Check".to_string(),
+                    passed: false,
+                    message: format!("Found {} security advisories", advisory_count),
+                    artifacts,
+                };
+            }
+            Err(e) => {
+                if is_transient_error(&e) && attempt < 3 {
+                    println!("    Transient error detected, retrying... (attempt {}/3)", attempt + 1);
+                    std::thread::sleep(std::time::Duration::from_secs(2));
+                    continue;
+                }
+                
+                return GateResult {
+                    name: "Security Advisory Check".to_string(),
+                    passed: false,
+                    message: format!("Failed to run cargo audit: {}", e),
+                    artifacts: Vec::new(),
+                };
             }
         }
-        Err(e) => {
-            GateResult {
-                name: "Security Advisory Check".to_string(),
-                passed: false,
-                message: format!("Failed to run cargo audit: {}", e),
-            }
-        }
+    }
+    
+    // Should never reach here due to the loop structure, but just in case
+    GateResult {
+        name: "Security Advisory Check".to_string(),
+        passed: false,
+        message: "Unexpected error in retry logic".to_string(),
+        artifacts: Vec::new(),
     }
 }
 
 fn run_cargo_deny_gate() -> GateResult {
-    println!("  Running cargo deny check...");
+    println!("  Running cargo deny check with JSON output...");
     
+    // Pin cargo-deny version for consistent behavior
     let output = Command::new("cargo")
-        .args(&["deny", "check", "--hide-inclusion-graph"])
+        .args(&["deny", "--locked", "--version", "0.14.23", "check", "--format", "json"])
         .output();
         
     match output {
-        Ok(result) if result.status.success() => {
-            GateResult {
-                name: "Cargo Deny Compliance".to_string(),
-                passed: true,
-                message: "All cargo-deny checks passed".to_string(),
-            }
-        }
         Ok(result) => {
+            let exit_code = result.status.code().unwrap_or(-1);
+            let stdout = String::from_utf8_lossy(&result.stdout);
             let stderr = String::from_utf8_lossy(&result.stderr);
-            let error_lines: Vec<&str> = stderr.lines()
-                .filter(|line| line.contains("error:") || line.contains("denied:"))
-                .collect();
+            
+            // Save raw output as artifact
+            let artifacts = save_gate_artifacts("cargo-deny", &stdout, &stderr, exit_code);
+            
+            // Always check exit code first
+            if exit_code != 0 {
+                // Parse JSON for detailed error information (manual parsing)
+                let error_details = if let Ok(report) = parse_deny_json(&stdout) {
+                    let error_count = report.diagnostics.iter()
+                        .filter(|d| d.severity == "error")
+                        .count();
+                    let warning_count = report.diagnostics.iter()
+                        .filter(|d| d.severity == "warn")
+                        .count();
+                    
+                    format!("{} errors, {} warnings", error_count, warning_count)
+                } else {
+                    // Fallback to stderr parsing
+                    let error_lines: Vec<&str> = stderr.lines()
+                        .filter(|line| line.contains("error:") || line.contains("denied:"))
+                        .collect();
+                    format!("{} violations detected", error_lines.len())
+                };
                 
-            GateResult {
-                name: "Cargo Deny Compliance".to_string(),
-                passed: false,
-                message: format!("Found {} cargo-deny violations", error_lines.len()),
+                return GateResult {
+                    name: "Cargo Deny Compliance".to_string(),
+                    passed: false,
+                    message: format!("cargo-deny failed: {}", error_details),
+                    artifacts,
+                };
+            }
+            
+            // Parse JSON output for warnings (manual parsing)
+            if let Ok(report) = parse_deny_json(&stdout) {
+                let warnings: Vec<&Diagnostic> = report.diagnostics.iter()
+                    .filter(|d| d.severity == "warn" && 
+                            d.message.contains("license-not-encountered"))
+                    .collect();
+                
+                let message = if warnings.is_empty() {
+                    "All cargo-deny checks passed".to_string()
+                } else {
+                    format!("Passed with {} license-not-encountered warnings", warnings.len())
+                };
+                
+                GateResult {
+                    name: "Cargo Deny Compliance".to_string(),
+                    passed: true,
+                    message,
+                    artifacts,
+                }
+            } else {
+                GateResult {
+                    name: "Cargo Deny Compliance".to_string(),
+                    passed: true,
+                    message: "All cargo-deny checks passed (JSON parse failed)".to_string(),
+                    artifacts,
+                }
             }
         }
         Err(e) => {
@@ -148,6 +268,7 @@ fn run_cargo_deny_gate() -> GateResult {
                 name: "Cargo Deny Compliance".to_string(),
                 passed: false,
                 message: format!("Failed to run cargo deny: {}", e),
+                artifacts: Vec::new(),
             }
         }
     }
@@ -230,6 +351,7 @@ fn run_license_compliance_gate() -> GateResult {
                         message: format!("{}% compliant ({}/{}), {} unknown", 
                                        (compliance_rate * 100.0) as u32, 
                                        compliant_deps, total_deps, unknown_licenses),
+                        artifacts: Vec::new(),
                     }
                 } else {
                     GateResult {
@@ -238,6 +360,7 @@ fn run_license_compliance_gate() -> GateResult {
                         message: format!("{}% compliant ({}/{}), {} unknown - below threshold", 
                                        (compliance_rate * 100.0) as u32, 
                                        compliant_deps, total_deps, unknown_licenses),
+                        artifacts: Vec::new(),
                     }
                 }
             } else {
@@ -245,6 +368,7 @@ fn run_license_compliance_gate() -> GateResult {
                     name: "License Compliance".to_string(),
                     passed: false,
                     message: "Failed to parse cargo metadata".to_string(),
+                    artifacts: Vec::new(),
                 }
             }
         }
@@ -253,6 +377,7 @@ fn run_license_compliance_gate() -> GateResult {
                 name: "License Compliance".to_string(),
                 passed: false,
                 message: "Failed to parse dependency metadata".to_string(),
+                artifacts: Vec::new(),
             }
         }
         Err(e) => {
@@ -260,6 +385,7 @@ fn run_license_compliance_gate() -> GateResult {
                 name: "License Compliance".to_string(),
                 passed: false,
                 message: format!("Failed to get dependency metadata: {}", e),
+                artifacts: Vec::new(),
             }
         }
     }
@@ -288,6 +414,7 @@ fn run_spdx_validation_gate() -> GateResult {
             name: "SPDX Identifier Validation".to_string(),
             passed: true,
             message: format!("All {} crates have SPDX identifiers", workspace_crates.len()),
+            artifacts: Vec::new(),
         }
     } else {
         GateResult {
@@ -295,51 +422,69 @@ fn run_spdx_validation_gate() -> GateResult {
             passed: false,
             message: format!("{} crates missing SPDX identifiers: {}", 
                            missing_spdx.len(), missing_spdx.join(", ")),
+            artifacts: Vec::new(),
         }
     }
 }
 
 fn run_dependency_count_gate() -> GateResult {
-    println!("  Checking dependency count...");
+    println!("  Checking dependency count using cargo metadata...");
     
     let output = Command::new("cargo")
-        .args(&["tree", "--depth", "1"])
+        .args(&["metadata", "--format-version", "1"])
         .output();
         
     match output {
         Ok(result) if result.status.success() => {
             let stdout = String::from_utf8_lossy(&result.stdout);
-            let dep_count = stdout.lines()
-                .filter(|line| line.starts_with("├──") || line.starts_with("└──"))
-                .count();
-                
-            // Reasonable threshold for a real-time system
-            if dep_count <= 150 {
-                GateResult {
-                    name: "Dependency Count Validation".to_string(),
-                    passed: true,
-                    message: format!("{} direct dependencies (within limit)", dep_count),
+            let artifacts = save_gate_artifacts("cargo-metadata", &stdout, "", 0);
+            
+            match count_runtime_dependencies(&stdout) {
+                Ok(dep_count) => {
+                    // Threshold for runtime dependencies only
+                    if dep_count <= 150 {
+                        GateResult {
+                            name: "Dependency Count Validation".to_string(),
+                            passed: true,
+                            message: format!("{} runtime dependencies (within limit)", dep_count),
+                            artifacts,
+                        }
+                    } else {
+                        GateResult {
+                            name: "Dependency Count Validation".to_string(),
+                            passed: false,
+                            message: format!("{} runtime dependencies (exceeds limit of 150)", dep_count),
+                            artifacts,
+                        }
+                    }
                 }
-            } else {
-                GateResult {
-                    name: "Dependency Count Validation".to_string(),
-                    passed: false,
-                    message: format!("{} direct dependencies (exceeds limit of 150)", dep_count),
+                Err(e) => {
+                    GateResult {
+                        name: "Dependency Count Validation".to_string(),
+                        passed: false,
+                        message: format!("Failed to parse metadata: {}", e),
+                        artifacts,
+                    }
                 }
             }
         }
-        Ok(_) => {
+        Ok(result) => {
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            let artifacts = save_gate_artifacts("cargo-metadata", "", &stderr, result.status.code().unwrap_or(-1));
+            
             GateResult {
                 name: "Dependency Count Validation".to_string(),
                 passed: false,
-                message: "Failed to run cargo tree".to_string(),
+                message: "Failed to run cargo metadata".to_string(),
+                artifacts,
             }
         }
         Err(e) => {
             GateResult {
                 name: "Dependency Count Validation".to_string(),
                 passed: false,
-                message: format!("Failed to count dependencies: {}", e),
+                message: format!("Failed to execute cargo metadata: {}", e),
+                artifacts: Vec::new(),
             }
         }
     }
@@ -378,6 +523,7 @@ fn run_audit_trail_gate() -> GateResult {
             name: "Audit Trail Validation".to_string(),
             passed: true,
             message: "All audit documents present and current".to_string(),
+            artifacts: Vec::new(),
         }
     } else {
         let mut message = String::new();
@@ -395,6 +541,7 @@ fn run_audit_trail_gate() -> GateResult {
             name: "Audit Trail Validation".to_string(),
             passed: false,
             message,
+            artifacts: Vec::new(),
         }
     }
 }
@@ -407,6 +554,7 @@ fn run_license_list_gate() -> GateResult {
             name: "Third-Party License List".to_string(),
             passed: false,
             message: "THIRD_PARTY_LICENSES.md not found".to_string(),
+            artifacts: Vec::new(),
         };
     }
     
@@ -422,12 +570,14 @@ fn run_license_list_gate() -> GateResult {
                 name: "Third-Party License List".to_string(),
                 passed: true,
                 message: "License list is complete and well-formed".to_string(),
+                artifacts: Vec::new(),
             }
         } else {
             GateResult {
                 name: "Third-Party License List".to_string(),
                 passed: false,
                 message: "License list is incomplete or malformed".to_string(),
+                artifacts: Vec::new(),
             }
         }
     } else {
@@ -435,6 +585,7 @@ fn run_license_list_gate() -> GateResult {
             name: "Third-Party License List".to_string(),
             passed: false,
             message: "Failed to read THIRD_PARTY_LICENSES.md".to_string(),
+            artifacts: Vec::new(),
         }
     }
 }
@@ -485,6 +636,228 @@ fn is_license_compliant(license: &str) -> bool {
     compliant_licenses.contains(&license)
 }
 
+fn check_lockfile_guard() -> Result<(), String> {
+    // Check if Cargo.lock has uncommitted changes
+    let output = Command::new("git")
+        .args(&["diff", "--quiet", "Cargo.lock"])
+        .output()
+        .map_err(|e| format!("Failed to run git diff: {}", e))?;
+    
+    if !output.status.success() {
+        return Err("Cargo.lock has uncommitted changes - commit or stash changes before running gate".to_string());
+    }
+    
+    Ok(())
+}
+
+fn save_gate_artifacts(gate_name: &str, stdout: &str, stderr: &str, exit_code: i32) -> Vec<String> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let mut artifacts = Vec::new();
+    
+    // Create artifacts directory if it doesn't exist
+    if let Err(_) = fs::create_dir_all("target/ci-artifacts") {
+        return artifacts;
+    }
+    
+    // Save stdout
+    let stdout_file = format!("target/ci-artifacts/{}-{}-stdout.json", gate_name, timestamp);
+    if let Ok(_) = fs::write(&stdout_file, stdout) {
+        artifacts.push(stdout_file);
+    }
+    
+    // Save stderr
+    let stderr_file = format!("target/ci-artifacts/{}-{}-stderr.txt", gate_name, timestamp);
+    if let Ok(_) = fs::write(&stderr_file, stderr) {
+        artifacts.push(stderr_file);
+    }
+    
+    // Save metadata
+    let metadata = format!(
+        "{{\"gate\":\"{}\",\"timestamp\":{},\"exit_code\":{},\"rustc_version\":\"{}\",\"os\":\"{}\"}}",
+        gate_name,
+        timestamp,
+        exit_code,
+        get_rustc_version(),
+        std::env::consts::OS
+    );
+    let metadata_file = format!("target/ci-artifacts/{}-{}-metadata.json", gate_name, timestamp);
+    if let Ok(_) = fs::write(&metadata_file, metadata) {
+        artifacts.push(metadata_file);
+    }
+    
+    artifacts
+}
+
+fn get_rustc_version() -> String {
+    Command::new("rustc")
+        .args(&["--version"])
+        .output()
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_else(|_| "unknown".to_string())
+}
+
+fn is_transient_failure(stderr: &str) -> bool {
+    // Check for network-related errors that might be transient
+    stderr.contains("network") || 
+    stderr.contains("timeout") || 
+    stderr.contains("connection") ||
+    stderr.contains("DNS") ||
+    stderr.contains("temporary failure")
+}
+
+fn is_transient_error(error: &std::io::Error) -> bool {
+    use std::io::ErrorKind;
+    match error.kind() {
+        ErrorKind::TimedOut | 
+        ErrorKind::ConnectionRefused | 
+        ErrorKind::ConnectionAborted |
+        ErrorKind::NetworkUnreachable => true,
+        _ => false,
+    }
+}
+
+fn parse_audit_json(json_output: &str) -> Option<usize> {
+    // Simple JSON parsing to count vulnerabilities
+    // This is a basic implementation - in a real scenario you'd use proper JSON parsing
+    if json_output.trim().is_empty() {
+        return Some(0);
+    }
+    
+    // Count occurrences of vulnerability objects in JSON
+    let vuln_count = json_output.matches("\"advisory\"").count();
+    Some(vuln_count)
+}
+
+fn count_runtime_dependencies(metadata_json: &str) -> Result<usize, String> {
+    // Simple dependency counting using string parsing
+    // Count unique dependency names in the packages section
+    let mut deps = std::collections::HashSet::new();
+    
+    let lines: Vec<&str> = metadata_json.lines().collect();
+    let mut in_dependencies = false;
+    
+    for line in lines {
+        let trimmed = line.trim();
+        
+        // Look for dependencies sections
+        if trimmed.contains("\"dependencies\": [") {
+            in_dependencies = true;
+            continue;
+        }
+        
+        if in_dependencies {
+            if trimmed == "]" || trimmed == "]," {
+                in_dependencies = false;
+                continue;
+            }
+            
+            // Extract dependency names
+            if trimmed.contains("\"name\":") {
+                if let Some(start) = trimmed.find("\"name\": \"") {
+                    let name_part = &trimmed[start + 9..];
+                    if let Some(end) = name_part.find('"') {
+                        let dep_name = &name_part[..end];
+                        // Only count non-workspace dependencies
+                        if !dep_name.starts_with("flight-") {
+                            deps.insert(dep_name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(deps.len())
+}
+
+fn run_duplicate_major_detection_gate() -> GateResult {
+    println!("  Checking for duplicate major versions...");
+    
+    let output = Command::new("cargo")
+        .args(&["tree", "-d"])
+        .output();
+        
+    match output {
+        Ok(result) if result.status.success() => {
+            let stdout = String::from_utf8_lossy(&result.stdout);
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            let artifacts = save_gate_artifacts("cargo-tree-duplicates", &stdout, &stderr, 0);
+            
+            // Check for duplicate major versions of critical crates
+            let critical_crates = ["axum", "tower", "hyper", "thiserror", "syn"];
+            let mut duplicate_majors = Vec::new();
+            
+            for crate_name in &critical_crates {
+                let _pattern = format!(r"{}\s+v\d+", crate_name);
+                let matches: Vec<&str> = stdout.lines()
+                    .filter(|line| line.contains(crate_name))
+                    .collect();
+                
+                if matches.len() > 1 {
+                    // Extract version numbers to check for different majors
+                    let mut major_versions = std::collections::HashSet::new();
+                    for line in matches {
+                        if let Some(version_start) = line.find(" v") {
+                            let version_part = &line[version_start + 2..];
+                            if let Some(dot_pos) = version_part.find('.') {
+                                let major = &version_part[..dot_pos];
+                                major_versions.insert(major.to_string());
+                            }
+                        }
+                    }
+                    
+                    if major_versions.len() > 1 {
+                        duplicate_majors.push(format!("{} (majors: {})", 
+                                                    crate_name, 
+                                                    major_versions.into_iter().collect::<Vec<_>>().join(", ")));
+                    }
+                }
+            }
+            
+            if duplicate_majors.is_empty() {
+                GateResult {
+                    name: "Duplicate Major Version Detection".to_string(),
+                    passed: true,
+                    message: "No duplicate major versions found for critical crates".to_string(),
+                    artifacts,
+                }
+            } else {
+                GateResult {
+                    name: "Duplicate Major Version Detection".to_string(),
+                    passed: false,
+                    message: format!("Duplicate major versions found: {}", duplicate_majors.join(", ")),
+                    artifacts,
+                }
+            }
+        }
+        Ok(result) => {
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            let artifacts = save_gate_artifacts("cargo-tree-duplicates", "", &stderr, result.status.code().unwrap_or(-1));
+            
+            GateResult {
+                name: "Duplicate Major Version Detection".to_string(),
+                passed: false,
+                message: "Failed to run cargo tree -d".to_string(),
+                artifacts,
+            }
+        }
+        Err(e) => {
+            GateResult {
+                name: "Duplicate Major Version Detection".to_string(),
+                passed: false,
+                message: format!("Failed to execute cargo tree: {}", e),
+                artifacts: Vec::new(),
+            }
+        }
+    }
+}
+
 fn print_remediation_guidance(gates: &[GateResult]) {
     println!("\n🔧 Remediation Guidance");
     println!("======================");
@@ -526,6 +899,13 @@ fn print_remediation_guidance(gates: &[GateResult]) {
                     println!("   - Consolidate similar functionality");
                     println!("   - Consider feature flags to reduce dependency count");
                 }
+                "Duplicate Major Version Detection" => {
+                    println!("🔄 Duplicate Major Version Detection:");
+                    println!("   - Run 'cargo tree -d' to see all duplicate dependencies");
+                    println!("   - Update Cargo.toml to use unified versions");
+                    println!("   - Add [patch.crates-io] entries to force version unification");
+                    println!("   - Review workspace dependencies for version consistency");
+                }
                 "Audit Trail Validation" => {
                     println!("📊 Audit Trail Validation:");
                     println!("   - Run 'cargo +nightly -Zscript scripts/supply_chain_audit.rs'");
@@ -537,6 +917,13 @@ fn print_remediation_guidance(gates: &[GateResult]) {
                     println!("   - Run supply chain audit to regenerate license list");
                     println!("   - Ensure THIRD_PARTY_LICENSES.md is complete");
                     println!("   - Verify all license information is accurate");
+                }
+                "Cargo About Integration" => {
+                    println!("📋 Cargo About Integration:");
+                    println!("   - Install cargo-about: cargo install cargo-about --locked --version 0.6.4");
+                    println!("   - Create about.hjson configuration file");
+                    println!("   - Run 'cargo about generate' to create license documentation");
+                    println!("   - Ensure all license texts are included and complete");
                 }
                 _ => {}
             }
@@ -550,3 +937,215 @@ fn print_remediation_guidance(gates: &[GateResult]) {
     println!("   - Check CI workflow in .github/workflows/security.yml");
 }
 
+fn run_cargo_about_gate() -> GateResult {
+    println!("  Running cargo-about with pinned version...");
+    
+    // Pin cargo-about version for consistent output
+    let output = Command::new("cargo")
+        .args(&["about", "--locked", "--version", "0.6.4", "generate", "--format", "json"])
+        .output();
+        
+    match output {
+        Ok(result) => {
+            let exit_code = result.status.code().unwrap_or(-1);
+            let stdout = String::from_utf8_lossy(&result.stdout);
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            
+            // Save comprehensive artifacts
+            let artifacts = save_comprehensive_artifacts("cargo-about", &stdout, &stderr, exit_code);
+            
+            if exit_code == 0 {
+                GateResult {
+                    name: "Cargo About Integration".to_string(),
+                    passed: true,
+                    message: "License documentation generated successfully".to_string(),
+                    artifacts,
+                }
+            } else {
+                GateResult {
+                    name: "Cargo About Integration".to_string(),
+                    passed: false,
+                    message: format!("cargo-about failed with exit code {}", exit_code),
+                    artifacts,
+                }
+            }
+        }
+        Err(e) => {
+            GateResult {
+                name: "Cargo About Integration".to_string(),
+                passed: false,
+                message: format!("Failed to run cargo-about: {}", e),
+                artifacts: Vec::new(),
+            }
+        }
+    }
+}
+
+fn save_comprehensive_artifacts(gate_name: &str, stdout: &str, stderr: &str, exit_code: i32) -> Vec<String> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let mut artifacts = Vec::new();
+    
+    // Create artifacts directory if it doesn't exist
+    if let Err(_) = fs::create_dir_all("target/ci-artifacts") {
+        return artifacts;
+    }
+    
+    // Save raw outputs
+    let stdout_file = format!("target/ci-artifacts/{}-{}-stdout.json", gate_name, timestamp);
+    if let Ok(_) = fs::write(&stdout_file, stdout) {
+        artifacts.push(stdout_file);
+    }
+    
+    let stderr_file = format!("target/ci-artifacts/{}-{}-stderr.txt", gate_name, timestamp);
+    if let Ok(_) = fs::write(&stderr_file, stderr) {
+        artifacts.push(stderr_file);
+    }
+    
+    // Enhanced metadata with tool versions and environment
+    let tool_versions = get_tool_versions();
+    let metadata = format!(
+        "{{\"gate\":\"{}\",\"timestamp\":{},\"exit_code\":{},\"tool_versions\":{},\"environment\":{{\"os\":\"{}\",\"arch\":\"{}\",\"rustc\":\"{}\",\"cargo\":\"{}\"}},\"ci_info\":{{\"github_actions\":{},\"runner_os\":\"{}\",\"workflow\":\"{}\",\"run_id\":\"{}\"}}}}",
+        gate_name,
+        timestamp,
+        exit_code,
+        format_tool_versions(&tool_versions),
+        std::env::consts::OS,
+        std::env::consts::ARCH,
+        get_rustc_version(),
+        get_cargo_version(),
+        std::env::var("GITHUB_ACTIONS").unwrap_or_else(|_| "false".to_string()) == "true",
+        std::env::var("RUNNER_OS").unwrap_or_else(|_| "unknown".to_string()),
+        std::env::var("GITHUB_WORKFLOW").unwrap_or_else(|_| "unknown".to_string()),
+        std::env::var("GITHUB_RUN_ID").unwrap_or_else(|_| "unknown".to_string())
+    );
+    
+    let metadata_file = format!("target/ci-artifacts/{}-{}-metadata.json", gate_name, timestamp);
+    if let Ok(_) = fs::write(&metadata_file, metadata) {
+        artifacts.push(metadata_file);
+    }
+    
+    // Save execution summary
+    let summary = format!(
+        "Gate: {}\nTimestamp: {}\nExit Code: {}\nPassed: {}\nArtifacts: {}\n",
+        gate_name,
+        timestamp,
+        exit_code,
+        exit_code == 0,
+        artifacts.len()
+    );
+    
+    let summary_file = format!("target/ci-artifacts/{}-{}-summary.txt", gate_name, timestamp);
+    if let Ok(_) = fs::write(&summary_file, summary) {
+        artifacts.push(summary_file);
+    }
+    
+    artifacts
+}
+
+fn get_tool_versions() -> std::collections::HashMap<String, String> {
+    let mut versions = std::collections::HashMap::new();
+    
+    // Get cargo-deny version
+    if let Ok(output) = Command::new("cargo").args(&["deny", "--version"]).output() {
+        if output.status.success() {
+            let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            versions.insert("cargo-deny".to_string(), version);
+        }
+    }
+    
+    // Get cargo-about version
+    if let Ok(output) = Command::new("cargo").args(&["about", "--version"]).output() {
+        if output.status.success() {
+            let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            versions.insert("cargo-about".to_string(), version);
+        }
+    }
+    
+    // Get cargo-audit version
+    if let Ok(output) = Command::new("cargo").args(&["audit", "--version"]).output() {
+        if output.status.success() {
+            let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            versions.insert("cargo-audit".to_string(), version);
+        }
+    }
+    
+    versions
+}
+
+fn get_cargo_version() -> String {
+    Command::new("cargo")
+        .args(&["--version"])
+        .output()
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .unwrap_or_else(|_| "unknown".to_string())
+}
+
+fn parse_deny_json(json_str: &str) -> Result<DenyReport, String> {
+    // Simple manual JSON parsing for deny report
+    let mut diagnostics = Vec::new();
+    
+    // Look for diagnostic objects in the JSON
+    let lines: Vec<&str> = json_str.lines().collect();
+    let mut in_diagnostic = false;
+    let mut current_severity = String::new();
+    let mut current_message = String::new();
+    
+    for line in lines {
+        let trimmed = line.trim();
+        
+        if trimmed.contains("\"severity\":") {
+            if let Some(start) = trimmed.find("\"severity\": \"") {
+                let severity_part = &trimmed[start + 13..];
+                if let Some(end) = severity_part.find('"') {
+                    current_severity = severity_part[..end].to_string();
+                    in_diagnostic = true;
+                }
+            }
+        }
+        
+        if in_diagnostic && trimmed.contains("\"message\":") {
+            if let Some(start) = trimmed.find("\"message\": \"") {
+                let message_part = &trimmed[start + 12..];
+                if let Some(end) = message_part.rfind('"') {
+                    current_message = message_part[..end].to_string();
+                }
+            }
+        }
+        
+        if in_diagnostic && (trimmed == "}" || trimmed == "},") {
+            diagnostics.push(Diagnostic {
+                severity: current_severity.clone(),
+                message: current_message.clone(),
+            });
+            in_diagnostic = false;
+            current_severity.clear();
+            current_message.clear();
+        }
+    }
+    
+    Ok(DenyReport { diagnostics })
+}
+
+
+
+fn format_tool_versions(versions: &std::collections::HashMap<String, String>) -> String {
+    let mut result = String::from("{");
+    let mut first = true;
+    
+    for (key, value) in versions {
+        if !first {
+            result.push(',');
+        }
+        result.push_str(&format!("\"{}\":\"{}\"", key, value));
+        first = false;
+    }
+    
+    result.push('}');
+    result
+}

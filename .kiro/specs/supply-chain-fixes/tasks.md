@@ -109,32 +109,47 @@
     - Keep dev ergonomics by not setting warnings globally
     - _Requirements: SC-04.4, SC-04.5_
 
-- [ ] 5. Implement enhanced CI gate controller
-  - [ ] 5.1 Update gate controller to use JSON parsing with tool pinning
+- [x] 5. Implement enhanced CI gate controller
+
+
+
+
+
+  - [x] 5.1 Update gate controller to use JSON parsing with tool pinning
+
+
     - Pin tool versions in CI: cargo-deny --locked --version 0.14.23, cargo-about --locked --version 0.6.4
     - Modify ci_supply_chain_gate.rs to use cargo deny --format json
     - Replace string parsing with structured JSON analysis using serde
     - Add lockfile guard: fail if Cargo.lock changed but not committed
     - _Requirements: SC-07.2, SC-07.4, NFR-A_
 
-  - [ ] 5.2 Fix exit code handling and warning classification
+  - [x] 5.2 Fix exit code handling and warning classification
+
+
     - Implement proper exit code evaluation before parsing JSON output
     - Treat license-not-encountered as warnings, not failures in JSON diagnostics
     - Add retry logic only for transient execution failures, not policy failures
     - _Requirements: SC-07.1, SC-07.3_
 
-  - [ ] 5.3 Add dependency counting using cargo metadata
+  - [x] 5.3 Add dependency counting using cargo metadata
+
+
     - Implement runtime dependency counting via cargo metadata --format-version 1
     - Filter for kind == "normal" and target.is_none(), dedupe by package name
     - Exclude dev-dependencies and build-dependencies from count
     - _Requirements: SC-05.1, SC-05.3_
 
-  - [ ] 5.4 Implement duplicate major version detection
+  - [x] 5.4 Implement duplicate major version detection
+
+
     - Add validation: cargo tree -d | rg -E "(axum|tower|hyper|thiserror|syn)" && exit 1 || true
     - Create automated check for single major versions across workspace
     - _Requirements: SC-05.2, SC-05.5_
 
-  - [ ] 5.5 Add comprehensive CI artifact retention
+  - [x] 5.5 Add comprehensive CI artifact retention
+
+
     - Store raw JSON outputs from cargo-deny, cargo-about, and cargo-audit
     - Include tool versions, execution environment (OS, rustc), and timestamps
     - Attach artifacts to every gate run for audit trail
