@@ -8,15 +8,24 @@
 
 **Determinism:** Given the same Cargo.lock, THIRD_PARTY_LICENSES.md and SBOM outputs must be byte-for-byte identical; fail CI if Cargo.lock is dirty.
 
-- [ ] 1. Fix P0 license compliance issues
-  - [ ] 1.1 Update deny.toml with comprehensive license policy
+- [x] 1. Fix P0 license compliance issues
+
+
+
+
+
+  - [x] 1.1 Update deny.toml with comprehensive license policy
+
+
     - Add Unicode-3.0, Unicode-DFS-2016, and MPL-2.0 to allowed licenses
     - Set exclude-dev-dependencies = true and include-build-dependencies = false
     - Add unicode-ident exception for compound license expressions
     - Configure unused-allowed-licenses = "warn"
     - _Requirements: SC-01.1, SC-01.2, SC-01.5_
   
-  - [ ] 1.2 Ensure examples crate compliance
+  - [x] 1.2 Ensure examples crate compliance
+
+
     - Add license = "MIT OR Apache-2.0" to examples/Cargo.toml
     - Set publish = false and edition = "2024" in examples crate
     - _Requirements: SC-01.4_

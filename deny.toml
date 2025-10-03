@@ -4,7 +4,7 @@
 [graph]
 # Ensure we have a complete dependency graph
 all-features = true
-exclude-dev = false
+exclude-dev = true
 
 [licenses]
 # Only allow licenses that are compatible with our MIT/Apache-2.0 dual license
@@ -24,9 +24,13 @@ allow = [
 # Confidence threshold for license detection
 confidence-threshold = 0.8
 
+# Warn about unused allowed licenses
+unused-allowed-license = "warn"
+
 # Allow specific exceptions (if needed)
 exceptions = [
-    # Example: { allow = ["GPL-3.0"], name = "some-crate", version = "1.0" }
+    # unicode-ident has compound license expressions that need special handling
+    { allow = ["MIT", "Apache-2.0", "Unicode-3.0"], name = "unicode-ident" },
 ]
 
 [bans]
