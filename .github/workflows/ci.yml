@@ -37,8 +37,24 @@ jobs:
     - name: Check formatting
       run: cargo fmt --all -- --check
       
-    - name: Run clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+    - name: Run clippy (general - warnings allowed for dev ergonomics)
+      run: cargo clippy --all-targets --all-features
+      
+    - name: Run clippy with strict warnings for public API crates only
+      run: |
+        echo "🔍 Running strict clippy checks for public API crates..."
+        # Apply strict warnings only to public API crates (flight-hid, flight-ipc, flight-service)
+        cargo clippy -p flight-hid --lib --tests -- -D warnings
+        cargo clippy -p flight-ipc --lib --tests -- -D warnings
+        cargo clippy -p flight-service --lib --tests -- -D warnings
+        
+    - name: Run file descriptor safety tests for public API crates
+      run: |
+        echo "🔍 Running file descriptor safety tests for public API crates..."
+        # Test that public API crates use typed file descriptors instead of RawFd
+        cargo test -p flight-hid fd_safety_tests
+        cargo test -p flight-ipc fd_safety_tests
+        cargo test -p flight-service fd_safety_tests
       
     - name: Run tests
       run: cargo test --all-features --workspace

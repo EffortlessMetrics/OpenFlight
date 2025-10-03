@@ -379,7 +379,7 @@ impl ProcessDetector {
                         entry.th32ProcessID,
                     ) {
                         let mut path_buffer = [0u16; 260];
-                        if K32GetModuleFileNameExW(process_handle, None, &mut path_buffer) > 0 {
+                        if K32GetModuleFileNameExW(Some(process_handle), None, &mut path_buffer) > 0 {
                             let path = OsString::from_wide(&path_buffer)
                                 .to_string_lossy()
                                 .trim_end_matches('\0')

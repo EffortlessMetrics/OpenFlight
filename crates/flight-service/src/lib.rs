@@ -24,6 +24,8 @@ mod capability_integration_tests;
 mod test_service;
 #[cfg(test)]
 mod acceptance_tests;
+#[cfg(test)]
+mod fd_safety_tests;
 
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use one_click_resolver::{OneClickResolver, OneClickResolverConfig, OneClickResult, VerificationOutcome, ResolutionMetrics};

@@ -81,18 +81,29 @@
     - Document transport configuration choice in workspace dependencies
     - _Requirements: SC-03.6_
 
-- [ ] 4. Update system-level dependencies
-  - [ ] 4.1 Update nix to 0.30 and migrate to typed file descriptors
+- [x] 4. Update system-level dependencies
+
+
+
+
+
+  - [x] 4.1 Update nix to 0.30 and migrate to typed file descriptors
+
+
     - Update nix version in workspace dependencies
     - Replace RawFd usage with OwnedFd/BorrowedFd in public APIs
     - _Requirements: SC-04.1, SC-04.5_
 
-  - [ ] 4.2 Update windows crate to 0.62
+  - [x] 4.2 Update windows crate to 0.62
+
+
     - Update windows version and feature flags in workspace dependencies
     - Regenerate Windows bindings if using windows::build!
     - _Requirements: SC-04.2_
 
-  - [ ] 4.3 Add compiler warning enforcement for public API crates
+  - [x] 4.3 Add compiler warning enforcement for public API crates
+
+
     - Configure CI to use RUSTFLAGS="-Dwarnings" for public API crates only (flight-hid, flight-ipc, flight-service)
     - Add unit test or clippy lint to ensure public functions use OwnedFd/BorrowedFd/AsFd instead of RawFd
     - Keep dev ergonomics by not setting warnings globally

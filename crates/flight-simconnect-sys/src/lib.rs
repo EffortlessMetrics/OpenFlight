@@ -17,7 +17,7 @@
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::ptr;
 use windows::core::{HRESULT, PCSTR};
-use windows::Win32::Foundation::{BOOL, HANDLE, HWND};
+use windows::Win32::Foundation::{HANDLE, HWND};
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
 
 /// SimConnect handle type

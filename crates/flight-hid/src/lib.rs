@@ -9,6 +9,8 @@
 pub mod ofp1;
 #[cfg(test)]
 mod ofp1_tests;
+#[cfg(test)]
+mod fd_safety_tests;
 
 use flight_core::{
     WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEvent,

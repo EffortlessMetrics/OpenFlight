@@ -67,6 +67,8 @@ pub mod transport;
 pub mod client;
 pub mod server;
 pub mod negotiation;
+#[cfg(test)]
+mod fd_safety_tests;
 
 pub use proto::*;
 
