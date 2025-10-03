@@ -21,6 +21,8 @@ This crate implements key safety and architectural decisions:
 
 - **[ADR-001: Real-Time Spine Architecture](../../docs/adr/001-rt-spine-architecture.md)** - Protected RT core for FFB processing
 - **[ADR-004: Zero-Allocation Constraint](../../docs/adr/004-zero-allocation-constraint.md)** - No allocations in RT FFB path
+- **[ADR-008: Force Feedback Mode Selection](../../docs/adr/008-ffb-mode-selection.md)** - Capability-based FFB mode negotiation
+- **[ADR-009: Safety Interlock Design](../../docs/adr/009-safety-interlock-design.md)** - Multi-layered safety interlock system
 
 ## Safety State Machine
 

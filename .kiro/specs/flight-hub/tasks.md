@@ -610,7 +610,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 ## Cross-Cutting Tasks (Always-On)
 
-- [ ] 34. ADRs & governance
+- [x] 34. ADRs & governance
+
+
+
+
+
   - Document architectural decisions for RT loop, driver-light approach
   - Create ADRs for pipeline ownership, FFB modes, interlock design
   - Document writers, schemas, and observability decisions

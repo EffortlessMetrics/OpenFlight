@@ -6,6 +6,13 @@ A table-driven configuration management system for flight simulators with golden
 
 Flight Writers provides a robust system for managing simulator configurations through:
 
+## Architecture
+
+This crate implements key architectural decisions:
+
+- **[ADR-002: Writers as Data Pattern](../../docs/adr/002-writers-as-data.md)** - Table-driven configuration management
+- **[ADR-006: Driver-Light Integration Approach](../../docs/adr/006-driver-light-approach.md)** - Minimal system footprint integration
+
 - **Versioned JSON Diffs**: Table-driven configuration changes per simulator version
 - **Golden File Testing**: Automated testing with expected output validation
 - **Verify/Repair**: Scripted verification and minimal diff repair system

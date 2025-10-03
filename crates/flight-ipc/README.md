@@ -16,6 +16,11 @@ Cross-platform IPC (Inter-Process Communication) layer for Flight Hub, providing
 
 The IPC layer follows a schema-first approach with the following components:
 
+This crate implements key architectural decisions:
+
+- **[ADR-010: Schema Versioning Strategy](../../docs/adr/010-schema-versioning-strategy.md)** - Comprehensive schema versioning with migration support
+- **[ADR-006: Driver-Light Integration Approach](../../docs/adr/006-driver-light-approach.md)** - Local-only IPC with minimal system footprint
+
 - **Proto Schema** (`proto/flight.v1.proto`): Defines all service interfaces and message types
 - **Transport Layer** (`transport.rs`): Platform-specific transport implementations
 - **Client** (`client.rs`): High-level client API with feature negotiation
