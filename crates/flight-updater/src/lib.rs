@@ -6,6 +6,7 @@
 pub mod channels;
 pub mod delta;
 pub mod integration_docs;
+pub mod packaging;
 pub mod rollback;
 pub mod signature;
 pub mod updater;
@@ -13,6 +14,7 @@ pub mod updater;
 pub use channels::{Channel, ChannelConfig};
 pub use delta::{DeltaApplier, DeltaPatch};
 pub use integration_docs::{IntegrationDocsManager, SimIntegrationDocs, ValidationReport};
+pub use packaging::{MsiPackageBuilder, PackageConfig, SystemdPackageBuilder};
 pub use rollback::{RollbackManager, VersionInfo};
 pub use signature::{SignatureVerifier, UpdateSignature};
 pub use updater::{UpdateManager, UpdateConfig, UpdateResult};
@@ -44,6 +46,10 @@ pub enum UpdateError {
     
     #[error("Version validation failed: {0}")]
     VersionValidation(String),
+    
+    #[error("Documentation not found: {0}")]
+    DocumentationNotFound(String),
 }
 
 pub type Result<T> = std::result::Result<T, UpdateError>;
+pub type Error = UpdateError;

@@ -581,6 +581,8 @@ Each task builds incrementally on previous work, with comprehensive testing and 
 
 
 
+
+
   - Create MSI (signed) and systemd user units
   - Implement udev rules and delta update system
   - Add rollback functionality and signature verification
@@ -597,7 +599,9 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - _Requirements: REL-01_
 
 
-- [ ] 33.2 "What we touch" docs surfaced
+- [x] 33.2 "What we touch" docs surfaced
+
+
   - Create per-sim page listing files/ports/vars and revert steps
   - Link documentation from installer & UI with validation
   - Add doc checks that pass with resolving links

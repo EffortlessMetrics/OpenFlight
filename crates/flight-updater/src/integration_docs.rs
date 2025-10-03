@@ -314,6 +314,95 @@ impl IntegrationDocsManager {
         Ok(report)
     }
     
+    /// Link to external markdown documentation
+    pub fn get_markdown_doc_path(&self, simulator: &str) -> Option<PathBuf> {
+        let markdown_path = self.docs_dir.join("integration").join(format!("{}.md", simulator));
+        if markdown_path.exists() {
+            Some(markdown_path)
+        } else {
+            None
+        }
+    }
+
+    /// Open markdown documentation in system browser
+    pub fn open_markdown_docs(&self, simulator: &str) -> crate::Result<()> {
+        if let Some(doc_path) = self.get_markdown_doc_path(simulator) {
+            let url = format!("file://{}", doc_path.canonicalize()?.display());
+            
+            #[cfg(target_os = "windows")]
+            {
+                std::process::Command::new("cmd")
+                    .args(["/c", "start", &url])
+                    .spawn()?;
+            }
+            
+            #[cfg(target_os = "macos")]
+            {
+                std::process::Command::new("open")
+                    .arg(&url)
+                    .spawn()?;
+            }
+            
+            #[cfg(target_os = "linux")]
+            {
+                std::process::Command::new("xdg-open")
+                    .arg(&url)
+                    .spawn()?;
+            }
+            
+            Ok(())
+        } else {
+            Err(crate::Error::DocumentationNotFound(simulator.to_string()))
+        }
+    }
+
+    /// Generate installer summary with links to detailed docs
+    pub fn generate_installer_summary(&self) -> String {
+        let mut summary = String::new();
+        
+        summary.push_str("# Flight Hub Integration Summary\n\n");
+        summary.push_str("Flight Hub integrates with flight simulators using documented APIs and minimal configuration changes.\n\n");
+        
+        summary.push_str("## What We Touch\n\n");
+        summary.push_str("| Simulator | Files Modified | Network Ports | Multiplayer Safe |\n");
+        summary.push_str("|-----------|----------------|---------------|------------------|\n");
+        
+        for (sim_name, docs) in &self.docs {
+            let file_count = docs.files.len();
+            let port_count = docs.network_ports.len();
+            let mp_safe = docs.multiplayer_notes
+                .as_ref()
+                .map(|n| if n.multiplayer_safe { "Yes" } else { "Partial" })
+                .unwrap_or("Unknown");
+            
+            summary.push_str(&format!("| {} | {} | {} | {} |\n", 
+                docs.simulator.name, file_count, port_count, mp_safe));
+        }
+        
+        summary.push_str("\n## Installation Requirements\n\n");
+        summary.push_str("- **Privileges**: User-level installation (no administrator required)\n");
+        summary.push_str("- **Runtime**: No elevated privileges needed\n");
+        summary.push_str("- **Network**: Local communication only (no external servers)\n\n");
+        
+        summary.push_str("## Detailed Documentation\n\n");
+        summary.push_str("For complete details on what Flight Hub touches in each simulator:\n\n");
+        
+        for (sim_name, docs) in &self.docs {
+            summary.push_str(&format!("- [{}](./integration/{}.md) - Complete integration details\n", 
+                docs.simulator.name, sim_name));
+        }
+        
+        summary.push_str("\n## Removal\n\n");
+        summary.push_str("Flight Hub can be completely removed:\n");
+        summary.push_str("1. Use the automatic removal in Flight Hub settings\n");
+        summary.push_str("2. Or follow the manual steps in each simulator's documentation\n");
+        summary.push_str("3. Uninstall Flight Hub normally\n\n");
+        
+        summary.push_str("All changes are reversible and documented.\n");
+        
+        summary
+    }
+
     /// Generate user-friendly documentation
     pub fn generate_user_docs(&self, simulator: &str) -> Option<String> {
         let docs = self.get_docs(simulator)?;

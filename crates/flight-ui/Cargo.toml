@@ -9,3 +9,7 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
