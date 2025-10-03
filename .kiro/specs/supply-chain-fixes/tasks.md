@@ -213,15 +213,24 @@
     - Set clap default-features = false with features = ["derive"]
     - _Requirements: SC-05.4_
 
-- [ ] 8. Implement security policy enforcement
-  - [ ] 8.1 Configure comprehensive registry and VCS source restrictions
+- [x] 8. Implement security policy enforcement
+
+
+
+
+
+  - [x] 8.1 Configure comprehensive registry and VCS source restrictions
+
+
     - Update deny.toml [sources] with unknown-registry = "deny" and unknown-git = "deny"
     - Set allow-registry = ["https://github.com/rust-lang/crates.io-index"]
     - Add empty allow-git template with per-crate exception structure
     - Create CI gate to fail on git dependencies or unknown registries
     - _Requirements: NFR-C_
 
-  - [ ] 8.2 Add MSRV and edition enforcement across workspace
+  - [x] 8.2 Add MSRV and edition enforcement across workspace
+
+
     - Create CI job to validate edition = "2024" in all workspace package Cargo.toml files
     - Verify rust-version = "1.89.0" consistency across all crates
     - Add automated check that fails CI if any crate deviates from workspace standards

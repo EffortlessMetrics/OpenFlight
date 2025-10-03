@@ -8,7 +8,7 @@ Generated on:
 
 ### MIT License
 
-**Dependencies using this license (271 total):**
+**Dependencies using this license (259 total):**
 
 
 **License Text:**

@@ -79,6 +79,14 @@ fn main() {
     println!("\n📋 Gate 9: Cargo About Integration");
     gates.push(run_cargo_about_gate());
     
+    // Gate 10: Source Validation - Registry and VCS source restrictions
+    println!("\n🔐 Gate 10: Source Validation");
+    gates.push(run_source_validation_gate());
+    
+    // Gate 11: MSRV and Edition Enforcement - Workspace consistency
+    println!("\n📋 Gate 11: MSRV and Edition Enforcement");
+    gates.push(run_msrv_edition_gate());
+    
     // Summary
     println!("\n📊 CI Supply Chain Security Gate Summary");
     println!("=======================================");
@@ -1071,6 +1079,209 @@ fn run_cargo_about_gate() -> GateResult {
                 name: "Cargo About Integration".to_string(),
                 passed: false,
                 message: format!("Failed to run cargo-about: {}", e),
+                artifacts: Vec::new(),
+            }
+        }
+    }
+}
+
+fn run_source_validation_gate() -> GateResult {
+    println!("  Validating registry and VCS source restrictions...");
+    
+    // Run cargo deny check sources to validate source restrictions
+    let output = Command::new("cargo")
+        .args(&["deny", "--locked", "--version", "0.14.23", "check", "sources", "--format", "json"])
+        .output();
+        
+    match output {
+        Ok(result) => {
+            let exit_code = result.status.code().unwrap_or(-1);
+            let stdout = String::from_utf8_lossy(&result.stdout);
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            
+            // Save raw output as artifact
+            let artifacts = save_gate_artifacts("cargo-deny-sources", &stdout, &stderr, exit_code);
+            
+            // Always check exit code first
+            if exit_code != 0 {
+                // Parse JSON for detailed error information
+                let error_details = if let Ok(report) = parse_deny_json(&stdout) {
+                    let error_count = report.diagnostics.iter()
+                        .filter(|d| d.severity == "error")
+                        .count();
+                    let warning_count = report.diagnostics.iter()
+                        .filter(|d| d.severity == "warn")
+                        .count();
+                    
+                    // Check for specific source violations
+                    let git_violations = report.diagnostics.iter()
+                        .filter(|d| d.message.contains("git") || d.message.contains("unknown-git"))
+                        .count();
+                    let registry_violations = report.diagnostics.iter()
+                        .filter(|d| d.message.contains("registry") || d.message.contains("unknown-registry"))
+                        .count();
+                    
+                    format!("{} errors, {} warnings (git: {}, registry: {})", 
+                           error_count, warning_count, git_violations, registry_violations)
+                } else {
+                    // Fallback to stderr parsing
+                    let error_lines: Vec<&str> = stderr.lines()
+                        .filter(|line| line.contains("error:") || line.contains("denied:"))
+                        .collect();
+                    format!("{} source violations detected", error_lines.len())
+                };
+                
+                return GateResult {
+                    name: "Source Validation".to_string(),
+                    passed: false,
+                    message: format!("Source restrictions violated: {}", error_details),
+                    artifacts,
+                };
+            }
+            
+            // Additional validation: Check for git dependencies using cargo tree
+            println!("    Performing additional git dependency validation...");
+            let tree_output = Command::new("cargo")
+                .args(&["tree", "--format", "{p} {r}"])
+                .output();
+                
+            match tree_output {
+                Ok(tree_result) if tree_result.status.success() => {
+                    let tree_stdout = String::from_utf8_lossy(&tree_result.stdout);
+                    let git_deps: Vec<&str> = tree_stdout.lines()
+                        .filter(|line| line.contains("git+"))
+                        .collect();
+                    
+                    if !git_deps.is_empty() {
+                        return GateResult {
+                            name: "Source Validation".to_string(),
+                            passed: false,
+                            message: format!("Found {} git dependencies: {}", 
+                                           git_deps.len(), 
+                                           git_deps.iter().take(3).map(|s| s.split_whitespace().next().unwrap_or("")).collect::<Vec<_>>().join(", ")),
+                            artifacts,
+                        };
+                    }
+                }
+                _ => {
+                    // Tree command failed, but deny passed, so continue
+                    println!("    Warning: Could not validate git dependencies with cargo tree");
+                }
+            }
+            
+            // Parse JSON output for warnings
+            if let Ok(report) = parse_deny_json(&stdout) {
+                let warnings: Vec<&Diagnostic> = report.diagnostics.iter()
+                    .filter(|d| d.severity == "warn")
+                    .collect();
+                
+                let message = if warnings.is_empty() {
+                    "All source restrictions validated - only crates.io registry allowed".to_string()
+                } else {
+                    format!("Source validation passed with {} warnings", warnings.len())
+                };
+                
+                GateResult {
+                    name: "Source Validation".to_string(),
+                    passed: true,
+                    message,
+                    artifacts,
+                }
+            } else {
+                GateResult {
+                    name: "Source Validation".to_string(),
+                    passed: true,
+                    message: "Source restrictions validated (JSON parse failed)".to_string(),
+                    artifacts,
+                }
+            }
+        }
+        Err(e) => {
+            GateResult {
+                name: "Source Validation".to_string(),
+                passed: false,
+                message: format!("Failed to run cargo deny sources: {}", e),
+                artifacts: Vec::new(),
+            }
+        }
+    }
+}
+
+fn run_msrv_edition_gate() -> GateResult {
+    println!("  Validating MSRV and edition consistency across workspace...");
+    
+    // Run the MSRV/edition validation script
+    let output = Command::new("cargo")
+        .args(&["+nightly", "-Zscript", "scripts/validate_msrv_edition.rs"])
+        .output();
+        
+    match output {
+        Ok(result) => {
+            let exit_code = result.status.code().unwrap_or(-1);
+            let stdout = String::from_utf8_lossy(&result.stdout);
+            let stderr = String::from_utf8_lossy(&result.stderr);
+            
+            // Save output as artifact
+            let artifacts = save_gate_artifacts("msrv-edition-validation", &stdout, &stderr, exit_code);
+            
+            if exit_code == 0 {
+                // Parse success message for details
+                let message = if stdout.contains("All") && stdout.contains("workspace crates comply") {
+                    // Extract the number of crates from the output
+                    if let Some(line) = stdout.lines().find(|l| l.contains("workspace crates comply")) {
+                        line.trim_start_matches("✅ ").to_string()
+                    } else {
+                        "All workspace crates comply with MSRV and edition requirements".to_string()
+                    }
+                } else {
+                    "MSRV and edition validation passed".to_string()
+                };
+                
+                GateResult {
+                    name: "MSRV and Edition Enforcement".to_string(),
+                    passed: true,
+                    message,
+                    artifacts,
+                }
+            } else {
+                // Parse failure details from output
+                let mut violations = Vec::new();
+                let mut in_violations = false;
+                
+                for line in stdout.lines() {
+                    if line.starts_with("❌") {
+                        in_violations = true;
+                        continue;
+                    }
+                    if in_violations && line.starts_with("  - ") {
+                        violations.push(line.trim_start_matches("  - ").to_string());
+                    }
+                    if in_violations && line.starts_with("💡") {
+                        break;
+                    }
+                }
+                
+                let violation_summary = if violations.is_empty() {
+                    "MSRV/edition violations detected".to_string()
+                } else {
+                    format!("{} violations: {}", 
+                           violations.len(),
+                           violations.iter().take(3).cloned().collect::<Vec<_>>().join("; "))
+                };
+                
+                GateResult {
+                    name: "MSRV and Edition Enforcement".to_string(),
+                    passed: false,
+                    message: violation_summary,
+                    artifacts,
+                }
+            }
+        }
+        Err(e) => {
+            GateResult {
+                name: "MSRV and Edition Enforcement".to_string(),
+                passed: false,
+                message: format!("Failed to run MSRV/edition validation: {}", e),
                 artifacts: Vec::new(),
             }
         }
