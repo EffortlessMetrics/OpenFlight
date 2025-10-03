@@ -178,6 +178,10 @@ impl Default for UpdateRates {
 pub enum MappingError {
     #[error("SimConnect API error: {0}")]
     SimConnect(#[from] flight_simconnect_sys::SimConnectError),
+    #[error("Bus type error: {0}")]
+    BusType(#[from] flight_bus::types::BusTypeError),
+    #[error("Transport error: {0}")]
+    Transport(#[from] crate::transport::TransportError),
     #[error("Variable not found: {0}")]
     VariableNotFound(String),
     #[error("Invalid data type for variable: {0}")]
@@ -287,13 +291,20 @@ impl VariableMapping {
         api: &SimConnectApi,
         handle: HSIMCONNECT,
     ) -> Result<(), MappingError> {
-        for (request_id, mapping) in &self.request_mappings {
+        // Use scoped borrow pattern to avoid potential conflicts
+        let requests: Vec<_> = {
+            self.request_mappings.iter().map(|(request_id, mapping)| {
+                (*request_id, mapping.definition_id, mapping.period)
+            }).collect()
+        }; // immutable borrow ends here
+        
+        for (request_id, definition_id, period) in requests {
             api.request_data_on_sim_object(
                 handle,
-                *request_id,
-                mapping.definition_id,
+                request_id,
+                definition_id,
                 SIMCONNECT_OBJECT_ID_USER,
-                mapping.period,
+                period,
             )?;
         }
         Ok(())

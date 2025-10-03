@@ -25,6 +25,7 @@ pub mod events;
 pub mod fixtures;
 pub mod mapping;
 pub mod session;
+pub mod transport;
 
 // Re-export main types
 pub use adapter::{MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};

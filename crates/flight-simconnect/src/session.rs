@@ -8,7 +8,7 @@
 
 use flight_simconnect_sys::{
     constants::*, SimConnectApi, SimConnectError, HSIMCONNECT, SIMCONNECT_RECV,
-    SIMCONNECT_RECV_EXCEPTION, SIMCONNECT_RECV_OPEN, SIMCONNECT_RECV_SIMOBJECT_DATA,
+    SIMCONNECT_RECV_EXCEPTION, SIMCONNECT_RECV_ID, SIMCONNECT_RECV_OPEN, SIMCONNECT_RECV_SIMOBJECT_DATA,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

@@ -265,7 +265,7 @@ impl MsfsAdapter {
             let aircraft_clone = self.current_aircraft.clone();
             
             tokio::spawn(async move {
-                let mut receiver = event_receiver.lock().await;
+                let mut receiver = event_receiver.lock().unwrap();
                 
                 while let Some(event) = receiver.recv().await {
                     match event {

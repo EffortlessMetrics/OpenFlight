@@ -4,8 +4,9 @@
 //! raw file descriptors in public APIs, enforcing the use of OwnedFd/BorrowedFd/AsFd
 //! for better type safety and resource management.
 
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests {
+    #[cfg(unix)]
     use std::os::fd::{OwnedFd, BorrowedFd, AsFd};
     
     /// Test that demonstrates proper typed file descriptor usage for IPC
@@ -72,7 +73,9 @@ mod tests {
         // This test ensures that Unix socket implementations use typed FDs
         // rather than raw file descriptors
         
+        #[cfg(unix)]
         use std::os::unix::net::UnixStream;
+        #[cfg(unix)]
         use std::os::fd::AsRawFd;
         
         // Example of how to properly extract and use file descriptors from Unix sockets
@@ -135,5 +138,34 @@ mod fd_usage_examples {
     fn test_ipc_fd_usage_examples() {
         // This test documents the correct way to use file descriptors in IPC
         // and serves as a reference for developers
+    }
+}#[c
+fg(all(test, windows))]
+mod windows_tests {
+    #[cfg(windows)]
+    use std::os::windows::io::{AsRawHandle, BorrowedHandle, OwnedHandle};
+    
+    /// Test that demonstrates proper typed handle usage for IPC on Windows
+    #[cfg(windows)]
+    #[test]
+    fn test_typed_handle_usage_ipc() {
+        // This test ensures we're using the correct imports for typed handles
+        // in IPC contexts where named pipes are used on Windows
+        
+        // Example of proper typed handle usage for IPC (would be used in actual implementations)
+        fn example_ipc_function_with_owned_handle(_handle: OwnedHandle) {
+            // Function that takes ownership of a pipe handle
+        }
+        
+        fn example_ipc_function_with_borrowed_handle(_handle: BorrowedHandle) {
+            // Function that borrows a pipe handle temporarily
+        }
+        
+        // This function signature would be INCORRECT and should be avoided:
+        // fn bad_ipc_function_with_raw_handle(handle: RawHandle) { }
+        
+        // Instead, use typed handles for better safety in IPC
+        let _ = example_ipc_function_with_owned_handle;
+        let _ = example_ipc_function_with_borrowed_handle;
     }
 }

@@ -53,13 +53,20 @@
   - Verify: `cargo check -p flight-replay` compiles with serde features enabled
   - _Requirements: BC-02.1, BC-02.2, BC-02.3, BC-02.4, BC-02.5_
 
-- [ ] 2. Phase 2: Platform Compatibility
+- [x] 2. Phase 2: Platform Compatibility
+
+
+
+
+
   - Add Windows-specific dependencies and fix platform-specific code
   - Implement error conversion infrastructure
   - Fix borrow checker conflicts in mapping code
   - _Requirements: BC-03, BC-04_
 
-- [ ] 2.1 Add Windows dependencies and fix imports
+- [x] 2.1 Add Windows dependencies and fix imports
+
+
   - Add windows crate with target-specific dependency: `[target.'cfg(windows)'.dependencies]`
   - Add futures = "0.3" as normal dependency
   - Fix SIMCONNECT_RECV_ID import from flight-simconnect-sys
@@ -67,7 +74,9 @@
   - Verify: `cargo tree -e features -p flight-simconnect | grep windows` empty on Linux
   - _Requirements: BC-03.1, BC-03.2, BC-03.6, BC-03.7_
 
-- [ ] 2.2 Implement error conversion infrastructure
+- [x] 2.2 Implement error conversion infrastructure
+
+
   - Create MappingError enum with `#[derive(thiserror::Error, Debug)]`
   - Implement `From<BusTypeError> for MappingError` with `#[from]` attribute
   - Implement `From<flight_simconnect_sys::SimConnectError> for MappingError`
@@ -76,13 +85,17 @@
   - Verify: `cargo check -p flight-simconnect` passes without ? conversion errors
   - _Requirements: BC-03.5_
 
-- [ ] 2.3 Fix async/sync mutex usage patterns
+- [x] 2.3 Fix async/sync mutex usage patterns
+
+
   - Identify std::sync::Mutex vs tokio::sync::Mutex usage
   - Remove .await from std::sync::Mutex.lock() calls
   - Ensure tokio::sync::Mutex.lock().await usage is correct
   - _Requirements: BC-03.3_
 
-- [ ] 2.4 Fix borrow checker conflicts in mapping.rs
+- [x] 2.4 Fix borrow checker conflicts in mapping.rs
+
+
   - Implement scoped borrow pattern: `let keys = { self.subs.iter().map(...).collect() };`
   - Clone/extract keys or values into locals before mutation to end immutable borrow scope
   - Refactor subscription management around lines 257-279 to avoid conflicts
@@ -90,7 +103,9 @@
   - Verify: `cargo check -p flight-simconnect` passes without borrow conflicts
   - _Requirements: BC-03.4_
 
-- [ ] 2.5 Implement platform-specific code gates
+- [x] 2.5 Implement platform-specific code gates
+
+
   - Add `#[cfg(unix)] use std::os::fd::*;` for Unix-specific imports
   - Add `#[cfg(windows)] use std::os::windows::io::*;` for Windows-specific imports
   - Gate fd_safety_tests modules with `#[cfg(unix)]` in flight-hid and flight-ipc

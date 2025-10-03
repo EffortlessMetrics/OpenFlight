@@ -4,8 +4,9 @@
 //! raw file descriptors in public APIs, enforcing the use of OwnedFd/BorrowedFd/AsFd
 //! for better type safety and resource management.
 
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests {
+    #[cfg(unix)]
     use std::os::fd::{OwnedFd, BorrowedFd, AsFd};
     
     /// Test that demonstrates proper typed file descriptor usage for service layer
@@ -46,12 +47,14 @@ mod tests {
     
     /// Test that service layer properly handles system resources
     #[cfg(unix)]
+    #[cfg(unix)]
     #[test]
     fn test_service_system_resource_safety() {
         // This test ensures that service layer implementations use proper
         // resource management patterns
         
         use std::fs::File;
+        #[cfg(unix)]
         use std::os::fd::AsRawFd;
         
         // Example of how to properly handle system resources in service layer
@@ -117,5 +120,40 @@ mod fd_usage_examples {
     fn test_service_fd_usage_examples() {
         // This test documents the correct way to use file descriptors in service layer
         // and serves as a reference for developers
+    }
+}#[cfg
+(all(test, windows))]
+mod windows_tests {
+    #[cfg(windows)]
+    use std::os::windows::io::{AsRawHandle, BorrowedHandle, OwnedHandle};
+    
+    /// Test that demonstrates proper typed handle usage for service layer on Windows
+    #[cfg(windows)]
+    #[test]
+    fn test_service_system_handle_safety() {
+        // This test ensures that service layer implementations use proper
+        // handle management patterns on Windows
+        
+        use std::fs::File;
+        #[cfg(windows)]
+        use std::os::windows::io::AsRawHandle;
+        
+        // Example of how to properly handle system resources in service layer on Windows
+        fn example_service_handle_usage() -> std::io::Result<()> {
+            // Create a temporary file for testing
+            let file = File::create("test_service_handle.tmp")?;
+            
+            // CORRECT: Use AsRawHandle trait method to get the raw handle when needed
+            #[cfg(windows)]
+            let _raw_handle = file.as_raw_handle();
+            
+            // Clean up
+            std::fs::remove_file("test_service_handle.tmp").ok();
+            
+            Ok(())
+        }
+        
+        // Test the function
+        example_service_handle_usage().unwrap();
     }
 }
