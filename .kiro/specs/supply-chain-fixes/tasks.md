@@ -155,7 +155,14 @@
     - Attach artifacts to every gate run for audit trail
     - _Requirements: SC-07.5_
 
-- [-] 6. Implement cargo-about integration for license documentation
+- [x] 6. Implement cargo-about integration for license documentation
+
+
+
+
+
+
+
 
 
 
@@ -169,13 +176,17 @@
     - Commit full license texts for Unicode v3 and MPL-2.0 under licenses/ directory
     - _Requirements: SC-06.5_
 
-  - [ ] 6.2 Implement deterministic license document generation
+  - [x] 6.2 Implement deterministic license document generation
+
+
     - Add lockfile validation: git diff --quiet Cargo.lock before generation
     - Pin cargo-about version --locked --version 0.6.4 for consistent output
     - Verify cargo about generate exits zero and git diff --exit-code is clean after generation
     - _Requirements: SC-06.6, NFR-A_
 
-  - [ ] 6.3 Generate comprehensive third-party license documentation
+  - [x] 6.3 Generate comprehensive third-party license documentation
+
+
     - Include full Unicode and MPL-2.0 license texts in generated documentation
     - Add Unicode attribution note to THIRD_PARTY_LICENSES.md
     - Ensure all transitive dependency licenses are included

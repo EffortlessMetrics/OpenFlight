@@ -1,0 +1,40 @@
+# Third-Party Licenses
+
+This document contains the licenses of all third-party dependencies used in Flight Hub.
+
+Generated on: {{timestamp}}
+
+## License Summary
+
+{{#each overview}}
+### {{name}}
+
+**Dependencies using this license ({{count}} total):**
+
+{{#each indices}}
+{{#with (lookup ../crates this)}}
+- **{{name}}** ({{version}})
+{{/with}}
+{{/each}}
+
+{{#if text}}
+**License Text:**
+
+```
+{{text}}
+```
+{{/if}}
+
+---
+
+{{/each}}
+
+## Attribution Notice
+
+This software includes components with Unicode licenses. The Unicode License Agreement - Data Files and Software (Unicode-3.0) applies to Unicode data files and software components. Full license text is available in the licenses/Unicode-3.0.txt file.
+
+Components licensed under Mozilla Public License Version 2.0 (MPL-2.0) are also included. Full license text is available in the licenses/MPL-2.0.txt file.
+
+---
+
+*This document was automatically generated using [cargo-about](https://github.com/EmbarkStudios/cargo-about) version {{about_version}}.*
