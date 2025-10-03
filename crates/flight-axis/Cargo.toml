@@ -18,12 +18,13 @@ once_cell.workspace = true
 crossbeam.workspace = true
 parking_lot.workspace = true
 thiserror.workspace = true
-serde = { workspace = true, features = ["derive"] }
+serde = { workspace = true, features = ["derive"], optional = true }
 bincode = "1.3"
 
 [features]
 default = []
 rt-checks = []  # Enable runtime allocation/lock checking
+serde = ["dep:serde"]
 
 [dev-dependencies]
 criterion.workspace = true

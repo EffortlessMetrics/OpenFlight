@@ -47,6 +47,7 @@ use std::fmt;
 /// Represents a single sample of axis input data flowing through the processing pipeline.
 /// All values are normalized to [-1.0, 1.0] range unless otherwise specified.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)] // Ensure consistent memory layout for performance
 pub struct AxisFrame {
     /// Raw input value from hardware [-1.0, 1.0]

@@ -20,8 +20,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         enable_rt_checks: true,
         max_frame_time_us: 500,
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     };
-    let engine = AxisEngine::with_config(config);
+    let engine = AxisEngine::with_config("demo_axis".to_string(), config);
 
     // Build a processing pipeline
     println!("\n1. Building processing pipeline...");

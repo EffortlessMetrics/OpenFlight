@@ -1126,7 +1126,10 @@ mod tests {
         assert_eq!(profiles.len(), 3);
         
         // Test profile merging
-        let merged = Profile::merge(&profiles.iter().collect::<Vec<_>>()).unwrap();
+        let mut merged = profiles[0].clone();
+        for profile in profiles.iter().skip(1) {
+            merged = merged.merge_with(profile).unwrap();
+        }
         let pitch_config = merged.axes.get("pitch").unwrap();
         
         // Should have deadzone from global, expo from sim, and slew_rate from aircraft

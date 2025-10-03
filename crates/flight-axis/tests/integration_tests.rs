@@ -127,9 +127,11 @@ fn test_axis_engine_with_config() {
         enable_rt_checks: true,
         max_frame_time_us: 1000,
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     };
     
-    let engine = AxisEngine::with_config(config);
+    let engine = AxisEngine::with_config("test_config".to_string(), config);
     assert!(!engine.has_active_pipeline());
 }
 
@@ -422,9 +424,11 @@ fn test_zero_allocation_guarantee() {
         enable_rt_checks: true,
         max_frame_time_us: 1000,
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     };
     
-    let engine = AxisEngine::with_config(config);
+    let engine = AxisEngine::with_config("test_zero_allocation".to_string(), config);
     
     // Create pipeline
     let pipeline = PipelineBuilder::new()

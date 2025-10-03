@@ -309,23 +309,6 @@ WantedBy=default.target
         Ok(())
     }
 
-    async fn include_integration_docs(&self, docs_dir: &Path, docs_manager: &mut IntegrationDocsManager) -> crate::Result<()> {
-        // Load all documentation
-        docs_manager.load_all_docs().await?;
-
-        // Copy markdown documentation files
-        let source_docs_dir = Path::new("docs/integration");
-        if source_docs_dir.exists() {
-            copy_dir_recursive(source_docs_dir, docs_dir).await?;
-        }
-
-        // Generate installer summary
-        let summary = docs_manager.generate_installer_summary();
-        fs::write(docs_dir.join("INSTALLER_SUMMARY.md"), summary).await?;
-
-        Ok(())
-    }
-
     async fn create_package(&self, package_dir: &Path, output_path: &Path) -> crate::Result<()> {
         // Create tarball
         let output = std::process::Command::new("tar")

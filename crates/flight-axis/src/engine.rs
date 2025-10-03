@@ -14,6 +14,7 @@ use std::time::Instant;
 
 /// Configuration for axis engine
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineConfig {
     /// Enable runtime allocation checking
     pub enable_rt_checks: bool,

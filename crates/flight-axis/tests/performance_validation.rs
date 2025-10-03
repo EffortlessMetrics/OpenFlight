@@ -14,9 +14,11 @@ fn test_rt_performance_requirements() {
         enable_rt_checks: true,
         max_frame_time_us: 500, // 0.5ms requirement
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     };
     
-    let engine = AxisEngine::with_config(config);
+    let engine = AxisEngine::with_config("test_rt_performance".to_string(), config);
     
     // Create a complex pipeline to stress test
     let pipeline = PipelineBuilder::new()
@@ -161,9 +163,11 @@ fn test_zero_allocation_validation() {
         enable_rt_checks: true,
         max_frame_time_us: 1000,
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     };
     
-    let engine = AxisEngine::with_config(config);
+    let engine = AxisEngine::with_config("test_zero_allocation".to_string(), config);
     
     // Create pipeline with all node types
     let pipeline = PipelineBuilder::new()

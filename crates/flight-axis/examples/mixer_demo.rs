@@ -164,10 +164,12 @@ fn demonstrate_mixer_performance() -> Result<(), Box<dyn std::error::Error>> {
     println!("----------------------------");
     
     // Create engine with mixer in pipeline
-    let engine = AxisEngine::with_config(EngineConfig {
+    let engine = AxisEngine::with_config("mixer_demo".to_string(), EngineConfig {
         enable_rt_checks: true,
         max_frame_time_us: 500,
         enable_counters: true,
+        enable_conflict_detection: true,
+        conflict_detector_config: Default::default(),
     });
     
     // Create pipeline with deadzone, curve, and helicopter mixer

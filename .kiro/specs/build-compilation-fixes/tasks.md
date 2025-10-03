@@ -1,12 +1,17 @@
 # Implementation Plan
 
-- [ ] 1. Phase 1: Core API Stabilization
+- [-] 1. Phase 1: Core API Stabilization
+
+
+
   - Fix critical API changes that block compilation across multiple crates
   - Implement serde feature infrastructure for serialization
   - Resolve async recursion issues in flight-updater
   - _Requirements: BC-01, BC-02_
 
-- [ ] 1.1 Fix AxisEngine API signature and EngineConfig fields
+- [x] 1.1 Fix AxisEngine API signature and EngineConfig fields
+
+
   - Update EngineConfig struct to include missing fields: conflict_detector_config and enable_conflict_detection
   - Change AxisEngine::with_config to accept (name: String, config: EngineConfig) signature
   - Update all call sites in examples, tests, and benchmarks to use new API
@@ -14,7 +19,9 @@
   - Verify: `git grep -n "Engine::new(" | wc -l` shows 2 arguments in all call sites
   - _Requirements: BC-01.1, BC-01.2, BC-01.3_
 
-- [ ] 1.2 Fix Profile API rename in flight-core
+- [x] 1.2 Fix Profile API rename in flight-core
+
+
   - Change Profile::merge calls to Profile::merge_with in aircraft_switch.rs
   - Verify argument order matches merge_with expectations (check if self-first or parameter order changed)
   - Ensure no remaining Profile::merge calls exist in codebase
@@ -22,7 +29,9 @@
   - Verify: `git grep -n "Profile::merge(" | wc -l` returns 0
   - _Requirements: BC-01.4_
 
-- [ ] 1.3 Resolve async recursion in flight-updater
+- [x] 1.3 Resolve async recursion in flight-updater
+
+
   - **Preferred approach**: Convert recursive async functions to iterative loops (walk_updates, delta, rollback functions)
   - **Alternative**: Add async-recursion = "1" dependency and annotate specific functions if loop conversion not feasible
   - Fix duplicate function names in packaging.rs (include_integration_docs_for_sim vs include_integration_docs_for_b2)
@@ -30,7 +39,8 @@
   - Verify: No "recursion in an async fn requires boxing" errors
   - _Requirements: BC-07.6_
 
-- [ ] 1.4 Implement serde feature infrastructure
+- [-] 1.4 Implement serde feature infrastructure
+
   - Ensure workspace uses resolver = "2" to prevent feature leakage
   - Add serde feature to flight-axis and flight-simconnect Cargo.toml with optional = true
   - Add conditional derive macros: `#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]`

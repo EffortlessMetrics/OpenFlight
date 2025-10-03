@@ -248,19 +248,25 @@ impl RollbackManager {
         Ok(())
     }
     
-    /// Copy directory recursively
+    /// Copy directory iteratively (converted from recursive to avoid async recursion)
     async fn copy_directory(&self, src: &Path, dst: &Path) -> crate::Result<()> {
         fs::create_dir_all(dst).await?;
         
-        let mut entries = fs::read_dir(src).await?;
-        while let Some(entry) = entries.next_entry().await? {
-            let src_path = entry.path();
-            let dst_path = dst.join(entry.file_name());
+        let mut dirs_to_process = vec![(src.to_path_buf(), dst.to_path_buf())];
+        
+        while let Some((current_src, current_dst)) = dirs_to_process.pop() {
+            let mut entries = fs::read_dir(&current_src).await?;
             
-            if src_path.is_dir() {
-                self.copy_directory(&src_path, &dst_path).await?;
-            } else {
-                fs::copy(&src_path, &dst_path).await?;
+            while let Some(entry) = entries.next_entry().await? {
+                let src_path = entry.path();
+                let dst_path = current_dst.join(entry.file_name());
+                
+                if src_path.is_dir() {
+                    fs::create_dir_all(&dst_path).await?;
+                    dirs_to_process.push((src_path, dst_path));
+                } else {
+                    fs::copy(&src_path, &dst_path).await?;
+                }
             }
         }
         

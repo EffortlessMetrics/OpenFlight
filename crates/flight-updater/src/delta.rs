@@ -407,29 +407,33 @@ impl DeltaGenerator {
         Ok(files)
     }
     
-    /// Recursively scan directory
+    /// Iteratively scan directory (converted from recursive to avoid async recursion)
     async fn scan_directory_recursive(
         &self,
         base_dir: &Path,
         current_dir: &Path,
         files: &mut HashMap<String, PathBuf>,
     ) -> crate::Result<()> {
-        let mut entries = fs::read_dir(current_dir).await?;
+        let mut dirs_to_process = vec![current_dir.to_path_buf()];
         
-        while let Some(entry) = entries.next_entry().await? {
-            let path = entry.path();
+        while let Some(current_dir) = dirs_to_process.pop() {
+            let mut entries = fs::read_dir(&current_dir).await?;
             
-            if path.is_dir() {
-                self.scan_directory_recursive(base_dir, &path, files).await?;
-            } else {
-                let rel_path = path.strip_prefix(base_dir)
-                    .map_err(|e| crate::UpdateError::DeltaPatch(
-                        format!("Failed to create relative path: {}", e)
-                    ))?
-                    .to_string_lossy()
-                    .to_string();
+            while let Some(entry) = entries.next_entry().await? {
+                let path = entry.path();
                 
-                files.insert(rel_path, path);
+                if path.is_dir() {
+                    dirs_to_process.push(path);
+                } else {
+                    let rel_path = path.strip_prefix(base_dir)
+                        .map_err(|e| crate::UpdateError::DeltaPatch(
+                            format!("Failed to create relative path: {}", e)
+                        ))?
+                        .to_string_lossy()
+                        .to_string();
+                    
+                    files.insert(rel_path, path);
+                }
             }
         }
         
