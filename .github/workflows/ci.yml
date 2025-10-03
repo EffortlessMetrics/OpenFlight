@@ -83,6 +83,59 @@ jobs:
       
     - name: Run cargo-deny
       run: cargo deny check --hide-inclusion-graph
+      
+    - name: Validate HTTP stack unification
+      run: |
+        echo "🔍 Validating HTTP stack unification..."
+        
+        # Function to check if a package exists in the dependency tree
+        check_banned_package() {
+          local package=$1
+          echo "Checking for $package dependencies..."
+          
+          # Run cargo tree and capture both stdout and stderr
+          output=$(cargo tree -i "$package" 2>&1 || true)
+          
+          # If output contains actual dependency info (not error message), fail
+          if echo "$output" | grep -q "^$package v" || echo "$output" | grep -q "├──\|└──"; then
+            echo "❌ Found $package dependencies:"
+            echo "$output"
+            return 1
+          else
+            echo "✅ No $package dependencies found"
+            return 0
+          fi
+        }
+        
+        # Check banned packages
+        check_banned_package "native-tls"
+        check_banned_package "hyper-tls" 
+        check_banned_package "openssl"
+        
+        # Verify only hyper v1.x versions present
+        echo "Checking hyper versions..."
+        hyper_output=$(cargo tree -i hyper 2>&1 || true)
+        
+        if echo "$hyper_output" | grep -q "did not match any packages"; then
+          echo "✅ No hyper dependencies found"
+        elif echo "$hyper_output" | grep -q "^hyper v"; then
+          hyper_versions=$(echo "$hyper_output" | grep "^hyper v" | awk '{print $2}' | sort -u)
+          echo "Found hyper versions: $hyper_versions"
+          
+          # Check if any version is not v1.x
+          if echo "$hyper_versions" | grep -v '^v1\.'; then
+            echo "❌ Found non-v1.x hyper versions"
+            exit 1
+          else
+            echo "✅ All hyper versions are v1.x"
+          fi
+        else
+          echo "❌ Unexpected hyper tree output:"
+          echo "$hyper_output"
+          exit 1
+        fi
+        
+        echo "✅ HTTP stack unification validation passed"
 
   build:
     name: Build Release

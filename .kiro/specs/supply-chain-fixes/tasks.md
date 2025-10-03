@@ -30,19 +30,30 @@
     - Set publish = false and edition = "2024" in examples crate
     - _Requirements: SC-01.4_
 
-- [ ] 2. Implement HTTP stack unification
-  - [ ] 2.1 Add workspace patches and bans policy for HTTP unification
+- [x] 2. Implement HTTP stack unification
+
+
+
+
+
+  - [x] 2.1 Add workspace patches and bans policy for HTTP unification
+
+
     - Add [patch.crates-io] section to root Cargo.toml with hyper 1.4, http 1.1, reqwest 0.12.8
     - Add deny.toml bans for hyper < 1.0.0, native-tls, hyper-tls, and openssl
     - Set multiple-versions = "deny" in deny.toml bans section
     - _Requirements: SC-02.1, SC-02.2, SC-02.5, SC-02.6_
 
-  - [ ] 2.2 Update workspace dependencies for HTTP unification
+  - [x] 2.2 Update workspace dependencies for HTTP unification
+
+
     - Update reqwest to 0.12.8 with default-features = false, features = ["rustls-tls", "http2", "json"]
     - Remove any native-tls or hyper-tls feature flags from existing dependencies
     - _Requirements: SC-02.2, SC-02.3_
 
-  - [ ] 2.3 Implement HTTP stack validation with negative proofs
+  - [x] 2.3 Implement HTTP stack validation with negative proofs
+
+
     - Create CI validation commands: cargo tree -i native-tls | (! grep .)
     - Add validation for hyper-tls and openssl absence
     - Verify only hyper v1.x versions present with cargo tree -i hyper

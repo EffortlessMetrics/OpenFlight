@@ -43,6 +43,12 @@ deny = [
     # Crates that could compromise real-time performance
     { name = "lazy_static" }, # Prefer once_cell or std::sync::LazyLock
     { name = "failure" }, # Prefer anyhow or thiserror
+    
+    # HTTP stack unification - ban conflicting dependencies
+    { name = "hyper", version = "<1.0.0" },
+    { name = "native-tls" },
+    { name = "hyper-tls" },
+    { name = "openssl" },
 ]
 
 # Multiple version policy - be strict about these
