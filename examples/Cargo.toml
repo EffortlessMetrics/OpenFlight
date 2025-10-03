@@ -66,7 +66,7 @@ flight-ipc = { path = "../crates/flight-ipc", optional = true }
 flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
 flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
 flight-replay = { path = "../crates/flight-replay", optional = true }
-tokio = { version = "1.35", features = ["full"], optional = true }
+tokio = { version = "1.35", features = ["macros", "rt-multi-thread", "time", "fs", "signal", "sync"], optional = true }
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
 tempfile = { version = "3.8", optional = true }

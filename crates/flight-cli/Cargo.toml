@@ -18,7 +18,7 @@ path = "src/main.rs"
 [dependencies]
 flight-core = { path = "../flight-core" }
 flight-ipc = { path = "../flight-ipc" }
-clap = { version = "4.4", features = ["derive"] }
+clap = { workspace = true }
 tokio.workspace = true
 anyhow.workspace = true
 serde_json.workspace = true

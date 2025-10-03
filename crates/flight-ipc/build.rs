@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Use prost-build for basic protobuf generation
     let proto_file = "proto/flight.v1.proto";

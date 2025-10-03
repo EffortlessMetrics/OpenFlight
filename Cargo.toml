@@ -39,13 +39,13 @@ homepage = "https://flight-hub.dev"
 
 [workspace.dependencies]
 # Core dependencies
-tokio = { version = "1.35", features = ["full"] }
+tokio = { version = "1.35", features = ["macros", "rt-multi-thread", "time", "fs", "signal", "sync"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
 thiserror = "2.0"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter"] }
 
 # IPC and serialization - gRPC stack unified to 0.14.x
 prost = "0.14.1"
@@ -80,7 +80,7 @@ nix = "0.30"
 criterion = "0.7"
 proptest = "1.4"
 tempfile = "3.8"
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.4", default-features = false, features = ["std", "derive"] }
 
 cc = "1.0"
 

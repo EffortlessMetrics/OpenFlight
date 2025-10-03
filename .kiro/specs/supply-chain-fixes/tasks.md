@@ -192,14 +192,23 @@
     - Ensure all transitive dependency licenses are included
     - _Requirements: SC-06.1, SC-06.2, SC-06.3_
 
-- [ ] 7. Add feature optimization for heavy dependencies
-  - [ ] 7.1 Optimize tokio features in workspace dependencies
+- [x] 7. Add feature optimization for heavy dependencies
+
+
+
+
+
+  - [x] 7.1 Optimize tokio features in workspace dependencies
+
+
     - Replace tokio "full" features with minimal set: ["macros", "rt-multi-thread", "time", "fs", "signal", "sync"]
     - Add compile-fail test to prevent re-enabling "full" features at workspace root
     - Ensure criterion remains dev-only to keep dependency count stable
     - _Requirements: SC-05.4_
 
-  - [ ] 7.2 Optimize tracing-subscriber and clap features
+  - [x] 7.2 Optimize tracing-subscriber and clap features
+
+
     - Set tracing-subscriber default-features = false with features = ["fmt", "env-filter"]
     - Set clap default-features = false with features = ["derive"]
     - _Requirements: SC-05.4_

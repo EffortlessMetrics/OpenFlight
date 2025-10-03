@@ -1,4 +1,5 @@
 use std::env;
+#[cfg(feature = "static")]
 use std::path::PathBuf;
 
 fn main() {
