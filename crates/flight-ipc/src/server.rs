@@ -6,13 +6,43 @@
 use crate::{
     negotiation::negotiate_features,
     proto::{
-        flight_service_server::{FlightService, FlightServiceServer},
         ApplyProfileRequest, ApplyProfileResponse, GetServiceInfoRequest, GetServiceInfoResponse,
         HealthEvent, HealthSubscribeRequest, ListDevicesRequest, ListDevicesResponse,
         NegotiateFeaturesRequest, NegotiateFeaturesResponse, ServiceStatus,
     },
     ServerConfig,
 };
+
+/// FlightService trait - manually defined since we're not using tonic-build service generation
+#[tonic::async_trait]
+pub trait FlightService: Send + Sync + 'static {
+    type HealthSubscribeStream: futures_core::Stream<Item = Result<HealthEvent, tonic::Status>> + Send + 'static;
+    
+    async fn negotiate_features(
+        &self,
+        request: tonic::Request<NegotiateFeaturesRequest>,
+    ) -> Result<tonic::Response<NegotiateFeaturesResponse>, tonic::Status>;
+    
+    async fn list_devices(
+        &self,
+        request: tonic::Request<ListDevicesRequest>,
+    ) -> Result<tonic::Response<ListDevicesResponse>, tonic::Status>;
+    
+    async fn health_subscribe(
+        &self,
+        request: tonic::Request<HealthSubscribeRequest>,
+    ) -> Result<tonic::Response<Self::HealthSubscribeStream>, tonic::Status>;
+    
+    async fn apply_profile(
+        &self,
+        request: tonic::Request<ApplyProfileRequest>,
+    ) -> Result<tonic::Response<ApplyProfileResponse>, tonic::Status>;
+    
+    async fn get_service_info(
+        &self,
+        request: tonic::Request<GetServiceInfoRequest>,
+    ) -> Result<tonic::Response<GetServiceInfoResponse>, tonic::Status>;
+}
 use anyhow::Result;
 use flight_core::{SecurityManager, TelemetryDataType};
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
@@ -131,8 +161,8 @@ impl FlightServiceImpl {
 impl FlightService for FlightServiceImpl {
     async fn negotiate_features(
         &self,
-        request: Request<NegotiateFeaturesRequest>,
-    ) -> Result<Response<NegotiateFeaturesResponse>, Status> {
+        request: tonic::Request<NegotiateFeaturesRequest>,
+    ) -> Result<tonic::Response<NegotiateFeaturesResponse>, tonic::Status> {
         let request = request.into_inner();
         
         debug!(
@@ -155,7 +185,7 @@ impl FlightService for FlightServiceImpl {
             );
         }
         
-        Ok(Response::new(response))
+        Ok(tonic::Response::new(response))
     }
     
     async fn list_devices(
@@ -171,12 +201,12 @@ impl FlightService for FlightServiceImpl {
         Ok(Response::new(response))
     }
     
-    type HealthSubscribeStream = tokio_stream::wrappers::ReceiverStream<Result<HealthEvent, Status>>;
+    type HealthSubscribeStream = std::pin::Pin<Box<dyn futures_core::Stream<Item = Result<HealthEvent, tonic::Status>> + Send>>;
     
     async fn health_subscribe(
         &self,
-        request: Request<HealthSubscribeRequest>,
-    ) -> Result<Response<Self::HealthSubscribeStream>, Status> {
+        request: tonic::Request<HealthSubscribeRequest>,
+    ) -> Result<tonic::Response<Self::HealthSubscribeStream>, tonic::Status> {
         let request = request.into_inner();
         
         debug!("Health subscribe request: {:?}", request);
@@ -194,8 +224,9 @@ impl FlightService for FlightServiceImpl {
         });
         
         let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+        let boxed_stream: Self::HealthSubscribeStream = Box::pin(stream);
         
-        Ok(Response::new(stream))
+        Ok(tonic::Response::new(boxed_stream))
     }
     
     async fn apply_profile(

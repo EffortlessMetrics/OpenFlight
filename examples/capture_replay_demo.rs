@@ -49,14 +49,14 @@ async fn demo_blackbox_recording() -> Result<(), Box<dyn std::error::Error>> {
     let recording_path = temp_dir.path().join("demo_flight.fbb");
 
     let config = BlackboxConfig {
-        output_path: recording_path.clone(),
+        output_dir: recording_path.clone(),
         max_file_size_mb: 100,
-        flush_interval_ms: 1000,
-        compression_enabled: true,
-        index_interval_ms: 100,
+        max_recording_duration: std::time::Duration::from_secs(3600),
+        enable_compression: true,
+        buffer_size: 1024 * 1024, // 1MB buffer
     };
 
-    let mut writer = BlackboxWriter::new(config)?;
+    let mut writer = BlackboxWriter::new(config);
     println!("✓ Blackbox writer initialized");
     println!("  Output file: {:?}", recording_path);
 
@@ -393,14 +393,14 @@ async fn demo_performance_testing() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn create_sample_recording(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let config = BlackboxConfig {
-        output_path: path.clone(),
+        output_dir: path.clone(),
         max_file_size_mb: 10,
-        flush_interval_ms: 100,
-        compression_enabled: false,
-        index_interval_ms: 100,
+        max_recording_duration: std::time::Duration::from_secs(60),
+        enable_compression: false,
+        buffer_size: 512 * 1024, // 512KB buffer
     };
 
-    let mut writer = BlackboxWriter::new(config)?;
+    let mut writer = BlackboxWriter::new(config);
     writer.start_recording().await?;
 
     // Write sample data
@@ -432,14 +432,14 @@ async fn create_sample_recording(path: &PathBuf) -> Result<(), Box<dyn std::erro
 
 async fn create_deterministic_recording(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let config = BlackboxConfig {
-        output_path: path.clone(),
+        output_dir: path.clone(),
         max_file_size_mb: 10,
-        flush_interval_ms: 100,
-        compression_enabled: false,
-        index_interval_ms: 100,
+        max_recording_duration: std::time::Duration::from_secs(60),
+        enable_compression: false,
+        buffer_size: 512 * 1024, // 512KB buffer
     };
 
-    let mut writer = BlackboxWriter::new(config)?;
+    let mut writer = BlackboxWriter::new(config);
     writer.start_recording().await?;
 
     // Create deterministic test pattern
@@ -464,14 +464,14 @@ async fn create_deterministic_recording(path: &PathBuf) -> Result<(), Box<dyn st
 
 async fn create_performance_recording(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let config = BlackboxConfig {
-        output_path: path.clone(),
+        output_dir: path.clone(),
         max_file_size_mb: 50,
-        flush_interval_ms: 1000,
-        compression_enabled: true,
-        index_interval_ms: 100,
+        max_recording_duration: std::time::Duration::from_secs(300),
+        enable_compression: true,
+        buffer_size: 2 * 1024 * 1024, // 2MB buffer
     };
 
-    let mut writer = BlackboxWriter::new(config)?;
+    let mut writer = BlackboxWriter::new(config);
     writer.start_recording().await?;
 
     // Create larger dataset for performance testing

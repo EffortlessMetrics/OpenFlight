@@ -114,13 +114,18 @@
   - Verify: `git grep -n "std::os::fd" | grep -v "#\[cfg(unix)\]"` returns no hits on Windows targets
   - _Requirements: BC-04.1, BC-04.2, BC-04.3, BC-04.4, BC-04.6_
 
-- [ ] 3. Phase 3: Service Infrastructure
+- [-] 3. Phase 3: Service Infrastructure
+
+
+
   - Fix gRPC module paths and stream type definitions
   - Create feature-isolated examples package
   - Update configuration struct field names
   - _Requirements: BC-05, BC-06_
 
-- [ ] 3.1 Fix gRPC module import paths
+- [x] 3.1 Fix gRPC module import paths
+
+
   - Pin tonic/tonic-build versions together in workspace to avoid module path drift
   - Update imports: `crate::proto::flight_service::flight_service_client::FlightServiceClient`
   - Update imports: `crate::proto::flight_service::flight_service_server::{FlightService, FlightServiceServer}`
@@ -129,7 +134,9 @@
   - Verify: No "could not find flight_service_client" errors
   - _Requirements: BC-05.1, BC-05.3, BC-05.6_
 
-- [ ] 3.2 Define proper gRPC stream associated types
+- [x] 3.2 Define proper gRPC stream associated types
+
+
   - Define single reusable type: `type HealthSubscribeStream = Pin<Box<dyn Stream<Item = Result<HealthResponse, Status>> + Send>>;`
   - Use `Self::HealthSubscribeStream` in return positions consistently
   - Use `futures_core::Stream` or `tokio_stream::wrappers::ReceiverStream` for channel wrapping
@@ -138,7 +145,9 @@
   - Verify: No "ambiguous associated type" errors in service implementations
   - _Requirements: BC-05.2, BC-05.4, BC-05.5, BC-05.6_
 
-- [ ] 3.3 Create feature-isolated examples package
+- [x] 3.3 Create feature-isolated examples package
+
+
   - Create examples as separate workspace member with `publish = false`
   - Use feature-gated dependencies per example to prevent heavyweight feature pulls
   - Add `[target.'cfg(windows)'.dependencies]` for Windows-only examples
@@ -149,6 +158,8 @@
   - _Requirements: BC-06.1, BC-06.5, BC-06.6, BC-06.7_
 
 - [ ] 3.4 Update configuration struct field names
+
+
   - Change BlackboxConfig `output_path` to `output_dir: PathBuf`
   - Change `compression_enabled` to `enable_compression: bool`
   - Add `buffer_size: usize` field where needed

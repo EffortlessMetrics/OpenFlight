@@ -6,8 +6,7 @@
 use crate::{
     negotiation::{validate_required_features, Version},
     proto::{
-        flight_service_client::FlightServiceClient, GetServiceInfoRequest, HealthSubscribeRequest,
-        ListDevicesRequest, NegotiateFeaturesRequest,
+        GetServiceInfoRequest, HealthSubscribeRequest, NegotiateFeaturesRequest,
     },
     ClientConfig, IpcError, NegotiationResult,
 };
@@ -18,7 +17,7 @@ use tracing::{debug, info};
 
 /// Flight Hub IPC client
 pub struct FlightClient {
-    client: FlightServiceClient<Channel>,
+    channel: tonic::transport::Channel,
     config: ClientConfig,
     negotiation_result: Option<NegotiationResult>,
 }
@@ -32,10 +31,9 @@ impl FlightClient {
     /// Create a new client with custom configuration
     pub async fn connect_with_config(config: ClientConfig) -> Result<Self, IpcError> {
         let channel = Self::create_channel(&config).await?;
-        let client = FlightServiceClient::new(channel);
         
         let mut flight_client = Self {
-            client,
+            channel,
             config,
             negotiation_result: None,
         };
@@ -47,12 +45,12 @@ impl FlightClient {
     }
     
     /// Create transport channel based on configuration
-    async fn create_channel(config: &ClientConfig) -> Result<Channel, IpcError> {
+    async fn create_channel(config: &ClientConfig) -> Result<tonic::transport::Channel, IpcError> {
         let _address = crate::default_bind_address();
         
         // For now, use a simple TCP connection for development
         // In production, this would use the actual transport layer
-        let endpoint = Endpoint::from_static("http://127.0.0.1:50051")
+        let endpoint = tonic::transport::Endpoint::from_static("http://127.0.0.1:50051")
             .timeout(Duration::from_millis(config.connection_timeout_ms));
         
         let channel = endpoint.connect().await.map_err(|e| IpcError::ConnectionFailed {
@@ -72,9 +70,10 @@ impl FlightClient {
         
         debug!("Negotiating features with server");
         
-        let response = self
-            .client
-            .negotiate_features(request)
+        // Manual gRPC call using tonic client
+        let mut client = tonic::client::Grpc::new(self.channel.clone());
+        let response = client
+            .unary(request, "/flight.v1.FlightService/NegotiateFeatures", &mut Default::default())
             .await?
             .into_inner();
         
