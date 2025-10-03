@@ -9,6 +9,7 @@
 use std::fs;
 use std::path::Path;
 use std::process::{Command, exit};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -17,6 +18,255 @@ struct GateResult {
     passed: bool,
     message: String,
     artifacts: Vec<String>,
+    duration_ms: u64,
+}
+
+#[derive(Debug)]
+struct GateMetrics {
+    gate_name: String,
+    duration_ms: u64,
+    timestamp: u64,
+    passed: bool,
+}
+
+#[derive(Debug)]
+struct MetricsCollector {
+    gate_metrics: Vec<GateMetrics>,
+    start_time: Instant,
+}
+
+#[derive(Debug)]
+struct ComplianceMetrics {
+    direct_nondev_deps: u32,
+    license_complete: bool,
+    open_advisories: u32,
+    licenses_gate_passed: bool,
+    security_gate_passed: bool,
+    deps_gate_passed: bool,
+    http_unified: bool,
+}
+
+impl MetricsCollector {
+    fn new() -> Self {
+        Self {
+            gate_metrics: Vec::new(),
+            start_time: Instant::now(),
+        }
+    }
+    
+    fn record_gate(&mut self, gate_result: &GateResult) {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+            
+        self.gate_metrics.push(GateMetrics {
+            gate_name: gate_result.name.clone(),
+            duration_ms: gate_result.duration_ms,
+            timestamp,
+            passed: gate_result.passed,
+        });
+    }
+    
+    fn save_metrics(&self) -> Result<String, String> {
+        let total_duration = self.start_time.elapsed().as_millis() as u64;
+        
+        // Calculate compliance metrics
+        let compliance_metrics = self.calculate_compliance_metrics();
+        
+        // Create metrics summary
+        let mut metrics_json = String::from("{\n");
+        metrics_json.push_str(&format!("  \"total_duration_ms\": {},\n", total_duration));
+        metrics_json.push_str(&format!("  \"timestamp\": {},\n", 
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()));
+        metrics_json.push_str("  \"gates\": [\n");
+        
+        for (i, metric) in self.gate_metrics.iter().enumerate() {
+            if i > 0 {
+                metrics_json.push_str(",\n");
+            }
+            metrics_json.push_str(&format!(
+                "    {{\n      \"gate\": \"{}\",\n      \"duration_ms\": {},\n      \"timestamp\": {},\n      \"passed\": {}\n    }}",
+                metric.gate_name, metric.duration_ms, metric.timestamp, metric.passed
+            ));
+        }
+        
+        metrics_json.push_str("\n  ],\n");
+        
+        // Add SLO compliance check
+        let license_gate_duration = self.gate_metrics.iter()
+            .find(|m| m.gate_name.contains("License"))
+            .map(|m| m.duration_ms)
+            .unwrap_or(0);
+            
+        let slo_compliant = license_gate_duration < 45000; // 45 seconds
+        metrics_json.push_str(&format!("  \"slo_compliance\": {{\n"));
+        metrics_json.push_str(&format!("    \"license_gate_duration_ms\": {},\n", license_gate_duration));
+        metrics_json.push_str(&format!("    \"slo_target_ms\": 45000,\n"));
+        metrics_json.push_str(&format!("    \"compliant\": {}\n", slo_compliant));
+        metrics_json.push_str("  },\n");
+        
+        // Add supply chain metrics (task 9.2)
+        metrics_json.push_str("  \"supply_chain_metrics\": {\n");
+        metrics_json.push_str(&format!("    \"scm.deps.direct_nondev_total\": {},\n", compliance_metrics.direct_nondev_deps));
+        metrics_json.push_str(&format!("    \"scm.deps.threshold_compliant\": {},\n", compliance_metrics.direct_nondev_deps <= 150));
+        metrics_json.push_str(&format!("    \"scm.licenses.completeness\": {},\n", if compliance_metrics.license_complete { 1 } else { 0 }));
+        metrics_json.push_str(&format!("    \"scm.security.advisories_open_total\": {},\n", compliance_metrics.open_advisories));
+        metrics_json.push_str(&format!("    \"scm.gate.status.licenses\": {},\n", if compliance_metrics.licenses_gate_passed { 1 } else { 0 }));
+        metrics_json.push_str(&format!("    \"scm.gate.status.security\": {},\n", if compliance_metrics.security_gate_passed { 1 } else { 0 }));
+        metrics_json.push_str(&format!("    \"scm.gate.status.dependencies\": {},\n", if compliance_metrics.deps_gate_passed { 1 } else { 0 }));
+        metrics_json.push_str(&format!("    \"scm.licenses.unified_http_ok\": {}\n", if compliance_metrics.http_unified { 1 } else { 0 }));
+        metrics_json.push_str("  }\n");
+        metrics_json.push('}');
+        
+        // Save to artifacts directory
+        if let Err(_) = fs::create_dir_all("target/ci-artifacts") {
+            return Err("Failed to create artifacts directory".to_string());
+        }
+        
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let metrics_file = format!("target/ci-artifacts/gate-metrics-{}.json", timestamp);
+        
+        fs::write(&metrics_file, &metrics_json)
+            .map_err(|e| format!("Failed to write metrics file: {}", e))?;
+            
+        Ok(metrics_file)
+    }
+    
+    fn load_historical_metrics() -> Vec<GateMetrics> {
+        let mut historical = Vec::new();
+        
+        if let Ok(entries) = fs::read_dir("target/ci-artifacts") {
+            for entry in entries.flatten() {
+                if let Some(filename) = entry.file_name().to_str() {
+                    if filename.starts_with("gate-metrics-") && filename.ends_with(".json") {
+                        if let Ok(content) = fs::read_to_string(entry.path()) {
+                            if let Ok(metrics) = parse_metrics_json(&content) {
+                                historical.extend(metrics);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Keep only last 50 runs for trendline analysis
+        historical.sort_by_key(|m| m.timestamp);
+        if historical.len() > 50 {
+            historical.drain(0..historical.len() - 50);
+        }
+        
+        historical
+    }
+    
+    fn calculate_p95_duration(&self, gate_name: &str) -> Option<u64> {
+        let historical = Self::load_historical_metrics();
+        let mut durations: Vec<u64> = historical.iter()
+            .filter(|m| m.gate_name == gate_name)
+            .map(|m| m.duration_ms)
+            .collect();
+            
+        if durations.is_empty() {
+            return None;
+        }
+        
+        durations.sort();
+        let p95_index = (durations.len() as f64 * 0.95) as usize;
+        Some(durations.get(p95_index).copied().unwrap_or(durations[durations.len() - 1]))
+    }
+    
+    fn calculate_compliance_metrics(&self) -> ComplianceMetrics {
+        // Get gate results
+        let licenses_gate_passed = self.gate_metrics.iter()
+            .find(|m| m.gate_name.contains("License"))
+            .map(|m| m.passed)
+            .unwrap_or(false);
+            
+        let security_gate_passed = self.gate_metrics.iter()
+            .find(|m| m.gate_name.contains("Security Advisory"))
+            .map(|m| m.passed)
+            .unwrap_or(false);
+            
+        let deps_gate_passed = self.gate_metrics.iter()
+            .find(|m| m.gate_name.contains("Dependency Count"))
+            .map(|m| m.passed)
+            .unwrap_or(false);
+            
+        let duplicate_gate_passed = self.gate_metrics.iter()
+            .find(|m| m.gate_name.contains("Duplicate Major"))
+            .map(|m| m.passed)
+            .unwrap_or(false);
+        
+        // Calculate dependency count
+        let direct_nondev_deps = self.get_direct_dependency_count();
+        
+        // Calculate open advisories count
+        let open_advisories = self.get_open_advisories_count();
+        
+        // License completeness (all license-related gates pass)
+        let license_complete = licenses_gate_passed && 
+            self.gate_metrics.iter()
+                .find(|m| m.gate_name.contains("Third-Party License"))
+                .map(|m| m.passed)
+                .unwrap_or(false);
+        
+        // HTTP unification (no duplicate majors for HTTP stack)
+        let http_unified = duplicate_gate_passed;
+        
+        ComplianceMetrics {
+            direct_nondev_deps,
+            license_complete,
+            open_advisories,
+            licenses_gate_passed,
+            security_gate_passed,
+            deps_gate_passed,
+            http_unified,
+        }
+    }
+    
+    fn get_direct_dependency_count(&self) -> u32 {
+        // Use cargo metadata to count direct non-dev dependencies
+        let output = Command::new("cargo")
+            .args(&["metadata", "--format-version", "1"])
+            .output();
+            
+        match output {
+            Ok(result) if result.status.success() => {
+                let stdout = String::from_utf8_lossy(&result.stdout);
+                count_runtime_dependencies(&stdout).unwrap_or(0) as u32
+            }
+            _ => 0
+        }
+    }
+    
+    fn get_open_advisories_count(&self) -> u32 {
+        // Use cargo audit to count open advisories
+        let output = Command::new("cargo")
+            .args(&["audit", "--format", "json"])
+            .output();
+            
+        match output {
+            Ok(result) if result.status.success() => {
+                let stdout = String::from_utf8_lossy(&result.stdout);
+                parse_audit_json(&stdout).unwrap_or(0) as u32
+            }
+            _ => {
+                // If cargo audit fails, check if security gate failed
+                if !self.gate_metrics.iter()
+                    .find(|m| m.gate_name.contains("Security Advisory"))
+                    .map(|m| m.passed)
+                    .unwrap_or(true) {
+                    // Security gate failed, assume there are advisories
+                    1
+                } else {
+                    0
+                }
+            }
+        }
+    }
 }
 
 // Simple JSON parsing structures (without serde dependency)
@@ -31,9 +281,26 @@ struct Diagnostic {
     message: String,
 }
 
+fn run_timed_gate<F>(_gate_name: &str, gate_fn: F) -> GateResult 
+where 
+    F: FnOnce() -> GateResult,
+{
+    let start_time = Instant::now();
+    let mut result = gate_fn();
+    let duration_ms = start_time.elapsed().as_millis() as u64;
+    
+    result.duration_ms = duration_ms;
+    println!("  ⏱️  Completed in {}ms", duration_ms);
+    
+    result
+}
+
 fn main() {
     println!("🚪 Flight Hub CI Supply Chain Security Gate");
     println!("==========================================");
+    
+    // Initialize metrics collector
+    let mut metrics_collector = MetricsCollector::new();
     
     // Check for uncommitted Cargo.lock changes first
     if let Err(msg) = check_lockfile_guard() {
@@ -45,47 +312,74 @@ fn main() {
     
     // Gate 1: Cargo Audit - No security advisories
     println!("\n🔒 Gate 1: Security Advisory Check");
-    gates.push(run_cargo_audit_gate());
+    let gate_result = run_timed_gate("Security Advisory Check", run_cargo_audit_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 2: Cargo Deny - All checks pass
     println!("\n🚫 Gate 2: Cargo Deny Compliance");
-    gates.push(run_cargo_deny_gate());
+    let gate_result = run_timed_gate("Cargo Deny Compliance", run_cargo_deny_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 3: License Compliance - All licenses approved
     println!("\n📄 Gate 3: License Compliance");
-    gates.push(run_license_compliance_gate());
+    let gate_result = run_timed_gate("License Compliance", run_license_compliance_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 4: SPDX Validation - All crates have SPDX identifiers
     println!("\n📋 Gate 4: SPDX Identifier Validation");
-    gates.push(run_spdx_validation_gate());
+    let gate_result = run_timed_gate("SPDX Identifier Validation", run_spdx_validation_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 5: Dependency Count - Reasonable dependency count
     println!("\n📦 Gate 5: Dependency Count Validation");
-    gates.push(run_dependency_count_gate());
+    let gate_result = run_timed_gate("Dependency Count Validation", run_dependency_count_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 6: Duplicate Major Version Detection - Single major per family
     println!("\n🔄 Gate 6: Duplicate Major Version Detection");
-    gates.push(run_duplicate_major_detection_gate());
+    let gate_result = run_timed_gate("Duplicate Major Version Detection", run_duplicate_major_detection_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 7: Supply Chain Audit Trail - Audit documents exist and are current
     println!("\n📊 Gate 7: Audit Trail Validation");
-    gates.push(run_audit_trail_gate());
+    let gate_result = run_timed_gate("Audit Trail Validation", run_audit_trail_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 8: Third-Party License List - Complete and up-to-date
     println!("\n📜 Gate 8: Third-Party License List");
-    gates.push(run_license_list_gate());
+    let gate_result = run_timed_gate("Third-Party License List", run_license_list_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 9: Cargo About Integration - Generate license documentation
     println!("\n📋 Gate 9: Cargo About Integration");
-    gates.push(run_cargo_about_gate());
+    let gate_result = run_timed_gate("Cargo About Integration", run_cargo_about_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 10: Source Validation - Registry and VCS source restrictions
     println!("\n🔐 Gate 10: Source Validation");
-    gates.push(run_source_validation_gate());
+    let gate_result = run_timed_gate("Source Validation", run_source_validation_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
     
     // Gate 11: MSRV and Edition Enforcement - Workspace consistency
     println!("\n📋 Gate 11: MSRV and Edition Enforcement");
-    gates.push(run_msrv_edition_gate());
+    let gate_result = run_timed_gate("MSRV and Edition Enforcement", run_msrv_edition_gate);
+    metrics_collector.record_gate(&gate_result);
+    gates.push(gate_result);
+    
+    // Save metrics before summary
+    if let Ok(metrics_file) = metrics_collector.save_metrics() {
+        println!("\n📊 Metrics saved to: {}", metrics_file);
+    }
     
     // Summary
     println!("\n📊 CI Supply Chain Security Gate Summary");
@@ -93,13 +387,44 @@ fn main() {
     
     let passed_gates = gates.iter().filter(|g| g.passed).count();
     let total_gates = gates.len();
+    let total_duration = metrics_collector.start_time.elapsed().as_millis();
     
     println!("Gates passed: {}/{}", passed_gates, total_gates);
+    println!("Total execution time: {}ms", total_duration);
     
+    // Show timing information for each gate
     for gate in &gates {
         let status = if gate.passed { "✅ PASS" } else { "❌ FAIL" };
-        println!("  {} {}: {}", status, gate.name, gate.message);
+        println!("  {} {} ({}ms): {}", status, gate.name, gate.duration_ms, gate.message);
     }
+    
+    // Show SLO compliance for license gate
+    if let Some(license_gate) = gates.iter().find(|g| g.name.contains("License")) {
+        let slo_status = if license_gate.duration_ms < 45000 { "✅" } else { "⚠️" };
+        println!("\n⏱️  SLO Compliance:");
+        println!("  {} License gate: {}ms (target: <45s)", slo_status, license_gate.duration_ms);
+        
+        // Show p95 trend if available
+        if let Some(p95) = metrics_collector.calculate_p95_duration(&license_gate.name) {
+            println!("  📈 P95 historical: {}ms", p95);
+        }
+    }
+    
+    // Show supply chain metrics (task 9.2)
+    let compliance_metrics = metrics_collector.calculate_compliance_metrics();
+    println!("\n📊 Supply Chain Metrics:");
+    println!("  📦 Direct dependencies: {} (threshold: ≤150) {}", 
+             compliance_metrics.direct_nondev_deps,
+             if compliance_metrics.direct_nondev_deps <= 150 { "✅" } else { "❌" });
+    println!("  📄 License completeness: {} {}", 
+             if compliance_metrics.license_complete { "Complete" } else { "Incomplete" },
+             if compliance_metrics.license_complete { "✅" } else { "❌" });
+    println!("  🔒 Open advisories: {} (target: 0) {}", 
+             compliance_metrics.open_advisories,
+             if compliance_metrics.open_advisories == 0 { "✅" } else { "⚠️" });
+    println!("  🔗 HTTP stack unified: {} {}", 
+             if compliance_metrics.http_unified { "Yes" } else { "No" },
+             if compliance_metrics.http_unified { "✅" } else { "❌" });
     
     if passed_gates == total_gates {
         println!("\n🎉 All supply chain security gates passed!");
@@ -140,6 +465,7 @@ fn run_cargo_audit_gate() -> GateResult {
                         passed: true,
                         message: "No security advisories found".to_string(),
                         artifacts,
+                        duration_ms: 0, // Will be set by run_timed_gate
                     };
                 }
                 
@@ -170,6 +496,7 @@ fn run_cargo_audit_gate() -> GateResult {
                     passed: false,
                     message: format!("Found {} security advisories", advisory_count),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 };
             }
             Err(e) => {
@@ -184,6 +511,7 @@ fn run_cargo_audit_gate() -> GateResult {
                     passed: false,
                     message: format!("Failed to run cargo audit: {}", e),
                     artifacts: Vec::new(),
+                    duration_ms: 0, // Will be set by run_timed_gate
                 };
             }
         }
@@ -195,6 +523,7 @@ fn run_cargo_audit_gate() -> GateResult {
         passed: false,
         message: "Unexpected error in retry logic".to_string(),
         artifacts: Vec::new(),
+        duration_ms: 0, // Will be set by run_timed_gate
     }
 }
 
@@ -240,6 +569,7 @@ fn run_cargo_deny_gate() -> GateResult {
                     passed: false,
                     message: format!("cargo-deny failed: {}", error_details),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 };
             }
             
@@ -261,6 +591,7 @@ fn run_cargo_deny_gate() -> GateResult {
                     passed: true,
                     message,
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             } else {
                 GateResult {
@@ -268,6 +599,7 @@ fn run_cargo_deny_gate() -> GateResult {
                     passed: true,
                     message: "All cargo-deny checks passed (JSON parse failed)".to_string(),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             }
         }
@@ -277,6 +609,7 @@ fn run_cargo_deny_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to run cargo deny: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -360,6 +693,7 @@ fn run_license_compliance_gate() -> GateResult {
                                        (compliance_rate * 100.0) as u32, 
                                        compliant_deps, total_deps, unknown_licenses),
                         artifacts: Vec::new(),
+                        duration_ms: 0, // Will be set by run_timed_gate
                     }
                 } else {
                     GateResult {
@@ -369,6 +703,7 @@ fn run_license_compliance_gate() -> GateResult {
                                        (compliance_rate * 100.0) as u32, 
                                        compliant_deps, total_deps, unknown_licenses),
                         artifacts: Vec::new(),
+                        duration_ms: 0, // Will be set by run_timed_gate
                     }
                 }
             } else {
@@ -377,6 +712,7 @@ fn run_license_compliance_gate() -> GateResult {
                     passed: false,
                     message: "Failed to parse cargo metadata".to_string(),
                     artifacts: Vec::new(),
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             }
         }
@@ -386,6 +722,7 @@ fn run_license_compliance_gate() -> GateResult {
                 passed: false,
                 message: "Failed to parse dependency metadata".to_string(),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
         Err(e) => {
@@ -394,6 +731,7 @@ fn run_license_compliance_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to get dependency metadata: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -423,6 +761,7 @@ fn run_spdx_validation_gate() -> GateResult {
             passed: true,
             message: format!("All {} crates have SPDX identifiers", workspace_crates.len()),
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         }
     } else {
         GateResult {
@@ -431,6 +770,7 @@ fn run_spdx_validation_gate() -> GateResult {
             message: format!("{} crates missing SPDX identifiers: {}", 
                            missing_spdx.len(), missing_spdx.join(", ")),
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         }
     }
 }
@@ -456,6 +796,7 @@ fn run_dependency_count_gate() -> GateResult {
                             passed: true,
                             message: format!("{} runtime dependencies (within limit)", dep_count),
                             artifacts,
+                            duration_ms: 0, // Will be set by run_timed_gate
                         }
                     } else {
                         GateResult {
@@ -463,6 +804,7 @@ fn run_dependency_count_gate() -> GateResult {
                             passed: false,
                             message: format!("{} runtime dependencies (exceeds limit of 150)", dep_count),
                             artifacts,
+                            duration_ms: 0, // Will be set by run_timed_gate
                         }
                     }
                 }
@@ -472,6 +814,7 @@ fn run_dependency_count_gate() -> GateResult {
                         passed: false,
                         message: format!("Failed to parse metadata: {}", e),
                         artifacts,
+                        duration_ms: 0, // Will be set by run_timed_gate
                     }
                 }
             }
@@ -485,6 +828,7 @@ fn run_dependency_count_gate() -> GateResult {
                 passed: false,
                 message: "Failed to run cargo metadata".to_string(),
                 artifacts,
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
         Err(e) => {
@@ -493,6 +837,7 @@ fn run_dependency_count_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to execute cargo metadata: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -532,6 +877,7 @@ fn run_audit_trail_gate() -> GateResult {
             passed: true,
             message: "All audit documents present and current".to_string(),
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         }
     } else {
         let mut message = String::new();
@@ -550,6 +896,7 @@ fn run_audit_trail_gate() -> GateResult {
             passed: false,
             message,
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         }
     }
 }
@@ -563,6 +910,7 @@ fn run_license_list_gate() -> GateResult {
             passed: false,
             message: "THIRD_PARTY_LICENSES.md not found".to_string(),
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         };
     }
     
@@ -579,6 +927,7 @@ fn run_license_list_gate() -> GateResult {
                 passed: true,
                 message: "License list is complete and well-formed".to_string(),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         } else {
             GateResult {
@@ -586,6 +935,7 @@ fn run_license_list_gate() -> GateResult {
                 passed: false,
                 message: "License list is incomplete or malformed".to_string(),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     } else {
@@ -594,6 +944,7 @@ fn run_license_list_gate() -> GateResult {
             passed: false,
             message: "Failed to read THIRD_PARTY_LICENSES.md".to_string(),
             artifacts: Vec::new(),
+            duration_ms: 0, // Will be set by run_timed_gate
         }
     }
 }
@@ -834,6 +1185,7 @@ fn run_duplicate_major_detection_gate() -> GateResult {
                     passed: true,
                     message: "No duplicate major versions found for critical crates".to_string(),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             } else {
                 GateResult {
@@ -841,6 +1193,7 @@ fn run_duplicate_major_detection_gate() -> GateResult {
                     passed: false,
                     message: format!("Duplicate major versions found: {}", duplicate_majors.join(", ")),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             }
         }
@@ -853,6 +1206,7 @@ fn run_duplicate_major_detection_gate() -> GateResult {
                 passed: false,
                 message: "Failed to run cargo tree -d".to_string(),
                 artifacts,
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
         Err(e) => {
@@ -861,6 +1215,7 @@ fn run_duplicate_major_detection_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to execute cargo tree: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -961,6 +1316,7 @@ fn run_cargo_about_gate() -> GateResult {
                 passed: false,
                 message: "Cargo.lock has uncommitted changes - deterministic generation requires clean lockfile".to_string(),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             };
         }
         Err(e) => {
@@ -969,6 +1325,7 @@ fn run_cargo_about_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to check Cargo.lock status: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             };
         }
         _ => {} // Lockfile is clean, continue
@@ -988,6 +1345,7 @@ fn run_cargo_about_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to install cargo-about 0.6.4: {}", stderr),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             };
         }
         Err(e) => {
@@ -996,6 +1354,7 @@ fn run_cargo_about_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to execute cargo install: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             };
         }
         _ => {} // Installation successful
@@ -1022,6 +1381,7 @@ fn run_cargo_about_gate() -> GateResult {
                     passed: false,
                     message: format!("cargo about generate failed with exit code {}: {}", exit_code, stderr),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 };
             }
             
@@ -1040,6 +1400,7 @@ fn run_cargo_about_gate() -> GateResult {
                             passed: true,
                             message: "License documentation generated successfully with deterministic output".to_string(),
                             artifacts,
+                            duration_ms: 0, // Will be set by run_timed_gate
                         }
                     } else {
                         // Changes detected - output is not deterministic or file was updated
@@ -1051,6 +1412,7 @@ fn run_cargo_about_gate() -> GateResult {
                                 passed: true,
                                 message: "License documentation generated successfully (new file created)".to_string(),
                                 artifacts,
+                                duration_ms: 0, // Will be set by run_timed_gate
                             }
                         } else {
                             // File was modified - this could indicate non-deterministic output
@@ -1060,6 +1422,7 @@ fn run_cargo_about_gate() -> GateResult {
                                 passed: true,
                                 message: "License documentation generated with modifications (check for determinism)".to_string(),
                                 artifacts,
+                                duration_ms: 0, // Will be set by run_timed_gate
                             }
                         }
                     }
@@ -1070,6 +1433,7 @@ fn run_cargo_about_gate() -> GateResult {
                         passed: false,
                         message: format!("Failed to verify deterministic output: {}", e),
                         artifacts,
+                        duration_ms: 0, // Will be set by run_timed_gate
                     }
                 }
             }
@@ -1080,6 +1444,7 @@ fn run_cargo_about_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to run cargo-about: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -1136,6 +1501,7 @@ fn run_source_validation_gate() -> GateResult {
                     passed: false,
                     message: format!("Source restrictions violated: {}", error_details),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 };
             }
             
@@ -1160,6 +1526,7 @@ fn run_source_validation_gate() -> GateResult {
                                            git_deps.len(), 
                                            git_deps.iter().take(3).map(|s| s.split_whitespace().next().unwrap_or("")).collect::<Vec<_>>().join(", ")),
                             artifacts,
+                            duration_ms: 0, // Will be set by run_timed_gate
                         };
                     }
                 }
@@ -1186,6 +1553,7 @@ fn run_source_validation_gate() -> GateResult {
                     passed: true,
                     message,
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             } else {
                 GateResult {
@@ -1193,6 +1561,7 @@ fn run_source_validation_gate() -> GateResult {
                     passed: true,
                     message: "Source restrictions validated (JSON parse failed)".to_string(),
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             }
         }
@@ -1202,6 +1571,7 @@ fn run_source_validation_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to run cargo deny sources: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -1242,6 +1612,7 @@ fn run_msrv_edition_gate() -> GateResult {
                     passed: true,
                     message,
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             } else {
                 // Parse failure details from output
@@ -1274,6 +1645,7 @@ fn run_msrv_edition_gate() -> GateResult {
                     passed: false,
                     message: violation_summary,
                     artifacts,
+                    duration_ms: 0, // Will be set by run_timed_gate
                 }
             }
         }
@@ -1283,6 +1655,7 @@ fn run_msrv_edition_gate() -> GateResult {
                 passed: false,
                 message: format!("Failed to run MSRV/edition validation: {}", e),
                 artifacts: Vec::new(),
+                duration_ms: 0, // Will be set by run_timed_gate
             }
         }
     }
@@ -1455,4 +1828,86 @@ fn format_tool_versions(versions: &std::collections::HashMap<String, String>) ->
     
     result.push('}');
     result
+}
+
+fn parse_metrics_json(json_str: &str) -> Result<Vec<GateMetrics>, String> {
+    let mut metrics = Vec::new();
+    let lines: Vec<&str> = json_str.lines().collect();
+    
+    let mut in_gates_array = false;
+    let mut in_gate_object = false;
+    let mut current_gate = String::new();
+    let mut current_duration = 0u64;
+    let mut current_timestamp = 0u64;
+    let mut current_passed = false;
+    
+    for line in lines {
+        let trimmed = line.trim();
+        
+        if trimmed.contains("\"gates\": [") {
+            in_gates_array = true;
+            continue;
+        }
+        
+        if in_gates_array && trimmed == "]," {
+            in_gates_array = false;
+            continue;
+        }
+        
+        if in_gates_array && trimmed == "{" {
+            in_gate_object = true;
+            continue;
+        }
+        
+        if in_gate_object {
+            if trimmed.contains("\"gate\":") {
+                if let Some(start) = trimmed.find("\"gate\": \"") {
+                    let gate_part = &trimmed[start + 9..];
+                    if let Some(end) = gate_part.find('"') {
+                        current_gate = gate_part[..end].to_string();
+                    }
+                }
+            } else if trimmed.contains("\"duration_ms\":") {
+                if let Some(start) = trimmed.find("\"duration_ms\": ") {
+                    let duration_part = &trimmed[start + 15..];
+                    if let Some(end) = duration_part.find(',') {
+                        if let Ok(duration) = duration_part[..end].parse::<u64>() {
+                            current_duration = duration;
+                        }
+                    }
+                }
+            } else if trimmed.contains("\"timestamp\":") {
+                if let Some(start) = trimmed.find("\"timestamp\": ") {
+                    let timestamp_part = &trimmed[start + 13..];
+                    if let Some(end) = timestamp_part.find(',') {
+                        if let Ok(timestamp) = timestamp_part[..end].parse::<u64>() {
+                            current_timestamp = timestamp;
+                        }
+                    }
+                }
+            } else if trimmed.contains("\"passed\":") {
+                if let Some(start) = trimmed.find("\"passed\": ") {
+                    let passed_part = &trimmed[start + 10..];
+                    current_passed = passed_part.starts_with("true");
+                }
+            }
+            
+            if trimmed == "}" || trimmed == "}," {
+                metrics.push(GateMetrics {
+                    gate_name: current_gate.clone(),
+                    duration_ms: current_duration,
+                    timestamp: current_timestamp,
+                    passed: current_passed,
+                });
+                
+                in_gate_object = false;
+                current_gate.clear();
+                current_duration = 0;
+                current_timestamp = 0;
+                current_passed = false;
+            }
+        }
+    }
+    
+    Ok(metrics)
 }

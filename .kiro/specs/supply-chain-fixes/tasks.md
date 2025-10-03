@@ -236,24 +236,31 @@
     - Add automated check that fails CI if any crate deviates from workspace standards
     - _Requirements: NFR-B_
 
-- [ ] 9. Add monitoring and metrics collection
-  - [ ] 9.1 Implement gate execution time tracking with defined metrics
+- [-] 9. Add monitoring and metrics collection
+
+
+  - [x] 9.1 Implement gate execution time tracking with defined metrics
+
+
     - Add timing instrumentation to CI gate controller for scm.gate.duration_ms{gate="licenses"}
     - Track p95 execution time with target SLO of < 45s
     - Store last N runs to show trendlines for future dependency PRs
     - _Requirements: Monitoring metrics_
 
-  - [ ] 9.2 Add dependency count and compliance monitoring
+  - [x] 9.2 Add dependency count and compliance monitoring
+
+
+
     - Implement scm.deps.direct_nondev_total gauge with threshold 150
     - Add scm.licenses.completeness gauge (1==complete)
     - Track scm.security.advisories_open_total gauge (0 target)
     - _Requirements: Monitoring metrics_
 
-- [ ]* 9.3 Create supply chain health dashboard
-  - Implement comprehensive metrics collection: scm.gate.status{gate=*}, scm.licenses.unified_http_ok
-  - Add security advisory response time tracking and license compliance percentages
-  - Create weekly and quarterly reporting automation with trend analysis
-  - _Requirements: Monitoring and reporting_
+  - [ ] 9.3 Create supply chain health dashboard
+    - Implement comprehensive metrics collection: scm.gate.status{gate=*}, scm.licenses.unified_http_ok
+    - Add security advisory response time tracking and license compliance percentages
+    - Create weekly and quarterly reporting automation with trend analysis
+    - _Requirements: Monitoring and reporting_
 
 ## Task Completion Criteria (DoD)
 
