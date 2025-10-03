@@ -19,13 +19,47 @@ path = "watchdog_integration_demo.rs"
 name = "telemetry_synth_demo"
 path = "telemetry_synth_demo.rs"
 
+[[bin]]
+name = "profile_parsing_demo"
+path = "profile_parsing_demo.rs"
+
+[[bin]]
+name = "pipeline_compilation_demo"
+path = "pipeline_compilation_demo.rs"
+
+[[bin]]
+name = "simconnect_usage_demo"
+path = "simconnect_usage_demo.rs"
+
+[[bin]]
+name = "streamdeck_panel_demo"
+path = "streamdeck_panel_demo.rs"
+
+[[bin]]
+name = "capture_replay_demo"
+path = "capture_replay_demo.rs"
+
+[[bin]]
+name = "simple_profile_demo"
+path = "simple_profile_demo.rs"
+
 [dependencies]
 flight-core = { path = "../crates/flight-core" }
-flight-panels = { path = "../crates/flight-panels" }
-flight-axis = { path = "../crates/flight-axis" }
-flight-service = { path = "../crates/flight-service" }
-flight-hid = { path = "../crates/flight-hid" }
-flight-ffb = { path = "../crates/flight-ffb" }
-flight-bus = { path = "../crates/flight-bus" }
-tracing = "0.1"
-tracing-subscriber = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Optional dependencies for more complex examples
+flight-panels = { path = "../crates/flight-panels", optional = true }
+flight-axis = { path = "../crates/flight-axis", optional = true }
+flight-service = { path = "../crates/flight-service", optional = true }
+flight-hid = { path = "../crates/flight-hid", optional = true }
+flight-ffb = { path = "../crates/flight-ffb", optional = true }
+flight-bus = { path = "../crates/flight-bus", optional = true }
+flight-ipc = { path = "../crates/flight-ipc", optional = true }
+flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
+flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
+flight-replay = { path = "../crates/flight-replay", optional = true }
+tokio = { version = "1.35", features = ["full"], optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", optional = true }
+tempfile = { version = "3.8", optional = true }

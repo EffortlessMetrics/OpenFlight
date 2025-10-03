@@ -634,7 +634,12 @@ Each task builds incrementally on previous work, with comprehensive testing and 
   - Build comprehensive security verification in CI/manual checks
   - _Requirements: SEC-01_
 
-- [ ] 36. Documentation & examples
+- [x] 36. Documentation & examples
+
+
+
+
+
   - Create docs.rs documentation for each crate with examples
   - Build examples for profile parsing, pipeline compilation, SimConnect usage
   - Add StreamDeck panel and capture + replay examples

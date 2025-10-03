@@ -4,7 +4,7 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
-use crate::profile::{Profile, CapabilityContext};
+use crate::profile::{Profile, CapabilityContext, CapabilityMode, merge_axis_configs};
 use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -255,7 +255,7 @@ impl Default for AutoSwitchConfig {
             ],
             enable_pof: true,
             pof_hysteresis: PofHysteresisConfig::default(),
-            capability_context: CapabilityContext::default(),
+            capability_context: CapabilityContext::for_mode(CapabilityMode::Full),
         }
     }
 }
@@ -613,7 +613,10 @@ impl AircraftAutoSwitch {
         let profiles = Self::load_profile_hierarchy(aircraft_id, sim, config).await?;
         
         // Merge profiles with deterministic hierarchy
-        let merged_profile = Profile::merge(&profiles.iter().collect::<Vec<_>>())?;
+        let mut merged_profile = profiles[0].clone();
+        for profile in profiles.iter().skip(1) {
+            merged_profile = merged_profile.merge_with(profile)?;
+        }
         
         // Validate with capability enforcement
         merged_profile.validate_with_capabilities(&config.capability_context)?;
@@ -710,7 +713,7 @@ impl AircraftAutoSwitch {
                             if let Some(existing_config) = override_profile.axes.get(axis_name) {
                                 override_profile.axes.insert(
                                     axis_name.clone(),
-                                    existing_config.merge_with(axis_config)
+                                    merge_axis_configs(existing_config, axis_config)
                                 );
                             } else {
                                 override_profile.axes.insert(axis_name.clone(), axis_config.clone());

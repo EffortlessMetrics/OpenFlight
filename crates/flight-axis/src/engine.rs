@@ -127,7 +127,7 @@ impl AxisEngine {
             conflict_detector: RwLock::new(conflict_detector),
             blackbox_annotator: RwLock::new(BlackboxAnnotator::new()),
             axis_name,
-            capability_context: RwLock::new(CapabilityContext::default()),
+            capability_context: RwLock::new(CapabilityContext::for_mode(CapabilityMode::Full)),
         }
     }
 

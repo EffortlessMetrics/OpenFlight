@@ -2,6 +2,57 @@
 //!
 //! Provides protobuf-based IPC communication between Flight Hub components
 //! using named pipes on Windows and Unix domain sockets on Linux.
+//!
+//! # Overview
+//!
+//! This crate implements the inter-process communication layer for Flight Hub with:
+//!
+//! - **Cross-platform Transport**: Named pipes (Windows) and Unix sockets (Linux)
+//! - **Protocol Versioning**: Feature negotiation and compatibility checking
+//! - **Type Safety**: Protobuf-generated types with validation
+//! - **Security**: Local-only communication with OS ACLs
+//!
+//! # Examples
+//!
+//! ## Client Connection
+//!
+//! ```rust,no_run
+//! use flight_ipc::{ClientConfig, client::FlightClient};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = ClientConfig::default();
+//!     let mut client = FlightClient::connect(config).await?;
+//!     
+//!     let devices = client.list_devices().await?;
+//!     println!("Found {} devices", devices.len());
+//!     
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ## Server Setup
+//!
+//! ```rust,no_run
+//! use flight_ipc::{ServerConfig, server::FlightServer};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = ServerConfig::default();
+//!     let server = FlightServer::new(config);
+//!     
+//!     server.serve().await?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! # Protocol Versioning
+//!
+//! The IPC layer supports feature negotiation to handle version compatibility:
+//!
+//! - Clients declare supported features during connection
+//! - Server responds with enabled feature set
+//! - Incompatible versions are rejected with clear error messages
 
 use thiserror::Error;
 
