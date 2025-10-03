@@ -43,14 +43,14 @@ tokio = { version = "1.35", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # IPC and serialization
-prost = "0.12"
-tonic = "0.10"
-protobuf-codegen = "3.4"
+prost = "0.14"
+tonic = "0.14"
+protobuf-codegen = "4.32.1-release"
 
 # Real-time and performance
 crossbeam = "0.8"
@@ -58,21 +58,21 @@ parking_lot = "0.12"
 once_cell = "1.19"
 
 # Platform-specific dependencies (defined in individual crates)
-windows = { version = "0.52", features = [
+windows = { version = "0.62", features = [
     "Win32_System_Threading",
     "Win32_System_Performance", 
     "Win32_Devices_HumanInterfaceDevice",
     "Win32_Storage_FileSystem"
 ] }
 libc = "0.2"
-nix = "0.27"
+nix = "0.30"
 
 # Additional dependencies
-criterion = "0.5"
+criterion = "0.7"
 proptest = "1.4"
 tempfile = "3.8"
 clap = { version = "4.4", features = ["derive"] }
-tonic-build = "0.10"
+tonic-build = "0.14"
 cc = "1.0"
 
 
