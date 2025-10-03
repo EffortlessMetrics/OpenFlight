@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Flight Bus - Normalized telemetry model and publisher
 //!
 //! Provides a comprehensive telemetry bus system with type-safe units,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Test fixtures for X-Plane adapter
 //!
 //! Provides comprehensive test fixtures for validating X-Plane adapter functionality,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Comprehensive negative tests for safety violations
 //!
 //! These tests verify that the safety systems correctly prevent unsafe operations

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Comprehensive tests for watchdog and quarantine system
 //!
 //! Tests all requirements including USB stall detection, plugin overrun monitoring,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Safe Mode Implementation
 //!
 //! Provides a minimal, axis-only mode for troubleshooting and safe operation

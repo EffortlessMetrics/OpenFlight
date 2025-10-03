@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Pipeline compiler with function pointer generation
 //!
 //! The compiler transforms high-level node configurations into optimized

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Trim correctness validation for force feedback devices
 //!
 //! This module provides comprehensive validation of trim behavior including:

@@ -1,0 +1,16 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: flight-tactile
+DocumentNamespace: https://flight-hub.dev/spdx/flight-tactile
+CreationInfo: Tool: flight-hub-supply-chain-audit
+Created: 1759457625 (Unix timestamp)
+
+PackageName: flight-tactile
+SPDXID: SPDXRef-Package-flight-tactile
+PackageDownloadLocation: NOASSERTION
+FilesAnalyzed: false
+PackageLicenseConcluded: MIT OR Apache-2.0
+PackageLicenseDeclared: MIT OR Apache-2.0
+PackageCopyrightText: Copyright (c) 2024 Flight Hub Team
+

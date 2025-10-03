@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Session fixtures for testing and validation
 //!
 //! Provides recording and playback capabilities for SimConnect sessions,

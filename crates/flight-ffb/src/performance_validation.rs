@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Performance validation for FFB mode negotiation
 //!
 //! This module provides comprehensive performance testing to ensure that

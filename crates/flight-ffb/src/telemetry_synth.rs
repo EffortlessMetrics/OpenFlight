@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Telemetry-based force feedback effect synthesis
 //!
 //! This module implements force feedback effects derived from flight telemetry data,

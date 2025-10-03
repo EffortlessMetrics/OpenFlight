@@ -2,6 +2,12 @@
 name = "flight-hub-examples"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+authors = ["Flight Hub Team"]
+
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [[bin]]
 name = "profile_demo"

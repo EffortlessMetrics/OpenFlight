@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Trace event definitions and serialization
 //!
 //! Defines the structured events that are emitted by the Flight Hub tracing system.

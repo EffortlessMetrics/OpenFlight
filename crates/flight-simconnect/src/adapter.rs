@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Main MSFS SimConnect adapter implementation
 //!
 //! Provides the high-level adapter interface that integrates session management,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Phase-Locked Loop for scheduler timing correction
 //!
 //! Implements a simple PLL to correct for systematic timing drift

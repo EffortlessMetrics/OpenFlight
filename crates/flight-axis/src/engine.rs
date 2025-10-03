@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Real-time axis engine with atomic pipeline swaps
 //!
 //! The AxisEngine provides the main interface for real-time axis processing

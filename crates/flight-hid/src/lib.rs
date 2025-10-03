@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! HID device management with watchdog integration
 //!
 //! Provides USB HID device monitoring, endpoint management, and integration

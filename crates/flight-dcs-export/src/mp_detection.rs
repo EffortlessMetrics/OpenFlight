@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Multiplayer session detection and feature blocking
 //!
 //! Implements MP session detection to enforce integrity contract.

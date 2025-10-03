@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Compiled axis processing pipeline with SoA state layout
 //!
 //! The pipeline uses a compile-to-function-pointer approach with Structure-of-Arrays

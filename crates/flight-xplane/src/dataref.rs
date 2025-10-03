@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! DataRef management for X-Plane communication
 //!
 //! Provides structures and utilities for managing X-Plane DataRefs,

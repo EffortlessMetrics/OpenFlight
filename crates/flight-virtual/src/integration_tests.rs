@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Integration tests for scheduler and virtual devices
 //!
 //! Tests the complete system including scheduler, virtual devices,

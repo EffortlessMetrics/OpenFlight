@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Trim correctness for force feedback devices
 //!
 //! Implements rate and jerk limited setpoint changes to prevent torque steps.

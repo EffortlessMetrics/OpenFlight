@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Force feedback engine with safety-first design
 //!
 //! This crate provides safe and controlled force feedback operation for Flight Hub.

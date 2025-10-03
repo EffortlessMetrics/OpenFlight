@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Soft-stop ramp implementation for safe torque shutdown
 //!
 //! Provides controlled torque ramp to zero within 50ms constraint with

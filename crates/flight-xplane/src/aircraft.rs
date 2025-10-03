@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Aircraft detection for X-Plane
 //!
 //! Provides aircraft detection capabilities by querying X-Plane DataRefs

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Verify test implementation for StreamDeck event round-trip testing
 //!
 //! Provides comprehensive testing of event flow from StreamDeck plugin

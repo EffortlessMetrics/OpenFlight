@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Rules evaluator for zero-allocation runtime evaluation
 
 use flight_core::rules::{CompiledRules, BytecodeOp, BytecodeProgram, Action, CompareOp};

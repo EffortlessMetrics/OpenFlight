@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! OFP-1 reference emulator for testing and development
 //!
 //! This module provides a virtual OFP-1 device that implements the complete

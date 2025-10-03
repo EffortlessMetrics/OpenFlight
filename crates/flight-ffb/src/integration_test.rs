@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Integration test for FFB mode negotiation and trim limits
 //!
 //! This module provides a comprehensive integration test that demonstrates

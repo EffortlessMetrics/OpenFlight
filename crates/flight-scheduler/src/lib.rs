@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Real-time scheduler for Flight Hub
 //!
 //! Provides precise timing for the 250Hz axis processing loop with

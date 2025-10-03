@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Pipeline processing nodes with zero-allocation guarantee
 //!
 //! All nodes implement the Node trait for compile-to-function-pointer optimization.

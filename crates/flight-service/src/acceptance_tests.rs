@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! End-to-End Acceptance Tests
 //!
 //! Comprehensive acceptance tests that verify the complete service functionality

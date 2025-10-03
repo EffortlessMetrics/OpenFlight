@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Blackbox recording system for fault analysis and diagnostics
 //!
 //! Provides continuous circular buffer recording with 2s pre-fault capture

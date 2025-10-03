@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Aircraft detection and identification for MSFS
 //!
 //! Provides aircraft detection via ATC model/type for auto-profile switching

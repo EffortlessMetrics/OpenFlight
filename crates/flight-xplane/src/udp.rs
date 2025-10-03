@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! UDP client for X-Plane DataRef communication
 //!
 //! Implements the X-Plane UDP protocol for requesting and receiving DataRef values.

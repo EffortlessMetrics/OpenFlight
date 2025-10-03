@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Physical interlock system for force feedback safety
 //!
 //! Implements challenge/response system with rolling tokens to prevent

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Integration documentation manager for Flight Hub UI
 //! 
 //! Provides access to "what we touch" documentation for each simulator,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Unix-specific scheduler implementation
 //!
 //! Uses clock_nanosleep with CLOCK_MONOTONIC for high-precision timing

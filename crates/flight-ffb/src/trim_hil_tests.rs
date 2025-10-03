@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Hardware-in-Loop (HIL) tests specifically for trim correctness validation
 //!
 //! These tests validate trim behavior with actual hardware timing constraints

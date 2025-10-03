@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! StreamDeck Web API server implementation
 //!
 //! Provides HTTP server for StreamDeck plugin integration with CORS support,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Capability enforcement service for kid/demo mode management
 
 use flight_core::profile::{CapabilityMode, CapabilityLimits, CapabilityContext};

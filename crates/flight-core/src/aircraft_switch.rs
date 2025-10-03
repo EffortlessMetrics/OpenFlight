@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Aircraft Auto-Switch System
 //!
 //! Implements automatic profile switching based on aircraft detection with ≤500ms response time.

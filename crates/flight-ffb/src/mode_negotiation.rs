@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! FFB mode negotiation and device capability management
 //!
 //! This module handles the negotiation of FFB modes based on device capabilities

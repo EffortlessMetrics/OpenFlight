@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! OFP-1 protocol integration for FFB engine
 //!
 //! This module integrates the OFP-1 protocol with the FFB engine,

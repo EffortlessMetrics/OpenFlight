@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Flight Axis Processing Engine
 //!
 //! Real-time 250Hz axis processing pipeline with zero-allocation guarantee.

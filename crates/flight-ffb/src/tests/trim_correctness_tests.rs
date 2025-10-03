@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Comprehensive tests for trim correctness validation
 //!
 //! These tests verify the complete implementation of task 27:

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Web API client for X-Plane
 //!
 //! Provides HTTP-based communication with X-Plane's web API for DataRef access

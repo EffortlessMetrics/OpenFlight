@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Runtime counters and allocation guards for RT monitoring
 //!
 //! Provides zero-overhead monitoring of real-time constraints including

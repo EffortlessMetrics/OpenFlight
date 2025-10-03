@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Bus telemetry types with comprehensive unit safety and validation
 
 use flight_core::units::{Speed, Angle, SpeedUnit, AngleUnit, UnitValue};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Performance counters for CI quality gates
 //!
 //! Provides atomic counters for tracking key performance metrics that are

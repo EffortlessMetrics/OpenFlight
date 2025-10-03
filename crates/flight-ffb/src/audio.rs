@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Audio cue system for force feedback safety events
 //!
 //! Provides cross-platform audio alerts for fault conditions and safety events.

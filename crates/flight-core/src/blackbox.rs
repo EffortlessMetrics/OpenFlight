@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Blackbox Recording System
 //!
 //! Implements the .fbb (Flight Black Box) format for recording flight data with:

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Verify matrix integration for panel drift detection and repair
 //!
 //! Provides systematic testing of panel configurations to detect drift

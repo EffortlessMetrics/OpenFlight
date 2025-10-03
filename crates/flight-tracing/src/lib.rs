@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Flight Hub Tracing and Performance Counters
 //!
 //! Provides platform-specific tracing infrastructure for real-time performance monitoring:

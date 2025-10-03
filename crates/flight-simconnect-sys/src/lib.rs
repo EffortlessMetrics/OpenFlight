@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Low-level FFI bindings for Microsoft SimConnect SDK
 //!
 //! This crate provides safe Rust bindings to the SimConnect API for Microsoft Flight Simulator.

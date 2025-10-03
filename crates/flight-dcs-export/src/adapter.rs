@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! DCS World adapter implementation
 //!
 //! Main adapter that coordinates socket bridge, MP detection, and telemetry publishing.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Writers system for applying curve conflict resolutions
 //!
 //! Provides table-driven configuration changes with golden tests,

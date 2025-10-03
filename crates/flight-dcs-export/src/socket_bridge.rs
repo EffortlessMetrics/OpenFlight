@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Socket bridge for DCS Export.lua communication
 //!
 //! Implements version negotiation and message framing for reliable

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! OFP-1 (Open Force Protocol v1) implementation
 //!
 //! This module implements the OFP-1 protocol for raw torque force feedback devices.

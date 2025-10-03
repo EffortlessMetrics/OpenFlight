@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Flight Tactile Bridge - Channel routing for tactile feedback effects
 //!
 //! Provides a rate-limited bridge to SimShaker-class applications for touchdown,

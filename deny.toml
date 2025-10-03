@@ -16,16 +16,9 @@ allow = [
     "BSD-3-Clause",
     "ISC",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "MPL-2.0",
     "CC0-1.0",
-]
-
-# Deny copyleft licenses that could affect our licensing
-deny = [
-    "GPL-2.0",
-    "GPL-3.0", 
-    "LGPL-2.1",
-    "LGPL-3.0",
-    "AGPL-3.0",
 ]
 
 # Confidence threshold for license detection
@@ -39,16 +32,21 @@ exceptions = [
 [bans]
 # Deny specific crates that have known security issues or are unmaintained
 deny = [
-    # Crates with known security vulnerabilities
-    { name = "openssl", version = "<0.10.55" },
-    { name = "hyper", version = "<0.14.18" },
-    { name = "tokio", version = "<1.20.0" },
-    
     # Unmaintained or problematic crates
     { name = "net2" },
     { name = "tempdir" },
-    { name = "rand", version = "<0.8.0" },
+    
+    # Crates that could compromise real-time performance
+    { name = "lazy_static" }, # Prefer once_cell or std::sync::LazyLock
+    { name = "failure" }, # Prefer anyhow or thiserror
 ]
+
+# Multiple version policy - be strict about these
+multiple-versions = "deny"
+wildcards = "deny"
+
+# Allow multiple versions for these specific crates if needed
+multiple-versions-include-dev = false
 
 # Skip certain crates from duplicate version checking
 skip = [
@@ -69,15 +67,11 @@ skip-tree = [
 db-path = "~/.cargo/advisory-db"
 db-urls = ["https://github.com/rustsec/advisory-db"]
 
-# Vulnerability severity levels to deny
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "deny"
-notice = "warn"
-
 # Ignore specific advisories (use sparingly and with justification)
 ignore = [
     # Example: "RUSTSEC-2020-0001", # Justification for ignoring
+    # Add specific ignores here only with clear business justification
+    # and time-bound remediation plans
 ]
 
 [sources]

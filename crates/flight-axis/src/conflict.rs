@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Curve conflict detection and analysis
 //!
 //! Detects when both simulator and profile curves are active on the same axis,

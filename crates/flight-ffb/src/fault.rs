@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Fault detection and handling for force feedback safety
 //!
 //! Implements comprehensive fault detection matrix with immediate safety responses.

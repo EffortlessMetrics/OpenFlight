@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Comprehensive test suite for flight-scheduler
 //!
 //! Tests timing accuracy, jitter measurement, PLL behavior,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! One-click curve conflict resolution system
 //!
 //! Provides a streamlined workflow for detecting conflicts and applying

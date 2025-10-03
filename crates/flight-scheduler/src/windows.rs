@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Windows-specific scheduler implementation
 //!
 //! Uses high-precision timing and thread priority for real-time performance.

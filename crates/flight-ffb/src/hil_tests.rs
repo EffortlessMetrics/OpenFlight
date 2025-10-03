@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Hardware-in-Loop (HIL) tests for FFB mode negotiation and trim validation
 //!
 //! These tests validate the FFB mode selection matrix and trim behavior

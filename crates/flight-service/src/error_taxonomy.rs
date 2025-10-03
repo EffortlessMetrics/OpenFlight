@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Error Taxonomy and Stable Error Codes
 //!
 //! Provides a comprehensive taxonomy of error codes with stable identifiers

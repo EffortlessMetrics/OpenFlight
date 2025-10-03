@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! USB yank test infrastructure for Hardware-in-Loop validation
 //!
 //! Provides comprehensive testing for USB disconnect scenarios to validate

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Security verification and audit system
 //!
 //! Provides comprehensive security checks, audit logging, and CI/manual verification

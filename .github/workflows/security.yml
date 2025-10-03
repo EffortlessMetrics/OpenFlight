@@ -105,8 +105,28 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     
-    - name: Install cargo-deny
-      run: cargo install cargo-deny
+    - name: Install audit tools
+      run: |
+        echo "🛠️ Installing supply chain audit tools"
+        cargo install cargo-audit cargo-deny cargo-license
+        echo "✅ Audit tools installed"
+    
+    - name: Run comprehensive supply chain audit
+      run: |
+        echo "🔍 Running comprehensive supply chain audit"
+        cargo +nightly -Zscript scripts/supply_chain_audit.rs
+        echo "✅ Supply chain audit completed"
+    
+    - name: Upload audit artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: supply-chain-audit-${{ github.sha }}
+        path: |
+          SUPPLY_CHAIN_AUDIT.md
+          THIRD_PARTY_LICENSES.md
+          spdx/
+        retention-days: 30
     
     - name: Check for banned crates
       run: |
@@ -119,6 +139,27 @@ jobs:
         echo "🔍 Checking for duplicate dependencies"
         cargo tree --duplicates
         echo "ℹ️ Duplicate dependency check completed"
+    
+    - name: Validate SPDX documents
+      run: |
+        echo "📋 Validating SPDX documents"
+        if [ -d "spdx" ]; then
+          for spdx_file in spdx/*.spdx; do
+            if [ -f "$spdx_file" ]; then
+              echo "  Validating $(basename "$spdx_file")"
+              # Basic SPDX validation - check required fields
+              if grep -q "SPDXVersion:" "$spdx_file" && \
+                 grep -q "DataLicense:" "$spdx_file" && \
+                 grep -q "PackageName:" "$spdx_file"; then
+                echo "    ✅ $(basename "$spdx_file") is valid"
+              else
+                echo "    ❌ $(basename "$spdx_file") is invalid"
+                exit 1
+              fi
+            fi
+          done
+        fi
+        echo "✅ SPDX validation completed"
 
   semver-check:
     name: Semantic Versioning
@@ -155,3 +196,39 @@ jobs:
       with:
         fail-on-severity: moderate
         allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+
+  supply-chain-gate:
+    name: Supply Chain Security Gate
+    runs-on: ubuntu-latest
+    needs: [security-audit, license-check, supply-chain]
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy
+    
+    - name: Install nightly for scripts
+      uses: dtolnay/rust-toolchain@nightly
+    
+    - name: Install audit tools
+      run: |
+        cargo install cargo-audit cargo-deny cargo-license
+    
+    - name: Run CI Supply Chain Security Gate
+      run: |
+        echo "🚪 Running CI Supply Chain Security Gate"
+        cargo +nightly -Zscript scripts/ci_supply_chain_gate.rs
+        echo "✅ All supply chain security gates passed"
+    
+    - name: Upload gate results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: supply-chain-gate-results-${{ github.sha }}
+        path: |
+          SUPPLY_CHAIN_AUDIT.md
+          THIRD_PARTY_LICENSES.md
+          spdx/
+        retention-days: 90

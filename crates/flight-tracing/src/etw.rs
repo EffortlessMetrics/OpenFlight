@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! ETW (Event Tracing for Windows) provider implementation
 //!
 //! Provides high-performance event tracing on Windows using ETW infrastructure.

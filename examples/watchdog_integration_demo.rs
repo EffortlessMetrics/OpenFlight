@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Watchdog and Quarantine System Integration Demo
 //!
 //! Demonstrates the complete watchdog system including:

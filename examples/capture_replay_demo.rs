@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
 //! Capture and Replay Demo
 //!
 //! This example demonstrates the blackbox recording and replay functionality,
