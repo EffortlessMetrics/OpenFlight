@@ -13,7 +13,7 @@ repository.workspace = true
 
 [dependencies]
 flight-core = { path = "../flight-core" }
-flight-axis = { path = "../flight-axis" }
+flight-axis = { path = "../flight-axis", features = ["serde"] }
 flight-ffb = { path = "../flight-ffb" }
 flight-bus = { path = "../flight-bus" }
 serde = { workspace = true, features = ["derive"] }

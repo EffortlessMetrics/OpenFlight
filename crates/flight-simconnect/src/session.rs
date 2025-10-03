@@ -20,6 +20,7 @@ use windows::Win32::Foundation::{HANDLE, HWND};
 
 /// Configuration for SimConnect session
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SessionConfig {
     /// Application name for SimConnect
     pub app_name: String,

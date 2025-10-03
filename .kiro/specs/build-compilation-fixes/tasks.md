@@ -1,6 +1,8 @@
 # Implementation Plan
 
-- [-] 1. Phase 1: Core API Stabilization
+- [x] 1. Phase 1: Core API Stabilization
+
+
 
 
 
@@ -39,7 +41,8 @@
   - Verify: No "recursion in an async fn requires boxing" errors
   - _Requirements: BC-07.6_
 
-- [-] 1.4 Implement serde feature infrastructure
+- [x] 1.4 Implement serde feature infrastructure
+
 
   - Ensure workspace uses resolver = "2" to prevent feature leakage
   - Add serde feature to flight-axis and flight-simconnect Cargo.toml with optional = true
@@ -212,7 +215,7 @@
   - Verify: `cargo clippy -p flight-simconnect -- -D warnings` passes after sys crate allows
   - _Requirements: BC-10.1, BC-10.2, BC-10.3, BC-10.6_
 
-- [ ]* 5.5 Add regression prevention measures
+- [ ] 5.5 Add regression prevention measures
   - Add workspace dependency version alignment task (tonic/tonic-build, tokio, futures versions)
   - Implement feature powerset testing: `cargo hack check --workspace --feature-powerset --depth 2`
   - Add clippy enforcement: `cargo clippy --workspace -- -D warnings` for core crates
@@ -220,7 +223,7 @@
   - Set up CI verification greps for each critical pattern (Profile::merge, BlackboxWriter::new?, etc.)
   - _Requirements: NFR-B, NFR-C_
 
-- [ ]* 5.6 Verify all compilation targets
+- [ ] 5.6 Verify all compilation targets
   - Run `cargo check --workspace` on both Windows and Linux CI
   - Verify examples compile and run: `cargo run -p openflight-examples --example <name>`
   - Test serde feature combinations: `cargo check -p flight-axis --features serde`
