@@ -45,6 +45,7 @@ graph TD
 **Key Changes**:
 - `Engine::new()` → `Engine::new(name: String, config: EngineConfig)`
 - Add missing `EngineConfig` fields: `conflict_detector_config`, `enable_conflict_detection`
+- Fix `Profile::merge()` → `Profile::merge_with()` in flight-core
 - Update all call sites consistently
 
 **Interface**:
@@ -66,6 +67,17 @@ let config = EngineConfig {
     conflict_detector_config: ConflictDetectorConfig::default(),
 };
 let engine = AxisEngine::with_config("demo".to_string(), config);
+```
+
+**Profile API Fix**:
+```rust
+// flight-core/src/aircraft_switch.rs
+// Before
+let merged = Profile::merge(base, overlay);
+
+// After  
+let merged = Profile::merge_with(base, overlay);
+// Note: Check if merge_with expects different argument order
 ```
 
 ### 2. Serde Feature Infrastructure
@@ -135,13 +147,42 @@ mod handle_safety_tests {
 ```toml
 # flight-simconnect/Cargo.toml
 [dependencies]
-windows = { version = "0.62", features = [
+windows = { workspace = true, features = [
     "Win32_System_Threading",
     "Win32_Foundation", 
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_ProcessStatus"
 ] }
 futures = "0.3"
+```
+
+**Error Conversion Infrastructure**:
+```rust
+// flight-simconnect/src/mapping.rs
+#[derive(thiserror::Error, Debug)]
+pub enum MappingError {
+    #[error("bus type error: {0}")]
+    Bus(#[from] BusTypeError),
+    #[error("simconnect error: {0}")]
+    Sim(#[from] flight_simconnect_sys::SimConnectError),
+    #[error("transport error: {0}")]
+    Transport(#[from] crate::transport::TransportError),  // Note: crate::transport::
+}
+```
+
+**Borrow Conflict Resolution Pattern**:
+```rust
+// Problem: immutable borrow held across mutable operation
+// let keys: Vec<_> = self.subs.iter().map(|(k, _)| k.clone()).collect();
+// self.unsubscribe(&keys[0])?; // ERROR: can't borrow mutably
+
+// Solution: Narrow immutable borrow lifetime
+let keys: Vec<_> = {
+    self.subs.iter().map(|(k, _)| k.clone()).collect()
+}; // immutable borrow ends here
+for k in keys {
+    self.unsubscribe(&k)?; // now mutable borrow is allowed
+}
 ```
 
 **Async Pattern Fixes**:
@@ -188,18 +229,43 @@ impl FlightService for FlightServiceImpl {
 
 ### 6. Examples Package Architecture
 
-**Purpose**: Centralize cross-crate examples with proper dependency management
+**Purpose**: Centralize cross-crate examples with controlled dependency management
 
-**Structure**:
+**Structure** (Feature-Isolated Approach):
 ```
 examples/
-├── Cargo.toml          # Dependencies on all workspace crates
+├── Cargo.toml          # Minimal dependencies, feature-gated
 ├── src/lib.rs          # Empty library
 └── examples/
-    ├── capability_demo.rs
-    ├── capture_replay_demo.rs
-    ├── pipeline_compilation_demo.rs
-    └── ...
+    ├── axis_demo.rs        # Only flight-axis deps
+    ├── replay_demo.rs      # Only flight-replay deps  
+    ├── simconnect_demo.rs  # Only flight-simconnect deps
+    └── integration_demo.rs # Multi-crate, behind feature
+```
+
+**Cargo.toml Strategy**:
+```toml
+[package]
+name = "openflight-examples"
+publish = false
+
+[dependencies]
+# Core always available
+flight-axis = { path = "../crates/flight-axis" }
+tokio = { workspace = true }
+
+# Optional feature-gated dependencies
+flight-replay = { path = "../crates/flight-replay", optional = true }
+flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
+
+[features]
+default = []
+replay = ["flight-replay"]
+simconnect = ["flight-simconnect"] 
+integration = ["replay", "simconnect"]
+
+# Platform-specific features
+windows-only = ["simconnect"]
 ```
 
 **Configuration Updates**:
@@ -213,7 +279,7 @@ let config = BlackboxConfig {
     ..Default::default()
 };
 
-// Constructor changes
+// Constructor changes - remove ? from non-Result constructors
 let writer = BlackboxWriter::new(config);  // Remove ? if not Result<T, E>
 ```
 
@@ -223,9 +289,9 @@ let writer = BlackboxWriter::new(config);  // Remove ? if not Result<T, E>
 
 **API Migration**:
 ```rust
-// Dependencies
+// Dependencies (prefer rand_core over full rand)
 ed25519-dalek = { version = "2", features = ["rand_core"] }
-rand = "0.8"
+rand_core = "0.6"  // For OsRng
 
 // Type migrations
 use ed25519_dalek::{
@@ -234,6 +300,7 @@ use ed25519_dalek::{
     VerifyingKey,        // was: PublicKey
     Signer, Verifier
 };
+use rand_core::OsRng;
 
 // Key generation
 let signing_key = SigningKey::generate(&mut OsRng);  // was: Keypair::generate()
@@ -243,10 +310,63 @@ let verifying_key = signing_key.verifying_key();     // was: keypair.public
 let signature = signing_key.sign(message);           // was: keypair.sign()
 verifying_key.verify(message, &signature)?;         // was: public_key.verify()
 
-// Byte conversions
+// Byte conversions with proper error handling
 let sig = Signature::from_bytes(
-    sig_bytes.as_slice().try_into()?                 // Handle Vec<u8> -> [u8; 64]
+    sig_bytes.as_slice().try_into()
+        .map_err(|_| anyhow::anyhow!("Invalid signature length"))?
 )?;
+
+// Verification helper
+fn verify_signature(msg: &[u8], sig_bytes: &[u8], vk_bytes: &[u8]) -> anyhow::Result<()> {
+    let vk = VerifyingKey::from_bytes(
+        vk_bytes.try_into().map_err(|_| anyhow::anyhow!("Invalid key length"))?
+    )?;
+    let sig = Signature::from_bytes(
+        sig_bytes.try_into().map_err(|_| anyhow::anyhow!("Invalid signature length"))?
+    )?;
+    vk.verify(msg, &sig).map_err(|e| anyhow::anyhow!("Verification failed: {e}"))
+}
+```
+
+### 7a. Async Recursion Resolution Module
+
+**Purpose**: Fix "recursion in an async fn requires boxing" errors in flight-updater
+
+**Resolution Strategies**:
+```rust
+// Strategy 1: Loop conversion (preferred)
+pub async fn walk_updates(&mut self, start: Version) -> Result<Version> {
+    let mut current = start;
+    loop {
+        let next = self.next_version(current).await?;
+        if next == current { 
+            break Ok(current); 
+        }
+        current = next;
+    }
+}
+
+// Strategy 2: async-recursion crate (if loop conversion not feasible)
+use async_recursion::async_recursion;
+
+#[async_recursion]
+pub async fn recursive_update(&mut self, version: Version) -> Result<()> {
+    // Recursive calls now work
+    if self.needs_update(version).await? {
+        self.recursive_update(self.next_version(version).await?).await?;
+    }
+    Ok(())
+}
+
+// Strategy 3: Manual boxing (most control)
+pub fn boxed_recursive(&mut self, version: Version) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
+    Box::pin(async move {
+        if self.needs_update(version).await? {
+            self.boxed_recursive(self.next_version(version).await?).await?;
+        }
+        Ok(())
+    })
+}
 ```
 
 ### 8. Memory Safety Module
@@ -306,16 +426,27 @@ criterion_main!(benches);
 
 **Test Visibility Fixes**:
 ```rust
-// Test-only accessors
+// Test-only accessors with optional downstream support
 impl RulesEvaluator {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-helpers"))]
     pub(crate) fn stack(&self) -> &Vec<StackItem> { 
         &self.stack 
     }
     
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-helpers"))]
     pub(crate) fn variable_cache(&self) -> &HashMap<String, Value> {
         &self.variable_cache
+    }
+}
+
+// Unsafe operation wrapping
+unsafe impl GlobalAlloc for MyAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        unsafe { self.inner.alloc(layout) }  // Wrap in unsafe block
+    }
+    
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        unsafe { self.inner.dealloc(ptr, layout) }  // Wrap in unsafe block
     }
 }
 ```
@@ -383,38 +514,48 @@ Each fix module includes rollback procedures:
 Each requirement maps to specific verification commands:
 
 ```bash
-# BC-01: flight-axis compilation
+# BC-01: flight-axis compilation + core API fixes
 cargo build -p flight-axis --examples --tests --benches
+cargo check -p flight-core  # Profile::merge_with fix
+git grep -n "Profile::merge(" | wc -l  # Should return 0
 
 # BC-02: Serde feature verification  
 cargo check -p flight-axis --features serde
 cargo check -p flight-replay  # Should compile with serde features
 
-# BC-03: Windows build verification
+# BC-03: Windows build verification + error mapping
 cargo build -p flight-simconnect  # On Windows CI
+cargo test -p flight-simconnect --no-run  # Verify test compilation
 
 # BC-04: Cross-platform verification
 cargo check --workspace  # On both Windows and Linux
 
-# BC-05: gRPC compilation
+# BC-05: gRPC compilation + transport error fix
 cargo build -p flight-ipc
 cargo test -p flight-ipc
+cargo check -p flight-ipc  # Verify TransportError import fix
 
-# BC-06: Examples verification
-cargo run -p openflight-examples --example capability_demo
+# BC-06: Examples verification + feature isolation
+cargo run -p openflight-examples --example axis_demo
+cargo tree -p openflight-examples | grep windows  # Should be empty on non-Windows
 
-# BC-07: Cryptography verification
+# BC-07: Cryptography + async recursion verification
 cargo test -p flight-updater -- signature
+cargo check -p flight-updater  # Verify async recursion fixes
 
 # BC-08: Memory safety verification  
-cargo clippy -W clippy::unaligned_references
+cargo clippy -- -D clippy::borrow_deref_ref -W clippy::unaligned_references
 
 # BC-09: Test infrastructure
 cargo test --workspace
 cargo bench -p flight-replay
 
 # BC-10: FFI warning cleanup
-cargo clippy -p flight-simconnect-sys
+cargo clippy -p flight-simconnect-sys  # Should not flood with style warnings
+cargo clippy -p flight-simconnect -- -D warnings  # After sys crate allows
+
+# Feature powerset testing (regression prevention)
+cargo hack check --workspace --feature-powerset --depth 2
 ```
 
 ### CI Integration
@@ -436,28 +577,38 @@ The fixes integrate with existing CI infrastructure:
 ## Implementation Phases
 
 ### Phase 1: Core API Stabilization (BC-01, BC-02)
-- Fix AxisEngine API signature
+- Fix AxisEngine API signature and EngineConfig fields
+- Fix Profile::merge → Profile::merge_with in flight-core
+- Fix async recursion in flight-updater (loop conversion preferred)
 - Implement serde feature infrastructure
 - Update all engine call sites
 
 ### Phase 2: Platform Compatibility (BC-03, BC-04)  
-- Add Windows dependencies
+- Add Windows dependencies with workspace version alignment
+- Implement error conversion infrastructure (BusTypeError → MappingError)
+- Fix borrow conflicts in mapping.rs with scoped pattern
 - Implement platform-specific code gates
-- Fix async/sync mutex usage
+- Fix async/sync mutex usage and TransportError import paths
 
 ### Phase 3: Service Infrastructure (BC-05, BC-06)
-- Fix gRPC module paths
-- Centralize examples package
-- Update configuration field names
+- Fix gRPC module paths and associated stream types
+- Create feature-isolated examples package
+- Update configuration field names and remove ? from non-Result constructors
 
 ### Phase 4: Security & Safety (BC-07, BC-08)
-- Migrate cryptography APIs
-- Fix packed struct access patterns
-- Ensure memory safety compliance
+- Migrate ed25519-dalek v2 API with proper error handling
+- Fix packed struct access patterns with copy-by-value and read_unaligned
+- Ensure memory safety compliance with clippy enforcement
 
 ### Phase 5: Quality & Cleanup (BC-09, BC-10)
-- Fix test and benchmark infrastructure
-- Suppress FFI warnings appropriately
-- Verify all compilation targets
+- Fix test and benchmark infrastructure with Criterion 0.5
+- Add test-only accessors with optional downstream support
+- Suppress FFI warnings appropriately with crate-level allows
+- Add feature powerset testing for regression prevention
 
-Each phase can be implemented and tested independently, allowing for incremental progress and early validation of fixes.
+### Critical Dependencies
+- **Phase 1 blocks everything** - Must complete first
+- **Phase 2 blocks Windows CI** - Required for cross-platform verification  
+- **Phases 3-5 can run in parallel** after Phase 2 completion
+
+Each phase includes verification commands and can be validated independently.
