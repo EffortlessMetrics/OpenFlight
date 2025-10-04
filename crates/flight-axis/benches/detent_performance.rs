@@ -5,7 +5,7 @@
 //! - Zero allocations during processing
 //! - Deterministic execution time
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use flight_axis::{
     AxisFrame, DetentNode, DetentZone, DetentRole, DetentState, Node,
 };
@@ -38,12 +38,12 @@ fn bench_detent_processing(c: &mut Criterion) {
     
     c.bench_function("detent_single_step", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(black_box(0.42), black_box(1000000));
+            let mut frame = AxisFrame::new(std::hint::black_box(0.42), std::hint::black_box(1000000));
             unsafe {
                 let state_ptr = &mut state as *mut DetentState as *mut u8;
                 node.step_soa(&mut frame, state_ptr);
             }
-            black_box(frame.out);
+            std::hint::black_box(frame.out);
         });
     });
 }
@@ -72,12 +72,12 @@ fn bench_detent_scaling(c: &mut Criterion) {
             zone_count,
             |b, _| {
                 b.iter(|| {
-                    let mut frame = AxisFrame::new(black_box(0.42), black_box(1000000));
+                    let mut frame = AxisFrame::new(std::hint::black_box(0.42), std::hint::black_box(1000000));
                     unsafe {
                         let state_ptr = &mut state as *mut DetentState as *mut u8;
                         node.step_soa(&mut frame, state_ptr);
                     }
-                    black_box(frame.out);
+                    std::hint::black_box(frame.out);
                 });
             },
         );
@@ -105,12 +105,12 @@ fn bench_detent_transitions(c: &mut Criterion) {
     c.bench_function("detent_frequent_transitions", |b| {
         b.iter(|| {
             for (i, &position) in positions.iter().enumerate() {
-                let mut frame = AxisFrame::new(black_box(position), black_box((i * 1000) as u64));
+                let mut frame = AxisFrame::new(std::hint::black_box(position), std::hint::black_box((i * 1000) as u64));
                 unsafe {
                     let state_ptr = &mut state as *mut DetentState as *mut u8;
                     node.step_soa(&mut frame, state_ptr);
                 }
-                black_box(frame.out);
+                std::hint::black_box(frame.out);
             }
         });
     });
@@ -131,13 +131,13 @@ fn bench_allocation_validation(c: &mut Criterion) {
             
             for i in 0..iters {
                 let position = (i as f32 * 0.001) % 2.0 - 1.0; // Sweep -1 to 1
-                let mut frame = AxisFrame::new(black_box(position), black_box(i * 1000));
+                let mut frame = AxisFrame::new(std::hint::black_box(position), std::hint::black_box(i * 1000));
                 
                 unsafe {
                     let state_ptr = &mut state as *mut DetentState as *mut u8;
                     node.step_soa(&mut frame, state_ptr);
                 }
-                black_box(frame.out);
+                std::hint::black_box(frame.out);
             }
             
             start.elapsed()
@@ -160,9 +160,9 @@ fn bench_zone_lookup(c: &mut Criterion) {
     
     c.bench_function("detent_zone_lookup", |b| {
         b.iter(|| {
-            let position = black_box(0.42);
+            let position = std::hint::black_box(0.42);
             let result = node.find_entry_detent(position);
-            black_box(result);
+            std::hint::black_box(result);
         });
     });
 }
@@ -173,10 +173,10 @@ fn bench_hysteresis_check(c: &mut Criterion) {
     
     c.bench_function("detent_hysteresis_check", |b| {
         b.iter(|| {
-            let position = black_box(0.12);
+            let position = std::hint::black_box(0.12);
             let entry = zone.contains_entry(position);
             let exit = zone.contains_exit(position);
-            black_box((entry, exit));
+            std::hint::black_box((entry, exit));
         });
     });
 }

@@ -1,6 +1,6 @@
 //! Performance benchmarks for Flight Hub IPC
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use flight_ipc::{
     negotiation::{negotiate_features, Version},
     proto::{
@@ -15,8 +15,8 @@ use std::time::SystemTime;
 fn bench_version_parsing(c: &mut Criterion) {
     c.bench_function("version_parsing", |b| {
         b.iter(|| {
-            let version = Version::parse(black_box("1.2.3")).unwrap();
-            black_box(version);
+            let version = Version::parse(std::hint::black_box("1.2.3")).unwrap();
+            std::hint::black_box(version);
         });
     });
 }
@@ -27,8 +27,8 @@ fn bench_version_compatibility(c: &mut Criterion) {
     
     c.bench_function("version_compatibility", |b| {
         b.iter(|| {
-            let result = black_box(&v2).is_compatible_with(black_box(&v1));
-            black_box(result);
+            let result = std::hint::black_box(&v2).is_compatible_with(std::hint::black_box(&v1));
+            std::hint::black_box(result);
         });
     });
 }
@@ -53,8 +53,8 @@ fn bench_feature_negotiation(c: &mut Criterion) {
     
     c.bench_function("feature_negotiation", |b| {
         b.iter(|| {
-            let response = negotiate_features(black_box(&request), black_box(&server_features)).unwrap();
-            black_box(response);
+            let response = negotiate_features(std::hint::black_box(&request), std::hint::black_box(&server_features)).unwrap();
+            std::hint::black_box(response);
         });
     });
 }
@@ -67,8 +67,8 @@ fn bench_device_serialization(c: &mut Criterion) {
     // Benchmark protobuf encoding
     group.bench_function("protobuf_encode", |b| {
         b.iter(|| {
-            let encoded = black_box(&device).encode_to_vec();
-            black_box(encoded);
+            let encoded = std::hint::black_box(&device).encode_to_vec();
+            std::hint::black_box(encoded);
         });
     });
     
@@ -76,16 +76,16 @@ fn bench_device_serialization(c: &mut Criterion) {
     let encoded = device.encode_to_vec();
     group.bench_function("protobuf_decode", |b| {
         b.iter(|| {
-            let decoded = Device::decode(black_box(&encoded[..])).unwrap();
-            black_box(decoded);
+            let decoded = Device::decode(std::hint::black_box(&encoded[..])).unwrap();
+            std::hint::black_box(decoded);
         });
     });
     
     // Benchmark JSON serialization
     group.bench_function("json_encode", |b| {
         b.iter(|| {
-            let json = serde_json::to_string(black_box(&device)).unwrap();
-            black_box(json);
+            let json = serde_json::to_string(std::hint::black_box(&device)).unwrap();
+            std::hint::black_box(json);
         });
     });
     
@@ -93,8 +93,8 @@ fn bench_device_serialization(c: &mut Criterion) {
     let json = serde_json::to_string(&device).unwrap();
     group.bench_function("json_decode", |b| {
         b.iter(|| {
-            let decoded: Device = serde_json::from_str(black_box(&json)).unwrap();
-            black_box(decoded);
+            let decoded: Device = serde_json::from_str(std::hint::black_box(&json)).unwrap();
+            std::hint::black_box(decoded);
         });
     });
     
@@ -119,8 +119,8 @@ fn bench_device_list_serialization(c: &mut Criterion) {
     // Benchmark large device list encoding
     group.bench_function("protobuf_encode_100_devices", |b| {
         b.iter(|| {
-            let encoded = black_box(&response).encode_to_vec();
-            black_box(encoded);
+            let encoded = std::hint::black_box(&response).encode_to_vec();
+            std::hint::black_box(encoded);
         });
     });
     
@@ -128,8 +128,8 @@ fn bench_device_list_serialization(c: &mut Criterion) {
     let encoded = response.encode_to_vec();
     group.bench_function("protobuf_decode_100_devices", |b| {
         b.iter(|| {
-            let decoded = ListDevicesResponse::decode(black_box(&encoded[..])).unwrap();
-            black_box(decoded);
+            let decoded = ListDevicesResponse::decode(std::hint::black_box(&encoded[..])).unwrap();
+            std::hint::black_box(decoded);
         });
     });
     
@@ -161,7 +161,7 @@ fn bench_health_event_creation(c: &mut Criterion) {
                     memory_usage_bytes: 1024 * 1024 * 50, // 50MB
                 }),
             };
-            black_box(event);
+            std::hint::black_box(event);
         });
     });
 }

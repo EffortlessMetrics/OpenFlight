@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use flight_updater::delta::{DeltaApplier, DeltaOperation, DeltaPatch, FileDelta};
 use std::collections::HashMap;
 use tempfile::TempDir;
@@ -21,7 +21,7 @@ fn benchmark_delta_apply(c: &mut Criterion) {
                     source_hash: "source_hash".to_string(),
                     target_hash: "target_hash".to_string(),
                     operations: vec![DeltaOperation::Insert {
-                        data: black_box(b"small test content".to_vec()),
+                        data: std::hint::black_box(b"small test content".to_vec()),
                     }],
                     compression: "none".to_string(),
                 };
@@ -30,7 +30,7 @@ fn benchmark_delta_apply(c: &mut Criterion) {
                 
                 // Benchmark would apply patch here
                 // (simplified for benchmark purposes)
-                black_box(patch);
+                std::hint::black_box(patch);
             });
         });
     });
@@ -39,7 +39,7 @@ fn benchmark_delta_apply(c: &mut Criterion) {
         let data = vec![0u8; 1024]; // 1KB of zeros
         
         b.iter(|| {
-            let compressed = DeltaApplier::compress_patch_data(black_box(&data)).unwrap();
+            let compressed = DeltaApplier::compress_patch_data(std::hint::black_box(&data)).unwrap();
             let _decompressed = DeltaApplier::decompress_patch_data(&compressed).unwrap();
         });
     });

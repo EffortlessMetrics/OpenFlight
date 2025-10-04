@@ -137,9 +137,9 @@ fn test_zero_allocation_constraint() {
     };
     
     // Capture initial capacities
-    let initial_stack_cap = evaluator.stack.capacity();
-    let initial_actions_cap = evaluator.actions_buffer.capacity();
-    let initial_vars_cap = evaluator.variable_cache.capacity();
+    let initial_stack_cap = evaluator.stack().capacity();
+    let initial_actions_cap = evaluator.actions_buffer().capacity();
+    let initial_vars_cap = evaluator.variable_cache().capacity();
     
     let mut telemetry = HashMap::new();
     telemetry.insert("test_var".to_string(), 1.0);
@@ -150,7 +150,7 @@ fn test_zero_allocation_constraint() {
     }
     
     // Verify no capacity growth (indicating no allocations)
-    assert_eq!(evaluator.stack.capacity(), initial_stack_cap);
-    assert_eq!(evaluator.actions_buffer.capacity(), initial_actions_cap);
-    assert_eq!(evaluator.variable_cache.capacity(), initial_vars_cap);
+    assert_eq!(evaluator.stack().capacity(), initial_stack_cap);
+    assert_eq!(evaluator.actions_buffer().capacity(), initial_actions_cap);
+    assert_eq!(evaluator.variable_cache().capacity(), initial_vars_cap);
 }

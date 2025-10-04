@@ -35,7 +35,7 @@ struct BytecodeVM<'a> {
 
 /// Hysteresis state for a variable
 #[derive(Debug, Clone)]
-struct HysteresisState {
+pub(crate) struct HysteresisState {
     current_value: f32,
     threshold_value: f32,
     band: f32,
@@ -129,6 +129,30 @@ impl RulesEvaluator {
     /// Set minimum evaluation interval for rate limiting
     pub fn set_min_eval_interval(&mut self, interval: std::time::Duration) {
         self.min_eval_interval = interval;
+    }
+
+    /// Test-only accessor for the evaluation stack
+    #[cfg(any(test, feature = "test-helpers"))]
+    pub fn stack(&self) -> &Vec<f32> {
+        &self.stack
+    }
+
+    /// Test-only accessor for the variable cache
+    #[cfg(any(test, feature = "test-helpers"))]
+    pub fn variable_cache(&self) -> &Vec<f32> {
+        &self.variable_cache
+    }
+
+    /// Test-only accessor for the actions buffer
+    #[cfg(any(test, feature = "test-helpers"))]
+    pub fn actions_buffer(&self) -> &Vec<Action> {
+        &self.actions_buffer
+    }
+
+    /// Test-only accessor for the hysteresis state
+    #[cfg(any(test, feature = "test-helpers"))]
+    pub fn hysteresis_state(&self) -> &Vec<HysteresisState> {
+        &self.hysteresis_state
     }
 }
 
@@ -242,6 +266,8 @@ impl<'a> BytecodeVM<'a> {
         state.last_triggered = new_triggered;
         new_triggered
     }
+
+
 }
 
 impl Default for RulesEvaluator {

@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

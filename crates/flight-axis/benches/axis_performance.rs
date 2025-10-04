@@ -3,7 +3,7 @@
 //! Validates that the axis processing meets the strict timing requirements
 //! specified in the requirements (≤0.5ms p99 processing time).
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use flight_axis::{
     AxisEngine, AxisFrame, PipelineBuilder, DeadzoneNode, CurveNode, Node
 };
@@ -12,8 +12,8 @@ use std::time::Instant;
 fn bench_axis_frame_creation(c: &mut Criterion) {
     c.bench_function("axis_frame_creation", |b| {
         b.iter(|| {
-            let frame = AxisFrame::new(black_box(0.5), black_box(1000000));
-            black_box(frame)
+            let frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
+            std::hint::black_box(frame)
         })
     });
 }
@@ -23,9 +23,9 @@ fn bench_deadzone_processing(c: &mut Criterion) {
     
     c.bench_function("deadzone_processing", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(black_box(0.5), black_box(1000000));
+            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             node.step(&mut frame);
-            black_box(frame.out)
+            std::hint::black_box(frame.out)
         })
     });
 }
@@ -35,9 +35,9 @@ fn bench_curve_processing(c: &mut Criterion) {
     
     c.bench_function("curve_processing", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(black_box(0.5), black_box(1000000));
+            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             node.step(&mut frame);
-            black_box(frame.out)
+            std::hint::black_box(frame.out)
         })
     });
 }
@@ -47,9 +47,9 @@ fn bench_engine_processing(c: &mut Criterion) {
     
     c.bench_function("engine_processing_no_pipeline", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(black_box(0.5), black_box(1000000));
+            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             let result = engine.process(&mut frame);
-            black_box((result, frame.out))
+            std::hint::black_box((result, frame.out))
         })
     });
 }
@@ -58,11 +58,11 @@ fn bench_pipeline_compilation(c: &mut Criterion) {
     c.bench_function("pipeline_compilation", |b| {
         b.iter(|| {
             let pipeline = PipelineBuilder::new()
-                .deadzone(black_box(0.05))
-                .curve(black_box(0.2)).unwrap()
-                .slew(black_box(1.5))
+                .deadzone(std::hint::black_box(0.05))
+                .curve(std::hint::black_box(0.2)).unwrap()
+                .slew(std::hint::black_box(1.5))
                 .compile();
-            black_box(pipeline)
+            std::hint::black_box(pipeline)
         })
     });
 }
@@ -87,7 +87,7 @@ fn bench_multi_node_pipeline(c: &mut Criterion) {
                 }
                 
                 b.iter(|| {
-                    let mut frame = AxisFrame::new(black_box(0.5), black_box(1000000));
+                    let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
                     
                     for node in &mut deadzone_nodes {
                         node.step(&mut frame);
@@ -97,7 +97,7 @@ fn bench_multi_node_pipeline(c: &mut Criterion) {
                         node.step(&mut frame);
                     }
                     
-                    black_box(frame.out)
+                    std::hint::black_box(frame.out)
                 })
             },
         );
@@ -115,12 +115,12 @@ fn bench_250hz_simulation(c: &mut Criterion) {
             
             for i in 0..1000 {
                 let mut frame = AxisFrame::new(
-                    black_box((i as f32) / 1000.0),
-                    black_box(start_time + i * frame_interval)
+                    std::hint::black_box((i as f32) / 1000.0),
+                    std::hint::black_box(start_time + i * frame_interval)
                 );
                 
                 let _result = engine.process(&mut frame);
-                black_box(frame.out);
+                std::hint::black_box(frame.out);
             }
         })
     });
@@ -135,8 +135,8 @@ fn bench_rt_timing_validation(c: &mut Criterion) {
             
             for i in 0..iters {
                 let mut frame = AxisFrame::new(
-                    black_box((i as f32) / (iters as f32)),
-                    black_box(1000000 + i * 4000) // 250Hz intervals
+                    std::hint::black_box((i as f32) / (iters as f32)),
+                    std::hint::black_box(1000000 + i * 4000) // 250Hz intervals
                 );
                 
                 let start = Instant::now();
@@ -144,7 +144,7 @@ fn bench_rt_timing_validation(c: &mut Criterion) {
                 let elapsed = start.elapsed();
                 
                 total_time += elapsed;
-                black_box(frame.out);
+                std::hint::black_box(frame.out);
                 
                 // Validate RT constraint: each frame should be < 500μs
                 // Note: This is a very strict test - in practice, occasional spikes

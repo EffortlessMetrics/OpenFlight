@@ -1,6 +1,6 @@
 //! Performance benchmarks for replay harness
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::runtime::Runtime;
@@ -56,23 +56,25 @@ fn bench_replay_modes(c: &mut Criterion) {
             BenchmarkId::new("fast_forward", frame_count),
             &frame_count,
             |b, _| {
-                b.to_async(&rt).iter(|| async {
-                    let config = ReplayConfig {
-                        mode: ReplayMode::FastForward,
-                        max_duration: Duration::from_secs(30),
-                        validate_outputs: false,
-                        collect_metrics: true,
-                        ..Default::default()
-                    };
-                    
-                    let mut harness = ReplayHarness::new(config).unwrap();
-                    
-                    // Add test device
-                    let axis_config = AxisEngineConfig::default();
-                    harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-                    
-                    let result = harness.replay_file(&filepath).await.unwrap();
-                    black_box(result);
+                b.iter(|| {
+                    rt.block_on(async {
+                        let config = ReplayConfig {
+                            mode: ReplayMode::FastForward,
+                            max_duration: Duration::from_secs(30),
+                            validate_outputs: false,
+                            collect_metrics: true,
+                            ..Default::default()
+                        };
+                        
+                        let mut harness = ReplayHarness::new(config).unwrap();
+                        
+                        // Add test device
+                        let axis_config = AxisEngineConfig::default();
+                        harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                        
+                        let result = harness.replay_file(&filepath).await.unwrap();
+                        std::hint::black_box(result);
+                    })
                 });
             },
         );
@@ -82,24 +84,26 @@ fn bench_replay_modes(c: &mut Criterion) {
             BenchmarkId::new("fast_forward_with_validation", frame_count),
             &frame_count,
             |b, _| {
-                b.to_async(&rt).iter(|| async {
-                    let config = ReplayConfig {
-                        mode: ReplayMode::FastForward,
-                        max_duration: Duration::from_secs(30),
-                        validate_outputs: true,
-                        tolerance: ToleranceConfig::strict(),
-                        collect_metrics: true,
-                        ..Default::default()
-                    };
-                    
-                    let mut harness = ReplayHarness::new(config).unwrap();
-                    
-                    // Add test device
-                    let axis_config = AxisEngineConfig::default();
-                    harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-                    
-                    let result = harness.replay_file(&filepath).await.unwrap();
-                    black_box(result);
+                b.iter(|| {
+                    rt.block_on(async {
+                        let config = ReplayConfig {
+                            mode: ReplayMode::FastForward,
+                            max_duration: Duration::from_secs(30),
+                            validate_outputs: true,
+                            tolerance: ToleranceConfig::strict(),
+                            collect_metrics: true,
+                            ..Default::default()
+                        };
+                        
+                        let mut harness = ReplayHarness::new(config).unwrap();
+                        
+                        // Add test device
+                        let axis_config = AxisEngineConfig::default();
+                        harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                        
+                        let result = harness.replay_file(&filepath).await.unwrap();
+                        std::hint::black_box(result);
+                    })
                 });
             },
         );
@@ -116,43 +120,47 @@ fn bench_tolerance_configurations(c: &mut Criterion) {
     
     // Benchmark strict tolerance
     group.bench_function("strict_tolerance", |b| {
-        b.to_async(&rt).iter(|| async {
-            let config = ReplayConfig {
-                mode: ReplayMode::FastForward,
-                max_duration: Duration::from_secs(30),
-                validate_outputs: true,
-                tolerance: ToleranceConfig::strict(),
-                collect_metrics: true,
-                ..Default::default()
-            };
-            
-            let mut harness = ReplayHarness::new(config).unwrap();
-            let axis_config = AxisEngineConfig::default();
-            harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-            
-            let result = harness.replay_file(&filepath).await.unwrap();
-            black_box(result);
+        b.iter(|| {
+            rt.block_on(async {
+                let config = ReplayConfig {
+                    mode: ReplayMode::FastForward,
+                    max_duration: Duration::from_secs(30),
+                    validate_outputs: true,
+                    tolerance: ToleranceConfig::strict(),
+                    collect_metrics: true,
+                    ..Default::default()
+                };
+                
+                let mut harness = ReplayHarness::new(config).unwrap();
+                let axis_config = AxisEngineConfig::default();
+                harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                
+                let result = harness.replay_file(&filepath).await.unwrap();
+                std::hint::black_box(result);
+            })
         });
     });
     
     // Benchmark relaxed tolerance
     group.bench_function("relaxed_tolerance", |b| {
-        b.to_async(&rt).iter(|| async {
-            let config = ReplayConfig {
-                mode: ReplayMode::FastForward,
-                max_duration: Duration::from_secs(30),
-                validate_outputs: true,
-                tolerance: ToleranceConfig::relaxed(),
-                collect_metrics: true,
-                ..Default::default()
-            };
-            
-            let mut harness = ReplayHarness::new(config).unwrap();
-            let axis_config = AxisEngineConfig::default();
-            harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-            
-            let result = harness.replay_file(&filepath).await.unwrap();
-            black_box(result);
+        b.iter(|| {
+            rt.block_on(async {
+                let config = ReplayConfig {
+                    mode: ReplayMode::FastForward,
+                    max_duration: Duration::from_secs(30),
+                    validate_outputs: true,
+                    tolerance: ToleranceConfig::relaxed(),
+                    collect_metrics: true,
+                    ..Default::default()
+                };
+                
+                let mut harness = ReplayHarness::new(config).unwrap();
+                let axis_config = AxisEngineConfig::default();
+                harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                
+                let result = harness.replay_file(&filepath).await.unwrap();
+                std::hint::black_box(result);
+            })
         });
     });
     
@@ -167,51 +175,55 @@ fn bench_engine_configurations(c: &mut Criterion) {
     
     // Benchmark axis-only configuration
     group.bench_function("axis_only", |b| {
-        b.to_async(&rt).iter(|| async {
-            let config = ReplayConfig {
-                mode: ReplayMode::FastForward,
-                max_duration: Duration::from_secs(30),
-                validate_outputs: false,
-                collect_metrics: true,
-                ..Default::default()
-            };
-            
-            let mut harness = ReplayHarness::new(config).unwrap();
-            let axis_config = AxisEngineConfig::default();
-            harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-            
-            let result = harness.replay_file(&filepath).await.unwrap();
-            black_box(result);
+        b.iter(|| {
+            rt.block_on(async {
+                let config = ReplayConfig {
+                    mode: ReplayMode::FastForward,
+                    max_duration: Duration::from_secs(30),
+                    validate_outputs: false,
+                    collect_metrics: true,
+                    ..Default::default()
+                };
+                
+                let mut harness = ReplayHarness::new(config).unwrap();
+                let axis_config = AxisEngineConfig::default();
+                harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                
+                let result = harness.replay_file(&filepath).await.unwrap();
+                std::hint::black_box(result);
+            })
         });
     });
     
     // Benchmark axis + FFB configuration
     group.bench_function("axis_and_ffb", |b| {
-        b.to_async(&rt).iter(|| async {
-            let config = ReplayConfig {
-                mode: ReplayMode::FastForward,
-                max_duration: Duration::from_secs(30),
-                validate_outputs: false,
-                collect_metrics: true,
-                ..Default::default()
-            };
-            
-            let mut harness = ReplayHarness::new(config).unwrap();
-            
-            let axis_config = AxisEngineConfig::default();
-            harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
-            
-            let ffb_config = FfbConfig {
-                max_torque_nm: 15.0,
-                fault_timeout_ms: 50,
-                interlock_required: false,
-                mode: FfbMode::TelemetrySynth,
-                device_path: None,
-            };
-            harness.add_ffb_device("bench_ffb".to_string(), ffb_config).unwrap();
-            
-            let result = harness.replay_file(&filepath).await.unwrap();
-            black_box(result);
+        b.iter(|| {
+            rt.block_on(async {
+                let config = ReplayConfig {
+                    mode: ReplayMode::FastForward,
+                    max_duration: Duration::from_secs(30),
+                    validate_outputs: false,
+                    collect_metrics: true,
+                    ..Default::default()
+                };
+                
+                let mut harness = ReplayHarness::new(config).unwrap();
+                
+                let axis_config = AxisEngineConfig::default();
+                harness.add_axis_device("bench_device".to_string(), axis_config).unwrap();
+                
+                let ffb_config = FfbConfig {
+                    max_torque_nm: 15.0,
+                    fault_timeout_ms: 50,
+                    interlock_required: false,
+                    mode: FfbMode::TelemetrySynth,
+                    device_path: None,
+                };
+                harness.add_ffb_device("bench_ffb".to_string(), ffb_config).unwrap();
+                
+                let result = harness.replay_file(&filepath).await.unwrap();
+                std::hint::black_box(result);
+            })
         });
     });
     

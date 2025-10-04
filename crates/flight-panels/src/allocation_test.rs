@@ -35,11 +35,11 @@ mod tests {
     unsafe impl GlobalAlloc for TrackingAllocator {
         unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
             self.allocation_count.fetch_add(1, Ordering::SeqCst);
-            System.alloc(layout)
+            unsafe { System.alloc(layout) }
         }
 
         unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-            System.dealloc(ptr, layout)
+            unsafe { System.dealloc(ptr, layout) }
         }
     }
 
@@ -73,9 +73,9 @@ mod tests {
         evaluator.set_min_eval_interval(std::time::Duration::from_millis(0));
 
         // Capture initial capacities
-        let initial_stack_capacity = evaluator.stack.capacity();
-        let initial_actions_capacity = evaluator.actions_buffer.capacity();
-        let initial_variable_capacity = evaluator.variable_cache.capacity();
+        let initial_stack_capacity = evaluator.stack().capacity();
+        let initial_actions_capacity = evaluator.actions_buffer().capacity();
+        let initial_variable_capacity = evaluator.variable_cache().capacity();
 
         let mut telemetry = HashMap::new();
         telemetry.insert("gear_down".to_string(), 1.0);
@@ -88,9 +88,9 @@ mod tests {
         }
 
         // Verify capacities haven't grown (indicating no allocations)
-        assert_eq!(evaluator.stack.capacity(), initial_stack_capacity);
-        assert_eq!(evaluator.actions_buffer.capacity(), initial_actions_capacity);
-        assert_eq!(evaluator.variable_cache.capacity(), initial_variable_capacity);
+        assert_eq!(evaluator.stack().capacity(), initial_stack_capacity);
+        assert_eq!(evaluator.actions_buffer().capacity(), initial_actions_capacity);
+        assert_eq!(evaluator.variable_cache().capacity(), initial_variable_capacity);
     }
 
     #[test]
@@ -126,7 +126,7 @@ mod tests {
         evaluator.set_min_eval_interval(std::time::Duration::from_millis(0));
 
         // Capture initial hysteresis state capacity
-        let initial_hyst_len = evaluator.hysteresis_state.len();
+        let initial_hyst_len = evaluator.hysteresis_state().len();
 
         let mut telemetry = HashMap::new();
         
@@ -142,7 +142,7 @@ mod tests {
         }
 
         // Verify hysteresis state hasn't grown
-        assert_eq!(evaluator.hysteresis_state.len(), initial_hyst_len);
+        assert_eq!(evaluator.hysteresis_state().len(), initial_hyst_len);
     }
 
     #[test]
@@ -182,10 +182,10 @@ mod tests {
         evaluator.set_min_eval_interval(std::time::Duration::from_millis(0));
 
         // Capture all initial capacities
-        let initial_stack_cap = evaluator.stack.capacity();
-        let initial_actions_cap = evaluator.actions_buffer.capacity();
-        let initial_vars_cap = evaluator.variable_cache.capacity();
-        let initial_hyst_len = evaluator.hysteresis_state.len();
+        let initial_stack_cap = evaluator.stack().capacity();
+        let initial_actions_cap = evaluator.actions_buffer().capacity();
+        let initial_vars_cap = evaluator.variable_cache().capacity();
+        let initial_hyst_len = evaluator.hysteresis_state().len();
 
         let mut telemetry = HashMap::new();
         
@@ -202,10 +202,10 @@ mod tests {
         }
 
         // Verify no capacity growth
-        assert_eq!(evaluator.stack.capacity(), initial_stack_cap);
-        assert_eq!(evaluator.actions_buffer.capacity(), initial_actions_cap);
-        assert_eq!(evaluator.variable_cache.capacity(), initial_vars_cap);
-        assert_eq!(evaluator.hysteresis_state.len(), initial_hyst_len);
+        assert_eq!(evaluator.stack().capacity(), initial_stack_cap);
+        assert_eq!(evaluator.actions_buffer().capacity(), initial_actions_cap);
+        assert_eq!(evaluator.variable_cache().capacity(), initial_vars_cap);
+        assert_eq!(evaluator.hysteresis_state().len(), initial_hyst_len);
     }
 
     #[test]

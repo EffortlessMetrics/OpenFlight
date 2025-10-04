@@ -233,12 +233,18 @@
   - _Requirements: BC-08.1, BC-08.2, BC-08.3, BC-08.4, BC-08.6_
 
 - [ ] 5. Phase 5: Quality & Cleanup
+
+
+
+
   - Fix test and benchmark infrastructure
   - Suppress FFI warnings appropriately
   - Add regression prevention measures
   - _Requirements: BC-09, BC-10_
 
-- [ ] 5.1 Update Criterion benchmark infrastructure
+- [x] 5.1 Update Criterion benchmark infrastructure
+
+
   - Upgrade to `criterion = "0.5"` in dev-dependencies
   - Use `b.to_async(&rt).iter()` pattern for async benchmarks
   - Set `harness = false` in `[[bench]]` sections of Cargo.toml
@@ -248,7 +254,9 @@
   - Verify: `git grep -n "criterion::black_box" | wc -l` returns 0
   - _Requirements: BC-09.2, BC-09.3, BC-09.7_
 
-- [ ] 5.2 Implement test-only field accessors
+- [x] 5.2 Implement test-only field accessors
+
+
   - Add `#[cfg(any(test, feature = "test-helpers"))]` accessors for private fields in flight-panels
   - Create `pub(crate)` getter methods for `stack`, `variable_cache`, `actions_buffer` in RulesEvaluator
   - Add optional `test-helpers` feature to enable downstream integration test support
@@ -257,7 +265,9 @@
   - Verify: `cargo test -p flight-panels --features test-helpers` if downstream support needed
   - _Requirements: BC-09.1, BC-09.5, BC-09.6_
 
-- [ ] 5.3 Fix unsafe operation wrapping
+- [x] 5.3 Fix unsafe operation wrapping
+
+
   - Wrap `GlobalAlloc::alloc` and `dealloc` calls in `unsafe {}` blocks in allocation tests
   - Target specific files: allocation_test.rs and similar test files with unsafe intrinsics
   - Ensure all unsafe operations are properly contained within unsafe blocks
@@ -265,7 +275,12 @@
   - Verify: `cargo test --workspace` passes without unsafe operation warnings
   - _Requirements: BC-09.4_
 
-- [ ] 5.4 Suppress FFI warnings in sys crates
+- [-] 5.4 Suppress FFI warnings in sys crates
+
+
+
+
+
   - Add `#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]` at crate root
   - Apply to flight-simconnect-sys/src/lib.rs and other FFI binding crates
   - Disable style lints in build-generated modules if bindgen emits submodules
@@ -275,6 +290,7 @@
   - _Requirements: BC-10.1, BC-10.2, BC-10.3, BC-10.6_
 
 - [ ] 5.5 Add regression prevention measures
+
   - Add workspace dependency version alignment task (tonic/tonic-build, tokio, futures versions)
   - Implement feature powerset testing: `cargo hack check --workspace --feature-powerset --depth 2`
   - Add clippy enforcement: `cargo clippy --workspace -- -D warnings` for core crates
