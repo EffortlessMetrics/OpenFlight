@@ -13,6 +13,7 @@ use tracing::{debug, warn, info};
 
 /// Configuration for curve conflict detection
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConflictDetectorConfig {
     /// Number of test points to use for linearity analysis
     pub test_points: usize,

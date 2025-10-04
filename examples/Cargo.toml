@@ -70,7 +70,7 @@ replay = ["flight-replay", "tokio", "tracing"]
 simconnect = ["flight-simconnect", "tokio", "tracing"]
 panels = ["flight-panels", "tokio", "tracing"]
 streamdeck = ["flight-streamdeck", "tokio", "tracing"]
-integration = ["axis", "replay", "simconnect", "panels", "streamdeck"]
+integration = ["axis", "replay", "simconnect", "panels", "streamdeck", "flight-bus", "tempfile", "tracing-subscriber"]
 
 [dependencies]
 # Core always available

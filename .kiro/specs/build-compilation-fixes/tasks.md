@@ -118,6 +118,8 @@
 
 
 
+
+
   - Fix gRPC module paths and stream type definitions
   - Create feature-isolated examples package
   - Update configuration struct field names
@@ -157,7 +159,10 @@
   - Verify: `cargo tree -p openflight-examples | grep windows` empty on non-Windows runners
   - _Requirements: BC-06.1, BC-06.5, BC-06.6, BC-06.7_
 
-- [ ] 3.4 Update configuration struct field names
+- [x] 3.4 Update configuration struct field names
+
+
+
 
 
   - Change BlackboxConfig `output_path` to `output_dir: PathBuf`
