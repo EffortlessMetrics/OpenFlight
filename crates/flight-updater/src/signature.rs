@@ -3,10 +3,11 @@
 
 //! Digital signature verification for updates
 
-use ed25519_dalek::{PublicKey, Signature, Verifier};
+use ed25519_dalek::{VerifyingKey, Signature, Verifier};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
+use anyhow::anyhow;
 
 /// Update signature containing the signature and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,10 +47,50 @@ impl UpdateSignature {
 /// Signature verifier for update packages
 #[derive(Debug)]
 pub struct SignatureVerifier {
-    public_key: PublicKey,
+    verifying_key: VerifyingKey,
 }
 
 impl SignatureVerifier {
+    /// Helper function to verify signature with proper length checks
+    pub fn verify_signature_bytes(
+        verifying_key: &VerifyingKey,
+        message: &[u8],
+        signature_bytes: &[u8],
+    ) -> crate::Result<bool> {
+        // Convert Vec<u8> to [u8; 64] with proper error handling
+        let sig_array: [u8; 64] = signature_bytes.try_into()
+            .map_err(|_| crate::UpdateError::InvalidSignature(
+                anyhow!("Invalid signature length").to_string()
+            ))?;
+        
+        // Handle Signature::from_bytes conversion
+        let signature = Signature::from_bytes(&sig_array);
+        
+        // Verify signature
+        match verifying_key.verify(message, &signature) {
+            Ok(()) => Ok(true),
+            Err(e) => {
+                tracing::warn!("Signature verification failed: {}", e);
+                Ok(false)
+            }
+        }
+    }
+    
+    /// Helper function to create VerifyingKey from bytes with proper length checks
+    pub fn verifying_key_from_bytes(key_bytes: &[u8]) -> crate::Result<VerifyingKey> {
+        // Convert Vec<u8> to [u8; 32] with proper error handling
+        let key_array: [u8; 32] = key_bytes.try_into()
+            .map_err(|_| crate::UpdateError::InvalidSignature(
+                anyhow!("Invalid public key length").to_string()
+            ))?;
+        
+        // Handle VerifyingKey::from_bytes conversion
+        VerifyingKey::from_bytes(&key_array)
+            .map_err(|e| crate::UpdateError::InvalidSignature(
+                format!("Invalid public key: {}", e)
+            ))
+    }
+
     /// Create a new signature verifier with the given public key
     pub fn new(public_key_hex: &str) -> crate::Result<Self> {
         let key_bytes = hex::decode(public_key_hex)
@@ -57,12 +98,9 @@ impl SignatureVerifier {
                 format!("Invalid public key hex: {}", e)
             ))?;
         
-        let public_key = PublicKey::from_bytes(&key_bytes)
-            .map_err(|e| crate::UpdateError::InvalidSignature(
-                format!("Invalid public key: {}", e)
-            ))?;
+        let verifying_key = Self::verifying_key_from_bytes(&key_bytes)?;
         
-        Ok(Self { public_key })
+        Ok(Self { verifying_key })
     }
     
     /// Verify a signature against file content
@@ -107,22 +145,14 @@ impl SignatureVerifier {
                 format!("Invalid signature hex: {}", e)
             ))?;
         
-        let sig = Signature::from_bytes(&sig_bytes)
-            .map_err(|e| crate::UpdateError::InvalidSignature(
-                format!("Invalid signature format: {}", e)
-            ))?;
+        // Use helper function for verification
+        let result = Self::verify_signature_bytes(&self.verifying_key, content, &sig_bytes)?;
         
-        // Verify signature
-        match self.public_key.verify(content, &sig) {
-            Ok(()) => {
-                tracing::info!("Signature verification successful for signer: {}", signature.signer);
-                Ok(true)
-            }
-            Err(e) => {
-                tracing::warn!("Signature verification failed: {}", e);
-                Ok(false)
-            }
+        if result {
+            tracing::info!("Signature verification successful for signer: {}", signature.signer);
         }
+        
+        Ok(result)
     }
     
     /// Hash content using SHA256
@@ -223,24 +253,24 @@ impl Default for SignatureManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{Keypair, Signer};
-    use rand::rngs::OsRng;
+    use ed25519_dalek::{SigningKey, Signer};
+    use rand_core::OsRng;
 
     #[tokio::test]
     async fn test_signature_verification() {
-        // Generate a test keypair
-        let mut csprng = OsRng {};
-        let keypair = Keypair::generate(&mut csprng);
+        // Generate a test signing key
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
         
         // Create test content
         let content = b"test update content";
         
         // Sign the content
-        let signature_bytes = keypair.sign(content);
+        let signature_bytes = signing_key.sign(content);
         let signature_hex = hex::encode(signature_bytes.to_bytes());
         
         // Create verifier
-        let public_key_hex = hex::encode(keypair.public.to_bytes());
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
         let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
         
         // Create signature

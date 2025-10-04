@@ -1,6 +1,6 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Use prost-build to generate protobuf types
-    // We'll manually implement gRPC service traits
+    // Use prost-build to generate protobuf types only
+    // We'll manually implement the gRPC service traits for now
     prost_build::compile_protos(&["proto/flight.v1.proto"], &["proto"])?;
     
     // Generate version info for breaking change detection

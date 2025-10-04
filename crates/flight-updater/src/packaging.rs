@@ -246,7 +246,7 @@ impl SystemdPackageBuilder {
         // Include integration documentation
         if self.config.include_integration_docs {
             if let Some(docs_manager) = &mut self.docs_manager {
-                self.include_integration_docs(&docs_dir, docs_manager).await?;
+                Self::include_integration_docs_for_systemd(&docs_dir, docs_manager).await?;
             }
         }
 
@@ -292,7 +292,7 @@ WantedBy=default.target
         Ok(())
     }
 
-    async fn include_integration_docs(&self, docs_dir: &Path, docs_manager: &mut IntegrationDocsManager) -> crate::Result<()> {
+    async fn include_integration_docs_for_systemd(docs_dir: &Path, docs_manager: &mut IntegrationDocsManager) -> crate::Result<()> {
         // Load all documentation
         docs_manager.load_all_docs().await?;
 

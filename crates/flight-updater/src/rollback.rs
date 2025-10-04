@@ -141,8 +141,8 @@ impl RollbackManager {
             ));
         }
         
-        let current = &self.version_history[0];
-        let previous = &self.version_history[1];
+        let current = self.version_history[0].clone();
+        let previous = self.version_history[1].clone();
         
         tracing::warn!(
             "Rolling back from version {} to {}",
@@ -151,7 +151,7 @@ impl RollbackManager {
         );
         
         // Restore from backup
-        self.restore_from_backup(previous).await?;
+        self.restore_from_backup(&previous).await?;
         
         // Update current version
         self.current_version = Some(previous.clone());
@@ -160,7 +160,7 @@ impl RollbackManager {
         self.version_history.remove(0);
         self.save_version_history().await?;
         
-        Ok(previous.clone())
+        Ok(previous)
     }
     
     /// Check if rollback is needed based on startup crash detection

@@ -139,8 +139,9 @@ mod fd_usage_examples {
         // This test documents the correct way to use file descriptors in IPC
         // and serves as a reference for developers
     }
-}#[c
-fg(all(test, windows))]
+}
+
+#[cfg(all(test, windows))]
 mod windows_tests {
     #[cfg(windows)]
     use std::os::windows::io::{AsRawHandle, BorrowedHandle, OwnedHandle};

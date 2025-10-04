@@ -8,11 +8,13 @@
 
 use crate::{CurveConflict, ConflictType, ConflictSeverity};
 use std::time::{SystemTime, UNIX_EPOCH, Instant};
+#[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 use tracing::{info, warn, debug};
 
 /// Blackbox event types for curve conflicts
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum BlackboxEvent {
     /// Curve conflict detected
     ConflictDetected {
@@ -60,7 +62,8 @@ pub enum BlackboxEvent {
 }
 
 /// Serializable conflict data for blackbox
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ConflictData {
     pub conflict_type: String,
     pub severity: String,
@@ -74,7 +77,8 @@ pub struct ConflictData {
 }
 
 /// Resolution details for blackbox
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ResolutionDetails {
     pub resolution_type: String,
     pub parameters: std::collections::HashMap<String, String>,

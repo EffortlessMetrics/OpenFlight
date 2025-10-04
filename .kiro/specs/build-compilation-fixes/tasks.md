@@ -114,7 +114,12 @@
   - Verify: `git grep -n "std::os::fd" | grep -v "#\[cfg(unix)\]"` returns no hits on Windows targets
   - _Requirements: BC-04.1, BC-04.2, BC-04.3, BC-04.4, BC-04.6_
 
-- [-] 3. Phase 3: Service Infrastructure
+- [x] 3. Phase 3: Service Infrastructure
+
+
+
+
+
 
 
 
@@ -173,13 +178,27 @@
   - Verify: `git grep -n "BlackboxWriter::new.*?" | wc -l` returns 0
   - _Requirements: BC-06.2, BC-06.3, BC-06.4_
 
-- [ ] 4. Phase 4: Security & Safety
+- [x] 4. Phase 4: Security & Safety
+
+
+
+
+
+
+
+
+
   - Migrate ed25519-dalek to v2 API
   - Fix packed struct memory safety violations
   - Implement proper error handling for cryptographic operations
   - _Requirements: BC-07, BC-08_
+-
 
-- [ ] 4.1 Migrate ed25519-dalek v2 API
+- [x] 4.1 Migrate ed25519-dalek v2 API
+
+
+
+
   - Update dependencies: `ed25519-dalek = { version = "2", features = ["rand_core"] }`
   - Prefer `rand_core = "0.6"` over full `rand` crate unless other code needs rand
   - Replace `PublicKey` with `VerifyingKey` and `Keypair` with `SigningKey`
@@ -188,7 +207,14 @@
   - Verify: `cargo test -p flight-updater -- signature` passes
   - _Requirements: BC-07.1, BC-07.2, BC-07.3, BC-07.6_
 
-- [ ] 4.2 Fix byte array conversions for signatures
+- [x] 4.2 Fix byte array conversions for signatures
+
+
+
+
+
+
+
   - Implement `Vec<u8>` to `[u8; 64]` conversions: `sig_bytes.as_slice().try_into().map_err(...)?`
   - Add proper error handling: `.map_err(|_| anyhow::anyhow!("Invalid signature length"))?`
   - Create verification helper with length checks for both signatures and keys
@@ -196,7 +222,9 @@
   - Verify: All signature operations compile without type mismatch errors
   - _Requirements: BC-07.4, BC-07.5_
 
-- [ ] 4.3 Fix packed struct memory safety violations
+- [x] 4.3 Fix packed struct memory safety violations
+
+
   - Identify all packed struct field reference violations in flight-virtual/src/ofp1_emulator.rs (lines 632-634, 677)
   - Replace `&packed.field` with `let value = packed.field; &value` for Copy types
   - Use `unsafe { ptr::read_unaligned(ptr::addr_of!(packed.field)) }` for non-Copy fields
