@@ -275,7 +275,9 @@
   - Verify: `cargo test --workspace` passes without unsafe operation warnings
   - _Requirements: BC-09.4_
 
-- [-] 5.4 Suppress FFI warnings in sys crates
+- [x] 5.4 Suppress FFI warnings in sys crates
+
+
 
 
 
@@ -288,8 +290,10 @@
   - Verify: `cargo clippy -p flight-simconnect-sys` shows no style flood
   - Verify: `cargo clippy -p flight-simconnect -- -D warnings` passes after sys crate allows
   - _Requirements: BC-10.1, BC-10.2, BC-10.3, BC-10.6_
+-
 
-- [ ] 5.5 Add regression prevention measures
+- [-] 5.5 Add regression prevention measures
+
 
   - Add workspace dependency version alignment task (tonic/tonic-build, tokio, futures versions)
   - Implement feature powerset testing: `cargo hack check --workspace --feature-powerset --depth 2`

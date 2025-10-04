@@ -37,8 +37,8 @@ tracing = { workspace = true }
 semver = "1.0"
 
 # Async utilities
-futures = "0.3"
-tokio-util = "0.7"
+futures = { workspace = true }
+tokio-util = { workspace = true }
 
 # UUID generation
 uuid = { version = "1.6", features = ["v4", "serde"] }

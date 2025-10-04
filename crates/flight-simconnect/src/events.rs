@@ -9,6 +9,7 @@
 use flight_simconnect_sys::{
     constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_EVENTID,
 };
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;

@@ -23,7 +23,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 crossbeam = { workspace = true }
 regex = "1.10"
-futures = "0.3"
+futures = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62", features = [

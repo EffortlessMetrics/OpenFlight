@@ -40,13 +40,18 @@ jobs:
     - name: Run clippy (general - warnings allowed for dev ergonomics)
       run: cargo clippy --all-targets --all-features
       
-    - name: Run clippy with strict warnings for public API crates only
+    - name: Run clippy with strict warnings for core crates
       run: |
-        echo "🔍 Running strict clippy checks for public API crates..."
-        # Apply strict warnings only to public API crates (flight-hid, flight-ipc, flight-service)
+        echo "🔍 Running strict clippy checks for core crates..."
+        # Apply strict warnings to core crates that must maintain high quality
+        cargo clippy -p flight-core --lib --tests -- -D warnings
+        cargo clippy -p flight-axis --lib --tests -- -D warnings
+        cargo clippy -p flight-bus --lib --tests -- -D warnings
         cargo clippy -p flight-hid --lib --tests -- -D warnings
         cargo clippy -p flight-ipc --lib --tests -- -D warnings
         cargo clippy -p flight-service --lib --tests -- -D warnings
+        cargo clippy -p flight-simconnect --lib --tests -- -D warnings
+        cargo clippy -p flight-panels --lib --tests -- -D warnings
         
     - name: Run file descriptor safety tests for public API crates
       run: |
@@ -56,6 +61,36 @@ jobs:
         cargo test -p flight-ipc fd_safety_tests
         cargo test -p flight-service fd_safety_tests
       
+    - name: Verify critical patterns are fixed
+      run: |
+        echo "🔍 Verifying critical patterns are fixed..."
+        
+        # Check Profile::merge is replaced with Profile::merge_with
+        if git grep -n "Profile::merge(" | grep -v "Profile::merge_with"; then
+          echo "❌ Found Profile::merge( calls - should be Profile::merge_with"
+          exit 1
+        fi
+        
+        # Check BlackboxWriter::new doesn't have ? operator inappropriately
+        if git grep -n "BlackboxWriter::new.*?"; then
+          echo "❌ Found BlackboxWriter::new with ? operator"
+          exit 1
+        fi
+        
+        # Check Engine::new has correct signature (2 arguments)
+        if git grep -n "Engine::new(" | grep -v ","; then
+          echo "❌ Found Engine::new with incorrect signature"
+          exit 1
+        fi
+        
+        # Check for criterion::black_box usage
+        if git grep -n "criterion::black_box"; then
+          echo "❌ Found criterion::black_box - should be std::hint::black_box"
+          exit 1
+        fi
+        
+        echo "✅ All critical patterns verified"
+        
     - name: Run tests
       run: cargo test --all-features --workspace
       
@@ -182,6 +217,53 @@ jobs:
         path: |
           target/release/flightd*
           target/release/flightctl*
+
+  feature-powerset:
+    name: Feature Powerset Testing
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      
+    - name: Install cargo-hack
+      run: cargo install cargo-hack
+      
+    - name: Run feature powerset testing
+      run: |
+        echo "🔍 Running feature powerset testing with depth 2..."
+        cargo hack check --workspace --feature-powerset --depth 2
+        
+    - name: Verify workspace dependency alignment
+      run: |
+        echo "🔍 Verifying workspace dependency alignment..."
+        
+        # Check that all crates use workspace dependencies for common crates
+        echo "Checking tokio dependencies..."
+        if grep -r "tokio.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"; then
+          echo "❌ Found non-workspace tokio dependencies"
+          exit 1
+        fi
+        
+        echo "Checking futures dependencies..."
+        if grep -r "futures.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"; then
+          echo "❌ Found non-workspace futures dependencies"
+          exit 1
+        fi
+        
+        echo "Checking tonic/tonic-build version alignment..."
+        tonic_versions=$(grep -r "tonic.*=" Cargo.toml crates/*/Cargo.toml | grep version | awk -F'"' '{print $2}' | sort -u)
+        if [ $(echo "$tonic_versions" | wc -l) -gt 1 ]; then
+          echo "❌ Found misaligned tonic versions: $tonic_versions"
+          exit 1
+        fi
+        
+        echo "✅ Workspace dependency alignment verified"
 
   performance:
     name: Performance Tests

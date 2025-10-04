@@ -82,6 +82,12 @@ proptest = "1.4"
 tempfile = "3.8"
 clap = { version = "4.4", default-features = false, features = ["std", "derive"] }
 
+# Async and futures ecosystem - aligned versions
+futures = "0.3"
+futures-core = "0.3"
+tokio-stream = "0.1"
+tokio-util = "0.7"
+
 cc = "1.0"
 
 

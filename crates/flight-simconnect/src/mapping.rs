@@ -16,6 +16,7 @@ use flight_simconnect_sys::{
     constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE,
     SIMCONNECT_PERIOD, SIMCONNECT_REQUESTID,
 };
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::c_void;

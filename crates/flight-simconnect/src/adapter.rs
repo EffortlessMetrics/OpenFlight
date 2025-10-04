@@ -14,6 +14,7 @@ use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSessio
 use flight_bus::adapters::SimAdapter;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, BusTypeError, SimId};
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
