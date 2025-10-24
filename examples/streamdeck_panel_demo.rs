@@ -18,10 +18,11 @@ use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::sleep;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
-    tracing_subscriber::fmt::init();
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
     
     println!("=== Flight Hub StreamDeck Panel Demo ===\n");
 
@@ -47,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_device_discovery() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_device_discovery() -> anyhow::Result<()> {
     println!("1. Device Discovery and Connection");
     println!("---------------------------------");
 
@@ -98,7 +99,7 @@ async fn demo_device_discovery() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_panel_profiles() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_panel_profiles() -> anyhow::Result<()> {
     println!("\n2. Panel Profile Loading");
     println!("-----------------------");
 
@@ -133,7 +134,7 @@ async fn demo_panel_profiles() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_button_actions() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_button_actions() -> anyhow::Result<()> {
     println!("\n3. Button Actions and Events");
     println!("---------------------------");
 
@@ -184,7 +185,7 @@ async fn demo_button_actions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_telemetry_updates() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_telemetry_updates() -> anyhow::Result<()> {
     println!("\n4. Telemetry-Driven Updates");
     println!("--------------------------");
 
@@ -229,7 +230,7 @@ async fn demo_telemetry_updates() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_multi_aircraft_profiles() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_multi_aircraft_profiles() -> anyhow::Result<()> {
     println!("\n5. Multi-Aircraft Profiles");
     println!("-------------------------");
 
@@ -272,7 +273,7 @@ async fn demo_multi_aircraft_profiles() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
-async fn demo_version_compatibility() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_version_compatibility() -> anyhow::Result<()> {
     println!("\n6. Version Compatibility");
     println!("-----------------------");
 

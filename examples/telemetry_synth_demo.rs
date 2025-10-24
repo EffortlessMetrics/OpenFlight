@@ -12,9 +12,11 @@ use flight_ffb::{TelemetrySynthEngine, TelemetrySynthConfig, FfbEngine, FfbConfi
 use std::time::{Duration, Instant};
 use std::collections::HashMap;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize tracing
-    tracing_subscriber::fmt::init();
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
 
     println!("Flight Hub Telemetry Synthesis Demo");
     println!("===================================");
@@ -47,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n1. Stall Buffet Demo");
     println!("-------------------");
     
@@ -68,7 +70,7 @@ fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n2. Touchdown Impulse Demo");
     println!("------------------------");
     
@@ -98,7 +100,7 @@ fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n3. Ground Roll Demo");
     println!("------------------");
     
@@ -120,7 +122,7 @@ fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error
     Ok(())
 }
 
-fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n4. Gear Warning Demo");
     println!("-------------------");
     
@@ -154,7 +156,7 @@ fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n5. Helicopter Effects Demo");
     println!("-------------------------");
     
@@ -188,7 +190,7 @@ fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std
     Ok(())
 }
 
-fn demo_user_tuning(ffb_engine: &mut FfbEngine) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_user_tuning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n6. User Tuning Demo");
     println!("------------------");
     

@@ -65,34 +65,34 @@ path = "integration_demo.rs"
 
 [features]
 default = []
-axis = ["flight-axis", "tokio", "tracing"]
-replay = ["flight-replay", "tokio", "tracing"]
-simconnect = ["flight-simconnect", "tokio", "tracing"]
-panels = ["flight-panels", "tokio", "tracing"]
-streamdeck = ["flight-streamdeck", "tokio", "tracing"]
-integration = ["axis", "replay", "simconnect", "panels", "streamdeck", "flight-bus", "tempfile", "tracing-subscriber"]
+simconnect = ["flight-simconnect"]
+panels = ["flight-panels"]
+streamdeck = ["flight-streamdeck"]
+integration = ["simconnect", "panels", "streamdeck"]
 
 [dependencies]
 # Core always available
 flight-core = { path = "../crates/flight-core" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+anyhow = "1"
+bincode = "1"
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "time", "sync"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+flight-bus = { path = "../crates/flight-bus" }
+flight-ffb = { path = "../crates/flight-ffb" }
+flight-axis = { path = "../crates/flight-axis" }
+flight-replay = { path = "../crates/flight-replay" }
+tempfile = "3.8"
 
 # Feature-gated dependencies
-flight-axis = { path = "../crates/flight-axis", optional = true }
-flight-replay = { path = "../crates/flight-replay", optional = true }
 flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
 flight-panels = { path = "../crates/flight-panels", optional = true }
 flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
 flight-service = { path = "../crates/flight-service", optional = true }
 flight-hid = { path = "../crates/flight-hid", optional = true }
-flight-ffb = { path = "../crates/flight-ffb", optional = true }
-flight-bus = { path = "../crates/flight-bus", optional = true }
 flight-ipc = { path = "../crates/flight-ipc", optional = true }
-tokio = { version = "1.35", features = ["macros", "rt-multi-thread", "time", "fs", "signal", "sync"], optional = true }
-tracing = { version = "0.1", optional = true }
-tracing-subscriber = { version = "0.3", optional = true }
-tempfile = { version = "3.8", optional = true }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

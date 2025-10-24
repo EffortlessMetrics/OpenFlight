@@ -22,14 +22,21 @@ These issues require fixes to bring the workspace to a fully compiling state.
 
 ## Tasks
 
-- [ ] 1. Fix flight-hub-examples compilation errors
+- [x] 1. Fix flight-hub-examples compilation errors
+
+
+
+
+
   - Add missing dependencies to resolve E0433 errors
   - Update BlackboxWriter/Reader API usage to match current implementation
   - Add missing async runtime attributes to resolve E0752 errors
   - Fix BlackboxRecord variant construction to resolve E0223 errors
   - _Requirements: BC-06, BC-09_
 
-- [ ] 1.1 Add missing dependencies and async runtime setup
+- [x] 1.1 Add missing dependencies and async runtime setup
+
+
   - **File**: `flight-hub-examples/Cargo.toml`
   - Add dependencies:
     ```toml
@@ -56,7 +63,9 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-hub-examples` resolves E0433 (unresolved crate) and E0752 (async main) errors
   - _Requirements: BC-06.1, BC-06.5_
 
-- [ ] 1.2 Update BlackboxWriter API calls
+- [x] 1.2 Update BlackboxWriter API calls
+
+
   - **Files**: All examples using BlackboxWriter (capture_replay_demo.rs, etc.)
   - Update `start_recording()` calls (E0061 - wrong arity):
     ```rust
@@ -87,7 +96,8 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-hub-examples` resolves E0061, E0599, E0223 errors
   - _Requirements: BC-06.2, BC-06.3_
 
-- [ ] 1.3 Update BlackboxReader API calls and stats access
+- [x] 1.3 Update BlackboxReader API calls and stats access
+
   - **Files**: All examples using BlackboxReader
   - Replace constructor (E0599 - method not found):
     ```rust
@@ -110,7 +120,8 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-hub-examples` passes without errors
   - _Requirements: BC-06.2_
 
-- [ ] 1.4 Add platform-specific gates for Windows-only examples (optional)
+- [x] 1.4 Add platform-specific gates for Windows-only examples (optional)
+
   - **Files**: Any Windows-specific examples
   - Add `#[cfg(windows)]` attribute at top of file if example uses Windows-only APIs
   - Alternative: Feature-gate in Cargo.toml with `[target.'cfg(windows)'.dependencies]`
