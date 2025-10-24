@@ -10,11 +10,10 @@ use flight_simconnect_sys::{
     constants::*, SimConnectApi, SimConnectError, HSIMCONNECT, SIMCONNECT_RECV,
     SIMCONNECT_RECV_EXCEPTION, SIMCONNECT_RECV_ID, SIMCONNECT_RECV_OPEN, SIMCONNECT_RECV_SIMOBJECT_DATA,
 };
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tracing::{debug, error, info, warn};
 use windows::Win32::Foundation::{HANDLE, HWND};
 
@@ -104,7 +103,7 @@ pub struct SimConnectSession {
     config: SessionConfig,
     handle: Option<HSIMCONNECT>,
     event_sender: mpsc::UnboundedSender<SessionEvent>,
-    event_receiver: Arc<Mutex<mpsc::UnboundedReceiver<SessionEvent>>>,
+    event_receiver: Arc<Mutex<Option<mpsc::UnboundedReceiver<SessionEvent>>>>,
     connected: bool,
     last_poll: Instant,
     reconnect_attempts: u32,
@@ -121,7 +120,7 @@ impl SimConnectSession {
             config,
             handle: None,
             event_sender,
-            event_receiver: Arc::new(Mutex::new(event_receiver)),
+            event_receiver: Arc::new(Mutex::new(Some(event_receiver))),
             connected: false,
             last_poll: Instant::now(),
             reconnect_attempts: 0,
@@ -175,7 +174,7 @@ impl SimConnectSession {
     }
 
     /// Get event receiver for session events
-    pub fn event_receiver(&self) -> Arc<Mutex<mpsc::UnboundedReceiver<SessionEvent>>> {
+    pub fn event_receiver(&self) -> Arc<Mutex<Option<mpsc::UnboundedReceiver<SessionEvent>>>> {
         self.event_receiver.clone()
     }
 

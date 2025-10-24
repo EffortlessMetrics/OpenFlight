@@ -144,6 +144,7 @@ impl Default for ValidationTolerance {
 pub enum FixtureError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    #[cfg(feature = "serde")]
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
     #[error("Fixture not found: {0}")]
@@ -241,6 +242,7 @@ impl FixtureRecorder {
     }
 
     /// Save fixture to file
+    #[cfg(feature = "serde")]
     pub fn save_to_file<P: AsRef<Path>>(self, path: P) -> Result<(), FixtureError> {
         let fixture = self.finalize();
         let file = File::create(path)?;
@@ -266,6 +268,7 @@ pub struct FixturePlayer {
 
 impl FixturePlayer {
     /// Load fixture from file
+    #[cfg(feature = "serde")]
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, FixtureError> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
@@ -472,6 +475,7 @@ impl FixtureLibrary {
     }
 
     /// Load all fixtures from the library directory
+    #[cfg(feature = "serde")]
     pub fn load_all(&mut self) -> Result<usize, FixtureError> {
         if !self.root_dir.exists() {
             std::fs::create_dir_all(&self.root_dir)?;
@@ -503,6 +507,7 @@ impl FixtureLibrary {
     }
 
     /// Load a specific fixture
+    #[cfg(feature = "serde")]
     pub fn load_fixture<P: AsRef<Path>>(&self, path: P) -> Result<SessionFixture, FixtureError> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);

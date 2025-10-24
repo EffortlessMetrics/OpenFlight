@@ -235,9 +235,9 @@ impl MsfsAdapter {
 
     async fn start_update_loop(&mut self) {
         let state = self.state.clone();
-        let current_aircraft = self.current_aircraft.clone();
-        let current_snapshot = self.current_snapshot.clone();
-        let snapshot_sender = self.snapshot_sender.clone();
+        let _current_aircraft = self.current_aircraft.clone();
+        let _current_snapshot = self.current_snapshot.clone();
+        let _snapshot_sender = self.snapshot_sender.clone();
         
         // Clone necessary data for the async task
         let publish_interval = Duration::from_secs_f32(1.0 / self.config.publish_rate);
@@ -264,12 +264,17 @@ impl MsfsAdapter {
         if let Some(session) = &mut self.session {
             let event_receiver = session.event_receiver();
             let state_clone = self.state.clone();
-            let aircraft_clone = self.current_aircraft.clone();
+            let _aircraft_clone = self.current_aircraft.clone();
             
             tokio::spawn(async move {
-                let mut receiver = event_receiver.lock().unwrap();
+                // Take receiver ownership before spawning to avoid holding MutexGuard across await
+                let mut guard = event_receiver.lock().await;
+                let mut rx = guard
+                    .take()
+                    .expect("receiver should be initialized before spawn");
+                drop(guard); // Explicitly drop guard before spawn
                 
-                while let Some(event) = receiver.recv().await {
+                while let Some(event) = rx.recv().await {
                     match event {
                         SessionEvent::Connected { .. } => {
                             info!("SimConnect connection established");
@@ -451,7 +456,7 @@ impl MsfsAdapter {
         let aircraft_info = self.current_aircraft.read().await;
         if let Some(ref aircraft) = *aircraft_info {
             let aircraft_id = AircraftId::new(&aircraft.atc_model);
-            let mut snapshot = BusSnapshot::new(SimId::Msfs, aircraft_id);
+            let snapshot = BusSnapshot::new(SimId::Msfs, aircraft_id);
             
             // Update snapshot with current data
             // This would typically process received SimConnect data

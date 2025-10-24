@@ -128,13 +128,24 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-hub-examples` passes on both Windows and Linux
   - _Requirements: BC-04.6_
 
-- [ ] 2. Fix flight-simconnect compilation errors
+- [x] 2. Fix flight-simconnect compilation errors
+
+
+
+
+
   - Add serde derives to SessionFixture to resolve E0277 trait bound errors
   - Fix non-Send future in tokio::spawn by taking receiver ownership
   - Resolve borrow checker conflicts in mapping.rs with scoped borrows
   - _Requirements: BC-03, BC-02_
 
-- [ ] 2.1 Add serde derives to SessionFixture
+- [x] 2.1 Add serde derives to SessionFixture
+
+
+
+
+
+
   - **File**: `crates/flight-simconnect/src/fixtures.rs` (or wherever SessionFixture is defined)
   - Add serde imports and derives:
     ```rust
@@ -149,7 +160,10 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-simconnect` resolves E0277 (trait bound not satisfied) errors
   - _Requirements: BC-02.1, BC-02.2_
 
-- [ ] 2.2 Fix non-Send future in tokio::spawn
+
+- [x] 2.2 Fix non-Send future in tokio::spawn
+
+
   - **File**: `crates/flight-simconnect/src/adapter.rs`
   - Take receiver ownership before spawning to avoid holding MutexGuard across await:
     ```rust
@@ -174,7 +188,10 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-simconnect` resolves "future cannot be sent between threads safely" error
   - _Requirements: BC-03.3_
 
-- [ ] 2.3 Fix borrow checker conflicts in mapping.rs
+
+
+- [x] 2.3 Fix borrow checker conflicts in mapping.rs
+
   - **File**: `crates/flight-simconnect/src/mapping.rs`
   - Refactor `setup_data_definitions` to end immutable borrow before mutable calls:
     ```rust
@@ -214,14 +231,21 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Verify: `cargo check -p flight-simconnect` resolves E0502 (cannot borrow as mutable) errors
   - _Requirements: BC-03.4_
 
-- [ ] 3. Verify all fixes with comprehensive checks
+- [x] 3. Verify all fixes with comprehensive checks
+
+
+
+
+
   - Run validation commands to ensure workspace compiles
   - Verify examples package compiles independently
   - Test serde feature combinations
   - Validate cross-platform compatibility
   - _Requirements: All BC requirements verification_
 
-- [ ] 3.1 Run workspace and package-specific checks
+
+- [x] 3.1 Run workspace and package-specific checks
+
   - Execute verification commands:
     ```bash
     # Examples compilation
@@ -240,7 +264,9 @@ These issues require fixes to bring the workspace to a fully compiling state.
   - Warnings about unused items are acceptable
   - _Requirements: BC-06.6, BC-03.7, BC-04.6_
 
-- [ ] 3.2 Add regression prevention checks
+
+- [x] 3.2 Add regression prevention checks
+
   - Add clippy lint for async lock holding:
     ```bash
     cargo clippy -p flight-simconnect -- -W clippy::await_holding_lock

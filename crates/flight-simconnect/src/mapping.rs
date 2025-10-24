@@ -269,30 +269,30 @@ impl VariableMapping {
         handle: HSIMCONNECT,
         aircraft_id: &str,
     ) -> Result<(), MappingError> {
-        let mapping = self.get_aircraft_mapping(aircraft_id);
+        // Clone all needed data in a scoped block to end immutable borrow
+        let (kin, cfg, engs, env, nav, helo) = {
+            let m = self.get_aircraft_mapping(aircraft_id);
+            (
+                m.kinematics.clone(),
+                m.config.clone(),
+                m.engines.clone(),
+                m.environment.clone(),
+                m.navigation.clone(),
+                m.helicopter.clone(),
+            )
+        }; // immutable borrow ends here
 
-        // Setup kinematics definition
-        self.setup_kinematics_definition(api, handle, &mapping.kinematics)?;
-
-        // Setup configuration definition
-        self.setup_config_definition(api, handle, &mapping.config)?;
-
-        // Setup engine definitions
-        for engine_mapping in &mapping.engines {
-            self.setup_engine_definition(api, handle, engine_mapping)?;
+        // Now safe to call &mut self methods
+        self.setup_kinematics_definition(api, handle, &kin)?;
+        self.setup_config_definition(api, handle, &cfg)?;
+        for e in &engs {
+            self.setup_engine_definition(api, handle, e)?;
         }
-
-        // Setup environment definition
-        self.setup_environment_definition(api, handle, &mapping.environment)?;
-
-        // Setup navigation definition
-        self.setup_navigation_definition(api, handle, &mapping.navigation)?;
-
-        // Setup helicopter definition if applicable
-        if let Some(helo_mapping) = &mapping.helicopter {
-            self.setup_helicopter_definition(api, handle, helo_mapping)?;
+        self.setup_environment_definition(api, handle, &env)?;
+        self.setup_navigation_definition(api, handle, &nav)?;
+        if let Some(h) = helo.as_ref() {
+            self.setup_helicopter_definition(api, handle, h)?;
         }
-
         Ok(())
     }
 
