@@ -316,6 +316,8 @@
 
 
 
+
+
   - Run `cargo check --workspace` on both Windows and Linux CI
   - Verify examples compile and run: `cargo run -p openflight-examples --example <name>`
   - Test serde feature combinations: `cargo check -p flight-axis --features serde`
