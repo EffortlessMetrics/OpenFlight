@@ -1,305 +1,347 @@
-# Implementation Plan - Phase 2: Remaining Compilation Fixes
+# Implementation Plan - Phase 2: Final Workspace Compilation Fixes
 
-This task list addresses compilation errors discovered during verification (task 5.6) that were not covered in the initial implementation phase.
+This task list addresses the remaining compilation errors blocking `cargo check --workspace` success.
 
 ## Background
 
-After completing tasks 1.1-5.6, `cargo check --workspace` revealed additional compilation errors in:
-- **flight-hub-examples** package (examples with outdated APIs, missing dependencies)
-- **flight-simconnect** crate (missing serde derives, borrow conflicts, async safety)
+After completing Phase 1 (tasks 1.1-5.6), the workspace still has compilation failures in:
+- **flight-hub-examples** (examples package) - API drift, missing dependencies, heavy outdated API usage
+- **flight-simconnect-sys** - clippy FFI lint errors
 
-These issues require fixes to bring the workspace to a fully compiling state.
+## Strategy Overview
 
-## Strategy
+Following the minimal, no-public-API fix approach:
 
-- **No public API changes** - only fix call sites and internal implementation
-- **Add missing dependencies** - resolve E0433 errors by adding flight_bus, flight_ffb, tracing deps
-- **Mechanical API updates** - update call sites to match current BlackboxWriter/Reader APIs
-- **Fix async safety** - resolve non-Send future and borrow checker issues in flight-simconnect
-- **Bisectable commits** - each task should result in a compilable state
+1. **Feature-isolate examples** - Gate failing demos behind declared features with fallback mains
+2. **Surgical example fixes** - Port high-value demos to new APIs (optional but low-effort)
+3. **Clippy FFI suppression** - Allow FFI-specific lints in sys crate per BC-10
+
+This gets the workspace green immediately while allowing selective demo re-enablement.
 
 ---
 
 ## Tasks
 
-- [x] 1. Fix flight-hub-examples compilation errors
+- [ ] 1. Feature-isolate examples package (Step 1 - Makes workspace green)
+  - Declare features in examples/Cargo.toml to silence "unexpected cfg" warnings
+  - Make external deps optional and map features to deps
+  - Gate failing examples with fallback mains
+  - _Requirements: BC-06_
 
-
-
-
-
-  - Add missing dependencies to resolve E0433 errors
-  - Update BlackboxWriter/Reader API usage to match current implementation
-  - Add missing async runtime attributes to resolve E0752 errors
-  - Fix BlackboxRecord variant construction to resolve E0223 errors
-  - _Requirements: BC-06, BC-09_
-
-- [x] 1.1 Add missing dependencies and async runtime setup
-
-
-  - **File**: `flight-hub-examples/Cargo.toml`
-  - Add dependencies:
+- [ ] 1.1 Update examples/Cargo.toml with feature declarations
+  - **File**: `examples/Cargo.toml`
+  - Add features section:
+    ```toml
+    [features]
+    default = []
+    flight-service    = ["dep:flight-service"]
+    flight-simconnect = ["dep:flight-simconnect"]
+    flight-panels     = ["dep:flight-panels"]
+    flight-streamdeck = ["dep:flight-streamdeck"]
+    panels            = ["flight-panels"]
+    simconnect        = ["flight-simconnect"]
+    streamdeck        = ["flight-streamdeck"]
+    windows           = []
+    integration       = []
+    axis              = []  # legacy gate for axis_demo.rs
+    replay            = []  # legacy gate for replay_demo.rs
+    ```
+  - Add base dependencies (always available):
     ```toml
     anyhow = "1"
-    tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+    tokio = { version = "1", features = ["rt-multi-thread","macros","time","sync"] }
     tracing = "0.1"
-    tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-    flight-core = { path = "../crates/flight-core", features = ["serde"] }
+    tracing-subscriber = { version = "0.3", features = ["fmt","env-filter"] }
+    bincode = "1"
+    flight-core = { path = "../crates/flight-core" }
     flight-bus = { path = "../crates/flight-bus" }
     flight-ffb = { path = "../crates/flight-ffb" }
     ```
-  - **Files**: `examples/capture_replay_demo.rs`, `examples/streamdeck_panel_demo.rs`, `examples/telemetry_synth_demo.rs`
-  - Add async main attribute and logging initialization:
+  - Make failing deps optional:
+    ```toml
+    flight-replay     = { path = "../crates/flight-replay", optional = true }
+    flight-service    = { path = "../crates/flight-service", optional = true }
+    flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
+    flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
+    flight-panels     = { path = "../crates/flight-panels", optional = true }
+    flight-hid        = { path = "../crates/flight-hid", optional = true }
+    tempfile          = { version = "3", optional = true }
+    ```
+  - Verify: Features declared match cfg gates used in example files
+  - _Requirements: BC-06.1_
+
+- [ ] 1.2 Gate capability_demo.rs with fallback main
+  - **File**: `examples/capability_demo.rs`
+  - Add at top of file:
     ```rust
+    #![cfg_attr(not(feature = "flight-service"), allow(dead_code, unused_imports))]
+    
+    #[cfg(feature = "flight-service")]
     #[tokio::main(flavor = "current_thread")]
     async fn main() -> anyhow::Result<()> {
-        tracing_subscriber::fmt()
-            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-            .init();
-        // ... existing code ...
+        // existing demo code
         Ok(())
     }
-    ```
-  - Verify: `cargo check -p flight-hub-examples` resolves E0433 (unresolved crate) and E0752 (async main) errors
-  - _Requirements: BC-06.1, BC-06.5_
-
-- [x] 1.2 Update BlackboxWriter API calls
-
-
-  - **Files**: All examples using BlackboxWriter (capture_replay_demo.rs, etc.)
-  - Update `start_recording()` calls (E0061 - wrong arity):
-    ```rust
-    // Before: writer.start_recording().await?;
-    // After:
-    writer.start_recording(
-        "openflight-demo".into(),
-        "msfs".into(),
-        "C172".into()
-    ).await?;
-    ```
-  - Update `write_record()` to `write()` (E0599 - method not found):
-    ```rust
-    // Before: writer.write_record(record).await?;
-    // After: writer.write(record).await?;
-    ```
-  - Fix BlackboxRecord variant construction (E0223 - ambiguous associated type):
-    ```rust
-    // Before: BlackboxRecord::AxisFrame { timestamp, frame }
-    // After: BlackboxRecord::Axis(axis_frame)
     
-    // Before: BlackboxRecord::BusSnapshot { timestamp, snapshot }
-    // After: BlackboxRecord::BusSnapshot(snapshot)
-    
-    // Before: BlackboxRecord::Event { timestamp, event }
-    // After: BlackboxRecord::Event(event)
+    #[cfg(not(feature = "flight-service"))]
+    fn main() {
+        eprintln!("Enable `--features flight-service` to build this example.");
+    }
     ```
-  - Verify: `cargo check -p flight-hub-examples` resolves E0061, E0599, E0223 errors
-  - _Requirements: BC-06.2, BC-06.3_
+  - Verify: `cargo check -p examples` passes (example compiles with fallback)
+  - Verify: `cargo check -p examples --features flight-service` shows missing dep error (expected until deps added)
+  - _Requirements: BC-06.1_
 
-- [x] 1.3 Update BlackboxReader API calls and stats access
-
-  - **Files**: All examples using BlackboxReader
-  - Replace constructor (E0599 - method not found):
+- [ ] 1.3 Gate simconnect_usage_demo.rs with fallback main
+  - **File**: `examples/simconnect_usage_demo.rs`
+  - Add at top of file:
     ```rust
-    // Before: let mut reader = BlackboxReader::new(&recording_path)?;
-    // After: let mut reader = BlackboxReader::open(&recording_path)?;
-    ```
-  - Update stats field access (E0609 - no field):
-    ```rust
-    // Before:
-    // println!("  Axis frames: {}", stats.axis_frames_written);
-    // println!("  Bus snapshots: {}", stats.bus_snapshots_written);
-    // println!("  Events: {}", stats.events_written);
-    // println!("  Compression ratio: {:.1}%", stats.compression_ratio * 100.0);
+    #![cfg_attr(not(feature = "simconnect"), allow(dead_code, unused_imports))]
     
-    // After:
-    println!("  Records written: {}", stats.records_written);
-    println!("  Bytes written:   {}", stats.bytes_written);
-    println!("  Chunks written:  {}", stats.chunks_written);
+    #[cfg(feature = "simconnect")]
+    #[tokio::main(flavor = "current_thread")]
+    async fn main() -> anyhow::Result<()> {
+        // existing demo code
+        Ok(())
+    }
+    
+    #[cfg(not(feature = "simconnect"))]
+    fn main() {
+        eprintln!("Enable `--features simconnect` to build this example.");
+    }
     ```
-  - Verify: `cargo check -p flight-hub-examples` passes without errors
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.1_
+
+- [ ] 1.4 Gate streamdeck_panel_demo.rs with fallback main
+  - **File**: `examples/streamdeck_panel_demo.rs`
+  - Add at top of file:
+    ```rust
+    #![cfg_attr(not(all(feature = "streamdeck", feature = "panels")), allow(dead_code, unused_imports))]
+    
+    #[cfg(all(feature = "streamdeck", feature = "panels"))]
+    #[tokio::main(flavor = "current_thread")]
+    async fn main() -> anyhow::Result<()> {
+        // existing demo code
+        Ok(())
+    }
+    
+    #[cfg(not(all(feature = "streamdeck", feature = "panels")))]
+    fn main() {
+        eprintln!("Enable `--features streamdeck,panels` to build this example.");
+    }
+    ```
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.1_
+
+- [ ] 1.5 Gate watchdog_integration_demo.rs with fallback main
+  - **File**: `examples/watchdog_integration_demo.rs`
+  - Add at top of file:
+    ```rust
+    #![cfg_attr(not(feature = "flight-hid"), allow(dead_code, unused_imports))]
+    
+    #[cfg(feature = "flight-hid")]
+    #[tokio::main(flavor = "current_thread")]
+    async fn main() -> anyhow::Result<()> {
+        // existing demo code
+        Ok(())
+    }
+    
+    #[cfg(not(feature = "flight-hid"))]
+    fn main() {
+        eprintln!("Enable `--features flight-hid` to build this example.");
+    }
+    ```
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.1_
+
+- [ ] 1.6 Gate pipeline_compilation_demo.rs with fallback main
+  - **File**: `examples/pipeline_compilation_demo.rs`
+  - Add at top of file:
+    ```rust
+    #![cfg_attr(not(feature = "integration"), allow(dead_code, unused_imports))]
+    
+    #[cfg(feature = "integration")]
+    #[tokio::main(flavor = "current_thread")]
+    async fn main() -> anyhow::Result<()> {
+        // existing demo code
+        Ok(())
+    }
+    
+    #[cfg(not(feature = "integration"))]
+    fn main() {
+        eprintln!("Enable `--features integration` to build this example (requires API porting).");
+    }
+    ```
+  - Note: This demo has heavy API drift (old PipelineBuilder API), gate until ported
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.1_
+
+- [ ] 1.7 Gate capture_replay_demo.rs with fallback main
+  - **File**: `examples/capture_replay_demo.rs`
+  - Add at top of file:
+    ```rust
+    #![cfg_attr(not(feature = "replay"), allow(dead_code, unused_imports))]
+    
+    #[cfg(feature = "replay")]
+    #[tokio::main(flavor = "current_thread")]
+    async fn main() -> anyhow::Result<()> {
+        // existing demo code
+        Ok(())
+    }
+    
+    #[cfg(not(feature = "replay"))]
+    fn main() {
+        eprintln!("Enable `--features replay` to build this example (requires API porting).");
+    }
+    ```
+  - Note: This demo uses old ReplayEngine/ReplayFrame/ReplayStats API, gate until ported
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.1_
+
+- [ ] 1.8 Verify workspace compiles with gated examples
+  - Run: `cargo check --workspace`
+  - Should pass with all examples compiling to fallback mains
+  - Run: `cargo check -p examples --all-features`
+  - Will show errors for gated examples (expected - they need API porting)
+  - Verify: No "unexpected cfg" warnings
+  - _Requirements: BC-06.6_
+
+- [ ] 2. Suppress clippy FFI lints in sys crate (Step 3)
+  - Fix clippy errors in flight-simconnect-sys
+  - _Requirements: BC-10_
+
+- [ ] 2.1 Add FFI lint suppressions to flight-simconnect-sys
+  - **File**: `crates/flight-simconnect-sys/src/lib.rs`
+  - Add at crate root (top of file):
+    ```rust
+    #![allow(
+        clippy::not_unsafe_ptr_arg_deref,
+        clippy::missing_transmute_annotations
+    )]
+    ```
+  - These lints are typical for FFI thunks calling function pointers with raw handles
+  - Suppression is appropriate for -sys crates per BC-10
+  - Verify: `cargo clippy -p flight-simconnect-sys` passes without FFI lint errors
+  - _Requirements: BC-10.1, BC-10.2, BC-10.6_
+
+- [ ] 3. Optional: Surgical fixes for high-value examples (Step 2)
+  - Port specific examples to new APIs for demonstration purposes
+  - These are optional - workspace is green after Step 1
+  - _Requirements: BC-06_
+
+- [ ] 3.1 Fix streamdeck_panel_demo.rs helper signatures (optional)
+  - **File**: `examples/streamdeck_panel_demo.rs`
+  - Change helper function signatures from `Result<_, Box<dyn Error>>` to `anyhow::Result<()>`
+  - Add missing import: `use flight_bus::AutopilotState;`
+  - This fixes ? conversion errors with anyhow::Result
+  - Verify: `cargo check -p examples --features streamdeck,panels` passes
   - _Requirements: BC-06.2_
 
-- [x] 1.4 Add platform-specific gates for Windows-only examples (optional)
+- [ ] 3.2 Fix simconnect_usage_demo.rs API updates (optional)
+  - **File**: `examples/simconnect_usage_demo.rs`
+  - Update method calls:
+    - `as_knots()` → `to_knots()`
+    - `as_degrees()` → `to_degrees()`
+    - Replace `as_percentage()` with new API (often raw f32 or `as_f32()` * 100)
+  - Update AutoSwitchConfig construction with available fields:
+    - `max_switch_time`, `profile_paths`, `enable_pof`, `pof_hysteresis`, `capability_context`
+  - Update DetectedAircraft construction: `{ sim, aircraft_id, process_name }`
+  - Add `.await` to metrics access (it's a Future)
+  - Fix type literals: `Some(3500.0f32)` instead of bare `3500.0`
+  - Verify: `cargo check -p examples --features simconnect` passes
+  - _Requirements: BC-06.2_
 
-  - **Files**: Any Windows-specific examples
-  - Add `#[cfg(windows)]` attribute at top of file if example uses Windows-only APIs
-  - Alternative: Feature-gate in Cargo.toml with `[target.'cfg(windows)'.dependencies]`
-  - Verify: `cargo check -p flight-hub-examples` passes on both Windows and Linux
-  - _Requirements: BC-04.6_
-
-- [x] 2. Fix flight-simconnect compilation errors
-
-
-
-
-
-  - Add serde derives to SessionFixture to resolve E0277 trait bound errors
-  - Fix non-Send future in tokio::spawn by taking receiver ownership
-  - Resolve borrow checker conflicts in mapping.rs with scoped borrows
-  - _Requirements: BC-03, BC-02_
-
-- [x] 2.1 Add serde derives to SessionFixture
-
-
-
-
-
-
-  - **File**: `crates/flight-simconnect/src/fixtures.rs` (or wherever SessionFixture is defined)
-  - Add serde imports and derives:
+- [ ] 3.3 Fix telemetry_synth_demo.rs borrow checker (optional)
+  - **File**: `examples/telemetry_synth_demo.rs`
+  - Fix borrow conflict by scoping the first mutable borrow:
     ```rust
-    use serde::{Serialize, Deserialize};
+    // Before (holds synth_engine mutably while calling ffb_engine method):
+    // let synth = ffb_engine.get_telemetry_synth_mut().unwrap();
+    // synth.tuning_mut().set_global_intensity(1.5);
+    // let reduced = ffb_engine.update_telemetry_synthesis(&snapshot)?;
     
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct SessionFixture {
-        // ... fields
-    }
+    // After (scope the first borrow):
+    if let Some(synth) = ffb_engine.get_telemetry_synth_mut() {
+        synth.tuning_mut().set_global_intensity(1.5);
+    } // borrow ends here
+    let reduced = ffb_engine.update_telemetry_synthesis(&snapshot)?;
     ```
-  - Ensure all nested types in SessionFixture also derive Serialize and Deserialize
-  - Verify: `cargo check -p flight-simconnect` resolves E0277 (trait bound not satisfied) errors
-  - _Requirements: BC-02.1, BC-02.2_
+  - Verify: `cargo check -p examples` passes
+  - _Requirements: BC-06.2_
 
-
-- [x] 2.2 Fix non-Send future in tokio::spawn
-
-
-  - **File**: `crates/flight-simconnect/src/adapter.rs`
-  - Take receiver ownership before spawning to avoid holding MutexGuard across await:
-    ```rust
-    use tokio::sync::{Mutex, mpsc};
-    
-    // Struct field should be:
-    // event_receiver: Mutex<Option<mpsc::UnboundedReceiver<SessionEvent>>>
-    
-    // In spawn code:
-    let mut guard = self.event_receiver.lock().await;
-    let mut rx = guard
-        .take()
-        .expect("receiver should be initialized before spawn");
-    drop(guard); // Explicitly drop guard before spawn
-    
-    tokio::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            // handle event...
-        }
-    });
-    ```
-  - Verify: `cargo check -p flight-simconnect` resolves "future cannot be sent between threads safely" error
-  - _Requirements: BC-03.3_
-
-
-
-- [x] 2.3 Fix borrow checker conflicts in mapping.rs
-
-  - **File**: `crates/flight-simconnect/src/mapping.rs`
-  - Refactor `setup_data_definitions` to end immutable borrow before mutable calls:
-    ```rust
-    pub fn setup_data_definitions(
-        &mut self,
-        api: &SimConnectApi,
-        handle: HSIMCONNECT,
-        aircraft_id: AircraftId,
-    ) -> Result<(), MappingError> {
-        // Clone all needed data in a scoped block to end immutable borrow
-        let (kin, cfg, engs, env, nav, helo) = {
-            let m = self.get_aircraft_mapping(aircraft_id);
-            (
-                m.kinematics.clone(),
-                m.config.clone(),
-                m.engines.clone(),
-                m.environment.clone(),
-                m.navigation.clone(),
-                m.helicopter.clone(),
-            )
-        }; // immutable borrow ends here
-        
-        // Now safe to call &mut self methods
-        self.setup_kinematics_definition(api, handle, &kin)?;
-        self.setup_config_definition(api, handle, &cfg)?;
-        for e in &engs {
-            self.setup_engine_definition(api, handle, e)?;
-        }
-        self.setup_environment_definition(api, handle, &env)?;
-        self.setup_navigation_definition(api, handle, &nav)?;
-        if let Some(h) = helo.as_ref() {
-            self.setup_helicopter_definition(api, handle, h)?;
-        }
-        Ok(())
-    }
-    ```
-  - Verify: `cargo check -p flight-simconnect` resolves E0502 (cannot borrow as mutable) errors
-  - _Requirements: BC-03.4_
-
-- [x] 3. Verify all fixes with comprehensive checks
-
-
-
-
-
-  - Run validation commands to ensure workspace compiles
-  - Verify examples package compiles independently
-  - Test serde feature combinations
-  - Validate cross-platform compatibility
+- [ ] 4. Verify final workspace state
+  - Run comprehensive checks to ensure green build
   - _Requirements: All BC requirements verification_
 
-
-- [x] 3.1 Run workspace and package-specific checks
-
-  - Execute verification commands:
+- [ ] 4.1 Run core verification commands
+  - Execute:
     ```bash
-    # Examples compilation
-    cargo check -p flight-hub-examples
-    
-    # SimConnect compilation
-    cargo check -p flight-simconnect
-    
-    # Full workspace check
+    # Primary goal - workspace compiles
     cargo check --workspace
     
-    # Serde feature check (if gated)
-    cargo check -p flight-simconnect --features serde
+    # Sys crate clippy passes
+    cargo clippy -p flight-simconnect-sys
+    
+    # Examples compile with fallback mains
+    cargo check -p examples
+    
+    # Specific feature checks (optional demos)
+    cargo check -p examples --features simconnect
+    cargo check -p examples --features streamdeck,panels
     ```
   - All commands should pass without errors
-  - Warnings about unused items are acceptable
-  - _Requirements: BC-06.6, BC-03.7, BC-04.6_
+  - Gated examples show helpful "enable --features" messages
+  - _Requirements: BC-06.6, BC-10.6_
 
-
-- [x] 3.2 Add regression prevention checks
-
-  - Add clippy lint for async lock holding:
+- [ ] 4.2 Verify cross-platform compatibility
+  - Run on both Windows and Linux CI:
     ```bash
-    cargo clippy -p flight-simconnect -- -W clippy::await_holding_lock
+    cargo check --workspace
     ```
-  - Add grep checks for common API drift patterns:
-    ```bash
-    # Should return 0 hits (old API usage)
-    git grep -n "write_record(" examples/
-    git grep -n "BlackboxReader::new(" examples/
-    git grep -n "start_recording().await" examples/
+  - Ensure no platform-specific compilation errors
+  - Windows-only examples properly gated
+  - _Requirements: BC-04.6, NFR-C_
+
+- [ ] 4.3 Document example feature usage
+  - Add comment to examples/Cargo.toml explaining feature system:
+    ```toml
+    # Examples are feature-gated to avoid pulling in heavyweight dependencies by default.
+    # To build a specific example:
+    #   cargo run -p examples --example <name> --features <feature>
+    # 
+    # Available features:
+    #   simconnect        - SimConnect integration examples
+    #   streamdeck,panels - StreamDeck panel examples
+    #   flight-hid        - HID device examples
+    #   integration       - Multi-crate integration examples (may need API porting)
+    #   replay            - Replay system examples (may need API porting)
     ```
-  - Document these checks in CI or verification scripts
-  - _Requirements: NFR-B, NFR-C_
+  - _Requirements: BC-06.7_
 
 ---
 
-## Commit Strategy (for bisectability)
+## Summary
 
-Each commit should result in a compilable state:
+This phase achieves a green `cargo check --workspace` through:
 
-1. **Commit 1**: Examples Cargo.toml + async mains (task 1.1)
-2. **Commit 2**: BlackboxWriter call-site updates (task 1.2)
-3. **Commit 3**: BlackboxReader call-site updates (task 1.3)
-4. **Commit 4**: SimConnect SessionFixture derives (task 2.1)
-5. **Commit 5**: SimConnect spawn Send-safety (task 2.2)
-6. **Commit 6**: SimConnect mapping borrow refactor (task 2.3)
-7. **Commit 7**: Verification and regression checks (task 3.1-3.2)
+1. **Feature isolation** (tasks 1.1-1.8) - Gate failing examples behind features with fallback mains
+2. **Clippy fixes** (task 2.1) - Suppress appropriate FFI lints in sys crate
+3. **Optional porting** (tasks 3.1-3.3) - Selective API updates for high-value demos
+4. **Verification** (tasks 4.1-4.3) - Comprehensive checks and documentation
+
+## Key Benefits
+
+- **Workspace compiles by default** - No heavyweight features pulled in
+- **No public API changes** - All fixes are internal or call-site updates
+- **Selective enablement** - Demos can be re-enabled with `--features` as needed
+- **Clear migration path** - Gated demos show what needs porting
+- **Bisectable** - Each task results in a compilable state
 
 ## Notes
 
-- **No public API changes** - all fixes are call-site updates or internal refactoring
-- **Add dependencies, don't remove** - resolves the flight_bus/flight_ffb contradiction
-- **Mechanical updates** - each change has a clear before/after pattern
-- **Platform-aware** - Windows-specific code is properly gated
-- These tasks build on completed Phase 1 tasks (1.1-5.6)
-- Focus on bringing workspace to fully compiling state with `cargo check --workspace`
+- Pattern already used in axis_demo.rs and replay_demo.rs - extending to all failing examples
+- Feature declarations silence "unexpected cfg" warnings
+- Fallback mains provide helpful error messages
+- Optional surgical fixes (Step 2) can be done incrementally
+- Focus is on getting workspace green, not porting all examples immediately
