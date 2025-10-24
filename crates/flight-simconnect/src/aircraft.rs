@@ -19,7 +19,8 @@ use thiserror::Error;
 use tracing::{debug, info};
 
 /// Aircraft information from SimConnect
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AircraftInfo {
     /// Aircraft title from SimConnect
     pub title: String,
@@ -40,7 +41,8 @@ pub struct AircraftInfo {
 }
 
 /// Aircraft category enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AircraftCategory {
     Airplane,
     Helicopter,
@@ -49,7 +51,8 @@ pub enum AircraftCategory {
 }
 
 /// Engine type enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum EngineType {
     Piston,
     Turboprop,

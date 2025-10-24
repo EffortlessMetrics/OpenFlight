@@ -4,331 +4,471 @@ This document describes the regression prevention measures implemented in the Op
 
 ## Overview
 
-The regression prevention system consists of several layers:
+The OpenFlight project implements multiple layers of regression prevention:
 
-1. **Workspace Dependency Alignment** - Ensures consistent versions across crates
-2. **Feature Powerset Testing** - Validates all feature combinations work
-3. **Strict Clippy Enforcement** - Maintains code quality for core crates
-4. **Critical Pattern Verification** - Prevents specific known issues
-5. **Automated CI Checks** - Runs all checks on every PR
+1. **Workspace Dependency Alignment** - Centralized version management
+2. **Feature Powerset Testing** - Comprehensive feature combination testing
+3. **Strict Clippy Enforcement** - High-quality code standards for core crates
+4. **Critical Pattern Verification** - Automated checks for known issues
+5. **CI Integration** - Automated enforcement in continuous integration
 
-## Quick Start
+## Workspace Dependency Alignment
 
-### Local Development
+### Strategy
 
-Run regression checks locally before pushing:
+All common dependencies are managed through `[workspace.dependencies]` in the root `Cargo.toml`. This ensures:
+
+- Consistent versions across all crates
+- No feature leakage (using `resolver = "2"`)
+- Easier dependency updates
+- Reduced compilation time
+
+### Key Aligned Dependencies
+
+| Dependency | Version | Notes |
+|------------|---------|-------|
+| tokio | 1.35 | Async runtime with aligned features |
+| futures | 0.3 | Futures ecosystem alignment |
+| tonic | 0.14.2 | gRPC framework |
+| tonic-build | 0.14.2 | Must match tonic version |
+| prost | 0.14.1 | Protocol buffers |
+| serde | 1.0 | Serialization framework |
+| criterion | 0.5 | Benchmarking framework |
+
+### Verification
+
+Check dependency alignment:
+```bash
+make check-workspace-deps
+```
+
+Or manually:
+```bash
+# Check tokio versions
+grep -r "tokio.*=" Cargo.toml crates/*/Cargo.toml | grep version
+
+# Check futures versions
+grep -r "futures.*=" Cargo.toml crates/*/Cargo.toml | grep version
+
+# Check tonic/tonic-build alignment
+grep -r "tonic.*=" Cargo.toml crates/*/Cargo.toml | grep version
+```
+
+## Feature Powerset Testing
+
+### Purpose
+
+Feature powerset testing ensures that all valid combinations of features compile successfully. This prevents:
+
+- Feature interaction bugs
+- Conditional compilation errors
+- Missing feature gates
+
+### Implementation
+
+Using `cargo-hack` with depth 2 to balance coverage and CI time:
 
 ```bash
-# Run all checks
-make all
+cargo hack check --workspace --feature-powerset --depth 2
+```
 
-# Quick checks during development
-make quick
-
-# Individual checks
+Or via Makefile:
+```bash
 make feature-powerset
+```
+
+### CI Integration
+
+Feature powerset testing runs automatically in CI on every pull request:
+
+```yaml
+- name: Run feature powerset testing
+  run: cargo hack check --workspace --feature-powerset --depth 2
+```
+
+## Strict Clippy Enforcement
+
+### Core Crates
+
+The following crates must pass strict clippy checks with `-D warnings`:
+
+- `flight-core` - Core types and traits
+- `flight-axis` - Axis processing engine
+- `flight-bus` - Event bus system
+- `flight-hid` - HID device handling
+- `flight-ipc` - Inter-process communication
+- `flight-service` - Service infrastructure
+- `flight-simconnect` - SimConnect integration
+- `flight-panels` - Panel device support
+
+### Running Locally
+
+```bash
 make clippy-strict
+```
+
+Or for a specific crate:
+```bash
+cargo clippy -p flight-core -- -D warnings
+```
+
+### CI Integration
+
+Strict clippy checks run in CI for all core crates:
+
+```yaml
+- name: Run clippy with strict warnings for core crates
+  run: |
+    cargo clippy -p flight-core --lib --tests -- -D warnings
+    cargo clippy -p flight-axis --lib --tests -- -D warnings
+    # ... (all core crates)
+```
+
+## Critical Pattern Verification
+
+### Verified Patterns
+
+The following patterns are automatically verified to prevent regression:
+
+#### 1. Profile::merge → Profile::merge_with
+
+**Issue**: `Profile::merge` was renamed to `Profile::merge_with`
+
+**Verification**:
+```bash
+git grep -n "Profile::merge(" | grep -v "Profile::merge_with"
+```
+
+**Expected**: No matches (exit code 1)
+
+#### 2. BlackboxWriter::new without ? operator
+
+**Issue**: `BlackboxWriter::new` returns `T` not `Result<T, E>`, so `?` is incorrect
+
+**Verification**:
+```bash
+git grep -n "BlackboxWriter::new.*?"
+```
+
+**Expected**: No matches (exit code 1)
+
+#### 3. Engine::new signature (2 arguments)
+
+**Issue**: `Engine::new` requires `(name: String, config: EngineConfig)`
+
+**Verification**:
+```bash
+git grep -n "Engine::new(" | grep -v ","
+```
+
+**Expected**: No matches (exit code 1)
+
+#### 4. std::hint::black_box instead of criterion::black_box
+
+**Issue**: `criterion::black_box` is deprecated in favor of `std::hint::black_box`
+
+**Verification**:
+```bash
+git grep -n "criterion::black_box"
+```
+
+**Expected**: No matches (exit code 1)
+
+#### 5. Workspace dependency alignment
+
+**Issue**: Crates must use workspace dependencies for common crates
+
+**Verification**:
+```bash
+# Check tokio
+grep -r "tokio.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"
+
+# Check futures
+grep -r "futures.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"
+```
+
+**Expected**: No matches (exit code 1)
+
+### Running All Pattern Checks
+
+```bash
 make verify-patterns
 ```
 
-### Using the Regression Script
+Or use the regression prevention script:
+```bash
+cargo +nightly -Zscript scripts/regression_prevention.rs verify-patterns
+```
+
+## Dead Code Cleanup
+
+### Purpose
+
+Automatically remove unused code and imports to maintain code cleanliness.
+
+### Running Cleanup
+
+```bash
+make dead-code-cleanup
+```
+
+Or directly:
+```bash
+cargo fix --workspace --allow-dirty
+```
+
+**Note**: This modifies files in place. Review changes before committing.
+
+## Regression Prevention Script
+
+A comprehensive Rust script is available for running all checks:
+
+```bash
+cargo +nightly -Zscript scripts/regression_prevention.rs [command]
+```
+
+### Available Commands
+
+- `feature-powerset` - Run feature powerset testing
+- `clippy-strict` - Run strict clippy checks on core crates
+- `dead-code-cleanup` - Clean up dead code and imports
+- `verify-patterns` - Verify critical patterns are fixed
+- `all` - Run all checks (default)
+
+### Example Usage
 
 ```bash
 # Run all checks
 cargo +nightly -Zscript scripts/regression_prevention.rs
 
-# Run specific checks
-cargo +nightly -Zscript scripts/regression_prevention.rs feature-powerset
+# Run specific check
 cargo +nightly -Zscript scripts/regression_prevention.rs clippy-strict
-cargo +nightly -Zscript scripts/regression_prevention.rs verify-patterns
 ```
 
-## Regression Prevention Measures
+## Makefile Targets
 
-### 1. Workspace Dependency Alignment
+The Makefile provides convenient targets for local development:
 
-**Purpose**: Prevent version conflicts and ensure consistent behavior across crates.
+### Quick Reference
 
-**Implementation**:
-- All common dependencies (tokio, futures, tonic, etc.) are defined in workspace `Cargo.toml`
-- Individual crates use `{ workspace = true }` to inherit versions
-- CI verifies no crates use non-workspace versions
-
-**Aligned Dependencies**:
-- `tokio = "1.35"` - Async runtime
-- `futures = "0.3"` - Futures utilities  
-- `futures-core = "0.3"` - Core futures traits
-- `tokio-stream = "0.1"` - Stream utilities
-- `tokio-util = "0.7"` - Tokio utilities
-- `tonic = "0.14.2"` - gRPC framework
-- `tonic-build = "0.14.2"` - gRPC code generation
-
-### 2. Feature Powerset Testing
-
-**Purpose**: Ensure all feature combinations compile and work correctly.
-
-**Implementation**:
 ```bash
-cargo hack check --workspace --feature-powerset --depth 2
+make all                  # Run all regression prevention checks
+make quick                # Run quick checks (clippy + patterns)
+make feature-powerset     # Run feature powerset testing
+make clippy-strict        # Run strict clippy on core crates
+make dead-code-cleanup    # Clean up dead code and imports
+make verify-patterns      # Verify critical patterns
+make check-workspace-deps # Check dependency alignment
+make ci-simulation        # Run full CI simulation locally
+make help                 # Show all available targets
 ```
 
-**Coverage**:
-- Tests all combinations of features up to depth 2
-- Validates optional dependencies work correctly
-- Catches feature interaction bugs early
+### Recommended Workflow
 
-**CI Integration**: Runs on every PR in dedicated job
+Before pushing code:
 
-### 3. Strict Clippy Enforcement
-
-**Purpose**: Maintain high code quality for core crates that other crates depend on.
-
-**Core Crates** (must pass `-D warnings`):
-- `flight-core` - Core types and traits
-- `flight-axis` - Axis processing engine
-- `flight-bus` - Event bus system
-- `flight-hid` - HID device interface
-- `flight-ipc` - Inter-process communication
-- `flight-service` - Service framework
-- `flight-simconnect` - SimConnect integration
-- `flight-panels` - Panel management
-
-**Non-Core Crates**: Allow warnings for development ergonomics
-
-### 4. Critical Pattern Verification
-
-**Purpose**: Prevent specific compilation errors that have occurred before.
-
-**Verified Patterns**:
-
-#### Profile API Usage
 ```bash
-# ❌ Old API (causes compilation error)
-Profile::merge(base, overlay)
+# Quick check during development
+make quick
 
-# ✅ New API (correct)
-Profile::merge_with(base, overlay)
+# Full check before pushing
+make all
+
+# Simulate CI locally (includes tests and build)
+make ci-simulation
 ```
-
-#### BlackboxWriter Constructor
-```bash
-# ❌ Incorrect (if constructor doesn't return Result)
-let writer = BlackboxWriter::new(config)?;
-
-# ✅ Correct
-let writer = BlackboxWriter::new(config);
-```
-
-#### Engine Constructor Signature
-```bash
-# ❌ Old signature
-Engine::new(config)
-
-# ✅ New signature
-Engine::new(name, config)
-```
-
-#### Benchmark Black Box Usage
-```bash
-# ❌ Old Criterion API
-criterion::black_box(value)
-
-# ✅ New std API
-std::hint::black_box(value)
-```
-
-#### Packed Struct Safety
-```bash
-# ❌ Unsafe (creates unaligned reference)
-let value = &packed_struct.field;
-
-# ✅ Safe (copy by value)
-let value = packed_struct.field;
-let reference = &value;
-```
-
-### 5. Dead Code Cleanup
-
-**Purpose**: Remove unused code and imports to reduce maintenance burden.
-
-**Implementation**:
-```bash
-cargo fix --workspace --allow-dirty
-```
-
-**What it fixes**:
-- Unused imports
-- Dead code
-- Unnecessary `mut` keywords
-- Other automatic fixes
 
 ## CI Integration
 
-### Workflow Jobs
+### Workflow Structure
 
-1. **Test Suite** (`test`)
-   - Runs on Ubuntu and Windows
-   - Includes critical pattern verification
-   - Strict clippy checks for core crates
+The CI workflow (`.github/workflows/ci.yml`) includes:
 
-2. **Feature Powerset** (`feature-powerset`)
-   - Runs feature powerset testing
-   - Verifies workspace dependency alignment
-   - Ubuntu only (faster feedback)
+1. **Test Suite** - Runs on Ubuntu and Windows with multiple Rust versions
+2. **Security Audit** - Dependency security checks
+3. **Build Release** - Release builds for both platforms
+4. **Feature Powerset** - Comprehensive feature testing
+5. **Performance Tests** - Benchmark execution
 
-3. **Security Audit** (`security`)
-   - Dependency vulnerability scanning
-   - HTTP stack unification validation
+### Critical Pattern Verification in CI
 
-4. **Build Release** (`build`)
-   - Cross-platform release builds
-   - Artifact generation
+The CI workflow includes a dedicated step for pattern verification:
 
-5. **Performance** (`performance`)
-   - Benchmark execution
-   - Performance regression detection (TODO)
-
-### Pattern Verification in CI
-
-The CI runs these checks on every PR:
-
-```bash
-# Profile::merge usage
-git grep -n "Profile::merge(" | grep -v "Profile::merge_with"
-
-# BlackboxWriter::new usage  
-git grep -n "BlackboxWriter::new.*?"
-
-# Engine::new signature
-git grep -n "Engine::new(" | grep -v ","
-
-# Criterion black_box usage
-git grep -n "criterion::black_box"
-
-# Workspace dependency alignment
-grep -r "tokio.*=" crates/*/Cargo.toml | grep -v "workspace = true"
+```yaml
+- name: Verify critical patterns are fixed
+  run: |
+    # Check Profile::merge is replaced with Profile::merge_with
+    if git grep -n "Profile::merge(" | grep -v "Profile::merge_with"; then
+      echo "❌ Found Profile::merge( calls"
+      exit 1
+    fi
+    
+    # Check BlackboxWriter::new doesn't have ? operator
+    if git grep -n "BlackboxWriter::new.*?"; then
+      echo "❌ Found BlackboxWriter::new with ? operator"
+      exit 1
+    fi
+    
+    # ... (additional checks)
 ```
 
-## Adding New Regression Prevention
+### Platform Matrix
 
-### For New API Changes
+Tests run on:
+- **OS**: Ubuntu Latest, Windows Latest
+- **Rust**: Stable, MSRV (1.89.0)
 
-1. **Add Pattern Check**: Update `scripts/regression_prevention.rs` with new pattern
-2. **Update CI**: Add check to `.github/workflows/ci.yml`
-3. **Update Makefile**: Add target to `Makefile`
-4. **Document**: Add to this guide
+This ensures cross-platform compatibility and MSRV compliance.
 
-### For New Core Crates
+## Adding New Regression Checks
 
-1. **Add to Strict Clippy**: Update core crates list in CI and Makefile
-2. **Feature Testing**: Ensure crate participates in feature powerset testing
-3. **Dependency Alignment**: Move common dependencies to workspace level
+### 1. Identify the Pattern
 
-### For New Dependencies
+Document the issue and the correct pattern:
 
-1. **Workspace Level**: Add to `[workspace.dependencies]` in root `Cargo.toml`
-2. **Version Alignment**: Update all crates to use `{ workspace = true }`
-3. **CI Verification**: Add to dependency alignment checks
+```markdown
+**Issue**: Description of what went wrong
+**Correct Pattern**: How it should be done
+**Verification**: Command to check for the issue
+```
+
+### 2. Add to verify-patterns Target
+
+Update `Makefile`:
+
+```makefile
+verify-patterns:
+    @echo "  Checking new pattern..."
+    @if git grep -n "bad_pattern"; then \
+        echo "❌ Found bad_pattern usage"; \
+        exit 1; \
+    fi
+```
+
+### 3. Add to Regression Prevention Script
+
+Update `scripts/regression_prevention.rs`:
+
+```rust
+fn verify_critical_patterns() {
+    // ... existing checks ...
+    
+    // New pattern check
+    let new_pattern_check = Command::new("git")
+        .args(&["grep", "-n", "bad_pattern"])
+        .output()
+        .expect("Failed to run git grep");
+        
+    if new_pattern_check.status.success() && !new_pattern_check.stdout.is_empty() {
+        eprintln!("❌ Found bad_pattern usage:");
+        eprintln!("{}", String::from_utf8_lossy(&new_pattern_check.stdout));
+        exit(1);
+    }
+}
+```
+
+### 4. Add to CI Workflow
+
+Update `.github/workflows/ci.yml`:
+
+```yaml
+- name: Verify critical patterns are fixed
+  run: |
+    # ... existing checks ...
+    
+    # New pattern check
+    if git grep -n "bad_pattern"; then
+      echo "❌ Found bad_pattern usage"
+      exit 1
+    fi
+```
+
+### 5. Document in This Guide
+
+Add the new pattern to the "Critical Pattern Verification" section above.
+
+## Best Practices
+
+### For Developers
+
+1. **Run quick checks frequently** during development:
+   ```bash
+   make quick
+   ```
+
+2. **Run full checks before pushing**:
+   ```bash
+   make all
+   ```
+
+3. **Use workspace dependencies** for common crates:
+   ```toml
+   [dependencies]
+   tokio = { workspace = true, features = ["macros"] }
+   ```
+
+4. **Test feature combinations** when adding new features:
+   ```bash
+   cargo hack check -p your-crate --feature-powerset
+   ```
+
+### For Maintainers
+
+1. **Review CI failures carefully** - they often indicate real issues
+2. **Update regression checks** when fixing bugs
+3. **Keep dependency versions aligned** in workspace Cargo.toml
+4. **Document new patterns** in this guide
 
 ## Troubleshooting
 
-### Feature Powerset Failures
+### cargo-hack not installed
 
-**Symptom**: `cargo hack check --workspace --feature-powerset --depth 2` fails
+```bash
+cargo install cargo-hack
+```
 
-**Common Causes**:
-- Feature combinations that don't compile together
-- Missing optional dependencies
-- Conflicting feature flags
+Or let the Makefile install it automatically:
+```bash
+make check-deps
+```
 
-**Solutions**:
-- Use `--exclude` to skip problematic crates temporarily
-- Add `[features]` constraints in `Cargo.toml`
-- Fix feature interaction bugs
+### Pattern check false positives
 
-### Clippy Strict Failures
+If a pattern check incorrectly flags valid code:
 
-**Symptom**: Core crate fails `cargo clippy -p <crate> -- -D warnings`
+1. Review the grep pattern for accuracy
+2. Add exclusions if needed (e.g., `grep -v "valid_usage"`)
+3. Document the exception in this guide
 
-**Common Causes**:
-- New clippy lints in Rust updates
-- Code quality regressions
-- Platform-specific warnings
+### CI failures on Windows
 
-**Solutions**:
-- Fix the underlying issue (preferred)
-- Add targeted `#[allow(clippy::lint_name)]` if justified
-- Move crate out of core list if quality requirements too strict
+Windows uses different shell syntax. Ensure CI scripts use:
+- PowerShell-compatible commands
+- Cross-platform tools (cargo, git)
+- Proper path separators
 
-### Pattern Verification Failures
+### Feature powerset timeout
 
-**Symptom**: CI fails on pattern verification step
+If feature powerset testing takes too long:
 
-**Common Causes**:
-- Reintroduction of old API usage
-- New code using deprecated patterns
-- False positives from grep patterns
-
-**Solutions**:
-- Fix the code to use correct patterns
-- Update pattern if API legitimately changed
-- Refine grep pattern to reduce false positives
-
-### Dependency Alignment Failures
-
-**Symptom**: CI fails on workspace dependency alignment
-
-**Common Causes**:
-- New crate added with inline dependency versions
-- Dependency version bumped in individual crate
-- New dependency not added to workspace
-
-**Solutions**:
-- Move dependency to workspace level
-- Update all crates to use `{ workspace = true }`
-- Align versions across workspace
-
-## Performance Considerations
-
-### CI Time Impact
-
-- **Feature Powerset**: ~5-10 minutes (depth 2 limit)
-- **Strict Clippy**: ~2-3 minutes (core crates only)
-- **Pattern Verification**: ~30 seconds (grep operations)
-- **Total Overhead**: ~8-14 minutes per PR
-
-### Local Development Impact
-
-- **Quick Checks**: ~2-3 minutes (`make quick`)
-- **Full Checks**: ~8-12 minutes (`make all`)
-- **Incremental**: Most checks are incremental and cache-friendly
-
-### Optimization Strategies
-
-1. **Parallel Execution**: CI jobs run in parallel
-2. **Selective Checking**: Only core crates get strict treatment
-3. **Depth Limiting**: Feature powerset limited to depth 2
-4. **Caching**: Rust compilation cache reduces repeated work
-
-## Future Improvements
-
-### Planned Enhancements
-
-1. **Performance Regression Detection**: Automated benchmark comparison
-2. **Dependency Update Automation**: Automated dependency updates with testing
-3. **Custom Lints**: Project-specific clippy lints for domain rules
-4. **Integration Testing**: Cross-crate integration test automation
-
-### Metrics and Monitoring
-
-1. **Build Time Tracking**: Monitor CI build time trends
-2. **Pattern Violation Frequency**: Track how often patterns are violated
-3. **Feature Combination Coverage**: Measure feature testing coverage
-4. **Code Quality Trends**: Track clippy warning trends over time
+1. Reduce depth: `--depth 1` instead of `--depth 2`
+2. Exclude problematic crates: `--exclude problematic-crate`
+3. Run on specific crates: `-p specific-crate`
 
 ## References
 
 - [Cargo Hack Documentation](https://github.com/taiki-e/cargo-hack)
-- [Clippy Lint Reference](https://rust-lang.github.io/rust-clippy/)
-- [Cargo Workspaces](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html)
-- [GitHub Actions Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+- [Clippy Lints](https://rust-lang.github.io/rust-clippy/master/)
+- [Cargo Workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html)
+- [Feature Resolver v2](https://doc.rust-lang.org/cargo/reference/resolver.html#feature-resolver-version-2)
+
+## Maintenance
+
+This document should be updated when:
+
+- New regression checks are added
+- Critical patterns change
+- CI workflow is modified
+- New tools are introduced
+
+Last updated: 2025-10-23

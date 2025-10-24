@@ -71,12 +71,36 @@ cargo deny check
 
 This project uses `rustfmt` and `clippy` for code formatting and linting. Configuration is provided in `rustfmt.toml` and `clippy.toml`.
 
+### Regression Prevention
+
+Flight Hub implements comprehensive regression prevention measures to maintain code quality:
+
+```bash
+# Quick check before committing
+make quick
+
+# Full regression prevention suite
+make all
+
+# Simulate CI locally
+make ci-simulation
+```
+
+Key measures include:
+- **Workspace dependency alignment** - Centralized version management
+- **Feature powerset testing** - Test all feature combinations
+- **Strict clippy enforcement** - Core crates must pass `-D warnings`
+- **Critical pattern verification** - Automated checks for known issues
+
+See [Regression Prevention Guide](docs/regression-prevention.md) for details.
+
 ### CI/CD
 
 GitHub Actions workflows provide:
 - Cross-platform testing (Windows + Linux)
 - Security auditing with `cargo-audit` and `cargo-deny`
 - Performance regression detection
+- Feature powerset testing
 - Automated releases
 
 ### Performance Requirements

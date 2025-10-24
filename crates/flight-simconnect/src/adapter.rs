@@ -24,7 +24,8 @@ use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
 /// MSFS adapter configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MsfsAdapterConfig {
     /// SimConnect session configuration
     pub session: SessionConfig,

@@ -16,7 +16,8 @@ use thiserror::Error;
 use tracing::{debug, warn};
 
 /// SimConnect event types
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SimEvent {
     /// Standard SimConnect event
     Standard {
@@ -35,7 +36,8 @@ pub enum SimEvent {
 }
 
 /// Input Event for modern aircraft compatibility
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InputEvent {
     /// Event name/hash
     pub name: String,

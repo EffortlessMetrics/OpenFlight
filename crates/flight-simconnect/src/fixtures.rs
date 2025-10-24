@@ -19,7 +19,8 @@ use thiserror::Error;
 use tracing::{debug, info, warn};
 
 /// Session fixture containing recorded SimConnect data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SessionFixture {
     /// Fixture metadata
     pub metadata: FixtureMetadata,
@@ -32,7 +33,8 @@ pub struct SessionFixture {
 }
 
 /// Fixture metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FixtureMetadata {
     /// Fixture name/description
     pub name: String,
@@ -51,7 +53,8 @@ pub struct FixtureMetadata {
 }
 
 /// Recorded SimConnect event
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FixtureEvent {
     /// Timestamp relative to recording start
     pub timestamp: Duration,
@@ -60,7 +63,8 @@ pub struct FixtureEvent {
 }
 
 /// Types of recorded events
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum RecordedEvent {
     /// Connection established
     Connected {
@@ -96,7 +100,8 @@ pub enum RecordedEvent {
 }
 
 /// Timestamped bus snapshot for validation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TimestampedSnapshot {
     /// Timestamp relative to recording start
     pub timestamp: Duration,
@@ -107,7 +112,8 @@ pub struct TimestampedSnapshot {
 }
 
 /// Validation tolerance for fixture comparison
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ValidationTolerance {
     /// Speed tolerance (knots)
     pub speed: f32,

@@ -24,7 +24,8 @@ use thiserror::Error;
 use tracing::{debug, warn};
 
 /// Variable mapping configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MappingConfig {
     /// Aircraft-specific variable mappings
     pub aircraft_mappings: HashMap<String, AircraftMapping>,
@@ -35,7 +36,8 @@ pub struct MappingConfig {
 }
 
 /// Aircraft-specific variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AircraftMapping {
     /// Kinematics variables
     pub kinematics: KinematicsMapping,
@@ -52,7 +54,8 @@ pub struct AircraftMapping {
 }
 
 /// Kinematics variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KinematicsMapping {
     pub ias: String,
     pub tas: String,
@@ -70,7 +73,8 @@ pub struct KinematicsMapping {
 }
 
 /// Aircraft configuration variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ConfigMapping {
     pub gear_nose: String,
     pub gear_left: String,
@@ -89,7 +93,8 @@ pub struct ConfigMapping {
 }
 
 /// Lights variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LightsMapping {
     pub nav: String,
     pub beacon: String,
@@ -101,7 +106,8 @@ pub struct LightsMapping {
 }
 
 /// Engine variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineMapping {
     pub index: u8,
     pub running: String,
@@ -115,7 +121,8 @@ pub struct EngineMapping {
 }
 
 /// Environment variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EnvironmentMapping {
     pub altitude: String,
     pub pressure_altitude: String,
@@ -127,7 +134,8 @@ pub struct EnvironmentMapping {
 }
 
 /// Navigation variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NavigationMapping {
     pub latitude: String,
     pub longitude: String,
@@ -138,7 +146,8 @@ pub struct NavigationMapping {
 }
 
 /// Helicopter variable mapping
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HeloMapping {
     pub nr: String,
     pub np: String,
@@ -148,7 +157,8 @@ pub struct HeloMapping {
 }
 
 /// Update rates for different data categories
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UpdateRates {
     /// Kinematics update rate (Hz)
     pub kinematics: f32,
