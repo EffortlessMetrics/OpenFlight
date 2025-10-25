@@ -321,7 +321,100 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.2_
 
-- [x] 4. Verify final workspace state
+- [x] 4. Gate optional binaries to prevent default build failures
+
+
+
+
+
+
+
+
+  - Gate flight-updater's docs-validator and flight-cli binaries
+  - These binaries have API drift or missing dependencies
+  - _Requirements: BC-06_
+
+- [x] 4.1 Gate flight-updater's docs-validator bin
+
+
+
+
+  - **File**: `crates/flight-updater/Cargo.toml`
+  - Add feature for docs-validator:
+    ```toml
+    [features]
+    default = []
+    docs-validator = ["dep:clap"]
+    ```
+  - Make clap optional:
+    ```toml
+    [dependencies]
+    # ...existing deps...
+    clap = { version = "4", features = ["derive"], optional = true }
+    ```
+  - Add required-features to bin:
+    ```toml
+    [[bin]]
+    name = "docs-validator"
+    path = "src/bin/docs-validator.rs"
+    required-features = ["docs-validator"]
+    ```
+  - Verify: `cargo check -p flight-updater` passes (bin not built by default)
+  - Verify: `cargo build -p flight-updater --features docs-validator` builds the bin
+  - _Requirements: BC-06.1_
+
+- [x] 4.2 Gate flight-cli binary
+
+
+
+
+  - **File**: `crates/flight-cli/Cargo.toml`
+  - Add feature for CLI:
+    ```toml
+    [features]
+    default = []
+    cli = ["dep:clap"]
+    ```
+  - Make clap optional:
+    ```toml
+    [dependencies]
+    anyhow = "1"
+    # ...existing deps...
+    clap = { version = "4", features = ["derive"], optional = true }
+    ```
+  - Add required-features to bin:
+    ```toml
+    [[bin]]
+    name = "flightctl"
+    path = "src/main.rs"
+    required-features = ["cli"]
+    ```
+  - **File**: `crates/flight-cli/src/main.rs`
+  - Add fallback main:
+    ```rust
+    #[cfg(feature = "cli")]
+    fn main() -> anyhow::Result<()> {
+        // existing CLI program here (unchanged)
+        Ok(())
+    }
+    
+    #[cfg(not(feature = "cli"))]
+    fn main() {
+        eprintln!("Enable `-p flight-cli --features cli` to build the flight CLI.");
+    }
+    ```
+  - Verify: `cargo check -p flight-cli` passes (bin not built by default)
+  - Verify: `cargo build -p flight-cli --features cli` builds the CLI
+  - _Requirements: BC-06.1_
+
+- [x] 5. Verify final workspace state
+
+
+
+
+
+
+
 
 
 
@@ -330,7 +423,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Run comprehensive checks to ensure green build
   - _Requirements: All BC requirements verification_
 
-- [x] 4.1 Run core verification commands
+
+- [x] 5.1 Run core verification commands
+
 
 
   - Execute:
@@ -347,12 +442,18 @@ This gets the workspace green immediately while allowing selective demo re-enabl
     # Specific feature checks (optional demos)
     cargo check -p examples --features simconnect
     cargo check -p examples --features streamdeck,panels
+    
+    # Gated binaries compile when features enabled
+    cargo build -p flight-updater --features docs-validator
+    cargo build -p flight-cli --features cli
     ```
   - All commands should pass without errors
-  - Gated examples show helpful "enable --features" messages
+  - Gated examples and binaries show helpful "enable --features" messages
   - _Requirements: BC-06.6, BC-10.6_
 
-- [x] 4.2 Verify cross-platform compatibility
+- [x] 5.2 Verify cross-platform compatibility
+
+
 
 
   - Run on both Windows and Linux CI:
@@ -363,7 +464,8 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Windows-only examples properly gated
   - _Requirements: BC-04.6, NFR-C_
 
-- [x] 4.3 Document example feature usage
+- [x] 5.3 Document example feature usage
+
 
 
   - Add comment to examples/Cargo.toml explaining feature system:

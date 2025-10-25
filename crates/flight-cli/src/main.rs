@@ -3,20 +3,30 @@
 
 //! Flight Hub CLI - Command line interface with full parity to UI functionality
 
-use clap::{Parser, Subcommand, Args};
-use flight_ipc::{client::FlightClient, ClientConfig};
-use serde_json::{json, Value};
-use std::path::PathBuf;
+#[cfg(feature = "cli")]
+use clap::{Parser, Subcommand};
+#[cfg(feature = "cli")]
+use flight_ipc::ClientConfig;
+#[cfg(feature = "cli")]
+use serde_json::json;
+#[cfg(feature = "cli")]
 use std::process;
 
+#[cfg(feature = "cli")]
 mod commands;
+#[cfg(feature = "cli")]
 mod output;
+#[cfg(feature = "cli")]
 mod client_manager;
 
+#[cfg(feature = "cli")]
 use commands::*;
+#[cfg(feature = "cli")]
 use output::OutputFormat;
+#[cfg(feature = "cli")]
 use client_manager::ClientManager;
 
+#[cfg(feature = "cli")]
 #[derive(Parser)]
 #[command(name = "flightctl")]
 #[command(about = "Flight Hub command line interface")]
@@ -38,6 +48,7 @@ struct Cli {
     command: Commands,
 }
 
+#[cfg(feature = "cli")]
 #[derive(Subcommand)]
 enum Commands {
     /// Device management commands
@@ -76,8 +87,9 @@ enum Commands {
     Info,
 }
 
+#[cfg(feature = "cli")]
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     
     // Initialize client manager
@@ -116,6 +128,12 @@ async fn main() {
     }
 }
 
+#[cfg(not(feature = "cli"))]
+fn main() {
+    eprintln!("Enable `-p flight-cli --features cli` to build the flight CLI.");
+}
+
+#[cfg(feature = "cli")]
 async fn execute_command(cli: &Cli, client_manager: &ClientManager) -> anyhow::Result<Option<String>> {
     match &cli.command {
         Commands::Devices { action } => {
@@ -145,6 +163,7 @@ async fn execute_command(cli: &Cli, client_manager: &ClientManager) -> anyhow::R
     }
 }
 
+#[cfg(feature = "cli")]
 fn error_to_code(error: &anyhow::Error) -> &'static str {
     // Map error types to stable error codes
     if let Some(ipc_error) = error.downcast_ref::<flight_ipc::IpcError>() {
@@ -161,6 +180,7 @@ fn error_to_code(error: &anyhow::Error) -> &'static str {
     }
 }
 
+#[cfg(feature = "cli")]
 fn error_to_exit_code(error: &anyhow::Error) -> i32 {
     // Map error types to exit codes
     if let Some(ipc_error) = error.downcast_ref::<flight_ipc::IpcError>() {

@@ -11,16 +11,21 @@ repository.workspace = true
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+[features]
+default = []
+cli = ["dep:clap"]
+
 [[bin]]
 name = "flightctl"
 path = "src/main.rs"
+required-features = ["cli"]
 
 [dependencies]
+anyhow.workspace = true
 flight-core = { path = "../flight-core" }
 flight-ipc = { path = "../flight-ipc" }
-clap = { workspace = true }
+clap = { workspace = true, optional = true }
 tokio.workspace = true
-anyhow.workspace = true
 serde_json.workspace = true
 serde = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }

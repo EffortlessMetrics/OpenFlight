@@ -12,6 +12,15 @@ repository.workspace = true
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 homepage.workspace = true
 
+[features]
+default = []
+docs-validator = ["dep:clap"]
+
+[[bin]]
+name = "docs-validator"
+path = "src/bin/docs-validator.rs"
+required-features = ["docs-validator"]
+
 [dependencies]
 # Core dependencies
 tokio = { workspace = true, features = ["fs", "process", "time"] }
@@ -37,6 +46,9 @@ dirs = "5.0"
 # Compression for delta updates
 flate2 = "1.0"
 tar = "0.4"
+
+# CLI for docs-validator binary (optional)
+clap = { version = "4", features = ["derive"], optional = true }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]
