@@ -33,11 +33,17 @@ This gets `cargo check --workspace` green without touching public APIs.
 
 ## P0 Tasks: flight-service Compilation Fixes
 
-- [ ] 0. Verify earlier namespace fixes are in place
+- [x] 0. Verify earlier namespace fixes are in place
+
+
+
+
   - Ensure previous E0255/E0404 fixes remain
   - _Requirements: BC-03, BC-05_
 
-- [ ] 0.1 Confirm namespace aliases in aircraft_auto_switch_service.rs
+- [x] 0.1 Confirm namespace aliases in aircraft_auto_switch_service.rs
+
+
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
   - Verify these imports exist (from earlier fixes):
     ```rust
@@ -48,7 +54,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no namespace collision errors
   - _Requirements: BC-03.1, BC-05.1_
 
-- [ ] 1. Fix Bus API drift (subscribe + id)
+- [-] 1. Fix Bus API drift (subscribe + id)
+
+
   - Update subscription API to match current flight-bus implementation
   - Remove async patterns where no longer needed
   - Delete unused SubscriberId logic
