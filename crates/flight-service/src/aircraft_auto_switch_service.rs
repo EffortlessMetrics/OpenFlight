@@ -10,7 +10,7 @@ use flight_core::{
     AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, ProcessDetector, 
     ProcessDetectionConfig, DetectedProcess, PhaseOfFlight, SwitchMetrics, Result, FlightError
 };
-use flight_bus::{BusSnapshot, BusPublisher, SubscriberId, SimId, AircraftId};
+use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig, SimId, AircraftId};
 use flight_simconnect::{AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo};
 use flight_xplane::{AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft};
 // Avoid type-name collision with local stub
@@ -168,8 +168,7 @@ impl AircraftAutoSwitchService {
         self.process_detector.start().await?;
 
         // Subscribe to bus for telemetry updates
-        let subscriber_id = SubscriberId::new("aircraft_auto_switch");
-        let subscriber = bus_publisher.subscribe(subscriber_id, Default::default()).await
+        let subscriber = bus_publisher.subscribe(SubscriptionConfig::default())
             .map_err(|e| FlightError::AutoSwitch(format!("Failed to subscribe to bus: {}", e)))?;
         
         *self.bus_subscriber.write().await = Some(subscriber);

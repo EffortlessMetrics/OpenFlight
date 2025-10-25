@@ -62,7 +62,8 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Delete unused SubscriberId logic
   - _Requirements: BC-03, BC-05_
 
-- [ ] 1.1 Update bus subscription API in aircraft_auto_switch_service.rs
+- [-] 1.1 Update bus subscription API in aircraft_auto_switch_service.rs
+
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
   - Remove `SubscriberId` import, add `SubscriptionConfig`:
     ```rust
