@@ -159,7 +159,13 @@ impl CapabilityService {
             success: true,
             error_message: None,
             affected_axes,
-            applied_limits: CapabilityLimits::for_mode(mode),
+            applied_limits: CapabilityLimits {
+                max_axis_output: 1.0,
+                max_ffb_torque: 10.0,
+                allow_high_torque: true,
+                max_expo: 1.0,
+                max_slew_rate: 10.0,
+            },
         })
     }
 

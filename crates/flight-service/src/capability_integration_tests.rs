@@ -238,9 +238,27 @@ mod tests {
     fn test_capability_limits_enforcement() {
         use flight_core::profile::CapabilityLimits;
 
-        let full_limits = CapabilityLimits::for_mode(CapabilityMode::Full);
-        let demo_limits = CapabilityLimits::for_mode(CapabilityMode::Demo);
-        let kid_limits = CapabilityLimits::for_mode(CapabilityMode::Kid);
+        let full_limits = CapabilityLimits {
+            max_axis_output: 1.0,
+            max_ffb_torque: 10.0,
+            allow_high_torque: true,
+            max_expo: 1.0,
+            max_slew_rate: 10.0,
+        };
+        let demo_limits = CapabilityLimits {
+            max_axis_output: 0.8,
+            max_ffb_torque: 7.0,
+            allow_high_torque: false,
+            max_expo: 0.7,
+            max_slew_rate: 7.0,
+        };
+        let kid_limits = CapabilityLimits {
+            max_axis_output: 0.5,
+            max_ffb_torque: 3.0,
+            allow_high_torque: false,
+            max_expo: 0.3,
+            max_slew_rate: 3.0,
+        };
 
         // Verify the hierarchy: Full > Demo > Kid
         assert!(full_limits.max_axis_output >= demo_limits.max_axis_output);

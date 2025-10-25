@@ -249,11 +249,18 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "method not found: shutdown" errors
   - _Requirements: BC-03.3_
 
-- [ ] 4. Update EngineConfig field usage
+- [x] 4. Update EngineConfig field usage
+
+
+
+
+
   - Migrate to new EngineConfig field names
   - _Requirements: BC-01_
 
-- [ ] 4.1 Update EngineConfig construction in safe_mode.rs and service.rs
+- [x] 4.1 Update EngineConfig construction in safe_mode.rs and service.rs
+
+
   - **Files**: `crates/flight-service/src/safe_mode.rs`, `crates/flight-service/src/service.rs`
   - Replace old fields with new equivalents:
     ```rust
@@ -275,11 +282,18 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "unknown field" errors
   - _Requirements: BC-01.3_
 
-- [ ] 5. Fix Profile and capability API changes
+- [x] 5. Fix Profile and capability API changes
+
+
+
+
+
   - Update profile and capability usage to match current APIs
   - _Requirements: BC-01_
 
-- [ ] 5.1 Replace Profile builder and name() calls
+- [x] 5.1 Replace Profile builder and name() calls
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Replace builder pattern:
     ```rust
@@ -295,7 +309,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "method not found: builder/name" errors
   - _Requirements: BC-01.4_
 
-- [ ] 5.2 Replace CapabilityLimits::for_mode with default
+- [x] 5.2 Replace CapabilityLimits::for_mode with default
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Replace for_mode calls:
     ```rust
