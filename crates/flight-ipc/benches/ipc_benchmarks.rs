@@ -5,7 +5,7 @@ use flight_ipc::{
     negotiation::{negotiate_features, Version},
     proto::{
         Device, DeviceCapabilities, DeviceHealth, DeviceStatus, DeviceType, HealthEvent,
-        HealthEventType, ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest,
+        HealthEventType, ListDevicesResponse, NegotiateFeaturesRequest,
         PerformanceMetrics, TransportType,
     },
 };

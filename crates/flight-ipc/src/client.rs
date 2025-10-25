@@ -5,19 +5,16 @@
 
 use crate::{
     negotiation::{validate_required_features, Version},
-    proto::{
-        GetServiceInfoRequest, HealthSubscribeRequest, NegotiateFeaturesRequest,
-    },
+    proto::NegotiateFeaturesRequest,
     ClientConfig, IpcError, NegotiationResult,
 };
 use anyhow::Result;
 use std::time::Duration;
-use tonic::transport::{Channel, Endpoint};
 use tracing::{debug, info};
 
 /// Flight Hub IPC client
 pub struct FlightClient {
-    channel: tonic::transport::Channel,
+    _channel: tonic::transport::Channel,
     config: ClientConfig,
     negotiation_result: Option<NegotiationResult>,
 }
@@ -33,7 +30,7 @@ impl FlightClient {
         let channel = Self::create_channel(&config).await?;
         
         let mut flight_client = Self {
-            channel,
+            _channel: channel,
             config,
             negotiation_result: None,
         };
@@ -62,7 +59,7 @@ impl FlightClient {
     
     /// Negotiate features with the server
     async fn negotiate_features(&mut self) -> Result<(), IpcError> {
-        let request = NegotiateFeaturesRequest {
+        let _request = NegotiateFeaturesRequest {
             client_version: self.config.client_version.clone(),
             supported_features: self.config.supported_features.clone(),
             preferred_transport: self.config.preferred_transport.into(),
