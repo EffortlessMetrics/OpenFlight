@@ -6,14 +6,24 @@
 //! This example demonstrates the blackbox recording and replay functionality,
 //! showing how to capture flight data and replay it for analysis and testing.
 
+#![cfg_attr(not(feature = "replay"), allow(dead_code, unused_imports))]
+
+#[cfg(feature = "replay")]
 use flight_replay::{ReplayEngine, ReplayConfig, ReplayError, ReplayStats};
+#[cfg(feature = "replay")]
 use flight_core::blackbox::{BlackboxWriter, BlackboxReader, BlackboxConfig};
+#[cfg(feature = "replay")]
 use flight_axis::{AxisEngine, AxisFrame};
+#[cfg(feature = "replay")]
 use flight_bus::{BusSnapshot, SimId, AircraftId};
+#[cfg(feature = "replay")]
 use std::path::PathBuf;
+#[cfg(feature = "replay")]
 use std::time::{Duration, Instant};
+#[cfg(feature = "replay")]
 use tempfile::TempDir;
 
+#[cfg(feature = "replay")]
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
@@ -41,6 +51,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(not(feature = "replay"))]
+fn main() {
+    eprintln!("Enable `--features replay` to build this example (requires API porting).");
+}
+
+#[cfg(feature = "replay")]
 async fn demo_blackbox_recording() -> anyhow::Result<()> {
     println!("1. Blackbox Recording");
     println!("--------------------");
@@ -118,6 +134,7 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn demo_blackbox_reading() -> anyhow::Result<()> {
     println!("\n2. Blackbox Reading");
     println!("------------------");
@@ -146,6 +163,7 @@ async fn demo_blackbox_reading() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn demo_replay_engine() -> anyhow::Result<()> {
     println!("\n3. Replay Engine");
     println!("---------------");
@@ -222,6 +240,7 @@ async fn demo_replay_engine() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn demo_validation_analysis() -> anyhow::Result<()> {
     println!("\n4. Validation and Analysis");
     println!("-------------------------");
@@ -289,6 +308,7 @@ async fn demo_validation_analysis() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn demo_performance_testing() -> anyhow::Result<()> {
     println!("\n5. Performance Testing");
     println!("---------------------");
@@ -352,6 +372,7 @@ async fn demo_performance_testing() -> anyhow::Result<()> {
 
 // Helper functions
 
+#[cfg(feature = "replay")]
 async fn create_sample_recording(path: &PathBuf) -> anyhow::Result<()> {
     let config = BlackboxConfig {
         output_dir: path.clone(),
@@ -388,6 +409,7 @@ async fn create_sample_recording(path: &PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn create_deterministic_recording(path: &PathBuf) -> anyhow::Result<()> {
     let config = BlackboxConfig {
         output_dir: path.clone(),
@@ -420,6 +442,7 @@ async fn create_deterministic_recording(path: &PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 async fn create_performance_recording(path: &PathBuf) -> anyhow::Result<()> {
     let config = BlackboxConfig {
         output_dir: path.clone(),
@@ -449,6 +472,7 @@ async fn create_performance_recording(path: &PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "replay")]
 fn create_mock_axis_frame(timestamp: u64, sequence: u64) -> AxisFrame {
     let input = ((sequence as f32) * 0.01).sin() * 0.5 + 0.5; // Sine wave input
     let mut frame = AxisFrame::new(input, timestamp);
@@ -457,6 +481,7 @@ fn create_mock_axis_frame(timestamp: u64, sequence: u64) -> AxisFrame {
     frame
 }
 
+#[cfg(feature = "replay")]
 fn create_mock_bus_snapshot(timestamp: u64) -> BusSnapshot {
     use flight_bus::{Kinematics, AircraftConfig, Environment, Navigation, GearState, AutopilotState, LightsConfig};
     use flight_bus::types::{ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearPosition};
@@ -518,6 +543,7 @@ fn create_mock_bus_snapshot(timestamp: u64) -> BusSnapshot {
     }
 }
 
+#[cfg(feature = "replay")]
 fn create_deterministic_profile() -> flight_core::profile::Profile {
     use flight_core::profile::{Profile, AxisConfig, AircraftId};
     use std::collections::HashMap;

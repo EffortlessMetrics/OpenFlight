@@ -8,10 +8,15 @@
 
 #![cfg_attr(not(feature = "simconnect"), allow(dead_code, unused_imports))]
 
-use flight_simconnect::{SimConnectAdapter, SimConnectConfig, SimConnectError};
-use flight_bus::{BusSnapshot, SimId, AircraftId};
-use flight_core::aircraft_switch::{DetectedAircraft, AircraftAutoSwitch, AutoSwitchConfig};
+#[cfg(feature = "simconnect")]
+use flight_simconnect::{MsfsAdapter, MsfsAdapterConfig};
+#[cfg(feature = "simconnect")]
+use flight_bus::BusSnapshot;
+#[cfg(feature = "simconnect")]
+use flight_core::aircraft_switch::{DetectedAircraft, AircraftAutoSwitch, AutoSwitchConfig, SimId, AircraftId};
+#[cfg(feature = "simconnect")]
 use std::time::Duration;
+#[cfg(feature = "simconnect")]
 use tokio::time::sleep;
 
 #[cfg(feature = "simconnect")]
@@ -46,55 +51,43 @@ fn main() {
     eprintln!("Enable `--features simconnect` to build this example.");
 }
 
+#[cfg(feature = "simconnect")]
 async fn demo_basic_connection() -> anyhow::Result<()> {
     println!("1. Basic SimConnect Connection");
     println!("-----------------------------");
 
-    let config = SimConnectConfig {
-        app_name: "Flight Hub Demo".to_string(),
-        connection_timeout: Duration::from_secs(10),
-        retry_attempts: 3,
-        retry_delay: Duration::from_secs(2),
-        telemetry_rate_hz: 30,
+    let config = MsfsAdapterConfig {
+        session: flight_simconnect::SessionConfig::default(),
+        mapping: flight_simconnect::mapping::create_default_mapping(),
+        publish_rate: 30.0,
+        aircraft_detection_timeout: Duration::from_secs(10),
+        auto_reconnect: true,
+        max_reconnect_attempts: 3,
     };
 
-    match SimConnectAdapter::new(config).await {
-        Ok(mut adapter) => {
-            println!("✓ Connected to MSFS successfully");
-            
-            // Check connection status
-            if adapter.is_connected().await {
-                println!("✓ Connection verified");
-                
-                // Get simulator info
-                if let Ok(sim_info) = adapter.get_simulator_info().await {
-                    println!("  Simulator: {}", sim_info.name);
-                    println!("  Version: {}", sim_info.version);
-                    println!("  Build: {}", sim_info.build);
-                }
-                
-                adapter.disconnect().await?;
-                println!("✓ Disconnected cleanly");
-            } else {
-                println!("✗ Connection verification failed");
-            }
+    match MsfsAdapter::new(config) {
+        Ok(_adapter) => {
+            println!("✓ MSFS adapter created successfully");
+            println!("  Note: Actual connection happens when start() is called");
+            println!("  In a real application:");
+            println!("  1. Call adapter.start() to begin telemetry publishing");
+            println!("  2. Subscribe to telemetry updates via the bus");
+            println!("  3. Call adapter.stop() when done");
         }
-        Err(SimConnectError::SimulatorNotRunning) => {
-            println!("ℹ MSFS is not running - this is expected for demo");
+        Err(e) => {
+            println!("ℹ MSFS adapter creation failed: {}", e);
+            println!("  This is expected if MSFS is not running");
             println!("  To test with real MSFS:");
             println!("  1. Start Microsoft Flight Simulator");
             println!("  2. Load into any aircraft");
             println!("  3. Run this demo again");
-        }
-        Err(e) => {
-            println!("✗ Connection failed: {}", e);
-            println!("  This is expected if MSFS is not running");
         }
     }
 
     Ok(())
 }
 
+#[cfg(feature = "simconnect")]
 async fn demo_telemetry_reading() -> anyhow::Result<()> {
     println!("\n2. Telemetry Reading");
     println!("-------------------");
@@ -106,14 +99,14 @@ async fn demo_telemetry_reading() -> anyhow::Result<()> {
     
     println!("✓ Mock telemetry snapshot created:");
     println!("  Aircraft: {:?}", mock_snapshot.aircraft);
-    println!("  IAS: {:.0} kt", mock_snapshot.kinematics.ias.as_knots());
+    println!("  IAS: {:.0} kt", mock_snapshot.kinematics.ias.to_knots());
     println!("  Altitude: {:.0} ft", mock_snapshot.environment.altitude);
-    println!("  AoA: {:.1}°", mock_snapshot.kinematics.aoa.as_degrees());
+    println!("  AoA: {:.1}°", mock_snapshot.kinematics.aoa.to_degrees());
     println!("  Gear: {:?}", mock_snapshot.config.gear);
-    println!("  Flaps: {:.0}%", mock_snapshot.config.flaps.as_percentage());
+    println!("  Flaps: {:.0}%", mock_snapshot.config.flaps.value());
 
     // Demonstrate telemetry processing
-    if mock_snapshot.kinematics.ias.as_knots() > 100.0 {
+    if mock_snapshot.kinematics.ias.to_knots() > 100.0 {
         println!("  Status: Cruising");
     } else if mock_snapshot.environment.altitude < 1000.0 {
         println!("  Status: Pattern altitude");
@@ -124,18 +117,28 @@ async fn demo_telemetry_reading() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "simconnect")]
 async fn demo_aircraft_detection() -> anyhow::Result<()> {
     println!("\n3. Aircraft Detection");
     println!("--------------------");
 
     // Create aircraft auto-switch system
+    use flight_core::aircraft_switch::PofHysteresisConfig;
+    use flight_core::profile::CapabilityContext;
+    use std::collections::HashMap;
+    
     let config = AutoSwitchConfig {
-        switch_delay_ms: 500,
-        hysteresis_enabled: true,
-        detection_confidence_threshold: 0.8,
+        max_switch_time: Duration::from_millis(500),
+        profile_paths: vec![],
+        enable_pof: false,
+        pof_hysteresis: PofHysteresisConfig {
+            min_phase_time: Duration::from_secs(5),
+            hysteresis_bands: HashMap::new(),
+        },
+        capability_context: CapabilityContext::for_mode(flight_core::profile::CapabilityMode::Full),
     };
     
-    let mut auto_switch = AircraftAutoSwitch::new(config);
+    let auto_switch = AircraftAutoSwitch::new(config);
     
     // Simulate aircraft detection sequence
     let aircraft_sequence = vec![
@@ -145,43 +148,38 @@ async fn demo_aircraft_detection() -> anyhow::Result<()> {
         ("Bell 407", "B407", "Third Party"),
     ];
     
-    for (display_name, icao, manufacturer) in aircraft_sequence {
+    for (display_name, icao, _manufacturer) in aircraft_sequence {
         let detected = DetectedAircraft {
-            icao: icao.to_string(),
-            display_name: display_name.to_string(),
-            manufacturer: manufacturer.to_string(),
+            sim: SimId::Msfs,
+            aircraft_id: AircraftId::new(icao),
+            process_name: display_name.to_string(),
             confidence: 0.95,
             detection_time: std::time::Instant::now(),
         };
         
-        match auto_switch.process_detection(detected).await {
-            Ok(switch_result) => {
-                if switch_result.profile_changed {
-                    println!("✓ Switched to {}: {} ({})", icao, display_name, manufacturer);
-                    if let Some(profile_path) = switch_result.applied_profile {
-                        println!("  Applied profile: {}", profile_path);
-                    }
-                    println!("  Switch time: {} ms", switch_result.switch_time_ms);
-                } else {
-                    println!("  Already using profile for {}", icao);
-                }
+        match auto_switch.on_aircraft_detected(detected).await {
+            Ok(()) => {
+                println!("✓ Aircraft detection sent for {}: {}", icao, display_name);
+                // In a real implementation, the switch would happen asynchronously
+                // and we'd get the result through a callback or channel
             }
-            Err(e) => println!("✗ Aircraft switch failed: {}", e),
+            Err(e) => println!("✗ Aircraft detection failed: {}", e),
         }
         
         sleep(Duration::from_millis(100)).await;
     }
     
     // Show metrics
-    let metrics = auto_switch.get_metrics();
+    let metrics = auto_switch.get_metrics().await;
     println!("✓ Auto-switch metrics:");
     println!("  Total switches: {}", metrics.total_switches);
-    println!("  Average switch time: {:.1} ms", metrics.average_switch_time_ms);
+    println!("  Average switch time: {:.1} ms", metrics.average_switch_time.as_millis());
     println!("  Failed switches: {}", metrics.failed_switches);
 
     Ok(())
 }
 
+#[cfg(feature = "simconnect")]
 async fn demo_event_sending() -> anyhow::Result<()> {
     println!("\n4. Event Sending");
     println!("---------------");
@@ -212,36 +210,37 @@ async fn demo_event_sending() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "simconnect")]
 async fn demo_error_handling() -> anyhow::Result<()> {
     println!("\n5. Error Handling");
     println!("----------------");
 
     // Demonstrate various error conditions
     let error_scenarios = vec![
-        ("Simulator not running", SimConnectError::SimulatorNotRunning),
-        ("Connection timeout", SimConnectError::ConnectionTimeout),
-        ("Invalid event", SimConnectError::InvalidEvent("INVALID_EVENT".to_string())),
-        ("Data request failed", SimConnectError::DataRequestFailed("Test request".to_string())),
+        ("Simulator not running", "SimulatorNotRunning"),
+        ("Connection timeout", "ConnectionTimeout"),
+        ("Invalid event", "InvalidEvent"),
+        ("Data request failed", "DataRequestFailed"),
     ];
     
-    for (description, error) in error_scenarios {
+    for (description, error_type) in error_scenarios {
         println!("  Scenario: {}", description);
         
-        match error {
-            SimConnectError::SimulatorNotRunning => {
+        match error_type {
+            "SimulatorNotRunning" => {
                 println!("    → Retry connection with backoff");
                 println!("    → Show user-friendly message");
             }
-            SimConnectError::ConnectionTimeout => {
+            "ConnectionTimeout" => {
                 println!("    → Increase timeout and retry");
                 println!("    → Check firewall settings");
             }
-            SimConnectError::InvalidEvent(event) => {
-                println!("    → Log invalid event: {}", event);
+            "InvalidEvent" => {
+                println!("    → Log invalid event");
                 println!("    → Skip and continue with next event");
             }
-            SimConnectError::DataRequestFailed(request) => {
-                println!("    → Retry request: {}", request);
+            "DataRequestFailed" => {
+                println!("    → Retry request");
                 println!("    → Fallback to default values");
             }
             _ => {
@@ -255,14 +254,15 @@ async fn demo_error_handling() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "simconnect")]
 fn create_mock_snapshot() -> BusSnapshot {
     use flight_bus::{Kinematics, AircraftConfig, Environment, Navigation, GearState, AutopilotState, LightsConfig};
     use flight_bus::types::{ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearPosition};
     use std::collections::HashMap;
 
     BusSnapshot {
-        sim: SimId::Msfs,
-        aircraft: AircraftId::new("C172"),
+        sim: flight_bus::SimId::Msfs,
+        aircraft: flight_bus::AircraftId::new("C172"),
         timestamp: std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -291,7 +291,7 @@ fn create_mock_snapshot() -> BusSnapshot {
             flaps: Percentage::new(10.0).unwrap(),
             spoilers: Percentage::new(0.0).unwrap(),
             ap_state: AutopilotState::Off,
-            ap_altitude: Some(3500),
+            ap_altitude: Some(3500.0f32),
             ap_heading: Some(ValidatedAngle::new_degrees(270.0).unwrap()),
             ap_speed: Some(ValidatedSpeed::new_knots(120.0).unwrap()),
             lights: LightsConfig::default(),

@@ -22,7 +22,11 @@ This gets the workspace green immediately while allowing selective demo re-enabl
 
 ## Tasks
 
-- [ ] 1. Feature-isolate examples package (Step 1 - Makes workspace green)
+- [x] 1. Feature-isolate examples package (Step 1 - Makes workspace green)
+
+
+
+
   - Declare features in examples/Cargo.toml to silence "unexpected cfg" warnings
   - Make external deps optional and map features to deps
   - Gate failing examples with fallback mains
@@ -180,7 +184,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [ ] 1.6 Gate pipeline_compilation_demo.rs with fallback main
+- [x] 1.6 Gate pipeline_compilation_demo.rs with fallback main
+
+
   - **File**: `examples/pipeline_compilation_demo.rs`
   - Add at top of file:
     ```rust
@@ -202,7 +208,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [ ] 1.7 Gate capture_replay_demo.rs with fallback main
+
+- [x] 1.7 Gate capture_replay_demo.rs with fallback main
+
   - **File**: `examples/capture_replay_demo.rs`
   - Add at top of file:
     ```rust
@@ -224,7 +232,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [ ] 1.8 Verify workspace compiles with gated examples
+
+- [x] 1.8 Verify workspace compiles with gated examples
+
   - Run: `cargo check --workspace`
   - Should pass with all examples compiling to fallback mains
   - Run: `cargo check -p examples --all-features`
@@ -232,11 +242,16 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: No "unexpected cfg" warnings
   - _Requirements: BC-06.6_
 
-- [ ] 2. Suppress clippy FFI lints in sys crate (Step 3)
+- [x] 2. Suppress clippy FFI lints in sys crate (Step 3)
+
+
+
+
   - Fix clippy errors in flight-simconnect-sys
   - _Requirements: BC-10_
 
-- [ ] 2.1 Add FFI lint suppressions to flight-simconnect-sys
+- [x] 2.1 Add FFI lint suppressions to flight-simconnect-sys
+
   - **File**: `crates/flight-simconnect-sys/src/lib.rs`
   - Add at crate root (top of file):
     ```rust
@@ -250,12 +265,19 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo clippy -p flight-simconnect-sys` passes without FFI lint errors
   - _Requirements: BC-10.1, BC-10.2, BC-10.6_
 
-- [ ] 3. Optional: Surgical fixes for high-value examples (Step 2)
+- [x] 3. Optional: Surgical fixes for high-value examples (Step 2)
+
+
+
+
+
   - Port specific examples to new APIs for demonstration purposes
   - These are optional - workspace is green after Step 1
   - _Requirements: BC-06_
 
-- [ ] 3.1 Fix streamdeck_panel_demo.rs helper signatures (optional)
+- [x] 3.1 Fix streamdeck_panel_demo.rs helper signatures (optional)
+
+
   - **File**: `examples/streamdeck_panel_demo.rs`
   - Change helper function signatures from `Result<_, Box<dyn Error>>` to `anyhow::Result<()>`
   - Add missing import: `use flight_bus::AutopilotState;`
@@ -263,7 +285,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples --features streamdeck,panels` passes
   - _Requirements: BC-06.2_
 
-- [ ] 3.2 Fix simconnect_usage_demo.rs API updates (optional)
+- [x] 3.2 Fix simconnect_usage_demo.rs API updates (optional)
+
+
   - **File**: `examples/simconnect_usage_demo.rs`
   - Update method calls:
     - `as_knots()` → `to_knots()`
@@ -277,7 +301,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples --features simconnect` passes
   - _Requirements: BC-06.2_
 
-- [ ] 3.3 Fix telemetry_synth_demo.rs borrow checker (optional)
+- [x] 3.3 Fix telemetry_synth_demo.rs borrow checker (optional)
+
+
   - **File**: `examples/telemetry_synth_demo.rs`
   - Fix borrow conflict by scoping the first mutable borrow:
     ```rust

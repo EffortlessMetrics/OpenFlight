@@ -7,10 +7,15 @@
 
 #![cfg_attr(not(feature = "flight-service"), allow(dead_code, unused_imports))]
 
+#[cfg(feature = "flight-service")]
 use flight_core::profile::{Profile, AxisConfig, AircraftId, CapabilityMode, CapabilityContext};
+#[cfg(feature = "flight-service")]
 use flight_service::capability_service::CapabilityService;
+#[cfg(feature = "flight-service")]
 use flight_axis::AxisEngine;
+#[cfg(feature = "flight-service")]
 use std::collections::HashMap;
+#[cfg(feature = "flight-service")]
 use std::sync::Arc;
 
 #[cfg(feature = "flight-service")]
@@ -46,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "flight-service")]
 fn demonstrate_profile_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Profile Validation with Capability Enforcement");
     println!("------------------------------------------------");
@@ -95,6 +101,7 @@ fn demonstrate_profile_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "flight-service")]
 fn demonstrate_output_clamping(engine: &AxisEngine) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Engine Output Clamping");
     println!("-------------------------");
@@ -125,6 +132,7 @@ fn demonstrate_output_clamping(engine: &AxisEngine) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+#[cfg(feature = "flight-service")]
 fn demonstrate_service_operations(service: &CapabilityService) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Service Operations (IPC Simulation)");
     println!("--------------------------------------");

@@ -7,11 +7,18 @@
 //! including stall buffet, touchdown impulse, ground roll, gear warnings,
 //! and helicopter rotor effects.
 
+#![cfg_attr(not(feature = "integration"), allow(dead_code, unused_imports))]
+
+#[cfg(feature = "integration")]
 use flight_bus::{BusSnapshot, HeloData, Kinematics, AircraftConfig, Environment, Navigation, SimId, AircraftId, ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearState, types::GearPosition, AutopilotState, LightsConfig};
+#[cfg(feature = "integration")]
 use flight_ffb::{TelemetrySynthEngine, TelemetrySynthConfig, FfbEngine, FfbConfig, FfbMode};
+#[cfg(feature = "integration")]
 use std::time::{Duration, Instant};
+#[cfg(feature = "integration")]
 use std::collections::HashMap;
 
+#[cfg(feature = "integration")]
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
@@ -49,6 +56,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(not(feature = "integration"))]
+fn main() {
+    eprintln!("Enable `--features integration` to build this example (requires API porting).");
+}
+
+#[cfg(feature = "integration")]
 fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n1. Stall Buffet Demo");
     println!("-------------------");
@@ -70,6 +83,7 @@ fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n2. Touchdown Impulse Demo");
     println!("------------------------");
@@ -100,6 +114,7 @@ fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n3. Ground Roll Demo");
     println!("------------------");
@@ -122,6 +137,7 @@ fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n4. Gear Warning Demo");
     println!("-------------------");
@@ -156,6 +172,7 @@ fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n5. Helicopter Effects Demo");
     println!("-------------------------");
@@ -190,6 +207,7 @@ fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_user_tuning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n6. User Tuning Demo");
     println!("------------------");
@@ -232,6 +250,7 @@ fn demo_user_tuning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn create_base_snapshot() -> BusSnapshot {
     BusSnapshot {
         sim: SimId::Msfs,

@@ -16,9 +16,11 @@ use flight_streamdeck::{
     ImageSource, TextOverlay, ButtonLayout
 };
 #[cfg(all(feature = "streamdeck", feature = "panels"))]
-use flight_bus::{BusSnapshot, SimId, AircraftId};
+use flight_bus::{BusSnapshot, SimId, AircraftId, AutopilotState};
 #[cfg(all(feature = "streamdeck", feature = "panels"))]
-use flight_panels::{PanelManager, LedTarget, LedState};
+use flight_panels::{PanelManager, LedTarget};
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
+use flight_panels::led::LedState;
 #[cfg(all(feature = "streamdeck", feature = "panels"))]
 use std::collections::HashMap;
 #[cfg(all(feature = "streamdeck", feature = "panels"))]
@@ -566,7 +568,7 @@ fn create_cruise_snapshot() -> BusSnapshot {
     snapshot.config.gear.nose = flight_bus::types::GearPosition::Up;
     snapshot.config.gear.left = flight_bus::types::GearPosition::Up;
     snapshot.config.gear.right = flight_bus::types::GearPosition::Up;
-    snapshot.config.ap_state = AutopilotState::On;
+    snapshot.config.ap_state = AutopilotState::Engaged;
     snapshot.timestamp = 5000;
     snapshot
 }
@@ -591,19 +593,20 @@ fn process_telemetry_for_streamdeck(snapshot: &BusSnapshot) -> Vec<DisplayUpdate
     // Update speed indicator
     updates.push(DisplayUpdate::Text {
         position: (0, 1),
-        text: format!("{:.0}kt", snapshot.kinematics.ias.as_knots()),
+        text: format!("{:.0}kt", snapshot.kinematics.ias.to_knots()),
         font_size: 10,
         color: (255, 255, 255),
     });
     
     // Update autopilot indicator
-    let ap_on = matches!(snapshot.config.ap_state, AutopilotState::On);
+    let ap_on = matches!(snapshot.config.ap_state, AutopilotState::Engaged);
     updates.push(DisplayUpdate::Led {
         position: (1, 0),
         state: LedState {
             on: ap_on,
             brightness: if ap_on { 1.0 } else { 0.0 },
-            color: (0, 255, 0),
+            blink_rate: None,
+            last_update: std::time::Instant::now(),
         },
     });
     

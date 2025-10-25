@@ -1,4 +1,8 @@
 #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
+#![allow(
+    clippy::not_unsafe_ptr_arg_deref,
+    clippy::missing_transmute_annotations
+)]
 
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team

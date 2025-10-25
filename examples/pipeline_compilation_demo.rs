@@ -7,16 +7,23 @@
 //! showing how profiles are compiled into optimized function pipelines
 //! with zero-allocation guarantees.
 
+#![cfg_attr(not(feature = "integration"), allow(dead_code, unused_imports))]
+
+#[cfg(feature = "integration")]
 use flight_axis::{
     AxisEngine, AxisFrame, PipelineCompiler, PipelineBuilder, 
     nodes::{DeadzoneNode, CurveNode, SlewNode, DetentNode, DetentZone, DetentRole, MixerNode, MixerInput},
     counters::{RuntimeCounters, AllocationGuard},
     UpdateResult, EngineConfig
 };
+#[cfg(feature = "integration")]
 use flight_core::profile::{Profile, AxisConfig, CurvePoint};
+#[cfg(feature = "integration")]
 use std::collections::HashMap;
+#[cfg(feature = "integration")]
 use std::time::Instant;
 
+#[cfg(feature = "integration")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Flight Hub Pipeline Compilation Demo ===\n");
 
@@ -42,6 +49,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(not(feature = "integration"))]
+fn main() {
+    eprintln!("Enable `--features integration` to build this example (requires API porting).");
+}
+
+#[cfg(feature = "integration")]
 fn demo_basic_pipeline_building() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Basic Pipeline Building");
     println!("-------------------------");
@@ -83,6 +96,7 @@ fn demo_basic_pipeline_building() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_profile_compilation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Profile to Pipeline Compilation");
     println!("---------------------------------");
@@ -117,6 +131,7 @@ fn demo_profile_compilation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_atomic_swapping() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Atomic Pipeline Swapping");
     println!("---------------------------");
@@ -160,6 +175,7 @@ fn demo_atomic_swapping() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_zero_allocation_verification() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Zero-Allocation Verification");
     println!("-------------------------------");
@@ -204,6 +220,7 @@ fn demo_zero_allocation_verification() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. Performance Benchmarking");
     println!("---------------------------");
@@ -241,6 +258,7 @@ fn demo_performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn demo_complex_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n6. Complex Pipeline with All Node Types");
     println!("--------------------------------------");
@@ -314,6 +332,7 @@ fn demo_complex_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "integration")]
 fn create_test_profile() -> Profile {
     let mut axes = HashMap::new();
     

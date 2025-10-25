@@ -6,11 +6,18 @@
 //! This example demonstrates the profile canonicalization, validation,
 //! and rules DSL functionality implemented in task 3.
 
+#![cfg_attr(not(feature = "panels"), allow(dead_code, unused_imports))]
+
+#[cfg(feature = "panels")]
 use flight_core::profile::{Profile, AircraftId, AxisConfig, DetentZone, CurvePoint};
+#[cfg(feature = "panels")]
 use flight_core::rules::{RulesSchema, Rule, RuleDefaults};
+#[cfg(feature = "panels")]
 use flight_panels::{PanelManager, LedTarget};
+#[cfg(feature = "panels")]
 use std::collections::HashMap;
 
+#[cfg(feature = "panels")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Flight Hub Profile & Rules Demo ===\n");
 
@@ -149,4 +156,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n=== Demo completed successfully! ===");
     Ok(())
+}
+
+#[cfg(not(feature = "panels"))]
+fn main() {
+    eprintln!("Enable `--features panels` to build this example.");
 }
