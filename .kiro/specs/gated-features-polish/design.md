@@ -82,10 +82,17 @@ The work is organized into six independent components that can be implemented in
 **Feature Configuration:**
 ```toml
 # crates/flight-ipc/Cargo.toml
+[dependencies]
+serde_json = { version = "1", optional = true }
+
 [features]
 ipc-bench = []
 ipc-bench-serde = ["dep:serde_json"]
 ```
+
+**Note on JSON Roundtrip:** If the proto-generated `Device` type doesn't have serde derives, use one of:
+- **Option A (minimal):** Only enable JSON bench if proto crate exposes serde feature
+- **Option B (scaffold):** Create local `DeviceJson` mirror with serde derives for structure/size testing (document as approximation)
 
 **Code Pattern:**
 ```rust
@@ -129,28 +136,27 @@ RUSTFLAGS="-Dunused-imports" cargo bench -p flight-ipc --features "ipc-bench,ipc
 
 **Location:** `crates/flight-ipc/examples/client_example.rs` and `crates/flight-ipc/src/client.rs`
 
-**Option A: Keep Shim (Gated)**
+**Option A: Keep Shim (Recommended: pub(crate))**
 
-Feature-gate the shim to prevent public API growth:
-
+Make it crate-private to avoid growing public API surface:
 ```rust
 // crates/flight-ipc/src/client.rs
-impl FlightClient {
-    #[cfg(feature = "ipc-examples")]
-    pub fn list_devices(&self) -> Result<Vec<Device>> {
-        // Shim implementation
-    }
-}
-```
-
-Or make it crate-private:
-```rust
 impl FlightClient {
     pub(crate) fn list_devices(&self) -> Result<Vec<Device>> {
         // Shim implementation
     }
 }
 ```
+
+Or place the helper directly in the example file (no library change):
+```rust
+// crates/flight-ipc/examples/client_example.rs
+fn list_devices(client: &FlightClient) -> Result<Vec<Device>> {
+    // Helper implementation in example only
+}
+```
+
+**Do not gate library code on `ipc-examples` feature** - this creates unnecessary coupling between library and examples.
 
 Changelog entry:
 ```markdown
@@ -179,7 +185,8 @@ Remove the `list_devices()` method entirely.
 
 **Public API Verification:**
 ```bash
-cargo public-api -p flight-ipc --diff-git main..HEAD
+# Requires fetch-depth: 0 in CI checkout
+cargo public-api -p flight-ipc --diff-git origin/main..HEAD
 # or
 cargo semver-checks -p flight-ipc
 ```
@@ -243,20 +250,22 @@ flight-virtual = { path = "../flight-virtual" }
 ```
 
 **Verification Commands:**
-```powershell
-# Verify no cycle
-cargo tree -p flight-hid --edges dev,normal | Select-String flight-virtual
-# Should print nothing
+```bash
+# Verify no cycle (cross-platform with ripgrep)
+cargo tree -p flight-hid --edges dev,normal | rg 'flight-virtual' -n
+# Should be empty (exit code 1)
 
 # Verify single version
-cargo tree -p flight-hid | Select-String 'flight_hid v'
-# Should show exactly one version
+cargo tree -p flight-hid | rg '^flight_hid v' | wc -l
+# Should output: 1
 
 # Run relocated tests
 cargo test -p flight-virtual --tests
 # or
 cargo test -p flight-hid-integration-tests
 ```
+
+**Important:** Ensure any features needed from flight-hid (e.g., `ofp1-tests`) are non-default and only enabled by flight-virtual dev-dependencies.
 
 ### 4. Packed Field Safe Helpers
 
@@ -276,6 +285,12 @@ pub struct CapabilitiesReport {
 }
 
 impl CapabilitiesReport {
+    /// Returns a copy of capability flags without taking a reference to packed field.
+    #[inline]
+    pub fn cap_flags(&self) -> CapabilityFlags {
+        self.capability_flags
+    }
+    
     /// Safely sets a capability flag without taking a reference to packed field.
     #[inline]
     pub fn set_cap_flag(&mut self, flag: CapabilityFlags) {
@@ -301,6 +316,12 @@ pub struct HealthStatusReport {
 }
 
 impl HealthStatusReport {
+    /// Returns a copy of status flags without taking a reference to packed field.
+    #[inline]
+    pub fn status_flags(&self) -> StatusFlags {
+        self.status_flags
+    }
+    
     /// Safely sets a status flag without taking a reference to packed field.
     #[inline]
     pub fn set_status_flag(&mut self, flag: StatusFlags) {
@@ -339,16 +360,26 @@ pub struct CapabilitiesReport {
     /// Capability flags.
     /// 
     /// **Warning:** Do not take references to this field directly due to packed layout.
-    /// Use [`set_cap_flag`](Self::set_cap_flag) and [`clear_cap_flag`](Self::clear_cap_flag) instead.
+    /// Use [`cap_flags`](Self::cap_flags) to read, [`set_cap_flag`](Self::set_cap_flag) 
+    /// and [`clear_cap_flag`](Self::clear_cap_flag) to modify.
+    /// 
+    /// # Example
+    /// ```
+    /// let mut report = CapabilitiesReport::default();
+    /// report.set_cap_flag(CapabilityFlags::ANALOG_INPUT);
+    /// assert!(report.cap_flags().has_flag(CapabilityFlags::ANALOG_INPUT));
+    /// ```
     pub capability_flags: CapabilityFlags,
 }
 ```
+
+**Note:** If similar patterns exist on other packed structs, consider a macro to generate safe accessors for consistency.
 
 ### 5. Clone/Copy Derive Strategy
 
 **Location:** `crates/flight-hid/src/protocol/ofp1.rs`
 
-**Option A: Gate for Tests (No Public API Change)**
+**Option A: Gate for Tests (No Public API Change) - Recommended**
 
 For same-crate tests:
 ```rust
@@ -373,6 +404,8 @@ pub struct CapabilitiesReport {
 [features]
 ofp1-tests = []  # Not in default features
 ```
+
+**Important:** Deriving `Copy` on `#[repr(packed)]` is safe as long as all fields are `Copy`, but it does not make taking references safer. Keep tests using helper methods to avoid regressions.
 
 **Option B: Make Public (With Changelog)**
 
@@ -439,13 +472,32 @@ jobs:
       - name: Check flight-hid public API
         run: cargo public-api -p flight-hid --diff-git origin/main..HEAD
 
+  # Path filter for conditional jobs
+  path-filter:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      ipc: ${{ steps.filter.outputs.ipc }}
+      hid: ${{ steps.filter.outputs.hid }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ipc:
+              - 'crates/flight-ipc/**'
+            hid:
+              - 'crates/flight-hid/**'
+
   # Gated IPC smoke tests (on-demand)
   gated-ipc-smoke:
     runs-on: ubuntu-latest
+    needs: path-filter
     if: |
       github.event_name == 'schedule' ||
       contains(github.event.pull_request.labels.*.name, 'run-gated') ||
-      contains(github.event.pull_request.changed_files, 'crates/flight-ipc/')
+      needs.path-filter.outputs.ipc == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -453,19 +505,24 @@ jobs:
         run: RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features ipc-bench
       - name: Smoke test IPC benchmarks with serde
         run: RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"
+      - name: Clippy on IPC benchmarks
+        run: cargo clippy -p flight-ipc --benches -- -Dwarnings
 
   # Gated HID smoke tests (on-demand)
   gated-hid-smoke:
     runs-on: ubuntu-latest
+    needs: path-filter
     if: |
       github.event_name == 'schedule' ||
       contains(github.event.pull_request.labels.*.name, 'run-gated') ||
-      contains(github.event.pull_request.changed_files, 'crates/flight-hid/')
+      needs.path-filter.outputs.hid == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Smoke test HID with ofp1-tests
         run: cargo test --no-run -p flight-hid --features ofp1-tests
+      - name: Clippy on HID tests
+        run: cargo clippy -p flight-hid --tests -- -Dwarnings
 
   # Cross-platform verification (runs on schedule)
   cross-platform:
@@ -480,6 +537,11 @@ jobs:
       - name: Check workspace
         run: cargo check --workspace
 ```
+
+**Platform Notes:**
+- Some crates (e.g., SimConnect) are Windows-specific
+- Guard Windows-only crates with `cfg(windows)` in Cargo.toml targets/features
+- Ensure `cargo check --workspace` passes on Linux CI by excluding Windows-only targets
 
 **Trigger Mechanisms:**
 1. **Always:** Default workspace check and public API guard on PRs
@@ -580,18 +642,56 @@ RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features "ipc-
 # HID smoke tests
 cargo test --no-run -p flight-hid --features ofp1-tests
 
-# Dependency verification
-cargo tree -p flight-hid --edges dev,normal | Select-String flight-virtual  # Should be empty
-cargo tree -p flight-hid | Select-String 'flight_hid v'  # Should show one version
+# Dependency verification (cross-platform with ripgrep)
+cargo tree -p flight-hid --edges dev,normal | rg 'flight-virtual' -n  # Should be empty (exit 1)
+cargo tree -p flight-hid | rg '^flight_hid v' | wc -l  # Should output: 1
 
-# Public API verification
+# Public API verification (requires fetch-depth: 0)
 cargo public-api -p flight-ipc --diff-git origin/main..HEAD
 cargo public-api -p flight-hid --diff-git origin/main..HEAD
 
 # Lint verification
 cargo fmt --check -p flight-ipc -p flight-hid
-cargo clippy -p flight-ipc -p flight-hid -- -Dwarnings
+cargo clippy -p flight-ipc --benches -- -Dwarnings
+cargo clippy -p flight-hid --tests -- -Dwarnings
 ```
+
+## Definition of Done
+
+### Build and Test Verification
+1. `cargo check --workspace` passes on MSRV (1.75+) and stable
+2. Cross-platform: passes on both Windows and Linux (or platform requirements documented)
+3. IPC benches: both commands pass with `-Dunused-imports`:
+   - `RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features ipc-bench`
+   - `RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"`
+4. HID tests: `cargo test --no-run -p flight-hid --features ofp1-tests` passes
+5. Relocated tests pass: `cargo test -p flight-virtual --tests` (or integration crate)
+
+### Dependency and API Verification
+6. No cyclic dependencies: `cargo tree -p flight-hid --edges dev,normal | rg 'flight-virtual'` is empty
+7. Single version: `cargo tree -p flight-hid | rg '^flight_hid v' | wc -l` outputs `1`
+8. Public API guard passes for flight-ipc and flight-hid (no unintended surface growth)
+
+### Code Quality
+9. Packed field helpers implemented: `cap_flags()`, `set_cap_flag()`, `clear_cap_flag()`, etc.
+10. All tests updated to use helpers (no direct references to packed fields)
+11. Clippy passes on touched crates:
+    - `cargo clippy -p flight-ipc --benches -- -Dwarnings`
+    - `cargo clippy -p flight-hid --tests -- -Dwarnings`
+12. `cargo fmt --check` passes on touched crates
+
+### Documentation
+13. Changelog updated per Requirement 2 and Requirement 5 decisions
+14. README docs updated with feature flag descriptions:
+    - `ipc-bench`, `ipc-bench-serde` in flight-ipc
+    - `ofp1-tests` in flight-hid
+15. Rustdoc warnings added for packed fields (if public) with helper usage examples
+16. CI documentation updated with smoke test trigger mechanisms
+
+### CI Integration
+17. Path-filter action added for conditional smoke tests
+18. Smoke tests schedulable via `run-gated` label or nightly cron
+19. Public API check runs on all PRs with `fetch-depth: 0`
 
 ## Implementation Notes
 
@@ -605,8 +705,18 @@ All six components are independent and can be implemented in parallel:
 6. CI smoke tests
 
 ### Open Decisions Required Before Implementation
-1. **FlightClient::list_devices():** Keep (gated) or drop (use existing RPC)?
-2. **Clone/Copy derives:** Gate for tests or make public with changelog?
+1. **FlightClient::list_devices():** 
+   - **Recommended:** Drop the shim and update example to use existing RPC (e.g., `get_service_info`)
+   - **Alternative:** Keep as `pub(crate)` or in example file only
+2. **Clone/Copy derives:** 
+   - **Recommended:** Gate with `#[cfg_attr(any(test, feature = "ofp1-tests"), derive(Clone, Copy))]`
+   - **Alternative:** Make public with changelog documentation
+
+### Feature Flag Documentation
+Document in README and Cargo.toml comments:
+- `ipc-bench`: Enables IPC benchmarks (dev-only)
+- `ipc-bench-serde`: Adds JSON roundtrip benchmarks (requires `ipc-bench`)
+- `ofp1-tests`: Enables Clone/Copy derives for external integration tests (dev-only)
 
 ### Changelog Updates
 Document decisions in respective crate changelogs:
@@ -615,5 +725,6 @@ Document decisions in respective crate changelogs:
 
 ### Documentation Updates
 - Add rustdoc warnings for packed fields if they remain public
+- Include usage examples in rustdoc showing helper methods
 - Document gated features in crate README files
 - Update CI documentation with smoke test trigger mechanisms
