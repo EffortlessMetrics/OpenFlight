@@ -11,6 +11,10 @@ The flight-service crate has accumulated API drift from its dependencies:
 - **Service constructors**: Changed from `async fn new() -> Result<Self>` to `fn new() -> Self`
 - **Lifecycle methods**: `.shutdown()` methods removed
 
+**Earlier namespace fixes (already applied)**:
+- `use flight_dcs_export::DcsAdapter as DcsAdapterApi;` (resolved E0255)
+- `use tracing::Subscriber;` for trait in `dyn Subscriber` (resolved E0404)
+
 ## Strategy Overview
 
 **P0 (Must Fix)**: flight-service internal fixes to restore compilation
@@ -18,13 +22,36 @@ The flight-service crate has accumulated API drift from its dependencies:
 
 This gets `cargo check --workspace` green without touching public APIs.
 
+## Definition of Done
+
+**DoD-1**: `cargo check -p flight-service` completes with 0 errors
+**DoD-2**: `cargo build -p flight-service --all-features` completes (if features exist)
+**DoD-3**: `cargo check --workspace` completes with 0 errors (warnings OK)
+**DoD-4** (optional): Add unit smoke tests for mapper functions, guarded behind `#[cfg(test)]`
+
 ---
 
 ## P0 Tasks: flight-service Compilation Fixes
 
+- [ ] 0. Verify earlier namespace fixes are in place
+  - Ensure previous E0255/E0404 fixes remain
+  - _Requirements: BC-03, BC-05_
+
+- [ ] 0.1 Confirm namespace aliases in aircraft_auto_switch_service.rs
+  - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
+  - Verify these imports exist (from earlier fixes):
+    ```rust
+    use flight_dcs_export::DcsAdapter as DcsAdapterApi;
+    use tracing::Subscriber;  // trait for dyn Subscriber
+    ```
+  - If missing, add them to resolve E0255/E0404 errors
+  - Verify: `cargo check -p flight-service` shows no namespace collision errors
+  - _Requirements: BC-03.1, BC-05.1_
+
 - [ ] 1. Fix Bus API drift (subscribe + id)
   - Update subscription API to match current flight-bus implementation
   - Remove async patterns where no longer needed
+  - Delete unused SubscriberId logic
   - _Requirements: BC-03, BC-05_
 
 - [ ] 1.1 Update bus subscription API in aircraft_auto_switch_service.rs
@@ -40,8 +67,10 @@ This gets `cargo check --workspace` green without touching public APIs.
     - let subscriber = bus_publisher.subscribe(subscriber_id, Default::default()).await?;
     + let subscriber = bus_publisher.subscribe(SubscriptionConfig::default())?;
     ```
-  - Note: `subscribe()` now returns `Result<Subscriber, PublisherError>` and is sync
-  - Verify: `cargo check -p flight-service` shows fewer errors
+  - Delete any unused `subscriber_id` variables nearby
+  - Note: `subscribe()` now returns `Result<Subscriber, PublisherError>` and is **sync** (no await)
+  - Keep `.await` on actual async methods like `on_telemetry_update()` and `force_switch()`
+  - Verify: `cargo check -p flight-service` shows bus subscription errors resolved
   - _Requirements: BC-03.1, BC-05.1_
 
 - [ ] 2. Add bus ↔ core type mapping helpers
@@ -58,7 +87,7 @@ This gets `cargo check --workspace` green without touching public APIs.
         SimId as CoreSimId, AircraftId as CoreAircraftId, TelemetrySnapshot,
     };
     ```
-  - Add mapper functions (pub(crate) or private):
+  - Add **private** mapper functions (not `impl From` - orphan rules):
     ```rust
     fn map_sim_id(sim: BusSimId) -> CoreSimId {
         match sim {
@@ -70,48 +99,67 @@ This gets `cargo check --workspace` green without touching public APIs.
     }
     
     fn map_aircraft_id(id: BusAircraftId) -> CoreAircraftId {
-        // Adjust based on actual struct definitions
-        CoreAircraftId { value: id.value }  // or id.0 → CoreAircraftId(id.0)
+        // IMPORTANT: Check if newtype vs struct with fields
+        // If tuple newtype: CoreAircraftId(id.0)
+        // If struct: CoreAircraftId { value: id.value }
+        // Adjust based on actual definitions when you see them
+        CoreAircraftId { value: id.value }  // placeholder
     }
     
     fn map_snapshot(bus: &BusSnapshot) -> TelemetrySnapshot {
-        // Prefer existing From/TryFrom if available:
-        // TelemetrySnapshot::from(bus.clone())
-        // Otherwise construct minimal fields:
+        // IMPORTANT: Check if From<BusSnapshot> exists first - prefer that
+        // If not, build minimal snapshot with only fields auto_switch reads
+        // (e.g., sim, aircraft_id, basic kinematics)
+        // If Default not implemented, construct required fields explicitly
+        // TODO: Flesh out with real telemetry data after bring-up
         TelemetrySnapshot {
-            // Fill fields actually used by auto-switch
+            // Fill minimal fields for compilation
             ..Default::default()
         }
     }
     ```
+  - Note: These are **private free functions**, not trait impls (avoids orphan rules)
   - Verify: Functions compile, types match
   - _Requirements: BC-03.5, BC-05.2_
 
 - [ ] 2.2 Apply type mappers at all callsites
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
-  - Update telemetry handler:
+  - Update telemetry handler (keep `.await` - it's still async):
     ```rust
     - if let Err(e) = auto_switch.on_telemetry_update(snapshot).await {
     + if let Err(e) = auto_switch.on_telemetry_update(map_snapshot(&snapshot)).await {
     ```
-  - Update force_switch call:
+  - Update force_switch call (keep `.await` - it's still async):
     ```rust
     - self.auto_switch.force_switch(aircraft_id).await
     + self.auto_switch.force_switch(map_aircraft_id(aircraft_id)).await
     ```
-  - Update ServiceEvent enum to use BusSimId:
+  - Update ServiceEvent enum to use BusSimId consistently:
     ```rust
     - enum ServiceEvent { ProcessLost(SimId), ... }
     + use flight_bus::SimId as BusSimId;
     + enum ServiceEvent { ProcessLost(BusSimId), ... }
     ```
-  - Update match arms to use consistent enum (BusSimId or CoreSimId + mapping):
+  - Update ALL match arms to use ONE enum consistently (pick BusSimId everywhere):
     ```rust
+    // PICK ONE PATTERN AND USE EVERYWHERE:
+    // Option A: Use BusSimId directly (recommended)
     match process.sim {
-        CoreSimId::Msfs => { ... }  // or map_sim_id(bus_sim_id)
+        BusSimId::Msfs => { ... }
+        BusSimId::XPlane => { ... }
+        BusSimId::Dcs => { ... }
     }
+    
+    // Option B: Convert then match CoreSimId
+    match map_sim_id(bus_sim) {
+        CoreSimId::Msfs => { ... }
+        CoreSimId::XPlane => { ... }
+        CoreSimId::Dcs => { ... }
+    }
+    
+    // DO NOT MIX: Don't use BusSimId in some places and CoreSimId in others
     ```
-  - Verify: `cargo check -p flight-service` shows type errors resolved
+  - Verify: `cargo check -p flight-service` shows E0308 type mismatch errors resolved
   - _Requirements: BC-03.5, BC-05.2_
 
 - [ ] 3. Fix constructor and lifecycle API changes
@@ -184,11 +232,14 @@ This gets `cargo check --workspace` green without touching public APIs.
     - };
     + let config = EngineConfig {
     +   enable_rt_checks: false,
-    +   max_frame_time_us: 5_000,             // 5ms budget (similar intent)
+    +   max_frame_time_us: 5_000u32,          // Use integer literal (u32/u64)
     +   enable_conflict_detection: false,
     +   conflict_detector_config: Default::default(),
     + };
     ```
+  - Note: `max_frame_time_us` is likely `u32` or `u64` - use integer literal to avoid type inference issues
+  - Note: These values approximate prior behavior (5ms budget ≈ 5.0ms latency)
+  - TODO: Add follow-up task to tune these values for actual runtime behavior
   - Verify: `cargo check -p flight-service` shows no "unknown field" errors
   - _Requirements: BC-01.3_
 
@@ -285,13 +336,28 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "method not found: compile_profile" errors
   - _Requirements: BC-01.4_
 
-- [ ] 8.2 Replace FlightError::InvalidState with anyhow
+- [ ] 8.2 Replace FlightError::InvalidState carefully
   - **File**: `crates/flight-service/src/service.rs` (and other files using InvalidState)
-  - Replace InvalidState variant:
+  - **CAUTION**: Functions likely return `flight_core::Result<T> = Result<T, FlightError>`
+  - **Check if `From<anyhow::Error>` exists for `FlightError` first**
+  - **Option A** (if FlightError has generic/other variant):
+    ```rust
+    - return Err(FlightError::InvalidState(msg.to_string()).into());
+    + return Err(FlightError::other(msg));  // or FlightError::Generic(msg)
+    ```
+  - **Option B** (if no suitable variant, temporary unblocker):
+    ```rust
+    - return Err(FlightError::InvalidState(msg.to_string()).into());
+    + tracing::warn!("Invalid state: {}", msg);
+    + return Ok(());  // Only on non-critical paths
+    + // TODO: Add proper error variant to FlightError
+    ```
+  - **Option C** (if From<anyhow::Error> exists):
     ```rust
     - return Err(FlightError::InvalidState(msg.to_string()).into());
     + return Err(anyhow::anyhow!(msg).into());
     ```
+  - Choose based on FlightError's actual definition
   - Verify: `cargo check -p flight-service` shows no "variant not found: InvalidState" errors
   - _Requirements: BC-03.5_
 
@@ -409,10 +475,12 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Add at top:
     ```rust
     #![cfg(feature = "ofp1-tests")]
-    use crate::ofp1::Ofp1Device;  // bring trait into scope if used
+    use crate::ofp1::Ofp1Device;  // Bring trait into scope to resolve "method not found"
     ```
-  - Sidesteps "multiple flight_hid versions in graph" quirk
-  - Verify: `cargo check -p flight-hid` passes
+  - Note: This sidesteps "multiple flight_hid versions in graph" quirk
+  - Note: When feature is enabled, trait must be in scope for methods to resolve
+  - Verify: `cargo check -p flight-hid` passes (tests not built by default)
+  - Verify: `cargo test -p flight-hid --features ofp1-tests` compiles when enabled
   - _Requirements: BC-06.1, BC-09.6_
 
 - [ ] 10.4 Gate remaining crate tests/benches/examples
@@ -473,19 +541,36 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
 
 ---
 
+## Build-Out Sequence (Minimize Red States)
+
+Follow this order to keep compilation working after each step:
+
+1. **Pre-flight** (task 0.1) - Verify earlier namespace fixes remain
+2. **Delete foreign impls** (task 6.1) - Fast win, removes E0116 errors immediately
+3. **Bus API** (task 1.1) - Fix subscribe, remove .await on sync methods
+4. **Engine constructors/config** (tasks 3.1, 4.1) - Update AxisEngine and EngineConfig
+5. **Service constructors & shutdown** (tasks 3.2, 3.3) - Make constructors sync, remove shutdown
+6. **Enum/type mapping** (tasks 2.1, 2.2) - Add mappers, convert callsites, unify ServiceEvent
+7. **Profile/capabilities** (tasks 5.1, 5.2) - Replace builder/name/for_mode
+8. **Stragglers** (tasks 8.1, 8.2, 8.3) - compile_profile, InvalidState, match consistency
+9. **Serde** (task 7.1) - Fix ServiceConfig derives
+10. **Verify** (task 9.1) - Confirm flight-service compiles
+11. **Workspace default** - `cargo check --workspace` should be green
+
 ## Summary
 
 This phase achieves a green `cargo check --workspace` through:
 
 **P0 (Must Fix)**:
-1. **Bus API updates** (tasks 1.1) - Remove `.await`, use `SubscriptionConfig`
-2. **Type mapping** (tasks 2.1-2.2) - Add bus↔core conversion helpers
+0. **Namespace fixes** (task 0.1) - Verify earlier DcsAdapter/Subscriber aliases remain
+1. **Bus API updates** (task 1.1) - Remove `.await` on sync subscribe, use `SubscriptionConfig`
+2. **Type mapping** (tasks 2.1-2.2) - Add private bus↔core conversion helpers
 3. **Constructor fixes** (tasks 3.1-3.3) - Update to new signatures, remove shutdown
-4. **Config updates** (tasks 4.1) - Migrate EngineConfig fields
+4. **Config updates** (task 4.1) - Migrate EngineConfig fields with integer literals
 5. **Profile/caps fixes** (tasks 5.1-5.2) - Use defaults, remove builder
 6. **Orphan rule fixes** (task 6.1) - Delete illegal inherent impls
 7. **Serde fixes** (task 7.1) - Drop/skip derives
-8. **Stragglers** (tasks 8.1-8.3) - compile_profile, InvalidState, match consistency
+8. **Stragglers** (tasks 8.1-8.3) - compile_profile, InvalidState (careful!), match consistency
 9. **Verification** (task 9.1) - Confirm flight-service compiles
 
 **P1 (Optional)**:
@@ -496,14 +581,27 @@ This phase achieves a green `cargo check --workspace` through:
 
 - **No public API changes** - All fixes are internal to flight-service
 - **Surgical approach** - Minimal code changes, focused on compilation
-- **Bisectable** - Each task results in fewer errors
+- **Bisectable** - Each task results in fewer errors, sequence minimizes red states
 - **Clear migration path** - Type mappers isolate bus↔core differences
 - **Optional gating** - P1 tasks prevent non-default targets from blocking
 
+## Risks & Mitigations
+
+**Semantic drift**: New EngineConfig defaults may not match prior runtime behavior
+- Mitigation: Values approximate prior behavior; add TODO for tuning
+
+**Error typing**: Replacing InvalidState must keep same Result type
+- Mitigation: Check FlightError definition first; avoid anyhow unless From exists
+
+**Snapshot content**: Minimal map_snapshot may under-populate fields
+- Mitigation: Fine for compilation bring-up; add TODO to flesh out with real telemetry
+
 ## Notes
 
-- All type mapping is internal to flight-service (pub(crate) or private)
-- Constructor changes are mechanical (remove Result wrapping, remove .await)
+- All type mapping is **private free functions** (not trait impls - avoids orphan rules)
+- Constructor changes are mechanical (remove Result wrapping, remove .await on constructors)
+- Keep `.await` on actual async methods (on_telemetry_update, force_switch)
 - Shutdown is now implicit (drop handles cleanup)
 - Profile/caps use defaults for safe-mode bring-up
 - Gating pattern (P1) already used successfully in Phase 2 for examples package
+- Earlier namespace fixes (DcsAdapterApi, tracing::Subscriber) must remain in place
