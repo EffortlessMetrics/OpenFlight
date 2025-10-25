@@ -54,7 +54,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no namespace collision errors
   - _Requirements: BC-03.1, BC-05.1_
 
-- [-] 1. Fix Bus API drift (subscribe + id)
+- [x] 1. Fix Bus API drift (subscribe + id)
+
+
 
 
   - Update subscription API to match current flight-bus implementation
@@ -62,7 +64,8 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Delete unused SubscriberId logic
   - _Requirements: BC-03, BC-05_
 
-- [-] 1.1 Update bus subscription API in aircraft_auto_switch_service.rs
+- [x] 1.1 Update bus subscription API in aircraft_auto_switch_service.rs
+
 
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
   - Remove `SubscriberId` import, add `SubscriptionConfig`:
