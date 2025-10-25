@@ -17,8 +17,8 @@ named-pipes = ["tokio/net"]
 unix-sockets = ["tokio/net"]
 client = []
 server = []
-ipc-bench = []
-ipc-bench-serde = []  # Enable JSON benchmarks with serde
+ipc-bench = []  # Enable IPC benchmarks (dev-only)
+ipc-bench-serde = []  # Enable JSON benchmarks with serde (requires ipc-bench)
 ipc-examples = []
 ipc-tests = []
 
@@ -29,7 +29,7 @@ tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
 anyhow.workspace = true
 thiserror.workspace = true
 serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
+serde_json.workspace = true  # Required by library error types
 tracing.workspace = true
 tokio-stream = { workspace = true, features = ["sync"] }
 futures-core = { workspace = true }

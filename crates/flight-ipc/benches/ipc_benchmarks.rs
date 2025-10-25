@@ -1,5 +1,7 @@
 //! Performance benchmarks for Flight Hub IPC
 
+#![deny(unused_imports)]
+
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use flight_ipc::{
     negotiation::{negotiate_features, Version},
@@ -11,6 +13,9 @@ use flight_ipc::{
 };
 use prost::Message;
 use std::time::SystemTime;
+
+#[cfg(feature = "ipc-bench-serde")]
+use serde::{Deserialize, Serialize};
 
 fn bench_version_parsing(c: &mut Criterion) {
     c.bench_function("version_parsing", |b| {
@@ -81,11 +86,33 @@ fn bench_device_serialization(c: &mut Criterion) {
         });
     });
     
-    // Note: JSON benchmarks are not available because Device type (generated from protobuf)
-    // does not implement Serialize/Deserialize. To add JSON benchmarks, you would need to:
-    // 1. Enable serde feature in prost-build configuration
-    // 2. Add #[derive(Serialize, Deserialize)] to generated types
-    // For now, we only benchmark protobuf encoding/decoding which is the primary use case.
+    #[cfg(feature = "ipc-bench-serde")]
+    {
+        // JSON benchmarks using DeviceJson mirror struct
+        // Note: The proto-generated Device type doesn't have serde derives,
+        // so we use a mirror struct as an approximation for JSON serialization benchmarks
+        let device_json = DeviceJson::from_device(&device);
+        
+        group.bench_function("json_encode", |b| {
+            b.iter(|| {
+                let encoded = serde_json::to_string(std::hint::black_box(&device_json)).unwrap();
+                std::hint::black_box(encoded);
+            });
+        });
+        
+        let json_str = serde_json::to_string(&device_json).unwrap();
+        group.bench_function("json_decode", |b| {
+            b.iter(|| {
+                let decoded: DeviceJson = serde_json::from_str(std::hint::black_box(&json_str)).unwrap();
+                std::hint::black_box(decoded);
+            });
+        });
+    }
+    
+    #[cfg(not(feature = "ipc-bench-serde"))]
+    {
+        // JSON benchmarks disabled - enable with --features ipc-bench-serde
+    }
     
     group.finish();
 }
@@ -189,6 +216,75 @@ fn create_test_device() -> Device {
         .collect(),
     }
 }
+
+#[cfg(feature = "ipc-bench-serde")]
+mod json_mirror {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// Mirror struct for Device with serde support for JSON benchmarking.
+    /// This is an approximation of the proto-generated Device type structure
+    /// for the purpose of benchmarking JSON serialization performance.
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct DeviceJson {
+        pub id: String,
+        pub name: String,
+        pub device_type: i32,
+        pub status: i32,
+        pub capabilities: Option<DeviceCapabilitiesJson>,
+        pub health: Option<DeviceHealthJson>,
+        pub metadata: HashMap<String, String>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct DeviceCapabilitiesJson {
+        pub supports_force_feedback: bool,
+        pub supports_raw_torque: bool,
+        pub max_torque_nm: u32,
+        pub min_period_us: u32,
+        pub has_health_stream: bool,
+        pub supported_protocols: Vec<String>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct DeviceHealthJson {
+        pub temperature_celsius: f32,
+        pub current_amperes: f32,
+        pub packet_loss_count: u32,
+        pub last_seen_timestamp: i64,
+        pub active_faults: Vec<String>,
+    }
+
+    impl DeviceJson {
+        pub fn from_device(device: &Device) -> Self {
+            Self {
+                id: device.id.clone(),
+                name: device.name.clone(),
+                device_type: device.r#type,
+                status: device.status,
+                capabilities: device.capabilities.as_ref().map(|c| DeviceCapabilitiesJson {
+                    supports_force_feedback: c.supports_force_feedback,
+                    supports_raw_torque: c.supports_raw_torque,
+                    max_torque_nm: c.max_torque_nm,
+                    min_period_us: c.min_period_us,
+                    has_health_stream: c.has_health_stream,
+                    supported_protocols: c.supported_protocols.clone(),
+                }),
+                health: device.health.as_ref().map(|h| DeviceHealthJson {
+                    temperature_celsius: h.temperature_celsius,
+                    current_amperes: h.current_amperes,
+                    packet_loss_count: h.packet_loss_count,
+                    last_seen_timestamp: h.last_seen_timestamp,
+                    active_faults: h.active_faults.clone(),
+                }),
+                metadata: device.metadata.clone(),
+            }
+        }
+    }
+}
+
+#[cfg(feature = "ipc-bench-serde")]
+use json_mirror::DeviceJson;
 
 criterion_group!(
     benches,

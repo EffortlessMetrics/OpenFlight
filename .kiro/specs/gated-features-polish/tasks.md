@@ -1,6 +1,11 @@
 # Implementation Plan
 
-- [ ] 1. Clean up flight-ipc benchmarks for warning-free compilation
+- [x] 1. Clean up flight-ipc benchmarks for warning-free compilation
+
+
+
+
+
   - Remove unused imports (e.g., `ListDevicesRequest`) from `crates/flight-ipc/benches/ipc_benchmarks.rs`
   - Add optional `serde_json` dependency to `crates/flight-ipc/Cargo.toml`: `[dependencies] serde_json = { version = "1", optional = true }`
   - Update feature definitions in `crates/flight-ipc/Cargo.toml` to include `default = []`, `ipc-bench = []`, and `ipc-bench-serde = ["dep:serde_json"]`
@@ -13,7 +18,12 @@
   - Run `cargo clippy -p flight-ipc --benches -- -Dwarnings` to catch any remaining issues
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
-- [ ] 2. Resolve FlightClient example decision and ensure public API stability
+- [x] 2. Resolve FlightClient example decision and ensure public API stability
+
+
+
+
+
   - Review current `FlightClient::list_devices()` implementation in `crates/flight-ipc/src/client.rs`
   - **Decision Path A (Recommended):** Drop the shim entirely and update `crates/flight-ipc/examples/client_example.rs` to use existing RPC like `get_service_info()`
   - **Decision Path B:** Make shim `pub(crate)` in library OR move helper function into example file only (no library change)
