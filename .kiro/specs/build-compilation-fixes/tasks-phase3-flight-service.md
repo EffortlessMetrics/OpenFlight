@@ -183,12 +183,19 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows E0308 type mismatch errors resolved
   - _Requirements: BC-03.5, BC-05.2_
 
-- [ ] 3. Fix constructor and lifecycle API changes
+- [x] 3. Fix constructor and lifecycle API changes
+
+
+
+
+
   - Update service constructors to match new signatures
   - Remove shutdown calls that no longer exist
   - _Requirements: BC-01, BC-03_
 
-- [ ] 3.1 Update AxisEngine constructor calls
+- [x] 3.1 Update AxisEngine constructor calls
+
+
   - **Files**: `crates/flight-service/src/service.rs`, `crates/flight-service/src/safe_mode.rs`
   - Change constructor signature:
     ```rust
@@ -199,7 +206,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows fewer constructor errors
   - _Requirements: BC-01.2_
 
-- [ ] 3.2 Update service constructor patterns
+- [x] 3.2 Update service constructor patterns
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Update AircraftAutoSwitchService:
     ```rust
@@ -226,7 +235,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows constructor errors resolved
   - _Requirements: BC-01.2, BC-03.3_
 
-- [ ] 3.3 Remove shutdown method calls
+- [x] 3.3 Remove shutdown method calls
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Remove all `.shutdown().await` calls:
     ```rust

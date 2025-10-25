@@ -271,28 +271,10 @@ impl FlightService {
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine");
         
-        let engine_config = EngineConfig {
-            tick_rate_hz: self.config.axis_config.tick_rate_hz,
-            max_latency_ms: self.config.axis_config.max_latency_ms,
-            enable_counters: self.config.axis_config.enable_counters,
-            enable_blackbox: self.config.axis_config.enable_blackbox,
-        };
-        
-        match AxisEngine::new(engine_config) {
-            Ok(engine) => {
-                self.axis_engine = Some(Arc::new(engine));
-                self.health.info("axis_engine", "Axis engine initialized").await;
-                Ok(())
-            }
-            Err(e) => {
-                self.health.error(
-                    "axis_engine",
-                    &format!("Failed to initialize axis engine: {}", e),
-                    self.error_taxonomy.get_error("RT_PRIVILEGE_DENIED").cloned()
-                ).await;
-                Err(e.into())
-            }
-        }
+        let engine = AxisEngine::new();
+        self.axis_engine = Some(Arc::new(engine));
+        self.health.info("axis_engine", "Axis engine initialized").await;
+        Ok(())
     }
     
     /// Initialize auto-switch service
@@ -302,90 +284,37 @@ impl FlightService {
         // Stub implementation - would use real config
         let config = Default::default();
         
-        match AircraftAutoSwitchService::new(config).await {
-            Ok(service) => {
-                self.auto_switch = Some(service);
-                self.health.info("auto_switch", "Auto-switch service initialized").await;
-                Ok(())
-            }
-            Err(e) => {
-                self.health.warning(
-                    "auto_switch",
-                    &format!("Auto-switch initialization failed: {}", e)
-                ).await;
-                // Non-critical failure
-                Ok(())
-            }
-        }
+        let auto_switch = AircraftAutoSwitchService::new(config);
+        self.auto_switch = Some(auto_switch);
+        self.health.info("auto_switch", "Auto-switch service initialized").await;
+        Ok(())
     }
     
     /// Initialize curve conflict detection
     async fn initialize_curve_conflict(&mut self) -> Result<()> {
         info!("Initializing curve conflict detection");
         
-        // Stub implementation
-        let config = Default::default();
-        
-        match CurveConflictService::new(config) {
-            Ok(service) => {
-                self.curve_conflict = Some(service);
-                self.health.info("curve_conflict", "Curve conflict service initialized").await;
-                Ok(())
-            }
-            Err(e) => {
-                self.health.warning(
-                    "curve_conflict",
-                    &format!("Curve conflict service initialization failed: {}", e)
-                ).await;
-                // Non-critical failure
-                Ok(())
-            }
-        }
+        self.curve_conflict = Some(CurveConflictService::new()?);
+        self.health.info("curve_conflict", "Curve conflict service initialized").await;
+        Ok(())
     }
     
     /// Initialize capability service
     async fn initialize_capability_service(&mut self) -> Result<()> {
         info!("Initializing capability service");
         
-        // Stub implementation
-        let config = Default::default();
-        
-        match CapabilityService::new(config) {
-            Ok(service) => {
-                self.capability_service = Some(service);
-                self.health.info("capability", "Capability service initialized").await;
-                Ok(())
-            }
-            Err(e) => {
-                self.health.warning(
-                    "capability",
-                    &format!("Capability service initialization failed: {}", e)
-                ).await;
-                // Non-critical failure
-                Ok(())
-            }
-        }
+        self.capability_service = Some(CapabilityService::new());
+        self.health.info("capability", "Capability service initialized").await;
+        Ok(())
     }
     
     /// Initialize watchdog system
     async fn initialize_watchdog(&mut self) -> Result<()> {
         info!("Initializing watchdog system");
         
-        match WatchdogSystem::new(self.config.watchdog_config.clone()) {
-            Ok(watchdog) => {
-                self.watchdog = Some(watchdog);
-                self.health.info("safety", "Watchdog system initialized").await;
-                Ok(())
-            }
-            Err(e) => {
-                self.health.error(
-                    "safety",
-                    &format!("Watchdog initialization failed: {}", e),
-                    self.error_taxonomy.get_error("WATCHDOG_TIMEOUT").cloned()
-                ).await;
-                Err(e.into())
-            }
-        }
+        self.watchdog = Some(WatchdogSystem::new());
+        self.health.info("safety", "Watchdog system initialized").await;
+        Ok(())
     }
     
     /// Check power configuration
@@ -490,35 +419,26 @@ impl FlightService {
             let _ = tx.send(());
         }
         
-        // Shutdown components in reverse order
-        if let Some(mut watchdog) = self.watchdog.take() {
-            if let Err(e) = watchdog.shutdown().await {
-                warn!("Watchdog shutdown error: {}", e);
-            }
+        // Shutdown components in reverse order (drop handles cleanup)
+        if let Some(_watchdog) = self.watchdog.take() {
+            debug!("Watchdog system dropped");
         }
         
-        if let Some(mut capability) = self.capability_service.take() {
-            if let Err(e) = capability.shutdown().await {
-                warn!("Capability service shutdown error: {}", e);
-            }
+        if let Some(_capability) = self.capability_service.take() {
+            debug!("Capability service dropped");
         }
         
-        if let Some(mut curve_conflict) = self.curve_conflict.take() {
-            if let Err(e) = curve_conflict.shutdown().await {
-                warn!("Curve conflict service shutdown error: {}", e);
-            }
+        if let Some(_curve_conflict) = self.curve_conflict.take() {
+            debug!("Curve conflict service dropped");
         }
         
-        if let Some(mut auto_switch) = self.auto_switch.take() {
-            if let Err(e) = auto_switch.shutdown().await {
-                warn!("Auto-switch service shutdown error: {}", e);
-            }
+        if let Some(_auto_switch) = self.auto_switch.take() {
+            debug!("Auto-switch service dropped");
         }
         
         // Shutdown axis engine last
         if let Some(_engine) = self.axis_engine.take() {
-            // In real implementation, would properly shutdown the engine
-            debug!("Axis engine shutdown");
+            debug!("Axis engine dropped");
         }
         
         // Shutdown safe mode if active

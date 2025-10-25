@@ -270,14 +270,7 @@ impl SafeModeManager {
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine for safe mode");
         
-        let config = EngineConfig {
-            tick_rate_hz: 250.0,
-            max_latency_ms: 5.0,
-            enable_counters: true,
-            enable_blackbox: false, // Disabled in safe mode
-        };
-        
-        let engine = AxisEngine::new(config)?;
+        let engine = AxisEngine::new();
         self.axis_engine = Some(Arc::new(engine));
         
         debug!("Axis engine initialized successfully");
