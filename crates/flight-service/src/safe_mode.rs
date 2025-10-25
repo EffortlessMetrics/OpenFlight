@@ -427,7 +427,7 @@ mod profile_stub {
     }
 }
 
-use profile_stub::Profile;
+use profile_stub::Profile as StubProfile;
 
 #[cfg(test)]
 mod tests {

@@ -10,10 +10,13 @@ use flight_core::{
     AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, ProcessDetector, 
     ProcessDetectionConfig, DetectedProcess, PhaseOfFlight, SwitchMetrics, Result, FlightError
 };
-use flight_bus::{BusSnapshot, BusPublisher, Subscriber, SubscriberId, SimId, AircraftId};
+use flight_bus::{BusSnapshot, BusPublisher, SubscriberId, SimId, AircraftId};
 use flight_simconnect::{AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo};
 use flight_xplane::{AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft};
-use flight_dcs_export::{DcsAdapter};
+// Avoid type-name collision with local stub
+use flight_dcs_export::DcsAdapter as DcsAdapterApi;
+// Bring the trait into scope for a dyn object
+use tracing::Subscriber as TracingSubscriber;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -60,7 +63,7 @@ pub struct AircraftAutoSwitchService {
     auto_switch: Arc<AircraftAutoSwitch>,
     process_detector: Arc<ProcessDetector>,
     adapters: Arc<RwLock<SimAdapters>>,
-    bus_subscriber: Arc<RwLock<Option<Box<dyn Subscriber + Send + Sync>>>>,
+    bus_subscriber: Arc<RwLock<Option<Box<dyn TracingSubscriber + Send + Sync>>>>,
     service_tx: mpsc::UnboundedSender<ServiceEvent>,
     service_rx: Arc<RwLock<Option<mpsc::UnboundedReceiver<ServiceEvent>>>>,
 }
@@ -86,7 +89,7 @@ struct XPlaneAdapter {
 
 /// DCS adapter wrapper
 struct DcsAdapter {
-    adapter: flight_dcs_export::DcsAdapter,
+    adapter: DcsAdapterApi,
     current_aircraft: Option<AircraftId>,
 }
 
@@ -376,7 +379,7 @@ impl AircraftAutoSwitchService {
             }
             SimId::Dcs if config.adapters.enable_dcs => {
                 if adapters_guard.dcs.is_none() {
-                    let adapter = flight_dcs_export::DcsAdapter::new(Default::default());
+                    let adapter = DcsAdapterApi::new(Default::default());
                     // TODO: Setup and start DCS aircraft detection
                     adapters_guard.dcs = Some(DcsAdapter {
                         adapter,
