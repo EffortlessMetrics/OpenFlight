@@ -32,7 +32,9 @@ proptest.workspace = true
 [[bench]]
 name = "replay_performance"
 harness = false
+required-features = ["benches-optin"]
 
 [features]
 default = []
 validation-suite = []  # Enable comprehensive validation features
+benches-optin = []

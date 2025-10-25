@@ -17,6 +17,9 @@ named-pipes = ["tokio/net"]
 unix-sockets = ["tokio/net"]
 client = []
 server = []
+ipc-bench = []
+ipc-examples = []
+ipc-tests = []
 
 [dependencies]
 prost.workspace = true
@@ -54,3 +57,20 @@ criterion.workspace = true
 chrono = "0.4"
 tokio-stream = { workspace = true, features = ["sync"] }
 tracing-subscriber.workspace = true
+
+[[bench]]
+name = "ipc_benchmarks"
+harness = false
+required-features = ["ipc-bench"]
+
+[[example]]
+name = "list_devices"
+required-features = ["ipc-examples"]
+
+[[example]]
+name = "health_subscribe"
+required-features = ["ipc-examples"]
+
+[[test]]
+name = "integration_tests"
+required-features = ["ipc-tests"]

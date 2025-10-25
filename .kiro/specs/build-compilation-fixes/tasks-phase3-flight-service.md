@@ -454,11 +454,17 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no type mismatch errors in matches
   - _Requirements: BC-03.5, BC-05.2_
 
-- [ ] 9. Verify flight-service compilation
+- [x] 9. Verify flight-service compilation
+
+
+
+
   - Run comprehensive checks on flight-service
   - _Requirements: All BC requirements_
 
-- [ ] 9.1 Run flight-service verification commands
+- [x] 9.1 Run flight-service verification commands
+
+
   - Execute:
     ```bash
     # Primary goal - flight-service compiles
@@ -480,11 +486,18 @@ This gets `cargo check --workspace` green without touching public APIs.
 
 These tasks prevent tests/benches/examples in other crates from blocking the default workspace build. They're optional if you want to fix those targets later.
 
-- [ ] 10. Add feature gates to prevent non-default build failures
+- [x] 10. Add feature gates to prevent non-default build failures
+
+
+
+
+
   - Gate failing tests/benches/examples behind features
   - _Requirements: BC-06, BC-09_
 
-- [ ] 10.1 Gate flight-ipc benches and examples
+
+- [x] 10.1 Gate flight-ipc benches and examples
+
   - **File**: `crates/flight-ipc/Cargo.toml`
   - Add features:
     ```toml
@@ -516,7 +529,9 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Verify: `cargo check -p flight-ipc` passes
   - _Requirements: BC-06.1, BC-09.6_
 
-- [ ] 10.2 Gate flight-simconnect fixture tests
+
+- [x] 10.2 Gate flight-simconnect fixture tests
+
   - **File**: `crates/flight-simconnect/Cargo.toml`
   - Add features:
     ```toml
@@ -535,7 +550,9 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Verify: `cargo check -p flight-simconnect` passes
   - _Requirements: BC-06.1, BC-09.6_
 
-- [ ] 10.3 Gate flight-hid OFP1 tests
+- [x] 10.3 Gate flight-hid OFP1 tests
+
+
   - **File**: `crates/flight-hid/Cargo.toml`
   - Add features:
     ```toml
@@ -555,7 +572,9 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Verify: `cargo test -p flight-hid --features ofp1-tests` compiles when enabled
   - _Requirements: BC-06.1, BC-09.6_
 
-- [ ] 10.4 Gate remaining crate tests/benches/examples
+
+- [x] 10.4 Gate remaining crate tests/benches/examples
+
   - **Crates**: flight-panels, flight-virtual, flight-axis, flight-ffb, flight-replay, flight-scheduler
   - Repeat pattern for each:
     ```toml

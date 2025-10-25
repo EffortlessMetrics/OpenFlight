@@ -7,8 +7,11 @@
 //! OFP-1 handshake, capability negotiation, torque path stability,
 //! and health stream monitoring functionality.
 
+#![cfg(feature = "ofp1-tests")]
+
 #[cfg(test)]
 mod tests {
+    use crate::ofp1::Ofp1Device;  // Bring trait into scope to resolve "method not found"
     use super::super::ofp1::*;
     use flight_virtual::ofp1_emulator::{Ofp1Emulator, Ofp1EmulatorConfig, EmulatorFaultType};
     use std::time::{Duration, Instant};

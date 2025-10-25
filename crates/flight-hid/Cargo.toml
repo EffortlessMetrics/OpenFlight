@@ -11,6 +11,10 @@ repository.workspace = true
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+[features]
+default = []
+ofp1-tests = []
+
 [dependencies]
 flight-core = { path = "../flight-core" }
 tracing.workspace = true

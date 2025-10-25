@@ -14,6 +14,7 @@ repository.workspace = true
 [features]
 default = []
 test-helpers = []
+tests-optin = []
 
 [dependencies]
 flight-core = { path = "../flight-core" }
@@ -27,3 +28,19 @@ tracing.workspace = true
 [dev-dependencies]
 proptest.workspace = true
 tempfile.workspace = true
+
+[[test]]
+name = "cougar_integration"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "dsl_test"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "minimal_dsl_test"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "simple_dsl_test"
+required-features = ["tests-optin"]

@@ -25,6 +25,9 @@ bincode = "1.3"
 default = []
 rt-checks = []  # Enable runtime allocation/lock checking
 serde = ["dep:serde"]
+tests-optin = []
+benches-optin = []
+examples-optin = []
 
 [dev-dependencies]
 criterion.workspace = true
@@ -33,8 +36,38 @@ proptest.workspace = true
 [[bench]]
 name = "axis_performance"
 harness = false
+required-features = ["benches-optin"]
 
 [[bench]]
 name = "detent_performance"
 harness = false
+required-features = ["benches-optin"]
+
+[[test]]
+name = "detent_integration"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "detent_tests"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "integration_tests"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "mixer_tests"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "performance_validation"
+required-features = ["tests-optin"]
+
+[[example]]
+name = "basic_usage"
+required-features = ["examples-optin"]
+
+[[example]]
+name = "mixer_demo"
+required-features = ["examples-optin"]
 

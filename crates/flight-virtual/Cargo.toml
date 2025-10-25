@@ -22,3 +22,9 @@ parking_lot.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+
+[features]
+default = []
+tests-optin = []
+benches-optin = []
+examples-optin = []

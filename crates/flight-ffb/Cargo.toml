@@ -21,3 +21,9 @@ thiserror = "1.0"
 tracing = "0.1"
 crossbeam.workspace = true
 serde = { version = "1.0", features = ["derive"] }
+
+[features]
+default = []
+tests-optin = []
+benches-optin = []
+examples-optin = []

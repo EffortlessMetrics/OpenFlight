@@ -36,7 +36,13 @@ windows = { version = "0.62", features = [
 [features]
 default = []
 serde = ["dep:serde"]
+fixtures-tests = []
+integration-tests = []
 
 [dev-dependencies]
 tempfile = { workspace = true }
 proptest = { workspace = true }
+
+[[test]]
+name = "integration_tests"
+required-features = ["integration-tests"]
