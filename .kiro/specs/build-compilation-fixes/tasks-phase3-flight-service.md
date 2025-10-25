@@ -601,11 +601,18 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Verify: `cargo check --workspace` passes
   - _Requirements: BC-06.1, BC-09.6_
 
-- [ ] 11. Verify final workspace state with gating
+- [x] 11. Verify final workspace state with gating
+
+
+
+
+
   - Run comprehensive checks with all gating in place
   - _Requirements: All BC requirements_
 
-- [ ] 11.1 Run default workspace verification
+
+- [x] 11.1 Run default workspace verification
+
   - Execute:
     ```bash
     # Default (green):
@@ -616,7 +623,9 @@ These tasks prevent tests/benches/examples in other crates from blocking the def
   - Verify: No tests/benches/examples compile by default
   - _Requirements: BC-06.6, BC-09.6_
 
-- [ ] 11.2 Run spot checks for gated targets
+
+- [x] 11.2 Run spot checks for gated targets
+
   - Execute:
     ```bash
     # IPC demos/tests when ready
