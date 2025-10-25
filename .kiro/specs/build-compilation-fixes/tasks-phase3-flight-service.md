@@ -85,12 +85,19 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows bus subscription errors resolved
   - _Requirements: BC-03.1, BC-05.1_
 
-- [ ] 2. Add bus ↔ core type mapping helpers
+- [x] 2. Add bus ↔ core type mapping helpers
+
+
+
+
+
   - Create local conversion functions for type mismatches
   - Keep all mapping logic internal to flight-service
   - _Requirements: BC-03, BC-05_
 
-- [ ] 2.1 Create type mapper functions in aircraft_auto_switch_service.rs
+- [x] 2.1 Create type mapper functions in aircraft_auto_switch_service.rs
+
+
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
   - Add imports at top:
     ```rust
@@ -134,7 +141,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: Functions compile, types match
   - _Requirements: BC-03.5, BC-05.2_
 
-- [ ] 2.2 Apply type mappers at all callsites
+- [x] 2.2 Apply type mappers at all callsites
+
+
   - **File**: `crates/flight-service/src/aircraft_auto_switch_service.rs`
   - Update telemetry handler (keep `.await` - it's still async):
     ```rust

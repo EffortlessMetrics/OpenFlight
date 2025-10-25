@@ -10,7 +10,12 @@ use flight_core::{
     AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, ProcessDetector, 
     ProcessDetectionConfig, DetectedProcess, PhaseOfFlight, SwitchMetrics, Result, FlightError
 };
-use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig, SimId, AircraftId};
+use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig};
+// Import bus and core types with aliases to avoid conflicts
+use flight_bus::{SimId as BusSimId, AircraftId as BusAircraftId};
+use flight_core::aircraft_switch::{
+    SimId as CoreSimId, AircraftId as CoreAircraftId, TelemetrySnapshot,
+};
 use flight_simconnect::{AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo};
 use flight_xplane::{AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft};
 // Avoid type-name collision with local stub
@@ -23,6 +28,47 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, RwLock};
 use tracing::{debug, info, warn, error};
+
+// ============================================================================
+// Type Mapping Functions (Bus ↔ Core)
+// ============================================================================
+// These private functions convert between flight-bus and flight-core types
+// to handle API drift. They avoid orphan rule violations by not using trait impls.
+
+/// Map flight-bus SimId to flight-core SimId
+fn map_sim_id(sim: BusSimId) -> CoreSimId {
+    match sim {
+        BusSimId::Msfs => CoreSimId::Msfs,
+        BusSimId::XPlane => CoreSimId::XPlane,
+        BusSimId::Dcs => CoreSimId::Dcs,
+        BusSimId::Unknown => CoreSimId::Unknown,
+    }
+}
+
+/// Map flight-bus AircraftId to flight-core AircraftId
+fn map_aircraft_id(id: BusAircraftId) -> CoreAircraftId {
+    CoreAircraftId {
+        icao: id.icao,
+        variant: id.variant,
+    }
+}
+
+/// Map BusSnapshot to TelemetrySnapshot for auto-switch system
+/// 
+/// This creates a minimal snapshot with only the fields needed for
+/// phase-of-flight determination and aircraft switching logic.
+fn map_snapshot(bus: &BusSnapshot) -> TelemetrySnapshot {
+    TelemetrySnapshot {
+        sim: map_sim_id(bus.sim),
+        aircraft: map_aircraft_id(bus.aircraft.clone()),
+        timestamp: bus.timestamp,
+        ias_knots: bus.kinematics.ias.to_knots(),
+        ground_speed_knots: bus.kinematics.ground_speed.to_knots(),
+        altitude_feet: bus.environment.altitude,
+        vertical_speed_fpm: bus.kinematics.vertical_speed,
+        gear_down: bus.config.gear.all_down(),
+    }
+}
 
 /// Aircraft auto-switch service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -90,17 +136,17 @@ struct XPlaneAdapter {
 /// DCS adapter wrapper
 struct DcsAdapter {
     adapter: DcsAdapterApi,
-    current_aircraft: Option<AircraftId>,
+    current_aircraft: Option<BusAircraftId>,
 }
 
 /// Service event for internal processing
 #[derive(Debug)]
 enum ServiceEvent {
     ProcessDetected(DetectedProcess),
-    ProcessLost(SimId),
-    AircraftDetected(SimId, AircraftId),
+    ProcessLost(BusSimId),
+    AircraftDetected(BusSimId, BusAircraftId),
     TelemetryUpdate(BusSnapshot),
-    AdapterError(SimId, String),
+    AdapterError(BusSimId, String),
     Shutdown,
 }
 
@@ -109,7 +155,7 @@ enum ServiceEvent {
 pub struct ServiceMetrics {
     pub auto_switch_metrics: SwitchMetrics,
     pub process_detection_metrics: flight_core::DetectionMetrics,
-    pub adapter_metrics: HashMap<SimId, AdapterMetrics>,
+    pub adapter_metrics: HashMap<BusSimId, AdapterMetrics>,
     pub total_aircraft_switches: u64,
     pub average_detection_time: Duration,
 }
@@ -203,8 +249,8 @@ impl AircraftAutoSwitchService {
                     }
                     ServiceEvent::AircraftDetected(sim, aircraft_id) => {
                         let detected_aircraft = DetectedAircraft {
-                            sim,
-                            aircraft_id,
+                            sim: map_sim_id(sim),
+                            aircraft_id: map_aircraft_id(aircraft_id),
                             process_name: format!("{}_process", sim),
                             detection_time: Instant::now(),
                             confidence: 0.9,
@@ -215,7 +261,7 @@ impl AircraftAutoSwitchService {
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
-                        if let Err(e) = auto_switch.on_telemetry_update(snapshot).await {
+                        if let Err(e) = auto_switch.on_telemetry_update(map_snapshot(&snapshot)).await {
                             error!("Failed to handle telemetry update: {}", e);
                         }
                     }
@@ -285,8 +331,8 @@ impl AircraftAutoSwitchService {
     }
 
     /// Force switch to specific aircraft
-    pub async fn force_switch(&self, aircraft_id: AircraftId) -> Result<()> {
-        self.auto_switch.force_switch(aircraft_id).await
+    pub async fn force_switch(&self, aircraft_id: BusAircraftId) -> Result<()> {
+        self.auto_switch.force_switch(map_aircraft_id(aircraft_id)).await
     }
 
     /// Start monitoring process detection
@@ -312,7 +358,14 @@ impl AircraftAutoSwitchService {
                         // Check for lost processes
                         for sim in last_processes.keys() {
                             if !current_processes.contains_key(sim) {
-                                let _ = service_tx.send(ServiceEvent::ProcessLost(*sim));
+                                // Convert CoreSimId to BusSimId for event
+                                let bus_sim = match sim {
+                                    CoreSimId::Msfs => BusSimId::Msfs,
+                                    CoreSimId::XPlane => BusSimId::XPlane,
+                                    CoreSimId::Dcs => BusSimId::Dcs,
+                                    CoreSimId::Unknown => BusSimId::Unknown,
+                                };
+                                let _ = service_tx.send(ServiceEvent::ProcessLost(bus_sim));
                             }
                         }
 
@@ -355,8 +408,16 @@ impl AircraftAutoSwitchService {
 
         let mut adapters_guard = adapters.write().await;
 
-        match process.sim {
-            SimId::Msfs if config.adapters.enable_msfs => {
+        // Convert core SimId to bus SimId for matching
+        let bus_sim = match process.sim {
+            CoreSimId::Msfs => BusSimId::Msfs,
+            CoreSimId::XPlane => BusSimId::XPlane,
+            CoreSimId::Dcs => BusSimId::Dcs,
+            CoreSimId::Unknown => BusSimId::Unknown,
+        };
+
+        match bus_sim {
+            BusSimId::Msfs if config.adapters.enable_msfs => {
                 if adapters_guard.msfs.is_none() {
                     let mut detector = MsfsAircraftDetector::new();
                     // TODO: Setup and start MSFS aircraft detection
@@ -366,7 +427,7 @@ impl AircraftAutoSwitchService {
                     });
                 }
             }
-            SimId::XPlane if config.adapters.enable_xplane => {
+            BusSimId::XPlane if config.adapters.enable_xplane => {
                 if adapters_guard.xplane.is_none() {
                     let detector = XPlaneAircraftDetector::new();
                     // TODO: Setup and start X-Plane aircraft detection
@@ -376,7 +437,7 @@ impl AircraftAutoSwitchService {
                     });
                 }
             }
-            SimId::Dcs if config.adapters.enable_dcs => {
+            BusSimId::Dcs if config.adapters.enable_dcs => {
                 if adapters_guard.dcs.is_none() {
                     let adapter = DcsAdapterApi::new(Default::default());
                     // TODO: Setup and start DCS aircraft detection
@@ -396,7 +457,7 @@ impl AircraftAutoSwitchService {
 
     /// Handle process lost event
     async fn handle_process_lost(
-        sim: SimId,
+        sim: BusSimId,
         adapters: &Arc<RwLock<SimAdapters>>,
     ) -> Result<()> {
         info!("Stopping adapter for lost process: {}", sim);
@@ -404,13 +465,13 @@ impl AircraftAutoSwitchService {
         let mut adapters_guard = adapters.write().await;
 
         match sim {
-            SimId::Msfs => {
+            BusSimId::Msfs => {
                 adapters_guard.msfs = None;
             }
-            SimId::XPlane => {
+            BusSimId::XPlane => {
                 adapters_guard.xplane = None;
             }
-            SimId::Dcs => {
+            BusSimId::Dcs => {
                 adapters_guard.dcs = None;
             }
             _ => {}
@@ -482,7 +543,7 @@ mod tests {
         let config = AircraftAutoSwitchServiceConfig::default();
         let service = AircraftAutoSwitchService::new(config);
         
-        let aircraft_id = AircraftId::new("C172");
+        let aircraft_id = BusAircraftId::new("C172");
         
         // This should not fail even without starting the service
         // (it will just queue the request)
