@@ -52,7 +52,7 @@ pub enum Ofp1Error {
 pub type Result<T> = std::result::Result<T, Ofp1Error>;
 
 /// Device capabilities report (Feature 0x32)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[repr(C, packed)]
 pub struct CapabilitiesReport {
     /// Report ID (0x32)
@@ -116,7 +116,7 @@ impl CapabilityFlags {
 }
 
 /// Torque command report (OUT 0x30)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[repr(C, packed)]
 pub struct TorqueCommandReport {
     /// Report ID (0x30)
@@ -166,7 +166,7 @@ impl CommandFlags {
 }
 
 /// Health status report (IN 0x31)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[repr(C, packed)]
 pub struct HealthStatusReport {
     /// Report ID (0x31)
@@ -632,9 +632,12 @@ mod tests {
             reserved: [0; 8],
         };
         
-        caps.capability_flags.set_flag(CapabilityFlags::HEALTH_STREAM);
-        caps.capability_flags.set_flag(CapabilityFlags::BIDIRECTIONAL);
-        caps.capability_flags.set_flag(CapabilityFlags::PHYSICAL_INTERLOCK);
+        // Copy capability_flags to avoid packed field reference
+        let mut flags = caps.capability_flags;
+        flags.set_flag(CapabilityFlags::HEALTH_STREAM);
+        flags.set_flag(CapabilityFlags::BIDIRECTIONAL);
+        flags.set_flag(CapabilityFlags::PHYSICAL_INTERLOCK);
+        caps.capability_flags = flags;
         
         let result = negotiator.negotiate(&caps).unwrap();
         assert_eq!(result.protocol_version, OFP1_VERSION);
@@ -670,7 +673,10 @@ mod tests {
         
         // Test fault report
         let mut fault_report = healthy_report;
-        fault_report.status_flags.set_flag(StatusFlags::TEMP_FAULT);
+        // Copy status_flags to avoid packed field reference
+        let mut flags = fault_report.status_flags;
+        flags.set_flag(StatusFlags::TEMP_FAULT);
+        fault_report.status_flags = flags;
         
         let result = monitor.update_health(fault_report);
         assert!(matches!(result, Err(Ofp1Error::DeviceFault { .. })));

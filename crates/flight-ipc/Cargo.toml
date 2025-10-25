@@ -18,6 +18,7 @@ unix-sockets = ["tokio/net"]
 client = []
 server = []
 ipc-bench = []
+ipc-bench-serde = []  # Enable JSON benchmarks with serde
 ipc-examples = []
 ipc-tests = []
 

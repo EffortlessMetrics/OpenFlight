@@ -129,6 +129,16 @@ impl FlightClient {
         Ok(())
     }
     
+    /// List connected devices (placeholder implementation)
+    pub async fn list_devices(&mut self) -> Result<Vec<crate::proto::Device>, IpcError> {
+        self.require_feature("device-management")?;
+        
+        // Placeholder - in real implementation this would make gRPC call
+        info!("Device list requested");
+        
+        Ok(vec![])
+    }
+    
     /// Get service information (placeholder implementation)
     pub async fn get_service_info(&mut self) -> Result<crate::proto::GetServiceInfoResponse, IpcError> {
         // Placeholder - in real implementation this would make gRPC call

@@ -81,22 +81,11 @@ fn bench_device_serialization(c: &mut Criterion) {
         });
     });
     
-    // Benchmark JSON serialization
-    group.bench_function("json_encode", |b| {
-        b.iter(|| {
-            let json = serde_json::to_string(std::hint::black_box(&device)).unwrap();
-            std::hint::black_box(json);
-        });
-    });
-    
-    // Benchmark JSON deserialization
-    let json = serde_json::to_string(&device).unwrap();
-    group.bench_function("json_decode", |b| {
-        b.iter(|| {
-            let decoded: Device = serde_json::from_str(std::hint::black_box(&json)).unwrap();
-            std::hint::black_box(decoded);
-        });
-    });
+    // Note: JSON benchmarks are not available because Device type (generated from protobuf)
+    // does not implement Serialize/Deserialize. To add JSON benchmarks, you would need to:
+    // 1. Enable serde feature in prost-build configuration
+    // 2. Add #[derive(Serialize, Deserialize)] to generated types
+    // For now, we only benchmark protobuf encoding/decoding which is the primary use case.
     
     group.finish();
 }

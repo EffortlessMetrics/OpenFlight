@@ -18,10 +18,12 @@ ofp1-tests = []
 [dependencies]
 flight-core = { path = "../flight-core" }
 tracing.workspace = true
-rand = "0.8"
+rand = "0.9"
 serde.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-flight-virtual = { path = "../flight-virtual" }
+# Note: flight-virtual creates a circular dependency (flight-virtual depends on flight-hid)
+# Tests requiring the emulator are disabled to avoid this issue
+# flight-virtual = { path = "../flight-virtual" }
 tokio = { workspace = true, features = ["test-util"] }
