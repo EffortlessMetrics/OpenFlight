@@ -382,7 +382,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no Serde trait bound errors
   - _Requirements: BC-02.4_
 
-- [-] 8. Clean up remaining API drift
+- [x] 8. Clean up remaining API drift
+
+
 
 
 
@@ -429,7 +431,8 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "variant not found: InvalidState" errors
   - _Requirements: BC-03.5_
 
-- [-] 8.3 Fix SimId match arm consistency
+- [x] 8.3 Fix SimId match arm consistency
+
 
   - **Files**: All files in `crates/flight-service/src/` with SimId matches
   - Ensure all match arms use one enum consistently (BusSimId or CoreSimId + mapping):

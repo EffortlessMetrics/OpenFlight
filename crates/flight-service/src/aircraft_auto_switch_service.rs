@@ -10,7 +10,7 @@ use flight_core::{
     AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, ProcessDetector, 
     ProcessDetectionConfig, DetectedProcess, PhaseOfFlight, SwitchMetrics, Result, FlightError
 };
-use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig};
+use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig, Subscriber as BusSubscriber};
 // Import bus and core types with aliases to avoid conflicts
 use flight_bus::{SimId as BusSimId, AircraftId as BusAircraftId};
 use flight_core::aircraft_switch::{
@@ -20,8 +20,6 @@ use flight_simconnect::{AircraftDetector as MsfsAircraftDetector, AircraftInfo a
 use flight_xplane::{AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft};
 // Avoid type-name collision with local stub
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
-// Bring the trait into scope for a dyn object
-use tracing::Subscriber as TracingSubscriber;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -109,7 +107,7 @@ pub struct AircraftAutoSwitchService {
     auto_switch: Arc<AircraftAutoSwitch>,
     process_detector: Arc<ProcessDetector>,
     adapters: Arc<RwLock<SimAdapters>>,
-    bus_subscriber: Arc<RwLock<Option<Box<dyn TracingSubscriber + Send + Sync>>>>,
+    bus_subscriber: Arc<RwLock<Option<BusSubscriber>>>,
     service_tx: mpsc::UnboundedSender<ServiceEvent>,
     service_rx: Arc<RwLock<Option<mpsc::UnboundedReceiver<ServiceEvent>>>>,
 }
@@ -206,7 +204,7 @@ impl AircraftAutoSwitchService {
     }
 
     /// Start the aircraft auto-switch service
-    pub async fn start(&self, bus_publisher: Arc<BusPublisher>) -> Result<()> {
+    pub async fn start(&self, bus_publisher: &mut BusPublisher) -> Result<()> {
         // Start auto-switch system
         self.auto_switch.start().await?;
 
