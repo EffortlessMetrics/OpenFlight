@@ -382,11 +382,16 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no Serde trait bound errors
   - _Requirements: BC-02.4_
 
-- [ ] 8. Clean up remaining API drift
+- [-] 8. Clean up remaining API drift
+
+
+
   - Fix stragglers: compile_profile, InvalidState, etc.
   - _Requirements: BC-01, BC-03_
 
-- [ ] 8.1 Remove or replace compile_profile calls
+- [x] 8.1 Remove or replace compile_profile calls
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Remove compile_profile calls:
     ```rust
@@ -397,7 +402,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "method not found: compile_profile" errors
   - _Requirements: BC-01.4_
 
-- [ ] 8.2 Replace FlightError::InvalidState carefully
+- [x] 8.2 Replace FlightError::InvalidState carefully
+
+
   - **File**: `crates/flight-service/src/service.rs` (and other files using InvalidState)
   - **CAUTION**: Functions likely return `flight_core::Result<T> = Result<T, FlightError>`
   - **Check if `From<anyhow::Error>` exists for `FlightError` first**
@@ -422,7 +429,8 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "variant not found: InvalidState" errors
   - _Requirements: BC-03.5_
 
-- [ ] 8.3 Fix SimId match arm consistency
+- [-] 8.3 Fix SimId match arm consistency
+
   - **Files**: All files in `crates/flight-service/src/` with SimId matches
   - Ensure all match arms use one enum consistently (BusSimId or CoreSimId + mapping):
     ```rust
