@@ -65,34 +65,41 @@ path = "integration_demo.rs"
 
 [features]
 default = []
-simconnect = ["flight-simconnect"]
-panels = ["flight-panels"]
-streamdeck = ["flight-streamdeck"]
-integration = ["simconnect", "panels", "streamdeck"]
+flight-service    = ["dep:flight-service"]
+flight-simconnect = ["dep:flight-simconnect"]
+flight-panels     = ["dep:flight-panels"]
+flight-streamdeck = ["dep:flight-streamdeck"]
+flight-hid        = ["dep:flight-hid"]
+panels            = ["flight-panels"]
+simconnect        = ["flight-simconnect"]
+streamdeck        = ["flight-streamdeck"]
+windows           = ["dep:windows"]
+integration       = []
+axis              = []  # legacy gate for axis_demo.rs
+replay            = ["dep:flight-replay", "dep:tempfile"]  # legacy gate for replay_demo.rs
 
 [dependencies]
 # Core always available
-flight-core = { path = "../crates/flight-core" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 anyhow = "1"
-bincode = "1"
-tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "time", "sync"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+bincode = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+flight-core = { path = "../crates/flight-core" }
 flight-bus = { path = "../crates/flight-bus" }
 flight-ffb = { path = "../crates/flight-ffb" }
 flight-axis = { path = "../crates/flight-axis" }
-flight-replay = { path = "../crates/flight-replay" }
-tempfile = "3.8"
 
-# Feature-gated dependencies
+# Optional feature-gated dependencies
+flight-replay     = { path = "../crates/flight-replay", optional = true }
+flight-service    = { path = "../crates/flight-service", optional = true }
 flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
-flight-panels = { path = "../crates/flight-panels", optional = true }
 flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
-flight-service = { path = "../crates/flight-service", optional = true }
-flight-hid = { path = "../crates/flight-hid", optional = true }
-flight-ipc = { path = "../crates/flight-ipc", optional = true }
+flight-panels     = { path = "../crates/flight-panels", optional = true }
+flight-hid        = { path = "../crates/flight-hid", optional = true }
+tempfile          = { version = "3", optional = true }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

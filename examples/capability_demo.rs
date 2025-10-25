@@ -5,12 +5,15 @@
 //!
 //! This example demonstrates the kid/demo mode capability enforcement system.
 
+#![cfg_attr(not(feature = "flight-service"), allow(dead_code, unused_imports))]
+
 use flight_core::profile::{Profile, AxisConfig, AircraftId, CapabilityMode, CapabilityContext};
 use flight_service::capability_service::CapabilityService;
 use flight_axis::AxisEngine;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+#[cfg(feature = "flight-service")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     tracing_subscriber::fmt::init();
@@ -169,4 +172,9 @@ fn demonstrate_service_operations(service: &CapabilityService) -> Result<(), Box
     println!("  ✓ Reset to FULL mode: {} axes affected", result.affected_axes.len());
 
     Ok(())
+}
+
+#[cfg(not(feature = "flight-service"))]
+fn main() {
+    eprintln!("Enable `--features flight-service` to build this example.");
 }

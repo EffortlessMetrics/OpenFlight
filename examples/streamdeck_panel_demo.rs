@@ -7,17 +7,26 @@
 //! showing how to create panels, handle button presses, and update displays
 //! based on flight telemetry.
 
+#![cfg_attr(not(all(feature = "streamdeck", feature = "panels")), allow(dead_code, unused_imports))]
+
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use flight_streamdeck::{
     StreamDeckManager, StreamDeckConfig, StreamDeckDevice, StreamDeckError,
     ButtonAction, ButtonState, DisplayUpdate, PanelProfile, PanelButton,
     ImageSource, TextOverlay, ButtonLayout
 };
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use flight_bus::{BusSnapshot, SimId, AircraftId};
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use flight_panels::{PanelManager, LedTarget, LedState};
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use std::collections::HashMap;
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use std::time::Duration;
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 use tokio::time::sleep;
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
@@ -48,6 +57,7 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_device_discovery() -> anyhow::Result<()> {
     println!("1. Device Discovery and Connection");
     println!("---------------------------------");
@@ -99,6 +109,7 @@ async fn demo_device_discovery() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_panel_profiles() -> anyhow::Result<()> {
     println!("\n2. Panel Profile Loading");
     println!("-----------------------");
@@ -134,6 +145,7 @@ async fn demo_panel_profiles() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_button_actions() -> anyhow::Result<()> {
     println!("\n3. Button Actions and Events");
     println!("---------------------------");
@@ -185,6 +197,7 @@ async fn demo_button_actions() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_telemetry_updates() -> anyhow::Result<()> {
     println!("\n4. Telemetry-Driven Updates");
     println!("--------------------------");
@@ -230,6 +243,7 @@ async fn demo_telemetry_updates() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_multi_aircraft_profiles() -> anyhow::Result<()> {
     println!("\n5. Multi-Aircraft Profiles");
     println!("-------------------------");
@@ -273,6 +287,7 @@ async fn demo_multi_aircraft_profiles() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 async fn demo_version_compatibility() -> anyhow::Result<()> {
     println!("\n6. Version Compatibility");
     println!("-----------------------");
@@ -308,6 +323,7 @@ async fn demo_version_compatibility() -> anyhow::Result<()> {
 
 // Helper functions to create sample profiles
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_ga_profile() -> PanelProfile {
     let mut buttons = HashMap::new();
     
@@ -358,6 +374,7 @@ fn create_ga_profile() -> PanelProfile {
     }
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_airliner_profile() -> PanelProfile {
     let mut buttons = HashMap::new();
     
@@ -408,6 +425,7 @@ fn create_airliner_profile() -> PanelProfile {
     }
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_helo_profile() -> PanelProfile {
     let mut buttons = HashMap::new();
     
@@ -447,6 +465,7 @@ fn create_helo_profile() -> PanelProfile {
 
 // Helper functions to create telemetry snapshots
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_ground_snapshot() -> BusSnapshot {
     use flight_bus::{Kinematics, AircraftConfig, Environment, Navigation, GearState, AutopilotState, LightsConfig};
     use flight_bus::types::{ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearPosition};
@@ -508,6 +527,7 @@ fn create_ground_snapshot() -> BusSnapshot {
     }
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_taxi_snapshot() -> BusSnapshot {
     let mut snapshot = create_ground_snapshot();
     snapshot.kinematics.ground_speed = flight_bus::types::ValidatedSpeed::new_knots(15.0).unwrap();
@@ -515,6 +535,7 @@ fn create_taxi_snapshot() -> BusSnapshot {
     snapshot
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_takeoff_snapshot() -> BusSnapshot {
     let mut snapshot = create_ground_snapshot();
     snapshot.kinematics.ias = flight_bus::types::ValidatedSpeed::new_knots(65.0).unwrap();
@@ -523,6 +544,7 @@ fn create_takeoff_snapshot() -> BusSnapshot {
     snapshot
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_climb_snapshot() -> BusSnapshot {
     let mut snapshot = create_ground_snapshot();
     snapshot.kinematics.ias = flight_bus::types::ValidatedSpeed::new_knots(85.0).unwrap();
@@ -535,6 +557,7 @@ fn create_climb_snapshot() -> BusSnapshot {
     snapshot
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn create_cruise_snapshot() -> BusSnapshot {
     let mut snapshot = create_ground_snapshot();
     snapshot.kinematics.ias = flight_bus::types::ValidatedSpeed::new_knots(120.0).unwrap();
@@ -548,6 +571,7 @@ fn create_cruise_snapshot() -> BusSnapshot {
     snapshot
 }
 
+#[cfg(all(feature = "streamdeck", feature = "panels"))]
 fn process_telemetry_for_streamdeck(snapshot: &BusSnapshot) -> Vec<DisplayUpdate> {
     let mut updates = vec![];
     
@@ -584,4 +608,9 @@ fn process_telemetry_for_streamdeck(snapshot: &BusSnapshot) -> Vec<DisplayUpdate
     });
     
     updates
+}
+
+#[cfg(not(all(feature = "streamdeck", feature = "panels")))]
+fn main() {
+    eprintln!("Enable `--features streamdeck,panels` to build this example.");
 }

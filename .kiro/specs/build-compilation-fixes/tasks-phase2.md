@@ -28,7 +28,12 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Gate failing examples with fallback mains
   - _Requirements: BC-06_
 
-- [ ] 1.1 Update examples/Cargo.toml with feature declarations
+- [x] 1.1 Update examples/Cargo.toml with feature declarations
+
+
+
+
+
   - **File**: `examples/Cargo.toml`
   - Add features section:
     ```toml
@@ -70,7 +75,12 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: Features declared match cfg gates used in example files
   - _Requirements: BC-06.1_
 
-- [ ] 1.2 Gate capability_demo.rs with fallback main
+- [x] 1.2 Gate capability_demo.rs with fallback main
+
+
+
+
+
   - **File**: `examples/capability_demo.rs`
   - Add at top of file:
     ```rust
@@ -92,7 +102,12 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples --features flight-service` shows missing dep error (expected until deps added)
   - _Requirements: BC-06.1_
 
-- [ ] 1.3 Gate simconnect_usage_demo.rs with fallback main
+- [x] 1.3 Gate simconnect_usage_demo.rs with fallback main
+
+
+
+
+
   - **File**: `examples/simconnect_usage_demo.rs`
   - Add at top of file:
     ```rust
@@ -113,7 +128,12 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [ ] 1.4 Gate streamdeck_panel_demo.rs with fallback main
+- [x] 1.4 Gate streamdeck_panel_demo.rs with fallback main
+
+
+
+
+
   - **File**: `examples/streamdeck_panel_demo.rs`
   - Add at top of file:
     ```rust
@@ -134,7 +154,9 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [ ] 1.5 Gate watchdog_integration_demo.rs with fallback main
+- [-] 1.5 Gate watchdog_integration_demo.rs with fallback main
+
+
   - **File**: `examples/watchdog_integration_demo.rs`
   - Add at top of file:
     ```rust

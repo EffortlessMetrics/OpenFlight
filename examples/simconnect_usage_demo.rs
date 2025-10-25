@@ -6,14 +6,17 @@
 //! This example demonstrates how to use the flight-simconnect crate
 //! to connect to Microsoft Flight Simulator and read telemetry data.
 
+#![cfg_attr(not(feature = "simconnect"), allow(dead_code, unused_imports))]
+
 use flight_simconnect::{SimConnectAdapter, SimConnectConfig, SimConnectError};
 use flight_bus::{BusSnapshot, SimId, AircraftId};
 use flight_core::aircraft_switch::{DetectedAircraft, AircraftAutoSwitch, AutoSwitchConfig};
 use std::time::Duration;
 use tokio::time::sleep;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[cfg(feature = "simconnect")]
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
     
@@ -38,7 +41,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_basic_connection() -> Result<(), Box<dyn std::error::Error>> {
+#[cfg(not(feature = "simconnect"))]
+fn main() {
+    eprintln!("Enable `--features simconnect` to build this example.");
+}
+
+async fn demo_basic_connection() -> anyhow::Result<()> {
     println!("1. Basic SimConnect Connection");
     println!("-----------------------------");
 
@@ -87,7 +95,7 @@ async fn demo_basic_connection() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_telemetry_reading() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_telemetry_reading() -> anyhow::Result<()> {
     println!("\n2. Telemetry Reading");
     println!("-------------------");
 
@@ -116,7 +124,7 @@ async fn demo_telemetry_reading() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_aircraft_detection() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_aircraft_detection() -> anyhow::Result<()> {
     println!("\n3. Aircraft Detection");
     println!("--------------------");
 
@@ -174,7 +182,7 @@ async fn demo_aircraft_detection() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_event_sending() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_event_sending() -> anyhow::Result<()> {
     println!("\n4. Event Sending");
     println!("---------------");
 
@@ -204,7 +212,7 @@ async fn demo_event_sending() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn demo_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+async fn demo_error_handling() -> anyhow::Result<()> {
     println!("\n5. Error Handling");
     println!("----------------");
 
