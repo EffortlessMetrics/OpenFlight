@@ -10,17 +10,19 @@
 //! - Synthetic fault injection for testing
 //! - Integration with HID adapter
 
-use flight_core::{
-    WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEventType, SyntheticFault,
-    WatchdogHealthSummary, PluginOverrunStats
-};
-use flight_hid::{HidAdapter, HidDeviceInfo, EndpointType};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
-use std::thread;
-use tracing::{info, warn, error};
+#![cfg_attr(not(feature = "flight-hid"), allow(dead_code, unused_imports))]
 
+#[cfg(feature = "flight-hid")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{
+        WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEventType, SyntheticFault,
+        WatchdogHealthSummary, PluginOverrunStats
+    };
+    use flight_hid::{HidAdapter, HidDeviceInfo, EndpointType};
+    use std::sync::{Arc, Mutex};
+    use std::time::{Duration, Instant};
+    use std::thread;
+    use tracing::{info, warn, error};
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -63,7 +65,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_basic_watchdog_functionality(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{WatchdogSystem, WatchdogConfig, ComponentType};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::info;
     info!("=== Demo 1: Basic Watchdog Functionality ===");
     
     let mut wd = watchdog.lock().unwrap();
@@ -110,7 +118,14 @@ fn demo_basic_watchdog_functionality(watchdog: &Arc<Mutex<WatchdogSystem>>) -> R
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_usb_endpoint_monitoring(hid_adapter: &mut HidAdapter, watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_hid::{HidAdapter, HidDeviceInfo};
+    use flight_core::WatchdogSystem;
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::{info, warn};
     info!("=== Demo 2: USB Endpoint Monitoring ===");
     
     // Register a test device
@@ -160,7 +175,13 @@ fn demo_usb_endpoint_monitoring(hid_adapter: &mut HidAdapter, watchdog: &Arc<Mut
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_plugin_overrun_detection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{WatchdogSystem, WatchdogConfig, ComponentType};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::{info, warn};
     info!("=== Demo 3: Plugin Overrun Detection ===");
     
     let plugin_id = "demo_overrun_plugin";
@@ -219,7 +240,13 @@ fn demo_plugin_overrun_detection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Resul
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_quarantine_and_recovery(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{WatchdogSystem, WatchdogConfig, ComponentType};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::{info, warn};
     info!("=== Demo 4: Component Quarantine and Recovery ===");
     
     let endpoint_id = "demo_quarantine_endpoint";
@@ -280,7 +307,13 @@ fn demo_quarantine_and_recovery(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_synthetic_fault_injection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEventType, SyntheticFault};
+    use std::sync::{Arc, Mutex};
+    use std::time::{Duration, Instant};
+    use std::thread;
+    use tracing::{info, warn};
     info!("=== Demo 5: Synthetic Fault Injection ===");
     
     let plugin_id = "demo_injection_plugin";
@@ -360,7 +393,13 @@ fn demo_synthetic_fault_injection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Resu
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_health_monitoring(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::WatchdogSystem;
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::info;
     info!("=== Demo 6: Health Monitoring and Statistics ===");
     
     // Get comprehensive health summary
@@ -398,7 +437,13 @@ fn demo_health_monitoring(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), B
     Ok(())
 }
 
+#[cfg(feature = "flight-hid")]
 fn demo_fault_storm_detection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(), Box<dyn std::error::Error>> {
+    use flight_core::{WatchdogSystem, WatchdogConfig, ComponentType};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use std::thread;
+    use tracing::{info, warn};
     info!("=== Demo 7: Fault Storm Detection ===");
     
     // Register multiple components for storm simulation
@@ -469,4 +514,9 @@ fn demo_fault_storm_detection(watchdog: &Arc<Mutex<WatchdogSystem>>) -> Result<(
     }
     
     Ok(())
+}
+
+#[cfg(not(feature = "flight-hid"))]
+fn main() {
+    eprintln!("Enable `--features flight-hid` to build this example.");
 }

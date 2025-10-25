@@ -154,7 +154,10 @@ This gets the workspace green immediately while allowing selective demo re-enabl
   - Verify: `cargo check -p examples` passes
   - _Requirements: BC-06.1_
 
-- [-] 1.5 Gate watchdog_integration_demo.rs with fallback main
+- [x] 1.5 Gate watchdog_integration_demo.rs with fallback main
+
+
+
 
 
   - **File**: `examples/watchdog_integration_demo.rs`
