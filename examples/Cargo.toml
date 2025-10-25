@@ -11,6 +11,17 @@ publish = false
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+# Examples are feature-gated to avoid pulling in heavyweight dependencies by default.
+# To build a specific example:
+#   cargo run -p flight-hub-examples --example <name> --features <feature>
+# 
+# Available features:
+#   simconnect        - SimConnect integration examples
+#   streamdeck,panels - StreamDeck panel examples
+#   flight-hid        - HID device examples
+#   integration       - Multi-crate integration examples (may need API porting)
+#   replay            - Replay system examples (may need API porting)
+
 [[bin]]
 name = "profile_demo"
 path = "profile_demo.rs"
