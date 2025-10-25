@@ -44,6 +44,7 @@ pub struct FlightServiceConfig {
     /// Auto-switch configuration
     pub auto_switch_config: AutoSwitchConfig,
     /// Watchdog configuration
+    #[serde(skip_serializing, skip_deserializing)]
     pub watchdog_config: WatchdogConfig,
     /// Enable health monitoring
     pub enable_health_monitoring: bool,

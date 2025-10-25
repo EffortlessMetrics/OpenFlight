@@ -350,13 +350,18 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "cannot define inherent impl" errors
   - _Requirements: BC-09.1_
 
-- [-] 7. Fix Serde bounds on ServiceConfig
+- [x] 7. Fix Serde bounds on ServiceConfig
+
+
+
 
 
   - Resolve Serialize/Deserialize trait bound errors
   - _Requirements: BC-02_
 
-- [ ] 7.1 Drop or skip Serde derives for WatchdogConfig field
+- [x] 7.1 Drop or skip Serde derives for WatchdogConfig field
+
+
   - **File**: `crates/flight-service/src/config.rs` (or wherever ServiceConfig is defined)
   - Option 1 - Drop derives entirely:
     ```rust
