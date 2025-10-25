@@ -321,11 +321,17 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "method not found: for_mode" errors
   - _Requirements: BC-01.4_
 
-- [ ] 6. Remove illegal inherent impls on foreign types
+- [x] 6. Remove illegal inherent impls on foreign types
+
+
+
+
   - Delete inherent impl blocks that violate orphan rules
   - _Requirements: BC-09_
 
-- [ ] 6.1 Remove foreign type inherent impls in service.rs
+- [x] 6.1 Remove foreign type inherent impls in service.rs
+
+
   - **File**: `crates/flight-service/src/service.rs`
   - Delete these impl blocks:
     ```rust
@@ -344,7 +350,9 @@ This gets `cargo check --workspace` green without touching public APIs.
   - Verify: `cargo check -p flight-service` shows no "cannot define inherent impl" errors
   - _Requirements: BC-09.1_
 
-- [ ] 7. Fix Serde bounds on ServiceConfig
+- [-] 7. Fix Serde bounds on ServiceConfig
+
+
   - Resolve Serialize/Deserialize trait bound errors
   - _Requirements: BC-02_
 
