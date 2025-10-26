@@ -34,7 +34,12 @@
   - Optionally run `cargo semver-checks -p flight-ipc` for type-level semver verification
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
 
-- [ ] 3. Relocate flight-hid emulator tests to break cyclic dependency
+- [x] 3. Relocate flight-hid emulator tests to break cyclic dependency
+
+
+
+
+
   - Identify emulator tests currently in `crates/flight-hid/` that depend on flight-virtual
   - **Decision Path A (Recommended):** Move tests to `crates/flight-virtual/tests/ofp1_integration.rs`
   - **Decision Path B:** Create new `crates/flight-hid-integration-tests/` crate with minimal structure

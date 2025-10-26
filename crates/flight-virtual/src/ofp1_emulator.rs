@@ -629,9 +629,13 @@ mod tests {
         let caps = emulator.get_capabilities().unwrap();
         
         assert_eq!(caps.report_id, report_ids::CAPABILITIES);
-        assert_eq!(caps.protocol_version, OFP1_VERSION);
-        assert_eq!(caps.max_torque_mnm, 15000);
-        assert!(caps.capability_flags.has_flag(CapabilityFlags::HEALTH_STREAM));
+        // Copy fields to avoid packed field references
+        let protocol_version = caps.protocol_version;
+        let max_torque_mnm = caps.max_torque_mnm;
+        let capability_flags = caps.capability_flags;
+        assert_eq!(protocol_version, OFP1_VERSION);
+        assert_eq!(max_torque_mnm, 15000);
+        assert!(capability_flags.has_flag(CapabilityFlags::HEALTH_STREAM));
     }
     
     #[test]
@@ -673,8 +677,11 @@ mod tests {
         assert!(health.is_some());
         
         let health_report = health.unwrap();
-        assert_eq!(health_report.report_id, report_ids::HEALTH_STATUS);
-        assert!(health_report.status_flags.has_flag(StatusFlags::READY));
+        // Copy fields to avoid packed field references
+        let report_id = health_report.report_id;
+        let status_flags = health_report.status_flags;
+        assert_eq!(report_id, report_ids::HEALTH_STATUS);
+        assert!(status_flags.has_flag(StatusFlags::READY));
         
         emulator.stop();
     }

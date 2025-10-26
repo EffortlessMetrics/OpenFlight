@@ -23,7 +23,4 @@ serde.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-# Note: flight-virtual creates a circular dependency (flight-virtual depends on flight-hid)
-# Tests requiring the emulator are disabled to avoid this issue
-# flight-virtual = { path = "../flight-virtual" }
 tokio = { workspace = true, features = ["test-util"] }

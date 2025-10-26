@@ -21,6 +21,7 @@ crossbeam.workspace = true
 parking_lot.workspace = true
 
 [dev-dependencies]
+flight-hid = { path = "../flight-hid", features = ["ofp1-tests"] }
 criterion.workspace = true
 
 [features]
