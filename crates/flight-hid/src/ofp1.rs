@@ -68,11 +68,101 @@ pub struct CapabilitiesReport {
     /// Minimum update period in microseconds
     pub min_period_us: u32,
     /// Device capability flags
+    ///
+    /// **Warning:** Do not take references to this field directly due to packed layout.
+    /// Use [`cap_flags`](Self::cap_flags) to read, [`set_cap_flag`](Self::set_cap_flag)
+    /// and [`clear_cap_flag`](Self::clear_cap_flag) to modify.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{CapabilitiesReport, CapabilityFlags, report_ids};
+    /// let mut report = CapabilitiesReport {
+    ///     report_id: report_ids::CAPABILITIES,
+    ///     protocol_version: 0x0100,
+    ///     vendor_id: 0,
+    ///     product_id: 0,
+    ///     max_torque_mnm: 0,
+    ///     min_period_us: 0,
+    ///     capability_flags: CapabilityFlags::new(),
+    ///     serial_number: [0; 8],
+    ///     reserved: [0; 8],
+    /// };
+    /// report.set_cap_flag(CapabilityFlags::BIDIRECTIONAL);
+    /// assert!(report.cap_flags().has_flag(CapabilityFlags::BIDIRECTIONAL));
+    /// ```
     pub capability_flags: CapabilityFlags,
     /// Device serial number (8 bytes, null-terminated)
     pub serial_number: [u8; 8],
     /// Reserved for future use
     pub reserved: [u8; 8],
+}
+
+impl CapabilitiesReport {
+    /// Returns a copy of capability flags without taking a reference to packed field.
+    ///
+    /// This method is safe to use with packed structs and avoids E0793 errors.
+    #[inline]
+    pub fn cap_flags(&self) -> CapabilityFlags {
+        self.capability_flags
+    }
+    
+    /// Safely sets a capability flag without taking a reference to packed field.
+    ///
+    /// Uses the copy-modify-write-back pattern to avoid undefined behavior.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{CapabilitiesReport, CapabilityFlags, report_ids};
+    /// # let mut report = CapabilitiesReport {
+    /// #     report_id: report_ids::CAPABILITIES,
+    /// #     protocol_version: 0x0100,
+    /// #     vendor_id: 0,
+    /// #     product_id: 0,
+    /// #     max_torque_mnm: 0,
+    /// #     min_period_us: 0,
+    /// #     capability_flags: CapabilityFlags::new(),
+    /// #     serial_number: [0; 8],
+    /// #     reserved: [0; 8],
+    /// # };
+    /// report.set_cap_flag(CapabilityFlags::HEALTH_STREAM);
+    /// assert!(report.cap_flags().has_flag(CapabilityFlags::HEALTH_STREAM));
+    /// ```
+    #[inline]
+    pub fn set_cap_flag(&mut self, flag: u32) {
+        // Copy-modify-write-back pattern
+        let mut flags = self.capability_flags;
+        flags.set_flag(flag);
+        self.capability_flags = flags;
+    }
+    
+    /// Safely clears a capability flag without taking a reference to packed field.
+    ///
+    /// Uses the copy-modify-write-back pattern to avoid undefined behavior.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{CapabilitiesReport, CapabilityFlags, report_ids};
+    /// # let mut report = CapabilitiesReport {
+    /// #     report_id: report_ids::CAPABILITIES,
+    /// #     protocol_version: 0x0100,
+    /// #     vendor_id: 0,
+    /// #     product_id: 0,
+    /// #     max_torque_mnm: 0,
+    /// #     min_period_us: 0,
+    /// #     capability_flags: CapabilityFlags::new(),
+    /// #     serial_number: [0; 8],
+    /// #     reserved: [0; 8],
+    /// # };
+    /// report.set_cap_flag(CapabilityFlags::HEALTH_STREAM);
+    /// report.clear_cap_flag(CapabilityFlags::HEALTH_STREAM);
+    /// assert!(!report.cap_flags().has_flag(CapabilityFlags::HEALTH_STREAM));
+    /// ```
+    #[inline]
+    pub fn clear_cap_flag(&mut self, flag: u32) {
+        let mut flags = self.capability_flags;
+        flags.clear_flag(flag);
+        self.capability_flags = flags;
+    }
 }
 
 /// Device capability flags
@@ -174,6 +264,28 @@ pub struct HealthStatusReport {
     /// Sequence number (echoes last command sequence)
     pub sequence: u16,
     /// Device status flags
+    ///
+    /// **Warning:** Do not take references to this field directly due to packed layout.
+    /// Use [`status_flags`](Self::status_flags) to read, [`set_status_flag`](Self::set_status_flag)
+    /// and [`clear_status_flag`](Self::clear_status_flag) to modify.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{HealthStatusReport, StatusFlags, report_ids};
+    /// let mut report = HealthStatusReport {
+    ///     report_id: report_ids::HEALTH_STATUS,
+    ///     sequence: 0,
+    ///     status_flags: StatusFlags::new(),
+    ///     current_torque: 0,
+    ///     temperature_dc: 0,
+    ///     current_ma: 0,
+    ///     encoder_position: 0,
+    ///     uptime_s: 0,
+    ///     reserved: [0; 2],
+    /// };
+    /// report.set_status_flag(StatusFlags::READY);
+    /// assert!(report.status_flags().has_flag(StatusFlags::READY));
+    /// ```
     pub status_flags: StatusFlags,
     /// Current torque output (-32767 to +32767)
     pub current_torque: i16,
@@ -187,6 +299,74 @@ pub struct HealthStatusReport {
     pub uptime_s: u32,
     /// Reserved for future use
     pub reserved: [u8; 2],
+}
+
+impl HealthStatusReport {
+    /// Returns a copy of status flags without taking a reference to packed field.
+    ///
+    /// This method is safe to use with packed structs and avoids E0793 errors.
+    #[inline]
+    pub fn status_flags(&self) -> StatusFlags {
+        self.status_flags
+    }
+    
+    /// Safely sets a status flag without taking a reference to packed field.
+    ///
+    /// Uses the copy-modify-write-back pattern to avoid undefined behavior.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{HealthStatusReport, StatusFlags, report_ids};
+    /// # let mut report = HealthStatusReport {
+    /// #     report_id: report_ids::HEALTH_STATUS,
+    /// #     sequence: 0,
+    /// #     status_flags: StatusFlags::new(),
+    /// #     current_torque: 0,
+    /// #     temperature_dc: 0,
+    /// #     current_ma: 0,
+    /// #     encoder_position: 0,
+    /// #     uptime_s: 0,
+    /// #     reserved: [0; 2],
+    /// # };
+    /// report.set_status_flag(StatusFlags::TORQUE_ENABLED);
+    /// assert!(report.status_flags().has_flag(StatusFlags::TORQUE_ENABLED));
+    /// ```
+    #[inline]
+    pub fn set_status_flag(&mut self, flag: u16) {
+        // Copy-modify-write-back pattern
+        let mut flags = self.status_flags;
+        flags.set_flag(flag);
+        self.status_flags = flags;
+    }
+    
+    /// Safely clears a status flag without taking a reference to packed field.
+    ///
+    /// Uses the copy-modify-write-back pattern to avoid undefined behavior.
+    ///
+    /// # Example
+    /// ```
+    /// # use flight_hid::ofp1::{HealthStatusReport, StatusFlags, report_ids};
+    /// # let mut report = HealthStatusReport {
+    /// #     report_id: report_ids::HEALTH_STATUS,
+    /// #     sequence: 0,
+    /// #     status_flags: StatusFlags::new(),
+    /// #     current_torque: 0,
+    /// #     temperature_dc: 0,
+    /// #     current_ma: 0,
+    /// #     encoder_position: 0,
+    /// #     uptime_s: 0,
+    /// #     reserved: [0; 2],
+    /// # };
+    /// report.set_status_flag(StatusFlags::TORQUE_ENABLED);
+    /// report.clear_status_flag(StatusFlags::TORQUE_ENABLED);
+    /// assert!(!report.status_flags().has_flag(StatusFlags::TORQUE_ENABLED));
+    /// ```
+    #[inline]
+    pub fn clear_status_flag(&mut self, flag: u16) {
+        let mut flags = self.status_flags;
+        flags.clear_flag(flag);
+        self.status_flags = flags;
+    }
 }
 
 /// Device status flags
@@ -307,8 +487,8 @@ impl Ofp1Negotiator {
             });
         }
         
-        // Check required capabilities (copy to avoid packed field reference)
-        let capability_flags = capabilities.capability_flags;
+        // Check required capabilities (use safe accessor to avoid packed field reference)
+        let capability_flags = capabilities.cap_flags();
         for flag in [
             CapabilityFlags::HEALTH_STREAM,
             CapabilityFlags::BIDIRECTIONAL,
@@ -409,8 +589,8 @@ impl Ofp1HealthMonitor {
     pub fn update_health(&mut self, health: HealthStatusReport) -> Result<()> {
         let now = Instant::now();
         
-        // Check for faults (copy to avoid packed field reference)
-        let status_flags = health.status_flags;
+        // Check for faults (use safe accessor to avoid packed field reference)
+        let status_flags = health.status_flags();
         if status_flags.has_fault() {
             self.fault_history.push((now, status_flags));
             
@@ -632,12 +812,10 @@ mod tests {
             reserved: [0; 8],
         };
         
-        // Copy capability_flags to avoid packed field reference
-        let mut flags = caps.capability_flags;
-        flags.set_flag(CapabilityFlags::HEALTH_STREAM);
-        flags.set_flag(CapabilityFlags::BIDIRECTIONAL);
-        flags.set_flag(CapabilityFlags::PHYSICAL_INTERLOCK);
-        caps.capability_flags = flags;
+        // Use safe helper methods to set capability flags
+        caps.set_cap_flag(CapabilityFlags::HEALTH_STREAM);
+        caps.set_cap_flag(CapabilityFlags::BIDIRECTIONAL);
+        caps.set_cap_flag(CapabilityFlags::PHYSICAL_INTERLOCK);
         
         let result = negotiator.negotiate(&caps).unwrap();
         assert_eq!(result.protocol_version, OFP1_VERSION);
@@ -673,10 +851,8 @@ mod tests {
         
         // Test fault report
         let mut fault_report = healthy_report;
-        // Copy status_flags to avoid packed field reference
-        let mut flags = fault_report.status_flags;
-        flags.set_flag(StatusFlags::TEMP_FAULT);
-        fault_report.status_flags = flags;
+        // Use safe helper method to set status flag
+        fault_report.set_status_flag(StatusFlags::TEMP_FAULT);
         
         let result = monitor.update_health(fault_report);
         assert!(matches!(result, Err(Ofp1Error::DeviceFault { .. })));

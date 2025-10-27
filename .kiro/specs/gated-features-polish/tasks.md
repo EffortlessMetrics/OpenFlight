@@ -53,8 +53,15 @@
   - Run relocated tests: `cargo test -p flight-virtual --tests` or `cargo test -p flight-hid-integration-tests`
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8_
 
-- [ ] 4. Implement safe helper methods for packed struct fields
-  - [ ] 4.1 Add safe accessors to CapabilitiesReport
+- [x] 4. Implement safe helper methods for packed struct fields
+
+
+
+
+
+
+  - [x] 4.1 Add safe accessors to CapabilitiesReport
+
     - Locate `CapabilitiesReport` struct in `crates/flight-hid/src/protocol/ofp1.rs`
     - Add `#[inline] pub fn cap_flags(&self) -> CapabilityFlags` getter method that returns a copy
     - Add `#[inline] pub fn set_cap_flag(&mut self, flag: CapabilityFlags)` method using copy-modify-write-back pattern
@@ -63,7 +70,9 @@
     - Consider creating a macro if other packed structs need similar helpers for consistency
     - _Requirements: 4.1, 4.3, 4.5, 4.6, 4.7_
   
-  - [ ] 4.2 Add safe accessors to HealthStatusReport
+
+  - [x] 4.2 Add safe accessors to HealthStatusReport
+
     - Locate `HealthStatusReport` struct in `crates/flight-hid/src/protocol/ofp1.rs`
     - Add `#[inline] pub fn status_flags(&self) -> StatusFlags` getter method that returns a copy
     - Add `#[inline] pub fn set_status_flag(&mut self, flag: StatusFlags)` method using copy-modify-write-back pattern
@@ -71,7 +80,9 @@
     - If `status_flags` field is public, add loud rustdoc warning with links to helper methods and usage examples
     - _Requirements: 4.2, 4.3, 4.5, 4.6, 4.7_
   
-  - [ ] 4.3 Update tests to use safe helper methods
+
+  - [x] 4.3 Update tests to use safe helper methods
+
     - Search for direct packed field access in `crates/flight-hid/tests/` and `crates/flight-hid/src/` test modules
     - Replace direct field access (e.g., `report.capability_flags.set_flag()`) with helper calls (e.g., `report.set_cap_flag()`)
     - Verify no direct references remain: `rg '\.capability_flags\.' crates/flight-hid/tests/` and `rg '\.status_flags\.' crates/flight-hid/tests/` (should be empty)
