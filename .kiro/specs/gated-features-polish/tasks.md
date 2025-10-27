@@ -108,10 +108,14 @@
   - Confirm tests still use helper methods (Copy doesn't fix packed reference UB)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-- [-] 6. Set up CI gated feature smoke tests
+- [x] 6. Set up CI gated feature smoke tests
 
 
-  - [ ] 6.1 Add public API guard job
+
+
+  - [x] 6.1 Add public API guard job
+
+
     - Create or update `.github/workflows/ci.yml`
     - Add `public-api-check` job that runs on pull requests
     - Configure checkout with `fetch-depth: 0`
@@ -120,14 +124,18 @@
     - Add step to check flight-hid: `cargo public-api -p flight-hid --diff-git origin/main..HEAD`
     - _Requirements: 6.1_
   
-  - [ ] 6.2 Add path filter for conditional smoke tests
+  - [x] 6.2 Add path filter for conditional smoke tests
+
+
     - Add `path-filter` job using `dorny/paths-filter@v3` action that runs on pull requests
     - Configure filters for `crates/flight-ipc/**` and `crates/flight-hid/**` paths
     - Set up job outputs for `ipc` and `hid` that downstream jobs can reference
     - Ensure downstream jobs use `needs: path-filter` and check outputs in `if:` conditions
     - _Requirements: 6.4, 6.5_
   
-  - [ ] 6.3 Add gated IPC smoke test job
+  - [x] 6.3 Add gated IPC smoke test job
+
+
     - Add `gated-ipc-smoke` job that depends on `path-filter` with `needs: path-filter`
     - Configure conditional execution in `if:` clause: `github.event_name == 'schedule'` OR `contains(github.event.pull_request.labels.*.name, 'run-gated')` OR `needs.path-filter.outputs.ipc == 'true'`
     - Add step: `RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features ipc-bench`
@@ -136,14 +144,18 @@
     - Optionally add `workflow_dispatch` trigger with input flag for manual runs
     - _Requirements: 6.2, 6.4, 6.7_
   
-  - [ ] 6.4 Add gated HID smoke test job
+  - [x] 6.4 Add gated HID smoke test job
+
+
     - Add `gated-hid-smoke` job that depends on `path-filter` with `needs: path-filter`
     - Configure conditional execution in `if:` clause: `github.event_name == 'schedule'` OR `contains(github.event.pull_request.labels.*.name, 'run-gated')` OR `needs.path-filter.outputs.hid == 'true'`
     - Add step: `cargo test --no-run -p flight-hid --features ofp1-tests`
     - Add step: `cargo clippy -p flight-hid --tests -- -Dwarnings`
     - _Requirements: 6.3, 6.5, 6.7_
   
-  - [ ] 6.5 Add scheduled cross-platform verification
+  - [x] 6.5 Add scheduled cross-platform verification
+
+
     - Add `cross-platform` job with matrix for ubuntu-latest and windows-latest
     - Configure to run on cron schedule: `0 3 * * *` (3 AM UTC daily)
     - Add step: `cargo check --workspace` (or `--workspace --all-targets` if appropriate)

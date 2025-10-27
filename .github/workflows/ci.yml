@@ -5,6 +5,9 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC daily
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -109,6 +112,141 @@ jobs:
           fi
         done
         echo "✅ All referenced ADRs exist"
+
+  path-filter:
+    name: Path Filter
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      ipc: ${{ steps.filter.outputs.ipc }}
+      hid: ${{ steps.filter.outputs.hid }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Filter paths
+      uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          ipc:
+            - 'crates/flight-ipc/**'
+          hid:
+            - 'crates/flight-hid/**'
+
+  public-api-check:
+    name: Public API Guard
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      
+    - name: Install cargo-public-api
+      run: cargo install cargo-public-api
+      
+    - name: Check flight-ipc public API
+      run: cargo public-api -p flight-ipc --diff-git origin/main..HEAD
+      
+    - name: Check flight-hid public API
+      run: cargo public-api -p flight-hid --diff-git origin/main..HEAD
+
+  gated-ipc-smoke:
+    name: Gated IPC Smoke Tests
+    runs-on: ubuntu-latest
+    needs: path-filter
+    if: |
+      always() &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       contains(github.event.pull_request.labels.*.name, 'run-gated') ||
+       needs.path-filter.outputs.ipc == 'true')
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      
+    - name: Smoke test IPC benchmarks
+      run: cargo bench --no-run -p flight-ipc --features ipc-bench
+      env:
+        RUSTFLAGS: "-Dunused-imports"
+      
+    - name: Smoke test IPC benchmarks with serde
+      run: cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"
+      env:
+        RUSTFLAGS: "-Dunused-imports"
+      
+    - name: Clippy on IPC benchmarks
+      run: cargo clippy -p flight-ipc --benches -- -Dwarnings
+
+  gated-hid-smoke:
+    name: Gated HID Smoke Tests
+    runs-on: ubuntu-latest
+    needs: path-filter
+    if: |
+      always() &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       contains(github.event.pull_request.labels.*.name, 'run-gated') ||
+       needs.path-filter.outputs.hid == 'true')
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      
+    - name: Smoke test HID with ofp1-tests
+      run: cargo test --no-run -p flight-hid --features ofp1-tests
+      
+    - name: Clippy on HID tests
+      run: cargo clippy -p flight-hid --tests -- -Dwarnings
+
+  cross-platform:
+    name: Cross-Platform Verification
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'schedule'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+      
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: cross-platform-${{ matrix.os }}
+      
+    - name: Check workspace
+      run: cargo check --workspace
+      
+    - name: Clippy workspace (strict)
+      run: cargo clippy --workspace --all-targets -- -Dwarnings
+      
+    - name: Check formatting
+      run: cargo fmt --all -- --check
 
   security:
     name: Security Audit
