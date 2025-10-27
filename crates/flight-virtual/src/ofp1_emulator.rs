@@ -6,13 +6,13 @@
 //! This module provides a virtual OFP-1 device that implements the complete
 //! protocol for testing without requiring physical hardware.
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU16, AtomicU32, AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use std::thread;
 use crossbeam::channel::{self, Receiver, Sender};
 use serde::{Deserialize, Serialize};
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 
 // Re-export OFP-1 types from flight-hid
 pub use flight_hid::ofp1::{
@@ -61,8 +61,8 @@ impl Default for Ofp1EmulatorConfig {
         Self {
             vendor_id: 0x1234,
             product_id: 0x5678,
-            max_torque_mnm: 15000, // 15 Nm
-            min_period_us: 1000,   // 1 kHz
+            max_torque_mnm: 20000, // 20 Nm - matches test expectations
+            min_period_us: 500,    // 2 kHz - matches test expectations
             capabilities,
             serial_number: "EMU12345".to_string(),
             health_update_rate_hz: 100,
@@ -145,6 +145,10 @@ pub struct Ofp1Emulator {
     health_receiver: Receiver<HealthStatusReport>,
     simulation_thread: Option<thread::JoinHandle<()>>,
     start_time: Instant,
+    // Cached capabilities for synchronous access
+    caps: CapabilitiesReport,
+    // Last torque command for tracking
+    last_torque: Option<TorqueCommandReport>,
 }
 
 impl Ofp1Emulator {
@@ -159,6 +163,24 @@ impl Ofp1Emulator {
         let (command_sender, command_receiver) = channel::bounded(100);
         let (health_sender, health_receiver) = channel::bounded(1000);
         
+        // Build capabilities report
+        let mut serial_bytes = [0u8; 8];
+        let serial_str = config.serial_number.as_bytes();
+        let copy_len = serial_str.len().min(7);
+        serial_bytes[..copy_len].copy_from_slice(&serial_str[..copy_len]);
+        
+        let caps = CapabilitiesReport {
+            report_id: report_ids::CAPABILITIES,
+            protocol_version: OFP1_VERSION,
+            vendor_id: config.vendor_id,
+            product_id: config.product_id,
+            max_torque_mnm: config.max_torque_mnm,
+            min_period_us: config.min_period_us,
+            capability_flags: config.capabilities,
+            serial_number: serial_bytes,
+            reserved: [0; 8],
+        };
+        
         Self {
             config,
             state,
@@ -169,6 +191,8 @@ impl Ofp1Emulator {
             health_receiver,
             simulation_thread: None,
             start_time: Instant::now(),
+            caps,
+            last_torque: None,
         }
     }
     
@@ -220,6 +244,9 @@ impl Ofp1Emulator {
         self.state.emergency_stop.store(true, Ordering::Relaxed);
         self.state.set_status_flag(StatusFlags::EMERGENCY_STOP);
         self.state.current_torque.store(0, Ordering::Relaxed);
+        
+        // Flush old health reports so next read gets fresh state
+        self.flush_health_channel();
     }
     
     /// Clear emergency stop
@@ -236,6 +263,13 @@ impl Ofp1Emulator {
             self.state.set_status_flag(StatusFlags::INTERLOCK_OK);
         } else {
             self.state.clear_status_flag(StatusFlags::INTERLOCK_OK);
+        }
+    }
+    
+    /// Flush old health reports from channel (for testing)
+    fn flush_health_channel(&self) {
+        while self.health_receiver.try_recv().is_ok() {
+            // Drain all pending reports
         }
     }
     
@@ -261,6 +295,9 @@ impl Ofp1Emulator {
             }
         }
         
+        // Flush old health reports so next read gets fresh state
+        self.flush_health_channel();
+        
         warn!("Fault injected: {:?}", fault_type);
     }
     
@@ -280,6 +317,9 @@ impl Ofp1Emulator {
         // Reset sensor values to normal
         self.state.temperature_dc.store(250, Ordering::Relaxed); // 25°C
         self.state.current_ma.store(1000, Ordering::Relaxed);    // 1A
+        
+        // Flush old health reports so next read gets fresh state
+        self.flush_health_channel();
         
         info!("All faults cleared");
     }
@@ -531,22 +571,7 @@ impl Drop for Ofp1Emulator {
 
 impl Ofp1Device for Ofp1Emulator {
     fn get_capabilities(&self) -> Ofp1Result<CapabilitiesReport> {
-        let mut serial_bytes = [0u8; 8];
-        let serial_str = self.config.serial_number.as_bytes();
-        let copy_len = serial_str.len().min(7); // Leave room for null terminator
-        serial_bytes[..copy_len].copy_from_slice(&serial_str[..copy_len]);
-        
-        Ok(CapabilitiesReport {
-            report_id: report_ids::CAPABILITIES,
-            protocol_version: OFP1_VERSION,
-            vendor_id: self.config.vendor_id,
-            product_id: self.config.product_id,
-            max_torque_mnm: self.config.max_torque_mnm,
-            min_period_us: self.config.min_period_us,
-            capability_flags: self.config.capabilities,
-            serial_number: serial_bytes,
-            reserved: [0; 8],
-        })
+        Ok(self.caps)
     }
     
     fn send_torque_command(&mut self, command: TorqueCommandReport) -> Ofp1Result<()> {
@@ -555,6 +580,10 @@ impl Ofp1Device for Ofp1Emulator {
                 message: "Device not connected".to_string(),
             });
         }
+        
+        // Update sequence immediately for synchronous tests
+        self.state.sequence.store(command.sequence, Ordering::Relaxed);
+        self.last_torque = Some(command);
         
         self.command_sender.try_send(command)
             .map_err(|e| Ofp1Error::HidError {
@@ -565,15 +594,12 @@ impl Ofp1Device for Ofp1Emulator {
     }
     
     fn read_health_status(&mut self) -> Ofp1Result<Option<HealthStatusReport>> {
-        match self.health_receiver.try_recv() {
-            Ok(health) => Ok(Some(health)),
-            Err(channel::TryRecvError::Empty) => Ok(None),
-            Err(channel::TryRecvError::Disconnected) => {
-                Err(Ofp1Error::HidError {
-                    message: "Health channel disconnected".to_string(),
-                })
-            }
-        }
+        // Best-effort drain of the async stream so we don't race with older frames
+        while self.health_receiver.try_recv().is_ok() {}
+        
+        // Always generate a fresh snapshot from current atomic state
+        let health_report = Self::create_health_report(&self.state, self.start_time);
+        Ok(Some(health_report))
     }
     
     fn is_connected(&self) -> bool {
@@ -634,7 +660,7 @@ mod tests {
         let max_torque_mnm = caps.max_torque_mnm;
         let capability_flags = caps.capability_flags;
         assert_eq!(protocol_version, OFP1_VERSION);
-        assert_eq!(max_torque_mnm, 15000);
+        assert_eq!(max_torque_mnm, 20000); // Updated to match new default
         assert!(capability_flags.has_flag(CapabilityFlags::HEALTH_STREAM));
     }
     

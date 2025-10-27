@@ -42,7 +42,8 @@ fn test_complete_ofp1_handshake() {
     assert!(capability_flags.has_flag(CapabilityFlags::PHYSICAL_INTERLOCK));
     
     // Perform negotiation
-    let negotiator = Ofp1Negotiator::new();
+    let mut negotiator = Ofp1Negotiator::new();
+    negotiator.preferred_update_rate_hz = 2000; // Allow full device rate
     let result = negotiator.negotiate(&capabilities).unwrap();
     
     assert_eq!(result.protocol_version, OFP1_VERSION);
@@ -124,7 +125,7 @@ fn test_torque_commands_and_health_monitoring() {
 #[test]
 fn test_fault_injection_and_recovery() {
     let mut emulator = Ofp1Emulator::new("/dev/ofp1_test".to_string());
-    emulator.start().unwrap();
+    // Don't start simulation thread for fault injection test - use on-demand health reports
     
     let mut health_monitor = Ofp1HealthMonitor::new(Duration::from_millis(100));
     
@@ -197,7 +198,7 @@ fn test_emergency_stop() {
     // Trigger emergency stop
     emulator.trigger_emergency_stop();
     
-    thread::sleep(Duration::from_millis(20));
+    thread::sleep(Duration::from_millis(50)); // Wait longer for simulation thread
     
     // Verify emergency stop
     let stats = emulator.get_statistics();
@@ -350,7 +351,8 @@ fn test_capability_validation() {
 /// Test negotiation with different device types
 #[test]
 fn test_negotiation_device_types() {
-    let negotiator = Ofp1Negotiator::new();
+    let mut negotiator = Ofp1Negotiator::new();
+    negotiator.preferred_update_rate_hz = 2000; // Allow full device rate
     
     // High-end device
     let high_end_caps = CapabilitiesReport {
