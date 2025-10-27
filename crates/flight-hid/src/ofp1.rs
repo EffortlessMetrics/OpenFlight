@@ -52,7 +52,8 @@ pub enum Ofp1Error {
 pub type Result<T> = std::result::Result<T, Ofp1Error>;
 
 /// Device capabilities report (Feature 0x32)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "ofp1-tests"), derive(Clone, Copy))]
 #[repr(C, packed)]
 pub struct CapabilitiesReport {
     /// Report ID (0x32)
@@ -206,7 +207,8 @@ impl CapabilityFlags {
 }
 
 /// Torque command report (OUT 0x30)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "ofp1-tests"), derive(Clone, Copy))]
 #[repr(C, packed)]
 pub struct TorqueCommandReport {
     /// Report ID (0x30)
@@ -256,7 +258,8 @@ impl CommandFlags {
 }
 
 /// Health status report (IN 0x31)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(any(test, feature = "ofp1-tests"), derive(Clone, Copy))]
 #[repr(C, packed)]
 pub struct HealthStatusReport {
     /// Report ID (0x31)

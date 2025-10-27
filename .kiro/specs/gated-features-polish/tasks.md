@@ -90,7 +90,12 @@
     - Run tests to ensure functionality is preserved: `cargo test -p flight-hid`
     - _Requirements: 4.4, 4.5, 4.8_
 
-- [ ] 5. Apply Clone/Copy derive strategy to flight-hid public types
+- [x] 5. Apply Clone/Copy derive strategy to flight-hid public types
+
+
+
+
+
   - Locate public packed structs in `crates/flight-hid/src/protocol/ofp1.rs` (CapabilitiesReport, HealthStatusReport, etc.)
   - **Decision Path A (Recommended):** Add `#[cfg_attr(any(test, feature = "ofp1-tests"), derive(Clone, Copy))]` to all affected structs
   - **Decision Path B:** Add `#[derive(Clone, Copy)]` directly and document in changelog as intentional public API addition
@@ -103,7 +108,9 @@
   - Confirm tests still use helper methods (Copy doesn't fix packed reference UB)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-- [ ] 6. Set up CI gated feature smoke tests
+- [-] 6. Set up CI gated feature smoke tests
+
+
   - [ ] 6.1 Add public API guard job
     - Create or update `.github/workflows/ci.yml`
     - Add `public-api-check` job that runs on pull requests
