@@ -177,7 +177,9 @@
     - Optionally add `cargo fmt --all -- --check` to verify formatting
     - _Requirements: 6.6, 6.8_
 
-- [-] 7. Update documentation and finalize
+- [ ] 7. Update documentation and finalize
+
+
 
 
 
@@ -198,6 +200,8 @@
   
 
   - [ ] 7.3 Verify Definition of Done
+
+
 
 
 
