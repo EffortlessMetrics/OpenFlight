@@ -1,6 +1,11 @@
 # Implementation Plan
 
-- [ ] 1. Clean up flight-ipc benchmarks for warning-free compilation
+- [x] 1. Clean up flight-ipc benchmarks for warning-free compilation
+
+
+
+
+
 
 
 
@@ -135,7 +140,11 @@
     - Ensure downstream jobs use `needs: path-filter` and check outputs in `if:` conditions
     - _Requirements: 6.4, 6.5_
   
-  - [ ] 6.3 Add gated IPC smoke test job
+-
+
+  - [x] 6.3 Add gated IPC smoke test job
+
+
 
 
     - Add `gated-ipc-smoke` job that depends on `path-filter` with `needs: path-filter`

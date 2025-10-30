@@ -12,7 +12,7 @@ repository.workspace = true
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [features]
-default = ["named-pipes", "unix-sockets"]
+default = []
 # Platform-specific transport layers
 named-pipes = ["tokio/net"]  # Windows named pipe transport
 unix-sockets = ["tokio/net"]  # Unix domain socket transport
@@ -21,7 +21,7 @@ client = []  # Enable client-side functionality
 server = []  # Enable server-side functionality
 # Development-only features (not for production use)
 ipc-bench = []  # Enable IPC benchmarks for performance testing
-ipc-bench-serde = []  # Enable JSON roundtrip benchmarks (requires ipc-bench)
+ipc-bench-serde = []  # Enable JSON roundtrip benchmarks (requires ipc-bench; serde_json already available)
 ipc-examples = []  # Enable example programs
 ipc-tests = []  # Enable integration tests
 

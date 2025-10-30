@@ -181,16 +181,15 @@ jobs:
       
     - name: Smoke test IPC benchmarks
       run: cargo bench --no-run -p flight-ipc --features ipc-bench
-      env:
-        RUSTFLAGS: "-Dunused-imports"
       
     - name: Smoke test IPC benchmarks with serde
       run: cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"
-      env:
-        RUSTFLAGS: "-Dunused-imports"
       
     - name: Clippy on IPC benchmarks
-      run: cargo clippy -p flight-ipc --benches -- -Dwarnings
+      run: cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings
+      
+    - name: Clippy on IPC benchmarks with serde
+      run: cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings
 
   gated-hid-smoke:
     name: Gated HID Smoke Tests
