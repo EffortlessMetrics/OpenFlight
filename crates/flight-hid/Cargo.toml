@@ -13,7 +13,8 @@ repository.workspace = true
 
 [features]
 default = []
-ofp1-tests = []
+# Development-only features (not for production use)
+ofp1-tests = []  # Enable Clone/Copy derives for external integration tests
 
 [dependencies]
 flight-core = { path = "../flight-core" }

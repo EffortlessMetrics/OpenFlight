@@ -1,21 +1,23 @@
 # Implementation Plan
 
-- [x] 1. Clean up flight-ipc benchmarks for warning-free compilation
+- [ ] 1. Clean up flight-ipc benchmarks for warning-free compilation
 
 
 
 
 
   - Remove unused imports (e.g., `ListDevicesRequest`) from `crates/flight-ipc/benches/ipc_benchmarks.rs`
+  - Add `#![deny(unused_imports)]` at the top of `crates/flight-ipc/benches/ipc_benchmarks.rs` to enforce unused import checks at file level
   - Add optional `serde_json` dependency to `crates/flight-ipc/Cargo.toml`: `[dependencies] serde_json = { version = "1", optional = true }`
   - Update feature definitions in `crates/flight-ipc/Cargo.toml` to include `default = []`, `ipc-bench = []`, and `ipc-bench-serde = ["dep:serde_json"]`
   - Wrap serde-specific imports in `#[cfg(feature = "ipc-bench-serde")]` blocks
   - Check if proto-generated `Device` type has serde derives; if not, create `DeviceJson` mirror struct with serde derives and document as approximation
   - Wrap JSON roundtrip benchmark code in `#[cfg(feature = "ipc-bench-serde")]` block
   - Add no-op comment in `#[cfg(not(feature = "ipc-bench-serde"))]` block
-  - Verify with `RUSTFLAGS="-Dunused-imports" cargo bench -p flight-ipc --features ipc-bench --no-run`
-  - Verify with `RUSTFLAGS="-Dunused-imports" cargo bench -p flight-ipc --features "ipc-bench,ipc-bench-serde" --no-run`
-  - Run `cargo clippy -p flight-ipc --benches -- -Dwarnings` to catch any remaining issues
+  - Verify with `cargo bench -p flight-ipc --features ipc-bench --no-run`
+  - Verify with `cargo bench -p flight-ipc --features "ipc-bench,ipc-bench-serde" --no-run`
+  - Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` to catch any remaining issues
+  - Run `cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings` to verify both feature combos
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
 - [x] 2. Resolve FlightClient example decision and ensure public API stability
@@ -133,14 +135,15 @@
     - Ensure downstream jobs use `needs: path-filter` and check outputs in `if:` conditions
     - _Requirements: 6.4, 6.5_
   
-  - [x] 6.3 Add gated IPC smoke test job
+  - [ ] 6.3 Add gated IPC smoke test job
 
 
     - Add `gated-ipc-smoke` job that depends on `path-filter` with `needs: path-filter`
     - Configure conditional execution in `if:` clause: `github.event_name == 'schedule'` OR `contains(github.event.pull_request.labels.*.name, 'run-gated')` OR `needs.path-filter.outputs.ipc == 'true'`
-    - Add step: `RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features ipc-bench`
-    - Add step: `RUSTFLAGS="-Dunused-imports" cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"`
-    - Add step: `cargo clippy -p flight-ipc --benches -- -Dwarnings`
+    - Add step: `cargo bench --no-run -p flight-ipc --features ipc-bench`
+    - Add step: `cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"`
+    - Add step: `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings`
+    - Add step: `cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings`
     - Optionally add `workflow_dispatch` trigger with input flag for manual runs
     - _Requirements: 6.2, 6.4, 6.7_
   
@@ -165,20 +168,38 @@
     - Optionally add `cargo fmt --all -- --check` to verify formatting
     - _Requirements: 6.6, 6.8_
 
-- [ ] 7. Update documentation and finalize
-  - [ ] 7.1 Update crate README files
+- [-] 7. Update documentation and finalize
+
+
+
+
+
+
+  - [x] 7.1 Update crate README files
+
     - Add feature flag documentation to `crates/flight-ipc/README.md`: `ipc-bench`, `ipc-bench-serde`
     - Add feature flag documentation to `crates/flight-hid/README.md`: `ofp1-tests`
     - Document that these are dev-only features
   
-  - [ ] 7.2 Add Cargo.toml comments
+
+  - [x] 7.2 Add Cargo.toml comments
+
     - Add inline comments in `crates/flight-ipc/Cargo.toml` explaining feature purposes
     - Add inline comments in `crates/flight-hid/Cargo.toml` explaining feature purposes
   
+
   - [ ] 7.3 Verify Definition of Done
+
+
+
+
+
+
     - **Build Verification:** Run `cargo check --workspace` on stable (and MSRV 1.75+ if applicable) - must pass
-    - **IPC Benches:** Run `RUSTFLAGS="-Dunused-imports" cargo bench -p flight-ipc --features ipc-bench --no-run` - must pass
-    - **IPC Benches with Serde:** Run `RUSTFLAGS="-Dunused-imports" cargo bench -p flight-ipc --features "ipc-bench,ipc-bench-serde" --no-run` - must pass
+    - **IPC Benches (build):** Run `cargo bench -p flight-ipc --features ipc-bench --no-run` - must pass
+    - **IPC Benches with Serde (build):** Run `cargo bench -p flight-ipc --features "ipc-bench,ipc-bench-serde" --no-run` - must pass
+    - **IPC Benches (lint):** Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` - must pass
+    - **IPC Benches with Serde (lint):** Run `cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings` - must pass
     - **HID Tests:** Run `cargo test --no-run -p flight-hid --features ofp1-tests` - must pass
     - **Relocated Tests:** Run `cargo test -p flight-virtual --tests` (or integration crate) - must pass
     - **No Cycles:** Run `cargo tree -p flight-hid --edges dev,normal | rg 'flight-virtual' -n` - must be empty (exit 1)
@@ -190,3 +211,4 @@
     - **Format:** Run `cargo fmt --check -p flight-ipc -p flight-hid` - must pass
     - **Changelogs:** Verify `crates/flight-ipc/CHANGELOG.md` and `crates/flight-hid/CHANGELOG.md` are updated per decisions
     - **Documentation:** Verify README files document new features (`ipc-bench`, `ipc-bench-serde`, `ofp1-tests`)
+    - **Note:** File-level `#![deny(unused_imports)]` in `crates/flight-ipc/benches/ipc_benchmarks.rs` ensures unused import enforcement without workspace-wide RUSTFLAGS

@@ -12,6 +12,22 @@ Cross-platform IPC (Inter-Process Communication) layer for Flight Hub, providing
 - **Device Management**: Comprehensive device listing and status monitoring
 - **Profile Management**: JSON schema-based profile validation and application
 
+### Cargo Features
+
+- `named-pipes` (default): Enable Windows named pipe transport
+- `unix-sockets` (default): Enable Unix domain socket transport
+- `client`: Enable client-side functionality
+- `server`: Enable server-side functionality
+- `ipc-examples`: Enable example programs
+- `ipc-tests`: Enable integration tests
+
+#### Development-Only Features
+
+These features are intended for development, testing, and benchmarking only:
+
+- `ipc-bench`: Enable IPC benchmarks (dev-only, not for production use)
+- `ipc-bench-serde`: Enable JSON roundtrip benchmarks with serde (requires `ipc-bench`, dev-only)
+
 ## Architecture
 
 The IPC layer follows a schema-first approach with the following components:

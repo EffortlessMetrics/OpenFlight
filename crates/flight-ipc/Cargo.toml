@@ -13,14 +13,17 @@ repository.workspace = true
 
 [features]
 default = ["named-pipes", "unix-sockets"]
-named-pipes = ["tokio/net"]
-unix-sockets = ["tokio/net"]
-client = []
-server = []
-ipc-bench = []  # Enable IPC benchmarks (dev-only)
-ipc-bench-serde = []  # Enable JSON benchmarks with serde (requires ipc-bench)
-ipc-examples = []
-ipc-tests = []
+# Platform-specific transport layers
+named-pipes = ["tokio/net"]  # Windows named pipe transport
+unix-sockets = ["tokio/net"]  # Unix domain socket transport
+# Component features
+client = []  # Enable client-side functionality
+server = []  # Enable server-side functionality
+# Development-only features (not for production use)
+ipc-bench = []  # Enable IPC benchmarks for performance testing
+ipc-bench-serde = []  # Enable JSON roundtrip benchmarks (requires ipc-bench)
+ipc-examples = []  # Enable example programs
+ipc-tests = []  # Enable integration tests
 
 [dependencies]
 prost.workspace = true

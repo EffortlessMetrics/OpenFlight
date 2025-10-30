@@ -14,7 +14,7 @@ repository.workspace = true
 [dependencies]
 flight-core = { path = "../flight-core" }
 flight-scheduler = { path = "../flight-scheduler" }
-flight-hid = { path = "../flight-hid" }
+flight-hid = { path = "../flight-hid", features = ["ofp1-tests"] }
 tracing.workspace = true
 serde.workspace = true
 crossbeam.workspace = true
