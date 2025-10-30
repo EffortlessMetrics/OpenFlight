@@ -27,13 +27,14 @@ The solution implements a two-lane CI approach:
 ### Toolchain Determinism
 
 - **MSRV Alignment**: Resolve discrepancy between clippy.toml (1.75.0) and Cargo.toml (1.89.0)
-  - Decision: Use clippy.toml MSRV (1.89.0) for lint checks
-  - Rationale: Ensures lints are consistent with the minimum supported version
-  - Action: Document in CI configuration and local development guides
+  - **Decision**: Use workspace Cargo.toml `rust-version = "1.89.0"` as single source of truth
+  - **Rationale**: Workspace MSRV is authoritative; clippy.toml should match or be removed
+  - **Action**: Update clippy.toml to `msrv = "1.89.0"` or remove the line to inherit from Cargo.toml
 
 - **Toolchain Pinning**: CI must explicitly specify Rust version
-  - Use `rust-version` from workspace Cargo.toml or create rust-toolchain.toml
+  - Pin to `1.89.0` in all CI jobs: `uses: dtolnay/rust-toolchain@1.89.0`
   - Prevents lint drift from automatic toolchain updates
+  - Optional: Add nightly cron job to detect future lint drift
 
 ## Components and Interfaces
 
@@ -72,7 +73,10 @@ for entry in entries.flatten() {
 }
 ```
 
-**Verification**: Compiler guarantees identical iteration behavior; no runtime changes
+**Verification**: 
+- Compiler guarantees identical iteration behavior; no runtime changes
+- Note: `.flatten()` silently drops `Err` values, same as `if let Ok(entry)`
+- If future error reporting is needed, use `.filter_map(Result::ok)` with logging
 
 #### 2. Range Checking (manual_range_contains)
 
@@ -116,33 +120,134 @@ context: "Component quarantined due to excessive failures".to_string()
 
 #### 4. Parameter Types (ptr_arg)
 
-**Pattern**: Accept `&Path` instead of `&PathBuf` for function parameters
+**Pattern**: Accept `&Path` instead of `&PathBuf` for function parameters without breaking public API
 
 **Affected Files**:
 - `crates/flight-core/src/aircraft_switch.rs`
 
-**Implementation**:
-```rust
-// Before
-async fn load_profile_from_path(base_path: &PathBuf, filename: &str) -> Result<Profile> {
-    // implementation
-}
+**Implementation Strategy**:
 
-// After
+If `load_profile_from_path` is **private** or `pub(crate)`:
+```rust
+// Direct change - no API impact
 async fn load_profile_from_path(base_path: &Path, filename: &str) -> Result<Profile> {
     // implementation
 }
 ```
 
-**Call Site Updates**: If callers pass `&PathBuf`, change to `.as_path()`
+If `load_profile_from_path` is **public**:
+```rust
+// Keep existing public API, add internal helper
+pub async fn load_profile_from_path(base_path: &PathBuf, filename: &str) -> Result<Profile> {
+    load_profile_from_path_impl(base_path.as_path(), filename).await
+}
+
+pub(crate) async fn load_profile_from_path_impl(base_path: &Path, filename: &str) -> Result<Profile> {
+    // implementation moved here
+}
+```
+
+**Call Site Updates**: 
+- Internal callers should use the `&Path` version directly
 - Rust's deref coercion handles `&PathBuf` → `&Path` automatically in most cases
 - Explicit `.as_path()` only needed if type inference fails
 
 **Verification**: 
-- Public API check: `cargo public-api` confirms no external signature changes
-- Compiler guarantees: `&PathBuf` coerces to `&Path` safely
+- Check visibility with `cargo public-api -p flight-core` before changes
+- If public: wrapper pattern preserves API; `cargo public-api --diff` shows no changes
+- If private: direct change is safe; no external impact
 
-#### 5. Control Flow Simplification (if_same_then_else, collapsible_if, single_match)
+#### 5. Rustc Warnings (unused_imports, unused_variables, dead_code, private_interfaces)
+
+**Pattern**: Clean up compiler warnings that fail under `-Dwarnings`
+
+**Affected Files**:
+- `crates/flight-core/src/process_detection.rs`
+- `crates/flight-core/src/blackbox.rs`
+- `crates/flight-core/src/security.rs`
+- `crates/flight-core/src/rules.rs`
+- `crates/flight-core/src/aircraft_switch.rs`
+- Other files as identified by `cargo clippy -p flight-core -- -Dwarnings`
+
+**Implementation**:
+
+**Unused Imports**:
+```rust
+// Before
+use std::path::PathBuf;  // unused on Linux
+
+// After - platform-gated
+#[cfg(windows)]
+use std::path::PathBuf;
+```
+
+**Unused Variables**:
+```rust
+// Before
+fn process(client_info: ClientInfo) {  // client_info unused
+    // ...
+}
+
+// After - prefix with underscore or use let _
+fn process(_client_info: ClientInfo) {
+    // ...
+}
+
+// Or if intentionally ignored
+fn process(client_info: ClientInfo) {
+    let _ = client_info;  // explicit ignore
+    // ...
+}
+```
+
+**Dead Code**:
+```rust
+// Before
+fn helper_function() {  // not called in some build configs
+    // ...
+}
+
+// After - item-scoped allow (avoid crate-level)
+#[allow(dead_code)]
+fn helper_function() {
+    // ...
+}
+```
+
+**Private Interfaces** (Windows-specific):
+```rust
+// Before
+pub struct WindowsHandle {
+    handle: HANDLE,  // HANDLE is private
+}
+
+// After - either lower visibility or raise type visibility
+pub(crate) struct WindowsHandle {  // preferred
+    handle: HANDLE,
+}
+```
+
+**Platform-Specific Code**:
+```rust
+// Wrap Windows-only code to avoid Linux warnings
+#[cfg(windows)]
+mod windows_impl {
+    use windows::Win32::System::Threading::*;
+    // Windows-specific implementation
+}
+
+#[cfg(not(windows))]
+mod windows_impl {
+    // Stub or alternative implementation
+}
+```
+
+**Verification**:
+- Run `cargo clippy -p flight-core -- -Dwarnings` on both Linux and Windows
+- Ensure no warnings remain on either platform
+- Verify platform-gated code compiles correctly on target platforms
+
+#### 6. Control Flow Simplification (if_same_then_else, collapsible_if, single_match)
 
 **Pattern**: Combine redundant conditions and simplify match expressions
 
@@ -304,9 +409,14 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+    # Only run when flight-core changes
+    paths:
+      - 'crates/flight-core/**'
+      - 'Cargo.toml'
+      - 'clippy.toml'
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0  # Pin to MSRV
+      - uses: dtolnay/rust-toolchain@1.89.0  # Pin to workspace MSRV
       - run: cargo clippy -p flight-core -- -Dwarnings
 
   clippy-ipc-benches:
@@ -318,7 +428,7 @@ jobs:
         mode: [strict, unblock]
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: dtolnay/rust-toolchain@1.89.0  # Pin to workspace MSRV
       - name: Clippy (strict - with deps)
         if: matrix.mode == 'strict'
         run: |
@@ -338,8 +448,17 @@ jobs:
         with:
           fetch-depth: 0  # Need full history for diff
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-public-api
-      - run: cargo public-api -p flight-core --diff-git origin/main..HEAD
+      - name: Install cargo-public-api
+        run: cargo install cargo-public-api
+      - name: Check public API changes
+        run: cargo public-api -p flight-core --diff-git origin/main..HEAD
+        continue-on-error: false  # Fail if API changes detected
+      # Fallback to nightly if rustdoc-json issues occur
+      - name: Retry with nightly (if needed)
+        if: failure()
+        run: |
+          rustup toolchain install nightly
+          cargo +nightly public-api -p flight-core --diff-git origin/main..HEAD
 ```
 
 ### Merge Gates
@@ -355,16 +474,27 @@ Optional checks (informational):
 
 ## Implementation Order
 
-1. **Toolchain Setup**: Verify MSRV alignment and document decision
-2. **Profile.rs**: Iterator and range idioms (2 changes)
-3. **Writers.rs**: Iterator idioms (3 changes)
-4. **Watchdog.rs**: String construction (1 change)
-5. **Aircraft_switch.rs**: Parameter types (1 change + call sites)
-6. **Security/verification.rs**: Control flow (1 change)
-7. **Security.rs**: Control flow (3 changes)
-8. **Validation**: Run full test suite and public API check
-9. **CI Updates**: Add new workflow jobs and gates
-10. **Documentation**: Create docs/dev/clippy-core.md with lint mapping
+1. **Toolchain Setup**: Update clippy.toml MSRV to 1.89.0 (or remove to inherit from Cargo.toml)
+2. **Baseline Capture**: Run `cargo clippy -p flight-core -- -Dwarnings 2>&1 | tee clippy-before.log`
+3. **Clippy Idiom Fixes**:
+   - Profile.rs: Iterator and range idioms (2 changes)
+   - Writers.rs: Iterator idioms (3 changes)
+   - Watchdog.rs: String construction (1 change)
+   - Security/verification.rs: Control flow (1 change)
+   - Security.rs: Control flow (3 changes)
+4. **Rustc Warning Sweep**:
+   - Remove unused imports (add `#[cfg(windows)]` where needed)
+   - Prefix unused variables with `_` or use `let _ = value`
+   - Add item-scoped `#[allow(dead_code)]` where required
+   - Fix private interface visibility issues
+5. **Parameter Type Fix**:
+   - Aircraft_switch.rs: Check visibility, apply wrapper pattern if public
+6. **Validation**: 
+   - Run `cargo clippy -p flight-core -- -Dwarnings` on both platforms
+   - Run full test suite
+   - Run `cargo public-api -p flight-core --diff-git origin/main..HEAD`
+7. **CI Updates**: Add workflow jobs with path filters and toolchain pinning
+8. **Documentation**: Create docs/dev/clippy-core.md with complete lint mapping
 
 ## Rollback Plan
 
@@ -384,10 +514,11 @@ If issues arise during implementation:
 
 ## Success Criteria
 
-- ✅ All 11 Clippy lint warnings resolved in flight-core
-- ✅ `cargo clippy -p flight-core -- -Dwarnings` passes on both platforms
+- ✅ All lints from baseline `clippy-before.log` resolved (Clippy idioms + rustc warnings)
+- ✅ `cargo clippy -p flight-core -- -Dwarnings` passes on ubuntu-latest and windows-latest
 - ✅ IPC bench workflow (task 7.3) passes without `--no-deps` workaround
-- ✅ Zero changes to flight-core public API
+- ✅ Zero changes to flight-core public API (verified by `cargo public-api --diff`)
 - ✅ All existing tests pass with no modifications
-- ✅ CI jobs added for continuous validation
-- ✅ Documentation created for future reference
+- ✅ MSRV aligned: clippy.toml updated to 1.89.0 or removed
+- ✅ CI jobs added with path filters and toolchain pinning
+- ✅ Documentation created at docs/dev/clippy-core.md with lint mapping
