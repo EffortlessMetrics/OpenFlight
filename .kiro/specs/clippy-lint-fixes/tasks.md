@@ -1,6 +1,10 @@
 # Implementation Plan
 
 - [ ] 1. Align toolchain and capture baseline
+
+
+
+
   - Choose workspace Cargo.toml `rust-version = "1.89.0"` as single source of truth
   - Update clippy.toml: set `msrv = "1.89.0"` or remove the msrv line entirely to inherit from Cargo.toml
   - Verify toolchain will be pinned to `dtolnay/rust-toolchain@1.89.0` in all CI lint jobs
