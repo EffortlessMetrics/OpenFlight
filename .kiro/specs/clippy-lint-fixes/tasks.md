@@ -40,11 +40,18 @@
   - Add comment: "Intentionally ignore read errors; preserves prior behavior"
   - _Requirements: 2.3, 2.4_
 
-- [ ] 4. Fix Clippy idiom lints in watchdog.rs
+- [x] 4. Fix Clippy idiom lints in watchdog.rs
+
+
+
+
+
   - Change `format!("Component quarantined due to excessive failures")` to `"Component quarantined due to excessive failures".to_string()`
   - _Requirements: 2.5_
 
-- [ ] 5. Fix Clippy idiom lints in security/verification.rs
+- [-] 5. Fix Clippy idiom lints in security/verification.rs
+
+
   - Combine identical if branches: change `if has_failures { Fail } else if has_warnings && fail_on_warnings { Fail }` to `if has_failures || (has_warnings && fail_on_warnings) { Fail }`
   - Verify by truth table: both conditions lead to Fail; else-chain unchanged (Warn if has_warnings, Pass otherwise)
   - Ensure no change in execution paths or return values

@@ -664,7 +664,7 @@ impl WatchdogSystem {
             timestamp: Instant::now(),
             component: component.clone(),
             event_type: WatchdogEventType::ComponentQuarantined,
-            context: format!("Component quarantined due to excessive failures"),
+            context: "Component quarantined due to excessive failures".to_string(),
             execution_time: None,
             action_taken: WatchdogAction::QuarantineComponent,
         };
