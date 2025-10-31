@@ -232,7 +232,7 @@ impl Profile {
         let mut canonical = self.clone();
         
         // Normalize float values to 6 decimal places
-        for (_, config) in &mut canonical.axes {
+        for config in canonical.axes.values_mut() {
             if let Some(deadzone) = &mut config.deadzone {
                 *deadzone = (*deadzone * 1_000_000.0).round() / 1_000_000.0;
             }
@@ -302,7 +302,7 @@ impl Profile {
     fn validate_axis_config(&self, axis_name: &str, config: &AxisConfig, context: &CapabilityContext) -> Result<()> {
         // Validate deadzone
         if let Some(deadzone) = config.deadzone {
-            if deadzone < 0.0 || deadzone > MAX_DEADZONE {
+            if !(0.0..=MAX_DEADZONE).contains(&deadzone) {
                 return Err(FlightError::ProfileValidation(
                     format!("axes.{}.deadzone: Deadzone must be between 0.0 and {}", axis_name, MAX_DEADZONE)
                 ));

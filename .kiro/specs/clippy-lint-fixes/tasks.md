@@ -1,6 +1,11 @@
 # Implementation Plan
 
-- [ ] 1. Align toolchain and capture baseline
+- [x] 1. Align toolchain and capture baseline
+
+
+
+
+
 
 
 
@@ -12,12 +17,19 @@
   - Run `cargo public-api -p flight-core > baseline-api.txt` to capture current public API
   - _Requirements: 1.4, 5.1_
 
-- [ ] 2. Fix Clippy idiom lints in profile.rs
+- [x] 2. Fix Clippy idiom lints in profile.rs
+
+
+
+
+
   - Change `for (_, config) in &mut canonical.axes` to `for config in canonical.axes.values_mut()`
   - Change `if deadzone < 0.0 || deadzone > MAX_DEADZONE` to `if !(0.0..=MAX_DEADZONE).contains(&deadzone)`
   - _Requirements: 2.1, 2.2_
 
-- [ ] 3. Fix Clippy idiom lints in writers.rs
+- [-] 3. Fix Clippy idiom lints in writers.rs
+
+
   - Change first `for entry in entries { if let Ok(entry) = entry` to `for entry in entries.flatten()` (around line 159)
   - Add comment: "Intentionally ignore read errors; preserves prior behavior"
   - Change `for (_, value) in &diff.changes` to `for value in diff.changes.values()` (around line 464)
