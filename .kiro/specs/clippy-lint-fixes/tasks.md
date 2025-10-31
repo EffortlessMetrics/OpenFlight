@@ -27,7 +27,10 @@
   - Change `if deadzone < 0.0 || deadzone > MAX_DEADZONE` to `if !(0.0..=MAX_DEADZONE).contains(&deadzone)`
   - _Requirements: 2.1, 2.2_
 
-- [-] 3. Fix Clippy idiom lints in writers.rs
+- [x] 3. Fix Clippy idiom lints in writers.rs
+
+
+
 
 
   - Change first `for entry in entries { if let Ok(entry) = entry` to `for entry in entries.flatten()` (around line 159)

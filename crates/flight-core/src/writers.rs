@@ -156,15 +156,14 @@ impl CurveConflictWriter {
 
         // Load all JSON files from config directory
         if let Ok(entries) = fs::read_dir(&self.config.config_dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                        if let Ok(content) = fs::read_to_string(&path) {
-                            if let Ok(config) = serde_json::from_str::<WriterConfig>(&content) {
-                                let key = format!("{}_{}", config.sim, config.version);
-                                self.sim_configs.insert(key, config);
-                            }
+            // Intentionally ignore read errors; preserves prior behavior
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                    if let Ok(content) = fs::read_to_string(&path) {
+                        if let Ok(config) = serde_json::from_str::<WriterConfig>(&content) {
+                            let key = format!("{}_{}", config.sim, config.version);
+                            self.sim_configs.insert(key, config);
                         }
                     }
                 }
@@ -461,7 +460,7 @@ impl CurveConflictWriter {
             String::new()
         };
 
-        for (_, value) in &diff.changes {
+        for value in diff.changes.values() {
             let expanded_value = self.expand_parameters(value, parameters);
             content.push('\n');
             content.push_str(&expanded_value);
@@ -684,16 +683,15 @@ impl CurveConflictWriter {
         }
 
         if let Ok(entries) = fs::read_dir(&self.config.backup_dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        let info_path = path.join("backup_info.json");
-                        if info_path.exists() {
-                            if let Ok(content) = fs::read_to_string(&info_path) {
-                                if let Ok(backup_info) = serde_json::from_str::<BackupInfo>(&content) {
-                                    backups.push(backup_info);
-                                }
+            // Intentionally ignore read errors; preserves prior behavior
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let info_path = path.join("backup_info.json");
+                    if info_path.exists() {
+                        if let Ok(content) = fs::read_to_string(&info_path) {
+                            if let Ok(backup_info) = serde_json::from_str::<BackupInfo>(&content) {
+                                backups.push(backup_info);
                             }
                         }
                     }
