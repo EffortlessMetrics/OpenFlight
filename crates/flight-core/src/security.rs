@@ -381,21 +381,17 @@ impl SecurityManager {
     /// Validate ACL configuration for IPC
     pub fn validate_ipc_acl(&self, client_info: &IpcClientInfo) -> Result<()> {
         // Check if current user only mode is enabled
-        if self.acl_config.current_user_only {
-            if client_info.user_id != get_current_user_id()? {
-                return Err(FlightError::Security(SecurityError::AclValidationFailed {
-                    reason: "Access denied: current user only mode enabled".to_string(),
-                }));
-            }
+        if self.acl_config.current_user_only && client_info.user_id != get_current_user_id()? {
+            return Err(FlightError::Security(SecurityError::AclValidationFailed {
+                reason: "Access denied: current user only mode enabled".to_string(),
+            }));
         }
         
         // Check allowed users list
-        if !self.acl_config.allowed_users.is_empty() {
-            if !self.acl_config.allowed_users.contains(&client_info.user_id) {
-                return Err(FlightError::Security(SecurityError::AclValidationFailed {
-                    reason: "Access denied: user not in allowed list".to_string(),
-                }));
-            }
+        if !self.acl_config.allowed_users.is_empty() && !self.acl_config.allowed_users.contains(&client_info.user_id) {
+            return Err(FlightError::Security(SecurityError::AclValidationFailed {
+                reason: "Access denied: user not in allowed list".to_string(),
+            }));
         }
         
         // Platform-specific ACL validation
@@ -428,20 +424,17 @@ impl SecurityManager {
         // 3. Check certificate validity period
         // 4. Validate signature matches the binary
         
-        match &manifest.signature {
-            SignatureStatus::Signed { valid_until, .. } => {
-                let now = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-                
-                if now > *valid_until {
-                    return Err(FlightError::Security(SecurityError::SignatureVerificationFailed {
-                        reason: "Certificate has expired".to_string(),
-                    }));
-                }
+        if let SignatureStatus::Signed { valid_until, .. } = &manifest.signature {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            
+            if now > *valid_until {
+                return Err(FlightError::Security(SecurityError::SignatureVerificationFailed {
+                    reason: "Certificate has expired".to_string(),
+                }));
             }
-            _ => {}
         }
         
         Ok(())
@@ -470,14 +463,14 @@ impl SecurityManager {
     }
     
     #[cfg(windows)]
-    fn validate_platform_acl(&self, client_info: &IpcClientInfo) -> Result<()> {
+    fn validate_platform_acl(&self, _client_info: &IpcClientInfo) -> Result<()> {
         // Windows-specific ACL validation
         // In a real implementation, this would check Windows security descriptors
         Ok(())
     }
     
     #[cfg(unix)]
-    fn validate_platform_acl(&self, client_info: &IpcClientInfo) -> Result<()> {
+    fn validate_platform_acl(&self, _client_info: &IpcClientInfo) -> Result<()> {
         // Unix-specific ACL validation
         // In a real implementation, this would check file permissions and groups
         Ok(())

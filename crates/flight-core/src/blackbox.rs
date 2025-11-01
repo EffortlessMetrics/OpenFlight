@@ -9,9 +9,8 @@
 //! - Zero-drop guarantee for 10-minute captures
 //! - Size target <30MB/3min
 
-use std::collections::VecDeque;
-use std::fs::{File, OpenOptions};
-use std::io::{BufWriter, Write, Seek, SeekFrom};
+use std::fs::File;
+use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};

@@ -60,7 +60,10 @@
   - Ensure no change in execution paths or return values
   - _Requirements: 3.1_
 
-- [-] 6. Fix Clippy idiom lints in security.rs
+- [x] 6. Fix Clippy idiom lints in security.rs
+
+
+
 
 
   - Collapse nested if for current_user_only check: `if current_user_only && user_id != get_current_user_id()` (around line 384)
@@ -69,7 +72,12 @@
   - Verify by truth table: combined conditions are logically equivalent; error propagation with `?` unchanged
   - _Requirements: 3.2, 3.3_
 
-- [ ] 7. Fix rustc warnings - unused imports and variables
+- [x] 7. Fix rustc warnings - unused imports and variables
+
+
+
+
+
   - Review clippy-before.log for all unused_imports and unused_variables warnings
   - Add `#[cfg(windows)]` (or `#[cfg(target_os = "windows")]`) to Windows-specific imports (e.g., GetModuleFileNameExW, HANDLE, Windows API types)
   - Add `#[cfg(unix)]` for Unix-specific imports where symmetric

@@ -6,7 +6,7 @@
 //! Provides comprehensive security checks, audit logging, and CI/manual verification
 //! capabilities according to SEC-01 requirements.
 
-use crate::{FlightError, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;

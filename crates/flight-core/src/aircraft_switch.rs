@@ -511,7 +511,7 @@ impl AircraftAutoSwitch {
         snapshot: TelemetrySnapshot,
         state: &Arc<RwLock<AutoSwitchState>>,
         pof_tracker: &Arc<RwLock<PofTracker>>,
-        profile_cache: &Arc<RwLock<ProfileCache>>,
+        _profile_cache: &Arc<RwLock<ProfileCache>>,
         config: &AutoSwitchConfig,
     ) -> Result<Option<SwitchResult>> {
         // Determine current phase of flight

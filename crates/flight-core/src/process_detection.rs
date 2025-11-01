@@ -11,10 +11,9 @@ use crate::aircraft_switch::SimId;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, RwLock};
-use tracing::{debug, info, warn};
+use tracing::warn;
 
 /// Process detection system for flight simulators
 #[derive(Debug)]
@@ -346,12 +345,12 @@ impl ProcessDetector {
     async fn get_windows_processes() -> Result<Vec<SystemProcess>> {
         use std::ffi::OsString;
         use std::os::windows::ffi::OsStringExt;
-        use windows::Win32::Foundation::{CloseHandle, HANDLE};
+        use windows::Win32::Foundation::CloseHandle;
         use windows::Win32::System::Diagnostics::ToolHelp::{
             CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
             TH32CS_SNAPPROCESS,
         };
-        use windows::Win32::System::ProcessStatus::{GetModuleFileNameExW, K32GetModuleFileNameExW};
+        use windows::Win32::System::ProcessStatus::K32GetModuleFileNameExW;
         use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
 
         let mut processes = Vec::new();
