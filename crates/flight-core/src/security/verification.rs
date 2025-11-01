@@ -528,9 +528,7 @@ impl SecurityVerifier {
         let has_failures = checks.iter().any(|c| c.status == VerificationStatus::Fail);
         let has_warnings = checks.iter().any(|c| c.status == VerificationStatus::Warning);
         
-        if has_failures {
-            VerificationStatus::Fail
-        } else if has_warnings && self.config.fail_on_warnings {
+        if has_failures || (has_warnings && self.config.fail_on_warnings) {
             VerificationStatus::Fail
         } else if has_warnings {
             VerificationStatus::Warning

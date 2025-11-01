@@ -49,7 +49,10 @@
   - Change `format!("Component quarantined due to excessive failures")` to `"Component quarantined due to excessive failures".to_string()`
   - _Requirements: 2.5_
 
-- [-] 5. Fix Clippy idiom lints in security/verification.rs
+- [x] 5. Fix Clippy idiom lints in security/verification.rs
+
+
+
 
 
   - Combine identical if branches: change `if has_failures { Fail } else if has_warnings && fail_on_warnings { Fail }` to `if has_failures || (has_warnings && fail_on_warnings) { Fail }`
@@ -57,7 +60,9 @@
   - Ensure no change in execution paths or return values
   - _Requirements: 3.1_
 
-- [ ] 6. Fix Clippy idiom lints in security.rs
+- [-] 6. Fix Clippy idiom lints in security.rs
+
+
   - Collapse nested if for current_user_only check: `if current_user_only && user_id != get_current_user_id()` (around line 384)
   - Collapse nested if for allowed_users check: `if !allowed_users.is_empty() && !allowed_users.contains(&user_id)` (around line 393)
   - Change match to if let: `if let SignatureStatus::Signed { valid_until, .. } = &manifest.signature` (around line 431)
