@@ -18,9 +18,11 @@ use tracing::warn;
 /// Process detection system for flight simulators
 #[derive(Debug)]
 pub struct ProcessDetector {
+    #[allow(dead_code)]
     config: ProcessDetectionConfig,
     state: RwLock<DetectionState>,
     detection_tx: mpsc::UnboundedSender<DetectionEvent>,
+    #[allow(dead_code)]
     detection_rx: RwLock<Option<mpsc::UnboundedReceiver<DetectionEvent>>>,
 }
 
@@ -56,6 +58,7 @@ struct DetectionState {
     /// Currently detected processes
     detected_processes: HashMap<SimId, DetectedProcess>,
     /// Last detection scan time
+    #[allow(dead_code)]
     last_scan: Option<Instant>,
     /// Detection metrics
     metrics: DetectionMetrics,
@@ -75,6 +78,7 @@ pub struct DetectedProcess {
 
 /// Detection event for internal processing
 #[derive(Debug)]
+#[allow(dead_code)]
 enum DetectionEvent {
     ScanProcesses,
     ProcessFound(DetectedProcess),
@@ -207,6 +211,7 @@ impl ProcessDetector {
     }
 
     /// Scan for processes (internal)
+    #[allow(dead_code)]
     async fn scan_processes(
         state: &RwLock<DetectionState>,
         config: &ProcessDetectionConfig,
@@ -266,6 +271,7 @@ impl ProcessDetector {
     }
 
     /// Get system processes (platform-specific)
+    #[allow(dead_code)]
     async fn get_system_processes() -> Result<Vec<SystemProcess>> {
         #[cfg(target_os = "windows")]
         {
@@ -282,6 +288,7 @@ impl ProcessDetector {
     }
 
     /// Check if simulator processes are running
+    #[allow(dead_code)]
     async fn check_simulator_processes(
         sim_id: SimId,
         definition: &ProcessDefinition,
@@ -342,6 +349,7 @@ impl ProcessDetector {
     }
 
     #[cfg(target_os = "windows")]
+    #[allow(dead_code)]
     async fn get_windows_processes() -> Result<Vec<SystemProcess>> {
         use std::ffi::OsString;
         use std::os::windows::ffi::OsStringExt;
@@ -462,6 +470,7 @@ impl ProcessDetector {
 
 /// System process information
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct SystemProcess {
     pid: u32,
     name: String,

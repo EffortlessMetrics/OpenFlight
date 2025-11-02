@@ -146,6 +146,7 @@ pub struct BlackboxStats {
 }
 
 /// Internal writer state
+#[allow(dead_code)]
 struct WriterState {
     file: BufWriter<File>,
     current_chunk: Vec<u8>,
@@ -160,6 +161,7 @@ struct WriterState {
 /// Blackbox writer implementation
 pub struct BlackboxWriter {
     config: BlackboxConfig,
+    #[allow(dead_code)]
     state: Option<WriterState>,
     record_tx: Option<mpsc::UnboundedSender<BlackboxRecord>>,
     record_rx: Option<mpsc::UnboundedReceiver<BlackboxRecord>>,
@@ -368,6 +370,7 @@ impl BlackboxWriter {
 
 /// Blackbox reader for validation and replay
 pub struct BlackboxReader {
+    #[allow(dead_code)]
     file: File,
     header: BlackboxHeader,
     footer: BlackboxFooter,
@@ -439,6 +442,7 @@ impl BlackboxReader {
     }
 
     /// Calculate CRC32C checksum
+    #[allow(dead_code)]
     fn calculate_crc32c(file: &mut File) -> Result<u32> {
         use std::io::Read;
         
@@ -459,10 +463,12 @@ impl BlackboxReader {
 
 // Add CRC32C hasher (simplified implementation)
 mod crc32c {
+    #[allow(dead_code)]
     pub struct Crc32cHasher {
         state: u32,
     }
 
+    #[allow(dead_code)]
     impl Crc32cHasher {
         pub fn new() -> Self {
             Self { state: 0xFFFFFFFF }
@@ -482,6 +488,7 @@ mod crc32c {
     }
 
     // Simplified CRC32C table (first 16 entries for demo)
+    #[allow(dead_code)]
     const CRC32C_TABLE: [u32; 256] = [
         0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB,
         0x8AD958CF, 0x78B2DBCC, 0x6BE22838, 0x9989AB3B, 0x4D43CFD0, 0xBF284CD3, 0xAC78BF27, 0x5E133C24,

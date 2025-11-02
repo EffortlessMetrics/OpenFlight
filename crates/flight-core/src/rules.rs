@@ -220,6 +220,7 @@ impl RulesCompiler {
         })
     }
 
+    #[allow(dead_code)]
     fn compile_rule(&self, rule: &Rule) -> Result<CompiledRule> {
         // Stub implementation - parse condition and action
         let condition = self.parse_condition(&rule.when)?;
@@ -327,6 +328,7 @@ impl RulesCompiler {
         )))
     }
 
+    #[allow(dead_code)]
     fn extract_hysteresis_key(&self, condition: &Condition) -> Option<String> {
         match condition {
             Condition::Compare { variable, .. } => {

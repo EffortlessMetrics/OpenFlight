@@ -138,6 +138,7 @@ struct AutoSwitchState {
     /// Last switch timestamp
     last_switch: Option<Instant>,
     /// Current phase of flight
+    #[allow(dead_code)]
     current_pof: Option<PhaseOfFlight>,
     /// Switch performance metrics
     metrics: SwitchMetrics,
@@ -187,9 +188,12 @@ pub struct CompiledProfile {
 /// Cached profile with metadata
 #[derive(Debug, Clone)]
 struct CachedProfile {
+    #[allow(dead_code)]
     pub base_profile: Profile,
     pub compiled: CompiledProfile,
+    #[allow(dead_code)]
     pub file_path: PathBuf,
+    #[allow(dead_code)]
     pub last_modified: Instant,
 }
 

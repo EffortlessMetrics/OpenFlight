@@ -86,7 +86,12 @@
   - Files explicitly affected: process_detection.rs, blackbox.rs, security.rs, rules.rs, aircraft_switch.rs (check clippy-before.log for complete list)
   - _Requirements: 4.1, 4.2_
 
-- [ ] 8. Fix rustc warnings - dead code and private interfaces
+- [x] 8. Fix rustc warnings - dead code and private interfaces
+
+
+
+
+
   - Add item-scoped `#[allow(dead_code)]` only for symbols required for cross-platform parity but not referenced in some builds
   - Avoid crate-level allows; keep allows targeted to specific items
   - Fix private_interfaces lint (especially in flight-hid): prefer lowering method visibility (e.g., `pub` → `pub(crate)`) over raising type visibility
