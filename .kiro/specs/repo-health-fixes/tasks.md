@@ -1,6 +1,9 @@
 # Implementation Plan
 
-- [-] 1. Fix aircraft auto-switch PhaseOfFlight classification
+- [x] 1. Fix aircraft auto-switch PhaseOfFlight classification
+
+
+
 
 
   - Reorder classification logic to prioritize high-energy phases (Cruise, Climb, Descent) before ground phases (Taxi, Park)

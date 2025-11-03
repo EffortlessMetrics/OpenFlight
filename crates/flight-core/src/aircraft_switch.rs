@@ -808,28 +808,59 @@ impl AircraftAutoSwitch {
         let gear_down = snapshot.gear_down;
         let vertical_speed = snapshot.vertical_speed_fpm;
 
-        // Simple phase of flight logic (can be enhanced)
-        if ground_speed < 5.0 {
-            PhaseOfFlight::Ground
-        } else if ground_speed < 30.0 && gear_down {
-            PhaseOfFlight::Taxi
-        } else if ias > 60.0 && vertical_speed > 500.0 && altitude < 1000.0 {
-            PhaseOfFlight::Takeoff
-        } else if vertical_speed > 300.0 && altitude > 1000.0 {
-            PhaseOfFlight::Climb
-        } else if vertical_speed.abs() < 200.0 && altitude > 5000.0 {
-            PhaseOfFlight::Cruise
-        } else if vertical_speed < -300.0 && altitude > 2000.0 {
-            PhaseOfFlight::Descent
-        } else if ias < 120.0 && altitude < 2000.0 && !gear_down {
-            PhaseOfFlight::Approach
-        } else if gear_down && altitude < 500.0 && vertical_speed < -100.0 {
-            PhaseOfFlight::Landing
-        } else if vertical_speed > 1000.0 && altitude < 2000.0 {
-            PhaseOfFlight::GoAround
-        } else {
-            PhaseOfFlight::Cruise // Default fallback
+        // Prioritize high-energy phases before ground phases to prevent misclassification
+        
+        // GoAround - high vertical speed at low altitude (emergency maneuver)
+        if vertical_speed > 1000.0 && altitude < 2000.0 {
+            return PhaseOfFlight::GoAround;
         }
+
+        // Takeoff - high speed with positive vertical speed at low altitude
+        if ias > 60.0 && vertical_speed > 500.0 && altitude < 1000.0 {
+            return PhaseOfFlight::Takeoff;
+        }
+
+        // Climb - positive vertical speed above pattern altitude
+        if vertical_speed > 300.0 && altitude > 1000.0 {
+            return PhaseOfFlight::Climb;
+        }
+
+        // Cruise - stable flight at altitude with sufficient speed
+        // Requires altitude >= 5000 ft, stable vertical speed, and minimum airspeed
+        if altitude >= 5000.0 && vertical_speed.abs() < 200.0 && ias >= 60.0 {
+            return PhaseOfFlight::Cruise;
+        }
+
+        // Descent - negative vertical speed above pattern altitude
+        if vertical_speed < -300.0 && altitude > 2000.0 {
+            return PhaseOfFlight::Descent;
+        }
+
+        // Approach - low speed at pattern altitude without gear
+        if ias < 120.0 && altitude < 2000.0 && !gear_down {
+            return PhaseOfFlight::Approach;
+        }
+
+        // Ground-only phases - only match when clearly on ground
+        
+        // Landing - gear down, low altitude, descending
+        if gear_down && altitude < 500.0 && vertical_speed < -100.0 {
+            return PhaseOfFlight::Landing;
+        }
+
+        // Taxi - low ground speed with gear down (on ground)
+        // Only matches when ground_speed < 30 knots and gear is down
+        if ground_speed < 30.0 && ground_speed >= 5.0 && gear_down {
+            return PhaseOfFlight::Taxi;
+        }
+
+        // Ground - stationary or very slow movement
+        if ground_speed < 5.0 {
+            return PhaseOfFlight::Ground;
+        }
+
+        // Default fallback for ambiguous cases
+        PhaseOfFlight::Cruise
     }
     /// Update PoF with hysteresis logic
     async fn update_pof_with_hysteresis(
