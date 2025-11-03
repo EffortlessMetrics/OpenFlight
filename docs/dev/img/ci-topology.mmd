@@ -1,0 +1,7 @@
+graph LR
+    PF[path-filter] --> CORE[clippy-core linux+windows • feature-matrix]
+    PF --> IPC[clippy-ipc-benches linux+windows • 2 feature sets]
+    PF --> API[public-api-check core]
+    
+    CORE -->|fmt check| CORE
+    CORE --> API

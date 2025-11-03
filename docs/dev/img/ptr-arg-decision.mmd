@@ -1,0 +1,11 @@
+flowchart TD
+    Q[Clippy ptr_arg: &PathBuf param] --> A{Is function public?}
+    A -- No --> B[Change to &Path or P: AsRef Path]
+    B --> R[Update callsites • done]
+    
+    A -- Yes --> C{OK to change API?}
+    C -- Yes --> D[Add new fn with &Path; deprecate &PathBuf; delegate to impl]
+    D --> R
+    
+    C -- No --> E[Keep public &PathBuf; add internal &Path impl; delegate]
+    E --> R

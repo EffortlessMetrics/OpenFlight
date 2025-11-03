@@ -1,0 +1,10 @@
+flowchart TD
+    S[Warning: dead_code or private_interfaces] --> T{Platform/feature specific?}
+    T -- Yes --> U[#[cfg target_os] or #[cfg feature] gate]
+    T -- No --> V{Can you reduce visibility?}
+    V -- Yes --> W[pub -> pub crate/pub super]
+    V -- No --> X{Is it truly needed but unused today?}
+    X --> Y[#[expect dead_code, reason="…"] item-scoped only]
+    
+    S --> P{Public API exposes private type?}
+    P -- Yes --> Z[Wrap in public newtype OR lower method visibility OR return view]

@@ -1,0 +1,19 @@
+flowchart TD
+    A[Dev changes] --> B[CI path-filter]
+    B -->|core files| C[clippy-core job]
+    B -->|ipc files| D[clippy-ipc-benches job]
+    B -->|workflow edits| E[public-api-check job]
+    
+    C --> F{cargo clippy -D warnings}
+    F -->|pass| G[cargo fmt --check]
+    F -->|fail| H[Fix lints • commit]
+    
+    G --> I[Public API diff core]
+    I -->|pass| J[Ready to merge]
+    I -->|fail| K[Review/justify API delta]
+    
+    D --> L{Strict benches: clippy with deps}
+    L -->|pass| J
+    L -->|fail| M{Label present? bench-unblock}
+    M -->|yes| N[Run --no-deps temporarily]
+    M -->|no| H
