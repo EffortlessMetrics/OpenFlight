@@ -1,6 +1,8 @@
 # Implementation Plan
 
-- [ ] 1. Fix aircraft auto-switch PhaseOfFlight classification
+- [-] 1. Fix aircraft auto-switch PhaseOfFlight classification
+
+
   - Reorder classification logic to prioritize high-energy phases (Cruise, Climb, Descent) before ground phases (Taxi, Park)
   - Ensure Taxi only matches when `on_ground` is true and `ground_speed < taxi_speed_max`
   - Ensure Cruise requires `alt_agl >= cruise_agl_min`, `vs.abs() <= cruise_vs_abs_max`, and `ias >= cruise_ias_min`
