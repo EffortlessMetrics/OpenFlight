@@ -128,7 +128,12 @@
   - Run `cargo fmt --all -- --check` (ensure formatting is clean)
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 10.1 Optional: Run feature sweep for drift detection
+- [x] 10.1 Optional: Run feature sweep for drift detection
+
+
+
+
+
 
   - Run `cargo clippy -p flight-core --all-targets --all-features -- -Dwarnings`
   - This catches warnings that only appear under different feature/target combinations
