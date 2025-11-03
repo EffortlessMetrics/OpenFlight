@@ -12,7 +12,12 @@
   - Place ground-only phases (Landing, Taxi, Park) at the end of the classification chain
   - _Requirements: 1.1, 1.5_
 
-- [ ] 2. Add C172 test fixture for aircraft auto-switch tests
+- [x] 2. Add C172 test fixture for aircraft auto-switch tests
+
+
+
+
+
   - Create `tests/fixtures/profiles/` directory in flight-core
   - Create `tests/fixtures/profiles/C172.json` with pof_thresholds for cruise, climb, descent, approach, taxi, and takeoff
   - Add test helper function `test_profile_repo()` that returns ProfileRepo pointing to fixtures directory

@@ -1,0 +1,78 @@
+{
+  "schema": "flight.profile/1",
+  "aircraft": {
+    "icao": "C172"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.02,
+      "expo": 0.1,
+      "slew_rate": 1.5,
+      "detents": []
+    },
+    "roll": {
+      "deadzone": 0.02,
+      "expo": 0.15,
+      "detents": []
+    },
+    "yaw": {
+      "deadzone": 0.03,
+      "expo": 0.1,
+      "detents": []
+    }
+  },
+  "pof_overrides": {
+    "cruise": {
+      "axes": {
+        "pitch": {
+          "expo": 0.15,
+          "detents": []
+        }
+      }
+    },
+    "climb": {
+      "axes": {
+        "pitch": {
+          "expo": 0.12,
+          "detents": []
+        }
+      }
+    },
+    "descent": {
+      "axes": {
+        "pitch": {
+          "expo": 0.12,
+          "detents": []
+        }
+      }
+    },
+    "approach": {
+      "axes": {
+        "pitch": {
+          "expo": 0.25,
+          "detents": []
+        },
+        "roll": {
+          "expo": 0.2,
+          "detents": []
+        }
+      }
+    },
+    "taxi": {
+      "axes": {
+        "yaw": {
+          "expo": 0.05,
+          "detents": []
+        }
+      }
+    },
+    "takeoff": {
+      "axes": {
+        "pitch": {
+          "expo": 0.2,
+          "detents": []
+        }
+      }
+    }
+  }
+}
