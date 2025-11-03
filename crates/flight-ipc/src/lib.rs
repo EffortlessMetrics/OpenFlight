@@ -63,12 +63,12 @@ pub mod proto {
     tonic::include_proto!("flight.v1");
 }
 
-pub mod transport;
 pub mod client;
-pub mod server;
-pub mod negotiation;
 #[cfg(test)]
 mod fd_safety_tests;
+pub mod negotiation;
+pub mod server;
+pub mod transport;
 
 pub use proto::*;
 
@@ -78,7 +78,7 @@ pub const PROTOCOL_VERSION: &str = "1.0.0";
 /// Supported feature flags
 pub const SUPPORTED_FEATURES: &[&str] = &[
     "device-management",
-    "health-monitoring", 
+    "health-monitoring",
     "profile-management",
     "force-feedback",
     "real-time-telemetry",
@@ -88,19 +88,19 @@ pub const SUPPORTED_FEATURES: &[&str] = &[
 pub enum IpcError {
     #[error("Transport error: {0}")]
     Transport(#[from] transport::TransportError),
-    
+
     #[error("Protocol version mismatch: client={client}, server={server}")]
     VersionMismatch { client: String, server: String },
-    
+
     #[error("Feature not supported: {feature}")]
     UnsupportedFeature { feature: String },
-    
+
     #[error("Connection failed: {reason}")]
     ConnectionFailed { reason: String },
-    
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     #[error("gRPC error: {0}")]
     Grpc(#[from] tonic::Status),
 }
@@ -157,7 +157,7 @@ impl Default for ServerConfig {
 pub fn default_transport_type() -> TransportType {
     #[cfg(windows)]
     return TransportType::NamedPipes;
-    
+
     #[cfg(unix)]
     return TransportType::UnixSockets;
 }
@@ -166,7 +166,7 @@ pub fn default_transport_type() -> TransportType {
 pub fn default_bind_address() -> String {
     #[cfg(windows)]
     return r"\\.\pipe\flight-hub".to_string();
-    
+
     #[cfg(unix)]
     return "/tmp/flight-hub.sock".to_string();
 }

@@ -12,9 +12,9 @@ use tracing_subscriber;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
+
     info!("Connecting to Flight Hub service...");
-    
+
     // Create client with default configuration
     let mut client = match FlightClient::connect().await {
         Ok(client) => {
@@ -26,17 +26,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(e.into());
         }
     };
-    
+
     // Display negotiation result
     if let Some(negotiation) = client.negotiation_result() {
         info!("Server version: {}", negotiation.server_version);
         info!("Enabled features: {:?}", negotiation.enabled_features);
     }
-    
+
     // Subscribe to health events
     info!("Subscribing to health events...");
     info!("Press Ctrl+C to stop");
-    
+
     let mut health_stream = match client.subscribe_health().await {
         Ok(stream) => stream,
         Err(e) => {
@@ -44,20 +44,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(e.into());
         }
     };
-    
+
     // Process health events
     let mut event_count = 0;
-    
+
     while let Some(event_result) = health_stream.next().await {
         match event_result {
             Ok(event) => {
                 event_count += 1;
-                
+
                 // Format timestamp
                 let timestamp = chrono::DateTime::from_timestamp(event.timestamp, 0)
                     .map(|dt| dt.format("%H:%M:%S%.3f").to_string())
                     .unwrap_or_else(|| "Unknown".to_string());
-                
+
                 // Format event based on type
                 match event.r#type() {
                     HealthEventType::Info => {
@@ -93,12 +93,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         info!("[{}] UNKNOWN: {}", timestamp, event.message);
                     }
                 }
-                
+
                 // Display device information if available
                 if !event.device_id.is_empty() {
                     info!("  Device: {}", event.device_id);
                 }
-                
+
                 // Display metadata if available
                 if !event.metadata.is_empty() {
                     info!("  Metadata:");
@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         info!("    {}: {}", key, value);
                     }
                 }
-                
+
                 // Show progress every 10 events
                 if event_count % 10 == 0 {
                     info!("Processed {} health events", event_count);
@@ -118,8 +118,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    
-    info!("Health subscription ended. Total events processed: {}", event_count);
-    
+
+    info!(
+        "Health subscription ended. Total events processed: {}",
+        event_count
+    );
+
     Ok(())
 }

@@ -6,18 +6,17 @@
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
 
-pub mod ofp1;
 #[cfg(test)]
 mod fd_safety_tests;
+pub mod ofp1;
 
 use flight_core::{
-    WatchdogSystem, WatchdogConfig, ComponentType, WatchdogEvent,
-    FlightError, Result
+    ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent, WatchdogSystem,
 };
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tracing::{debug, warn, error, info};
+use std::time::{Duration, Instant};
+use tracing::{debug, error, info, warn};
 
 /// HID device endpoint identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -67,10 +66,15 @@ struct EndpointState {
 /// HID operation result
 #[derive(Debug)]
 pub enum HidOperationResult {
-    Success { bytes_transferred: usize },
+    Success {
+        bytes_transferred: usize,
+    },
     Stall,
     Timeout,
-    Error { error_code: i32, description: String },
+    Error {
+        error_code: i32,
+        description: String,
+    },
 }
 
 /// HID adapter with watchdog integration
@@ -103,10 +107,10 @@ impl HidAdapter {
         }
 
         info!("Starting HID adapter with watchdog integration");
-        
+
         // Enumerate existing devices
         self.enumerate_devices()?;
-        
+
         self.is_running = true;
         Ok(())
     }
@@ -118,7 +122,7 @@ impl HidAdapter {
         }
 
         info!("Stopping HID adapter");
-        
+
         // Unregister all endpoints from watchdog
         for endpoint_id in self.endpoint_states.keys() {
             let component = ComponentType::UsbEndpoint(endpoint_id.device_path.clone());
@@ -126,7 +130,7 @@ impl HidAdapter {
                 watchdog.unregister_component(&component);
             }
         }
-        
+
         self.devices.clear();
         self.endpoint_states.clear();
         self.is_running = false;
@@ -135,10 +139,10 @@ impl HidAdapter {
     /// Enumerate and register HID devices
     fn enumerate_devices(&mut self) -> Result<()> {
         debug!("Enumerating HID devices");
-        
+
         // This would normally use platform-specific HID enumeration
         // For now, we'll simulate device discovery
-        
+
         // Example device registration
         let device_info = HidDeviceInfo {
             vendor_id: 0x046d,
@@ -150,37 +154,48 @@ impl HidAdapter {
             usage_page: 0x01,
             usage: 0x04,
         };
-        
+
         self.register_device(device_info)?;
-        
+
         Ok(())
     }
 
     /// Register a new HID device
     pub fn register_device(&mut self, device_info: HidDeviceInfo) -> Result<()> {
-        info!("Registering HID device: {} (VID:{:04X} PID:{:04X})", 
-              device_info.product_name.as_deref().unwrap_or("Unknown"),
-              device_info.vendor_id, 
-              device_info.product_id);
+        info!(
+            "Registering HID device: {} (VID:{:04X} PID:{:04X})",
+            device_info.product_name.as_deref().unwrap_or("Unknown"),
+            device_info.vendor_id,
+            device_info.product_id
+        );
 
         let device_path = device_info.device_path.clone();
-        
+
         // Register endpoints with watchdog
         let endpoints = vec![
-            EndpointId { device_path: device_path.clone(), endpoint_type: EndpointType::Input },
-            EndpointId { device_path: device_path.clone(), endpoint_type: EndpointType::Output },
+            EndpointId {
+                device_path: device_path.clone(),
+                endpoint_type: EndpointType::Input,
+            },
+            EndpointId {
+                device_path: device_path.clone(),
+                endpoint_type: EndpointType::Output,
+            },
         ];
 
         for endpoint_id in &endpoints {
-            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
-            
+            let component = ComponentType::UsbEndpoint(format!(
+                "{}:{:?}",
+                endpoint_id.device_path, endpoint_id.endpoint_type
+            ));
+
             let config = WatchdogConfig {
                 usb_timeout: Duration::from_millis(100),
                 max_consecutive_failures: 3,
                 max_failures_per_window: 10,
                 failure_rate_window: Duration::from_secs(60),
                 enable_nan_guards: false, // Not applicable for USB endpoints
-                is_critical: true, // USB endpoints are critical for operation
+                is_critical: true,        // USB endpoints are critical for operation
                 ..Default::default()
             };
 
@@ -189,14 +204,17 @@ impl HidAdapter {
             }
 
             // Initialize endpoint state
-            self.endpoint_states.insert(endpoint_id.clone(), EndpointState {
-                last_success: Instant::now(),
-                consecutive_failures: 0,
-                is_stalled: false,
-                frame_stall_count: 0,
-                bytes_transferred: 0,
-                operation_count: 0,
-            });
+            self.endpoint_states.insert(
+                endpoint_id.clone(),
+                EndpointState {
+                    last_success: Instant::now(),
+                    consecutive_failures: 0,
+                    is_stalled: false,
+                    frame_stall_count: 0,
+                    bytes_transferred: 0,
+                    operation_count: 0,
+                },
+            );
         }
 
         self.devices.insert(device_path, device_info);
@@ -211,18 +229,23 @@ impl HidAdapter {
         self.devices.remove(device_path);
 
         // Remove endpoint states and unregister from watchdog
-        let endpoints_to_remove: Vec<_> = self.endpoint_states.keys()
+        let endpoints_to_remove: Vec<_> = self
+            .endpoint_states
+            .keys()
             .filter(|id| id.device_path == device_path)
             .cloned()
             .collect();
 
         for endpoint_id in endpoints_to_remove {
-            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
-            
+            let component = ComponentType::UsbEndpoint(format!(
+                "{}:{:?}",
+                endpoint_id.device_path, endpoint_id.endpoint_type
+            ));
+
             if let Ok(mut watchdog) = self.watchdog.lock() {
                 watchdog.unregister_component(&component);
             }
-            
+
             self.endpoint_states.remove(&endpoint_id);
         }
 
@@ -230,7 +253,11 @@ impl HidAdapter {
     }
 
     /// Perform HID input operation with watchdog monitoring
-    pub fn read_input(&mut self, device_path: &str, buffer: &mut [u8]) -> Result<HidOperationResult> {
+    pub fn read_input(
+        &mut self,
+        device_path: &str,
+        buffer: &mut [u8],
+    ) -> Result<HidOperationResult> {
         let endpoint_id = EndpointId {
             device_path: device_path.to_string(),
             endpoint_type: EndpointType::Input,
@@ -239,11 +266,13 @@ impl HidAdapter {
         self.perform_operation(&endpoint_id, |_| {
             // Simulate HID read operation
             // In real implementation, this would call platform-specific HID APIs
-            
+
             // Simulate occasional stalls for testing
-            if rand::random::<f32>() < 0.01 { // 1% chance of stall
+            if rand::random::<f32>() < 0.01 {
+                // 1% chance of stall
                 HidOperationResult::Stall
-            } else if rand::random::<f32>() < 0.005 { // 0.5% chance of error
+            } else if rand::random::<f32>() < 0.005 {
+                // 0.5% chance of error
                 HidOperationResult::Error {
                     error_code: -1,
                     description: "Simulated USB error".to_string(),
@@ -251,7 +280,9 @@ impl HidAdapter {
             } else {
                 // Simulate successful read
                 let bytes_read = std::cmp::min(buffer.len(), 8);
-                HidOperationResult::Success { bytes_transferred: bytes_read }
+                HidOperationResult::Success {
+                    bytes_transferred: bytes_read,
+                }
             }
         })
     }
@@ -266,40 +297,54 @@ impl HidAdapter {
         self.perform_operation(&endpoint_id, |_| {
             // Simulate HID write operation
             // In real implementation, this would call platform-specific HID APIs
-            
+
             // Check if component is quarantined
-            let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
-            
+            let _component = ComponentType::UsbEndpoint(format!(
+                "{}:{:?}",
+                endpoint_id.device_path, endpoint_id.endpoint_type
+            ));
+
             // Simulate occasional stalls for testing
-            if rand::random::<f32>() < 0.02 { // 2% chance of stall for output
+            if rand::random::<f32>() < 0.02 {
+                // 2% chance of stall for output
                 HidOperationResult::Stall
-            } else if rand::random::<f32>() < 0.01 { // 1% chance of error
+            } else if rand::random::<f32>() < 0.01 {
+                // 1% chance of error
                 HidOperationResult::Error {
                     error_code: -2,
                     description: "Simulated USB write error".to_string(),
                 }
             } else {
                 // Simulate successful write
-                HidOperationResult::Success { bytes_transferred: data.len() }
+                HidOperationResult::Success {
+                    bytes_transferred: data.len(),
+                }
             }
         })
     }
 
     /// Perform a HID operation with watchdog monitoring
-    fn perform_operation<F>(&mut self, endpoint_id: &EndpointId, operation: F) -> Result<HidOperationResult>
+    fn perform_operation<F>(
+        &mut self,
+        endpoint_id: &EndpointId,
+        operation: F,
+    ) -> Result<HidOperationResult>
     where
         F: FnOnce(&EndpointId) -> HidOperationResult,
     {
-        let component = ComponentType::UsbEndpoint(format!("{}:{:?}", endpoint_id.device_path, endpoint_id.endpoint_type));
-        
+        let component = ComponentType::UsbEndpoint(format!(
+            "{}:{:?}",
+            endpoint_id.device_path, endpoint_id.endpoint_type
+        ));
+
         // Check if component is quarantined
-        if let Ok(watchdog) = self.watchdog.lock() {
-            if watchdog.is_quarantined(&component) {
-                return Err(FlightError::Configuration(format!(
-                    "USB endpoint {} is quarantined", 
-                    endpoint_id.device_path
-                )));
-            }
+        if let Ok(watchdog) = self.watchdog.lock()
+            && watchdog.is_quarantined(&component)
+        {
+            return Err(FlightError::Configuration(format!(
+                "USB endpoint {} is quarantined",
+                endpoint_id.device_path
+            )));
         }
 
         let start_time = Instant::now();
@@ -323,7 +368,10 @@ impl HidAdapter {
                         watchdog.record_usb_success(&endpoint_id.device_path);
                     }
 
-                    debug!("USB operation successful: {} bytes in {:?}", bytes_transferred, operation_time);
+                    debug!(
+                        "USB operation successful: {} bytes in {:?}",
+                        bytes_transferred, operation_time
+                    );
                 }
                 HidOperationResult::Stall => {
                     state.consecutive_failures += 1;
@@ -331,10 +379,10 @@ impl HidAdapter {
                     state.frame_stall_count += 1;
 
                     // Notify watchdog of stall
-                    if let Ok(mut watchdog) = self.watchdog.lock() {
-                        if let Some(event) = watchdog.record_usb_stall(&endpoint_id.device_path) {
-                            warn!("USB stall detected and reported to watchdog: {:?}", event);
-                        }
+                    if let Ok(mut watchdog) = self.watchdog.lock()
+                        && let Some(event) = watchdog.record_usb_stall(&endpoint_id.device_path)
+                    {
+                        warn!("USB stall detected and reported to watchdog: {:?}", event);
                     }
 
                     warn!("USB endpoint stalled: {}", endpoint_id.device_path);
@@ -343,15 +391,18 @@ impl HidAdapter {
                     state.consecutive_failures += 1;
 
                     // Check for timeout with watchdog
-                    if let Ok(mut watchdog) = self.watchdog.lock() {
-                        if let Some(event) = watchdog.check_usb_timeout(&endpoint_id.device_path) {
-                            error!("USB timeout detected and reported to watchdog: {:?}", event);
-                        }
+                    if let Ok(mut watchdog) = self.watchdog.lock()
+                        && let Some(event) = watchdog.check_usb_timeout(&endpoint_id.device_path)
+                    {
+                        error!("USB timeout detected and reported to watchdog: {:?}", event);
                     }
 
                     error!("USB endpoint timeout: {}", endpoint_id.device_path);
                 }
-                HidOperationResult::Error { error_code, description } => {
+                HidOperationResult::Error {
+                    error_code,
+                    description,
+                } => {
                     state.consecutive_failures += 1;
 
                     // Notify watchdog of error
@@ -379,8 +430,9 @@ impl HidAdapter {
         self.devices.values().collect()
     }
 
-    /// Get endpoint state
-    pub fn get_endpoint_state(&self, endpoint_id: &EndpointId) -> Option<&EndpointState> {
+    /// Get endpoint state (internal use only)
+    #[allow(dead_code)]
+    pub(crate) fn get_endpoint_state(&self, endpoint_id: &EndpointId) -> Option<&EndpointState> {
         self.endpoint_states.get(endpoint_id)
     }
 
@@ -389,7 +441,9 @@ impl HidAdapter {
         let mut events = Vec::new();
 
         // Check all endpoints for this device
-        let endpoints: Vec<_> = self.endpoint_states.keys()
+        let endpoints: Vec<_> = self
+            .endpoint_states
+            .keys()
             .filter(|id| id.device_path == device_path)
             .cloned()
             .collect();
@@ -418,20 +472,28 @@ impl HidAdapter {
     pub fn get_statistics(&self) -> HidAdapterStats {
         let total_devices = self.devices.len();
         let total_endpoints = self.endpoint_states.len();
-        
-        let total_operations: u64 = self.endpoint_states.values()
+
+        let total_operations: u64 = self
+            .endpoint_states
+            .values()
             .map(|state| state.operation_count)
             .sum();
-        
-        let total_bytes: u64 = self.endpoint_states.values()
+
+        let total_bytes: u64 = self
+            .endpoint_states
+            .values()
             .map(|state| state.bytes_transferred)
             .sum();
-        
-        let failed_endpoints = self.endpoint_states.values()
+
+        let failed_endpoints = self
+            .endpoint_states
+            .values()
             .filter(|state| state.consecutive_failures > 0)
             .count();
 
-        let stalled_endpoints = self.endpoint_states.values()
+        let stalled_endpoints = self
+            .endpoint_states
+            .values()
             .filter(|state| state.is_stalled)
             .count();
 
@@ -448,49 +510,57 @@ impl HidAdapter {
     /// Attempt to recover a quarantined endpoint
     pub fn attempt_endpoint_recovery(&mut self, device_path: &str) -> Result<bool> {
         let component = ComponentType::UsbEndpoint(device_path.to_string());
-        
-        if let Ok(mut watchdog) = self.watchdog.lock() {
-            if watchdog.attempt_recovery(&component) {
-                info!("Attempting recovery for USB endpoint: {}", device_path);
-                
-                // Reset local endpoint state
-                let endpoints_to_reset: Vec<_> = self.endpoint_states.keys()
-                    .filter(|id| id.device_path == device_path)
-                    .cloned()
-                    .collect();
 
-                for endpoint_id in endpoints_to_reset {
-                    if let Some(state) = self.endpoint_states.get_mut(&endpoint_id) {
-                        state.consecutive_failures = 0;
-                        state.is_stalled = false;
-                        state.frame_stall_count = 0;
-                        state.last_success = Instant::now();
-                    }
+        if let Ok(mut watchdog) = self.watchdog.lock()
+            && watchdog.attempt_recovery(&component)
+        {
+            info!("Attempting recovery for USB endpoint: {}", device_path);
+
+            // Reset local endpoint state
+            let endpoints_to_reset: Vec<_> = self
+                .endpoint_states
+                .keys()
+                .filter(|id| id.device_path == device_path)
+                .cloned()
+                .collect();
+
+            for endpoint_id in endpoints_to_reset {
+                if let Some(state) = self.endpoint_states.get_mut(&endpoint_id) {
+                    state.consecutive_failures = 0;
+                    state.is_stalled = false;
+                    state.frame_stall_count = 0;
+                    state.last_success = Instant::now();
                 }
-                
-                return Ok(true);
             }
+
+            return Ok(true);
         }
-        
+
         Ok(false)
     }
 
     /// Perform OFP-1 capability negotiation with device
-    pub fn negotiate_ofp1_capabilities(&self, device_path: &str) -> Result<Option<crate::ofp1::Ofp1NegotiationResult>> {
+    pub fn negotiate_ofp1_capabilities(
+        &self,
+        device_path: &str,
+    ) -> Result<Option<crate::ofp1::Ofp1NegotiationResult>> {
         // This would normally perform HID Feature report exchange
         // For now, simulate successful negotiation for testing
-        
+
         if let Some(device_info) = self.get_device_info(device_path) {
             // Check if device supports OFP-1 (based on VID/PID or other criteria)
             if self.is_ofp1_compatible(device_info) {
                 let negotiator = crate::ofp1::Ofp1Negotiator::new();
-                
+
                 // Simulate getting capabilities from device
                 let capabilities = self.simulate_device_capabilities(device_info)?;
-                
+
                 match negotiator.negotiate(&capabilities) {
                     Ok(result) => {
-                        info!("OFP-1 negotiation successful for {}: {:?}", device_path, result);
+                        info!(
+                            "OFP-1 negotiation successful for {}: {:?}",
+                            device_path, result
+                        );
                         Ok(Some(result))
                     }
                     Err(e) => {
@@ -503,7 +573,10 @@ impl HidAdapter {
                 Ok(None)
             }
         } else {
-            Err(FlightError::Configuration(format!("Device not found: {}", device_path)))
+            Err(FlightError::Configuration(format!(
+                "Device not found: {}",
+                device_path
+            )))
         }
     }
 
@@ -511,18 +584,20 @@ impl HidAdapter {
     fn is_ofp1_compatible(&self, device_info: &HidDeviceInfo) -> bool {
         // Check for known OFP-1 compatible devices
         // This would normally check VID/PID against a database
-        
+
         // For testing, consider Logitech devices as potentially OFP-1 compatible
-        device_info.vendor_id == 0x046d || 
-        device_info.vendor_id == 0x1234 // Test VID
+        device_info.vendor_id == 0x046d || device_info.vendor_id == 0x1234 // Test VID
     }
 
     /// Simulate device capabilities for testing
-    fn simulate_device_capabilities(&self, device_info: &HidDeviceInfo) -> Result<crate::ofp1::CapabilitiesReport> {
+    fn simulate_device_capabilities(
+        &self,
+        device_info: &HidDeviceInfo,
+    ) -> Result<crate::ofp1::CapabilitiesReport> {
         let mut capabilities = crate::ofp1::CapabilityFlags::new();
         capabilities.set_flag(crate::ofp1::CapabilityFlags::BIDIRECTIONAL);
         capabilities.set_flag(crate::ofp1::CapabilityFlags::HEALTH_STREAM);
-        
+
         // Add more capabilities based on device type
         if device_info.vendor_id == 0x1234 {
             capabilities.set_flag(crate::ofp1::CapabilityFlags::PHYSICAL_INTERLOCK);
@@ -549,38 +624,51 @@ impl HidAdapter {
     }
 
     /// Send OFP-1 torque command to device
-    pub fn send_ofp1_torque_command(&mut self, device_path: &str, command: crate::ofp1::TorqueCommandReport) -> Result<HidOperationResult> {
+    pub fn send_ofp1_torque_command(
+        &mut self,
+        device_path: &str,
+        command: crate::ofp1::TorqueCommandReport,
+    ) -> Result<HidOperationResult> {
         // Validate command first
         if let Err(e) = crate::ofp1::utils::validate_torque_command(&command) {
-            return Err(FlightError::Configuration(format!("Invalid OFP-1 command: {}", e)));
+            return Err(FlightError::Configuration(format!(
+                "Invalid OFP-1 command: {}",
+                e
+            )));
         }
 
         // Convert to HID output report and send
         // In real implementation, this would serialize the command struct to bytes
         let command_bytes = self.serialize_ofp1_command(&command)?;
-        
+
         self.write_output(device_path, &command_bytes)
     }
 
     /// Read OFP-1 health status from device
-    pub fn read_ofp1_health_status(&mut self, device_path: &str) -> Result<Option<crate::ofp1::HealthStatusReport>> {
+    pub fn read_ofp1_health_status(
+        &mut self,
+        device_path: &str,
+    ) -> Result<Option<crate::ofp1::HealthStatusReport>> {
         // Read HID input report
         let mut buffer = [0u8; 32]; // OFP-1 health report size
-        
+
         match self.read_input(device_path, &mut buffer)? {
             HidOperationResult::Success { bytes_transferred } => {
                 if bytes_transferred >= std::mem::size_of::<crate::ofp1::HealthStatusReport>() {
                     let health_report = self.deserialize_ofp1_health(&buffer)?;
-                    
+
                     // Validate report
                     if let Err(e) = crate::ofp1::utils::validate_health_status(&health_report) {
                         warn!("Invalid OFP-1 health report from {}: {}", device_path, e);
                         return Ok(None);
                     }
-                    
+
                     Ok(Some(health_report))
                 } else {
-                    debug!("Insufficient data for OFP-1 health report: {} bytes", bytes_transferred);
+                    debug!(
+                        "Insufficient data for OFP-1 health report: {} bytes",
+                        bytes_transferred
+                    );
                     Ok(None)
                 }
             }
@@ -589,7 +677,10 @@ impl HidAdapter {
     }
 
     /// Serialize OFP-1 torque command to bytes
-    fn serialize_ofp1_command(&self, command: &crate::ofp1::TorqueCommandReport) -> Result<Vec<u8>> {
+    fn serialize_ofp1_command(
+        &self,
+        command: &crate::ofp1::TorqueCommandReport,
+    ) -> Result<Vec<u8>> {
         // In real implementation, this would use proper serialization
         // For now, simulate with a simple byte array
         Ok(vec![
@@ -611,7 +702,9 @@ impl HidAdapter {
         // In real implementation, this would use proper deserialization
         // For now, simulate with a basic structure
         if buffer.len() < 16 {
-            return Err(FlightError::Configuration("Buffer too small for health report".to_string()));
+            return Err(FlightError::Configuration(
+                "Buffer too small for health report".to_string(),
+            ));
         }
 
         let mut status_flags = crate::ofp1::StatusFlags::new();
@@ -645,21 +738,25 @@ pub struct HidAdapterStats {
 
 impl EndpointState {
     /// Get success rate for this endpoint
+    #[allow(dead_code)]
     pub fn success_rate(&self) -> f64 {
         if self.operation_count == 0 {
             return 1.0;
         }
-        
-        let successful_operations = self.operation_count.saturating_sub(self.consecutive_failures as u64);
+
+        let successful_operations = self
+            .operation_count
+            .saturating_sub(self.consecutive_failures as u64);
         successful_operations as f64 / self.operation_count as f64
     }
 
     /// Get average bytes per operation
+    #[allow(dead_code)]
     pub fn avg_bytes_per_operation(&self) -> f64 {
         if self.operation_count == 0 {
             return 0.0;
         }
-        
+
         self.bytes_transferred as f64 / self.operation_count as f64
     }
 }
@@ -680,7 +777,7 @@ mod tests {
     #[test]
     fn test_device_registration() {
         let mut adapter = create_test_adapter();
-        
+
         let device_info = HidDeviceInfo {
             vendor_id: 0x1234,
             product_id: 0x5678,
@@ -700,7 +797,7 @@ mod tests {
     #[test]
     fn test_device_unregistration() {
         let mut adapter = create_test_adapter();
-        
+
         let device_info = HidDeviceInfo {
             vendor_id: 0x1234,
             product_id: 0x5678,
@@ -721,7 +818,7 @@ mod tests {
     #[test]
     fn test_endpoint_operations() {
         let mut adapter = create_test_adapter();
-        
+
         let device_info = HidDeviceInfo {
             vendor_id: 0x1234,
             product_id: 0x5678,
@@ -750,7 +847,7 @@ mod tests {
     fn test_adapter_statistics() {
         let adapter = create_test_adapter();
         let stats = adapter.get_statistics();
-        
+
         assert_eq!(stats.total_devices, 0);
         assert_eq!(stats.total_endpoints, 0);
         assert_eq!(stats.total_operations, 0);

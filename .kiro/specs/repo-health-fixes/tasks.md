@@ -24,7 +24,10 @@
   - Update tests to use `test_profile_repo()` instead of production profile paths
   - _Requirements: 1.4, 1.6_
 
-- [ ] 3. Increment metrics counters on profile switch
+- [-] 3. Increment metrics counters on profile switch
+
+
+
   - Decide on semantics: count only on ID change (Option 1) or count on any force (Option 2)
   - Rename metric to `committed_switches` for clarity
   - In `commit_switch`, check if profile ID changed: `self.current_profile.as_ref().map(|p| &p.id) != Some(&new_profile.id)`

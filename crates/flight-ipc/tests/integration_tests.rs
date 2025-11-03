@@ -4,13 +4,13 @@
 //! including feature negotiation, device management, and protocol validation.
 
 use flight_ipc::{
-    negotiation::{detect_breaking_changes, negotiate_features, Version},
+    PROTOCOL_VERSION,
+    negotiation::{Version, detect_breaking_changes, negotiate_features},
     proto::{
         Device, DeviceCapabilities, DeviceHealth, DeviceStatus, DeviceType,
         NegotiateFeaturesRequest, TransportType,
     },
     server::{DeviceManager, MockDeviceManager, MockProfileManager, ProfileManager},
-    PROTOCOL_VERSION,
 };
 use std::time::SystemTime;
 
@@ -49,36 +49,51 @@ fn create_test_device() -> Device {
 fn test_feature_negotiation_unit() {
     let request = NegotiateFeaturesRequest {
         client_version: "1.0.0".to_string(),
-        supported_features: vec!["device-management".to_string(), "health-monitoring".to_string()],
+        supported_features: vec![
+            "device-management".to_string(),
+            "health-monitoring".to_string(),
+        ],
         preferred_transport: TransportType::NamedPipes.into(),
     };
-    
+
     let server_features = vec![
         "device-management".to_string(),
         "health-monitoring".to_string(),
         "profile-management".to_string(),
     ];
-    
+
     let response = negotiate_features(&request, &server_features).unwrap();
-    
+
     assert!(response.success);
     assert_eq!(response.server_version, PROTOCOL_VERSION);
-    assert!(response.enabled_features.contains(&"device-management".to_string()));
-    assert!(response.enabled_features.contains(&"health-monitoring".to_string()));
-    assert!(!response.enabled_features.contains(&"profile-management".to_string()));
+    assert!(
+        response
+            .enabled_features
+            .contains(&"device-management".to_string())
+    );
+    assert!(
+        response
+            .enabled_features
+            .contains(&"health-monitoring".to_string())
+    );
+    assert!(
+        !response
+            .enabled_features
+            .contains(&"profile-management".to_string())
+    );
 }
 
 #[test]
 fn test_device_manager_unit() {
     let device_manager = MockDeviceManager;
-    
+
     let request = flight_ipc::proto::ListDevicesRequest {
         include_disconnected: false,
         filter_types: vec![],
     };
-    
+
     let response = device_manager.list_devices(&request).unwrap();
-    
+
     // Mock device manager returns empty list
     assert_eq!(response.devices.len(), 0);
     assert_eq!(response.total_count, 0);
@@ -87,40 +102,40 @@ fn test_device_manager_unit() {
 #[test]
 fn test_profile_manager_unit() {
     let profile_manager = MockProfileManager;
-    
+
     // Test successful profile
     let request = flight_ipc::proto::ApplyProfileRequest {
         profile_json: r#"{"test": "profile"}"#.to_string(),
         validate_only: false,
         force_apply: false,
     };
-    
+
     let response = profile_manager.apply_profile(&request).unwrap();
-    
+
     assert!(response.success);
     assert_eq!(response.effective_profile_hash, "mock-hash");
     assert_eq!(response.compile_time_ms, 10);
-    
+
     // Test empty profile
     let request = flight_ipc::proto::ApplyProfileRequest {
         profile_json: String::new(),
         validate_only: false,
         force_apply: false,
     };
-    
+
     let response = profile_manager.apply_profile(&request).unwrap();
-    
+
     assert!(response.success); // Mock always succeeds
 }
 
 #[test]
 fn test_device_serialization() {
     let device = create_test_device();
-    
+
     // Test that device can be serialized and deserialized
     let json = serde_json::to_string(&device).unwrap();
     let deserialized: Device = serde_json::from_str(&json).unwrap();
-    
+
     assert_eq!(device.id, deserialized.id);
     assert_eq!(device.name, deserialized.name);
     assert_eq!(device.r#type, deserialized.r#type);
@@ -130,12 +145,12 @@ fn test_device_serialization() {
 #[tokio::test]
 async fn test_version_compatibility() {
     use flight_ipc::negotiation::Version;
-    
+
     // Test version parsing
     let v1_0_0 = Version::parse("1.0.0").unwrap();
     let v1_1_0 = Version::parse("1.1.0").unwrap();
     let v2_0_0 = Version::parse("2.0.0").unwrap();
-    
+
     // Test compatibility rules
     assert!(v1_1_0.is_compatible_with(&v1_0_0)); // Newer minor version is compatible
     assert!(!v1_0_0.is_compatible_with(&v1_1_0)); // Older version is not compatible
@@ -146,7 +161,7 @@ async fn test_version_compatibility() {
 #[tokio::test]
 async fn test_breaking_change_detection() {
     use flight_ipc::negotiation::detect_breaking_changes;
-    
+
     let old_schema = r#"
     service FlightService {
         rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
@@ -158,7 +173,7 @@ async fn test_breaking_change_detection() {
         string name = 2;
     }
     "#;
-    
+
     let new_schema = r#"
     service FlightService {
         rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
@@ -172,10 +187,14 @@ async fn test_breaking_change_detection() {
         string type = 3;
     }
     "#;
-    
+
     let breaking_changes = detect_breaking_changes(old_schema, new_schema).unwrap();
-    
+
     // Should detect the removed RPC
     assert!(!breaking_changes.is_empty());
-    assert!(breaking_changes.iter().any(|change| change.contains("HealthSubscribe")));
+    assert!(
+        breaking_changes
+            .iter()
+            .any(|change| change.contains("HealthSubscribe"))
+    );
 }

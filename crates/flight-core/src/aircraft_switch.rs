@@ -234,6 +234,7 @@ pub struct SwitchMetrics {
     pub total_switches: u64,
     pub successful_switches: u64,
     pub failed_switches: u64,
+    pub committed_switches: u64,
     pub average_switch_time: Duration,
     pub max_switch_time: Duration,
     pub cache_hits: u64,
@@ -518,9 +519,30 @@ impl AircraftAutoSwitch {
         let old_aircraft = {
             let mut state_guard = state.write().await;
             let old = state_guard.current_aircraft.clone();
+            
+            // Check if aircraft ID changed (profile switch semantics: count only on ID change)
+            let aircraft_id_changed = state_guard
+                .current_aircraft
+                .as_ref()
+                .map(|a| &a.aircraft_id)
+                != Some(&aircraft.aircraft_id);
+            
             state_guard.current_aircraft = Some(aircraft.clone());
             state_guard.current_profile = Some(compiled_profile.clone());
             state_guard.last_switch = Some(start_time);
+            
+            // Increment committed_switches counter if aircraft ID changed
+            if aircraft_id_changed {
+                state_guard.metrics.committed_switches = state_guard
+                    .metrics
+                    .committed_switches
+                    .checked_add(1)
+                    .unwrap_or_else(|| {
+                        warn!("committed_switches counter overflow, resetting to 0");
+                        0
+                    });
+            }
+            
             old
         };
 
@@ -850,7 +872,7 @@ impl AircraftAutoSwitch {
 
         // Taxi - low ground speed with gear down (on ground)
         // Only matches when ground_speed < 30 knots and gear is down
-        if ground_speed < 30.0 && ground_speed >= 5.0 && gear_down {
+        if (5.0..30.0).contains(&ground_speed) && gear_down {
             return PhaseOfFlight::Taxi;
         }
 
@@ -1046,6 +1068,7 @@ impl Clone for SwitchMetrics {
             total_switches: self.total_switches,
             successful_switches: self.successful_switches,
             failed_switches: self.failed_switches,
+            committed_switches: self.committed_switches,
             average_switch_time: self.average_switch_time,
             max_switch_time: self.max_switch_time,
             cache_hits: self.cache_hits,

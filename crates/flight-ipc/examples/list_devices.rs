@@ -11,9 +11,9 @@ use tracing_subscriber;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
+
     info!("Connecting to Flight Hub service...");
-    
+
     // Create client with default configuration
     let mut client = match FlightClient::connect().await {
         Ok(client) => {
@@ -25,24 +25,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(e.into());
         }
     };
-    
+
     // Display negotiation result
     if let Some(negotiation) = client.negotiation_result() {
         info!("Server version: {}", negotiation.server_version);
         info!("Enabled features: {:?}", negotiation.enabled_features);
         info!("Transport type: {:?}", negotiation.transport_type);
     }
-    
+
     // Get service information
     info!("Getting service information...");
-    
+
     match client.get_service_info().await {
         Ok(service_info) => {
             info!("Service Information:");
             info!("  Version: {}", service_info.version);
             info!("  Uptime: {} seconds", service_info.uptime_seconds);
             info!("  Status: {:?}", service_info.status());
-            
+
             if !service_info.capabilities.is_empty() {
                 info!("  Capabilities:");
                 for (key, value) in &service_info.capabilities {
@@ -57,8 +57,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(e.into());
         }
     }
-    
+
     info!("Example completed successfully");
-    
+
     Ok(())
 }

@@ -2,13 +2,13 @@
 
 #![deny(unused_imports)]
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use flight_ipc::{
-    negotiation::{negotiate_features, Version},
+    negotiation::{Version, negotiate_features},
     proto::{
         Device, DeviceCapabilities, DeviceHealth, DeviceStatus, DeviceType, HealthEvent,
-        HealthEventType, ListDevicesResponse, NegotiateFeaturesRequest,
-        PerformanceMetrics, TransportType,
+        HealthEventType, ListDevicesResponse, NegotiateFeaturesRequest, PerformanceMetrics,
+        TransportType,
     },
 };
 use prost::Message;
@@ -29,7 +29,7 @@ fn bench_version_parsing(c: &mut Criterion) {
 fn bench_version_compatibility(c: &mut Criterion) {
     let v1 = Version::parse("1.0.0").unwrap();
     let v2 = Version::parse("1.1.0").unwrap();
-    
+
     c.bench_function("version_compatibility", |b| {
         b.iter(|| {
             let result = std::hint::black_box(&v2).is_compatible_with(std::hint::black_box(&v1));
@@ -48,17 +48,21 @@ fn bench_feature_negotiation(c: &mut Criterion) {
         ],
         preferred_transport: TransportType::NamedPipes.into(),
     };
-    
+
     let server_features = vec![
         "device-management".to_string(),
         "health-monitoring".to_string(),
         "profile-management".to_string(),
         "force-feedback".to_string(),
     ];
-    
+
     c.bench_function("feature_negotiation", |b| {
         b.iter(|| {
-            let response = negotiate_features(std::hint::black_box(&request), std::hint::black_box(&server_features)).unwrap();
+            let response = negotiate_features(
+                std::hint::black_box(&request),
+                std::hint::black_box(&server_features),
+            )
+            .unwrap();
             std::hint::black_box(response);
         });
     });
@@ -66,9 +70,9 @@ fn bench_feature_negotiation(c: &mut Criterion) {
 
 fn bench_device_serialization(c: &mut Criterion) {
     let device = create_test_device();
-    
+
     let mut group = c.benchmark_group("device_serialization");
-    
+
     // Benchmark protobuf encoding
     group.bench_function("protobuf_encode", |b| {
         b.iter(|| {
@@ -76,7 +80,7 @@ fn bench_device_serialization(c: &mut Criterion) {
             std::hint::black_box(encoded);
         });
     });
-    
+
     // Benchmark protobuf decoding
     let encoded = device.encode_to_vec();
     group.bench_function("protobuf_decode", |b| {
@@ -85,53 +89,56 @@ fn bench_device_serialization(c: &mut Criterion) {
             std::hint::black_box(decoded);
         });
     });
-    
+
     #[cfg(feature = "ipc-bench-serde")]
     {
         // JSON benchmarks using DeviceJson mirror struct
         // Note: The proto-generated Device type doesn't have serde derives,
         // so we use a mirror struct as an approximation for JSON serialization benchmarks
         let device_json = DeviceJson::from_device(&device);
-        
+
         group.bench_function("json_encode", |b| {
             b.iter(|| {
                 let encoded = serde_json::to_string(std::hint::black_box(&device_json)).unwrap();
                 std::hint::black_box(encoded);
             });
         });
-        
+
         let json_str = serde_json::to_string(&device_json).unwrap();
         group.bench_function("json_decode", |b| {
             b.iter(|| {
-                let decoded: DeviceJson = serde_json::from_str(std::hint::black_box(&json_str)).unwrap();
+                let decoded: DeviceJson =
+                    serde_json::from_str(std::hint::black_box(&json_str)).unwrap();
                 std::hint::black_box(decoded);
             });
         });
     }
-    
+
     #[cfg(not(feature = "ipc-bench-serde"))]
     {
         // JSON benchmarks disabled - enable with --features ipc-bench-serde
     }
-    
+
     group.finish();
 }
 
 fn bench_device_list_serialization(c: &mut Criterion) {
-    let devices: Vec<Device> = (0..100).map(|i| {
-        let mut device = create_test_device();
-        device.id = format!("device-{}", i);
-        device
-    }).collect();
-    
+    let devices: Vec<Device> = (0..100)
+        .map(|i| {
+            let mut device = create_test_device();
+            device.id = format!("device-{}", i);
+            device
+        })
+        .collect();
+
     let response = ListDevicesResponse {
         devices,
         total_count: 100,
     };
-    
+
     let mut group = c.benchmark_group("device_list_serialization");
     group.throughput(Throughput::Elements(100));
-    
+
     // Benchmark large device list encoding
     group.bench_function("protobuf_encode_100_devices", |b| {
         b.iter(|| {
@@ -139,7 +146,7 @@ fn bench_device_list_serialization(c: &mut Criterion) {
             std::hint::black_box(encoded);
         });
     });
-    
+
     // Benchmark large device list decoding
     let encoded = response.encode_to_vec();
     group.bench_function("protobuf_decode_100_devices", |b| {
@@ -148,7 +155,7 @@ fn bench_device_list_serialization(c: &mut Criterion) {
             std::hint::black_box(decoded);
         });
     });
-    
+
     group.finish();
 }
 
@@ -262,14 +269,17 @@ mod json_mirror {
                 name: device.name.clone(),
                 device_type: device.r#type,
                 status: device.status,
-                capabilities: device.capabilities.as_ref().map(|c| DeviceCapabilitiesJson {
-                    supports_force_feedback: c.supports_force_feedback,
-                    supports_raw_torque: c.supports_raw_torque,
-                    max_torque_nm: c.max_torque_nm,
-                    min_period_us: c.min_period_us,
-                    has_health_stream: c.has_health_stream,
-                    supported_protocols: c.supported_protocols.clone(),
-                }),
+                capabilities: device
+                    .capabilities
+                    .as_ref()
+                    .map(|c| DeviceCapabilitiesJson {
+                        supports_force_feedback: c.supports_force_feedback,
+                        supports_raw_torque: c.supports_raw_torque,
+                        max_torque_nm: c.max_torque_nm,
+                        min_period_us: c.min_period_us,
+                        has_health_stream: c.has_health_stream,
+                        supported_protocols: c.supported_protocols.clone(),
+                    }),
                 health: device.health.as_ref().map(|h| DeviceHealthJson {
                     temperature_celsius: h.temperature_celsius,
                     current_amperes: h.current_amperes,
