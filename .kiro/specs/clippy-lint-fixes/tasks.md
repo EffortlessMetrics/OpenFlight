@@ -98,7 +98,12 @@
   - Ensure Windows-specific types and functions are properly gated with `#[cfg(windows)]`
   - _Requirements: 4.1, 4.2_
 
-- [ ] 9. Fix ptr_arg lint in aircraft_switch.rs
+- [x] 9. Fix ptr_arg lint in aircraft_switch.rs
+
+
+
+
+
   - Check if `load_profile_from_path` is public using `cargo public-api -p flight-core | grep load_profile_from_path`
   - If private/pub(crate): change parameter from `&PathBuf` to `&Path` directly
   - If public: 

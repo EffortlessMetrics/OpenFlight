@@ -11,7 +11,7 @@ use crate::profile::{Profile, CapabilityContext, CapabilityMode, merge_axis_conf
 use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, RwLock};
@@ -687,7 +687,7 @@ impl AircraftAutoSwitch {
     }
 
     /// Load profile from file path
-    async fn load_profile_from_path(base_path: &PathBuf, filename: &str) -> Result<Profile> {
+    async fn load_profile_from_path(base_path: &Path, filename: &str) -> Result<Profile> {
         let profile_path = base_path.join(filename);
         
         let content = tokio::fs::read_to_string(&profile_path).await
