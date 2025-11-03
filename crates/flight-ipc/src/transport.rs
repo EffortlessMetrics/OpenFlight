@@ -4,12 +4,30 @@
 //! Transport layer abstractions for cross-platform IPC
 
 use anyhow::Result;
-use std::pin::Pin;
-use std::task::{Context, Poll};
 use thiserror::Error;
-use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio::io::{AsyncRead, AsyncWrite};
 use flight_core::{SecurityManager, IpcClientInfo};
 use std::path::PathBuf;
+
+// Conditionally import items only used in platform-specific modules
+#[cfg(any(
+    all(windows, feature = "named-pipes"),
+    all(unix, feature = "unix-sockets")
+))]
+use std::pin::Pin;
+
+#[cfg(any(
+    all(windows, feature = "named-pipes"),
+    all(unix, feature = "unix-sockets")
+))]
+use std::task::{Context, Poll};
+
+#[cfg(any(
+    all(windows, feature = "named-pipes"),
+    all(unix, feature = "unix-sockets")
+))]
+use tokio::io::ReadBuf;
+
 // Transport abstractions - actual tonic transport integration would go here
 
 #[derive(Debug, Error)]
@@ -174,20 +192,21 @@ pub async fn create_transport_with_acl(
     security_manager: Option<&SecurityManager>,
 ) -> Result<Box<dyn Transport>, TransportError> {
     // Validate ACL if security manager is provided and this is a client connection
-    if let Some(security_manager) = security_manager {
-        if !is_server {
-            let client_info = get_client_info()?;
-            security_manager.validate_ipc_acl(&client_info)
-                .map_err(|e| TransportError::InvalidAddress { 
-                    address: format!("ACL validation failed: {}", e) 
-                })?;
-        }
+    if let Some(security_manager) = security_manager
+        && !is_server
+    {
+        let client_info = get_client_info()?;
+        security_manager.validate_ipc_acl(&client_info)
+            .map_err(|e| TransportError::InvalidAddress { 
+                address: format!("ACL validation failed: {}", e) 
+            })?;
     }
     
     create_transport(transport_type, address, is_server).await
 }
 
 /// Create a transport based on the specified type and address
+#[allow(unused_variables)] // Parameters used in cfg-gated code
 pub async fn create_transport(
     transport_type: crate::TransportType,
     address: &str,

@@ -46,6 +46,7 @@ pub trait FlightService: Send + Sync + 'static {
 
 /// FlightServiceServer wrapper for tonic server
 pub struct FlightServiceServer<T> {
+    #[allow(dead_code)]
     inner: T,
 }
 
@@ -58,10 +59,10 @@ where
     }
 }
 use anyhow::Result;
-use flight_core::{SecurityManager, TelemetryDataType};
+use flight_core::SecurityManager;
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::broadcast;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status};
 use tracing::{debug, info, warn};
 
 /// Flight Hub service implementation
@@ -295,6 +296,7 @@ impl FlightService for FlightServiceImpl {
 /// Flight Hub IPC server
 pub struct FlightServer {
     service: FlightServiceImpl,
+    #[allow(dead_code)]
     config: ServerConfig,
 }
 

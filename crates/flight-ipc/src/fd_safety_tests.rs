@@ -144,7 +144,7 @@ mod fd_usage_examples {
 #[cfg(all(test, windows))]
 mod windows_tests {
     #[cfg(windows)]
-    use std::os::windows::io::{AsRawHandle, BorrowedHandle, OwnedHandle};
+    use std::os::windows::io::{BorrowedHandle, OwnedHandle};
     
     /// Test that demonstrates proper typed handle usage for IPC on Windows
     #[cfg(windows)]

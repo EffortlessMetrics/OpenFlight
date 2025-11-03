@@ -140,7 +140,12 @@
   - Can be run as nightly cron job instead of blocking PR
   - _Requirements: 4.1_
 
-- [ ] 11. Validate IPC bench workflow
+- [x] 11. Validate IPC bench workflow
+
+
+
+
+
   - Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` (must pass)
   - Run `cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings` (must pass)
   - Verify task 7.3 from IPC bench workflow now passes without `--no-deps` workaround
