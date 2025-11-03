@@ -9,10 +9,10 @@
 use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{info, warn, debug};
+use tracing::{debug, info, warn};
 
 /// Configuration for the writers system
 #[derive(Debug, Clone)]
@@ -147,9 +147,10 @@ impl CurveConflictWriter {
     /// Load writer configurations from disk
     fn load_configurations(&mut self) -> Result<()> {
         if !self.config.config_dir.exists() {
-            fs::create_dir_all(&self.config.config_dir)
-                .map_err(|e| FlightError::Writer(format!("Failed to create config directory: {}", e)))?;
-            
+            fs::create_dir_all(&self.config.config_dir).map_err(|e| {
+                FlightError::Writer(format!("Failed to create config directory: {}", e))
+            })?;
+
             // Create default configurations
             self.create_default_configurations()?;
         }
@@ -159,13 +160,12 @@ impl CurveConflictWriter {
             // Intentionally ignore read errors; preserves prior behavior
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                    if let Ok(content) = fs::read_to_string(&path) {
-                        if let Ok(config) = serde_json::from_str::<WriterConfig>(&content) {
-                            let key = format!("{}_{}", config.sim, config.version);
-                            self.sim_configs.insert(key, config);
-                        }
-                    }
+                if path.extension().and_then(|s| s.to_str()) == Some("json")
+                    && let Ok(content) = fs::read_to_string(&path)
+                    && let Ok(config) = serde_json::from_str::<WriterConfig>(&content)
+                {
+                    let key = format!("{}_{}", config.sim, config.version);
+                    self.sim_configs.insert(key, config);
                 }
             }
         }
@@ -181,27 +181,23 @@ impl CurveConflictWriter {
             sim: "msfs".to_string(),
             version: "1.36.0".to_string(),
             description: "Disable MSFS built-in control curves".to_string(),
-            diffs: vec![
-                ConfigDiff {
-                    file: "MSFS/UserCfg.opt".to_string(),
-                    section: Some("[CONTROLS]".to_string()),
-                    changes: {
-                        let mut changes = HashMap::new();
-                        changes.insert("UseLinearCurves".to_string(), "1".to_string());
-                        changes.insert("DisableNonLinearControls".to_string(), "1".to_string());
-                        changes
-                    },
-                    operation: DiffOperation::Set,
+            diffs: vec![ConfigDiff {
+                file: "MSFS/UserCfg.opt".to_string(),
+                section: Some("[CONTROLS]".to_string()),
+                changes: {
+                    let mut changes = HashMap::new();
+                    changes.insert("UseLinearCurves".to_string(), "1".to_string());
+                    changes.insert("DisableNonLinearControls".to_string(), "1".to_string());
+                    changes
                 },
-            ],
-            verification_tests: vec![
-                VerificationTest {
-                    name: "check_linear_curves".to_string(),
-                    description: "Verify linear curves are enabled".to_string(),
-                    test_type: VerificationTestType::FileContains,
-                    expected_result: "UseLinearCurves=1".to_string(),
-                },
-            ],
+                operation: DiffOperation::Set,
+            }],
+            verification_tests: vec![VerificationTest {
+                name: "check_linear_curves".to_string(),
+                description: "Verify linear curves are enabled".to_string(),
+                test_type: VerificationTestType::FileContains,
+                expected_result: "UseLinearCurves=1".to_string(),
+            }],
         };
 
         // X-Plane configuration
@@ -209,26 +205,22 @@ impl CurveConflictWriter {
             sim: "xplane".to_string(),
             version: "12.0".to_string(),
             description: "Disable X-Plane control response curves".to_string(),
-            diffs: vec![
-                ConfigDiff {
-                    file: "X-Plane 12/Output/preferences/X-Plane Joystick Settings.prf".to_string(),
-                    section: None,
-                    changes: {
-                        let mut changes = HashMap::new();
-                        changes.insert("_joy_use_linear_curves".to_string(), "1".to_string());
-                        changes
-                    },
-                    operation: DiffOperation::Set,
+            diffs: vec![ConfigDiff {
+                file: "X-Plane 12/Output/preferences/X-Plane Joystick Settings.prf".to_string(),
+                section: None,
+                changes: {
+                    let mut changes = HashMap::new();
+                    changes.insert("_joy_use_linear_curves".to_string(), "1".to_string());
+                    changes
                 },
-            ],
-            verification_tests: vec![
-                VerificationTest {
-                    name: "check_xplane_linear".to_string(),
-                    description: "Verify X-Plane uses linear curves".to_string(),
-                    test_type: VerificationTestType::FileContains,
-                    expected_result: "_joy_use_linear_curves\t1".to_string(),
-                },
-            ],
+                operation: DiffOperation::Set,
+            }],
+            verification_tests: vec![VerificationTest {
+                name: "check_xplane_linear".to_string(),
+                description: "Verify X-Plane uses linear curves".to_string(),
+                test_type: VerificationTestType::FileContains,
+                expected_result: "_joy_use_linear_curves\t1".to_string(),
+            }],
         };
 
         // DCS configuration
@@ -236,26 +228,22 @@ impl CurveConflictWriter {
             sim: "dcs".to_string(),
             version: "2.9".to_string(),
             description: "Disable DCS control curves via options.lua".to_string(),
-            diffs: vec![
-                ConfigDiff {
-                    file: "DCS World/Config/options.lua".to_string(),
-                    section: Some("options = {".to_string()),
-                    changes: {
-                        let mut changes = HashMap::new();
-                        changes.insert("useLinearCurves".to_string(), "true".to_string());
-                        changes
-                    },
-                    operation: DiffOperation::Set,
+            diffs: vec![ConfigDiff {
+                file: "DCS World/Config/options.lua".to_string(),
+                section: Some("options = {".to_string()),
+                changes: {
+                    let mut changes = HashMap::new();
+                    changes.insert("useLinearCurves".to_string(), "true".to_string());
+                    changes
                 },
-            ],
-            verification_tests: vec![
-                VerificationTest {
-                    name: "check_dcs_linear".to_string(),
-                    description: "Verify DCS uses linear curves".to_string(),
-                    test_type: VerificationTestType::FileContains,
-                    expected_result: "useLinearCurves = true".to_string(),
-                },
-            ],
+                operation: DiffOperation::Set,
+            }],
+            verification_tests: vec![VerificationTest {
+                name: "check_dcs_linear".to_string(),
+                description: "Verify DCS uses linear curves".to_string(),
+                test_type: VerificationTestType::FileContains,
+                expected_result: "useLinearCurves = true".to_string(),
+            }],
         };
 
         // Save configurations
@@ -270,10 +258,10 @@ impl CurveConflictWriter {
     fn save_config(&self, config: &WriterConfig) -> Result<()> {
         let filename = format!("{}_{}.json", config.sim, config.version);
         let path = self.config.config_dir.join(filename);
-        
+
         let json = serde_json::to_string_pretty(config)
             .map_err(|e| FlightError::Writer(format!("Failed to serialize config: {}", e)))?;
-        
+
         fs::write(&path, json)
             .map_err(|e| FlightError::Writer(format!("Failed to write config file: {}", e)))?;
 
@@ -289,10 +277,14 @@ impl CurveConflictWriter {
         parameters: &HashMap<String, String>,
     ) -> Result<WriteResult> {
         let config_key = format!("{}_{}", sim, version);
-        let config = self.sim_configs.get(&config_key)
-            .ok_or_else(|| FlightError::Configuration(format!("No writer config found for {} {}", sim, version)))?;
+        let config = self.sim_configs.get(&config_key).ok_or_else(|| {
+            FlightError::Configuration(format!("No writer config found for {} {}", sim, version))
+        })?;
 
-        info!("Applying curve conflict resolution for {} {} ({})", sim, version, resolution_type);
+        info!(
+            "Applying curve conflict resolution for {} {} ({})",
+            sim, version, resolution_type
+        );
 
         // Create backup before making changes
         let backup_path = if self.should_create_backup(config) {
@@ -328,7 +320,7 @@ impl CurveConflictWriter {
                 let result = self.run_verification_test(test);
                 let passed = result.passed;
                 verification_results.push(result);
-                
+
                 if !passed {
                     success = false;
                     if error_message.is_none() {
@@ -361,9 +353,17 @@ impl CurveConflictWriter {
     }
 
     /// Apply a SET operation (modify key-value pairs)
-    fn apply_set_diff(&self, path: &Path, diff: &ConfigDiff, parameters: &HashMap<String, String>) -> Result<()> {
+    fn apply_set_diff(
+        &self,
+        path: &Path,
+        diff: &ConfigDiff,
+        parameters: &HashMap<String, String>,
+    ) -> Result<()> {
         if !path.exists() {
-            return Err(FlightError::Writer(format!("Target file does not exist: {:?}", path)));
+            return Err(FlightError::Writer(format!(
+                "Target file does not exist: {:?}",
+                path
+            )));
         }
 
         let content = fs::read_to_string(path)
@@ -374,16 +374,16 @@ impl CurveConflictWriter {
         // Apply changes
         for (key, value) in &diff.changes {
             let expanded_value = self.expand_parameters(value, parameters);
-            
+
             // Simple key=value replacement (would need more sophisticated parsing for real use)
             let pattern = format!("{}=", key);
             let replacement = format!("{}={}", key, expanded_value);
-            
+
             if modified_content.contains(&pattern) {
                 // Replace existing value
                 let lines: Vec<&str> = modified_content.lines().collect();
                 let mut new_lines = Vec::new();
-                
+
                 for line in lines {
                     if line.trim_start().starts_with(&pattern) {
                         new_lines.push(replacement.clone());
@@ -391,17 +391,15 @@ impl CurveConflictWriter {
                         new_lines.push(line.to_string());
                     }
                 }
-                
+
                 modified_content = new_lines.join("\n");
             } else {
                 // Add new key-value pair
                 if let Some(section) = &diff.section {
                     // Add to specific section
                     if modified_content.contains(section) {
-                        modified_content = modified_content.replace(
-                            section,
-                            &format!("{}\n{}", section, replacement)
-                        );
+                        modified_content = modified_content
+                            .replace(section, &format!("{}\n{}", section, replacement));
                     }
                 } else {
                     // Append to end of file
@@ -431,14 +429,14 @@ impl CurveConflictWriter {
 
         for line in lines {
             let mut should_keep = true;
-            
+
             for key in diff.changes.keys() {
                 if line.trim_start().starts_with(&format!("{}=", key)) {
                     should_keep = false;
                     break;
                 }
             }
-            
+
             if should_keep {
                 new_lines.push(line.to_string());
             }
@@ -452,7 +450,12 @@ impl CurveConflictWriter {
     }
 
     /// Apply an APPEND operation
-    fn apply_append_diff(&self, path: &Path, diff: &ConfigDiff, parameters: &HashMap<String, String>) -> Result<()> {
+    fn apply_append_diff(
+        &self,
+        path: &Path,
+        diff: &ConfigDiff,
+        parameters: &HashMap<String, String>,
+    ) -> Result<()> {
         let mut content = if path.exists() {
             fs::read_to_string(path)
                 .map_err(|e| FlightError::Writer(format!("Failed to read file: {}", e)))?
@@ -473,8 +476,15 @@ impl CurveConflictWriter {
     }
 
     /// Apply a REPLACE operation
-    fn apply_replace_diff(&self, path: &Path, diff: &ConfigDiff, parameters: &HashMap<String, String>) -> Result<()> {
-        let new_content = diff.changes.values()
+    fn apply_replace_diff(
+        &self,
+        path: &Path,
+        diff: &ConfigDiff,
+        parameters: &HashMap<String, String>,
+    ) -> Result<()> {
+        let new_content = diff
+            .changes
+            .values()
             .map(|value| self.expand_parameters(value, parameters))
             .collect::<Vec<_>>()
             .join("\n");
@@ -488,12 +498,12 @@ impl CurveConflictWriter {
     /// Expand parameter placeholders in a string
     fn expand_parameters(&self, text: &str, parameters: &HashMap<String, String>) -> String {
         let mut result = text.to_string();
-        
+
         for (key, value) in parameters {
             let placeholder = format!("{{{}}}", key);
             result = result.replace(&placeholder, value);
         }
-        
+
         result
     }
 
@@ -509,23 +519,24 @@ impl CurveConflictWriter {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
+
         let backup_name = format!("backup_{}_{}", config.sim, timestamp);
         let backup_path = self.config.backup_dir.join(&backup_name);
-        
-        fs::create_dir_all(&backup_path)
-            .map_err(|e| FlightError::Writer(format!("Failed to create backup directory: {}", e)))?;
+
+        fs::create_dir_all(&backup_path).map_err(|e| {
+            FlightError::Writer(format!("Failed to create backup directory: {}", e))
+        })?;
 
         // Copy files that will be modified
         for diff in &config.diffs {
             let source_path = Path::new(&diff.file);
-            if source_path.exists() {
-                if let Some(file_name) = source_path.file_name() {
-                    let backup_file_path = backup_path.join(file_name);
-                    
-                    if let Err(e) = fs::copy(source_path, &backup_file_path) {
-                        warn!("Failed to backup file {:?}: {}", source_path, e);
-                    }
+            if source_path.exists()
+                && let Some(file_name) = source_path.file_name()
+            {
+                let backup_file_path = backup_path.join(file_name);
+
+                if let Err(e) = fs::copy(source_path, &backup_file_path) {
+                    warn!("Failed to backup file {:?}: {}", source_path, e);
                 }
             }
         }
@@ -534,7 +545,11 @@ impl CurveConflictWriter {
         let backup_info = BackupInfo {
             timestamp,
             description: config.description.clone(),
-            affected_files: config.diffs.iter().map(|d| PathBuf::from(&d.file)).collect(),
+            affected_files: config
+                .diffs
+                .iter()
+                .map(|d| PathBuf::from(&d.file))
+                .collect(),
             backup_dir: backup_path.clone(),
             writer_config: format!("{}_{}", config.sim, config.version),
         };
@@ -588,7 +603,10 @@ impl CurveConflictWriter {
                             passed: contains,
                             actual_result: format!("File contains text: {}", contains),
                             error_message: if !contains {
-                                Some(format!("File does not contain expected text: {}", search_text))
+                                Some(format!(
+                                    "File does not contain expected text: {}",
+                                    search_text
+                                ))
                             } else {
                                 None
                             },
@@ -626,14 +644,14 @@ impl CurveConflictWriter {
     /// Rollback changes using a backup
     pub fn rollback(&self, backup_path: &Path) -> Result<WriteResult> {
         let info_path = backup_path.join("backup_info.json");
-        
+
         if !info_path.exists() {
             return Err(FlightError::Writer("Backup info not found".to_string()));
         }
 
         let info_content = fs::read_to_string(&info_path)
             .map_err(|e| FlightError::Writer(format!("Failed to read backup info: {}", e)))?;
-        
+
         let backup_info: BackupInfo = serde_json::from_str(&info_content)
             .map_err(|e| FlightError::Writer(format!("Failed to parse backup info: {}", e)))?;
 
@@ -645,7 +663,7 @@ impl CurveConflictWriter {
         for file_path in &backup_info.affected_files {
             if let Some(file_name) = file_path.file_name() {
                 let backup_file_path = backup_path.join(file_name);
-                
+
                 if backup_file_path.exists() {
                     match fs::copy(&backup_file_path, file_path) {
                         Ok(_) => {
@@ -654,7 +672,8 @@ impl CurveConflictWriter {
                         }
                         Err(e) => {
                             success = false;
-                            error_message = Some(format!("Failed to restore file {:?}: {}", file_path, e));
+                            error_message =
+                                Some(format!("Failed to restore file {:?}: {}", file_path, e));
                             warn!("Failed to restore file {:?}: {}", file_path, e);
                             break;
                         }
@@ -663,7 +682,10 @@ impl CurveConflictWriter {
             }
         }
 
-        info!("Rollback completed for backup {:?}, success: {}", backup_path, success);
+        info!(
+            "Rollback completed for backup {:?}, success: {}",
+            backup_path, success
+        );
 
         Ok(WriteResult {
             success,
@@ -688,12 +710,11 @@ impl CurveConflictWriter {
                 let path = entry.path();
                 if path.is_dir() {
                     let info_path = path.join("backup_info.json");
-                    if info_path.exists() {
-                        if let Ok(content) = fs::read_to_string(&info_path) {
-                            if let Ok(backup_info) = serde_json::from_str::<BackupInfo>(&content) {
-                                backups.push(backup_info);
-                            }
-                        }
+                    if info_path.exists()
+                        && let Ok(content) = fs::read_to_string(&info_path)
+                        && let Ok(backup_info) = serde_json::from_str::<BackupInfo>(&content)
+                    {
+                        backups.push(backup_info);
                     }
                 }
             }

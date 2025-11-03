@@ -18,16 +18,18 @@ mod usb_stall_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_usb_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
 
         // First two stalls should not trigger fault
         assert!(watchdog.record_usb_stall(endpoint_id).is_none());
         assert!(watchdog.record_usb_stall(endpoint_id).is_none());
         assert!(!watchdog.is_quarantined(&component));
-        
+
         // Third stall should trigger fault
-        let event = watchdog.record_usb_stall(endpoint_id).expect("Should trigger fault after 3 stalls");
+        let event = watchdog
+            .record_usb_stall(endpoint_id)
+            .expect("Should trigger fault after 3 stalls");
         assert_eq!(event.event_type, WatchdogEventType::UsbTimeout);
         assert_eq!(event.action_taken, WatchdogAction::ResetUsbEndpoint);
         assert!(event.context.contains("3 frames"));
@@ -38,16 +40,16 @@ mod usb_stall_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_usb_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Record two stalls
         watchdog.record_usb_stall(endpoint_id);
         watchdog.record_usb_stall(endpoint_id);
-        
+
         // Reset counter with successful operation
         watchdog.reset_usb_stall_counter();
-        
+
         // Next stall should not trigger fault (counter was reset)
         assert!(watchdog.record_usb_stall(endpoint_id).is_none());
     }
@@ -57,16 +59,18 @@ mod usb_stall_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_timeout_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.usb_timeout = Duration::from_millis(10); // Very short timeout for testing
-        
+
         watchdog.register_component(component, config);
 
         // Wait for timeout period
         thread::sleep(Duration::from_millis(15));
-        
-        let event = watchdog.check_usb_timeout(endpoint_id).expect("Should detect timeout");
+
+        let event = watchdog
+            .check_usb_timeout(endpoint_id)
+            .expect("Should detect timeout");
         assert_eq!(event.event_type, WatchdogEventType::UsbTimeout);
         assert!(event.context.contains("Timeout after"));
     }
@@ -76,15 +80,17 @@ mod usb_stall_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_wedge_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Simulate unresponsive endpoint for wedge detection period
         assert!(watchdog.check_endpoint_wedge(false).is_none()); // Start timer
-        
+
         thread::sleep(Duration::from_millis(110)); // Wait past 100ms threshold
-        
-        let event = watchdog.check_endpoint_wedge(false).expect("Should detect wedged endpoint");
+
+        let event = watchdog
+            .check_endpoint_wedge(false)
+            .expect("Should detect wedged endpoint");
         assert_eq!(event.event_type, WatchdogEventType::UsbTimeout);
     }
 
@@ -93,7 +99,7 @@ mod usb_stall_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_error_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
 
         let event = watchdog.record_usb_error(endpoint_id, "Test USB error");
@@ -112,18 +118,23 @@ mod plugin_overrun_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Normal execution should not trigger overrun
         let normal_time = Duration::from_micros(50);
-        assert!(watchdog.record_plugin_execution(plugin_id, normal_time, true).is_none());
+        assert!(
+            watchdog
+                .record_plugin_execution(plugin_id, normal_time, true)
+                .is_none()
+        );
 
         // Excessive execution should trigger overrun
         let excessive_time = Duration::from_millis(1); // Much longer than 100μs budget
-        let event = watchdog.record_plugin_execution(plugin_id, excessive_time, true)
+        let event = watchdog
+            .record_plugin_execution(plugin_id, excessive_time, true)
             .expect("Should detect plugin overrun");
-        
+
         assert_eq!(event.event_type, WatchdogEventType::PluginOverrun);
         assert_eq!(event.execution_time, Some(excessive_time));
         assert!(event.context.contains("exceeded budget"));
@@ -134,7 +145,7 @@ mod plugin_overrun_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "test_overrun_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Record multiple overruns
@@ -142,7 +153,9 @@ mod plugin_overrun_tests {
             watchdog.record_plugin_execution(plugin_id, Duration::from_millis(1), true);
         }
 
-        let stats = watchdog.get_plugin_overrun_stats(plugin_id).expect("Should have stats");
+        let stats = watchdog
+            .get_plugin_overrun_stats(plugin_id)
+            .expect("Should have stats");
         assert_eq!(stats.total_overruns, 5);
         assert_eq!(stats.recent_overruns, 5);
         assert!(stats.avg_execution_time.is_some());
@@ -154,10 +167,10 @@ mod plugin_overrun_tests {
         let mut watchdog = WatchdogSystem::new();
         let native_plugin_id = "native_plugin";
         let wasm_plugin_id = "wasm_plugin";
-        
+
         let native_component = ComponentType::NativePlugin(native_plugin_id.to_string());
         let wasm_component = ComponentType::WasmPlugin(wasm_plugin_id.to_string());
-        
+
         watchdog.register_component(native_component.clone(), WatchdogConfig::default());
         watchdog.register_component(wasm_component.clone(), WatchdogConfig::default());
 
@@ -168,10 +181,16 @@ mod plugin_overrun_tests {
         // Both should have overrun events but different component types
         let events = watchdog.get_recent_events(Duration::from_secs(1));
         assert_eq!(events.len(), 2);
-        
-        let native_event = events.iter().find(|e| matches!(e.component, ComponentType::NativePlugin(_))).unwrap();
-        let wasm_event = events.iter().find(|e| matches!(e.component, ComponentType::WasmPlugin(_))).unwrap();
-        
+
+        let native_event = events
+            .iter()
+            .find(|e| matches!(e.component, ComponentType::NativePlugin(_)))
+            .unwrap();
+        let wasm_event = events
+            .iter()
+            .find(|e| matches!(e.component, ComponentType::WasmPlugin(_)))
+            .unwrap();
+
         assert_eq!(native_event.event_type, WatchdogEventType::PluginOverrun);
         assert_eq!(wasm_event.event_type, WatchdogEventType::PluginOverrun);
     }
@@ -181,10 +200,10 @@ mod plugin_overrun_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "quarantine_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.max_consecutive_failures = 3; // Lower threshold for testing
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Generate consecutive overruns to trigger quarantine
@@ -210,24 +229,30 @@ mod nan_guard_tests {
     fn test_nan_detection() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("test_axis".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.enable_nan_guards = true;
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Normal value should not trigger guard
-        assert!(watchdog.check_nan_guard(1.0, "normal_value", component.clone()).is_none());
+        assert!(
+            watchdog
+                .check_nan_guard(1.0, "normal_value", component.clone())
+                .is_none()
+        );
 
         // NaN value should trigger guard
-        let event = watchdog.check_nan_guard(f32::NAN, "nan_value", component.clone())
+        let event = watchdog
+            .check_nan_guard(f32::NAN, "nan_value", component.clone())
             .expect("Should detect NaN");
         assert_eq!(event.event_type, WatchdogEventType::NanDetected);
         assert!(event.context.contains("nan_value"));
         assert!(event.context.contains("NaN"));
 
         // Infinite value should also trigger guard
-        let event = watchdog.check_nan_guard(f32::INFINITY, "infinite_value", component)
+        let event = watchdog
+            .check_nan_guard(f32::INFINITY, "infinite_value", component)
             .expect("Should detect infinity");
         assert_eq!(event.event_type, WatchdogEventType::NanDetected);
         assert!(event.context.contains("infinite_value"));
@@ -237,30 +262,35 @@ mod nan_guard_tests {
     fn test_nan_guard_disabled() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("test_axis".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.enable_nan_guards = false; // Disabled
-        
+
         watchdog.register_component(component.clone(), config);
 
         // NaN should not trigger guard when disabled
-        assert!(watchdog.check_nan_guard(f32::NAN, "nan_value", component).is_none());
+        assert!(
+            watchdog
+                .check_nan_guard(f32::NAN, "nan_value", component)
+                .is_none()
+        );
     }
 
     #[test]
     fn test_critical_component_nan_response() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("critical_axis".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.enable_nan_guards = true;
         config.is_critical = true; // Critical component
-        
+
         watchdog.register_component(component.clone(), config);
 
-        let event = watchdog.check_nan_guard(f32::NAN, "critical_nan", component)
+        let event = watchdog
+            .check_nan_guard(f32::NAN, "critical_nan", component)
             .expect("Should detect NaN in critical component");
-        
+
         assert_eq!(event.event_type, WatchdogEventType::NanDetected);
         assert_eq!(event.action_taken, WatchdogAction::EmergencyStop); // Critical components trigger emergency stop
     }
@@ -274,22 +304,26 @@ mod quarantine_tests {
     fn test_component_quarantine_isolation() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::UsbEndpoint("quarantine_test".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.max_consecutive_failures = 2;
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Generate failures to trigger quarantine
         watchdog.record_usb_error("quarantine_test", "Error 1");
         assert!(!watchdog.is_quarantined(&component));
-        
+
         watchdog.record_usb_error("quarantine_test", "Error 2");
         assert!(watchdog.is_quarantined(&component));
 
         // Verify quarantine status
-        if let Some(QuarantineStatus::Quarantined { reason, failure_count, .. }) = 
-            watchdog.get_quarantine_status(&component) {
+        if let Some(QuarantineStatus::Quarantined {
+            reason,
+            failure_count,
+            ..
+        }) = watchdog.get_quarantine_status(&component)
+        {
             assert!(reason.contains("USB error"));
             assert_eq!(*failure_count, 2);
         } else {
@@ -306,19 +340,22 @@ mod quarantine_tests {
     fn test_quarantine_recovery_mechanism() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("recovery_test".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
-        
+
         // Manually quarantine component
         watchdog.quarantine_component(&component, "Test quarantine".to_string());
         assert!(watchdog.is_quarantined(&component));
 
         // Attempt recovery
         assert!(watchdog.attempt_recovery(&component));
-        
+
         // Should be in recovery state
-        if let Some(QuarantineStatus::Recovering { until, attempt_count }) = 
-            watchdog.get_quarantine_status(&component) {
+        if let Some(QuarantineStatus::Recovering {
+            until,
+            attempt_count,
+        }) = watchdog.get_quarantine_status(&component)
+        {
             assert!(*attempt_count == 1);
             assert!(*until > Instant::now());
         } else {
@@ -335,11 +372,11 @@ mod quarantine_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "rate_test_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.max_failures_per_window = 5;
         config.failure_rate_window = Duration::from_secs(10);
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Generate failures within the time window
@@ -354,13 +391,13 @@ mod quarantine_tests {
     #[test]
     fn test_multiple_component_quarantine() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         let usb_component = ComponentType::UsbEndpoint("usb_test".to_string());
         let plugin_component = ComponentType::NativePlugin("plugin_test".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.max_consecutive_failures = 1; // Immediate quarantine for testing
-        
+
         watchdog.register_component(usb_component.clone(), config.clone());
         watchdog.register_component(plugin_component.clone(), config);
 
@@ -384,7 +421,7 @@ mod fault_injection_tests {
     #[test]
     fn test_fault_injection_enable_disable() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         // Initially disabled
         let summary = watchdog.get_health_summary();
         assert!(!summary.fault_injection_enabled);
@@ -405,7 +442,7 @@ mod fault_injection_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "injection_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         watchdog.enable_fault_injection();
 
@@ -418,7 +455,7 @@ mod fault_injection_tests {
 
         watchdog.inject_synthetic_fault(fault);
         let events = watchdog.process_synthetic_faults();
-        
+
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_type, WatchdogEventType::SyntheticFault);
         assert_eq!(events[0].component, component);
@@ -426,7 +463,8 @@ mod fault_injection_tests {
 
         // Should also trigger actual overrun detection
         let all_events = watchdog.get_recent_events(Duration::from_secs(1));
-        let overrun_events: Vec<_> = all_events.iter()
+        let overrun_events: Vec<_> = all_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::PluginOverrun)
             .collect();
         assert!(!overrun_events.is_empty());
@@ -437,7 +475,7 @@ mod fault_injection_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "injection_usb_test";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         watchdog.enable_fault_injection();
 
@@ -450,13 +488,14 @@ mod fault_injection_tests {
 
         watchdog.inject_synthetic_fault(fault);
         let events = watchdog.process_synthetic_faults();
-        
+
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_type, WatchdogEventType::SyntheticFault);
 
         // Should also trigger actual USB error
         let all_events = watchdog.get_recent_events(Duration::from_secs(1));
-        let usb_events: Vec<_> = all_events.iter()
+        let usb_events: Vec<_> = all_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::UsbError)
             .collect();
         assert!(!usb_events.is_empty());
@@ -466,10 +505,10 @@ mod fault_injection_tests {
     fn test_synthetic_nan_injection() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("injection_axis_test".to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.enable_nan_guards = true;
-        
+
         watchdog.register_component(component.clone(), config);
         watchdog.enable_fault_injection();
 
@@ -482,13 +521,14 @@ mod fault_injection_tests {
 
         watchdog.inject_synthetic_fault(fault);
         let events = watchdog.process_synthetic_faults();
-        
+
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_type, WatchdogEventType::SyntheticFault);
 
         // Should also trigger actual NaN detection
         let all_events = watchdog.get_recent_events(Duration::from_secs(1));
-        let nan_events: Vec<_> = all_events.iter()
+        let nan_events: Vec<_> = all_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::NanDetected)
             .collect();
         assert!(!nan_events.is_empty());
@@ -498,7 +538,7 @@ mod fault_injection_tests {
     fn test_delayed_fault_injection() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("delayed_test".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         watchdog.enable_fault_injection();
 
@@ -510,14 +550,14 @@ mod fault_injection_tests {
         };
 
         watchdog.inject_synthetic_fault(fault);
-        
+
         // Should not trigger immediately
         let events = watchdog.process_synthetic_faults();
         assert_eq!(events.len(), 0);
 
         // Wait for injection time
         thread::sleep(Duration::from_millis(60));
-        
+
         // Should trigger now
         let events = watchdog.process_synthetic_faults();
         assert_eq!(events.len(), 1);
@@ -527,7 +567,7 @@ mod fault_injection_tests {
     fn test_fault_injection_when_disabled() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("disabled_test".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         // Don't enable fault injection
 
@@ -540,7 +580,7 @@ mod fault_injection_tests {
 
         watchdog.inject_synthetic_fault(fault);
         let events = watchdog.process_synthetic_faults();
-        
+
         // Should not inject when disabled
         assert_eq!(events.len(), 0);
     }
@@ -553,12 +593,21 @@ mod health_tests {
     #[test]
     fn test_health_summary() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         // Register components
-        watchdog.register_component(ComponentType::UsbEndpoint("ep1".to_string()), WatchdogConfig::default());
-        watchdog.register_component(ComponentType::NativePlugin("plugin1".to_string()), WatchdogConfig::default());
-        watchdog.register_component(ComponentType::WasmPlugin("wasm1".to_string()), WatchdogConfig::default());
-        
+        watchdog.register_component(
+            ComponentType::UsbEndpoint("ep1".to_string()),
+            WatchdogConfig::default(),
+        );
+        watchdog.register_component(
+            ComponentType::NativePlugin("plugin1".to_string()),
+            WatchdogConfig::default(),
+        );
+        watchdog.register_component(
+            ComponentType::WasmPlugin("wasm1".to_string()),
+            WatchdogConfig::default(),
+        );
+
         // Quarantine one component
         let component = ComponentType::UsbEndpoint("ep1".to_string());
         watchdog.quarantine_component(&component, "Test quarantine".to_string());
@@ -575,7 +624,7 @@ mod health_tests {
         watchdog.check_nan_guard(f32::NAN, "test", axis_component); // NaN
 
         let summary = watchdog.get_health_summary();
-        
+
         assert_eq!(summary.total_components, 4);
         assert_eq!(summary.active_components, 3);
         assert_eq!(summary.quarantined_components, 1);
@@ -590,16 +639,16 @@ mod health_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "stats_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Record various execution times
         let execution_times = [
-            Duration::from_micros(50),  // Normal
-            Duration::from_micros(75),  // Normal
-            Duration::from_millis(1),   // Overrun
-            Duration::from_micros(60),  // Normal
-            Duration::from_millis(2),   // Overrun
+            Duration::from_micros(50), // Normal
+            Duration::from_micros(75), // Normal
+            Duration::from_millis(1),  // Overrun
+            Duration::from_micros(60), // Normal
+            Duration::from_millis(2),  // Overrun
         ];
 
         for time in &execution_times {
@@ -607,7 +656,7 @@ mod health_tests {
         }
 
         let stats = watchdog.get_plugin_overrun_stats(plugin_id).unwrap();
-        
+
         assert_eq!(stats.total_overruns, 2);
         assert_eq!(stats.recent_executions, 5);
         assert_eq!(stats.recent_overruns, 2);
@@ -620,16 +669,16 @@ mod health_tests {
     fn test_recent_events_filtering() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("event_test".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
 
         // Record an event
         watchdog.record_plugin_execution("event_test", Duration::from_millis(1), true);
-        
+
         // Should be in recent events
         let recent = watchdog.get_recent_events(Duration::from_secs(1));
         assert!(!recent.is_empty());
-        
+
         // Wait and check again with very short window
         thread::sleep(Duration::from_millis(10));
         let very_recent = watchdog.get_recent_events(Duration::from_millis(5));
@@ -639,23 +688,26 @@ mod health_tests {
     #[test]
     fn test_clear_all_state() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         // Set up some state
-        watchdog.register_component(ComponentType::UsbEndpoint("test".to_string()), WatchdogConfig::default());
+        watchdog.register_component(
+            ComponentType::UsbEndpoint("test".to_string()),
+            WatchdogConfig::default(),
+        );
         watchdog.record_usb_error("test", "Error");
         watchdog.enable_fault_injection();
-        
+
         // Verify state exists
         assert!(!watchdog.get_all_events().is_empty());
         assert!(watchdog.get_health_summary().fault_injection_enabled);
-        
+
         // Clear all state
         watchdog.clear_all_state();
-        
+
         // Verify state is cleared
         assert!(watchdog.get_all_events().is_empty());
         assert_eq!(watchdog.get_quarantined_components().len(), 0);
-        
+
         let summary = watchdog.get_health_summary();
         assert_eq!(summary.active_components, 0);
         assert_eq!(summary.quarantined_components, 0);
@@ -671,10 +723,10 @@ mod integration_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "lifecycle_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         let mut config = WatchdogConfig::default();
         config.max_consecutive_failures = 3;
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Phase 1: Normal operation
@@ -694,9 +746,11 @@ mod integration_tests {
 
         // Phase 4: Recovery attempt
         assert!(watchdog.attempt_recovery(&component));
-        
+
         // Should be in recovery state
-        if let Some(QuarantineStatus::Recovering { .. }) = watchdog.get_quarantine_status(&component) {
+        if let Some(QuarantineStatus::Recovering { .. }) =
+            watchdog.get_quarantine_status(&component)
+        {
             // Expected
         } else {
             panic!("Should be in recovery state");
@@ -705,8 +759,10 @@ mod integration_tests {
         // Phase 5: Successful recovery (simulated by time passage)
         // In real implementation, this would happen after recovery timeout
         // For testing, we'll manually transition to active
-        watchdog.quarantine_status.insert(component.clone(), QuarantineStatus::Active);
-        
+        watchdog
+            .quarantine_status
+            .insert(component.clone(), QuarantineStatus::Active);
+
         // Phase 6: Normal operation after recovery
         watchdog.record_plugin_execution(plugin_id, Duration::from_micros(50), true);
         assert!(!watchdog.is_quarantined(&component));
@@ -715,7 +771,7 @@ mod integration_tests {
     #[test]
     fn test_multi_component_fault_storm() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         // Register multiple components
         let components = vec![
             ComponentType::UsbEndpoint("usb1".to_string()),
@@ -731,17 +787,25 @@ mod integration_tests {
         // Generate fault storm across multiple components
         for i in 0..15 {
             match i % 4 {
-                0 => { watchdog.record_usb_error("usb1", "Storm error"); },
-                1 => { watchdog.record_usb_error("usb2", "Storm error"); },
-                2 => { watchdog.record_plugin_execution("plugin1", Duration::from_millis(1), true); },
-                3 => { watchdog.record_plugin_execution("plugin2", Duration::from_millis(1), true); },
+                0 => {
+                    watchdog.record_usb_error("usb1", "Storm error");
+                }
+                1 => {
+                    watchdog.record_usb_error("usb2", "Storm error");
+                }
+                2 => {
+                    watchdog.record_plugin_execution("plugin1", Duration::from_millis(1), true);
+                }
+                3 => {
+                    watchdog.record_plugin_execution("plugin2", Duration::from_millis(1), true);
+                }
                 _ => unreachable!(),
             }
         }
 
         // Should detect fault storm
         assert!(watchdog.is_in_fault_storm());
-        
+
         let summary = watchdog.get_health_summary();
         assert!(summary.recent_overruns > 0);
         assert!(summary.recent_usb_errors > 0);
@@ -752,7 +816,7 @@ mod integration_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "synthetic_integration_test";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         watchdog.enable_fault_injection();
 
@@ -787,13 +851,15 @@ mod integration_tests {
 
         // Verify both synthetic and real events were generated
         let all_events = watchdog.get_recent_events(Duration::from_secs(1));
-        let synthetic_events: Vec<_> = all_events.iter()
+        let synthetic_events: Vec<_> = all_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::SyntheticFault)
             .collect();
-        let overrun_events: Vec<_> = all_events.iter()
+        let overrun_events: Vec<_> = all_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::PluginOverrun)
             .collect();
-        
+
         assert_eq!(synthetic_events.len(), 2);
         assert!(!overrun_events.is_empty()); // Should have triggered real overruns
     }

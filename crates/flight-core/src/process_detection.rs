@@ -6,13 +6,13 @@
 //! Provides cross-platform process detection for flight simulators with
 //! fast detection times and reliable process monitoring.
 
-use crate::{FlightError, Result};
 use crate::aircraft_switch::SimId;
+use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tracing::warn;
 
 /// Process detection system for flight simulators
@@ -101,59 +101,65 @@ impl Default for ProcessDetectionConfig {
         let mut process_definitions = HashMap::new();
 
         // MSFS process definition
-        process_definitions.insert(SimId::Msfs, ProcessDefinition {
-            process_names: vec![
-                "FlightSimulator.exe".to_string(),
-                "fsx.exe".to_string(), // Legacy FSX support
-            ],
-            window_titles: vec![
-                "Microsoft Flight Simulator".to_string(),
-                "Microsoft Flight Simulator X".to_string(),
-            ],
-            process_paths: vec![
-                PathBuf::from("Microsoft Flight Simulator"),
-                PathBuf::from("Microsoft Games/Microsoft Flight Simulator X"),
-            ],
-            min_confidence: 0.8,
-        });
+        process_definitions.insert(
+            SimId::Msfs,
+            ProcessDefinition {
+                process_names: vec![
+                    "FlightSimulator.exe".to_string(),
+                    "fsx.exe".to_string(), // Legacy FSX support
+                ],
+                window_titles: vec![
+                    "Microsoft Flight Simulator".to_string(),
+                    "Microsoft Flight Simulator X".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("Microsoft Flight Simulator"),
+                    PathBuf::from("Microsoft Games/Microsoft Flight Simulator X"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
 
         // X-Plane process definition
-        process_definitions.insert(SimId::XPlane, ProcessDefinition {
-            process_names: vec![
-                "X-Plane.exe".to_string(),
-                "X-Plane-x86_64".to_string(),
-                "X-Plane 12.exe".to_string(),
-                "X-Plane 11.exe".to_string(),
-            ],
-            window_titles: vec![
-                "X-Plane".to_string(),
-                "X-Plane 12".to_string(),
-                "X-Plane 11".to_string(),
-            ],
-            process_paths: vec![
-                PathBuf::from("X-Plane 12"),
-                PathBuf::from("X-Plane 11"),
-                PathBuf::from("X-Plane"),
-            ],
-            min_confidence: 0.8,
-        });
+        process_definitions.insert(
+            SimId::XPlane,
+            ProcessDefinition {
+                process_names: vec![
+                    "X-Plane.exe".to_string(),
+                    "X-Plane-x86_64".to_string(),
+                    "X-Plane 12.exe".to_string(),
+                    "X-Plane 11.exe".to_string(),
+                ],
+                window_titles: vec![
+                    "X-Plane".to_string(),
+                    "X-Plane 12".to_string(),
+                    "X-Plane 11".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("X-Plane 12"),
+                    PathBuf::from("X-Plane 11"),
+                    PathBuf::from("X-Plane"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
 
         // DCS process definition
-        process_definitions.insert(SimId::Dcs, ProcessDefinition {
-            process_names: vec![
-                "DCS.exe".to_string(),
-                "DCS_updater.exe".to_string(),
-            ],
-            window_titles: vec![
-                "DCS World".to_string(),
-                "Digital Combat Simulator".to_string(),
-            ],
-            process_paths: vec![
-                PathBuf::from("DCS World"),
-                PathBuf::from("Eagle Dynamics/DCS World"),
-            ],
-            min_confidence: 0.8,
-        });
+        process_definitions.insert(
+            SimId::Dcs,
+            ProcessDefinition {
+                process_names: vec!["DCS.exe".to_string(), "DCS_updater.exe".to_string()],
+                window_titles: vec![
+                    "DCS World".to_string(),
+                    "Digital Combat Simulator".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("DCS World"),
+                    PathBuf::from("Eagle Dynamics/DCS World"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
 
         Self {
             detection_interval: Duration::from_secs(1),
@@ -185,7 +191,8 @@ impl ProcessDetector {
 
     /// Stop the process detection system
     pub async fn stop(&self) -> Result<()> {
-        self.detection_tx.send(DetectionEvent::Shutdown)
+        self.detection_tx
+            .send(DetectionEvent::Shutdown)
             .map_err(|e| FlightError::AutoSwitch(format!("Failed to send shutdown: {}", e)))?;
         Ok(())
     }
@@ -202,12 +209,21 @@ impl ProcessDetector {
 
     /// Check if a specific simulator is detected
     pub async fn is_sim_detected(&self, sim: SimId) -> bool {
-        self.state.read().await.detected_processes.contains_key(&sim)
+        self.state
+            .read()
+            .await
+            .detected_processes
+            .contains_key(&sim)
     }
 
     /// Get detected process for specific simulator
     pub async fn get_detected_process(&self, sim: SimId) -> Option<DetectedProcess> {
-        self.state.read().await.detected_processes.get(&sim).cloned()
+        self.state
+            .read()
+            .await
+            .detected_processes
+            .get(&sim)
+            .cloned()
     }
 
     /// Scan for processes (internal)
@@ -228,7 +244,8 @@ impl ProcessDetector {
                 definition,
                 &system_processes,
                 config.enable_window_detection,
-            ).await?;
+            )
+            .await?;
 
             let current_state = {
                 let state_guard = state.read().await;
@@ -261,7 +278,10 @@ impl ProcessDetector {
         // Update scan timing
         let scan_time = scan_start.elapsed();
         if scan_time > config.max_detection_time {
-            warn!("Process scan exceeded time budget: {:?} > {:?}", scan_time, config.max_detection_time);
+            warn!(
+                "Process scan exceeded time budget: {:?} > {:?}",
+                scan_time, config.max_detection_time
+            );
         }
 
         let mut state_guard = state.write().await;
@@ -283,7 +303,9 @@ impl ProcessDetector {
         }
         #[cfg(not(any(target_os = "windows", target_os = "linux")))]
         {
-            Err(FlightError::AutoSwitch("Unsupported platform for process detection".to_string()))
+            Err(FlightError::AutoSwitch(
+                "Unsupported platform for process detection".to_string(),
+            ))
         }
     }
 
@@ -303,7 +325,11 @@ impl ProcessDetector {
 
             // Check process name match
             for process_name in &definition.process_names {
-                if process.name.to_lowercase().contains(&process_name.to_lowercase()) {
+                if process
+                    .name
+                    .to_lowercase()
+                    .contains(&process_name.to_lowercase())
+                {
                     confidence += 0.6; // High weight for process name
                     break;
                 }
@@ -311,21 +337,26 @@ impl ProcessDetector {
 
             // Check process path match
             for process_path in &definition.process_paths {
-                if process.path.to_string_lossy().to_lowercase()
-                    .contains(&process_path.to_string_lossy().to_lowercase()) {
+                if process
+                    .path
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .contains(&process_path.to_string_lossy().to_lowercase())
+                {
                     confidence += 0.3; // Medium weight for path
                     break;
                 }
             }
 
             // Check window title match (if enabled)
-            if enable_window_detection {
-                if let Some(window_title) = &process.window_title {
-                    for title_pattern in &definition.window_titles {
-                        if window_title.to_lowercase().contains(&title_pattern.to_lowercase()) {
-                            confidence += 0.1; // Low weight for window title
-                            break;
-                        }
+            if enable_window_detection && let Some(window_title) = &process.window_title {
+                for title_pattern in &definition.window_titles {
+                    if window_title
+                        .to_lowercase()
+                        .contains(&title_pattern.to_lowercase())
+                    {
+                        confidence += 0.1; // Low weight for window title
+                        break;
                     }
                 }
             }
@@ -355,17 +386,20 @@ impl ProcessDetector {
         use std::os::windows::ffi::OsStringExt;
         use windows::Win32::Foundation::CloseHandle;
         use windows::Win32::System::Diagnostics::ToolHelp::{
-            CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+            CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
             TH32CS_SNAPPROCESS,
         };
         use windows::Win32::System::ProcessStatus::K32GetModuleFileNameExW;
-        use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
+        use windows::Win32::System::Threading::{
+            OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ,
+        };
 
         let mut processes = Vec::new();
 
         unsafe {
-            let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
-                .map_err(|e| FlightError::AutoSwitch(format!("Failed to create process snapshot: {}", e)))?;
+            let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).map_err(|e| {
+                FlightError::AutoSwitch(format!("Failed to create process snapshot: {}", e))
+            })?;
 
             let mut entry = PROCESSENTRY32W {
                 dwSize: std::mem::size_of::<PROCESSENTRY32W>() as u32,
@@ -386,7 +420,8 @@ impl ProcessDetector {
                         entry.th32ProcessID,
                     ) {
                         let mut path_buffer = [0u16; 260];
-                        if K32GetModuleFileNameExW(Some(process_handle), None, &mut path_buffer) > 0 {
+                        if K32GetModuleFileNameExW(Some(process_handle), None, &mut path_buffer) > 0
+                        {
                             let path = OsString::from_wide(&path_buffer)
                                 .to_string_lossy()
                                 .trim_end_matches('\0')
@@ -434,7 +469,9 @@ impl ProcessDetector {
             .map_err(|e| FlightError::AutoSwitch(format!("Failed to read /proc: {}", e)))?;
 
         for entry in proc_dir {
-            let entry = entry.map_err(|e| FlightError::AutoSwitch(format!("Failed to read proc entry: {}", e)))?;
+            let entry = entry.map_err(|e| {
+                FlightError::AutoSwitch(format!("Failed to read proc entry: {}", e))
+            })?;
             let file_name = entry.file_name();
             let file_name_str = file_name.to_string_lossy();
 
@@ -449,8 +486,7 @@ impl ProcessDetector {
 
                 // Read process path from /proc/PID/exe
                 let exe_path = format!("/proc/{}/exe", pid);
-                let process_path = fs::read_link(&exe_path)
-                    .unwrap_or_else(|_| PathBuf::new());
+                let process_path = fs::read_link(&exe_path).unwrap_or_else(|_| PathBuf::new());
 
                 // TODO: Get window title if needed (requires X11/Wayland integration)
                 let window_title = None;
@@ -508,25 +544,52 @@ mod tests {
     fn test_process_detector_creation() {
         let config = ProcessDetectionConfig::default();
         let detector = ProcessDetector::new(config);
-        
+
         // Should have process definitions for all simulators
-        assert!(detector.config.process_definitions.contains_key(&SimId::Msfs));
-        assert!(detector.config.process_definitions.contains_key(&SimId::XPlane));
-        assert!(detector.config.process_definitions.contains_key(&SimId::Dcs));
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::Msfs)
+        );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::XPlane)
+        );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::Dcs)
+        );
     }
 
     #[test]
     fn test_process_definition_defaults() {
         let config = ProcessDetectionConfig::default();
-        
+
         let msfs_def = config.process_definitions.get(&SimId::Msfs).unwrap();
-        assert!(msfs_def.process_names.contains(&"FlightSimulator.exe".to_string()));
-        assert!(msfs_def.window_titles.contains(&"Microsoft Flight Simulator".to_string()));
+        assert!(
+            msfs_def
+                .process_names
+                .contains(&"FlightSimulator.exe".to_string())
+        );
+        assert!(
+            msfs_def
+                .window_titles
+                .contains(&"Microsoft Flight Simulator".to_string())
+        );
         assert_eq!(msfs_def.min_confidence, 0.8);
 
         let xplane_def = config.process_definitions.get(&SimId::XPlane).unwrap();
-        assert!(xplane_def.process_names.contains(&"X-Plane.exe".to_string()));
-        
+        assert!(
+            xplane_def
+                .process_names
+                .contains(&"X-Plane.exe".to_string())
+        );
+
         let dcs_def = config.process_definitions.get(&SimId::Dcs).unwrap();
         assert!(dcs_def.process_names.contains(&"DCS.exe".to_string()));
     }
@@ -535,14 +598,14 @@ mod tests {
     async fn test_process_detection_lifecycle() {
         let config = ProcessDetectionConfig::default();
         let detector = ProcessDetector::new(config);
-        
+
         // Should start successfully
         assert!(detector.start().await.is_ok());
-        
+
         // Should have no detected processes initially
         let processes = detector.get_detected_processes().await;
         assert!(processes.is_empty());
-        
+
         // Should stop successfully
         assert!(detector.stop().await.is_ok());
     }
@@ -551,7 +614,7 @@ mod tests {
     async fn test_sim_detection_check() {
         let config = ProcessDetectionConfig::default();
         let detector = ProcessDetector::new(config);
-        
+
         // Should not detect any sims initially
         assert!(!detector.is_sim_detected(SimId::Msfs).await);
         assert!(!detector.is_sim_detected(SimId::XPlane).await);

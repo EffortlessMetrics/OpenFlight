@@ -7,26 +7,26 @@
 //! and system components with automatic quarantine of failed components.
 //! Provides synthetic fault injection for testing and validation.
 
-use std::time::{Duration, Instant};
 use std::collections::{HashMap, VecDeque};
+use std::time::{Duration, Instant};
 use thiserror::Error;
-use tracing::{warn, error, info, debug};
+use tracing::{debug, error, info, warn};
 
 /// Watchdog-specific errors
 #[derive(Error, Debug)]
 pub enum WatchdogError {
     #[error("Component quarantined: {component_id}")]
     ComponentQuarantined { component_id: String },
-    
+
     #[error("USB endpoint timeout: {endpoint}")]
     UsbEndpointTimeout { endpoint: String },
-    
+
     #[error("Plugin overrun: {plugin_id} exceeded {budget:?}")]
     PluginOverrun { plugin_id: String, budget: Duration },
-    
+
     #[error("NaN guard triggered: {context}")]
     NanGuard { context: String },
-    
+
     #[error("Watchdog system error: {0}")]
     System(String),
 }
@@ -64,12 +64,12 @@ impl ComponentType {
     /// Get component ID string
     pub fn id(&self) -> &str {
         match self {
-            ComponentType::UsbEndpoint(id) |
-            ComponentType::NativePlugin(id) |
-            ComponentType::WasmPlugin(id) |
-            ComponentType::SimAdapter(id) |
-            ComponentType::PanelDevice(id) |
-            ComponentType::AxisNode(id) => id,
+            ComponentType::UsbEndpoint(id)
+            | ComponentType::NativePlugin(id)
+            | ComponentType::WasmPlugin(id)
+            | ComponentType::SimAdapter(id)
+            | ComponentType::PanelDevice(id)
+            | ComponentType::AxisNode(id) => id,
         }
     }
 }
@@ -119,10 +119,7 @@ pub enum QuarantineStatus {
         failure_count: u32,
     },
     /// Component is temporarily disabled for recovery
-    Recovering {
-        until: Instant,
-        attempt_count: u32,
-    },
+    Recovering { until: Instant, attempt_count: u32 },
 }
 
 /// Record of a watchdog event
@@ -267,29 +264,39 @@ impl WatchdogSystem {
 
     /// Register a component for monitoring
     pub fn register_component(&mut self, component: ComponentType, config: WatchdogConfig) {
-        debug!("Registering component for watchdog monitoring: {}", component.display_name());
-        
+        debug!(
+            "Registering component for watchdog monitoring: {}",
+            component.display_name()
+        );
+
         self.configs.insert(component.clone(), config);
-        self.quarantine_status.insert(component.clone(), QuarantineStatus::Active);
+        self.quarantine_status
+            .insert(component.clone(), QuarantineStatus::Active);
 
         // Initialize component-specific state
         match &component {
             ComponentType::UsbEndpoint(id) => {
-                self.usb_endpoints.insert(id.clone(), UsbEndpointState {
-                    last_success: Instant::now(),
-                    consecutive_failures: 0,
-                    recent_failures: VecDeque::new(),
-                    is_stalled: false,
-                    stall_frame_count: 0,
-                });
+                self.usb_endpoints.insert(
+                    id.clone(),
+                    UsbEndpointState {
+                        last_success: Instant::now(),
+                        consecutive_failures: 0,
+                        recent_failures: VecDeque::new(),
+                        is_stalled: false,
+                        stall_frame_count: 0,
+                    },
+                );
             }
             ComponentType::NativePlugin(id) | ComponentType::WasmPlugin(id) => {
-                self.plugins.insert(id.clone(), PluginState {
-                    execution_times: VecDeque::new(),
-                    consecutive_overruns: 0,
-                    total_overruns: 0,
-                    last_execution: None,
-                });
+                self.plugins.insert(
+                    id.clone(),
+                    PluginState {
+                        execution_times: VecDeque::new(),
+                        consecutive_overruns: 0,
+                        total_overruns: 0,
+                        last_execution: None,
+                    },
+                );
             }
             _ => {} // Other component types don't need special state
         }
@@ -297,8 +304,11 @@ impl WatchdogSystem {
 
     /// Unregister a component from monitoring
     pub fn unregister_component(&mut self, component: &ComponentType) {
-        debug!("Unregistering component from watchdog monitoring: {}", component.display_name());
-        
+        debug!(
+            "Unregistering component from watchdog monitoring: {}",
+            component.display_name()
+        );
+
         self.configs.remove(component);
         self.quarantine_status.remove(component);
 
@@ -353,27 +363,33 @@ impl WatchdogSystem {
     /// Record USB endpoint stall
     pub fn record_usb_stall(&mut self, endpoint_id: &str) -> Option<WatchdogEvent> {
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         if let Some(state) = self.usb_endpoints.get_mut(endpoint_id) {
             state.stall_frame_count += 1;
             state.is_stalled = true;
 
             // Trigger fault after 3 stalls (as per requirements)
             if state.stall_frame_count >= 3 {
-                warn!("USB endpoint {} stalled for {} frames", endpoint_id, state.stall_frame_count);
-                
+                warn!(
+                    "USB endpoint {} stalled for {} frames",
+                    endpoint_id, state.stall_frame_count
+                );
+
                 let event = WatchdogEvent {
                     timestamp: Instant::now(),
                     component: component.clone(),
                     event_type: WatchdogEventType::UsbTimeout,
-                    context: format!("USB stall detected after {} frames", state.stall_frame_count),
+                    context: format!(
+                        "USB stall detected after {} frames",
+                        state.stall_frame_count
+                    ),
                     execution_time: None,
                     action_taken: WatchdogAction::ResetUsbEndpoint,
                 };
 
                 // Reset counter before recording event to avoid borrowing issues
                 state.stall_frame_count = 0;
-                
+
                 self.record_event(event.clone());
                 return Some(event);
             }
@@ -397,22 +413,22 @@ impl WatchdogSystem {
         if !endpoint_responsive {
             if self.endpoint_wedge_timer.is_none() {
                 self.endpoint_wedge_timer = Some(Instant::now());
-            } else if let Some(timer) = self.endpoint_wedge_timer {
-                if timer.elapsed() >= Duration::from_millis(100) {
-                    self.endpoint_wedge_timer = None;
-                    
-                    let event = WatchdogEvent {
-                        timestamp: Instant::now(),
-                        component: ComponentType::UsbEndpoint("wedged_endpoint".to_string()),
-                        event_type: WatchdogEventType::UsbTimeout,
-                        context: "Endpoint wedged - unresponsive for >100ms".to_string(),
-                        execution_time: None,
-                        action_taken: WatchdogAction::ResetUsbEndpoint,
-                    };
-                    
-                    self.record_event(event.clone());
-                    return Some(event);
-                }
+            } else if let Some(timer) = self.endpoint_wedge_timer
+                && timer.elapsed() >= Duration::from_millis(100)
+            {
+                self.endpoint_wedge_timer = None;
+
+                let event = WatchdogEvent {
+                    timestamp: Instant::now(),
+                    component: ComponentType::UsbEndpoint("wedged_endpoint".to_string()),
+                    event_type: WatchdogEventType::UsbTimeout,
+                    context: "Endpoint wedged - unresponsive for >100ms".to_string(),
+                    execution_time: None,
+                    action_taken: WatchdogAction::ResetUsbEndpoint,
+                };
+
+                self.record_event(event.clone());
+                return Some(event);
             }
         } else {
             self.endpoint_wedge_timer = None;
@@ -423,11 +439,11 @@ impl WatchdogSystem {
     /// Record USB endpoint error
     pub fn record_usb_error(&mut self, endpoint_id: &str, error_context: &str) -> WatchdogEvent {
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         if let Some(state) = self.usb_endpoints.get_mut(endpoint_id) {
             state.consecutive_failures += 1;
             state.recent_failures.push_back(Instant::now());
-            
+
             // Keep only recent failures within the window
             if let Some(config) = self.configs.get(&component) {
                 let cutoff = Instant::now() - config.failure_rate_window;
@@ -464,7 +480,12 @@ impl WatchdogSystem {
     }
 
     /// Record plugin execution time and check for overruns
-    pub fn record_plugin_execution(&mut self, plugin_id: &str, execution_time: Duration, is_native: bool) -> Option<WatchdogEvent> {
+    pub fn record_plugin_execution(
+        &mut self,
+        plugin_id: &str,
+        execution_time: Duration,
+        is_native: bool,
+    ) -> Option<WatchdogEvent> {
         let component = if is_native {
             ComponentType::NativePlugin(plugin_id.to_string())
         } else {
@@ -476,7 +497,9 @@ impl WatchdogSystem {
         let is_overrun = execution_time > max_execution_time;
 
         if let Some(state) = self.plugins.get_mut(plugin_id) {
-            state.execution_times.push_back((Instant::now(), execution_time));
+            state
+                .execution_times
+                .push_back((Instant::now(), execution_time));
             state.last_execution = Some(Instant::now());
 
             // Keep only recent execution times
@@ -500,9 +523,12 @@ impl WatchdogSystem {
                 );
 
                 let should_quarantine = self.should_quarantine_component(&component);
-                
+
                 let action = if should_quarantine {
-                    self.quarantine_component(&component, format!("Plugin overrun: {:?}", execution_time));
+                    self.quarantine_component(
+                        &component,
+                        format!("Plugin overrun: {:?}", execution_time),
+                    );
                     WatchdogAction::QuarantineComponent
                 } else {
                     WatchdogAction::LogOnly
@@ -512,7 +538,10 @@ impl WatchdogSystem {
                     timestamp: Instant::now(),
                     component,
                     event_type: WatchdogEventType::PluginOverrun,
-                    context: format!("Execution time {:?} exceeded budget {:?}", execution_time, max_execution_time),
+                    context: format!(
+                        "Execution time {:?} exceeded budget {:?}",
+                        execution_time, max_execution_time
+                    ),
                     execution_time: Some(execution_time),
                     action_taken: action,
                 };
@@ -529,29 +558,40 @@ impl WatchdogSystem {
     }
 
     /// Check for NaN values and trigger guard if found
-    pub fn check_nan_guard(&mut self, value: f32, context: &str, component: ComponentType) -> Option<WatchdogEvent> {
-        if let Some(config) = self.configs.get(&component) {
-            if config.enable_nan_guards && (value.is_nan() || value.is_infinite()) {
-                error!("NaN guard triggered for {}: {} = {}", component.display_name(), context, value);
+    pub fn check_nan_guard(
+        &mut self,
+        value: f32,
+        context: &str,
+        component: ComponentType,
+    ) -> Option<WatchdogEvent> {
+        if let Some(config) = self.configs.get(&component)
+            && config.enable_nan_guards
+            && (value.is_nan() || value.is_infinite())
+        {
+            error!(
+                "NaN guard triggered for {}: {} = {}",
+                component.display_name(),
+                context,
+                value
+            );
 
-                let action = if config.is_critical {
-                    WatchdogAction::EmergencyStop
-                } else {
-                    WatchdogAction::LogOnly
-                };
+            let action = if config.is_critical {
+                WatchdogAction::EmergencyStop
+            } else {
+                WatchdogAction::LogOnly
+            };
 
-                let event = WatchdogEvent {
-                    timestamp: Instant::now(),
-                    component,
-                    event_type: WatchdogEventType::NanDetected,
-                    context: format!("{} = {}", context, value),
-                    execution_time: None,
-                    action_taken: action,
-                };
+            let event = WatchdogEvent {
+                timestamp: Instant::now(),
+                component,
+                event_type: WatchdogEventType::NanDetected,
+                context: format!("{} = {}", context, value),
+                execution_time: None,
+                action_taken: action,
+            };
 
-                self.record_event(event.clone());
-                return Some(event);
-            }
+            self.record_event(event.clone());
+            return Some(event);
         }
 
         None
@@ -560,16 +600,16 @@ impl WatchdogSystem {
     /// Check USB endpoint timeout
     pub fn check_usb_timeout(&mut self, endpoint_id: &str) -> Option<WatchdogEvent> {
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         // Get timeout config and check state separately to avoid borrowing conflicts
         let usb_timeout = self.configs.get(&component)?.usb_timeout;
         let elapsed_time = self.usb_endpoints.get(endpoint_id)?.last_success.elapsed();
-        
+
         if elapsed_time > usb_timeout {
             warn!("USB endpoint {} timeout: {:?}", endpoint_id, elapsed_time);
 
             let should_quarantine = self.should_quarantine_component(&component);
-            
+
             let action = if should_quarantine {
                 self.quarantine_component(&component, "USB timeout".to_string());
                 WatchdogAction::QuarantineComponent
@@ -603,7 +643,7 @@ impl WatchdogSystem {
                         if state.consecutive_failures >= config.max_consecutive_failures {
                             return true;
                         }
-                        
+
                         // Quarantine if failure rate is too high
                         if state.recent_failures.len() as u32 >= config.max_failures_per_window {
                             return true;
@@ -616,12 +656,14 @@ impl WatchdogSystem {
                         if state.consecutive_overruns >= config.max_consecutive_failures {
                             return true;
                         }
-                        
+
                         // Quarantine if overrun rate is too high
-                        let recent_overruns = state.execution_times.iter()
+                        let recent_overruns = state
+                            .execution_times
+                            .iter()
                             .filter(|(_, duration)| *duration > config.max_execution_time)
                             .count() as u32;
-                        
+
                         if recent_overruns >= config.max_failures_per_window {
                             return true;
                         }
@@ -639,12 +681,18 @@ impl WatchdogSystem {
 
     /// Quarantine a component
     fn quarantine_component(&mut self, component: &ComponentType, reason: String) {
-        warn!("Quarantining component {}: {}", component.display_name(), reason);
+        warn!(
+            "Quarantining component {}: {}",
+            component.display_name(),
+            reason
+        );
 
         let failure_count = match component {
-            ComponentType::UsbEndpoint(id) => {
-                self.usb_endpoints.get(id).map(|s| s.consecutive_failures).unwrap_or(0)
-            }
+            ComponentType::UsbEndpoint(id) => self
+                .usb_endpoints
+                .get(id)
+                .map(|s| s.consecutive_failures)
+                .unwrap_or(0),
             ComponentType::NativePlugin(id) | ComponentType::WasmPlugin(id) => {
                 self.plugins.get(id).map(|s| s.total_overruns).unwrap_or(0)
             }
@@ -677,8 +725,11 @@ impl WatchdogSystem {
         if let Some(status) = self.quarantine_status.get_mut(component) {
             match status {
                 QuarantineStatus::Quarantined { .. } => {
-                    info!("Attempting recovery for component: {}", component.display_name());
-                    
+                    info!(
+                        "Attempting recovery for component: {}",
+                        component.display_name()
+                    );
+
                     *status = QuarantineStatus::Recovering {
                         until: Instant::now() + Duration::from_secs(30), // 30s recovery period
                         attempt_count: 1,
@@ -696,11 +747,14 @@ impl WatchdogSystem {
                     self.record_event(event);
                     return true;
                 }
-                QuarantineStatus::Recovering { until, attempt_count: _ } => {
+                QuarantineStatus::Recovering {
+                    until,
+                    attempt_count: _,
+                } => {
                     if Instant::now() > *until {
                         // Recovery period ended, mark as active
                         *status = QuarantineStatus::Active;
-                        
+
                         // Reset component state
                         match component {
                             ComponentType::UsbEndpoint(id) => {
@@ -720,10 +774,16 @@ impl WatchdogSystem {
                             _ => {}
                         }
 
-                        info!("Component {} recovered successfully", component.display_name());
+                        info!(
+                            "Component {} recovered successfully",
+                            component.display_name()
+                        );
                         return true;
                     } else {
-                        debug!("Component {} still in recovery period", component.display_name());
+                        debug!(
+                            "Component {} still in recovery period",
+                            component.display_name()
+                        );
                         return false;
                     }
                 }
@@ -740,7 +800,7 @@ impl WatchdogSystem {
     /// Record a watchdog event
     fn record_event(&mut self, event: WatchdogEvent) {
         self.event_history.push_back(event);
-        
+
         // Keep history bounded
         if self.event_history.len() > self.max_event_history {
             self.event_history.pop_front();
@@ -765,10 +825,18 @@ impl WatchdogSystem {
     pub fn get_plugin_overrun_stats(&self, plugin_id: &str) -> Option<PluginOverrunStats> {
         self.plugins.get(plugin_id).map(|state| {
             let recent_executions = state.execution_times.len();
-            let recent_overruns = state.execution_times.iter()
+            let recent_overruns = state
+                .execution_times
+                .iter()
                 .filter(|(_, duration)| {
-                    if let Some(config) = self.configs.get(&ComponentType::NativePlugin(plugin_id.to_string()))
-                        .or_else(|| self.configs.get(&ComponentType::WasmPlugin(plugin_id.to_string()))) {
+                    if let Some(config) = self
+                        .configs
+                        .get(&ComponentType::NativePlugin(plugin_id.to_string()))
+                        .or_else(|| {
+                            self.configs
+                                .get(&ComponentType::WasmPlugin(plugin_id.to_string()))
+                        })
+                    {
                         *duration > config.max_execution_time
                     } else {
                         false
@@ -783,9 +851,7 @@ impl WatchdogSystem {
                 None
             };
 
-            let max_execution_time = state.execution_times.iter()
-                .map(|(_, d)| *d)
-                .max();
+            let max_execution_time = state.execution_times.iter().map(|(_, d)| *d).max();
 
             PluginOverrunStats {
                 total_overruns: state.total_overruns,
@@ -816,11 +882,11 @@ impl WatchdogSystem {
 
     /// Inject a synthetic fault for testing
     pub fn inject_synthetic_fault(&mut self, fault: SyntheticFault) {
-        if let Some(injection_state) = &mut self.fault_injection {
-            if injection_state.enabled {
-                injection_state.pending_faults.push_back(fault);
-                debug!("Synthetic fault queued for injection");
-            }
+        if let Some(injection_state) = &mut self.fault_injection
+            && injection_state.enabled
+        {
+            injection_state.pending_faults.push_back(fault);
+            debug!("Synthetic fault queued for injection");
         }
     }
 
@@ -828,26 +894,30 @@ impl WatchdogSystem {
     pub fn process_synthetic_faults(&mut self) -> Vec<WatchdogEvent> {
         let mut events = Vec::new();
         let mut faults_to_process = Vec::new();
-        
+
         // First, collect faults that are ready to be processed
-        if let Some(injection_state) = &mut self.fault_injection {
-            if injection_state.enabled {
-                let now = Instant::now();
-                
-                while let Some(fault) = injection_state.pending_faults.front() {
-                    if fault.inject_at <= now {
-                        faults_to_process.push(injection_state.pending_faults.pop_front().unwrap());
-                    } else {
-                        break;
-                    }
+        if let Some(injection_state) = &mut self.fault_injection
+            && injection_state.enabled
+        {
+            let now = Instant::now();
+
+            while let Some(fault) = injection_state.pending_faults.front() {
+                if fault.inject_at <= now {
+                    faults_to_process.push(injection_state.pending_faults.pop_front().unwrap());
+                } else {
+                    break;
                 }
             }
         }
-        
+
         // Now process the collected faults
         for fault in faults_to_process {
-            warn!("Injecting synthetic fault: {:?} for {}", fault.fault_type, fault.component.display_name());
-            
+            warn!(
+                "Injecting synthetic fault: {:?} for {}",
+                fault.fault_type,
+                fault.component.display_name()
+            );
+
             let event = WatchdogEvent {
                 timestamp: Instant::now(),
                 component: fault.component.clone(),
@@ -856,17 +926,23 @@ impl WatchdogSystem {
                 execution_time: None,
                 action_taken: WatchdogAction::LogOnly,
             };
-            
+
             self.record_event(event.clone());
             events.push(event);
-            
+
             // Trigger the actual fault behavior
             match fault.fault_type {
                 WatchdogEventType::PluginOverrun => {
-                    if let ComponentType::NativePlugin(id) | ComponentType::WasmPlugin(id) = &fault.component {
+                    if let ComponentType::NativePlugin(id) | ComponentType::WasmPlugin(id) =
+                        &fault.component
+                    {
                         // Simulate overrun by recording excessive execution time
                         let excessive_time = Duration::from_millis(10); // Much longer than 100μs budget
-                        self.record_plugin_execution(id, excessive_time, matches!(fault.component, ComponentType::NativePlugin(_)));
+                        self.record_plugin_execution(
+                            id,
+                            excessive_time,
+                            matches!(fault.component, ComponentType::NativePlugin(_)),
+                        );
                     }
                 }
                 WatchdogEventType::UsbTimeout => {
@@ -880,7 +956,7 @@ impl WatchdogSystem {
                 _ => {}
             }
         }
-        
+
         events
     }
 
@@ -893,11 +969,11 @@ impl WatchdogSystem {
         self.event_history.clear();
         self.usb_stall_counter = 0;
         self.endpoint_wedge_timer = None;
-        
+
         if let Some(injection_state) = &mut self.fault_injection {
             injection_state.pending_faults.clear();
         }
-        
+
         info!("Watchdog state cleared");
     }
 
@@ -912,15 +988,23 @@ impl WatchdogSystem {
         let total_components = self.configs.len();
         let quarantined_components = self.get_quarantined_components().len();
         let active_components = total_components - quarantined_components;
-        
+
         let recent_events = self.get_recent_events(Duration::from_secs(300)); // Last 5 minutes
-        let recent_overruns = recent_events.iter()
+        let recent_overruns = recent_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::PluginOverrun)
             .count();
-        let recent_usb_errors = recent_events.iter()
-            .filter(|e| matches!(e.event_type, WatchdogEventType::UsbTimeout | WatchdogEventType::UsbError))
+        let recent_usb_errors = recent_events
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.event_type,
+                    WatchdogEventType::UsbTimeout | WatchdogEventType::UsbError
+                )
+            })
             .count();
-        let recent_nan_detections = recent_events.iter()
+        let recent_nan_detections = recent_events
+            .iter()
             .filter(|e| e.event_type == WatchdogEventType::NanDetected)
             .count();
 
@@ -931,7 +1015,11 @@ impl WatchdogSystem {
             recent_overruns,
             recent_usb_errors,
             recent_nan_detections,
-            fault_injection_enabled: self.fault_injection.as_ref().map(|s| s.enabled).unwrap_or(false),
+            fault_injection_enabled: self
+                .fault_injection
+                .as_ref()
+                .map(|s| s.enabled)
+                .unwrap_or(false),
         }
     }
 }
@@ -982,7 +1070,10 @@ mod basic_tests {
         watchdog.register_component(component.clone(), config);
 
         assert!(!watchdog.is_quarantined(&component));
-        assert_eq!(watchdog.get_quarantine_status(&component), Some(&QuarantineStatus::Active));
+        assert_eq!(
+            watchdog.get_quarantine_status(&component),
+            Some(&QuarantineStatus::Active)
+        );
     }
 
     #[test]
@@ -990,13 +1081,13 @@ mod basic_tests {
         let mut watchdog = WatchdogSystem::new();
         let endpoint_id = "test_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // First two stalls should not trigger fault
         assert!(watchdog.record_usb_stall(endpoint_id).is_none());
         assert!(watchdog.record_usb_stall(endpoint_id).is_none());
-        
+
         // Third stall should trigger fault
         let event = watchdog.record_usb_stall(endpoint_id).unwrap();
         assert_eq!(event.event_type, WatchdogEventType::UsbTimeout);
@@ -1008,16 +1099,22 @@ mod basic_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Normal execution should not trigger overrun
         let normal_time = Duration::from_micros(50);
-        assert!(watchdog.record_plugin_execution(plugin_id, normal_time, true).is_none());
+        assert!(
+            watchdog
+                .record_plugin_execution(plugin_id, normal_time, true)
+                .is_none()
+        );
 
         // Excessive execution should trigger overrun
         let excessive_time = Duration::from_millis(1);
-        let event = watchdog.record_plugin_execution(plugin_id, excessive_time, true).unwrap();
+        let event = watchdog
+            .record_plugin_execution(plugin_id, excessive_time, true)
+            .unwrap();
         assert_eq!(event.event_type, WatchdogEventType::PluginOverrun);
         assert_eq!(event.execution_time, Some(excessive_time));
     }
@@ -1028,14 +1125,20 @@ mod basic_tests {
         let component = ComponentType::AxisNode("test_axis".to_string());
         let mut config = WatchdogConfig::default();
         config.enable_nan_guards = true;
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Normal value should not trigger guard
-        assert!(watchdog.check_nan_guard(1.0, "test_value", component.clone()).is_none());
+        assert!(
+            watchdog
+                .check_nan_guard(1.0, "test_value", component.clone())
+                .is_none()
+        );
 
         // NaN value should trigger guard
-        let event = watchdog.check_nan_guard(f32::NAN, "test_nan", component).unwrap();
+        let event = watchdog
+            .check_nan_guard(f32::NAN, "test_nan", component)
+            .unwrap();
         assert_eq!(event.event_type, WatchdogEventType::NanDetected);
     }
 
@@ -1046,18 +1149,23 @@ mod basic_tests {
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
         let mut config = WatchdogConfig::default();
         config.max_consecutive_failures = 2; // Lower threshold for testing
-        
+
         watchdog.register_component(component.clone(), config);
 
         // Generate enough failures to trigger quarantine
         watchdog.record_usb_error(endpoint_id, "Test error 1");
         assert!(!watchdog.is_quarantined(&component));
-        
+
         watchdog.record_usb_error(endpoint_id, "Test error 2");
         assert!(watchdog.is_quarantined(&component));
 
         // Check quarantine status
-        if let Some(QuarantineStatus::Quarantined { reason, failure_count, .. }) = watchdog.get_quarantine_status(&component) {
+        if let Some(QuarantineStatus::Quarantined {
+            reason,
+            failure_count,
+            ..
+        }) = watchdog.get_quarantine_status(&component)
+        {
             assert!(reason.contains("USB error"));
             assert_eq!(*failure_count, 2);
         } else {
@@ -1069,18 +1177,20 @@ mod basic_tests {
     fn test_component_recovery() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("test_plugin".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
-        
+
         // Manually quarantine component
         watchdog.quarantine_component(&component, "Test quarantine".to_string());
         assert!(watchdog.is_quarantined(&component));
 
         // Attempt recovery
         assert!(watchdog.attempt_recovery(&component));
-        
+
         // Should be in recovery state
-        if let Some(QuarantineStatus::Recovering { .. }) = watchdog.get_quarantine_status(&component) {
+        if let Some(QuarantineStatus::Recovering { .. }) =
+            watchdog.get_quarantine_status(&component)
+        {
             // Expected
         } else {
             panic!("Component should be in recovery state");
@@ -1091,7 +1201,7 @@ mod basic_tests {
     fn test_synthetic_fault_injection() {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::NativePlugin("test_plugin".to_string());
-        
+
         watchdog.register_component(component.clone(), WatchdogConfig::default());
         watchdog.enable_fault_injection();
 
@@ -1104,7 +1214,7 @@ mod basic_tests {
 
         watchdog.inject_synthetic_fault(fault);
         let events = watchdog.process_synthetic_faults();
-        
+
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_type, WatchdogEventType::SyntheticFault);
         assert_eq!(events[0].component, component);
@@ -1113,17 +1223,23 @@ mod basic_tests {
     #[test]
     fn test_health_summary() {
         let mut watchdog = WatchdogSystem::new();
-        
+
         // Register some components
-        watchdog.register_component(ComponentType::UsbEndpoint("ep1".to_string()), WatchdogConfig::default());
-        watchdog.register_component(ComponentType::NativePlugin("plugin1".to_string()), WatchdogConfig::default());
-        
+        watchdog.register_component(
+            ComponentType::UsbEndpoint("ep1".to_string()),
+            WatchdogConfig::default(),
+        );
+        watchdog.register_component(
+            ComponentType::NativePlugin("plugin1".to_string()),
+            WatchdogConfig::default(),
+        );
+
         // Quarantine one component
         let component = ComponentType::UsbEndpoint("ep1".to_string());
         watchdog.quarantine_component(&component, "Test".to_string());
 
         let summary = watchdog.get_health_summary();
-        
+
         assert_eq!(summary.total_components, 2);
         assert_eq!(summary.active_components, 1);
         assert_eq!(summary.quarantined_components, 1);
@@ -1135,7 +1251,7 @@ mod basic_tests {
         let mut watchdog = WatchdogSystem::new();
         let plugin_id = "test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
-        
+
         watchdog.register_component(component, WatchdogConfig::default());
 
         // Record some executions
@@ -1144,7 +1260,7 @@ mod basic_tests {
         watchdog.record_plugin_execution(plugin_id, Duration::from_micros(75), true);
 
         let stats = watchdog.get_plugin_overrun_stats(plugin_id).unwrap();
-        
+
         assert_eq!(stats.total_overruns, 1);
         assert_eq!(stats.recent_executions, 3);
         assert_eq!(stats.recent_overruns, 1);

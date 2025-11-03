@@ -1,0 +1,23 @@
+{
+  "sim": "xplane",
+  "version": "12.0",
+  "description": "Disable X-Plane control response curves",
+  "diffs": [
+    {
+      "file": "X-Plane 12/Output/preferences/X-Plane Joystick Settings.prf",
+      "section": null,
+      "changes": {
+        "_joy_use_linear_curves": "1"
+      },
+      "operation": "Set"
+    }
+  ],
+  "verification_tests": [
+    {
+      "name": "check_xplane_linear",
+      "description": "Verify X-Plane uses linear curves",
+      "test_type": "FileContains",
+      "expected_result": "_joy_use_linear_curves\t1"
+    }
+  ]
+}

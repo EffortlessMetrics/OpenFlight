@@ -3,9 +3,9 @@
 
 //! Rules DSL for panel LED control
 
+use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::{FlightError, Result};
 
 /// Rules DSL schema version 1
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,10 +48,7 @@ pub enum Condition {
         value: f32,
     },
     /// Boolean variable
-    Boolean {
-        variable: String,
-        negate: bool,
-    },
+    Boolean { variable: String, negate: bool },
     /// Logical AND of conditions
     And(Vec<Condition>),
     /// Logical OR of conditions
@@ -184,7 +181,7 @@ impl RulesSchema {
             self.defaults
                 .as_ref()
                 .and_then(|d| d.hysteresis.clone())
-                .unwrap_or_default()
+                .unwrap_or_default(),
         );
 
         compiler.compile(self)
@@ -201,7 +198,7 @@ impl RulesCompiler {
     /// Compile rules schema to bytecode
     pub fn compile(&self, schema: &RulesSchema) -> Result<CompiledRules> {
         let mut compiler = BytecodeCompiler::new();
-        
+
         // Add hysteresis defaults
         for (key, band) in &self.hysteresis_defaults {
             compiler.add_hysteresis_key(key.clone(), *band);
@@ -213,7 +210,7 @@ impl RulesCompiler {
         }
 
         let bytecode = compiler.finalize();
-        
+
         Ok(CompiledRules {
             bytecode,
             hysteresis_bands: self.hysteresis_defaults.clone(),
@@ -243,21 +240,28 @@ impl RulesCompiler {
         // Handle negated boolean variables
         if condition_str.starts_with('!') && !condition_str.contains(['>', '<', '=']) {
             let variable = condition_str[1..].trim().to_string();
-            return Ok(Condition::Boolean { variable, negate: true });
+            return Ok(Condition::Boolean {
+                variable,
+                negate: true,
+            });
         }
 
         // Handle boolean variables (no operators)
         if !condition_str.contains(['>', '<', '=']) {
             let variable = condition_str.to_string();
-            return Ok(Condition::Boolean { variable, negate: false });
+            return Ok(Condition::Boolean {
+                variable,
+                negate: false,
+            });
         }
 
         // Handle comparisons (very basic parsing)
         if let Some(pos) = condition_str.find(" == ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>()
-                .map_err(|_| FlightError::RulesValidation(format!("Invalid number: {}", value_str)))?;
+            let value = value_str.parse::<f32>().map_err(|_| {
+                FlightError::RulesValidation(format!("Invalid number: {}", value_str))
+            })?;
 
             return Ok(Condition::Compare {
                 variable,
@@ -269,8 +273,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" > ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
-            let value = value_str.parse::<f32>()
-                .map_err(|_| FlightError::RulesValidation(format!("Invalid number: {}", value_str)))?;
+            let value = value_str.parse::<f32>().map_err(|_| {
+                FlightError::RulesValidation(format!("Invalid number: {}", value_str))
+            })?;
 
             return Ok(Condition::Compare {
                 variable,
@@ -292,32 +297,32 @@ impl RulesCompiler {
         let action_str = action_str.trim();
 
         // Parse led.panel('TARGET').on()
-        if let Some(start) = action_str.find("led.panel('") {
-            if let Some(end) = action_str[start + 11..].find("')") {
-                let target = action_str[start + 11..start + 11 + end].to_string();
-                
-                if action_str.ends_with(".on()") {
-                    return Ok(Action::LedOn { target });
-                } else if action_str.ends_with(".off()") {
-                    return Ok(Action::LedOff { target });
-                }
+        if let Some(start) = action_str.find("led.panel('")
+            && let Some(end) = action_str[start + 11..].find("')")
+        {
+            let target = action_str[start + 11..start + 11 + end].to_string();
+
+            if action_str.ends_with(".on()") {
+                return Ok(Action::LedOn { target });
+            } else if action_str.ends_with(".off()") {
+                return Ok(Action::LedOff { target });
             }
         }
 
         // Parse led.indexer.blink(rate_hz=6)
-        if action_str.starts_with("led.indexer.blink(") {
-            if let Some(start) = action_str.find("rate_hz=") {
-                if let Some(end) = action_str[start + 8..].find(')') {
-                    let rate_str = &action_str[start + 8..start + 8 + end];
-                    let rate_hz = rate_str.parse::<f32>()
-                        .map_err(|_| FlightError::RulesValidation(format!("Invalid rate: {}", rate_str)))?;
+        if action_str.starts_with("led.indexer.blink(")
+            && let Some(start) = action_str.find("rate_hz=")
+            && let Some(end) = action_str[start + 8..].find(')')
+        {
+            let rate_str = &action_str[start + 8..start + 8 + end];
+            let rate_hz = rate_str
+                .parse::<f32>()
+                .map_err(|_| FlightError::RulesValidation(format!("Invalid rate: {}", rate_str)))?;
 
-                    return Ok(Action::LedBlink {
-                        target: "indexer".to_string(),
-                        rate_hz,
-                    });
-                }
-            }
+            return Ok(Action::LedBlink {
+                target: "indexer".to_string(),
+                rate_hz,
+            });
         }
 
         // TODO: Implement full parser for all action types
@@ -437,7 +442,7 @@ impl BytecodeCompiler {
                 // No stack effect
             }
         }
-        
+
         self.instructions.push(op);
     }
 
@@ -445,24 +450,24 @@ impl BytecodeCompiler {
         // Parse condition and action
         let condition = self.parse_condition(&rule.when)?;
         let action = self.parse_action(&rule.action)?;
-        
+
         // Compile condition to bytecode
         self.compile_condition(&condition)?;
-        
+
         // Jump over action if condition is false
         let jump_addr = self.instructions.len();
         self.emit(BytecodeOp::JumpFalse(0)); // Placeholder, will be patched
-        
+
         // Emit action
         let action_index = self.add_action(action);
         self.emit(BytecodeOp::Action(action_index));
-        
+
         // Patch jump address
         let end_addr = self.instructions.len() as u16;
         if let BytecodeOp::JumpFalse(addr) = &mut self.instructions[jump_addr] {
             *addr = end_addr;
         }
-        
+
         Ok(())
     }
 
@@ -473,16 +478,20 @@ impl BytecodeCompiler {
                 self.emit(BytecodeOp::LoadVar(var_index));
                 self.emit(BytecodeOp::LoadConst(0.0));
                 self.emit(BytecodeOp::Compare(CompareOp::NotEqual));
-                
+
                 if *negate {
                     self.emit(BytecodeOp::Not);
                 }
             }
-            Condition::Compare { variable, operator, value } => {
+            Condition::Compare {
+                variable,
+                operator,
+                value,
+            } => {
                 let var_index = self.get_or_add_variable(variable);
                 self.emit(BytecodeOp::LoadVar(var_index));
                 self.emit(BytecodeOp::LoadConst(*value));
-                
+
                 // Apply hysteresis if configured
                 if let Some(&hyst_index) = self.hysteresis_map.get(variable) {
                     self.emit(BytecodeOp::Hysteresis(hyst_index));
@@ -495,19 +504,19 @@ impl BytecodeCompiler {
                     self.emit(BytecodeOp::LoadConst(1.0)); // True
                     return Ok(());
                 }
-                
+
                 // Compile first condition
                 self.compile_condition(&conditions[0])?;
-                
+
                 // For each additional condition, compile and AND
                 for condition in &conditions[1..] {
                     // Short-circuit: if current result is false, skip remaining
                     let skip_addr = self.instructions.len();
                     self.emit(BytecodeOp::JumpFalse(0)); // Placeholder
-                    
+
                     self.compile_condition(condition)?;
                     self.emit(BytecodeOp::And);
-                    
+
                     // Patch skip address
                     let end_addr = self.instructions.len() as u16;
                     if let BytecodeOp::JumpFalse(addr) = &mut self.instructions[skip_addr] {
@@ -520,10 +529,10 @@ impl BytecodeCompiler {
                     self.emit(BytecodeOp::LoadConst(0.0)); // False
                     return Ok(());
                 }
-                
+
                 // Compile first condition
                 self.compile_condition(&conditions[0])?;
-                
+
                 // For each additional condition, compile and OR
                 for condition in &conditions[1..] {
                     self.compile_condition(condition)?;
@@ -573,13 +582,11 @@ mod tests {
     fn test_rules_schema_validation() {
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear == DOWN".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "gear == DOWN".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 
@@ -604,13 +611,11 @@ mod tests {
 
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "aoa > alpha_warn".to_string(),
-                    do_action: "led.indexer.blink(rate_hz=6)".to_string(),
-                    action: "led.indexer.blink(rate_hz=6)".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "aoa > alpha_warn".to_string(),
+                do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                action: "led.indexer.blink(rate_hz=6)".to_string(),
+            }],
             defaults: Some(RuleDefaults {
                 hysteresis: Some(hysteresis),
             }),
@@ -634,7 +639,7 @@ mod tests {
 
         // Test comparison
         let condition = compiler.parse_condition("ias > 90").unwrap();
-        matches!(condition, Condition::Compare { variable, operator: CompareOp::Greater, value } 
+        matches!(condition, Condition::Compare { variable, operator: CompareOp::Greater, value }
                  if variable == "ias" && value == 90.0);
     }
 
@@ -647,7 +652,9 @@ mod tests {
         matches!(action, Action::LedOn { target } if target == "GEAR");
 
         // Test LED blink action
-        let action = compiler.parse_action("led.indexer.blink(rate_hz=6)").unwrap();
+        let action = compiler
+            .parse_action("led.indexer.blink(rate_hz=6)")
+            .unwrap();
         matches!(action, Action::LedBlink { target, rate_hz } if target == "indexer" && rate_hz == 6.0);
     }
 }

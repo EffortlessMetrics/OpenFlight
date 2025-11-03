@@ -65,38 +65,40 @@
 //! rules.validate().expect("Rules should be valid");
 //! ```
 
+pub mod aircraft_switch;
+pub mod blackbox;
 pub mod error;
+pub mod process_detection;
 pub mod profile;
 pub mod rules;
-pub mod units;
-pub mod writers;
-pub mod watchdog;
-pub mod aircraft_switch;
-pub mod process_detection;
-pub mod blackbox;
 pub mod security;
+pub mod units;
+pub mod watchdog;
+pub mod writers;
 
-pub use error::{FlightError, Result};
-pub use writers::{CurveConflictWriter, WritersConfig, WriteResult, VerificationResult, BackupInfo};
-pub use profile::{CapabilityMode, CapabilityLimits, CapabilityContext};
-pub use watchdog::{
-    WatchdogSystem, WatchdogConfig, WatchdogEvent, WatchdogEventType, WatchdogAction,
-    ComponentType, QuarantineStatus, SyntheticFault, WatchdogError,
-    PluginOverrunStats, WatchdogHealthSummary
-};
 pub use aircraft_switch::{
-    AircraftAutoSwitch, AutoSwitchConfig, PofHysteresisConfig, HysteresisBand,
-    DetectedAircraft, CompiledProfile, PhaseOfFlight, SwitchMetrics, SwitchResult
-};
-pub use process_detection::{
-    ProcessDetector, ProcessDetectionConfig, ProcessDefinition, DetectedProcess, DetectionMetrics
+    AircraftAutoSwitch, AutoSwitchConfig, CompiledProfile, DetectedAircraft, HysteresisBand,
+    PhaseOfFlight, PofHysteresisConfig, SwitchMetrics, SwitchResult,
 };
 pub use blackbox::{
-    BlackboxWriter, BlackboxReader, BlackboxConfig, BlackboxStats, BlackboxError,
-    BlackboxHeader, BlackboxFooter, IndexEntry, StreamType, BlackboxRecord
+    BlackboxConfig, BlackboxError, BlackboxFooter, BlackboxHeader, BlackboxReader, BlackboxRecord,
+    BlackboxStats, BlackboxWriter, IndexEntry, StreamType,
 };
+pub use error::{FlightError, Result};
+pub use process_detection::{
+    DetectedProcess, DetectionMetrics, ProcessDefinition, ProcessDetectionConfig, ProcessDetector,
+};
+pub use profile::{CapabilityContext, CapabilityLimits, CapabilityMode};
 pub use security::{
-    SecurityManager, SecurityConfig, TelemetryConfig, AclConfig, PluginCapabilityManifest,
-    PluginCapability, PluginType, SignatureStatus, TelemetryDataType, IpcClientInfo,
-    SecurityError
+    AclConfig, IpcClientInfo, PluginCapability, PluginCapabilityManifest, PluginType,
+    SecurityConfig, SecurityError, SecurityManager, SignatureStatus, TelemetryConfig,
+    TelemetryDataType,
+};
+pub use watchdog::{
+    ComponentType, PluginOverrunStats, QuarantineStatus, SyntheticFault, WatchdogAction,
+    WatchdogConfig, WatchdogError, WatchdogEvent, WatchdogEventType, WatchdogHealthSummary,
+    WatchdogSystem,
+};
+pub use writers::{
+    BackupInfo, CurveConflictWriter, VerificationResult, WriteResult, WritersConfig,
 };

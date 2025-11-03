@@ -114,7 +114,11 @@
   - Update all internal call sites to use `&Path` version directly
   - _Requirements: 2.6, 2.7, 5.2, 5.3_
 
-- [ ] 10. Validate all fixes
+- [x] 10. Validate all fixes
+
+
+
+
   - Run `cargo clippy -p flight-core -- -Dwarnings` on current platform (must pass with zero warnings)
   - Run `cargo test -p flight-core` (all tests must pass, no new tests)
   - Run `cargo test -p flight-virtual --tests` (all tests must pass)
