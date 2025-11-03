@@ -8,58 +8,72 @@
   - _Requirements: 1.1, 1.5_
 
 - [ ] 2. Add C172 test fixture for aircraft auto-switch tests
-  - Add embedded C172 profile JSON under `#[cfg(test)]` in aircraft_switch.rs
-  - Include pof_thresholds for cruise, climb, descent, approach, taxi, and takeoff
-  - Modify `load_profile` function to check embedded test profiles when filesystem lookup fails
-  - Use `id.eq_ignore_ascii_case("c172")` for case-insensitive matching
-  - _Requirements: 1.2, 1.5_
+  - Create `tests/fixtures/profiles/` directory in flight-core
+  - Create `tests/fixtures/profiles/C172.json` with pof_thresholds for cruise, climb, descent, approach, taxi, and takeoff
+  - Add test helper function `test_profile_repo()` that returns ProfileRepo pointing to fixtures directory
+  - Update tests to use `test_profile_repo()` instead of production profile paths
+  - _Requirements: 1.4, 1.6_
 
 - [ ] 3. Increment metrics counters on profile switch
-  - Add `self.metrics.total_switches = self.metrics.total_switches.saturating_add(1)` in `commit_switch` method
-  - Remove early return in `force_switch` that bypasses commit when target is same as current
-  - Ensure `force_switch` always calls `commit_switch` to increment counter
-  - _Requirements: 1.3, 1.4, 1.5_
+  - Decide on semantics: count only on ID change (Option 1) or count on any force (Option 2)
+  - Rename metric to `committed_switches` for clarity
+  - In `commit_switch`, check if profile ID changed: `self.current_profile.as_ref().map(|p| &p.id) != Some(&new_profile.id)`
+  - Use `checked_add(1).unwrap_or_else(|| { tracing::warn!("..."); 0 })` instead of `saturating_add` to detect overflow
+  - Update tests to reflect chosen semantics
+  - _Requirements: 1.5, 1.6_
 
-- [ ] 4. Validate flight-core tests pass
+- [ ] 4. Add hysteresis to PhaseOfFlight classification (optional but recommended)
+  - Add `consecutive_frames` counter to classification state
+  - Require N consecutive frames (e.g., 3-5 frames at 250Hz) meeting Cruise criteria before transitioning
+  - Add unit tests for phase transition hysteresis (no flip-flop within M frames)
+  - Add debug feature behind test cfg that logs which predicate matched for troubleshooting
+  - _Requirements: 1.2_
+
+- [ ] 5. Validate flight-core tests pass
   - Run `cargo test -p flight-core` and verify all tests pass
   - Specifically verify the 5 previously failing aircraft_switch tests now pass
   - Check that PhaseOfFlight classification tests produce expected phases
-  - Check that metrics tests show non-zero switch counts
-  - _Requirements: 1.5_
+  - Check that metrics tests show correct switch counts based on chosen semantics
+  - _Requirements: 1.6_
 
-- [ ] 5. Fix flight-hid private_interfaces warning
-  - Run `cargo public-api -p flight-hid` to check if `get_endpoint_state` is in public API
-  - If method is not used externally: change visibility from `pub` to `pub(crate)`
-  - If method is used externally: create `EndpointView<'a>` wrapper type and expose only needed methods
+- [ ] 6. Fix flight-hid private_interfaces warning
+  - Run `cargo public-api -p flight-hid diff origin/main..HEAD` to check current public API
+  - If `get_endpoint_state` is not used externally: change visibility from `pub` to `pub(crate)`
+  - If method is used externally: create `EndpointView<'a>` wrapper type and expose only needed methods (success_rate, avg_bytes_per_operation)
+  - Optionally add deprecated shim if changing visibility: `#[deprecated] pub fn ... { self.internal_method() }`
   - Run `cargo clippy -p flight-hid -- -Dwarnings` to verify warning is resolved
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 6. Investigate and fix flight-virtual abnormal exit
+- [ ] 7. Investigate and fix flight-virtual abnormal exit
   - Run `cargo test -p flight-virtual -- --nocapture` with `RUST_BACKTRACE=1` and `RUST_LOG=debug`
   - Identify source of abnormal exit (spawned thread panic, channel error, timing issue, or Drop panic)
+  - Create reusable test helper: `wait_until(timeout: Duration, poll: impl Fn() -> bool)` for timing-dependent tests
   - Fix identified issues:
-    - Wrap spawned threads with `JoinHandle.join().expect("...")` in tests
-    - Replace channel `unwrap()` with `expect("...")` or graceful error handling
-    - Add bounded waits with timeouts for timing-dependent tests
-  - Run tests again to verify clean completion
-  - _Requirements: 3.1, 3.2, 3.3, 3.4_
+    - Wrap spawned threads with `JoinHandle.join().expect("Background thread panicked: ...")` in tests
+    - Replace channel `unwrap()` with `expect("Receiver dropped unexpectedly")` or graceful error handling
+    - Replace fixed `sleep()` calls with `wait_until` helper
+    - Add final state assertion to verify no OS handle leaks
+  - Run tests again to verify exit code 0 and no panics
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 7. Create stable rustfmt.toml
+- [ ] 8. Create stable rustfmt.toml
   - Review current rustfmt.toml for nightly-only options (imports_granularity, group_imports, format_code_in_doc_comments, normalize_comments, wrap_comments)
   - Create new rustfmt.toml with only stable options: edition, max_width, use_small_heuristics, newline_style
-  - Optionally create rustfmt.nightly.toml with nightly features for local development
+  - Optionally create rustfmt.nightly.toml with nightly features (gated behind opt-in CI job, non-required)
   - Run `cargo fmt --all` to format all code including examples/
   - Run `cargo fmt --all -- --check` on stable Rust 1.89.0 to verify no warnings
-  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - Ensure CI includes examples in formatting check
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 8. Align workspace MSRV and edition
+- [ ] 9. Align workspace MSRV and edition
   - Update workspace Cargo.toml to specify `edition = "2024"` and `rust-version = "1.89.0"` in `[workspace.package]`
   - Verify individual crate Cargo.toml files inherit with `edition.workspace = true` and `rust-version.workspace = true`
-  - Update README.md to accurately reflect edition 2024 and MSRV 1.89.0
+  - Update README.md to accurately reflect edition 2024 and MSRV 1.89.0 (note: let-chains do not require 2024 edition)
   - Run `cargo check --all` to verify workspace configuration is valid
-  - _Requirements: 5.1, 5.2, 5.3, 5.4_
+  - Add dedicated MSRV CI job that builds and runs clippy on Rust 1.89.0 (Linux only)
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 9. Scope IPC bench lint allows
+- [ ] 10. Scope IPC bench lint allows
   - Find function-level `#[allow(unused_variables)]` in IPC bench code
   - Replace with parameter-level `#[cfg_attr(not(feature = "ipc-bench"), allow(unused_variables))]`
   - Find struct fields only used in benches/tests
@@ -67,40 +81,45 @@
   - Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` to verify
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 10. Clean up meaningless test assertions
+- [ ] 11. Clean up meaningless test assertions
   - Search for `assert!(value >= 0)` where value is unsigned type (u32, u64, usize)
-  - Either remove meaningless assertions or change to meaningful bounds (e.g., `assert!(value > 0)`)
+  - Either remove meaningless assertions or change to meaningful bounds (e.g., `assert!(value > 0, "Duration should be non-zero")`)
+  - For duration/timing assertions, consider reasonable range checks: `assert!(value > 0 && value < 10_000, "Duration {} ms outside expected range", value)`
   - Run `cargo test --all` to verify tests still pass
   - Run `cargo clippy --tests` to verify no unused_comparisons warnings
   - _Requirements: 8.1, 8.2, 8.3_
 
-- [ ] 11. Harden CI workflows
+- [ ] 12. Harden CI workflows
   - Add concurrency control to workflow: `concurrency: { group: "ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}", cancel-in-progress: true }`
-  - Add timeout-minutes to jobs (30 for builds, 10 for tests)
-  - Pin cargo-public-api version: `cargo install cargo-public-api --version 0.38.0`
-  - Improve caching to include `~/.cargo/bin/cargo-public-api`
+  - Add platform-appropriate timeout-minutes: Windows tests 20min, Linux tests 10min, Windows builds 45min, Linux builds 30min
+  - Set `fail-fast: false` in matrix jobs so Linux failures don't mask Windows issues
+  - Pin cargo-public-api with --locked: `cargo install --locked cargo-public-api@=0.38.0`
+  - Improve caching to include toolchain hash: `key: ${{ runner.os }}-${{ steps.rust-toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}`
+  - Add step to get toolchain hash: `echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT`
   - Verify required check names in repository settings match job names exactly
-  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [ ] 12. Create missing documentation files
+- [ ] 13. Create missing documentation files
   - Create stub ADR files: docs/adr/001-*.md through docs/adr/005-*.md with standard format (Status, Context, Decision, Consequences)
   - Create docs/regression-prevention.md with relevant testing and validation content
   - If using mdBook, update docs/SUMMARY.md to include all ADRs and documentation files
   - Verify all README links work by checking file existence
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 13. Validate "properly working" definition
+- [ ] 14. Validate "properly working" definition
   - Run `cargo test -p flight-core` (must pass with 0 failures)
-  - Run `cargo test -p flight-virtual` (must pass with no abnormal exit)
+  - Run `cargo test -p flight-virtual` (must pass with exit code 0, no panics in background threads)
   - Run `cargo clippy -p flight-core -- -Dwarnings` (must pass)
   - Run `cargo clippy -p flight-hid -- -Dwarnings` (must pass)
   - Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` (must pass)
   - Run `cargo bench -p flight-ipc --features ipc-bench --no-run` (must compile)
   - Run `cargo bench -p flight-ipc --features "ipc-bench,ipc-bench-serde" --no-run` (must compile)
-  - Run `cargo public-api -p flight-core --diff-git origin/main..HEAD` (should show only intended changes)
+  - Run `cargo public-api -p flight-core diff origin/main..HEAD` (use correct CLI: diff subcommand, not --diff flag)
+  - Run `cargo public-api -p flight-hid diff origin/main..HEAD` (if API changes were made)
   - Run `cargo fmt --all -- --check` (must pass on stable)
-  - Verify CI passes on both Windows and Linux
-  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10_
+  - Verify MSRV CI job passes (builds and runs clippy on Rust 1.89.0)
+  - Verify CI passes on both Windows and Linux with appropriate timeouts
+  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 10.11_
 
 ## Implementation Notes
 

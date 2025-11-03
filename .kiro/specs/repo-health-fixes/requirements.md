@@ -25,10 +25,11 @@ This feature addresses critical gaps preventing the repository from reaching a "
 #### Acceptance Criteria
 
 1. WHEN the PhaseOfFlight classification logic evaluates flight conditions, THEN the System SHALL prioritize high-energy phases (Cruise, Climb, Descent) over ground phases (Taxi, Park)
-2. WHEN test fixtures require aircraft profiles, THEN the Test System SHALL provide embedded or fixture-based profiles for common aircraft types (e.g., C172)
-3. WHEN the auto-switch system commits a profile change, THEN the Metrics System SHALL increment the total_switches counter
-4. WHEN the auto-switch system forces a profile change, THEN the Metrics System SHALL increment the total_switches counter and bypass same-target early returns
-5. WHEN the developer runs `cargo test -p flight-core`, THEN the Test System SHALL pass all tests with zero failures
+2. WHEN Cruise classification is evaluated, THEN the System SHALL require N consecutive frames meeting (agl >= min AND |vs| <= max AND ias >= min) to prevent phase flapping
+3. WHEN Taxi classification is evaluated, THEN the System SHALL require on_ground == true AND ground_contact_duration >= 150ms AND ground_speed < taxi_speed_max
+4. WHEN test fixtures require aircraft profiles, THEN the Test System SHALL provide fixture-based profiles via test repo or in-memory provider (no embedded JSON in library crate)
+5. WHEN the auto-switch system commits a profile change, THEN the Metrics System SHALL increment the committed_switches counter only when the active profile pointer changes OR a force operation explicitly records a committed switch
+6. WHEN the developer runs `cargo test -p flight-core`, THEN the Test System SHALL pass all tests with zero failures
 
 ### Requirement 2
 
@@ -46,10 +47,11 @@ This feature addresses critical gaps preventing the repository from reaching a "
 
 #### Acceptance Criteria
 
-1. WHEN the developer runs `cargo test -p flight-virtual -- --nocapture` with RUST_BACKTRACE=1, THEN the Test System SHALL complete without abnormal exits (exit code 1 without clear failure)
-2. WHERE background tasks spawn threads or use channels, THE Test System SHALL properly await JoinHandles and handle channel errors with clear assertion messages
-3. WHERE tests depend on timing, THE Test System SHALL use bounded waits with timeouts instead of assuming immediate completion
-4. WHEN all flight-virtual tests complete, THEN the Test System SHALL report clear pass/fail status for each test
+1. WHEN the developer runs `cargo test -p flight-virtual -- --nocapture` with RUST_BACKTRACE=1, THEN the Test System SHALL complete with exit code 0
+2. WHERE background tasks spawn threads, THE Test System SHALL assert all JoinHandle::join() results are Ok (no panics in background threads)
+3. WHERE background tasks use channels, THE Test System SHALL use expect("...") with context instead of bare unwrap() on send/recv operations
+4. WHERE tests depend on timing, THE Test System SHALL use a reusable wait_until(timeout, poll) helper instead of fixed sleep() calls
+5. WHEN all flight-virtual tests complete, THEN the Test System SHALL have no OS handle leaks (verified by final state assertion)
 
 ### Requirement 4
 
@@ -59,8 +61,9 @@ This feature addresses critical gaps preventing the repository from reaching a "
 
 1. WHERE rustfmt.toml contains nightly-only options, THE Configuration System SHALL remove or comment out unstable options for stable builds
 2. WHEN the developer runs `cargo fmt --all -- --check` on stable Rust 1.89.0, THEN the Formatter SHALL complete without warnings about unknown configuration options
-3. THE Repository SHALL optionally provide rustfmt.nightly.toml for developers who want nightly formatting features
+3. THE Repository SHALL optionally provide rustfmt.nightly.toml for developers who want nightly formatting features (gated behind opt-in CI job)
 4. WHERE example code exists in examples/ directory, THE Formatter SHALL format those files consistently with the main codebase
+5. THE CI System SHALL include examples in `cargo fmt --all -- --check` gate to prevent formatting drift
 
 ### Requirement 5
 
@@ -69,9 +72,10 @@ This feature addresses critical gaps preventing the repository from reaching a "
 #### Acceptance Criteria
 
 1. WHERE the README states "Rust 1.89.0 MSRV", THE Workspace Cargo.toml SHALL specify `rust-version = "1.89.0"`
-2. WHERE the codebase uses 2024 edition features (e.g., let-chains), THE Workspace Cargo.toml SHALL specify `edition = "2024"`
+2. THE Workspace Cargo.toml SHALL specify `edition = "2024"` for consistency (note: let-chains do not require 2024 edition)
 3. WHERE individual crate Cargo.toml files exist, THEY SHALL inherit workspace edition and rust-version settings
 4. THE README SHALL accurately reflect the edition and MSRV specified in Cargo.toml
+5. THE CI System SHALL include a dedicated MSRV job that builds and runs clippy on Rust 1.89.0 to prevent accidental MSRV bumps
 
 ### Requirement 6
 
@@ -91,10 +95,11 @@ This feature addresses critical gaps preventing the repository from reaching a "
 #### Acceptance Criteria
 
 1. WHERE CI workflows can have concurrent runs, THE Workflow Configuration SHALL include concurrency groups with cancel-in-progress for PR builds
-2. WHERE CI jobs can timeout, THE Workflow Configuration SHALL specify reasonable timeout values (e.g., 30 minutes for builds, 10 minutes for tests)
-3. WHERE CI uses external tools like cargo-public-api, THE Workflow Configuration SHALL pin tool versions to prevent CLI drift
+2. WHERE CI jobs can timeout, THE Workflow Configuration SHALL specify platform-appropriate timeout values (Windows tests: 20min, Linux tests: 10min, Windows builds: 45min, Linux builds: 30min)
+3. WHERE CI uses external tools like cargo-public-api, THE Workflow Configuration SHALL pin tool versions with --locked flag (e.g., cargo install --locked cargo-public-api@=0.38.0)
 4. WHERE CI has required checks, THE Repository Settings SHALL match job names exactly to prevent merge gate bypasses
-5. THE CI System SHALL cache cargo registry, target directory, and installed tools to improve build times
+5. THE CI System SHALL cache cargo registry, target directory, and installed tools with cache keys including toolchain hash
+6. THE CI System SHALL set fail-fast: false in matrix jobs so Linux failures don't mask Windows issues
 
 ### Requirement 8
 
@@ -124,15 +129,16 @@ This feature addresses critical gaps preventing the repository from reaching a "
 #### Acceptance Criteria
 
 1. WHEN all core tests run, THEN `cargo test -p flight-core` SHALL pass with zero failures
-2. WHEN all virtual tests run, THEN `cargo test -p flight-virtual` SHALL pass with zero abnormal exits
-3. WHEN linting runs on changed crates, THEN `cargo clippy -- -Dwarnings` SHALL pass for flight-core, flight-ipc, and flight-hid
+2. WHEN all virtual tests run, THEN `cargo test -p flight-virtual` SHALL pass with exit code 0 and no panics in background threads
+3. WHEN linting runs on changed crates (path-gated), THEN `cargo clippy -- -Dwarnings` SHALL pass for affected crates
 4. WHEN IPC benches compile, THEN both feature modes SHALL compile successfully with `--no-run`
-5. WHEN public API is checked, THEN `cargo public-api -p flight-core --diff` SHALL show only intended changes
+5. WHEN public API is checked, THEN `cargo public-api -p <crate> diff origin/main..HEAD` SHALL show only intended changes (use correct CLI: diff subcommand, not --diff flag)
 6. WHEN formatting is checked, THEN `cargo fmt --all -- --check` SHALL pass on stable Rust without warnings
 7. WHEN CI runs on Windows and Linux, THEN all required jobs SHALL pass on both platforms
 8. WHEN CI jobs are path-gated, THEN only relevant jobs SHALL run for specific file changes
-9. WHEN CI jobs have timeouts, THEN no job SHALL hang indefinitely
-10. THE Repository SHALL meet all above criteria before being considered "properly working"
+9. WHEN CI jobs have timeouts, THEN no job SHALL hang indefinitely (platform-appropriate timeouts set)
+10. WHEN MSRV is validated, THEN a dedicated CI job SHALL build and run clippy on Rust 1.89.0 (Linux only) to catch accidental bumps
+11. THE Repository SHALL meet all above criteria before being considered "properly working"
 
 ## Success Criteria
 

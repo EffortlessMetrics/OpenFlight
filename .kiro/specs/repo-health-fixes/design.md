@@ -111,45 +111,7 @@ fn classify_phase(s: &Snapshot, t: &PofThresholds) -> PhaseOfFlight {
 
 **1.2 Provide Test Fixture for C172**
 
-**Option A: Embedded Test Profile** (Recommended for simplicity)
-
-```rust
-#[cfg(test)]
-const C172_PROFILE_JSON: &str = r#"{
-  "aircraft_id": "C172",
-  "name": "Cessna 172 Skyhawk",
-  "pof_thresholds": {
-    "cruise": { "ias_min": 90.0, "agl_min": 1500.0, "vs_abs_max": 200.0 },
-    "climb": { "vs_min": 300.0, "agl_min": 500.0 },
-    "descent": { "vs_min": 300.0 },
-    "approach": { "agl_max": 2000.0, "ias_max": 100.0 },
-    "taxi": { "speed_max": 15.0 },
-    "takeoff": { "ias_min": 50.0 }
-  }
-}"#;
-
-fn load_profile(id: &str, repo: &ProfileRepo) -> Result<CompiledProfile> {
-    // Try filesystem first
-    if let Some(p) = repo.try_fs(id)? { 
-        return Ok(p); 
-    }
-    
-    // Fallback to embedded test profiles
-    #[cfg(test)]
-    if id.eq_ignore_ascii_case("c172") {
-        return CompiledProfile::from_json(C172_PROFILE_JSON)
-            .map_err(|e| FlightError::AutoSwitch(
-                format!("Embedded C172 profile invalid: {e}")
-            ));
-    }
-    
-    Err(FlightError::AutoSwitch(
-        format!("No profiles found for aircraft: {id}")
-    ))
-}
-```
-
-**Option B: Fixture Directory** (Better for multiple test profiles)
+**Option A: Fixture Directory** (Recommended - keeps library clean)
 
 ```rust
 #[cfg(test)]
@@ -167,17 +129,45 @@ fn test_auto_switch_c172() {
 }
 ```
 
-**Decision**: Use Option A (embedded) for minimal changes. Can migrate to Option B if more test profiles are needed.
+**Option B: Dependency Injection** (Most flexible)
+
+```rust
+trait ProfileSource {
+    fn load(&self, id: &str) -> Result<CompiledProfile>;
+}
+
+struct FilesystemSource { /* ... */ }
+struct InMemorySource { /* ... */ }
+
+#[cfg(test)]
+fn test_profile_source() -> InMemorySource {
+    let mut source = InMemorySource::new();
+    source.add("C172", CompiledProfile { /* ... */ });
+    source
+}
+```
+
+**Decision**: Use Option A (fixture directory) to keep the library free of test-only content. Avoids embedding JSON in library code and keeps tests readable. Can add multi-aircraft fixtures without growing the binary.
+
+**Rationale**:
+- Keeps production code clean
+- Reduces link-time overhead
+- Makes test data easy to inspect and modify
+- Follows standard Rust testing patterns
 
 **1.3 Increment Metrics on Switch**
 
 **File**: `crates/flight-core/src/aircraft_switch.rs`
 
+**Semantics Decision**: A committed switch is counted when:
+1. The active profile pointer changes (different aircraft ID), OR
+2. A `force_switch` operation explicitly records a committed switch
+
 **Current Code** (missing increment):
 ```rust
 fn commit_switch(&mut self, new_profile: &CompiledProfile) -> Result<()> {
     self.current_profile = Some(new_profile.clone());
-    // Missing: self.metrics.total_switches += 1;
+    // Missing: self.metrics.committed_switches += 1;
     Ok(())
 }
 
@@ -193,26 +183,58 @@ pub fn force_switch(&mut self, id: &AircraftId) -> Result<()> {
 }
 ```
 
-**Fixed Code**:
+**Fixed Code** (Option 1: Count only on ID change):
 ```rust
 fn commit_switch(&mut self, new_profile: &CompiledProfile) -> Result<()> {
+    let changed = self.current_profile.as_ref().map(|p| &p.id) != Some(&new_profile.id);
     self.current_profile = Some(new_profile.clone());
-    self.metrics.total_switches = self.metrics.total_switches.saturating_add(1);
+    
+    if changed {
+        self.metrics.committed_switches = self.metrics.committed_switches
+            .checked_add(1)
+            .unwrap_or_else(|| {
+                tracing::warn!("Switch counter overflow, resetting to 0");
+                0
+            });
+    }
     Ok(())
 }
 
 pub fn force_switch(&mut self, id: &AircraftId) -> Result<()> {
     let profile = self.resolve_profile(id)?;
-    
-    // Force always commits, even if same target
-    self.commit_switch(&profile)
+    self.commit_switch(&profile)  // Will count if ID differs
 }
 ```
 
+**Fixed Code** (Option 2: Count on any force):
+```rust
+fn commit_switch(&mut self, new_profile: &CompiledProfile, force: bool) -> Result<()> {
+    let changed = self.current_profile.as_ref().map(|p| &p.id) != Some(&new_profile.id);
+    self.current_profile = Some(new_profile.clone());
+    
+    if changed || force {
+        self.metrics.committed_switches = self.metrics.committed_switches
+            .checked_add(1)
+            .unwrap_or_else(|| {
+                tracing::warn!("Switch counter overflow, resetting to 0");
+                0
+            });
+    }
+    Ok(())
+}
+
+pub fn force_switch(&mut self, id: &AircraftId) -> Result<()> {
+    let profile = self.resolve_profile(id)?;
+    self.commit_switch(&profile, true)  // Always counts
+}
+```
+
+**Recommendation**: Use Option 1 (count only on ID change) unless tests explicitly require force-same-target to increment. Use `checked_add` with logging instead of `saturating_add` to detect overflow issues early.
+
 **Rationale**:
 - `commit_switch` is the single point where switches happen
-- `force_switch` should bypass "same target" optimization
-- `saturating_add` prevents overflow (defensive programming)
+- `checked_add` with logging prevents silent overflow
+- Clear semantics prevent future ambiguity
 
 ### 2. flight-hid Private Interfaces Fix
 
@@ -470,25 +492,35 @@ concurrency:
   cancel-in-progress: true
 ```
 
-**Timeouts**:
+**Platform-Appropriate Timeouts**:
 ```yaml
 jobs:
   test:
-    timeout-minutes: 30
+    strategy:
+      fail-fast: false  # Don't let Linux mask Windows issues
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 20 || 10 }}
     steps:
       - name: Run tests
-        timeout-minutes: 10
         run: cargo test --all
+  
+  build:
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 45 || 30 }}
 ```
 
-**Tool Pinning**:
+**Tool Pinning with --locked**:
 ```yaml
 - name: Install cargo-public-api
-  run: cargo install cargo-public-api --version 0.38.0
+  run: cargo install --locked cargo-public-api@=0.38.0
 ```
 
-**Caching**:
+**Caching with Toolchain Hash**:
 ```yaml
+- name: Get Rust toolchain
+  id: rust-toolchain
+  run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
 - uses: actions/cache@v3
   with:
     path: |
@@ -496,7 +528,19 @@ jobs:
       ~/.cargo/git
       target/
       ~/.cargo/bin/cargo-public-api
-    key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
+    key: ${{ runner.os }}-${{ steps.rust-toolchain.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+```
+
+**MSRV Job**:
+```yaml
+jobs:
+  msrv-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.89.0
+      - run: cargo build --all --all-features
+      - run: cargo clippy -p flight-core -- -Dwarnings
 ```
 
 ### 8. Test Assertion Cleanup
