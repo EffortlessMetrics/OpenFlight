@@ -120,6 +120,7 @@ jobs:
     outputs:
       ipc: ${{ steps.filter.outputs.ipc }}
       hid: ${{ steps.filter.outputs.hid }}
+      core: ${{ steps.filter.outputs.core }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -133,11 +134,150 @@ jobs:
             - 'crates/flight-ipc/**'
           hid:
             - 'crates/flight-hid/**'
+          core:
+            - 'crates/flight-core/**'
+            - 'Cargo.toml'
+            - 'clippy.toml'
+
+  clippy-core:
+    name: Clippy - flight-core
+    runs-on: ${{ matrix.os }}
+    needs: path-filter
+    if: |
+      always() &&
+      (github.event_name != 'pull_request' ||
+       needs.path-filter.outputs.core == 'true')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@1.89.0
+      with:
+        components: rustfmt, clippy
+      
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/registry
+        key: ${{ matrix.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-cargo-registry-
+      
+    - name: Cache cargo index
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/git
+        key: ${{ matrix.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-cargo-index-
+      
+    - name: Cache target directory
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ matrix.os }}-target-clippy-core-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-target-clippy-core-
+      
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+      
+    - name: Run clippy on flight-core
+      run: cargo clippy -p flight-core -- -Dwarnings
+
+  clippy-ipc-benches:
+    name: Clippy - IPC Benches (${{ matrix.mode }})
+    runs-on: ${{ matrix.os }}
+    needs: path-filter
+    if: |
+      always() &&
+      (github.event_name != 'pull_request' ||
+       needs.path-filter.outputs.ipc == 'true' ||
+       needs.path-filter.outputs.core == 'true')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        mode: [strict]
+        include:
+          # Add unblock mode only when label is present
+          - os: ubuntu-latest
+            mode: unblock
+          - os: windows-latest
+            mode: unblock
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check if unblock mode should run
+      if: matrix.mode == 'unblock'
+      id: check-label
+      run: |
+        if [[ "${{ contains(github.event.pull_request.labels.*.name, 'clippy-unblock') }}" == "true" ]]; then
+          echo "run=true" >> $GITHUB_OUTPUT
+        else
+          echo "run=false" >> $GITHUB_OUTPUT
+          echo "Skipping unblock mode - label 'clippy-unblock' not present"
+        fi
+      shell: bash
+      
+    - name: Exit early if unblock mode not needed
+      if: matrix.mode == 'unblock' && steps.check-label.outputs.run != 'true'
+      run: exit 0
+      
+    - name: Install Rust toolchain
+      if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
+      uses: dtolnay/rust-toolchain@1.89.0
+      with:
+        components: clippy
+      
+    - name: Cache cargo registry
+      if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/registry
+        key: ${{ matrix.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-cargo-registry-
+      
+    - name: Cache cargo index
+      if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/git
+        key: ${{ matrix.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-cargo-index-
+      
+    - name: Cache target directory
+      if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ matrix.os }}-target-clippy-ipc-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-target-clippy-ipc-
+      
+    - name: Clippy IPC benches (strict - with deps)
+      if: matrix.mode == 'strict'
+      run: |
+        cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings
+        cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings
+      
+    - name: Clippy IPC benches (unblock - no deps)
+      if: matrix.mode == 'unblock' && steps.check-label.outputs.run == 'true'
+      run: |
+        cargo clippy -p flight-ipc --no-deps --benches --features ipc-bench -- -Dwarnings
+        cargo clippy -p flight-ipc --no-deps --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings
 
   public-api-check:
     name: Public API Guard
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    needs: path-filter
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -147,17 +287,82 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/registry
+        key: ubuntu-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ubuntu-cargo-registry-
+      
+    - name: Cache cargo index
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/git
+        key: ubuntu-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ubuntu-cargo-index-
+      
+    - name: Cache target directory
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ubuntu-target-public-api-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ubuntu-target-public-api-
+      
+    - name: Cache cargo-public-api binary
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/cargo-public-api
+        key: cargo-public-api-${{ runner.os }}
       
     - name: Install cargo-public-api
-      run: cargo install cargo-public-api
+      run: |
+        if ! command -v cargo-public-api &> /dev/null; then
+          cargo install cargo-public-api
+        else
+          echo "cargo-public-api already installed"
+        fi
+      
+    - name: Check flight-core public API
+      if: needs.path-filter.outputs.core == 'true'
+      id: check-core-api
+      continue-on-error: true
+      run: cargo public-api -p flight-core --diff-git origin/main..HEAD
+      
+    - name: Retry flight-core API check with nightly (if needed)
+      if: needs.path-filter.outputs.core == 'true' && steps.check-core-api.outcome == 'failure'
+      run: |
+        echo "Retrying with nightly toolchain..."
+        rustup toolchain install nightly
+        cargo +nightly public-api -p flight-core --diff-git origin/main..HEAD
       
     - name: Check flight-ipc public API
+      if: needs.path-filter.outputs.ipc == 'true'
+      id: check-ipc-api
+      continue-on-error: true
       run: cargo public-api -p flight-ipc --diff-git origin/main..HEAD
       
+    - name: Retry flight-ipc API check with nightly (if needed)
+      if: needs.path-filter.outputs.ipc == 'true' && steps.check-ipc-api.outcome == 'failure'
+      run: |
+        echo "Retrying with nightly toolchain..."
+        rustup toolchain install nightly
+        cargo +nightly public-api -p flight-ipc --diff-git origin/main..HEAD
+      
     - name: Check flight-hid public API
+      if: needs.path-filter.outputs.hid == 'true'
+      id: check-hid-api
+      continue-on-error: true
       run: cargo public-api -p flight-hid --diff-git origin/main..HEAD
+      
+    - name: Retry flight-hid API check with nightly (if needed)
+      if: needs.path-filter.outputs.hid == 'true' && steps.check-hid-api.outcome == 'failure'
+      run: |
+        echo "Retrying with nightly toolchain..."
+        rustup toolchain install nightly
+        cargo +nightly public-api -p flight-hid --diff-git origin/main..HEAD
 
   gated-ipc-smoke:
     name: Gated IPC Smoke Tests

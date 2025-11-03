@@ -151,7 +151,12 @@
   - Verify task 7.3 from IPC bench workflow now passes without `--no-deps` workaround
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 12. Update CI workflows
+- [x] 12. Update CI workflows
+
+
+
+
+
   - Add `clippy-core` job with ubuntu-latest and windows-latest matrix
   - Add path filters: `crates/flight-core/**`, `Cargo.toml`, `clippy.toml`
   - Pin toolchain to `dtolnay/rust-toolchain@1.89.0` in all lint jobs (clippy-core, clippy-ipc-benches)
