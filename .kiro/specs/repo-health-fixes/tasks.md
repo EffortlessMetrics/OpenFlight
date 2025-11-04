@@ -40,14 +40,24 @@
   - Update tests to reflect chosen semantics
   - _Requirements: 1.5, 1.6_
 
-- [ ] 4. Add hysteresis to PhaseOfFlight classification (optional but recommended)
+- [x] 4. Add hysteresis to PhaseOfFlight classification (optional but recommended)
+
+
+
+
+
   - Add `consecutive_frames` counter to classification state
   - Require N consecutive frames (e.g., 3-5 frames at 250Hz) meeting Cruise criteria before transitioning
   - Add unit tests for phase transition hysteresis (no flip-flop within M frames)
   - Add debug feature behind test cfg that logs which predicate matched for troubleshooting
   - _Requirements: 1.2_
 
-- [ ] 5. Validate flight-core tests pass
+- [x] 5. Validate flight-core tests pass
+
+
+
+
+
   - Run `cargo test -p flight-core` and verify all tests pass
   - Specifically verify the 5 previously failing aircraft_switch tests now pass
   - Check that PhaseOfFlight classification tests produce expected phases
