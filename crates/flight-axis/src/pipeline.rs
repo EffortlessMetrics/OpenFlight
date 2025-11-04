@@ -183,6 +183,7 @@ impl Pipeline {
 
 impl PipelineState {
     /// Initialize state for given nodes
+    #[allow(unsafe_op_in_unsafe_fn)]
     pub(crate) unsafe fn init_with_nodes(&mut self, nodes: &[Arc<dyn Node>]) {
         let base_ptr = self.state_buffer.as_mut_ptr();
         

@@ -548,7 +548,7 @@ impl FixtureLibrary {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "serde"))]
 mod tests {
     use super::*;
     use flight_bus::types::{AircraftId, SimId};

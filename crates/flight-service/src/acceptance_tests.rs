@@ -11,7 +11,7 @@ use tokio::time::timeout;
 use crate::{
     FlightService, FlightServiceConfig, ServiceState,
     safe_mode::SafeModeConfig,
-    health::{HealthSeverity, HealthCategory},
+    health::HealthSeverity,
 };
 
 /// Test end-to-end service startup and shutdown
@@ -33,8 +33,8 @@ async fn test_service_lifecycle() {
     assert!(!health.components.is_empty(), "Should have registered components");
     
     // Test shutdown
-    let result = service.shutdown().await;
-    assert!(result.is_ok(), "Service should shutdown successfully");
+    let _result = service.shutdown().await;
+    assert!(_result.is_ok(), "Service should shutdown successfully");
     
     let state = service.get_state().await;
     assert_eq!(state, ServiceState::Stopped, "Service should be stopped");
@@ -92,7 +92,7 @@ async fn test_health_monitoring() {
     // In a real scenario, the service would emit events during operation
     
     // Verify health stream is working
-    let health_stream = &service.health;
+    let health_stream = service.test_health_stream();
     health_stream.info("test", "Test health event").await;
     
     // Try to receive the event with a timeout
@@ -142,7 +142,7 @@ async fn test_power_checks_disabled() {
     assert!(result.is_ok(), "Service should start with power checks disabled");
     
     // Power status should be None when checks are disabled
-    let power_status = service.get_power_status().await;
+    let _power_status = service.get_power_status().await;
     // Note: In our implementation, we still run power checks but this tests the config
     
     // Shutdown
@@ -163,7 +163,7 @@ async fn test_profile_application() {
     let profile = create_test_profile();
     
     // Apply profile
-    let result = service.apply_profile(&profile).await;
+    let _result = service.apply_profile(&profile).await;
     // This might fail due to missing axis engine, but we test the interface
     // In a real implementation with proper axis engine, this should succeed
     
@@ -178,7 +178,7 @@ async fn test_error_taxonomy() {
     let service = FlightService::new(config);
     
     // Test that error taxonomy is available
-    let taxonomy = &service.error_taxonomy;
+    let taxonomy = service.test_error_taxonomy();
     
     // Verify standard errors are registered
     assert!(taxonomy.get_error("HID_OUT_STALL").is_some());
@@ -250,8 +250,15 @@ async fn test_service_state_transitions() {
 }
 
 /// Helper function to create a test profile
-fn create_test_profile() -> crate::service::stubs::Profile {
-    crate::service::stubs::Profile { name: "Test Profile".to_string() }
+fn create_test_profile() -> flight_core::profile::Profile {
+    use std::collections::HashMap;
+    flight_core::profile::Profile {
+        schema: "flight.profile/1".to_string(),
+        sim: Some("msfs".to_string()),
+        aircraft: Some(flight_core::profile::AircraftId { icao: "TEST".to_string() }),
+        axes: HashMap::new(),
+        pof_overrides: None,
+    }
 }
 
 /// Test comprehensive service functionality with all components
@@ -282,7 +289,8 @@ async fn test_comprehensive_service_functionality() {
     
     // Test health monitoring
     assert_eq!(health.overall.state, crate::health::HealthState::Healthy);
-    assert!(health.uptime_seconds >= 0);
+    // uptime_seconds is u64, always >= 0
+    let _ = health.uptime_seconds;
     
     // Test power status
     let power_status = service.get_power_status().await;

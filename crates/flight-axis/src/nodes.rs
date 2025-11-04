@@ -220,18 +220,18 @@ impl Node for SlewNode {
         std::mem::size_of::<SlewState>()
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn init_state(&self, state_ptr: *mut u8) {
-        unsafe {
-            let state = state_ptr as *mut SlewState;
-            *state = SlewState {
-                last_output: 0.0,
-                last_time_ns: 0,
-            };
-        }
+        let state = state_ptr as *mut SlewState;
+        *state = SlewState {
+            last_output: 0.0,
+            last_time_ns: 0,
+        };
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
-        let state = unsafe { &mut *(state_ptr as *mut SlewState) };
+        let state = &mut *(state_ptr as *mut SlewState);
 
         if state.last_time_ns == 0 {
             state.last_output = frame.out;
@@ -463,6 +463,7 @@ impl Node for DetentNode {
         std::mem::size_of::<DetentState>()
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn init_state(&self, state_ptr: *mut u8) {
         let state = state_ptr as *mut DetentState;
         *state = DetentState {
@@ -472,6 +473,7 @@ impl Node for DetentNode {
         };
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
         let state = &mut *(state_ptr as *mut DetentState);
         let position = frame.out;
@@ -753,6 +755,7 @@ impl Node for MixerNode {
         std::mem::size_of::<MixerState>()
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn init_state(&self, state_ptr: *mut u8) {
         let state = state_ptr as *mut MixerState;
         *state = MixerState {
@@ -763,6 +766,7 @@ impl Node for MixerNode {
         };
     }
 
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
         let state = &mut *(state_ptr as *mut MixerState);
         

@@ -5,7 +5,6 @@ use flight_updater::{
     rollback::{RollbackManager, StartupCrashDetector, VersionInfo},
     updater::{UpdateConfig, UpdateManager},
 };
-use std::path::PathBuf;
 use std::time::Duration;
 use tempfile::TempDir;
 use tokio::fs;
@@ -33,7 +32,7 @@ async fn test_update_rollback_cycle() {
     };
     
     // Initialize update manager
-    let mut manager = UpdateManager::new(config).await.unwrap();
+    let mut manager = UpdateManager::new(config.clone()).await.unwrap();
     let init_result = manager.initialize().await.unwrap();
     assert!(init_result.is_none()); // No crash on first run
     
@@ -41,7 +40,7 @@ async fn test_update_rollback_cycle() {
     manager.mark_startup_success().await.unwrap();
     
     // Simulate version upgrade (manually record new version)
-    let new_version = VersionInfo::new(
+    let _new_version = VersionInfo::new(
         "1.1.0".to_string(),
         "abc123".to_string(),
         Channel::Stable,
@@ -54,10 +53,10 @@ async fn test_update_rollback_cycle() {
     // Create new manager instance with new version
     let config_v2 = UpdateConfig {
         current_version: "1.1.0".to_string(),
-        ..config
+        ..config.clone()
     };
     
-    let mut manager_v2 = UpdateManager::new(config_v2).await.unwrap();
+    let _manager_v2 = UpdateManager::new(config_v2).await.unwrap();
     
     // Simulate startup crash by not calling mark_startup_success
     // and creating a new manager instance after timeout

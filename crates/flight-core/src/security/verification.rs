@@ -592,8 +592,8 @@ mod tests {
         assert_eq!(result.overall_status, VerificationStatus::Pass);
         assert!(!result.checks.is_empty());
         assert!(result.timestamp > 0);
-        // Duration might be 0 on very fast systems, so just check it's present
-        assert!(result.duration_ms >= 0);
+        // Duration is u64, always >= 0, so just verify it exists
+        let _ = result.duration_ms;
     }
 
     #[test]

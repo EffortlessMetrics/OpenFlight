@@ -8,8 +8,8 @@
 
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
-use tracing::{info, warn, debug};
-use flight_core::{profile::Profile, FlightError, Result};
+use tracing::{info, debug};
+use flight_core::{profile::Profile, Result};
 use flight_axis::AxisEngine;
 use crate::power::{PowerChecker, PowerStatus, PowerCheckStatus};
 
@@ -333,7 +333,7 @@ impl SafeModeManager {
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down safe mode");
         
-        if let Some(engine) = self.axis_engine.take() {
+        if let Some(_engine) = self.axis_engine.take() {
             // In real implementation, would properly shutdown the engine
             debug!("Axis engine shutdown");
         }
@@ -342,71 +342,6 @@ impl SafeModeManager {
         Ok(())
     }
 }
-
-// Stub Profile implementation for compilation
-mod profile_stub {
-    use flight_core::{FlightError, Result};
-    
-    pub struct Profile {
-        name: String,
-    }
-    
-    impl Profile {
-        pub fn builder() -> ProfileBuilder {
-            ProfileBuilder::new()
-        }
-        
-        pub fn validate(&self) -> Result<()> {
-            Ok(())
-        }
-    }
-    
-    pub struct ProfileBuilder {
-        name: String,
-    }
-    
-    impl ProfileBuilder {
-        fn new() -> Self {
-            Self {
-                name: "Default".to_string(),
-            }
-        }
-        
-        pub fn with_name(mut self, name: &str) -> Self {
-            self.name = name.to_string();
-            self
-        }
-        
-        pub fn with_axis<F>(self, _name: &str, _config: F) -> Self
-        where
-            F: FnOnce(AxisBuilder) -> AxisBuilder,
-        {
-            self
-        }
-        
-        pub fn build(self) -> Profile {
-            Profile { name: self.name }
-        }
-    }
-    
-    pub struct AxisBuilder;
-    
-    impl AxisBuilder {
-        pub fn with_deadzone(self, _deadzone: f32) -> Self {
-            self
-        }
-        
-        pub fn with_expo(self, _expo: f32) -> Self {
-            self
-        }
-        
-        pub fn with_slew_rate(self, _rate: f32) -> Self {
-            self
-        }
-    }
-}
-
-use profile_stub::Profile as StubProfile;
 
 #[cfg(test)]
 mod tests {
@@ -439,7 +374,7 @@ mod tests {
         
         let profile = manager.create_basic_profile();
         // Profile should be created successfully
-        assert_eq!(profile.name, "Safe Mode Basic Profile");
+        assert_eq!(profile.schema, "flight.profile/1");
     }
     
     #[tokio::test]

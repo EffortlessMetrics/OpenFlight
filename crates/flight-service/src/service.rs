@@ -7,26 +7,23 @@
 //! including axis processing, safety systems, auto-profiles, and health monitoring.
 
 use std::sync::Arc;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, broadcast};
-use tracing::{info, warn, error, debug};
+use tracing::{info, warn, debug};
 use anyhow::Result;
 
 use flight_core::{
     profile::Profile, 
-    aircraft_switch::{AircraftAutoSwitch, AutoSwitchConfig},
+    aircraft_switch::AutoSwitchConfig,
     watchdog::{WatchdogSystem, WatchdogConfig},
-    FlightError,
 };
 use flight_axis::AxisEngine;
-use flight_bus::BusSnapshot;
 
 use crate::{
     safe_mode::{SafeModeManager, SafeModeConfig, SafeModeStatus},
     power::{PowerChecker, PowerStatus},
-    health::{HealthStream, HealthSeverity, HealthCategory},
-    error_taxonomy::{ErrorTaxonomy, ErrorCode},
+    health::HealthStream,
+    error_taxonomy::ErrorTaxonomy,
     curve_conflict_service::CurveConflictService,
     capability_service::CapabilityService,
     aircraft_auto_switch_service::AircraftAutoSwitchService,
@@ -154,6 +151,18 @@ impl FlightService {
             power_status: Arc::new(RwLock::new(None)),
             shutdown_tx: None,
         }
+    }
+    
+    /// Test-only accessor for health stream
+    #[cfg(test)]
+    pub(crate) fn test_health_stream(&self) -> &HealthStream {
+        &self.health
+    }
+    
+    /// Test-only accessor for error taxonomy
+    #[cfg(test)]
+    pub(crate) fn test_error_taxonomy(&self) -> &ErrorTaxonomy {
+        &self.error_taxonomy
     }
     
     /// Start the service

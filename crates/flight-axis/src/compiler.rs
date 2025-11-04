@@ -20,6 +20,7 @@ fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *
     // Return a closure that captures the node configuration
     // This is a simplified approach - in a full implementation, we'd generate
     // optimized machine code or use more sophisticated compilation techniques
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn deadzone_step(frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         // This is a placeholder - in practice we'd need to capture the node config
         // For now, apply a simple deadzone with hardcoded threshold
@@ -40,6 +41,7 @@ fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *
 
 /// Generate specialized step function for curve nodes
 fn generate_curve_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn curve_step(frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         let frame = &mut *frame_ptr;
         let expo = 0.2f32; // This should come from the captured node config
@@ -60,6 +62,7 @@ fn generate_curve_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mu
 
 /// Generate specialized step function for detent nodes
 fn generate_detent_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn detent_step(_frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         // This is a bridge implementation that delegates to the node's step_soa method
         // In a production system, we'd want to inline the detent logic for maximum performance
@@ -74,6 +77,7 @@ fn generate_detent_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *m
 
 /// Generate specialized step function for slew nodes
 fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn slew_step(frame_ptr: *mut AxisFrame, state_ptr: *mut u8) {
         // Delegate to the node's SoA implementation
         // This is a bridge between the function pointer system and the trait system
@@ -110,6 +114,7 @@ fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut
 
 /// Generate specialized step function for mixer nodes
 fn generate_mixer_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn mixer_step(_frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         // This is a bridge implementation that delegates to the node's step_soa method
         // In a production system, we'd want to inline the mixer logic for maximum performance

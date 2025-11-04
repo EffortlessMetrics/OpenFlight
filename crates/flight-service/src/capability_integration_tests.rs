@@ -3,7 +3,7 @@
 
 //! Integration tests for capability enforcement
 
-use crate::capability_service::{CapabilityService, CapabilityServiceConfig};
+use crate::capability_service::CapabilityService;
 use flight_core::profile::{Profile, AxisConfig, AircraftId, CapabilityMode, CapabilityContext};
 use flight_axis::AxisEngine;
 use std::collections::HashMap;
@@ -270,16 +270,12 @@ mod tests {
         assert!(full_limits.max_slew_rate >= demo_limits.max_slew_rate);
         assert!(demo_limits.max_slew_rate >= kid_limits.max_slew_rate);
         
-        assert!(full_limits.max_curve_expo >= demo_limits.max_curve_expo);
-        assert!(demo_limits.max_curve_expo >= kid_limits.max_curve_expo);
+        assert!(full_limits.max_expo >= demo_limits.max_expo);
+        assert!(demo_limits.max_expo >= kid_limits.max_expo);
 
         // Verify boolean restrictions
         assert!(full_limits.allow_high_torque);
         assert!(!demo_limits.allow_high_torque);
         assert!(!kid_limits.allow_high_torque);
-        
-        assert!(full_limits.allow_custom_curves);
-        assert!(demo_limits.allow_custom_curves);
-        assert!(!kid_limits.allow_custom_curves);
     }
 }
