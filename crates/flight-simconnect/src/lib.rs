@@ -1,3 +1,5 @@
+#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

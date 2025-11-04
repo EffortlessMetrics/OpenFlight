@@ -178,11 +178,7 @@ impl AxisFrame {
     /// assert_eq!(frame2.latency_from(&frame1), 500_000);
     /// ```
     pub fn latency_from(&self, other: &AxisFrame) -> u64 {
-        if self.ts_mono_ns >= other.ts_mono_ns {
-            self.ts_mono_ns - other.ts_mono_ns
-        } else {
-            other.ts_mono_ns - self.ts_mono_ns
-        }
+        self.ts_mono_ns.abs_diff(other.ts_mono_ns)
     }
     
     /// Calculate the time delta from the previous frame in seconds

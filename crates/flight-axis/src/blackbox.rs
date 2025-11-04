@@ -6,8 +6,12 @@
 //! Provides structured logging and annotation of curve conflict events
 //! for diagnostics and replay analysis.
 
-use crate::{CurveConflict, ConflictType, ConflictSeverity};
-use std::time::{SystemTime, UNIX_EPOCH, Instant};
+use crate::CurveConflict;
+#[cfg(test)]
+use crate::{ConflictType, ConflictSeverity};
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(test)]
+use std::time::Instant;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Deserialize};
 use tracing::{info, warn, debug};
@@ -28,7 +32,7 @@ pub enum BlackboxEvent {
         axis_name: String,
         resolution_type: String,
         success: bool,
-        details: ResolutionDetails,
+        details: Box<ResolutionDetails>,
     },
     /// Conflict cleared/resolved
     ConflictCleared {
@@ -193,7 +197,7 @@ impl BlackboxAnnotator {
             axis_name: axis_name.to_string(),
             resolution_type: resolution_type.to_string(),
             success,
-            details,
+            details: Box::new(details),
         };
 
         self.add_event(event);

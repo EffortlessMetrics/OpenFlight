@@ -54,11 +54,10 @@ impl LedController {
             let target = self.action_to_target(action);
             
             // Check rate limiting
-            if let Some(&last_write) = self.last_write.get(&target) {
-                if now.duration_since(last_write) < self.min_interval {
+            if let Some(&last_write) = self.last_write.get(&target)
+                && now.duration_since(last_write) < self.min_interval {
                     continue; // Skip this update due to rate limiting
                 }
-            }
 
             self.execute_action(action, now)?;
             self.last_write.insert(target, now);

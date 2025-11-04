@@ -9,7 +9,7 @@
 use crate::{AxisFrame, Node};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{debug, warn, info};
+use tracing::{debug, info};
 
 /// Configuration for curve conflict detection
 #[derive(Debug, Clone)]
@@ -141,7 +141,7 @@ impl CurveConflictDetector {
         let now = Instant::now();
         
         // Get or create sample buffer for this axis
-        let samples = self.sample_buffer.entry(axis_name.to_string()).or_insert_with(Vec::new);
+        let samples = self.sample_buffer.entry(axis_name.to_string()).or_default();
         
         // Add new sample
         samples.push(SamplePoint {
@@ -205,7 +205,7 @@ impl CurveConflictDetector {
     pub fn detect_conflicts_with_test_inputs(
         &mut self,
         axis_name: &str,
-        test_node: &dyn Node,
+        _test_node: &dyn Node,
     ) -> Option<CurveConflict> {
         let mut test_samples = Vec::new();
         let now = Instant::now();
@@ -215,7 +215,7 @@ impl CurveConflictDetector {
             let input = i as f32 / (self.config.test_points - 1) as f32;
             
             // Create test frame
-            let mut frame = AxisFrame::new(input, now.elapsed().as_nanos() as u64);
+            let frame = AxisFrame::new(input, now.elapsed().as_nanos() as u64);
             
             // Process through node (this simulates the pipeline)
             // Note: In practice, this would need to be done more carefully
@@ -471,7 +471,9 @@ impl Default for CurveConflictDetector {
 
 /// Internal analysis results
 struct LinearityAnalysis {
+    #[allow(dead_code)]
     mean_deviation: f32,
+    #[allow(dead_code)]
     max_deviation: f32,
     combined_nonlinearity: f32,
     sim_curve_strength: f32,

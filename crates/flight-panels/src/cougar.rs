@@ -586,7 +586,7 @@ impl CougarMfdWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&mfd_path, &led_name, &target, &state);
+                let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {
@@ -611,7 +611,7 @@ impl CougarMfdWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&mfd_path, &led_name, &target, &state);
+                let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {
@@ -636,7 +636,7 @@ impl CougarMfdWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&mfd_path, &led_name, &target, &state);
+                let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {

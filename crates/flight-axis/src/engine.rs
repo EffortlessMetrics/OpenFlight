@@ -197,8 +197,8 @@ impl AxisEngine {
         *self.last_frame.write() = Some(*frame);
 
         // Add sample to conflict detector if enabled (RT-safe)
-        if self.config.enable_conflict_detection {
-            if let Some(mut detector) = self.conflict_detector.try_write() {
+        if self.config.enable_conflict_detection
+            && let Some(mut detector) = self.conflict_detector.try_write() {
                 detector.add_sample(&self.axis_name, frame);
                 
                 // Check for new conflicts and annotate them
@@ -211,7 +211,6 @@ impl AxisEngine {
             }
             // If we can't get the lock, skip conflict detection for this frame
             // This maintains RT guarantees
-        }
 
         result
     }
@@ -283,7 +282,7 @@ impl AxisEngine {
 
     /// Perform one-shot conflict detection with current pipeline
     pub fn detect_conflicts_now(&self) -> Option<CurveConflict> {
-        if let Some(pipeline) = self.active_pipeline.read().as_ref() {
+        if let Some(_pipeline) = self.active_pipeline.read().as_ref() {
             // This would need access to the pipeline nodes for testing
             // For now, return existing conflicts
             self.get_curve_conflicts()
@@ -331,8 +330,8 @@ impl AxisEngine {
     #[inline(always)]
     fn try_swap_pipeline(&self) {
         // Try to acquire pending pipeline without blocking
-        if let Some(mut pending) = self.pending_pipeline.try_write() {
-            if let Some(new_pipeline) = pending.take() {
+        if let Some(mut pending) = self.pending_pipeline.try_write()
+            && let Some(new_pipeline) = pending.take() {
                 // Atomic swap at tick boundary
                 *self.active_pipeline.write() = Some(new_pipeline);
                 
@@ -342,7 +341,6 @@ impl AxisEngine {
                 // Update counters
                 self.counters.increment_pipeline_swaps();
             }
-        }
     }
 
     /// Apply capability enforcement clamps to frame output (RT-safe)

@@ -6,7 +6,7 @@
 //! Provides systematic testing of panel configurations to detect drift
 //! and automated repair capabilities for Saitek/Logitech panels.
 
-use crate::saitek::{SaitekPanelWriter, PanelType, VerifyTestResult, PanelHealthStatus};
+use crate::saitek::{SaitekPanelWriter, PanelType, VerifyTestResult};
 use flight_core::{Result, FlightError};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -283,7 +283,7 @@ impl VerifyMatrix {
 
         // Store in history
         self.test_history.entry(panel_path.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(test_results.into_iter().last().unwrap()); // Store last result
 
         Ok(matrix_result)
@@ -355,9 +355,9 @@ impl VerifyMatrix {
         };
 
         // Filter history to analysis window
-        let cutoff_time = Instant::now() - self.drift_thresholds.analysis_window;
+        let _cutoff_time = Instant::now() - self.drift_thresholds.analysis_window;
         let recent_history: Vec<_> = history.iter()
-            .filter(|result| {
+            .filter(|_result| {
                 // Approximate time filtering - in real implementation, we'd store timestamps
                 true // For now, use all history
             })

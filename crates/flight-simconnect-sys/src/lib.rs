@@ -20,11 +20,11 @@
 //! All SimConnect API calls are wrapped in safe Rust interfaces with proper error handling.
 //! The underlying FFI is marked as unsafe but exposed through safe abstractions.
 
-use std::ffi::{c_char, c_void, CStr, CString};
+use std::ffi::{c_char, c_void, CString};
 use std::ptr;
-use windows::core::{HRESULT, PCSTR};
+use windows::core::{s, HRESULT, PCSTR};
 use windows::Win32::Foundation::{HANDLE, HWND};
-use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryA};
+use windows::Win32::System::LibraryLoader::GetProcAddress;
 
 /// SimConnect handle type
 pub type HSIMCONNECT = *mut c_void;
@@ -299,6 +299,7 @@ pub struct SimConnectApi {
     // Function pointers
     open: SimConnect_Open,
     close: SimConnect_Close,
+    #[allow(dead_code)]
     call_dispatch: SimConnect_CallDispatch,
     get_next_dispatch: SimConnect_GetNextDispatch,
     add_to_data_definition: SimConnect_AddToDataDefinition,
@@ -340,7 +341,7 @@ impl SimConnectApi {
 
         // Load function pointers
         let open = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_Open\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_Open"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_Open".to_string()));
             }
@@ -348,7 +349,7 @@ impl SimConnectApi {
         };
 
         let close = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_Close\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_Close"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_Close".to_string()));
             }
@@ -356,7 +357,7 @@ impl SimConnectApi {
         };
 
         let call_dispatch = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_CallDispatch\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_CallDispatch"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_CallDispatch".to_string()));
             }
@@ -364,7 +365,7 @@ impl SimConnectApi {
         };
 
         let get_next_dispatch = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_GetNextDispatch\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_GetNextDispatch"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_GetNextDispatch".to_string()));
             }
@@ -372,7 +373,7 @@ impl SimConnectApi {
         };
 
         let add_to_data_definition = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_AddToDataDefinition\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_AddToDataDefinition"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_AddToDataDefinition".to_string()));
             }
@@ -380,7 +381,7 @@ impl SimConnectApi {
         };
 
         let request_data_on_sim_object = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_RequestDataOnSimObject\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_RequestDataOnSimObject"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_RequestDataOnSimObject".to_string()));
             }
@@ -388,7 +389,7 @@ impl SimConnectApi {
         };
 
         let map_client_event_to_sim_event = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_MapClientEventToSimEvent\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_MapClientEventToSimEvent"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_MapClientEventToSimEvent".to_string()));
             }
@@ -396,7 +397,7 @@ impl SimConnectApi {
         };
 
         let transmit_client_event = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_TransmitClientEvent\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_TransmitClientEvent"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_TransmitClientEvent".to_string()));
             }
@@ -404,7 +405,7 @@ impl SimConnectApi {
         };
 
         let subscribe_to_system_event = unsafe {
-            let proc = GetProcAddress(library, PCSTR(b"SimConnect_SubscribeToSystemEvent\0".as_ptr()));
+            let proc = GetProcAddress(library, s!("SimConnect_SubscribeToSystemEvent"));
             if proc.is_none() {
                 return Err(SimConnectError::FunctionNotFound("SimConnect_SubscribeToSystemEvent".to_string()));
             }

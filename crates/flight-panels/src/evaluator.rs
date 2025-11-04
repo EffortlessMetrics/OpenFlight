@@ -151,7 +151,7 @@ impl RulesEvaluator {
 
     /// Test-only accessor for the hysteresis state
     #[cfg(any(test, feature = "test-helpers"))]
-    pub fn hysteresis_state(&self) -> &Vec<HysteresisState> {
+    pub(crate) fn hysteresis_state(&self) -> &Vec<HysteresisState> {
         &self.hysteresis_state
     }
 }
@@ -208,12 +208,11 @@ impl<'a> BytecodeVM<'a> {
                     }
                 }
                 BytecodeOp::JumpFalse(addr) => {
-                    if let Some(condition) = self.stack.pop() {
-                        if condition == 0.0 {
+                    if let Some(condition) = self.stack.pop()
+                        && condition == 0.0 {
                             self.pc = *addr as usize;
                             continue;
                         }
-                    }
                 }
                 BytecodeOp::Jump(addr) => {
                     self.pc = *addr as usize;

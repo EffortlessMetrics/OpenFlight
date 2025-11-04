@@ -1,3 +1,5 @@
+#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -97,7 +99,7 @@ impl PanelManager {
         // Update Saitek panel blink states
         if let Some(saitek_writer) = &mut self.saitek_writer {
             saitek_writer.update_blink_states()?;
-        } else if let Some(matrix) = &mut self.verify_matrix {
+        } else if let Some(_matrix) = &mut self.verify_matrix {
             // If writer is in matrix, update through matrix
             // Note: In a real implementation, we'd need better access patterns
         }

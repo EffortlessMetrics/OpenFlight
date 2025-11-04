@@ -385,7 +385,7 @@ impl SaitekPanelWriter {
     }
 
     /// Build HID report for LED update
-    fn build_led_report(&self, panel_path: &str, led_name: &str, led_state: &PanelLedState) -> Result<Vec<u8>> {
+    fn build_led_report(&self, panel_path: &str, _led_name: &str, led_state: &PanelLedState) -> Result<Vec<u8>> {
         let panel_info = self.panels.get(panel_path)
             .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
 
@@ -609,7 +609,7 @@ impl SaitekPanelWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&panel_path, &led_name, &target, &state);
+                let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {
@@ -634,7 +634,7 @@ impl SaitekPanelWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&panel_path, &led_name, &target, &state);
+                let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {
@@ -659,7 +659,7 @@ impl SaitekPanelWriter {
                 let target = LedTarget::Panel(led_name.to_string());
                 
                 let step_start = Instant::now();
-                let result = self.set_led(&panel_path, &led_name, &target, &state);
+                let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
                 
                 if let Some(verify_state) = &mut self.verify_state {
@@ -797,7 +797,7 @@ impl SaitekPanelWriter {
     }
 
     /// Detect LED state drift
-    fn detect_led_drift(&self, panel_path: &str) -> Result<bool> {
+    fn detect_led_drift(&self, _panel_path: &str) -> Result<bool> {
         // In a real implementation, this would:
         // 1. Read back LED states from hardware if supported
         // 2. Compare with expected states

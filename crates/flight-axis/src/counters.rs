@@ -179,6 +179,7 @@ impl AllocationGuard {
     /// # Safety
     /// This guard uses thread-local state to track allocations.
     /// Only one guard should be active per thread at a time.
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         RT_ALLOCATION_GUARD.with(|guard| {
             guard.store(true, Ordering::Relaxed);
@@ -214,8 +215,8 @@ impl Drop for AllocationGuard {
 
 // Thread-local state for allocation tracking
 thread_local! {
-    static RT_ALLOCATION_GUARD: AtomicBool = AtomicBool::new(false);
-    static RT_ALLOCATION_DETECTED: AtomicBool = AtomicBool::new(false);
+    static RT_ALLOCATION_GUARD: AtomicBool = const { AtomicBool::new(false) };
+    static RT_ALLOCATION_DETECTED: AtomicBool = const { AtomicBool::new(false) };
 }
 
 /// Check if currently in RT context (for debugging)

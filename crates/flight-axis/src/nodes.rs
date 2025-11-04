@@ -124,7 +124,7 @@ impl CurveNode {
     /// Panics if expo is outside [-1.0, 1.0] range
     pub fn new(expo: f32) -> Self {
         assert!(
-            expo >= -1.0 && expo <= 1.0,
+            (-1.0..=1.0).contains(&expo),
             "Exponential factor must be in range [-1.0, 1.0], got {}",
             expo
         );
@@ -133,7 +133,7 @@ impl CurveNode {
 
     /// Create exponential curve with validation
     pub fn exponential(expo: f32) -> Result<Self, &'static str> {
-        if expo < -1.0 || expo > 1.0 {
+        if !(-1.0..=1.0).contains(&expo) {
             Err("Exponential factor must be in range [-1.0, 1.0]")
         } else {
             Ok(Self { expo })
@@ -490,11 +490,10 @@ impl Node for DetentNode {
         };
 
         // If we're not in a detent, check for entry into a new one
-        if new_detent_idx == u32::MAX {
-            if let Some(idx) = self.find_entry_detent(position) {
+        if new_detent_idx == u32::MAX
+            && let Some(idx) = self.find_entry_detent(position) {
                 new_detent_idx = idx as u32;
             }
-        }
 
         // Generate event if detent changed
         if new_detent_idx != state.active_detent_idx {
