@@ -406,10 +406,9 @@ impl XPlaneAdapter {
         // Try web API as fallback if available
         if let Some(web_client) = web_api_client {
             for dataref in &datarefs {
-                if !dataref_values.contains_key(&dataref.name) {
-                    if let Ok(value) = web_client.get_dataref(&dataref.name).await {
-                        dataref_values.insert(dataref.name.clone(), value);
-                    }
+                if !dataref_values.contains_key(&dataref.name)
+                    && let Ok(value) = web_client.get_dataref(&dataref.name).await {
+                    dataref_values.insert(dataref.name.clone(), value);
                 }
             }
         }

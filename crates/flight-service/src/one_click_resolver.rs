@@ -8,14 +8,10 @@
 
 use flight_axis::{CurveConflict, ConflictType, ResolutionType, BlackboxAnnotator, ResolutionDetails};
 use flight_core::{CurveConflictWriter, WriteResult, BackupInfo};
-use flight_ipc::proto::{
-    ResolutionAction, ResolutionResult, ResolutionType as ProtoResolutionType,
-    ConflictMetadata as ProtoConflictMetadata,
-};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
-use tracing::{info, warn, error, debug};
+use tracing::{info, warn, debug};
 use anyhow::{Result, Context};
 
 /// Configuration for one-click resolution
@@ -245,7 +241,7 @@ impl OneClickResolver {
 
         // Step 3: Apply resolution
         let apply_step_start = Instant::now();
-        let write_result = match self.apply_resolution(&resolution_strategy, sim_id, sim_version) {
+        let write_result = match self.apply_resolution(resolution_strategy, sim_id, sim_version) {
             Ok(write_result) => {
                 steps.push(ResolutionStep {
                     name: "apply_resolution".to_string(),

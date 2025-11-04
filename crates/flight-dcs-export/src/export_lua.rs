@@ -72,8 +72,7 @@ impl ExportLuaGenerator {
 
     /// Generate script header with documentation
     fn generate_header(&self) -> String {
-        format!(
-            r#"-- Flight Hub DCS Export Script
+        r#"-- Flight Hub DCS Export Script
 -- Generated automatically - DO NOT EDIT MANUALLY
 --
 -- This script provides telemetry data from DCS World to Flight Hub.
@@ -95,8 +94,7 @@ impl ExportLuaGenerator {
 -- Version: 1.0
 -- Protocol: Flight Hub DCS Export v1.0
 
-local FlightHubExport = {{}}"#
-        )
+local FlightHubExport = {{}}"#.to_string()
     }
 
     /// Generate configuration section
@@ -414,8 +412,7 @@ end"#.to_string()
 
     /// Generate main loop code
     fn generate_main_loop(&self) -> String {
-        format!(
-            r#"
+        r#"
 -- Main export loop
 FlightHubExport.last_update = 0
 
@@ -476,8 +473,7 @@ function FlightHubExport.to_json(obj)
     else
         return "null"
     end
-end"#
-        )
+end"#.to_string()
     }
 
     /// Generate script footer

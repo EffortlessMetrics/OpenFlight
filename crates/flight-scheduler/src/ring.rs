@@ -227,7 +227,7 @@ mod tests {
         let consumer = thread::spawn(move || {
             let mut received = 0;
             while received < 10000 {
-                if let Some(_) = ring_consumer.try_pop() {
+                if ring_consumer.try_pop().is_some() {
                     received += 1;
                 }
                 thread::yield_now();

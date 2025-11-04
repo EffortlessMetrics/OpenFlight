@@ -231,7 +231,7 @@ impl DcsInstaller {
             for issue in &validation_issues {
                 report.push_str(&format!("- {}\n", issue));
             }
-            report.push_str("\n");
+            report.push('\n');
         } else {
             report.push_str("## Validation\n");
             report.push_str("✅ No issues found.\n\n");
@@ -417,12 +417,10 @@ impl DcsInstaller {
 
         // Check for read-only Scripts directory
         let scripts_path = dcs_path.join("Scripts");
-        if scripts_path.exists() {
-            if let Ok(metadata) = scripts_path.metadata() {
-                if metadata.permissions().readonly() {
-                    issues.push("Scripts directory is read-only. Installation may fail.".to_string());
-                }
-            }
+        if scripts_path.exists()
+            && let Ok(metadata) = scripts_path.metadata()
+            && metadata.permissions().readonly() {
+            issues.push("Scripts directory is read-only. Installation may fail.".to_string());
         }
     }
 }

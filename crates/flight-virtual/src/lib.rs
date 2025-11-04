@@ -9,11 +9,7 @@
 //! without requiring physical devices for testing.
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
-use std::time::{Duration, Instant};
 use parking_lot::Mutex;
-use crossbeam::channel;
-use flight_scheduler::{Scheduler, SchedulerConfig, SpscRing};
 
 pub mod device;
 pub mod loopback;

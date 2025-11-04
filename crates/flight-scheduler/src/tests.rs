@@ -144,7 +144,7 @@ fn test_concurrent_ring_operations() {
     let consumer = thread::spawn(move || {
         let mut received = 0;
         while received < 10000 {
-            if let Some(_) = ring_consumer.try_pop() {
+            if ring_consumer.try_pop().is_some() {
                 received += 1;
             }
             thread::yield_now();
@@ -177,7 +177,7 @@ fn test_overload_behavior() {
         
         let mut consumed = 0;
         while consumed < 100 { // Only consume some items
-            if let Some(_) = ring_consumer.try_pop() {
+            if ring_consumer.try_pop().is_some() {
                 consumed += 1;
             }
             thread::sleep(Duration::from_micros(100)); // Slow consumer

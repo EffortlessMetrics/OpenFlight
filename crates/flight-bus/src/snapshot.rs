@@ -163,7 +163,7 @@ pub struct Navigation {
 }
 
 /// Aircraft lights configuration
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct LightsConfig {
     /// Navigation lights
     pub nav: bool,
@@ -214,15 +214,14 @@ impl BusSnapshot {
         }
 
         // Validate helicopter data consistency
-        if let Some(helo) = &self.helo {
-            if helo.pedals < -100.0 || helo.pedals > 100.0 {
-                return Err(BusTypeError::OutOfRange {
-                    field: "helo.pedals".to_string(),
-                    value: helo.pedals,
-                    min: -100.0,
-                    max: 100.0,
-                });
-            }
+        if let Some(helo) = &self.helo
+            && (helo.pedals < -100.0 || helo.pedals > 100.0) {
+            return Err(BusTypeError::OutOfRange {
+                field: "helo.pedals".to_string(),
+                value: helo.pedals,
+                min: -100.0,
+                max: 100.0,
+            });
         }
 
         Ok(())
@@ -306,19 +305,7 @@ impl Default for Navigation {
     }
 }
 
-impl Default for LightsConfig {
-    fn default() -> Self {
-        Self {
-            nav: false,
-            beacon: false,
-            strobe: false,
-            landing: false,
-            taxi: false,
-            logo: false,
-            wing: false,
-        }
-    }
-}
+
 
 /// Get current timestamp in nanoseconds since Unix epoch
 fn current_timestamp_ns() -> u64 {

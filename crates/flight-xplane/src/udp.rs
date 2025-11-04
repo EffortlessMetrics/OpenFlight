@@ -136,11 +136,10 @@ impl UdpClient {
     /// Request a DataRef value
     pub async fn request_dataref(&self, dataref: &DataRef) -> Result<DataRefValue, UdpError> {
         // Check cache first
-        if let Some((value, timestamp)) = self.get_cached_value(&dataref.name) {
-            if timestamp.elapsed() < Duration::from_millis(50) {
-                trace!("Returning cached value for {}", dataref.name);
-                return Ok(value);
-            }
+        if let Some((value, timestamp)) = self.get_cached_value(&dataref.name)
+            && timestamp.elapsed() < Duration::from_millis(50) {
+            trace!("Returning cached value for {}", dataref.name);
+            return Ok(value);
         }
 
         let request_id = self.get_next_request_id();

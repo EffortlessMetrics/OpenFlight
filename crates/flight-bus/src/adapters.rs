@@ -220,7 +220,7 @@ pub mod validation {
 
     /// Validate that a value is within expected range for the field type
     pub fn validate_speed_range(speed: f32, field_name: &str) -> Result<(), BusTypeError> {
-        if speed < 0.0 || speed > 1000.0 {
+        if !(0.0..=1000.0).contains(&speed) {
             Err(BusTypeError::OutOfRange {
                 field: field_name.to_string(),
                 value: speed,
@@ -234,7 +234,7 @@ pub mod validation {
 
     /// Validate that an angle is within valid range
     pub fn validate_angle_range(angle: f32, field_name: &str) -> Result<(), BusTypeError> {
-        if angle < -180.0 || angle > 180.0 {
+        if !(-180.0..=180.0).contains(&angle) {
             Err(BusTypeError::OutOfRange {
                 field: field_name.to_string(),
                 value: angle,
@@ -248,7 +248,7 @@ pub mod validation {
 
     /// Validate that altitude is reasonable
     pub fn validate_altitude_range(altitude: f32, field_name: &str) -> Result<(), BusTypeError> {
-        if altitude < -1000.0 || altitude > 100000.0 {
+        if !(-1000.0..=100000.0).contains(&altitude) {
             Err(BusTypeError::OutOfRange {
                 field: field_name.to_string(),
                 value: altitude,
@@ -302,15 +302,14 @@ pub mod validation {
         }
 
         // Validate helicopter data if present
-        if let Some(helo) = &snapshot.helo {
-            if helo.pedals < -100.0 || helo.pedals > 100.0 {
-                return Err(BusTypeError::OutOfRange {
-                    field: "helo.pedals".to_string(),
-                    value: helo.pedals,
-                    min: -100.0,
-                    max: 100.0,
-                });
-            }
+        if let Some(helo) = &snapshot.helo
+            && (helo.pedals < -100.0 || helo.pedals > 100.0) {
+            return Err(BusTypeError::OutOfRange {
+                field: "helo.pedals".to_string(),
+                value: helo.pedals,
+                min: -100.0,
+                max: 100.0,
+            });
         }
 
         Ok(())

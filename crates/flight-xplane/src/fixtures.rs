@@ -351,10 +351,9 @@ impl XPlaneFixtureValidator {
 
         // Validate DataRef values are within reasonable ranges
         for (name, expected_value) in &fixture.dataref_values {
-            if let Some(actual_value) = raw_data.dataref_values.get(name) {
-                if let Err(e) = Self::validate_dataref_value(name, expected_value, actual_value, &fixture.tolerances) {
-                    return Err(format!("DataRef {} validation failed: {}", name, e));
-                }
+            if let Some(actual_value) = raw_data.dataref_values.get(name)
+                && let Err(e) = Self::validate_dataref_value(name, expected_value, actual_value, &fixture.tolerances) {
+                return Err(format!("DataRef {} validation failed: {}", name, e));
             }
         }
 
@@ -483,17 +482,17 @@ impl XPlaneFixtureValidator {
     fn validate_kinematics(kinematics: &flight_bus::snapshot::Kinematics, _tolerances: &ValidationTolerance) -> Result<(), String> {
         // Check for reasonable values
         let ias_knots = kinematics.ias.to_knots();
-        if ias_knots < 0.0 || ias_knots > 500.0 {
+        if !(0.0..=500.0).contains(&ias_knots) {
             return Err(format!("Unreasonable IAS: {} knots", ias_knots));
         }
 
         let g_force = kinematics.g_force.value();
-        if g_force < -10.0 || g_force > 10.0 {
+        if !(-10.0..=10.0).contains(&g_force) {
             return Err(format!("Unreasonable G-force: {} G", g_force));
         }
 
         let mach = kinematics.mach.value();
-        if mach < 0.0 || mach > 2.0 {
+        if !(0.0..=2.0).contains(&mach) {
             return Err(format!("Unreasonable Mach: {}", mach));
         }
 

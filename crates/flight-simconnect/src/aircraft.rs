@@ -14,9 +14,8 @@ use flight_simconnect_sys::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::ffi::CString;
 use thiserror::Error;
-use tracing::{debug, info};
+use tracing::info;
 
 /// Aircraft information from SimConnect
 #[derive(Debug, Clone, PartialEq)]
@@ -75,12 +74,15 @@ pub enum DetectionError {
     Timeout,
 }
 
+/// Type alias for aircraft detection callbacks
+type DetectionCallback = Box<dyn Fn(&AircraftInfo) + Send + Sync>;
+
 /// Aircraft detector for MSFS
 pub struct AircraftDetector {
     definition_id: SIMCONNECT_DATADEFID,
     request_id: SIMCONNECT_REQUESTID,
     current_aircraft: Option<AircraftInfo>,
-    detection_callbacks: Vec<Box<dyn Fn(&AircraftInfo) + Send + Sync>>,
+    detection_callbacks: Vec<DetectionCallback>,
 }
 
 impl AircraftDetector {
@@ -375,20 +377,17 @@ fn extract_icao_from_title(title: &str) -> Option<String> {
     ];
 
     for pattern in &patterns {
-        if let Ok(re) = regex::Regex::new(pattern) {
-            if let Some(captures) = re.captures(title) {
-                if let Some(model) = captures.get(1) {
-                    return Some(format!("C{}", model.as_str())); // Simplified mapping
-                }
-            }
+        if let Ok(re) = regex::Regex::new(pattern)
+            && let Some(captures) = re.captures(title)
+            && let Some(model) = captures.get(1) {
+            return Some(format!("C{}", model.as_str())); // Simplified mapping
         }
     }
 
     // Fallback: try to extract any alphanumeric sequence that looks like an ICAO
-    if let Ok(re) = regex::Regex::new(r"[A-Z]\d{3}|[A-Z]{2}\d{2}|[A-Z]{3}\d") {
-        if let Some(m) = re.find(title) {
-            return Some(m.as_str().to_string());
-        }
+    if let Ok(re) = regex::Regex::new(r"[A-Z]\d{3}|[A-Z]{2}\d{2}|[A-Z]{3}\d")
+        && let Some(m) = re.find(title) {
+        return Some(m.as_str().to_string());
     }
 
     None

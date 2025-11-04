@@ -8,10 +8,10 @@
 
 use flight_bus::adapters::msfs::MsfsConverter;
 use flight_bus::snapshot::{
-    AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
+    AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics,
     Navigation,
 };
-use flight_bus::types::{AircraftId, AutopilotState, GearPosition, GearState, Percentage, SimId};
+use flight_bus::types::Percentage;
 use flight_simconnect_sys::{
     constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE,
     SIMCONNECT_PERIOD, SIMCONNECT_REQUESTID,
@@ -19,9 +19,7 @@ use flight_simconnect_sys::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::ffi::c_void;
 use thiserror::Error;
-use tracing::{debug, warn};
 
 /// Variable mapping configuration
 #[derive(Debug, Clone)]
@@ -215,6 +213,7 @@ pub struct VariableMapping {
 /// Data definition information
 #[derive(Debug, Clone)]
 struct DataDefinition {
+    #[allow(dead_code)]
     id: SIMCONNECT_DATADEFID,
     variables: Vec<VariableDefinition>,
     data_size: usize,
@@ -223,16 +222,20 @@ struct DataDefinition {
 /// Variable definition within a data definition
 #[derive(Debug, Clone)]
 struct VariableDefinition {
+    #[allow(dead_code)]
     name: String,
+    #[allow(dead_code)]
     units: String,
     data_type: SIMCONNECT_DATATYPE,
     offset: usize,
+    #[allow(dead_code)]
     size: usize,
 }
 
 /// Request mapping information
 #[derive(Debug, Clone)]
 struct RequestMapping {
+    #[allow(dead_code)]
     request_id: SIMCONNECT_REQUESTID,
     definition_id: SIMCONNECT_DATADEFID,
     category: DataCategory,
@@ -241,6 +244,7 @@ struct RequestMapping {
 
 /// Data category enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 enum DataCategory {
     Kinematics,
     Config,
@@ -592,7 +596,7 @@ impl VariableMapping {
                 size: 8,
             });
             offset += 8;
-            datum_id += 1;
+            let _ = datum_id; // Last datum_id value not used
         }
 
         // Continue with other optional variables...
@@ -623,9 +627,9 @@ impl VariableMapping {
 
     fn setup_environment_definition(
         &mut self,
-        api: &SimConnectApi,
-        handle: HSIMCONNECT,
-        mapping: &EnvironmentMapping,
+        _api: &SimConnectApi,
+        _handle: HSIMCONNECT,
+        _mapping: &EnvironmentMapping,
     ) -> Result<(), MappingError> {
         // Implementation similar to other setup methods
         // This is abbreviated for brevity
@@ -634,9 +638,9 @@ impl VariableMapping {
 
     fn setup_navigation_definition(
         &mut self,
-        api: &SimConnectApi,
-        handle: HSIMCONNECT,
-        mapping: &NavigationMapping,
+        _api: &SimConnectApi,
+        _handle: HSIMCONNECT,
+        _mapping: &NavigationMapping,
     ) -> Result<(), MappingError> {
         // Implementation similar to other setup methods
         // This is abbreviated for brevity
@@ -645,9 +649,9 @@ impl VariableMapping {
 
     fn setup_helicopter_definition(
         &mut self,
-        api: &SimConnectApi,
-        handle: HSIMCONNECT,
-        mapping: &HeloMapping,
+        _api: &SimConnectApi,
+        _handle: HSIMCONNECT,
+        _mapping: &HeloMapping,
     ) -> Result<(), MappingError> {
         // Implementation similar to other setup methods
         // This is abbreviated for brevity
@@ -710,9 +714,9 @@ impl VariableMapping {
 
     fn convert_config_data(
         &self,
-        definition: &DataDefinition,
-        data: &[u8],
-        config: &mut AircraftConfig,
+        _definition: &DataDefinition,
+        _data: &[u8],
+        _config: &mut AircraftConfig,
     ) -> Result<(), MappingError> {
         // Implementation similar to convert_kinematics_data
         // This is abbreviated for brevity
@@ -721,9 +725,9 @@ impl VariableMapping {
 
     fn convert_engine_data(
         &self,
-        definition: &DataDefinition,
-        data: &[u8],
-        engines: &mut Vec<EngineData>,
+        _definition: &DataDefinition,
+        _data: &[u8],
+        _engines: &mut [EngineData],
     ) -> Result<(), MappingError> {
         // Implementation similar to convert_kinematics_data
         // This is abbreviated for brevity
@@ -732,9 +736,9 @@ impl VariableMapping {
 
     fn convert_environment_data(
         &self,
-        definition: &DataDefinition,
-        data: &[u8],
-        environment: &mut Environment,
+        _definition: &DataDefinition,
+        _data: &[u8],
+        _environment: &mut Environment,
     ) -> Result<(), MappingError> {
         // Implementation similar to convert_kinematics_data
         // This is abbreviated for brevity
@@ -743,9 +747,9 @@ impl VariableMapping {
 
     fn convert_navigation_data(
         &self,
-        definition: &DataDefinition,
-        data: &[u8],
-        navigation: &mut Navigation,
+        _definition: &DataDefinition,
+        _data: &[u8],
+        _navigation: &mut Navigation,
     ) -> Result<(), MappingError> {
         // Implementation similar to convert_kinematics_data
         // This is abbreviated for brevity
@@ -754,9 +758,9 @@ impl VariableMapping {
 
     fn convert_helicopter_data(
         &self,
-        definition: &DataDefinition,
-        data: &[u8],
-        helo: &mut HeloData,
+        _definition: &DataDefinition,
+        _data: &[u8],
+        _helo: &mut HeloData,
     ) -> Result<(), MappingError> {
         // Implementation similar to convert_kinematics_data
         // This is abbreviated for brevity

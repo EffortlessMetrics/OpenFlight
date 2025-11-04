@@ -16,6 +16,7 @@ pub fn platform_sleep(duration: Duration) {
 }
 
 /// Set current thread to real-time priority
+#[allow(dead_code)]
 pub fn set_realtime_priority() -> std::result::Result<(), Box<dyn std::error::Error>> {
     unsafe {
         // Set thread priority to time critical
@@ -29,6 +30,7 @@ pub fn set_realtime_priority() -> std::result::Result<(), Box<dyn std::error::Er
 }
 
 /// Disable process power throttling for consistent performance
+#[allow(dead_code)]
 pub fn disable_power_throttling() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // Simplified implementation - in a full version this would use SetProcessInformation
     // For now, just return success
@@ -36,6 +38,7 @@ pub fn disable_power_throttling() -> std::result::Result<(), Box<dyn std::error:
 }
 
 /// Check if system is configured for real-time performance
+#[allow(dead_code)]
 pub fn check_rt_configuration() -> RTConfigStatus {
     let issues = Vec::new();
     
@@ -49,10 +52,12 @@ pub fn check_rt_configuration() -> RTConfigStatus {
 }
 
 /// Real-time configuration status
+#[allow(dead_code)]
 pub struct RTConfigStatus {
     pub issues: Vec<String>,
 }
 
+#[allow(dead_code)]
 impl RTConfigStatus {
     pub fn is_optimal(&self) -> bool {
         self.issues.is_empty()

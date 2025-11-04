@@ -37,7 +37,7 @@ impl SessionType {
         match self {
             SessionType::SinglePlayer => Vec::new(),
             SessionType::Multiplayer | SessionType::Unknown => {
-                MP_BLOCKED_FEATURES.iter().copied().collect()
+                MP_BLOCKED_FEATURES.to_vec()
             }
         }
     }

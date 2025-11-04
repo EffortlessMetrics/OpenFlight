@@ -46,6 +46,7 @@ pub struct TimingStats {
 
 /// Jitter measurement system
 pub struct JitterMetrics {
+    #[allow(dead_code)]
     frequency_hz: u32,
     expected_period_ns: u64,
     last_tick: Option<Instant>,

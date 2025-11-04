@@ -3,11 +3,11 @@
 
 //! Capability enforcement service for kid/demo mode management
 
-use flight_core::profile::{CapabilityMode, CapabilityLimits, CapabilityContext};
+use flight_core::profile::{CapabilityMode, CapabilityLimits};
 use flight_axis::AxisEngine;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use tracing::{info, warn, debug};
+use tracing::{info, warn};
 
 /// Service for managing capability enforcement across axes
 pub struct CapabilityService {

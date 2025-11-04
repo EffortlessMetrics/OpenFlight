@@ -121,24 +121,32 @@ struct SimAdapters {
 
 /// MSFS adapter wrapper
 struct MsfsAdapter {
+    #[allow(dead_code)]
     detector: MsfsAircraftDetector,
+    #[allow(dead_code)]
     current_aircraft: Option<MsfsAircraftInfo>,
 }
 
 /// X-Plane adapter wrapper
 struct XPlaneAdapter {
+    #[allow(dead_code)]
     detector: XPlaneAircraftDetector,
+    #[allow(dead_code)]
     current_aircraft: Option<XPlaneDetectedAircraft>,
 }
 
 /// DCS adapter wrapper
 struct DcsAdapter {
+    #[allow(dead_code)]
     adapter: DcsAdapterApi,
+    #[allow(dead_code)]
     current_aircraft: Option<BusAircraftId>,
 }
 
 /// Service event for internal processing
 #[derive(Debug)]
+#[allow(dead_code)]
+#[allow(clippy::large_enum_variant)]
 enum ServiceEvent {
     ProcessDetected(DetectedProcess),
     ProcessLost(BusSimId),
@@ -222,7 +230,7 @@ impl AircraftAutoSwitchService {
             .ok_or_else(|| FlightError::AutoSwitch("Service already started".to_string()))?;
 
         let auto_switch = Arc::clone(&self.auto_switch);
-        let process_detector = Arc::clone(&self.process_detector);
+        let _process_detector = Arc::clone(&self.process_detector);
         let adapters = Arc::clone(&self.adapters);
         let config = self.config.clone();
 
@@ -344,32 +352,30 @@ impl AircraftAutoSwitchService {
             loop {
                 tokio::time::sleep(Duration::from_secs(1)).await;
 
-                match process_detector.get_detected_processes().await {
-                    current_processes => {
-                        // Check for new processes
-                        for (sim, process) in &current_processes {
-                            if !last_processes.contains_key(sim) {
-                                let _ = service_tx.send(ServiceEvent::ProcessDetected(process.clone()));
-                            }
-                        }
-
-                        // Check for lost processes
-                        for sim in last_processes.keys() {
-                            if !current_processes.contains_key(sim) {
-                                // Convert CoreSimId to BusSimId for event
-                                let bus_sim = match sim {
-                                    CoreSimId::Msfs => BusSimId::Msfs,
-                                    CoreSimId::XPlane => BusSimId::XPlane,
-                                    CoreSimId::Dcs => BusSimId::Dcs,
-                                    CoreSimId::Unknown => BusSimId::Unknown,
-                                };
-                                let _ = service_tx.send(ServiceEvent::ProcessLost(bus_sim));
-                            }
-                        }
-
-                        last_processes = current_processes;
+                let current_processes = process_detector.get_detected_processes().await;
+                
+                // Check for new processes
+                for (sim, process) in &current_processes {
+                    if !last_processes.contains_key(sim) {
+                        let _ = service_tx.send(ServiceEvent::ProcessDetected(process.clone()));
                     }
                 }
+
+                // Check for lost processes
+                for sim in last_processes.keys() {
+                    if !current_processes.contains_key(sim) {
+                        // Convert CoreSimId to BusSimId for event
+                        let bus_sim = match sim {
+                            CoreSimId::Msfs => BusSimId::Msfs,
+                            CoreSimId::XPlane => BusSimId::XPlane,
+                            CoreSimId::Dcs => BusSimId::Dcs,
+                            CoreSimId::Unknown => BusSimId::Unknown,
+                        };
+                        let _ = service_tx.send(ServiceEvent::ProcessLost(bus_sim));
+                    }
+                }
+
+                last_processes = current_processes;
             }
         });
 
@@ -378,7 +384,7 @@ impl AircraftAutoSwitchService {
 
     /// Start monitoring bus updates
     async fn start_bus_monitoring(&self) -> Result<()> {
-        let service_tx = self.service_tx.clone();
+        let _service_tx = self.service_tx.clone();
         let telemetry_rate = self.config.bus_subscription.telemetry_rate;
 
         tokio::spawn(async move {
@@ -417,7 +423,7 @@ impl AircraftAutoSwitchService {
         match bus_sim {
             BusSimId::Msfs if config.adapters.enable_msfs => {
                 if adapters_guard.msfs.is_none() {
-                    let mut detector = MsfsAircraftDetector::new();
+                    let detector = MsfsAircraftDetector::new();
                     // TODO: Setup and start MSFS aircraft detection
                     adapters_guard.msfs = Some(MsfsAdapter {
                         detector,

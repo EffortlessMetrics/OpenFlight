@@ -365,7 +365,7 @@ impl FlightService {
         } else {
             let msg = "Cannot apply profile - axis engine not initialized";
             self.health.warning("service", msg).await;
-            Err(anyhow::anyhow!(msg).into())
+            Err(anyhow::anyhow!(msg))
         }
     }
     
@@ -386,11 +386,7 @@ impl FlightService {
     
     /// Get safe mode status
     pub async fn get_safe_mode_status(&self) -> Option<SafeModeStatus> {
-        if let Some(safe_mode) = &self.safe_mode {
-            Some(safe_mode.get_status())
-        } else {
-            None
-        }
+        self.safe_mode.as_ref().map(|safe_mode| safe_mode.get_status())
     }
     
     /// Subscribe to health events
@@ -443,10 +439,9 @@ impl FlightService {
         }
         
         // Shutdown safe mode if active
-        if let Some(mut safe_mode) = self.safe_mode.take() {
-            if let Err(e) = safe_mode.shutdown().await {
-                warn!("Safe mode shutdown error: {}", e);
-            }
+        if let Some(mut safe_mode) = self.safe_mode.take()
+            && let Err(e) = safe_mode.shutdown().await {
+            warn!("Safe mode shutdown error: {}", e);
         }
         
         // Update final state

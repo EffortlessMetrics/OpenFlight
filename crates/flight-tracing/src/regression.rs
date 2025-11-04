@@ -6,10 +6,10 @@
 //! Provides automated detection of performance regressions by comparing
 //! current metrics against historical baselines and configurable thresholds.
 
-use crate::counters::{CounterSnapshot, JitterStats, HidStats};
+use crate::counters::CounterSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Regression detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,6 +155,12 @@ impl Default for Thresholds {
     }
 }
 
+impl Default for RegressionDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RegressionDetector {
     /// Create new regression detector with default thresholds
     pub fn new() -> Self {
@@ -212,14 +218,10 @@ impl RegressionDetector {
         
         let similar_baseline = self.baselines.iter()
             .filter(|b| {
-                let duration_diff = if b.session_duration_ms > target_duration {
-                    b.session_duration_ms - target_duration
-                } else {
-                    target_duration - b.session_duration_ms
-                };
+                let duration_diff = b.session_duration_ms.abs_diff(target_duration);
                 duration_diff <= tolerance && b.jitter.sample_count >= self.min_samples
             })
-            .last(); // Use most recent similar baseline
+            .next_back(); // Use most recent similar baseline
         
         // Fall back to most recent baseline if no similar one found
         similar_baseline.cloned().or_else(|| self.baselines.back().cloned())

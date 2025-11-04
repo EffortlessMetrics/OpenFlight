@@ -11,10 +11,8 @@ use flight_bus::snapshot::BusSnapshot;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
@@ -263,8 +261,11 @@ pub struct FixturePlayer {
     /// Playback speed multiplier
     speed: f64,
     /// Event callbacks
-    event_callbacks: HashMap<String, Box<dyn Fn(&RecordedEvent) + Send + Sync>>,
+    event_callbacks: HashMap<String, EventCallback>,
 }
+
+/// Type alias for event callbacks
+type EventCallback = Box<dyn Fn(&RecordedEvent) + Send + Sync>;
 
 impl FixturePlayer {
     /// Load fixture from file
@@ -296,7 +297,7 @@ impl FixturePlayer {
 
     /// Set playback speed (1.0 = normal, 2.0 = 2x speed, etc.)
     pub fn set_speed(&mut self, speed: f64) {
-        self.speed = speed.max(0.1).min(10.0); // Clamp to reasonable range
+        self.speed = speed.clamp(0.1, 10.0); // Clamp to reasonable range
     }
 
     /// Add event callback
@@ -371,12 +372,7 @@ impl FixturePlayer {
             let closest_actual = actual_snapshots
                 .iter()
                 .min_by_key(|actual| {
-                    let diff = if actual.timestamp > expected.timestamp {
-                        actual.timestamp - expected.timestamp
-                    } else {
-                        expected.timestamp - actual.timestamp
-                    };
-                    diff.as_millis()
+                    actual.timestamp.as_millis().abs_diff(expected.timestamp.as_millis())
                 });
 
             if let Some(actual) = closest_actual {
@@ -460,6 +456,7 @@ fn validate_snapshot_match(
 /// Fixture library for managing collections of fixtures
 pub struct FixtureLibrary {
     /// Library root directory
+    #[allow(dead_code)]
     root_dir: PathBuf,
     /// Loaded fixtures (name -> fixture)
     fixtures: HashMap<String, SessionFixture>,

@@ -211,14 +211,13 @@ impl DcsAdapter {
         ))?;
 
         // Update connection state
-        if let Some(connection) = &mut self.active_connection {
-            if connection.addr == addr {
-                connection.last_telemetry = Instant::now();
-                connection.aircraft = Some(AircraftId::new(aircraft_name.clone()));
-                connection.session_type = self.mp_detector.current_session()
-                    .map(|s| s.session_type)
-                    .unwrap_or(SessionType::Unknown);
-            }
+        if let Some(connection) = &mut self.active_connection
+            && connection.addr == addr {
+            connection.last_telemetry = Instant::now();
+            connection.aircraft = Some(AircraftId::new(aircraft_name.clone()));
+            connection.session_type = self.mp_detector.current_session()
+                .map(|s| s.session_type)
+                .unwrap_or(SessionType::Unknown);
         }
 
         // Check feature restrictions
@@ -235,10 +234,9 @@ impl DcsAdapter {
 
     /// Handle heartbeat from DCS
     async fn handle_heartbeat(&mut self, addr: SocketAddr) -> Result<(), DcsAdapterError> {
-        if let Some(connection) = &mut self.active_connection {
-            if connection.addr == addr {
-                connection.last_telemetry = Instant::now();
-            }
+        if let Some(connection) = &mut self.active_connection
+            && connection.addr == addr {
+            connection.last_telemetry = Instant::now();
         }
         Ok(())
     }
@@ -249,17 +247,16 @@ impl DcsAdapter {
         let restricted_fields = ["weapons", "countermeasures", "rwr_contacts"];
         
         for field in &restricted_fields {
-            if data.contains_key(*field) {
-                if let Err(e) = self.mp_detector.validate_feature(&format!("telemetry_{}", field)) {
-                    // Log blocked feature (rate limited)
-                    let now = Instant::now();
-                    let last_notified = self.blocked_features_notified.get(*field).copied()
-                        .unwrap_or(Instant::now() - Duration::from_secs(60));
-                    
-                    if now.duration_since(last_notified) > Duration::from_secs(30) {
-                        warn!("Blocked restricted feature '{}' in MP session: {}", field, e);
-                        self.blocked_features_notified.insert(field.to_string(), now);
-                    }
+            if data.contains_key(*field)
+                && let Err(e) = self.mp_detector.validate_feature(&format!("telemetry_{}", field)) {
+                // Log blocked feature (rate limited)
+                let now = Instant::now();
+                let last_notified = self.blocked_features_notified.get(*field).copied()
+                    .unwrap_or(Instant::now() - Duration::from_secs(60));
+                
+                if now.duration_since(last_notified) > Duration::from_secs(30) {
+                    warn!("Blocked restricted feature '{}' in MP session: {}", field, e);
+                    self.blocked_features_notified.insert(field.to_string(), now);
                 }
             }
         }

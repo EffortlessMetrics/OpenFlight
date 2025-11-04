@@ -172,8 +172,8 @@ impl EventManager {
     /// Transmit an Input Event (requires MSFS 2024 or compatible aircraft)
     pub fn transmit_input_event(
         &self,
-        api: &SimConnectApi,
-        handle: HSIMCONNECT,
+        _api: &SimConnectApi,
+        _handle: HSIMCONNECT,
         event_name: &str,
         value: f64,
     ) -> Result<(), EventError> {

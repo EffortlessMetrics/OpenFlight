@@ -8,7 +8,7 @@
 
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use tracing::{debug, warn, info};
+use tracing::{debug, info};
 
 /// Power management check results
 #[derive(Debug, Clone, Serialize, Deserialize)]

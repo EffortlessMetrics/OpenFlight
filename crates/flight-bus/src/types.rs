@@ -3,7 +3,7 @@
 
 //! Bus telemetry types with comprehensive unit safety and validation
 
-use flight_core::units::{Speed, Angle, SpeedUnit, AngleUnit, UnitValue};
+use flight_core::units::{Speed, Angle, SpeedUnit, AngleUnit};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;

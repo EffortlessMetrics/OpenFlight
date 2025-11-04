@@ -166,7 +166,7 @@ impl DeltaApplier {
         self.verify_source_files(patch, source_dir).await?;
         
         // Apply file deltas
-        for (target_path, file_delta) in &patch.files {
+        for (_target_path, file_delta) in &patch.files {
             self.apply_file_delta(file_delta, source_dir, target_dir).await?;
         }
         
@@ -235,6 +235,7 @@ impl DeltaApplier {
     }
     
     /// Apply delta operations to a single file
+    #[allow(unused_assignments)]
     async fn apply_file_delta(
         &self,
         file_delta: &FileDelta,
@@ -257,7 +258,7 @@ impl DeltaApplier {
         
         // Read source file
         let source_content = fs::read(&source_file).await?;
-        let mut source_pos = 0usize;
+        let mut _source_pos = 0usize;
         let mut target_content = Vec::new();
         
         // Apply operations in sequence
@@ -274,13 +275,13 @@ impl DeltaApplier {
                     }
                     
                     target_content.extend_from_slice(&source_content[start..end]);
-                    source_pos = end;
+                    _source_pos = end;
                 }
                 DeltaOperation::Insert { data } => {
                     target_content.extend_from_slice(data);
                 }
                 DeltaOperation::Delete { length } => {
-                    source_pos += *length as usize;
+                    _source_pos += *length as usize;
                 }
             }
         }

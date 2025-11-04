@@ -342,8 +342,7 @@ impl AircraftDetector {
         // Remove common X-Plane suffixes and clean up
         let cleaned = raw_icao
             .trim()
-            .replace('\0', "") // Remove null terminators
-            .replace(' ', "")   // Remove spaces
+            .replace(['\0', ' '], "") // Remove null terminators and spaces
             .to_uppercase();
 
         // Take first 4 characters for standard ICAO
@@ -358,7 +357,7 @@ impl AircraftDetector {
     fn classify_aircraft_type(&self, icao: &str, title: &str, engine_count: u32) -> AircraftType {
         // Check direct mapping first
         if let Some(aircraft_type) = self.aircraft_mappings.get(icao) {
-            return aircraft_type.clone();
+            return *aircraft_type;
         }
 
         // Classify based on title keywords
@@ -402,7 +401,7 @@ impl AircraftDetector {
     fn classify_engine_type(&self, icao: &str, _extended_data: &HashMap<String, DataRefValue>) -> EngineType {
         // Check direct mapping first
         if let Some(engine_type) = self.engine_mappings.get(icao) {
-            return engine_type.clone();
+            return *engine_type;
         }
 
         // TODO: Use extended_data to determine engine type from X-Plane DataRefs

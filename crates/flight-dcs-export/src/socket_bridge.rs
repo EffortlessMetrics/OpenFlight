@@ -102,6 +102,7 @@ pub struct SocketBridge {
     config: SocketBridgeConfig,
     listener: Option<TcpListener>,
     active_connections: HashMap<SocketAddr, ConnectionState>,
+    #[allow(dead_code)]
     message_tx: mpsc::UnboundedSender<(SocketAddr, DcsMessage)>,
     message_rx: mpsc::UnboundedReceiver<(SocketAddr, DcsMessage)>,
 }
@@ -221,7 +222,7 @@ impl SocketBridge {
             }
             Ok(Ok(_)) => {
                 // Parse message
-                match serde_json::from_str::<DcsMessage>(&line.trim()) {
+                match serde_json::from_str::<DcsMessage>(line.trim()) {
                     Ok(message) => {
                         debug!("Received DCS message from {}: {:?}", addr, message);
                         messages.push((addr, message));
@@ -345,7 +346,7 @@ impl SocketBridge {
                 
                 match connection.stream.write_all(line.as_bytes()).await {
                     Ok(()) => {
-                        if let Err(_) = connection.stream.flush().await {
+                        if (connection.stream.flush().await).is_err() {
                             to_remove.push(*addr);
                         } else {
                             connection.last_heartbeat = now;

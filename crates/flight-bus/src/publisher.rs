@@ -141,6 +141,7 @@ struct SubscriberData {
     sender: Sender<BusSnapshot>,
     config: SubscriptionConfig,
     last_sent: Instant,
+    #[allow(dead_code)]
     stats: Arc<Mutex<SubscriberStats>>,
 }
 
@@ -355,10 +356,9 @@ impl BusPublisher {
                         latest_snapshot = Some(snapshot);
                     }
                     
-                    if let Some(snapshot) = latest_snapshot {
-                        if let Err(e) = self.publish(snapshot) {
-                            error!("Failed to publish snapshot: {}", e);
-                        }
+                    if let Some(snapshot) = latest_snapshot
+                        && let Err(e) = self.publish(snapshot) {
+                        error!("Failed to publish snapshot: {}", e);
                     }
                 }
                 else => break,

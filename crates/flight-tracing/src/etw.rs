@@ -28,6 +28,7 @@ impl EtwProvider {
     }
     
     /// Check if ETW is available on this system
+    #[allow(dead_code)]
     pub fn is_available() -> bool {
         // Always available (using file-based logging for simplicity)
         true

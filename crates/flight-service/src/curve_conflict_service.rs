@@ -6,7 +6,7 @@
 //! Provides the main service interface for detecting and resolving
 //! curve conflicts across all axes and simulators.
 
-use flight_axis::{AxisEngine, CurveConflict, ConflictType, ConflictSeverity, ResolutionType, BlackboxAnnotator, ResolutionDetails};
+use flight_axis::{AxisEngine, CurveConflict, ConflictType, ConflictSeverity, ResolutionType, ResolutionDetails};
 use flight_core::{CurveConflictWriter, WriteResult, WritersConfig};
 use flight_ipc::proto::{
     DetectCurveConflictsRequest, DetectCurveConflictsResponse, CurveConflict as ProtoCurveConflict,
@@ -329,8 +329,8 @@ impl CurveConflictService {
         before_conflict: Option<&CurveConflict>,
         after_conflict: Option<&CurveConflict>,
     ) {
-        if let Some(engine) = self.axis_engines.read().get(axis_name) {
-            let details = ResolutionDetails::new(
+        if let Some(_engine) = self.axis_engines.read().get(axis_name) {
+            let _details = ResolutionDetails::new(
                 format!("{:?}", resolution.r#type()),
                 resolution.parameters.clone(),
                 write_result.applied_diffs.clone(),

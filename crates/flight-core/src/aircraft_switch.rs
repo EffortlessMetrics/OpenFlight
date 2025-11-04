@@ -1389,6 +1389,45 @@ mod tests {
         assert!(updated_metrics.total_switches > initial_metrics.total_switches);
     }
 
+    #[tokio::test]
+    async fn test_committed_switches_counter() {
+        let config = test_profile_repo();
+        let auto_switch = AircraftAutoSwitch::new(config);
+        auto_switch.start().await.unwrap();
+
+        let initial_metrics = auto_switch.get_metrics().await;
+        assert_eq!(initial_metrics.committed_switches, 0);
+
+        // First switch to C172
+        let aircraft1 = DetectedAircraft {
+            sim: SimId::Msfs,
+            aircraft_id: AircraftId::new("C172"),
+            process_name: "FlightSimulator.exe".to_string(),
+            detection_time: Instant::now(),
+            confidence: 0.9,
+        };
+
+        auto_switch.on_aircraft_detected(aircraft1.clone()).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        let metrics_after_first = auto_switch.get_metrics().await;
+        assert_eq!(metrics_after_first.committed_switches, 1, "First switch should increment counter");
+
+        // Switch to same aircraft (C172) - should NOT increment
+        auto_switch.on_aircraft_detected(aircraft1).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        let metrics_after_same = auto_switch.get_metrics().await;
+        assert_eq!(metrics_after_same.committed_switches, 1, "Same aircraft should not increment counter");
+
+        // Force switch to same aircraft - should NOT increment (Option 1 semantics)
+        auto_switch.force_switch(AircraftId::new("C172")).await.unwrap();
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        let metrics_after_force_same = auto_switch.get_metrics().await;
+        assert_eq!(metrics_after_force_same.committed_switches, 1, "Force switch to same aircraft should not increment counter");
+    }
+
     fn create_test_snapshot() -> TelemetrySnapshot {
         TelemetrySnapshot {
             sim: SimId::Msfs,

@@ -308,11 +308,10 @@ impl MsfsAdapter {
             let current_state = self.state().await;
             match current_state {
                 AdapterState::Disconnected => {
-                    if self.config.auto_reconnect && self.connection_attempts < self.config.max_reconnect_attempts {
-                        if let Err(e) = self.attempt_reconnect().await {
-                            error!("Reconnection attempt failed: {}", e);
-                            self.connection_attempts += 1;
-                        }
+                    if self.config.auto_reconnect && self.connection_attempts < self.config.max_reconnect_attempts
+                        && let Err(e) = self.attempt_reconnect().await {
+                        error!("Reconnection attempt failed: {}", e);
+                        self.connection_attempts += 1;
                     }
                 }
                 AdapterState::Connected => {
@@ -340,11 +339,10 @@ impl MsfsAdapter {
             }
 
             // Poll session for messages
-            if let Some(session) = &mut self.session {
-                if let Err(e) = session.poll().await {
-                    error!("Session polling error: {}", e);
-                    *self.state.write().await = AdapterState::Error;
-                }
+            if let Some(session) = &mut self.session
+                && let Err(e) = session.poll().await {
+                error!("Session polling error: {}", e);
+                *self.state.write().await = AdapterState::Error;
             }
         }
     }
@@ -432,11 +430,10 @@ impl MsfsAdapter {
         
         let mut mapping = VariableMapping::new(self.config.mapping.clone());
         
-        if let Some(session) = &self.session {
-            if let Some(handle) = session.handle() {
-                mapping.setup_aircraft_definitions(session.api(), handle, &aircraft_info.atc_model)?;
-                mapping.start_data_requests(session.api(), handle)?;
-            }
+        if let Some(session) = &self.session
+            && let Some(handle) = session.handle() {
+            mapping.setup_aircraft_definitions(session.api(), handle, &aircraft_info.atc_model)?;
+            mapping.start_data_requests(session.api(), handle)?;
         }
         
         self.variable_mapping = Some(mapping);

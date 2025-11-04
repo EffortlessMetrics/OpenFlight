@@ -22,7 +22,7 @@
 
 use std::ffi::{c_char, c_void, CString};
 use std::ptr;
-use windows::core::{s, HRESULT, PCSTR};
+use windows::core::{HRESULT, PCSTR, s};
 use windows::Win32::Foundation::{HANDLE, HWND};
 use windows::Win32::System::LibraryLoader::GetProcAddress;
 
@@ -308,6 +308,10 @@ pub struct SimConnectApi {
     transmit_client_event: SimConnect_TransmitClientEvent,
     subscribe_to_system_event: SimConnect_SubscribeToSystemEvent,
 }
+
+// SAFETY: SimConnectApi function pointers are thread-safe
+unsafe impl Send for SimConnectApi {}
+unsafe impl Sync for SimConnectApi {}
 
 impl SimConnectApi {
     /// Load SimConnect API (dynamic or static linking)

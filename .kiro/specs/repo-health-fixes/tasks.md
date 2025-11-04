@@ -24,7 +24,12 @@
   - Update tests to use `test_profile_repo()` instead of production profile paths
   - _Requirements: 1.4, 1.6_
 
-- [-] 3. Increment metrics counters on profile switch
+- [x] 3. Increment metrics counters on profile switch
+
+
+
+
+
 
 
 

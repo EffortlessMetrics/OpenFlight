@@ -12,7 +12,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, RwLock};
 use tracing::{debug, warn, error};
-use crate::error_taxonomy::{ErrorCode, ErrorCategory, StableError};
+use crate::error_taxonomy::ErrorCode;
 
 /// Health event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -190,7 +190,7 @@ impl HealthStream {
         drop(recent);
         
         // Broadcast event
-        if let Err(_) = self.event_tx.send(event.clone()) {
+        if self.event_tx.send(event.clone()).is_err() {
             // No subscribers, which is fine
             debug!("No health event subscribers");
         }

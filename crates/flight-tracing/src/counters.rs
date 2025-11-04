@@ -7,7 +7,7 @@
 //! consumed by CI systems for regression detection and quality gates.
 
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use crate::events::{TraceEvent, EventData};
@@ -80,7 +80,7 @@ impl JitterTracker {
 }
 
 /// Jitter statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct JitterStats {
     pub p50_ns: i64,
     pub p99_ns: i64,
@@ -88,19 +88,10 @@ pub struct JitterStats {
     pub sample_count: usize,
 }
 
-impl Default for JitterStats {
-    fn default() -> Self {
-        Self {
-            p50_ns: 0,
-            p99_ns: 0,
-            max_ns: 0,
-            sample_count: 0,
-        }
-    }
-}
+
 
 /// HID write statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HidStats {
     pub total_writes: u64,
     pub total_time_ns: u64,
@@ -108,16 +99,7 @@ pub struct HidStats {
     pub p99_time_ns: u64,
 }
 
-impl Default for HidStats {
-    fn default() -> Self {
-        Self {
-            total_writes: 0,
-            total_time_ns: 0,
-            avg_time_ns: 0,
-            p99_time_ns: 0,
-        }
-    }
-}
+
 
 /// Complete counter snapshot for CI consumption
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +130,12 @@ pub struct CounterSnapshot {
     
     /// Timestamp of snapshot
     pub timestamp_ns: u64,
+}
+
+impl Default for PerfCounters {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PerfCounters {

@@ -167,7 +167,7 @@ impl PluginCapability {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             "read_datarefs" => Some(PluginCapability::ReadDataRefs),
             "write_datarefs" => Some(PluginCapability::WriteDataRefs),
@@ -316,7 +316,7 @@ impl PluginInterface {
             Ok(Ok(PluginResponse::HandshakeAck { version, capabilities, status })) => {
                 conn.version = version;
                 conn.capabilities = capabilities.iter()
-                    .filter_map(|c| PluginCapability::from_str(c))
+                    .filter_map(|c| PluginCapability::parse(c))
                     .collect();
                 
                 info!("Plugin handshake successful: version={}, status={}", conn.version, status);
@@ -417,8 +417,10 @@ impl PluginInterface {
 
     /// Get DataRef value via plugin
     pub async fn get_dataref(&self, name: &str) -> Result<DataRefValue, PluginError> {
-        let connection = self.connection.read().unwrap();
-        let conn = connection.as_ref().ok_or(PluginError::NotConnected)?;
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+        };
 
         if !conn.capabilities.contains(&PluginCapability::ReadDataRefs) {
             return Err(PluginError::UnsupportedCapability {
@@ -441,7 +443,7 @@ impl PluginInterface {
             name: name.to_string(),
         };
 
-        Self::send_message(conn, message).await?;
+        Self::send_message(&conn, message).await?;
 
         // Wait for response
         match timeout(Duration::from_secs(1), receiver).await {
@@ -467,8 +469,10 @@ impl PluginInterface {
 
     /// Set DataRef value via plugin
     pub async fn set_dataref(&self, name: &str, value: DataRefValue) -> Result<(), PluginError> {
-        let connection = self.connection.read().unwrap();
-        let conn = connection.as_ref().ok_or(PluginError::NotConnected)?;
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+        };
 
         if !conn.capabilities.contains(&PluginCapability::WriteDataRefs) {
             return Err(PluginError::UnsupportedCapability {
@@ -492,7 +496,7 @@ impl PluginInterface {
             value,
         };
 
-        Self::send_message(conn, message).await?;
+        Self::send_message(&conn, message).await?;
 
         // Wait for response
         match timeout(Duration::from_secs(1), receiver).await {
@@ -523,8 +527,10 @@ impl PluginInterface {
 
     /// Subscribe to DataRef updates
     pub async fn subscribe_dataref(&self, name: &str, frequency: f32) -> Result<mpsc::UnboundedReceiver<DataRefValue>, PluginError> {
-        let connection = self.connection.read().unwrap();
-        let conn = connection.as_ref().ok_or(PluginError::NotConnected)?;
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+        };
 
         if !conn.capabilities.contains(&PluginCapability::SubscribeDataRefs) {
             return Err(PluginError::UnsupportedCapability {
@@ -548,15 +554,17 @@ impl PluginInterface {
             frequency,
         };
 
-        Self::send_message(conn, message).await?;
+        Self::send_message(&conn, message).await?;
 
         Ok(rx)
     }
 
     /// Get aircraft information via plugin
     pub async fn get_aircraft_info(&self) -> Result<(String, String, String, String), PluginError> {
-        let connection = self.connection.read().unwrap();
-        let conn = connection.as_ref().ok_or(PluginError::NotConnected)?;
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+        };
 
         if !conn.capabilities.contains(&PluginCapability::AircraftInfo) {
             return Err(PluginError::UnsupportedCapability {
@@ -575,7 +583,7 @@ impl PluginInterface {
 
         // Send request
         let message = PluginMessage::GetAircraftInfo { id: request_id };
-        Self::send_message(conn, message).await?;
+        Self::send_message(&conn, message).await?;
 
         // Wait for response
         match timeout(Duration::from_secs(1), receiver).await {
@@ -647,10 +655,10 @@ mod tests {
         assert_eq!(PluginCapability::WriteDataRefs.as_str(), "write_datarefs");
         
         assert_eq!(
-            PluginCapability::from_str("read_datarefs"),
+            PluginCapability::parse("read_datarefs"),
             Some(PluginCapability::ReadDataRefs)
         );
-        assert_eq!(PluginCapability::from_str("invalid"), None);
+        assert_eq!(PluginCapability::parse("invalid"), None);
     }
 
     #[tokio::test]
