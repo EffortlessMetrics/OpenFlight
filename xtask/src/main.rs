@@ -11,6 +11,7 @@ use std::env;
 
 mod check;
 mod config;
+mod cross_ref;
 mod front_matter;
 mod schema;
 mod validate;

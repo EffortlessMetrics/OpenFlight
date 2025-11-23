@@ -230,7 +230,10 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 ## Phase 2: Refinements and Quality Overlays
 
 
-- [ ] 12. Implement cross-reference checking module
+- [x] 12. Implement cross-reference checking module
+
+
+
 
   - Create `xtask/src/cross_ref.rs` module
   - Implement `build_req_index(ledger: &SpecLedger) -> (HashSet<String>, HashSet<String>)` - returns (req_ids, ac_ids)

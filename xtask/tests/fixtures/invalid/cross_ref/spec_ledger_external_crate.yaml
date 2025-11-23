@@ -1,0 +1,9 @@
+requirements:
+  - id: REQ-1
+    name: Test Requirement
+    status: implemented
+    ac:
+      - id: AC-1.1
+        description: "Test acceptance criteria"
+        tests:
+          - external_crate::tests::test_something
