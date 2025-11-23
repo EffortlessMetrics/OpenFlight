@@ -1,0 +1,5 @@
+# Missing required 'links' field
+doc_id: DOC-CORE-OVERVIEW
+kind: concept
+area: flight-core
+status: draft

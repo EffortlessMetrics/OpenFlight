@@ -1,0 +1,7 @@
+# Missing required 'status' field
+requirements:
+  - id: REQ-1
+    name: Real-Time Axis Processing
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"

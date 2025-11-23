@@ -1,0 +1,9 @@
+# Invalid kind value (not in enum)
+doc_id: DOC-CORE-OVERVIEW
+kind: tutorial
+area: flight-core
+status: draft
+links:
+  requirements: []
+  tasks: []
+  adrs: []

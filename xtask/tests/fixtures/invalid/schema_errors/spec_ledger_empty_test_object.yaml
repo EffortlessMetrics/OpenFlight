@@ -1,0 +1,10 @@
+# Test object must have at least one property (minProperties: 1)
+requirements:
+  - id: REQ-1
+    name: Real-Time Axis Processing
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"
+        tests:
+          - {}

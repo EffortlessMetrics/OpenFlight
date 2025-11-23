@@ -1,0 +1,14 @@
+requirements:
+  - id: REQ-1
+    name: Real-Time Axis Processing
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"
+        tests:
+          - flight-core::axis::tests::test_latency_p99
+      - id: AC-1.2
+        description: "Jitter SHALL be ≤ 0.5ms p99 at 250Hz"
+        tests:
+          - test: flight-scheduler::tests::test_jitter_p99
+          - command: cargo bench --bench axis_latency

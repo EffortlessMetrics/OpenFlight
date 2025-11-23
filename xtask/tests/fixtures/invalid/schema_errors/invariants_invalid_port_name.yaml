@@ -1,0 +1,7 @@
+# Port names must match pattern ^[a-z][a-z0-9-]*$
+environment: local-development
+rust_version: "1.89.0"
+
+ports:
+  FlightService: 8080
+  metrics_port: 9090

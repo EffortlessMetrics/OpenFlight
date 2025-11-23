@@ -1,0 +1,8 @@
+# Invalid requirement ID pattern (should be REQ-N or INF-REQ-N)
+requirements:
+  - id: REQUIREMENT-1
+    name: Real-Time Axis Processing
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"

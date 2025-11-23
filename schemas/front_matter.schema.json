@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Documentation Front Matter Schema",
+  "description": "Schema for YAML front matter in docs/**/*.md files",
+  "type": "object",
+  "required": ["doc_id", "kind", "area", "status", "links"],
+  "additionalProperties": false,
+  "properties": {
+    "doc_id": {
+      "type": "string",
+      "description": "Unique documentation identifier",
+      "pattern": "^DOC-[A-Z0-9-]+$"
+    },
+    "kind": {
+      "type": "string",
+      "description": "Documentation category (band)",
+      "enum": ["requirements", "design", "concept", "how-to", "reference", "adr"]
+    },
+    "area": {
+      "type": "string",
+      "description": "Feature area or crate this documentation covers",
+      "enum": [
+        "flight-core",
+        "flight-virtual",
+        "flight-hid",
+        "flight-ipc",
+        "flight-scheduler",
+        "flight-ffb",
+        "flight-panels",
+        "infra",
+        "ci"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "description": "Current status of the documentation",
+      "enum": ["draft", "active", "deprecated"]
+    },
+    "links": {
+      "type": "object",
+      "description": "Cross-references to requirements, tasks, and ADRs",
+      "additionalProperties": false,
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "description": "List of requirement IDs this document relates to",
+          "items": {
+            "type": "string",
+            "pattern": "^(REQ|INF-REQ)-[0-9]+$"
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "description": "List of task identifiers",
+          "items": {
+            "type": "string"
+          }
+        },
+        "adrs": {
+          "type": "array",
+          "description": "List of ADR identifiers",
+          "items": {
+            "type": "string",
+            "pattern": "^ADR-[0-9]+$"
+          }
+        }
+      }
+    }
+  }
+}

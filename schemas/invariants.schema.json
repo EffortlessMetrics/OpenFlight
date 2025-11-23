@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Infrastructure Invariants Schema",
+  "description": "Schema for infra/**/invariants.yaml - defines infrastructure contracts",
+  "type": "object",
+  "required": ["environment", "rust_version"],
+  "additionalProperties": false,
+  "properties": {
+    "environment": {
+      "type": "string",
+      "description": "Environment name (e.g., local-development, ci, production)",
+      "minLength": 1
+    },
+    "rust_version": {
+      "type": "string",
+      "description": "Required Rust version",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "rust_edition": {
+      "type": "string",
+      "description": "Required Rust edition",
+      "enum": ["2015", "2018", "2021", "2024"]
+    },
+    "ports": {
+      "type": "object",
+      "description": "Logical service names mapped to port numbers",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      },
+      "additionalProperties": false
+    },
+    "env_vars": {
+      "type": "object",
+      "description": "Environment variable specifications",
+      "patternProperties": {
+        "^[A-Z][A-Z0-9_]*$": {
+          "type": "object",
+          "required": ["required", "description"],
+          "additionalProperties": false,
+          "properties": {
+            "required": {
+              "type": "boolean",
+              "description": "Whether this environment variable must be set"
+            },
+            "default": {
+              "type": "string",
+              "description": "Default value if not set"
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of the variable's purpose",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource limits for the environment",
+      "additionalProperties": false,
+      "properties": {
+        "cpu_limit": {
+          "type": "string",
+          "description": "CPU limit (e.g., '2', '500m')"
+        },
+        "memory_limit": {
+          "type": "string",
+          "description": "Memory limit (e.g., '2Gi', '512Mi')"
+        }
+      }
+    }
+  }
+}

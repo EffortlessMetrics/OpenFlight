@@ -1,0 +1,5 @@
+# Missing required 'rust_version' field
+environment: local-development
+
+ports:
+  flight-service: 8080

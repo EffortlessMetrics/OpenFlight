@@ -1,0 +1,9 @@
+# Additional properties not allowed
+requirements:
+  - id: REQ-1
+    name: Real-Time Axis Processing
+    status: draft
+    extra_field: "This should not be here"
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"

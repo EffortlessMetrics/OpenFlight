@@ -50,7 +50,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo xtask check` executes all three steps and exits 0 if all pass, 1 if any fail
   - _Requirements: INF-REQ-10.1, INF-REQ-5.1_
 
-- [ ] 3. Create JSON schemas for validation
+- [x] 3. Create JSON schemas for validation
+
+
+
+
+
   - Create `schemas/` directory
   - Create `schemas/spec_ledger.schema.json` with:
     - `additionalProperties: false` on all objects

@@ -1,0 +1,10 @@
+# Additional properties not allowed
+doc_id: DOC-CORE-OVERVIEW
+kind: concept
+area: flight-core
+status: draft
+author: "John Doe"
+links:
+  requirements: []
+  tasks: []
+  adrs: []
