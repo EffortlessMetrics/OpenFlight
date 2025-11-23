@@ -447,7 +447,12 @@ This phase addresses the gap between implementation and validation by aligning s
   - Acceptance: Cross-ref validation recognizes `cmd:cargo xtask validate` as valid test reference
   - _Requirements: INF-REQ-2.4, INF-REQ-6.2_
 
-- [ ] 24. Update spec ledger with command-based test references for INF-REQ-1
+- [x] 24. Update spec ledger with command-based test references for INF-REQ-1
+
+
+
+
+
   - Open `specs/spec_ledger.yaml`
   - For INF-REQ-1 (Structured Documentation System), update all AC test references:
     - AC-1.1 (Documentation bands): `tests: [cmd:cargo xtask normalize-docs]`
