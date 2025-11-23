@@ -14,6 +14,35 @@ use crate::{VirtualDeviceManager, VirtualDeviceConfig, DeviceType};
 use crate::loopback::{LoopbackHid, HidReport};
 use crate::perf_gate::{PerfGate, PerfGateConfig};
 
+/// Reusable test helper for timing-dependent tests
+/// 
+/// Polls a condition function until it returns true or timeout is reached.
+/// This replaces fixed sleep() calls with proper synchronization.
+/// 
+/// # Arguments
+/// * `timeout` - Maximum duration to wait
+/// * `poll` - Function that returns true when condition is met
+/// 
+/// # Returns
+/// * `true` if condition was met within timeout
+/// * `false` if timeout was reached
+fn wait_until<F>(timeout: Duration, mut poll: F) -> bool
+where
+    F: FnMut() -> bool,
+{
+    let start = Instant::now();
+    let poll_interval = Duration::from_millis(10);
+    
+    while start.elapsed() < timeout {
+        if poll() {
+            return true;
+        }
+        thread::sleep(poll_interval);
+    }
+    
+    false
+}
+
 #[test]
 fn test_scheduler_virtual_device_integration() {
     let mut manager = VirtualDeviceManager::new();
@@ -322,4 +351,8 @@ fn test_ci_benchmark() {
         std::env::set_var("FLIGHT_HUB_MISS_RATE", 
                          result.timing_result.miss_rate.to_string());
     }
+    
+    // Don't assert on result.passed - this is a benchmark test that collects metrics
+    // The test should not fail even if performance is below threshold
+    // In production CI, these metrics would be tracked over time
 }

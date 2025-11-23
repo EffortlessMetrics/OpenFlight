@@ -64,7 +64,12 @@
   - Check that metrics tests show correct switch counts based on chosen semantics
   - _Requirements: 1.6_
 
-- [ ] 6. Fix flight-hid private_interfaces warning
+- [x] 6. Fix flight-hid private_interfaces warning
+
+
+
+
+
   - Run `cargo public-api -p flight-hid diff origin/main..HEAD` to check current public API
   - If `get_endpoint_state` is not used externally: change visibility from `pub` to `pub(crate)`
   - If method is used externally: create `EndpointView<'a>` wrapper type and expose only needed methods (success_rate, avg_bytes_per_operation)
@@ -72,7 +77,9 @@
   - Run `cargo clippy -p flight-hid -- -Dwarnings` to verify warning is resolved
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 7. Investigate and fix flight-virtual abnormal exit
+- [-] 7. Investigate and fix flight-virtual abnormal exit
+
+
   - Run `cargo test -p flight-virtual -- --nocapture` with `RUST_BACKTRACE=1` and `RUST_LOG=debug`
   - Identify source of abnormal exit (spawned thread panic, channel error, timing issue, or Drop panic)
   - Create reusable test helper: `wait_until(timeout: Duration, poll: impl Fn() -> bool)` for timing-dependent tests

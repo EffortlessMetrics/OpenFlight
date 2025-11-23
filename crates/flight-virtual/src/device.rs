@@ -6,7 +6,6 @@
 //! Simulates flight control devices for testing without hardware
 
 use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
-use std::sync::Arc;
 use std::time::Instant;
 use parking_lot::Mutex;
 use serde::{Serialize, Deserialize};

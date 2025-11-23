@@ -229,7 +229,7 @@ impl Ofp1Emulator {
         self.state.connected.store(false, Ordering::Relaxed);
         
         if let Some(handle) = self.simulation_thread.take() {
-            let _ = handle.join();
+            handle.join().expect("Emulator simulation thread panicked");
         }
     }
     

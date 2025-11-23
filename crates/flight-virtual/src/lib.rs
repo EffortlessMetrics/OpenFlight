@@ -49,7 +49,7 @@ impl VirtualDeviceManager {
     /// Enable HID loopback for testing
     pub fn enable_loopback(&mut self) -> &mut LoopbackHid {
         self.loopback = Some(LoopbackHid::new());
-        self.loopback.as_mut().unwrap()
+        self.loopback.as_mut().expect("Loopback was just initialized")
     }
 
     /// Get all virtual devices
