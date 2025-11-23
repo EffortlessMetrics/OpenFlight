@@ -76,6 +76,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 
 
+
   - Create `xtask/src/schema.rs` module
   - Implement `validate_yaml_against_schema(yaml_path: &Path, schema_path: &Path) -> Result<(), Vec<SchemaError>>`
   - Load YAML into serde_yaml::Value, convert to JSON for jsonschema validation
@@ -85,6 +86,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: Tests pass for both valid schemas and intentional violations with correct error codes
   - _Requirements: INF-REQ-12.4, INF-REQ-12.7_
 
+-
 
 - [ ] 5. Create minimal spec ledger
   - Create `specs/` directory
