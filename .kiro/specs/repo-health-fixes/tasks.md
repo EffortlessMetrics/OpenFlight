@@ -139,15 +139,24 @@
   - Run `cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings` to verify
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 11. Clean up meaningless test assertions
+- [x] 11. Clean up meaningless test assertions
+
+
+
+
+
   - Search for `assert!(value >= 0)` where value is unsigned type (u32, u64, usize)
   - Either remove meaningless assertions or change to meaningful bounds (e.g., `assert!(value > 0, "Duration should be non-zero")`)
   - For duration/timing assertions, consider reasonable range checks: `assert!(value > 0 && value < 10_000, "Duration {} ms outside expected range", value)`
   - Run `cargo test --all` to verify tests still pass
   - Run `cargo clippy --tests` to verify no unused_comparisons warnings
   - _Requirements: 8.1, 8.2, 8.3_
+-
 
-- [ ] 12. Harden CI workflows
+- [x] 12. Harden CI workflows
+
+
+
   - Add concurrency control to workflow: `concurrency: { group: "ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}", cancel-in-progress: true }`
   - Add platform-appropriate timeout-minutes: Windows tests 20min, Linux tests 10min, Windows builds 45min, Linux builds 30min
   - Set `fail-fast: false` in matrix jobs so Linux failures don't mask Windows issues
@@ -157,14 +166,23 @@
   - Verify required check names in repository settings match job names exactly
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [ ] 13. Create missing documentation files
+- [x] 13. Create missing documentation files
+
+
+
+
   - Create stub ADR files: docs/adr/001-*.md through docs/adr/005-*.md with standard format (Status, Context, Decision, Consequences)
   - Create docs/regression-prevention.md with relevant testing and validation content
   - If using mdBook, update docs/SUMMARY.md to include all ADRs and documentation files
   - Verify all README links work by checking file existence
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 14. Validate "properly working" definition
+
+- [x] 14. Validate "properly working" definition
+
+
+
+
   - Run `cargo test -p flight-core` (must pass with 0 failures)
   - Run `cargo test -p flight-virtual` (must pass with exit code 0, no panics in background threads)
   - Run `cargo clippy -p flight-core -- -Dwarnings` (must pass)
