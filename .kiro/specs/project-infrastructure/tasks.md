@@ -513,7 +513,11 @@ This phase addresses the gap between implementation and validation by aligning s
   - Run `cargo xtask validate` and verify no INF-XREF-002 errors for INF-REQ-4
   - _Requirements: INF-REQ-2.3_
 
-- [ ] 28. Update spec ledger with command-based test references for INF-REQ-5 through INF-REQ-12
+- [x] 28. Update spec ledger with command-based test references for INF-REQ-5 through INF-REQ-12
+
+
+
+
   - For INF-REQ-5 (Validation Framework):
     - All ACs: `tests: [cmd:cargo xtask validate]`
   - For INF-REQ-6 (Cross-Reference Checking):
