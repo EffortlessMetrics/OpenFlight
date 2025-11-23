@@ -26,14 +26,26 @@ async fn when_file_placed_in_docs(world: &mut FlightWorld) {
     }
 }
 
-#[then("it SHALL be organized into one of the bands: requirements, design, concepts, how-to, reference, or adr")]
+#[then(
+    "it SHALL be organized into one of the bands: requirements, design, concepts, how-to, reference, or adr"
+)]
 async fn then_organized_into_bands(world: &mut FlightWorld) {
-    let valid_bands = ["requirements", "design", "concepts", "how-to", "reference", "adr"];
-    
+    let valid_bands = [
+        "requirements",
+        "design",
+        "concepts",
+        "how-to",
+        "reference",
+        "adr",
+    ];
+
     if let Some(ref path) = world.doc_path {
         let path_parts: Vec<&str> = path.split('/').collect();
-        assert!(path_parts.len() >= 2, "Path must have at least docs/<band>/");
-        
+        assert!(
+            path_parts.len() >= 2,
+            "Path must have at least docs/<band>/"
+        );
+
         let band = path_parts[1];
         assert!(
             valid_bands.contains(&band),
@@ -85,7 +97,7 @@ async fn then_has_required_fields(world: &mut FlightWorld) {
         "Front matter must be present and valid: {:?}",
         world.validation_errors
     );
-    
+
     let fm = world.front_matter.as_ref().unwrap();
     assert!(!fm.doc_id.is_empty(), "doc_id must not be empty");
     assert!(!fm.kind.is_empty(), "kind must not be empty");
@@ -128,10 +140,10 @@ async fn when_doc_written(world: &mut FlightWorld) {
 #[then("it SHALL use stable requirement IDs like REQ-1, INF-REQ-1, or AC-1.1")]
 async fn then_uses_stable_ids(world: &mut FlightWorld) {
     assert!(world.front_matter.is_some(), "Front matter must be present");
-    
+
     let fm = world.front_matter.as_ref().unwrap();
     let req_pattern = regex::Regex::new(r"^(REQ|INF-REQ)-\d+$|^AC-\d+\.\d+$").unwrap();
-    
+
     for req_id in &fm.links.requirements {
         assert!(
             req_pattern.is_match(req_id),
@@ -158,13 +170,13 @@ async fn when_system_validates(world: &mut FlightWorld) {
 async fn then_doc_ids_unique(world: &mut FlightWorld) {
     let mut seen = HashSet::new();
     let mut duplicates = Vec::new();
-    
+
     for doc_id in &world.doc_ids {
         if !seen.insert(doc_id.clone()) {
             duplicates.push(doc_id.clone());
         }
     }
-    
+
     assert!(
         duplicates.is_empty(),
         "Duplicate doc_ids found: {:?}",
@@ -182,7 +194,10 @@ async fn given_docs_with_front_matter(_world: &mut FlightWorld) {
         return;
     }
     let docs = collect_docs_with_front_matter();
-    assert!(!docs.is_empty(), "No documentation files with front matter found");
+    assert!(
+        !docs.is_empty(),
+        "No documentation files with front matter found"
+    );
 }
 
 #[when("generating documentation indexes")]
@@ -197,30 +212,36 @@ async fn then_produces_grouped_tables(_world: &mut FlightWorld) {
     if !std::path::Path::new("docs").exists() {
         return;
     }
-    
+
     let docs = collect_docs_with_front_matter();
-    
+
     // If no docs found, skip (test environment)
     if docs.is_empty() {
         return;
     }
-    
+
     // Group by kind (band)
-    let mut by_kind: std::collections::HashMap<String, Vec<FrontMatter>> = std::collections::HashMap::new();
+    let mut by_kind: std::collections::HashMap<String, Vec<FrontMatter>> =
+        std::collections::HashMap::new();
     for doc in docs {
         by_kind.entry(doc.kind.clone()).or_default().push(doc);
     }
-    
+
     // Verify we can group by kind
     assert!(!by_kind.is_empty(), "Should be able to group docs by kind");
-    
+
     // Group by area within each kind
     for (kind, docs_in_kind) in by_kind {
-        let mut by_area: std::collections::HashMap<String, Vec<FrontMatter>> = std::collections::HashMap::new();
+        let mut by_area: std::collections::HashMap<String, Vec<FrontMatter>> =
+            std::collections::HashMap::new();
         for doc in docs_in_kind {
             by_area.entry(doc.area.clone()).or_default().push(doc);
         }
-        assert!(!by_area.is_empty(), "Should be able to group docs by area within kind {}", kind);
+        assert!(
+            !by_area.is_empty(),
+            "Should be able to group docs by area within kind {}",
+            kind
+        );
     }
 }
 
@@ -249,16 +270,18 @@ async fn when_checking_coverage(world: &mut FlightWorld) {
 #[then("at least one concept document SHALL exist in docs/concepts/ for that area")]
 async fn then_concept_doc_exists(_world: &mut FlightWorld) {
     // If Cargo.toml or docs directory doesn't exist, skip this check (test environment)
-    if !std::path::Path::new("Cargo.toml").exists() || !std::path::Path::new("docs/concepts").exists() {
+    if !std::path::Path::new("Cargo.toml").exists()
+        || !std::path::Path::new("docs/concepts").exists()
+    {
         return;
     }
-    
+
     let workspace_crates = get_workspace_crates();
     let concept_docs = get_concept_doc_areas();
-    
+
     // For core crates, verify concept docs exist
     let core_crates = ["flight-core", "flight-virtual", "flight-hid", "flight-ipc"];
-    
+
     for crate_name in &core_crates {
         if workspace_crates.contains(&crate_name.to_string()) {
             let area = crate_name.to_string();
@@ -291,7 +314,7 @@ links:
 "#
         .to_string(),
     );
-    
+
     if let Some(ref content) = world.doc_content {
         world.front_matter = extract_and_parse_front_matter(content).ok();
     }
@@ -307,7 +330,7 @@ async fn when_status_changes(world: &mut FlightWorld) {
 #[then("the front matter status field SHALL be updated to reflect the new state")]
 async fn then_status_updated(world: &mut FlightWorld) {
     assert!(world.front_matter.is_some(), "Front matter must exist");
-    
+
     let fm = world.front_matter.as_ref().unwrap();
     assert_eq!(fm.status, "active", "Status should be updated to 'active'");
 }
@@ -320,9 +343,9 @@ fn extract_and_parse_front_matter(content: &str) -> Result<FrontMatter, String> 
     if parts.len() < 3 {
         return Err("No front matter found".to_string());
     }
-    
+
     let yaml_content = parts[1].trim();
-    
+
     #[derive(Deserialize)]
     struct RawFrontMatter {
         doc_id: String,
@@ -332,7 +355,7 @@ fn extract_and_parse_front_matter(content: &str) -> Result<FrontMatter, String> 
         #[serde(default)]
         links: RawLinks,
     }
-    
+
     #[derive(Deserialize, Default)]
     struct RawLinks {
         #[serde(default)]
@@ -342,10 +365,10 @@ fn extract_and_parse_front_matter(content: &str) -> Result<FrontMatter, String> 
         #[serde(default)]
         adrs: Vec<String>,
     }
-    
-    let raw: RawFrontMatter = serde_yaml::from_str(yaml_content)
-        .map_err(|e| format!("Failed to parse YAML: {}", e))?;
-    
+
+    let raw: RawFrontMatter =
+        serde_yaml::from_str(yaml_content).map_err(|e| format!("Failed to parse YAML: {}", e))?;
+
     Ok(FrontMatter {
         doc_id: raw.doc_id,
         kind: raw.kind,
@@ -361,8 +384,11 @@ fn extract_and_parse_front_matter(content: &str) -> Result<FrontMatter, String> 
 
 fn collect_doc_ids_from_filesystem() -> Vec<String> {
     let mut doc_ids = Vec::new();
-    
-    if let Ok(entries) = WalkDir::new("docs").into_iter().collect::<Result<Vec<_>, _>>() {
+
+    if let Ok(entries) = WalkDir::new("docs")
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+    {
         for entry in entries {
             if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
                 if let Ok(content) = fs::read_to_string(entry.path()) {
@@ -373,14 +399,17 @@ fn collect_doc_ids_from_filesystem() -> Vec<String> {
             }
         }
     }
-    
+
     doc_ids
 }
 
 fn collect_docs_with_front_matter() -> Vec<FrontMatter> {
     let mut docs = Vec::new();
-    
-    if let Ok(entries) = WalkDir::new("docs").into_iter().collect::<Result<Vec<_>, _>>() {
+
+    if let Ok(entries) = WalkDir::new("docs")
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+    {
         for entry in entries {
             if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
                 if let Ok(content) = fs::read_to_string(entry.path()) {
@@ -391,14 +420,14 @@ fn collect_docs_with_front_matter() -> Vec<FrontMatter> {
             }
         }
     }
-    
+
     docs
 }
 
 fn get_workspace_crates() -> Vec<String> {
     // Parse Cargo.toml to get workspace members
     let cargo_toml = fs::read_to_string("Cargo.toml").unwrap_or_default();
-    
+
     // Simple parsing - look for crates/ entries
     cargo_toml
         .lines()
@@ -414,8 +443,11 @@ fn get_workspace_crates() -> Vec<String> {
 
 fn get_concept_doc_areas() -> HashSet<String> {
     let mut areas = HashSet::new();
-    
-    if let Ok(entries) = WalkDir::new("docs/concepts").into_iter().collect::<Result<Vec<_>, _>>() {
+
+    if let Ok(entries) = WalkDir::new("docs/concepts")
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+    {
         for entry in entries {
             if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
                 if let Ok(content) = fs::read_to_string(entry.path()) {
@@ -426,6 +458,6 @@ fn get_concept_doc_areas() -> HashSet<String> {
             }
         }
     }
-    
+
     areas
 }

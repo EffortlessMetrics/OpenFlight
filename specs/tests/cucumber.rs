@@ -17,7 +17,7 @@ pub struct FlightWorld {
     pub scheduler_state: Option<SchedulerState>,
     pub latency_measurements: Vec<f64>,
     pub jitter_measurements: Vec<f64>,
-    
+
     // Documentation validation state
     pub doc_path: Option<String>,
     pub doc_content: Option<String>,
@@ -65,8 +65,6 @@ async fn main() {
         // Fallback for when running from specs directory
         "features/"
     };
-    
-    FlightWorld::cucumber()
-        .run_and_exit(features_path)
-        .await;
+
+    FlightWorld::cucumber().run_and_exit(features_path).await;
 }
