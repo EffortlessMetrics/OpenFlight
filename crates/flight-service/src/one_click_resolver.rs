@@ -6,13 +6,15 @@
 //! Provides a streamlined workflow for detecting conflicts and applying
 //! resolutions with comprehensive testing and verification.
 
-use flight_axis::{CurveConflict, ConflictType, ResolutionType, BlackboxAnnotator, ResolutionDetails};
-use flight_core::{CurveConflictWriter, WriteResult, BackupInfo};
+use anyhow::{Context, Result};
+use flight_axis::{
+    BlackboxAnnotator, ConflictType, CurveConflict, ResolutionDetails, ResolutionType,
+};
+use flight_core::{BackupInfo, CurveConflictWriter, WriteResult};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
-use tracing::{info, warn, debug};
-use anyhow::{Result, Context};
+use tracing::{debug, info, warn};
 
 /// Configuration for one-click resolution
 #[derive(Debug, Clone)]
@@ -132,9 +134,9 @@ impl OneClickResolver {
 
     /// Create new one-click resolver with custom configuration
     pub fn with_config(config: OneClickResolverConfig) -> Result<Self> {
-        let writer = CurveConflictWriter::new()
-            .context("Failed to create curve conflict writer")?;
-        
+        let writer =
+            CurveConflictWriter::new().context("Failed to create curve conflict writer")?;
+
         let blackbox = if config.enable_blackbox {
             BlackboxAnnotator::new()
         } else {
@@ -156,7 +158,10 @@ impl OneClickResolver {
         sim_id: &str,
         sim_version: &str,
     ) -> Result<OneClickResult> {
-        info!("Starting one-click resolution for axis '{}' conflict: {:?}", axis_name, conflict.conflict_type);
+        info!(
+            "Starting one-click resolution for axis '{}' conflict: {:?}",
+            axis_name, conflict.conflict_type
+        );
 
         let start_time = Instant::now();
         let mut steps = Vec::new();
@@ -250,13 +255,13 @@ impl OneClickResolver {
                     duration_ms: apply_step_start.elapsed().as_millis() as u64,
                     error: write_result.error_message.clone(),
                 });
-                
+
                 if !write_result.success {
                     result.error_message = write_result.error_message.clone();
                     result.steps_performed = steps;
                     return Ok(result);
                 }
-                
+
                 result.modified_files = write_result.applied_diffs.clone();
                 write_result
             }
@@ -278,25 +283,29 @@ impl OneClickResolver {
         // Step 4: Verify resolution if enabled
         if self.config.verify_resolution {
             let verify_step_start = Instant::now();
-            let verification = self.verify_resolution(axis_name, conflict).unwrap_or_else(|e| {
-                VerificationOutcome {
+            let verification = self
+                .verify_resolution(axis_name, conflict)
+                .unwrap_or_else(|e| VerificationOutcome {
                     passed: false,
                     details: format!("Verification failed: {}", e),
                     duration_ms: verify_step_start.elapsed().as_millis() as u64,
                     conflict_resolved: false,
-                }
-            });
+                });
 
             steps.push(ResolutionStep {
                 name: "verify_resolution".to_string(),
                 description: "Verify resolution effectiveness".to_string(),
                 success: verification.passed,
                 duration_ms: verification.duration_ms,
-                error: if verification.passed { None } else { Some(verification.details.clone()) },
+                error: if verification.passed {
+                    None
+                } else {
+                    Some(verification.details.clone())
+                },
             });
 
             result.verification = verification;
-            
+
             if !result.verification.passed {
                 result.error_message = Some("Resolution verification failed".to_string());
             }
@@ -329,7 +338,7 @@ impl OneClickResolver {
 
         // Calculate overall success and improvement
         result.success = write_result.success && result.verification.passed;
-        
+
         if let (Some(before), Some(after)) = (&result.metrics.before, &result.metrics.after) {
             result.metrics.improvement = if before.nonlinearity > 0.0 {
                 ((before.nonlinearity - after.nonlinearity) / before.nonlinearity).max(0.0)
@@ -353,19 +362,30 @@ impl OneClickResolver {
     }
 
     /// Select the best resolution strategy for a conflict
-    fn select_resolution_strategy<'a>(&self, conflict: &'a CurveConflict) -> Result<&'a flight_axis::ConflictResolution> {
+    fn select_resolution_strategy<'a>(
+        &self,
+        conflict: &'a CurveConflict,
+    ) -> Result<&'a flight_axis::ConflictResolution> {
         if conflict.suggested_resolutions.is_empty() {
             return Err(anyhow::anyhow!("No resolution strategies available"));
         }
 
         // Select the resolution with highest estimated improvement
-        let best_resolution = conflict.suggested_resolutions
+        let best_resolution = conflict
+            .suggested_resolutions
             .iter()
-            .max_by(|a, b| a.estimated_improvement.partial_cmp(&b.estimated_improvement).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|a, b| {
+                a.estimated_improvement
+                    .partial_cmp(&b.estimated_improvement)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
             .ok_or_else(|| anyhow::anyhow!("Failed to select best resolution"))?;
 
-        debug!("Selected resolution: {} (estimated improvement: {:.1}%)", 
-               best_resolution.description, best_resolution.estimated_improvement * 100.0);
+        debug!(
+            "Selected resolution: {} (estimated improvement: {:.1}%)",
+            best_resolution.description,
+            best_resolution.estimated_improvement * 100.0
+        );
 
         Ok(best_resolution)
     }
@@ -405,20 +425,29 @@ impl OneClickResolver {
             ResolutionType::ReduceCurveStrength => "reduce_curve_strength",
         };
 
-        debug!("Applying resolution: {} for {} {}", resolution_type_str, sim_id, sim_version);
+        debug!(
+            "Applying resolution: {} for {} {}",
+            resolution_type_str, sim_id, sim_version
+        );
 
-        self.writer.resolve_curve_conflict(
-            sim_id,
-            sim_version,
-            resolution_type_str,
-            &resolution.parameters,
-        ).map_err(|e| anyhow::anyhow!("Writer error: {}", e))
+        self.writer
+            .resolve_curve_conflict(
+                sim_id,
+                sim_version,
+                resolution_type_str,
+                &resolution.parameters,
+            )
+            .map_err(|e| anyhow::anyhow!("Writer error: {}", e))
     }
 
     /// Verify that the resolution was effective
-    fn verify_resolution(&self, axis_name: &str, original_conflict: &CurveConflict) -> Result<VerificationOutcome> {
+    fn verify_resolution(
+        &self,
+        axis_name: &str,
+        original_conflict: &CurveConflict,
+    ) -> Result<VerificationOutcome> {
         let start_time = Instant::now();
-        
+
         // Wait for changes to take effect
         std::thread::sleep(Duration::from_millis(1000));
 
@@ -432,7 +461,7 @@ impl OneClickResolver {
         };
 
         let duration = start_time.elapsed();
-        
+
         let outcome = VerificationOutcome {
             passed: verification_passed,
             details: if verification_passed {
@@ -444,8 +473,10 @@ impl OneClickResolver {
             conflict_resolved: verification_passed,
         };
 
-        debug!("Verification completed for axis '{}': passed={}, duration={}ms", 
-               axis_name, outcome.passed, outcome.duration_ms);
+        debug!(
+            "Verification completed for axis '{}': passed={}, duration={}ms",
+            axis_name, outcome.passed, outcome.duration_ms
+        );
 
         Ok(outcome)
     }
@@ -464,22 +495,23 @@ impl OneClickResolver {
             resolution_type_str.to_string(),
             HashMap::new(), // Parameters would be passed separately in real implementation
             write_result.applied_diffs.clone(),
-            write_result.backup_path.as_ref().map(|p| p.to_string_lossy().to_string()),
+            write_result
+                .backup_path
+                .as_ref()
+                .map(|p| p.to_string_lossy().to_string()),
             success,
-        ).with_metrics(
+        )
+        .with_metrics(
             before_metrics.map(|m| self.convert_metrics_to_conflict_data(m)),
             after_metrics.map(|m| self.convert_metrics_to_conflict_data(m)),
         );
 
-        self.blackbox.annotate_resolution_applied(
-            axis_name,
-            resolution_type_str,
-            success,
-            details,
-        );
+        self.blackbox
+            .annotate_resolution_applied(axis_name, resolution_type_str, success, details);
 
         if success {
-            self.blackbox.annotate_conflict_cleared(axis_name, "One-click resolution successful");
+            self.blackbox
+                .annotate_conflict_cleared(axis_name, "One-click resolution successful");
         }
     }
 
@@ -494,7 +526,10 @@ impl OneClickResolver {
     }
 
     /// Convert metrics to blackbox conflict data format
-    fn convert_metrics_to_conflict_data(&self, metrics: &ConflictMetrics) -> flight_axis::ConflictData {
+    fn convert_metrics_to_conflict_data(
+        &self,
+        metrics: &ConflictMetrics,
+    ) -> flight_axis::ConflictData {
         flight_axis::ConflictData {
             conflict_type: "Metrics".to_string(),
             severity: "Unknown".to_string(),
@@ -528,15 +563,20 @@ impl OneClickResolver {
 
     /// Rollback a previous resolution
     pub fn rollback_resolution(&self, backup_info: &BackupInfo) -> Result<WriteResult> {
-        info!("Rolling back resolution using backup: {:?}", backup_info.backup_dir);
-        
-        self.writer.rollback(&backup_info.backup_dir)
+        info!(
+            "Rolling back resolution using backup: {:?}",
+            backup_info.backup_dir
+        );
+
+        self.writer
+            .rollback(&backup_info.backup_dir)
             .map_err(|e| anyhow::anyhow!("Rollback failed: {}", e))
     }
 
     /// List available backups for rollback
     pub fn list_available_backups(&self) -> Result<Vec<BackupInfo>> {
-        self.writer.list_backups()
+        self.writer
+            .list_backups()
             .map_err(|e| anyhow::anyhow!("Failed to list backups: {}", e))
     }
 
@@ -555,7 +595,7 @@ impl Default for OneClickResolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_axis::{ConflictSeverity, ConflictMetadata, ConflictResolution};
+    use flight_axis::{ConflictMetadata, ConflictResolution, ConflictSeverity};
     use std::time::Instant;
 
     fn create_test_conflict() -> CurveConflict {
@@ -573,15 +613,13 @@ mod tests {
                 actual_outputs: vec![0.0, 0.3, 1.0],
                 detection_timestamp: Instant::now(),
             },
-            suggested_resolutions: vec![
-                ConflictResolution {
-                    resolution_type: ResolutionType::DisableSimCurve,
-                    description: "Disable simulator curve".to_string(),
-                    estimated_improvement: 0.8,
-                    requires_sim_restart: true,
-                    parameters: HashMap::new(),
-                },
-            ],
+            suggested_resolutions: vec![ConflictResolution {
+                resolution_type: ResolutionType::DisableSimCurve,
+                description: "Disable simulator curve".to_string(),
+                estimated_improvement: 0.8,
+                requires_sim_restart: true,
+                parameters: HashMap::new(),
+            }],
             detected_at: Instant::now(),
         }
     }
@@ -596,10 +634,10 @@ mod tests {
     fn test_strategy_selection() {
         let resolver = OneClickResolver::new().unwrap();
         let conflict = create_test_conflict();
-        
+
         let strategy = resolver.select_resolution_strategy(&conflict);
         assert!(strategy.is_ok());
-        
+
         let selected = strategy.unwrap();
         assert_eq!(selected.resolution_type, ResolutionType::DisableSimCurve);
     }
@@ -607,7 +645,7 @@ mod tests {
     #[test]
     fn test_available_strategies() {
         let resolver = OneClickResolver::new().unwrap();
-        
+
         let strategies = resolver.get_available_strategies(&ConflictType::DoubleCurve);
         assert!(!strategies.is_empty());
         assert!(strategies.contains(&ResolutionType::DisableSimCurve));
@@ -618,7 +656,7 @@ mod tests {
     fn test_metrics_extraction() {
         let resolver = OneClickResolver::new().unwrap();
         let conflict = create_test_conflict();
-        
+
         let metrics = resolver.extract_metrics(&conflict);
         assert_eq!(metrics.nonlinearity, 0.5);
         assert_eq!(metrics.sim_curve_strength, 0.4);

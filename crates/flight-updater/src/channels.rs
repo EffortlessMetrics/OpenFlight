@@ -82,100 +82,114 @@ impl ChannelManager {
     /// Create a new channel manager with default configurations
     pub fn new() -> Self {
         let mut configs = HashMap::new();
-        
+
         // Stable channel
-        configs.insert(Channel::Stable, ChannelConfig {
-            channel: Channel::Stable,
-            check_frequency_hours: 24,
-            auto_install: false,
-            accept_prerelease: false,
-            update_url: "https://updates.flight-hub.dev/stable".to_string(),
-            public_key: include_str!("../keys/stable.pub").to_string(),
-        });
-        
+        configs.insert(
+            Channel::Stable,
+            ChannelConfig {
+                channel: Channel::Stable,
+                check_frequency_hours: 24,
+                auto_install: false,
+                accept_prerelease: false,
+                update_url: "https://updates.flight-hub.dev/stable".to_string(),
+                public_key: include_str!("../keys/stable.pub").to_string(),
+            },
+        );
+
         // Beta channel
-        configs.insert(Channel::Beta, ChannelConfig {
-            channel: Channel::Beta,
-            check_frequency_hours: 12,
-            auto_install: false,
-            accept_prerelease: true,
-            update_url: "https://updates.flight-hub.dev/beta".to_string(),
-            public_key: include_str!("../keys/beta.pub").to_string(),
-        });
-        
+        configs.insert(
+            Channel::Beta,
+            ChannelConfig {
+                channel: Channel::Beta,
+                check_frequency_hours: 12,
+                auto_install: false,
+                accept_prerelease: true,
+                update_url: "https://updates.flight-hub.dev/beta".to_string(),
+                public_key: include_str!("../keys/beta.pub").to_string(),
+            },
+        );
+
         // Canary channel
-        configs.insert(Channel::Canary, ChannelConfig {
-            channel: Channel::Canary,
-            check_frequency_hours: 6,
-            auto_install: false,
-            accept_prerelease: true,
-            update_url: "https://updates.flight-hub.dev/canary".to_string(),
-            public_key: include_str!("../keys/canary.pub").to_string(),
-        });
-        
+        configs.insert(
+            Channel::Canary,
+            ChannelConfig {
+                channel: Channel::Canary,
+                check_frequency_hours: 6,
+                auto_install: false,
+                accept_prerelease: true,
+                update_url: "https://updates.flight-hub.dev/canary".to_string(),
+                public_key: include_str!("../keys/canary.pub").to_string(),
+            },
+        );
+
         Self {
             configs,
             current_channel: Channel::Stable,
         }
     }
-    
+
     /// Get configuration for a specific channel
     pub fn get_config(&self, channel: Channel) -> Option<&ChannelConfig> {
         self.configs.get(&channel)
     }
-    
+
     /// Get current active channel
     pub fn current_channel(&self) -> Channel {
         self.current_channel
     }
-    
+
     /// Switch to a different channel
     pub fn switch_channel(&mut self, channel: Channel) -> crate::Result<()> {
         if !self.configs.contains_key(&channel) {
             return Err(crate::UpdateError::ChannelNotFound(channel.to_string()));
         }
-        
-        tracing::info!("Switching from {} to {} channel", self.current_channel, channel);
+
+        tracing::info!(
+            "Switching from {} to {} channel",
+            self.current_channel,
+            channel
+        );
         self.current_channel = channel;
         Ok(())
     }
-    
+
     /// Update configuration for a channel
     pub fn update_config(&mut self, channel: Channel, config: ChannelConfig) {
         self.configs.insert(channel, config);
     }
-    
+
     /// Get all available channels
     pub fn available_channels(&self) -> Vec<Channel> {
         self.configs.keys().copied().collect()
     }
-    
+
     /// Validate channel configuration
     pub fn validate_config(&self, channel: Channel) -> crate::Result<()> {
-        let config = self.get_config(channel)
+        let config = self
+            .get_config(channel)
             .ok_or_else(|| crate::UpdateError::ChannelNotFound(channel.to_string()))?;
-        
+
         // Validate URL format
         if config.update_url.is_empty() {
             return Err(crate::UpdateError::VersionValidation(
-                "Update URL cannot be empty".to_string()
+                "Update URL cannot be empty".to_string(),
             ));
         }
-        
+
         // Validate public key
         if config.public_key.is_empty() {
             return Err(crate::UpdateError::VersionValidation(
-                "Public key cannot be empty".to_string()
+                "Public key cannot be empty".to_string(),
             ));
         }
-        
+
         // Validate check frequency (minimum 1 hour)
         if config.check_frequency_hours == 0 {
             return Err(crate::UpdateError::VersionValidation(
-                "Check frequency must be at least 1 hour".to_string()
+                "Check frequency must be at least 1 hour".to_string(),
             ));
         }
-        
+
         Ok(())
     }
 }
@@ -215,10 +229,10 @@ mod tests {
     #[test]
     fn test_channel_switching() {
         let mut manager = ChannelManager::new();
-        
+
         assert!(manager.switch_channel(Channel::Beta).is_ok());
         assert_eq!(manager.current_channel(), Channel::Beta);
-        
+
         assert!(manager.switch_channel(Channel::Canary).is_ok());
         assert_eq!(manager.current_channel(), Channel::Canary);
     }
@@ -226,7 +240,7 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let manager = ChannelManager::new();
-        
+
         // Default configs should be valid
         assert!(manager.validate_config(Channel::Stable).is_ok());
         assert!(manager.validate_config(Channel::Beta).is_ok());

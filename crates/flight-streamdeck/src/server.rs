@@ -6,21 +6,21 @@
 //! Provides HTTP server for StreamDeck plugin integration with CORS support,
 //! request logging, and graceful shutdown capabilities.
 
-use crate::{StreamDeckApi, VersionCompatibility, ProfileManager};
+use crate::{ProfileManager, StreamDeckApi, VersionCompatibility};
 use anyhow::Result;
 use axum::{
-    http::{
-        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
-        Method,
-    },
     Router,
+    http::{
+        Method,
+        header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+    },
 };
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::net::TcpListener;
 
 use tower_http::cors::CorsLayer;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// Server configuration
 #[derive(Debug, Clone)]
@@ -73,9 +73,9 @@ impl ServerConfig {
     }
 
     pub fn socket_addr(&self) -> Result<SocketAddr, ServerError> {
-        format!("{}:{}", self.host, self.port)
-            .parse()
-            .map_err(|e| ServerError::InvalidAddress(format!("{}:{} - {}", self.host, self.port, e)))
+        format!("{}:{}", self.host, self.port).parse().map_err(|e| {
+            ServerError::InvalidAddress(format!("{}:{} - {}", self.host, self.port, e))
+        })
     }
 }
 
@@ -84,16 +84,16 @@ impl ServerConfig {
 pub enum ServerError {
     #[error("Invalid server address: {0}")]
     InvalidAddress(String),
-    
+
     #[error("Server bind failed: {0}")]
     BindFailed(String),
-    
+
     #[error("Server startup failed: {0}")]
     StartupFailed(String),
-    
+
     #[error("Server shutdown failed: {0}")]
     ShutdownFailed(String),
-    
+
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 }
@@ -111,13 +111,14 @@ impl StreamDeckServer {
     pub fn new(config: ServerConfig) -> Result<Self, ServerError> {
         let compatibility = VersionCompatibility::new();
         let mut profile_manager = ProfileManager::new();
-        
+
         // Load sample profiles during server creation
-        profile_manager.load_sample_profiles()
-            .map_err(|e| ServerError::ConfigurationError(format!("Failed to load profiles: {}", e)))?;
-        
+        profile_manager.load_sample_profiles().map_err(|e| {
+            ServerError::ConfigurationError(format!("Failed to load profiles: {}", e))
+        })?;
+
         let api = StreamDeckApi::new(compatibility, profile_manager);
-        
+
         Ok(Self {
             config,
             api,
@@ -129,51 +130,55 @@ impl StreamDeckServer {
     /// Start the server
     pub async fn start(&mut self) -> Result<(), ServerError> {
         let addr = self.config.socket_addr()?;
-        
+
         info!("Starting StreamDeck server on {}", addr);
-        
+
         // Create TCP listener
         let listener = TcpListener::bind(addr)
             .await
             .map_err(|e| ServerError::BindFailed(format!("Failed to bind to {}: {}", addr, e)))?;
-        
-        let actual_addr = listener.local_addr()
-            .map_err(|e| ServerError::StartupFailed(format!("Failed to get local address: {}", e)))?;
-        
+
+        let actual_addr = listener.local_addr().map_err(|e| {
+            ServerError::StartupFailed(format!("Failed to get local address: {}", e))
+        })?;
+
         info!("StreamDeck server listening on {}", actual_addr);
-        
+
         // Update port if it was auto-assigned (port 0)
         if self.config.port == 0 {
             self.config.port = actual_addr.port();
         }
-        
+
         // Create the application router
         let _app = self.create_app_router();
-        
+
         // Create shutdown channel
         let (shutdown_tx, _shutdown_rx) = tokio::sync::oneshot::channel();
         self.shutdown_tx = Some(shutdown_tx);
-        
+
         // Store listener reference
         self.listener = Some(listener);
-        
-        info!("StreamDeck server started successfully on port {}", self.config.port);
+
+        info!(
+            "StreamDeck server started successfully on port {}",
+            self.config.port
+        );
         Ok(())
     }
 
     /// Stop the server
     pub async fn stop(&mut self) -> Result<(), ServerError> {
         info!("Stopping StreamDeck server");
-        
+
         if let Some(shutdown_tx) = self.shutdown_tx.take() {
             shutdown_tx.send(()).map_err(|_| {
                 ServerError::ShutdownFailed("Failed to send shutdown signal".to_string())
             })?;
         }
-        
+
         // Give server time to shutdown gracefully
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        
+
         info!("StreamDeck server stopped");
         Ok(())
     }
@@ -202,12 +207,8 @@ impl StreamDeckServer {
             .allow_origin(tower_http::cors::Any);
 
         // Build the router with middleware
-        self.api
-            .create_router()
-            .layer(cors)
+        self.api.create_router().layer(cors)
     }
-
-
 
     /// Check if server is running
     pub fn is_running(&self) -> bool {
@@ -250,7 +251,7 @@ impl Drop for StreamDeckServer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_server_creation() {
@@ -264,7 +265,7 @@ mod tests {
         let config = ServerConfig::new("127.0.0.1".to_string(), 8081)
             .with_max_connections(50)
             .with_request_timeout(15000);
-        
+
         assert_eq!(config.host, "127.0.0.1");
         assert_eq!(config.port, 8081);
         assert_eq!(config.max_connections, 50);
@@ -282,14 +283,14 @@ mod tests {
     async fn test_server_start_stop() {
         let config = ServerConfig::new("127.0.0.1".to_string(), 0); // Use port 0 for auto-assignment
         let mut server = StreamDeckServer::new(config).unwrap();
-        
+
         // Start server
         let start_result = server.start().await;
         assert!(start_result.is_ok());
-        
+
         // Check server configuration
         assert!(server.get_port() > 0);
-        
+
         // Stop server - this might fail if shutdown_tx was already consumed, which is OK for this test
         let _stop_result = server.stop().await;
         // Don't assert on stop result as the implementation may consume the channel
@@ -299,7 +300,7 @@ mod tests {
     async fn test_server_status() {
         let config = ServerConfig::new("127.0.0.1".to_string(), 8083);
         let server = StreamDeckServer::new(config).unwrap();
-        
+
         let status = server.get_status();
         assert!(!status.running);
         assert_eq!(status.port, 8083);

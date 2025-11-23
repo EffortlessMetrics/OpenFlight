@@ -7,9 +7,9 @@
 //! All faults trigger torque-to-zero within 50ms and appropriate recovery actions.
 //! Includes pre-fault capture system for diagnostics and stable error codes.
 
-use std::time::{Duration, Instant};
-use std::collections::{VecDeque, HashMap};
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 /// Types of faults that can be detected
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -83,14 +83,14 @@ impl FaultType {
     /// Check if this fault requires immediate torque cutoff
     pub fn requires_torque_cutoff(&self) -> bool {
         match self {
-            FaultType::UsbStall |
-            FaultType::EndpointError |
-            FaultType::NanValue |
-            FaultType::OverTemp |
-            FaultType::OverCurrent |
-            FaultType::EndpointWedged |
-            FaultType::EncoderInvalid |
-            FaultType::DeviceTimeout => true,
+            FaultType::UsbStall
+            | FaultType::EndpointError
+            | FaultType::NanValue
+            | FaultType::OverTemp
+            | FaultType::OverCurrent
+            | FaultType::EndpointWedged
+            | FaultType::EncoderInvalid
+            | FaultType::DeviceTimeout => true,
             FaultType::PluginOverrun => false, // Plugin faults don't affect FFB
         }
     }
@@ -98,13 +98,13 @@ impl FaultType {
     /// Get maximum allowed response time for this fault
     pub fn max_response_time(&self) -> Duration {
         match self {
-            FaultType::UsbStall |
-            FaultType::EndpointError |
-            FaultType::NanValue |
-            FaultType::OverTemp |
-            FaultType::OverCurrent |
-            FaultType::EncoderInvalid |
-            FaultType::DeviceTimeout => Duration::from_millis(50),
+            FaultType::UsbStall
+            | FaultType::EndpointError
+            | FaultType::NanValue
+            | FaultType::OverTemp
+            | FaultType::OverCurrent
+            | FaultType::EncoderInvalid
+            | FaultType::DeviceTimeout => Duration::from_millis(50),
             FaultType::EndpointWedged => Duration::from_millis(100),
             FaultType::PluginOverrun => Duration::from_millis(100),
         }
@@ -282,7 +282,7 @@ impl PreFaultCapture {
     /// Add axis sample to pre-fault capture
     pub fn add_axis_sample(&mut self, sample: AxisSample) {
         self.axis_samples.push_back(sample);
-        
+
         // Keep only samples within capture duration
         let cutoff = Instant::now() - self.capture_duration;
         while let Some(front) = self.axis_samples.front() {
@@ -302,7 +302,7 @@ impl PreFaultCapture {
     /// Add FFB sample to pre-fault capture
     pub fn add_ffb_sample(&mut self, sample: FfbSample) {
         self.ffb_samples.push_back(sample);
-        
+
         // Keep only samples within capture duration
         let cutoff = Instant::now() - self.capture_duration;
         while let Some(front) = self.ffb_samples.front() {
@@ -322,7 +322,7 @@ impl PreFaultCapture {
     /// Add system event to pre-fault capture
     pub fn add_system_event(&mut self, event: SystemEvent) {
         self.system_events.push_back(event);
-        
+
         // Keep only events within capture duration
         let cutoff = Instant::now() - self.capture_duration;
         while let Some(front) = self.system_events.front() {
@@ -380,14 +380,14 @@ impl FaultDetector {
 
         // Determine action based on fault type
         let action_taken = match fault_type {
-            FaultType::UsbStall | 
-            FaultType::EndpointError | 
-            FaultType::NanValue | 
-            FaultType::OverTemp | 
-            FaultType::OverCurrent |
-            FaultType::EndpointWedged |
-            FaultType::EncoderInvalid |
-            FaultType::DeviceTimeout => FaultAction::TorqueZero50ms,
+            FaultType::UsbStall
+            | FaultType::EndpointError
+            | FaultType::NanValue
+            | FaultType::OverTemp
+            | FaultType::OverCurrent
+            | FaultType::EndpointWedged
+            | FaultType::EncoderInvalid
+            | FaultType::DeviceTimeout => FaultAction::TorqueZero50ms,
             FaultType::PluginOverrun => FaultAction::QuarantineComponent,
         };
 
@@ -412,7 +412,7 @@ impl FaultDetector {
 
         // Add to history
         self.fault_history.push_back(record.clone());
-        
+
         // Keep history bounded
         if self.fault_history.len() > self.max_history_size {
             self.fault_history.pop_front();
@@ -422,10 +422,18 @@ impl FaultDetector {
     }
 
     /// Record completion of fault response
-    pub fn record_fault_response_complete(&mut self, fault_type: FaultType, response_time: Duration) {
+    pub fn record_fault_response_complete(
+        &mut self,
+        fault_type: FaultType,
+        response_time: Duration,
+    ) {
         // Find the most recent fault of this type and update response time
-        if let Some(record) = self.fault_history.iter_mut().rev()
-            .find(|r| r.fault_type == fault_type && r.response_time.is_none()) {
+        if let Some(record) = self
+            .fault_history
+            .iter_mut()
+            .rev()
+            .find(|r| r.fault_type == fault_type && r.response_time.is_none())
+        {
             record.response_time = Some(response_time);
         }
     }
@@ -440,7 +448,7 @@ impl FaultDetector {
         };
 
         self.soft_stop_history.push_back(record.clone());
-        
+
         // Keep history bounded
         if self.soft_stop_history.len() > self.max_history_size {
             self.soft_stop_history.pop_front();
@@ -481,18 +489,25 @@ impl FaultDetector {
     /// Get recent faults (within specified duration)
     pub fn get_recent_faults(&self, within: Duration) -> Vec<&FaultRecord> {
         let cutoff = Instant::now() - within;
-        self.fault_history.iter()
+        self.fault_history
+            .iter()
             .filter(|record| record.detected_at > cutoff)
             .collect()
     }
 
     /// Check if fault rate is excessive
-    pub fn is_fault_rate_excessive(&self, fault_type: &FaultType, within: Duration, max_count: u32) -> bool {
-        let recent_count = self.get_recent_faults(within)
+    pub fn is_fault_rate_excessive(
+        &self,
+        fault_type: &FaultType,
+        within: Duration,
+        max_count: u32,
+    ) -> bool {
+        let recent_count = self
+            .get_recent_faults(within)
             .iter()
             .filter(|record| &record.fault_type == fault_type)
             .count() as u32;
-        
+
         recent_count > max_count
     }
 
@@ -511,7 +526,7 @@ impl FaultDetector {
     /// Record USB frame stall
     pub fn record_usb_stall(&mut self) -> Option<FaultRecord> {
         self.usb_stall_counter += 1;
-        
+
         // Trigger fault after 3 stalls
         if self.usb_stall_counter >= 3 {
             self.usb_stall_counter = 0; // Reset counter
@@ -544,18 +559,28 @@ impl FaultDetector {
     }
 
     /// Record plugin overrun
-    pub fn record_plugin_overrun(&mut self, plugin_id: String, execution_time: Duration) -> Option<FaultRecord> {
+    pub fn record_plugin_overrun(
+        &mut self,
+        plugin_id: String,
+        execution_time: Duration,
+    ) -> Option<FaultRecord> {
         if execution_time > Duration::from_micros(100) {
-            *self.plugin_overrun_counters.entry(plugin_id.clone()).or_insert(0) += 1;
-            
+            *self
+                .plugin_overrun_counters
+                .entry(plugin_id.clone())
+                .or_insert(0) += 1;
+
             // Add system event to pre-fault capture
             self.pre_fault_capture.add_system_event(SystemEvent {
                 timestamp: Instant::now(),
                 event_type: "PLUGIN_OVERRUN".to_string(),
-                details: format!("Plugin {} exceeded 100μs budget: {:?}", plugin_id, execution_time),
+                details: format!(
+                    "Plugin {} exceeded 100μs budget: {:?}",
+                    plugin_id, execution_time
+                ),
                 severity: EventSeverity::Warning,
             });
-            
+
             Some(self.record_fault(FaultType::PluginOverrun))
         } else {
             None
@@ -563,7 +588,13 @@ impl FaultDetector {
     }
 
     /// Add axis sample to pre-fault capture
-    pub fn add_axis_sample(&mut self, device_id: String, raw_input: f32, processed_output: f32, pipeline_stage: String) {
+    pub fn add_axis_sample(
+        &mut self,
+        device_id: String,
+        raw_input: f32,
+        processed_output: f32,
+        pipeline_stage: String,
+    ) {
         let sample = AxisSample {
             timestamp: Instant::now(),
             device_id,
@@ -575,7 +606,13 @@ impl FaultDetector {
     }
 
     /// Add FFB sample to pre-fault capture
-    pub fn add_ffb_sample(&mut self, torque_setpoint: f32, actual_torque: f32, safety_state: String, device_health: Option<String>) {
+    pub fn add_ffb_sample(
+        &mut self,
+        torque_setpoint: f32,
+        actual_torque: f32,
+        safety_state: String,
+        device_health: Option<String>,
+    ) {
         let sample = FfbSample {
             timestamp: Instant::now(),
             torque_setpoint,
@@ -587,7 +624,12 @@ impl FaultDetector {
     }
 
     /// Add system event to pre-fault capture
-    pub fn add_system_event(&mut self, event_type: String, details: String, severity: EventSeverity) {
+    pub fn add_system_event(
+        &mut self,
+        event_type: String,
+        details: String,
+        severity: EventSeverity,
+    ) {
         let event = SystemEvent {
             timestamp: Instant::now(),
             event_type,
@@ -631,15 +673,19 @@ impl FaultDetector {
     pub fn get_fault_statistics(&self) -> FaultStatistics {
         let total_faults = self.fault_counters.values().sum();
         let unique_fault_types = self.fault_counters.len();
-        
+
         let avg_response_time = if !self.fault_history.is_empty() {
-            let total_response_time: Duration = self.fault_history.iter()
+            let total_response_time: Duration = self
+                .fault_history
+                .iter()
                 .filter_map(|r| r.response_time)
                 .sum();
-            let count = self.fault_history.iter()
+            let count = self
+                .fault_history
+                .iter()
                 .filter(|r| r.response_time.is_some())
                 .count();
-            
+
             if count > 0 {
                 Some(total_response_time / count as u32)
             } else {
@@ -653,7 +699,9 @@ impl FaultDetector {
             total_faults,
             unique_fault_types,
             avg_response_time,
-            max_response_time: self.fault_history.iter()
+            max_response_time: self
+                .fault_history
+                .iter()
                 .filter_map(|r| r.response_time)
                 .max(),
             fault_storm_detected: self.is_in_fault_storm(),
@@ -685,19 +733,37 @@ mod tests {
     fn test_fault_type_properties() {
         assert_eq!(FaultType::UsbStall.error_code(), "HID_OUT_STALL");
         assert!(FaultType::UsbStall.requires_torque_cutoff());
-        assert_eq!(FaultType::UsbStall.max_response_time(), Duration::from_millis(50));
-        assert_eq!(FaultType::UsbStall.kb_article_url(), "https://docs.flight-hub.dev/kb/hid-out-stall");
-        
+        assert_eq!(
+            FaultType::UsbStall.max_response_time(),
+            Duration::from_millis(50)
+        );
+        assert_eq!(
+            FaultType::UsbStall.kb_article_url(),
+            "https://docs.flight-hub.dev/kb/hid-out-stall"
+        );
+
         assert_eq!(FaultType::PluginOverrun.error_code(), "PLUG_OVERRUN");
         assert!(!FaultType::PluginOverrun.requires_torque_cutoff());
-        assert_eq!(FaultType::PluginOverrun.max_response_time(), Duration::from_millis(100));
-        assert_eq!(FaultType::PluginOverrun.kb_article_url(), "https://docs.flight-hub.dev/kb/plug-overrun");
-        
+        assert_eq!(
+            FaultType::PluginOverrun.max_response_time(),
+            Duration::from_millis(100)
+        );
+        assert_eq!(
+            FaultType::PluginOverrun.kb_article_url(),
+            "https://docs.flight-hub.dev/kb/plug-overrun"
+        );
+
         // Test new fault types
-        assert_eq!(FaultType::EndpointWedged.error_code(), "HID_ENDPOINT_WEDGED");
+        assert_eq!(
+            FaultType::EndpointWedged.error_code(),
+            "HID_ENDPOINT_WEDGED"
+        );
         assert!(FaultType::EndpointWedged.requires_torque_cutoff());
-        assert_eq!(FaultType::EndpointWedged.max_response_time(), Duration::from_millis(100));
-        
+        assert_eq!(
+            FaultType::EndpointWedged.max_response_time(),
+            Duration::from_millis(100)
+        );
+
         assert_eq!(FaultType::EncoderInvalid.error_code(), "ENCODER_INVALID");
         assert!(FaultType::EncoderInvalid.requires_torque_cutoff());
     }
@@ -705,16 +771,19 @@ mod tests {
     #[test]
     fn test_fault_recording() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         let record = detector.record_fault(FaultType::UsbStall);
-        
+
         assert_eq!(record.fault_type, FaultType::UsbStall);
         assert_eq!(record.action_taken, FaultAction::TorqueZero50ms);
         assert!(record.caused_safety_transition);
         assert_eq!(record.error_code, "HID_OUT_STALL");
-        assert_eq!(record.kb_article_url, "https://docs.flight-hub.dev/kb/hid-out-stall");
+        assert_eq!(
+            record.kb_article_url,
+            "https://docs.flight-hub.dev/kb/hid-out-stall"
+        );
         assert!(record.pre_fault_capture.is_some()); // Should have pre-fault capture for torque cutoff faults
-        
+
         assert_eq!(detector.get_fault_history().len(), 1);
         assert_eq!(detector.get_fault_counters()[&FaultType::UsbStall], 1);
     }
@@ -722,10 +791,10 @@ mod tests {
     #[test]
     fn test_fault_response_completion() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         detector.record_fault(FaultType::UsbStall);
         detector.record_fault_response_complete(FaultType::UsbStall, Duration::from_millis(30));
-        
+
         let record = &detector.get_fault_history()[0];
         assert_eq!(record.response_time, Some(Duration::from_millis(30)));
     }
@@ -733,31 +802,34 @@ mod tests {
     #[test]
     fn test_soft_stop_recording() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         let triggered_at = Instant::now();
         let record = detector.record_soft_stop(triggered_at);
-        
+
         assert_eq!(record.triggered_at, triggered_at);
         assert!(record.audio_cue_triggered);
         assert_eq!(detector.get_soft_stop_history().len(), 1);
-        
+
         detector.record_soft_stop_complete(Duration::from_millis(45));
-        
+
         let updated_record = &detector.get_soft_stop_history()[0];
-        assert_eq!(updated_record.ramp_duration, Some(Duration::from_millis(45)));
+        assert_eq!(
+            updated_record.ramp_duration,
+            Some(Duration::from_millis(45))
+        );
     }
 
     #[test]
     fn test_recent_faults() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         detector.record_fault(FaultType::UsbStall);
         std::thread::sleep(Duration::from_millis(10));
         detector.record_fault(FaultType::OverTemp);
-        
+
         let recent = detector.get_recent_faults(Duration::from_millis(100));
         assert_eq!(recent.len(), 2);
-        
+
         let very_recent = detector.get_recent_faults(Duration::from_millis(5));
         assert_eq!(very_recent.len(), 1);
         assert_eq!(very_recent[0].fault_type, FaultType::OverTemp);
@@ -766,21 +838,17 @@ mod tests {
     #[test]
     fn test_fault_rate_detection() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         // Record multiple faults of same type
         for _ in 0..5 {
             detector.record_fault(FaultType::UsbStall);
         }
-        
-        assert!(detector.is_fault_rate_excessive(
-            &FaultType::UsbStall, 
-            Duration::from_secs(60), 
-            3
-        ));
-        
+
+        assert!(detector.is_fault_rate_excessive(&FaultType::UsbStall, Duration::from_secs(60), 3));
+
         assert!(!detector.is_fault_rate_excessive(
-            &FaultType::OverTemp, 
-            Duration::from_secs(60), 
+            &FaultType::OverTemp,
+            Duration::from_secs(60),
             3
         ));
     }
@@ -788,32 +856,32 @@ mod tests {
     #[test]
     fn test_fault_storm_detection() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         // Record many faults to trigger storm detection
         for i in 0..15 {
-            let fault_type = if i % 2 == 0 { 
-                FaultType::UsbStall 
-            } else { 
-                FaultType::OverTemp 
+            let fault_type = if i % 2 == 0 {
+                FaultType::UsbStall
+            } else {
+                FaultType::OverTemp
             };
             detector.record_fault(fault_type);
         }
-        
+
         assert!(detector.is_in_fault_storm());
     }
 
     #[test]
     fn test_fault_statistics() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         detector.record_fault(FaultType::UsbStall);
         detector.record_fault_response_complete(FaultType::UsbStall, Duration::from_millis(30));
-        
+
         detector.record_fault(FaultType::OverTemp);
         detector.record_fault_response_complete(FaultType::OverTemp, Duration::from_millis(40));
-        
+
         let stats = detector.get_fault_statistics();
-        
+
         assert_eq!(stats.total_faults, 2);
         assert_eq!(stats.unique_fault_types, 2);
         assert_eq!(stats.avg_response_time, Some(Duration::from_millis(35)));
@@ -824,15 +892,15 @@ mod tests {
     #[test]
     fn test_clear_faults() {
         let mut detector = FaultDetector::new(Duration::from_millis(50));
-        
+
         detector.record_fault(FaultType::UsbStall);
         detector.record_soft_stop(Instant::now());
-        
+
         assert!(!detector.get_fault_history().is_empty());
         assert!(!detector.get_soft_stop_history().is_empty());
-        
+
         detector.clear_faults();
-        
+
         assert!(detector.get_fault_history().is_empty());
         assert!(detector.get_soft_stop_history().is_empty());
         assert!(detector.get_fault_counters().is_empty());

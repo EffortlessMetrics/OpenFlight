@@ -4,7 +4,7 @@
 //! Output formatting utilities for CLI
 
 use clap::ValueEnum;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum OutputFormat {
@@ -18,34 +18,30 @@ impl OutputFormat {
     /// Format a success response
     pub fn success(&self, data: Value) -> String {
         match self {
-            OutputFormat::Json => {
-                json!({
-                    "success": true,
-                    "data": data
-                }).to_string()
-            }
-            OutputFormat::Human => {
-                format_human_output(&data)
-            }
+            OutputFormat::Json => json!({
+                "success": true,
+                "data": data
+            })
+            .to_string(),
+            OutputFormat::Human => format_human_output(&data),
         }
     }
-    
+
     /// Format an error response
     pub fn error(&self, message: &str, error_code: &str) -> String {
         match self {
-            OutputFormat::Json => {
-                json!({
-                    "success": false,
-                    "error": message,
-                    "error_code": error_code
-                }).to_string()
-            }
+            OutputFormat::Json => json!({
+                "success": false,
+                "error": message,
+                "error_code": error_code
+            })
+            .to_string(),
             OutputFormat::Human => {
                 format!("Error: {}", message)
             }
         }
     }
-    
+
     /// Format a list of items
     pub fn list(&self, items: Vec<Value>, total_count: Option<i32>) -> String {
         match self {
@@ -54,27 +50,27 @@ impl OutputFormat {
                     "success": true,
                     "data": items
                 });
-                
+
                 if let Some(count) = total_count {
                     result["total_count"] = json!(count);
                 }
-                
+
                 result.to_string()
             }
             OutputFormat::Human => {
                 let mut output = String::new();
-                
+
                 if let Some(count) = total_count {
                     output.push_str(&format!("Total: {} items\n\n", count));
                 }
-                
+
                 for (i, item) in items.iter().enumerate() {
                     if i > 0 {
                         output.push('\n');
                     }
                     output.push_str(&format_human_output(item));
                 }
-                
+
                 output
             }
         }
@@ -85,7 +81,7 @@ fn format_human_output(data: &Value) -> String {
     match data {
         Value::Object(map) => {
             let mut output = String::new();
-            
+
             for (key, value) in map {
                 match value {
                     Value::String(s) => output.push_str(&format!("{}: {}\n", key, s)),
@@ -107,7 +103,7 @@ fn format_human_output(data: &Value) -> String {
                     Value::Null => output.push_str(&format!("{}: null\n", key)),
                 }
             }
-            
+
             output
         }
         Value::Array(arr) => {

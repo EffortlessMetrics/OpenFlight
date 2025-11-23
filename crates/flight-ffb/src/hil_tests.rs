@@ -7,11 +7,11 @@
 //! with floating-point tolerance matching to ensure consistent behavior
 //! across different hardware configurations.
 
-use std::time::{Duration, Instant};
 use crate::{
-    DeviceCapabilities, FfbMode, ModeNegotiator, ModeSelectionPolicy, 
-    TrimController, TrimMode, SetpointChange, TrimLimits, TrimOutput
+    DeviceCapabilities, FfbMode, ModeNegotiator, ModeSelectionPolicy, SetpointChange,
+    TrimController, TrimLimits, TrimMode, TrimOutput,
 };
+use std::time::{Duration, Instant};
 
 /// HIL test configuration
 #[derive(Debug, Clone)]
@@ -69,7 +69,7 @@ impl HilTestSuite {
         for test_case in test_matrix {
             let start_time = Instant::now();
             let mut measurements = Vec::new();
-            
+
             let result = match self.validate_mode_selection(&negotiator, &test_case) {
                 Ok(measurement) => {
                     measurements.push(measurement);
@@ -81,17 +81,15 @@ impl HilTestSuite {
                         measurements,
                     }
                 }
-                Err(error) => {
-                    HilTestResult {
-                        name: format!("Mode Selection: {}", test_case.name),
-                        passed: false,
-                        duration: start_time.elapsed(),
-                        error: Some(error),
-                        measurements,
-                    }
-                }
+                Err(error) => HilTestResult {
+                    name: format!("Mode Selection: {}", test_case.name),
+                    passed: false,
+                    duration: start_time.elapsed(),
+                    error: Some(error),
+                    measurements,
+                },
             };
-            
+
             results.push(result);
         }
 
@@ -169,31 +167,33 @@ impl HilTestSuite {
                 limits: limits.clone(),
             };
 
-            controller.apply_setpoint_change(change)
+            controller
+                .apply_setpoint_change(change)
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Simulate updates and measure rate compliance
             let mut max_observed_rate = 0.0f32;
             let sample_interval = Duration::from_millis(1);
-            
+
             for _ in 0..1000 {
                 let output = controller.update();
-                
+
                 if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
                     max_observed_rate = max_observed_rate.max(rate_nm_per_s.abs());
                     measurements.push(rate_nm_per_s.abs());
-                    
+
                     // Check rate limit compliance
                     if rate_nm_per_s.abs() > limits.max_rate_nm_per_s + self.config.fp_tolerance {
                         return Err(format!(
                             "Rate limit exceeded: {} > {} Nm/s",
-                            rate_nm_per_s.abs(), limits.max_rate_nm_per_s
+                            rate_nm_per_s.abs(),
+                            limits.max_rate_nm_per_s
                         ));
                     }
                 }
-                
+
                 std::thread::sleep(sample_interval);
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -238,22 +238,23 @@ impl HilTestSuite {
                 limits: limits.clone(),
             };
 
-            controller.apply_setpoint_change(change)
+            controller
+                .apply_setpoint_change(change)
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Measure jerk (rate of rate change)
             let mut previous_rate = 0.0f32;
             let mut max_observed_jerk = 0.0f32;
             let dt = 0.001f32; // 1ms timestep
-            
+
             for _ in 0..1000 {
                 let output = controller.update();
-                
+
                 if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
                     let jerk = (rate_nm_per_s - previous_rate).abs() / dt;
                     max_observed_jerk = max_observed_jerk.max(jerk);
                     measurements.push(jerk);
-                    
+
                     // Check jerk limit compliance (with some tolerance for discrete sampling)
                     if jerk > limits.max_jerk_nm_per_s2 + self.config.fp_tolerance * 10.0 {
                         return Err(format!(
@@ -261,12 +262,12 @@ impl HilTestSuite {
                             jerk, limits.max_jerk_nm_per_s2
                         ));
                     }
-                    
+
                     previous_rate = rate_nm_per_s;
                 }
-                
+
                 std::thread::sleep(Duration::from_millis(1));
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -299,28 +300,30 @@ impl HilTestSuite {
                 limits: TrimLimits::default(),
             };
 
-            controller.apply_setpoint_change(change)
+            controller
+                .apply_setpoint_change(change)
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Run until convergence or timeout
             let mut converged = false;
-            
+
             for _ in 0..5000 {
                 let output = controller.update();
-                
+
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                     let error = (setpoint_nm - target).abs();
                     measurements.push(error);
-                    
+
                     // Check for convergence
-                    if error < self.config.fp_tolerance * 1000.0 { // 1e-3 tolerance
+                    if error < self.config.fp_tolerance * 1000.0 {
+                        // 1e-3 tolerance
                         converged = true;
                         break;
                     }
                 }
-                
+
                 std::thread::sleep(Duration::from_millis(1));
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -329,7 +332,8 @@ impl HilTestSuite {
             if !converged {
                 return Err(format!(
                     "Failed to converge to target {} within {} seconds",
-                    target, self.config.max_test_duration.as_secs()
+                    target,
+                    self.config.max_test_duration.as_secs()
                 ));
             }
 
@@ -359,14 +363,17 @@ impl HilTestSuite {
                 limits: TrimLimits::default(),
             };
 
-            controller.apply_setpoint_change(change)
+            controller
+                .apply_setpoint_change(change)
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Verify spring is initially frozen
             let output = controller.update();
             if let TrimOutput::SpringCentered { frozen, .. } = output {
                 if !frozen {
-                    return Err("Spring should be frozen immediately after setpoint change".to_string());
+                    return Err(
+                        "Spring should be frozen immediately after setpoint change".to_string()
+                    );
                 }
                 measurements.push(1.0); // Frozen state
             } else {
@@ -418,9 +425,9 @@ impl HilTestSuite {
             // Test various setpoints and verify center mapping
             let test_cases = vec![
                 (0.0, 0.0),    // Zero torque -> center
-                (7.5, 0.5),   // Half max -> 0.5 center
-                (-7.5, -0.5), // Negative half -> -0.5 center
-                (15.0, 1.0),  // Max torque -> 1.0 center
+                (7.5, 0.5),    // Half max -> 0.5 center
+                (-7.5, -0.5),  // Negative half -> -0.5 center
+                (15.0, 1.0),   // Max torque -> 1.0 center
                 (-15.0, -1.0), // Min torque -> -1.0 center
             ];
 
@@ -430,14 +437,15 @@ impl HilTestSuite {
                     limits: TrimLimits::default(),
                 };
 
-                controller.apply_setpoint_change(change)
+                controller
+                    .apply_setpoint_change(change)
                     .map_err(|e| format!("Failed to apply setpoint {}: {}", target_nm, e))?;
 
                 let output = controller.update();
                 if let TrimOutput::SpringCentered { config, .. } = output {
                     let center_error = (config.center - expected_center).abs();
                     measurements.push(center_error);
-                    
+
                     if center_error > self.config.fp_tolerance * 1000.0 {
                         return Err(format!(
                             "Center mapping error for {} Nm: expected {}, got {} (error: {})",
@@ -510,10 +518,10 @@ impl HilTestSuite {
             ];
 
             let mut previous_rate = None;
-            
+
             for (name, capabilities, expected_mode) in test_cases {
                 let selection = negotiator.negotiate_mode(&capabilities);
-                
+
                 if selection.mode != expected_mode {
                     return Err(format!(
                         "Mode mismatch for {}: expected {:?}, got {:?}",
@@ -536,8 +544,9 @@ impl HilTestSuite {
                     }
                     FfbMode::DirectInput => {
                         // DirectInput should be moderate
-                        if selection.trim_limits.max_rate_nm_per_s < 3.0 || 
-                           selection.trim_limits.max_rate_nm_per_s > 10.0 {
+                        if selection.trim_limits.max_rate_nm_per_s < 3.0
+                            || selection.trim_limits.max_rate_nm_per_s > 10.0
+                        {
                             return Err(format!(
                                 "DirectInput limits out of range: {} Nm/s",
                                 selection.trim_limits.max_rate_nm_per_s
@@ -560,7 +569,9 @@ impl HilTestSuite {
 
                 // Verify limits decrease as we go to less capable modes
                 if let Some(prev_rate) = previous_rate {
-                    if selection.trim_limits.max_rate_nm_per_s > prev_rate + self.config.fp_tolerance {
+                    if selection.trim_limits.max_rate_nm_per_s
+                        > prev_rate + self.config.fp_tolerance
+                    {
                         return Err(format!(
                             "Trim limits should decrease with less capable modes: {} > {}",
                             selection.trim_limits.max_rate_nm_per_s, prev_rate
@@ -595,31 +606,50 @@ impl HilTestSuite {
         report.push_str(&format!("- Total Tests: {}\n", total_tests));
         report.push_str(&format!("- Passed: {}\n", passed_tests));
         report.push_str(&format!("- Failed: {}\n", failed_tests));
-        report.push_str(&format!("- Success Rate: {:.1}%\n\n", 
-            (passed_tests as f32 / total_tests as f32) * 100.0));
+        report.push_str(&format!(
+            "- Success Rate: {:.1}%\n\n",
+            (passed_tests as f32 / total_tests as f32) * 100.0
+        ));
 
         report.push_str("## Test Results\n\n");
-        
+
         for result in results {
-            let status = if result.passed { "✅ PASS" } else { "❌ FAIL" };
+            let status = if result.passed {
+                "✅ PASS"
+            } else {
+                "❌ FAIL"
+            };
             report.push_str(&format!("### {} - {}\n", status, result.name));
-            report.push_str(&format!("- Duration: {:.2}ms\n", result.duration.as_secs_f32() * 1000.0));
-            
+            report.push_str(&format!(
+                "- Duration: {:.2}ms\n",
+                result.duration.as_secs_f32() * 1000.0
+            ));
+
             if let Some(error) = &result.error {
                 report.push_str(&format!("- Error: {}\n", error));
             }
-            
+
             if !result.measurements.is_empty() {
-                let avg = result.measurements.iter().sum::<f32>() / result.measurements.len() as f32;
-                let max = result.measurements.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
-                let min = result.measurements.iter().fold(f32::INFINITY, |a, &b| a.min(b));
-                
-                report.push_str(&format!("- Measurements: {} samples\n", result.measurements.len()));
+                let avg =
+                    result.measurements.iter().sum::<f32>() / result.measurements.len() as f32;
+                let max = result
+                    .measurements
+                    .iter()
+                    .fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+                let min = result
+                    .measurements
+                    .iter()
+                    .fold(f32::INFINITY, |a, &b| a.min(b));
+
+                report.push_str(&format!(
+                    "- Measurements: {} samples\n",
+                    result.measurements.len()
+                ));
                 report.push_str(&format!("  - Average: {:.6}\n", avg));
                 report.push_str(&format!("  - Min: {:.6}\n", min));
                 report.push_str(&format!("  - Max: {:.6}\n", max));
             }
-            
+
             report.push_str("\n");
         }
 
@@ -648,33 +678,44 @@ mod tests {
     fn test_mode_selection_matrix_validation() {
         let suite = HilTestSuite::default();
         let results = suite.run_mode_selection_matrix_test();
-        
+
         // All mode selection tests should pass
         for result in &results {
             if !result.passed {
-                panic!("Mode selection test failed: {} - {:?}", result.name, result.error);
+                panic!(
+                    "Mode selection test failed: {} - {:?}",
+                    result.name, result.error
+                );
             }
         }
-        
+
         assert!(!results.is_empty());
     }
 
     #[test]
     fn test_trim_validation_basic() {
         let suite = HilTestSuite::default();
-        
+
         // Test individual trim validation functions
         let ffb_rate_result = suite.test_ffb_trim_rate_limiting();
-        assert!(ffb_rate_result.passed, "FFB rate limiting test failed: {:?}", ffb_rate_result.error);
-        
+        assert!(
+            ffb_rate_result.passed,
+            "FFB rate limiting test failed: {:?}",
+            ffb_rate_result.error
+        );
+
         let spring_freeze_result = suite.test_spring_trim_freeze_ramp();
-        assert!(spring_freeze_result.passed, "Spring freeze/ramp test failed: {:?}", spring_freeze_result.error);
+        assert!(
+            spring_freeze_result.passed,
+            "Spring freeze/ramp test failed: {:?}",
+            spring_freeze_result.error
+        );
     }
 
     #[test]
     fn test_report_generation() {
         let suite = HilTestSuite::default();
-        
+
         let mock_results = vec![
             HilTestResult {
                 name: "Test 1".to_string(),
@@ -691,9 +732,9 @@ mod tests {
                 measurements: vec![],
             },
         ];
-        
+
         let report = suite.generate_test_report(&mock_results);
-        
+
         assert!(report.contains("Total Tests: 2"));
         assert!(report.contains("Passed: 1"));
         assert!(report.contains("Failed: 1"));

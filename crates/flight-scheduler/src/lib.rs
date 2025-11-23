@@ -1,5 +1,14 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -19,16 +28,16 @@ mod unix;
 #[cfg(windows)]
 mod windows;
 
+pub mod metrics;
 pub mod pll;
 pub mod ring;
-pub mod metrics;
 
-use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 
-pub use pll::Pll;
-pub use ring::{SpscRing, RingStats};
 pub use metrics::{JitterMetrics, TimingStats};
+pub use pll::Pll;
+pub use ring::{RingStats, SpscRing};
 
 #[cfg(test)]
 mod tests;
@@ -94,7 +103,7 @@ impl Scheduler {
     pub fn wait_for_tick(&mut self) -> TickResult {
         let tick_start = Instant::now();
         let tick_number = self.tick_count.fetch_add(1, Ordering::Relaxed);
-        
+
         // Check if we missed the deadline
         let missed = tick_start >= self.next_tick + Duration::from_nanos(self.period_ns / 2);
         if missed {
@@ -118,16 +127,16 @@ impl Scheduler {
         }
 
         let actual_tick = Instant::now();
-        
+
         // Update PLL with timing error
         let error_ns = if actual_tick >= self.next_tick {
             (actual_tick - self.next_tick).as_nanos() as i64
         } else {
             -((self.next_tick - actual_tick).as_nanos() as i64)
         };
-        
+
         let corrected_period = self.pll.update(error_ns as f64);
-        
+
         // Schedule next tick with PLL correction
         self.next_tick += Duration::from_nanos(corrected_period as u64);
 
@@ -148,7 +157,7 @@ impl Scheduler {
     pub fn get_stats(&self) -> TimingStats {
         let total_ticks = self.tick_count.load(Ordering::Relaxed);
         let missed_ticks = self.missed_ticks.load(Ordering::Relaxed);
-        
+
         let jitter_stats = self.metrics.as_ref().map(|m| m.get_stats());
 
         TimingStats {

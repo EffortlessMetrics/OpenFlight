@@ -1,5 +1,14 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -17,25 +26,25 @@
 //! - Bug reproduction
 //! - Algorithm verification
 
-pub mod harness;
-pub mod comparison;
-pub mod validation;
 pub mod acceptance;
+pub mod comparison;
+pub mod harness;
+pub mod metrics;
 pub mod offline_engine;
 pub mod replay_config;
-pub mod metrics;
+pub mod validation;
 
-pub use harness::{ReplayHarness, ReplayResult, ReplayError};
-pub use comparison::{OutputComparator, ComparisonResult, ComparisonConfig};
+pub use acceptance::{AcceptanceResult, AcceptanceTest, AcceptanceTestRunner};
+pub use comparison::{ComparisonConfig, ComparisonResult, OutputComparator};
+pub use harness::{ReplayError, ReplayHarness, ReplayResult};
+pub use metrics::{AccuracyMetrics, PerformanceMetrics, ReplayMetrics};
+pub use offline_engine::{EngineState, OfflineAxisEngine, OfflineFfbEngine};
 pub use replay_config::ToleranceConfig;
-pub use validation::{ReplayValidator, ValidationSuite, ValidationResult, ValidationError};
-pub use acceptance::{AcceptanceTestRunner, AcceptanceTest, AcceptanceResult};
-pub use offline_engine::{OfflineAxisEngine, OfflineFfbEngine, EngineState};
 pub use replay_config::{ReplayConfig, ReplayMode, TimingMode};
-pub use metrics::{ReplayMetrics, PerformanceMetrics, AccuracyMetrics};
+pub use validation::{ReplayValidator, ValidationError, ValidationResult, ValidationSuite};
 
+pub use flight_axis::AxisFrame;
+pub use flight_bus::BusSnapshot;
 /// Re-export commonly used types from dependencies
 pub use flight_core::blackbox::{BlackboxReader, BlackboxRecord, StreamType};
-pub use flight_axis::AxisFrame;
 pub use flight_ffb::{FfbEngine, SafetyState};
-pub use flight_bus::BusSnapshot;

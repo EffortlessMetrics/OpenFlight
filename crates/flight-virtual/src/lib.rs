@@ -1,5 +1,14 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -8,18 +17,18 @@
 //! Provides loopback HID devices that simulate real hardware
 //! without requiring physical devices for testing.
 
-use std::sync::Arc;
 use parking_lot::Mutex;
+use std::sync::Arc;
 
 pub mod device;
 pub mod loopback;
-pub mod perf_gate;
 pub mod ofp1_emulator;
+pub mod perf_gate;
 
-pub use device::{VirtualDevice, VirtualDeviceConfig, DeviceType};
-pub use loopback::{LoopbackHid, HidReport};
+pub use device::{DeviceType, VirtualDevice, VirtualDeviceConfig};
+pub use loopback::{HidReport, LoopbackHid};
+pub use ofp1_emulator::{EmulatorFaultType, EmulatorStatistics, Ofp1Emulator, Ofp1EmulatorConfig};
 pub use perf_gate::{PerfGate, PerfGateConfig, PerfResult};
-pub use ofp1_emulator::{Ofp1Emulator, Ofp1EmulatorConfig, EmulatorFaultType, EmulatorStatistics};
 
 #[cfg(test)]
 mod integration_tests;
@@ -49,7 +58,9 @@ impl VirtualDeviceManager {
     /// Enable HID loopback for testing
     pub fn enable_loopback(&mut self) -> &mut LoopbackHid {
         self.loopback = Some(LoopbackHid::new());
-        self.loopback.as_mut().expect("Loopback was just initialized")
+        self.loopback
+            .as_mut()
+            .expect("Loopback was just initialized")
     }
 
     /// Get all virtual devices

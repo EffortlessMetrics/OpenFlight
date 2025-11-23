@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    
+
     // Only build on Windows
     if env::var("CARGO_CFG_TARGET_OS").unwrap() != "windows" {
         return;
@@ -34,7 +34,9 @@ fn main() {
         }
 
         if !found_lib {
-            println!("cargo:warning=SimConnect.lib not found. Set SIMCONNECT_SDK_PATH environment variable or install MSFS SDK.");
+            println!(
+                "cargo:warning=SimConnect.lib not found. Set SIMCONNECT_SDK_PATH environment variable or install MSFS SDK."
+            );
             println!("cargo:warning=Falling back to dynamic linking.");
         }
     }

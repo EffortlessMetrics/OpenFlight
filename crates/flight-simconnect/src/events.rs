@@ -6,9 +6,7 @@
 //! Provides event mapping, Input Events for modern aircraft compatibility,
 //! and system event subscription for MSFS integration.
 
-use flight_simconnect_sys::{
-    constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_EVENTID,
-};
+use flight_simconnect_sys::{HSIMCONNECT, SIMCONNECT_EVENTID, SimConnectApi, constants::*};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -20,19 +18,11 @@ use tracing::{debug, warn};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum SimEvent {
     /// Standard SimConnect event
-    Standard {
-        name: String,
-        data: Option<u32>,
-    },
+    Standard { name: String, data: Option<u32> },
     /// Input Event (modern aircraft)
-    Input {
-        hash: u64,
-        value: f64,
-    },
+    Input { hash: u64, value: f64 },
     /// System event
-    System {
-        name: String,
-    },
+    System { name: String },
 }
 
 /// Input Event for modern aircraft compatibility
@@ -104,7 +94,8 @@ impl EventManager {
 
         api.map_client_event_to_sim_event(handle, event_id, event_name)?;
 
-        self.standard_events.insert(event_name.to_string(), event_id);
+        self.standard_events
+            .insert(event_name.to_string(), event_id);
         self.event_names.insert(event_id, event_name.to_string());
 
         debug!("Mapped standard event: {} -> {}", event_name, event_id);
@@ -155,7 +146,9 @@ impl EventManager {
         event_name: &str,
         data: Option<u32>,
     ) -> Result<(), EventError> {
-        let event_id = self.standard_events.get(event_name)
+        let event_id = self
+            .standard_events
+            .get(event_name)
             .ok_or_else(|| EventError::EventNotFound(event_name.to_string()))?;
 
         api.transmit_client_event(
@@ -165,7 +158,10 @@ impl EventManager {
             data.unwrap_or(0),
         )?;
 
-        debug!("Transmitted standard event: {} (data: {:?})", event_name, data);
+        debug!(
+            "Transmitted standard event: {} (data: {:?})",
+            event_name, data
+        );
         Ok(())
     }
 
@@ -177,16 +173,24 @@ impl EventManager {
         event_name: &str,
         value: f64,
     ) -> Result<(), EventError> {
-        let hash = self.input_events.get(event_name)
+        let hash = self
+            .input_events
+            .get(event_name)
             .ok_or_else(|| EventError::EventNotFound(event_name.to_string()))?;
 
         // Input Events use a different API call (would need additional SimConnect functions)
         // For now, we'll log the attempt
-        debug!("Input event transmission requested: {} (0x{:016X}) = {}", event_name, hash, value);
-        
+        debug!(
+            "Input event transmission requested: {} (0x{:016X}) = {}",
+            event_name, hash, value
+        );
+
         // TODO: Implement actual Input Event transmission when API is available
-        warn!("Input Event transmission not yet implemented: {}", event_name);
-        
+        warn!(
+            "Input Event transmission not yet implemented: {}",
+            event_name
+        );
+
         Ok(())
     }
 
@@ -273,12 +277,12 @@ fn calculate_input_event_hash(event_name: &str) -> u64 {
     // This is a simplified hash calculation
     // The actual MSFS Input Event hash algorithm may be different
     let mut hash: u64 = 0xCBF29CE484222325; // FNV-1a offset basis
-    
+
     for byte in event_name.bytes() {
         hash ^= byte as u64;
         hash = hash.wrapping_mul(0x100000001B3); // FNV-1a prime
     }
-    
+
     hash
 }
 
@@ -386,7 +390,7 @@ mod tests {
     #[test]
     fn test_input_event_registration() {
         let mut manager = EventManager::new();
-        
+
         let hash1 = manager.register_input_event("AXIS_ELEVATOR_SET");
         let hash2 = manager.register_input_event("AXIS_ELEVATOR_SET"); // Same event
         let hash3 = manager.register_input_event("AXIS_AILERONS_SET"); // Different event

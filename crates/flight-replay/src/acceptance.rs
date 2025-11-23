@@ -14,7 +14,7 @@ use tracing::{info, warn};
 
 use crate::harness::{ReplayHarness, ReplayResult};
 use crate::replay_config::{ReplayConfig, ReplayMode, ToleranceConfig};
-use crate::validation::{ValidationResult, ValidationSuite, ValidationConfig, ValidationTestCase};
+use crate::validation::{ValidationConfig, ValidationResult, ValidationSuite, ValidationTestCase};
 
 /// Acceptance test errors
 #[derive(Error, Debug)]
@@ -177,23 +177,25 @@ impl AcceptanceTestRunner {
     pub fn load_tests_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let content = std::fs::read_to_string(path)
             .context("Failed to read acceptance test configuration")?;
-        
+
         let tests: Vec<AcceptanceTest> = serde_json::from_str(&content)
             .context("Failed to parse acceptance test configuration")?;
-        
+
         for test in tests {
             self.register_test(test);
         }
-        
+
         info!("Loaded {} acceptance tests", self.test_registry.len());
         Ok(())
     }
 
     /// Run a specific acceptance test by ID
     pub async fn run_test(&self, test_id: &str) -> Result<AcceptanceResult> {
-        let test = self.test_registry.get(test_id)
+        let test = self
+            .test_registry
+            .get(test_id)
             .ok_or_else(|| AcceptanceError::ConfigError {
-                message: format!("Test '{}' not found", test_id)
+                message: format!("Test '{}' not found", test_id),
             })?;
 
         self.execute_test(test).await
@@ -202,10 +204,10 @@ impl AcceptanceTestRunner {
     /// Run all registered acceptance tests
     pub async fn run_all_tests(&self) -> Result<Vec<AcceptanceResult>> {
         let mut results = Vec::new();
-        
+
         for (test_id, test) in &self.test_registry {
             info!("Running acceptance test: {}", test_id);
-            
+
             match self.execute_test(test).await {
                 Ok(result) => {
                     if result.passed {
@@ -234,7 +236,7 @@ impl AcceptanceTestRunner {
                 }
             }
         }
-        
+
         Ok(results)
     }
 
@@ -260,8 +262,8 @@ impl AcceptanceTestRunner {
             };
 
             // Create and configure harness
-            let mut harness = ReplayHarness::new(replay_config)
-                .context("Failed to create replay harness")?;
+            let mut harness =
+                ReplayHarness::new(replay_config).context("Failed to create replay harness")?;
 
             // Configure default devices
             self.configure_test_devices(&mut harness)?;
@@ -281,7 +283,7 @@ impl AcceptanceTestRunner {
         if !replay_results.is_empty() {
             let validation_config = self.config.clone();
             let validator_suite = ValidationSuite::new(validation_config);
-            
+
             // Create a validation test case
             let test_case = ValidationTestCase {
                 name: test.id.clone(),
@@ -297,7 +299,8 @@ impl AcceptanceTestRunner {
         }
 
         // Evaluate acceptance criteria
-        let criteria_evaluation = self.evaluate_criteria(test, &replay_results, &validation_results);
+        let criteria_evaluation =
+            self.evaluate_criteria(test, &replay_results, &validation_results);
 
         // Calculate overall score
         let score = self.calculate_test_score(&replay_results, &validation_results);
@@ -326,8 +329,11 @@ impl AcceptanceTestRunner {
 
         // Add test axis device
         let axis_config = AxisEngineConfig::default();
-        harness.add_axis_device("acceptance_test_axis".to_string(), axis_config)
-            .map_err(|e| AcceptanceError::ConfigError { message: e.to_string() })?;
+        harness
+            .add_axis_device("acceptance_test_axis".to_string(), axis_config)
+            .map_err(|e| AcceptanceError::ConfigError {
+                message: e.to_string(),
+            })?;
 
         // Add test FFB device
         let ffb_config = FfbConfig {
@@ -337,36 +343,61 @@ impl AcceptanceTestRunner {
             mode: FfbMode::TelemetrySynth,
             device_path: None,
         };
-        harness.add_ffb_device("acceptance_test_ffb".to_string(), ffb_config)
-            .map_err(|e| AcceptanceError::ConfigError { message: e.to_string() })?;
+        harness
+            .add_ffb_device("acceptance_test_ffb".to_string(), ffb_config)
+            .map_err(|e| AcceptanceError::ConfigError {
+                message: e.to_string(),
+            })?;
 
         Ok(())
     }
 
     /// Create a mock validation result for testing
-    fn create_mock_validation_result(&self, test: &AcceptanceTest, replay_result: &ReplayResult) -> ValidationResult {
-        use crate::validation::{ValidationDetails, OutputAccuracyResult, PerformanceValidationResult, TimingValidationResult};
+    fn create_mock_validation_result(
+        &self,
+        test: &AcceptanceTest,
+        replay_result: &ReplayResult,
+    ) -> ValidationResult {
+        use crate::validation::{
+            OutputAccuracyResult, PerformanceValidationResult, TimingValidationResult,
+            ValidationDetails,
+        };
 
         // Create mock validation details based on replay result
         let output_accuracy = OutputAccuracyResult {
             within_tolerance: replay_result.comparison.as_ref().map_or(true, |c| c.passed),
             axis_accuracy_score: 0.95,
             ffb_accuracy_score: 0.93,
-            total_mismatches: replay_result.comparison.as_ref().map_or(0, |c| c.mismatches),
+            total_mismatches: replay_result
+                .comparison
+                .as_ref()
+                .map_or(0, |c| c.mismatches),
         };
 
         let performance = PerformanceValidationResult {
-            meets_requirements: replay_result.performance.frames_per_second >= test.criteria.min_fps,
+            meets_requirements: replay_result.performance.frames_per_second
+                >= test.criteria.min_fps,
             frames_per_second: replay_result.performance.frames_per_second,
             avg_frame_time_us: replay_result.performance.avg_frame_time.as_micros() as f64,
             memory_efficiency_score: 0.85,
         };
 
         let timing = TimingValidationResult {
-            within_tolerance: replay_result.accuracy.timing_stats.frames_within_tolerance_pct >= test.criteria.min_timing_accuracy_pct,
-            timing_accuracy_score: replay_result.accuracy.timing_stats.frames_within_tolerance_pct / 100.0,
+            within_tolerance: replay_result
+                .accuracy
+                .timing_stats
+                .frames_within_tolerance_pct
+                >= test.criteria.min_timing_accuracy_pct,
+            timing_accuracy_score: replay_result
+                .accuracy
+                .timing_stats
+                .frames_within_tolerance_pct
+                / 100.0,
             max_timing_drift_ns_per_s: replay_result.accuracy.timing_stats.max_timing_error_ns,
-            frames_within_tolerance_pct: replay_result.accuracy.timing_stats.frames_within_tolerance_pct,
+            frames_within_tolerance_pct: replay_result
+                .accuracy
+                .timing_stats
+                .frames_within_tolerance_pct,
         };
 
         let details = ValidationDetails {
@@ -376,9 +407,10 @@ impl AcceptanceTestRunner {
             timing,
         };
 
-        let score = (details.output_accuracy.axis_accuracy_score + 
-                    details.output_accuracy.ffb_accuracy_score + 
-                    details.timing.timing_accuracy_score) / 3.0;
+        let score = (details.output_accuracy.axis_accuracy_score
+            + details.output_accuracy.ffb_accuracy_score
+            + details.timing.timing_accuracy_score)
+            / 3.0;
 
         ValidationResult {
             test_name: test.id.clone(),
@@ -413,13 +445,19 @@ impl AcceptanceTestRunner {
         // Evaluate minimum overall score
         if let Some(validation_result) = validation_results.first() {
             let score_met = validation_result.score >= test.criteria.min_overall_score;
-            criterion_results.insert("min_overall_score".to_string(), CriterionResult {
-                name: "Minimum Overall Score".to_string(),
-                met: score_met,
-                actual_value: validation_result.score as f64,
-                expected_value: test.criteria.min_overall_score as f64,
-                details: format!("Score: {:.3}, Required: {:.3}", validation_result.score, test.criteria.min_overall_score),
-            });
+            criterion_results.insert(
+                "min_overall_score".to_string(),
+                CriterionResult {
+                    name: "Minimum Overall Score".to_string(),
+                    met: score_met,
+                    actual_value: validation_result.score as f64,
+                    expected_value: test.criteria.min_overall_score as f64,
+                    details: format!(
+                        "Score: {:.3}, Required: {:.3}",
+                        validation_result.score, test.criteria.min_overall_score
+                    ),
+                },
+            );
             if !score_met {
                 failed_criteria.push("Minimum overall score not met".to_string());
             }
@@ -428,13 +466,19 @@ impl AcceptanceTestRunner {
         // Evaluate maximum output mismatches
         if let Some(comparison) = &replay_result.comparison {
             let mismatches_met = comparison.mismatches <= test.criteria.max_output_mismatches;
-            criterion_results.insert("max_output_mismatches".to_string(), CriterionResult {
-                name: "Maximum Output Mismatches".to_string(),
-                met: mismatches_met,
-                actual_value: comparison.mismatches as f64,
-                expected_value: test.criteria.max_output_mismatches as f64,
-                details: format!("Mismatches: {}, Limit: {}", comparison.mismatches, test.criteria.max_output_mismatches),
-            });
+            criterion_results.insert(
+                "max_output_mismatches".to_string(),
+                CriterionResult {
+                    name: "Maximum Output Mismatches".to_string(),
+                    met: mismatches_met,
+                    actual_value: comparison.mismatches as f64,
+                    expected_value: test.criteria.max_output_mismatches as f64,
+                    details: format!(
+                        "Mismatches: {}, Limit: {}",
+                        comparison.mismatches, test.criteria.max_output_mismatches
+                    ),
+                },
+            );
             if !mismatches_met {
                 failed_criteria.push("Too many output mismatches".to_string());
             }
@@ -442,13 +486,19 @@ impl AcceptanceTestRunner {
 
         // Evaluate minimum FPS
         let fps_met = replay_result.performance.frames_per_second >= test.criteria.min_fps;
-        criterion_results.insert("min_fps".to_string(), CriterionResult {
-            name: "Minimum Frames Per Second".to_string(),
-            met: fps_met,
-            actual_value: replay_result.performance.frames_per_second,
-            expected_value: test.criteria.min_fps,
-            details: format!("FPS: {:.1}, Required: {:.1}", replay_result.performance.frames_per_second, test.criteria.min_fps),
-        });
+        criterion_results.insert(
+            "min_fps".to_string(),
+            CriterionResult {
+                name: "Minimum Frames Per Second".to_string(),
+                met: fps_met,
+                actual_value: replay_result.performance.frames_per_second,
+                expected_value: test.criteria.min_fps,
+                details: format!(
+                    "FPS: {:.1}, Required: {:.1}",
+                    replay_result.performance.frames_per_second, test.criteria.min_fps
+                ),
+            },
+        );
         if !fps_met {
             failed_criteria.push("Minimum FPS not met".to_string());
         }
@@ -456,28 +506,49 @@ impl AcceptanceTestRunner {
         // Evaluate maximum frame time
         let frame_time_us = replay_result.performance.avg_frame_time.as_micros() as f64;
         let frame_time_met = frame_time_us <= test.criteria.max_avg_frame_time_us;
-        criterion_results.insert("max_avg_frame_time".to_string(), CriterionResult {
-            name: "Maximum Average Frame Time".to_string(),
-            met: frame_time_met,
-            actual_value: frame_time_us,
-            expected_value: test.criteria.max_avg_frame_time_us,
-            details: format!("Frame time: {:.1}μs, Limit: {:.1}μs", frame_time_us, test.criteria.max_avg_frame_time_us),
-        });
+        criterion_results.insert(
+            "max_avg_frame_time".to_string(),
+            CriterionResult {
+                name: "Maximum Average Frame Time".to_string(),
+                met: frame_time_met,
+                actual_value: frame_time_us,
+                expected_value: test.criteria.max_avg_frame_time_us,
+                details: format!(
+                    "Frame time: {:.1}μs, Limit: {:.1}μs",
+                    frame_time_us, test.criteria.max_avg_frame_time_us
+                ),
+            },
+        );
         if !frame_time_met {
             failed_criteria.push("Maximum frame time exceeded".to_string());
         }
 
         // Evaluate timing accuracy
-        let timing_accuracy_met = replay_result.accuracy.timing_stats.frames_within_tolerance_pct >= test.criteria.min_timing_accuracy_pct;
-        criterion_results.insert("min_timing_accuracy".to_string(), CriterionResult {
-            name: "Minimum Timing Accuracy".to_string(),
-            met: timing_accuracy_met,
-            actual_value: replay_result.accuracy.timing_stats.frames_within_tolerance_pct as f64,
-            expected_value: test.criteria.min_timing_accuracy_pct as f64,
-            details: format!("Timing accuracy: {:.1}%, Required: {:.1}%", 
-                           replay_result.accuracy.timing_stats.frames_within_tolerance_pct, 
-                           test.criteria.min_timing_accuracy_pct),
-        });
+        let timing_accuracy_met = replay_result
+            .accuracy
+            .timing_stats
+            .frames_within_tolerance_pct
+            >= test.criteria.min_timing_accuracy_pct;
+        criterion_results.insert(
+            "min_timing_accuracy".to_string(),
+            CriterionResult {
+                name: "Minimum Timing Accuracy".to_string(),
+                met: timing_accuracy_met,
+                actual_value: replay_result
+                    .accuracy
+                    .timing_stats
+                    .frames_within_tolerance_pct as f64,
+                expected_value: test.criteria.min_timing_accuracy_pct as f64,
+                details: format!(
+                    "Timing accuracy: {:.1}%, Required: {:.1}%",
+                    replay_result
+                        .accuracy
+                        .timing_stats
+                        .frames_within_tolerance_pct,
+                    test.criteria.min_timing_accuracy_pct
+                ),
+            },
+        );
         if !timing_accuracy_met {
             failed_criteria.push("Minimum timing accuracy not met".to_string());
         }
@@ -485,13 +556,16 @@ impl AcceptanceTestRunner {
         // Evaluate custom rules
         for rule in &test.criteria.custom_rules {
             let rule_met = self.evaluate_custom_rule(rule, replay_result);
-            criterion_results.insert(rule.name.clone(), CriterionResult {
-                name: rule.name.clone(),
-                met: rule_met,
-                actual_value: 0.0, // Would extract actual value based on rule.metric
-                expected_value: rule.expected_value,
-                details: format!("Custom rule: {}", rule.description),
-            });
+            criterion_results.insert(
+                rule.name.clone(),
+                CriterionResult {
+                    name: rule.name.clone(),
+                    met: rule_met,
+                    actual_value: 0.0, // Would extract actual value based on rule.metric
+                    expected_value: rule.expected_value,
+                    details: format!("Custom rule: {}", rule.description),
+                },
+            );
             if !rule_met {
                 failed_criteria.push(format!("Custom rule '{}' not met", rule.name));
             }
@@ -507,7 +581,11 @@ impl AcceptanceTestRunner {
     }
 
     /// Evaluate a custom validation rule
-    fn evaluate_custom_rule(&self, rule: &CustomValidationRule, replay_result: &ReplayResult) -> bool {
+    fn evaluate_custom_rule(
+        &self,
+        rule: &CustomValidationRule,
+        replay_result: &ReplayResult,
+    ) -> bool {
         // In a full implementation, this would extract the metric value from replay_result
         // and compare it using the specified operator and expected value
         // For now, return true as a placeholder
@@ -515,20 +593,26 @@ impl AcceptanceTestRunner {
     }
 
     /// Calculate overall test score
-    fn calculate_test_score(&self, replay_results: &[ReplayResult], validation_results: &[ValidationResult]) -> f32 {
+    fn calculate_test_score(
+        &self,
+        replay_results: &[ReplayResult],
+        validation_results: &[ValidationResult],
+    ) -> f32 {
         if validation_results.is_empty() {
-            return if replay_results.iter().all(|r| r.success) { 0.5 } else { 0.0 };
+            return if replay_results.iter().all(|r| r.success) {
+                0.5
+            } else {
+                0.0
+            };
         }
 
         // Average validation scores
-        let avg_validation_score = validation_results.iter()
-            .map(|r| r.score)
-            .sum::<f32>() / validation_results.len() as f32;
+        let avg_validation_score = validation_results.iter().map(|r| r.score).sum::<f32>()
+            / validation_results.len() as f32;
 
         // Factor in replay success
-        let replay_success_rate = replay_results.iter()
-            .filter(|r| r.success)
-            .count() as f32 / replay_results.len() as f32;
+        let replay_success_rate = replay_results.iter().filter(|r| r.success).count() as f32
+            / replay_results.len() as f32;
 
         // Weighted combination
         (avg_validation_score * 0.8) + (replay_success_rate * 0.2)
@@ -570,7 +654,7 @@ mod tests {
     fn test_acceptance_test_runner_creation() {
         let config = ValidationConfig::default();
         let runner = AcceptanceTestRunner::new(config);
-        
+
         assert_eq!(runner.test_registry.len(), 0);
     }
 
@@ -578,7 +662,7 @@ mod tests {
     fn test_acceptance_test_registration() {
         let config = ValidationConfig::default();
         let mut runner = AcceptanceTestRunner::new(config);
-        
+
         let test = AcceptanceTest {
             id: "test1".to_string(),
             name: "Test 1".to_string(),
@@ -587,7 +671,7 @@ mod tests {
             criteria: AcceptanceCriteria::default(),
             config: AcceptanceTestConfig::default(),
         };
-        
+
         runner.register_test(test);
         assert_eq!(runner.test_registry.len(), 1);
         assert!(runner.test_registry.contains_key("test1"));
@@ -604,7 +688,7 @@ mod tests {
             min_timing_accuracy_pct: 95.0,
             custom_rules: Vec::new(),
         };
-        
+
         assert_eq!(criteria.min_overall_score, 0.8);
         assert_eq!(criteria.max_output_mismatches, 5);
     }
@@ -612,7 +696,7 @@ mod tests {
     #[test]
     fn test_comparison_operators() {
         use ComparisonOperator::*;
-        
+
         let operators = vec![
             GreaterThan,
             GreaterThanOrEqual,
@@ -621,7 +705,7 @@ mod tests {
             Equal,
             NotEqual,
         ];
-        
+
         assert_eq!(operators.len(), 6);
     }
 
@@ -629,7 +713,7 @@ mod tests {
     async fn test_nonexistent_test_execution() {
         let config = ValidationConfig::default();
         let runner = AcceptanceTestRunner::new(config);
-        
+
         let result = runner.run_test("nonexistent").await;
         assert!(result.is_err());
     }

@@ -89,12 +89,15 @@ impl AircraftDetector {
 
         detector.initialize_aircraft_mappings();
         detector.initialize_engine_mappings();
-        
+
         detector
     }
 
     /// Detect currently loaded aircraft
-    pub async fn detect_aircraft(&self, udp_client: &UdpClient) -> Result<DetectedAircraft, AircraftDetectionError> {
+    pub async fn detect_aircraft(
+        &self,
+        udp_client: &UdpClient,
+    ) -> Result<DetectedAircraft, AircraftDetectionError> {
         debug!("Starting aircraft detection");
 
         // Query basic aircraft information DataRefs
@@ -136,12 +139,16 @@ impl AircraftDetector {
         };
 
         info!("Detected aircraft: {} - {} by {}", icao, title, author);
-        
+
         Ok(detected)
     }
 
     /// Get extended aircraft information
-    pub async fn get_extended_info(&self, udp_client: &UdpClient, basic: DetectedAircraft) -> Result<XPlaneAircraftInfo, AircraftDetectionError> {
+    pub async fn get_extended_info(
+        &self,
+        udp_client: &UdpClient,
+        basic: DetectedAircraft,
+    ) -> Result<XPlaneAircraftInfo, AircraftDetectionError> {
         debug!("Getting extended aircraft information for {}", basic.icao);
 
         // Query extended DataRefs
@@ -169,14 +176,21 @@ impl AircraftDetector {
         }
 
         // Extract extended information
-        let file_path = self.extract_string_value(&extended_data, "sim/aircraft/view/acf_file_path").ok();
-        
-        let engine_count = self.extract_int_value(&extended_data, "sim/aircraft/engine/acf_num_engines")
+        let file_path = self
+            .extract_string_value(&extended_data, "sim/aircraft/view/acf_file_path")
+            .ok();
+
+        let engine_count = self
+            .extract_int_value(&extended_data, "sim/aircraft/engine/acf_num_engines")
             .unwrap_or(1) as u32;
-        
-        let max_weight = self.extract_float_value(&extended_data, "sim/aircraft/weight/acf_m_max").ok();
-        
-        let fuel_capacity = self.extract_float_value(&extended_data, "sim/aircraft/overflow/acf_fuel_tot").ok();
+
+        let max_weight = self
+            .extract_float_value(&extended_data, "sim/aircraft/weight/acf_m_max")
+            .ok();
+
+        let fuel_capacity = self
+            .extract_float_value(&extended_data, "sim/aircraft/overflow/acf_fuel_tot")
+            .ok();
 
         // Determine aircraft and engine types
         let aircraft_type = self.classify_aircraft_type(&basic.icao, &basic.title, engine_count);
@@ -204,7 +218,6 @@ impl AircraftDetector {
             ("SR22", AircraftType::GeneralAviation),
             ("BE36", AircraftType::GeneralAviation),
             ("M20P", AircraftType::GeneralAviation),
-            
             // Airliners
             ("A320", AircraftType::Airliner),
             ("A321", AircraftType::Airliner),
@@ -218,7 +231,6 @@ impl AircraftDetector {
             ("B787", AircraftType::Airliner),
             ("CRJ2", AircraftType::Airliner),
             ("E145", AircraftType::Airliner),
-            
             // Helicopters
             ("UH1H", AircraftType::Helicopter),
             ("AH64", AircraftType::Helicopter),
@@ -226,24 +238,22 @@ impl AircraftDetector {
             ("R44", AircraftType::Helicopter),
             ("EC35", AircraftType::Helicopter),
             ("S76", AircraftType::Helicopter),
-            
             // Fighters
             ("F16", AircraftType::Fighter),
             ("F18", AircraftType::Fighter),
             ("F22", AircraftType::Fighter),
             ("A10", AircraftType::Fighter),
-            
             // Gliders
             ("ASK21", AircraftType::Glider),
             ("DG808", AircraftType::Glider),
-            
             // Seaplanes
             ("DHC2", AircraftType::Seaplane),
             ("C208F", AircraftType::Seaplane),
         ];
 
         for (icao, aircraft_type) in mappings {
-            self.aircraft_mappings.insert(icao.to_string(), aircraft_type);
+            self.aircraft_mappings
+                .insert(icao.to_string(), aircraft_type);
         }
     }
 
@@ -255,11 +265,9 @@ impl AircraftDetector {
             ("C182", EngineType::Piston),
             ("PA28", EngineType::Piston),
             ("SR22", EngineType::Piston),
-            
             // Turboprops
             ("C208", EngineType::Turboprop),
             ("DHC2", EngineType::Turboprop),
-            
             // Jets
             ("A320", EngineType::Jet),
             ("A321", EngineType::Jet),
@@ -267,7 +275,6 @@ impl AircraftDetector {
             ("B777", EngineType::Jet),
             ("F16", EngineType::Jet),
             ("F18", EngineType::Jet),
-            
             // Turboshafts (helicopters)
             ("UH1H", EngineType::Turboshaft),
             ("AH64", EngineType::Turboshaft),
@@ -281,27 +288,29 @@ impl AircraftDetector {
     }
 
     /// Extract string value from DataRef response
-    fn extract_string_value(&self, data: &HashMap<String, DataRefValue>, key: &str) -> Result<String, AircraftDetectionError> {
+    fn extract_string_value(
+        &self,
+        data: &HashMap<String, DataRefValue>,
+        key: &str,
+    ) -> Result<String, AircraftDetectionError> {
         match data.get(key) {
             Some(DataRefValue::Float(f)) => {
                 // X-Plane sometimes returns strings as float arrays or encoded floats
                 // This is a simplified approach - in practice, string DataRefs are more complex
                 Ok(format!("{}", *f as i32))
             }
-            Some(DataRefValue::Int(i)) => {
-                Ok(i.to_string())
-            }
+            Some(DataRefValue::Int(i)) => Ok(i.to_string()),
             Some(DataRefValue::FloatArray(arr)) => {
                 // Convert float array to string (common for X-Plane string DataRefs)
-                let bytes: Vec<u8> = arr.iter()
+                let bytes: Vec<u8> = arr
+                    .iter()
                     .take_while(|&&f| f != 0.0)
                     .map(|&f| f as u8)
                     .collect();
-                
-                String::from_utf8(bytes)
-                    .map_err(|_| AircraftDetectionError::InvalidData {
-                        reason: "Invalid UTF-8 in string DataRef".to_string(),
-                    })
+
+                String::from_utf8(bytes).map_err(|_| AircraftDetectionError::InvalidData {
+                    reason: "Invalid UTF-8 in string DataRef".to_string(),
+                })
             }
             Some(value) => {
                 // Fallback: convert any value to string
@@ -314,7 +323,11 @@ impl AircraftDetector {
     }
 
     /// Extract integer value from DataRef response
-    fn extract_int_value(&self, data: &HashMap<String, DataRefValue>, key: &str) -> Result<i32, AircraftDetectionError> {
+    fn extract_int_value(
+        &self,
+        data: &HashMap<String, DataRefValue>,
+        key: &str,
+    ) -> Result<i32, AircraftDetectionError> {
         match data.get(key) {
             Some(DataRefValue::Int(i)) => Ok(*i),
             Some(DataRefValue::Float(f)) => Ok(*f as i32),
@@ -326,7 +339,11 @@ impl AircraftDetector {
     }
 
     /// Extract float value from DataRef response
-    fn extract_float_value(&self, data: &HashMap<String, DataRefValue>, key: &str) -> Result<f32, AircraftDetectionError> {
+    fn extract_float_value(
+        &self,
+        data: &HashMap<String, DataRefValue>,
+        key: &str,
+    ) -> Result<f32, AircraftDetectionError> {
         match data.get(key) {
             Some(DataRefValue::Float(f)) => Ok(*f),
             Some(DataRefValue::Double(d)) => Ok(*d as f32),
@@ -362,33 +379,40 @@ impl AircraftDetector {
 
         // Classify based on title keywords
         let title_lower = title.to_lowercase();
-        
+
         if title_lower.contains("helicopter") || title_lower.contains("helo") {
             return AircraftType::Helicopter;
         }
-        
-        if title_lower.contains("fighter") || title_lower.contains("f-") || title_lower.contains("f/") {
+
+        if title_lower.contains("fighter")
+            || title_lower.contains("f-")
+            || title_lower.contains("f/")
+        {
             return AircraftType::Fighter;
         }
-        
+
         if title_lower.contains("glider") || title_lower.contains("sailplane") {
             return AircraftType::Glider;
         }
-        
+
         if title_lower.contains("seaplane") || title_lower.contains("floatplane") {
             return AircraftType::Seaplane;
         }
-        
+
         // Classify based on engine count and other characteristics
         if engine_count >= 2 {
             // Multi-engine aircraft are likely airliners or large GA
-            if title_lower.contains("boeing") || title_lower.contains("airbus") || 
-               title_lower.contains("737") || title_lower.contains("320") ||
-               title_lower.contains("777") || title_lower.contains("787") {
+            if title_lower.contains("boeing")
+                || title_lower.contains("airbus")
+                || title_lower.contains("737")
+                || title_lower.contains("320")
+                || title_lower.contains("777")
+                || title_lower.contains("787")
+            {
                 return AircraftType::Airliner;
             }
         }
-        
+
         // Default to GA for single-engine aircraft
         if engine_count == 1 {
             return AircraftType::GeneralAviation;
@@ -398,7 +422,11 @@ impl AircraftDetector {
     }
 
     /// Classify engine type based on ICAO and DataRef information
-    fn classify_engine_type(&self, icao: &str, _extended_data: &HashMap<String, DataRefValue>) -> EngineType {
+    fn classify_engine_type(
+        &self,
+        icao: &str,
+        _extended_data: &HashMap<String, DataRefValue>,
+    ) -> EngineType {
         // Check direct mapping first
         if let Some(engine_type) = self.engine_mappings.get(icao) {
             return *engine_type;
@@ -406,7 +434,7 @@ impl AircraftDetector {
 
         // TODO: Use extended_data to determine engine type from X-Plane DataRefs
         // For now, use ICAO-based classification
-        
+
         // Default classification based on aircraft type
         match self.aircraft_mappings.get(icao) {
             Some(AircraftType::GeneralAviation) => EngineType::Piston,
@@ -418,7 +446,11 @@ impl AircraftDetector {
     }
 
     /// Check if aircraft has changed
-    pub fn has_aircraft_changed(&self, current: &DetectedAircraft, previous: &Option<DetectedAircraft>) -> bool {
+    pub fn has_aircraft_changed(
+        &self,
+        current: &DetectedAircraft,
+        previous: &Option<DetectedAircraft>,
+    ) -> bool {
         match previous {
             Some(prev) => current.icao != prev.icao || current.title != prev.title,
             None => true,
@@ -453,18 +485,15 @@ impl AircraftDetector {
                 "weapons_systems".to_string(),
                 "high_performance".to_string(),
             ],
-            AircraftType::Glider => vec![
-                "basic_flight_controls".to_string(),
-                "soaring".to_string(),
-            ],
+            AircraftType::Glider => {
+                vec!["basic_flight_controls".to_string(), "soaring".to_string()]
+            }
             AircraftType::Seaplane => vec![
                 "basic_flight_controls".to_string(),
                 "engine_management".to_string(),
                 "water_operations".to_string(),
             ],
-            AircraftType::Unknown => vec![
-                "basic_flight_controls".to_string(),
-            ],
+            AircraftType::Unknown => vec!["basic_flight_controls".to_string()],
         }
     }
 }
@@ -489,7 +518,7 @@ mod tests {
     #[test]
     fn test_icao_cleaning() {
         let detector = AircraftDetector::new();
-        
+
         assert_eq!(detector.clean_icao_code("C172\0\0\0"), "C172");
         assert_eq!(detector.clean_icao_code("c172 "), "C172");
         assert_eq!(detector.clean_icao_code("C172SP"), "C172");
@@ -499,29 +528,29 @@ mod tests {
     #[test]
     fn test_aircraft_type_classification() {
         let detector = AircraftDetector::new();
-        
+
         // Direct mapping
         assert_eq!(
             detector.classify_aircraft_type("C172", "Cessna 172", 1),
             AircraftType::GeneralAviation
         );
-        
+
         assert_eq!(
             detector.classify_aircraft_type("A320", "Airbus A320", 2),
             AircraftType::Airliner
         );
-        
+
         // Title-based classification
         assert_eq!(
             detector.classify_aircraft_type("UNKN", "Test Helicopter", 1),
             AircraftType::Helicopter
         );
-        
+
         assert_eq!(
             detector.classify_aircraft_type("UNKN", "F-16 Fighter", 1),
             AircraftType::Fighter
         );
-        
+
         // Engine count-based classification
         assert_eq!(
             detector.classify_aircraft_type("UNKN", "Unknown Aircraft", 1),
@@ -533,17 +562,17 @@ mod tests {
     fn test_engine_type_classification() {
         let detector = AircraftDetector::new();
         let empty_data = HashMap::new();
-        
+
         assert_eq!(
             detector.classify_engine_type("C172", &empty_data),
             EngineType::Piston
         );
-        
+
         assert_eq!(
             detector.classify_engine_type("A320", &empty_data),
             EngineType::Jet
         );
-        
+
         assert_eq!(
             detector.classify_engine_type("UH1H", &empty_data),
             EngineType::Turboshaft
@@ -553,25 +582,25 @@ mod tests {
     #[test]
     fn test_aircraft_change_detection() {
         let detector = AircraftDetector::new();
-        
+
         let aircraft1 = DetectedAircraft {
             icao: "C172".to_string(),
             title: "Cessna 172".to_string(),
             author: "Laminar Research".to_string(),
         };
-        
+
         let aircraft2 = DetectedAircraft {
             icao: "A320".to_string(),
             title: "Airbus A320".to_string(),
             author: "FlightFactor".to_string(),
         };
-        
+
         // No previous aircraft
         assert!(detector.has_aircraft_changed(&aircraft1, &None));
-        
+
         // Same aircraft
         assert!(!detector.has_aircraft_changed(&aircraft1, &Some(aircraft1.clone())));
-        
+
         // Different aircraft
         assert!(detector.has_aircraft_changed(&aircraft2, &Some(aircraft1)));
     }
@@ -579,15 +608,15 @@ mod tests {
     #[test]
     fn test_aircraft_capabilities() {
         let detector = AircraftDetector::new();
-        
+
         let ga_caps = detector.get_aircraft_capabilities(AircraftType::GeneralAviation);
         assert!(ga_caps.contains(&"basic_flight_controls".to_string()));
         assert!(ga_caps.contains(&"engine_management".to_string()));
-        
+
         let airliner_caps = detector.get_aircraft_capabilities(AircraftType::Airliner);
         assert!(airliner_caps.contains(&"autopilot".to_string()));
         assert!(airliner_caps.contains(&"multiple_engines".to_string()));
-        
+
         let helo_caps = detector.get_aircraft_capabilities(AircraftType::Helicopter);
         assert!(helo_caps.contains(&"collective".to_string()));
         assert!(helo_caps.contains(&"anti_torque".to_string()));
@@ -597,23 +626,23 @@ mod tests {
     fn test_value_extraction() {
         let detector = AircraftDetector::new();
         let mut data = HashMap::new();
-        
+
         // Test string extraction from float array (simulating X-Plane string DataRef)
         data.insert(
             "test_string".to_string(),
             DataRefValue::FloatArray(vec![67.0, 49.0, 55.0, 50.0, 0.0]), // "C172"
         );
-        
+
         let result = detector.extract_string_value(&data, "test_string");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "C172");
-        
+
         // Test integer extraction
         data.insert("test_int".to_string(), DataRefValue::Int(42));
         let result = detector.extract_int_value(&data, "test_int");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 42);
-        
+
         // Test float extraction
         data.insert("test_float".to_string(), DataRefValue::Float(3.14));
         let result = detector.extract_float_value(&data, "test_float");

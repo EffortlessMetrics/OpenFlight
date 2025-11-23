@@ -48,10 +48,7 @@ pub enum PluginMessage {
         capabilities: Vec<String>,
     },
     /// Request DataRef value
-    GetDataRef {
-        id: u32,
-        name: String,
-    },
+    GetDataRef { id: u32, name: String },
     /// Set DataRef value
     SetDataRef {
         id: u32,
@@ -65,24 +62,13 @@ pub enum PluginMessage {
         frequency: f32,
     },
     /// Unsubscribe from DataRef updates
-    Unsubscribe {
-        id: u32,
-        name: String,
-    },
+    Unsubscribe { id: u32, name: String },
     /// Execute command
-    Command {
-        id: u32,
-        name: String,
-    },
+    Command { id: u32, name: String },
     /// Get aircraft information
-    GetAircraftInfo {
-        id: u32,
-    },
+    GetAircraftInfo { id: u32 },
     /// Ping for connection health
-    Ping {
-        id: u32,
-        timestamp: u64,
-    },
+    Ping { id: u32, timestamp: u64 },
 }
 
 /// Plugin response types
@@ -129,10 +115,7 @@ pub enum PluginResponse {
         details: Option<String>,
     },
     /// Pong response
-    Pong {
-        id: u32,
-        timestamp: u64,
-    },
+    Pong { id: u32, timestamp: u64 },
 }
 
 /// Plugin capabilities
@@ -217,7 +200,7 @@ impl PluginInterface {
     pub async fn start(&self) -> Result<(), PluginError> {
         let addr = format!("127.0.0.1:{}", self.port);
         let listener = TcpListener::bind(&addr).await?;
-        
+
         info!("Plugin interface listening on {}", addr);
 
         let connection = self.connection.clone();
@@ -229,7 +212,7 @@ impl PluginInterface {
                 match listener.accept().await {
                     Ok((stream, addr)) => {
                         info!("Plugin connected from {}", addr);
-                        
+
                         let conn = PluginConnection {
                             stream: Arc::new(RwLock::new(Some(stream))),
                             capabilities: Vec::new(),
@@ -244,14 +227,16 @@ impl PluginInterface {
                         let connection_clone = connection.clone();
                         let pending_clone = pending_requests.clone();
                         let subscriptions_clone = subscriptions.clone();
-                        
+
                         tokio::spawn(async move {
                             if let Err(e) = Self::handle_connection(
                                 conn,
                                 connection_clone,
                                 pending_clone,
                                 subscriptions_clone,
-                            ).await {
+                            )
+                            .await
+                            {
                                 error!("Plugin connection error: {}", e);
                             }
                         });
@@ -313,27 +298,36 @@ impl PluginInterface {
 
         // Wait for handshake response
         match timeout(Duration::from_secs(5), Self::read_message(conn)).await {
-            Ok(Ok(PluginResponse::HandshakeAck { version, capabilities, status })) => {
+            Ok(Ok(PluginResponse::HandshakeAck {
+                version,
+                capabilities,
+                status,
+            })) => {
                 conn.version = version;
-                conn.capabilities = capabilities.iter()
+                conn.capabilities = capabilities
+                    .iter()
                     .filter_map(|c| PluginCapability::parse(c))
                     .collect();
-                
-                info!("Plugin handshake successful: version={}, status={}", conn.version, status);
+
+                info!(
+                    "Plugin handshake successful: version={}, status={}",
+                    conn.version, status
+                );
                 Ok(())
             }
-            Ok(Ok(response)) => {
-                Err(PluginError::Protocol {
-                    message: format!("Unexpected handshake response: {:?}", response),
-                })
-            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected handshake response: {:?}", response),
+            }),
             Ok(Err(e)) => Err(e),
             Err(_) => Err(PluginError::Timeout),
         }
     }
 
     /// Send message to plugin
-    async fn send_message(conn: &PluginConnection, message: PluginMessage) -> Result<(), PluginError> {
+    async fn send_message(
+        conn: &PluginConnection,
+        message: PluginMessage,
+    ) -> Result<(), PluginError> {
         let json = serde_json::to_string(&message)?;
         let _data = format!("{}\n", json);
 
@@ -355,14 +349,14 @@ impl PluginInterface {
             let stream_guard = conn.stream.read().unwrap();
             stream_guard.is_some()
         };
-        
+
         if has_stream {
             // In a real implementation, we would read from the stream
             // This is a simplified version for demonstration
-            
+
             // Simulate reading a response
             tokio::time::sleep(Duration::from_millis(10)).await;
-            
+
             // Return a mock response for testing
             Ok(PluginResponse::HandshakeAck {
                 version: "1.0.0".to_string(),
@@ -381,10 +375,10 @@ impl PluginInterface {
         subscriptions: &Arc<RwLock<HashMap<String, mpsc::UnboundedSender<DataRefValue>>>>,
     ) -> Result<(), PluginError> {
         match response {
-            PluginResponse::DataRefValue { id, .. } |
-            PluginResponse::CommandResult { id, .. } |
-            PluginResponse::AircraftInfo { id, .. } |
-            PluginResponse::Pong { id, .. } => {
+            PluginResponse::DataRefValue { id, .. }
+            | PluginResponse::CommandResult { id, .. }
+            | PluginResponse::AircraftInfo { id, .. }
+            | PluginResponse::Pong { id, .. } => {
                 // Handle request response
                 let mut pending = pending_requests.write().unwrap();
                 if let Some(sender) = pending.remove(&id) {
@@ -398,7 +392,11 @@ impl PluginInterface {
                     let _ = sender.send(value);
                 }
             }
-            PluginResponse::Error { id, ref error, ref details } => {
+            PluginResponse::Error {
+                id,
+                ref error,
+                ref details,
+            } => {
                 debug!("Plugin error: {} (details: {:?})", error, details);
                 if let Some(id) = id {
                     let mut pending = pending_requests.write().unwrap();
@@ -419,7 +417,10 @@ impl PluginInterface {
     pub async fn get_dataref(&self, name: &str) -> Result<DataRefValue, PluginError> {
         let conn = {
             let connection = self.connection.read().unwrap();
-            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
         };
 
         if !conn.capabilities.contains(&PluginCapability::ReadDataRefs) {
@@ -451,11 +452,9 @@ impl PluginInterface {
             Ok(Ok(PluginResponse::Error { error, .. })) => {
                 Err(PluginError::Protocol { message: error })
             }
-            Ok(Ok(response)) => {
-                Err(PluginError::Protocol {
-                    message: format!("Unexpected response: {:?}", response),
-                })
-            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected response: {:?}", response),
+            }),
             Ok(Err(_)) => Err(PluginError::Protocol {
                 message: "Response channel closed".to_string(),
             }),
@@ -471,7 +470,10 @@ impl PluginInterface {
     pub async fn set_dataref(&self, name: &str, value: DataRefValue) -> Result<(), PluginError> {
         let conn = {
             let connection = self.connection.read().unwrap();
-            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
         };
 
         if !conn.capabilities.contains(&PluginCapability::WriteDataRefs) {
@@ -501,19 +503,19 @@ impl PluginInterface {
         // Wait for response
         match timeout(Duration::from_secs(1), receiver).await {
             Ok(Ok(PluginResponse::CommandResult { success: true, .. })) => Ok(()),
-            Ok(Ok(PluginResponse::CommandResult { success: false, message, .. })) => {
-                Err(PluginError::Protocol {
-                    message: message.unwrap_or("Set DataRef failed".to_string()),
-                })
-            }
+            Ok(Ok(PluginResponse::CommandResult {
+                success: false,
+                message,
+                ..
+            })) => Err(PluginError::Protocol {
+                message: message.unwrap_or("Set DataRef failed".to_string()),
+            }),
             Ok(Ok(PluginResponse::Error { error, .. })) => {
                 Err(PluginError::Protocol { message: error })
             }
-            Ok(Ok(response)) => {
-                Err(PluginError::Protocol {
-                    message: format!("Unexpected response: {:?}", response),
-                })
-            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected response: {:?}", response),
+            }),
             Ok(Err(_)) => Err(PluginError::Protocol {
                 message: "Response channel closed".to_string(),
             }),
@@ -526,13 +528,23 @@ impl PluginInterface {
     }
 
     /// Subscribe to DataRef updates
-    pub async fn subscribe_dataref(&self, name: &str, frequency: f32) -> Result<mpsc::UnboundedReceiver<DataRefValue>, PluginError> {
+    pub async fn subscribe_dataref(
+        &self,
+        name: &str,
+        frequency: f32,
+    ) -> Result<mpsc::UnboundedReceiver<DataRefValue>, PluginError> {
         let conn = {
             let connection = self.connection.read().unwrap();
-            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
         };
 
-        if !conn.capabilities.contains(&PluginCapability::SubscribeDataRefs) {
+        if !conn
+            .capabilities
+            .contains(&PluginCapability::SubscribeDataRefs)
+        {
             return Err(PluginError::UnsupportedCapability {
                 capability: "subscribe_datarefs".to_string(),
             });
@@ -563,7 +575,10 @@ impl PluginInterface {
     pub async fn get_aircraft_info(&self) -> Result<(String, String, String, String), PluginError> {
         let conn = {
             let connection = self.connection.read().unwrap();
-            connection.as_ref().ok_or(PluginError::NotConnected)?.clone()
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
         };
 
         if !conn.capabilities.contains(&PluginCapability::AircraftInfo) {
@@ -587,17 +602,19 @@ impl PluginInterface {
 
         // Wait for response
         match timeout(Duration::from_secs(1), receiver).await {
-            Ok(Ok(PluginResponse::AircraftInfo { icao, title, author, file_path, .. })) => {
-                Ok((icao, title, author, file_path))
-            }
+            Ok(Ok(PluginResponse::AircraftInfo {
+                icao,
+                title,
+                author,
+                file_path,
+                ..
+            })) => Ok((icao, title, author, file_path)),
             Ok(Ok(PluginResponse::Error { error, .. })) => {
                 Err(PluginError::Protocol { message: error })
             }
-            Ok(Ok(response)) => {
-                Err(PluginError::Protocol {
-                    message: format!("Unexpected response: {:?}", response),
-                })
-            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected response: {:?}", response),
+            }),
             Ok(Err(_)) => Err(PluginError::Protocol {
                 message: "Response channel closed".to_string(),
             }),
@@ -619,7 +636,9 @@ impl PluginInterface {
 
     /// Check if plugin is connected
     pub fn is_connected(&self) -> bool {
-        self.connection.read().unwrap()
+        self.connection
+            .read()
+            .unwrap()
             .as_ref()
             .map(|c| c.connected)
             .unwrap_or(false)
@@ -627,7 +646,9 @@ impl PluginInterface {
 
     /// Get plugin capabilities
     pub fn get_capabilities(&self) -> Vec<PluginCapability> {
-        self.connection.read().unwrap()
+        self.connection
+            .read()
+            .unwrap()
             .as_ref()
             .map(|c| c.capabilities.clone())
             .unwrap_or_default()
@@ -653,7 +674,7 @@ mod tests {
     fn test_plugin_capability_conversion() {
         assert_eq!(PluginCapability::ReadDataRefs.as_str(), "read_datarefs");
         assert_eq!(PluginCapability::WriteDataRefs.as_str(), "write_datarefs");
-        
+
         assert_eq!(
             PluginCapability::parse("read_datarefs"),
             Some(PluginCapability::ReadDataRefs)
@@ -665,7 +686,7 @@ mod tests {
     async fn test_plugin_interface_creation() {
         let interface = PluginInterface::new();
         assert!(interface.is_ok());
-        
+
         let interface = interface.unwrap();
         assert!(!interface.is_connected());
         assert!(interface.get_capabilities().is_empty());
@@ -707,7 +728,12 @@ mod tests {
 
         let deserialized: PluginResponse = serde_json::from_str(&json).unwrap();
         match deserialized {
-            PluginResponse::DataRefValue { id, name, value, timestamp } => {
+            PluginResponse::DataRefValue {
+                id,
+                name,
+                value,
+                timestamp,
+            } => {
                 assert_eq!(id, 123);
                 assert_eq!(name, "sim/test/dataref");
                 assert_eq!(value, DataRefValue::Float(42.0));
@@ -720,10 +746,10 @@ mod tests {
     #[test]
     fn test_request_id_generation() {
         let interface = PluginInterface::new().unwrap();
-        
+
         let id1 = interface.get_next_request_id();
         let id2 = interface.get_next_request_id();
-        
+
         assert_eq!(id1, 1);
         assert_eq!(id2, 2);
     }

@@ -4,13 +4,13 @@
 //! SimShaker-class application bridge for tactile output
 
 use crate::channel::ChannelOutput;
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use std::net::{UdpSocket, SocketAddr};
+use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use parking_lot::RwLock;
 use thiserror::Error;
-use tracing::{debug, warn, error};
+use tracing::{debug, error, warn};
 
 /// Configuration for SimShaker bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,8 +35,8 @@ impl Default for SimShakerConfig {
     fn default() -> Self {
         Self {
             target_address: "127.0.0.1".to_string(),
-            target_port: 4123, // Common SimShaker port
-            local_port: 0, // Auto-assign
+            target_port: 4123,    // Common SimShaker port
+            local_port: 0,        // Auto-assign
             update_rate_hz: 30.0, // 30 Hz update rate
             timeout_ms: 1000,
             max_packet_size: 256,
@@ -119,7 +119,7 @@ impl SimShakerPacket {
             sequence,
             checksum: 0,
         };
-        
+
         packet.checksum = packet.calculate_checksum();
         packet
     }
@@ -127,32 +127,32 @@ impl SimShakerPacket {
     /// Calculate packet checksum
     fn calculate_checksum(&self) -> u16 {
         let mut sum: u32 = 0;
-        
+
         // Include header
         for &byte in &self.header {
             sum = sum.wrapping_add(byte as u32);
         }
-        
+
         // Include channels
         for &byte in &self.channels {
             sum = sum.wrapping_add(byte as u32);
         }
-        
+
         // Include sequence
         sum = sum.wrapping_add(self.sequence);
-        
+
         (sum & 0xFFFF) as u16
     }
 
     /// Serialize packet to bytes
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(18);
-        
+
         bytes.extend_from_slice(&self.header);
         bytes.extend_from_slice(&self.channels);
         bytes.extend_from_slice(&self.sequence.to_le_bytes());
         bytes.extend_from_slice(&self.checksum.to_le_bytes());
-        
+
         bytes
     }
 }
@@ -175,13 +175,13 @@ impl SimShakerBridge {
         // Validate configuration
         if config.update_rate_hz <= 0.0 || config.update_rate_hz > 1000.0 {
             return Err(SimShakerError::Configuration(
-                "Update rate must be between 0 and 1000 Hz".to_string()
+                "Update rate must be between 0 and 1000 Hz".to_string(),
             ));
         }
 
         if config.channel_count == 0 || config.channel_count > 8 {
             return Err(SimShakerError::Configuration(
-                "Channel count must be between 1 and 8".to_string()
+                "Channel count must be between 1 and 8".to_string(),
             ));
         }
 
@@ -202,14 +202,14 @@ impl SimShakerBridge {
     /// Start the SimShaker bridge
     pub fn start(&mut self) -> Result<(), SimShakerError> {
         debug!("Starting SimShaker bridge");
-        
+
         // Update status
         self.stats.write().status = SimShakerStatus::Connecting;
 
         // Create UDP socket
         let bind_addr = format!("0.0.0.0:{}", self.config.local_port);
         let socket = UdpSocket::bind(&bind_addr)?;
-        
+
         // Set socket timeout
         socket.set_write_timeout(Some(Duration::from_millis(self.config.timeout_ms)))?;
         socket.set_read_timeout(Some(Duration::from_millis(100)))?; // Short read timeout for non-blocking
@@ -237,7 +237,7 @@ impl SimShakerBridge {
     /// Stop the SimShaker bridge
     pub fn stop(&mut self) {
         debug!("Stopping SimShaker bridge");
-        
+
         // Send zero packet to clear effects
         self.channel_values = [0; 8];
         let _ = self.send_packet();
@@ -250,7 +250,7 @@ impl SimShakerBridge {
     /// Update bridge with channel outputs
     pub fn update(&mut self, outputs: &[ChannelOutput]) -> Result<(), SimShakerError> {
         let now = Instant::now();
-        
+
         // Check if it's time to send an update
         if now.duration_since(self.last_update) < self.update_interval {
             return Ok(());
@@ -285,7 +285,7 @@ impl SimShakerBridge {
     /// Send handshake packet to establish connection
     fn send_handshake(&mut self) -> Result<(), SimShakerError> {
         debug!("Sending SimShaker handshake");
-        
+
         // Send a zero packet as handshake
         self.channel_values = [0; 8];
         self.send_packet()
@@ -293,10 +293,13 @@ impl SimShakerBridge {
 
     /// Send current channel data packet
     fn send_packet(&mut self) -> Result<(), SimShakerError> {
-        let socket = self.socket.as_ref()
+        let socket = self
+            .socket
+            .as_ref()
             .ok_or_else(|| SimShakerError::Protocol("Socket not initialized".to_string()))?;
-        
-        let target_addr = self.target_addr
+
+        let target_addr = self
+            .target_addr
             .ok_or_else(|| SimShakerError::Protocol("Target address not set".to_string()))?;
 
         // Create packet
@@ -308,13 +311,13 @@ impl SimShakerBridge {
         match socket.send_to(&packet_bytes, target_addr) {
             Ok(bytes_sent) => {
                 let send_duration = send_start.elapsed();
-                
+
                 // Update statistics
                 let mut stats = self.stats.write();
                 stats.packets_sent += 1;
                 stats.bytes_sent += bytes_sent as u64;
                 stats.last_send_time = Some(send_start);
-                
+
                 // Update average latency (simple moving average)
                 let latency_us = send_duration.as_micros() as f32;
                 if stats.average_latency_us == 0.0 {
@@ -324,21 +327,24 @@ impl SimShakerBridge {
                 }
 
                 self.sequence_number = self.sequence_number.wrapping_add(1);
-                
-                debug!("Sent SimShaker packet: {} bytes, seq {}", bytes_sent, packet.sequence);
+
+                debug!(
+                    "Sent SimShaker packet: {} bytes, seq {}",
+                    bytes_sent, packet.sequence
+                );
                 Ok(())
             }
             Err(e) => {
                 warn!("Failed to send SimShaker packet: {}", e);
-                
+
                 // Update error statistics
                 self.stats.write().packets_failed += 1;
-                
+
                 // Update status on repeated failures
                 if self.stats.read().packets_failed > 10 {
                     self.stats.write().status = SimShakerStatus::Failed(e.to_string());
                 }
-                
+
                 Err(SimShakerError::Network(e))
             }
         }
@@ -357,18 +363,18 @@ impl SimShakerBridge {
     /// Test connection with a test pattern
     pub fn test_connection(&mut self) -> Result<(), SimShakerError> {
         debug!("Testing SimShaker connection");
-        
+
         // Send test pattern: all channels at 50%
         self.channel_values = [128; 8];
         self.send_packet()?;
-        
+
         // Wait briefly
         std::thread::sleep(Duration::from_millis(100));
-        
+
         // Send zero pattern
         self.channel_values = [0; 8];
         self.send_packet()?;
-        
+
         Ok(())
     }
 
@@ -377,13 +383,13 @@ impl SimShakerBridge {
         // Validate new configuration
         if config.update_rate_hz <= 0.0 || config.update_rate_hz > 1000.0 {
             return Err(SimShakerError::Configuration(
-                "Update rate must be between 0 and 1000 Hz".to_string()
+                "Update rate must be between 0 and 1000 Hz".to_string(),
             ));
         }
 
         self.config = config;
         self.update_interval = Duration::from_secs_f32(1.0 / self.config.update_rate_hz);
-        
+
         Ok(())
     }
 
@@ -412,22 +418,22 @@ mod tests {
     #[test]
     fn test_simshaker_config_validation() {
         let mut config = SimShakerConfig::default();
-        
+
         // Valid config should work
         assert!(SimShakerBridge::new(config.clone()).is_ok());
-        
+
         // Invalid update rate should fail
         config.update_rate_hz = 0.0;
         assert!(SimShakerBridge::new(config.clone()).is_err());
-        
+
         config.update_rate_hz = 2000.0;
         assert!(SimShakerBridge::new(config.clone()).is_err());
-        
+
         // Invalid channel count should fail
         config.update_rate_hz = 30.0;
         config.channel_count = 0;
         assert!(SimShakerBridge::new(config.clone()).is_err());
-        
+
         config.channel_count = 10;
         assert!(SimShakerBridge::new(config).is_err());
     }
@@ -436,12 +442,12 @@ mod tests {
     fn test_simshaker_packet_creation() {
         let channel_data = [128, 64, 192, 32, 255, 0, 96, 160];
         let packet = SimShakerPacket::new(&channel_data, 12345);
-        
+
         assert_eq!(packet.header, [0x53, 0x48, 0x4B, 0x52]);
         assert_eq!(packet.channels, channel_data);
         assert_eq!(packet.sequence, 12345);
         assert!(packet.checksum > 0);
-        
+
         let bytes = packet.to_bytes();
         assert_eq!(bytes.len(), 18); // 4 + 8 + 4 + 2
     }
@@ -449,18 +455,18 @@ mod tests {
     #[test]
     fn test_channel_value_conversion() {
         use crate::ChannelId;
-        
+
         let config = SimShakerConfig::default();
         let mut bridge = SimShakerBridge::new(config).unwrap();
-        
+
         let outputs = vec![
             ChannelOutput::new(ChannelId::new(0), EffectIntensity::new(0.0).unwrap()),
             ChannelOutput::new(ChannelId::new(1), EffectIntensity::new(0.5).unwrap()),
             ChannelOutput::new(ChannelId::new(2), EffectIntensity::new(1.0).unwrap()),
         ];
-        
+
         bridge.update_channel_values(&outputs);
-        
+
         assert_eq!(bridge.channel_values[0], 0);
         assert_eq!(bridge.channel_values[1], 128); // 0.5 * 255 = 127.5 -> 128
         assert_eq!(bridge.channel_values[2], 255);
@@ -471,7 +477,7 @@ mod tests {
     fn test_stats_initialization() {
         let config = SimShakerConfig::default();
         let bridge = SimShakerBridge::new(config).unwrap();
-        
+
         let stats = bridge.get_stats();
         assert_eq!(stats.packets_sent, 0);
         assert_eq!(stats.packets_failed, 0);

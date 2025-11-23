@@ -67,7 +67,7 @@ impl LatencyBudget {
     /// Get warning threshold as duration
     pub fn warning_duration(&self) -> Duration {
         Duration::from_nanos(
-            (self.max_latency.as_nanos() as f64 * self.warning_threshold as f64) as u64
+            (self.max_latency.as_nanos() as f64 * self.warning_threshold as f64) as u64,
         )
     }
 
@@ -177,7 +177,7 @@ impl LatencyTracker {
         {
             let mut measurements = self.measurements.write().unwrap();
             measurements.push_back(measurement.clone());
-            
+
             // Keep only the last N measurements
             while measurements.len() > self.max_measurements {
                 measurements.pop_front();
@@ -191,7 +191,7 @@ impl LatencyTracker {
         if is_violation {
             let mut violations = self.consecutive_violations.write().unwrap();
             *violations += 1;
-            
+
             warn!(
                 "Latency budget violation: {}ms > {}ms (operation: {}, consecutive: {})",
                 measurement.latency.as_millis(),
@@ -228,9 +228,9 @@ impl LatencyTracker {
     /// Update internal statistics
     fn update_stats(&self, measurement: LatencyMeasurement, is_violation: bool, is_warning: bool) {
         let mut stats = self.stats.write().unwrap();
-        
+
         stats.count += 1;
-        
+
         if stats.count == 1 {
             stats.min = measurement.latency;
             stats.max = measurement.latency;
@@ -238,9 +238,10 @@ impl LatencyTracker {
         } else {
             stats.min = stats.min.min(measurement.latency);
             stats.max = stats.max.max(measurement.latency);
-            
+
             // Update running mean
-            let total_nanos = stats.mean.as_nanos() as u64 * (stats.count - 1) as u64 + measurement.latency.as_nanos() as u64;
+            let total_nanos = stats.mean.as_nanos() as u64 * (stats.count - 1) as u64
+                + measurement.latency.as_nanos() as u64;
             stats.mean = Duration::from_nanos(total_nanos / stats.count as u64);
         }
 
@@ -260,19 +261,17 @@ impl LatencyTracker {
     /// Update percentile statistics
     fn update_percentiles(&self, stats: &mut LatencyStats) {
         let measurements = self.measurements.read().unwrap();
-        
+
         if measurements.is_empty() {
             return;
         }
 
         // Collect latencies and sort
-        let mut latencies: Vec<Duration> = measurements.iter()
-            .map(|m| m.latency)
-            .collect();
+        let mut latencies: Vec<Duration> = measurements.iter().map(|m| m.latency).collect();
         latencies.sort();
 
         let len = latencies.len();
-        
+
         // Calculate percentiles
         stats.p50 = latencies[len * 50 / 100];
         stats.p95 = latencies[len * 95 / 100];
@@ -287,11 +286,7 @@ impl LatencyTracker {
     /// Get recent measurements
     pub fn get_recent_measurements(&self, count: usize) -> Vec<LatencyMeasurement> {
         let measurements = self.measurements.read().unwrap();
-        measurements.iter()
-            .rev()
-            .take(count)
-            .cloned()
-            .collect()
+        measurements.iter().rev().take(count).cloned().collect()
     }
 
     /// Check if currently in violation state
@@ -337,8 +332,9 @@ impl LatencyTracker {
     pub fn get_performance_summary(&self) -> PerformanceSummary {
         let stats = self.get_stats();
         let measurements = self.measurements.read().unwrap();
-        
-        let recent_violations = measurements.iter()
+
+        let recent_violations = measurements
+            .iter()
             .rev()
             .take(100) // Last 100 measurements
             .filter(|m| self.budget.is_exceeded(m.latency))
@@ -366,7 +362,8 @@ impl LatencyTracker {
             recent_violations,
             avg_latency: stats.mean,
             p99_latency: stats.p99,
-            budget_utilization: stats.p99.as_nanos() as f32 / self.budget.max_latency.as_nanos() as f32,
+            budget_utilization: stats.p99.as_nanos() as f32
+                / self.budget.max_latency.as_nanos() as f32,
             consecutive_violations: self.get_consecutive_violations(),
         }
     }
@@ -422,11 +419,11 @@ impl LatencyTimer {
     /// Finish timing and get duration
     pub fn finish(self) -> Duration {
         let duration = self.start_time.elapsed();
-        
+
         if let Some(tracker) = self.tracker {
             tracker.record_measurement_with_operation(self.operation, duration);
         }
-        
+
         duration
     }
 
@@ -464,8 +461,7 @@ mod tests {
 
     #[test]
     fn test_budget_thresholds() {
-        let budget = LatencyBudget::new(Duration::from_millis(100))
-            .with_warning_threshold(0.8);
+        let budget = LatencyBudget::new(Duration::from_millis(100)).with_warning_threshold(0.8);
 
         assert!(!budget.is_exceeded(Duration::from_millis(50)));
         assert!(!budget.is_exceeded(Duration::from_millis(100)));
@@ -480,10 +476,9 @@ mod tests {
 
     #[test]
     fn test_latency_measurement() {
-        let measurement = LatencyMeasurement::new(
-            "test_operation".to_string(),
-            Duration::from_millis(25)
-        ).with_metadata("test metadata".to_string());
+        let measurement =
+            LatencyMeasurement::new("test_operation".to_string(), Duration::from_millis(25))
+                .with_metadata("test metadata".to_string());
 
         assert_eq!(measurement.operation, "test_operation");
         assert_eq!(measurement.latency, Duration::from_millis(25));
@@ -509,8 +504,7 @@ mod tests {
 
     #[test]
     fn test_budget_violations() {
-        let budget = LatencyBudget::new(Duration::from_millis(50))
-            .with_violation_threshold(2);
+        let budget = LatencyBudget::new(Duration::from_millis(50)).with_violation_threshold(2);
         let tracker = LatencyTracker::new(budget);
 
         // Record violation
@@ -565,18 +559,21 @@ mod tests {
         let summary = tracker.get_performance_summary();
         assert!((summary.violation_rate - 0.1).abs() < 0.01); // ~10%
         assert!(summary.budget_utilization > 1.0); // P99 exceeds budget
-        
+
         // Should be in critical or warning state due to violation rate
-        assert!(matches!(summary.health_status, HealthStatus::Critical | HealthStatus::Warning));
+        assert!(matches!(
+            summary.health_status,
+            HealthStatus::Critical | HealthStatus::Warning
+        ));
     }
 
     #[test]
     fn test_latency_timer() {
         let timer = LatencyTimer::start("test_operation".to_string());
-        
+
         // Simulate some work
         thread::sleep(Duration::from_millis(10));
-        
+
         let duration = timer.finish();
         assert!(duration >= Duration::from_millis(10));
         assert!(duration < Duration::from_millis(50)); // Should be reasonable
@@ -586,15 +583,12 @@ mod tests {
     fn test_timer_with_tracker() {
         let budget = LatencyBudget::new(Duration::from_millis(100));
         let tracker = LatencyTracker::new(budget);
-        
-        let timer = LatencyTimer::start_with_tracker(
-            "test_operation".to_string(),
-            tracker.clone()
-        );
-        
+
+        let timer = LatencyTimer::start_with_tracker("test_operation".to_string(), tracker.clone());
+
         thread::sleep(Duration::from_millis(5));
         let _duration = timer.finish();
-        
+
         // Should have recorded the measurement
         let stats = tracker.get_stats();
         assert_eq!(stats.count, 1);
@@ -605,13 +599,17 @@ mod tests {
     fn test_timer_budget_validation() {
         let budget = LatencyBudget::new(Duration::from_millis(5));
         let timer = LatencyTimer::start("test_operation".to_string());
-        
+
         thread::sleep(Duration::from_millis(10));
-        
+
         let result = timer.finish_and_validate(&budget);
         assert!(result.is_err());
-        
-        if let Err(LatencyError::BudgetExceeded { actual_ms, budget_ms }) = result {
+
+        if let Err(LatencyError::BudgetExceeded {
+            actual_ms,
+            budget_ms,
+        }) = result
+        {
             assert!(actual_ms > budget_ms);
             assert_eq!(budget_ms, 5);
         }
@@ -647,13 +645,13 @@ mod tests {
         for i in 1..=10 {
             tracker.record_measurement_with_operation(
                 format!("operation_{}", i),
-                Duration::from_millis(i * 10)
+                Duration::from_millis(i * 10),
             );
         }
 
         let recent = tracker.get_recent_measurements(5);
         assert_eq!(recent.len(), 5);
-        
+
         // Should be in reverse order (most recent first)
         assert_eq!(recent[0].operation, "operation_10");
         assert_eq!(recent[4].operation, "operation_6");

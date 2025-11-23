@@ -48,7 +48,7 @@ pub trait FlightService: Send + Sync + 'static {
 
 /// FlightServiceServer wrapper for tonic server
 pub struct FlightServiceServer<T> {
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Reserved for future tonic integration
     inner: T,
 }
 
@@ -302,7 +302,7 @@ impl FlightService for FlightServiceImpl {
 /// Flight Hub IPC server
 pub struct FlightServer {
     service: FlightServiceImpl,
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Stored for future use in serve() implementation
     config: ServerConfig,
 }
 

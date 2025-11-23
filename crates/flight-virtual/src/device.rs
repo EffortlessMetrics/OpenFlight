@@ -5,10 +5,10 @@
 //!
 //! Simulates flight control devices for testing without hardware
 
-use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
-use std::time::Instant;
 use parking_lot::Mutex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::time::Instant;
 
 /// Type of virtual device
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -205,7 +205,9 @@ impl VirtualDevice {
         report.push(((buttons >> 24) & 0xFF) as u8);
 
         self.stats.input_reports.fetch_add(1, Ordering::Relaxed);
-        self.stats.bytes_transferred.fetch_add(report.len() as u64, Ordering::Relaxed);
+        self.stats
+            .bytes_transferred
+            .fetch_add(report.len() as u64, Ordering::Relaxed);
 
         Some(report)
     }
@@ -236,7 +238,9 @@ impl VirtualDevice {
         }
 
         self.stats.output_reports.fetch_add(1, Ordering::Relaxed);
-        self.stats.bytes_transferred.fetch_add(report.len() as u64, Ordering::Relaxed);
+        self.stats
+            .bytes_transferred
+            .fetch_add(report.len() as u64, Ordering::Relaxed);
 
         true
     }
@@ -294,19 +298,27 @@ mod rand {
     use std::hash::{Hash, Hasher};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    pub fn random<T>() -> T 
-    where 
-        T: From<f64>
+    pub fn random<T>() -> T
+    where
+        T: From<f64>,
     {
         let mut hasher = DefaultHasher::new();
-        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().hash(&mut hasher);
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+            .hash(&mut hasher);
         let hash = hasher.finish();
         T::from((hash as f64) / (u64::MAX as f64))
     }
 
     pub fn random_f32() -> f32 {
         let mut hasher = DefaultHasher::new();
-        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().hash(&mut hasher);
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+            .hash(&mut hasher);
         let hash = hasher.finish();
         (hash as f64 / u64::MAX as f64) as f32
     }
@@ -320,7 +332,7 @@ mod tests {
     fn test_virtual_device_creation() {
         let config = VirtualDeviceConfig::default();
         let device = VirtualDevice::new(config);
-        
+
         assert!(device.is_connected());
         assert_eq!(device.config().name, "Virtual Flight Stick");
     }
@@ -328,10 +340,10 @@ mod tests {
     #[test]
     fn test_axis_control() {
         let device = VirtualDevice::new(VirtualDeviceConfig::default());
-        
+
         device.set_axis(0, 0.5);
         device.set_axis(1, -0.8);
-        
+
         let state = device.get_state();
         assert_eq!(state.axes[0], 0.5);
         assert_eq!(state.axes[1], -0.8);
@@ -340,10 +352,10 @@ mod tests {
     #[test]
     fn test_button_control() {
         let device = VirtualDevice::new(VirtualDeviceConfig::default());
-        
+
         device.set_button(0, true);
         device.set_button(2, true);
-        
+
         let state = device.get_state();
         assert_eq!(state.buttons & 0x01, 0x01); // Button 0
         assert_eq!(state.buttons & 0x04, 0x04); // Button 2
@@ -353,18 +365,18 @@ mod tests {
     #[test]
     fn test_hid_report_generation() {
         let device = VirtualDevice::new(VirtualDeviceConfig::default());
-        
-        device.set_axis(0, 0.0);  // Center
-        device.set_axis(1, 1.0);  // Max
+
+        device.set_axis(0, 0.0); // Center
+        device.set_axis(1, 1.0); // Max
         device.set_axis(2, -1.0); // Min
         device.set_button(0, true);
-        
+
         let report = device.generate_input_report().unwrap();
-        
+
         // Should have report ID + axes + buttons
         assert!(report.len() > 10);
         assert_eq!(report[0], 0x01); // Report ID
-        
+
         let stats = device.get_stats();
         assert_eq!(stats.input_reports, 1);
     }
@@ -372,13 +384,13 @@ mod tests {
     #[test]
     fn test_disconnect_behavior() {
         let device = VirtualDevice::new(VirtualDeviceConfig::default());
-        
+
         assert!(device.generate_input_report().is_some());
-        
+
         device.disconnect();
         assert!(!device.is_connected());
         assert!(device.generate_input_report().is_none());
-        
+
         device.reconnect();
         assert!(device.is_connected());
         assert!(device.generate_input_report().is_some());

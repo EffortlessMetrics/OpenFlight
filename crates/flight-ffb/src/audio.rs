@@ -143,7 +143,9 @@ impl AudioCueSystem {
     /// Create new audio cue system
     pub fn new(config: AudioConfig) -> AudioResult<Self> {
         if !(0.0..=1.0).contains(&config.volume) {
-            return Err(AudioError::InvalidVolume { volume: config.volume });
+            return Err(AudioError::InvalidVolume {
+                volume: config.volume,
+            });
         }
 
         Ok(Self {
@@ -194,10 +196,10 @@ impl AudioCueSystem {
         let mut should_play_beep = false;
         let mut pattern_to_play = None;
         let mut playback_complete = false;
-        
+
         if let Some(playback) = &mut self.current_playback {
             let now = Instant::now();
-            
+
             // Check if we need to start the next repeat
             if playback.current_repeat < playback.pattern.repeat_count {
                 let should_start_next = if let Some(last_start) = playback.last_beep_start {
@@ -258,9 +260,11 @@ impl AudioCueSystem {
     /// Update configuration
     pub fn update_config(&mut self, config: AudioConfig) -> AudioResult<()> {
         if !(0.0..=1.0).contains(&config.volume) {
-            return Err(AudioError::InvalidVolume { volume: config.volume });
+            return Err(AudioError::InvalidVolume {
+                volume: config.volume,
+            });
         }
-        
+
         self.config = config;
         Ok(())
     }
@@ -294,7 +298,7 @@ impl AudioCueSystem {
         // - On Windows: Use Beep() API or DirectSound
         // - On Linux: Use ALSA or PulseAudio
         // - Cross-platform: Use a crate like rodio or cpal
-        
+
         tracing::info!(
             "Audio cue: {}Hz for {:?} (volume: {:.1})",
             pattern.frequency_hz,
@@ -304,7 +308,7 @@ impl AudioCueSystem {
 
         // For now, just log the beep
         // TODO: Implement actual audio output
-        
+
         Ok(())
     }
 }
@@ -351,15 +355,12 @@ pub mod platform {
             unsafe extern "system" {
                 fn Beep(frequency: c_ulong, duration: c_ulong) -> i32;
             }
-            
+
             unsafe {
-                let result = Beep(
-                    frequency_hz as c_ulong,
-                    duration.as_millis() as c_ulong
-                );
+                let result = Beep(frequency_hz as c_ulong, duration.as_millis() as c_ulong);
                 if result == 0 {
                     Err(AudioError::PlaybackFailed {
-                        message: "Windows Beep API failed".to_string()
+                        message: "Windows Beep API failed".to_string(),
                     })
                 } else {
                     Ok(())
@@ -405,7 +406,7 @@ mod tests {
             volume: 0.5,
             min_interval: Duration::from_millis(100),
         };
-        
+
         let system = AudioCueSystem::new(valid_config);
         assert!(system.is_ok());
 
@@ -414,7 +415,7 @@ mod tests {
             volume: 1.5, // Invalid volume
             min_interval: Duration::from_millis(100),
         };
-        
+
         let system = AudioCueSystem::new(invalid_config);
         assert!(matches!(system, Err(AudioError::InvalidVolume { .. })));
     }
@@ -422,12 +423,12 @@ mod tests {
     #[test]
     fn test_cue_triggering() {
         let mut system = AudioCueSystem::default();
-        
+
         // Trigger a cue
         system.trigger_cue(AudioCueType::FaultWarning).unwrap();
         assert!(system.is_playing());
         assert_eq!(system.current_cue(), Some(AudioCueType::FaultWarning));
-        
+
         // Stop playback
         system.stop_current_playback();
         assert!(!system.is_playing());
@@ -441,12 +442,12 @@ mod tests {
             volume: 0.5,
             min_interval: Duration::from_millis(100),
         };
-        
+
         let mut system = AudioCueSystem::new(config).unwrap();
-        
+
         // First cue should work
         system.trigger_cue(AudioCueType::FaultWarning).unwrap();
-        
+
         // Immediate second cue should be rate limited
         let result = system.trigger_cue(AudioCueType::SoftStop);
         assert!(matches!(result, Err(AudioError::RateLimited)));
@@ -459,9 +460,9 @@ mod tests {
             volume: 0.5,
             min_interval: Duration::from_millis(100),
         };
-        
+
         let mut system = AudioCueSystem::new(config).unwrap();
-        
+
         // Should succeed but not actually play
         system.trigger_cue(AudioCueType::FaultWarning).unwrap();
         assert!(!system.is_playing());
@@ -470,11 +471,11 @@ mod tests {
     #[test]
     fn test_volume_setting() {
         let mut system = AudioCueSystem::default();
-        
+
         // Valid volume
         system.set_volume(0.3).unwrap();
         assert_eq!(system.get_config().volume, 0.3);
-        
+
         // Invalid volume
         let result = system.set_volume(1.5);
         assert!(matches!(result, Err(AudioError::InvalidVolume { .. })));
@@ -483,17 +484,17 @@ mod tests {
     #[test]
     fn test_playback_update() {
         let mut system = AudioCueSystem::default();
-        
+
         // Trigger a multi-repeat cue
         system.trigger_cue(AudioCueType::FaultWarning).unwrap();
         assert!(system.is_playing());
-        
+
         // Update should handle repeat logic
         for _ in 0..10 {
             system.update().unwrap();
             thread::sleep(Duration::from_millis(50));
         }
-        
+
         // Eventually should complete
         // Note: In a real test, we'd need to wait for the full pattern duration
     }
@@ -501,14 +502,14 @@ mod tests {
     #[test]
     fn test_cue_interruption() {
         let mut system = AudioCueSystem::default();
-        
+
         // Start first cue
         system.trigger_cue(AudioCueType::SoftStop).unwrap();
         assert_eq!(system.current_cue(), Some(AudioCueType::SoftStop));
-        
+
         // Wait to avoid rate limiting
         thread::sleep(Duration::from_millis(150));
-        
+
         // Start second cue (should interrupt first)
         system.trigger_cue(AudioCueType::FaultWarning).unwrap();
         assert_eq!(system.current_cue(), Some(AudioCueType::FaultWarning));

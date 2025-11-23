@@ -14,14 +14,18 @@ use crate::replay_config::ToleranceConfig;
 /// Output comparison errors
 #[derive(Error, Debug)]
 pub enum ComparisonError {
-    #[error("Axis output mismatch: expected {expected}, got {actual}, diff {diff} > epsilon {epsilon}")]
+    #[error(
+        "Axis output mismatch: expected {expected}, got {actual}, diff {diff} > epsilon {epsilon}"
+    )]
     AxisMismatch {
         expected: f32,
         actual: f32,
         diff: f32,
         epsilon: f32,
     },
-    #[error("FFB output mismatch: expected {expected} Nm, got {actual} Nm, diff {diff} > epsilon {epsilon}")]
+    #[error(
+        "FFB output mismatch: expected {expected} Nm, got {actual} Nm, diff {diff} > epsilon {epsilon}"
+    )]
     FfbMismatch {
         expected: f32,
         actual: f32,
@@ -135,13 +139,15 @@ impl OutputComparator {
         actual: &HashMap<String, f32>,
     ) -> Result<(), ComparisonError> {
         for (device_id, &expected_value) in expected {
-            let actual_value = actual.get(device_id)
-                .ok_or_else(|| ComparisonError::MissingDevice { 
-                    device_id: device_id.clone() 
-                })?;
+            let actual_value =
+                actual
+                    .get(device_id)
+                    .ok_or_else(|| ComparisonError::MissingDevice {
+                        device_id: device_id.clone(),
+                    })?;
 
             let diff = (expected_value - actual_value).abs();
-            
+
             if self.config.collect_stats {
                 self.axis_diffs.push(diff);
             }
@@ -174,13 +180,15 @@ impl OutputComparator {
         actual: &HashMap<String, f32>,
     ) -> Result<(), ComparisonError> {
         for (device_id, &expected_value) in expected {
-            let actual_value = actual.get(device_id)
-                .ok_or_else(|| ComparisonError::MissingDevice { 
-                    device_id: device_id.clone() 
-                })?;
+            let actual_value =
+                actual
+                    .get(device_id)
+                    .ok_or_else(|| ComparisonError::MissingDevice {
+                        device_id: device_id.clone(),
+                    })?;
 
             let diff = (expected_value - actual_value).abs();
-            
+
             if self.config.collect_stats {
                 self.ffb_diffs.push(diff);
             }
@@ -282,9 +290,9 @@ impl OutputComparator {
         let timing_stats = self.calculate_timing_stats();
 
         let total_comparisons = axis_stats.count + ffb_stats.count + timing_stats.count;
-        let mismatches = (axis_stats.count - axis_stats.within_tolerance) +
-                        (ffb_stats.count - ffb_stats.within_tolerance) +
-                        (timing_stats.count - timing_stats.within_tolerance);
+        let mismatches = (axis_stats.count - axis_stats.within_tolerance)
+            + (ffb_stats.count - ffb_stats.within_tolerance)
+            + (timing_stats.count - timing_stats.within_tolerance);
 
         ComparisonResult {
             passed: mismatches == 0,
@@ -307,11 +315,13 @@ impl OutputComparator {
         let max_diff = self.axis_diffs.iter().fold(0.0f32, |a, &b| a.max(b));
         let sum_diff: f32 = self.axis_diffs.iter().sum();
         let avg_diff = sum_diff / count as f32;
-        
+
         let sum_squared: f32 = self.axis_diffs.iter().map(|&x| x * x).sum();
         let rms_diff = (sum_squared / count as f32).sqrt();
-        
-        let within_tolerance = self.axis_diffs.iter()
+
+        let within_tolerance = self
+            .axis_diffs
+            .iter()
             .filter(|&&diff| diff <= self.config.tolerance.axis_epsilon)
             .count() as u64;
 
@@ -334,11 +344,13 @@ impl OutputComparator {
         let max_diff = self.ffb_diffs.iter().fold(0.0f32, |a, &b| a.max(b));
         let sum_diff: f32 = self.ffb_diffs.iter().sum();
         let avg_diff = sum_diff / count as f32;
-        
+
         let sum_squared: f32 = self.ffb_diffs.iter().map(|&x| x * x).sum();
         let rms_diff = (sum_squared / count as f32).sqrt();
-        
-        let within_tolerance = self.ffb_diffs.iter()
+
+        let within_tolerance = self
+            .ffb_diffs
+            .iter()
             .filter(|&&diff| diff <= self.config.tolerance.ffb_epsilon)
             .count() as u64;
 
@@ -358,29 +370,41 @@ impl OutputComparator {
         }
 
         let count = self.timing_measurements.len() as u64;
-        
-        let max_drift_ns_per_s = self.timing_measurements.iter()
-            .map(|m| m.drift_ns_per_s)
-            .max()
-            .unwrap_or(0);
-            
-        let avg_drift_ns_per_s = self.timing_measurements.iter()
-            .map(|m| m.drift_ns_per_s)
-            .sum::<u64>() / count;
-            
-        let max_jitter_ns = self.timing_measurements.iter()
-            .map(|m| m.jitter_ns)
-            .max()
-            .unwrap_or(0);
-            
-        let avg_jitter_ns = self.timing_measurements.iter()
-            .map(|m| m.jitter_ns)
-            .sum::<u64>() / count;
 
-        let within_tolerance = self.timing_measurements.iter()
+        let max_drift_ns_per_s = self
+            .timing_measurements
+            .iter()
+            .map(|m| m.drift_ns_per_s)
+            .max()
+            .unwrap_or(0);
+
+        let avg_drift_ns_per_s = self
+            .timing_measurements
+            .iter()
+            .map(|m| m.drift_ns_per_s)
+            .sum::<u64>()
+            / count;
+
+        let max_jitter_ns = self
+            .timing_measurements
+            .iter()
+            .map(|m| m.jitter_ns)
+            .max()
+            .unwrap_or(0);
+
+        let avg_jitter_ns = self
+            .timing_measurements
+            .iter()
+            .map(|m| m.jitter_ns)
+            .sum::<u64>()
+            / count;
+
+        let within_tolerance = self
+            .timing_measurements
+            .iter()
             .filter(|m| {
-                m.drift_ns_per_s <= self.config.tolerance.timing_drift_ns_per_s &&
-                m.jitter_ns <= self.config.tolerance.max_timing_jitter_ns
+                m.drift_ns_per_s <= self.config.tolerance.timing_drift_ns_per_s
+                    && m.jitter_ns <= self.config.tolerance.max_timing_jitter_ns
             })
             .count() as u64;
 
@@ -441,12 +465,12 @@ mod tests {
 
         let mut expected = HashMap::new();
         expected.insert("device1".to_string(), 0.5);
-        
+
         let mut actual = HashMap::new();
         actual.insert("device1".to_string(), 0.5000005); // Within 1e-6 tolerance
 
         assert!(comparator.compare_axis_outputs(&expected, &actual).is_ok());
-        
+
         let result = comparator.finalize();
         assert!(result.passed);
         assert_eq!(result.axis_stats.within_tolerance, 1);
@@ -463,7 +487,7 @@ mod tests {
 
         let mut expected = HashMap::new();
         expected.insert("device1".to_string(), 0.5);
-        
+
         let mut actual = HashMap::new();
         actual.insert("device1".to_string(), 0.6); // Exceeds 1e-6 tolerance
 
@@ -477,12 +501,12 @@ mod tests {
 
         let mut expected = HashMap::new();
         expected.insert("device1".to_string(), 5.0);
-        
+
         let mut actual = HashMap::new();
         actual.insert("device1".to_string(), 5.00005); // Within 1e-4 tolerance
 
         assert!(comparator.compare_ffb_outputs(&expected, &actual).is_ok());
-        
+
         let result = comparator.finalize();
         assert!(result.passed);
         assert_eq!(result.ffb_stats.within_tolerance, 1);
@@ -494,8 +518,12 @@ mod tests {
         let mut comparator = OutputComparator::new(config);
 
         // 50μs difference over 1 second = 50,000 ns/s drift (within 100,000 ns/s limit)
-        assert!(comparator.compare_timing(1000000000, 1000050000, 1.0).is_ok());
-        
+        assert!(
+            comparator
+                .compare_timing(1000000000, 1000050000, 1.0)
+                .is_ok()
+        );
+
         let result = comparator.finalize();
         assert!(result.passed);
         assert_eq!(result.timing_stats.within_tolerance, 1);
@@ -511,7 +539,11 @@ mod tests {
         let mut comparator = OutputComparator::new(config);
 
         // 200μs difference over 1 second = 200,000 ns/s drift (exceeds 100,000 ns/s limit)
-        assert!(comparator.compare_timing(1000000000, 1000200000, 1.0).is_err());
+        assert!(
+            comparator
+                .compare_timing(1000000000, 1000200000, 1.0)
+                .is_err()
+        );
     }
 
     #[test]
@@ -521,12 +553,12 @@ mod tests {
 
         let mut expected = HashMap::new();
         expected.insert("device1".to_string(), 0.5);
-        
+
         let actual = HashMap::new(); // Missing device1
 
         let result = comparator.compare_axis_outputs(&expected, &actual);
         assert!(result.is_err());
-        
+
         if let Err(ComparisonError::MissingDevice { device_id }) = result {
             assert_eq!(device_id, "device1");
         } else {
@@ -542,7 +574,7 @@ mod tests {
         // Add multiple comparisons to test statistics
         let mut expected = HashMap::new();
         let mut actual = HashMap::new();
-        
+
         for i in 0..10 {
             expected.insert(format!("device{}", i), i as f32);
             actual.insert(format!("device{}", i), i as f32 + 0.000001); // Small difference

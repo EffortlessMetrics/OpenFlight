@@ -32,11 +32,7 @@ pub struct Writers {
 
 impl Writers {
     /// Create a new Writers instance with the specified directories
-    pub fn new<P: AsRef<Path>>(
-        config_dir: P,
-        golden_dir: P,
-        backup_dir: P,
-    ) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(config_dir: P, golden_dir: P, backup_dir: P) -> Result<Self> {
         let config_dir = config_dir.as_ref().to_path_buf();
         let golden_dir = golden_dir.as_ref().to_path_buf();
         let backup_dir = backup_dir.as_ref().to_path_buf();

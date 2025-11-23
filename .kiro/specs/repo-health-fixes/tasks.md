@@ -77,7 +77,15 @@
   - Run `cargo clippy -p flight-hid -- -Dwarnings` to verify warning is resolved
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [-] 7. Investigate and fix flight-virtual abnormal exit
+- [x] 7. Investigate and fix flight-virtual abnormal exit
+
+
+
+
+
+
+
+
 
 
   - Run `cargo test -p flight-virtual -- --nocapture` with `RUST_BACKTRACE=1` and `RUST_LOG=debug`
@@ -91,7 +99,12 @@
   - Run tests again to verify exit code 0 and no panics
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 8. Create stable rustfmt.toml
+- [x] 8. Create stable rustfmt.toml
+
+
+
+
+
   - Review current rustfmt.toml for nightly-only options (imports_granularity, group_imports, format_code_in_doc_comments, normalize_comments, wrap_comments)
   - Create new rustfmt.toml with only stable options: edition, max_width, use_small_heuristics, newline_style
   - Optionally create rustfmt.nightly.toml with nightly features (gated behind opt-in CI job, non-required)
@@ -100,15 +113,25 @@
   - Ensure CI includes examples in formatting check
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 9. Align workspace MSRV and edition
+- [x] 9. Align workspace MSRV and edition
+
+
+
+
+
   - Update workspace Cargo.toml to specify `edition = "2024"` and `rust-version = "1.89.0"` in `[workspace.package]`
   - Verify individual crate Cargo.toml files inherit with `edition.workspace = true` and `rust-version.workspace = true`
   - Update README.md to accurately reflect edition 2024 and MSRV 1.89.0 (note: let-chains do not require 2024 edition)
   - Run `cargo check --all` to verify workspace configuration is valid
   - Add dedicated MSRV CI job that builds and runs clippy on Rust 1.89.0 (Linux only)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+-
 
-- [ ] 10. Scope IPC bench lint allows
+- [x] 10. Scope IPC bench lint allows
+
+
+
+
   - Find function-level `#[allow(unused_variables)]` in IPC bench code
   - Replace with parameter-level `#[cfg_attr(not(feature = "ipc-bench"), allow(unused_variables))]`
   - Find struct fields only used in benches/tests

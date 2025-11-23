@@ -6,10 +6,10 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use flight_core::rules::{RulesSchema, Rule, RuleDefaults};
+    use flight_core::rules::{Rule, RuleDefaults, RulesSchema};
+    use std::alloc::{GlobalAlloc, Layout, System};
     use std::collections::HashMap;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::alloc::{GlobalAlloc, Layout, System};
 
     /// Custom allocator that tracks allocations
     struct TrackingAllocator {
@@ -50,7 +50,7 @@ mod tests {
     fn test_evaluator_capacity_stability() {
         // Test that evaluator doesn't grow its internal buffers during evaluation
         let mut evaluator = RulesEvaluator::new();
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![
@@ -89,19 +89,25 @@ mod tests {
 
         // Verify capacities haven't grown (indicating no allocations)
         assert_eq!(evaluator.stack().capacity(), initial_stack_capacity);
-        assert_eq!(evaluator.actions_buffer().capacity(), initial_actions_capacity);
-        assert_eq!(evaluator.variable_cache().capacity(), initial_variable_capacity);
+        assert_eq!(
+            evaluator.actions_buffer().capacity(),
+            initial_actions_capacity
+        );
+        assert_eq!(
+            evaluator.variable_cache().capacity(),
+            initial_variable_capacity
+        );
     }
 
     #[test]
     fn test_hysteresis_state_stability() {
         // Test that hysteresis state doesn't cause allocations
         let mut evaluator = RulesEvaluator::new();
-        
+
         let mut hysteresis = HashMap::new();
         hysteresis.insert("aoa".to_string(), 2.0);
         hysteresis.insert("ias".to_string(), 5.0);
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![
@@ -129,15 +135,15 @@ mod tests {
         let initial_hyst_len = evaluator.hysteresis_state().len();
 
         let mut telemetry = HashMap::new();
-        
+
         // Oscillate values around thresholds to trigger hysteresis
         for i in 0..5000 {
             let aoa = 10.0 + 2.0 * ((i as f32 * 0.1).sin());
             let ias = 100.0 + 10.0 * ((i as f32 * 0.05).cos());
-            
+
             telemetry.insert("aoa".to_string(), aoa);
             telemetry.insert("ias".to_string(), ias);
-            
+
             let _actions = evaluator.evaluate(&compiled, &telemetry);
         }
 
@@ -149,7 +155,7 @@ mod tests {
     fn test_complex_rules_no_allocation() {
         // Test complex rules with multiple conditions and actions
         let mut evaluator = RulesEvaluator::new();
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![
@@ -188,15 +194,18 @@ mod tests {
         let initial_hyst_len = evaluator.hysteresis_state().len();
 
         let mut telemetry = HashMap::new();
-        
+
         // Run complex evaluation patterns
         for i in 0..2000 {
-            telemetry.insert("gear_down".to_string(), if i % 100 < 50 { 1.0 } else { 0.0 });
+            telemetry.insert(
+                "gear_down".to_string(),
+                if i % 100 < 50 { 1.0 } else { 0.0 },
+            );
             telemetry.insert("ias".to_string(), 80.0 + (i % 50) as f32);
             telemetry.insert("altitude".to_string(), 500.0 + (i % 200) as f32 * 10.0);
-            
+
             let actions = evaluator.evaluate(&compiled, &telemetry);
-            
+
             // Verify we get reasonable results
             assert!(actions.len() <= 4); // Maximum possible actions
         }
@@ -212,16 +221,14 @@ mod tests {
     fn test_evaluation_timing_consistency() {
         // Test that evaluation time remains consistent (no GC pauses from allocations)
         let mut evaluator = RulesEvaluator::new();
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear_down".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                },
-            ],
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 
@@ -233,7 +240,7 @@ mod tests {
         telemetry.insert("gear_down".to_string(), 1.0);
 
         let mut times = Vec::new();
-        
+
         // Measure evaluation times
         for _ in 0..1000 {
             let start = std::time::Instant::now();
@@ -249,8 +256,14 @@ mod tests {
 
         // Verify timing consistency (max shouldn't be much larger than mean)
         // This would catch GC pauses from allocations
-        assert!(max < mean * 10, "Timing inconsistency detected: max={}, mean={}, min={}", max, mean, min);
-        
+        assert!(
+            max < mean * 10,
+            "Timing inconsistency detected: max={}, mean={}, min={}",
+            max,
+            mean,
+            min
+        );
+
         // Verify reasonable performance (should be very fast)
         assert!(mean < 10_000, "Evaluation too slow: {} ns", mean); // Less than 10μs
     }
@@ -259,18 +272,16 @@ mod tests {
     fn test_memory_usage_stability() {
         // Test that memory usage doesn't grow over time
         use std::process;
-        
+
         let mut evaluator = RulesEvaluator::new();
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear_down".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                },
-            ],
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 
@@ -293,9 +304,13 @@ mod tests {
         // Check memory usage hasn't grown significantly
         let final_memory = get_memory_usage();
         let growth = final_memory.saturating_sub(initial_memory);
-        
+
         // Allow some growth for OS/runtime overhead, but not much
-        assert!(growth < 1024 * 1024, "Memory usage grew by {} bytes", growth); // Less than 1MB growth
+        assert!(
+            growth < 1024 * 1024,
+            "Memory usage grew by {} bytes",
+            growth
+        ); // Less than 1MB growth
     }
 
     fn get_memory_usage() -> usize {

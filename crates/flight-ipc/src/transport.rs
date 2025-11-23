@@ -219,10 +219,12 @@ pub async fn create_transport_with_acl(
 }
 
 /// Create a transport based on the specified type and address
-#[allow(unused_variables)] // Parameters used in cfg-gated code
 pub async fn create_transport(
+    #[cfg_attr(not(any(feature = "named-pipes", feature = "unix-sockets")), allow(unused_variables))]
     transport_type: crate::TransportType,
+    #[cfg_attr(not(any(feature = "named-pipes", feature = "unix-sockets")), allow(unused_variables))]
     address: &str,
+    #[cfg_attr(not(any(feature = "named-pipes", feature = "unix-sockets")), allow(unused_variables))]
     is_server: bool,
 ) -> Result<Box<dyn Transport>, TransportError> {
     match transport_type {

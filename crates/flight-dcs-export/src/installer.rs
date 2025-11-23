@@ -19,7 +19,10 @@ pub enum InstallStatus {
     /// Installed and up to date
     Installed,
     /// Installed but outdated
-    Outdated { current_version: String, latest_version: String },
+    Outdated {
+        current_version: String,
+        latest_version: String,
+    },
     /// Installation exists but is corrupted/invalid
     Corrupted { reason: String },
     /// Export.lua exists but is not Flight Hub's
@@ -51,13 +54,13 @@ impl DcsInstaller {
     /// Check current installation status
     pub fn check_status(&self) -> Result<InstallStatus> {
         let export_path = ExportLuaGenerator::get_export_lua_path()?;
-        
+
         if !export_path.exists() {
             return Ok(InstallStatus::NotInstalled);
         }
 
-        let content = fs::read_to_string(&export_path)
-            .context("Failed to read existing Export.lua")?;
+        let content =
+            fs::read_to_string(&export_path).context("Failed to read existing Export.lua")?;
 
         // Check if it's a Flight Hub export
         if !content.contains("Flight Hub DCS Export Script") {
@@ -74,7 +77,7 @@ impl DcsInstaller {
                 .unwrap_or("unknown")
                 .trim()
                 .to_string();
-            
+
             if current_version != "1.0" {
                 return Ok(InstallStatus::Outdated {
                     current_version,
@@ -97,23 +100,17 @@ impl DcsInstaller {
         let status = self.check_status()?;
 
         match status {
-            InstallStatus::NotInstalled => {
-                self.perform_fresh_install(&export_path)
-            }
-            InstallStatus::Installed if !force => {
-                Ok(InstallResult {
-                    status,
-                    path: export_path,
-                    backup_path: None,
-                    message: "Flight Hub DCS Export is already installed and up to date.".to_string(),
-                })
-            }
-            InstallStatus::Outdated { .. } | InstallStatus::Corrupted { .. } | InstallStatus::Installed => {
-                self.perform_update(&export_path, force)
-            }
-            InstallStatus::Conflict { .. } => {
-                self.handle_conflict(&export_path)
-            }
+            InstallStatus::NotInstalled => self.perform_fresh_install(&export_path),
+            InstallStatus::Installed if !force => Ok(InstallResult {
+                status,
+                path: export_path,
+                backup_path: None,
+                message: "Flight Hub DCS Export is already installed and up to date.".to_string(),
+            }),
+            InstallStatus::Outdated { .. }
+            | InstallStatus::Corrupted { .. }
+            | InstallStatus::Installed => self.perform_update(&export_path, force),
+            InstallStatus::Conflict { .. } => self.handle_conflict(&export_path),
         }
     }
 
@@ -123,30 +120,29 @@ impl DcsInstaller {
         let status = self.check_status()?;
 
         match status {
-            InstallStatus::NotInstalled => {
-                Ok(InstallResult {
-                    status,
-                    path: export_path,
-                    backup_path: None,
-                    message: "Flight Hub DCS Export is not installed.".to_string(),
-                })
-            }
-            InstallStatus::Conflict { .. } => {
-                Ok(InstallResult {
-                    status,
-                    path: export_path,
-                    backup_path: None,
-                    message: "Export.lua exists but is not Flight Hub's. Manual removal required.".to_string(),
-                })
-            }
+            InstallStatus::NotInstalled => Ok(InstallResult {
+                status,
+                path: export_path,
+                backup_path: None,
+                message: "Flight Hub DCS Export is not installed.".to_string(),
+            }),
+            InstallStatus::Conflict { .. } => Ok(InstallResult {
+                status,
+                path: export_path,
+                backup_path: None,
+                message: "Export.lua exists but is not Flight Hub's. Manual removal required."
+                    .to_string(),
+            }),
             _ => {
                 // Create backup before removal
                 let backup_path = self.create_backup(&export_path)?;
-                
-                fs::remove_file(&export_path)
-                    .context("Failed to remove Export.lua")?;
 
-                info!("Removed Flight Hub DCS Export from {}", export_path.display());
+                fs::remove_file(&export_path).context("Failed to remove Export.lua")?;
+
+                info!(
+                    "Removed Flight Hub DCS Export from {}",
+                    export_path.display()
+                );
 
                 Ok(InstallResult {
                     status: InstallStatus::NotInstalled,
@@ -165,14 +161,20 @@ impl DcsInstaller {
         // Check if DCS directory exists
         let dcs_path = ExportLuaGenerator::get_dcs_saved_games_path()?;
         if !dcs_path.exists() {
-            issues.push(format!("DCS Saved Games directory not found: {}", dcs_path.display()));
+            issues.push(format!(
+                "DCS Saved Games directory not found: {}",
+                dcs_path.display()
+            ));
             return Ok(issues);
         }
 
         // Check Scripts directory
         let scripts_path = dcs_path.join("Scripts");
         if !scripts_path.exists() {
-            issues.push("Scripts directory does not exist. It will be created during installation.".to_string());
+            issues.push(
+                "Scripts directory does not exist. It will be created during installation."
+                    .to_string(),
+            );
         }
 
         // Check write permissions
@@ -206,7 +208,10 @@ impl DcsInstaller {
                 report.push_str("✅ **Installed**\n");
                 report.push_str("Flight Hub DCS Export is installed and up to date.\n\n");
             }
-            InstallStatus::Outdated { ref current_version, ref latest_version } => {
+            InstallStatus::Outdated {
+                ref current_version,
+                ref latest_version,
+            } => {
                 report.push_str("⚠️ **Outdated**\n");
                 report.push_str(&format!("Current version: {}\n", current_version));
                 report.push_str(&format!("Latest version: {}\n\n", latest_version));
@@ -239,10 +244,19 @@ impl DcsInstaller {
 
         // Configuration
         report.push_str("## Configuration\n");
-        report.push_str(&format!("- Socket Address: {}:{}\n", self.config.socket_address, self.config.socket_port));
-        report.push_str(&format!("- Update Interval: {:.1}s\n", self.config.update_interval));
+        report.push_str(&format!(
+            "- Socket Address: {}:{}\n",
+            self.config.socket_address, self.config.socket_port
+        ));
+        report.push_str(&format!(
+            "- Update Interval: {:.1}s\n",
+            self.config.update_interval
+        ));
         report.push_str(&format!("- MP Safe Mode: {}\n", self.config.mp_safe_mode));
-        report.push_str(&format!("- Enabled Features: {}\n\n", self.config.enabled_features.join(", ")));
+        report.push_str(&format!(
+            "- Enabled Features: {}\n\n",
+            self.config.enabled_features.join(", ")
+        ));
 
         // Next steps
         report.push_str("## Next Steps\n");
@@ -271,15 +285,18 @@ impl DcsInstaller {
     fn perform_fresh_install(&self, export_path: &Path) -> Result<InstallResult> {
         // Ensure Scripts directory exists
         if let Some(parent) = export_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create Scripts directory")?;
+            fs::create_dir_all(parent).context("Failed to create Scripts directory")?;
         }
 
         // Generate and write Export.lua
-        self.generator.write_script(export_path)
+        self.generator
+            .write_script(export_path)
             .context("Failed to write Export.lua")?;
 
-        info!("Installed Flight Hub DCS Export to {}", export_path.display());
+        info!(
+            "Installed Flight Hub DCS Export to {}",
+            export_path.display()
+        );
 
         Ok(InstallResult {
             status: InstallStatus::Installed,
@@ -295,7 +312,8 @@ impl DcsInstaller {
         let backup_path = self.create_backup(export_path)?;
 
         // Write new version
-        self.generator.write_script(export_path)
+        self.generator
+            .write_script(export_path)
             .context("Failed to update Export.lua")?;
 
         let message = if force {
@@ -318,7 +336,7 @@ impl DcsInstaller {
     fn handle_conflict(&self, export_path: &Path) -> Result<InstallResult> {
         // For conflicts, we don't automatically overwrite
         // User must manually resolve or use force flag
-        
+
         Ok(InstallResult {
             status: InstallStatus::Conflict {
                 existing_content: "Existing Export.lua found".to_string(),
@@ -336,9 +354,8 @@ impl DcsInstaller {
     fn create_backup(&self, export_path: &Path) -> Result<PathBuf> {
         let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
         let backup_path = export_path.with_extension(format!("lua.backup.{}", timestamp));
-        
-        fs::copy(export_path, &backup_path)
-            .context("Failed to create backup")?;
+
+        fs::copy(export_path, &backup_path).context("Failed to create backup")?;
 
         info!("Created backup at {}", backup_path.display());
         Ok(backup_path)
@@ -350,7 +367,7 @@ impl DcsInstaller {
         let required_components = [
             "FlightHubExport",
             "socket_address",
-            "socket_port", 
+            "socket_port",
             "LuaExportStart",
             "LuaExportBeforeNextFrame",
             "DCS.setUserCallbacks",
@@ -373,14 +390,12 @@ impl DcsInstaller {
     /// Test write permissions
     fn test_write_permissions(&self, scripts_path: &Path) -> Result<()> {
         let test_file = scripts_path.join(".flight_hub_test");
-        
+
         // Create directory if it doesn't exist
-        fs::create_dir_all(scripts_path)
-            .context("Cannot create Scripts directory")?;
+        fs::create_dir_all(scripts_path).context("Cannot create Scripts directory")?;
 
         // Test write
-        fs::write(&test_file, "test")
-            .context("Cannot write to Scripts directory")?;
+        fs::write(&test_file, "test").context("Cannot write to Scripts directory")?;
 
         // Clean up
         let _ = fs::remove_file(&test_file);
@@ -408,7 +423,8 @@ impl DcsInstaller {
             issues.push(format!(
                 "Multiple DCS installations detected. Using: {}. Others found: {}",
                 dcs_path.display(),
-                existing_paths.iter()
+                existing_paths
+                    .iter()
                     .map(|p| p.display().to_string())
                     .collect::<Vec<_>>()
                     .join(", ")
@@ -419,7 +435,8 @@ impl DcsInstaller {
         let scripts_path = dcs_path.join("Scripts");
         if scripts_path.exists()
             && let Ok(metadata) = scripts_path.metadata()
-            && metadata.permissions().readonly() {
+            && metadata.permissions().readonly()
+        {
             issues.push("Scripts directory is read-only. Installation may fail.".to_string());
         }
     }
@@ -439,7 +456,7 @@ mod tests {
             enabled_features: vec!["telemetry_basic".to_string()],
             mp_safe_mode: true,
         };
-        
+
         (DcsInstaller::new(config), temp_dir)
     }
 
@@ -452,7 +469,7 @@ mod tests {
     #[test]
     fn test_content_validation() {
         let (installer, _temp) = create_test_installer();
-        
+
         // Valid content
         let valid_content = r#"
             local FlightHubExport = {}
@@ -464,9 +481,9 @@ mod tests {
             function LuaExportBeforeNextFrame() end
             DCS.setUserCallbacks({})
         "#;
-        
+
         assert!(installer.validate_export_content(valid_content).is_ok());
-        
+
         // Invalid content (missing component)
         let invalid_content = "local test = {}";
         assert!(installer.validate_export_content(invalid_content).is_err());
@@ -476,7 +493,7 @@ mod tests {
     fn test_report_generation() {
         let (installer, _temp) = create_test_installer();
         let report = installer.generate_report().unwrap();
-        
+
         assert!(report.contains("Flight Hub DCS Export Installation Report"));
         assert!(report.contains("Installation Status"));
         assert!(report.contains("Configuration"));

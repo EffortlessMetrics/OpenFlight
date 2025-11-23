@@ -26,12 +26,16 @@ impl ConfigVerifier {
     pub async fn verify(&self, sim: SimulatorType, version: &str) -> Result<VerifyResult> {
         info!("Verifying {} configuration for version {}", sim, version);
 
-        let config_file = self.golden_dir
+        let config_file = self
+            .golden_dir
             .join(sim.to_string())
             .join(format!("{}.json", version));
 
         if !config_file.exists() {
-            warn!("No verification configuration found for {} {}", sim, version);
+            warn!(
+                "No verification configuration found for {} {}",
+                sim, version
+            );
             return Ok(VerifyResult {
                 sim,
                 version: version.to_string(),
@@ -44,7 +48,7 @@ impl ConfigVerifier {
         // Load verification configuration
         let config_content = fs::read_to_string(&config_file)
             .context("Failed to read verification configuration")?;
-        
+
         let config: WriterConfig = serde_json::from_str(&config_content)
             .context("Failed to parse verification configuration")?;
 
@@ -126,7 +130,11 @@ impl ConfigVerifier {
                         success,
                         actual_value: Some(actual),
                         expected_value: Some(expected.value),
-                        error: if success { None } else { Some("Value out of tolerance".to_string()) },
+                        error: if success {
+                            None
+                        } else {
+                            Some("Value out of tolerance".to_string())
+                        },
                     });
                 }
                 None => {
@@ -181,20 +189,29 @@ impl ConfigVerifier {
                     error: None,
                 })
             }
-            VerifyAction::CheckVar { variable, expected, tolerance } => {
+            VerifyAction::CheckVar {
+                variable,
+                expected,
+                tolerance,
+            } => {
                 debug!("Checking variable: {} = {}", variable, expected);
-                let actual = sim_state.get_variable(variable)
+                let actual = sim_state
+                    .get_variable(variable)
                     .context("Variable not found")?;
-                
+
                 let tolerance = tolerance.unwrap_or(0.001);
                 let success = (actual - expected).abs() <= tolerance;
-                
+
                 Ok(ActionResult {
                     action: format!("CheckVar: {}", variable),
                     success,
                     actual_value: Some(actual),
                     expected_value: Some(*expected),
-                    error: if success { None } else { Some("Value out of tolerance".to_string()) },
+                    error: if success {
+                        None
+                    } else {
+                        Some("Value out of tolerance".to_string())
+                    },
                 })
             }
         }
@@ -219,14 +236,11 @@ impl ConfigVerifier {
         }
 
         // Read current file content
-        let current_content = fs::read_to_string(file_path)
-            .context("Failed to read file")?;
+        let current_content = fs::read_to_string(file_path).context("Failed to read file")?;
 
         // Check if content matches expected state
         let matches = match expected_operation {
-            DiffOperation::Replace { content } => {
-                current_content.trim() == content.trim()
-            }
+            DiffOperation::Replace { content } => current_content.trim() == content.trim(),
             DiffOperation::IniSection { section, changes } => {
                 self.verify_ini_section(&current_content, section, changes)
             }
@@ -235,7 +249,11 @@ impl ConfigVerifier {
                 // This is simplified for now
                 true
             }
-            DiffOperation::LineReplace { pattern, replacement, regex } => {
+            DiffOperation::LineReplace {
+                pattern,
+                replacement,
+                regex,
+            } => {
                 if *regex {
                     // For regex replacement, check if the replacement text is present
                     current_content.contains(replacement)
@@ -273,10 +291,10 @@ impl ConfigVerifier {
 
         for line in content.lines() {
             let trimmed = line.trim();
-            
+
             // Check for section headers
             if trimmed.starts_with('[') && trimmed.ends_with(']') {
-                let section_name = &trimmed[1..trimmed.len()-1];
+                let section_name = &trimmed[1..trimmed.len() - 1];
                 in_target_section = section_name == section;
                 continue;
             }
@@ -315,7 +333,7 @@ struct MockSimulatorState {
 impl MockSimulatorState {
     fn new() -> Self {
         let mut variables = std::collections::HashMap::new();
-        
+
         // Initialize with some default values
         variables.insert("GEAR_POSITION".to_string(), 0.0);
         variables.insert("FLAPS_POSITION".to_string(), 0.0);
@@ -331,24 +349,32 @@ impl MockSimulatorState {
         match event {
             "GEAR_TOGGLE" => {
                 let current = self.variables.get("GEAR_POSITION").unwrap_or(&0.0);
-                self.variables.insert("GEAR_POSITION".to_string(), if *current > 0.5 { 0.0 } else { 1.0 });
+                self.variables.insert(
+                    "GEAR_POSITION".to_string(),
+                    if *current > 0.5 { 0.0 } else { 1.0 },
+                );
             }
             "FLAPS_INCR" => {
                 let current = self.variables.get("FLAPS_POSITION").unwrap_or(&0.0);
-                self.variables.insert("FLAPS_POSITION".to_string(), (current + 0.25).min(1.0));
+                self.variables
+                    .insert("FLAPS_POSITION".to_string(), (current + 0.25).min(1.0));
             }
             "FLAPS_DECR" => {
                 let current = self.variables.get("FLAPS_POSITION").unwrap_or(&0.0);
-                self.variables.insert("FLAPS_POSITION".to_string(), (current - 0.25).max(0.0));
+                self.variables
+                    .insert("FLAPS_POSITION".to_string(), (current - 0.25).max(0.0));
             }
             "AP_MASTER" => {
-                self.variables.insert("AUTOPILOT_MASTER".to_string(), value.unwrap_or(1.0));
+                self.variables
+                    .insert("AUTOPILOT_MASTER".to_string(), value.unwrap_or(1.0));
             }
             "AP_ALT_HOLD" => {
-                self.variables.insert("AUTOPILOT_ALTITUDE_LOCK".to_string(), value.unwrap_or(1.0));
+                self.variables
+                    .insert("AUTOPILOT_ALTITUDE_LOCK".to_string(), value.unwrap_or(1.0));
             }
             "AP_HDG_HOLD" => {
-                self.variables.insert("AUTOPILOT_HEADING_LOCK".to_string(), value.unwrap_or(1.0));
+                self.variables
+                    .insert("AUTOPILOT_HEADING_LOCK".to_string(), value.unwrap_or(1.0));
             }
             _ => {
                 // For unknown events, just set the variable if a value is provided
@@ -367,13 +393,13 @@ impl MockSimulatorState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_verification_script() {
         let verifier = ConfigVerifier::new(TempDir::new().unwrap().path());
-        
+
         let script = VerifyScript {
             name: "gear_test".to_string(),
             description: "Test gear operation".to_string(),
@@ -384,13 +410,11 @@ mod tests {
                 },
                 VerifyAction::Wait { duration_ms: 100 },
             ],
-            expected: vec![
-                ExpectedResult {
-                    variable: "GEAR_POSITION".to_string(),
-                    value: 1.0,
-                    tolerance: 0.1,
-                },
-            ],
+            expected: vec![ExpectedResult {
+                variable: "GEAR_POSITION".to_string(),
+                value: 1.0,
+                tolerance: 0.1,
+            }],
         };
 
         let result = verifier.run_verification_script(&script).await.unwrap();
@@ -401,15 +425,15 @@ mod tests {
     #[tokio::test]
     async fn test_ini_section_verification() {
         let verifier = ConfigVerifier::new(TempDir::new().unwrap().path());
-        
+
         let content = "[AUTOPILOT]\nenabled=1\naltitude_hold=0\n\n[OTHER]\nkey=value\n";
-        
+
         let mut expected_changes = HashMap::new();
         expected_changes.insert("enabled".to_string(), "1".to_string());
         expected_changes.insert("altitude_hold".to_string(), "0".to_string());
-        
+
         assert!(verifier.verify_ini_section(content, "AUTOPILOT", &expected_changes));
-        
+
         // Test with missing key
         expected_changes.insert("missing_key".to_string(), "value".to_string());
         assert!(!verifier.verify_ini_section(content, "AUTOPILOT", &expected_changes));

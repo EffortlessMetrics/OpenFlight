@@ -12,9 +12,9 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
+use crate::comparison::ComparisonResult;
 use crate::harness::{ReplayHarness, ReplayResult};
 use crate::replay_config::{ReplayConfig, ReplayMode, ToleranceConfig};
-use crate::comparison::ComparisonResult;
 
 /// Validation errors
 #[derive(Error, Debug)]
@@ -143,7 +143,11 @@ impl ReplayValidator {
         path: P,
         test_name: String,
     ) -> Result<ValidationResult> {
-        info!("Starting validation of {}: {}", test_name, path.as_ref().display());
+        info!(
+            "Starting validation of {}: {}",
+            test_name,
+            path.as_ref().display()
+        );
 
         // Create replay configuration for validation
         let replay_config = ReplayConfig {
@@ -156,14 +160,16 @@ impl ReplayValidator {
         };
 
         // Create and configure harness
-        let mut harness = ReplayHarness::new(replay_config)
-            .context("Failed to create replay harness")?;
+        let mut harness =
+            ReplayHarness::new(replay_config).context("Failed to create replay harness")?;
 
         // Add default device configurations
         self.configure_default_devices(&mut harness)?;
 
         // Run replay
-        let replay_result = harness.replay_file(&path).await
+        let replay_result = harness
+            .replay_file(&path)
+            .await
             .context("Replay execution failed")?;
 
         // Validate results
@@ -173,10 +179,10 @@ impl ReplayValidator {
         let score = self.calculate_overall_score(&validation_details);
 
         // Determine if validation passed
-        let passed = replay_result.success && 
-                    validation_details.output_accuracy.within_tolerance &&
-                    validation_details.performance.meets_requirements &&
-                    validation_details.timing.within_tolerance;
+        let passed = replay_result.success
+            && validation_details.output_accuracy.within_tolerance
+            && validation_details.performance.meets_requirements
+            && validation_details.timing.within_tolerance;
 
         let mut errors = Vec::new();
         if !replay_result.success {
@@ -204,7 +210,8 @@ impl ReplayValidator {
 
         // Add default axis device
         let axis_config = AxisEngineConfig::default();
-        harness.add_axis_device("validation_axis".to_string(), axis_config)
+        harness
+            .add_axis_device("validation_axis".to_string(), axis_config)
             .context("Failed to add axis device")?;
 
         // Add default FFB device
@@ -215,7 +222,8 @@ impl ReplayValidator {
             mode: FfbMode::TelemetrySynth,
             device_path: None,
         };
-        harness.add_ffb_device("validation_ffb".to_string(), ffb_config)
+        harness
+            .add_ffb_device("validation_ffb".to_string(), ffb_config)
             .context("Failed to add FFB device")?;
 
         Ok(())
@@ -242,24 +250,29 @@ impl ReplayValidator {
 
     /// Validate output accuracy
     fn validate_output_accuracy(&self, result: &ReplayResult) -> Result<OutputAccuracyResult> {
-        let comparison = result.comparison.as_ref()
-            .ok_or_else(|| ValidationError::ConfigError {
-                message: "No comparison results available".to_string()
-            })?;
+        let comparison =
+            result
+                .comparison
+                .as_ref()
+                .ok_or_else(|| ValidationError::ConfigError {
+                    message: "No comparison results available".to_string(),
+                })?;
 
         let within_tolerance = comparison.passed;
         let total_mismatches = comparison.mismatches;
 
         // Calculate accuracy scores based on comparison statistics
         let axis_accuracy_score = if comparison.axis_stats.count > 0 {
-            let accuracy_ratio = comparison.axis_stats.within_tolerance as f32 / comparison.axis_stats.count as f32;
+            let accuracy_ratio =
+                comparison.axis_stats.within_tolerance as f32 / comparison.axis_stats.count as f32;
             accuracy_ratio
         } else {
             1.0
         };
 
         let ffb_accuracy_score = if comparison.ffb_stats.count > 0 {
-            let accuracy_ratio = comparison.ffb_stats.within_tolerance as f32 / comparison.ffb_stats.count as f32;
+            let accuracy_ratio =
+                comparison.ffb_stats.within_tolerance as f32 / comparison.ffb_stats.count as f32;
             accuracy_ratio
         } else {
             1.0
@@ -277,16 +290,21 @@ impl ReplayValidator {
     fn validate_performance(&self, result: &ReplayResult) -> Result<PerformanceValidationResult> {
         let performance = &result.performance;
 
-        let meets_fps_requirement = performance.frames_per_second >= self.config.performance_requirements.min_fps;
+        let meets_fps_requirement =
+            performance.frames_per_second >= self.config.performance_requirements.min_fps;
         let avg_frame_time_us = performance.avg_frame_time.as_micros() as f64;
-        let meets_frame_time_requirement = avg_frame_time_us <= self.config.performance_requirements.max_avg_frame_time_us;
-        let meets_memory_requirement = performance.memory_stats.peak_memory_bytes <= self.config.performance_requirements.max_memory_bytes;
+        let meets_frame_time_requirement =
+            avg_frame_time_us <= self.config.performance_requirements.max_avg_frame_time_us;
+        let meets_memory_requirement = performance.memory_stats.peak_memory_bytes
+            <= self.config.performance_requirements.max_memory_bytes;
 
-        let meets_requirements = meets_fps_requirement && meets_frame_time_requirement && meets_memory_requirement;
+        let meets_requirements =
+            meets_fps_requirement && meets_frame_time_requirement && meets_memory_requirement;
 
         // Calculate memory efficiency score
         let memory_efficiency_score = if self.config.performance_requirements.max_memory_bytes > 0 {
-            let usage_ratio = performance.memory_stats.peak_memory_bytes as f32 / self.config.performance_requirements.max_memory_bytes as f32;
+            let usage_ratio = performance.memory_stats.peak_memory_bytes as f32
+                / self.config.performance_requirements.max_memory_bytes as f32;
             (1.0 - usage_ratio).max(0.0)
         } else {
             1.0
@@ -304,8 +322,10 @@ impl ReplayValidator {
     fn validate_timing(&self, result: &ReplayResult) -> Result<TimingValidationResult> {
         let timing_stats = &result.accuracy.timing_stats;
 
-        let drift_within_tolerance = timing_stats.max_timing_error_ns <= self.config.tolerance.timing_drift_ns_per_s;
-        let jitter_within_tolerance = timing_stats.max_timing_error_ns <= self.config.tolerance.max_timing_jitter_ns;
+        let drift_within_tolerance =
+            timing_stats.max_timing_error_ns <= self.config.tolerance.timing_drift_ns_per_s;
+        let jitter_within_tolerance =
+            timing_stats.max_timing_error_ns <= self.config.tolerance.max_timing_jitter_ns;
         let within_tolerance = drift_within_tolerance && jitter_within_tolerance;
 
         // Calculate timing accuracy score
@@ -321,8 +341,14 @@ impl ReplayValidator {
 
     /// Calculate overall validation score
     fn calculate_overall_score(&self, details: &ValidationDetails) -> f32 {
-        let output_score = (details.output_accuracy.axis_accuracy_score + details.output_accuracy.ffb_accuracy_score) / 2.0;
-        let performance_score = if details.performance.meets_requirements { 1.0 } else { 0.5 };
+        let output_score = (details.output_accuracy.axis_accuracy_score
+            + details.output_accuracy.ffb_accuracy_score)
+            / 2.0;
+        let performance_score = if details.performance.meets_requirements {
+            1.0
+        } else {
+            0.5
+        };
         let timing_score = details.timing.timing_accuracy_score;
         let memory_score = details.performance.memory_efficiency_score;
 
@@ -367,13 +393,19 @@ impl ValidationSuite {
 
         for test_case in &self.test_cases {
             info!("Running validation test: {}", test_case.name);
-            
-            match self.validator.validate_file(&test_case.file_path, test_case.name.clone()).await {
+
+            match self
+                .validator
+                .validate_file(&test_case.file_path, test_case.name.clone())
+                .await
+            {
                 Ok(result) => {
                     let meets_threshold = result.score >= test_case.expected_score_threshold;
                     if !meets_threshold {
-                        warn!("Test {} scored {:.3} below threshold {:.3}", 
-                              test_case.name, result.score, test_case.expected_score_threshold);
+                        warn!(
+                            "Test {} scored {:.3} below threshold {:.3}",
+                            test_case.name, result.score, test_case.expected_score_threshold
+                        );
                     }
                     results.push(result);
                 }
@@ -403,15 +435,21 @@ impl ValidationSuite {
         let total_tests = results.len();
         let passed_tests = results.iter().filter(|r| r.passed).count();
         let failed_tests = total_tests - passed_tests;
-        
+
         let avg_score = if !results.is_empty() {
             results.iter().map(|r| r.score).sum::<f32>() / results.len() as f32
         } else {
             0.0
         };
 
-        let min_score = results.iter().map(|r| r.score).fold(1.0f32, |a, b| a.min(b));
-        let max_score = results.iter().map(|r| r.score).fold(0.0f32, |a, b| a.max(b));
+        let min_score = results
+            .iter()
+            .map(|r| r.score)
+            .fold(1.0f32, |a, b| a.min(b));
+        let max_score = results
+            .iter()
+            .map(|r| r.score)
+            .fold(0.0f32, |a, b| a.max(b));
 
         ValidationSummary {
             total_tests,
@@ -449,8 +487,8 @@ impl Default for ValidationConfig {
 impl Default for PerformanceRequirements {
     fn default() -> Self {
         Self {
-            min_fps: 100.0, // Minimum 100 FPS for fast-forward replay
-            max_avg_frame_time_us: 1000.0, // Maximum 1ms average frame time
+            min_fps: 100.0,                      // Minimum 100 FPS for fast-forward replay
+            max_avg_frame_time_us: 1000.0,       // Maximum 1ms average frame time
             max_memory_bytes: 100 * 1024 * 1024, // 100MB memory limit
         }
     }
@@ -492,8 +530,8 @@ impl Default for TimingValidationResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flight_core::blackbox::{BlackboxConfig, BlackboxWriter};
     use tempfile::TempDir;
-    use flight_core::blackbox::{BlackboxWriter, BlackboxConfig};
 
     async fn create_test_blackbox() -> (TempDir, std::path::PathBuf) {
         let temp_dir = TempDir::new().unwrap();
@@ -503,16 +541,20 @@ mod tests {
         };
 
         let mut writer = BlackboxWriter::new(config);
-        let filepath = writer.start_recording(
-            "test_sim".to_string(),
-            "test_aircraft".to_string(),
-            "1.0.0".to_string(),
-        ).await.unwrap();
+        let filepath = writer
+            .start_recording(
+                "test_sim".to_string(),
+                "test_aircraft".to_string(),
+                "1.0.0".to_string(),
+            )
+            .await
+            .unwrap();
 
         // Write test data
         for i in 0..1000 {
             let timestamp = i * 4_000_000;
-            let axis_data = bincode::serialize(&flight_axis::AxisFrame::new(0.5, timestamp)).unwrap();
+            let axis_data =
+                bincode::serialize(&flight_axis::AxisFrame::new(0.5, timestamp)).unwrap();
             writer.record_axis_frame(timestamp, &axis_data).unwrap();
         }
 
@@ -526,7 +568,7 @@ mod tests {
     async fn test_validator_creation() {
         let config = ValidationConfig::default();
         let validator = ReplayValidator::new(config);
-        
+
         // Validator should be created successfully
         assert!(true);
     }
@@ -534,15 +576,18 @@ mod tests {
     #[tokio::test]
     async fn test_file_validation() {
         let (_temp_dir, filepath) = create_test_blackbox().await;
-        
+
         let config = ValidationConfig {
             test_timeout: Duration::from_secs(30),
             ..Default::default()
         };
         let validator = ReplayValidator::new(config);
-        
-        let result = validator.validate_file(&filepath, "test_validation".to_string()).await.unwrap();
-        
+
+        let result = validator
+            .validate_file(&filepath, "test_validation".to_string())
+            .await
+            .unwrap();
+
         assert_eq!(result.test_name, "test_validation");
         assert!(result.score >= 0.0 && result.score <= 1.0);
     }
@@ -550,23 +595,23 @@ mod tests {
     #[tokio::test]
     async fn test_validation_suite() {
         let (_temp_dir, filepath) = create_test_blackbox().await;
-        
+
         let config = ValidationConfig {
             test_timeout: Duration::from_secs(30),
             ..Default::default()
         };
         let mut suite = ValidationSuite::new(config);
-        
+
         suite.add_test_case(ValidationTestCase {
             name: "basic_replay_test".to_string(),
             description: "Basic replay validation test".to_string(),
             file_path: filepath.to_string_lossy().to_string(),
             expected_score_threshold: 0.5,
         });
-        
+
         let results = suite.run_all_tests().await.unwrap();
         assert_eq!(results.len(), 1);
-        
+
         let summary = suite.summarize_results(&results);
         assert_eq!(summary.total_tests, 1);
     }
@@ -599,11 +644,11 @@ mod tests {
                 errors: vec!["Test error".to_string()],
             },
         ];
-        
+
         let config = ValidationConfig::default();
         let suite = ValidationSuite::new(config);
         let summary = suite.summarize_results(&results);
-        
+
         assert_eq!(summary.total_tests, 2);
         assert_eq!(summary.passed_tests, 1);
         assert_eq!(summary.failed_tests, 1);

@@ -3,10 +3,8 @@
 //! Validates that the axis processing meets the strict timing requirements
 //! specified in the requirements (≤0.5ms p99 processing time).
 
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use flight_axis::{
-    AxisEngine, AxisFrame, PipelineBuilder, DeadzoneNode, CurveNode, Node
-};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use flight_axis::{AxisEngine, AxisFrame, CurveNode, DeadzoneNode, Node, PipelineBuilder};
 use std::time::Instant;
 
 fn bench_axis_frame_creation(c: &mut Criterion) {
@@ -20,10 +18,11 @@ fn bench_axis_frame_creation(c: &mut Criterion) {
 
 fn bench_deadzone_processing(c: &mut Criterion) {
     let mut node = DeadzoneNode::new(0.1);
-    
+
     c.bench_function("deadzone_processing", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
+            let mut frame =
+                AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             node.step(&mut frame);
             std::hint::black_box(frame.out)
         })
@@ -32,10 +31,11 @@ fn bench_deadzone_processing(c: &mut Criterion) {
 
 fn bench_curve_processing(c: &mut Criterion) {
     let mut node = CurveNode::new(0.2);
-    
+
     c.bench_function("curve_processing", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
+            let mut frame =
+                AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             node.step(&mut frame);
             std::hint::black_box(frame.out)
         })
@@ -44,10 +44,11 @@ fn bench_curve_processing(c: &mut Criterion) {
 
 fn bench_engine_processing(c: &mut Criterion) {
     let engine = AxisEngine::new();
-    
+
     c.bench_function("engine_processing_no_pipeline", |b| {
         b.iter(|| {
-            let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
+            let mut frame =
+                AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
             let result = engine.process(&mut frame);
             std::hint::black_box((result, frame.out))
         })
@@ -59,7 +60,8 @@ fn bench_pipeline_compilation(c: &mut Criterion) {
         b.iter(|| {
             let pipeline = PipelineBuilder::new()
                 .deadzone(std::hint::black_box(0.05))
-                .curve(std::hint::black_box(0.2)).unwrap()
+                .curve(std::hint::black_box(0.2))
+                .unwrap()
                 .slew(std::hint::black_box(1.5))
                 .compile();
             std::hint::black_box(pipeline)
@@ -69,7 +71,7 @@ fn bench_pipeline_compilation(c: &mut Criterion) {
 
 fn bench_multi_node_pipeline(c: &mut Criterion) {
     let mut group = c.benchmark_group("multi_node_pipeline");
-    
+
     for node_count in [1, 3, 5].iter() {
         group.bench_with_input(
             BenchmarkId::new("nodes", node_count),
@@ -77,7 +79,7 @@ fn bench_multi_node_pipeline(c: &mut Criterion) {
             |b, &node_count| {
                 let mut deadzone_nodes = Vec::new();
                 let mut curve_nodes = Vec::new();
-                
+
                 for i in 0..node_count {
                     if i % 2 == 0 {
                         deadzone_nodes.push(DeadzoneNode::new(0.05));
@@ -85,18 +87,19 @@ fn bench_multi_node_pipeline(c: &mut Criterion) {
                         curve_nodes.push(CurveNode::new(0.2));
                     }
                 }
-                
+
                 b.iter(|| {
-                    let mut frame = AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
-                    
+                    let mut frame =
+                        AxisFrame::new(std::hint::black_box(0.5), std::hint::black_box(1000000));
+
                     for node in &mut deadzone_nodes {
                         node.step(&mut frame);
                     }
-                    
+
                     for node in &mut curve_nodes {
                         node.step(&mut frame);
                     }
-                    
+
                     std::hint::black_box(frame.out)
                 })
             },
@@ -107,18 +110,18 @@ fn bench_multi_node_pipeline(c: &mut Criterion) {
 
 fn bench_250hz_simulation(c: &mut Criterion) {
     let engine = AxisEngine::new();
-    
+
     c.bench_function("250hz_simulation_1000_frames", |b| {
         b.iter(|| {
             let start_time = 1000000000u64; // 1 second in nanoseconds
             let frame_interval = 4000000u64; // 4ms = 250Hz
-            
+
             for i in 0..1000 {
                 let mut frame = AxisFrame::new(
                     std::hint::black_box((i as f32) / 1000.0),
-                    std::hint::black_box(start_time + i * frame_interval)
+                    std::hint::black_box(start_time + i * frame_interval),
                 );
-                
+
                 let _result = engine.process(&mut frame);
                 std::hint::black_box(frame.out);
             }
@@ -128,32 +131,33 @@ fn bench_250hz_simulation(c: &mut Criterion) {
 
 fn bench_rt_timing_validation(c: &mut Criterion) {
     let engine = AxisEngine::new();
-    
+
     c.bench_function("rt_timing_validation", |b| {
         b.iter_custom(|iters| {
             let mut total_time = std::time::Duration::ZERO;
-            
+
             for i in 0..iters {
                 let mut frame = AxisFrame::new(
                     std::hint::black_box((i as f32) / (iters as f32)),
-                    std::hint::black_box(1000000 + i * 4000) // 250Hz intervals
+                    std::hint::black_box(1000000 + i * 4000), // 250Hz intervals
                 );
-                
+
                 let start = Instant::now();
                 let _result = engine.process(&mut frame);
                 let elapsed = start.elapsed();
-                
+
                 total_time += elapsed;
                 std::hint::black_box(frame.out);
-                
+
                 // Validate RT constraint: each frame should be < 500μs
                 // Note: This is a very strict test - in practice, occasional spikes
                 // above 500μs are acceptable as long as p99 is met
-                if elapsed.as_micros() > 1000 { // Allow up to 1ms for occasional spikes
+                if elapsed.as_micros() > 1000 {
+                    // Allow up to 1ms for occasional spikes
                     eprintln!("Warning: Frame processing took {}μs", elapsed.as_micros());
                 }
             }
-            
+
             total_time
         })
     });

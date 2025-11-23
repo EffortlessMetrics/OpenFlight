@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 use tracing::{debug, error, trace, warn};
 
 /// Publisher errors
@@ -93,9 +93,9 @@ impl Subscriber {
                 Ok(Some(snapshot))
             }
             Err(TryRecvError::Empty) => Ok(None),
-            Err(TryRecvError::Disconnected) => {
-                Err(PublisherError::ChannelError("Publisher disconnected".to_string()))
-            }
+            Err(TryRecvError::Disconnected) => Err(PublisherError::ChannelError(
+                "Publisher disconnected".to_string(),
+            )),
         }
     }
 
@@ -106,7 +106,9 @@ impl Subscriber {
                 self.update_stats(&snapshot);
                 Ok(snapshot)
             }
-            Err(_) => Err(PublisherError::ChannelError("Publisher disconnected".to_string())),
+            Err(_) => Err(PublisherError::ChannelError(
+                "Publisher disconnected".to_string(),
+            )),
         }
     }
 
@@ -118,10 +120,10 @@ impl Subscriber {
     fn update_stats(&mut self, snapshot: &BusSnapshot) {
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_received).as_secs_f32();
-        
+
         self.stats.messages_received += 1;
         self.stats.last_message_age_ms = snapshot.age_ms();
-        
+
         if elapsed > 0.0 {
             // Simple moving average for rate calculation
             let current_rate = 1.0 / elapsed;
@@ -131,7 +133,7 @@ impl Subscriber {
                 self.stats.average_rate_hz = 0.9 * self.stats.average_rate_hz + 0.1 * current_rate;
             }
         }
-        
+
         self.last_received = now;
     }
 }
@@ -174,7 +176,7 @@ impl RateLimiter {
     fn new(max_hz: f32) -> Self {
         let min_interval = Duration::from_secs_f32(1.0 / max_hz);
         let now = Instant::now();
-        
+
         Self {
             min_interval,
             last_publish: now - min_interval, // Allow first publish immediately
@@ -186,17 +188,17 @@ impl RateLimiter {
     fn can_publish(&mut self) -> bool {
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_publish);
-        
+
         if elapsed >= self.min_interval {
             self.last_publish = now;
             self.publish_count += 1;
-            
+
             // Reset window every second for rate calculation
             if now.duration_since(self.window_start) >= Duration::from_secs(1) {
                 self.window_start = now;
                 self.publish_count = 0;
             }
-            
+
             true
         } else {
             false
@@ -204,7 +206,9 @@ impl RateLimiter {
     }
 
     fn current_rate_hz(&self) -> f32 {
-        let window_duration = Instant::now().duration_since(self.window_start).as_secs_f32();
+        let window_duration = Instant::now()
+            .duration_since(self.window_start)
+            .as_secs_f32();
         if window_duration > 0.0 {
             self.publish_count as f32 / window_duration
         } else {
@@ -227,7 +231,7 @@ impl BusPublisher {
     pub fn subscribe(&mut self, config: SubscriptionConfig) -> Result<Subscriber, PublisherError> {
         let id = SubscriberId::new();
         let (sender, receiver) = channel::bounded(config.buffer_size);
-        
+
         let subscriber_data = SubscriberData {
             sender,
             config: config.clone(),
@@ -255,7 +259,7 @@ impl BusPublisher {
     /// Unsubscribe a subscriber
     pub fn unsubscribe(&mut self, id: SubscriberId) -> Result<(), PublisherError> {
         let mut subscribers = self.subscribers.lock().unwrap();
-        
+
         if subscribers.remove(&id).is_some() {
             self.publish_stats.subscribers_count = subscribers.len();
             debug!("Unsubscribed subscriber {}", id.0);
@@ -268,10 +272,10 @@ impl BusPublisher {
     /// Publish a snapshot to all subscribers
     pub fn publish(&mut self, snapshot: BusSnapshot) -> Result<(), PublisherError> {
         let start_time = Instant::now();
-        
+
         // Validate snapshot before publishing
         snapshot.validate()?;
-        
+
         // Check rate limit
         if !self.rate_limiter.can_publish() {
             self.publish_stats.snapshots_dropped += 1;
@@ -287,7 +291,7 @@ impl BusPublisher {
             let now = Instant::now();
             let elapsed = now.duration_since(subscriber_data.last_sent).as_secs_f32();
             let min_interval = 1.0 / subscriber_data.config.max_rate_hz;
-            
+
             if elapsed < min_interval {
                 continue; // Skip this subscriber due to rate limit
             }
@@ -350,12 +354,12 @@ impl BusPublisher {
                 _ = interval.tick() => {
                     // Try to get latest snapshot
                     let mut latest_snapshot = None;
-                    
+
                     // Drain all available snapshots, keeping only the latest
                     while let Ok(snapshot) = snapshot_source.try_recv() {
                         latest_snapshot = Some(snapshot);
                     }
-                    
+
                     if let Some(snapshot) = latest_snapshot
                         && let Err(e) = self.publish(snapshot) {
                         error!("Failed to publish snapshot: {}", e);
@@ -373,7 +377,6 @@ mod tests {
     use crate::types::{AircraftId, SimId};
     use std::time::Duration;
 
-
     #[test]
     fn test_subscriber_id_uniqueness() {
         let id1 = SubscriberId::new();
@@ -384,13 +387,13 @@ mod tests {
     #[test]
     fn test_rate_limiter() {
         let mut limiter = RateLimiter::new(10.0); // 10 Hz = 100ms interval
-        
+
         // First publish should succeed
         assert!(limiter.can_publish());
-        
+
         // Immediate second publish should fail
         assert!(!limiter.can_publish());
-        
+
         // After waiting longer than the interval, should succeed again
         std::thread::sleep(Duration::from_millis(150));
         assert!(limiter.can_publish());
@@ -399,16 +402,16 @@ mod tests {
     #[tokio::test]
     async fn test_publisher_subscribe_unsubscribe() {
         let mut publisher = BusPublisher::new(60.0);
-        
+
         // Subscribe
         let config = SubscriptionConfig::default();
         let subscriber = publisher.subscribe(config).unwrap();
         assert_eq!(publisher.subscriber_count(), 1);
-        
+
         // Unsubscribe
         publisher.unsubscribe(subscriber.id).unwrap();
         assert_eq!(publisher.subscriber_count(), 0);
-        
+
         // Unsubscribe non-existent should fail
         assert!(publisher.unsubscribe(subscriber.id).is_err());
     }
@@ -417,10 +420,10 @@ mod tests {
     async fn test_publish_and_receive() {
         let mut publisher = BusPublisher::new(60.0);
         let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-        
+
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
         publisher.publish(snapshot.clone()).unwrap();
-        
+
         let received = subscriber.try_recv().unwrap();
         assert!(received.is_some());
         let received = received.unwrap();
@@ -432,14 +435,14 @@ mod tests {
     async fn test_rate_limiting() {
         let mut publisher = BusPublisher::new(1.0); // Very low rate for testing
         let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-        
+
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // First publish should succeed
         publisher.publish(snapshot.clone()).unwrap();
         let first_msg = subscriber.try_recv().unwrap();
         assert!(first_msg.is_some());
-        
+
         // Immediate second publish should be dropped due to rate limit
         let result = publisher.publish(snapshot.clone());
         // The publish call succeeds but message is rate limited
@@ -455,14 +458,14 @@ mod tests {
             ..Default::default()
         };
         let mut subscriber = publisher.subscribe(config).unwrap();
-        
+
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // First publish should reach subscriber
         publisher.publish(snapshot.clone()).unwrap();
         let first_msg = subscriber.try_recv().unwrap();
         assert!(first_msg.is_some());
-        
+
         // Second publish should be rate limited for this subscriber
         tokio::time::sleep(Duration::from_millis(10)).await;
         publisher.publish(snapshot.clone()).unwrap();
@@ -479,15 +482,15 @@ mod tests {
             max_rate_hz: 60.0,
         };
         let mut subscriber = publisher.subscribe(config).unwrap();
-        
+
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Fill buffer
         for _ in 0..3 {
             publisher.publish(snapshot.clone()).unwrap();
             std::thread::sleep(Duration::from_millis(20));
         }
-        
+
         // Should have received messages (oldest may be dropped)
         let mut received_count = 0;
         while subscriber.try_recv().unwrap().is_some() {

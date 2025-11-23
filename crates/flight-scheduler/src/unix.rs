@@ -6,11 +6,11 @@
 //! Uses clock_nanosleep with CLOCK_MONOTONIC for high-precision timing
 //! and SCHED_FIFO via rtkit for real-time performance.
 
-use std::time::Duration;
-use nix::sys::mman::{mlockall, MlockAllFlags};
-use nix::unistd::{getpid, getuid};
+use libc::{self, CLOCK_MONOTONIC, TIMER_ABSTIME, timespec};
 use nix::errno::Errno;
-use libc::{self, timespec, CLOCK_MONOTONIC, TIMER_ABSTIME};
+use nix::sys::mman::{MlockAllFlags, mlockall};
+use nix::unistd::{getpid, getuid};
+use std::time::Duration;
 
 /// Platform-specific sleep implementation for Unix
 pub fn platform_sleep(duration: Duration) {
@@ -18,7 +18,7 @@ pub fn platform_sleep(duration: Duration) {
         tv_sec: duration.as_secs() as libc::time_t,
         tv_nsec: duration.subsec_nanos() as libc::c_long,
     };
-    
+
     unsafe {
         // Use clock_nanosleep for high precision
         let result = libc::clock_nanosleep(
@@ -27,7 +27,7 @@ pub fn platform_sleep(duration: Duration) {
             &sleep_time,
             std::ptr::null_mut(),
         );
-        
+
         if result != 0 {
             // Fallback to standard sleep on error
             std::thread::sleep(duration);
@@ -41,7 +41,7 @@ pub fn set_realtime_priority() -> std::result::Result<(), Box<dyn std::error::Er
     if let Err(e) = mlockall(MlockAllFlags::MCL_CURRENT | MlockAllFlags::MCL_FUTURE) {
         eprintln!("Warning: Failed to lock memory: {}", e);
     }
-    
+
     // Try to set SCHED_FIFO via rtkit D-Bus interface
     // This is a simplified version - full implementation would use D-Bus
     match try_rtkit_sched_fifo() {
@@ -65,18 +65,18 @@ fn try_direct_sched_fifo() -> std::result::Result<(), Box<dyn std::error::Error>
         let param = libc::sched_param {
             sched_priority: 50, // Mid-range RT priority
         };
-        
+
         let result = libc::sched_setscheduler(
             0, // Current thread
             libc::SCHED_FIFO,
             &param,
         );
-        
+
         if result != 0 {
             let errno = Errno::last();
             return Err(format!("Failed to set SCHED_FIFO: {}", errno).into());
         }
-        
+
         Ok(())
     }
 }
@@ -84,29 +84,29 @@ fn try_direct_sched_fifo() -> std::result::Result<(), Box<dyn std::error::Error>
 /// Check if system is configured for real-time performance
 pub fn check_rt_configuration() -> RTConfigStatus {
     let mut issues = Vec::new();
-    
+
     // Check if running as root or with CAP_SYS_NICE
     if getuid().is_root() {
         // Running as root - should work but not recommended
         issues.push("Running as root (consider using rtkit instead)".to_string());
     }
-    
+
     // Check rtkit availability (would require D-Bus in full implementation)
-    
+
     // Check memory lock limits
     unsafe {
         let mut rlimit = libc::rlimit {
             rlim_cur: 0,
             rlim_max: 0,
         };
-        
+
         if libc::getrlimit(libc::RLIMIT_MEMLOCK, &mut rlimit) == 0 {
             if rlimit.rlim_cur == 0 {
                 issues.push("Memory lock limit is 0 (may cause RT issues)".to_string());
             }
         }
     }
-    
+
     RTConfigStatus { issues }
 }
 

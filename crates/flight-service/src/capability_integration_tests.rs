@@ -4,8 +4,8 @@
 //! Integration tests for capability enforcement
 
 use crate::capability_service::CapabilityService;
-use flight_core::profile::{Profile, AxisConfig, AircraftId, CapabilityMode, CapabilityContext};
 use flight_axis::AxisEngine;
+use flight_core::profile::{AircraftId, AxisConfig, CapabilityContext, CapabilityMode, Profile};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -18,21 +18,32 @@ mod tests {
     fn test_profile_validation_rejects_overrides() {
         // Create a profile with high values that should be rejected in kid mode
         let mut axes = HashMap::new();
-        axes.insert("pitch".to_string(), AxisConfig {
-            deadzone: Some(0.03),
-            expo: Some(0.9), // High expo - should be rejected in kid mode (limit 0.2)
-            slew_rate: Some(15.0), // High slew rate - should be rejected in kid mode (limit 2.0)
-            detents: vec![],
-            curve: Some(vec![
-                flight_core::profile::CurvePoint { input: 0.0, output: 0.0 },
-                flight_core::profile::CurvePoint { input: 1.0, output: 1.0 },
-            ]), // Custom curve - should be rejected in kid mode
-        });
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.9), // High expo - should be rejected in kid mode (limit 0.2)
+                slew_rate: Some(15.0), // High slew rate - should be rejected in kid mode (limit 2.0)
+                detents: vec![],
+                curve: Some(vec![
+                    flight_core::profile::CurvePoint {
+                        input: 0.0,
+                        output: 0.0,
+                    },
+                    flight_core::profile::CurvePoint {
+                        input: 1.0,
+                        output: 1.0,
+                    },
+                ]), // Custom curve - should be rejected in kid mode
+            },
+        );
 
         let profile = Profile {
             schema: "flight.profile/1".to_string(),
             sim: Some("msfs".to_string()),
-            aircraft: Some(AircraftId { icao: "C172".to_string() }),
+            aircraft: Some(AircraftId {
+                icao: "C172".to_string(),
+            }),
             axes,
             pof_overrides: None,
         };
@@ -54,7 +65,7 @@ mod tests {
     #[test]
     fn test_engine_output_clamping() {
         let engine = AxisEngine::new_for_axis("test_axis".to_string());
-        
+
         // Test in full mode - no clamping
         engine.set_capability_mode(CapabilityMode::Full);
         let mut frame = flight_axis::AxisFrame::new(0.9, 1000);
@@ -87,18 +98,26 @@ mod tests {
     #[test]
     fn test_capability_service_ipc_simulation() {
         let service = CapabilityService::new();
-        
+
         // Register multiple axes
         let pitch_engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
         let roll_engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
         let yaw_engine = Arc::new(AxisEngine::new_for_axis("yaw".to_string()));
-        
-        service.register_axis("pitch".to_string(), pitch_engine.clone()).unwrap();
-        service.register_axis("roll".to_string(), roll_engine.clone()).unwrap();
-        service.register_axis("yaw".to_string(), yaw_engine.clone()).unwrap();
+
+        service
+            .register_axis("pitch".to_string(), pitch_engine.clone())
+            .unwrap();
+        service
+            .register_axis("roll".to_string(), roll_engine.clone())
+            .unwrap();
+        service
+            .register_axis("yaw".to_string(), yaw_engine.clone())
+            .unwrap();
 
         // Simulate IPC call: Set global kid mode
-        let result = service.set_capability_mode(CapabilityMode::Kid, None, true).unwrap();
+        let result = service
+            .set_capability_mode(CapabilityMode::Kid, None, true)
+            .unwrap();
         assert!(result.success);
         assert_eq!(result.affected_axes.len(), 3);
         assert_eq!(result.applied_limits.max_axis_output, 0.5);
@@ -109,11 +128,9 @@ mod tests {
         assert_eq!(yaw_engine.capability_mode(), CapabilityMode::Kid);
 
         // Simulate IPC call: Set only pitch to demo mode
-        let result = service.set_capability_mode(
-            CapabilityMode::Demo,
-            Some(vec!["pitch".to_string()]),
-            true,
-        ).unwrap();
+        let result = service
+            .set_capability_mode(CapabilityMode::Demo, Some(vec!["pitch".to_string()]), true)
+            .unwrap();
         assert!(result.success);
         assert_eq!(result.affected_axes, vec!["pitch"]);
 
@@ -125,7 +142,7 @@ mod tests {
         // Simulate IPC call: Get capability status
         let status = service.get_capability_status(None).unwrap();
         assert_eq!(status.len(), 3);
-        
+
         let pitch_status = status.iter().find(|s| s.axis_name == "pitch").unwrap();
         assert_eq!(pitch_status.mode, CapabilityMode::Demo);
         assert_eq!(pitch_status.limits.max_axis_output, 0.8);
@@ -140,11 +157,15 @@ mod tests {
     fn test_audit_logging_control() {
         let service = CapabilityService::new();
         let engine = Arc::new(AxisEngine::new_for_axis("test_axis".to_string()));
-        
-        service.register_axis("test_axis".to_string(), engine.clone()).unwrap();
+
+        service
+            .register_axis("test_axis".to_string(), engine.clone())
+            .unwrap();
 
         // Set kid mode with audit enabled
-        let result = service.set_capability_mode(CapabilityMode::Kid, None, true).unwrap();
+        let result = service
+            .set_capability_mode(CapabilityMode::Kid, None, true)
+            .unwrap();
         assert!(result.success);
 
         // Get status and verify audit is enabled
@@ -164,8 +185,10 @@ mod tests {
     fn test_convenience_methods() {
         let service = CapabilityService::new();
         let engine = Arc::new(AxisEngine::new_for_axis("test_axis".to_string()));
-        
-        service.register_axis("test_axis".to_string(), engine.clone()).unwrap();
+
+        service
+            .register_axis("test_axis".to_string(), engine.clone())
+            .unwrap();
 
         // Test kid mode convenience
         let result = service.set_kid_mode(true).unwrap();
@@ -190,23 +213,25 @@ mod tests {
     #[test]
     fn test_restricted_axes_detection() {
         let service = CapabilityService::new();
-        
+
         let pitch_engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
         let roll_engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
-        
-        service.register_axis("pitch".to_string(), pitch_engine.clone()).unwrap();
-        service.register_axis("roll".to_string(), roll_engine.clone()).unwrap();
+
+        service
+            .register_axis("pitch".to_string(), pitch_engine.clone())
+            .unwrap();
+        service
+            .register_axis("roll".to_string(), roll_engine.clone())
+            .unwrap();
 
         // Initially no restricted axes
         assert!(!service.has_restricted_axes().unwrap());
         assert!(service.get_restricted_axes().unwrap().is_empty());
 
         // Set pitch to kid mode
-        service.set_capability_mode(
-            CapabilityMode::Kid,
-            Some(vec!["pitch".to_string()]),
-            true,
-        ).unwrap();
+        service
+            .set_capability_mode(CapabilityMode::Kid, Some(vec!["pitch".to_string()]), true)
+            .unwrap();
 
         // Should detect restricted axes
         assert!(service.has_restricted_axes().unwrap());
@@ -216,19 +241,17 @@ mod tests {
         assert_eq!(restricted[0].1, CapabilityMode::Kid);
 
         // Set roll to demo mode
-        service.set_capability_mode(
-            CapabilityMode::Demo,
-            Some(vec!["roll".to_string()]),
-            true,
-        ).unwrap();
+        service
+            .set_capability_mode(CapabilityMode::Demo, Some(vec!["roll".to_string()]), true)
+            .unwrap();
 
         // Should detect both restricted axes
         let restricted = service.get_restricted_axes().unwrap();
         assert_eq!(restricted.len(), 2);
-        
+
         let pitch_entry = restricted.iter().find(|(name, _)| name == "pitch").unwrap();
         assert_eq!(pitch_entry.1, CapabilityMode::Kid);
-        
+
         let roll_entry = restricted.iter().find(|(name, _)| name == "roll").unwrap();
         assert_eq!(roll_entry.1, CapabilityMode::Demo);
     }
@@ -263,13 +286,13 @@ mod tests {
         // Verify the hierarchy: Full > Demo > Kid
         assert!(full_limits.max_axis_output >= demo_limits.max_axis_output);
         assert!(demo_limits.max_axis_output >= kid_limits.max_axis_output);
-        
+
         assert!(full_limits.max_ffb_torque >= demo_limits.max_ffb_torque);
         assert!(demo_limits.max_ffb_torque >= kid_limits.max_ffb_torque);
-        
+
         assert!(full_limits.max_slew_rate >= demo_limits.max_slew_rate);
         assert!(demo_limits.max_slew_rate >= kid_limits.max_slew_rate);
-        
+
         assert!(full_limits.max_expo >= demo_limits.max_expo);
         assert!(demo_limits.max_expo >= kid_limits.max_expo);
 

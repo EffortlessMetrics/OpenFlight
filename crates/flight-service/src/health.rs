@@ -6,13 +6,13 @@
 //! Provides real-time health monitoring and event streaming for all
 //! Flight Hub components with stable error codes and diagnostics.
 
+use crate::error_taxonomy::ErrorCode;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
-use tokio::sync::{broadcast, RwLock};
-use tracing::{debug, warn, error};
-use crate::error_taxonomy::ErrorCode;
+use tokio::sync::{RwLock, broadcast};
+use tracing::{debug, error, warn};
 
 /// Health event types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,7 +132,7 @@ impl HealthStream {
     /// Create new health stream
     pub fn new() -> Self {
         let (event_tx, _) = broadcast::channel(1000);
-        
+
         Self {
             event_tx,
             components: Arc::new(RwLock::new(HashMap::new())),
@@ -141,12 +141,12 @@ impl HealthStream {
             event_counter: Arc::new(RwLock::new(0)),
         }
     }
-    
+
     /// Subscribe to health events
     pub fn subscribe(&self) -> broadcast::Receiver<HealthEvent> {
         self.event_tx.subscribe()
     }
-    
+
     /// Emit a health event
     pub async fn emit_event(
         &self,
@@ -161,12 +161,12 @@ impl HealthStream {
         *counter += 1;
         let event_id = format!("evt_{:08x}", *counter);
         drop(counter);
-        
+
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         let event = HealthEvent {
             id: event_id,
             timestamp,
@@ -177,10 +177,10 @@ impl HealthStream {
             error_code,
             metadata,
         };
-        
+
         // Update component health
         self.update_component_health(&event).await;
-        
+
         // Add to recent events
         let mut recent = self.recent_events.write().await;
         recent.push(event.clone());
@@ -188,13 +188,13 @@ impl HealthStream {
             recent.remove(0);
         }
         drop(recent);
-        
+
         // Broadcast event
         if self.event_tx.send(event.clone()).is_err() {
             // No subscribers, which is fine
             debug!("No health event subscribers");
         }
-        
+
         // Log based on severity
         match severity {
             HealthSeverity::Info => debug!("[{}] {}", component, message),
@@ -204,7 +204,7 @@ impl HealthStream {
             }
         }
     }
-    
+
     /// Emit info event
     pub async fn info(&self, component: &str, message: &str) {
         self.emit_event(
@@ -214,9 +214,10 @@ impl HealthStream {
             message,
             None,
             HashMap::new(),
-        ).await;
+        )
+        .await;
     }
-    
+
     /// Emit warning event
     pub async fn warning(&self, component: &str, message: &str) {
         self.emit_event(
@@ -226,9 +227,10 @@ impl HealthStream {
             message,
             None,
             HashMap::new(),
-        ).await;
+        )
+        .await;
     }
-    
+
     /// Emit error event
     pub async fn error(&self, component: &str, message: &str, error_code: Option<ErrorCode>) {
         self.emit_event(
@@ -238,9 +240,10 @@ impl HealthStream {
             message,
             error_code,
             HashMap::new(),
-        ).await;
+        )
+        .await;
     }
-    
+
     /// Emit critical event
     pub async fn critical(&self, component: &str, message: &str, error_code: Option<ErrorCode>) {
         self.emit_event(
@@ -250,13 +253,14 @@ impl HealthStream {
             message,
             error_code,
             HashMap::new(),
-        ).await;
+        )
+        .await;
     }
-    
+
     /// Update component health based on event
     async fn update_component_health(&self, event: &HealthEvent) {
         let mut components = self.components.write().await;
-        
+
         let health = components
             .entry(event.component.clone())
             .or_insert_with(|| ComponentHealth {
@@ -267,9 +271,9 @@ impl HealthStream {
                 warning_count: 0,
                 status_info: HashMap::new(),
             });
-        
+
         health.last_seen = event.timestamp;
-        
+
         // Update counters and state based on severity
         match event.severity {
             HealthSeverity::Info => {
@@ -292,26 +296,25 @@ impl HealthStream {
                 health.state = HealthState::Failed;
             }
         }
-        
+
         // Add error code to status info if present
         if let Some(error_code) = &event.error_code {
-            health.status_info.insert(
-                "last_error_code".to_string(),
-                error_code.to_string(),
-            );
+            health
+                .status_info
+                .insert("last_error_code".to_string(), error_code.to_string());
         }
     }
-    
+
     /// Register a component
     pub async fn register_component(&self, name: &str) {
         let mut components = self.components.write().await;
-        
+
         if !components.contains_key(name) {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs();
-            
+
             components.insert(
                 name.to_string(),
                 ComponentHealth {
@@ -323,18 +326,20 @@ impl HealthStream {
                     status_info: HashMap::new(),
                 },
             );
-            
+
             debug!("Registered component: {}", name);
         }
     }
-    
+
     /// Update component status information
     pub async fn update_component_status(&self, name: &str, key: &str, value: &str) {
         let mut components = self.components.write().await;
-        
+
         if let Some(health) = components.get_mut(name) {
-            health.status_info.insert(key.to_string(), value.to_string());
-            
+            health
+                .status_info
+                .insert(key.to_string(), value.to_string());
+
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
@@ -342,28 +347,31 @@ impl HealthStream {
             health.last_seen = timestamp;
         }
     }
-    
+
     /// Get current health status
     pub async fn get_health_status(&self) -> HealthStatus {
         let components = self.components.read().await;
         let recent_events = self.recent_events.read().await;
-        
+
         // Determine overall health
         let overall_state = if components.values().any(|c| c.state == HealthState::Failed) {
             HealthState::Failed
-        } else if components.values().any(|c| c.state == HealthState::Degraded) {
+        } else if components
+            .values()
+            .any(|c| c.state == HealthState::Degraded)
+        {
             HealthState::Degraded
         } else if components.values().any(|c| c.state == HealthState::Warning) {
             HealthState::Warning
         } else {
             HealthState::Healthy
         };
-        
+
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        
+
         HealthStatus {
             overall: ComponentHealth {
                 name: "System".to_string(),
@@ -379,47 +387,47 @@ impl HealthStream {
             last_update: timestamp,
         }
     }
-    
+
     /// Reset component health counters (called periodically)
     pub async fn reset_counters(&self) {
         let mut components = self.components.write().await;
-        
+
         for health in components.values_mut() {
             health.error_count = 0;
             health.warning_count = 0;
-            
+
             // Reset state to healthy if no recent issues
             if matches!(health.state, HealthState::Warning | HealthState::Degraded) {
                 health.state = HealthState::Healthy;
             }
         }
-        
+
         debug!("Reset health counters for all components");
     }
-    
+
     /// Start periodic health maintenance
     pub fn start_maintenance_task(&self) -> tokio::task::JoinHandle<()> {
         let components = Arc::clone(&self.components);
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(60));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 // Reset counters every minute
                 let mut comps = components.write().await;
                 for health in comps.values_mut() {
                     health.error_count = 0;
                     health.warning_count = 0;
-                    
+
                     // Auto-heal warnings and degraded states after 1 minute
                     if matches!(health.state, HealthState::Warning | HealthState::Degraded) {
                         health.state = HealthState::Healthy;
                     }
                 }
                 drop(comps);
-                
+
                 debug!("Health maintenance completed");
             }
         })
@@ -435,65 +443,65 @@ impl Default for HealthStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_health_stream_creation() {
         let health = HealthStream::new();
         let status = health.get_health_status().await;
-        
+
         assert_eq!(status.overall.state, HealthState::Healthy);
         assert!(status.components.is_empty());
         assert!(status.recent_events.is_empty());
     }
-    
+
     #[tokio::test]
     async fn test_component_registration() {
         let health = HealthStream::new();
-        
+
         health.register_component("test_component").await;
         let status = health.get_health_status().await;
-        
+
         assert!(status.components.contains_key("test_component"));
         assert_eq!(
             status.components["test_component"].state,
             HealthState::Healthy
         );
     }
-    
+
     #[tokio::test]
     async fn test_event_emission() {
         let health = HealthStream::new();
         let mut rx = health.subscribe();
-        
+
         health.register_component("test").await;
         health.warning("test", "Test warning").await;
-        
+
         let event = rx.recv().await.unwrap();
         assert_eq!(event.component, "test");
         assert_eq!(event.severity, HealthSeverity::Warning);
         assert_eq!(event.message, "Test warning");
     }
-    
+
     #[tokio::test]
     async fn test_health_state_transitions() {
         let health = HealthStream::new();
-        
+
         health.register_component("test").await;
-        
+
         // Start healthy
         let status = health.get_health_status().await;
         assert_eq!(status.components["test"].state, HealthState::Healthy);
-        
+
         // Warning should change to Warning state
         health.warning("test", "Warning").await;
         let status = health.get_health_status().await;
         assert_eq!(status.components["test"].state, HealthState::Warning);
-        
+
         // Error should change to Degraded state
         health.error("test", "Error", None).await;
         let status = health.get_health_status().await;
         assert_eq!(status.components["test"].state, HealthState::Degraded);
-        
+
         // Critical should change to Failed state
         health.critical("test", "Critical", None).await;
         let status = health.get_health_status().await;

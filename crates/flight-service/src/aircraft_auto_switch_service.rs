@@ -6,26 +6,30 @@
 //! Integrates process detection, aircraft detection, and profile switching
 //! to provide seamless aircraft auto-switching with ≤500ms response time.
 
+use flight_bus::{BusPublisher, BusSnapshot, Subscriber as BusSubscriber, SubscriptionConfig};
 use flight_core::{
-    AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, ProcessDetector, 
-    ProcessDetectionConfig, DetectedProcess, PhaseOfFlight, SwitchMetrics, Result, FlightError
+    AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, DetectedProcess, FlightError,
+    PhaseOfFlight, ProcessDetectionConfig, ProcessDetector, Result, SwitchMetrics,
 };
-use flight_bus::{BusSnapshot, BusPublisher, SubscriptionConfig, Subscriber as BusSubscriber};
 // Import bus and core types with aliases to avoid conflicts
-use flight_bus::{SimId as BusSimId, AircraftId as BusAircraftId};
+use flight_bus::{AircraftId as BusAircraftId, SimId as BusSimId};
 use flight_core::aircraft_switch::{
-    SimId as CoreSimId, AircraftId as CoreAircraftId, TelemetrySnapshot,
+    AircraftId as CoreAircraftId, SimId as CoreSimId, TelemetrySnapshot,
 };
-use flight_simconnect::{AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo};
-use flight_xplane::{AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft};
+use flight_simconnect::{
+    AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo,
+};
+use flight_xplane::{
+    AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft,
+};
 // Avoid type-name collision with local stub
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, RwLock};
-use tracing::{debug, info, warn, error};
+use tokio::sync::{RwLock, mpsc};
+use tracing::{debug, error, info, warn};
 
 // ============================================================================
 // Type Mapping Functions (Bus ↔ Core)
@@ -52,7 +56,7 @@ fn map_aircraft_id(id: BusAircraftId) -> CoreAircraftId {
 }
 
 /// Map BusSnapshot to TelemetrySnapshot for auto-switch system
-/// 
+///
 /// This creates a minimal snapshot with only the fields needed for
 /// phase-of-flight determination and aircraft switching logic.
 fn map_snapshot(bus: &BusSnapshot) -> TelemetrySnapshot {
@@ -220,13 +224,18 @@ impl AircraftAutoSwitchService {
         self.process_detector.start().await?;
 
         // Subscribe to bus for telemetry updates
-        let subscriber = bus_publisher.subscribe(SubscriptionConfig::default())
+        let subscriber = bus_publisher
+            .subscribe(SubscriptionConfig::default())
             .map_err(|e| FlightError::AutoSwitch(format!("Failed to subscribe to bus: {}", e)))?;
-        
+
         *self.bus_subscriber.write().await = Some(subscriber);
 
         // Start service event loop
-        let mut rx = self.service_rx.write().await.take()
+        let mut rx = self
+            .service_rx
+            .write()
+            .await
+            .take()
             .ok_or_else(|| FlightError::AutoSwitch("Service already started".to_string()))?;
 
         let auto_switch = Arc::clone(&self.auto_switch);
@@ -240,11 +249,9 @@ impl AircraftAutoSwitchService {
             while let Some(event) = rx.recv().await {
                 match event {
                     ServiceEvent::ProcessDetected(process) => {
-                        if let Err(e) = Self::handle_process_detected(
-                            process,
-                            &adapters,
-                            &config,
-                        ).await {
+                        if let Err(e) =
+                            Self::handle_process_detected(process, &adapters, &config).await
+                        {
                             error!("Failed to handle process detection: {}", e);
                         }
                     }
@@ -267,7 +274,10 @@ impl AircraftAutoSwitchService {
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
-                        if let Err(e) = auto_switch.on_telemetry_update(map_snapshot(&snapshot)).await {
+                        if let Err(e) = auto_switch
+                            .on_telemetry_update(map_snapshot(&snapshot))
+                            .await
+                        {
                             error!("Failed to handle telemetry update: {}", e);
                         }
                     }
@@ -303,7 +313,8 @@ impl AircraftAutoSwitchService {
         adapters.stop_all().await?;
 
         // Send shutdown event
-        self.service_tx.send(ServiceEvent::Shutdown)
+        self.service_tx
+            .send(ServiceEvent::Shutdown)
             .map_err(|e| FlightError::AutoSwitch(format!("Failed to send shutdown: {}", e)))?;
 
         Ok(())
@@ -313,7 +324,7 @@ impl AircraftAutoSwitchService {
     pub async fn get_metrics(&self) -> ServiceMetrics {
         let auto_switch_metrics = self.auto_switch.get_metrics().await;
         let process_detection_metrics = self.process_detector.get_metrics().await;
-        
+
         // TODO: Collect adapter metrics
         let adapter_metrics = HashMap::new();
 
@@ -338,7 +349,9 @@ impl AircraftAutoSwitchService {
 
     /// Force switch to specific aircraft
     pub async fn force_switch(&self, aircraft_id: BusAircraftId) -> Result<()> {
-        self.auto_switch.force_switch(map_aircraft_id(aircraft_id)).await
+        self.auto_switch
+            .force_switch(map_aircraft_id(aircraft_id))
+            .await
     }
 
     /// Start monitoring process detection
@@ -353,7 +366,7 @@ impl AircraftAutoSwitchService {
                 tokio::time::sleep(Duration::from_secs(1)).await;
 
                 let current_processes = process_detector.get_detected_processes().await;
-                
+
                 // Check for new processes
                 for (sim, process) in &current_processes {
                     if !last_processes.contains_key(sim) {
@@ -408,7 +421,10 @@ impl AircraftAutoSwitchService {
         adapters: &Arc<RwLock<SimAdapters>>,
         config: &AircraftAutoSwitchServiceConfig,
     ) -> Result<()> {
-        info!("Starting adapter for detected process: {} ({})", process.process_name, process.sim);
+        info!(
+            "Starting adapter for detected process: {} ({})",
+            process.process_name, process.sim
+        );
 
         let mut adapters_guard = adapters.write().await;
 
@@ -460,10 +476,7 @@ impl AircraftAutoSwitchService {
     }
 
     /// Handle process lost event
-    async fn handle_process_lost(
-        sim: BusSimId,
-        adapters: &Arc<RwLock<SimAdapters>>,
-    ) -> Result<()> {
+    async fn handle_process_lost(sim: BusSimId, adapters: &Arc<RwLock<SimAdapters>>) -> Result<()> {
         info!("Stopping adapter for lost process: {}", sim);
 
         let mut adapters_guard = adapters.write().await;
@@ -524,7 +537,7 @@ mod tests {
     async fn test_service_creation() {
         let config = AircraftAutoSwitchServiceConfig::default();
         let service = AircraftAutoSwitchService::new(config);
-        
+
         assert!(service.get_current_aircraft().await.is_none());
         assert!(service.get_current_pof().await.is_none());
     }
@@ -546,9 +559,9 @@ mod tests {
     async fn test_force_switch() {
         let config = AircraftAutoSwitchServiceConfig::default();
         let service = AircraftAutoSwitchService::new(config);
-        
+
         let aircraft_id = BusAircraftId::new("C172");
-        
+
         // This should not fail even without starting the service
         // (it will just queue the request)
         assert!(service.force_switch(aircraft_id).await.is_ok());

@@ -8,7 +8,7 @@
 //! SimConnect adapter for Flight Hub.
 
 use crate::aircraft::{AircraftDetector, AircraftInfo, DetectionError};
-use crate::events::{EventManager, EventError};
+use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
 use flight_bus::adapters::SimAdapter;
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
@@ -160,7 +160,7 @@ impl MsfsAdapter {
     /// Stop the adapter
     pub async fn stop(&mut self) -> Result<(), MsfsAdapterError> {
         info!("Stopping MSFS adapter");
-        
+
         if let Some(mut session) = self.session.take() {
             session.disconnect()?;
         }
@@ -195,7 +195,11 @@ impl MsfsAdapter {
     }
 
     /// Send an event to MSFS
-    pub async fn send_event(&mut self, event_name: &str, data: Option<u32>) -> Result<(), MsfsAdapterError> {
+    pub async fn send_event(
+        &mut self,
+        event_name: &str,
+        data: Option<u32>,
+    ) -> Result<(), MsfsAdapterError> {
         if let Some(session) = &self.session {
             if let Some(handle) = session.handle() {
                 self.event_manager.transmit_standard_event(
@@ -215,14 +219,16 @@ impl MsfsAdapter {
 
     async fn connect(&mut self) -> Result<(), MsfsAdapterError> {
         info!("Connecting to MSFS via SimConnect");
-        
+
         let mut session = SimConnectSession::new(self.config.session.clone())?;
         session.connect().await?;
 
         // Setup aircraft detection
         if let Some(handle) = session.handle() {
-            self.aircraft_detector.setup_detection(session.api(), handle)?;
-            self.event_manager.setup_common_events(session.api(), handle)?;
+            self.aircraft_detector
+                .setup_detection(session.api(), handle)?;
+            self.event_manager
+                .setup_common_events(session.api(), handle)?;
         }
 
         self.session = Some(session);
@@ -238,22 +244,25 @@ impl MsfsAdapter {
         let _current_aircraft = self.current_aircraft.clone();
         let _current_snapshot = self.current_snapshot.clone();
         let _snapshot_sender = self.snapshot_sender.clone();
-        
+
         // Clone necessary data for the async task
         let publish_interval = Duration::from_secs_f32(1.0 / self.config.publish_rate);
-        
+
         tokio::spawn(async move {
             let mut interval = interval(publish_interval);
-            
+
             loop {
                 interval.tick().await;
-                
+
                 // Check if we should continue running
                 let current_state = *state.read().await;
-                if matches!(current_state, AdapterState::Disconnected | AdapterState::Error) {
+                if matches!(
+                    current_state,
+                    AdapterState::Disconnected | AdapterState::Error
+                ) {
                     break;
                 }
-                
+
                 // Update telemetry would happen here
                 // This is a simplified version - the actual implementation would
                 // process SimConnect messages and update the bus snapshot
@@ -265,7 +274,7 @@ impl MsfsAdapter {
             let event_receiver = session.event_receiver();
             let state_clone = self.state.clone();
             let _aircraft_clone = self.current_aircraft.clone();
-            
+
             tokio::spawn(async move {
                 // Take receiver ownership before spawning to avoid holding MutexGuard across await
                 let mut guard = event_receiver.lock().await;
@@ -273,7 +282,7 @@ impl MsfsAdapter {
                     .take()
                     .expect("receiver should be initialized before spawn");
                 drop(guard); // Explicitly drop guard before spawn
-                
+
                 while let Some(event) = rx.recv().await {
                     match event {
                         SessionEvent::Connected { .. } => {
@@ -286,8 +295,14 @@ impl MsfsAdapter {
                         SessionEvent::Exception { exception, .. } => {
                             warn!("SimConnect exception: {}", exception);
                         }
-                        SessionEvent::DataReceived { request_id, data, .. } => {
-                            debug!("Received data for request {}: {} bytes", request_id, data.len());
+                        SessionEvent::DataReceived {
+                            request_id, data, ..
+                        } => {
+                            debug!(
+                                "Received data for request {}: {} bytes",
+                                request_id,
+                                data.len()
+                            );
                             // Process data here
                         }
                         SessionEvent::EventReceived { event_id, data, .. } => {
@@ -301,15 +316,17 @@ impl MsfsAdapter {
 
         // Start main update loop
         let mut update_interval = interval(Duration::from_millis(16)); // ~60Hz
-        
+
         loop {
             update_interval.tick().await;
-            
+
             let current_state = self.state().await;
             match current_state {
                 AdapterState::Disconnected => {
-                    if self.config.auto_reconnect && self.connection_attempts < self.config.max_reconnect_attempts
-                        && let Err(e) = self.attempt_reconnect().await {
+                    if self.config.auto_reconnect
+                        && self.connection_attempts < self.config.max_reconnect_attempts
+                        && let Err(e) = self.attempt_reconnect().await
+                    {
                         error!("Reconnection attempt failed: {}", e);
                         self.connection_attempts += 1;
                     }
@@ -340,7 +357,8 @@ impl MsfsAdapter {
 
             // Poll session for messages
             if let Some(session) = &mut self.session
-                && let Err(e) = session.poll().await {
+                && let Err(e) = session.poll().await
+            {
                 error!("Session polling error: {}", e);
                 *self.state.write().await = AdapterState::Error;
             }
@@ -348,8 +366,11 @@ impl MsfsAdapter {
     }
 
     async fn attempt_reconnect(&mut self) -> Result<(), MsfsAdapterError> {
-        info!("Attempting to reconnect to MSFS (attempt {})", self.connection_attempts + 1);
-        
+        info!(
+            "Attempting to reconnect to MSFS (attempt {})",
+            self.connection_attempts + 1
+        );
+
         // Clean up existing session
         if let Some(mut session) = self.session.take() {
             let _ = session.disconnect();
@@ -360,31 +381,33 @@ impl MsfsAdapter {
 
         // Try to reconnect
         self.connect().await?;
-        
+
         Ok(())
     }
 
     async fn detect_aircraft(&mut self) -> Result<(), MsfsAdapterError> {
         *self.state.write().await = AdapterState::DetectingAircraft;
-        
+
         if let Some(session) = &self.session {
             if let Some(handle) = session.handle() {
-                self.aircraft_detector.start_detection(session.api(), handle)?;
-                
+                self.aircraft_detector
+                    .start_detection(session.api(), handle)?;
+
                 // Wait for aircraft detection with timeout
                 let timeout = tokio::time::timeout(
                     self.config.aircraft_detection_timeout,
                     self.wait_for_aircraft_detection(),
-                ).await;
+                )
+                .await;
 
                 match timeout {
                     Ok(Ok(aircraft_info)) => {
                         info!("Aircraft detected: {}", aircraft_info.title);
                         *self.current_aircraft.write().await = Some(aircraft_info.clone());
-                        
+
                         // Setup variable mapping for this aircraft
                         self.setup_variable_mapping(&aircraft_info).await?;
-                        
+
                         *self.state.write().await = AdapterState::Active;
                         Ok(())
                     }
@@ -396,7 +419,9 @@ impl MsfsAdapter {
                     Err(_) => {
                         warn!("Aircraft detection timed out");
                         *self.state.write().await = AdapterState::Connected;
-                        Err(MsfsAdapterError::Timeout("Aircraft detection timed out".to_string()))
+                        Err(MsfsAdapterError::Timeout(
+                            "Aircraft detection timed out".to_string(),
+                        ))
                     }
                 }
             } else {
@@ -411,7 +436,7 @@ impl MsfsAdapter {
         // This would typically wait for aircraft detection events
         // For now, we'll simulate a successful detection
         tokio::time::sleep(Duration::from_millis(100)).await;
-        
+
         // Return a mock aircraft for testing
         Ok(AircraftInfo {
             title: "Cessna 172 Skyhawk".to_string(),
@@ -425,17 +450,24 @@ impl MsfsAdapter {
         })
     }
 
-    async fn setup_variable_mapping(&mut self, aircraft_info: &AircraftInfo) -> Result<(), MsfsAdapterError> {
-        info!("Setting up variable mapping for aircraft: {}", aircraft_info.atc_model);
-        
+    async fn setup_variable_mapping(
+        &mut self,
+        aircraft_info: &AircraftInfo,
+    ) -> Result<(), MsfsAdapterError> {
+        info!(
+            "Setting up variable mapping for aircraft: {}",
+            aircraft_info.atc_model
+        );
+
         let mut mapping = VariableMapping::new(self.config.mapping.clone());
-        
+
         if let Some(session) = &self.session
-            && let Some(handle) = session.handle() {
+            && let Some(handle) = session.handle()
+        {
             mapping.setup_aircraft_definitions(session.api(), handle, &aircraft_info.atc_model)?;
             mapping.start_data_requests(session.api(), handle)?;
         }
-        
+
         self.variable_mapping = Some(mapping);
         Ok(())
     }
@@ -454,11 +486,11 @@ impl MsfsAdapter {
         if let Some(ref aircraft) = *aircraft_info {
             let aircraft_id = AircraftId::new(&aircraft.atc_model);
             let snapshot = BusSnapshot::new(SimId::Msfs, aircraft_id);
-            
+
             // Update snapshot with current data
             // This would typically process received SimConnect data
             // For now, we'll create a basic snapshot
-            
+
             // Validate and publish snapshot
             if let Err(e) = snapshot.validate() {
                 warn!("Snapshot validation failed: {}", e);
@@ -466,7 +498,7 @@ impl MsfsAdapter {
             }
 
             *self.current_snapshot.write().await = Some(snapshot.clone());
-            
+
             if let Err(e) = self.snapshot_sender.send(snapshot) {
                 warn!("Failed to publish snapshot: {}", e);
             }
@@ -508,7 +540,7 @@ mod tests {
     async fn test_adapter_creation() {
         let config = MsfsAdapterConfig::default();
         let adapter = MsfsAdapter::new(config);
-        
+
         match adapter {
             Ok(adapter) => {
                 assert_eq!(adapter.state().await, AdapterState::Disconnected);
@@ -516,7 +548,7 @@ mod tests {
                 assert!(adapter.current_snapshot().await.is_none());
             }
             Err(MsfsAdapterError::Session(SessionError::SimConnect(
-                flight_simconnect_sys::SimConnectError::LibraryNotFound
+                flight_simconnect_sys::SimConnectError::LibraryNotFound,
             ))) => {
                 // Expected on systems without SimConnect
                 println!("SimConnect library not found - this is expected on systems without MSFS");
@@ -547,17 +579,17 @@ mod tests {
     #[tokio::test]
     async fn test_sim_adapter_trait() {
         let config = MsfsAdapterConfig::default();
-        
+
         match MsfsAdapter::new(config) {
             Ok(adapter) => {
                 assert_eq!(adapter.sim_id(), SimId::Msfs);
-                
+
                 // Test validation
                 let raw_data = vec![1, 2, 3, 4];
                 assert!(adapter.validate_raw_data(&raw_data).is_ok());
             }
             Err(MsfsAdapterError::Session(SessionError::SimConnect(
-                flight_simconnect_sys::SimConnectError::LibraryNotFound
+                flight_simconnect_sys::SimConnectError::LibraryNotFound,
             ))) => {
                 // Expected on systems without SimConnect
                 println!("SimConnect library not found");

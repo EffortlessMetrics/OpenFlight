@@ -52,13 +52,13 @@ use std::fmt;
 pub struct AxisFrame {
     /// Raw input value from hardware [-1.0, 1.0]
     pub in_raw: f32,
-    
+
     /// Processed output value [-1.0, 1.0]
     pub out: f32,
-    
+
     /// Input derivative (rate of change) per second
     pub d_in_dt: f32,
-    
+
     /// Monotonic timestamp in nanoseconds
     pub ts_mono_ns: u64,
 }
@@ -83,12 +83,12 @@ impl AxisFrame {
     pub fn new(input: f32, timestamp_ns: u64) -> Self {
         Self {
             in_raw: input,
-            out: input, // Initially, output equals input
+            out: input,   // Initially, output equals input
             d_in_dt: 0.0, // Will be calculated by derivative node
             ts_mono_ns: timestamp_ns,
         }
     }
-    
+
     /// Create a frame with all fields specified
     ///
     /// This is primarily used for testing and replay scenarios where
@@ -112,7 +112,7 @@ impl AxisFrame {
             ts_mono_ns: timestamp_ns,
         }
     }
-    
+
     /// Reset the frame to initial state (output = input, derivative = 0)
     ///
     /// This is useful when reprocessing a frame through a different pipeline.
@@ -134,7 +134,7 @@ impl AxisFrame {
         self.out = self.in_raw;
         self.d_in_dt = 0.0;
     }
-    
+
     /// Check if the frame values are within valid ranges
     ///
     /// Returns `true` if all values are finite and within expected ranges:
@@ -154,14 +154,16 @@ impl AxisFrame {
     /// assert!(!invalid_frame.is_valid());
     /// ```
     pub fn is_valid(&self) -> bool {
-        self.in_raw.is_finite() &&
-        self.out.is_finite() &&
-        self.d_in_dt.is_finite() &&
-        self.in_raw >= -1.0 && self.in_raw <= 1.0 &&
-        self.out >= -1.0 && self.out <= 1.0 &&
-        self.ts_mono_ns > 0
+        self.in_raw.is_finite()
+            && self.out.is_finite()
+            && self.d_in_dt.is_finite()
+            && self.in_raw >= -1.0
+            && self.in_raw <= 1.0
+            && self.out >= -1.0
+            && self.out <= 1.0
+            && self.ts_mono_ns > 0
     }
-    
+
     /// Get the processing latency if compared with another frame
     ///
     /// Calculates the time difference between this frame and another,
@@ -180,7 +182,7 @@ impl AxisFrame {
     pub fn latency_from(&self, other: &AxisFrame) -> u64 {
         self.ts_mono_ns.abs_diff(other.ts_mono_ns)
     }
-    
+
     /// Calculate the time delta from the previous frame in seconds
     ///
     /// This is commonly used by nodes that need to know the time step
@@ -204,7 +206,7 @@ impl AxisFrame {
             0.0
         }
     }
-    
+
     /// Update the derivative based on the previous frame
     ///
     /// This calculates the rate of change of the input value and stores it
@@ -229,7 +231,7 @@ impl AxisFrame {
             self.d_in_dt = 0.0;
         }
     }
-    
+
     /// Apply a simple linear transformation to the output
     ///
     /// This is a convenience method for basic scaling and offset operations.
@@ -252,7 +254,7 @@ impl AxisFrame {
     pub fn transform(&mut self, scale: f32, offset: f32) {
         self.out = self.out * scale + offset;
     }
-    
+
     /// Clamp the output to the specified range
     ///
     /// Ensures the output value stays within the given bounds.
@@ -274,8 +276,11 @@ impl AxisFrame {
 
 impl fmt::Display for AxisFrame {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "AxisFrame {{ in: {:.3}, out: {:.3}, d/dt: {:.3}, ts: {}ns }}", 
-               self.in_raw, self.out, self.d_in_dt, self.ts_mono_ns)
+        write!(
+            f,
+            "AxisFrame {{ in: {:.3}, out: {:.3}, d/dt: {:.3}, ts: {}ns }}",
+            self.in_raw, self.out, self.d_in_dt, self.ts_mono_ns
+        )
     }
 }
 
@@ -323,7 +328,7 @@ impl AxisFrame {
         if self.in_raw < -1.0 || self.in_raw > 1.0 {
             return Err(FrameError::InputOutOfRange(self.in_raw));
         }
-        
+
         // Check output
         if !self.out.is_finite() {
             return Err(FrameError::InvalidOutput(self.out));
@@ -331,17 +336,17 @@ impl AxisFrame {
         if self.out < -1.0 || self.out > 1.0 {
             return Err(FrameError::OutputOutOfRange(self.out));
         }
-        
+
         // Check derivative
         if !self.d_in_dt.is_finite() {
             return Err(FrameError::InvalidDerivative(self.d_in_dt));
         }
-        
+
         // Check timestamp
         if self.ts_mono_ns == 0 {
             return Err(FrameError::InvalidTimestamp(self.ts_mono_ns));
         }
-        
+
         Ok(())
     }
 }
@@ -350,9 +355,13 @@ impl std::fmt::Display for FrameError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FrameError::InvalidInput(val) => write!(f, "Invalid input value: {}", val),
-            FrameError::InputOutOfRange(val) => write!(f, "Input out of range [-1.0, 1.0]: {}", val),
+            FrameError::InputOutOfRange(val) => {
+                write!(f, "Input out of range [-1.0, 1.0]: {}", val)
+            }
             FrameError::InvalidOutput(val) => write!(f, "Invalid output value: {}", val),
-            FrameError::OutputOutOfRange(val) => write!(f, "Output out of range [-1.0, 1.0]: {}", val),
+            FrameError::OutputOutOfRange(val) => {
+                write!(f, "Output out of range [-1.0, 1.0]: {}", val)
+            }
             FrameError::InvalidTimestamp(ts) => write!(f, "Invalid timestamp: {}", ts),
             FrameError::InvalidDerivative(val) => write!(f, "Invalid derivative: {}", val),
         }
@@ -373,57 +382,60 @@ mod tests {
         assert_eq!(frame.d_in_dt, 0.0);
         assert_eq!(frame.ts_mono_ns, 1000);
     }
-    
+
     #[test]
     fn test_frame_validation() {
         let valid_frame = AxisFrame::new(0.5, 1000);
         assert!(valid_frame.is_valid());
         assert!(valid_frame.validate().is_ok());
-        
+
         let invalid_frame = AxisFrame::new(2.0, 1000);
         assert!(!invalid_frame.is_valid());
-        assert!(matches!(invalid_frame.validate(), Err(FrameError::InputOutOfRange(_))));
+        assert!(matches!(
+            invalid_frame.validate(),
+            Err(FrameError::InputOutOfRange(_))
+        ));
     }
-    
+
     #[test]
     fn test_frame_reset() {
         let mut frame = AxisFrame::new(0.5, 1000);
         frame.out = 0.3;
         frame.d_in_dt = 0.1;
-        
+
         frame.reset();
         assert_eq!(frame.out, 0.5);
         assert_eq!(frame.d_in_dt, 0.0);
     }
-    
+
     #[test]
     fn test_frame_transform() {
         let mut frame = AxisFrame::new(0.5, 1000);
         frame.transform(2.0, 0.1);
         assert_eq!(frame.out, 1.1);
     }
-    
+
     #[test]
     fn test_frame_clamp() {
         let mut frame = AxisFrame::new(1.5, 1000);
         frame.clamp(-1.0, 1.0);
         assert_eq!(frame.out, 1.0);
     }
-    
+
     #[test]
     fn test_delta_time_calculation() {
         let frame1 = AxisFrame::new(0.5, 1_000_000_000);
         let frame2 = AxisFrame::new(0.6, 1_004_000_000);
-        
+
         let dt = frame2.delta_time_from(&frame1);
         assert!((dt - 0.004).abs() < 1e-6);
     }
-    
+
     #[test]
     fn test_latency_calculation() {
         let frame1 = AxisFrame::new(0.5, 1_000_000);
         let frame2 = AxisFrame::new(0.5, 1_500_000);
-        
+
         assert_eq!(frame2.latency_from(&frame1), 500_000);
         assert_eq!(frame1.latency_from(&frame2), 500_000);
     }

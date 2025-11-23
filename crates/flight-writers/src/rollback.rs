@@ -54,8 +54,7 @@ impl RollbackManager {
         info!("Creating backup {} for {} {}", backup_id, sim, version);
 
         let backup_path = self.backup_dir.join(backup_id);
-        fs::create_dir_all(&backup_path)
-            .context("Failed to create backup directory")?;
+        fs::create_dir_all(&backup_path).context("Failed to create backup directory")?;
 
         let mut backup_files = Vec::new();
 
@@ -84,10 +83,13 @@ impl RollbackManager {
         let metadata_path = backup_path.join("metadata.json");
         let metadata_json = serde_json::to_string_pretty(&metadata)
             .context("Failed to serialize backup metadata")?;
-        fs::write(&metadata_path, metadata_json)
-            .context("Failed to write backup metadata")?;
+        fs::write(&metadata_path, metadata_json).context("Failed to write backup metadata")?;
 
-        info!("Created backup {} with {} files", backup_id, metadata.files.len());
+        info!(
+            "Created backup {} with {} files",
+            backup_id,
+            metadata.files.len()
+        );
         Ok(metadata)
     }
 
@@ -101,14 +103,13 @@ impl RollbackManager {
             .file_name()
             .context("Invalid file path")?
             .to_string_lossy();
-        
+
         let _backup_file_path = backup_dir.join(&*file_name);
-        
+
         // Create subdirectories if needed to preserve structure
         if let Some(parent) = original_path.parent() {
             let backup_subdir = backup_dir.join("files").join(parent);
-            fs::create_dir_all(&backup_subdir)
-                .context("Failed to create backup subdirectory")?;
+            fs::create_dir_all(&backup_subdir).context("Failed to create backup subdirectory")?;
         }
 
         // For simplicity, just use the filename in the backup directory
@@ -116,20 +117,20 @@ impl RollbackManager {
 
         // Ensure parent directory exists
         if let Some(parent) = structured_backup_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create backup parent directory")?;
+            fs::create_dir_all(parent).context("Failed to create backup parent directory")?;
         }
 
         // Copy the file using read/write to avoid file locking issues
-        let content = fs::read(original_path)
-            .context("Failed to read original file")?;
-        fs::write(&structured_backup_path, content)
-            .context("Failed to write backup file")?;
+        let content = fs::read(original_path).context("Failed to read original file")?;
+        fs::write(&structured_backup_path, content).context("Failed to write backup file")?;
 
         // Calculate checksum
         let checksum = self.calculate_file_checksum(original_path)?;
 
-        debug!("Backed up {:?} -> {:?}", original_path, structured_backup_path);
+        debug!(
+            "Backed up {:?} -> {:?}",
+            original_path, structured_backup_path
+        );
 
         Ok(BackupFileInfo {
             original_path: original_path.to_path_buf(),
@@ -141,22 +142,22 @@ impl RollbackManager {
     /// Calculate SHA-256 checksum of a file
     fn calculate_file_checksum(&self, file_path: &Path) -> Result<String> {
         use std::io::Read;
-        
-        let mut file = fs::File::open(file_path)
-            .context("Failed to open file for checksum")?;
-        
+
+        let mut file = fs::File::open(file_path).context("Failed to open file for checksum")?;
+
         let mut hasher = sha2::Sha256::new();
         let mut buffer = [0; 8192];
-        
+
         loop {
-            let bytes_read = file.read(&mut buffer)
+            let bytes_read = file
+                .read(&mut buffer)
                 .context("Failed to read file for checksum")?;
             if bytes_read == 0 {
                 break;
             }
             hasher.update(&buffer[..bytes_read]);
         }
-        
+
         Ok(format!("{:x}", hasher.finalize()))
     }
 
@@ -175,11 +176,11 @@ impl RollbackManager {
 
         // Load backup metadata
         let metadata_path = backup_path.join("metadata.json");
-        let metadata_content = fs::read_to_string(&metadata_path)
-            .context("Failed to read backup metadata")?;
-        
-        let metadata: BackupMetadata = serde_json::from_str(&metadata_content)
-            .context("Failed to parse backup metadata")?;
+        let metadata_content =
+            fs::read_to_string(&metadata_path).context("Failed to read backup metadata")?;
+
+        let metadata: BackupMetadata =
+            serde_json::from_str(&metadata_content).context("Failed to parse backup metadata")?;
 
         let mut restored_files = Vec::new();
         let mut errors = Vec::new();
@@ -201,7 +202,7 @@ impl RollbackManager {
         }
 
         let success = errors.is_empty();
-        
+
         if success {
             info!("Successfully rolled back {} files", restored_files.len());
         } else {
@@ -223,13 +224,12 @@ impl RollbackManager {
 
         // Ensure target directory exists
         if let Some(parent) = file_info.original_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create target directory")?;
+            fs::create_dir_all(parent).context("Failed to create target directory")?;
         }
 
         // Copy the backup file back to original location
-        let backup_content = fs::read(&file_info.backup_path)
-            .context("Failed to read backup file")?;
+        let backup_content =
+            fs::read(&file_info.backup_path).context("Failed to read backup file")?;
         fs::write(&file_info.original_path, backup_content)
             .context("Failed to restore file from backup")?;
 
@@ -263,7 +263,10 @@ impl RollbackManager {
                     match self.load_backup_metadata(&metadata_path).await {
                         Ok(metadata) => backups.push(metadata),
                         Err(e) => {
-                            warn!("Failed to load backup metadata from {:?}: {}", metadata_path, e);
+                            warn!(
+                                "Failed to load backup metadata from {:?}: {}",
+                                metadata_path, e
+                            );
                         }
                     }
                 }
@@ -278,23 +281,21 @@ impl RollbackManager {
 
     /// Load backup metadata from file
     async fn load_backup_metadata(&self, metadata_path: &Path) -> Result<BackupMetadata> {
-        let content = fs::read_to_string(metadata_path)
-            .context("Failed to read metadata file")?;
-        
-        serde_json::from_str(&content)
-            .context("Failed to parse metadata JSON")
+        let content = fs::read_to_string(metadata_path).context("Failed to read metadata file")?;
+
+        serde_json::from_str(&content).context("Failed to parse metadata JSON")
     }
 
     /// Delete old backups to free space
     pub async fn cleanup_old_backups(&self, keep_count: usize) -> Result<usize> {
         let backups = self.list_backups().await?;
-        
+
         if backups.len() <= keep_count {
             return Ok(0);
         }
 
         let mut deleted_count = 0;
-        
+
         // Delete oldest backups beyond the keep count
         for backup in backups.iter().skip(keep_count) {
             let backup_path = self.backup_dir.join(&backup.id);
@@ -318,7 +319,7 @@ impl RollbackManager {
     /// Get backup information
     pub async fn get_backup_info(&self, backup_id: &str) -> Result<Option<BackupMetadata>> {
         let metadata_path = self.backup_dir.join(backup_id).join("metadata.json");
-        
+
         if !metadata_path.exists() {
             return Ok(None);
         }
@@ -473,14 +474,14 @@ mod tests {
                 )
                 .await
                 .unwrap();
-            
+
             // Small delay between backups to ensure different timestamps
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
 
         let backups = manager.list_backups().await.unwrap();
         assert_eq!(backups.len(), 3);
-        
+
         // Should be sorted by timestamp (newest first)
         assert_eq!(backups[0].id, "backup_3");
         assert_eq!(backups[1].id, "backup_2");

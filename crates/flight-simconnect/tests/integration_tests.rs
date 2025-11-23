@@ -7,8 +7,8 @@
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, SimId};
 use flight_simconnect::{
-    fixtures::{FixtureRecorder, RecordedEvent, SessionFixture, ValidationTolerance},
     MsfsAdapter, MsfsAdapterConfig,
+    fixtures::{FixtureRecorder, RecordedEvent, SessionFixture, ValidationTolerance},
 };
 use std::time::Duration;
 use tempfile::TempDir;
@@ -16,7 +16,7 @@ use tempfile::TempDir;
 #[tokio::test]
 async fn test_adapter_creation_and_basic_functionality() {
     let config = MsfsAdapterConfig::default();
-    
+
     match MsfsAdapter::new(config) {
         Ok(adapter) => {
             // Test basic adapter functionality
@@ -27,7 +27,10 @@ async fn test_adapter_creation_and_basic_functionality() {
         }
         Err(e) => {
             // On systems without SimConnect, this is expected
-            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+            println!(
+                "Adapter creation failed (expected on systems without SimConnect): {}",
+                e
+            );
         }
     }
 }
@@ -106,7 +109,9 @@ fn test_fixture_save_and_load() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_aircraft_detection_and_mapping() {
-    use flight_simconnect::aircraft::{AircraftDatabase, AircraftDetector, AircraftInfo, AircraftCategory, EngineType};
+    use flight_simconnect::aircraft::{
+        AircraftCategory, AircraftDatabase, AircraftDetector, AircraftInfo, EngineType,
+    };
 
     // Test aircraft database
     let db = AircraftDatabase::new();
@@ -134,7 +139,7 @@ fn test_aircraft_detection_and_mapping() {
 
 #[test]
 fn test_event_management() {
-    use flight_simconnect::events::{EventManager, CommonEvents};
+    use flight_simconnect::events::{CommonEvents, EventManager};
 
     let mut manager = EventManager::new();
 
@@ -158,7 +163,7 @@ fn test_event_management() {
 
 #[test]
 fn test_variable_mapping_configuration() {
-    use flight_simconnect::mapping::{create_default_mapping, VariableMapping};
+    use flight_simconnect::mapping::{VariableMapping, create_default_mapping};
 
     let config = create_default_mapping();
     assert!(!config.default_mapping.kinematics.ias.is_empty());
@@ -213,10 +218,10 @@ async fn test_bus_snapshot_integration() {
 fn test_coverage_matrix() {
     // This test validates that we have coverage for the required variables
     // as specified in the requirements
-    
+
     let config = flight_simconnect::mapping::create_default_mapping();
     let kinematics = &config.default_mapping.kinematics;
-    
+
     // Verify required kinematics variables are mapped
     assert!(!kinematics.ias.is_empty());
     assert!(!kinematics.tas.is_empty());
@@ -225,16 +230,16 @@ fn test_coverage_matrix() {
     assert!(!kinematics.heading.is_empty());
     assert!(!kinematics.g_force.is_empty());
     assert!(!kinematics.mach.is_empty());
-    
+
     let config_mapping = &config.default_mapping.config;
-    
+
     // Verify required configuration variables are mapped
     assert!(!config_mapping.gear_nose.is_empty());
     assert!(!config_mapping.flaps.is_empty());
     assert!(!config_mapping.ap_master.is_empty());
-    
+
     let engine_mapping = &config.default_mapping.engines[0];
-    
+
     // Verify required engine variables are mapped
     assert!(!engine_mapping.running.is_empty());
     assert!(!engine_mapping.rpm.is_empty());
@@ -245,16 +250,16 @@ fn test_coverage_matrix() {
 fn test_redistribution_compliance() {
     // This test ensures we document what we touch for redistribution compliance
     // as required by LEG-01
-    
+
     // The adapter should document:
     // 1. SimConnect.dll dynamic loading (no redistribution)
     // 2. No injection into MSFS processes
     // 3. Uses only public SimConnect API
     // 4. No modification of MSFS files
-    
+
     // This is validated through the design and implementation approach
     // rather than runtime tests
-    
+
     println!("Redistribution compliance:");
     println!("- Uses dynamic loading of SimConnect.dll (no redistribution required)");
     println!("- No code injection into MSFS processes");

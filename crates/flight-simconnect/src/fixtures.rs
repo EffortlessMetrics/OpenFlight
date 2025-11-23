@@ -173,7 +173,7 @@ impl FixtureRecorder {
     /// Create a new fixture recorder
     pub fn new(name: String, tags: Vec<String>) -> Self {
         let start_time = SystemTime::now();
-        
+
         Self {
             metadata: FixtureMetadata {
                 name,
@@ -194,7 +194,7 @@ impl FixtureRecorder {
     /// Record a SimConnect event
     pub fn record_event(&mut self, event: RecordedEvent) {
         let timestamp = self.start_time.elapsed().unwrap_or(Duration::ZERO);
-        
+
         // Update metadata based on event
         match &event {
             RecordedEvent::Connected { app_name, .. } => {
@@ -216,9 +216,13 @@ impl FixtureRecorder {
     }
 
     /// Record an expected bus snapshot for validation
-    pub fn record_expected_snapshot(&mut self, snapshot: BusSnapshot, tolerance: Option<ValidationTolerance>) {
+    pub fn record_expected_snapshot(
+        &mut self,
+        snapshot: BusSnapshot,
+        tolerance: Option<ValidationTolerance>,
+    ) {
         let timestamp = self.start_time.elapsed().unwrap_or(Duration::ZERO);
-        
+
         self.expected_snapshots.push(TimestampedSnapshot {
             timestamp,
             snapshot,
@@ -274,7 +278,7 @@ impl FixturePlayer {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
         let fixture: SessionFixture = serde_json::from_reader(reader)?;
-        
+
         Ok(Self {
             fixture,
             position: 0,
@@ -327,14 +331,17 @@ impl FixturePlayer {
         // Process all events that should have occurred by now
         while self.position < self.fixture.events.len() {
             let event = &self.fixture.events[self.position];
-            
+
             if event.timestamp <= scaled_elapsed {
                 // Fire event callbacks
                 for callback in self.event_callbacks.values() {
                     callback(&event.event);
                 }
-                
-                debug!("Played fixture event at {:?}: {:?}", event.timestamp, event.event);
+
+                debug!(
+                    "Played fixture event at {:?}: {:?}",
+                    event.timestamp, event.event
+                );
                 self.position += 1;
             } else {
                 break;
@@ -359,7 +366,10 @@ impl FixturePlayer {
     }
 
     /// Validate bus snapshots against expected values
-    pub fn validate_snapshots(&self, actual_snapshots: &[TimestampedSnapshot]) -> Result<(), FixtureError> {
+    pub fn validate_snapshots(
+        &self,
+        actual_snapshots: &[TimestampedSnapshot],
+    ) -> Result<(), FixtureError> {
         if self.fixture.expected_snapshots.is_empty() {
             warn!("No expected snapshots in fixture for validation");
             return Ok(());
@@ -369,18 +379,26 @@ impl FixturePlayer {
 
         for expected in &self.fixture.expected_snapshots {
             // Find closest actual snapshot by timestamp
-            let closest_actual = actual_snapshots
-                .iter()
-                .min_by_key(|actual| {
-                    actual.timestamp.as_millis().abs_diff(expected.timestamp.as_millis())
-                });
+            let closest_actual = actual_snapshots.iter().min_by_key(|actual| {
+                actual
+                    .timestamp
+                    .as_millis()
+                    .abs_diff(expected.timestamp.as_millis())
+            });
 
             if let Some(actual) = closest_actual {
-                if let Err(e) = validate_snapshot_match(&expected.snapshot, &actual.snapshot, &expected.tolerance) {
+                if let Err(e) = validate_snapshot_match(
+                    &expected.snapshot,
+                    &actual.snapshot,
+                    &expected.tolerance,
+                ) {
                     validation_errors.push(format!("At {:?}: {}", expected.timestamp, e));
                 }
             } else {
-                validation_errors.push(format!("No actual snapshot found near {:?}", expected.timestamp));
+                validation_errors.push(format!(
+                    "No actual snapshot found near {:?}",
+                    expected.timestamp
+                ));
             }
         }
 
@@ -388,7 +406,10 @@ impl FixturePlayer {
             return Err(FixtureError::ValidationFailed(validation_errors.join("; ")));
         }
 
-        info!("Snapshot validation passed for {} expected snapshots", self.fixture.expected_snapshots.len());
+        info!(
+            "Snapshot validation passed for {} expected snapshots",
+            self.fixture.expected_snapshots.len()
+        );
         Ok(())
     }
 }
@@ -434,8 +455,7 @@ fn validate_snapshot_match(
     if expected.config.gear != actual.config.gear {
         return Err(format!(
             "Gear state mismatch: expected {:?}, actual {:?}",
-            expected.config.gear,
-            actual.config.gear
+            expected.config.gear, actual.config.gear
         ));
     }
 
@@ -484,7 +504,7 @@ impl FixtureLibrary {
         for entry in std::fs::read_dir(&self.root_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 match self.load_fixture(&path) {
                     Ok(fixture) => {
@@ -526,9 +546,7 @@ impl FixtureLibrary {
     pub fn find_by_tags(&self, tags: &[String]) -> Vec<&SessionFixture> {
         self.fixtures
             .values()
-            .filter(|fixture| {
-                tags.iter().any(|tag| fixture.metadata.tags.contains(tag))
-            })
+            .filter(|fixture| tags.iter().any(|tag| fixture.metadata.tags.contains(tag)))
             .collect()
     }
 
@@ -537,7 +555,10 @@ impl FixtureLibrary {
         self.fixtures
             .values()
             .filter(|fixture| {
-                fixture.metadata.aircraft.as_ref()
+                fixture
+                    .metadata
+                    .aircraft
+                    .as_ref()
                     .map(|a| a.contains(aircraft))
                     .unwrap_or(false)
             })
@@ -647,7 +668,8 @@ mod tests {
         assert_eq!(library.list_fixtures().len(), 0);
 
         // Create a test fixture file
-        let mut recorder = FixtureRecorder::new("Library Test".to_string(), vec!["library".to_string()]);
+        let mut recorder =
+            FixtureRecorder::new("Library Test".to_string(), vec!["library".to_string()]);
         recorder.record_event(RecordedEvent::Connected {
             app_name: "Test".to_string(),
             app_version: (1, 0, 0, 0),

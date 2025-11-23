@@ -3,7 +3,7 @@
 
 //! Settings UI components with integration documentation links
 
-use crate::integration_docs::{IntegrationDocsManager, IntegrationDocsError};
+use crate::integration_docs::{IntegrationDocsError, IntegrationDocsManager};
 
 /// Settings panel that includes integration documentation access
 pub struct SettingsPanel {
@@ -21,25 +21,25 @@ impl SettingsPanel {
     pub fn render_simulator_integration(&mut self) -> Result<(), IntegrationDocsError> {
         // This would be implemented with the actual UI framework (egui, tauri, etc.)
         // For now, we'll just validate that documentation is available
-        
+
         let available_docs = self.docs_manager.list_available_docs()?;
-        
+
         for simulator in available_docs {
             // In a real UI, this would render:
             // - Simulator name and status
             // - "View Integration Details" button that calls open_doc_in_browser
             // - "Revert Changes" button
             // - Current configuration status
-            
+
             println!("Simulator: {} - Documentation available", simulator);
-            
+
             if let Ok(doc) = self.docs_manager.get_simulator_doc(&simulator) {
                 println!("  Files modified: {}", doc.files_modified.len());
                 println!("  Network connections: {}", doc.network_connections.len());
                 println!("  Revert steps available: {}", doc.revert_steps.len());
             }
         }
-        
+
         Ok(())
     }
 
@@ -51,7 +51,7 @@ impl SettingsPanel {
     /// Get summary for display in settings
     pub fn get_integration_summary(&mut self) -> Result<String, IntegrationDocsError> {
         let summary = self.docs_manager.get_installer_summary()?;
-        
+
         Ok(format!(
             "Flight Hub integrates with {} simulators, modifies {} configuration files, and uses {} network ports. No administrator privileges required.",
             summary.simulators_supported.len(),

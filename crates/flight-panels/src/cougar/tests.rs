@@ -4,10 +4,10 @@
 //! Tests for Cougar MFD writer
 
 use super::*;
-use flight_hid::{HidAdapter, HidDeviceInfo};
 use flight_core::WatchdogSystem;
-use std::time::Duration;
+use flight_hid::{HidAdapter, HidDeviceInfo};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 /// Mock HID adapter for testing
 struct MockHidAdapter {
@@ -62,9 +62,18 @@ impl MockHidAdapter {
 
 #[test]
 fn test_cougar_mfd_type_from_product_id() {
-    assert_eq!(CougarMfdType::from_product_id(0x0404), Some(CougarMfdType::MfdLeft));
-    assert_eq!(CougarMfdType::from_product_id(0x0405), Some(CougarMfdType::MfdRight));
-    assert_eq!(CougarMfdType::from_product_id(0x0406), Some(CougarMfdType::MfdCenter));
+    assert_eq!(
+        CougarMfdType::from_product_id(0x0404),
+        Some(CougarMfdType::MfdLeft)
+    );
+    assert_eq!(
+        CougarMfdType::from_product_id(0x0405),
+        Some(CougarMfdType::MfdRight)
+    );
+    assert_eq!(
+        CougarMfdType::from_product_id(0x0406),
+        Some(CougarMfdType::MfdCenter)
+    );
     assert_eq!(CougarMfdType::from_product_id(0x9999), None);
 }
 
@@ -94,12 +103,18 @@ fn test_cougar_mfd_led_mapping() {
 fn test_cougar_verify_pattern() {
     let left_pattern = CougarMfdType::MfdLeft.verify_pattern();
     assert!(!left_pattern.is_empty());
-    
+
     // Check that pattern includes expected steps
-    let has_led_on = left_pattern.iter().any(|step| matches!(step, CougarVerifyStep::LedOn(_)));
-    let has_delay = left_pattern.iter().any(|step| matches!(step, CougarVerifyStep::Delay(_)));
-    let has_all_off = left_pattern.iter().any(|step| matches!(step, CougarVerifyStep::AllOff));
-    
+    let has_led_on = left_pattern
+        .iter()
+        .any(|step| matches!(step, CougarVerifyStep::LedOn(_)));
+    let has_delay = left_pattern
+        .iter()
+        .any(|step| matches!(step, CougarVerifyStep::Delay(_)));
+    let has_all_off = left_pattern
+        .iter()
+        .any(|step| matches!(step, CougarVerifyStep::AllOff));
+
     assert!(has_led_on);
     assert!(has_delay);
     assert!(has_all_off);
@@ -111,9 +126,9 @@ fn test_build_mfd_reports() {
     let _mock_adapter = MockHidAdapter::new();
     let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
     let hid_adapter = HidAdapter::new(watchdog); // This would be mocked in real implementation
-    
+
     let writer = CougarMfdWriter::new(hid_adapter);
-    
+
     let led_state = MfdLedState {
         led_index: 0,
         brightness: 1.0,
@@ -215,15 +230,13 @@ fn test_verify_test_result_latency_analysis() {
 
 #[test]
 fn test_verify_test_result_latency_failure() {
-    let step_results = vec![
-        CougarVerifyStepResult {
-            step_index: 0,
-            expected_latency: Duration::from_millis(20),
-            actual_latency: Duration::from_millis(25), // Exceeds requirement
-            success: false,
-            error: None,
-        },
-    ];
+    let step_results = vec![CougarVerifyStepResult {
+        step_index: 0,
+        expected_latency: Duration::from_millis(20),
+        actual_latency: Duration::from_millis(25), // Exceeds requirement
+        success: false,
+        error: None,
+    }];
 
     let result = CougarVerifyTestResult {
         mfd_path: "/dev/hidraw0".to_string(),
@@ -243,14 +256,14 @@ fn test_rate_limiting_enforcement() {
     // 1. Set a longer min_write_interval
     // 2. Attempt rapid LED updates
     // 3. Verify that hardware writes are rate limited
-    
+
     let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
     let hid_adapter = HidAdapter::new(watchdog);
     let mut writer = CougarMfdWriter::new(hid_adapter);
-    
+
     // Set rate limiting to 100ms for testing
     writer.min_write_interval = Duration::from_millis(100);
-    
+
     // In a real test, we would mock the HID adapter and verify write timing
     // For now, just ensure the structure is correct
     assert_eq!(writer.min_write_interval, Duration::from_millis(100));
@@ -262,11 +275,11 @@ fn test_latency_requirement_validation() {
     let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
     let hid_adapter = HidAdapter::new(watchdog);
     let writer = CougarMfdWriter::new(hid_adapter);
-    
+
     // Verify that latency samples are tracked
     assert_eq!(writer.latency_samples.len(), 0);
     assert_eq!(writer.max_latency_samples, 1000);
-    
+
     // In a real test, we would:
     // 1. Perform LED operations
     // 2. Check that latency is tracked
@@ -280,21 +293,29 @@ fn test_hardware_compatibility_fixture() {
     // 1. Load hardware test fixtures
     // 2. Simulate various MFD hardware configurations
     // 3. Verify compatibility across different firmware versions
-    
+
     let test_fixtures = vec![
         ("MFD_LEFT_FW_1.0", CougarMfdType::MfdLeft),
         ("MFD_RIGHT_FW_1.0", CougarMfdType::MfdRight),
         ("MFD_CENTER_FW_1.0", CougarMfdType::MfdCenter),
     ];
-    
+
     for (fixture_name, mfd_type) in test_fixtures {
         // Verify LED mapping is consistent
         let led_mapping = mfd_type.led_mapping();
-        assert!(!led_mapping.is_empty(), "LED mapping empty for {}", fixture_name);
-        
+        assert!(
+            !led_mapping.is_empty(),
+            "LED mapping empty for {}",
+            fixture_name
+        );
+
         // Verify verify pattern is defined
         let verify_pattern = mfd_type.verify_pattern();
-        assert!(!verify_pattern.is_empty(), "Verify pattern empty for {}", fixture_name);
+        assert!(
+            !verify_pattern.is_empty(),
+            "Verify pattern empty for {}",
+            fixture_name
+        );
     }
 }
 
@@ -302,43 +323,53 @@ fn test_hardware_compatibility_fixture() {
 fn test_comprehensive_hardware_validation_suite() {
     // This test represents the comprehensive hardware validation suite
     // In a real implementation, this would include:
-    
+
     // 1. LED Response Time Validation
     let max_acceptable_latency = Duration::from_millis(20);
-    assert!(max_acceptable_latency >= Duration::from_millis(1), "Latency requirement too strict");
-    
+    assert!(
+        max_acceptable_latency >= Duration::from_millis(1),
+        "Latency requirement too strict"
+    );
+
     // 2. Rate Limiting Validation
     let min_interval = Duration::from_millis(8);
-    assert!(min_interval >= Duration::from_millis(1), "Rate limiting too aggressive");
-    
+    assert!(
+        min_interval >= Duration::from_millis(1),
+        "Rate limiting too aggressive"
+    );
+
     // 3. Blink Pattern Validation
     let test_blink_rates = vec![1.0, 2.0, 4.0, 6.0, 8.0];
     for rate in test_blink_rates {
         let period = Duration::from_secs_f32(1.0 / rate);
-        assert!(period >= Duration::from_millis(125), "Blink rate {} too fast", rate);
+        assert!(
+            period >= Duration::from_millis(125),
+            "Blink rate {} too fast",
+            rate
+        );
     }
-    
+
     // 4. Hardware Fault Simulation
     let fault_conditions = vec![
         "USB_STALL",
-        "ENDPOINT_ERROR", 
+        "ENDPOINT_ERROR",
         "TIMEOUT",
         "DEVICE_DISCONNECT",
     ];
-    
+
     for condition in fault_conditions {
         // In real implementation, would simulate each fault condition
         // and verify proper error handling and recovery
         assert!(!condition.is_empty(), "Fault condition defined");
     }
-    
+
     // 5. Multi-MFD Coordination
     let mfd_types = vec![
         CougarMfdType::MfdLeft,
         CougarMfdType::MfdRight,
         CougarMfdType::MfdCenter,
     ];
-    
+
     // Verify each MFD type has unique characteristics
     for mfd_type in mfd_types {
         let led_count = mfd_type.led_mapping().len();
@@ -359,16 +390,16 @@ fn test_drift_detection_and_repair() {
     let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
     let hid_adapter = HidAdapter::new(watchdog);
     let mut writer = CougarMfdWriter::new(hid_adapter);
-    
+
     // In a real implementation, this would:
     // 1. Simulate configuration drift
     // 2. Verify detection mechanisms
     // 3. Test repair functionality
     // 4. Validate post-repair state
-    
+
     // For now, verify the structure exists
     let test_path = "/dev/hidraw0";
-    
+
     // These would be actual operations in a real test with mocked hardware
     let _repair_result = writer.repair_mfd_drift(test_path);
     // assert!(repair_result.is_ok(), "Drift repair should succeed");
@@ -379,7 +410,7 @@ fn test_verify_matrix_integration() {
     // Test integration with verify matrix system
     // This ensures the Cougar MFD writer properly integrates with
     // the broader panel verification system
-    
+
     let test_cases = vec![
         ("LED_RESPONSE_TIME", Duration::from_millis(20)),
         ("BLINK_ACCURACY", Duration::from_millis(50)),
@@ -387,11 +418,15 @@ fn test_verify_matrix_integration() {
         ("ALL_LEDS_ON", Duration::from_millis(100)),
         ("ALL_LEDS_OFF", Duration::from_millis(100)),
     ];
-    
+
     for (test_name, max_duration) in test_cases {
         // In real implementation, would execute each test case
         // and verify it completes within the specified duration
         assert!(!test_name.is_empty(), "Test case {} defined", test_name);
-        assert!(max_duration > Duration::ZERO, "Test duration positive for {}", test_name);
+        assert!(
+            max_duration > Duration::ZERO,
+            "Test duration positive for {}",
+            test_name
+        );
     }
 }

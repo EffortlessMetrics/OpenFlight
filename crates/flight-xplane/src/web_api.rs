@@ -96,7 +96,7 @@ impl WebApiClient {
     /// Test API availability
     pub async fn test_connection(&self) -> Result<(), WebApiError> {
         let url = format!("{}/api/v1/status", self.config.base_url);
-        
+
         match self.client.get(&url).send().await {
             Ok(response) => {
                 if response.status().is_success() {
@@ -119,9 +119,9 @@ impl WebApiClient {
     /// Get DataRef value via web API
     pub async fn get_dataref(&self, name: &str) -> Result<DataRefValue, WebApiError> {
         let url = format!("{}/api/v1/dataref/{}", self.config.base_url, name);
-        
+
         let mut request = self.client.get(&url);
-        
+
         // Add API key if configured
         if let Some(ref api_key) = self.config.api_key {
             request = request.header("X-API-Key", api_key);
@@ -157,11 +157,11 @@ impl WebApiClient {
     /// Set DataRef value via web API
     pub async fn set_dataref(&self, name: &str, value: DataRefValue) -> Result<(), WebApiError> {
         let url = format!("{}/api/v1/dataref/{}", self.config.base_url, name);
-        
+
         let json_value = self.convert_dataref_value_to_json(value)?;
-        
+
         let mut request = self.client.put(&url).json(&json_value);
-        
+
         // Add API key if configured
         if let Some(ref api_key) = self.config.api_key {
             request = request.header("X-API-Key", api_key);
@@ -191,9 +191,9 @@ impl WebApiClient {
     /// Get aircraft information via web API
     pub async fn get_aircraft_info(&self) -> Result<(String, String, String, String), WebApiError> {
         let url = format!("{}/api/v1/aircraft", self.config.base_url);
-        
+
         let mut request = self.client.get(&url);
-        
+
         // Add API key if configured
         if let Some(ref api_key) = self.config.api_key {
             request = request.header("X-API-Key", api_key);
@@ -225,15 +225,18 @@ impl WebApiClient {
     }
 
     /// Get multiple DataRefs in a single request
-    pub async fn get_multiple_datarefs(&self, names: &[String]) -> Result<Vec<(String, DataRefValue)>, WebApiError> {
+    pub async fn get_multiple_datarefs(
+        &self,
+        names: &[String],
+    ) -> Result<Vec<(String, DataRefValue)>, WebApiError> {
         let url = format!("{}/api/v1/datarefs", self.config.base_url);
-        
+
         let request_body = serde_json::json!({
             "datarefs": names
         });
 
         let mut request = self.client.post(&url).json(&request_body);
-        
+
         // Add API key if configured
         if let Some(ref api_key) = self.config.api_key {
             request = request.header("X-API-Key", api_key);
@@ -275,7 +278,10 @@ impl WebApiClient {
     }
 
     /// Convert JSON value to DataRefValue
-    fn convert_json_to_dataref_value(&self, value: serde_json::Value) -> Result<DataRefValue, WebApiError> {
+    fn convert_json_to_dataref_value(
+        &self,
+        value: serde_json::Value,
+    ) -> Result<DataRefValue, WebApiError> {
         match value {
             serde_json::Value::Number(n) => {
                 if let Some(f) = n.as_f64() {
@@ -312,9 +318,10 @@ impl WebApiClient {
 
                 if is_float_array {
                     // Determine if it's better represented as int or float array
-                    let all_integers = float_values.iter()
+                    let all_integers = float_values
+                        .iter()
                         .all(|&f| f.fract() == 0.0 && f >= i32::MIN as f32 && f <= i32::MAX as f32);
-                    
+
                     if all_integers {
                         Ok(DataRefValue::IntArray(int_values))
                     } else {
@@ -324,35 +331,38 @@ impl WebApiClient {
                     Err(WebApiError::InvalidResponse)
                 }
             }
-            serde_json::Value::Bool(b) => {
-                Ok(DataRefValue::Int(if b { 1 } else { 0 }))
-            }
+            serde_json::Value::Bool(b) => Ok(DataRefValue::Int(if b { 1 } else { 0 })),
             _ => Err(WebApiError::InvalidResponse),
         }
     }
 
     /// Convert DataRefValue to JSON value
-    fn convert_dataref_value_to_json(&self, value: DataRefValue) -> Result<serde_json::Value, WebApiError> {
+    fn convert_dataref_value_to_json(
+        &self,
+        value: DataRefValue,
+    ) -> Result<serde_json::Value, WebApiError> {
         match value {
             DataRefValue::Float(f) => Ok(serde_json::Value::Number(
-                serde_json::Number::from_f64(f as f64).ok_or(WebApiError::InvalidResponse)?
+                serde_json::Number::from_f64(f as f64).ok_or(WebApiError::InvalidResponse)?,
             )),
             DataRefValue::Double(d) => Ok(serde_json::Value::Number(
-                serde_json::Number::from_f64(d).ok_or(WebApiError::InvalidResponse)?
+                serde_json::Number::from_f64(d).ok_or(WebApiError::InvalidResponse)?,
             )),
-            DataRefValue::Int(i) => Ok(serde_json::Value::Number(
-                serde_json::Number::from(i)
-            )),
+            DataRefValue::Int(i) => Ok(serde_json::Value::Number(serde_json::Number::from(i))),
             DataRefValue::FloatArray(arr) => {
-                let json_arr: Result<Vec<serde_json::Value>, _> = arr.into_iter()
-                    .map(|f| serde_json::Number::from_f64(f as f64)
-                        .map(serde_json::Value::Number)
-                        .ok_or(WebApiError::InvalidResponse))
+                let json_arr: Result<Vec<serde_json::Value>, _> = arr
+                    .into_iter()
+                    .map(|f| {
+                        serde_json::Number::from_f64(f as f64)
+                            .map(serde_json::Value::Number)
+                            .ok_or(WebApiError::InvalidResponse)
+                    })
                     .collect();
                 Ok(serde_json::Value::Array(json_arr?))
             }
             DataRefValue::IntArray(arr) => {
-                let json_arr: Vec<serde_json::Value> = arr.into_iter()
+                let json_arr: Vec<serde_json::Value> = arr
+                    .into_iter()
                     .map(|i| serde_json::Value::Number(serde_json::Number::from(i)))
                     .collect();
                 Ok(serde_json::Value::Array(json_arr))
@@ -418,7 +428,9 @@ mod tests {
             serde_json::Value::Number(serde_json::Number::from(1)),
             serde_json::Value::Number(serde_json::Number::from(2)),
         ]);
-        let result = client.convert_json_to_dataref_value(json_int_array).unwrap();
+        let result = client
+            .convert_json_to_dataref_value(json_int_array)
+            .unwrap();
         assert_eq!(result, DataRefValue::IntArray(vec![1, 2]));
     }
 
@@ -430,12 +442,18 @@ mod tests {
         // Test float conversion
         let dataref_float = DataRefValue::Float(42.5);
         let result = client.convert_dataref_value_to_json(dataref_float).unwrap();
-        assert_eq!(result, serde_json::Value::Number(serde_json::Number::from_f64(42.5).unwrap()));
+        assert_eq!(
+            result,
+            serde_json::Value::Number(serde_json::Number::from_f64(42.5).unwrap())
+        );
 
         // Test integer conversion
         let dataref_int = DataRefValue::Int(123);
         let result = client.convert_dataref_value_to_json(dataref_int).unwrap();
-        assert_eq!(result, serde_json::Value::Number(serde_json::Number::from(123)));
+        assert_eq!(
+            result,
+            serde_json::Value::Number(serde_json::Number::from(123))
+        );
 
         // Test float array conversion
         let dataref_array = DataRefValue::FloatArray(vec![1.5, 2.5]);
@@ -448,7 +466,9 @@ mod tests {
 
         // Test integer array conversion
         let dataref_int_array = DataRefValue::IntArray(vec![1, 2]);
-        let result = client.convert_dataref_value_to_json(dataref_int_array).unwrap();
+        let result = client
+            .convert_dataref_value_to_json(dataref_int_array)
+            .unwrap();
         let expected = serde_json::Value::Array(vec![
             serde_json::Value::Number(serde_json::Number::from(1)),
             serde_json::Value::Number(serde_json::Number::from(2)),

@@ -6,7 +6,7 @@
 //! Provides zero-overhead monitoring of real-time constraints including
 //! allocation detection, lock usage, and timing violations.
 
-use std::sync::atomic::{AtomicU64, AtomicU32, AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 /// Runtime performance counters for axis engine
@@ -48,7 +48,7 @@ impl RuntimeCounters {
     /// Record frame processing time
     pub fn record_frame_time(&self, duration: Duration) {
         let micros = duration.as_micros() as u32;
-        
+
         // Update maximum
         let mut current_max = self.max_frame_time_us.load(Ordering::Relaxed);
         while micros > current_max {
@@ -166,7 +166,7 @@ impl Default for RuntimeCounters {
 }
 
 /// Allocation guard for detecting heap allocations in RT code
-/// 
+///
 /// When created, this guard installs a custom allocator that tracks
 /// allocations and reports violations to the runtime counters.
 pub struct AllocationGuard {
@@ -175,7 +175,7 @@ pub struct AllocationGuard {
 
 impl AllocationGuard {
     /// Create new allocation guard
-    /// 
+    ///
     /// # Safety
     /// This guard uses thread-local state to track allocations.
     /// Only one guard should be active per thread at a time.
@@ -192,9 +192,7 @@ impl AllocationGuard {
 
     /// Check if any allocations were detected
     pub fn allocations_detected() -> bool {
-        RT_ALLOCATION_DETECTED.with(|detected| {
-            detected.load(Ordering::Relaxed)
-        })
+        RT_ALLOCATION_DETECTED.with(|detected| detected.load(Ordering::Relaxed))
     }
 
     /// Reset allocation detection state
@@ -221,9 +219,7 @@ thread_local! {
 
 /// Check if currently in RT context (for debugging)
 pub fn in_rt_context() -> bool {
-    RT_ALLOCATION_GUARD.with(|guard| {
-        guard.load(Ordering::Relaxed)
-    })
+    RT_ALLOCATION_GUARD.with(|guard| guard.load(Ordering::Relaxed))
 }
 
 /// Performance snapshot for monitoring
@@ -271,7 +267,7 @@ mod tests {
     #[test]
     fn test_frame_time_recording() {
         let counters = RuntimeCounters::new();
-        
+
         counters.record_frame_time(Duration::from_micros(100));
         assert_eq!(counters.frames_processed(), 1);
         assert_eq!(counters.max_frame_time_us(), 100);

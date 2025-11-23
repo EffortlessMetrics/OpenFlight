@@ -30,10 +30,10 @@ pub struct ConflictDetectorConfig {
 impl Default for ConflictDetectorConfig {
     fn default() -> Self {
         Self {
-            test_points: 11, // 0.0, 0.1, 0.2, ... 1.0
+            test_points: 11,              // 0.0, 0.1, 0.2, ... 1.0
             nonlinearity_threshold: 0.15, // 15% deviation from linear
-            sample_window_ms: 5000, // 5 seconds
-            min_samples: 50, // At least 50 samples
+            sample_window_ms: 5000,       // 5 seconds
+            min_samples: 50,              // At least 50 samples
             continuous_monitoring: true,
         }
     }
@@ -134,15 +134,15 @@ impl CurveConflictDetector {
     }
 
     /// Add sample point for analysis (called from RT thread)
-    /// 
+    ///
     /// This function must be fast and non-blocking to maintain RT guarantees.
     #[inline(always)]
     pub fn add_sample(&mut self, axis_name: &str, frame: &AxisFrame) {
         let now = Instant::now();
-        
+
         // Get or create sample buffer for this axis
         let samples = self.sample_buffer.entry(axis_name.to_string()).or_default();
-        
+
         // Add new sample
         samples.push(SamplePoint {
             input: frame.in_raw,
@@ -153,7 +153,7 @@ impl CurveConflictDetector {
         // Trim old samples to maintain window size (keep it fast)
         let window_duration = Duration::from_millis(self.config.sample_window_ms);
         let cutoff_time = now - window_duration;
-        
+
         // Only trim if we have too many samples (avoid O(n) operation every time)
         if samples.len() > self.config.min_samples * 2 {
             samples.retain(|sample| sample.timestamp > cutoff_time);
@@ -161,25 +161,29 @@ impl CurveConflictDetector {
 
         // Check if we should trigger analysis (non-blocking)
         if samples.len() >= self.config.min_samples {
-            let should_analyze = self.last_analysis
+            let should_analyze = self
+                .last_analysis
                 .get(axis_name)
                 .map(|last| now.duration_since(*last) > Duration::from_millis(1000))
                 .unwrap_or(true);
 
             if should_analyze && !self.analysis_in_progress.get(axis_name).unwrap_or(&false) {
                 // Mark analysis as in progress to prevent concurrent analysis
-                self.analysis_in_progress.insert(axis_name.to_string(), true);
-                
+                self.analysis_in_progress
+                    .insert(axis_name.to_string(), true);
+
                 // Clone samples for analysis to avoid borrowing issues
                 let samples_clone = samples.clone();
-                
+
                 // Trigger analysis (this should be done off RT thread in practice)
                 if let Some(conflict) = self.analyze_samples(axis_name, &samples_clone) {
-                    self.detected_conflicts.insert(axis_name.to_string(), conflict);
+                    self.detected_conflicts
+                        .insert(axis_name.to_string(), conflict);
                 }
-                
+
                 self.last_analysis.insert(axis_name.to_string(), now);
-                self.analysis_in_progress.insert(axis_name.to_string(), false);
+                self.analysis_in_progress
+                    .insert(axis_name.to_string(), false);
             }
         }
     }
@@ -213,14 +217,14 @@ impl CurveConflictDetector {
         // Generate test inputs from 0.0 to 1.0
         for i in 0..self.config.test_points {
             let input = i as f32 / (self.config.test_points - 1) as f32;
-            
+
             // Create test frame
             let frame = AxisFrame::new(input, now.elapsed().as_nanos() as u64);
-            
+
             // Process through node (this simulates the pipeline)
             // Note: In practice, this would need to be done more carefully
             // to avoid affecting the real RT state
-            
+
             test_samples.push(SamplePoint {
                 input,
                 output: frame.out,
@@ -237,11 +241,15 @@ impl CurveConflictDetector {
             return None;
         }
 
-        debug!("Analyzing {} samples for axis '{}'", samples.len(), axis_name);
+        debug!(
+            "Analyzing {} samples for axis '{}'",
+            samples.len(),
+            axis_name
+        );
 
         // Calculate linearity metrics
         let linearity_analysis = self.analyze_linearity(samples);
-        
+
         // Detect conflict type and severity
         let conflict_type = self.classify_conflict(&linearity_analysis);
         let severity = self.assess_severity(&linearity_analysis);
@@ -274,8 +282,11 @@ impl CurveConflictDetector {
             detected_at: Instant::now(),
         };
 
-        info!("Detected curve conflict on axis '{}': {:?}", axis_name, conflict.conflict_type);
-        
+        info!(
+            "Detected curve conflict on axis '{}': {:?}",
+            axis_name, conflict.conflict_type
+        );
+
         Some(conflict)
     }
 
@@ -378,7 +389,11 @@ impl CurveConflictDetector {
     }
 
     /// Generate human-readable description
-    fn generate_description(&self, conflict_type: &ConflictType, analysis: &LinearityAnalysis) -> String {
+    fn generate_description(
+        &self,
+        conflict_type: &ConflictType,
+        analysis: &LinearityAnalysis,
+    ) -> String {
         match conflict_type {
             ConflictType::DoubleCurve => {
                 format!(
@@ -405,7 +420,11 @@ impl CurveConflictDetector {
     }
 
     /// Generate suggested resolutions
-    fn generate_resolutions(&self, conflict_type: &ConflictType, analysis: &LinearityAnalysis) -> Vec<ConflictResolution> {
+    fn generate_resolutions(
+        &self,
+        conflict_type: &ConflictType,
+        analysis: &LinearityAnalysis,
+    ) -> Vec<ConflictResolution> {
         let mut resolutions = Vec::new();
 
         match conflict_type {
@@ -413,7 +432,8 @@ impl CurveConflictDetector {
                 // Suggest disabling sim curve first (usually easier)
                 resolutions.push(ConflictResolution {
                     resolution_type: ResolutionType::DisableSimCurve,
-                    description: "Disable simulator's built-in curve and use only profile curve".to_string(),
+                    description: "Disable simulator's built-in curve and use only profile curve"
+                        .to_string(),
                     estimated_improvement: 0.8,
                     requires_sim_restart: true,
                     parameters: HashMap::new(),
@@ -432,7 +452,8 @@ impl CurveConflictDetector {
                 // Suggest reducing curve strength
                 resolutions.push(ConflictResolution {
                     resolution_type: ResolutionType::ReduceCurveStrength,
-                    description: "Reduce profile curve strength to balance with simulator".to_string(),
+                    description: "Reduce profile curve strength to balance with simulator"
+                        .to_string(),
                     estimated_improvement: 0.6,
                     requires_sim_restart: false,
                     parameters: {
@@ -497,9 +518,9 @@ mod tests {
     fn test_sample_collection() {
         let mut detector = CurveConflictDetector::new();
         let frame = AxisFrame::new(0.5, 1000);
-        
+
         detector.add_sample("test_axis", &frame);
-        
+
         // Should have collected the sample
         assert!(detector.sample_buffer.contains_key("test_axis"));
         assert_eq!(detector.sample_buffer["test_axis"].len(), 1);
@@ -528,6 +549,10 @@ mod tests {
 
         let resolutions = detector.generate_resolutions(&ConflictType::DoubleCurve, &analysis);
         assert!(!resolutions.is_empty());
-        assert!(resolutions.iter().any(|r| r.resolution_type == ResolutionType::DisableSimCurve));
+        assert!(
+            resolutions
+                .iter()
+                .any(|r| r.resolution_type == ResolutionType::DisableSimCurve)
+        );
     }
 }

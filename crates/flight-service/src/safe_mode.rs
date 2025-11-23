@@ -6,12 +6,12 @@
 //! Provides a minimal, axis-only mode for troubleshooting and safe operation
 //! when full system functionality is not available or desired.
 
-use std::sync::Arc;
-use serde::{Deserialize, Serialize};
-use tracing::{info, debug};
-use flight_core::{profile::Profile, Result};
+use crate::power::{PowerCheckStatus, PowerChecker, PowerStatus};
 use flight_axis::AxisEngine;
-use crate::power::{PowerChecker, PowerStatus, PowerCheckStatus};
+use flight_core::{Result, profile::Profile};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tracing::{debug, info};
 
 /// Safe mode configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,19 +86,19 @@ impl SafeModeManager {
     /// Create new safe mode manager
     pub fn new(config: SafeModeConfig) -> Self {
         info!("Initializing Safe Mode with config: {:?}", config);
-        
+
         Self {
             config,
             axis_engine: None,
         }
     }
-    
+
     /// Initialize safe mode with validation
     pub async fn initialize(&mut self) -> Result<SafeModeStatus> {
         info!("Starting safe mode initialization");
-        
+
         let mut validation_results = Vec::new();
-        
+
         // Check power configuration unless skipped
         let power_status = if self.config.skip_power_checks {
             info!("Skipping power checks as requested");
@@ -111,17 +111,17 @@ impl SafeModeManager {
             let start = std::time::Instant::now();
             let status = PowerChecker::check_power_configuration().await;
             let elapsed = start.elapsed().as_millis() as u64;
-            
+
             validation_results.push(ValidationResult {
                 component: "Power Configuration".to_string(),
                 success: status.overall_status != PowerCheckStatus::Critical,
                 message: format!("Power status: {}", status.overall_status),
                 execution_time_ms: elapsed,
             });
-            
+
             status
         };
-        
+
         // Check RT privileges
         let rt_privileges = self.check_rt_privileges().await;
         validation_results.push(ValidationResult {
@@ -130,7 +130,7 @@ impl SafeModeManager {
             message: rt_privileges.details.clone(),
             execution_time_ms: 5, // Stub timing
         });
-        
+
         // Initialize basic axis engine if axis processing enabled
         if self.config.axis_only {
             let start = std::time::Instant::now();
@@ -155,7 +155,7 @@ impl SafeModeManager {
                 }
             }
         }
-        
+
         // Validate basic profile if enabled
         if self.config.use_basic_profile {
             let start = std::time::Instant::now();
@@ -180,7 +180,7 @@ impl SafeModeManager {
                 }
             }
         }
-        
+
         let status = SafeModeStatus {
             active: true,
             config: self.config.clone(),
@@ -188,15 +188,15 @@ impl SafeModeManager {
             rt_privileges,
             validation_results,
         };
-        
+
         info!("Safe mode initialization completed");
         Ok(status)
     }
-    
+
     /// Check real-time privileges availability
     async fn check_rt_privileges(&self) -> RtPrivilegeStatus {
         debug!("Checking RT privileges");
-        
+
         #[cfg(target_os = "windows")]
         {
             // Check for MMCSS and high priority capabilities
@@ -218,7 +218,7 @@ impl SafeModeManager {
                 },
             }
         }
-        
+
         #[cfg(target_os = "linux")]
         {
             // Check for SCHED_FIFO via rtkit
@@ -241,7 +241,7 @@ impl SafeModeManager {
                 },
             }
         }
-        
+
         #[cfg(not(any(target_os = "windows", target_os = "linux")))]
         {
             RtPrivilegeStatus {
@@ -251,51 +251,51 @@ impl SafeModeManager {
             }
         }
     }
-    
+
     #[cfg(target_os = "windows")]
     async fn check_windows_rt_privileges(&self) -> bool {
         // Stub implementation - would check actual Windows capabilities
         // In real implementation, would try to set MMCSS class and check result
         true
     }
-    
+
     #[cfg(target_os = "linux")]
     async fn check_linux_rt_privileges(&self) -> bool {
         // Stub implementation - would check rtkit availability and limits
         // In real implementation, would try to acquire SCHED_FIFO via rtkit
         true
     }
-    
+
     /// Initialize basic axis engine for safe mode
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine for safe mode");
-        
+
         let engine = AxisEngine::new();
         self.axis_engine = Some(Arc::new(engine));
-        
+
         debug!("Axis engine initialized successfully");
         Ok(())
     }
-    
+
     /// Validate basic profile configuration
     async fn validate_basic_profile(&self) -> Result<()> {
         info!("Validating basic profile");
-        
+
         let basic_profile = self.create_basic_profile();
-        
+
         // Validate profile structure
         basic_profile.validate()?;
-        
+
         // Test profile compilation (if axis engine available)
         if let Some(_engine) = &self.axis_engine {
             // TODO: Replace with new profile ingestion API when ready
             debug!("Basic profile validated (compilation skipped for now)");
         }
-        
+
         info!("Basic profile validation completed");
         Ok(())
     }
-    
+
     /// Create a basic, safe profile for troubleshooting
     fn create_basic_profile(&self) -> Profile {
         // Create minimal profile with safe defaults
@@ -309,7 +309,7 @@ impl SafeModeManager {
             pof_overrides: None,
         }
     }
-    
+
     /// Get current safe mode status
     pub fn get_status(&self) -> SafeModeStatus {
         SafeModeStatus {
@@ -328,16 +328,16 @@ impl SafeModeManager {
             validation_results: Vec::new(),
         }
     }
-    
+
     /// Shutdown safe mode
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down safe mode");
-        
+
         if let Some(_engine) = self.axis_engine.take() {
             // In real implementation, would properly shutdown the engine
             debug!("Axis engine shutdown");
         }
-        
+
         info!("Safe mode shutdown completed");
         Ok(())
     }
@@ -346,42 +346,42 @@ impl SafeModeManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_safe_mode_initialization() {
         let config = SafeModeConfig::default();
         let mut manager = SafeModeManager::new(config);
-        
+
         let status = manager.initialize().await.unwrap();
         assert!(status.active);
         assert!(status.config.axis_only);
     }
-    
+
     #[tokio::test]
     async fn test_rt_privilege_check() {
         let config = SafeModeConfig::default();
         let manager = SafeModeManager::new(config);
-        
+
         let rt_status = manager.check_rt_privileges().await;
         // Should have some details regardless of availability
         assert!(!rt_status.details.is_empty());
     }
-    
+
     #[test]
     fn test_basic_profile_creation() {
         let config = SafeModeConfig::default();
         let manager = SafeModeManager::new(config);
-        
+
         let profile = manager.create_basic_profile();
         // Profile should be created successfully
         assert_eq!(profile.schema, "flight.profile/1");
     }
-    
+
     #[tokio::test]
     async fn test_safe_mode_shutdown() {
         let config = SafeModeConfig::default();
         let mut manager = SafeModeManager::new(config);
-        
+
         // Initialize and then shutdown
         let _status = manager.initialize().await.unwrap();
         let result = manager.shutdown().await;

@@ -283,7 +283,7 @@ impl TelemetrySynthEngine {
     pub fn new(config: TelemetrySynthConfig) -> Self {
         let min_interval = Duration::from_millis(config.rate_limiting.min_interval_ms as u64);
         let smoothing_factor = config.rate_limiting.smoothing_factor;
-        
+
         Self {
             config,
             last_update: Instant::now(),
@@ -303,39 +303,39 @@ impl TelemetrySynthEngine {
     /// Update effects based on telemetry snapshot
     pub fn update(&mut self, snapshot: &BusSnapshot) -> Result<EffectOutput> {
         let now = Instant::now();
-        
+
         // Rate limiting check
         if now.duration_since(self.rate_limiter.last_update) < self.rate_limiter.min_interval {
             // Return last computed output if rate limited
             return Ok(self.compute_current_output());
         }
-        
+
         self.rate_limiter.last_update = now;
         self.last_update = now;
-        
+
         // Update individual effects
         self.update_stall_buffet(&snapshot.kinematics)?;
         self.update_touchdown_impulse(&snapshot.kinematics)?;
         self.update_ground_roll(&snapshot.kinematics)?;
-        
+
         // Clone helo data to avoid borrowing issues
         let helo_data = snapshot.helo.clone();
         self.update_gear_warning(snapshot)?;
-        
+
         // Update helicopter effects if applicable
         if let Some(ref helo_data) = helo_data {
             self.update_rotor_effects(helo_data)?;
         }
-        
+
         // Store snapshot for next update
         self.last_snapshot = Some(snapshot.clone());
-        
+
         // Compute combined output
         let output = self.compute_combined_output();
-        
+
         // Apply rate limiting and smoothing
         let smoothed_output = self.apply_rate_limiting(output);
-        
+
         Ok(smoothed_output)
     }
 
@@ -348,12 +348,13 @@ impl TelemetrySynthEngine {
 
         let aoa_deg = kinematics.aoa.value();
         let threshold = self.config.stall_buffet.aoa_threshold_deg;
-        
+
         // Calculate buffet intensity based on AoA
         let intensity = if aoa_deg > threshold {
             let excess_aoa = aoa_deg - threshold;
             let raw_intensity = excess_aoa * self.config.stall_buffet.ramp_rate;
-            (raw_intensity * self.user_tuning.stall_buffet_intensity).min(self.config.stall_buffet.max_intensity)
+            (raw_intensity * self.user_tuning.stall_buffet_intensity)
+                .min(self.config.stall_buffet.max_intensity)
         } else {
             0.0
         };
@@ -361,11 +362,11 @@ impl TelemetrySynthEngine {
         // Update state
         let state = &mut self.effect_state.stall_buffet;
         let intensity_changed = (state.current_intensity - intensity).abs() > 0.01;
-        
+
         state.current_intensity = intensity;
         state.current_frequency = intensity * self.config.stall_buffet.max_frequency_hz;
         state.last_aoa = aoa_deg;
-        
+
         // Update phase for oscillation
         if intensity > 0.0 {
             let dt = self.last_update.elapsed().as_secs_f32();
@@ -383,18 +384,21 @@ impl TelemetrySynthEngine {
                     ("aoa_deg".to_string(), aoa_deg),
                     ("intensity".to_string(), intensity),
                     ("frequency_hz".to_string(), state.current_frequency),
-                ].into(),
+                ]
+                .into(),
             };
             self.blackbox_markers.push_back(marker);
-            
+
             // Keep only recent markers (last 1000)
             while self.blackbox_markers.len() > 1000 {
                 self.blackbox_markers.pop_front();
             }
         }
 
-        trace!("Stall buffet: AoA={:.1}°, intensity={:.2}, freq={:.1}Hz", 
-               aoa_deg, intensity, state.current_frequency);
+        trace!(
+            "Stall buffet: AoA={:.1}°, intensity={:.2}, freq={:.1}Hz",
+            aoa_deg, intensity, state.current_frequency
+        );
 
         Ok(())
     }
@@ -408,26 +412,26 @@ impl TelemetrySynthEngine {
 
         let vs_fpm = kinematics.vertical_speed;
         let altitude_ft = 0.0; // Would need to get from environment data
-        
+
         let state = &mut self.effect_state.touchdown;
-        
+
         // Detect touchdown conditions
         let approaching_ground = altitude_ft < self.config.touchdown.ground_proximity_ft;
-        let touchdown_transition = state.last_vs < self.config.touchdown.vs_threshold_fpm && 
-                                 vs_fpm >= self.config.touchdown.vs_threshold_fpm && 
-                                 approaching_ground;
+        let touchdown_transition = state.last_vs < self.config.touchdown.vs_threshold_fpm
+            && vs_fpm >= self.config.touchdown.vs_threshold_fpm
+            && approaching_ground;
 
         if touchdown_transition && !state.touchdown_detected {
             // Trigger touchdown impulse
-            let impulse_magnitude = (vs_fpm.abs() / 500.0).min(1.0) * 
-                                  self.config.touchdown.max_impulse_nm * 
-                                  self.user_tuning.touchdown_sensitivity;
-            
+            let impulse_magnitude = (vs_fpm.abs() / 500.0).min(1.0)
+                * self.config.touchdown.max_impulse_nm
+                * self.user_tuning.touchdown_sensitivity;
+
             state.impulse_active = true;
             state.impulse_start = Some(Instant::now());
             state.impulse_magnitude = impulse_magnitude;
             state.touchdown_detected = true;
-            
+
             let marker = BlackboxMarker {
                 timestamp: Instant::now(),
                 effect_type: "touchdown".to_string(),
@@ -436,24 +440,27 @@ impl TelemetrySynthEngine {
                     ("vs_fpm".to_string(), vs_fpm),
                     ("magnitude_nm".to_string(), impulse_magnitude),
                     ("altitude_ft".to_string(), altitude_ft),
-                ].into(),
+                ]
+                .into(),
             };
             self.blackbox_markers.push_back(marker);
-            
+
             // Keep only recent markers (last 1000)
             while self.blackbox_markers.len() > 1000 {
                 self.blackbox_markers.pop_front();
             }
-            
-            debug!("Touchdown impulse triggered: VS={:.0} fpm, magnitude={:.2} Nm", 
-                   vs_fpm, impulse_magnitude);
+
+            debug!(
+                "Touchdown impulse triggered: VS={:.0} fpm, magnitude={:.2} Nm",
+                vs_fpm, impulse_magnitude
+            );
         }
 
         // Update impulse state
         if let Some(start_time) = state.impulse_start {
             let elapsed = start_time.elapsed();
             let duration = Duration::from_millis(self.config.touchdown.duration_ms as u64);
-            
+
             if elapsed > duration {
                 state.impulse_active = false;
                 state.impulse_start = None;
@@ -481,15 +488,18 @@ impl TelemetrySynthEngine {
 
         let ground_speed_kt = kinematics.ground_speed.value();
         let on_ground = ground_speed_kt > 0.0 && kinematics.g_force.value() > 0.8; // Simplified ground detection
-        
+
         let state = &mut self.effect_state.ground_roll;
-        
+
         // Calculate ground roll intensity
-        let intensity = if on_ground && ground_speed_kt > self.config.ground_roll.speed_threshold_kt {
+        let intensity = if on_ground && ground_speed_kt > self.config.ground_roll.speed_threshold_kt
+        {
             let speed_factor = (ground_speed_kt / 100.0).min(1.0); // Normalize to 100 knots
             let surface_factor = self.config.ground_roll.roughness_multiplier;
-            speed_factor * surface_factor * self.config.ground_roll.max_intensity * 
-            self.user_tuning.ground_roll_intensity
+            speed_factor
+                * surface_factor
+                * self.config.ground_roll.max_intensity
+                * self.user_tuning.ground_roll_intensity
         } else {
             0.0
         };
@@ -505,8 +515,10 @@ impl TelemetrySynthEngine {
             state.phase = state.phase % (2.0 * std::f32::consts::PI);
         }
 
-        trace!("Ground roll: speed={:.1}kt, on_ground={}, intensity={:.2}", 
-               ground_speed_kt, on_ground, intensity);
+        trace!(
+            "Ground roll: speed={:.1}kt, on_ground={}, intensity={:.2}",
+            ground_speed_kt, on_ground, intensity
+        );
 
         Ok(())
     }
@@ -521,17 +533,17 @@ impl TelemetrySynthEngine {
         let airspeed_kt = snapshot.kinematics.ias.value();
         let gear_down = snapshot.config.gear.all_down();
         let altitude_ft = snapshot.environment.altitude; // Simplified - should use AGL
-        
+
         let state = &mut self.effect_state.gear_warning;
-        
+
         // Determine if gear warning should be active
-        let should_warn = !gear_down && 
-                         airspeed_kt < self.config.gear_warning.speed_threshold_kt &&
-                         altitude_ft < self.config.gear_warning.altitude_threshold_ft;
+        let should_warn = !gear_down
+            && airspeed_kt < self.config.gear_warning.speed_threshold_kt
+            && altitude_ft < self.config.gear_warning.altitude_threshold_ft;
 
         if should_warn != state.warning_active {
             state.warning_active = should_warn;
-            
+
             if should_warn {
                 let marker = BlackboxMarker {
                     timestamp: Instant::now(),
@@ -541,24 +553,30 @@ impl TelemetrySynthEngine {
                         ("airspeed_kt".to_string(), airspeed_kt),
                         ("altitude_ft".to_string(), altitude_ft),
                         ("gear_down".to_string(), if gear_down { 1.0 } else { 0.0 }),
-                    ].into(),
+                    ]
+                    .into(),
                 };
                 self.blackbox_markers.push_back(marker);
-                
+
                 // Keep only recent markers (last 1000)
                 while self.blackbox_markers.len() > 1000 {
                     self.blackbox_markers.pop_front();
                 }
-                
-                debug!("Gear warning activated: speed={:.0}kt, alt={:.0}ft, gear={}", 
-                       airspeed_kt, altitude_ft, if gear_down { "DOWN" } else { "UP" });
+
+                debug!(
+                    "Gear warning activated: speed={:.0}kt, alt={:.0}ft, gear={}",
+                    airspeed_kt,
+                    altitude_ft,
+                    if gear_down { "DOWN" } else { "UP" }
+                );
             }
         }
 
         // Update pulse phase
         if state.warning_active {
             let dt = self.last_update.elapsed().as_secs_f32();
-            state.pulse_phase += self.config.gear_warning.pulse_frequency_hz * dt * 2.0 * std::f32::consts::PI;
+            state.pulse_phase +=
+                self.config.gear_warning.pulse_frequency_hz * dt * 2.0 * std::f32::consts::PI;
             state.pulse_phase = state.pulse_phase % (2.0 * std::f32::consts::PI);
         }
 
@@ -578,13 +596,13 @@ impl TelemetrySynthEngine {
         let nr_pct = helo_data.nr.value();
         let np_pct = helo_data.np.value();
         let torque_pct = helo_data.torque.value();
-        
+
         let state = &mut self.effect_state.rotor_effects;
-        
+
         // Check for low rotor warnings
         let nr_warning = nr_pct < self.config.rotor_effects.nr_low_threshold;
         let np_warning = np_pct < self.config.rotor_effects.np_low_threshold;
-        
+
         // Update warning states
         if nr_warning != state.nr_warning_active {
             state.nr_warning_active = nr_warning;
@@ -595,21 +613,27 @@ impl TelemetrySynthEngine {
                     event: "nr_low_warning".to_string(),
                     parameters: [
                         ("nr_pct".to_string(), nr_pct),
-                        ("threshold".to_string(), self.config.rotor_effects.nr_low_threshold),
-                    ].into(),
+                        (
+                            "threshold".to_string(),
+                            self.config.rotor_effects.nr_low_threshold,
+                        ),
+                    ]
+                    .into(),
                 };
                 self.blackbox_markers.push_back(marker);
-                
+
                 // Keep only recent markers (last 1000)
                 while self.blackbox_markers.len() > 1000 {
                     self.blackbox_markers.pop_front();
                 }
-                
-                warn!("Low Nr warning: {:.1}% (threshold: {:.1}%)", 
-                      nr_pct, self.config.rotor_effects.nr_low_threshold);
+
+                warn!(
+                    "Low Nr warning: {:.1}% (threshold: {:.1}%)",
+                    nr_pct, self.config.rotor_effects.nr_low_threshold
+                );
             }
         }
-        
+
         if np_warning != state.np_warning_active {
             state.np_warning_active = np_warning;
             if np_warning {
@@ -619,24 +643,31 @@ impl TelemetrySynthEngine {
                     event: "np_low_warning".to_string(),
                     parameters: [
                         ("np_pct".to_string(), np_pct),
-                        ("threshold".to_string(), self.config.rotor_effects.np_low_threshold),
-                    ].into(),
+                        (
+                            "threshold".to_string(),
+                            self.config.rotor_effects.np_low_threshold,
+                        ),
+                    ]
+                    .into(),
                 };
                 self.blackbox_markers.push_back(marker);
-                
+
                 // Keep only recent markers (last 1000)
                 while self.blackbox_markers.len() > 1000 {
                     self.blackbox_markers.pop_front();
                 }
-                
-                warn!("Low Np warning: {:.1}% (threshold: {:.1}%)", 
-                      np_pct, self.config.rotor_effects.np_low_threshold);
+
+                warn!(
+                    "Low Np warning: {:.1}% (threshold: {:.1}%)",
+                    np_pct, self.config.rotor_effects.np_low_threshold
+                );
             }
         }
 
         // Calculate torque feedback
-        state.torque_feedback = torque_pct / 100.0 * self.config.rotor_effects.torque_scaling * 
-                               self.user_tuning.rotor_sensitivity;
+        state.torque_feedback = torque_pct / 100.0
+            * self.config.rotor_effects.torque_scaling
+            * self.user_tuning.rotor_sensitivity;
 
         // Update vibration phase based on rotor speed
         let rotor_freq = self.config.rotor_effects.base_frequency_hz * (nr_pct / 100.0);
@@ -648,8 +679,10 @@ impl TelemetrySynthEngine {
         state.last_np = np_pct;
         state.last_torque = torque_pct;
 
-        trace!("Rotor effects: Nr={:.1}%, Np={:.1}%, torque={:.1}%, feedback={:.2}", 
-               nr_pct, np_pct, torque_pct, state.torque_feedback);
+        trace!(
+            "Rotor effects: Nr={:.1}%, Np={:.1}%, torque={:.1}%, feedback={:.2}",
+            nr_pct, np_pct, torque_pct, state.torque_feedback
+        );
 
         Ok(())
     }
@@ -661,11 +694,16 @@ impl TelemetrySynthEngine {
 
         // Stall buffet contribution
         if self.effect_state.stall_buffet.current_intensity > 0.0 {
-            let buffet_torque = self.effect_state.stall_buffet.current_intensity * 
-                               self.effect_state.stall_buffet.phase.sin() * 2.0;
+            let buffet_torque = self.effect_state.stall_buffet.current_intensity
+                * self.effect_state.stall_buffet.phase.sin()
+                * 2.0;
             output.torque_nm += buffet_torque;
-            output.frequency_hz = output.frequency_hz.max(self.effect_state.stall_buffet.current_frequency);
-            output.intensity = output.intensity.max(self.effect_state.stall_buffet.current_intensity);
+            output.frequency_hz = output
+                .frequency_hz
+                .max(self.effect_state.stall_buffet.current_frequency);
+            output.intensity = output
+                .intensity
+                .max(self.effect_state.stall_buffet.current_intensity);
             active_effects.push("stall_buffet".to_string());
         }
 
@@ -678,33 +716,49 @@ impl TelemetrySynthEngine {
 
         // Ground roll contribution
         if self.effect_state.ground_roll.current_intensity > 0.0 {
-            let rumble_torque = self.effect_state.ground_roll.current_intensity * 
-                               self.effect_state.ground_roll.phase.sin() * 1.0;
+            let rumble_torque = self.effect_state.ground_roll.current_intensity
+                * self.effect_state.ground_roll.phase.sin()
+                * 1.0;
             output.torque_nm += rumble_torque;
-            output.frequency_hz = output.frequency_hz.max(self.config.ground_roll.frequency_hz);
-            output.intensity = output.intensity.max(self.effect_state.ground_roll.current_intensity);
+            output.frequency_hz = output
+                .frequency_hz
+                .max(self.config.ground_roll.frequency_hz);
+            output.intensity = output
+                .intensity
+                .max(self.effect_state.ground_roll.current_intensity);
             active_effects.push("ground_roll".to_string());
         }
 
         // Gear warning contribution
         if self.effect_state.gear_warning.warning_active {
-            let pulse_torque = self.config.gear_warning.pulse_intensity * 
-                              self.effect_state.gear_warning.pulse_phase.sin() * 
-                              self.user_tuning.gear_warning_sensitivity * 1.5;
+            let pulse_torque = self.config.gear_warning.pulse_intensity
+                * self.effect_state.gear_warning.pulse_phase.sin()
+                * self.user_tuning.gear_warning_sensitivity
+                * 1.5;
             output.torque_nm += pulse_torque;
-            output.frequency_hz = output.frequency_hz.max(self.config.gear_warning.pulse_frequency_hz);
-            output.intensity = output.intensity.max(self.config.gear_warning.pulse_intensity);
+            output.frequency_hz = output
+                .frequency_hz
+                .max(self.config.gear_warning.pulse_frequency_hz);
+            output.intensity = output
+                .intensity
+                .max(self.config.gear_warning.pulse_intensity);
             active_effects.push("gear_warning".to_string());
         }
 
         // Rotor effects contribution
-        if self.effect_state.rotor_effects.nr_warning_active || 
-           self.effect_state.rotor_effects.np_warning_active {
-            let warning_torque = self.config.rotor_effects.warning_intensity * 
-                                self.effect_state.rotor_effects.vibration_phase.sin() * 1.2;
+        if self.effect_state.rotor_effects.nr_warning_active
+            || self.effect_state.rotor_effects.np_warning_active
+        {
+            let warning_torque = self.config.rotor_effects.warning_intensity
+                * self.effect_state.rotor_effects.vibration_phase.sin()
+                * 1.2;
             output.torque_nm += warning_torque;
-            output.frequency_hz = output.frequency_hz.max(self.config.rotor_effects.base_frequency_hz);
-            output.intensity = output.intensity.max(self.config.rotor_effects.warning_intensity);
+            output.frequency_hz = output
+                .frequency_hz
+                .max(self.config.rotor_effects.base_frequency_hz);
+            output.intensity = output
+                .intensity
+                .max(self.config.rotor_effects.warning_intensity);
             active_effects.push("rotor_warning".to_string());
         }
 
@@ -714,7 +768,7 @@ impl TelemetrySynthEngine {
         // Apply global intensity scaling
         output.torque_nm *= self.user_tuning.global_intensity;
         output.intensity *= self.user_tuning.global_intensity;
-        
+
         output.active_effects = active_effects;
         output
     }
@@ -726,11 +780,12 @@ impl TelemetrySynthEngine {
 
     /// Apply rate limiting and smoothing to output
     fn apply_rate_limiting(&mut self, output: EffectOutput) -> EffectOutput {
-        let smoothed_torque = self.rate_limiter.last_output * (1.0 - self.rate_limiter.smoothing_factor) +
-                             output.torque_nm * self.rate_limiter.smoothing_factor;
-        
+        let smoothed_torque = self.rate_limiter.last_output
+            * (1.0 - self.rate_limiter.smoothing_factor)
+            + output.torque_nm * self.rate_limiter.smoothing_factor;
+
         self.rate_limiter.last_output = smoothed_torque;
-        
+
         EffectOutput {
             torque_nm: smoothed_torque,
             frequency_hz: output.frequency_hz,
@@ -738,8 +793,6 @@ impl TelemetrySynthEngine {
             active_effects: output.active_effects,
         }
     }
-
-
 
     /// Get recent blackbox markers
     pub fn get_blackbox_markers(&self) -> &VecDeque<BlackboxMarker> {
@@ -764,7 +817,8 @@ impl TelemetrySynthEngine {
     /// Update configuration
     pub fn update_config(&mut self, config: TelemetrySynthConfig) {
         self.config = config;
-        self.rate_limiter.min_interval = Duration::from_millis(self.config.rate_limiting.min_interval_ms as u64);
+        self.rate_limiter.min_interval =
+            Duration::from_millis(self.config.rate_limiting.min_interval_ms as u64);
         self.rate_limiter.smoothing_factor = self.config.rate_limiting.smoothing_factor;
     }
 
@@ -826,13 +880,26 @@ impl UserTuningInterface {
     /// Get all tuning values as a map
     pub fn get_all_values(&self) -> std::collections::HashMap<String, f32> {
         [
-            ("stall_buffet_intensity".to_string(), self.stall_buffet_intensity),
-            ("touchdown_sensitivity".to_string(), self.touchdown_sensitivity),
-            ("ground_roll_intensity".to_string(), self.ground_roll_intensity),
-            ("gear_warning_sensitivity".to_string(), self.gear_warning_sensitivity),
+            (
+                "stall_buffet_intensity".to_string(),
+                self.stall_buffet_intensity,
+            ),
+            (
+                "touchdown_sensitivity".to_string(),
+                self.touchdown_sensitivity,
+            ),
+            (
+                "ground_roll_intensity".to_string(),
+                self.ground_roll_intensity,
+            ),
+            (
+                "gear_warning_sensitivity".to_string(),
+                self.gear_warning_sensitivity,
+            ),
             ("rotor_sensitivity".to_string(), self.rotor_sensitivity),
             ("global_intensity".to_string(), self.global_intensity),
-        ].into()
+        ]
+        .into()
     }
 
     /// Reset all values to defaults
@@ -844,7 +911,7 @@ impl UserTuningInterface {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_bus::{AircraftId, BusSnapshot, SimId, ValidatedAngle, ValidatedSpeed, Percentage};
+    use flight_bus::{AircraftId, BusSnapshot, Percentage, SimId, ValidatedAngle, ValidatedSpeed};
 
     fn create_test_snapshot() -> BusSnapshot {
         BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"))
@@ -854,7 +921,7 @@ mod tests {
     fn test_telemetry_synth_engine_creation() {
         let config = TelemetrySynthConfig::default();
         let engine = TelemetrySynthEngine::new(config);
-        
+
         assert_eq!(engine.effect_state.stall_buffet.current_intensity, 0.0);
         assert!(!engine.effect_state.touchdown.impulse_active);
         assert!(!engine.effect_state.gear_warning.warning_active);
@@ -865,18 +932,18 @@ mod tests {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 0; // Disable rate limiting for test
         let mut engine = TelemetrySynthEngine::new(config);
-        
+
         let mut snapshot = create_test_snapshot();
-        
+
         // Set AoA below threshold
         snapshot.kinematics.aoa = ValidatedAngle::new_degrees(10.0).unwrap();
         let result = engine.update(&snapshot).unwrap();
         assert_eq!(result.torque_nm, 0.0);
         assert!(!result.active_effects.contains(&"stall_buffet".to_string()));
-        
+
         // Wait a bit to ensure different timestamp
         std::thread::sleep(std::time::Duration::from_millis(1));
-        
+
         // Set AoA above threshold
         snapshot.kinematics.aoa = ValidatedAngle::new_degrees(15.0).unwrap();
         let result = engine.update(&snapshot).unwrap();
@@ -889,13 +956,13 @@ mod tests {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 0; // Disable rate limiting for test
         let mut engine = TelemetrySynthEngine::new(config);
-        
+
         let mut snapshot = create_test_snapshot();
-        
+
         // Set conditions for ground roll
         snapshot.kinematics.ground_speed = ValidatedSpeed::new_knots(30.0).unwrap();
         snapshot.kinematics.g_force = flight_bus::GForce::new(1.0).unwrap();
-        
+
         let result = engine.update(&snapshot).unwrap();
         assert!(result.active_effects.contains(&"ground_roll".to_string()));
         assert!(result.torque_nm.abs() > 0.0);
@@ -906,16 +973,16 @@ mod tests {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 0; // Disable rate limiting for test
         let mut engine = TelemetrySynthEngine::new(config);
-        
+
         let mut snapshot = create_test_snapshot();
-        
+
         // Set conditions for gear warning (low speed, gear up, low altitude)
         snapshot.kinematics.ias = ValidatedSpeed::new_knots(100.0).unwrap();
         snapshot.config.gear.nose = flight_bus::types::GearPosition::Up;
         snapshot.config.gear.left = flight_bus::types::GearPosition::Up;
         snapshot.config.gear.right = flight_bus::types::GearPosition::Up;
         snapshot.environment.altitude = 500.0;
-        
+
         let result = engine.update(&snapshot).unwrap();
         assert!(result.active_effects.contains(&"gear_warning".to_string()));
     }
@@ -925,9 +992,9 @@ mod tests {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 0; // Disable rate limiting for test
         let mut engine = TelemetrySynthEngine::new(config);
-        
+
         let mut snapshot = create_test_snapshot();
-        
+
         // Add helicopter data with low Nr
         snapshot.helo = Some(HeloData {
             nr: Percentage::new(90.0).unwrap(), // Below threshold
@@ -936,7 +1003,7 @@ mod tests {
             collective: Percentage::new(50.0).unwrap(),
             pedals: 0.0,
         });
-        
+
         let result = engine.update(&snapshot).unwrap();
         assert!(result.active_effects.contains(&"rotor_warning".to_string()));
     }
@@ -944,18 +1011,18 @@ mod tests {
     #[test]
     fn test_user_tuning_interface() {
         let mut tuning = UserTuningInterface::default();
-        
+
         // Test setting values within range
         tuning.set_stall_buffet_intensity(1.5);
         assert_eq!(tuning.stall_buffet_intensity, 1.5);
-        
+
         // Test clamping
         tuning.set_global_intensity(3.0);
         assert_eq!(tuning.global_intensity, 2.0);
-        
+
         tuning.set_touchdown_sensitivity(-1.0);
         assert_eq!(tuning.touchdown_sensitivity, 0.0);
-        
+
         // Test reset
         tuning.reset_to_defaults();
         assert_eq!(tuning.global_intensity, 1.0);
@@ -965,16 +1032,16 @@ mod tests {
     fn test_rate_limiting() {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 100; // 10Hz max
-        
+
         let mut engine = TelemetrySynthEngine::new(config);
         let snapshot = create_test_snapshot();
-        
+
         // First update should work
         let result1 = engine.update(&snapshot).unwrap();
-        
+
         // Immediate second update should be rate limited
         let result2 = engine.update(&snapshot).unwrap();
-        
+
         // Results should be identical due to rate limiting
         assert_eq!(result1.torque_nm, result2.torque_nm);
         assert_eq!(result1.active_effects, result2.active_effects);
@@ -985,23 +1052,23 @@ mod tests {
         let mut config = TelemetrySynthConfig::default();
         config.rate_limiting.min_interval_ms = 0; // Disable rate limiting for test
         let mut engine = TelemetrySynthEngine::new(config);
-        
+
         let mut snapshot = create_test_snapshot();
-        
+
         // First update with low AoA
         snapshot.kinematics.aoa = ValidatedAngle::new_degrees(10.0).unwrap();
         engine.update(&snapshot).unwrap();
-        
+
         // Wait a bit to ensure different timestamp
         std::thread::sleep(std::time::Duration::from_millis(1));
-        
+
         // Second update with high AoA to trigger stall buffet
         snapshot.kinematics.aoa = ValidatedAngle::new_degrees(15.0).unwrap();
         engine.update(&snapshot).unwrap();
-        
+
         let markers = engine.get_blackbox_markers();
         assert!(!markers.is_empty());
-        
+
         let stall_marker = markers.iter().find(|m| m.effect_type == "stall_buffet");
         assert!(stall_marker.is_some());
     }

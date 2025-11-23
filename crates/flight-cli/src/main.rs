@@ -13,18 +13,18 @@ use serde_json::json;
 use std::process;
 
 #[cfg(feature = "cli")]
+mod client_manager;
+#[cfg(feature = "cli")]
 mod commands;
 #[cfg(feature = "cli")]
 mod output;
-#[cfg(feature = "cli")]
-mod client_manager;
 
+#[cfg(feature = "cli")]
+use client_manager::ClientManager;
 #[cfg(feature = "cli")]
 use commands::*;
 #[cfg(feature = "cli")]
 use output::OutputFormat;
-#[cfg(feature = "cli")]
-use client_manager::ClientManager;
 
 #[cfg(feature = "cli")]
 #[derive(Parser)]
@@ -35,15 +35,15 @@ struct Cli {
     /// Output format (human-readable or JSON)
     #[arg(long, short, value_enum, default_value = "human")]
     output: OutputFormat,
-    
+
     /// Verbose output
     #[arg(long, short)]
     verbose: bool,
-    
+
     /// Connection timeout in milliseconds
     #[arg(long, default_value = "5000")]
     timeout: u64,
-    
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -91,16 +91,16 @@ enum Commands {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    
+
     // Initialize client manager
     let mut client_config = ClientConfig::default();
     client_config.connection_timeout_ms = cli.timeout;
-    
+
     let client_manager = ClientManager::new(client_config);
-    
+
     // Execute command and handle result
     let result = execute_command(&cli, &client_manager).await;
-    
+
     match result {
         Ok(output) => {
             if let Some(output) = output {
@@ -110,18 +110,17 @@ async fn main() -> anyhow::Result<()> {
         }
         Err(error) => {
             let error_output = match cli.output {
-                OutputFormat::Json => {
-                    json!({
-                        "success": false,
-                        "error": error.to_string(),
-                        "error_code": error_to_code(&error)
-                    }).to_string()
-                }
+                OutputFormat::Json => json!({
+                    "success": false,
+                    "error": error.to_string(),
+                    "error_code": error_to_code(&error)
+                })
+                .to_string(),
                 OutputFormat::Human => {
                     format!("Error: {}", error)
                 }
             };
-            
+
             eprintln!("{}", error_output);
             process::exit(error_to_exit_code(&error));
         }
@@ -134,7 +133,10 @@ fn main() {
 }
 
 #[cfg(feature = "cli")]
-async fn execute_command(cli: &Cli, client_manager: &ClientManager) -> anyhow::Result<Option<String>> {
+async fn execute_command(
+    cli: &Cli,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
     match &cli.command {
         Commands::Devices { action } => {
             commands::devices::execute(action, cli.output, cli.verbose, client_manager).await
@@ -157,9 +159,7 @@ async fn execute_command(cli: &Cli, client_manager: &ClientManager) -> anyhow::R
         Commands::Status => {
             commands::status::execute(cli.output, cli.verbose, client_manager).await
         }
-        Commands::Info => {
-            commands::info::execute(cli.output, cli.verbose, client_manager).await
-        }
+        Commands::Info => commands::info::execute(cli.output, cli.verbose, client_manager).await,
     }
 }
 

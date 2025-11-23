@@ -36,8 +36,7 @@ impl WriterApplier {
 
         // Create backup directory for this operation
         let backup_path = self.backup_dir.join(&backup_id);
-        fs::create_dir_all(&backup_path)
-            .context("Failed to create backup directory")?;
+        fs::create_dir_all(&backup_path).context("Failed to create backup directory")?;
 
         // Apply each diff
         for diff in &config.diffs {
@@ -52,7 +51,7 @@ impl WriterApplier {
         }
 
         let success = errors.is_empty();
-        
+
         if success {
             info!("Successfully applied {} diffs", modified_files.len());
         } else {
@@ -79,17 +78,20 @@ impl WriterApplier {
 
         // Apply the operation
         match &diff.operation {
-            DiffOperation::Replace { content } => {
-                self.replace_file(&diff.file, content).await
-            }
+            DiffOperation::Replace { content } => self.replace_file(&diff.file, content).await,
             DiffOperation::IniSection { section, changes } => {
                 self.modify_ini_section(&diff.file, section, changes).await
             }
             DiffOperation::JsonPatch { patches } => {
                 self.apply_json_patches(&diff.file, patches).await
             }
-            DiffOperation::LineReplace { pattern, replacement, regex } => {
-                self.replace_lines(&diff.file, pattern, replacement, *regex).await
+            DiffOperation::LineReplace {
+                pattern,
+                replacement,
+                regex,
+            } => {
+                self.replace_lines(&diff.file, pattern, replacement, *regex)
+                    .await
             }
         }?;
 
@@ -100,12 +102,10 @@ impl WriterApplier {
     async fn replace_file(&self, file_path: &Path, content: &str) -> Result<()> {
         // Ensure parent directory exists
         if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create parent directory")?;
+            fs::create_dir_all(parent).context("Failed to create parent directory")?;
         }
 
-        fs::write(file_path, content)
-            .context("Failed to write file")?;
+        fs::write(file_path, content).context("Failed to write file")?;
 
         debug!("Replaced file {:?}", file_path);
         Ok(())
@@ -119,8 +119,7 @@ impl WriterApplier {
         changes: &HashMap<String, String>,
     ) -> Result<()> {
         let content = if file_path.exists() {
-            fs::read_to_string(file_path)
-                .context("Failed to read existing file")?
+            fs::read_to_string(file_path).context("Failed to read existing file")?
         } else {
             String::new()
         };
@@ -129,12 +128,10 @@ impl WriterApplier {
 
         // Ensure parent directory exists
         if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create parent directory")?;
+            fs::create_dir_all(parent).context("Failed to create parent directory")?;
         }
 
-        fs::write(file_path, modified_content)
-            .context("Failed to write modified file")?;
+        fs::write(file_path, modified_content).context("Failed to write modified file")?;
 
         debug!("Modified INI section [{}] in {:?}", section, file_path);
         Ok(())
@@ -156,10 +153,10 @@ impl WriterApplier {
         // Find lines that need modification
         for (line_idx, line) in lines.iter().enumerate() {
             let line_trimmed = line.trim();
-            
+
             // Check for section headers
             if line_trimmed.starts_with('[') && line_trimmed.ends_with(']') {
-                let section_name = &line_trimmed[1..line_trimmed.len()-1];
+                let section_name = &line_trimmed[1..line_trimmed.len() - 1];
                 in_target_section = section_name == target_section;
                 if in_target_section {
                     section_found = true;
@@ -197,11 +194,11 @@ impl WriterApplier {
                 // Find the end of the target section to add new keys
                 let mut insert_index = lines.len();
                 let mut in_section = false;
-                
+
                 for (i, line) in lines.iter().enumerate() {
                     let trimmed = line.trim();
                     if trimmed.starts_with('[') && trimmed.ends_with(']') {
-                        let section_name = &trimmed[1..trimmed.len()-1];
+                        let section_name = &trimmed[1..trimmed.len() - 1];
                         if section_name == target_section {
                             in_section = true;
                         } else if in_section {
@@ -221,14 +218,12 @@ impl WriterApplier {
     /// Apply JSON patches to a file
     async fn apply_json_patches(&self, file_path: &Path, patches: &[JsonPatchOp]) -> Result<()> {
         let content = if file_path.exists() {
-            fs::read_to_string(file_path)
-                .context("Failed to read existing JSON file")?
+            fs::read_to_string(file_path).context("Failed to read existing JSON file")?
         } else {
             "{}".to_string()
         };
 
-        let mut json: Value = serde_json::from_str(&content)
-            .context("Failed to parse JSON")?;
+        let mut json: Value = serde_json::from_str(&content).context("Failed to parse JSON")?;
 
         // Apply each patch
         for patch in patches {
@@ -236,17 +231,15 @@ impl WriterApplier {
                 .context("Failed to apply JSON patch")?;
         }
 
-        let modified_content = serde_json::to_string_pretty(&json)
-            .context("Failed to serialize JSON")?;
+        let modified_content =
+            serde_json::to_string_pretty(&json).context("Failed to serialize JSON")?;
 
         // Ensure parent directory exists
         if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create parent directory")?;
+            fs::create_dir_all(parent).context("Failed to create parent directory")?;
         }
 
-        fs::write(file_path, modified_content)
-            .context("Failed to write modified JSON file")?;
+        fs::write(file_path, modified_content).context("Failed to write modified JSON file")?;
 
         debug!("Applied {} JSON patches to {:?}", patches.len(), file_path);
         Ok(())
@@ -272,7 +265,11 @@ impl WriterApplier {
                 if let Some(expected) = &patch.value {
                     let actual = self.json_get_path(json, &patch.path)?;
                     if actual != *expected {
-                        anyhow::bail!("JSON patch test failed: expected {:?}, got {:?}", expected, actual);
+                        anyhow::bail!(
+                            "JSON patch test failed: expected {:?}, got {:?}",
+                            expected,
+                            actual
+                        );
                     }
                 }
             }
@@ -291,7 +288,8 @@ impl WriterApplier {
 
         // Navigate to the parent of the target
         for part in &parts[..parts.len().saturating_sub(1)] {
-            current = current.as_object_mut()
+            current = current
+                .as_object_mut()
                 .context("Expected object in JSON path")?
                 .entry(part.to_string())
                 .or_insert_with(|| Value::Object(serde_json::Map::new()));
@@ -316,7 +314,8 @@ impl WriterApplier {
             if part.is_empty() {
                 continue;
             }
-            current = current.get(part)
+            current = current
+                .get(part)
                 .context(format!("Path component '{}' not found", part))?;
         }
 
@@ -334,8 +333,7 @@ impl WriterApplier {
 
         // Navigate to the parent
         for part in &parts[..parts.len().saturating_sub(1)] {
-            current = current.get_mut(part)
-                .context("Path not found in JSON")?;
+            current = current.get_mut(part).context("Path not found in JSON")?;
         }
 
         // Remove the final key
@@ -357,15 +355,13 @@ impl WriterApplier {
         use_regex: bool,
     ) -> Result<()> {
         let content = if file_path.exists() {
-            fs::read_to_string(file_path)
-                .context("Failed to read existing file")?
+            fs::read_to_string(file_path).context("Failed to read existing file")?
         } else {
             String::new()
         };
 
         let modified_content = if use_regex {
-            let re = regex::Regex::new(pattern)
-                .context("Invalid regex pattern")?;
+            let re = regex::Regex::new(pattern).context("Invalid regex pattern")?;
             re.replace_all(&content, replacement).to_string()
         } else {
             content.replace(pattern, replacement)
@@ -373,12 +369,10 @@ impl WriterApplier {
 
         // Ensure parent directory exists
         if let Some(parent) = file_path.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create parent directory")?;
+            fs::create_dir_all(parent).context("Failed to create parent directory")?;
         }
 
-        fs::write(file_path, modified_content)
-            .context("Failed to write modified file")?;
+        fs::write(file_path, modified_content).context("Failed to write modified file")?;
 
         debug!("Replaced lines in {:?}", file_path);
         Ok(())
@@ -386,19 +380,14 @@ impl WriterApplier {
 
     /// Create a backup of a file
     fn create_backup(&self, file_path: &Path, backup_path: &Path) -> Result<()> {
-        let backup_file = backup_path.join(
-            file_path.file_name()
-                .context("Invalid file path")?
-        );
+        let backup_file = backup_path.join(file_path.file_name().context("Invalid file path")?);
 
         // Ensure backup directory exists
         if let Some(parent) = backup_file.parent() {
-            fs::create_dir_all(parent)
-                .context("Failed to create backup directory")?;
+            fs::create_dir_all(parent).context("Failed to create backup directory")?;
         }
 
-        fs::copy(file_path, &backup_file)
-            .context("Failed to create backup")?;
+        fs::copy(file_path, &backup_file).context("Failed to create backup")?;
 
         debug!("Created backup: {:?} -> {:?}", file_path, backup_file);
         Ok(())
@@ -424,12 +413,12 @@ mod tests {
     async fn test_replace_file() {
         let temp_dir = TempDir::new().unwrap();
         let applier = WriterApplier::new(temp_dir.path());
-        
+
         let file_path = temp_dir.path().join("test.txt");
         let content = "Hello, World!";
-        
+
         applier.replace_file(&file_path, content).await.unwrap();
-        
+
         let read_content = fs::read_to_string(&file_path).unwrap();
         assert_eq!(read_content, content);
     }
@@ -438,17 +427,20 @@ mod tests {
     async fn test_ini_section_modification() {
         let temp_dir = TempDir::new().unwrap();
         let applier = WriterApplier::new(temp_dir.path());
-        
+
         let file_path = temp_dir.path().join("test.ini");
         let initial_content = "[Section1]\nkey1=value1\n\n[Section2]\nkey2=value2\n";
         fs::write(&file_path, initial_content).unwrap();
-        
+
         let mut changes = HashMap::new();
         changes.insert("key1".to_string(), "new_value1".to_string());
         changes.insert("key3".to_string(), "value3".to_string());
-        
-        applier.modify_ini_section(&file_path, "Section1", &changes).await.unwrap();
-        
+
+        applier
+            .modify_ini_section(&file_path, "Section1", &changes)
+            .await
+            .unwrap();
+
         let content = fs::read_to_string(&file_path).unwrap();
         assert!(content.contains("key1=new_value1"));
         assert!(content.contains("key3=value3"));
@@ -459,22 +451,23 @@ mod tests {
     async fn test_json_patch() {
         let temp_dir = TempDir::new().unwrap();
         let applier = WriterApplier::new(temp_dir.path());
-        
+
         let file_path = temp_dir.path().join("test.json");
         let initial_json = r#"{"existing": "value"}"#;
         fs::write(&file_path, initial_json).unwrap();
-        
-        let patches = vec![
-            JsonPatchOp {
-                op: JsonPatchOpType::Add,
-                path: "/new_key".to_string(),
-                value: Some(serde_json::Value::String("new_value".to_string())),
-                from: None,
-            },
-        ];
-        
-        applier.apply_json_patches(&file_path, &patches).await.unwrap();
-        
+
+        let patches = vec![JsonPatchOp {
+            op: JsonPatchOpType::Add,
+            path: "/new_key".to_string(),
+            value: Some(serde_json::Value::String("new_value".to_string())),
+            from: None,
+        }];
+
+        applier
+            .apply_json_patches(&file_path, &patches)
+            .await
+            .unwrap();
+
         let content = fs::read_to_string(&file_path).unwrap();
         let json: Value = serde_json::from_str(&content).unwrap();
         assert_eq!(json["new_key"], "new_value");

@@ -14,7 +14,7 @@ use std::fmt;
 pub struct NodeId(pub u32);
 
 /// Pipeline node trait for zero-allocation processing
-/// 
+///
 /// All implementations must guarantee:
 /// - No heap allocations during step()
 /// - No mutex/lock operations
@@ -22,7 +22,7 @@ pub struct NodeId(pub u32);
 /// - Cache-friendly memory access patterns
 pub trait Node: Send + Sync + fmt::Debug {
     /// Process axis frame in-place with zero allocations
-    /// 
+    ///
     /// # Safety
     /// This function must not allocate memory or acquire locks
     fn step(&mut self, frame: &mut AxisFrame);
@@ -31,13 +31,13 @@ pub trait Node: Send + Sync + fmt::Debug {
     fn state_size(&self) -> usize;
 
     /// Initialize state data in provided buffer
-    /// 
+    ///
     /// # Safety
     /// Buffer must be at least state_size() bytes and properly aligned
     unsafe fn init_state(&self, state_ptr: *mut u8);
 
     /// Step function using SoA state layout
-    /// 
+    ///
     /// # Safety
     /// state_ptr must point to valid state data initialized by init_state()
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8);
@@ -119,7 +119,7 @@ pub struct CurveNode {
 
 impl CurveNode {
     /// Create exponential curve node
-    /// 
+    ///
     /// # Panics
     /// Panics if expo is outside [-1.0, 1.0] range
     pub fn new(expo: f32) -> Self {
@@ -150,7 +150,7 @@ impl Node for CurveNode {
 
         let sign = frame.out.signum();
         let abs_val = frame.out.abs();
-        
+
         // Ensure monotonic curve: f(x) = sign(x) * |x|^(1 + expo)
         frame.out = sign * abs_val.powf(1.0 + self.expo);
     }
@@ -245,7 +245,7 @@ impl Node for SlewNode {
             0.0 // Handle case where timestamps go backwards or are equal
         };
         let desired_change = frame.out - state.last_output;
-        
+
         let rate = if desired_change > 0.0 {
             self.attack_rate.unwrap_or(self.rate_limit)
         } else {
@@ -414,7 +414,7 @@ impl DetentNode {
     pub fn new(mut zones: Vec<DetentZone>) -> Self {
         // Sort zones by center position for efficient lookup
         zones.sort_by(|a, b| a.center.partial_cmp(&b.center).unwrap());
-        
+
         Self {
             zones,
             event_sender: None,
@@ -491,9 +491,10 @@ impl Node for DetentNode {
 
         // If we're not in a detent, check for entry into a new one
         if new_detent_idx == u32::MAX
-            && let Some(idx) = self.find_entry_detent(position) {
-                new_detent_idx = idx as u32;
-            }
+            && let Some(idx) = self.find_entry_detent(position)
+        {
+            new_detent_idx = idx as u32;
+        }
 
         // Generate event if detent changed
         if new_detent_idx != state.active_detent_idx {
@@ -618,7 +619,7 @@ impl MixerConfig {
         if self.inputs.is_empty() {
             return Err("Mixer must have at least one input");
         }
-        
+
         if self.inputs.len() > 8 {
             return Err("Mixer supports maximum 8 inputs");
         }
@@ -652,21 +653,21 @@ pub struct MixerState {
 }
 
 /// Mixer node for multi-axis interactions (helicopter anti-torque, etc.)
-/// 
+///
 /// The mixer combines multiple input sources with configurable scale and gain factors.
 /// This is essential for helicopter flight models where collective pitch affects
 /// anti-torque requirements, or for complex aircraft with control coupling.
-/// 
+///
 /// # Examples
-/// 
+///
 /// Helicopter anti-torque mixing:
 /// ```
 /// use flight_axis::{MixerNode, MixerConfig, MixerInput};
-/// 
+///
 /// let config = MixerConfig::new("anti_torque")
 ///     .add_scaled_input("collective", -0.3)  // Collective increases, need more left pedal
 ///     .add_scaled_input("pedals", 1.0);      // Direct pedal input
-/// 
+///
 /// let mixer = MixerNode::new(config).expect("Valid config");
 /// ```
 #[derive(Debug, Clone)]
@@ -681,9 +682,9 @@ impl MixerNode {
     /// Create new mixer node with configuration
     pub fn new(config: MixerConfig) -> Result<Self, &'static str> {
         config.validate()?;
-        
+
         let input_count = config.inputs.len();
-        
+
         Ok(Self {
             config,
             input_count,
@@ -691,14 +692,14 @@ impl MixerNode {
     }
 
     /// Create helicopter anti-torque mixer
-    /// 
+    ///
     /// Standard configuration for helicopter anti-torque where collective
     /// pitch affects pedal requirements.
     pub fn helicopter_anti_torque(collective_scale: f32) -> Result<Self, &'static str> {
         let config = MixerConfig::new("anti_torque")
             .add_scaled_input("collective", collective_scale)
             .add_scaled_input("pedals", 1.0);
-        
+
         Self::new(config)
     }
 
@@ -707,7 +708,7 @@ impl MixerNode {
         let config = MixerConfig::new("rudder_coordinated")
             .add_scaled_input("aileron", coordination_factor)
             .add_scaled_input("rudder", 1.0);
-        
+
         Self::new(config)
     }
 
@@ -717,17 +718,21 @@ impl MixerNode {
     }
 
     /// Process mixer with multiple input values
-    /// 
+    ///
     /// # Safety
     /// inputs slice must have exactly the same length as configured inputs
     #[inline(always)]
     pub fn process_inputs(&self, inputs: &[f32], output: &mut f32) {
-        debug_assert_eq!(inputs.len(), self.input_count, 
-                        "Input count mismatch: expected {}, got {}", 
-                        self.input_count, inputs.len());
+        debug_assert_eq!(
+            inputs.len(),
+            self.input_count,
+            "Input count mismatch: expected {}, got {}",
+            self.input_count,
+            inputs.len()
+        );
 
         let mut mixed_output = 0.0f32;
-        
+
         // Process each input with its scale and gain
         for (input_val, mixer_input) in inputs.iter().zip(&self.config.inputs) {
             mixed_output += mixer_input.apply(*input_val);
@@ -747,7 +752,9 @@ impl Node for MixerNode {
     fn step(&mut self, _frame: &mut AxisFrame) {
         // This implementation is for compatibility only
         // Real RT path uses step_soa with SoA state layout and external input management
-        unimplemented!("MixerNode requires SoA state layout and external input management - use step_soa()");
+        unimplemented!(
+            "MixerNode requires SoA state layout and external input management - use step_soa()"
+        );
     }
 
     fn state_size(&self) -> usize {
@@ -768,21 +775,21 @@ impl Node for MixerNode {
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
         let state = &mut *(state_ptr as *mut MixerState);
-        
+
         // For single-axis mixer, we use the current frame output as the primary input
         // and mix with previous inputs stored in state
         // This is a simplified implementation - in practice, mixers would receive
         // multiple axis inputs from the engine
-        
+
         // Store current input
         if state.input_count > 0 {
             state.prev_inputs[0] = frame.out;
         }
-        
+
         // For demonstration, apply a simple mixing operation
         // In a real implementation, this would receive multiple axis values
         let mut mixed_output = 0.0f32;
-        
+
         for (i, mixer_input) in self.config.inputs.iter().enumerate() {
             if i < state.input_count as usize {
                 let input_val = if i == 0 {
@@ -790,16 +797,16 @@ impl Node for MixerNode {
                 } else {
                     state.prev_inputs[i] // Previous stored values
                 };
-                
+
                 mixed_output += mixer_input.apply(input_val);
             }
         }
-        
+
         // Apply output clamping if enabled
         if self.config.clamp_output {
             mixed_output = mixed_output.clamp(-1.0, 1.0);
         }
-        
+
         frame.out = mixed_output;
         state.last_update_ns = frame.ts_mono_ns;
     }

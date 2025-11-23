@@ -3,8 +3,8 @@
 
 //! Configuration repair system
 
-use crate::types::*;
 use crate::diff::WriterApplier;
+use crate::types::*;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
@@ -47,15 +47,15 @@ impl ConfigRepairer {
 
         // Generate repair configuration
         let repair_config = self.generate_repair_config(verify_result)?;
-        
+
         // Apply the repair
         match applier.apply(&repair_config).await {
             Ok(apply_result) => {
                 repaired_files = apply_result.modified_files;
                 errors = apply_result.errors;
-                
+
                 let success = errors.is_empty();
-                
+
                 if success {
                     info!("Successfully repaired {} files", repaired_files.len());
                 } else {
@@ -102,7 +102,10 @@ impl ConfigRepairer {
             schema: "flight.writer/1".to_string(),
             sim: verify_result.sim,
             version: verify_result.version.clone(),
-            description: Some(format!("Auto-generated repair for {} {}", verify_result.sim, verify_result.version)),
+            description: Some(format!(
+                "Auto-generated repair for {} {}",
+                verify_result.sim, verify_result.version
+            )),
             diffs,
             verify_scripts: vec![], // No verification needed for repair
         })
@@ -160,14 +163,12 @@ impl ConfigRepairer {
                 Some("json") => {
                     // For JSON files, add a repair marker
                     DiffOperation::JsonPatch {
-                        patches: vec![
-                            crate::types::JsonPatchOp {
-                                op: crate::types::JsonPatchOpType::Add,
-                                path: "/repaired".to_string(),
-                                value: Some(serde_json::Value::Bool(true)),
-                                from: None,
-                            }
-                        ],
+                        patches: vec![crate::types::JsonPatchOp {
+                            op: crate::types::JsonPatchOpType::Add,
+                            path: "/repaired".to_string(),
+                            value: Some(serde_json::Value::Bool(true)),
+                            from: None,
+                        }],
                     }
                 }
                 _ => {
@@ -215,12 +216,9 @@ impl ConfigRepairer {
             DiffOperation::IniSection { section, changes } => {
                 let current_content = std::fs::read_to_string(file_path)
                     .context("Failed to read file for analysis")?;
-                
-                let minimal_changes = self.calculate_minimal_ini_changes(
-                    &current_content,
-                    section,
-                    changes,
-                )?;
+
+                let minimal_changes =
+                    self.calculate_minimal_ini_changes(&current_content, section, changes)?;
 
                 if !minimal_changes.is_empty() {
                     suggestions.push(FileDiff {
@@ -236,7 +234,7 @@ impl ConfigRepairer {
             DiffOperation::JsonPatch { patches } => {
                 // Analyze which patches are actually needed
                 let needed_patches = self.filter_needed_json_patches(file_path, patches).await?;
-                
+
                 if !needed_patches.is_empty() {
                     suggestions.push(FileDiff {
                         file: file_path.to_path_buf(),
@@ -250,7 +248,7 @@ impl ConfigRepairer {
             DiffOperation::Replace { content } => {
                 let current_content = std::fs::read_to_string(file_path)
                     .context("Failed to read file for analysis")?;
-                
+
                 if current_content.trim() != content.trim() {
                     suggestions.push(FileDiff {
                         file: file_path.to_path_buf(),
@@ -259,13 +257,16 @@ impl ConfigRepairer {
                     });
                 }
             }
-            DiffOperation::LineReplace { pattern, replacement, regex } => {
+            DiffOperation::LineReplace {
+                pattern,
+                replacement,
+                regex,
+            } => {
                 let current_content = std::fs::read_to_string(file_path)
                     .context("Failed to read file for analysis")?;
-                
+
                 let needs_replacement = if *regex {
-                    let re = regex::Regex::new(pattern)
-                        .context("Invalid regex pattern")?;
+                    let re = regex::Regex::new(pattern).context("Invalid regex pattern")?;
                     re.is_match(&current_content) && !current_content.contains(replacement)
                 } else {
                     current_content.contains(pattern) && !current_content.contains(replacement)
@@ -298,9 +299,9 @@ impl ConfigRepairer {
         // Parse current values in the target section
         for line in current_content.lines() {
             let trimmed = line.trim();
-            
+
             if trimmed.starts_with('[') && trimmed.ends_with(']') {
-                let section_name = &trimmed[1..trimmed.len()-1];
+                let section_name = &trimmed[1..trimmed.len() - 1];
                 in_target_section = section_name == target_section;
                 continue;
             }
@@ -336,11 +337,11 @@ impl ConfigRepairer {
         file_path: &Path,
         patches: &[crate::types::JsonPatchOp],
     ) -> Result<Vec<crate::types::JsonPatchOp>> {
-        let current_content = std::fs::read_to_string(file_path)
-            .context("Failed to read JSON file")?;
-        
-        let current_json: serde_json::Value = serde_json::from_str(&current_content)
-            .context("Failed to parse current JSON")?;
+        let current_content =
+            std::fs::read_to_string(file_path).context("Failed to read JSON file")?;
+
+        let current_json: serde_json::Value =
+            serde_json::from_str(&current_content).context("Failed to parse current JSON")?;
 
         let mut needed_patches = Vec::new();
 
@@ -388,7 +389,8 @@ impl ConfigRepairer {
             if part.is_empty() {
                 continue;
             }
-            current = current.get(part)
+            current = current
+                .get(part)
                 .context(format!("Path component '{}' not found", part))?;
         }
 
@@ -399,8 +401,8 @@ impl ConfigRepairer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_repair_missing_file() {
@@ -412,13 +414,11 @@ mod tests {
             version: "1.36.0".to_string(),
             success: false,
             script_results: vec![],
-            mismatched_files: vec![
-                FileMismatch {
-                    file: temp_dir.path().join("missing.ini"),
-                    mismatch_type: MismatchType::Missing,
-                    suggested_diff: None,
-                },
-            ],
+            mismatched_files: vec![FileMismatch {
+                file: temp_dir.path().join("missing.ini"),
+                mismatch_type: MismatchType::Missing,
+                suggested_diff: None,
+            }],
         };
 
         let result = repairer.repair(&verify_result).await.unwrap();
@@ -432,14 +432,16 @@ mod tests {
         let repairer = ConfigRepairer::new(temp_dir.path(), temp_dir.path());
 
         let content = "[SECTION]\nkey1=value1\nkey2=value2\n";
-        
+
         let mut desired_changes = HashMap::new();
         desired_changes.insert("key1".to_string(), "value1".to_string()); // Same value
         desired_changes.insert("key2".to_string(), "new_value2".to_string()); // Different value
         desired_changes.insert("key3".to_string(), "value3".to_string()); // New key
 
-        let minimal = repairer.calculate_minimal_ini_changes(content, "SECTION", &desired_changes).unwrap();
-        
+        let minimal = repairer
+            .calculate_minimal_ini_changes(content, "SECTION", &desired_changes)
+            .unwrap();
+
         assert_eq!(minimal.len(), 2); // Only key2 and key3 should be changed
         assert!(!minimal.contains_key("key1")); // key1 is already correct
         assert_eq!(minimal.get("key2"), Some(&"new_value2".to_string()));

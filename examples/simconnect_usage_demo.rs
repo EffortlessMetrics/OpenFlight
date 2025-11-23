@@ -9,11 +9,13 @@
 #![cfg_attr(not(feature = "simconnect"), allow(dead_code, unused_imports))]
 
 #[cfg(feature = "simconnect")]
-use flight_simconnect::{MsfsAdapter, MsfsAdapterConfig};
-#[cfg(feature = "simconnect")]
 use flight_bus::BusSnapshot;
 #[cfg(feature = "simconnect")]
-use flight_core::aircraft_switch::{DetectedAircraft, AircraftAutoSwitch, AutoSwitchConfig, SimId, AircraftId};
+use flight_core::aircraft_switch::{
+    AircraftAutoSwitch, AircraftId, AutoSwitchConfig, DetectedAircraft, SimId,
+};
+#[cfg(feature = "simconnect")]
+use flight_simconnect::{MsfsAdapter, MsfsAdapterConfig};
 #[cfg(feature = "simconnect")]
 use std::time::Duration;
 #[cfg(feature = "simconnect")]
@@ -24,21 +26,21 @@ use tokio::time::sleep;
 async fn main() -> anyhow::Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
+
     println!("=== Flight Hub SimConnect Usage Demo ===\n");
 
     // Demo 1: Basic Connection
     demo_basic_connection().await?;
-    
+
     // Demo 2: Telemetry Reading
     demo_telemetry_reading().await?;
-    
+
     // Demo 3: Aircraft Detection
     demo_aircraft_detection().await?;
-    
+
     // Demo 4: Event Sending
     demo_event_sending().await?;
-    
+
     // Demo 5: Error Handling
     demo_error_handling().await?;
 
@@ -94,9 +96,9 @@ async fn demo_telemetry_reading() -> anyhow::Result<()> {
 
     // Create a mock adapter for demonstration
     println!("ℹ Creating mock telemetry data (MSFS not required)");
-    
+
     let mock_snapshot = create_mock_snapshot();
-    
+
     println!("✓ Mock telemetry snapshot created:");
     println!("  Aircraft: {:?}", mock_snapshot.aircraft);
     println!("  IAS: {:.0} kt", mock_snapshot.kinematics.ias.to_knots());
@@ -126,7 +128,7 @@ async fn demo_aircraft_detection() -> anyhow::Result<()> {
     use flight_core::aircraft_switch::PofHysteresisConfig;
     use flight_core::profile::CapabilityContext;
     use std::collections::HashMap;
-    
+
     let config = AutoSwitchConfig {
         max_switch_time: Duration::from_millis(500),
         profile_paths: vec![],
@@ -137,17 +139,17 @@ async fn demo_aircraft_detection() -> anyhow::Result<()> {
         },
         capability_context: CapabilityContext::for_mode(flight_core::profile::CapabilityMode::Full),
     };
-    
+
     let auto_switch = AircraftAutoSwitch::new(config);
-    
+
     // Simulate aircraft detection sequence
     let aircraft_sequence = vec![
         ("Cessna 172", "C172", "Asobo"),
-        ("Boeing 747-8", "B748", "Asobo"), 
+        ("Boeing 747-8", "B748", "Asobo"),
         ("Airbus A320neo", "A20N", "Asobo"),
         ("Bell 407", "B407", "Third Party"),
     ];
-    
+
     for (display_name, icao, _manufacturer) in aircraft_sequence {
         let detected = DetectedAircraft {
             sim: SimId::Msfs,
@@ -156,7 +158,7 @@ async fn demo_aircraft_detection() -> anyhow::Result<()> {
             confidence: 0.95,
             detection_time: std::time::Instant::now(),
         };
-        
+
         match auto_switch.on_aircraft_detected(detected).await {
             Ok(()) => {
                 println!("✓ Aircraft detection sent for {}: {}", icao, display_name);
@@ -165,15 +167,18 @@ async fn demo_aircraft_detection() -> anyhow::Result<()> {
             }
             Err(e) => println!("✗ Aircraft detection failed: {}", e),
         }
-        
+
         sleep(Duration::from_millis(100)).await;
     }
-    
+
     // Show metrics
     let metrics = auto_switch.get_metrics().await;
     println!("✓ Auto-switch metrics:");
     println!("  Total switches: {}", metrics.total_switches);
-    println!("  Average switch time: {:.1} ms", metrics.average_switch_time.as_millis());
+    println!(
+        "  Average switch time: {:.1} ms",
+        metrics.average_switch_time.as_millis()
+    );
     println!("  Failed switches: {}", metrics.failed_switches);
 
     Ok(())
@@ -185,7 +190,7 @@ async fn demo_event_sending() -> anyhow::Result<()> {
     println!("---------------");
 
     println!("ℹ Demonstrating event sending (MSFS not required)");
-    
+
     // List of common SimConnect events
     let demo_events = vec![
         ("GEAR_TOGGLE", "Toggle landing gear"),
@@ -194,16 +199,16 @@ async fn demo_event_sending() -> anyhow::Result<()> {
         ("STROBES_TOGGLE", "Toggle strobe lights"),
         ("PARKING_BRAKES", "Toggle parking brake"),
     ];
-    
+
     for (event_name, description) in demo_events {
         println!("  Would send: {} ({})", event_name, description);
-        
+
         // In a real implementation with MSFS running:
         // adapter.send_event(event_name, 0).await?;
-        
+
         sleep(Duration::from_millis(50)).await;
     }
-    
+
     println!("✓ Event sending demonstration completed");
     println!("  Note: Events would be sent to MSFS if connected");
 
@@ -222,10 +227,10 @@ async fn demo_error_handling() -> anyhow::Result<()> {
         ("Invalid event", "InvalidEvent"),
         ("Data request failed", "DataRequestFailed"),
     ];
-    
+
     for (description, error_type) in error_scenarios {
         println!("  Scenario: {}", description);
-        
+
         match error_type {
             "SimulatorNotRunning" => {
                 println!("    → Retry connection with backoff");
@@ -248,7 +253,7 @@ async fn demo_error_handling() -> anyhow::Result<()> {
             }
         }
     }
-    
+
     println!("✓ Error handling scenarios demonstrated");
 
     Ok(())
@@ -256,8 +261,11 @@ async fn demo_error_handling() -> anyhow::Result<()> {
 
 #[cfg(feature = "simconnect")]
 fn create_mock_snapshot() -> BusSnapshot {
-    use flight_bus::{Kinematics, AircraftConfig, Environment, Navigation, GearState, AutopilotState, LightsConfig};
-    use flight_bus::types::{ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearPosition};
+    use flight_bus::types::{GForce, GearPosition, Percentage, ValidatedAngle, ValidatedSpeed};
+    use flight_bus::{
+        AircraftConfig, AutopilotState, Environment, GearState, Kinematics, LightsConfig,
+        Navigation,
+    };
     use std::collections::HashMap;
 
     BusSnapshot {

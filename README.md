@@ -42,7 +42,7 @@ Key architectural decisions are documented in [Architecture Decision Records (AD
 
 ### Minimum Supported Rust Version (MSRV)
 
-Flight Hub requires Rust 1.89.0 or later. This is enforced by CI and ensures compatibility with required language features and dependencies including Rust 2024 edition features.
+Flight Hub requires Rust 1.89.0 or later and uses Rust Edition 2024. This is enforced by CI and ensures compatibility with required language features and dependencies.
 
 ### Build Commands
 

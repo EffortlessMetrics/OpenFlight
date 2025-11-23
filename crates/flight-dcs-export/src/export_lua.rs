@@ -94,7 +94,8 @@ impl ExportLuaGenerator {
 -- Version: 1.0
 -- Protocol: Flight Hub DCS Export v1.0
 
-local FlightHubExport = {{}}"#.to_string()
+local FlightHubExport = {{}}"#
+            .to_string()
     }
 
     /// Generate configuration section
@@ -112,18 +113,22 @@ FlightHubExport.config = {{
             self.config.socket_address,
             self.config.socket_port,
             self.config.update_interval,
-            if self.config.mp_safe_mode { "true" } else { "false" }
+            if self.config.mp_safe_mode {
+                "true"
+            } else {
+                "false"
+            }
         )
     }
 
     /// Generate feature flags
     fn generate_feature_flags(&self) -> String {
         let mut features = HashMap::new();
-        
+
         // Default all features to false
         let all_features = [
             "telemetry_basic",
-            "telemetry_navigation", 
+            "telemetry_navigation",
             "telemetry_engines",
             "telemetry_weapons",
             "telemetry_countermeasures",
@@ -132,7 +137,10 @@ FlightHubExport.config = {{
         ];
 
         for feature in &all_features {
-            features.insert(*feature, self.config.enabled_features.contains(&feature.to_string()));
+            features.insert(
+                *feature,
+                self.config.enabled_features.contains(&feature.to_string()),
+            );
         }
 
         let mut feature_lines = Vec::new();
@@ -140,9 +148,17 @@ FlightHubExport.config = {{
         feature_lines.push("FlightHubExport.features = {".to_string());
 
         for (feature, enabled) in &features {
-            let mp_safe = !matches!(*feature, "telemetry_weapons" | "telemetry_countermeasures" | "telemetry_rwr");
-            let comment = if mp_safe { " -- MP-safe" } else { " -- MP-blocked" };
-            feature_lines.push(format!("    {} = {},{}",
+            let mp_safe = !matches!(
+                *feature,
+                "telemetry_weapons" | "telemetry_countermeasures" | "telemetry_rwr"
+            );
+            let comment = if mp_safe {
+                " -- MP-safe"
+            } else {
+                " -- MP-blocked"
+            };
+            feature_lines.push(format!(
+                "    {} = {},{}",
                 feature,
                 if *enabled { "true" } else { "false" },
                 comment
@@ -233,7 +249,8 @@ function FlightHubExport.send_heartbeat()
             FlightHubExport.last_heartbeat = now
         end
     end
-end"#.to_string()
+end"#
+            .to_string()
     }
 
     /// Generate telemetry collection code
@@ -407,7 +424,8 @@ function FlightHubExport.collect_telemetry()
     end
     
     return data, aircraft_name
-end"#.to_string()
+end"#
+            .to_string()
     }
 
     /// Generate main loop code
@@ -473,7 +491,8 @@ function FlightHubExport.to_json(obj)
     else
         return "null"
     end
-end"#.to_string()
+end"#
+            .to_string()
     }
 
     /// Generate script footer
@@ -535,7 +554,8 @@ if LuaExportStop_Original then
     end
 else
     LuaExportStop_Original = LuaExportStop
-end"#.to_string()
+end"#
+            .to_string()
     }
 
     /// Write script to file
@@ -548,14 +568,13 @@ end"#.to_string()
 
     /// Get default DCS Saved Games path
     pub fn get_dcs_saved_games_path() -> Result<PathBuf> {
-        let home_dir = dirs::home_dir()
-            .context("Could not determine home directory")?;
-        
+        let home_dir = dirs::home_dir().context("Could not determine home directory")?;
+
         // Try common DCS paths
         let dcs_paths = [
             "Saved Games/DCS.openbeta",
             "Saved Games/DCS",
-            "Documents/DCS.openbeta", 
+            "Documents/DCS.openbeta",
             "Documents/DCS",
         ];
 
@@ -678,7 +697,7 @@ mod tests {
         let config = ExportLuaConfig::default();
         let generator = ExportLuaGenerator::new(config);
         let script = generator.generate_script();
-        
+
         // Check for key components
         assert!(script.contains("Flight Hub DCS Export Script"));
         assert!(script.contains("socket_address = \"127.0.0.1\""));
@@ -693,10 +712,10 @@ mod tests {
     fn test_feature_flags_generation() {
         let mut config = ExportLuaConfig::default();
         config.enabled_features = vec!["telemetry_basic".to_string()];
-        
+
         let generator = ExportLuaGenerator::new(config);
         let script = generator.generate_script();
-        
+
         assert!(script.contains("telemetry_basic = true"));
         assert!(script.contains("telemetry_weapons = false"));
     }
@@ -705,10 +724,10 @@ mod tests {
     fn test_mp_safe_mode() {
         let mut config = ExportLuaConfig::default();
         config.mp_safe_mode = false;
-        
+
         let generator = ExportLuaGenerator::new(config);
         let script = generator.generate_script();
-        
+
         assert!(script.contains("mp_safe_mode = false"));
     }
 
@@ -717,7 +736,7 @@ mod tests {
         let config = ExportLuaConfig::default();
         let generator = ExportLuaGenerator::new(config);
         let install_script = generator.generate_install_script();
-        
+
         assert!(install_script.contains("Flight Hub DCS Export Installation"));
         assert!(install_script.contains("What We Touch"));
         assert!(install_script.contains("Multiplayer Integrity"));

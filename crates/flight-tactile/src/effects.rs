@@ -34,7 +34,10 @@ impl EffectIntensity {
         if (0.0..=1.0).contains(&value) {
             Ok(Self(value))
         } else {
-            Err(format!("Effect intensity must be between 0.0 and 1.0, got {}", value))
+            Err(format!(
+                "Effect intensity must be between 0.0 and 1.0, got {}",
+                value
+            ))
         }
     }
 
@@ -75,7 +78,11 @@ impl EffectEvent {
     }
 
     /// Create a new effect event with duration
-    pub fn with_duration(effect_type: EffectType, intensity: EffectIntensity, duration: Duration) -> Self {
+    pub fn with_duration(
+        effect_type: EffectType,
+        intensity: EffectIntensity,
+        duration: Duration,
+    ) -> Self {
         Self {
             effect_type,
             intensity,
@@ -95,7 +102,8 @@ impl EffectEvent {
 
     /// Get remaining duration
     pub fn remaining_duration(&self) -> Option<Duration> {
-        self.duration.and_then(|d| d.checked_sub(self.timestamp.elapsed()))
+        self.duration
+            .and_then(|d| d.checked_sub(self.timestamp.elapsed()))
     }
 }
 
@@ -118,9 +126,9 @@ impl EffectProcessor {
             last_altitude: 0.0,
             last_vertical_speed: 0.0,
             last_ground_speed: 0.0,
-            stall_threshold: 18.0, // degrees AoA
+            stall_threshold: 18.0,       // degrees AoA
             touchdown_threshold: -200.0, // fpm descent rate
-            ground_roll_threshold: 5.0, // knots ground speed
+            ground_roll_threshold: 5.0,  // knots ground speed
         }
     }
 
@@ -168,12 +176,12 @@ impl EffectProcessor {
     fn check_touchdown(&self, snapshot: &BusSnapshot) -> Option<EffectEvent> {
         let on_ground = snapshot.config.gear.all_down() && snapshot.environment.altitude < 50.0;
         let vertical_speed = snapshot.kinematics.vertical_speed;
-        
+
         // Touchdown detected: transition from air to ground with significant descent rate
         if !self.last_ground_contact && on_ground && vertical_speed < self.touchdown_threshold {
             let intensity = (vertical_speed.abs() / 500.0).min(1.0); // Scale by descent rate
             let intensity = EffectIntensity::new(intensity).unwrap_or(EffectIntensity::zero());
-            
+
             Some(EffectEvent::with_duration(
                 EffectType::Touchdown,
                 intensity,
@@ -188,12 +196,13 @@ impl EffectProcessor {
     fn check_ground_roll(&self, snapshot: &BusSnapshot) -> Option<EffectEvent> {
         let on_ground = snapshot.config.gear.all_down() && snapshot.environment.altitude < 50.0;
         let ground_speed = snapshot.kinematics.ground_speed.value();
-        
+
         if on_ground && ground_speed > self.ground_roll_threshold {
             // Intensity based on ground speed
             let intensity = (ground_speed / 100.0).min(1.0); // Scale up to 100 knots
-            let intensity = EffectIntensity::new(intensity * 0.3).unwrap_or(EffectIntensity::zero()); // Moderate intensity
-            
+            let intensity =
+                EffectIntensity::new(intensity * 0.3).unwrap_or(EffectIntensity::zero()); // Moderate intensity
+
             Some(EffectEvent::new(EffectType::GroundRoll, intensity))
         } else {
             None
@@ -204,12 +213,12 @@ impl EffectProcessor {
     fn check_stall_buffet(&self, snapshot: &BusSnapshot) -> Option<EffectEvent> {
         let aoa = snapshot.kinematics.aoa.value();
         let airspeed = snapshot.kinematics.ias.value();
-        
+
         // Stall buffet occurs at high AoA with sufficient airspeed
         if aoa > self.stall_threshold && airspeed > 40.0 {
             let intensity = ((aoa - self.stall_threshold) / 10.0).min(1.0); // Scale beyond threshold
             let intensity = EffectIntensity::new(intensity).unwrap_or(EffectIntensity::zero());
-            
+
             Some(EffectEvent::new(EffectType::StallBuffet, intensity))
         } else {
             None
@@ -223,18 +232,20 @@ impl EffectProcessor {
         }
 
         // Calculate average engine RPM
-        let total_rpm: f32 = snapshot.engines.iter()
+        let total_rpm: f32 = snapshot
+            .engines
+            .iter()
             .filter(|e| e.running)
             .map(|e| e.rpm.value())
             .sum();
-        
+
         let running_engines = snapshot.engines.iter().filter(|e| e.running).count();
-        
+
         if running_engines > 0 {
             let avg_rpm = total_rpm / running_engines as f32;
             let intensity = (avg_rpm / 100.0).min(1.0) * 0.2; // Low intensity engine vibration
             let intensity = EffectIntensity::new(intensity).unwrap_or(EffectIntensity::zero());
-            
+
             Some(EffectEvent::new(EffectType::EngineVibration, intensity))
         } else {
             None
@@ -246,11 +257,11 @@ impl EffectProcessor {
         let airspeed = snapshot.kinematics.ias.value();
         let altitude = snapshot.environment.altitude;
         let gear_down = snapshot.config.gear.all_down();
-        
+
         // Gear warning: low altitude, low speed, gear not down
         if altitude < 1000.0 && airspeed < 150.0 && !gear_down {
             let intensity = EffectIntensity::new(0.8).unwrap(); // High intensity warning
-            
+
             Some(EffectEvent::with_duration(
                 EffectType::GearWarning,
                 intensity,
@@ -266,12 +277,12 @@ impl EffectProcessor {
         if let Some(helo) = &snapshot.helo {
             let nr = helo.nr.value();
             let torque = helo.torque.value();
-            
+
             // Rotor vibration based on Nr and torque
             if nr > 90.0 {
                 let intensity = (torque / 100.0) * 0.4; // Scale with torque, moderate intensity
                 let intensity = EffectIntensity::new(intensity).unwrap_or(EffectIntensity::zero());
-                
+
                 Some(EffectEvent::new(EffectType::RotorVibration, intensity))
             } else {
                 None
@@ -283,7 +294,8 @@ impl EffectProcessor {
 
     /// Update internal state for next iteration
     fn update_state(&mut self, snapshot: &BusSnapshot) {
-        self.last_ground_contact = snapshot.config.gear.all_down() && snapshot.environment.altitude < 50.0;
+        self.last_ground_contact =
+            snapshot.config.gear.all_down() && snapshot.environment.altitude < 50.0;
         self.last_altitude = snapshot.environment.altitude;
         self.last_vertical_speed = snapshot.kinematics.vertical_speed;
         self.last_ground_speed = snapshot.kinematics.ground_speed.value();
@@ -314,7 +326,7 @@ impl Default for EffectProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_bus::{BusSnapshot, SimId, AircraftId};
+    use flight_bus::{AircraftId, BusSnapshot, SimId};
 
     fn create_test_snapshot() -> BusSnapshot {
         BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"))
@@ -336,7 +348,7 @@ mod tests {
             EffectIntensity::new(0.5).unwrap(),
             Duration::from_millis(100),
         );
-        
+
         assert!(!event.is_expired());
         std::thread::sleep(Duration::from_millis(150));
         assert!(event.is_expired());
@@ -346,16 +358,16 @@ mod tests {
     fn test_touchdown_detection() {
         let mut processor = EffectProcessor::new();
         let mut snapshot = create_test_snapshot();
-        
+
         // Set up for touchdown: in air with descent rate
         snapshot.environment.altitude = 100.0;
         snapshot.kinematics.vertical_speed = -300.0;
         processor.update_state(&snapshot);
-        
+
         // Now touchdown: on ground
         snapshot.environment.altitude = 10.0;
         let events = processor.process(&snapshot);
-        
+
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].effect_type, EffectType::Touchdown);
         assert!(events[0].intensity.value() > 0.0);
@@ -365,17 +377,18 @@ mod tests {
     fn test_stall_buffet_detection() {
         let mut processor = EffectProcessor::new();
         let mut snapshot = create_test_snapshot();
-        
+
         // Set up stall conditions
         snapshot.kinematics.aoa = flight_bus::ValidatedAngle::new_degrees(20.0).unwrap();
         snapshot.kinematics.ias = flight_bus::ValidatedSpeed::new_knots(50.0).unwrap();
-        
+
         let events = processor.process(&snapshot);
-        
-        let stall_events: Vec<_> = events.iter()
+
+        let stall_events: Vec<_> = events
+            .iter()
             .filter(|e| e.effect_type == EffectType::StallBuffet)
             .collect();
-        
+
         assert_eq!(stall_events.len(), 1);
         assert!(stall_events[0].intensity.value() > 0.0);
     }
@@ -384,17 +397,18 @@ mod tests {
     fn test_ground_roll_detection() {
         let mut processor = EffectProcessor::new();
         let mut snapshot = create_test_snapshot();
-        
+
         // Set up ground roll conditions
         snapshot.environment.altitude = 10.0;
         snapshot.kinematics.ground_speed = flight_bus::ValidatedSpeed::new_knots(30.0).unwrap();
-        
+
         let events = processor.process(&snapshot);
-        
-        let ground_roll_events: Vec<_> = events.iter()
+
+        let ground_roll_events: Vec<_> = events
+            .iter()
             .filter(|e| e.effect_type == EffectType::GroundRoll)
             .collect();
-        
+
         assert_eq!(ground_roll_events.len(), 1);
         assert!(ground_roll_events[0].intensity.value() > 0.0);
     }

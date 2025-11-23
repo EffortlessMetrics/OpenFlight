@@ -41,16 +41,19 @@ impl TrimLimits {
         if self.max_rate_nm_per_s <= 0.0 {
             return Err("max_rate_nm_per_s must be positive".to_string());
         }
-        
+
         if self.max_jerk_nm_per_s2 <= 0.0 {
             return Err("max_jerk_nm_per_s2 must be positive".to_string());
         }
-        
+
         // Sanity check: jerk should be reasonable relative to rate
         if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s {
-            return Err("max_jerk_nm_per_s2 should be >= max_rate_nm_per_s for reasonable behavior".to_string());
+            return Err(
+                "max_jerk_nm_per_s2 should be >= max_rate_nm_per_s for reasonable behavior"
+                    .to_string(),
+            );
         }
-        
+
         Ok(())
     }
 }
@@ -136,7 +139,7 @@ impl TrimController {
     /// Set trim mode
     pub fn set_mode(&mut self, mode: TrimMode) {
         self.mode = mode;
-        
+
         // Reset state when changing modes
         self.current_setpoint_nm = 0.0;
         self.target_setpoint_nm = 0.0;
@@ -172,12 +175,8 @@ impl TrimController {
         }
 
         match self.mode {
-            TrimMode::ForceFeedback => {
-                self.apply_ffb_setpoint_change(change)
-            }
-            TrimMode::SpringCentered => {
-                self.apply_spring_setpoint_change(change)
-            }
+            TrimMode::ForceFeedback => self.apply_ffb_setpoint_change(change),
+            TrimMode::SpringCentered => self.apply_spring_setpoint_change(change),
         }
     }
 
@@ -193,14 +192,14 @@ impl TrimController {
     fn apply_spring_setpoint_change(&mut self, change: SetpointChange) -> Result<(), String> {
         // For spring devices, we freeze the spring, change center, then re-enable
         self.freeze_spring();
-        
+
         // Convert torque setpoint to spring center position
         let new_center = (change.target_nm / self.max_torque_nm).clamp(-1.0, 1.0);
         self.spring_config.center = new_center;
-        
+
         self.target_setpoint_nm = change.target_nm;
         self.active_change = Some(change);
-        
+
         Ok(())
     }
 
@@ -226,7 +225,7 @@ impl TrimController {
         }
 
         let error = self.target_setpoint_nm - self.current_setpoint_nm;
-        
+
         // Check if we've reached the target
         if error.abs() < 0.001 {
             self.current_rate_nm_per_s = 0.0;
@@ -248,7 +247,7 @@ impl TrimController {
         let rate_error = desired_rate - self.current_rate_nm_per_s;
         let max_rate_change = self.limits.max_jerk_nm_per_s2 * dt;
         let rate_change = rate_error.clamp(-max_rate_change, max_rate_change);
-        
+
         self.current_rate_nm_per_s += rate_change;
         self.current_setpoint_nm += self.current_rate_nm_per_s * dt;
 
@@ -263,7 +262,7 @@ impl TrimController {
         // Handle spring ramp if active
         if let Some(ramp_start) = self.spring_ramp_start {
             let ramp_elapsed = ramp_start.elapsed();
-            
+
             if ramp_elapsed >= self.spring_ramp_duration {
                 // Ramp complete - unfreeze spring
                 self.spring_frozen = false;
@@ -271,13 +270,14 @@ impl TrimController {
                 self.active_change = None;
             } else {
                 // Ramp in progress - gradually increase spring strength
-                let ramp_progress = ramp_elapsed.as_secs_f32() / self.spring_ramp_duration.as_secs_f32();
+                let ramp_progress =
+                    ramp_elapsed.as_secs_f32() / self.spring_ramp_duration.as_secs_f32();
                 let target_strength = self.spring_config.strength;
-                
+
                 // Create ramped config with gradually increasing strength
                 let mut ramped_config = self.spring_config.clone();
                 ramped_config.strength = target_strength * ramp_progress;
-                
+
                 return TrimOutput::SpringCentered {
                     config: ramped_config,
                     frozen: false, // Not frozen during ramp, just reduced strength
@@ -378,14 +378,19 @@ impl TrimController {
     }
 
     /// Validate that no torque steps occur during setpoint changes
-    pub fn validate_no_torque_steps(&self, previous_output: f32, current_output: f32, dt: f32) -> Result<(), String> {
+    pub fn validate_no_torque_steps(
+        &self,
+        previous_output: f32,
+        current_output: f32,
+        dt: f32,
+    ) -> Result<(), String> {
         if dt <= 0.0 {
             return Ok(()); // Skip validation for invalid dt
         }
 
         let torque_change = (current_output - previous_output).abs();
         let rate = torque_change / dt;
-        
+
         // Check against rate limit with some tolerance for discrete sampling
         let tolerance_factor = 1.1; // 10% tolerance
         if rate > self.limits.max_rate_nm_per_s * tolerance_factor {
@@ -493,10 +498,10 @@ mod tests {
     #[test]
     fn test_mode_switching() {
         let mut controller = TrimController::new(15.0);
-        
+
         controller.set_mode(TrimMode::SpringCentered);
         assert_eq!(controller.mode(), TrimMode::SpringCentered);
-        
+
         controller.set_mode(TrimMode::ForceFeedback);
         assert_eq!(controller.mode(), TrimMode::ForceFeedback);
     }
@@ -504,13 +509,13 @@ mod tests {
     #[test]
     fn test_setpoint_validation() {
         let mut controller = TrimController::new(10.0);
-        
+
         let valid_change = SetpointChange {
             target_nm: 5.0,
             limits: TrimLimits::default(),
         };
         assert!(controller.apply_setpoint_change(valid_change).is_ok());
-        
+
         let invalid_change = SetpointChange {
             target_nm: 15.0, // Exceeds 10.0 limit
             limits: TrimLimits::default(),
@@ -522,12 +527,12 @@ mod tests {
     fn test_ffb_setpoint_change() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::ForceFeedback);
-        
+
         let change = SetpointChange {
             target_nm: 5.0,
             limits: TrimLimits::default(),
         };
-        
+
         assert!(controller.apply_setpoint_change(change).is_ok());
         assert_eq!(controller.target_setpoint_nm(), 5.0);
         assert!(controller.is_changing());
@@ -537,12 +542,12 @@ mod tests {
     fn test_spring_setpoint_change() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::SpringCentered);
-        
+
         let change = SetpointChange {
             target_nm: 7.5, // Should map to 0.5 center position
             limits: TrimLimits::default(),
         };
-        
+
         assert!(controller.apply_setpoint_change(change).is_ok());
         assert_eq!(controller.target_setpoint_nm(), 7.5);
         assert_eq!(controller.spring_config().center, 0.5);
@@ -553,9 +558,9 @@ mod tests {
     fn test_spring_freeze() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::SpringCentered);
-        
+
         controller.freeze_spring();
-        
+
         let output = controller.update();
         if let TrimOutput::SpringCentered { frozen, .. } = output {
             assert!(frozen);
@@ -568,7 +573,7 @@ mod tests {
     fn test_ffb_update_convergence() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::ForceFeedback);
-        
+
         let change = SetpointChange {
             target_nm: 1.0,
             limits: TrimLimits {
@@ -576,9 +581,9 @@ mod tests {
                 max_jerk_nm_per_s2: 100.0,
             },
         };
-        
+
         controller.apply_setpoint_change(change).unwrap();
-        
+
         // Simulate updates until convergence
         for _ in 0..1000 {
             let output = controller.update();
@@ -590,7 +595,7 @@ mod tests {
             // Simulate time passing
             std::thread::sleep(Duration::from_millis(1));
         }
-        
+
         // Check final state - should be close to target
         assert!((controller.current_setpoint_nm() - 1.0).abs() < 0.1);
     }
@@ -599,7 +604,7 @@ mod tests {
     fn test_rate_limiting() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::ForceFeedback);
-        
+
         let change = SetpointChange {
             target_nm: 10.0,
             limits: TrimLimits {
@@ -607,9 +612,9 @@ mod tests {
                 max_jerk_nm_per_s2: 5.0,
             },
         };
-        
+
         controller.apply_setpoint_change(change).unwrap();
-        
+
         // First update should respect rate limit
         let output = controller.update();
         if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
@@ -621,20 +626,20 @@ mod tests {
     fn test_completion_time_estimation() {
         let mut controller = TrimController::new(15.0);
         controller.set_mode(TrimMode::ForceFeedback);
-        
+
         let change = SetpointChange {
             target_nm: 5.0,
             limits: TrimLimits::default(),
         };
-        
+
         controller.apply_setpoint_change(change).unwrap();
-        
+
         // Verify that we can call the estimation function
         let _estimated = controller.estimated_completion_time();
-        
+
         // Verify that the controller is in changing state
         assert!(controller.is_changing());
-        
+
         // Verify target is set correctly
         assert_eq!(controller.target_setpoint_nm(), 5.0);
     }

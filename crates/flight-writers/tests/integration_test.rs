@@ -25,36 +25,30 @@ async fn test_complete_writers_workflow() {
         sim: SimulatorType::MSFS,
         version: "1.36.0".to_string(),
         description: Some("Test configuration".to_string()),
-        diffs: vec![
-            FileDiff {
-                file: temp_dir.path().join("test_panel.cfg"),
-                operation: DiffOperation::IniSection {
-                    section: "AUTOPILOT".to_string(),
-                    changes,
+        diffs: vec![FileDiff {
+            file: temp_dir.path().join("test_panel.cfg"),
+            operation: DiffOperation::IniSection {
+                section: "AUTOPILOT".to_string(),
+                changes,
+            },
+            backup: true,
+        }],
+        verify_scripts: vec![VerifyScript {
+            name: "basic_test".to_string(),
+            description: "Basic functionality test".to_string(),
+            actions: vec![
+                VerifyAction::SimEvent {
+                    event: "AP_MASTER".to_string(),
+                    value: Some(1.0),
                 },
-                backup: true,
-            },
-        ],
-        verify_scripts: vec![
-            VerifyScript {
-                name: "basic_test".to_string(),
-                description: "Basic functionality test".to_string(),
-                actions: vec![
-                    VerifyAction::SimEvent {
-                        event: "AP_MASTER".to_string(),
-                        value: Some(1.0),
-                    },
-                    VerifyAction::Wait { duration_ms: 100 },
-                ],
-                expected: vec![
-                    ExpectedResult {
-                        variable: "AUTOPILOT_MASTER".to_string(),
-                        value: 1.0,
-                        tolerance: 0.1,
-                    },
-                ],
-            },
-        ],
+                VerifyAction::Wait { duration_ms: 100 },
+            ],
+            expected: vec![ExpectedResult {
+                variable: "AUTOPILOT_MASTER".to_string(),
+                value: 1.0,
+                tolerance: 0.1,
+            }],
+        }],
     };
 
     // Test applying the configuration
@@ -65,7 +59,7 @@ async fn test_complete_writers_workflow() {
     // Verify the file was created correctly
     let created_file = &apply_result.modified_files[0];
     assert!(created_file.exists());
-    
+
     let content = fs::read_to_string(created_file).unwrap();
     assert!(content.contains("[AUTOPILOT]"));
     assert!(content.contains("autopilot_available=1"));
@@ -93,7 +87,7 @@ async fn test_complete_writers_workflow() {
 async fn test_golden_file_testing() {
     let temp_dir = TempDir::new().unwrap();
     let golden_dir = temp_dir.path().join("golden");
-    
+
     // Set up golden test structure
     let test_case_dir = golden_dir.join("msfs").join("test_v1.36.0_autopilot");
     fs::create_dir_all(&test_case_dir).unwrap();
@@ -108,16 +102,14 @@ async fn test_golden_file_testing() {
         sim: SimulatorType::MSFS,
         version: "1.36.0".to_string(),
         description: Some("Golden test configuration".to_string()),
-        diffs: vec![
-            FileDiff {
-                file: "autopilot.cfg".into(),
-                operation: DiffOperation::IniSection {
-                    section: "AUTOPILOT".to_string(),
-                    changes,
-                },
-                backup: true,
+        diffs: vec![FileDiff {
+            file: "autopilot.cfg".into(),
+            operation: DiffOperation::IniSection {
+                section: "AUTOPILOT".to_string(),
+                changes,
             },
-        ],
+            backup: true,
+        }],
         verify_scripts: vec![],
     };
 
@@ -126,7 +118,8 @@ async fn test_golden_file_testing() {
     fs::write(
         &input_file,
         serde_json::to_string_pretty(&input_config).unwrap(),
-    ).unwrap();
+    )
+    .unwrap();
 
     // Create expected output
     let expected_dir = test_case_dir.join("expected");
@@ -134,7 +127,8 @@ async fn test_golden_file_testing() {
     fs::write(
         expected_dir.join("autopilot.cfg"),
         "[AUTOPILOT]\nenabled=1\naltitude_hold=1\n",
-    ).unwrap();
+    )
+    .unwrap();
 
     // Run golden file test
     let tester = GoldenFileTester::new(&golden_dir);
@@ -164,24 +158,22 @@ async fn test_repair_functionality() {
         version: "1.36.0".to_string(),
         success: false,
         script_results: vec![],
-        mismatched_files: vec![
-            FileMismatch {
+        mismatched_files: vec![FileMismatch {
+            file: broken_file.clone(),
+            mismatch_type: MismatchType::ContentMismatch,
+            suggested_diff: Some(FileDiff {
                 file: broken_file.clone(),
-                mismatch_type: MismatchType::ContentMismatch,
-                suggested_diff: Some(FileDiff {
-                    file: broken_file.clone(),
-                    operation: DiffOperation::IniSection {
-                        section: "SECTION".to_string(),
-                        changes: {
-                            let mut changes = HashMap::new();
-                            changes.insert("correct_key".to_string(), "correct_value".to_string());
-                            changes
-                        },
+                operation: DiffOperation::IniSection {
+                    section: "SECTION".to_string(),
+                    changes: {
+                        let mut changes = HashMap::new();
+                        changes.insert("correct_key".to_string(), "correct_value".to_string());
+                        changes
                     },
-                    backup: true,
-                }),
-            },
-        ],
+                },
+                backup: true,
+            }),
+        }],
     };
 
     // Perform repair
@@ -198,7 +190,7 @@ async fn test_repair_functionality() {
 async fn test_coverage_matrix_generation() {
     let temp_dir = TempDir::new().unwrap();
     let golden_dir = temp_dir.path().join("golden");
-    
+
     // Create multiple test cases with different versions and areas
     let test_cases = [
         ("test_v1.35.0_autopilot", "1.35.0", "autopilot"),
@@ -210,7 +202,7 @@ async fn test_coverage_matrix_generation() {
     for (test_name, _version, _area) in &test_cases {
         let test_dir = golden_dir.join("msfs").join(test_name);
         fs::create_dir_all(&test_dir).unwrap();
-        
+
         // Create minimal test structure
         fs::write(test_dir.join("input.json"), "{}").unwrap();
         let expected_dir = test_dir.join("expected");
@@ -265,12 +257,12 @@ async fn test_json_patch_operations() {
 
     let backup_path = temp_dir.path().join("backup");
     fs::create_dir_all(&backup_path).unwrap();
-    
+
     applier.apply_diff(&diff, &backup_path).await.unwrap();
 
     let content = fs::read_to_string(&json_file).unwrap();
     let json: serde_json::Value = serde_json::from_str(&content).unwrap();
-    
+
     assert_eq!(json["existing"], "value");
     assert_eq!(json["number"], 100);
     assert_eq!(json["new_field"], "new_value");

@@ -9,7 +9,7 @@
 use crate::{AppVersion, VersionError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// Version range specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,8 +42,8 @@ impl VersionRange {
 
     /// Check if a version falls within this range
     pub fn contains(&self, version: &AppVersion) -> bool {
-        self.is_greater_or_equal(version, &self.min_version) &&
-        self.is_less_or_equal(version, &self.max_version)
+        self.is_greater_or_equal(version, &self.min_version)
+            && self.is_less_or_equal(version, &self.max_version)
     }
 
     /// Check if version is greater than or equal to reference
@@ -57,7 +57,7 @@ impl VersionRange {
         if version.patch != reference.patch {
             return version.patch > reference.patch;
         }
-        
+
         match (version.build, reference.build) {
             (Some(v_build), Some(r_build)) => v_build >= r_build,
             (Some(_), None) => true,
@@ -77,7 +77,7 @@ impl VersionRange {
         if version.patch != reference.patch {
             return version.patch < reference.patch;
         }
-        
+
         match (version.build, reference.build) {
             (Some(v_build), Some(r_build)) => v_build <= r_build,
             (Some(_), None) => false,
@@ -121,56 +121,47 @@ impl CompatibilityMatrix {
 
         // Fully supported versions (StreamDeck 6.0.0 - 6.4.x)
         matrix.supported_ranges.push(
-            VersionRange::new(
-                AppVersion::new(6, 0, 0),
-                AppVersion::new(6, 4, 999)
-            ).with_features(vec![
-                "basic_actions".to_string(),
-                "multi_actions".to_string(),
-                "profiles".to_string(),
-                "property_inspector".to_string(),
-                "websocket_api".to_string(),
-            ])
+            VersionRange::new(AppVersion::new(6, 0, 0), AppVersion::new(6, 4, 999)).with_features(
+                vec![
+                    "basic_actions".to_string(),
+                    "multi_actions".to_string(),
+                    "profiles".to_string(),
+                    "property_inspector".to_string(),
+                    "websocket_api".to_string(),
+                ],
+            ),
         );
 
         // Partially supported versions (StreamDeck 5.3.0 - 5.9.x)
         matrix.deprecated_ranges.push(
-            VersionRange::new(
-                AppVersion::new(5, 3, 0),
-                AppVersion::new(5, 9, 999)
-            ).with_features(vec![
-                "basic_actions".to_string(),
-                "profiles".to_string(),
-            ]).with_degraded_features(vec![
-                "multi_actions".to_string(),
-                "property_inspector".to_string(),
-            ])
+            VersionRange::new(AppVersion::new(5, 3, 0), AppVersion::new(5, 9, 999))
+                .with_features(vec!["basic_actions".to_string(), "profiles".to_string()])
+                .with_degraded_features(vec![
+                    "multi_actions".to_string(),
+                    "property_inspector".to_string(),
+                ]),
         );
 
         // Unsupported versions (< 5.3.0 or >= 7.0.0)
-        matrix.unsupported_ranges.push(
-            VersionRange::new(
-                AppVersion::new(0, 0, 0),
-                AppVersion::new(5, 2, 999)
-            )
-        );
-        
-        matrix.unsupported_ranges.push(
-            VersionRange::new(
-                AppVersion::new(7, 0, 0),
-                AppVersion::new(999, 999, 999)
-            )
-        );
+        matrix.unsupported_ranges.push(VersionRange::new(
+            AppVersion::new(0, 0, 0),
+            AppVersion::new(5, 2, 999),
+        ));
+
+        matrix.unsupported_ranges.push(VersionRange::new(
+            AppVersion::new(7, 0, 0),
+            AppVersion::new(999, 999, 999),
+        ));
 
         // Feature-specific version requirements
         matrix.feature_matrix.insert(
             "websocket_api".to_string(),
-            VersionRange::new(AppVersion::new(6, 0, 0), AppVersion::new(6, 4, 999))
+            VersionRange::new(AppVersion::new(6, 0, 0), AppVersion::new(6, 4, 999)),
         );
-        
+
         matrix.feature_matrix.insert(
             "property_inspector".to_string(),
-            VersionRange::new(AppVersion::new(5, 5, 0), AppVersion::new(6, 4, 999))
+            VersionRange::new(AppVersion::new(5, 5, 0), AppVersion::new(6, 4, 999)),
         );
 
         matrix
@@ -261,7 +252,7 @@ impl VersionCompatibility {
     /// Check if a version is compatible
     pub fn is_compatible(&self, version: &AppVersion) -> Result<bool, VersionError> {
         let status = self.matrix.check_compatibility(version);
-        
+
         match &status {
             CompatibilityStatus::FullySupported => {
                 info!("StreamDeck app version {} is fully supported", version);
@@ -292,14 +283,14 @@ impl VersionCompatibility {
     /// Set the current app version and check compatibility
     pub fn set_app_version(&mut self, version: AppVersion) -> Result<(), VersionError> {
         let is_compatible = self.is_compatible(&version)?;
-        
+
         if is_compatible {
             self.compatibility_status = Some(self.matrix.check_compatibility(&version));
             self.current_app_version = Some(version);
             Ok(())
         } else {
             Err(VersionError::CompatibilityCheckFailed(
-                "Version is not compatible".to_string()
+                "Version is not compatible".to_string(),
             ))
         }
     }
@@ -332,7 +323,8 @@ impl VersionCompatibility {
     pub fn get_user_guidance(&self) -> String {
         match &self.compatibility_status {
             Some(CompatibilityStatus::FullySupported) => {
-                "Your StreamDeck app version is fully supported. All features are available.".to_string()
+                "Your StreamDeck app version is fully supported. All features are available."
+                    .to_string()
             }
             Some(CompatibilityStatus::PartiallySupported { missing_features }) => {
                 format!(
@@ -353,9 +345,8 @@ impl VersionCompatibility {
                     error_message
                 )
             }
-            None => {
-                "StreamDeck app version not detected. Please ensure StreamDeck app is running.".to_string()
-            }
+            None => "StreamDeck app version not detected. Please ensure StreamDeck app is running."
+                .to_string(),
         }
     }
 }
@@ -372,10 +363,7 @@ mod tests {
 
     #[test]
     fn test_version_range_contains() {
-        let range = VersionRange::new(
-            AppVersion::new(6, 0, 0),
-            AppVersion::new(6, 4, 999)
-        );
+        let range = VersionRange::new(AppVersion::new(6, 0, 0), AppVersion::new(6, 4, 999));
 
         assert!(range.contains(&AppVersion::new(6, 0, 0)));
         assert!(range.contains(&AppVersion::new(6, 2, 5)));
@@ -403,7 +391,7 @@ mod tests {
     #[test]
     fn test_compatibility_matrix() {
         let matrix = CompatibilityMatrix::default_streamdeck();
-        
+
         // Test fully supported version
         let supported_version = AppVersion::new(6, 2, 0);
         match matrix.check_compatibility(&supported_version) {
@@ -429,14 +417,14 @@ mod tests {
     #[test]
     fn test_version_compatibility() {
         let mut compat = VersionCompatibility::new();
-        
+
         // Test compatible version
         let compatible_version = AppVersion::new(6, 2, 0);
         assert!(compat.is_compatible(&compatible_version).unwrap());
-        
+
         compat.set_app_version(compatible_version).unwrap();
         assert!(compat.is_feature_available("websocket_api"));
-        
+
         // Test incompatible version
         let incompatible_version = AppVersion::new(4, 0, 0);
         assert!(compat.is_compatible(&incompatible_version).is_err());
@@ -445,12 +433,12 @@ mod tests {
     #[test]
     fn test_user_guidance() {
         let mut compat = VersionCompatibility::new();
-        
+
         // Test guidance for supported version
         compat.set_app_version(AppVersion::new(6, 2, 0)).unwrap();
         let guidance = compat.get_user_guidance();
         assert!(guidance.contains("fully supported"));
-        
+
         // Test guidance for deprecated version
         compat.set_app_version(AppVersion::new(5, 5, 0)).unwrap();
         let guidance = compat.get_user_guidance();

@@ -9,12 +9,12 @@
 //! The Cougar MFD is a specialized display panel with programmable buttons and LED indicators
 //! commonly used in high-fidelity flight simulation setups.
 
-use crate::led::{LedTarget, LedState, LatencyStats};
-use flight_core::{Result, FlightError};
-use flight_hid::{HidAdapter, HidOperationResult, HidDeviceInfo};
+use crate::led::{LatencyStats, LedState, LedTarget};
+use flight_core::{FlightError, Result};
+use flight_hid::{HidAdapter, HidDeviceInfo, HidOperationResult};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{debug, warn, error, info};
+use tracing::{debug, error, info, warn};
 
 /// Thrustmaster Cougar MFD vendor ID
 const COUGAR_VENDOR_ID: u16 = 0x044F;
@@ -52,23 +52,73 @@ impl CougarMfdType {
         // Cougar MFDs have programmable button LEDs and status indicators
         match self {
             CougarMfdType::MfdLeft => &[
-                "OSB1", "OSB2", "OSB3", "OSB4", "OSB5",
-                "OSB6", "OSB7", "OSB8", "OSB9", "OSB10",
-                "OSB11", "OSB12", "OSB13", "OSB14", "OSB15",
-                "OSB16", "OSB17", "OSB18", "OSB19", "OSB20",
-                "BRIGHTNESS", "CONTRAST", "SYM", "CON", "BRT"
+                "OSB1",
+                "OSB2",
+                "OSB3",
+                "OSB4",
+                "OSB5",
+                "OSB6",
+                "OSB7",
+                "OSB8",
+                "OSB9",
+                "OSB10",
+                "OSB11",
+                "OSB12",
+                "OSB13",
+                "OSB14",
+                "OSB15",
+                "OSB16",
+                "OSB17",
+                "OSB18",
+                "OSB19",
+                "OSB20",
+                "BRIGHTNESS",
+                "CONTRAST",
+                "SYM",
+                "CON",
+                "BRT",
             ],
             CougarMfdType::MfdRight => &[
-                "OSB1", "OSB2", "OSB3", "OSB4", "OSB5",
-                "OSB6", "OSB7", "OSB8", "OSB9", "OSB10",
-                "OSB11", "OSB12", "OSB13", "OSB14", "OSB15",
-                "OSB16", "OSB17", "OSB18", "OSB19", "OSB20",
-                "BRIGHTNESS", "CONTRAST", "SYM", "CON", "BRT"
+                "OSB1",
+                "OSB2",
+                "OSB3",
+                "OSB4",
+                "OSB5",
+                "OSB6",
+                "OSB7",
+                "OSB8",
+                "OSB9",
+                "OSB10",
+                "OSB11",
+                "OSB12",
+                "OSB13",
+                "OSB14",
+                "OSB15",
+                "OSB16",
+                "OSB17",
+                "OSB18",
+                "OSB19",
+                "OSB20",
+                "BRIGHTNESS",
+                "CONTRAST",
+                "SYM",
+                "CON",
+                "BRT",
             ],
             CougarMfdType::MfdCenter => &[
-                "OSB1", "OSB2", "OSB3", "OSB4", "OSB5",
-                "OSB6", "OSB7", "OSB8", "OSB9", "OSB10",
-                "BRIGHTNESS", "CONTRAST", "POWER"
+                "OSB1",
+                "OSB2",
+                "OSB3",
+                "OSB4",
+                "OSB5",
+                "OSB6",
+                "OSB7",
+                "OSB8",
+                "OSB9",
+                "OSB10",
+                "BRIGHTNESS",
+                "CONTRAST",
+                "POWER",
             ],
         }
     }
@@ -220,17 +270,17 @@ impl CougarMfdWriter {
     /// Start the MFD writer and enumerate devices
     pub fn start(&mut self) -> Result<()> {
         info!("Starting Cougar MFD writer");
-        
+
         self.hid_adapter.start()?;
         self.enumerate_mfds()?;
-        
+
         Ok(())
     }
 
     /// Stop the MFD writer
     pub fn stop(&mut self) {
         info!("Stopping Cougar MFD writer");
-        
+
         // Turn off all LEDs before stopping
         let mfd_paths: Vec<_> = self.mfds.keys().cloned().collect();
         for mfd_path in mfd_paths {
@@ -238,7 +288,7 @@ impl CougarMfdWriter {
                 warn!("Failed to turn off LEDs for MFD {}: {}", mfd_path, e);
             }
         }
-        
+
         self.hid_adapter.stop();
         self.mfds.clear();
         self.led_states.clear();
@@ -247,33 +297,44 @@ impl CougarMfdWriter {
     /// Enumerate and register Cougar MFDs
     fn enumerate_mfds(&mut self) -> Result<()> {
         debug!("Enumerating Cougar MFDs");
-        
-        let devices: Vec<_> = self.hid_adapter.get_all_devices().into_iter().cloned().collect();
-        
+
+        let devices: Vec<_> = self
+            .hid_adapter
+            .get_all_devices()
+            .into_iter()
+            .cloned()
+            .collect();
+
         for device_info in devices {
             if self.is_supported_mfd(&device_info) {
                 self.register_mfd(device_info)?;
             }
         }
-        
+
         info!("Found {} Cougar MFDs", self.mfds.len());
         Ok(())
     }
 
     /// Check if device is a supported Cougar MFD
     fn is_supported_mfd(&self, device_info: &HidDeviceInfo) -> bool {
-        device_info.vendor_id == COUGAR_VENDOR_ID && 
-        CougarMfdType::from_product_id(device_info.product_id).is_some()
+        device_info.vendor_id == COUGAR_VENDOR_ID
+            && CougarMfdType::from_product_id(device_info.product_id).is_some()
     }
 
     /// Register a new MFD
     fn register_mfd(&mut self, device_info: HidDeviceInfo) -> Result<()> {
-        let mfd_type = CougarMfdType::from_product_id(device_info.product_id)
-            .ok_or_else(|| FlightError::Configuration(format!(
-                "Unsupported MFD product ID: {:04X}", device_info.product_id
-            )))?;
+        let mfd_type = CougarMfdType::from_product_id(device_info.product_id).ok_or_else(|| {
+            FlightError::Configuration(format!(
+                "Unsupported MFD product ID: {:04X}",
+                device_info.product_id
+            ))
+        })?;
 
-        info!("Registering {} MFD: {}", mfd_type.name(), device_info.device_path);
+        info!(
+            "Registering {} MFD: {}",
+            mfd_type.name(),
+            device_info.device_path
+        );
 
         let mfd_info = MfdInfo {
             device_info: device_info.clone(),
@@ -284,18 +345,22 @@ impl CougarMfdWriter {
         // Initialize LED states for this MFD
         let mut mfd_led_states = HashMap::new();
         for (index, &led_name) in mfd_type.led_mapping().iter().enumerate() {
-            mfd_led_states.insert(led_name.to_string(), MfdLedState {
-                led_index: index as u8,
-                brightness: 0.0,
-                is_on: false,
-                blink_rate: None,
-                last_blink_toggle: Instant::now(),
-                last_write: Instant::now(),
-            });
+            mfd_led_states.insert(
+                led_name.to_string(),
+                MfdLedState {
+                    led_index: index as u8,
+                    brightness: 0.0,
+                    is_on: false,
+                    blink_rate: None,
+                    last_blink_toggle: Instant::now(),
+                    last_write: Instant::now(),
+                },
+            );
         }
 
         self.mfds.insert(device_info.device_path.clone(), mfd_info);
-        self.led_states.insert(device_info.device_path.clone(), mfd_led_states);
+        self.led_states
+            .insert(device_info.device_path.clone(), mfd_led_states);
 
         // Initialize MFD (turn off all LEDs)
         self.turn_off_all_leds(&device_info.device_path)?;
@@ -304,18 +369,31 @@ impl CougarMfdWriter {
     }
 
     /// Set LED state for a specific MFD and LED
-    pub fn set_led(&mut self, mfd_path: &str, led_name: &str, _target: &LedTarget, state: &LedState) -> Result<()> {
-        let _mfd_info = self.mfds.get(mfd_path)
+    pub fn set_led(
+        &mut self,
+        mfd_path: &str,
+        led_name: &str,
+        _target: &LedTarget,
+        state: &LedState,
+    ) -> Result<()> {
+        let _mfd_info = self
+            .mfds
+            .get(mfd_path)
             .ok_or_else(|| FlightError::Configuration(format!("MFD not found: {}", mfd_path)))?;
 
         // Check rate limiting and update LED state
         let now = Instant::now();
         let should_write = {
-            let mfd_led_states = self.led_states.get_mut(mfd_path)
-                .ok_or_else(|| FlightError::Configuration(format!("LED states not found for MFD: {}", mfd_path)))?;
+            let mfd_led_states = self.led_states.get_mut(mfd_path).ok_or_else(|| {
+                FlightError::Configuration(format!("LED states not found for MFD: {}", mfd_path))
+            })?;
 
-            let led_state = mfd_led_states.get_mut(led_name)
-                .ok_or_else(|| FlightError::Configuration(format!("LED not found: {} on MFD {}", led_name, mfd_path)))?;
+            let led_state = mfd_led_states.get_mut(led_name).ok_or_else(|| {
+                FlightError::Configuration(format!(
+                    "LED not found: {} on MFD {}",
+                    led_name, mfd_path
+                ))
+            })?;
 
             // Check rate limiting
             if now.duration_since(led_state.last_write) < self.min_write_interval {
@@ -338,7 +416,7 @@ impl CougarMfdWriter {
                 let mfd_led_states = self.led_states.get(mfd_path).unwrap();
                 mfd_led_states.get(led_name).unwrap().clone()
             };
-            
+
             // Write to hardware
             self.write_led_to_hardware(mfd_path, led_name, &led_state_copy)?;
         }
@@ -347,7 +425,12 @@ impl CougarMfdWriter {
     }
 
     /// Write LED state to hardware via HID
-    fn write_led_to_hardware(&mut self, mfd_path: &str, led_name: &str, led_state: &MfdLedState) -> Result<()> {
+    fn write_led_to_hardware(
+        &mut self,
+        mfd_path: &str,
+        led_name: &str,
+        led_state: &MfdLedState,
+    ) -> Result<()> {
         let write_start = Instant::now();
 
         // Build HID report for this MFD type
@@ -357,7 +440,7 @@ impl CougarMfdWriter {
         match self.hid_adapter.write_output(mfd_path, &report)? {
             HidOperationResult::Success { bytes_transferred } => {
                 let write_latency = write_start.elapsed();
-                
+
                 // Track latency
                 self.latency_samples.push(write_latency);
                 if self.latency_samples.len() > self.max_latency_samples {
@@ -366,33 +449,58 @@ impl CougarMfdWriter {
 
                 // Validate latency requirement (≤20ms)
                 if write_latency > Duration::from_millis(20) {
-                    warn!("LED write latency exceeded 20ms: {:?} for {} on {}", 
-                          write_latency, led_name, mfd_path);
+                    warn!(
+                        "LED write latency exceeded 20ms: {:?} for {} on {}",
+                        write_latency, led_name, mfd_path
+                    );
                 }
 
-                debug!("LED {} on {} updated: {} bytes in {:?}", 
-                       led_name, mfd_path, bytes_transferred, write_latency);
+                debug!(
+                    "LED {} on {} updated: {} bytes in {:?}",
+                    led_name, mfd_path, bytes_transferred, write_latency
+                );
                 Ok(())
             }
             HidOperationResult::Stall => {
                 error!("HID stall writing LED {} on {}", led_name, mfd_path);
-                Err(FlightError::Hardware(format!("HID stall writing to {}", mfd_path)))
+                Err(FlightError::Hardware(format!(
+                    "HID stall writing to {}",
+                    mfd_path
+                )))
             }
             HidOperationResult::Timeout => {
                 error!("HID timeout writing LED {} on {}", led_name, mfd_path);
-                Err(FlightError::Hardware(format!("HID timeout writing to {}", mfd_path)))
+                Err(FlightError::Hardware(format!(
+                    "HID timeout writing to {}",
+                    mfd_path
+                )))
             }
-            HidOperationResult::Error { error_code, description } => {
-                error!("HID error writing LED {} on {}: {} - {}", 
-                       led_name, mfd_path, error_code, description);
-                Err(FlightError::Hardware(format!("HID error {}: {}", error_code, description)))
+            HidOperationResult::Error {
+                error_code,
+                description,
+            } => {
+                error!(
+                    "HID error writing LED {} on {}: {} - {}",
+                    led_name, mfd_path, error_code, description
+                );
+                Err(FlightError::Hardware(format!(
+                    "HID error {}: {}",
+                    error_code, description
+                )))
             }
         }
     }
 
     /// Build HID report for LED update
-    fn build_led_report(&self, mfd_path: &str, _led_name: &str, led_state: &MfdLedState) -> Result<Vec<u8>> {
-        let mfd_info = self.mfds.get(mfd_path)
+    fn build_led_report(
+        &self,
+        mfd_path: &str,
+        _led_name: &str,
+        led_state: &MfdLedState,
+    ) -> Result<Vec<u8>> {
+        let mfd_info = self
+            .mfds
+            .get(mfd_path)
             .ok_or_else(|| FlightError::Configuration(format!("MFD not found: {}", mfd_path)))?;
 
         // Build report based on MFD type
@@ -408,18 +516,18 @@ impl CougarMfdWriter {
         // Cougar MFD Left HID report format
         let mut report = vec![0u8; 32];
         report[0] = 0x01; // Report ID for LED control
-        
+
         // LED brightness in report bytes 1-25 (20 OSBs + 5 control LEDs)
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         if (led_state.led_index as usize) < 25 {
             report[1 + led_state.led_index as usize] = brightness_value;
         }
-        
+
         Ok(report)
     }
 
@@ -428,17 +536,17 @@ impl CougarMfdWriter {
         // Cougar MFD Right HID report format (same as left)
         let mut report = vec![0u8; 32];
         report[0] = 0x01; // Report ID for LED control
-        
+
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         if (led_state.led_index as usize) < 25 {
             report[1 + led_state.led_index as usize] = brightness_value;
         }
-        
+
         Ok(report)
     }
 
@@ -447,23 +555,25 @@ impl CougarMfdWriter {
         // Cougar MFD Center HID report format (fewer LEDs)
         let mut report = vec![0u8; 16];
         report[0] = 0x01; // Report ID for LED control
-        
+
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         if (led_state.led_index as usize) < 13 {
             report[1 + led_state.led_index as usize] = brightness_value;
         }
-        
+
         Ok(report)
     }
 
     /// Turn off all LEDs on an MFD
     fn turn_off_all_leds(&mut self, mfd_path: &str) -> Result<()> {
-        let mfd_info = self.mfds.get(mfd_path)
+        let mfd_info = self
+            .mfds
+            .get(mfd_path)
             .ok_or_else(|| FlightError::Configuration(format!("MFD not found: {}", mfd_path)))?;
 
         for &led_name in mfd_info.mfd_type.led_mapping() {
@@ -473,7 +583,7 @@ impl CougarMfdWriter {
                 blink_rate: None,
                 last_update: Instant::now(),
             };
-            
+
             let target = LedTarget::Panel(led_name.to_string());
             self.set_led(mfd_path, led_name, &target, &off_state)?;
         }
@@ -492,11 +602,11 @@ impl CougarMfdWriter {
                 if let Some(rate_hz) = led_state.blink_rate {
                     let period = Duration::from_secs_f32(1.0 / rate_hz);
                     let elapsed = now.duration_since(led_state.last_blink_toggle);
-                    
+
                     if elapsed >= period / 2 {
                         led_state.is_on = !led_state.is_on;
                         led_state.last_blink_toggle = now;
-                        
+
                         // Check rate limiting
                         if now.duration_since(led_state.last_write) >= self.min_write_interval {
                             updates.push((mfd_path.clone(), led_name.clone(), led_state.clone()));
@@ -516,14 +626,22 @@ impl CougarMfdWriter {
 
     /// Start verify test pattern for an MFD
     pub fn start_verify_test(&mut self, mfd_path: &str) -> Result<()> {
-        let mfd_info = self.mfds.get(mfd_path)
+        let mfd_info = self
+            .mfds
+            .get(mfd_path)
             .ok_or_else(|| FlightError::Configuration(format!("MFD not found: {}", mfd_path)))?;
 
         if self.verify_state.is_some() {
-            return Err(FlightError::Configuration("Verify test already in progress".to_string()));
+            return Err(FlightError::Configuration(
+                "Verify test already in progress".to_string(),
+            ));
         }
 
-        info!("Starting verify test for {} MFD: {}", mfd_info.mfd_type.name(), mfd_path);
+        info!(
+            "Starting verify test for {} MFD: {}",
+            mfd_info.mfd_type.name(),
+            mfd_path
+        );
 
         let steps = mfd_info.mfd_type.verify_pattern();
         self.verify_state = Some(CougarVerifyTestState {
@@ -555,15 +673,15 @@ impl CougarMfdWriter {
         };
 
         let now = Instant::now();
-        
+
         if current_step_index >= steps_len {
             // Test complete
             let total_duration = now.duration_since(test_start_time);
             let results = self.verify_state.as_ref().unwrap().results.clone();
             let success = results.iter().all(|r| r.success);
-            
+
             self.verify_state = None;
-            
+
             return Ok(Some(CougarVerifyTestResult {
                 mfd_path,
                 total_duration,
@@ -584,11 +702,11 @@ impl CougarMfdWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(CougarVerifyStepResult {
                         step_index: current_step_index,
@@ -598,7 +716,7 @@ impl CougarMfdWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             CougarVerifyStep::LedOff(led_name) => {
@@ -609,11 +727,11 @@ impl CougarMfdWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(CougarVerifyStepResult {
                         step_index: current_step_index,
@@ -623,7 +741,7 @@ impl CougarMfdWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             CougarVerifyStep::LedBlink(led_name, rate_hz) => {
@@ -634,11 +752,11 @@ impl CougarMfdWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&mfd_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(CougarVerifyStepResult {
                         step_index: current_step_index,
@@ -648,14 +766,20 @@ impl CougarMfdWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             CougarVerifyStep::AllOn => {
-                let led_mapping = self.mfds.get(&mfd_path).unwrap().mfd_type.led_mapping().to_vec();
+                let led_mapping = self
+                    .mfds
+                    .get(&mfd_path)
+                    .unwrap()
+                    .mfd_type
+                    .led_mapping()
+                    .to_vec();
                 let step_start = Instant::now();
                 let mut all_success = true;
-                
+
                 for led_name in led_mapping {
                     let state = LedState {
                         on: true,
@@ -664,12 +788,12 @@ impl CougarMfdWriter {
                         last_update: now,
                     };
                     let target = LedTarget::Panel(led_name.to_string());
-                    
+
                     if self.set_led(&mfd_path, led_name, &target, &state).is_err() {
                         all_success = false;
                     }
                 }
-                
+
                 let actual_latency = step_start.elapsed();
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(CougarVerifyStepResult {
@@ -677,17 +801,21 @@ impl CougarMfdWriter {
                         expected_latency: Duration::from_millis(20),
                         actual_latency,
                         success: all_success && actual_latency <= Duration::from_millis(20),
-                        error: if all_success { None } else { Some("Failed to turn on all LEDs".to_string()) },
+                        error: if all_success {
+                            None
+                        } else {
+                            Some("Failed to turn on all LEDs".to_string())
+                        },
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             CougarVerifyStep::AllOff => {
                 let step_start = Instant::now();
                 let result = self.turn_off_all_leds(&mfd_path);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(CougarVerifyStepResult {
                         step_index: current_step_index,
@@ -697,7 +825,7 @@ impl CougarMfdWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             CougarVerifyStep::Delay(duration) => {
@@ -755,16 +883,17 @@ impl CougarMfdWriter {
     pub fn check_mfd_health(&mut self, mfd_path: &str) -> Result<CougarMfdHealthStatus> {
         let now = Instant::now();
         let mfd_type = {
-            let mfd_info = self.mfds.get_mut(mfd_path)
-                .ok_or_else(|| FlightError::Configuration(format!("MFD not found: {}", mfd_path)))?;
-            
+            let mfd_info = self.mfds.get_mut(mfd_path).ok_or_else(|| {
+                FlightError::Configuration(format!("MFD not found: {}", mfd_path))
+            })?;
+
             mfd_info.last_health_check = now;
             mfd_info.mfd_type
         };
 
         // Check if MFD is responsive by attempting a simple LED operation
         let is_responsive = self.check_mfd_responsiveness(mfd_path)?;
-        
+
         // Check for configuration drift
         let drift_detected = self.detect_mfd_drift(mfd_path)?;
 
@@ -787,7 +916,7 @@ impl CougarMfdWriter {
             blink_rate: None,
             last_update: Instant::now(),
         };
-        
+
         let target = LedTarget::Panel("OSB1".to_string());
         match self.set_led(mfd_path, "OSB1", &target, &test_state) {
             Ok(()) => Ok(true),
@@ -801,7 +930,7 @@ impl CougarMfdWriter {
         // 1. Read current LED states from hardware
         // 2. Compare with expected states
         // 3. Detect configuration drift
-        
+
         // For now, simulate drift detection
         Ok(false)
     }
@@ -809,10 +938,10 @@ impl CougarMfdWriter {
     /// Repair MFD configuration drift
     pub fn repair_mfd_drift(&mut self, mfd_path: &str) -> Result<()> {
         info!("Repairing MFD configuration drift for: {}", mfd_path);
-        
+
         // Turn off all LEDs and reinitialize
         self.turn_off_all_leds(mfd_path)?;
-        
+
         // Reset LED states
         if let Some(mfd_led_states) = self.led_states.get_mut(mfd_path) {
             for led_state in mfd_led_states.values_mut() {
@@ -822,7 +951,7 @@ impl CougarMfdWriter {
                 led_state.last_write = Instant::now();
             }
         }
-        
+
         Ok(())
     }
 }
@@ -830,14 +959,15 @@ impl CougarMfdWriter {
 impl CougarVerifyTestResult {
     /// Check if latency requirement is met (≤20ms)
     pub fn meets_latency_requirement(&self) -> bool {
-        self.step_results.iter().all(|result| {
-            result.actual_latency <= Duration::from_millis(20)
-        })
+        self.step_results
+            .iter()
+            .all(|result| result.actual_latency <= Duration::from_millis(20))
     }
 
     /// Get maximum latency from all steps
     pub fn max_latency(&self) -> Duration {
-        self.step_results.iter()
+        self.step_results
+            .iter()
             .map(|result| result.actual_latency)
             .max()
             .unwrap_or(Duration::ZERO)
@@ -849,10 +979,12 @@ impl CougarVerifyTestResult {
             return Duration::ZERO;
         }
 
-        let total_nanos: u128 = self.step_results.iter()
+        let total_nanos: u128 = self
+            .step_results
+            .iter()
             .map(|result| result.actual_latency.as_nanos())
             .sum();
-        
+
         Duration::from_nanos((total_nanos / self.step_results.len() as u128) as u64)
     }
 }

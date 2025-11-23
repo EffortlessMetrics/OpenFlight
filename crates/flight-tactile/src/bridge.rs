@@ -3,19 +3,19 @@
 
 //! Main tactile bridge implementation with rate-limited thread
 
-use crate::channel::{ChannelRouter, ChannelMapping};
+use crate::channel::{ChannelMapping, ChannelRouter};
 use crate::effects::{EffectProcessor, EffectType};
 use crate::simshaker::{SimShakerBridge, SimShakerConfig, SimShakerError};
 use flight_bus::BusSnapshot;
 use flight_core::Result;
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
-use parking_lot::RwLock;
 use thiserror::Error;
-use tracing::{debug, warn, error, info};
+use tracing::{debug, error, info, warn};
 
 /// Configuration for the tactile bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,13 +132,13 @@ impl TactileBridge {
         // Validate configuration
         if config.update_rate_hz <= 0.0 || config.update_rate_hz > 1000.0 {
             return Err(flight_core::FlightError::Configuration(
-                "Update rate must be between 0 and 1000 Hz".to_string()
+                "Update rate must be between 0 and 1000 Hz".to_string(),
             ));
         }
 
         if config.max_queue_size == 0 {
             return Err(flight_core::FlightError::Configuration(
-                "Max queue size must be greater than 0".to_string()
+                "Max queue size must be greater than 0".to_string(),
             ));
         }
 
@@ -160,7 +160,7 @@ impl TactileBridge {
         info!("Starting tactile bridge");
 
         let (command_sender, command_receiver) = mpsc::channel();
-        
+
         let config = self.config.clone();
         let enabled = self.enabled.clone();
         let stats = self.stats.clone();
@@ -170,7 +170,12 @@ impl TactileBridge {
             .spawn(move || {
                 Self::bridge_thread_main(config, enabled, stats, command_receiver);
             })
-            .map_err(|e| flight_core::FlightError::Configuration(format!("Failed to start tactile bridge thread: {}", e)))?;
+            .map_err(|e| {
+                flight_core::FlightError::Configuration(format!(
+                    "Failed to start tactile bridge thread: {}",
+                    e
+                ))
+            })?;
 
         self.command_sender = Some(command_sender);
         self.thread_handle = Some(thread_handle);
@@ -204,9 +209,9 @@ impl TactileBridge {
         if let Some(sender) = &self.command_sender {
             match sender.send(BridgeCommand::ProcessTelemetry(snapshot.clone())) {
                 Ok(()) => Ok(()),
-                Err(_) => {
-                    Err(flight_core::FlightError::Configuration("Tactile bridge thread disconnected".to_string()))
-                }
+                Err(_) => Err(flight_core::FlightError::Configuration(
+                    "Tactile bridge thread disconnected".to_string(),
+                )),
             }
         } else {
             Ok(()) // Bridge not started
@@ -216,11 +221,11 @@ impl TactileBridge {
     /// Update configuration
     pub fn update_config(&self, config: TactileConfig) -> Result<()> {
         *self.config.write() = config.clone();
-        
+
         if let Some(sender) = &self.command_sender {
             let _ = sender.send(BridgeCommand::UpdateConfig(config));
         }
-        
+
         Ok(())
     }
 
@@ -297,7 +302,7 @@ impl TactileBridge {
                         BridgeCommand::UpdateConfig(new_config) => {
                             debug!("Updating tactile bridge configuration");
                             channel_router.update_mapping(new_config.channel_mapping.clone());
-                            
+
                             // Update SimShaker bridge if needed
                             if let Some(ref mut bridge) = simshaker_bridge {
                                 if let Err(e) = bridge.update_config(new_config.simshaker.clone()) {
@@ -306,7 +311,10 @@ impl TactileBridge {
                             }
                         }
                         BridgeCommand::TestEffect(effect_type, intensity) => {
-                            debug!("Testing effect: {:?} at intensity {}", effect_type, intensity);
+                            debug!(
+                                "Testing effect: {:?} at intensity {}",
+                                effect_type, intensity
+                            );
                             Self::test_effect_internal(
                                 effect_type,
                                 intensity,
@@ -353,13 +361,14 @@ impl TactileBridge {
             // Calculate processing time
             let processing_time = loop_start.elapsed();
             let processing_time_us = processing_time.as_micros() as f32;
-            
+
             // Update average processing time (simple moving average)
             let mut stats_guard = stats.write();
             if stats_guard.avg_processing_time_us == 0.0 {
                 stats_guard.avg_processing_time_us = processing_time_us;
             } else {
-                stats_guard.avg_processing_time_us = stats_guard.avg_processing_time_us * 0.95 + processing_time_us * 0.05;
+                stats_guard.avg_processing_time_us =
+                    stats_guard.avg_processing_time_us * 0.95 + processing_time_us * 0.05;
             }
         }
 
@@ -387,7 +396,11 @@ impl TactileBridge {
 
         // Filter events based on configuration
         events.retain(|event| {
-            config.effect_enabled.get(&event.effect_type).copied().unwrap_or(true)
+            config
+                .effect_enabled
+                .get(&event.effect_type)
+                .copied()
+                .unwrap_or(true)
         });
 
         // Route events to channels
@@ -408,12 +421,13 @@ impl TactileBridge {
 
         let processing_time = process_start.elapsed();
         let processing_time_us = processing_time.as_micros() as f32;
-        
+
         // Update average processing time
         if stats_guard.avg_processing_time_us == 0.0 {
             stats_guard.avg_processing_time_us = processing_time_us;
         } else {
-            stats_guard.avg_processing_time_us = stats_guard.avg_processing_time_us * 0.9 + processing_time_us * 0.1;
+            stats_guard.avg_processing_time_us =
+                stats_guard.avg_processing_time_us * 0.9 + processing_time_us * 0.1;
         }
     }
 
@@ -443,14 +457,14 @@ impl Drop for TactileBridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use parking_lot::RwLock;
+    use std::sync::Arc;
 
     #[test]
     fn test_tactile_bridge_creation() {
         let config = TactileConfig::default();
         let enabled = Arc::new(RwLock::new(true));
-        
+
         let bridge = TactileBridge::new(config, enabled);
         assert!(bridge.is_ok());
     }
@@ -459,7 +473,7 @@ mod tests {
     fn test_tactile_bridge_invalid_config() {
         let mut config = TactileConfig::default();
         config.update_rate_hz = 0.0; // Invalid
-        
+
         let enabled = Arc::new(RwLock::new(true));
         let bridge = TactileBridge::new(config, enabled);
         assert!(bridge.is_err());
@@ -468,17 +482,29 @@ mod tests {
     #[test]
     fn test_tactile_config_defaults() {
         let config = TactileConfig::default();
-        
+
         assert_eq!(config.update_rate_hz, 60.0);
         assert_eq!(config.max_queue_size, 100);
-        assert!(config.effect_enabled.get(&EffectType::Touchdown).copied().unwrap_or(false));
-        assert!(config.effect_enabled.get(&EffectType::StallBuffet).copied().unwrap_or(false));
+        assert!(
+            config
+                .effect_enabled
+                .get(&EffectType::Touchdown)
+                .copied()
+                .unwrap_or(false)
+        );
+        assert!(
+            config
+                .effect_enabled
+                .get(&EffectType::StallBuffet)
+                .copied()
+                .unwrap_or(false)
+        );
     }
 
     #[test]
     fn test_tactile_stats_defaults() {
         let stats = TactileStats::default();
-        
+
         assert_eq!(stats.snapshots_processed, 0);
         assert_eq!(stats.effects_generated, 0);
         assert_eq!(stats.outputs_sent, 0);
@@ -489,12 +515,12 @@ mod tests {
     fn test_bridge_lifecycle() {
         let config = TactileConfig::default();
         let enabled = Arc::new(RwLock::new(true));
-        
+
         let bridge = TactileBridge::new(config, enabled).unwrap();
-        
+
         // Should not be running initially
         assert!(!bridge.is_running());
-        
+
         // Note: We can't easily test start/stop without mocking the SimShaker bridge
         // as it requires network operations. In a real test environment, we would
         // use dependency injection or mocking frameworks.

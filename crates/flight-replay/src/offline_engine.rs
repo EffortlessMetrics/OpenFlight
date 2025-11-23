@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
 use flight_axis::{AxisEngine, AxisFrame, EngineConfig as AxisEngineConfig};
-use flight_ffb::{FfbEngine, FfbConfig, SafetyState, FfbMode};
 use flight_bus::BusSnapshot;
+use flight_ffb::{FfbConfig, FfbEngine, FfbMode, SafetyState};
 
 use crate::replay_config::ReplayConfig;
 
@@ -98,10 +98,15 @@ impl OfflineAxisEngine {
         // Update state
         self.state.timestamp_ns = frame.ts_mono_ns;
         self.state.frames_processed += 1;
-        self.state.axis_outputs.insert(device_id.to_string(), output);
+        self.state
+            .axis_outputs
+            .insert(device_id.to_string(), output);
         self.last_frames.insert(device_id.to_string(), frame);
 
-        trace!("Processed axis frame for {}: {} -> {}", device_id, frame.in_raw, output);
+        trace!(
+            "Processed axis frame for {}: {} -> {}",
+            device_id, frame.in_raw, output
+        );
         Ok(output)
     }
 
@@ -121,7 +126,7 @@ impl OfflineAxisEngine {
             last_error: None,
         };
         self.last_frames.clear();
-        
+
         // Re-initialize axis outputs for configured devices
         for device_id in self.device_configs.keys() {
             self.state.axis_outputs.insert(device_id.clone(), 0.0);
@@ -154,13 +159,12 @@ impl OfflineFfbEngine {
         let ffb_config = FfbConfig {
             max_torque_nm: 15.0,
             fault_timeout_ms: 50,
-            interlock_required: false, // Disabled for offline replay
+            interlock_required: false,     // Disabled for offline replay
             mode: FfbMode::TelemetrySynth, // Use telemetry synthesis for replay
             device_path: None,
         };
 
-        let engine = FfbEngine::new(ffb_config)
-            .context("Failed to create FFB engine")?;
+        let engine = FfbEngine::new(ffb_config).context("Failed to create FFB engine")?;
 
         let state = EngineState {
             timestamp_ns: 0,
@@ -189,13 +193,19 @@ impl OfflineFfbEngine {
     }
 
     /// Process telemetry data and generate FFB output
-    pub fn process_telemetry(&mut self, device_id: &str, snapshot: &BusSnapshot, timestamp_ns: u64) -> Result<f32> {
+    pub fn process_telemetry(
+        &mut self,
+        device_id: &str,
+        snapshot: &BusSnapshot,
+        timestamp_ns: u64,
+    ) -> Result<f32> {
         // Update engine with telemetry data
-        let torque_output = if let Some(effect_output) = self.engine.update_telemetry_synthesis(snapshot)? {
-            effect_output.torque_nm
-        } else {
-            0.0 // No telemetry synthesis enabled
-        };
+        let torque_output =
+            if let Some(effect_output) = self.engine.update_telemetry_synthesis(snapshot)? {
+                effect_output.torque_nm
+            } else {
+                0.0 // No telemetry synthesis enabled
+            };
 
         // Update engine state
         if let Err(e) = self.engine.update() {
@@ -210,15 +220,25 @@ impl OfflineFfbEngine {
         // Update state
         self.state.timestamp_ns = timestamp_ns;
         self.state.frames_processed += 1;
-        self.state.ffb_outputs.insert(device_id.to_string(), torque_output);
+        self.state
+            .ffb_outputs
+            .insert(device_id.to_string(), torque_output);
         self.last_update = Instant::now();
 
-        trace!("Processed FFB telemetry for {}: {} Nm", device_id, torque_output);
+        trace!(
+            "Processed FFB telemetry for {}: {} Nm",
+            device_id, torque_output
+        );
         Ok(torque_output)
     }
 
     /// Process axis frame for FFB (for axis-driven effects)
-    pub fn process_axis_frame(&mut self, device_id: &str, frame: AxisFrame, axis_output: f32) -> Result<f32> {
+    pub fn process_axis_frame(
+        &mut self,
+        device_id: &str,
+        frame: AxisFrame,
+        axis_output: f32,
+    ) -> Result<f32> {
         // Record axis frame in FFB engine
         self.engine.record_axis_frame(
             device_id.to_string(),
@@ -237,9 +257,14 @@ impl OfflineFfbEngine {
         // Update state
         self.state.timestamp_ns = frame.ts_mono_ns;
         self.state.frames_processed += 1;
-        self.state.ffb_outputs.insert(device_id.to_string(), torque_output);
+        self.state
+            .ffb_outputs
+            .insert(device_id.to_string(), torque_output);
 
-        trace!("Processed FFB axis frame for {}: {} Nm", device_id, torque_output);
+        trace!(
+            "Processed FFB axis frame for {}: {} Nm",
+            device_id, torque_output
+        );
         Ok(torque_output)
     }
 
@@ -258,7 +283,7 @@ impl OfflineFfbEngine {
             is_healthy: true,
             last_error: None,
         };
-        
+
         // Re-initialize FFB outputs for configured devices
         for device_id in self.device_configs.keys() {
             self.state.ffb_outputs.insert(device_id.clone(), 0.0);
@@ -292,13 +317,13 @@ impl OfflineFfbEngine {
 mod tests {
     use super::*;
     use flight_axis::AxisFrame;
-    use flight_bus::{BusSnapshot, Kinematics, AircraftConfig};
+    use flight_bus::{AircraftConfig, BusSnapshot, Kinematics};
 
     #[test]
     fn test_offline_axis_engine_creation() {
         let config = ReplayConfig::default();
         let engine = OfflineAxisEngine::new(config).unwrap();
-        
+
         assert_eq!(engine.get_state().frames_processed, 0);
         assert!(engine.get_state().is_healthy);
     }
@@ -307,10 +332,12 @@ mod tests {
     fn test_offline_axis_engine_device_management() {
         let config = ReplayConfig::default();
         let mut engine = OfflineAxisEngine::new(config).unwrap();
-        
+
         let device_config = AxisEngineConfig::default();
-        engine.add_device("test_device".to_string(), device_config).unwrap();
-        
+        engine
+            .add_device("test_device".to_string(), device_config)
+            .unwrap();
+
         assert!(engine.get_state().axis_outputs.contains_key("test_device"));
     }
 
@@ -318,13 +345,15 @@ mod tests {
     fn test_offline_axis_engine_frame_processing() {
         let config = ReplayConfig::default();
         let mut engine = OfflineAxisEngine::new(config).unwrap();
-        
+
         let device_config = AxisEngineConfig::default();
-        engine.add_device("test_device".to_string(), device_config).unwrap();
-        
+        engine
+            .add_device("test_device".to_string(), device_config)
+            .unwrap();
+
         let frame = AxisFrame::new(0.5, 1000000);
         let output = engine.process_frame("test_device", frame).unwrap();
-        
+
         assert_eq!(engine.get_state().frames_processed, 1);
         assert_eq!(engine.get_state().axis_outputs["test_device"], output);
     }
@@ -333,7 +362,7 @@ mod tests {
     fn test_offline_ffb_engine_creation() {
         let config = ReplayConfig::default();
         let engine = OfflineFfbEngine::new(config).unwrap();
-        
+
         assert_eq!(engine.get_state().frames_processed, 0);
         assert!(engine.get_state().is_healthy);
         assert_eq!(engine.get_safety_state(), SafetyState::SafeTorque);
@@ -343,7 +372,7 @@ mod tests {
     fn test_offline_ffb_engine_telemetry_processing() {
         let config = ReplayConfig::default();
         let mut engine = OfflineFfbEngine::new(config).unwrap();
-        
+
         let ffb_config = FfbConfig {
             max_torque_nm: 10.0,
             fault_timeout_ms: 50,
@@ -351,8 +380,10 @@ mod tests {
             mode: FfbMode::TelemetrySynth,
             device_path: None,
         };
-        engine.add_device("test_device".to_string(), ffb_config).unwrap();
-        
+        engine
+            .add_device("test_device".to_string(), ffb_config)
+            .unwrap();
+
         let snapshot = BusSnapshot {
             sim: flight_bus::SimId::Unknown,
             aircraft: flight_bus::AircraftId::new("test_aircraft"),
@@ -392,9 +423,11 @@ mod tests {
             environment: flight_bus::Environment::default(),
             navigation: flight_bus::Navigation::default(),
         };
-        
-        let output = engine.process_telemetry("test_device", &snapshot, 1000000).unwrap();
-        
+
+        let output = engine
+            .process_telemetry("test_device", &snapshot, 1000000)
+            .unwrap();
+
         assert_eq!(engine.get_state().frames_processed, 1);
         assert!(engine.get_state().ffb_outputs.contains_key("test_device"));
     }
@@ -403,17 +436,19 @@ mod tests {
     fn test_engine_reset() {
         let config = ReplayConfig::default();
         let mut engine = OfflineAxisEngine::new(config).unwrap();
-        
+
         let device_config = AxisEngineConfig::default();
-        engine.add_device("test_device".to_string(), device_config).unwrap();
-        
+        engine
+            .add_device("test_device".to_string(), device_config)
+            .unwrap();
+
         let frame = AxisFrame::new(0.5, 1000000);
         engine.process_frame("test_device", frame).unwrap();
-        
+
         assert_eq!(engine.get_state().frames_processed, 1);
-        
+
         engine.reset();
-        
+
         assert_eq!(engine.get_state().frames_processed, 0);
         assert_eq!(engine.get_state().timestamp_ns, 0);
         assert!(engine.get_state().axis_outputs.contains_key("test_device"));

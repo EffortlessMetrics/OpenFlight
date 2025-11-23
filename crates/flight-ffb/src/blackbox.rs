@@ -62,12 +62,12 @@ impl BlackboxEntry {
     /// Get timestamp of this entry
     pub fn timestamp(&self) -> Instant {
         match self {
-            BlackboxEntry::AxisFrame { timestamp, .. } |
-            BlackboxEntry::FfbState { timestamp, .. } |
-            BlackboxEntry::Fault { timestamp, .. } |
-            BlackboxEntry::SoftStop { timestamp, .. } |
-            BlackboxEntry::SystemEvent { timestamp, .. } |
-            BlackboxEntry::TelemetrySynth { timestamp, .. } => *timestamp,
+            BlackboxEntry::AxisFrame { timestamp, .. }
+            | BlackboxEntry::FfbState { timestamp, .. }
+            | BlackboxEntry::Fault { timestamp, .. }
+            | BlackboxEntry::SoftStop { timestamp, .. }
+            | BlackboxEntry::SystemEvent { timestamp, .. }
+            | BlackboxEntry::TelemetrySynth { timestamp, .. } => *timestamp,
         }
     }
 
@@ -86,29 +86,91 @@ impl BlackboxEntry {
     /// Serialize entry for storage (simplified format)
     pub fn serialize(&self) -> String {
         match self {
-            BlackboxEntry::AxisFrame { timestamp, device_id, raw_input, processed_output, torque_nm } => {
-                format!("AXIS,{:?},{},{},{},{}", 
-                    timestamp.elapsed(), device_id, raw_input, processed_output, torque_nm)
+            BlackboxEntry::AxisFrame {
+                timestamp,
+                device_id,
+                raw_input,
+                processed_output,
+                torque_nm,
+            } => {
+                format!(
+                    "AXIS,{:?},{},{},{},{}",
+                    timestamp.elapsed(),
+                    device_id,
+                    raw_input,
+                    processed_output,
+                    torque_nm
+                )
             }
-            BlackboxEntry::FfbState { timestamp, safety_state, torque_setpoint, actual_torque } => {
-                format!("FFB,{:?},{},{},{}", 
-                    timestamp.elapsed(), safety_state, torque_setpoint, actual_torque)
+            BlackboxEntry::FfbState {
+                timestamp,
+                safety_state,
+                torque_setpoint,
+                actual_torque,
+            } => {
+                format!(
+                    "FFB,{:?},{},{},{}",
+                    timestamp.elapsed(),
+                    safety_state,
+                    torque_setpoint,
+                    actual_torque
+                )
             }
-            BlackboxEntry::Fault { timestamp, fault_type, fault_code, context } => {
-                format!("FAULT,{:?},{},{},{}", 
-                    timestamp.elapsed(), fault_type, fault_code, context)
+            BlackboxEntry::Fault {
+                timestamp,
+                fault_type,
+                fault_code,
+                context,
+            } => {
+                format!(
+                    "FAULT,{:?},{},{},{}",
+                    timestamp.elapsed(),
+                    fault_type,
+                    fault_code,
+                    context
+                )
             }
-            BlackboxEntry::SoftStop { timestamp, reason, initial_torque, target_ramp_time } => {
-                format!("SOFTSTOP,{:?},{},{},{:?}", 
-                    timestamp.elapsed(), reason, initial_torque, target_ramp_time)
+            BlackboxEntry::SoftStop {
+                timestamp,
+                reason,
+                initial_torque,
+                target_ramp_time,
+            } => {
+                format!(
+                    "SOFTSTOP,{:?},{},{},{:?}",
+                    timestamp.elapsed(),
+                    reason,
+                    initial_torque,
+                    target_ramp_time
+                )
             }
-            BlackboxEntry::SystemEvent { timestamp, event_type, details } => {
-                format!("SYSTEM,{:?},{},{}", 
-                    timestamp.elapsed(), event_type, details)
+            BlackboxEntry::SystemEvent {
+                timestamp,
+                event_type,
+                details,
+            } => {
+                format!(
+                    "SYSTEM,{:?},{},{}",
+                    timestamp.elapsed(),
+                    event_type,
+                    details
+                )
             }
-            BlackboxEntry::TelemetrySynth { timestamp, torque_nm, frequency_hz, intensity, active_effects } => {
-                format!("TELEMETRY,{:?},{},{},{},{}", 
-                    timestamp.elapsed(), torque_nm, frequency_hz, intensity, active_effects)
+            BlackboxEntry::TelemetrySynth {
+                timestamp,
+                torque_nm,
+                frequency_hz,
+                intensity,
+                active_effects,
+            } => {
+                format!(
+                    "TELEMETRY,{:?},{},{},{},{}",
+                    timestamp.elapsed(),
+                    torque_nm,
+                    frequency_hz,
+                    intensity,
+                    active_effects
+                )
             }
         }
     }
@@ -222,16 +284,16 @@ impl BlackboxRecorder {
             if !capture.complete {
                 let entry_timestamp = entry.timestamp();
                 capture.post_fault_entries.push(entry);
-                
+
                 // Check if post-fault capture is complete
                 let post_fault_duration = entry_timestamp.duration_since(capture.fault_time);
                 if post_fault_duration >= self.config.post_fault_duration {
                     capture.complete = true;
-                    
+
                     // Move to completed captures
                     let completed_capture = self.active_capture.take().unwrap();
                     self.completed_captures.push(completed_capture);
-                    
+
                     // Keep only recent completed captures
                     if self.completed_captures.len() > self.max_completed_captures {
                         self.completed_captures.remove(0);
@@ -254,10 +316,11 @@ impl BlackboxRecorder {
         }
 
         let fault_time = fault_entry.timestamp();
-        
+
         // Extract pre-fault entries from circular buffer
         let cutoff_time = fault_time - self.config.pre_fault_duration;
-        let pre_fault_entries: Vec<BlackboxEntry> = self.circular_buffer
+        let pre_fault_entries: Vec<BlackboxEntry> = self
+            .circular_buffer
             .iter()
             .filter(|entry| entry.timestamp() >= cutoff_time && entry.timestamp() < fault_time)
             .cloned()
@@ -311,14 +374,23 @@ impl BlackboxRecorder {
         let mut content = String::new();
         content.push_str(&format!("Fault Capture Report\n"));
         content.push_str(&format!("Fault Time: {:?}\n", capture.fault_time.elapsed()));
-        content.push_str(&format!("Fault Entry: {}\n", capture.fault_entry.serialize()));
-        content.push_str(&format!("\nPre-fault entries ({}):\n", capture.pre_fault_entries.len()));
-        
+        content.push_str(&format!(
+            "Fault Entry: {}\n",
+            capture.fault_entry.serialize()
+        ));
+        content.push_str(&format!(
+            "\nPre-fault entries ({}):\n",
+            capture.pre_fault_entries.len()
+        ));
+
         for entry in &capture.pre_fault_entries {
             content.push_str(&format!("{}\n", entry.serialize()));
         }
-        
-        content.push_str(&format!("\nPost-fault entries ({}):\n", capture.post_fault_entries.len()));
+
+        content.push_str(&format!(
+            "\nPost-fault entries ({}):\n",
+            capture.post_fault_entries.len()
+        ));
         for entry in &capture.post_fault_entries {
             content.push_str(&format!("{}\n", entry.serialize()));
         }
@@ -333,12 +405,12 @@ impl BlackboxRecorder {
     /// Save all completed captures
     pub fn save_all_captures(&self) -> BlackboxResult<Vec<String>> {
         let mut saved_files = Vec::new();
-        
+
         for capture in &self.completed_captures {
             let filename = self.save_fault_capture(capture)?;
             saved_files.push(filename);
         }
-        
+
         Ok(saved_files)
     }
 
@@ -356,11 +428,15 @@ impl BlackboxRecorder {
     pub fn get_statistics(&self) -> BlackboxStatistics {
         let total_entries = self.circular_buffer.len();
         let buffer_utilization = total_entries as f32 / self.config.max_entries as f32;
-        
-        let oldest_entry_age = self.circular_buffer.front()
+
+        let oldest_entry_age = self
+            .circular_buffer
+            .front()
             .map(|entry| entry.timestamp().elapsed());
-        
-        let newest_entry_age = self.circular_buffer.back()
+
+        let newest_entry_age = self
+            .circular_buffer
+            .back()
             .map(|entry| entry.timestamp().elapsed());
 
         BlackboxStatistics {
@@ -448,23 +524,25 @@ mod tests {
             max_entries: 3,
             ..Default::default()
         };
-        
+
         let mut recorder = BlackboxRecorder::new(config).unwrap();
-        
+
         // Add entries up to capacity
         let now = Instant::now();
         recorder.record(create_test_axis_entry(now, 1.0)).unwrap();
         recorder.record(create_test_axis_entry(now, 2.0)).unwrap();
         recorder.record(create_test_axis_entry(now, 3.0)).unwrap();
-        
+
         assert_eq!(recorder.get_all_entries().len(), 3);
-        
+
         // Add one more - should evict oldest
         recorder.record(create_test_axis_entry(now, 4.0)).unwrap();
         assert_eq!(recorder.get_all_entries().len(), 3);
-        
+
         // First entry should be gone, last should be 4.0
-        if let BlackboxEntry::AxisFrame { torque_nm, .. } = recorder.get_all_entries().back().unwrap() {
+        if let BlackboxEntry::AxisFrame { torque_nm, .. } =
+            recorder.get_all_entries().back().unwrap()
+        {
             assert_eq!(*torque_nm, 4.0);
         } else {
             panic!("Expected AxisFrame entry");
@@ -479,32 +557,49 @@ mod tests {
             max_entries: 100,
             ..Default::default()
         };
-        
+
         let mut recorder = BlackboxRecorder::new(config).unwrap();
-        
+
         let start_time = Instant::now();
-        
+
         // Record some pre-fault entries
-        recorder.record(create_test_axis_entry(start_time, 1.0)).unwrap();
+        recorder
+            .record(create_test_axis_entry(start_time, 1.0))
+            .unwrap();
         thread::sleep(Duration::from_millis(50));
-        recorder.record(create_test_axis_entry(start_time + Duration::from_millis(50), 2.0)).unwrap();
-        
+        recorder
+            .record(create_test_axis_entry(
+                start_time + Duration::from_millis(50),
+                2.0,
+            ))
+            .unwrap();
+
         // Record fault
         let fault_time = start_time + Duration::from_millis(100);
         let fault_entry = create_test_fault_entry(fault_time);
         recorder.start_fault_capture(fault_entry).unwrap();
-        
+
         // Should have active capture
         assert!(recorder.get_active_capture().is_some());
-        
+
         // Record some post-fault entries
-        recorder.record(create_test_axis_entry(fault_time + Duration::from_millis(50), 3.0)).unwrap();
-        recorder.record(create_test_axis_entry(fault_time + Duration::from_millis(150), 4.0)).unwrap();
-        
+        recorder
+            .record(create_test_axis_entry(
+                fault_time + Duration::from_millis(50),
+                3.0,
+            ))
+            .unwrap();
+        recorder
+            .record(create_test_axis_entry(
+                fault_time + Duration::from_millis(150),
+                4.0,
+            ))
+            .unwrap();
+
         // Capture should be complete now
         assert!(recorder.get_completed_captures().len() == 1);
         assert!(recorder.get_active_capture().is_none());
-        
+
         let capture = &recorder.get_completed_captures()[0];
         assert!(capture.complete);
         assert_eq!(capture.pre_fault_entries.len(), 2);
@@ -518,29 +613,43 @@ mod tests {
             max_entries: 100,
             ..Default::default()
         };
-        
+
         let mut recorder = BlackboxRecorder::new(config).unwrap();
-        
+
         let start_time = Instant::now();
-        
+
         // Record entries at different times
-        recorder.record(create_test_axis_entry(start_time, 1.0)).unwrap(); // Too old
-        recorder.record(create_test_axis_entry(start_time + Duration::from_millis(60), 2.0)).unwrap(); // Should be included
-        recorder.record(create_test_axis_entry(start_time + Duration::from_millis(80), 3.0)).unwrap(); // Should be included
-        
+        recorder
+            .record(create_test_axis_entry(start_time, 1.0))
+            .unwrap(); // Too old
+        recorder
+            .record(create_test_axis_entry(
+                start_time + Duration::from_millis(60),
+                2.0,
+            ))
+            .unwrap(); // Should be included
+        recorder
+            .record(create_test_axis_entry(
+                start_time + Duration::from_millis(80),
+                3.0,
+            ))
+            .unwrap(); // Should be included
+
         // Fault at 100ms
         let fault_time = start_time + Duration::from_millis(100);
-        recorder.start_fault_capture(create_test_fault_entry(fault_time)).unwrap();
-        
+        recorder
+            .start_fault_capture(create_test_fault_entry(fault_time))
+            .unwrap();
+
         let capture = recorder.get_active_capture().unwrap();
-        
+
         // Should only have entries from last 50ms (60ms and 80ms entries)
         assert_eq!(capture.pre_fault_entries.len(), 2);
-        
+
         if let BlackboxEntry::AxisFrame { torque_nm, .. } = &capture.pre_fault_entries[0] {
             assert_eq!(*torque_nm, 2.0);
         }
-        
+
         if let BlackboxEntry::AxisFrame { torque_nm, .. } = &capture.pre_fault_entries[1] {
             assert_eq!(*torque_nm, 3.0);
         }
@@ -556,7 +665,7 @@ mod tests {
             processed_output: 0.6,
             torque_nm: 1.5,
         };
-        
+
         let serialized = entry.serialize();
         assert!(serialized.contains("AXIS"));
         assert!(serialized.contains("test"));
@@ -567,12 +676,19 @@ mod tests {
     #[test]
     fn test_recent_entries() {
         let mut recorder = BlackboxRecorder::default();
-        
+
         let now = Instant::now();
-        recorder.record(create_test_axis_entry(now - Duration::from_millis(200), 1.0)).unwrap();
-        recorder.record(create_test_axis_entry(now - Duration::from_millis(50), 2.0)).unwrap();
+        recorder
+            .record(create_test_axis_entry(
+                now - Duration::from_millis(200),
+                1.0,
+            ))
+            .unwrap();
+        recorder
+            .record(create_test_axis_entry(now - Duration::from_millis(50), 2.0))
+            .unwrap();
         recorder.record(create_test_axis_entry(now, 3.0)).unwrap();
-        
+
         let recent = recorder.get_recent_entries(Duration::from_millis(100));
         assert_eq!(recent.len(), 2); // Last two entries
     }
@@ -583,15 +699,17 @@ mod tests {
             max_entries: 10,
             ..Default::default()
         };
-        
+
         let mut recorder = BlackboxRecorder::new(config).unwrap();
-        
+
         // Add some entries
         let now = Instant::now();
         for i in 0..5 {
-            recorder.record(create_test_axis_entry(now, i as f32)).unwrap();
+            recorder
+                .record(create_test_axis_entry(now, i as f32))
+                .unwrap();
         }
-        
+
         let stats = recorder.get_statistics();
         assert_eq!(stats.total_entries, 5);
         assert_eq!(stats.buffer_utilization, 0.5); // 5/10
@@ -602,13 +720,18 @@ mod tests {
     #[test]
     fn test_double_fault_capture() {
         let mut recorder = BlackboxRecorder::default();
-        
+
         let now = Instant::now();
-        recorder.start_fault_capture(create_test_fault_entry(now)).unwrap();
-        
+        recorder
+            .start_fault_capture(create_test_fault_entry(now))
+            .unwrap();
+
         // Second fault capture should fail
         let result = recorder.start_fault_capture(create_test_fault_entry(now));
-        assert!(matches!(result, Err(BlackboxError::FaultCaptureAlreadyActive)));
+        assert!(matches!(
+            result,
+            Err(BlackboxError::FaultCaptureAlreadyActive)
+        ));
     }
 
     #[test]
@@ -617,7 +740,7 @@ mod tests {
             max_entries: 0, // Invalid
             ..Default::default()
         };
-        
+
         let result = BlackboxRecorder::new(invalid_config);
         assert!(matches!(result, Err(BlackboxError::InvalidConfig { .. })));
     }

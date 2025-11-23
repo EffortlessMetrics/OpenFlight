@@ -43,7 +43,7 @@ impl MsiPackageBuilder {
         } else {
             None
         };
-        
+
         Self {
             config,
             docs_manager,
@@ -80,12 +80,19 @@ impl MsiPackageBuilder {
         // In a real implementation, this would copy the actual application binaries
         // For now, we'll create placeholder files
         fs::write(app_dir.join("flight-hub.exe"), b"placeholder").await?;
-        fs::write(app_dir.join("README.txt"), "Flight Hub - Flight Simulation Input Management").await?;
+        fs::write(
+            app_dir.join("README.txt"),
+            "Flight Hub - Flight Simulation Input Management",
+        )
+        .await?;
 
         Ok(())
     }
 
-    async fn include_integration_docs_static(package_dir: &Path, docs_manager: &mut IntegrationDocsManager) -> crate::Result<()> {
+    async fn include_integration_docs_static(
+        package_dir: &Path,
+        docs_manager: &mut IntegrationDocsManager,
+    ) -> crate::Result<()> {
         let docs_dir = package_dir.join("docs").join("integration");
         fs::create_dir_all(&docs_dir).await?;
 
@@ -148,16 +155,19 @@ impl MsiPackageBuilder {
 
     fn generate_wix_source(&self, _package_dir: &Path) -> crate::Result<String> {
         let mut wix = String::new();
-        
-        wix.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>
+
+        wix.push_str(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name=""#);
+  <Product Id="*" Name=""#,
+        );
         wix.push_str(&self.config.app_name);
         wix.push_str(r#"" Language="1033" Version=""#);
         wix.push_str(&self.config.version);
         wix.push_str(r#"" Manufacturer=""#);
         wix.push_str(&self.config.publisher);
-        wix.push_str(r#"" UpgradeCode="12345678-1234-1234-1234-123456789012">
+        wix.push_str(
+            r#"" UpgradeCode="12345678-1234-1234-1234-123456789012">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
     
     <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
@@ -194,7 +204,8 @@ impl MsiPackageBuilder {
       </Component>
     </ComponentGroup>
   </Fragment>
-</Wix>"#);
+</Wix>"#,
+        );
 
         Ok(wix)
     }
@@ -215,7 +226,7 @@ impl SystemdPackageBuilder {
         } else {
             None
         };
-        
+
         Self {
             config,
             docs_manager,
@@ -232,7 +243,7 @@ impl SystemdPackageBuilder {
         let bin_dir = package_dir.join("usr/local/bin");
         let systemd_dir = package_dir.join("usr/lib/systemd/user");
         let docs_dir = package_dir.join("usr/share/doc/flight-hub");
-        
+
         fs::create_dir_all(&bin_dir).await?;
         fs::create_dir_all(&systemd_dir).await?;
         fs::create_dir_all(&docs_dir).await?;
@@ -258,13 +269,19 @@ impl SystemdPackageBuilder {
 
     async fn copy_application_files(&self, bin_dir: &Path) -> crate::Result<()> {
         // Copy main executable
-        fs::write(bin_dir.join("flight-hub"), b"#!/bin/bash\necho 'Flight Hub placeholder'\n").await?;
-        
+        fs::write(
+            bin_dir.join("flight-hub"),
+            b"#!/bin/bash\necho 'Flight Hub placeholder'\n",
+        )
+        .await?;
+
         // Set executable permissions
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(bin_dir.join("flight-hub")).await?.permissions();
+            let mut perms = fs::metadata(bin_dir.join("flight-hub"))
+                .await?
+                .permissions();
             perms.set_mode(0o755);
             fs::set_permissions(bin_dir.join("flight-hub"), perms).await?;
         }
@@ -273,7 +290,8 @@ impl SystemdPackageBuilder {
     }
 
     async fn create_systemd_unit(&self, systemd_dir: &Path) -> crate::Result<()> {
-        let unit_content = format!(r#"[Unit]
+        let unit_content = format!(
+            r#"[Unit]
 Description=Flight Hub - Flight Simulation Input Management
 After=graphical-session.target
 
@@ -286,13 +304,17 @@ Environment=XDG_RUNTIME_DIR=%i
 
 [Install]
 WantedBy=default.target
-"#);
+"#
+        );
 
         fs::write(systemd_dir.join("flight-hub.service"), unit_content).await?;
         Ok(())
     }
 
-    async fn include_integration_docs_for_systemd(docs_dir: &Path, docs_manager: &mut IntegrationDocsManager) -> crate::Result<()> {
+    async fn include_integration_docs_for_systemd(
+        docs_dir: &Path,
+        docs_manager: &mut IntegrationDocsManager,
+    ) -> crate::Result<()> {
         // Load all documentation
         docs_manager.load_all_docs().await?;
 
@@ -312,7 +334,13 @@ WantedBy=default.target
     async fn create_package(&self, package_dir: &Path, output_path: &Path) -> crate::Result<()> {
         // Create tarball
         let output = std::process::Command::new("tar")
-            .args(["-czf", output_path.to_str().unwrap(), "-C", package_dir.to_str().unwrap(), "."])
+            .args([
+                "-czf",
+                output_path.to_str().unwrap(),
+                "-C",
+                package_dir.to_str().unwrap(),
+                ".",
+            ])
             .output();
 
         if output.is_err() || !output_path.exists() {
@@ -325,22 +353,25 @@ WantedBy=default.target
 }
 
 /// Copy directory recursively
-fn copy_dir_recursive<'a>(src: &'a Path, dst: &'a Path) -> std::pin::Pin<Box<dyn std::future::Future<Output = crate::Result<()>> + Send + 'a>> {
+fn copy_dir_recursive<'a>(
+    src: &'a Path,
+    dst: &'a Path,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = crate::Result<()>> + Send + 'a>> {
     Box::pin(async move {
         fs::create_dir_all(dst).await?;
-        
+
         let mut entries = fs::read_dir(src).await?;
         while let Some(entry) = entries.next_entry().await? {
             let src_path = entry.path();
             let dst_path = dst.join(entry.file_name());
-            
+
             if src_path.is_dir() {
                 copy_dir_recursive(&src_path, &dst_path).await?;
             } else {
                 fs::copy(&src_path, &dst_path).await?;
             }
         }
-        
+
         Ok(())
     })
 }
@@ -365,7 +396,7 @@ mod tests {
 
         let mut builder = MsiPackageBuilder::new(config);
         let output_path = temp_dir.path().join("flight-hub.msi");
-        
+
         // This should not fail even without WiX tools
         let result = builder.build(&output_path).await;
         assert!(result.is_ok());
@@ -386,7 +417,7 @@ mod tests {
 
         let mut builder = SystemdPackageBuilder::new(config);
         let output_path = temp_dir.path().join("flight-hub.tar.gz");
-        
+
         let result = builder.build(&output_path).await;
         assert!(result.is_ok());
     }

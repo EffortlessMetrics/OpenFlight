@@ -15,11 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 use thiserror::Error;
-use tokio::{
-    net::UdpSocket,
-    sync::oneshot,
-    time::timeout,
-};
+use tokio::{net::UdpSocket, sync::oneshot, time::timeout};
 use tracing::{debug, error, trace};
 
 /// UDP client errors
@@ -108,15 +104,12 @@ pub struct UdpClient {
 impl UdpClient {
     /// Create a new UDP client
     pub fn new(config: UdpConfig) -> Result<Self, UdpError> {
-        let local_addr = SocketAddr::new(
-            IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
-            config.local_port,
-        );
+        let local_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), config.local_port);
 
         // Create socket - this is synchronous but should be fast
         let socket = std::net::UdpSocket::bind(local_addr)?;
         socket.set_nonblocking(true)?;
-        
+
         let socket = Arc::new(UdpSocket::from_std(socket)?);
 
         let client = Self {
@@ -137,7 +130,8 @@ impl UdpClient {
     pub async fn request_dataref(&self, dataref: &DataRef) -> Result<DataRefValue, UdpError> {
         // Check cache first
         if let Some((value, timestamp)) = self.get_cached_value(&dataref.name)
-            && timestamp.elapsed() < Duration::from_millis(50) {
+            && timestamp.elapsed() < Duration::from_millis(50)
+        {
             trace!("Returning cached value for {}", dataref.name);
             return Ok(value);
         }
@@ -216,8 +210,12 @@ impl UdpClient {
         let packet = self.encode_message(message)?;
         let target_addr = SocketAddr::new(self.config.host, self.config.port);
 
-        trace!("Sending UDP packet to {}: {} bytes", target_addr, packet.len());
-        
+        trace!(
+            "Sending UDP packet to {}: {} bytes",
+            target_addr,
+            packet.len()
+        );
+
         self.socket.send_to(&packet, target_addr).await?;
         Ok(())
     }
@@ -236,12 +234,15 @@ impl UdpClient {
                 packet.extend_from_slice(&frequency.to_le_bytes());
                 packet.extend_from_slice(&id.to_le_bytes());
                 packet.extend_from_slice(dataref_name.as_bytes());
-                
+
                 // Pad to 400 bytes (X-Plane requirement)
                 packet.resize(413, 0);
                 Ok(packet)
             }
-            UdpMessage::SetDataRef { dataref_name, value } => {
+            UdpMessage::SetDataRef {
+                dataref_name,
+                value,
+            } => {
                 let mut packet = Vec::new();
                 packet.extend_from_slice(b"DREF");
                 packet.push(0); // Null terminator for command
@@ -294,11 +295,9 @@ impl UdpClient {
             loop {
                 match socket.recv_from(&mut buffer).await {
                     Ok((len, _addr)) => {
-                        if let Err(e) = Self::handle_response(
-                            &buffer[..len],
-                            &pending_requests,
-                            &dataref_cache,
-                        ) {
+                        if let Err(e) =
+                            Self::handle_response(&buffer[..len], &pending_requests, &dataref_cache)
+                        {
                             debug!("Failed to handle UDP response: {}", e);
                         }
                     }
@@ -313,13 +312,13 @@ impl UdpClient {
         // Start cleanup task for expired requests
         let pending_requests_cleanup = self.pending_requests.clone();
         let timeout = self.config.timeout;
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 let mut expired_ids = Vec::new();
                 {
                     let pending = pending_requests_cleanup.read().unwrap();
@@ -329,7 +328,7 @@ impl UdpClient {
                         }
                     }
                 }
-                
+
                 if !expired_ids.is_empty() {
                     let mut pending = pending_requests_cleanup.write().unwrap();
                     for id in expired_ids {
@@ -354,7 +353,7 @@ impl UdpClient {
         }
 
         let command = &data[0..4];
-        
+
         match command {
             b"RREF" => {
                 // DataRef response
@@ -372,11 +371,14 @@ impl UdpClient {
                 let mut pending = pending_requests.write().unwrap();
                 if let Some(request) = pending.remove(&id) {
                     let dataref_value = DataRefValue::Float(value);
-                    
+
                     // Cache the value
                     {
                         let mut cache = dataref_cache.write().unwrap();
-                        cache.insert(request.dataref_name.clone(), (dataref_value.clone(), Instant::now()));
+                        cache.insert(
+                            request.dataref_name.clone(),
+                            (dataref_value.clone(), Instant::now()),
+                        );
                     }
 
                     let _ = request.sender.send(Ok(dataref_value));
@@ -403,7 +405,7 @@ impl UdpClient {
     ) -> Result<(), UdpError> {
         // DATA messages contain multiple 36-byte records
         let mut offset = 5; // Skip "DATA" + null terminator
-        
+
         while offset + 36 <= data.len() {
             let index = u32::from_le_bytes([
                 data[offset],
@@ -530,7 +532,7 @@ impl UdpClient {
     pub fn get_stats(&self) -> UdpStats {
         let pending_count = self.pending_requests.read().unwrap().len();
         let cache_count = self.dataref_cache.read().unwrap().len();
-        
+
         UdpStats {
             pending_requests: pending_count,
             cached_datarefs: cache_count,
@@ -550,7 +552,6 @@ pub struct UdpStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
 
     #[test]
     fn test_udp_config_defaults() {
@@ -585,7 +586,7 @@ mod tests {
 
         let id1 = client.get_next_request_id();
         let id2 = client.get_next_request_id();
-        
+
         assert_eq!(id1, 1);
         assert_eq!(id2, 2);
     }
@@ -604,7 +605,7 @@ mod tests {
         // Retrieve cached value
         let cached = client.get_cached_value(&name);
         assert!(cached.is_some());
-        
+
         let (cached_value, _timestamp) = cached.unwrap();
         assert_eq!(cached_value, value);
     }
@@ -622,17 +623,17 @@ mod tests {
         let mut data = Vec::new();
         data.extend_from_slice(b"DATA");
         data.push(0); // Null terminator
-        
+
         // Add a record for index 3 (speeds)
         data.extend_from_slice(&3u32.to_le_bytes()); // Index
         data.extend_from_slice(&150.0f32.to_le_bytes()); // IAS
         data.extend_from_slice(&155.0f32.to_le_bytes()); // TAS
         data.extend_from_slice(&145.0f32.to_le_bytes()); // GS
-        data.extend_from_slice(&0.0f32.to_le_bytes());   // Unused
-        data.extend_from_slice(&0.0f32.to_le_bytes());   // Unused
-        data.extend_from_slice(&0.0f32.to_le_bytes());   // Unused
-        data.extend_from_slice(&0.0f32.to_le_bytes());   // Unused
-        data.extend_from_slice(&0.0f32.to_le_bytes());   // Unused
+        data.extend_from_slice(&0.0f32.to_le_bytes()); // Unused
+        data.extend_from_slice(&0.0f32.to_le_bytes()); // Unused
+        data.extend_from_slice(&0.0f32.to_le_bytes()); // Unused
+        data.extend_from_slice(&0.0f32.to_le_bytes()); // Unused
+        data.extend_from_slice(&0.0f32.to_le_bytes()); // Unused
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
@@ -641,8 +642,10 @@ mod tests {
         // Check that values were cached
         let cache_guard = cache.read().unwrap();
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
-        
-        if let Some((DataRefValue::Float(ias), _)) = cache_guard.get("sim/flightmodel/position/indicated_airspeed") {
+
+        if let Some((DataRefValue::Float(ias), _)) =
+            cache_guard.get("sim/flightmodel/position/indicated_airspeed")
+        {
             assert_eq!(*ias, 150.0);
         } else {
             panic!("Expected cached IAS value");

@@ -8,7 +8,7 @@
 
 use crate::{
     adapter::XPlaneRawData,
-    aircraft::{DetectedAircraft, AircraftType, EngineType},
+    aircraft::{AircraftType, DetectedAircraft, EngineType},
     dataref::DataRefValue,
     latency::LatencyMeasurement,
 };
@@ -85,52 +85,132 @@ impl XPlaneFixtureGenerator {
         };
 
         let mut dataref_values = HashMap::new();
-        
+
         // Basic flight data
-        dataref_values.insert("sim/flightmodel/position/indicated_airspeed".to_string(), DataRefValue::Float(77.17)); // ~150 knots
-        dataref_values.insert("sim/flightmodel/position/true_airspeed".to_string(), DataRefValue::Float(80.56)); // ~156 knots
-        dataref_values.insert("sim/flightmodel/position/groundspeed".to_string(), DataRefValue::Float(75.0)); // ~145 knots
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(77.17),
+        ); // ~150 knots
+        dataref_values.insert(
+            "sim/flightmodel/position/true_airspeed".to_string(),
+            DataRefValue::Float(80.56),
+        ); // ~156 knots
+        dataref_values.insert(
+            "sim/flightmodel/position/groundspeed".to_string(),
+            DataRefValue::Float(75.0),
+        ); // ~145 knots
+
         // Attitude
-        dataref_values.insert("sim/flightmodel/position/theta".to_string(), DataRefValue::Float(2.5)); // Slight climb
-        dataref_values.insert("sim/flightmodel/position/phi".to_string(), DataRefValue::Float(0.0)); // Level
-        dataref_values.insert("sim/flightmodel/position/psi".to_string(), DataRefValue::Float(90.0)); // East
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(2.5),
+        ); // Slight climb
+        dataref_values.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(0.0),
+        ); // Level
+        dataref_values.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(90.0),
+        ); // East
+
         // Angles
-        dataref_values.insert("sim/flightmodel/position/alpha".to_string(), DataRefValue::Float(3.0)); // AoA
-        dataref_values.insert("sim/flightmodel/position/beta".to_string(), DataRefValue::Float(0.0)); // No sideslip
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(3.0),
+        ); // AoA
+        dataref_values.insert(
+            "sim/flightmodel/position/beta".to_string(),
+            DataRefValue::Float(0.0),
+        ); // No sideslip
+
         // G-forces
-        dataref_values.insert("sim/flightmodel/forces/g_nrml".to_string(), DataRefValue::Float(1.0));
-        dataref_values.insert("sim/flightmodel/forces/g_side".to_string(), DataRefValue::Float(0.0));
-        dataref_values.insert("sim/flightmodel/forces/g_axil".to_string(), DataRefValue::Float(0.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_nrml".to_string(),
+            DataRefValue::Float(1.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_side".to_string(),
+            DataRefValue::Float(0.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_axil".to_string(),
+            DataRefValue::Float(0.0),
+        );
+
         // Position
-        dataref_values.insert("sim/flightmodel/position/latitude".to_string(), DataRefValue::Double(37.7749));
-        dataref_values.insert("sim/flightmodel/position/longitude".to_string(), DataRefValue::Double(-122.4194));
-        dataref_values.insert("sim/flightmodel/position/elevation".to_string(), DataRefValue::Float(1524.0)); // 5000 ft
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(37.7749),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-122.4194),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/elevation".to_string(),
+            DataRefValue::Float(1524.0),
+        ); // 5000 ft
+
         // Vertical speed
-        dataref_values.insert("sim/flightmodel/position/vh_ind".to_string(), DataRefValue::Float(2.54)); // 500 fpm
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/vh_ind".to_string(),
+            DataRefValue::Float(2.54),
+        ); // 500 fpm
+
         // Aircraft configuration
-        dataref_values.insert("sim/aircraft/parts/acf_gear_deploy".to_string(), DataRefValue::Float(0.0)); // Gear up
-        dataref_values.insert("sim/aircraft/parts/acf_flap_deploy".to_string(), DataRefValue::Float(0.0)); // No flaps
-        dataref_values.insert("sim/aircraft/parts/acf_speedbrake_deploy".to_string(), DataRefValue::Float(0.0));
-        
+        dataref_values.insert(
+            "sim/aircraft/parts/acf_gear_deploy".to_string(),
+            DataRefValue::Float(0.0),
+        ); // Gear up
+        dataref_values.insert(
+            "sim/aircraft/parts/acf_flap_deploy".to_string(),
+            DataRefValue::Float(0.0),
+        ); // No flaps
+        dataref_values.insert(
+            "sim/aircraft/parts/acf_speedbrake_deploy".to_string(),
+            DataRefValue::Float(0.0),
+        );
+
         // Engine
-        dataref_values.insert("sim/flightmodel/engine/ENGN_running[0]".to_string(), DataRefValue::Int(1));
-        dataref_values.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string(), DataRefValue::Float(75.0));
-        dataref_values.insert("sim/flightmodel/engine/ENGN_MPR[0]".to_string(), DataRefValue::Float(23.5));
-        
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_running[0]".to_string(),
+            DataRefValue::Int(1),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_N1_[0]".to_string(),
+            DataRefValue::Float(75.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_MPR[0]".to_string(),
+            DataRefValue::Float(23.5),
+        );
+
         // Environment
-        dataref_values.insert("sim/weather/temperature_ambient_c".to_string(), DataRefValue::Float(15.0));
-        dataref_values.insert("sim/weather/wind_speed_kt[0]".to_string(), DataRefValue::Float(5.14)); // 10 knots
-        dataref_values.insert("sim/weather/wind_direction_degt[0]".to_string(), DataRefValue::Float(270.0));
-        
+        dataref_values.insert(
+            "sim/weather/temperature_ambient_c".to_string(),
+            DataRefValue::Float(15.0),
+        );
+        dataref_values.insert(
+            "sim/weather/wind_speed_kt[0]".to_string(),
+            DataRefValue::Float(5.14),
+        ); // 10 knots
+        dataref_values.insert(
+            "sim/weather/wind_direction_degt[0]".to_string(),
+            DataRefValue::Float(270.0),
+        );
+
         // Aircraft identification
-        dataref_values.insert("sim/aircraft/view/acf_ICAO".to_string(), DataRefValue::FloatArray(vec![67.0, 49.0, 55.0, 50.0, 0.0])); // "C172"
-        dataref_values.insert("sim/aircraft/view/acf_descrip".to_string(), DataRefValue::FloatArray(vec![67.0, 101.0, 115.0, 115.0, 110.0, 97.0, 32.0, 49.0, 55.0, 50.0, 83.0, 80.0, 0.0])); // "Cessna 172SP"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_ICAO".to_string(),
+            DataRefValue::FloatArray(vec![67.0, 49.0, 55.0, 50.0, 0.0]),
+        ); // "C172"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_descrip".to_string(),
+            DataRefValue::FloatArray(vec![
+                67.0, 101.0, 115.0, 115.0, 110.0, 97.0, 32.0, 49.0, 55.0, 50.0, 83.0, 80.0, 0.0,
+            ]),
+        ); // "Cessna 172SP"
 
         // Create expected snapshot
         let aircraft_id = AircraftId::new(&aircraft.icao);
@@ -163,58 +243,150 @@ impl XPlaneFixtureGenerator {
         };
 
         let mut dataref_values = HashMap::new();
-        
+
         // Approach speeds
-        dataref_values.insert("sim/flightmodel/position/indicated_airspeed".to_string(), DataRefValue::Float(69.44)); // ~135 knots
-        dataref_values.insert("sim/flightmodel/position/true_airspeed".to_string(), DataRefValue::Float(72.0)); // ~140 knots
-        dataref_values.insert("sim/flightmodel/position/groundspeed".to_string(), DataRefValue::Float(67.0)); // ~130 knots
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(69.44),
+        ); // ~135 knots
+        dataref_values.insert(
+            "sim/flightmodel/position/true_airspeed".to_string(),
+            DataRefValue::Float(72.0),
+        ); // ~140 knots
+        dataref_values.insert(
+            "sim/flightmodel/position/groundspeed".to_string(),
+            DataRefValue::Float(67.0),
+        ); // ~130 knots
+
         // Approach attitude
-        dataref_values.insert("sim/flightmodel/position/theta".to_string(), DataRefValue::Float(-3.0)); // Descent
-        dataref_values.insert("sim/flightmodel/position/phi".to_string(), DataRefValue::Float(0.0)); // Level
-        dataref_values.insert("sim/flightmodel/position/psi".to_string(), DataRefValue::Float(270.0)); // West
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(-3.0),
+        ); // Descent
+        dataref_values.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(0.0),
+        ); // Level
+        dataref_values.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(270.0),
+        ); // West
+
         // Approach configuration
-        dataref_values.insert("sim/aircraft/parts/acf_gear_deploy".to_string(), DataRefValue::Float(1.0)); // Gear down
-        dataref_values.insert("sim/aircraft/parts/acf_flap_deploy".to_string(), DataRefValue::Float(0.75)); // Approach flaps
-        
+        dataref_values.insert(
+            "sim/aircraft/parts/acf_gear_deploy".to_string(),
+            DataRefValue::Float(1.0),
+        ); // Gear down
+        dataref_values.insert(
+            "sim/aircraft/parts/acf_flap_deploy".to_string(),
+            DataRefValue::Float(0.75),
+        ); // Approach flaps
+
         // Twin engines
-        dataref_values.insert("sim/flightmodel/engine/ENGN_running[0]".to_string(), DataRefValue::Int(1));
-        dataref_values.insert("sim/flightmodel/engine/ENGN_running[1]".to_string(), DataRefValue::Int(1));
-        dataref_values.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string(), DataRefValue::Float(65.0));
-        dataref_values.insert("sim/flightmodel/engine/ENGN_N1_[1]".to_string(), DataRefValue::Float(65.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_running[0]".to_string(),
+            DataRefValue::Int(1),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_running[1]".to_string(),
+            DataRefValue::Int(1),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_N1_[0]".to_string(),
+            DataRefValue::Float(65.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_N1_[1]".to_string(),
+            DataRefValue::Float(65.0),
+        );
+
         // Autopilot
-        dataref_values.insert("sim/cockpit/autopilot/autopilot_mode".to_string(), DataRefValue::Int(2)); // Engaged
-        dataref_values.insert("sim/cockpit/autopilot/altitude".to_string(), DataRefValue::Float(3000.0));
-        dataref_values.insert("sim/cockpit/autopilot/heading".to_string(), DataRefValue::Float(270.0));
-        
+        dataref_values.insert(
+            "sim/cockpit/autopilot/autopilot_mode".to_string(),
+            DataRefValue::Int(2),
+        ); // Engaged
+        dataref_values.insert(
+            "sim/cockpit/autopilot/altitude".to_string(),
+            DataRefValue::Float(3000.0),
+        );
+        dataref_values.insert(
+            "sim/cockpit/autopilot/heading".to_string(),
+            DataRefValue::Float(270.0),
+        );
+
         // Position
-        dataref_values.insert("sim/flightmodel/position/latitude".to_string(), DataRefValue::Double(40.6892));
-        dataref_values.insert("sim/flightmodel/position/longitude".to_string(), DataRefValue::Double(-74.1745));
-        dataref_values.insert("sim/flightmodel/position/elevation".to_string(), DataRefValue::Float(914.4)); // 3000 ft
-        dataref_values.insert("sim/flightmodel/position/vh_ind".to_string(), DataRefValue::Float(-3.81)); // -750 fpm
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(40.6892),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-74.1745),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/elevation".to_string(),
+            DataRefValue::Float(914.4),
+        ); // 3000 ft
+        dataref_values.insert(
+            "sim/flightmodel/position/vh_ind".to_string(),
+            DataRefValue::Float(-3.81),
+        ); // -750 fpm
+
         // Angles
-        dataref_values.insert("sim/flightmodel/position/alpha".to_string(), DataRefValue::Float(5.0)); // AoA
-        dataref_values.insert("sim/flightmodel/position/beta".to_string(), DataRefValue::Float(0.0)); // No sideslip
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(5.0),
+        ); // AoA
+        dataref_values.insert(
+            "sim/flightmodel/position/beta".to_string(),
+            DataRefValue::Float(0.0),
+        ); // No sideslip
+
         // G-forces
-        dataref_values.insert("sim/flightmodel/forces/g_nrml".to_string(), DataRefValue::Float(1.0));
-        dataref_values.insert("sim/flightmodel/forces/g_side".to_string(), DataRefValue::Float(0.0));
-        dataref_values.insert("sim/flightmodel/forces/g_axil".to_string(), DataRefValue::Float(0.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_nrml".to_string(),
+            DataRefValue::Float(1.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_side".to_string(),
+            DataRefValue::Float(0.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_axil".to_string(),
+            DataRefValue::Float(0.0),
+        );
+
         // Ground track
-        dataref_values.insert("sim/flightmodel/position/hpath".to_string(), DataRefValue::Float(270.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/hpath".to_string(),
+            DataRefValue::Float(270.0),
+        );
+
         // Environment
-        dataref_values.insert("sim/weather/temperature_ambient_c".to_string(), DataRefValue::Float(10.0));
-        dataref_values.insert("sim/weather/wind_speed_kt[0]".to_string(), DataRefValue::Float(10.28)); // 20 knots
-        dataref_values.insert("sim/weather/wind_direction_degt[0]".to_string(), DataRefValue::Float(300.0));
-        
+        dataref_values.insert(
+            "sim/weather/temperature_ambient_c".to_string(),
+            DataRefValue::Float(10.0),
+        );
+        dataref_values.insert(
+            "sim/weather/wind_speed_kt[0]".to_string(),
+            DataRefValue::Float(10.28),
+        ); // 20 knots
+        dataref_values.insert(
+            "sim/weather/wind_direction_degt[0]".to_string(),
+            DataRefValue::Float(300.0),
+        );
+
         // Aircraft identification
-        dataref_values.insert("sim/aircraft/view/acf_ICAO".to_string(), DataRefValue::FloatArray(vec![65.0, 51.0, 50.0, 48.0, 0.0])); // "A320"
-        dataref_values.insert("sim/aircraft/view/acf_descrip".to_string(), DataRefValue::FloatArray(vec![65.0, 105.0, 114.0, 98.0, 117.0, 115.0, 32.0, 65.0, 51.0, 50.0, 48.0, 0.0])); // "Airbus A320"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_ICAO".to_string(),
+            DataRefValue::FloatArray(vec![65.0, 51.0, 50.0, 48.0, 0.0]),
+        ); // "A320"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_descrip".to_string(),
+            DataRefValue::FloatArray(vec![
+                65.0, 105.0, 114.0, 98.0, 117.0, 115.0, 32.0, 65.0, 51.0, 50.0, 48.0, 0.0,
+            ]),
+        ); // "Airbus A320"
 
         let aircraft_id = AircraftId::new(&aircraft.icao);
         let expected_snapshot = BusSnapshot::new(SimId::XPlane, aircraft_id);
@@ -246,50 +418,130 @@ impl XPlaneFixtureGenerator {
         };
 
         let mut dataref_values = HashMap::new();
-        
+
         // Hover speeds (near zero)
-        dataref_values.insert("sim/flightmodel/position/indicated_airspeed".to_string(), DataRefValue::Float(2.57)); // ~5 knots
-        dataref_values.insert("sim/flightmodel/position/true_airspeed".to_string(), DataRefValue::Float(2.57));
-        dataref_values.insert("sim/flightmodel/position/groundspeed".to_string(), DataRefValue::Float(0.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(2.57),
+        ); // ~5 knots
+        dataref_values.insert(
+            "sim/flightmodel/position/true_airspeed".to_string(),
+            DataRefValue::Float(2.57),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/groundspeed".to_string(),
+            DataRefValue::Float(0.0),
+        );
+
         // Hover attitude
-        dataref_values.insert("sim/flightmodel/position/theta".to_string(), DataRefValue::Float(5.0)); // Slight nose up
-        dataref_values.insert("sim/flightmodel/position/phi".to_string(), DataRefValue::Float(-2.0)); // Slight left bank
-        dataref_values.insert("sim/flightmodel/position/psi".to_string(), DataRefValue::Float(180.0)); // South
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(5.0),
+        ); // Slight nose up
+        dataref_values.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(-2.0),
+        ); // Slight left bank
+        dataref_values.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(180.0),
+        ); // South
+
         // Helicopter-specific
-        dataref_values.insert("sim/flightmodel/engine/ENGN_Nrotor".to_string(), DataRefValue::Float(100.0)); // Main rotor
-        dataref_values.insert("sim/flightmodel/engine/ENGN_Nturb".to_string(), DataRefValue::Float(95.0)); // Turbine
-        dataref_values.insert("sim/flightmodel/engine/ENGN_torq".to_string(), DataRefValue::Float(65.0)); // Torque
-        dataref_values.insert("sim/joystick/yoke_pitch_ratio".to_string(), DataRefValue::Float(0.6)); // Collective
-        dataref_values.insert("sim/joystick/yoke_heading_ratio".to_string(), DataRefValue::Float(0.1)); // Pedals
-        
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_Nrotor".to_string(),
+            DataRefValue::Float(100.0),
+        ); // Main rotor
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_Nturb".to_string(),
+            DataRefValue::Float(95.0),
+        ); // Turbine
+        dataref_values.insert(
+            "sim/flightmodel/engine/ENGN_torq".to_string(),
+            DataRefValue::Float(65.0),
+        ); // Torque
+        dataref_values.insert(
+            "sim/joystick/yoke_pitch_ratio".to_string(),
+            DataRefValue::Float(0.6),
+        ); // Collective
+        dataref_values.insert(
+            "sim/joystick/yoke_heading_ratio".to_string(),
+            DataRefValue::Float(0.1),
+        ); // Pedals
+
         // Position
-        dataref_values.insert("sim/flightmodel/position/latitude".to_string(), DataRefValue::Double(32.7767));
-        dataref_values.insert("sim/flightmodel/position/longitude".to_string(), DataRefValue::Double(-96.7970));
-        dataref_values.insert("sim/flightmodel/position/elevation".to_string(), DataRefValue::Float(30.48)); // 100 ft
-        dataref_values.insert("sim/flightmodel/position/vh_ind".to_string(), DataRefValue::Float(0.0)); // Stable hover
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(32.7767),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-96.7970),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/position/elevation".to_string(),
+            DataRefValue::Float(30.48),
+        ); // 100 ft
+        dataref_values.insert(
+            "sim/flightmodel/position/vh_ind".to_string(),
+            DataRefValue::Float(0.0),
+        ); // Stable hover
+
         // G-forces
-        dataref_values.insert("sim/flightmodel/forces/g_nrml".to_string(), DataRefValue::Float(1.0));
-        dataref_values.insert("sim/flightmodel/forces/g_side".to_string(), DataRefValue::Float(0.0));
-        dataref_values.insert("sim/flightmodel/forces/g_axil".to_string(), DataRefValue::Float(0.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_nrml".to_string(),
+            DataRefValue::Float(1.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_side".to_string(),
+            DataRefValue::Float(0.0),
+        );
+        dataref_values.insert(
+            "sim/flightmodel/forces/g_axil".to_string(),
+            DataRefValue::Float(0.0),
+        );
+
         // Angles
-        dataref_values.insert("sim/flightmodel/position/alpha".to_string(), DataRefValue::Float(0.0)); // AoA
-        dataref_values.insert("sim/flightmodel/position/beta".to_string(), DataRefValue::Float(0.0)); // No sideslip
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(0.0),
+        ); // AoA
+        dataref_values.insert(
+            "sim/flightmodel/position/beta".to_string(),
+            DataRefValue::Float(0.0),
+        ); // No sideslip
+
         // Ground track
-        dataref_values.insert("sim/flightmodel/position/hpath".to_string(), DataRefValue::Float(180.0));
-        
+        dataref_values.insert(
+            "sim/flightmodel/position/hpath".to_string(),
+            DataRefValue::Float(180.0),
+        );
+
         // Environment
-        dataref_values.insert("sim/weather/temperature_ambient_c".to_string(), DataRefValue::Float(25.0));
-        dataref_values.insert("sim/weather/wind_speed_kt[0]".to_string(), DataRefValue::Float(2.57)); // 5 knots
-        dataref_values.insert("sim/weather/wind_direction_degt[0]".to_string(), DataRefValue::Float(90.0));
-        
+        dataref_values.insert(
+            "sim/weather/temperature_ambient_c".to_string(),
+            DataRefValue::Float(25.0),
+        );
+        dataref_values.insert(
+            "sim/weather/wind_speed_kt[0]".to_string(),
+            DataRefValue::Float(2.57),
+        ); // 5 knots
+        dataref_values.insert(
+            "sim/weather/wind_direction_degt[0]".to_string(),
+            DataRefValue::Float(90.0),
+        );
+
         // Aircraft identification
-        dataref_values.insert("sim/aircraft/view/acf_ICAO".to_string(), DataRefValue::FloatArray(vec![85.0, 72.0, 49.0, 72.0, 0.0])); // "UH1H"
-        dataref_values.insert("sim/aircraft/view/acf_descrip".to_string(), DataRefValue::FloatArray(vec![66.0, 101.0, 108.0, 108.0, 32.0, 85.0, 72.0, 45.0, 49.0, 72.0, 0.0])); // "Bell UH-1H"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_ICAO".to_string(),
+            DataRefValue::FloatArray(vec![85.0, 72.0, 49.0, 72.0, 0.0]),
+        ); // "UH1H"
+        dataref_values.insert(
+            "sim/aircraft/view/acf_descrip".to_string(),
+            DataRefValue::FloatArray(vec![
+                66.0, 101.0, 108.0, 108.0, 32.0, 85.0, 72.0, 45.0, 49.0, 72.0, 0.0,
+            ]),
+        ); // "Bell UH-1H"
 
         let aircraft_id = AircraftId::new(&aircraft.icao);
         let expected_snapshot = BusSnapshot::new(SimId::XPlane, aircraft_id);
@@ -327,7 +579,10 @@ pub struct XPlaneFixtureValidator;
 
 impl XPlaneFixtureValidator {
     /// Validate raw data against fixture
-    pub fn validate_raw_data(fixture: &XPlaneFixture, raw_data: &XPlaneRawData) -> Result<(), String> {
+    pub fn validate_raw_data(
+        fixture: &XPlaneFixture,
+        raw_data: &XPlaneRawData,
+    ) -> Result<(), String> {
         // Validate aircraft matches
         if raw_data.aircraft_info.icao != fixture.aircraft.icao {
             return Err(format!(
@@ -352,7 +607,13 @@ impl XPlaneFixtureValidator {
         // Validate DataRef values are within reasonable ranges
         for (name, expected_value) in &fixture.dataref_values {
             if let Some(actual_value) = raw_data.dataref_values.get(name)
-                && let Err(e) = Self::validate_dataref_value(name, expected_value, actual_value, &fixture.tolerances) {
+                && let Err(e) = Self::validate_dataref_value(
+                    name,
+                    expected_value,
+                    actual_value,
+                    &fixture.tolerances,
+                )
+            {
                 return Err(format!("DataRef {} validation failed: {}", name, e));
             }
         }
@@ -361,10 +622,16 @@ impl XPlaneFixtureValidator {
     }
 
     /// Validate converted snapshot against fixture
-    pub fn validate_snapshot(fixture: &XPlaneFixture, snapshot: &BusSnapshot) -> Result<(), String> {
+    pub fn validate_snapshot(
+        fixture: &XPlaneFixture,
+        snapshot: &BusSnapshot,
+    ) -> Result<(), String> {
         // Validate basic properties
         if snapshot.sim != SimId::XPlane {
-            return Err(format!("Wrong simulator ID: expected XPlane, got {:?}", snapshot.sim));
+            return Err(format!(
+                "Wrong simulator ID: expected XPlane, got {:?}",
+                snapshot.sim
+            ));
         }
 
         if snapshot.aircraft.icao != fixture.aircraft.icao {
@@ -389,7 +656,10 @@ impl XPlaneFixtureValidator {
     }
 
     /// Validate latency measurements
-    pub fn validate_latency(fixture: &XPlaneFixture, measurements: &[LatencyMeasurement]) -> Result<(), String> {
+    pub fn validate_latency(
+        fixture: &XPlaneFixture,
+        measurements: &[LatencyMeasurement],
+    ) -> Result<(), String> {
         if measurements.is_empty() {
             return Err("No latency measurements provided".to_string());
         }
@@ -426,38 +696,60 @@ impl XPlaneFixtureValidator {
             (DataRefValue::Float(exp), DataRefValue::Float(act)) => {
                 let tolerance = Self::get_tolerance_for_dataref(name, tolerances);
                 if (exp - act).abs() > tolerance {
-                    return Err(format!("Float value out of tolerance: expected {}, got {}, tolerance {}", exp, act, tolerance));
+                    return Err(format!(
+                        "Float value out of tolerance: expected {}, got {}, tolerance {}",
+                        exp, act, tolerance
+                    ));
                 }
             }
             (DataRefValue::Double(exp), DataRefValue::Double(act)) => {
                 let tolerance = Self::get_tolerance_for_dataref(name, tolerances) as f64;
                 if (exp - act).abs() > tolerance {
-                    return Err(format!("Double value out of tolerance: expected {}, got {}, tolerance {}", exp, act, tolerance));
+                    return Err(format!(
+                        "Double value out of tolerance: expected {}, got {}, tolerance {}",
+                        exp, act, tolerance
+                    ));
                 }
             }
             (DataRefValue::Int(exp), DataRefValue::Int(act)) => {
                 if exp != act {
-                    return Err(format!("Integer value mismatch: expected {}, got {}", exp, act));
+                    return Err(format!(
+                        "Integer value mismatch: expected {}, got {}",
+                        exp, act
+                    ));
                 }
             }
             (DataRefValue::FloatArray(exp), DataRefValue::FloatArray(act)) => {
                 if exp.len() != act.len() {
-                    return Err(format!("Array length mismatch: expected {}, got {}", exp.len(), act.len()));
+                    return Err(format!(
+                        "Array length mismatch: expected {}, got {}",
+                        exp.len(),
+                        act.len()
+                    ));
                 }
                 let tolerance = Self::get_tolerance_for_dataref(name, tolerances);
                 for (i, (e, a)) in exp.iter().zip(act.iter()).enumerate() {
                     if (e - a).abs() > tolerance {
-                        return Err(format!("Array element {} out of tolerance: expected {}, got {}, tolerance {}", i, e, a, tolerance));
+                        return Err(format!(
+                            "Array element {} out of tolerance: expected {}, got {}, tolerance {}",
+                            i, e, a, tolerance
+                        ));
                     }
                 }
             }
             (DataRefValue::IntArray(exp), DataRefValue::IntArray(act)) => {
                 if exp != act {
-                    return Err(format!("Integer array mismatch: expected {:?}, got {:?}", exp, act));
+                    return Err(format!(
+                        "Integer array mismatch: expected {:?}, got {:?}",
+                        exp, act
+                    ));
                 }
             }
             _ => {
-                return Err(format!("Type mismatch: expected {:?}, got {:?}", expected, actual));
+                return Err(format!(
+                    "Type mismatch: expected {:?}, got {:?}",
+                    expected, actual
+                ));
             }
         }
 
@@ -468,10 +760,19 @@ impl XPlaneFixtureValidator {
     fn get_tolerance_for_dataref(name: &str, tolerances: &ValidationTolerance) -> f32 {
         match name {
             name if name.contains("airspeed") => tolerances.speed_knots,
-            name if name.contains("position/theta") || name.contains("position/phi") || name.contains("position/psi") => tolerances.angle_degrees,
-            name if name.contains("position/alpha") || name.contains("position/beta") => tolerances.angle_degrees,
+            name if name.contains("position/theta")
+                || name.contains("position/phi")
+                || name.contains("position/psi") =>
+            {
+                tolerances.angle_degrees
+            }
+            name if name.contains("position/alpha") || name.contains("position/beta") => {
+                tolerances.angle_degrees
+            }
             name if name.contains("forces/g_") => tolerances.g_force,
-            name if name.contains("position/latitude") || name.contains("position/longitude") => 0.0001, // ~10m
+            name if name.contains("position/latitude") || name.contains("position/longitude") => {
+                0.0001
+            } // ~10m
             name if name.contains("position/elevation") => tolerances.altitude_feet,
             name if name.contains("engine") => tolerances.percentage,
             _ => 1.0, // Default tolerance
@@ -479,7 +780,10 @@ impl XPlaneFixtureValidator {
     }
 
     /// Validate kinematics data
-    fn validate_kinematics(kinematics: &flight_bus::snapshot::Kinematics, _tolerances: &ValidationTolerance) -> Result<(), String> {
+    fn validate_kinematics(
+        kinematics: &flight_bus::snapshot::Kinematics,
+        _tolerances: &ValidationTolerance,
+    ) -> Result<(), String> {
         // Check for reasonable values
         let ias_knots = kinematics.ias.to_knots();
         if !(0.0..=500.0).contains(&ias_knots) {
@@ -500,14 +804,20 @@ impl XPlaneFixtureValidator {
     }
 
     /// Validate aircraft configuration
-    fn validate_aircraft_config(config: &flight_bus::snapshot::AircraftConfig, _tolerances: &ValidationTolerance) -> Result<(), String> {
+    fn validate_aircraft_config(
+        config: &flight_bus::snapshot::AircraftConfig,
+        _tolerances: &ValidationTolerance,
+    ) -> Result<(), String> {
         // Validate percentages are in range
         if config.flaps.value() < 0.0 || config.flaps.value() > 100.0 {
             return Err(format!("Flaps out of range: {}%", config.flaps.value()));
         }
 
         if config.spoilers.value() < 0.0 || config.spoilers.value() > 100.0 {
-            return Err(format!("Spoilers out of range: {}%", config.spoilers.value()));
+            return Err(format!(
+                "Spoilers out of range: {}%",
+                config.spoilers.value()
+            ));
         }
 
         Ok(())
@@ -521,7 +831,7 @@ impl XPlaneScenarioRunner {
     /// Run a complete test scenario
     pub async fn run_scenario(fixture: &XPlaneFixture) -> Result<ScenarioResult, String> {
         let start_time = Instant::now();
-        
+
         // Create raw data from fixture
         let raw_data = XPlaneRawData {
             timestamp: Instant::now(),
@@ -567,7 +877,7 @@ impl XPlaneScenarioRunner {
 
         // This is a simplified conversion for testing
         // In the real adapter, this would use the full conversion logic
-        
+
         // Set timestamp to current time (in nanoseconds since epoch)
         snapshot.timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -620,24 +930,39 @@ mod tests {
     #[test]
     fn test_fixture_generation() {
         let fixture = XPlaneFixtureGenerator::cessna_172_cruise();
-        
+
         assert_eq!(fixture.metadata.name, "cessna_172_cruise");
         assert_eq!(fixture.aircraft.icao, "C172");
-        assert_eq!(fixture.metadata.aircraft_type, AircraftType::GeneralAviation);
+        assert_eq!(
+            fixture.metadata.aircraft_type,
+            AircraftType::GeneralAviation
+        );
         assert_eq!(fixture.metadata.engine_type, EngineType::Piston);
-        
+
         // Should have critical DataRefs
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/position/indicated_airspeed"));
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/position/latitude"));
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/position/longitude"));
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/position/indicated_airspeed")
+        );
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/position/latitude")
+        );
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/position/longitude")
+        );
     }
 
     #[test]
     fn test_all_fixtures_generation() {
         let fixtures = XPlaneFixtureGenerator::generate_all_fixtures();
-        
+
         assert_eq!(fixtures.len(), 3);
-        
+
         let names: Vec<&String> = fixtures.iter().map(|f| &f.metadata.name).collect();
         assert!(names.contains(&&"cessna_172_cruise".to_string()));
         assert!(names.contains(&&"airbus_a320_approach".to_string()));
@@ -647,7 +972,7 @@ mod tests {
     #[test]
     fn test_dataref_value_validation() {
         let tolerances = ValidationTolerance::default();
-        
+
         // Float validation within tolerance
         let result = XPlaneFixtureValidator::validate_dataref_value(
             "test_dataref",
@@ -656,7 +981,7 @@ mod tests {
             &tolerances,
         );
         assert!(result.is_ok());
-        
+
         // Float validation outside tolerance
         let result = XPlaneFixtureValidator::validate_dataref_value(
             "test_dataref",
@@ -665,7 +990,7 @@ mod tests {
             &tolerances,
         );
         assert!(result.is_err());
-        
+
         // Integer validation
         let result = XPlaneFixtureValidator::validate_dataref_value(
             "test_dataref",
@@ -674,7 +999,7 @@ mod tests {
             &tolerances,
         );
         assert!(result.is_ok());
-        
+
         let result = XPlaneFixtureValidator::validate_dataref_value(
             "test_dataref",
             &DataRefValue::Int(42),
@@ -687,21 +1012,21 @@ mod tests {
     #[test]
     fn test_latency_validation() {
         let fixture = XPlaneFixtureGenerator::cessna_172_cruise();
-        
+
         // Good latency measurements
         let good_measurements = vec![
             LatencyMeasurement::new("telemetry".to_string(), Duration::from_millis(25)),
             LatencyMeasurement::new("dataref".to_string(), Duration::from_millis(50)),
         ];
-        
+
         let result = XPlaneFixtureValidator::validate_latency(&fixture, &good_measurements);
         assert!(result.is_ok());
-        
+
         // Bad latency measurements
         let bad_measurements = vec![
             LatencyMeasurement::new("telemetry".to_string(), Duration::from_millis(100)), // Exceeds 50ms budget
         ];
-        
+
         let result = XPlaneFixtureValidator::validate_latency(&fixture, &bad_measurements);
         assert!(result.is_err());
     }
@@ -710,7 +1035,7 @@ mod tests {
     async fn test_scenario_runner() {
         let fixture = XPlaneFixtureGenerator::cessna_172_cruise();
         let result = XPlaneScenarioRunner::run_scenario(&fixture).await;
-        
+
         assert!(result.is_ok());
         let result = result.unwrap();
         assert!(result.success);
@@ -721,40 +1046,68 @@ mod tests {
     #[tokio::test]
     async fn test_all_scenarios() {
         let results = XPlaneScenarioRunner::run_all_scenarios().await;
-        
+
         assert_eq!(results.len(), 3);
-        
+
         // All scenarios should pass
         for result in &results {
-            assert!(result.success, "Scenario {} failed: {:?}", result.fixture_name, result.errors);
+            assert!(
+                result.success,
+                "Scenario {} failed: {:?}",
+                result.fixture_name, result.errors
+            );
         }
     }
 
     #[test]
     fn test_helicopter_fixture() {
         let fixture = XPlaneFixtureGenerator::uh1h_hover();
-        
+
         assert_eq!(fixture.metadata.aircraft_type, AircraftType::Helicopter);
         assert_eq!(fixture.metadata.engine_type, EngineType::Turboshaft);
-        
+
         // Should have helicopter-specific DataRefs
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/engine/ENGN_Nrotor"));
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/engine/ENGN_torq"));
-        assert!(fixture.dataref_values.contains_key("sim/joystick/yoke_pitch_ratio")); // Collective
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/engine/ENGN_Nrotor")
+        );
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/engine/ENGN_torq")
+        );
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/joystick/yoke_pitch_ratio")
+        ); // Collective
     }
 
     #[test]
     fn test_airliner_fixture() {
         let fixture = XPlaneFixtureGenerator::airbus_a320_approach();
-        
+
         assert_eq!(fixture.metadata.aircraft_type, AircraftType::Airliner);
         assert_eq!(fixture.metadata.engine_type, EngineType::Jet);
-        
+
         // Should have twin engines
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/engine/ENGN_running[0]"));
-        assert!(fixture.dataref_values.contains_key("sim/flightmodel/engine/ENGN_running[1]"));
-        
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/engine/ENGN_running[0]")
+        );
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/flightmodel/engine/ENGN_running[1]")
+        );
+
         // Should have autopilot
-        assert!(fixture.dataref_values.contains_key("sim/cockpit/autopilot/autopilot_mode"));
+        assert!(
+            fixture
+                .dataref_values
+                .contains_key("sim/cockpit/autopilot/autopilot_mode")
+        );
     }
 }

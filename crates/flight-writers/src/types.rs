@@ -68,9 +68,7 @@ fn default_backup() -> bool {
 pub enum DiffOperation {
     /// Replace entire file content
     #[serde(rename = "replace")]
-    Replace {
-        content: String,
-    },
+    Replace { content: String },
     /// Modify specific section in INI-style file
     #[serde(rename = "ini_section")]
     IniSection {
@@ -79,9 +77,7 @@ pub enum DiffOperation {
     },
     /// JSON patch operation
     #[serde(rename = "json_patch")]
-    JsonPatch {
-        patches: Vec<JsonPatchOp>,
-    },
+    JsonPatch { patches: Vec<JsonPatchOp> },
     /// Line-based replacement
     #[serde(rename = "line_replace")]
     LineReplace {
@@ -132,15 +128,10 @@ pub struct VerifyScript {
 pub enum VerifyAction {
     /// Send a simulator event
     #[serde(rename = "sim_event")]
-    SimEvent {
-        event: String,
-        value: Option<f64>,
-    },
+    SimEvent { event: String, value: Option<f64> },
     /// Wait for a specified duration
     #[serde(rename = "wait")]
-    Wait {
-        duration_ms: u64,
-    },
+    Wait { duration_ms: u64 },
     /// Check a simulator variable
     #[serde(rename = "check_var")]
     CheckVar {

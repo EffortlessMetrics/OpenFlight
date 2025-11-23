@@ -3,11 +3,11 @@
 
 //! Profile management commands
 
+use crate::client_manager::ClientManager;
 use crate::commands::ProfileAction;
 use crate::output::OutputFormat;
-use crate::client_manager::ClientManager;
 use flight_ipc::ApplyProfileRequest;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::fs;
 
 pub async fn execute(
@@ -17,8 +17,20 @@ pub async fn execute(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
-        ProfileAction::Apply { profile_path, validate_only, force } => {
-            apply_profile(profile_path, *validate_only, *force, output_format, verbose, client_manager).await
+        ProfileAction::Apply {
+            profile_path,
+            validate_only,
+            force,
+        } => {
+            apply_profile(
+                profile_path,
+                *validate_only,
+                *force,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
         }
         ProfileAction::Show { raw } => {
             show_profile(*raw, output_format, verbose, client_manager).await
@@ -35,23 +47,28 @@ async fn apply_profile(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     // Read profile file
-    let profile_content = fs::read_to_string(profile_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read profile file '{}': {}", profile_path.display(), e))?;
-    
+    let profile_content = fs::read_to_string(profile_path).map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to read profile file '{}': {}",
+            profile_path.display(),
+            e
+        )
+    })?;
+
     // Validate JSON format
     let _profile_json: Value = serde_json::from_str(&profile_content)
         .map_err(|e| anyhow::anyhow!("Invalid JSON in profile file: {}", e))?;
-    
+
     let mut client = client_manager.get_client().await?;
-    
+
     let request = ApplyProfileRequest {
         profile_json: profile_content,
         validate_only,
         force_apply: force,
     };
-    
+
     let response = client.apply_profile(request).await?;
-    
+
     if !response.success {
         let error_msg = if !response.validation_errors.is_empty() {
             let mut errors = vec!["Validation errors:".to_string()];
@@ -68,38 +85,41 @@ async fn apply_profile(
         } else {
             response.error_message
         };
-        
+
         return Err(anyhow::anyhow!("{}", error_msg));
     }
-    
+
     let mut result = json!({
         "success": true,
         "validate_only": validate_only,
         "effective_profile_hash": response.effective_profile_hash,
         "compile_time_ms": response.compile_time_ms,
     });
-    
+
     if validate_only {
         result["message"] = json!("Profile validation successful");
     } else {
         result["message"] = json!("Profile applied successfully");
     }
-    
+
     if verbose && !response.validation_errors.is_empty() {
-        let validation_errors: Vec<Value> = response.validation_errors
+        let validation_errors: Vec<Value> = response
+            .validation_errors
             .iter()
-            .map(|error| json!({
-                "field_path": error.field_path,
-                "line_number": error.line_number,
-                "column_number": error.column_number,
-                "error_message": error.error_message,
-                "error_type": validation_error_type_to_string(error.error_type()),
-            }))
+            .map(|error| {
+                json!({
+                    "field_path": error.field_path,
+                    "line_number": error.line_number,
+                    "column_number": error.column_number,
+                    "error_message": error.error_message,
+                    "error_type": validation_error_type_to_string(error.error_type()),
+                })
+            })
             .collect();
-        
+
         result["validation_warnings"] = json!(validation_errors);
     }
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }
@@ -116,7 +136,7 @@ async fn show_profile(
         "message": "Show profile functionality requires GetCurrentProfile RPC method to be implemented in the service",
         "raw_requested": raw,
     });
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }

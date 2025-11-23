@@ -6,9 +6,9 @@
 //! Provides bounded, lock-free communication channels that never block
 //! the real-time producer thread.
 
-use std::sync::atomic::{AtomicUsize, AtomicU64, Ordering};
-use std::sync::Arc;
 use std::cell::UnsafeCell;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 /// Statistics for ring buffer operations
 #[derive(Debug, Clone)]
@@ -69,9 +69,9 @@ impl<T> SpscRing<T> {
     pub fn try_push(&self, item: T) -> bool {
         let head = self.head.load(Ordering::Relaxed);
         let tail = self.tail.load(Ordering::Acquire);
-        
+
         let next_head = (head + 1) & self.mask;
-        
+
         // Check if buffer is full
         if next_head == tail {
             // Buffer full - drop item (drop-tail policy)
@@ -94,7 +94,7 @@ impl<T> SpscRing<T> {
     pub fn try_pop(&self) -> Option<T> {
         let tail = self.tail.load(Ordering::Relaxed);
         let head = self.head.load(Ordering::Acquire);
-        
+
         // Check if buffer is empty
         if tail == head {
             return None;
@@ -108,11 +108,11 @@ impl<T> SpscRing<T> {
 
         let next_tail = (tail + 1) & self.mask;
         self.tail.store(next_tail, Ordering::Release);
-        
+
         if item.is_some() {
             self.stats.consumed.fetch_add(1, Ordering::Relaxed);
         }
-        
+
         item
     }
 
@@ -121,16 +121,16 @@ impl<T> SpscRing<T> {
         let produced = self.stats.produced.load(Ordering::Relaxed);
         let consumed = self.stats.consumed.load(Ordering::Relaxed);
         let dropped = self.stats.dropped.load(Ordering::Relaxed);
-        
+
         let head = self.head.load(Ordering::Relaxed);
         let tail = self.tail.load(Ordering::Relaxed);
-        
+
         let used = if head >= tail {
             head - tail
         } else {
             self.capacity - tail + head
         };
-        
+
         let utilization = used as f64 / self.capacity as f64;
 
         RingStats {
@@ -175,19 +175,19 @@ unsafe impl<T: Send> Sync for SpscRing<T> {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread;
     use std::sync::Arc;
+    use std::thread;
     use std::time::Duration;
 
     #[test]
     fn test_basic_operations() {
         let ring = SpscRing::new(4);
-        
+
         // Test push/pop
         assert!(ring.try_push(1));
         assert!(ring.try_push(2));
         assert!(ring.try_push(3));
-        
+
         assert_eq!(ring.try_pop(), Some(1));
         assert_eq!(ring.try_pop(), Some(2));
         assert_eq!(ring.try_pop(), Some(3));
@@ -197,15 +197,15 @@ mod tests {
     #[test]
     fn test_drop_tail_policy() {
         let ring = SpscRing::new(4);
-        
+
         // Fill buffer (capacity - 1 due to ring buffer design)
         assert!(ring.try_push(1));
         assert!(ring.try_push(2));
         assert!(ring.try_push(3));
-        
+
         // Next push should fail (drop-tail)
         assert!(!ring.try_push(4));
-        
+
         let stats = ring.stats();
         assert_eq!(stats.dropped, 1);
     }
@@ -215,7 +215,7 @@ mod tests {
         let ring = Arc::new(SpscRing::new(1024));
         let ring_producer = ring.clone();
         let ring_consumer = ring.clone();
-        
+
         let producer = thread::spawn(move || {
             for i in 0..10000 {
                 while !ring_producer.try_push(i) {
@@ -223,7 +223,7 @@ mod tests {
                 }
             }
         });
-        
+
         let consumer = thread::spawn(move || {
             let mut received = 0;
             while received < 10000 {
@@ -233,10 +233,10 @@ mod tests {
                 thread::yield_now();
             }
         });
-        
+
         producer.join().unwrap();
         consumer.join().unwrap();
-        
+
         let stats = ring.stats();
         assert_eq!(stats.consumed, 10000);
     }
@@ -245,16 +245,16 @@ mod tests {
     fn test_overload_behavior() {
         let ring = Arc::new(SpscRing::new(8));
         let ring_producer = ring.clone();
-        
+
         // Fast producer, no consumer
         let producer = thread::spawn(move || {
             for i in 0..1000 {
                 ring_producer.try_push(i);
             }
         });
-        
+
         producer.join().unwrap();
-        
+
         let stats = ring.stats();
         // Should have dropped many items
         assert!(stats.dropped > 0);

@@ -6,8 +6,8 @@
 //! Implements challenge/response system with rolling tokens to prevent
 //! remote unlock of high-torque mode. Requires physical device interaction.
 
-use std::time::{Duration, Instant};
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 /// Physical interlock challenge sent to device
 #[derive(Debug, Clone, PartialEq)]
@@ -115,7 +115,10 @@ pub enum InterlockError {
     #[error("Invalid token: expected {expected}, got {actual}")]
     InvalidToken { expected: u32, actual: u32 },
     #[error("Wrong button combination: expected {expected:?}, got {actual:?}")]
-    WrongButtonCombination { expected: ButtonCombination, actual: Vec<ButtonId> },
+    WrongButtonCombination {
+        expected: ButtonCombination,
+        actual: Vec<ButtonId>,
+    },
     #[error("Insufficient hold duration: expected {expected}ms, got {actual}ms")]
     InsufficientHoldDuration { expected: u16, actual: u16 },
     #[error("No active challenge")]
@@ -197,12 +200,14 @@ impl InterlockSystem {
         self.active_challenge = Some(challenge.clone());
 
         // Add to history for replay prevention
-        self.challenge_history.insert(challenge.challenge_id, Instant::now());
+        self.challenge_history
+            .insert(challenge.challenge_id, Instant::now());
 
         // Clean old history entries (keep last 100)
         if self.challenge_history.len() > 100 {
             let cutoff = Instant::now() - Duration::from_secs(3600); // 1 hour
-            self.challenge_history.retain(|_, timestamp| *timestamp > cutoff);
+            self.challenge_history
+                .retain(|_, timestamp| *timestamp > cutoff);
         }
 
         Ok(challenge)
@@ -211,7 +216,9 @@ impl InterlockSystem {
     /// Validate interlock response from device
     pub fn validate_response(&mut self, response: InterlockResponse) -> InterlockResult<bool> {
         // Check if we have an active challenge
-        let challenge = self.active_challenge.as_ref()
+        let challenge = self
+            .active_challenge
+            .as_ref()
             .ok_or(InterlockError::NoActiveChallenge)?;
 
         // Check challenge ID matches
@@ -238,7 +245,7 @@ impl InterlockSystem {
             challenge.required_buttons.primary,
             challenge.required_buttons.secondary,
         ];
-        
+
         if !self.buttons_match(&required_buttons, &response.buttons_pressed) {
             return Err(InterlockError::WrongButtonCombination {
                 expected: challenge.required_buttons.clone(),
@@ -291,10 +298,10 @@ impl InterlockSystem {
     fn generate_blink_pattern(&self, token: u32) -> BlinkPattern {
         // Generate pattern based on token bits
         let mut sequence = Vec::new();
-        
+
         // Use lower 8 bits to generate pattern
         let pattern_bits = (token & 0xFF) as u8;
-        
+
         for i in 0..4 {
             let bit = (pattern_bits >> (i * 2)) & 0x03;
             match bit {
@@ -368,10 +375,10 @@ mod tests {
     #[test]
     fn test_challenge_generation() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge1 = system.generate_challenge().unwrap();
         let challenge2 = system.generate_challenge().unwrap();
-        
+
         // Challenges should be unique
         assert_ne!(challenge1.challenge_id, challenge2.challenge_id);
         assert_ne!(challenge1.token, challenge2.token);
@@ -380,9 +387,9 @@ mod tests {
     #[test]
     fn test_valid_response() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -390,7 +397,7 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(system.validate_response(response).unwrap());
         assert!(system.is_satisfied());
     }
@@ -398,9 +405,9 @@ mod tests {
     #[test]
     fn test_invalid_token() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token + 1, // Wrong token
@@ -408,7 +415,7 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(matches!(
             system.validate_response(response),
             Err(InterlockError::InvalidToken { .. })
@@ -419,9 +426,9 @@ mod tests {
     #[test]
     fn test_wrong_buttons() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -429,7 +436,7 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(matches!(
             system.validate_response(response),
             Err(InterlockError::WrongButtonCombination { .. })
@@ -440,9 +447,9 @@ mod tests {
     #[test]
     fn test_insufficient_hold_duration() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -450,7 +457,7 @@ mod tests {
             hold_duration_ms: 1000, // Too short
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(matches!(
             system.validate_response(response),
             Err(InterlockError::InsufficientHoldDuration { .. })
@@ -462,12 +469,12 @@ mod tests {
     fn test_challenge_expiration() {
         let mut system = InterlockSystem::new(true);
         system.challenge_timeout = Duration::from_millis(1); // Very short timeout
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         // Wait for challenge to expire
         std::thread::sleep(Duration::from_millis(10));
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -475,7 +482,7 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(matches!(
             system.validate_response(response),
             Err(InterlockError::ResponseTooLate { .. })
@@ -486,9 +493,9 @@ mod tests {
     fn test_satisfaction_timeout() {
         let mut system = InterlockSystem::new(true);
         system.satisfaction_timeout = Duration::from_millis(1); // Very short timeout
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -496,10 +503,10 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(system.validate_response(response).unwrap());
         assert!(system.is_satisfied());
-        
+
         // Wait for satisfaction to expire
         std::thread::sleep(Duration::from_millis(10));
         assert!(!system.is_satisfied());
@@ -508,9 +515,9 @@ mod tests {
     #[test]
     fn test_reset() {
         let mut system = InterlockSystem::new(true);
-        
+
         let challenge = system.generate_challenge().unwrap();
-        
+
         let response = InterlockResponse {
             challenge_id: challenge.challenge_id,
             echoed_token: challenge.token,
@@ -518,10 +525,10 @@ mod tests {
             hold_duration_ms: 2000,
             response_timestamp: Instant::now(),
         };
-        
+
         assert!(system.validate_response(response).unwrap());
         assert!(system.is_satisfied());
-        
+
         system.reset();
         assert!(!system.is_satisfied());
         assert!(system.active_challenge().is_none());
@@ -530,13 +537,13 @@ mod tests {
     #[test]
     fn test_blink_pattern_generation() {
         let system = InterlockSystem::new(true);
-        
+
         let pattern1 = system.generate_blink_pattern(0x12345678);
         let pattern2 = system.generate_blink_pattern(0x87654321);
-        
+
         // Different tokens should generate different patterns
         assert_ne!(pattern1.sequence, pattern2.sequence);
-        
+
         // Pattern should have reasonable length
         assert!(!pattern1.sequence.is_empty());
         assert!(pattern1.sequence.len() <= 16); // 4 bits * 2 values per bit

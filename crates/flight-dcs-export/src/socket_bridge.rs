@@ -26,7 +26,7 @@ pub struct ProtocolVersion {
 
 impl ProtocolVersion {
     pub const V1_0: Self = Self { major: 1, minor: 0 };
-    
+
     pub fn is_compatible(&self, other: &Self) -> bool {
         self.major == other.major
     }
@@ -87,14 +87,9 @@ pub enum DcsMessage {
         data: HashMap<String, serde_json::Value>,
     },
     /// Heartbeat to maintain connection
-    Heartbeat {
-        timestamp: u64,
-    },
+    Heartbeat { timestamp: u64 },
     /// Error message
-    Error {
-        code: String,
-        message: String,
-    },
+    Error { code: String, message: String },
 }
 
 /// Socket bridge for DCS communication
@@ -119,7 +114,7 @@ impl SocketBridge {
     /// Create new socket bridge
     pub fn new(config: SocketBridgeConfig) -> Self {
         let (message_tx, message_rx) = mpsc::unbounded_channel();
-        
+
         Self {
             config,
             listener: None,
@@ -134,7 +129,7 @@ impl SocketBridge {
         let listener = TcpListener::bind(self.config.bind_addr)
             .await
             .context("Failed to bind socket bridge")?;
-        
+
         info!("DCS socket bridge listening on {}", self.config.bind_addr);
         self.listener = Some(listener);
         Ok(())
@@ -150,14 +145,14 @@ impl SocketBridge {
         match timeout(Duration::from_millis(100), listener.accept()).await {
             Ok(Ok((stream, addr))) => {
                 info!("DCS connection from {}", addr);
-                
+
                 let connection = ConnectionState {
                     stream,
                     version: None,
                     features: Vec::new(),
                     last_heartbeat: Instant::now(),
                 };
-                
+
                 self.active_connections.insert(addr, connection);
                 Ok(Some(addr))
             }
@@ -172,7 +167,7 @@ impl SocketBridge {
     /// Process messages from DCS connections
     pub async fn process_messages(&mut self) -> Result<Vec<(SocketAddr, DcsMessage)>> {
         let mut messages = Vec::new();
-        
+
         // Collect all available messages without blocking
         while let Ok((addr, message)) = self.message_rx.try_recv() {
             messages.push((addr, message));
@@ -181,7 +176,7 @@ impl SocketBridge {
         // Process each active connection
         let mut to_remove = Vec::new();
         let addrs: Vec<SocketAddr> = self.active_connections.keys().copied().collect();
-        
+
         for addr in addrs {
             if let Some(connection) = self.active_connections.get_mut(&addr) {
                 match Self::read_messages_from_connection_static(addr, connection).await {
@@ -245,18 +240,25 @@ impl SocketBridge {
 
     /// Send message to DCS connection
     pub async fn send_message(&mut self, addr: SocketAddr, message: DcsMessage) -> Result<()> {
-        let connection = self.active_connections.get_mut(&addr)
+        let connection = self
+            .active_connections
+            .get_mut(&addr)
             .context("Connection not found")?;
 
-        let json = serde_json::to_string(&message)
-            .context("Failed to serialize message")?;
-        
+        let json = serde_json::to_string(&message).context("Failed to serialize message")?;
+
         let line = format!("{}\n", json);
-        
-        connection.stream.write_all(line.as_bytes()).await
+
+        connection
+            .stream
+            .write_all(line.as_bytes())
+            .await
             .context("Failed to send message")?;
-        
-        connection.stream.flush().await
+
+        connection
+            .stream
+            .flush()
+            .await
             .context("Failed to flush message")?;
 
         debug!("Sent DCS message to {}: {:?}", addr, message);
@@ -271,7 +273,9 @@ impl SocketBridge {
         };
 
         // Find compatible version
-        let compatible_version = self.config.supported_versions
+        let compatible_version = self
+            .config
+            .supported_versions
             .iter()
             .find(|v| v.is_compatible(&client_version))
             .copied()
@@ -293,8 +297,11 @@ impl SocketBridge {
         };
 
         self.send_message(addr, ack).await?;
-        
-        info!("Completed DCS handshake with {} (version {})", addr, compatible_version);
+
+        info!(
+            "Completed DCS handshake with {} (version {})",
+            addr, compatible_version
+        );
         Ok(())
     }
 
@@ -303,9 +310,9 @@ impl SocketBridge {
         // Define supported features
         let supported = [
             "telemetry_basic",
-            "telemetry_navigation", 
+            "telemetry_navigation",
             "telemetry_engines",
-            "telemetry_weapons", // MP-blocked
+            "telemetry_weapons",         // MP-blocked
             "telemetry_countermeasures", // MP-blocked
             "session_detection",
         ];
@@ -338,12 +345,12 @@ impl SocketBridge {
                         .unwrap_or(std::time::Duration::from_secs(0))
                         .as_millis() as u64,
                 };
-                
+
                 // Send heartbeat directly to avoid borrowing issues
-                let json = serde_json::to_string(&heartbeat)
-                    .context("Failed to serialize heartbeat")?;
+                let json =
+                    serde_json::to_string(&heartbeat).context("Failed to serialize heartbeat")?;
                 let line = format!("{}\n", json);
-                
+
                 match connection.stream.write_all(line.as_bytes()).await {
                     Ok(()) => {
                         if (connection.stream.flush().await).is_err() {
@@ -375,7 +382,8 @@ impl SocketBridge {
 
     /// Get connection info
     pub fn get_connection_info(&self, addr: SocketAddr) -> Option<(ProtocolVersion, Vec<String>)> {
-        self.active_connections.get(&addr)
+        self.active_connections
+            .get(&addr)
             .and_then(|conn| conn.version.map(|v| (v, conn.features.clone())))
     }
 }

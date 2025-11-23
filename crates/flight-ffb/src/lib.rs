@@ -1,5 +1,14 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -11,48 +20,48 @@
 
 use std::time::{Duration, Instant};
 
-pub mod safety;
-pub mod interlock;
-pub mod fault;
-pub mod trim;
-pub mod trim_validation;
-#[cfg(test)]
-pub mod trim_hil_tests;
-pub mod soft_stop;
 pub mod audio;
 pub mod blackbox;
-pub mod mode_negotiation;
-pub mod ofp1_integration;
-pub mod telemetry_synth;
+pub mod fault;
 #[cfg(test)]
 pub mod hil_tests;
 #[cfg(test)]
-pub mod performance_validation;
-#[cfg(test)]
 pub mod integration_test;
+pub mod interlock;
+pub mod mode_negotiation;
+pub mod ofp1_integration;
+#[cfg(test)]
+pub mod performance_validation;
+pub mod safety;
+pub mod soft_stop;
+pub mod telemetry_synth;
+pub mod trim;
+#[cfg(test)]
+pub mod trim_hil_tests;
+pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
 
 #[cfg(test)]
 mod tests;
 
-pub use safety::*;
-pub use interlock::*;
-pub use fault::*;
-pub use trim::*;
-pub use trim_validation::*;
-#[cfg(test)]
-pub use trim_hil_tests::*;
-pub use soft_stop::*;
 pub use audio::*;
 pub use blackbox::*;
-pub use mode_negotiation::*;
-pub use ofp1_integration::*;
-pub use telemetry_synth::*;
+pub use fault::*;
 #[cfg(test)]
 pub use hil_tests::*;
+pub use interlock::*;
+pub use mode_negotiation::*;
+pub use ofp1_integration::*;
 #[cfg(test)]
 pub use performance_validation::*;
+pub use safety::*;
+pub use soft_stop::*;
+pub use telemetry_synth::*;
+pub use trim::*;
+#[cfg(test)]
+pub use trim_hil_tests::*;
+pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
 
@@ -139,9 +148,10 @@ impl FfbEngine {
     /// Create a new FFB engine with the given configuration
     pub fn new(config: FfbConfig) -> Result<Self> {
         let interlock_system = InterlockSystem::new(config.interlock_required);
-        let fault_detector = FaultDetector::new(Duration::from_millis(config.fault_timeout_ms as u64));
+        let fault_detector =
+            FaultDetector::new(Duration::from_millis(config.fault_timeout_ms as u64));
         let trim_controller = TrimController::new(config.max_torque_nm);
-        
+
         // Configure soft-stop for 50ms ramp time
         let soft_stop_config = SoftStopConfig {
             max_ramp_time: Duration::from_millis(50),
@@ -150,10 +160,10 @@ impl FfbEngine {
             ..Default::default()
         };
         let soft_stop_controller = SoftStopController::new(soft_stop_config);
-        
+
         let audio_system = AudioCueSystem::default();
         let blackbox_recorder = BlackboxRecorder::default();
-        
+
         Ok(Self {
             config,
             safety_state: SafetyState::SafeTorque,
@@ -182,19 +192,19 @@ impl FfbEngine {
     /// Set device capabilities and negotiate FFB mode
     pub fn set_device_capabilities(&mut self, capabilities: DeviceCapabilities) -> Result<()> {
         self.device_capabilities = Some(capabilities.clone());
-        
+
         // Use mode negotiator to select appropriate mode and limits
         let negotiator = ModeNegotiator::new();
         let selection = negotiator.negotiate_mode(&capabilities);
-        
+
         // Update configuration based on negotiation result
         if self.config.mode == FfbMode::Auto {
             self.config.mode = selection.mode;
         }
-        
+
         // Update trim controller with negotiated limits
         self.trim_controller.set_limits(selection.trim_limits);
-        
+
         // Log negotiation result
         tracing::info!(
             "FFB mode negotiated: {:?} at {} Hz, high_torque={}, rationale={}",
@@ -203,7 +213,7 @@ impl FfbEngine {
             selection.supports_high_torque,
             selection.rationale
         );
-        
+
         Ok(())
     }
 
@@ -224,22 +234,28 @@ impl FfbEngine {
 
     /// Generate interlock challenge for device
     pub fn generate_interlock_challenge(&mut self) -> Result<InterlockChallenge> {
-        self.interlock_system.generate_challenge()
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })
+        self.interlock_system
+            .generate_challenge()
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })
     }
 
     /// Validate interlock response from device
     pub fn validate_interlock_response(&mut self, response: InterlockResponse) -> Result<bool> {
-        self.interlock_system.validate_response(response)
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })
+        self.interlock_system
+            .validate_response(response)
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })
     }
 
     /// Attempt to enable high torque mode
     pub fn enable_high_torque(&mut self, ui_consent: bool) -> Result<()> {
         // Check current state
         if self.safety_state != SafetyState::SafeTorque {
-            return Err(FfbError::SafetyStateViolation { 
-                state: self.safety_state 
+            return Err(FfbError::SafetyStateViolation {
+                state: self.safety_state,
             });
         }
 
@@ -255,7 +271,7 @@ impl FfbEngine {
 
         // Transition to high torque state
         self.safety_state = SafetyState::HighTorque;
-        
+
         Ok(())
     }
 
@@ -271,7 +287,7 @@ impl FfbEngine {
     /// Process fault detection and handle safety response
     pub fn process_fault(&mut self, fault: FaultType) -> Result<()> {
         let now = Instant::now();
-        
+
         // Create fault entry for blackbox
         let fault_entry = BlackboxEntry::Fault {
             timestamp: now,
@@ -281,87 +297,105 @@ impl FfbEngine {
         };
 
         // Start fault capture in blackbox (2s pre-fault capture)
-        self.blackbox_recorder.start_fault_capture(fault_entry)
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-        
+        self.blackbox_recorder
+            .start_fault_capture(fault_entry)
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
+
         // Record fault in fault detector
         self.fault_detector.record_fault(fault.clone());
-        
+
         // Immediate safety response
         match fault {
-            FaultType::UsbStall | 
-            FaultType::EndpointError | 
-            FaultType::EndpointWedged |
-            FaultType::NanValue | 
-            FaultType::EncoderInvalid |
-            FaultType::OverTemp | 
-            FaultType::OverCurrent |
-            FaultType::DeviceTimeout => {
+            FaultType::UsbStall
+            | FaultType::EndpointError
+            | FaultType::EndpointWedged
+            | FaultType::NanValue
+            | FaultType::EncoderInvalid
+            | FaultType::OverTemp
+            | FaultType::OverCurrent
+            | FaultType::DeviceTimeout => {
                 // Transition to faulted state
                 self.safety_state = SafetyState::Faulted;
-                
+
                 // Trigger audio cue for fault (ignore rate limiting errors in tests)
                 if let Err(e) = self.audio_system.trigger_cue(AudioCueType::FaultWarning) {
                     // In tests, rate limiting might cause failures, so we'll log but not fail
                     #[cfg(not(test))]
-                    return Err(FfbError::DeviceError { message: e.to_string() });
+                    return Err(FfbError::DeviceError {
+                        message: e.to_string(),
+                    });
                     #[cfg(test)]
                     tracing::debug!("Audio cue failed (test mode): {}", e);
                 }
-                
+
                 // Trigger soft-stop (torque to zero within 50ms)
                 self.trigger_soft_stop()?;
             }
             FaultType::PluginOverrun => {
                 // Plugin faults don't affect FFB safety state
                 // Just record and continue
-                self.blackbox_recorder.record(BlackboxEntry::SystemEvent {
-                    timestamp: now,
-                    event_type: "PLUGIN_OVERRUN".to_string(),
-                    details: "Plugin exceeded time budget and was quarantined".to_string(),
-                }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
+                self.blackbox_recorder
+                    .record(BlackboxEntry::SystemEvent {
+                        timestamp: now,
+                        event_type: "PLUGIN_OVERRUN".to_string(),
+                        details: "Plugin exceeded time budget and was quarantined".to_string(),
+                    })
+                    .map_err(|e| FfbError::DeviceError {
+                        message: e.to_string(),
+                    })?;
             }
         }
-        
+
         Ok(())
     }
 
     /// Trigger soft-stop sequence (torque to zero within 50ms)
     pub fn trigger_soft_stop(&mut self) -> Result<()> {
         let current_torque = self.get_current_torque_output();
-        
+
         // Record soft-stop in fault detector
         self.fault_detector.record_soft_stop(Instant::now());
-        
+
         // Record in blackbox
-        self.blackbox_recorder.record(BlackboxEntry::SoftStop {
-            timestamp: Instant::now(),
-            reason: "Fault-triggered soft-stop".to_string(),
-            initial_torque: current_torque,
-            target_ramp_time: Duration::from_millis(50),
-        }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-        
+        self.blackbox_recorder
+            .record(BlackboxEntry::SoftStop {
+                timestamp: Instant::now(),
+                reason: "Fault-triggered soft-stop".to_string(),
+                initial_torque: current_torque,
+                target_ramp_time: Duration::from_millis(50),
+            })
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
+
         // Start soft-stop ramp
-        self.soft_stop_controller.start_ramp(current_torque)
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-        
+        self.soft_stop_controller
+            .start_ramp(current_torque)
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
+
         // Trigger audio cue
         if self.soft_stop_controller.should_trigger_audio_cue() {
             if let Err(e) = self.audio_system.trigger_cue(AudioCueType::SoftStop) {
                 #[cfg(not(test))]
-                return Err(FfbError::DeviceError { message: e.to_string() });
+                return Err(FfbError::DeviceError {
+                    message: e.to_string(),
+                });
                 #[cfg(test)]
                 tracing::debug!("Audio cue failed (test mode): {}", e);
             }
             self.soft_stop_controller.mark_audio_cue_triggered();
         }
-        
+
         // Mark LED indication as triggered (would integrate with panel system)
         if self.soft_stop_controller.should_trigger_led_indication() {
             self.soft_stop_controller.mark_led_indication_triggered();
             // TODO: Integrate with panel LED system
         }
-        
+
         Ok(())
     }
 
@@ -393,21 +427,32 @@ impl FfbEngine {
     /// Update engine (should be called regularly from main loop)
     pub fn update(&mut self) -> Result<()> {
         // Update soft-stop controller
-        if let Some(target_torque) = self.soft_stop_controller.update()
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })? {
-            
+        if let Some(target_torque) =
+            self.soft_stop_controller
+                .update()
+                .map_err(|e| FfbError::DeviceError {
+                    message: e.to_string(),
+                })?
+        {
             // Record torque update in blackbox
-            self.blackbox_recorder.record(BlackboxEntry::FfbState {
-                timestamp: Instant::now(),
-                safety_state: format!("{:?}", self.safety_state),
-                torque_setpoint: target_torque,
-                actual_torque: target_torque, // Assume perfect tracking for now
-            }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
+            self.blackbox_recorder
+                .record(BlackboxEntry::FfbState {
+                    timestamp: Instant::now(),
+                    safety_state: format!("{:?}", self.safety_state),
+                    torque_setpoint: target_torque,
+                    actual_torque: target_torque, // Assume perfect tracking for now
+                })
+                .map_err(|e| FfbError::DeviceError {
+                    message: e.to_string(),
+                })?;
         }
 
         // Update audio system
-        self.audio_system.update()
-            .map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
+        self.audio_system
+            .update()
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
 
         Ok(())
     }
@@ -419,7 +464,7 @@ impl FfbEngine {
         match self.safety_state {
             SafetyState::SafeTorque => 2.0, // Assume some baseline torque
             SafetyState::HighTorque => 8.0, // Assume higher torque in high-torque mode
-            SafetyState::Faulted => 0.0,   // Should be zero in faulted state
+            SafetyState::Faulted => 0.0,    // Should be zero in faulted state
         }
     }
 
@@ -444,15 +489,25 @@ impl FfbEngine {
     }
 
     /// Record axis frame in blackbox
-    pub fn record_axis_frame(&mut self, device_id: String, raw_input: f32, processed_output: f32, torque_nm: f32) -> Result<()> {
-        self.blackbox_recorder.record(BlackboxEntry::AxisFrame {
-            timestamp: Instant::now(),
-            device_id,
-            raw_input,
-            processed_output,
-            torque_nm,
-        }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-        
+    pub fn record_axis_frame(
+        &mut self,
+        device_id: String,
+        raw_input: f32,
+        processed_output: f32,
+        torque_nm: f32,
+    ) -> Result<()> {
+        self.blackbox_recorder
+            .record(BlackboxEntry::AxisFrame {
+                timestamp: Instant::now(),
+                device_id,
+                raw_input,
+                processed_output,
+                torque_nm,
+            })
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
+
         Ok(())
     }
 
@@ -463,8 +518,11 @@ impl FfbEngine {
             self.telemetry_synth = Some(TelemetrySynthEngine::new(config));
             tracing::info!("Telemetry synthesis enabled");
         } else {
-            return Err(FfbError::ConfigError { 
-                message: format!("Telemetry synthesis requires FfbMode::TelemetrySynth, current mode: {:?}", self.config.mode)
+            return Err(FfbError::ConfigError {
+                message: format!(
+                    "Telemetry synthesis requires FfbMode::TelemetrySynth, current mode: {:?}",
+                    self.config.mode
+                ),
             });
         }
         Ok(())
@@ -477,19 +535,26 @@ impl FfbEngine {
     }
 
     /// Update telemetry synthesis with flight data
-    pub fn update_telemetry_synthesis(&mut self, snapshot: &flight_bus::BusSnapshot) -> Result<Option<EffectOutput>> {
+    pub fn update_telemetry_synthesis(
+        &mut self,
+        snapshot: &flight_bus::BusSnapshot,
+    ) -> Result<Option<EffectOutput>> {
         if let Some(ref mut synth_engine) = self.telemetry_synth {
             let output = synth_engine.update(snapshot)?;
-            
+
             // Record telemetry synthesis output in blackbox
-            self.blackbox_recorder.record(BlackboxEntry::TelemetrySynth {
-                timestamp: Instant::now(),
-                torque_nm: output.torque_nm,
-                frequency_hz: output.frequency_hz,
-                intensity: output.intensity,
-                active_effects: output.active_effects.join(","),
-            }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-            
+            self.blackbox_recorder
+                .record(BlackboxEntry::TelemetrySynth {
+                    timestamp: Instant::now(),
+                    torque_nm: output.torque_nm,
+                    frequency_hz: output.frequency_hz,
+                    intensity: output.intensity,
+                    active_effects: output.active_effects.join(","),
+                })
+                .map_err(|e| FfbError::DeviceError {
+                    message: e.to_string(),
+                })?;
+
             Ok(Some(output))
         } else {
             Ok(None)
@@ -524,34 +589,41 @@ impl FfbEngine {
     /// Apply trim setpoint change through engine
     pub fn apply_trim_setpoint_change(&mut self, change: SetpointChange) -> Result<()> {
         let target_nm = change.target_nm;
-        self.trim_controller.apply_setpoint_change(change)
+        self.trim_controller
+            .apply_setpoint_change(change)
             .map_err(|e| FfbError::ConfigError { message: e })?;
-        
+
         // Record trim change in blackbox
-        self.blackbox_recorder.record(BlackboxEntry::SystemEvent {
-            timestamp: Instant::now(),
-            event_type: "TRIM_SETPOINT_CHANGE".to_string(),
-            details: format!("Target: {} Nm", target_nm),
-        }).map_err(|e| FfbError::DeviceError { message: e.to_string() })?;
-        
+        self.blackbox_recorder
+            .record(BlackboxEntry::SystemEvent {
+                timestamp: Instant::now(),
+                event_type: "TRIM_SETPOINT_CHANGE".to_string(),
+                details: format!("Target: {} Nm", target_nm),
+            })
+            .map_err(|e| FfbError::DeviceError {
+                message: e.to_string(),
+            })?;
+
         Ok(())
     }
 
     /// Update trim controller and get output
     pub fn update_trim_controller(&mut self) -> TrimOutput {
         let output = self.trim_controller.update();
-        
+
         // Record trim state in blackbox
         let state = self.trim_controller.get_trim_state();
         if let Err(e) = self.blackbox_recorder.record(BlackboxEntry::SystemEvent {
             timestamp: Instant::now(),
             event_type: "TRIM_UPDATE".to_string(),
-            details: format!("Mode: {:?}, Setpoint: {} Nm, Rate: {} Nm/s", 
-                state.mode, state.current_setpoint_nm, state.current_rate_nm_per_s),
+            details: format!(
+                "Mode: {:?}, Setpoint: {} Nm, Rate: {} Nm/s",
+                state.mode, state.current_setpoint_nm, state.current_rate_nm_per_s
+            ),
         }) {
             tracing::warn!("Failed to record trim update in blackbox: {}", e);
         }
-        
+
         output
     }
 
@@ -562,7 +634,10 @@ impl FfbEngine {
     }
 
     /// Run trim validation with custom configuration
-    pub fn run_trim_validation_with_config(&mut self, config: TrimValidationConfig) -> Vec<TrimValidationResult> {
+    pub fn run_trim_validation_with_config(
+        &mut self,
+        config: TrimValidationConfig,
+    ) -> Vec<TrimValidationResult> {
         let mut validation_suite = TrimValidationSuite::new(config);
         validation_suite.run_complete_validation()
     }
@@ -577,7 +652,7 @@ impl Default for FfbEngine {
             mode: FfbMode::Auto,
             device_path: None,
         };
-        
+
         Self::new(config).expect("Default FFB engine creation should not fail")
     }
 }

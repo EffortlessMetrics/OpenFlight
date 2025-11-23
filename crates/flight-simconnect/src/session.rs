@@ -7,13 +7,13 @@
 //! for SimConnect communication with Microsoft Flight Simulator.
 
 use flight_simconnect_sys::{
-    SimConnectApi, SimConnectError, HSIMCONNECT, SIMCONNECT_RECV,
-    SIMCONNECT_RECV_EXCEPTION, SIMCONNECT_RECV_ID, SIMCONNECT_RECV_OPEN, SIMCONNECT_RECV_SIMOBJECT_DATA,
+    HSIMCONNECT, SIMCONNECT_RECV, SIMCONNECT_RECV_EXCEPTION, SIMCONNECT_RECV_ID,
+    SIMCONNECT_RECV_OPEN, SIMCONNECT_RECV_SIMOBJECT_DATA, SimConnectApi, SimConnectError,
 };
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 use tracing::{debug, error, info, warn};
 use windows::Win32::Foundation::{HANDLE, HWND};
 
@@ -161,7 +161,7 @@ impl SimConnectSession {
             self.api.close(handle)?;
             self.connected = false;
             info!("Disconnected from SimConnect");
-            
+
             // Send disconnect event
             let _ = self.event_sender.send(SessionEvent::Disconnected);
         }
@@ -230,17 +230,23 @@ impl SimConnectSession {
         }
 
         self.reconnect_attempts += 1;
-        info!("Attempting reconnection {} of {}", self.reconnect_attempts, self.config.max_reconnect_attempts);
+        info!(
+            "Attempting reconnection {} of {}",
+            self.reconnect_attempts, self.config.max_reconnect_attempts
+        );
 
         tokio::time::sleep(self.config.reconnect_delay).await;
-        
+
         match self.connect().await {
             Ok(()) => {
                 info!("Reconnection successful");
                 Ok(())
             }
             Err(e) => {
-                warn!("Reconnection attempt {} failed: {}", self.reconnect_attempts, e);
+                warn!(
+                    "Reconnection attempt {} failed: {}",
+                    self.reconnect_attempts, e
+                );
                 Err(e)
             }
         }
@@ -257,13 +263,15 @@ impl SimConnectSession {
     }
 
     fn try_connect(&self) -> Result<HSIMCONNECT, SessionError> {
-        self.api.open(
-            &self.config.app_name,
-            HWND::default(),
-            0,
-            HANDLE::default(),
-            self.config.config_index,
-        ).map_err(SessionError::SimConnect)
+        self.api
+            .open(
+                &self.config.app_name,
+                HWND::default(),
+                0,
+                HANDLE::default(),
+                self.config.config_index,
+            )
+            .map_err(SessionError::SimConnect)
     }
 
     fn process_message(&self, data: Vec<u8>) -> Result<(), SessionError> {
@@ -272,7 +280,7 @@ impl SimConnectSession {
         }
 
         let recv = unsafe { &*(data.as_ptr() as *const SIMCONNECT_RECV) };
-        
+
         match recv.dwID {
             id if id == SIMCONNECT_RECV_ID::OPEN as u32 => {
                 self.handle_open_message(&data)?;
@@ -304,7 +312,7 @@ impl SimConnectSession {
         }
 
         let open_msg = unsafe { &*(data.as_ptr() as *const SIMCONNECT_RECV_OPEN) };
-        
+
         // Extract application name (null-terminated)
         let app_name = unsafe {
             std::ffi::CStr::from_ptr(open_msg.szApplicationName.as_ptr())
@@ -338,7 +346,7 @@ impl SimConnectSession {
         }
 
         let exception_msg = unsafe { &*(data.as_ptr() as *const SIMCONNECT_RECV_EXCEPTION) };
-        
+
         let event = SessionEvent::Exception {
             exception: exception_msg.dwException,
             send_id: exception_msg.dwSendID,
@@ -355,7 +363,7 @@ impl SimConnectSession {
         }
 
         let data_msg = unsafe { &*(data.as_ptr() as *const SIMCONNECT_RECV_SIMOBJECT_DATA) };
-        
+
         // Extract the actual data payload
         let data_offset = std::mem::size_of::<SIMCONNECT_RECV_SIMOBJECT_DATA>();
         let payload = if data.len() > data_offset {
@@ -380,8 +388,9 @@ impl SimConnectSession {
             return Err(SessionError::InvalidMessage);
         }
 
-        let event_msg = unsafe { &*(data.as_ptr() as *const flight_simconnect_sys::SIMCONNECT_RECV_EVENT) };
-        
+        let event_msg =
+            unsafe { &*(data.as_ptr() as *const flight_simconnect_sys::SIMCONNECT_RECV_EVENT) };
+
         let event = SessionEvent::EventReceived {
             group_id: event_msg.uGroupID,
             event_id: event_msg.uEventID,
@@ -415,7 +424,7 @@ mod tests {
     #[test]
     fn test_session_creation() {
         let config = SessionConfig::default();
-        
+
         // This test will only pass if SimConnect.dll is available
         match SimConnectSession::new(config) {
             Ok(session) => {
@@ -436,7 +445,7 @@ mod tests {
     async fn test_session_connect_timeout() {
         let mut config = SessionConfig::default();
         config.connect_timeout = Duration::from_millis(100);
-        
+
         match SimConnectSession::new(config) {
             Ok(mut session) => {
                 // This should timeout since MSFS is likely not running

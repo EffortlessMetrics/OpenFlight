@@ -1,5 +1,14 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -33,6 +42,6 @@ pub mod transport;
 pub use adapter::{MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
 pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
-pub use fixtures::{SessionFixture, FixtureRecorder, FixturePlayer};
-pub use mapping::{VariableMapping, MappingConfig, MappingError};
-pub use session::{SimConnectSession, SessionConfig, SessionError};
+pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
+pub use mapping::{MappingConfig, MappingError, VariableMapping};
+pub use session::{SessionConfig, SessionError, SimConnectSession};

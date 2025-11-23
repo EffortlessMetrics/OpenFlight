@@ -23,36 +23,34 @@ pub struct TraceEvent {
 #[serde(tag = "type", content = "data")]
 pub enum EventData {
     /// RT loop tick started
-    TickStart {
-        tick_number: u64,
-    },
-    
+    TickStart { tick_number: u64 },
+
     /// RT loop tick completed
     TickEnd {
         tick_number: u64,
         duration_ns: u64,
         jitter_ns: i64,
     },
-    
+
     /// HID write operation
     HidWrite {
         device_id: u32,
         bytes: usize,
         duration_ns: u64,
     },
-    
+
     /// Deadline miss detected
     DeadlineMiss {
         tick_number: u64,
         miss_duration_ns: u64,
     },
-    
+
     /// Writer buffer drop
     WriterDrop {
         stream_id: String,
         dropped_count: u64,
     },
-    
+
     /// Custom event for extensibility
     Custom {
         name: String,
@@ -68,7 +66,7 @@ impl TraceEvent {
             data: EventData::TickStart { tick_number },
         }
     }
-    
+
     /// Create tick end event
     pub fn tick_end(tick_number: u64, duration_ns: u64, jitter_ns: i64) -> Self {
         Self {
@@ -80,7 +78,7 @@ impl TraceEvent {
             },
         }
     }
-    
+
     /// Create HID write event
     pub fn hid_write(device_id: u32, bytes: usize, duration_ns: u64) -> Self {
         Self {
@@ -92,7 +90,7 @@ impl TraceEvent {
             },
         }
     }
-    
+
     /// Create deadline miss event
     pub fn deadline_miss(tick_number: u64, miss_duration_ns: u64) -> Self {
         Self {
@@ -103,7 +101,7 @@ impl TraceEvent {
             },
         }
     }
-    
+
     /// Create writer drop event
     pub fn writer_drop(stream_id: impl Into<String>, dropped_count: u64) -> Self {
         Self {
@@ -114,7 +112,7 @@ impl TraceEvent {
             },
         }
     }
-    
+
     /// Create custom event
     pub fn custom(name: impl Into<String>, data: serde_json::Value) -> Self {
         Self {
@@ -125,7 +123,7 @@ impl TraceEvent {
             },
         }
     }
-    
+
     /// Get event type as string
     pub fn event_type(&self) -> &'static str {
         match &self.data {
@@ -137,44 +135,58 @@ impl TraceEvent {
             EventData::Custom { .. } => "Custom",
         }
     }
-    
+
     /// Serialize event to JSON bytes
     pub fn to_json_bytes(&self) -> Result<Vec<u8>, serde_json::Error> {
         serde_json::to_vec(self)
     }
-    
+
     /// Serialize event to compact binary format
     pub fn to_binary(&self) -> Vec<u8> {
         // Simple binary format for high-performance logging
         let mut buf = Vec::with_capacity(64);
-        
+
         // Timestamp (8 bytes)
         buf.extend_from_slice(&self.timestamp_ns.to_le_bytes());
-        
+
         // Event type and data
         match &self.data {
             EventData::TickStart { tick_number } => {
                 buf.push(0x01); // TickStart type
                 buf.extend_from_slice(&tick_number.to_le_bytes());
             }
-            EventData::TickEnd { tick_number, duration_ns, jitter_ns } => {
+            EventData::TickEnd {
+                tick_number,
+                duration_ns,
+                jitter_ns,
+            } => {
                 buf.push(0x02); // TickEnd type
                 buf.extend_from_slice(&tick_number.to_le_bytes());
                 buf.extend_from_slice(&duration_ns.to_le_bytes());
                 buf.extend_from_slice(&jitter_ns.to_le_bytes());
             }
-            EventData::HidWrite { device_id, bytes, duration_ns } => {
+            EventData::HidWrite {
+                device_id,
+                bytes,
+                duration_ns,
+            } => {
                 buf.push(0x03); // HidWrite type
                 buf.extend_from_slice(&device_id.to_le_bytes());
                 buf.extend_from_slice(&(*bytes as u32).to_le_bytes());
                 buf.extend_from_slice(&duration_ns.to_le_bytes());
             }
-            EventData::DeadlineMiss { tick_number, miss_duration_ns } => {
+            EventData::DeadlineMiss {
+                tick_number,
+                miss_duration_ns,
+            } => {
                 buf.push(0x04); // DeadlineMiss type
                 buf.extend_from_slice(&tick_number.to_le_bytes());
                 buf.extend_from_slice(&miss_duration_ns.to_le_bytes());
             }
-            EventData::WriterDrop { stream_id, dropped_count } => {
+            EventData::WriterDrop {
+                stream_id,
+                dropped_count,
+            } => {
                 buf.push(0x05); // WriterDrop type
                 let id_bytes = stream_id.as_bytes();
                 buf.push(id_bytes.len() as u8);
@@ -191,7 +203,7 @@ impl TraceEvent {
                 buf.extend_from_slice(&json_bytes);
             }
         }
-        
+
         buf
     }
 }
@@ -242,7 +254,7 @@ impl EventFilter {
             EventData::Custom { .. } => self.custom_events,
         }
     }
-    
+
     /// Create filter for CI performance testing (minimal events)
     pub fn ci_minimal() -> Self {
         Self {
@@ -253,7 +265,7 @@ impl EventFilter {
             custom_events: false,
         }
     }
-    
+
     /// Create filter for development (all events)
     pub fn development() -> Self {
         Self {
@@ -274,16 +286,16 @@ mod tests {
     fn test_event_creation() {
         let tick_start = TraceEvent::tick_start(42);
         assert_eq!(tick_start.event_type(), "TickStart");
-        
+
         let tick_end = TraceEvent::tick_end(42, 1000000, 500);
         assert_eq!(tick_end.event_type(), "TickEnd");
-        
+
         let hid_write = TraceEvent::hid_write(0x1234, 64, 250000);
         assert_eq!(hid_write.event_type(), "HidWrite");
-        
+
         let deadline_miss = TraceEvent::deadline_miss(43, 2000000);
         assert_eq!(deadline_miss.event_type(), "DeadlineMiss");
-        
+
         let writer_drop = TraceEvent::writer_drop("axis", 5);
         assert_eq!(writer_drop.event_type(), "WriterDrop");
     }
@@ -291,12 +303,12 @@ mod tests {
     #[test]
     fn test_event_serialization() {
         let event = TraceEvent::tick_end(100, 4000000, 1500);
-        
+
         // JSON serialization
         let json_bytes = event.to_json_bytes().unwrap();
         let deserialized: TraceEvent = serde_json::from_slice(&json_bytes).unwrap();
         assert_eq!(event.timestamp_ns, deserialized.timestamp_ns);
-        
+
         // Binary serialization
         let binary = event.to_binary();
         assert!(!binary.is_empty());
@@ -307,15 +319,15 @@ mod tests {
     #[test]
     fn test_event_filter() {
         let filter = EventFilter::default();
-        
+
         let tick_event = TraceEvent::tick_start(1);
         let hid_event = TraceEvent::hid_write(0x1234, 64, 250000);
         let custom_event = TraceEvent::custom("test", serde_json::json!({"key": "value"}));
-        
+
         assert!(filter.should_trace(&tick_event));
         assert!(filter.should_trace(&hid_event));
         assert!(!filter.should_trace(&custom_event)); // Custom disabled by default
-        
+
         let ci_filter = EventFilter::ci_minimal();
         assert!(!ci_filter.should_trace(&tick_event)); // Ticks disabled for CI
         assert!(ci_filter.should_trace(&hid_event));
@@ -326,13 +338,13 @@ mod tests {
         // Verify binary format is compact
         let tick_end = TraceEvent::tick_end(100, 4000000, 1500);
         let binary = tick_end.to_binary();
-        
+
         // Should be: 8 (timestamp) + 1 (type) + 8 (tick) + 8 (duration) + 8 (jitter) = 33 bytes
         assert_eq!(binary.len(), 33);
-        
+
         let hid_write = TraceEvent::hid_write(0x1234, 64, 250000);
         let binary = hid_write.to_binary();
-        
+
         // Should be: 8 (timestamp) + 1 (type) + 4 (device) + 4 (bytes) + 8 (duration) = 25 bytes
         assert_eq!(binary.len(), 25);
     }

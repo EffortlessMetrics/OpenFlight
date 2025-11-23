@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tracing::{info, warn, error, debug};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 /// Verify test configuration
@@ -26,11 +26,11 @@ pub struct VerifyTestConfig {
 impl Default for VerifyTestConfig {
     fn default() -> Self {
         Self {
-            test_duration_ms: 5000,  // 5 seconds
-            event_interval_ms: 100,  // 100ms between events
-            expected_events: 50,     // 50 events total
-            timeout_ms: 10000,       // 10 second timeout
-            max_latency_ms: 100,     // 100ms max latency
+            test_duration_ms: 5000, // 5 seconds
+            event_interval_ms: 100, // 100ms between events
+            expected_events: 50,    // 50 events total
+            timeout_ms: 10000,      // 10 second timeout
+            max_latency_ms: 100,    // 100ms max latency
         }
     }
 }
@@ -138,7 +138,10 @@ impl EventTracker {
             self.round_trip_times.push(round_trip_time);
             Some(round_trip_time)
         } else {
-            self.errors.push(format!("Received event {} without corresponding sent event", event_id));
+            self.errors.push(format!(
+                "Received event {} without corresponding sent event",
+                event_id
+            ));
             None
         }
     }
@@ -150,31 +153,37 @@ impl EventTracker {
     fn get_statistics(&self) -> EventStatistics {
         let total_sent = self.sent_events.len();
         let total_received = self.received_events.len();
-        
-        let (avg_latency, min_latency, max_latency, p99_latency) = if !self.round_trip_times.is_empty() {
-            let mut times: Vec<u64> = self.round_trip_times.iter()
-                .map(|d| d.as_millis() as u64)
-                .collect();
-            times.sort_unstable();
 
-            let avg = times.iter().sum::<u64>() / times.len() as u64;
-            let min = *times.first().unwrap_or(&0);
-            let max = *times.last().unwrap_or(&0);
-            let p99_index = ((times.len() as f64) * 0.99) as usize;
-            let p99 = times.get(p99_index.min(times.len() - 1)).copied().unwrap_or(0);
+        let (avg_latency, min_latency, max_latency, p99_latency) =
+            if !self.round_trip_times.is_empty() {
+                let mut times: Vec<u64> = self
+                    .round_trip_times
+                    .iter()
+                    .map(|d| d.as_millis() as u64)
+                    .collect();
+                times.sort_unstable();
 
-            (avg, min, max, p99)
-        } else {
-            (0, 0, 0, 0)
-        };
+                let avg = times.iter().sum::<u64>() / times.len() as u64;
+                let min = *times.first().unwrap_or(&0);
+                let max = *times.last().unwrap_or(&0);
+                let p99_index = ((times.len() as f64) * 0.99) as usize;
+                let p99 = times
+                    .get(p99_index.min(times.len() - 1))
+                    .copied()
+                    .unwrap_or(0);
+
+                (avg, min, max, p99)
+            } else {
+                (0, 0, 0, 0)
+            };
 
         EventStatistics {
             total_sent,
             total_received,
-            success_rate: if total_sent > 0 { 
-                (total_received as f64 / total_sent as f64) * 100.0 
-            } else { 
-                0.0 
+            success_rate: if total_sent > 0 {
+                (total_received as f64 / total_sent as f64) * 100.0
+            } else {
+                0.0
             },
             avg_latency_ms: avg_latency,
             min_latency_ms: min_latency,
@@ -203,16 +212,16 @@ pub struct EventStatistics {
 pub enum VerifyError {
     #[error("Test timeout after {timeout_ms}ms")]
     Timeout { timeout_ms: u64 },
-    
+
     #[error("Event processing failed: {0}")]
     EventProcessingFailed(String),
-    
+
     #[error("Latency exceeded threshold: {actual_ms}ms > {threshold_ms}ms")]
     LatencyThresholdExceeded { actual_ms: u32, threshold_ms: u32 },
-    
+
     #[error("Success rate too low: {actual}% < {threshold}%")]
     SuccessRateTooLow { actual: f64, threshold: f64 },
-    
+
     #[error("Test configuration error: {0}")]
     ConfigurationError(String),
 }
@@ -240,13 +249,13 @@ impl EventRoundTrip {
     /// Run the complete verify test
     pub async fn run_test(&mut self) -> Result<VerifyResult, VerifyError> {
         info!("Starting StreamDeck event round-trip verify test");
-        
+
         let start_time = Instant::now();
         let test_timeout = Duration::from_millis(self.config.timeout_ms);
-        
+
         // Run the test with timeout
         let result = tokio::time::timeout(test_timeout, self.execute_test()).await;
-        
+
         match result {
             Ok(test_result) => {
                 let elapsed = start_time.elapsed();
@@ -255,30 +264,35 @@ impl EventRoundTrip {
             }
             Err(_) => {
                 error!("Verify test timed out after {}ms", self.config.timeout_ms);
-                Err(VerifyError::Timeout { timeout_ms: self.config.timeout_ms })
+                Err(VerifyError::Timeout {
+                    timeout_ms: self.config.timeout_ms,
+                })
             }
         }
     }
 
     /// Execute the actual test
     async fn execute_test(&mut self) -> Result<VerifyResult, VerifyError> {
-        debug!("Executing verify test with {} events", self.config.expected_events);
-        
+        debug!(
+            "Executing verify test with {} events",
+            self.config.expected_events
+        );
+
         // Send test events
         for i in 0..self.config.expected_events {
             let event = self.create_test_event(i);
             self.send_test_event(event).await?;
-            
+
             // Wait between events
             if i < self.config.expected_events - 1 {
                 tokio::time::sleep(Duration::from_millis(self.config.event_interval_ms)).await;
             }
         }
-        
+
         // Wait for all responses
         let response_timeout = Duration::from_millis(self.config.max_latency_ms as u64 * 2);
         tokio::time::sleep(response_timeout).await;
-        
+
         // Analyze results
         self.analyze_results()
     }
@@ -293,22 +307,22 @@ impl EventRoundTrip {
                 .unwrap()
                 .as_millis()
         });
-        
+
         TestEvent::new(TestEventType::ActionTrigger, payload)
     }
 
     /// Send a test event
     async fn send_test_event(&mut self, event: TestEvent) -> Result<(), VerifyError> {
         debug!("Sending test event: {}", event.id);
-        
+
         self.tracker.track_sent_event(event.id.clone());
-        
+
         // Simulate sending event (in real implementation, this would send via IPC)
         tokio::time::sleep(Duration::from_millis(1)).await;
-        
+
         // Simulate receiving response (in real implementation, this would be async)
         self.simulate_event_response(event).await?;
-        
+
         Ok(())
     }
 
@@ -317,9 +331,9 @@ impl EventRoundTrip {
         // Simulate network/processing delay
         let delay_ms = fastrand::u64(10..=50); // 10-50ms random delay
         tokio::time::sleep(Duration::from_millis(delay_ms)).await;
-        
+
         debug!("Received response for event: {}", event.id);
-        
+
         if let Some(round_trip_time) = self.tracker.track_received_event(event.id.clone()) {
             if round_trip_time.as_millis() as u32 > self.config.max_latency_ms {
                 self.tracker.add_error(format!(
@@ -330,40 +344,38 @@ impl EventRoundTrip {
                 ));
             }
         }
-        
+
         Ok(())
     }
 
     /// Analyze test results
     fn analyze_results(&self) -> Result<VerifyResult, VerifyError> {
         let stats = self.tracker.get_statistics();
-        
+
         debug!("Test statistics: {:?}", stats);
-        
+
         // Check success rate
         if stats.success_rate < 95.0 {
-            return Ok(VerifyResult::failure(vec![
-                format!("Success rate too low: {:.1}% < 95.0%", stats.success_rate)
-            ]));
+            return Ok(VerifyResult::failure(vec![format!(
+                "Success rate too low: {:.1}% < 95.0%",
+                stats.success_rate
+            )]));
         }
-        
+
         // Check average latency
         if stats.avg_latency_ms > self.config.max_latency_ms as u64 {
-            return Ok(VerifyResult::failure(vec![
-                format!(
-                    "Average latency too high: {}ms > {}ms",
-                    stats.avg_latency_ms,
-                    self.config.max_latency_ms
-                )
-            ]));
+            return Ok(VerifyResult::failure(vec![format!(
+                "Average latency too high: {}ms > {}ms",
+                stats.avg_latency_ms, self.config.max_latency_ms
+            )]));
         }
-        
+
         // Check for errors
         if !stats.errors.is_empty() {
             warn!("Test completed with {} errors", stats.errors.len());
             return Ok(VerifyResult::failure(stats.errors));
         }
-        
+
         Ok(VerifyResult::success(
             stats.avg_latency_ms as u32,
             stats.total_received as u32,
@@ -433,7 +445,7 @@ mod tests {
             max_latency_ms: 200,
             ..Default::default()
         };
-        
+
         let test = VerifyTest::with_config(config);
         let stats = test.get_statistics();
         assert_eq!(stats.total_sent, 0);
@@ -448,10 +460,10 @@ mod tests {
             test_duration_ms: 1000,
             timeout_ms: 2000,
         };
-        
+
         let mut round_trip = EventRoundTrip::new(config);
         let result = round_trip.run_test().await;
-        
+
         assert!(result.is_ok());
         let verify_result = result.unwrap();
         assert!(verify_result.success);
@@ -461,17 +473,17 @@ mod tests {
     #[tokio::test]
     async fn test_event_tracker() {
         let mut tracker = EventTracker::new();
-        
+
         let event_id = "test-event-1".to_string();
         tracker.track_sent_event(event_id.clone());
-        
+
         // Simulate small delay
         tokio::time::sleep(Duration::from_millis(10)).await;
-        
+
         let round_trip_time = tracker.track_received_event(event_id);
         assert!(round_trip_time.is_some());
         assert!(round_trip_time.unwrap().as_millis() >= 10);
-        
+
         let stats = tracker.get_statistics();
         assert_eq!(stats.total_sent, 1);
         assert_eq!(stats.total_received, 1);
@@ -482,7 +494,7 @@ mod tests {
     async fn test_test_event_creation() {
         let round_trip = EventRoundTrip::default();
         let event = round_trip.create_test_event(42);
-        
+
         assert_eq!(event.event_type, TestEventType::ActionTrigger);
         assert!(event.payload.get("sequence").is_some());
         assert_eq!(event.payload["sequence"], 42);
@@ -495,7 +507,7 @@ mod tests {
         assert_eq!(success_result.round_trip_time_ms, 50);
         assert_eq!(success_result.events_processed, 10);
         assert!(success_result.errors.is_empty());
-        
+
         let failure_result = VerifyResult::failure(vec!["Test error".to_string()]);
         assert!(!failure_result.success);
         assert_eq!(failure_result.errors.len(), 1);

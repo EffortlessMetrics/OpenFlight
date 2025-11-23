@@ -8,13 +8,12 @@
 
 use flight_bus::adapters::msfs::MsfsConverter;
 use flight_bus::snapshot::{
-    AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics,
-    Navigation,
+    AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, Navigation,
 };
 use flight_bus::types::Percentage;
 use flight_simconnect_sys::{
-    constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE,
-    SIMCONNECT_PERIOD, SIMCONNECT_REQUESTID,
+    HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE, SIMCONNECT_PERIOD,
+    SIMCONNECT_REQUESTID, SimConnectApi, constants::*,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -308,11 +307,12 @@ impl VariableMapping {
     ) -> Result<(), MappingError> {
         // Use scoped borrow pattern to avoid potential conflicts
         let requests: Vec<_> = {
-            self.request_mappings.iter().map(|(request_id, mapping)| {
-                (*request_id, mapping.definition_id, mapping.period)
-            }).collect()
+            self.request_mappings
+                .iter()
+                .map(|(request_id, mapping)| (*request_id, mapping.definition_id, mapping.period))
+                .collect()
         }; // immutable borrow ends here
-        
+
         for (request_id, definition_id, period) in requests {
             api.request_data_on_sim_object(
                 handle,
@@ -332,11 +332,17 @@ impl VariableMapping {
         data: &[u8],
         current_snapshot: &mut BusSnapshot,
     ) -> Result<(), MappingError> {
-        let mapping = self.request_mappings.get(&request_id)
+        let mapping = self
+            .request_mappings
+            .get(&request_id)
             .ok_or_else(|| MappingError::VariableNotFound(format!("Request ID {}", request_id)))?;
 
-        let definition = self.data_definitions.get(&mapping.definition_id)
-            .ok_or_else(|| MappingError::VariableNotFound(format!("Definition ID {}", mapping.definition_id)))?;
+        let definition = self
+            .data_definitions
+            .get(&mapping.definition_id)
+            .ok_or_else(|| {
+                MappingError::VariableNotFound(format!("Definition ID {}", mapping.definition_id))
+            })?;
 
         match mapping.category {
             DataCategory::Kinematics => {
@@ -374,7 +380,9 @@ impl VariableMapping {
     }
 
     fn get_aircraft_mapping(&self, aircraft_id: &str) -> &AircraftMapping {
-        self.config.aircraft_mappings.get(aircraft_id)
+        self.config
+            .aircraft_mappings
+            .get(aircraft_id)
             .unwrap_or(&self.config.default_mapping)
     }
 
@@ -402,14 +410,22 @@ impl VariableMapping {
             (&mapping.heading, "degrees", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.g_force, "gforce", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.g_lateral, "gforce", SIMCONNECT_DATATYPE::FLOAT64),
-            (&mapping.g_longitudinal, "gforce", SIMCONNECT_DATATYPE::FLOAT64),
+            (
+                &mapping.g_longitudinal,
+                "gforce",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
             (&mapping.mach, "mach", SIMCONNECT_DATATYPE::FLOAT64),
-            (&mapping.vertical_speed, "feet per minute", SIMCONNECT_DATATYPE::FLOAT64),
+            (
+                &mapping.vertical_speed,
+                "feet per minute",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
         ];
 
         for (i, (var_name, units, data_type)) in kinematics_vars.iter().enumerate() {
             api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, i as u32)?;
-            
+
             let size = match data_type {
                 SIMCONNECT_DATATYPE::FLOAT64 => 8,
                 SIMCONNECT_DATATYPE::FLOAT32 => 4,
@@ -441,12 +457,15 @@ impl VariableMapping {
         self.next_request_id += 1;
 
         let period = hz_to_period(self.config.update_rates.kinematics);
-        self.request_mappings.insert(request_id, RequestMapping {
+        self.request_mappings.insert(
             request_id,
-            definition_id: def_id,
-            category: DataCategory::Kinematics,
-            period,
-        });
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Kinematics,
+                period,
+            },
+        );
 
         Ok(())
     }
@@ -471,7 +490,11 @@ impl VariableMapping {
             (&mapping.flaps, "percent", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.spoilers, "percent", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.ap_master, "bool", SIMCONNECT_DATATYPE::INT32),
-            (&mapping.ap_altitude_hold, "bool", SIMCONNECT_DATATYPE::INT32),
+            (
+                &mapping.ap_altitude_hold,
+                "bool",
+                SIMCONNECT_DATATYPE::INT32,
+            ),
             (&mapping.ap_heading_hold, "bool", SIMCONNECT_DATATYPE::INT32),
             (&mapping.ap_speed_hold, "bool", SIMCONNECT_DATATYPE::INT32),
             (&mapping.ap_altitude, "feet", SIMCONNECT_DATATYPE::FLOAT64),
@@ -481,7 +504,7 @@ impl VariableMapping {
 
         for (i, (var_name, units, data_type)) in config_vars.iter().enumerate() {
             api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, i as u32)?;
-            
+
             let size = match data_type {
                 SIMCONNECT_DATATYPE::FLOAT64 => 8,
                 SIMCONNECT_DATATYPE::FLOAT32 => 4,
@@ -513,8 +536,16 @@ impl VariableMapping {
 
         for (i, (var_name, units, data_type)) in lights_vars.iter().enumerate() {
             let datum_id = config_vars.len() + i;
-            api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, datum_id as u32)?;
-            
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                var_name,
+                units,
+                *data_type,
+                0.0,
+                datum_id as u32,
+            )?;
+
             variables.push(VariableDefinition {
                 name: var_name.to_string(),
                 units: units.to_string(),
@@ -539,12 +570,15 @@ impl VariableMapping {
         self.next_request_id += 1;
 
         let period = hz_to_period(self.config.update_rates.config);
-        self.request_mappings.insert(request_id, RequestMapping {
+        self.request_mappings.insert(
             request_id,
-            definition_id: def_id,
-            category: DataCategory::Config,
-            period,
-        });
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Config,
+                period,
+            },
+        );
 
         Ok(())
     }
@@ -563,7 +597,15 @@ impl VariableMapping {
         let mut datum_id = 0u32;
 
         // Add required engine variables
-        api.add_to_data_definition(handle, def_id, &mapping.running, "bool", SIMCONNECT_DATATYPE::INT32, 0.0, datum_id)?;
+        api.add_to_data_definition(
+            handle,
+            def_id,
+            &mapping.running,
+            "bool",
+            SIMCONNECT_DATATYPE::INT32,
+            0.0,
+            datum_id,
+        )?;
         variables.push(VariableDefinition {
             name: mapping.running.clone(),
             units: "bool".to_string(),
@@ -574,7 +616,15 @@ impl VariableMapping {
         offset += 4;
         datum_id += 1;
 
-        api.add_to_data_definition(handle, def_id, &mapping.rpm, "percent", SIMCONNECT_DATATYPE::FLOAT64, 0.0, datum_id)?;
+        api.add_to_data_definition(
+            handle,
+            def_id,
+            &mapping.rpm,
+            "percent",
+            SIMCONNECT_DATATYPE::FLOAT64,
+            0.0,
+            datum_id,
+        )?;
         variables.push(VariableDefinition {
             name: mapping.rpm.clone(),
             units: "percent".to_string(),
@@ -587,7 +637,15 @@ impl VariableMapping {
 
         // Add optional engine variables
         if let Some(ref var) = mapping.manifold_pressure {
-            api.add_to_data_definition(handle, def_id, var, "inHg", SIMCONNECT_DATATYPE::FLOAT64, 0.0, datum_id)?;
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                var,
+                "inHg",
+                SIMCONNECT_DATATYPE::FLOAT64,
+                0.0,
+                datum_id,
+            )?;
             variables.push(VariableDefinition {
                 name: var.clone(),
                 units: "inHg".to_string(),
@@ -615,12 +673,15 @@ impl VariableMapping {
         self.next_request_id += 1;
 
         let period = hz_to_period(self.config.update_rates.engines);
-        self.request_mappings.insert(request_id, RequestMapping {
+        self.request_mappings.insert(
             request_id,
-            definition_id: def_id,
-            category: DataCategory::Engines,
-            period,
-        });
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Engines,
+                period,
+            },
+        );
 
         Ok(())
     }
@@ -665,7 +726,9 @@ impl VariableMapping {
         kinematics: &mut Kinematics,
     ) -> Result<(), MappingError> {
         if data.len() < definition.data_size {
-            return Err(MappingError::ConversionError("Insufficient data".to_string()));
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
         }
 
         // Extract values from data buffer based on variable definitions

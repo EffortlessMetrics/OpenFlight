@@ -8,11 +8,11 @@
 #![cfg_attr(not(feature = "flight-service"), allow(dead_code, unused_imports))]
 
 #[cfg(feature = "flight-service")]
-use flight_core::profile::{Profile, AxisConfig, AircraftId, CapabilityMode, CapabilityContext};
+use flight_axis::AxisEngine;
+#[cfg(feature = "flight-service")]
+use flight_core::profile::{AircraftId, AxisConfig, CapabilityContext, CapabilityMode, Profile};
 #[cfg(feature = "flight-service")]
 use flight_service::capability_service::CapabilityService;
-#[cfg(feature = "flight-service")]
-use flight_axis::AxisEngine;
 #[cfg(feature = "flight-service")]
 use std::collections::HashMap;
 #[cfg(feature = "flight-service")]
@@ -28,22 +28,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a capability service
     let service = CapabilityService::new();
-    
+
     // Create and register axis engines
     let pitch_engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
     let roll_engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
-    
+
     service.register_axis("pitch".to_string(), pitch_engine.clone())?;
     service.register_axis("roll".to_string(), roll_engine.clone())?;
-    
+
     println!("✓ Registered pitch and roll axes");
 
     // Demonstrate profile validation with capability enforcement
     demonstrate_profile_validation()?;
-    
+
     // Demonstrate engine output clamping
     demonstrate_output_clamping(&pitch_engine)?;
-    
+
     // Demonstrate IPC-like service operations
     demonstrate_service_operations(&service)?;
 
@@ -58,21 +58,32 @@ fn demonstrate_profile_validation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a profile with aggressive settings
     let mut axes = HashMap::new();
-    axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.03),
-        expo: Some(0.8),      // High expo
-        slew_rate: Some(10.0), // High slew rate
-        detents: vec![],
-        curve: Some(vec![
-            flight_core::profile::CurvePoint { input: 0.0, output: 0.0 },
-            flight_core::profile::CurvePoint { input: 1.0, output: 1.0 },
-        ]), // Custom curve
-    });
+    axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.8),       // High expo
+            slew_rate: Some(10.0), // High slew rate
+            detents: vec![],
+            curve: Some(vec![
+                flight_core::profile::CurvePoint {
+                    input: 0.0,
+                    output: 0.0,
+                },
+                flight_core::profile::CurvePoint {
+                    input: 1.0,
+                    output: 1.0,
+                },
+            ]), // Custom curve
+        },
+    );
 
     let profile = Profile {
         schema: "flight.profile/1".to_string(),
         sim: Some("msfs".to_string()),
-        aircraft: Some(AircraftId { icao: "C172".to_string() }),
+        aircraft: Some(AircraftId {
+            icao: "C172".to_string(),
+        }),
         axes,
         pof_overrides: None,
     };
@@ -107,33 +118,44 @@ fn demonstrate_output_clamping(engine: &AxisEngine) -> Result<(), Box<dyn std::e
     println!("-------------------------");
 
     let test_input = 0.9;
-    
+
     // Test in full mode
     engine.set_capability_mode(CapabilityMode::Full);
     let mut frame = flight_axis::AxisFrame::new(test_input, 1000);
     frame.out = test_input;
     engine.process(&mut frame)?;
-    println!("  FULL mode: {:.1} → {:.1} (no clamping)", test_input, frame.out);
+    println!(
+        "  FULL mode: {:.1} → {:.1} (no clamping)",
+        test_input, frame.out
+    );
 
     // Test in demo mode
     engine.set_capability_mode(CapabilityMode::Demo);
     let mut frame = flight_axis::AxisFrame::new(test_input, 2000);
     frame.out = test_input;
     engine.process(&mut frame)?;
-    println!("  DEMO mode: {:.1} → {:.1} (clamped to 80%)", test_input, frame.out);
+    println!(
+        "  DEMO mode: {:.1} → {:.1} (clamped to 80%)",
+        test_input, frame.out
+    );
 
     // Test in kid mode
     engine.set_capability_mode(CapabilityMode::Kid);
     let mut frame = flight_axis::AxisFrame::new(test_input, 3000);
     frame.out = test_input;
     engine.process(&mut frame)?;
-    println!("  KID mode:  {:.1} → {:.1} (clamped to 50%)", test_input, frame.out);
+    println!(
+        "  KID mode:  {:.1} → {:.1} (clamped to 50%)",
+        test_input, frame.out
+    );
 
     Ok(())
 }
 
 #[cfg(feature = "flight-service")]
-fn demonstrate_service_operations(service: &CapabilityService) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_service_operations(
+    service: &CapabilityService,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Service Operations (IPC Simulation)");
     println!("--------------------------------------");
 
@@ -143,19 +165,31 @@ fn demonstrate_service_operations(service: &CapabilityService) -> Result<(), Box
 
     // Set global kid mode
     let result = service.set_kid_mode(true)?;
-    println!("  ✓ Set KID mode globally: {} axes affected", result.affected_axes.len());
-    println!("    Max axis output: {:.1}%", result.applied_limits.max_axis_output * 100.0);
-    println!("    Max FFB torque: {:.1} Nm", result.applied_limits.max_ffb_torque);
-    println!("    Allow high torque: {}", result.applied_limits.allow_high_torque);
+    println!(
+        "  ✓ Set KID mode globally: {} axes affected",
+        result.affected_axes.len()
+    );
+    println!(
+        "    Max axis output: {:.1}%",
+        result.applied_limits.max_axis_output * 100.0
+    );
+    println!(
+        "    Max FFB torque: {:.1} Nm",
+        result.applied_limits.max_ffb_torque
+    );
+    println!(
+        "    Allow high torque: {}",
+        result.applied_limits.allow_high_torque
+    );
 
     // Set specific axis to demo mode
-    let result = service.set_capability_mode(
-        CapabilityMode::Demo,
-        Some(vec!["pitch".to_string()]),
-        true,
-    )?;
+    let result =
+        service.set_capability_mode(CapabilityMode::Demo, Some(vec!["pitch".to_string()]), true)?;
     println!("  ✓ Set DEMO mode for pitch axis");
-    println!("    Max axis output: {:.1}%", result.applied_limits.max_axis_output * 100.0);
+    println!(
+        "    Max axis output: {:.1}%",
+        result.applied_limits.max_axis_output * 100.0
+    );
 
     // Check for restricted axes
     let has_restricted = service.has_restricted_axes()?;
@@ -169,15 +203,20 @@ fn demonstrate_service_operations(service: &CapabilityService) -> Result<(), Box
     let status = service.get_capability_status(None)?;
     println!("  Final status:");
     for axis_status in status {
-        println!("    {} → {:?} mode (max output: {:.1}%)", 
-                 axis_status.axis_name, 
-                 axis_status.mode, 
-                 axis_status.limits.max_axis_output * 100.0);
+        println!(
+            "    {} → {:?} mode (max output: {:.1}%)",
+            axis_status.axis_name,
+            axis_status.mode,
+            axis_status.limits.max_axis_output * 100.0
+        );
     }
 
     // Reset to full mode
     let result = service.set_kid_mode(false)?;
-    println!("  ✓ Reset to FULL mode: {} axes affected", result.affected_axes.len());
+    println!(
+        "  ✓ Reset to FULL mode: {} axes affected",
+        result.affected_axes.len()
+    );
 
     Ok(())
 }

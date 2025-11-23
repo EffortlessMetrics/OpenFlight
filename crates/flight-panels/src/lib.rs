@@ -1,18 +1,27 @@
-#![cfg_attr(test, allow(unused_imports, unused_variables, unused_mut, unused_assignments, unused_parens, dead_code))]
-
+#![cfg_attr(
+    test,
+    allow(
+        unused_imports,
+        unused_variables,
+        unused_mut,
+        unused_assignments,
+        unused_parens,
+        dead_code
+    )
+)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 //! Flight panels integration and LED control
 
-use flight_core::rules::{RulesSchema, CompiledRules};
 use flight_core::Result;
+use flight_core::rules::{CompiledRules, RulesSchema};
 use std::collections::HashMap;
 
+pub mod cougar;
 pub mod evaluator;
 pub mod led;
 pub mod saitek;
-pub mod cougar;
 pub mod verify_matrix;
 
 #[cfg(test)]
@@ -21,11 +30,13 @@ mod allocation_test;
 #[cfg(test)]
 mod integration_test;
 
+pub use cougar::{
+    CougarMfdHealthStatus, CougarMfdType, CougarMfdWriter, CougarVerifyTestResult, MfdLedState,
+};
 pub use evaluator::RulesEvaluator;
 pub use led::{LedController, LedTarget};
-pub use saitek::{SaitekPanelWriter, PanelType, VerifyTestResult, PanelHealthStatus};
-pub use cougar::{CougarMfdWriter, CougarMfdType, CougarVerifyTestResult, CougarMfdHealthStatus, MfdLedState};
-pub use verify_matrix::{VerifyMatrix, MatrixTestResult, DriftAnalysis, DriftAction};
+pub use saitek::{PanelHealthStatus, PanelType, SaitekPanelWriter, VerifyTestResult};
+pub use verify_matrix::{DriftAction, DriftAnalysis, MatrixTestResult, VerifyMatrix};
 
 /// Panel manager for LED control and rules evaluation
 pub struct PanelManager {
@@ -73,7 +84,9 @@ impl PanelManager {
             self.verify_matrix = Some(matrix);
             Ok(())
         } else {
-            Err(flight_core::FlightError::Configuration("Saitek writer must be initialized before verify matrix".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Saitek writer must be initialized before verify matrix".to_string(),
+            ))
         }
     }
 
@@ -81,10 +94,10 @@ impl PanelManager {
     pub fn load_rules(&mut self, rules: RulesSchema) -> Result<()> {
         rules.validate()?;
         let compiled = rules.compile()?;
-        
+
         // Initialize evaluator for the new bytecode program
         self.evaluator.initialize_for_program(&compiled.bytecode);
-        
+
         self.compiled_rules = Some(compiled);
         Ok(())
     }
@@ -129,7 +142,7 @@ impl PanelManager {
                 target: "MASTER_WARNING".to_string(),
             },
         ];
-        
+
         self.led_controller.execute_actions(&fault_actions)?;
         Ok(())
     }
@@ -146,7 +159,7 @@ impl PanelManager {
                 brightness: 1.0,
             },
         ];
-        
+
         self.led_controller.execute_actions(&soft_stop_actions)?;
         Ok(())
     }
@@ -164,7 +177,7 @@ impl PanelManager {
                 target: "SOFT_STOP_INDICATOR".to_string(),
             },
         ];
-        
+
         self.led_controller.execute_actions(&clear_actions)?;
         Ok(())
     }
@@ -174,7 +187,9 @@ impl PanelManager {
         if let Some(saitek_writer) = &mut self.saitek_writer {
             saitek_writer.start_verify_test(panel_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Saitek writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -192,7 +207,9 @@ impl PanelManager {
         if let Some(saitek_writer) = &mut self.saitek_writer {
             saitek_writer.check_panel_health(panel_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Saitek writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -201,7 +218,9 @@ impl PanelManager {
         if let Some(saitek_writer) = &mut self.saitek_writer {
             saitek_writer.repair_panel_drift(panel_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Saitek writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Saitek writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -228,7 +247,9 @@ impl PanelManager {
         if let Some(cougar_writer) = &mut self.cougar_writer {
             cougar_writer.start_verify_test(mfd_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Cougar writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -246,7 +267,9 @@ impl PanelManager {
         if let Some(cougar_writer) = &mut self.cougar_writer {
             cougar_writer.check_mfd_health(mfd_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Cougar writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -255,7 +278,9 @@ impl PanelManager {
         if let Some(cougar_writer) = &mut self.cougar_writer {
             cougar_writer.repair_mfd_drift(mfd_path)
         } else {
-            Err(flight_core::FlightError::Configuration("Cougar writer not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Cougar writer not initialized".to_string(),
+            ))
         }
     }
 
@@ -282,16 +307,24 @@ impl PanelManager {
         if let Some(matrix) = &mut self.verify_matrix {
             matrix.run_full_matrix()
         } else {
-            Err(flight_core::FlightError::Configuration("Verify matrix not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Verify matrix not initialized".to_string(),
+            ))
         }
     }
 
     /// Run verify matrix for specific panel
-    pub fn run_panel_verify_matrix(&mut self, panel_path: &str, panel_type: PanelType) -> Result<MatrixTestResult> {
+    pub fn run_panel_verify_matrix(
+        &mut self,
+        panel_path: &str,
+        panel_type: PanelType,
+    ) -> Result<MatrixTestResult> {
         if let Some(matrix) = &mut self.verify_matrix {
             matrix.run_panel_matrix(panel_path, panel_type)
         } else {
-            Err(flight_core::FlightError::Configuration("Verify matrix not initialized".to_string()))
+            Err(flight_core::FlightError::Configuration(
+                "Verify matrix not initialized".to_string(),
+            ))
         }
     }
 

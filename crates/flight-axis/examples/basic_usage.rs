@@ -6,9 +6,7 @@
 //! - Processing frames with atomic pipeline swaps
 //! - Monitoring performance counters
 
-use flight_axis::{
-    AxisEngine, AxisFrame, PipelineBuilder, EngineConfig, UpdateResult
-};
+use flight_axis::{AxisEngine, AxisFrame, EngineConfig, PipelineBuilder, UpdateResult};
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,15 +26,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Build a processing pipeline
     println!("\n1. Building processing pipeline...");
     let pipeline = PipelineBuilder::new()
-        .deadzone(0.05)           // 5% deadzone
-        .curve(0.2)?              // 20% exponential curve
-        .slew(2.0)                // 2 units/second slew rate
+        .deadzone(0.05) // 5% deadzone
+        .curve(0.2)? // 20% exponential curve
+        .slew(2.0) // 2 units/second slew rate
         .compile()?;
 
-    println!("   Pipeline compiled with {} nodes", pipeline.metadata().len());
+    println!(
+        "   Pipeline compiled with {} nodes",
+        pipeline.metadata().len()
+    );
     for (i, meta) in pipeline.metadata().iter().enumerate() {
-        println!("   Node {}: {} (state: {} bytes)", 
-                 i + 1, meta.node_type, meta.state_size);
+        println!(
+            "   Node {}: {} (state: {} bytes)",
+            i + 1,
+            meta.node_type,
+            meta.state_size
+        );
     }
 
     // Apply pipeline to engine
@@ -52,33 +57,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Process some frames to activate the pipeline
     println!("\n3. Processing frames...");
     let start_time = 1_000_000_000u64; // 1 second in nanoseconds
-    let frame_interval = 4_000_000u64;  // 4ms = 250Hz
+    let frame_interval = 4_000_000u64; // 4ms = 250Hz
 
     let test_inputs = [
-        0.0,   // Zero input
-        0.03,  // Within deadzone
-        0.1,   // Outside deadzone
-        0.5,   // Mid-range
-        1.0,   // Maximum
-        -0.5,  // Negative
-        -1.0,  // Negative maximum
+        0.0,  // Zero input
+        0.03, // Within deadzone
+        0.1,  // Outside deadzone
+        0.5,  // Mid-range
+        1.0,  // Maximum
+        -0.5, // Negative
+        -1.0, // Negative maximum
     ];
 
     for (i, &input) in test_inputs.iter().enumerate() {
         let mut frame = AxisFrame::new(input, start_time + i as u64 * frame_interval);
-        
+
         let process_start = Instant::now();
         engine.process(&mut frame)?;
         let process_time = process_start.elapsed();
 
-        println!("   Frame {}: {:.3} -> {:.3} (processed in {:?})", 
-                 i + 1, input, frame.out, process_time);
+        println!(
+            "   Frame {}: {:.3} -> {:.3} (processed in {:?})",
+            i + 1,
+            input,
+            frame.out,
+            process_time
+        );
     }
 
     // Check if pipeline was activated
     if engine.has_active_pipeline() {
-        println!("   ✓ Pipeline activated (version: {})", 
-                 engine.active_version().unwrap_or(0));
+        println!(
+            "   ✓ Pipeline activated (version: {})",
+            engine.active_version().unwrap_or(0)
+        );
         println!("   ✓ Swap acknowledgments: {}", engine.swap_ack_count());
     }
 
@@ -114,8 +126,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate atomic pipeline swap
     println!("\n6. Demonstrating atomic pipeline swap...");
     let new_pipeline = PipelineBuilder::new()
-        .deadzone(0.1)            // Different deadzone
-        .curve(0.3)?              // Different curve
+        .deadzone(0.1) // Different deadzone
+        .curve(0.3)? // Different curve
         .compile()?;
 
     let initial_version = engine.active_version();

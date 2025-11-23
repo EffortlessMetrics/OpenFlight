@@ -6,20 +6,23 @@
 //! Handles plugin lifecycle, telemetry integration, and event processing
 //! for StreamDeck devices with Flight Hub integration.
 
-use crate::{VersionCompatibility, AppVersion, VerifyResult};
+use crate::{AppVersion, VerifyResult, VersionCompatibility};
 use anyhow::Result;
 use flight_bus::{BusSnapshot, SubscriberId, SubscriptionConfig};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::{RwLock, mpsc};
-use tracing::{info, error, debug};
+use tracing::{debug, error, info};
 
 /// Telemetry subscriber trait
 pub trait TelemetrySubscriber {
     fn get_id(&self) -> &SubscriberId;
     fn get_config(&self) -> &SubscriptionConfig;
-    fn notify(&mut self, snapshot: &BusSnapshot) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    fn notify(
+        &mut self,
+        snapshot: &BusSnapshot,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 }
 
 /// Plugin configuration
@@ -51,19 +54,19 @@ impl Default for PluginConfig {
 pub enum PluginError {
     #[error("Plugin not initialized")]
     NotInitialized,
-    
+
     #[error("IPC connection failed: {0}")]
     IpcConnectionFailed(String),
-    
+
     #[error("Telemetry subscription failed: {0}")]
     TelemetrySubscriptionFailed(String),
-    
+
     #[error("Event processing failed: {0}")]
     EventProcessingFailed(String),
-    
+
     #[error("Plugin shutdown failed: {0}")]
     ShutdownFailed(String),
-    
+
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 }
@@ -72,10 +75,20 @@ pub enum PluginError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PluginEvent {
     TelemetryUpdate(BusSnapshot),
-    ActionTriggered { action_uuid: String, context: String },
-    PropertyInspectorUpdate { action_uuid: String, settings: serde_json::Value },
-    DeviceConnected { device_id: String },
-    DeviceDisconnected { device_id: String },
+    ActionTriggered {
+        action_uuid: String,
+        context: String,
+    },
+    PropertyInspectorUpdate {
+        action_uuid: String,
+        settings: serde_json::Value,
+    },
+    DeviceConnected {
+        device_id: String,
+    },
+    DeviceDisconnected {
+        device_id: String,
+    },
     PluginShutdown,
 }
 
@@ -105,7 +118,7 @@ impl StreamDeckPlugin {
     /// Create new plugin instance
     pub fn new(config: PluginConfig) -> Result<Self, PluginError> {
         let (event_tx, event_rx) = mpsc::unbounded_channel();
-        
+
         Ok(Self {
             config,
             state: Arc::new(RwLock::new(PluginState::Uninitialized)),
@@ -121,7 +134,7 @@ impl StreamDeckPlugin {
     /// Initialize the plugin
     pub async fn initialize(&mut self) -> Result<(), PluginError> {
         info!("Initializing StreamDeck plugin");
-        
+
         {
             let mut state = self.state.write().await;
             *state = PluginState::Initializing;
@@ -129,15 +142,15 @@ impl StreamDeckPlugin {
 
         // Initialize telemetry subscription
         self.initialize_telemetry_subscription().await?;
-        
+
         // Start event processing loop
         self.start_event_processing().await?;
-        
+
         {
             let mut state = self.state.write().await;
             *state = PluginState::Connected;
         }
-        
+
         info!("StreamDeck plugin initialized successfully");
         Ok(())
     }
@@ -145,7 +158,7 @@ impl StreamDeckPlugin {
     /// Shutdown the plugin
     pub async fn shutdown(&mut self) -> Result<(), PluginError> {
         info!("Shutting down StreamDeck plugin");
-        
+
         {
             let mut state = self.state.write().await;
             *state = PluginState::Shutdown;
@@ -163,7 +176,7 @@ impl StreamDeckPlugin {
 
         // Clean up telemetry subscription
         self.telemetry_subscriber = None;
-        
+
         info!("StreamDeck plugin shutdown complete");
         Ok(())
     }
@@ -199,7 +212,7 @@ impl StreamDeckPlugin {
         self.compatibility.set_app_version(version).map_err(|e| {
             PluginError::ConfigurationError(format!("Version compatibility failed: {}", e))
         })?;
-        
+
         info!("StreamDeck app version set to {}", version_str);
         Ok(())
     }
@@ -212,22 +225,22 @@ impl StreamDeckPlugin {
     /// Run verify test for event round-trip
     pub async fn run_verify_test(&mut self) -> Result<VerifyResult> {
         info!("Running StreamDeck verify test");
-        
+
         let start_time = std::time::Instant::now();
-        
+
         // Send test event
         let test_event = PluginEvent::ActionTriggered {
             action_uuid: "com.flighthub.verify-test".to_string(),
             context: "verify-test-context".to_string(),
         };
-        
+
         self.send_event(test_event)?;
-        
+
         // Wait for response (simulate round-trip)
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-        
+
         let elapsed = start_time.elapsed();
-        
+
         let result = VerifyResult {
             success: true,
             round_trip_time_ms: elapsed.as_millis() as u32,
@@ -238,7 +251,7 @@ impl StreamDeckPlugin {
                 .unwrap()
                 .as_secs(),
         };
-        
+
         info!("Verify test completed: {:?}", result);
         Ok(result)
     }
@@ -246,20 +259,20 @@ impl StreamDeckPlugin {
     /// Initialize telemetry subscription
     async fn initialize_telemetry_subscription(&mut self) -> Result<(), PluginError> {
         debug!("Initializing telemetry subscription");
-        
+
         // Create subscription configuration
         let subscription_config = SubscriptionConfig {
             max_rate_hz: self.config.telemetry_update_rate_hz as f32,
             buffer_size: self.config.event_buffer_size,
             drop_on_full: true,
         };
-        
+
         // Create subscriber (in a real implementation, this would connect to the bus)
         // For now, we'll create a mock subscriber
         let subscriber_id = format!("streamdeck-{}", self.config.plugin_uuid);
         let subscriber = MockSubscriber::new(subscriber_id, subscription_config);
         self.telemetry_subscriber = Some(Box::new(subscriber));
-        
+
         debug!("Telemetry subscription initialized");
         Ok(())
     }
@@ -267,19 +280,19 @@ impl StreamDeckPlugin {
     /// Start event processing loop
     async fn start_event_processing(&mut self) -> Result<(), PluginError> {
         debug!("Starting event processing loop");
-        
+
         let event_rx = self.event_rx.take().ok_or(PluginError::NotInitialized)?;
         let state = Arc::clone(&self.state);
         let current_telemetry = Arc::clone(&self.current_telemetry);
-        
+
         let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
         self.shutdown_tx = Some(shutdown_tx);
-        
+
         // Spawn event processing task
         tokio::spawn(async move {
             Self::event_processing_loop(event_rx, shutdown_rx, state, current_telemetry).await;
         });
-        
+
         debug!("Event processing loop started");
         Ok(())
     }
@@ -292,7 +305,7 @@ impl StreamDeckPlugin {
         current_telemetry: Arc<RwLock<Option<BusSnapshot>>>,
     ) {
         debug!("Event processing loop running");
-        
+
         loop {
             tokio::select! {
                 event = event_rx.recv() => {
@@ -314,7 +327,7 @@ impl StreamDeckPlugin {
                 }
             }
         }
-        
+
         // Update state to disconnected
         {
             let mut state_guard = state.write().await;
@@ -322,7 +335,7 @@ impl StreamDeckPlugin {
                 *state_guard = PluginState::Disconnected;
             }
         }
-        
+
         debug!("Event processing loop stopped");
     }
 
@@ -337,11 +350,17 @@ impl StreamDeckPlugin {
                 let mut telemetry = current_telemetry.write().await;
                 *telemetry = Some(snapshot);
             }
-            PluginEvent::ActionTriggered { action_uuid, context } => {
+            PluginEvent::ActionTriggered {
+                action_uuid,
+                context,
+            } => {
                 debug!("Processing action triggered: {} ({})", action_uuid, context);
                 // Handle action trigger logic here
             }
-            PluginEvent::PropertyInspectorUpdate { action_uuid, settings: _ } => {
+            PluginEvent::PropertyInspectorUpdate {
+                action_uuid,
+                settings: _,
+            } => {
                 debug!("Processing property inspector update: {}", action_uuid);
                 // Handle property inspector updates here
             }
@@ -356,7 +375,7 @@ impl StreamDeckPlugin {
                 return Ok(());
             }
         }
-        
+
         Ok(())
     }
 }
@@ -388,7 +407,10 @@ impl TelemetrySubscriber for MockSubscriber {
         &self.config
     }
 
-    fn notify(&mut self, _snapshot: &BusSnapshot) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    fn notify(
+        &mut self,
+        _snapshot: &BusSnapshot,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Mock implementation - in real code this would process the snapshot
         Ok(())
     }
@@ -397,7 +419,7 @@ impl TelemetrySubscriber for MockSubscriber {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::time::{timeout, Duration};
+    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_plugin_creation() {
@@ -410,11 +432,11 @@ mod tests {
     async fn test_plugin_initialization() {
         let config = PluginConfig::default();
         let mut plugin = StreamDeckPlugin::new(config).unwrap();
-        
+
         let result = timeout(Duration::from_secs(5), plugin.initialize()).await;
         assert!(result.is_ok());
         assert!(result.unwrap().is_ok());
-        
+
         assert!(plugin.is_connected().await);
     }
 
@@ -422,14 +444,14 @@ mod tests {
     async fn test_plugin_shutdown() {
         let config = PluginConfig::default();
         let mut plugin = StreamDeckPlugin::new(config).unwrap();
-        
+
         plugin.initialize().await.unwrap();
         assert!(plugin.is_connected().await);
-        
+
         let result = timeout(Duration::from_secs(5), plugin.shutdown()).await;
         assert!(result.is_ok());
         assert!(result.unwrap().is_ok());
-        
+
         assert!(!plugin.is_connected().await);
     }
 
@@ -437,12 +459,12 @@ mod tests {
     async fn test_plugin_event_sending() {
         let config = PluginConfig::default();
         let plugin = StreamDeckPlugin::new(config).unwrap();
-        
+
         let event = PluginEvent::ActionTriggered {
             action_uuid: "test-action".to_string(),
             context: "test-context".to_string(),
         };
-        
+
         let result = plugin.send_event(event);
         assert!(result.is_ok());
     }
@@ -451,11 +473,11 @@ mod tests {
     async fn test_plugin_version_compatibility() {
         let config = PluginConfig::default();
         let mut plugin = StreamDeckPlugin::new(config).unwrap();
-        
+
         let version = AppVersion::new(6, 2, 0);
         let result = plugin.set_app_version(version).await;
         assert!(result.is_ok());
-        
+
         let features = plugin.get_available_features();
         assert!(!features.is_empty());
     }
@@ -464,12 +486,12 @@ mod tests {
     async fn test_verify_test() {
         let config = PluginConfig::default();
         let mut plugin = StreamDeckPlugin::new(config).unwrap();
-        
+
         plugin.initialize().await.unwrap();
-        
+
         let result = plugin.run_verify_test().await;
         assert!(result.is_ok());
-        
+
         let verify_result = result.unwrap();
         assert!(verify_result.success);
         assert!(verify_result.round_trip_time_ms > 0);

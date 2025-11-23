@@ -4,22 +4,19 @@ use std::process::Command;
 
 fn run_cli_command(args: &[&str]) -> std::process::Output {
     let mut cmd = Command::new("cargo");
-    cmd.arg("run")
-        .arg("-p")
-        .arg("flight-cli")
-        .arg("--");
-    
+    cmd.arg("run").arg("-p").arg("flight-cli").arg("--");
+
     for arg in args {
         cmd.arg(arg);
     }
-    
+
     cmd.output().expect("Failed to execute CLI")
 }
 
 #[test]
 fn test_cli_help() {
     let output = run_cli_command(&["--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Flight Hub command line interface"));
@@ -36,7 +33,7 @@ fn test_cli_help() {
 #[test]
 fn test_devices_help() {
     let output = run_cli_command(&["devices", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Device management commands"));
@@ -47,7 +44,7 @@ fn test_devices_help() {
 #[test]
 fn test_devices_list_help() {
     let output = run_cli_command(&["devices", "list", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("List all connected devices"));
@@ -58,7 +55,7 @@ fn test_devices_list_help() {
 #[test]
 fn test_profile_help() {
     let output = run_cli_command(&["profile", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Profile management commands"));
@@ -69,7 +66,7 @@ fn test_profile_help() {
 #[test]
 fn test_sim_help() {
     let output = run_cli_command(&["sim", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Simulator configuration commands"));
@@ -82,7 +79,7 @@ fn test_sim_help() {
 #[test]
 fn test_panels_help() {
     let output = run_cli_command(&["panels", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Panel management commands"));
@@ -93,7 +90,7 @@ fn test_panels_help() {
 #[test]
 fn test_torque_help() {
     let output = run_cli_command(&["torque", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Force feedback and torque commands"));
@@ -105,7 +102,7 @@ fn test_torque_help() {
 #[test]
 fn test_diag_help() {
     let output = run_cli_command(&["diag", "--help"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Diagnostics and recording commands"));
@@ -119,17 +116,21 @@ fn test_diag_help() {
 fn test_json_output_format() {
     // Test that JSON output format is properly handled when service is not available
     let output = run_cli_command(&["--output", "json", "info"]);
-    
+
     // Should fail with connection error but return proper JSON
     assert!(!output.status.success());
     assert_eq!(output.status.code(), Some(1));
-    
+
     let stderr = String::from_utf8(output.stderr).unwrap();
-    
+
     // Should be valid JSON
     let json_result: Result<serde_json::Value, _> = serde_json::from_str(&stderr);
-    assert!(json_result.is_ok(), "Output should be valid JSON: {}", stderr);
-    
+    assert!(
+        json_result.is_ok(),
+        "Output should be valid JSON: {}",
+        stderr
+    );
+
     let json = json_result.unwrap();
     assert_eq!(json["success"], false);
     assert!(json["error"].is_string());
@@ -140,11 +141,11 @@ fn test_json_output_format() {
 fn test_human_output_format() {
     // Test that human output format is properly handled when service is not available
     let output = run_cli_command(&["--output", "human", "info"]);
-    
+
     // Should fail with connection error
     assert!(!output.status.success());
     assert_eq!(output.status.code(), Some(1));
-    
+
     let stderr = String::from_utf8(output.stderr).unwrap();
     assert!(stderr.starts_with("Error:"));
 }
@@ -152,7 +153,7 @@ fn test_human_output_format() {
 #[test]
 fn test_version_flag() {
     let output = run_cli_command(&["--version"]);
-    
+
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("0.1.0")); // Should match the version in Cargo.toml
@@ -161,7 +162,7 @@ fn test_version_flag() {
 #[test]
 fn test_invalid_command() {
     let output = run_cli_command(&["invalid-command"]);
-    
+
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();
     assert!(stderr.contains("error:") || stderr.contains("unrecognized subcommand"));
@@ -170,7 +171,7 @@ fn test_invalid_command() {
 #[test]
 fn test_timeout_option() {
     let output = run_cli_command(&["--timeout", "1000", "--output", "json", "info"]);
-    
+
     // Should still fail with connection error but should accept the timeout option
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();
@@ -181,7 +182,7 @@ fn test_timeout_option() {
 #[test]
 fn test_verbose_flag() {
     let output = run_cli_command(&["--verbose", "--output", "json", "info"]);
-    
+
     // Should still fail with connection error but should accept the verbose flag
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();

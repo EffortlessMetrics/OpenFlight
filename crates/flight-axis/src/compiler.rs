@@ -6,17 +6,17 @@
 //! The compiler transforms high-level node configurations into optimized
 //! function pointer pipelines with Structure-of-Arrays state layout.
 
-use crate::{Node, NodeId, Pipeline, AxisFrame};
-use crate::nodes::{DeadzoneNode, CurveNode, SlewNode, DetentNode, DetentZone, DetentRole, MixerNode, MixerConfig};
+use crate::nodes::{
+    CurveNode, DeadzoneNode, DetentNode, DetentRole, DetentZone, MixerConfig, MixerNode, SlewNode,
+};
+use crate::{AxisFrame, Node, NodeId, Pipeline};
 use std::sync::Arc;
-
-
 
 /// Generate specialized step function for deadzone nodes
 fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
     // Capture node configuration at compile time
     let _node_clone = node.clone();
-    
+
     // Return a closure that captures the node configuration
     // This is a simplified approach - in a full implementation, we'd generate
     // optimized machine code or use more sophisticated compilation techniques
@@ -26,7 +26,7 @@ fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *
         // For now, apply a simple deadzone with hardcoded threshold
         let frame = &mut *frame_ptr;
         let threshold = 0.1f32; // This should come from the captured node config
-        
+
         if frame.out.abs() < threshold {
             frame.out = 0.0;
         } else {
@@ -35,7 +35,7 @@ fn generate_deadzone_step_fn(node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *
             frame.out = sign * ((abs_val - threshold) / (1.0 - threshold));
         }
     }
-    
+
     deadzone_step
 }
 
@@ -45,18 +45,18 @@ fn generate_curve_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mu
     unsafe fn curve_step(frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
         let frame = &mut *frame_ptr;
         let expo = 0.2f32; // This should come from the captured node config
-        
+
         if expo == 0.0 {
             return; // Linear, no change needed
         }
 
         let sign = frame.out.signum();
         let abs_val = frame.out.abs();
-        
+
         // Ensure monotonic curve: f(x) = sign(x) * |x|^(1 + expo)
         frame.out = sign * abs_val.powf(1.0 + expo);
     }
-    
+
     curve_step
 }
 
@@ -67,11 +67,11 @@ fn generate_detent_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *m
         // This is a bridge implementation that delegates to the node's step_soa method
         // In a production system, we'd want to inline the detent logic for maximum performance
         // but for now we'll delegate to maintain correctness
-        
-        // The actual detent logic is handled by the pipeline's process method 
+
+        // The actual detent logic is handled by the pipeline's process method
         // which calls step_soa on each node when source_nodes are available
     }
-    
+
     detent_step
 }
 
@@ -82,11 +82,11 @@ fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut
         // Delegate to the node's SoA implementation
         // This is a bridge between the function pointer system and the trait system
         let frame = &mut *frame_ptr;
-        
+
         // For slew nodes, we need to use the SoA state layout
         // This is a simplified implementation
         let state = state_ptr as *mut crate::nodes::SlewState;
-        
+
         if (*state).last_time_ns == 0 {
             (*state).last_output = frame.out;
             (*state).last_time_ns = frame.ts_mono_ns;
@@ -96,7 +96,7 @@ fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut
         if frame.ts_mono_ns > (*state).last_time_ns {
             let dt_s = (frame.ts_mono_ns - (*state).last_time_ns) as f32 / 1_000_000_000.0;
             let desired_change = frame.out - (*state).last_output;
-            
+
             let rate_limit = 1.0f32; // This should come from captured config
             let max_change = rate_limit * dt_s;
 
@@ -108,7 +108,7 @@ fn generate_slew_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut
         (*state).last_output = frame.out;
         (*state).last_time_ns = frame.ts_mono_ns;
     }
-    
+
     slew_step
 }
 
@@ -119,11 +119,11 @@ fn generate_mixer_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mu
         // This is a bridge implementation that delegates to the node's step_soa method
         // In a production system, we'd want to inline the mixer logic for maximum performance
         // but for now we'll delegate to maintain correctness
-        
-        // The actual mixer logic is handled by the pipeline's process method 
+
+        // The actual mixer logic is handled by the pipeline's process method
         // which calls step_soa on each node when source_nodes are available
     }
-    
+
     mixer_step
 }
 
@@ -148,9 +148,7 @@ pub enum CompileError {
 impl PipelineCompiler {
     /// Create new pipeline compiler
     pub fn new() -> Self {
-        Self {
-            nodes: Vec::new(),
-        }
+        Self { nodes: Vec::new() }
     }
 
     /// Add node to compilation pipeline
@@ -174,12 +172,7 @@ impl PipelineCompiler {
             let state_size = node.state_size();
             let node_type = node.node_type();
 
-            pipeline.add_compiled_node(
-                step_fn,
-                NodeId(node_id),
-                node_type,
-                state_size,
-            );
+            pipeline.add_compiled_node(step_fn, NodeId(node_id), node_type, state_size);
 
             node_id += 1;
         }
@@ -188,7 +181,9 @@ impl PipelineCompiler {
         pipeline.set_source_nodes(self.nodes);
 
         // Validate compiled pipeline
-        pipeline.validate().map_err(|e| CompileError::StateLayout(e.to_string()))?;
+        pipeline
+            .validate()
+            .map_err(|e| CompileError::StateLayout(e.to_string()))?;
 
         Ok(pipeline)
     }
@@ -250,7 +245,13 @@ impl PipelineBuilder {
     }
 
     /// Add single detent zone
-    pub fn single_detent(self, center: f32, half_width: f32, hysteresis: f32, role: DetentRole) -> Self {
+    pub fn single_detent(
+        self,
+        center: f32,
+        half_width: f32,
+        hysteresis: f32,
+        role: DetentRole,
+    ) -> Self {
         let zone = DetentZone::new(center, half_width, hysteresis, role);
         self.detent(vec![zone])
     }
@@ -268,7 +269,10 @@ impl PipelineBuilder {
     }
 
     /// Add aileron-rudder coordination mixer
-    pub fn aileron_rudder_coordination(self, coordination_factor: f32) -> Result<Self, &'static str> {
+    pub fn aileron_rudder_coordination(
+        self,
+        coordination_factor: f32,
+    ) -> Result<Self, &'static str> {
         let mixer = MixerNode::aileron_rudder_coordination(coordination_factor)?;
         Ok(self.add_node(mixer))
     }
@@ -296,16 +300,17 @@ pub fn validate_node_config<N: Node>(node: &N) -> Result<(), CompileError> {
     // Check state size is reasonable
     let state_size = node.state_size();
     if state_size > 1024 {
-        return Err(CompileError::NodeValidation(
-            format!("Node state size {} exceeds maximum 1024 bytes", state_size)
-        ));
+        return Err(CompileError::NodeValidation(format!(
+            "Node state size {} exceeds maximum 1024 bytes",
+            state_size
+        )));
     }
 
     // Validate node type string
     let node_type = node.node_type();
     if node_type.is_empty() || node_type.len() > 32 {
         return Err(CompileError::NodeValidation(
-            "Node type must be 1-32 characters".to_string()
+            "Node type must be 1-32 characters".to_string(),
         ));
     }
 
@@ -320,7 +325,10 @@ mod tests {
     #[test]
     fn test_empty_pipeline_compilation() {
         let compiler = PipelineCompiler::new();
-        assert!(matches!(compiler.compile(), Err(CompileError::EmptyPipeline)));
+        assert!(matches!(
+            compiler.compile(),
+            Err(CompileError::EmptyPipeline)
+        ));
     }
 
     #[test]
@@ -338,17 +346,15 @@ mod tests {
     fn test_multi_node_compilation() {
         let pipeline = PipelineBuilder::new()
             .deadzone(0.05)
-            .curve(0.2).expect("Valid curve")
+            .curve(0.2)
+            .expect("Valid curve")
             .slew(1.0)
             .compile()
             .expect("Should compile multi-node pipeline");
 
         assert_eq!(pipeline.metadata().len(), 3);
-        
-        let types: Vec<_> = pipeline.metadata()
-            .iter()
-            .map(|m| m.node_type)
-            .collect();
+
+        let types: Vec<_> = pipeline.metadata().iter().map(|m| m.node_type).collect();
         assert_eq!(types, vec!["deadzone", "curve", "slew"]);
     }
 
@@ -372,13 +378,9 @@ mod tests {
 
     #[test]
     fn test_mixer_compilation() {
-        let config = MixerConfig::new("test")
-            .add_scaled_input("input1", 1.0);
-        
-        let result = PipelineBuilder::new()
-            .mixer(config)
-            .unwrap()
-            .compile();
+        let config = MixerConfig::new("test").add_scaled_input("input1", 1.0);
+
+        let result = PipelineBuilder::new().mixer(config).unwrap().compile();
 
         assert!(result.is_ok());
         let pipeline = result.unwrap();
@@ -416,19 +418,18 @@ mod tests {
     fn test_complex_pipeline_with_mixer() {
         let result = PipelineBuilder::new()
             .deadzone(0.05)
-            .curve(0.2).unwrap()
+            .curve(0.2)
+            .unwrap()
             .slew(1.5)
-            .helicopter_anti_torque(-0.25).unwrap()
+            .helicopter_anti_torque(-0.25)
+            .unwrap()
             .compile();
 
         assert!(result.is_ok());
         let pipeline = result.unwrap();
         assert_eq!(pipeline.metadata().len(), 4);
-        
-        let types: Vec<_> = pipeline.metadata()
-            .iter()
-            .map(|m| m.node_type)
-            .collect();
+
+        let types: Vec<_> = pipeline.metadata().iter().map(|m| m.node_type).collect();
         assert_eq!(types, vec!["deadzone", "curve", "slew", "mixer"]);
     }
 }

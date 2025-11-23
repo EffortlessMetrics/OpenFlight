@@ -3,10 +3,10 @@
 
 //! Flight Hub Service
 
-use std::env;
 use clap::{Arg, Command};
-use tracing::{info, error};
 use flight_service::{FlightService, FlightServiceConfig, safe_mode::SafeModeConfig};
+use std::env;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,19 +21,19 @@ async fn main() -> anyhow::Result<()> {
             Arg::new("safe")
                 .long("safe")
                 .help("Start in safe mode (axis-only; no panels/plugins/tactile)")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("config")
                 .short('c')
                 .long("config")
                 .value_name("FILE")
-                .help("Configuration file path")
+                .help("Configuration file path"),
         )
         .get_matches();
 
     let safe_mode = matches.get_flag("safe");
-    
+
     info!("Starting Flight Hub service (flightd)");
     if safe_mode {
         info!("Safe mode enabled - axis-only operation");
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     // Create service configuration
     let mut config = FlightServiceConfig::default();
     config.safe_mode = safe_mode;
-    
+
     if safe_mode {
         config.safe_mode_config = SafeModeConfig {
             axis_only: true,
@@ -54,14 +54,14 @@ async fn main() -> anyhow::Result<()> {
 
     // Create and start service
     let mut service = FlightService::new(config);
-    
+
     match service.start().await {
         Ok(_) => {
             info!("Flight Hub service started successfully");
-            
+
             // Set up signal handling for graceful shutdown
             let shutdown_rx = service.subscribe_shutdown();
-            
+
             tokio::select! {
                 _ = tokio::signal::ctrl_c() => {
                     info!("Received Ctrl+C, shutting down...");
@@ -74,7 +74,7 @@ async fn main() -> anyhow::Result<()> {
                     info!("Received shutdown signal");
                 }
             }
-            
+
             // Shutdown service
             match service.shutdown().await {
                 Ok(_) => {

@@ -3,8 +3,8 @@
 
 //! LED controller for panel hardware
 
-use flight_core::rules::Action;
 use flight_core::Result;
+use flight_core::rules::Action;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -52,12 +52,13 @@ impl LedController {
 
         for action in actions {
             let target = self.action_to_target(action);
-            
+
             // Check rate limiting
             if let Some(&last_write) = self.last_write.get(&target)
-                && now.duration_since(last_write) < self.min_interval {
-                    continue; // Skip this update due to rate limiting
-                }
+                && now.duration_since(last_write) < self.min_interval
+            {
+                continue; // Skip this update due to rate limiting
+            }
 
             self.execute_action(action, now)?;
             self.last_write.insert(target, now);
@@ -71,36 +72,40 @@ impl LedController {
             Action::LedOn { target } => {
                 let led_target = LedTarget::Panel(target.clone());
                 // Update the state directly
-                self.led_states.entry(led_target.clone()).and_modify(|state| {
-                    state.on = true;
-                    state.blink_rate = None;
-                    state.last_update = now;
-                }).or_insert(LedState {
-                    on: true,
-                    brightness: 1.0,
-                    blink_rate: None,
-                    last_update: now,
-                });
-                
+                self.led_states
+                    .entry(led_target.clone())
+                    .and_modify(|state| {
+                        state.on = true;
+                        state.blink_rate = None;
+                        state.last_update = now;
+                    })
+                    .or_insert(LedState {
+                        on: true,
+                        brightness: 1.0,
+                        blink_rate: None,
+                        last_update: now,
+                    });
+
                 let state_clone = self.led_states.get(&led_target).unwrap().clone();
                 self.write_led_state(&led_target, &state_clone)?;
             }
             Action::LedOff { target } => {
                 let led_target = LedTarget::Panel(target.clone());
                 // Update the state directly
-                self.led_states.entry(led_target.clone()).and_modify(|state| {
-                    state.on = false;
-                    state.blink_rate = None;
-                    state.last_update = now;
-                }).or_insert_with(|| {
-                    LedState {
+                self.led_states
+                    .entry(led_target.clone())
+                    .and_modify(|state| {
+                        state.on = false;
+                        state.blink_rate = None;
+                        state.last_update = now;
+                    })
+                    .or_insert_with(|| LedState {
                         on: false,
                         brightness: 1.0,
                         blink_rate: None,
                         last_update: now,
-                    }
-                });
-                
+                    });
+
                 let state_clone = self.led_states.get(&led_target).unwrap().clone();
                 self.write_led_state(&led_target, &state_clone)?;
             }
@@ -110,34 +115,40 @@ impl LedController {
                 } else {
                     LedTarget::Panel(target.clone())
                 };
-                
+
                 // Update the state directly
-                self.led_states.entry(led_target.clone()).and_modify(|state| {
-                    state.blink_rate = Some(*rate_hz);
-                    state.last_update = now;
-                }).or_insert(LedState {
-                    on: false,
-                    brightness: 1.0,
-                    blink_rate: Some(*rate_hz),
-                    last_update: now,
-                });
-                
+                self.led_states
+                    .entry(led_target.clone())
+                    .and_modify(|state| {
+                        state.blink_rate = Some(*rate_hz);
+                        state.last_update = now;
+                    })
+                    .or_insert(LedState {
+                        on: false,
+                        brightness: 1.0,
+                        blink_rate: Some(*rate_hz),
+                        last_update: now,
+                    });
+
                 let state_clone = self.led_states.get(&led_target).unwrap().clone();
                 self.write_led_state(&led_target, &state_clone)?;
             }
             Action::LedBrightness { target, brightness } => {
                 let led_target = LedTarget::Panel(target.clone());
                 // Update the state directly
-                self.led_states.entry(led_target.clone()).and_modify(|state| {
-                    state.brightness = brightness.clamp(0.0, 1.0);
-                    state.last_update = now;
-                }).or_insert(LedState {
-                    on: false,
-                    brightness: brightness.clamp(0.0, 1.0),
-                    blink_rate: None,
-                    last_update: now,
-                });
-                
+                self.led_states
+                    .entry(led_target.clone())
+                    .and_modify(|state| {
+                        state.brightness = brightness.clamp(0.0, 1.0);
+                        state.last_update = now;
+                    })
+                    .or_insert(LedState {
+                        on: false,
+                        brightness: brightness.clamp(0.0, 1.0),
+                        blink_rate: None,
+                        last_update: now,
+                    });
+
                 let state_clone = self.led_states.get(&led_target).unwrap().clone();
                 self.write_led_state(&led_target, &state_clone)?;
             }
@@ -148,9 +159,9 @@ impl LedController {
 
     fn action_to_target(&self, action: &Action) -> LedTarget {
         match action {
-            Action::LedOn { target } | Action::LedOff { target } | Action::LedBrightness { target, .. } => {
-                LedTarget::Panel(target.clone())
-            }
+            Action::LedOn { target }
+            | Action::LedOff { target }
+            | Action::LedBrightness { target, .. } => LedTarget::Panel(target.clone()),
             Action::LedBlink { target, .. } => {
                 if target == "indexer" {
                     LedTarget::Indexer
@@ -163,7 +174,7 @@ impl LedController {
 
     fn write_led_state(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
         let write_start = Instant::now();
-        
+
         // Stub implementation - would write to actual hardware
         tracing::debug!(
             "LED {:?}: on={}, brightness={:.2}, blink_rate={:?}",
@@ -177,7 +188,7 @@ impl LedController {
         std::thread::sleep(Duration::from_micros(100)); // Simulate 100μs write time
 
         let write_latency = write_start.elapsed();
-        
+
         // Track latency for validation
         self.latency_samples.push(write_latency);
         if self.latency_samples.len() > self.max_latency_samples {
@@ -210,7 +221,7 @@ impl LedController {
             if let Some(rate_hz) = state.blink_rate {
                 let period = Duration::from_secs_f32(1.0 / rate_hz);
                 let elapsed = now.duration_since(state.last_update);
-                
+
                 if elapsed >= period / 2 {
                     state.on = !state.on;
                     state.last_update = now;
@@ -302,7 +313,9 @@ mod tests {
         let target = LedTarget::Panel("GEAR".to_string());
 
         // Turn LED on
-        let action = Action::LedOn { target: "GEAR".to_string() };
+        let action = Action::LedOn {
+            target: "GEAR".to_string(),
+        };
         controller.execute_actions(&[action]).unwrap();
 
         let state = controller.get_led_state(&target).unwrap();
@@ -310,7 +323,9 @@ mod tests {
         assert!(state.blink_rate.is_none());
 
         // Turn LED off
-        let action = Action::LedOff { target: "GEAR".to_string() };
+        let action = Action::LedOff {
+            target: "GEAR".to_string(),
+        };
         controller.execute_actions(&[action]).unwrap();
 
         let state = controller.get_led_state(&target).unwrap();
@@ -355,8 +370,12 @@ mod tests {
         controller.set_min_interval(Duration::from_millis(100)); // Longer interval for testing
 
         let actions = vec![
-            Action::LedOn { target: "TEST".to_string() },
-            Action::LedOff { target: "TEST".to_string() },
+            Action::LedOn {
+                target: "TEST".to_string(),
+            },
+            Action::LedOff {
+                target: "TEST".to_string(),
+            },
         ];
 
         // Both actions should be processed, but second might be rate limited
@@ -373,18 +392,32 @@ mod tests {
 
         // Execute several actions to generate latency samples
         for i in 0..10 {
-            let action = Action::LedOn { target: format!("TEST_{}", i) };
+            let action = Action::LedOn {
+                target: format!("TEST_{}", i),
+            };
             controller.execute_actions(&[action]).unwrap();
         }
 
         // Check latency statistics
         let stats = controller.get_latency_stats().unwrap();
         assert_eq!(stats.sample_count, 10);
-        
+
         // Verify latency is reasonable (should be very fast in test)
-        assert!(stats.mean_ns < 50_000_000, "Mean latency too high: {} ns", stats.mean_ns); // <50ms
-        assert!(stats.p99_ns < 50_000_000, "P99 latency too high: {} ns", stats.p99_ns); // <50ms
-        assert!(stats.max_ns < 50_000_000, "Max latency too high: {} ns", stats.max_ns); // <50ms
+        assert!(
+            stats.mean_ns < 50_000_000,
+            "Mean latency too high: {} ns",
+            stats.mean_ns
+        ); // <50ms
+        assert!(
+            stats.p99_ns < 50_000_000,
+            "P99 latency too high: {} ns",
+            stats.p99_ns
+        ); // <50ms
+        assert!(
+            stats.max_ns < 50_000_000,
+            "Max latency too high: {} ns",
+            stats.max_ns
+        ); // <50ms
     }
 
     #[test]
@@ -394,26 +427,26 @@ mod tests {
 
         // Execute many actions to get good statistics
         for i in 0..100 {
-            let action = Action::LedBlink { 
-                target: format!("LED_{}", i % 10), 
-                rate_hz: 4.0 
+            let action = Action::LedBlink {
+                target: format!("LED_{}", i % 10),
+                rate_hz: 4.0,
             };
             controller.execute_actions(&[action]).unwrap();
         }
 
         let stats = controller.get_latency_stats().unwrap();
-        
+
         // Validate against requirements: LED latency ≤20ms
         assert!(
-            stats.p99_ns <= 20_000_000, 
-            "LED latency requirement violated: P99 = {} ns (>20ms)", 
+            stats.p99_ns <= 20_000_000,
+            "LED latency requirement violated: P99 = {} ns (>20ms)",
             stats.p99_ns
         );
-        
+
         // Also check that we're well under the limit in test environment
         assert!(
-            stats.mean_ns < 10_000_000, 
-            "Mean latency should be much better than requirement in test: {} ns", 
+            stats.mean_ns < 10_000_000,
+            "Mean latency should be much better than requirement in test: {} ns",
             stats.mean_ns
         );
     }
@@ -429,14 +462,19 @@ mod tests {
 
         // Try to execute multiple actions rapidly
         for _ in 0..5 {
-            let action = Action::LedOn { target: target.to_string() };
+            let action = Action::LedOn {
+                target: target.to_string(),
+            };
             controller.execute_actions(&[action]).unwrap();
         }
 
         let elapsed = start_time.elapsed();
-        
+
         // Should have been rate limited - not all writes should have occurred immediately
         // In a real implementation, we'd check the actual write timestamps
-        assert!(elapsed >= Duration::from_millis(1), "Some rate limiting should have occurred");
+        assert!(
+            elapsed >= Duration::from_millis(1),
+            "Some rate limiting should have occurred"
+        );
     }
 }

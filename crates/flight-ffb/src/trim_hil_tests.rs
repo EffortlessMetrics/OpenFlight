@@ -6,12 +6,12 @@
 //! These tests validate trim behavior with actual hardware timing constraints
 //! and floating-point precision requirements for production deployment.
 
-use std::time::{Duration, Instant};
 use crate::{
-    FfbEngine, FfbConfig, FfbMode, TrimController, TrimMode, SetpointChange, TrimLimits,
-    TrimOutput, TrimValidationSuite, TrimValidationConfig, TrimValidationResult,
-    DeviceCapabilities, BlackboxEntry
+    BlackboxEntry, DeviceCapabilities, FfbConfig, FfbEngine, FfbMode, SetpointChange,
+    TrimController, TrimLimits, TrimMode, TrimOutput, TrimValidationConfig, TrimValidationResult,
+    TrimValidationSuite,
 };
+use std::time::{Duration, Instant};
 
 /// HIL trim test configuration
 #[derive(Debug, Clone)]
@@ -117,9 +117,9 @@ impl HilTrimTestSuite {
             sample_rate_hz: config.hil_sample_rate_hz,
             verbose_logging: true,
         };
-        
+
         let validation_suite = TrimValidationSuite::new(validation_config);
-        
+
         Self {
             config,
             validation_suite,
@@ -135,12 +135,12 @@ impl HilTrimTestSuite {
         results.push(self.test_hil_ffb_jerk_limiting());
         results.push(self.test_hil_spring_freeze_timing());
         results.push(self.test_hil_spring_ramp_timing());
-        
+
         // Hardware-specific tests
         results.push(self.test_hil_usb_timing_compliance());
         results.push(self.test_hil_device_response_latency());
         results.push(self.test_hil_concurrent_trim_operations());
-        
+
         // Stress tests
         results.push(self.test_hil_rapid_setpoint_changes());
         results.push(self.test_hil_long_duration_stability());
@@ -157,7 +157,7 @@ impl HilTrimTestSuite {
 
         let validation_result = (|| -> TrimValidationResult {
             let mut engine = self.create_test_engine();
-            
+
             // Configure for high-performance FFB mode
             let capabilities = DeviceCapabilities {
                 supports_pid: true,
@@ -167,14 +167,14 @@ impl HilTrimTestSuite {
                 has_health_stream: true,
                 supports_interlock: true,
             };
-            
+
             engine.set_device_capabilities(capabilities).unwrap();
-            
+
             let limits = TrimLimits {
                 max_rate_nm_per_s: 10.0,
                 max_jerk_nm_per_s2: 40.0,
             };
-            
+
             {
                 let trim_controller = engine.get_trim_controller_mut();
                 trim_controller.set_mode(TrimMode::ForceFeedback);
@@ -190,43 +190,50 @@ impl HilTrimTestSuite {
             let mut measurements = Vec::new();
             let mut max_rate = 0.0f32;
             let mut last_update = Instant::now();
-            
+
             // Run with hardware timing constraints
-            for _i in 0..2500 { // 10 seconds at 250Hz
+            for _i in 0..2500 {
+                // 10 seconds at 250Hz
                 let update_start = Instant::now();
-                
+
                 let output = engine.update_trim_controller();
-                
-                if let TrimOutput::ForceFeedback { rate_nm_per_s, setpoint_nm } = output {
+
+                if let TrimOutput::ForceFeedback {
+                    rate_nm_per_s,
+                    setpoint_nm,
+                } = output
+                {
                     max_rate = max_rate.max(rate_nm_per_s.abs());
                     measurements.push(rate_nm_per_s.abs());
-                    
+
                     // Record in engine blackbox
-                    engine.record_axis_frame(
-                        "hil_test_device".to_string(),
-                        0.0, // raw input
-                        setpoint_nm, // processed output
-                        setpoint_nm, // torque
-                    ).unwrap();
+                    engine
+                        .record_axis_frame(
+                            "hil_test_device".to_string(),
+                            0.0,         // raw input
+                            setpoint_nm, // processed output
+                            setpoint_nm, // torque
+                        )
+                        .unwrap();
                 }
-                
+
                 // Measure timing
                 let update_period = update_start.duration_since(last_update);
                 update_periods.push(update_period.as_secs_f32() * 1000.0);
                 last_update = update_start;
-                
+
                 // Simulate hardware communication delay
                 if self.config.use_physical_device {
                     std::thread::sleep(Duration::from_micros(100)); // USB latency
                 }
-                
+
                 // Maintain 250Hz rate (4ms period)
                 let target_period = Duration::from_millis(4);
                 let elapsed = update_start.elapsed();
                 if elapsed < target_period {
                     std::thread::sleep(target_period - elapsed);
                 }
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -234,25 +241,32 @@ impl HilTrimTestSuite {
 
             // Analyze timing
             if !update_periods.is_empty() {
-                timing_analysis.avg_update_period_ms = update_periods.iter().sum::<f32>() / update_periods.len() as f32;
-                timing_analysis.max_update_period_ms = update_periods.iter().fold(0.0f32, |a, &b| a.max(b));
-                timing_analysis.min_update_period_ms = update_periods.iter().fold(f32::INFINITY, |a, &b| a.min(b));
-                
+                timing_analysis.avg_update_period_ms =
+                    update_periods.iter().sum::<f32>() / update_periods.len() as f32;
+                timing_analysis.max_update_period_ms =
+                    update_periods.iter().fold(0.0f32, |a, &b| a.max(b));
+                timing_analysis.min_update_period_ms =
+                    update_periods.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+
                 // Calculate standard deviation
                 let mean = timing_analysis.avg_update_period_ms;
-                let variance = update_periods.iter()
+                let variance = update_periods
+                    .iter()
                     .map(|&x| (x - mean).powi(2))
-                    .sum::<f32>() / update_periods.len() as f32;
+                    .sum::<f32>()
+                    / update_periods.len() as f32;
                 timing_analysis.update_period_stddev_ms = variance.sqrt();
-                
+
                 // Count missed deadlines (>5ms for 250Hz)
-                timing_analysis.missed_deadlines = update_periods.iter()
+                timing_analysis.missed_deadlines = update_periods
+                    .iter()
                     .filter(|&&period| period > 5.0)
                     .count() as u32;
             }
 
             // Validate rate limiting with hardware tolerance
-            let rate_violation = measurements.iter()
+            let rate_violation = measurements
+                .iter()
                 .any(|&rate| rate > limits.max_rate_nm_per_s + self.config.hil_fp_tolerance);
 
             TrimValidationResult {
@@ -262,7 +276,10 @@ impl HilTrimTestSuite {
                 error: if rate_violation {
                     Some(format!("Rate limit exceeded with hardware timing"))
                 } else if timing_analysis.missed_deadlines > 0 {
-                    Some(format!("Missed {} timing deadlines", timing_analysis.missed_deadlines))
+                    Some(format!(
+                        "Missed {} timing deadlines",
+                        timing_analysis.missed_deadlines
+                    ))
                 } else {
                     None
                 },
@@ -308,20 +325,20 @@ impl HilTrimTestSuite {
             let mut previous_rate = 0.0f32;
             let mut max_jerk = 0.0f32;
             let dt = 0.004f32; // 4ms timestep for 250Hz
-            
+
             for _ in 0..2000 {
                 let output = trim_controller.update();
-                
+
                 if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
                     let jerk = (rate_nm_per_s - previous_rate).abs() / dt;
                     max_jerk = max_jerk.max(jerk);
                     measurements.push(jerk);
                     previous_rate = rate_nm_per_s;
                 }
-                
+
                 // Hardware timing simulation
                 std::thread::sleep(Duration::from_millis(4));
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -329,7 +346,8 @@ impl HilTrimTestSuite {
 
             // Validate jerk limiting with hardware tolerance
             let jerk_tolerance = self.config.hil_fp_tolerance * 50.0; // More tolerance for jerk
-            let jerk_violation = measurements.iter()
+            let jerk_violation = measurements
+                .iter()
                 .any(|&jerk| jerk > limits.max_jerk_nm_per_s2 + jerk_tolerance);
 
             TrimValidationResult {
@@ -377,23 +395,23 @@ impl HilTrimTestSuite {
             let mut measurements = Vec::new();
             let mut freeze_start = None;
             let mut freeze_end = None;
-            
+
             for _ in 0..1000 {
                 let output = trim_controller.update();
-                
+
                 if let TrimOutput::SpringCentered { frozen, .. } = output {
                     measurements.push(if frozen { 1.0 } else { 0.0 });
-                    
+
                     if frozen && freeze_start.is_none() {
                         freeze_start = Some(Instant::now());
                     } else if !frozen && freeze_start.is_some() && freeze_end.is_none() {
                         freeze_end = Some(Instant::now());
                     }
                 }
-                
+
                 // Hardware timing simulation
                 std::thread::sleep(Duration::from_millis(10));
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -418,7 +436,10 @@ impl HilTrimTestSuite {
                 passed: timing_valid,
                 duration: start_time.elapsed(),
                 error: if !timing_valid {
-                    Some(format!("Spring freeze timing invalid: {:?}", freeze_duration))
+                    Some(format!(
+                        "Spring freeze timing invalid: {:?}",
+                        freeze_duration
+                    ))
                 } else {
                     None
                 },
@@ -462,10 +483,10 @@ impl HilTrimTestSuite {
             let mut ramp_start = None;
             let mut ramp_end = None;
             let mut strength_values = Vec::new();
-            
+
             for _ in 0..300 {
                 let state = trim_controller.get_trim_state();
-                
+
                 if state.spring_ramping && ramp_start.is_none() {
                     ramp_start = Some(Instant::now());
                 } else if !state.spring_ramping && ramp_start.is_some() && ramp_end.is_none() {
@@ -477,9 +498,9 @@ impl HilTrimTestSuite {
                     strength_values.push(config.strength);
                     measurements.push(config.strength);
                 }
-                
+
                 std::thread::sleep(Duration::from_millis(10));
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -539,11 +560,11 @@ impl HilTrimTestSuite {
 
             let mut measurements = Vec::new();
             let mut usb_latencies = Vec::new();
-            
+
             // Test multiple rapid setpoint changes to stress USB communication
             for i in 0..20 {
                 let usb_start = Instant::now();
-                
+
                 let change = SetpointChange {
                     target_nm: (i as f32 % 10.0) - 5.0, // Oscillate between -5 and 5
                     limits: TrimLimits {
@@ -553,22 +574,22 @@ impl HilTrimTestSuite {
                 };
 
                 trim_controller.apply_setpoint_change(change).unwrap();
-                
+
                 // Simulate USB communication
                 if self.config.use_physical_device {
                     std::thread::sleep(Duration::from_micros(200)); // Realistic USB latency
                 }
-                
+
                 let usb_latency = usb_start.elapsed().as_secs_f32() * 1000.0;
                 usb_latencies.push(usb_latency);
                 measurements.push(usb_latency);
-                
+
                 // Run a few updates
                 for _ in 0..10 {
                     trim_controller.update();
                     std::thread::sleep(Duration::from_millis(4)); // 250Hz
                 }
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -576,8 +597,9 @@ impl HilTrimTestSuite {
 
             // Analyze USB timing
             if !usb_latencies.is_empty() {
-                hardware_metrics.usb_latency_ms = usb_latencies.iter().sum::<f32>() / usb_latencies.len() as f32;
-                
+                hardware_metrics.usb_latency_ms =
+                    usb_latencies.iter().sum::<f32>() / usb_latencies.len() as f32;
+
                 let max_latency = usb_latencies.iter().fold(0.0f32, |a, &b| a.max(b));
                 let min_latency = usb_latencies.iter().fold(f32::INFINITY, |a, &b| a.min(b));
                 hardware_metrics.timing_jitter_ms = max_latency - min_latency;
@@ -592,9 +614,15 @@ impl HilTrimTestSuite {
                 passed: latency_acceptable && jitter_acceptable,
                 duration: start_time.elapsed(),
                 error: if !latency_acceptable {
-                    Some(format!("USB latency too high: {:.2}ms", hardware_metrics.usb_latency_ms))
+                    Some(format!(
+                        "USB latency too high: {:.2}ms",
+                        hardware_metrics.usb_latency_ms
+                    ))
                 } else if !jitter_acceptable {
-                    Some(format!("USB jitter too high: {:.2}ms", hardware_metrics.timing_jitter_ms))
+                    Some(format!(
+                        "USB jitter too high: {:.2}ms",
+                        hardware_metrics.timing_jitter_ms
+                    ))
                 } else {
                     None
                 },
@@ -623,11 +651,11 @@ impl HilTrimTestSuite {
 
             let mut measurements = Vec::new();
             let mut response_times = Vec::new();
-            
+
             // Test device response to setpoint changes
             for i in 0..10 {
                 let response_start = Instant::now();
-                
+
                 let target_nm = if i % 2 == 0 { 8.0 } else { -8.0 };
                 let change = SetpointChange {
                     target_nm: target_nm,
@@ -635,14 +663,15 @@ impl HilTrimTestSuite {
                 };
 
                 trim_controller.apply_setpoint_change(change).unwrap();
-                
+
                 // Wait for device to respond (simulate hardware response time)
                 let mut response_detected = false;
                 let mut response_time = Duration::ZERO;
-                
-                for _ in 0..100 { // Up to 400ms to respond
+
+                for _ in 0..100 {
+                    // Up to 400ms to respond
                     let output = trim_controller.update();
-                    
+
                     if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                         // Check if we're moving toward target
                         let target = target_nm;
@@ -651,23 +680,23 @@ impl HilTrimTestSuite {
                         } else {
                             setpoint_nm < -0.1 // Moving negative
                         };
-                        
+
                         if moving_toward_target && !response_detected {
                             response_detected = true;
                             response_time = response_start.elapsed();
                             break;
                         }
                     }
-                    
+
                     std::thread::sleep(Duration::from_millis(4));
                 }
-                
+
                 if response_detected {
                     let response_ms = response_time.as_secs_f32() * 1000.0;
                     response_times.push(response_ms);
                     measurements.push(response_ms);
                 }
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -675,7 +704,8 @@ impl HilTrimTestSuite {
 
             // Analyze device response times
             if !response_times.is_empty() {
-                hardware_metrics.device_response_time_ms = response_times.iter().sum::<f32>() / response_times.len() as f32;
+                hardware_metrics.device_response_time_ms =
+                    response_times.iter().sum::<f32>() / response_times.len() as f32;
             }
 
             // Device should respond within 50ms
@@ -686,7 +716,10 @@ impl HilTrimTestSuite {
                 passed: response_acceptable,
                 duration: start_time.elapsed(),
                 error: if !response_acceptable {
-                    Some(format!("Device response too slow: {:.2}ms", hardware_metrics.device_response_time_ms))
+                    Some(format!(
+                        "Device response too slow: {:.2}ms",
+                        hardware_metrics.device_response_time_ms
+                    ))
                 } else {
                     None
                 },
@@ -714,10 +747,10 @@ impl HilTrimTestSuite {
             trim_controller.set_mode(TrimMode::ForceFeedback);
 
             let mut measurements = Vec::new();
-            
+
             // Apply multiple rapid setpoint changes to test handling
             let setpoints = vec![5.0, -3.0, 8.0, -7.0, 2.0, -4.0, 6.0];
-            
+
             for &target in &setpoints {
                 let change = SetpointChange {
                     target_nm: target,
@@ -728,7 +761,7 @@ impl HilTrimTestSuite {
                 };
 
                 trim_controller.apply_setpoint_change(change).unwrap();
-                
+
                 // Only run a few updates before next change (concurrent behavior)
                 for _ in 0..5 {
                     let output = trim_controller.update();
@@ -775,11 +808,11 @@ impl HilTrimTestSuite {
             trim_controller.set_mode(TrimMode::ForceFeedback);
 
             let mut measurements = Vec::new();
-            
+
             // Rapid setpoint changes every 50ms
             for i in 0..50 {
                 let target = ((i as f32 * 0.5).sin() * 10.0).clamp(-12.0, 12.0);
-                
+
                 let change = SetpointChange {
                     target_nm: target,
                     limits: TrimLimits {
@@ -789,20 +822,28 @@ impl HilTrimTestSuite {
                 };
 
                 trim_controller.apply_setpoint_change(change).unwrap();
-                
+
                 // Run updates for 50ms
-                for _ in 0..12 { // ~50ms at 4ms intervals
+                for _ in 0..12 {
+                    // ~50ms at 4ms intervals
                     let output = trim_controller.update();
-                    if let TrimOutput::ForceFeedback { setpoint_nm, rate_nm_per_s } = output {
+                    if let TrimOutput::ForceFeedback {
+                        setpoint_nm,
+                        rate_nm_per_s,
+                    } = output
+                    {
                         measurements.push(setpoint_nm);
-                        
+
                         // Verify rate limits are still respected
                         if rate_nm_per_s.abs() > 20.0 + self.config.hil_fp_tolerance {
                             return TrimValidationResult {
                                 name: "HIL Rapid Setpoint Changes".to_string(),
                                 passed: false,
                                 duration: start_time.elapsed(),
-                                error: Some(format!("Rate limit violated during rapid changes: {} Nm/s", rate_nm_per_s)),
+                                error: Some(format!(
+                                    "Rate limit violated during rapid changes: {} Nm/s",
+                                    rate_nm_per_s
+                                )),
                                 measurements,
                                 metrics: Default::default(),
                             };
@@ -810,7 +851,7 @@ impl HilTrimTestSuite {
                     }
                     std::thread::sleep(Duration::from_millis(4));
                 }
-                
+
                 if start_time.elapsed() > self.config.max_test_duration {
                     break;
                 }
@@ -846,7 +887,7 @@ impl HilTrimTestSuite {
 
             let mut measurements = Vec::new();
             let test_duration = Duration::from_secs(30); // 30 second stability test
-            
+
             // Set a moderate setpoint and run for extended period
             let change = SetpointChange {
                 target_nm: 6.0,
@@ -854,15 +895,17 @@ impl HilTrimTestSuite {
             };
 
             trim_controller.apply_setpoint_change(change).unwrap();
-            
+
             let mut sample_count = 0;
-            while start_time.elapsed() < test_duration && start_time.elapsed() < self.config.max_test_duration {
+            while start_time.elapsed() < test_duration
+                && start_time.elapsed() < self.config.max_test_duration
+            {
                 let output = trim_controller.update();
-                
+
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                     measurements.push(setpoint_nm);
                     sample_count += 1;
-                    
+
                     // Check for stability issues
                     if !setpoint_nm.is_finite() {
                         return TrimValidationResult {
@@ -875,7 +918,7 @@ impl HilTrimTestSuite {
                         };
                     }
                 }
-                
+
                 std::thread::sleep(Duration::from_millis(4));
             }
 
@@ -915,7 +958,7 @@ impl HilTrimTestSuite {
             mode: FfbMode::Auto,
             device_path: Some("hil_test_device".to_string()),
         };
-        
+
         FfbEngine::new(config).expect("Failed to create test engine")
     }
 
@@ -925,51 +968,78 @@ impl HilTrimTestSuite {
         report.push_str("# HIL Trim Correctness Validation Report\n\n");
 
         let total_tests = results.len();
-        let passed_tests = results.iter().filter(|r| r.validation_result.passed).count();
+        let passed_tests = results
+            .iter()
+            .filter(|r| r.validation_result.passed)
+            .count();
         let failed_tests = total_tests - passed_tests;
 
         report.push_str("## HIL Test Summary\n\n");
         report.push_str(&format!("- **Total HIL Tests**: {}\n", total_tests));
-        report.push_str(&format!("- **Passed**: {} ({}%)\n", passed_tests, 
-            (passed_tests as f32 / total_tests as f32 * 100.0) as u32));
-        report.push_str(&format!("- **Failed**: {} ({}%)\n", failed_tests,
-            (failed_tests as f32 / total_tests as f32 * 100.0) as u32));
-        
-        let overall_status = if failed_tests == 0 { "✅ PASS" } else { "❌ FAIL" };
+        report.push_str(&format!(
+            "- **Passed**: {} ({}%)\n",
+            passed_tests,
+            (passed_tests as f32 / total_tests as f32 * 100.0) as u32
+        ));
+        report.push_str(&format!(
+            "- **Failed**: {} ({}%)\n",
+            failed_tests,
+            (failed_tests as f32 / total_tests as f32 * 100.0) as u32
+        ));
+
+        let overall_status = if failed_tests == 0 {
+            "✅ PASS"
+        } else {
+            "❌ FAIL"
+        };
         report.push_str(&format!("- **Overall HIL Status**: {}\n\n", overall_status));
 
         report.push_str("## Hardware Metrics Summary\n\n");
-        
+
         // Aggregate hardware metrics
-        let avg_device_response = results.iter()
+        let avg_device_response = results
+            .iter()
             .map(|r| r.hardware_metrics.device_response_time_ms)
             .filter(|&x| x > 0.0)
             .collect::<Vec<_>>();
-        
-        let avg_usb_latency = results.iter()
+
+        let avg_usb_latency = results
+            .iter()
             .map(|r| r.hardware_metrics.usb_latency_ms)
             .filter(|&x| x > 0.0)
             .collect::<Vec<_>>();
 
         if !avg_device_response.is_empty() {
             let avg = avg_device_response.iter().sum::<f32>() / avg_device_response.len() as f32;
-            report.push_str(&format!("- **Average Device Response Time**: {:.2}ms\n", avg));
+            report.push_str(&format!(
+                "- **Average Device Response Time**: {:.2}ms\n",
+                avg
+            ));
         }
-        
+
         if !avg_usb_latency.is_empty() {
             let avg = avg_usb_latency.iter().sum::<f32>() / avg_usb_latency.len() as f32;
             report.push_str(&format!("- **Average USB Latency**: {:.2}ms\n", avg));
         }
 
         report.push_str("\n## Detailed HIL Results\n\n");
-        
+
         for result in results {
-            let status = if result.validation_result.passed { "✅ PASS" } else { "❌ FAIL" };
-            report.push_str(&format!("### {} - {}\n\n", status, result.validation_result.name));
-            
-            report.push_str(&format!("- **Duration**: {:.2}ms\n", 
-                result.validation_result.duration.as_secs_f32() * 1000.0));
-            
+            let status = if result.validation_result.passed {
+                "✅ PASS"
+            } else {
+                "❌ FAIL"
+            };
+            report.push_str(&format!(
+                "### {} - {}\n\n",
+                status, result.validation_result.name
+            ));
+
+            report.push_str(&format!(
+                "- **Duration**: {:.2}ms\n",
+                result.validation_result.duration.as_secs_f32() * 1000.0
+            ));
+
             if let Some(error) = &result.validation_result.error {
                 report.push_str(&format!("- **Error**: {}\n", error));
             }
@@ -977,24 +1047,36 @@ impl HilTrimTestSuite {
             // Hardware metrics
             let hw = &result.hardware_metrics;
             if hw.device_response_time_ms > 0.0 {
-                report.push_str(&format!("- **Device Response Time**: {:.2}ms\n", hw.device_response_time_ms));
+                report.push_str(&format!(
+                    "- **Device Response Time**: {:.2}ms\n",
+                    hw.device_response_time_ms
+                ));
             }
             if hw.usb_latency_ms > 0.0 {
                 report.push_str(&format!("- **USB Latency**: {:.2}ms\n", hw.usb_latency_ms));
             }
             if hw.timing_jitter_ms > 0.0 {
-                report.push_str(&format!("- **Timing Jitter**: {:.2}ms\n", hw.timing_jitter_ms));
+                report.push_str(&format!(
+                    "- **Timing Jitter**: {:.2}ms\n",
+                    hw.timing_jitter_ms
+                ));
             }
 
             // Timing analysis
             let timing = &result.timing_analysis;
             if timing.avg_update_period_ms > 0.0 {
-                report.push_str(&format!("- **Average Update Period**: {:.2}ms\n", timing.avg_update_period_ms));
+                report.push_str(&format!(
+                    "- **Average Update Period**: {:.2}ms\n",
+                    timing.avg_update_period_ms
+                ));
             }
             if timing.missed_deadlines > 0 {
-                report.push_str(&format!("- **Missed Deadlines**: {}\n", timing.missed_deadlines));
+                report.push_str(&format!(
+                    "- **Missed Deadlines**: {}\n",
+                    timing.missed_deadlines
+                ));
             }
-            
+
             report.push_str("\n");
         }
 
@@ -1002,10 +1084,14 @@ impl HilTrimTestSuite {
         report.push_str("This HIL validation suite verifies:\n\n");
         report.push_str("- **Real-time Performance**: 250Hz update rate with <5ms jitter\n");
         report.push_str("- **Hardware Timing**: USB latency <5ms, device response <50ms\n");
-        report.push_str("- **Rate/Jerk Limiting**: No torque steps under hardware timing constraints\n");
+        report.push_str(
+            "- **Rate/Jerk Limiting**: No torque steps under hardware timing constraints\n",
+        );
         report.push_str("- **Spring Behavior**: Proper freeze/ramp timing with hardware delays\n");
         report.push_str("- **Stability**: Long-duration operation without degradation\n");
-        report.push_str("- **Concurrent Operations**: Stable behavior under rapid setpoint changes\n\n");
+        report.push_str(
+            "- **Concurrent Operations**: Stable behavior under rapid setpoint changes\n\n",
+        );
 
         report
     }
@@ -1032,9 +1118,12 @@ mod tests {
     fn test_hil_ffb_rate_limiting() {
         let mut suite = HilTrimTestSuite::default();
         let result = suite.test_hil_ffb_rate_limiting();
-        
-        assert!(result.validation_result.passed, 
-            "HIL FFB rate limiting test failed: {:?}", result.validation_result.error);
+
+        assert!(
+            result.validation_result.passed,
+            "HIL FFB rate limiting test failed: {:?}",
+            result.validation_result.error
+        );
         assert!(!result.validation_result.measurements.is_empty());
     }
 
@@ -1042,50 +1131,58 @@ mod tests {
     fn test_hil_spring_freeze_timing() {
         let mut suite = HilTrimTestSuite::default();
         let result = suite.test_hil_spring_freeze_timing();
-        
-        assert!(result.validation_result.passed, 
-            "HIL spring freeze timing test failed: {:?}", result.validation_result.error);
+
+        assert!(
+            result.validation_result.passed,
+            "HIL spring freeze timing test failed: {:?}",
+            result.validation_result.error
+        );
     }
 
     #[test]
     fn test_hil_complete_validation() {
         let mut suite = HilTrimTestSuite::default();
         let results = suite.run_hil_trim_validation();
-        
+
         assert!(!results.is_empty());
-        
+
         // Most tests should pass (allowing for some hardware-dependent failures)
-        let passed_count = results.iter().filter(|r| r.validation_result.passed).count();
+        let passed_count = results
+            .iter()
+            .filter(|r| r.validation_result.passed)
+            .count();
         let pass_rate = passed_count as f32 / results.len() as f32;
-        
-        assert!(pass_rate >= 0.8, "HIL pass rate too low: {:.1}%", pass_rate * 100.0);
+
+        assert!(
+            pass_rate >= 0.8,
+            "HIL pass rate too low: {:.1}%",
+            pass_rate * 100.0
+        );
     }
 
     #[test]
     fn test_hil_report_generation() {
         let mut suite = HilTrimTestSuite::default();
-        
-        let mock_results = vec![
-            HilTrimTestResult {
-                validation_result: TrimValidationResult {
-                    name: "HIL Test 1".to_string(),
-                    passed: true,
-                    duration: Duration::from_millis(100),
-                    error: None,
-                    measurements: vec![1.0, 2.0],
-                    metrics: Default::default(),
-                },
-                hardware_metrics: HardwareMetrics {
-                    device_response_time_ms: 25.0,
-                    usb_latency_ms: 2.5,
-                    ..Default::default()
-                },
-                timing_analysis: Default::default(),
+
+        let mock_results = vec![HilTrimTestResult {
+            validation_result: TrimValidationResult {
+                name: "HIL Test 1".to_string(),
+                passed: true,
+                duration: Duration::from_millis(100),
+                error: None,
+                measurements: vec![1.0, 2.0],
+                metrics: Default::default(),
             },
-        ];
-        
+            hardware_metrics: HardwareMetrics {
+                device_response_time_ms: 25.0,
+                usb_latency_ms: 2.5,
+                ..Default::default()
+            },
+            timing_analysis: Default::default(),
+        }];
+
         let report = suite.generate_hil_report(&mock_results);
-        
+
         assert!(report.contains("HIL Test Summary"));
         assert!(report.contains("Hardware Metrics Summary"));
         assert!(report.contains("Device Response Time"));

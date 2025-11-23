@@ -6,10 +6,16 @@
 //! The AxisEngine provides the main interface for real-time axis processing
 //! with atomic configuration updates and strict timing guarantees.
 
-use crate::{AxisFrame, Pipeline, PipelineState, RuntimeCounters, AllocationGuard, CurveConflictDetector, ConflictDetectorConfig, CurveConflict, BlackboxAnnotator};
+use crate::{
+    AllocationGuard, AxisFrame, BlackboxAnnotator, ConflictDetectorConfig, CurveConflict,
+    CurveConflictDetector, Pipeline, PipelineState, RuntimeCounters,
+};
 use flight_core::profile::{CapabilityContext, CapabilityMode};
 use parking_lot::RwLock;
-use std::sync::{Arc, atomic::{AtomicU64, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 use std::time::Instant;
 
 /// Configuration for axis engine
@@ -86,7 +92,7 @@ struct CompiledPipeline {
 
 impl CompiledPipeline {
     /// Process frame through pipeline (RT-safe)
-    /// 
+    ///
     /// # Safety
     /// This function assumes exclusive access to the pipeline state
     /// and must not allocate or block.
@@ -136,7 +142,7 @@ impl AxisEngine {
     }
 
     /// Process axis frame through active pipeline (RT-safe)
-    /// 
+    ///
     /// This is the main real-time processing function that must maintain
     /// strict timing guarantees and zero allocations.
     #[inline(always)]
@@ -187,7 +193,7 @@ impl AxisEngine {
         if let Some(start) = start_time {
             let elapsed = start.elapsed();
             self.counters.record_frame_time(elapsed);
-            
+
             if elapsed.as_micros() > self.config.max_frame_time_us as u128 {
                 self.counters.increment_deadline_misses();
             }
@@ -198,25 +204,26 @@ impl AxisEngine {
 
         // Add sample to conflict detector if enabled (RT-safe)
         if self.config.enable_conflict_detection
-            && let Some(mut detector) = self.conflict_detector.try_write() {
-                detector.add_sample(&self.axis_name, frame);
-                
-                // Check for new conflicts and annotate them
-                if let Some(conflict) = detector.get_conflicts(&self.axis_name) {
-                    // Try to annotate without blocking RT thread
-                    if let Some(mut annotator) = self.blackbox_annotator.try_write() {
-                        annotator.annotate_conflict_detected(&self.axis_name, conflict);
-                    }
+            && let Some(mut detector) = self.conflict_detector.try_write()
+        {
+            detector.add_sample(&self.axis_name, frame);
+
+            // Check for new conflicts and annotate them
+            if let Some(conflict) = detector.get_conflicts(&self.axis_name) {
+                // Try to annotate without blocking RT thread
+                if let Some(mut annotator) = self.blackbox_annotator.try_write() {
+                    annotator.annotate_conflict_detected(&self.axis_name, conflict);
                 }
             }
-            // If we can't get the lock, skip conflict detection for this frame
-            // This maintains RT guarantees
+        }
+        // If we can't get the lock, skip conflict detection for this frame
+        // This maintains RT guarantees
 
         result
     }
 
     /// Update pipeline atomically (non-RT thread)
-    /// 
+    ///
     /// The new pipeline will be compiled and validated off the RT thread,
     /// then swapped atomically at the next tick boundary.
     pub fn update_pipeline(&self, new_pipeline: Pipeline) -> UpdateResult {
@@ -262,13 +269,18 @@ impl AxisEngine {
 
     /// Get detected curve conflicts
     pub fn get_curve_conflicts(&self) -> Option<CurveConflict> {
-        self.conflict_detector.read().get_conflicts(&self.axis_name).cloned()
+        self.conflict_detector
+            .read()
+            .get_conflicts(&self.axis_name)
+            .cloned()
     }
 
     /// Clear curve conflicts (after resolution)
     pub fn clear_curve_conflicts(&self) {
-        self.conflict_detector.write().clear_conflicts(&self.axis_name);
-        
+        self.conflict_detector
+            .write()
+            .clear_conflicts(&self.axis_name);
+
         // Annotate conflict cleared
         if let Some(mut annotator) = self.blackbox_annotator.try_write() {
             annotator.annotate_conflict_cleared(&self.axis_name, "Manual clear");
@@ -309,7 +321,7 @@ impl AxisEngine {
     pub fn set_capability_mode(&self, mode: CapabilityMode) {
         let new_context = CapabilityContext::for_mode(mode);
         *self.capability_context.write() = new_context;
-        
+
         // Log capability mode change for audit trail
         if let Some(mut annotator) = self.blackbox_annotator.try_write() {
             annotator.annotate_capability_mode_changed(&self.axis_name, mode);
@@ -331,16 +343,17 @@ impl AxisEngine {
     fn try_swap_pipeline(&self) {
         // Try to acquire pending pipeline without blocking
         if let Some(mut pending) = self.pending_pipeline.try_write()
-            && let Some(new_pipeline) = pending.take() {
-                // Atomic swap at tick boundary
-                *self.active_pipeline.write() = Some(new_pipeline);
-                
-                // Increment acknowledgment counter
-                self.swap_ack_counter.fetch_add(1, Ordering::Relaxed);
-                
-                // Update counters
-                self.counters.increment_pipeline_swaps();
-            }
+            && let Some(new_pipeline) = pending.take()
+        {
+            // Atomic swap at tick boundary
+            *self.active_pipeline.write() = Some(new_pipeline);
+
+            // Increment acknowledgment counter
+            self.swap_ack_counter.fetch_add(1, Ordering::Relaxed);
+
+            // Update counters
+            self.counters.increment_pipeline_swaps();
+        }
     }
 
     /// Apply capability enforcement clamps to frame output (RT-safe)
@@ -349,12 +362,12 @@ impl AxisEngine {
         // Try to get capability context without blocking
         if let Some(context) = self.capability_context.try_read() {
             let original_output = frame.out;
-            
+
             // Clamp output magnitude to capability limits
             let max_output = context.limits.max_axis_output;
             if frame.out.abs() > max_output {
                 frame.out = frame.out.signum() * max_output;
-                
+
                 // Log clamping event for audit trail if enabled
                 if context.audit_enabled {
                     // Try to annotate without blocking RT thread
@@ -370,25 +383,28 @@ impl AxisEngine {
             }
         }
         // If we can't get the context, skip clamping to maintain RT guarantees
-        
+
         Ok(())
     }
 
     /// Compile and validate new pipeline (non-RT)
-    fn compile_and_validate(&self, pipeline: Pipeline) -> Result<Arc<CompiledPipeline>, CompileError> {
+    fn compile_and_validate(
+        &self,
+        pipeline: Pipeline,
+    ) -> Result<Arc<CompiledPipeline>, CompileError> {
         // Validate pipeline structure
         pipeline.validate().map_err(CompileError::Pipeline)?;
 
         // Create state for pipeline
         let state = pipeline.create_state();
-        
+
         // Validate state buffer
         if !state.validate() {
             return Err(CompileError::InvalidState);
         }
 
         let version = self.counters.pipeline_swaps() + 1;
-        
+
         Ok(Arc::new(CompiledPipeline {
             pipeline,
             state: parking_lot::Mutex::new(state),
@@ -447,7 +463,7 @@ mod tests {
     fn test_process_without_pipeline() {
         let engine = AxisEngine::new();
         let mut frame = AxisFrame::new(0.5, 1000);
-        
+
         // Should pass through without error
         assert!(engine.process(&mut frame).is_ok());
         assert_eq!(frame.out, 0.5);
@@ -457,7 +473,7 @@ mod tests {
     fn test_counters() {
         let engine = AxisEngine::new();
         let counters = engine.counters();
-        
+
         assert_eq!(counters.frames_processed(), 0);
         assert_eq!(counters.pipeline_swaps(), 0);
         assert_eq!(counters.deadline_misses(), 0);
@@ -466,14 +482,14 @@ mod tests {
     #[test]
     fn test_capability_mode_setting() {
         let engine = AxisEngine::new_for_axis("test_axis".to_string());
-        
+
         // Default should be full mode
         assert_eq!(engine.capability_mode(), CapabilityMode::Full);
-        
+
         // Set to demo mode
         engine.set_capability_mode(CapabilityMode::Demo);
         assert_eq!(engine.capability_mode(), CapabilityMode::Demo);
-        
+
         // Set to kid mode
         engine.set_capability_mode(CapabilityMode::Kid);
         assert_eq!(engine.capability_mode(), CapabilityMode::Kid);
@@ -482,23 +498,23 @@ mod tests {
     #[test]
     fn test_output_clamping() {
         let engine = AxisEngine::new_for_axis("test_axis".to_string());
-        
+
         // Set to kid mode (50% max output)
         engine.set_capability_mode(CapabilityMode::Kid);
-        
+
         // Test frame with high output
         let mut frame = AxisFrame::new(0.8, 1000); // 80% input
         frame.out = 0.8; // Simulate pipeline output
-        
+
         // Process frame - should clamp output to 50%
         let result = engine.process(&mut frame);
         assert!(result.is_ok());
         assert_eq!(frame.out, 0.5); // Should be clamped to kid mode limit
-        
+
         // Test negative output
         let mut frame = AxisFrame::new(-0.8, 2000);
         frame.out = -0.8;
-        
+
         let result = engine.process(&mut frame);
         assert!(result.is_ok());
         assert_eq!(frame.out, -0.5); // Should be clamped to -50%
@@ -507,14 +523,14 @@ mod tests {
     #[test]
     fn test_no_clamping_in_full_mode() {
         let engine = AxisEngine::new_for_axis("test_axis".to_string());
-        
+
         // Default is full mode
         assert_eq!(engine.capability_mode(), CapabilityMode::Full);
-        
+
         // Test frame with high output
         let mut frame = AxisFrame::new(0.9, 1000);
         frame.out = 0.9;
-        
+
         // Process frame - should not clamp in full mode
         let result = engine.process(&mut frame);
         assert!(result.is_ok());
@@ -524,22 +540,22 @@ mod tests {
     #[test]
     fn test_demo_mode_clamping() {
         let engine = AxisEngine::new_for_axis("test_axis".to_string());
-        
+
         // Set to demo mode (80% max output)
         engine.set_capability_mode(CapabilityMode::Demo);
-        
+
         // Test frame with output within demo limits
         let mut frame = AxisFrame::new(0.7, 1000);
         frame.out = 0.7;
-        
+
         let result = engine.process(&mut frame);
         assert!(result.is_ok());
         assert_eq!(frame.out, 0.7); // Should remain unchanged
-        
+
         // Test frame with output exceeding demo limits
         let mut frame = AxisFrame::new(0.9, 2000);
         frame.out = 0.9;
-        
+
         let result = engine.process(&mut frame);
         assert!(result.is_ok());
         assert_eq!(frame.out, 0.8); // Should be clamped to demo mode limit

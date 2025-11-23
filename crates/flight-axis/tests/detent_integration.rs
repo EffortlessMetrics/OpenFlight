@@ -3,11 +3,10 @@
 //! Tests the detent mapper working together with other pipeline nodes
 //! and validates end-to-end behavior.
 
-use flight_axis::{
-    AxisFrame, AxisEngine, PipelineBuilder, DetentZone, DetentRole, DetentEvent,
-    UpdateResult,
-};
 use crossbeam::channel;
+use flight_axis::{
+    AxisEngine, AxisFrame, DetentEvent, DetentRole, DetentZone, PipelineBuilder, UpdateResult,
+};
 use std::time::Duration;
 
 #[test]
@@ -20,18 +19,19 @@ fn test_detent_in_complete_pipeline() {
     ];
 
     let pipeline = PipelineBuilder::new()
-        .deadzone(0.02)           // Remove small inputs
-        .curve(0.15).unwrap()     // Apply exponential curve
-        .detent(zones)            // Apply detent mapping
-        .slew(2.0)               // Rate limit output
+        .deadzone(0.02) // Remove small inputs
+        .curve(0.15)
+        .unwrap() // Apply exponential curve
+        .detent(zones) // Apply detent mapping
+        .slew(2.0) // Rate limit output
         .compile()
         .expect("Pipeline should compile");
 
     let engine = AxisEngine::new();
-    
+
     // Apply the pipeline
     match engine.update_pipeline(pipeline) {
-        UpdateResult::Pending => {},
+        UpdateResult::Pending => {}
         other => panic!("Expected Pending, got {:?}", other),
     }
 
@@ -53,9 +53,12 @@ fn test_detent_in_complete_pipeline() {
     for (input, description) in test_sequence {
         let mut frame = AxisFrame::new(input, 1000000);
         let result = engine.process(&mut frame);
-        
-        println!("{}: input={:.3}, output={:.3}", description, input, frame.out);
-        
+
+        println!(
+            "{}: input={:.3}, output={:.3}",
+            description, input, frame.out
+        );
+
         // Verify processing succeeded
         assert!(result.is_ok());
         assert!(frame.ts_mono_ns > 0);
@@ -64,13 +67,17 @@ fn test_detent_in_complete_pipeline() {
     // Verify performance counters
     let counters = engine.counters();
     assert!(counters.frames_processed() > 0, "No frames processed");
-    assert_eq!(counters.rt_allocations(), 0, "Allocations detected in hot path");
+    assert_eq!(
+        counters.rt_allocations(),
+        0,
+        "Allocations detected in hot path"
+    );
 }
 
 #[test]
 fn test_detent_events_in_pipeline() {
     let (sender, receiver) = channel::unbounded();
-    
+
     let zones = vec![
         DetentZone::new(0.0, 0.1, 0.05, DetentRole::Idle),
         DetentZone::new(0.5, 0.08, 0.03, DetentRole::Takeoff),
@@ -90,12 +97,12 @@ fn test_detent_events_in_pipeline() {
 
     // Process frames that should generate events
     let frames = vec![
-        AxisFrame::new(-0.5, 1000),  // Outside detents
-        AxisFrame::new(0.05, 2000),  // Enter idle
-        AxisFrame::new(0.0, 3000),   // Stay in idle
-        AxisFrame::new(0.3, 4000),   // Exit idle
-        AxisFrame::new(0.52, 5000),  // Enter takeoff
-        AxisFrame::new(0.8, 6000),   // Exit takeoff
+        AxisFrame::new(-0.5, 1000), // Outside detents
+        AxisFrame::new(0.05, 2000), // Enter idle
+        AxisFrame::new(0.0, 3000),  // Stay in idle
+        AxisFrame::new(0.3, 4000),  // Exit idle
+        AxisFrame::new(0.52, 5000), // Enter takeoff
+        AxisFrame::new(0.8, 6000),  // Exit takeoff
     ];
 
     for mut frame in frames {
@@ -110,7 +117,7 @@ fn test_detent_events_in_pipeline() {
 
     // Should have: enter idle, exit idle, enter takeoff, exit takeoff
     assert_eq!(events.len(), 4);
-    
+
     assert_eq!(events[0].to_detent, Some(DetentRole::Idle));
     assert_eq!(events[1].from_detent, Some(DetentRole::Idle));
     assert_eq!(events[2].to_detent, Some(DetentRole::Takeoff));
@@ -146,13 +153,12 @@ fn test_detent_output_snapping() {
 #[test]
 fn test_detent_with_curve_interaction() {
     // Test how detents interact with exponential curves
-    let zones = vec![
-        DetentZone::new(0.0, 0.15, 0.05, DetentRole::Idle),
-    ];
+    let zones = vec![DetentZone::new(0.0, 0.15, 0.05, DetentRole::Idle)];
 
     let pipeline = PipelineBuilder::new()
-        .curve(0.3).unwrap()      // Apply curve first
-        .detent(zones)            // Then detents
+        .curve(0.3)
+        .unwrap() // Apply curve first
+        .detent(zones) // Then detents
         .compile()
         .expect("Pipeline should compile");
 
@@ -162,7 +168,7 @@ fn test_detent_with_curve_interaction() {
     // Input that would be curved but then snapped by detent
     let mut frame = AxisFrame::new(0.1, 1000);
     engine.process(&mut frame);
-    
+
     // The curve would transform 0.1 to something else, but detent should snap to 0.0
     assert_eq!(frame.out, 0.0, "Detent should override curve output");
 }
@@ -176,7 +182,7 @@ fn test_detent_hysteresis_with_slew() {
 
     let pipeline = PipelineBuilder::new()
         .detent(zones)
-        .slew(0.5)               // Slow slew rate
+        .slew(0.5) // Slow slew rate
         .compile()
         .expect("Pipeline should compile");
 
@@ -191,7 +197,7 @@ fn test_detent_hysteresis_with_slew() {
     // Move to edge of hysteresis band - should stay snapped but slew might affect it
     let mut frame2 = AxisFrame::new(0.18, 2000000);
     engine.process(&mut frame2);
-    
+
     // The detent should keep us at center, but slew might try to move us
     // This tests the interaction between these two systems
     println!("Hysteresis edge result: {:.3}", frame2.out);
@@ -217,7 +223,7 @@ fn test_multiple_detent_transitions() {
 
     // Sweep through all detents
     let positions = vec![
-        -0.8, -0.52, -0.48, -0.2, 0.05, 0.0, 0.15, 0.32, 0.28, 0.5, 0.72, 0.68, 0.9
+        -0.8, -0.52, -0.48, -0.2, 0.05, 0.0, 0.15, 0.32, 0.28, 0.5, 0.72, 0.68, 0.9,
     ];
 
     let mut outputs = Vec::new();
@@ -270,7 +276,8 @@ fn test_detent_performance_in_pipeline() {
 
     let pipeline = PipelineBuilder::new()
         .deadzone(0.02)
-        .curve(0.2).unwrap()
+        .curve(0.2)
+        .unwrap()
         .detent(zones)
         .slew(2.0)
         .compile()
@@ -288,8 +295,11 @@ fn test_detent_performance_in_pipeline() {
     }
     let elapsed = start.elapsed();
 
-    println!("Processed 10k frames in {:?} ({:.2}μs/frame)", 
-             elapsed, elapsed.as_micros() as f64 / 10000.0);
+    println!(
+        "Processed 10k frames in {:?} ({:.2}μs/frame)",
+        elapsed,
+        elapsed.as_micros() as f64 / 10000.0
+    );
 
     // Verify performance requirements
     let counters = engine.counters();
@@ -297,6 +307,9 @@ fn test_detent_performance_in_pipeline() {
     assert_eq!(counters.rt_allocations(), 0, "Allocations detected");
 
     // Should complete in reasonable time (well under 1ms per frame)
-    assert!(elapsed < Duration::from_millis(100), 
-            "Processing took too long: {:?}", elapsed);
+    assert!(
+        elapsed < Duration::from_millis(100),
+        "Processing took too long: {:?}",
+        elapsed
+    );
 }

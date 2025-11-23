@@ -1,4 +1,4 @@
-# Rust formatting configuration
+# Rust formatting configuration (stable-compatible)
 edition = "2024"
 max_width = 100
 hard_tabs = false
@@ -12,9 +12,11 @@ merge_derives = true
 use_try_shorthand = false
 use_field_init_shorthand = false
 force_explicit_abi = true
-empty_item_single_line = true
-struct_lit_single_line = true
-fn_single_line = false
-where_single_line = false
-imports_layout = "Vertical"
-group_imports = "StdExternalCrate"
+
+# Nightly-only options removed (see rustfmt.nightly.toml for these):
+# - empty_item_single_line
+# - struct_lit_single_line
+# - fn_single_line
+# - where_single_line
+# - imports_layout
+# - group_imports

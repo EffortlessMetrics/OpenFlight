@@ -104,7 +104,9 @@ impl SoftStopController {
         }
 
         if !current_torque_nm.is_finite() {
-            return Err(SoftStopError::InvalidTorque { value: current_torque_nm });
+            return Err(SoftStopError::InvalidTorque {
+                value: current_torque_nm,
+            });
         }
 
         let now = Instant::now();
@@ -126,7 +128,7 @@ impl SoftStopController {
         let state = match &mut self.state {
             Some(state) if state.active => state,
             Some(_) => return Ok(None), // Ramp completed
-            None => return Ok(None), // No active ramp
+            None => return Ok(None),    // No active ramp
         };
 
         let now = Instant::now();
@@ -259,22 +261,22 @@ mod tests {
             profile: RampProfile::Linear,
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
-        
+
         // Start ramp from 10 Nm
         controller.start_ramp(10.0).unwrap();
         assert!(controller.is_active());
-        
+
         // Should start at full torque
         let torque = controller.update().unwrap().unwrap();
         assert!((torque - 10.0).abs() < 0.1);
-        
+
         // Wait and check progress
         thread::sleep(Duration::from_millis(50));
         let torque = controller.update().unwrap().unwrap();
         assert!(torque < 10.0 && torque > 0.0);
-        
+
         // Check progress calculation
         let progress = controller.get_progress().unwrap();
         assert!(progress > 0.4 && progress < 0.6); // Should be around 50%
@@ -287,14 +289,14 @@ mod tests {
             profile: RampProfile::Exponential,
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
         controller.start_ramp(10.0).unwrap();
-        
+
         // Exponential should drop faster initially
         thread::sleep(Duration::from_millis(25));
         let torque = controller.update().unwrap().unwrap();
-        
+
         // Should have dropped significantly (more than linear)
         assert!(torque < 5.0);
     }
@@ -306,14 +308,14 @@ mod tests {
             zero_threshold_nm: 0.1,
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
         controller.start_ramp(1.0).unwrap();
-        
+
         // Wait for completion
         thread::sleep(Duration::from_millis(120));
         let torque = controller.update().unwrap();
-        
+
         // Should be complete (None) or zero
         assert!(torque.is_none() || torque.unwrap() == 0.0);
         assert!(!controller.is_active());
@@ -325,13 +327,13 @@ mod tests {
             max_ramp_time: Duration::from_millis(10),
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
         controller.start_ramp(10.0).unwrap();
-        
+
         // Wait longer than timeout
         thread::sleep(Duration::from_millis(20));
-        
+
         let result = controller.update();
         assert!(matches!(result, Err(SoftStopError::RampTimeout { .. })));
         assert!(!controller.is_active());
@@ -344,18 +346,18 @@ mod tests {
             led_indication: true,
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
         controller.start_ramp(10.0).unwrap();
-        
+
         // Should need to trigger cues
         assert!(controller.should_trigger_audio_cue());
         assert!(controller.should_trigger_led_indication());
-        
+
         // Mark as triggered
         controller.mark_audio_cue_triggered();
         controller.mark_led_indication_triggered();
-        
+
         // Should no longer need triggering
         assert!(!controller.should_trigger_audio_cue());
         assert!(!controller.should_trigger_led_indication());
@@ -364,11 +366,11 @@ mod tests {
     #[test]
     fn test_invalid_torque() {
         let mut controller = SoftStopController::default();
-        
+
         // Test NaN
         let result = controller.start_ramp(f32::NAN);
         assert!(matches!(result, Err(SoftStopError::InvalidTorque { .. })));
-        
+
         // Test infinity
         let result = controller.start_ramp(f32::INFINITY);
         assert!(matches!(result, Err(SoftStopError::InvalidTorque { .. })));
@@ -377,9 +379,9 @@ mod tests {
     #[test]
     fn test_double_start() {
         let mut controller = SoftStopController::default();
-        
+
         controller.start_ramp(10.0).unwrap();
-        
+
         // Second start should fail
         let result = controller.start_ramp(5.0);
         assert!(matches!(result, Err(SoftStopError::RampAlreadyActive)));
@@ -388,10 +390,10 @@ mod tests {
     #[test]
     fn test_reset() {
         let mut controller = SoftStopController::default();
-        
+
         controller.start_ramp(10.0).unwrap();
         assert!(controller.is_active());
-        
+
         controller.reset();
         assert!(!controller.is_active());
         assert!(controller.get_state().is_none());
@@ -404,27 +406,27 @@ mod tests {
             profile: RampProfile::SCurve,
             ..Default::default()
         };
-        
+
         let mut controller = SoftStopController::new(config);
         controller.start_ramp(10.0).unwrap();
-        
+
         // S-curve should start slow, accelerate, then slow down
         let initial_torque = controller.update().unwrap().unwrap();
-        
+
         thread::sleep(Duration::from_millis(10));
         let early_torque = controller.update().unwrap().unwrap();
-        
+
         thread::sleep(Duration::from_millis(30));
         let mid_torque = controller.update().unwrap().unwrap();
-        
+
         // Should show S-curve characteristics
         assert!(initial_torque > early_torque);
         assert!(early_torque > mid_torque);
-        
+
         // The rate of change should be different at different points
         let early_rate = (initial_torque - early_torque) / 0.01; // per 10ms
         let mid_rate = (early_torque - mid_torque) / 0.03; // per 30ms
-        
+
         // Mid section should have higher rate (steeper part of S-curve)
         assert!(mid_rate > early_rate * 0.5); // Allow some tolerance
     }

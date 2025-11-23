@@ -11,12 +11,12 @@
 //!
 //! Implements ≤20ms latency requirement with verify test patterns and drift detection.
 
-use crate::led::{LedTarget, LedState, LatencyStats};
-use flight_core::{Result, FlightError};
-use flight_hid::{HidAdapter, HidOperationResult, HidDeviceInfo};
+use crate::led::{LatencyStats, LedState, LedTarget};
+use flight_core::{FlightError, Result};
+use flight_hid::{HidAdapter, HidDeviceInfo, HidOperationResult};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{debug, warn, error, info};
+use tracing::{debug, error, info, warn};
 
 /// Saitek/Logitech panel vendor ID
 const SAITEK_VENDOR_ID: u16 = 0x06A3;
@@ -60,10 +60,46 @@ impl PanelType {
     pub fn led_mapping(&self) -> &'static [&'static str] {
         match self {
             PanelType::RadioPanel => &["COM1", "COM2", "NAV1", "NAV2", "ADF", "DME", "XPDR"],
-            PanelType::MultiPanel => &["ALT", "VS", "IAS", "HDG", "CRS", "AUTOTHROTTLE", "FLAPS", "PITCHTRIM"],
-            PanelType::SwitchPanel => &["GEAR", "MASTER_BAT", "MASTER_ALT", "AVIONICS", "FUEL_PUMP", "DEICE", "PITOT_HEAT", "COWL"],
-            PanelType::BIP => &["GEAR_L", "GEAR_N", "GEAR_R", "MASTER_WARNING", "MASTER_CAUTION", "FIRE_WARNING", "OIL_PRESSURE", "FUEL_PRESSURE"],
-            PanelType::FIP => &["ATTITUDE", "AIRSPEED", "ALTITUDE", "HSI", "TURN_COORD", "VOR1", "VOR2", "ADF"],
+            PanelType::MultiPanel => &[
+                "ALT",
+                "VS",
+                "IAS",
+                "HDG",
+                "CRS",
+                "AUTOTHROTTLE",
+                "FLAPS",
+                "PITCHTRIM",
+            ],
+            PanelType::SwitchPanel => &[
+                "GEAR",
+                "MASTER_BAT",
+                "MASTER_ALT",
+                "AVIONICS",
+                "FUEL_PUMP",
+                "DEICE",
+                "PITOT_HEAT",
+                "COWL",
+            ],
+            PanelType::BIP => &[
+                "GEAR_L",
+                "GEAR_N",
+                "GEAR_R",
+                "MASTER_WARNING",
+                "MASTER_CAUTION",
+                "FIRE_WARNING",
+                "OIL_PRESSURE",
+                "FUEL_PRESSURE",
+            ],
+            PanelType::FIP => &[
+                "ATTITUDE",
+                "AIRSPEED",
+                "ALTITUDE",
+                "HSI",
+                "TURN_COORD",
+                "VOR1",
+                "VOR2",
+                "ADF",
+            ],
         }
     }
 
@@ -208,17 +244,17 @@ impl SaitekPanelWriter {
     /// Start the panel writer and enumerate devices
     pub fn start(&mut self) -> Result<()> {
         info!("Starting Saitek/Logitech panel writer");
-        
+
         self.hid_adapter.start()?;
         self.enumerate_panels()?;
-        
+
         Ok(())
     }
 
     /// Stop the panel writer
     pub fn stop(&mut self) {
         info!("Stopping Saitek/Logitech panel writer");
-        
+
         // Turn off all LEDs before stopping
         let panel_paths: Vec<_> = self.panels.keys().cloned().collect();
         for panel_path in panel_paths {
@@ -226,7 +262,7 @@ impl SaitekPanelWriter {
                 warn!("Failed to turn off LEDs for panel {}: {}", panel_path, e);
             }
         }
-        
+
         self.hid_adapter.stop();
         self.panels.clear();
         self.led_states.clear();
@@ -235,39 +271,50 @@ impl SaitekPanelWriter {
     /// Enumerate and register Saitek/Logitech panels
     fn enumerate_panels(&mut self) -> Result<()> {
         debug!("Enumerating Saitek/Logitech panels");
-        
-        let devices: Vec<_> = self.hid_adapter.get_all_devices().into_iter().cloned().collect();
-        
+
+        let devices: Vec<_> = self
+            .hid_adapter
+            .get_all_devices()
+            .into_iter()
+            .cloned()
+            .collect();
+
         for device_info in devices {
             if self.is_supported_panel(&device_info) {
                 self.register_panel(device_info)?;
             }
         }
-        
+
         info!("Found {} Saitek/Logitech panels", self.panels.len());
         Ok(())
     }
 
     /// Check if device is a supported Saitek/Logitech panel
     fn is_supported_panel(&self, device_info: &HidDeviceInfo) -> bool {
-        let is_saitek_logitech = device_info.vendor_id == SAITEK_VENDOR_ID || 
-                                device_info.vendor_id == LOGITECH_VENDOR_ID;
-        
+        let is_saitek_logitech = device_info.vendor_id == SAITEK_VENDOR_ID
+            || device_info.vendor_id == LOGITECH_VENDOR_ID;
+
         if !is_saitek_logitech {
             return false;
         }
-        
+
         PanelType::from_product_id(device_info.product_id).is_some()
     }
 
     /// Register a new panel
     fn register_panel(&mut self, device_info: HidDeviceInfo) -> Result<()> {
-        let panel_type = PanelType::from_product_id(device_info.product_id)
-            .ok_or_else(|| FlightError::Configuration(format!(
-                "Unsupported panel product ID: {:04X}", device_info.product_id
-            )))?;
+        let panel_type = PanelType::from_product_id(device_info.product_id).ok_or_else(|| {
+            FlightError::Configuration(format!(
+                "Unsupported panel product ID: {:04X}",
+                device_info.product_id
+            ))
+        })?;
 
-        info!("Registering {} panel: {}", panel_type.name(), device_info.device_path);
+        info!(
+            "Registering {} panel: {}",
+            panel_type.name(),
+            device_info.device_path
+        );
 
         let panel_info = PanelInfo {
             device_info: device_info.clone(),
@@ -278,18 +325,23 @@ impl SaitekPanelWriter {
         // Initialize LED states for this panel
         let mut panel_led_states = HashMap::new();
         for (index, &led_name) in panel_type.led_mapping().iter().enumerate() {
-            panel_led_states.insert(led_name.to_string(), PanelLedState {
-                led_index: index as u8,
-                brightness: 0.0,
-                is_on: false,
-                blink_rate: None,
-                last_blink_toggle: Instant::now(),
-                last_write: Instant::now(),
-            });
+            panel_led_states.insert(
+                led_name.to_string(),
+                PanelLedState {
+                    led_index: index as u8,
+                    brightness: 0.0,
+                    is_on: false,
+                    blink_rate: None,
+                    last_blink_toggle: Instant::now(),
+                    last_write: Instant::now(),
+                },
+            );
         }
 
-        self.panels.insert(device_info.device_path.clone(), panel_info);
-        self.led_states.insert(device_info.device_path.clone(), panel_led_states);
+        self.panels
+            .insert(device_info.device_path.clone(), panel_info);
+        self.led_states
+            .insert(device_info.device_path.clone(), panel_led_states);
 
         // Initialize panel (turn off all LEDs)
         self.turn_off_all_leds(&device_info.device_path)?;
@@ -298,22 +350,40 @@ impl SaitekPanelWriter {
     }
 
     /// Set LED state for a specific panel and LED
-    pub fn set_led(&mut self, panel_path: &str, led_name: &str, _target: &LedTarget, state: &LedState) -> Result<()> {
-        let _panel_info = self.panels.get(panel_path)
-            .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
+    pub fn set_led(
+        &mut self,
+        panel_path: &str,
+        led_name: &str,
+        _target: &LedTarget,
+        state: &LedState,
+    ) -> Result<()> {
+        let _panel_info = self.panels.get(panel_path).ok_or_else(|| {
+            FlightError::Configuration(format!("Panel not found: {}", panel_path))
+        })?;
 
         // Check rate limiting and update LED state
         let now = Instant::now();
         let should_write = {
-            let panel_led_states = self.led_states.get_mut(panel_path)
-                .ok_or_else(|| FlightError::Configuration(format!("LED states not found for panel: {}", panel_path)))?;
+            let panel_led_states = self.led_states.get_mut(panel_path).ok_or_else(|| {
+                FlightError::Configuration(format!(
+                    "LED states not found for panel: {}",
+                    panel_path
+                ))
+            })?;
 
-            let led_state = panel_led_states.get_mut(led_name)
-                .ok_or_else(|| FlightError::Configuration(format!("LED not found: {} on panel {}", led_name, panel_path)))?;
+            let led_state = panel_led_states.get_mut(led_name).ok_or_else(|| {
+                FlightError::Configuration(format!(
+                    "LED not found: {} on panel {}",
+                    led_name, panel_path
+                ))
+            })?;
 
             // Check rate limiting
             if now.duration_since(led_state.last_write) < self.min_write_interval {
-                debug!("Rate limiting LED update for {} on {}", led_name, panel_path);
+                debug!(
+                    "Rate limiting LED update for {} on {}",
+                    led_name, panel_path
+                );
                 return Ok(());
             }
 
@@ -332,7 +402,7 @@ impl SaitekPanelWriter {
                 let panel_led_states = self.led_states.get(panel_path).unwrap();
                 panel_led_states.get(led_name).unwrap().clone()
             };
-            
+
             // Write to hardware
             self.write_led_to_hardware(panel_path, led_name, &led_state_copy)?;
         }
@@ -341,7 +411,12 @@ impl SaitekPanelWriter {
     }
 
     /// Write LED state to hardware via HID
-    fn write_led_to_hardware(&mut self, panel_path: &str, led_name: &str, led_state: &PanelLedState) -> Result<()> {
+    fn write_led_to_hardware(
+        &mut self,
+        panel_path: &str,
+        led_name: &str,
+        led_state: &PanelLedState,
+    ) -> Result<()> {
         let write_start = Instant::now();
 
         // Build HID report for this panel type
@@ -351,7 +426,7 @@ impl SaitekPanelWriter {
         match self.hid_adapter.write_output(panel_path, &report)? {
             HidOperationResult::Success { bytes_transferred } => {
                 let write_latency = write_start.elapsed();
-                
+
                 // Track latency
                 self.latency_samples.push(write_latency);
                 if self.latency_samples.len() > self.max_latency_samples {
@@ -360,34 +435,58 @@ impl SaitekPanelWriter {
 
                 // Validate latency requirement (≤20ms)
                 if write_latency > Duration::from_millis(20) {
-                    warn!("LED write latency exceeded 20ms: {:?} for {} on {}", 
-                          write_latency, led_name, panel_path);
+                    warn!(
+                        "LED write latency exceeded 20ms: {:?} for {} on {}",
+                        write_latency, led_name, panel_path
+                    );
                 }
 
-                debug!("LED {} on {} updated: {} bytes in {:?}", 
-                       led_name, panel_path, bytes_transferred, write_latency);
+                debug!(
+                    "LED {} on {} updated: {} bytes in {:?}",
+                    led_name, panel_path, bytes_transferred, write_latency
+                );
                 Ok(())
             }
             HidOperationResult::Stall => {
                 error!("HID stall writing LED {} on {}", led_name, panel_path);
-                Err(FlightError::Hardware(format!("HID stall writing to {}", panel_path)))
+                Err(FlightError::Hardware(format!(
+                    "HID stall writing to {}",
+                    panel_path
+                )))
             }
             HidOperationResult::Timeout => {
                 error!("HID timeout writing LED {} on {}", led_name, panel_path);
-                Err(FlightError::Hardware(format!("HID timeout writing to {}", panel_path)))
+                Err(FlightError::Hardware(format!(
+                    "HID timeout writing to {}",
+                    panel_path
+                )))
             }
-            HidOperationResult::Error { error_code, description } => {
-                error!("HID error writing LED {} on {}: {} - {}", 
-                       led_name, panel_path, error_code, description);
-                Err(FlightError::Hardware(format!("HID error {}: {}", error_code, description)))
+            HidOperationResult::Error {
+                error_code,
+                description,
+            } => {
+                error!(
+                    "HID error writing LED {} on {}: {} - {}",
+                    led_name, panel_path, error_code, description
+                );
+                Err(FlightError::Hardware(format!(
+                    "HID error {}: {}",
+                    error_code, description
+                )))
             }
         }
     }
 
     /// Build HID report for LED update
-    fn build_led_report(&self, panel_path: &str, _led_name: &str, led_state: &PanelLedState) -> Result<Vec<u8>> {
-        let panel_info = self.panels.get(panel_path)
-            .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
+    fn build_led_report(
+        &self,
+        panel_path: &str,
+        _led_name: &str,
+        led_state: &PanelLedState,
+    ) -> Result<Vec<u8>> {
+        let panel_info = self.panels.get(panel_path).ok_or_else(|| {
+            FlightError::Configuration(format!("Panel not found: {}", panel_path))
+        })?;
 
         // Build report based on panel type
         match panel_info.panel_type {
@@ -404,16 +503,16 @@ impl SaitekPanelWriter {
         // Radio Panel HID report format (simplified)
         let mut report = vec![0u8; 8];
         report[0] = 0x00; // Report ID
-        
+
         // LED brightness in report byte 1-2
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         report[1 + led_state.led_index as usize] = brightness_value;
-        
+
         Ok(report)
     }
 
@@ -422,15 +521,15 @@ impl SaitekPanelWriter {
         // Multi Panel HID report format (simplified)
         let mut report = vec![0u8; 12];
         report[0] = 0x00; // Report ID
-        
+
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         report[1 + led_state.led_index as usize] = brightness_value;
-        
+
         Ok(report)
     }
 
@@ -439,14 +538,14 @@ impl SaitekPanelWriter {
         // Switch Panel HID report format (simplified)
         let mut report = vec![0u8; 8];
         report[0] = 0x00; // Report ID
-        
+
         // Switch panel uses bit-packed LED states
         if led_state.is_on {
             let byte_index = 1 + (led_state.led_index / 8) as usize;
             let bit_index = led_state.led_index % 8;
             report[byte_index] |= 1 << bit_index;
         }
-        
+
         Ok(report)
     }
 
@@ -455,15 +554,15 @@ impl SaitekPanelWriter {
         // BIP HID report format (simplified)
         let mut report = vec![0u8; 16];
         report[0] = 0x00; // Report ID
-        
+
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         report[1 + led_state.led_index as usize] = brightness_value;
-        
+
         Ok(report)
     }
 
@@ -472,22 +571,23 @@ impl SaitekPanelWriter {
         // FIP HID report format (simplified)
         let mut report = vec![0u8; 32];
         report[0] = 0x00; // Report ID
-        
+
         let brightness_value = if led_state.is_on {
             (led_state.brightness * 255.0) as u8
         } else {
             0
         };
-        
+
         report[1 + led_state.led_index as usize] = brightness_value;
-        
+
         Ok(report)
     }
 
     /// Turn off all LEDs on a panel
     fn turn_off_all_leds(&mut self, panel_path: &str) -> Result<()> {
-        let panel_info = self.panels.get(panel_path)
-            .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
+        let panel_info = self.panels.get(panel_path).ok_or_else(|| {
+            FlightError::Configuration(format!("Panel not found: {}", panel_path))
+        })?;
 
         for &led_name in panel_info.panel_type.led_mapping() {
             let off_state = LedState {
@@ -496,7 +596,7 @@ impl SaitekPanelWriter {
                 blink_rate: None,
                 last_update: Instant::now(),
             };
-            
+
             let target = LedTarget::Panel(led_name.to_string());
             self.set_led(panel_path, led_name, &target, &off_state)?;
         }
@@ -515,11 +615,11 @@ impl SaitekPanelWriter {
                 if let Some(rate_hz) = led_state.blink_rate {
                     let period = Duration::from_secs_f32(1.0 / rate_hz);
                     let elapsed = now.duration_since(led_state.last_blink_toggle);
-                    
+
                     if elapsed >= period / 2 {
                         led_state.is_on = !led_state.is_on;
                         led_state.last_blink_toggle = now;
-                        
+
                         // Check rate limiting
                         if now.duration_since(led_state.last_write) >= self.min_write_interval {
                             updates.push((panel_path.clone(), led_name.clone(), led_state.clone()));
@@ -539,14 +639,21 @@ impl SaitekPanelWriter {
 
     /// Start verify test pattern for a panel
     pub fn start_verify_test(&mut self, panel_path: &str) -> Result<()> {
-        let panel_info = self.panels.get(panel_path)
-            .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
+        let panel_info = self.panels.get(panel_path).ok_or_else(|| {
+            FlightError::Configuration(format!("Panel not found: {}", panel_path))
+        })?;
 
         if self.verify_state.is_some() {
-            return Err(FlightError::Configuration("Verify test already in progress".to_string()));
+            return Err(FlightError::Configuration(
+                "Verify test already in progress".to_string(),
+            ));
         }
 
-        info!("Starting verify test for {} panel: {}", panel_info.panel_type.name(), panel_path);
+        info!(
+            "Starting verify test for {} panel: {}",
+            panel_info.panel_type.name(),
+            panel_path
+        );
 
         let steps = panel_info.panel_type.verify_pattern();
         self.verify_state = Some(VerifyTestState {
@@ -578,15 +685,15 @@ impl SaitekPanelWriter {
         };
 
         let now = Instant::now();
-        
+
         if current_step_index >= steps_len {
             // Test complete
             let total_duration = now.duration_since(test_start_time);
             let results = self.verify_state.as_ref().unwrap().results.clone();
             let success = results.iter().all(|r| r.success);
-            
+
             self.verify_state = None;
-            
+
             return Ok(Some(VerifyTestResult {
                 panel_path,
                 total_duration,
@@ -607,11 +714,11 @@ impl SaitekPanelWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(VerifyStepResult {
                         step_index: current_step_index,
@@ -621,7 +728,7 @@ impl SaitekPanelWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             VerifyStep::LedOff(led_name) => {
@@ -632,11 +739,11 @@ impl SaitekPanelWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(VerifyStepResult {
                         step_index: current_step_index,
@@ -646,7 +753,7 @@ impl SaitekPanelWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             VerifyStep::LedBlink(led_name, rate_hz) => {
@@ -657,11 +764,11 @@ impl SaitekPanelWriter {
                     last_update: now,
                 };
                 let target = LedTarget::Panel(led_name.to_string());
-                
+
                 let step_start = Instant::now();
                 let result = self.set_led(&panel_path, led_name, &target, &state);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(VerifyStepResult {
                         step_index: current_step_index,
@@ -671,14 +778,20 @@ impl SaitekPanelWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             VerifyStep::AllOn => {
-                let led_mapping = self.panels.get(&panel_path).unwrap().panel_type.led_mapping().to_vec();
+                let led_mapping = self
+                    .panels
+                    .get(&panel_path)
+                    .unwrap()
+                    .panel_type
+                    .led_mapping()
+                    .to_vec();
                 let step_start = Instant::now();
                 let mut all_success = true;
-                
+
                 for led_name in led_mapping {
                     let state = LedState {
                         on: true,
@@ -687,12 +800,15 @@ impl SaitekPanelWriter {
                         last_update: now,
                     };
                     let target = LedTarget::Panel(led_name.to_string());
-                    
-                    if self.set_led(&panel_path, led_name, &target, &state).is_err() {
+
+                    if self
+                        .set_led(&panel_path, led_name, &target, &state)
+                        .is_err()
+                    {
                         all_success = false;
                     }
                 }
-                
+
                 let actual_latency = step_start.elapsed();
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(VerifyStepResult {
@@ -700,17 +816,21 @@ impl SaitekPanelWriter {
                         expected_latency: Duration::from_millis(20),
                         actual_latency,
                         success: all_success && actual_latency <= Duration::from_millis(20),
-                        error: if all_success { None } else { Some("Failed to turn on all LEDs".to_string()) },
+                        error: if all_success {
+                            None
+                        } else {
+                            Some("Failed to turn on all LEDs".to_string())
+                        },
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             VerifyStep::AllOff => {
                 let step_start = Instant::now();
                 let result = self.turn_off_all_leds(&panel_path);
                 let actual_latency = step_start.elapsed();
-                
+
                 if let Some(verify_state) = &mut self.verify_state {
                     verify_state.results.push(VerifyStepResult {
                         step_index: current_step_index,
@@ -720,7 +840,7 @@ impl SaitekPanelWriter {
                         error: result.err().map(|e| e.to_string()),
                     });
                 }
-                
+
                 self.advance_verify_step();
             }
             VerifyStep::Delay(duration) => {
@@ -773,16 +893,17 @@ impl SaitekPanelWriter {
     pub fn check_panel_health(&mut self, panel_path: &str) -> Result<PanelHealthStatus> {
         let now = Instant::now();
         let panel_type = {
-            let panel_info = self.panels.get_mut(panel_path)
-                .ok_or_else(|| FlightError::Configuration(format!("Panel not found: {}", panel_path)))?;
-            
+            let panel_info = self.panels.get_mut(panel_path).ok_or_else(|| {
+                FlightError::Configuration(format!("Panel not found: {}", panel_path))
+            })?;
+
             panel_info.last_health_check = now;
             panel_info.panel_type
         };
 
         // Check HID endpoint health
         let hid_events = self.hid_adapter.check_endpoint_health(panel_path)?;
-        
+
         // Check LED state consistency (drift detection)
         let drift_detected = self.detect_led_drift(panel_path)?;
 
@@ -802,7 +923,7 @@ impl SaitekPanelWriter {
         // 1. Read back LED states from hardware if supported
         // 2. Compare with expected states
         // 3. Detect configuration drift
-        
+
         // For now, simulate drift detection
         Ok(false)
     }
@@ -810,10 +931,10 @@ impl SaitekPanelWriter {
     /// Repair panel configuration drift
     pub fn repair_panel_drift(&mut self, panel_path: &str) -> Result<()> {
         info!("Repairing panel configuration drift for: {}", panel_path);
-        
+
         // Turn off all LEDs and reinitialize
         self.turn_off_all_leds(panel_path)?;
-        
+
         // Reset LED states
         if let Some(panel_led_states) = self.led_states.get_mut(panel_path) {
             for led_state in panel_led_states.values_mut() {
@@ -823,7 +944,7 @@ impl SaitekPanelWriter {
                 led_state.last_write = Instant::now();
             }
         }
-        
+
         Ok(())
     }
 }
@@ -851,14 +972,15 @@ pub struct PanelHealthStatus {
 impl VerifyTestResult {
     /// Check if latency requirement is met (≤20ms)
     pub fn meets_latency_requirement(&self) -> bool {
-        self.step_results.iter().all(|result| {
-            result.actual_latency <= Duration::from_millis(20)
-        })
+        self.step_results
+            .iter()
+            .all(|result| result.actual_latency <= Duration::from_millis(20))
     }
 
     /// Get maximum latency from all steps
     pub fn max_latency(&self) -> Duration {
-        self.step_results.iter()
+        self.step_results
+            .iter()
             .map(|result| result.actual_latency)
             .max()
             .unwrap_or(Duration::ZERO)
@@ -870,10 +992,12 @@ impl VerifyTestResult {
             return Duration::ZERO;
         }
 
-        let total_nanos: u128 = self.step_results.iter()
+        let total_nanos: u128 = self
+            .step_results
+            .iter()
             .map(|result| result.actual_latency.as_nanos())
             .sum();
-        
+
         Duration::from_nanos((total_nanos / self.step_results.len() as u128) as u64)
     }
 }

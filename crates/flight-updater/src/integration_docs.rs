@@ -204,7 +204,11 @@ pub enum RevertAction {
     /// Delete registry key
     DeleteRegistryKey { key_path: String },
     /// Restore registry value
-    RestoreRegistryValue { key_path: String, value_name: String, backup_value: String },
+    RestoreRegistryValue {
+        key_path: String,
+        value_name: String,
+        backup_value: String,
+    },
     /// Stop process
     StopProcess { process_name: String },
 }
@@ -254,72 +258,89 @@ impl IntegrationDocsManager {
             docs_dir: docs_dir.as_ref().to_path_buf(),
         }
     }
-    
+
     /// Load documentation for all simulators
     pub async fn load_all_docs(&mut self) -> crate::Result<()> {
         // Load MSFS documentation
         self.load_msfs_docs().await?;
-        
+
         // Load X-Plane documentation
         self.load_xplane_docs().await?;
-        
+
         // Load DCS documentation
         self.load_dcs_docs().await?;
-        
+
         Ok(())
     }
-    
+
     /// Get documentation for a specific simulator
     pub fn get_docs(&self, simulator: &str) -> Option<&SimIntegrationDocs> {
         self.docs.get(simulator)
     }
-    
+
     /// Get all available documentation
     pub fn get_all_docs(&self) -> &HashMap<String, SimIntegrationDocs> {
         &self.docs
     }
-    
+
     /// Validate all documentation links and references
     pub async fn validate_docs(&self) -> crate::Result<ValidationReport> {
         let mut report = ValidationReport::new();
-        
+
         for (sim_name, docs) in &self.docs {
             // Validate file paths exist or are documented as created by us
             for file_integration in &docs.files {
                 match &file_integration.action {
-                    FileAction::Read { .. } | FileAction::Modify { .. } | FileAction::Monitor { .. } => {
+                    FileAction::Read { .. }
+                    | FileAction::Modify { .. }
+                    | FileAction::Monitor { .. } => {
                         // These should reference existing files in typical installations
                         // In a real implementation, we'd check common installation paths
-                        report.add_info(format!("File reference in {}: {}", sim_name, file_integration.path));
+                        report.add_info(format!(
+                            "File reference in {}: {}",
+                            sim_name, file_integration.path
+                        ));
                     }
                     FileAction::Create { .. } => {
                         // These are files we create, so they don't need to exist
-                        report.add_info(format!("File created by us in {}: {}", sim_name, file_integration.path));
+                        report.add_info(format!(
+                            "File created by us in {}: {}",
+                            sim_name, file_integration.path
+                        ));
                     }
                 }
             }
-            
+
             // Validate revert instructions are complete
-            if docs.revert_instructions.automatic_steps.is_empty() && 
-               docs.revert_instructions.manual_steps.is_empty() {
+            if docs.revert_instructions.automatic_steps.is_empty()
+                && docs.revert_instructions.manual_steps.is_empty()
+            {
                 report.add_warning(format!("No revert instructions for {}", sim_name));
             }
-            
+
             // Validate multiplayer notes for integrations that affect MP
             let has_mp_affecting_files = docs.files.iter().any(|f| f.affects_multiplayer);
             let has_mp_affecting_processes = docs.processes.iter().any(|p| p.affects_multiplayer);
-            
-            if (has_mp_affecting_files || has_mp_affecting_processes) && docs.multiplayer_notes.is_none() {
-                report.add_error(format!("Missing multiplayer notes for {} despite MP-affecting integrations", sim_name));
+
+            if (has_mp_affecting_files || has_mp_affecting_processes)
+                && docs.multiplayer_notes.is_none()
+            {
+                report.add_error(format!(
+                    "Missing multiplayer notes for {} despite MP-affecting integrations",
+                    sim_name
+                ));
             }
         }
-        
+
         Ok(report)
     }
-    
+
     /// Link to external markdown documentation
     pub fn get_markdown_doc_path(&self, simulator: &str) -> Option<PathBuf> {
-        let markdown_path = self.docs_dir.join("integration").join(format!("{}.md", simulator));
+        let markdown_path = self
+            .docs_dir
+            .join("integration")
+            .join(format!("{}.md", simulator));
         if markdown_path.exists() {
             Some(markdown_path)
         } else {
@@ -331,28 +352,24 @@ impl IntegrationDocsManager {
     pub fn open_markdown_docs(&self, simulator: &str) -> crate::Result<()> {
         if let Some(doc_path) = self.get_markdown_doc_path(simulator) {
             let url = format!("file://{}", doc_path.canonicalize()?.display());
-            
+
             #[cfg(target_os = "windows")]
             {
                 std::process::Command::new("cmd")
                     .args(["/c", "start", &url])
                     .spawn()?;
             }
-            
+
             #[cfg(target_os = "macos")]
             {
-                std::process::Command::new("open")
-                    .arg(&url)
-                    .spawn()?;
+                std::process::Command::new("open").arg(&url).spawn()?;
             }
-            
+
             #[cfg(target_os = "linux")]
             {
-                std::process::Command::new("xdg-open")
-                    .arg(&url)
-                    .spawn()?;
+                std::process::Command::new("xdg-open").arg(&url).spawn()?;
             }
-            
+
             Ok(())
         } else {
             Err(crate::Error::DocumentationNotFound(simulator.to_string()))
@@ -362,92 +379,130 @@ impl IntegrationDocsManager {
     /// Generate installer summary with links to detailed docs
     pub fn generate_installer_summary(&self) -> String {
         let mut summary = String::new();
-        
+
         summary.push_str("# Flight Hub Integration Summary\n\n");
         summary.push_str("Flight Hub integrates with flight simulators using documented APIs and minimal configuration changes.\n\n");
-        
+
         summary.push_str("## What We Touch\n\n");
         summary.push_str("| Simulator | Files Modified | Network Ports | Multiplayer Safe |\n");
         summary.push_str("|-----------|----------------|---------------|------------------|\n");
-        
+
         for (sim_name, docs) in &self.docs {
             let file_count = docs.files.len();
             let port_count = docs.network_ports.len();
-            let mp_safe = docs.multiplayer_notes
+            let mp_safe = docs
+                .multiplayer_notes
                 .as_ref()
                 .map(|n| if n.multiplayer_safe { "Yes" } else { "Partial" })
                 .unwrap_or("Unknown");
-            
-            summary.push_str(&format!("| {} | {} | {} | {} |\n", 
-                docs.simulator.name, file_count, port_count, mp_safe));
+
+            summary.push_str(&format!(
+                "| {} | {} | {} | {} |\n",
+                docs.simulator.name, file_count, port_count, mp_safe
+            ));
         }
-        
+
         summary.push_str("\n## Installation Requirements\n\n");
         summary.push_str("- **Privileges**: User-level installation (no administrator required)\n");
         summary.push_str("- **Runtime**: No elevated privileges needed\n");
         summary.push_str("- **Network**: Local communication only (no external servers)\n\n");
-        
+
         summary.push_str("## Detailed Documentation\n\n");
         summary.push_str("For complete details on what Flight Hub touches in each simulator:\n\n");
-        
+
         for (sim_name, docs) in &self.docs {
-            summary.push_str(&format!("- [{}](./integration/{}.md) - Complete integration details\n", 
-                docs.simulator.name, sim_name));
+            summary.push_str(&format!(
+                "- [{}](./integration/{}.md) - Complete integration details\n",
+                docs.simulator.name, sim_name
+            ));
         }
-        
+
         summary.push_str("\n## Removal\n\n");
         summary.push_str("Flight Hub can be completely removed:\n");
         summary.push_str("1. Use the automatic removal in Flight Hub settings\n");
         summary.push_str("2. Or follow the manual steps in each simulator's documentation\n");
         summary.push_str("3. Uninstall Flight Hub normally\n\n");
-        
+
         summary.push_str("All changes are reversible and documented.\n");
-        
+
         summary
     }
 
     /// Generate user-friendly documentation
     pub fn generate_user_docs(&self, simulator: &str) -> Option<String> {
         let docs = self.get_docs(simulator)?;
-        
+
         let mut output = String::new();
-        
-        output.push_str(&format!("# Flight Hub Integration with {}\n\n", docs.simulator.name));
-        output.push_str(&format!("**Integration Method:** {}\n\n", docs.simulator.integration_method));
-        output.push_str(&format!("**Supported Versions:** {}\n\n", docs.simulator.supported_versions.join(", ")));
-        
+
+        output.push_str(&format!(
+            "# Flight Hub Integration with {}\n\n",
+            docs.simulator.name
+        ));
+        output.push_str(&format!(
+            "**Integration Method:** {}\n\n",
+            docs.simulator.integration_method
+        ));
+        output.push_str(&format!(
+            "**Supported Versions:** {}\n\n",
+            docs.simulator.supported_versions.join(", ")
+        ));
+
         // Files section
         if !docs.files.is_empty() {
             output.push_str("## Files We Touch\n\n");
             for file in &docs.files {
                 output.push_str(&format!("### {}\n", file.path));
                 output.push_str(&format!("**Purpose:** {}\n", file.purpose));
-                output.push_str(&format!("**Action:** {}\n", format_file_action(&file.action)));
-                output.push_str(&format!("**Affects Multiplayer:** {}\n", if file.affects_multiplayer { "Yes" } else { "No" }));
+                output.push_str(&format!(
+                    "**Action:** {}\n",
+                    format_file_action(&file.action)
+                ));
+                output.push_str(&format!(
+                    "**Affects Multiplayer:** {}\n",
+                    if file.affects_multiplayer {
+                        "Yes"
+                    } else {
+                        "No"
+                    }
+                ));
                 if let Some(backup) = &file.backup_location {
                     output.push_str(&format!("**Backup Location:** {}\n", backup));
                 }
                 output.push_str("\n");
             }
         }
-        
+
         // Network ports section
         if !docs.network_ports.is_empty() {
             output.push_str("## Network Ports Used\n\n");
             for port in &docs.network_ports {
-                output.push_str(&format!("- **Port {}** ({}): {} - {}\n", 
-                    port.port, port.protocol, port.purpose, 
-                    if port.optional { "Optional" } else { "Required" }));
+                output.push_str(&format!(
+                    "- **Port {}** ({}): {} - {}\n",
+                    port.port,
+                    port.protocol,
+                    port.purpose,
+                    if port.optional {
+                        "Optional"
+                    } else {
+                        "Required"
+                    }
+                ));
             }
             output.push_str("\n");
         }
-        
+
         // Multiplayer notes
         if let Some(mp_notes) = &docs.multiplayer_notes {
             output.push_str("## Multiplayer Compatibility\n\n");
-            output.push_str(&format!("**Safe for Multiplayer:** {}\n\n", 
-                if mp_notes.multiplayer_safe { "Yes" } else { "Partially" }));
-            
+            output.push_str(&format!(
+                "**Safe for Multiplayer:** {}\n\n",
+                if mp_notes.multiplayer_safe {
+                    "Yes"
+                } else {
+                    "Partially"
+                }
+            ));
+
             if !mp_notes.safe_features.is_empty() {
                 output.push_str("**Safe Features:**\n");
                 for feature in &mp_notes.safe_features {
@@ -455,7 +510,7 @@ impl IntegrationDocsManager {
                 }
                 output.push_str("\n");
             }
-            
+
             if !mp_notes.blocked_features.is_empty() {
                 output.push_str("**Blocked in Multiplayer:**\n");
                 for feature in &mp_notes.blocked_features {
@@ -463,15 +518,15 @@ impl IntegrationDocsManager {
                 }
                 output.push_str("\n");
             }
-            
+
             if let Some(anticheat) = &mp_notes.anticheat_notes {
                 output.push_str(&format!("**Anti-cheat Notes:** {}\n\n", anticheat));
             }
         }
-        
+
         // Revert instructions
         output.push_str("## How to Completely Remove Flight Hub Integration\n\n");
-        
+
         if !docs.revert_instructions.automatic_steps.is_empty() {
             output.push_str("### Automatic Removal\n");
             output.push_str("Flight Hub can automatically remove its integration:\n");
@@ -479,7 +534,7 @@ impl IntegrationDocsManager {
             output.push_str("2. Go to Integration tab\n");
             output.push_str("3. Click \"Remove Integration\" for this simulator\n\n");
         }
-        
+
         if !docs.revert_instructions.manual_steps.is_empty() {
             output.push_str("### Manual Removal\n");
             for step in &docs.revert_instructions.manual_steps {
@@ -491,10 +546,10 @@ impl IntegrationDocsManager {
                 output.push_str("\n");
             }
         }
-        
+
         Some(output)
     }
-    
+
     /// Load MSFS integration documentation
     async fn load_msfs_docs(&mut self) -> crate::Result<()> {
         let docs = SimIntegrationDocs {
@@ -586,11 +641,11 @@ impl IntegrationDocsManager {
                 server_notes: None,
             }),
         };
-        
+
         self.docs.insert("msfs".to_string(), docs);
         Ok(())
     }
-    
+
     /// Load X-Plane integration documentation
     async fn load_xplane_docs(&mut self) -> crate::Result<()> {
         let docs = SimIntegrationDocs {
@@ -679,11 +734,11 @@ impl IntegrationDocsManager {
                 server_notes: Some("Server operators should be aware that the optional plugin can modify aircraft state.".to_string()),
             }),
         };
-        
+
         self.docs.insert("xplane".to_string(), docs);
         Ok(())
     }
-    
+
     /// Load DCS integration documentation
     async fn load_dcs_docs(&mut self) -> crate::Result<()> {
         let docs = SimIntegrationDocs {
@@ -788,7 +843,7 @@ impl IntegrationDocsManager {
                 server_notes: Some("Server operators can control Export.lua restrictions. Flight Hub respects server policies and displays blocked features clearly.".to_string()),
             }),
         };
-        
+
         self.docs.insert("dcs".to_string(), docs);
         Ok(())
     }
@@ -806,19 +861,19 @@ impl ValidationReport {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     pub fn add_error(&mut self, error: String) {
         self.errors.push(error);
     }
-    
+
     pub fn add_warning(&mut self, warning: String) {
         self.warnings.push(warning);
     }
-    
+
     pub fn add_info(&mut self, info: String) {
         self.info.push(info);
     }
-    
+
     pub fn has_errors(&self) -> bool {
         !self.errors.is_empty()
     }
@@ -827,11 +882,20 @@ impl ValidationReport {
 /// Format file action for display
 fn format_file_action(action: &FileAction) -> String {
     match action {
-        FileAction::Create { content_description } => {
+        FileAction::Create {
+            content_description,
+        } => {
             format!("Create new file ({})", content_description)
         }
-        FileAction::Modify { sections_modified, modification_type } => {
-            format!("Modify existing file ({}: {})", modification_type, sections_modified.join(", "))
+        FileAction::Modify {
+            sections_modified,
+            modification_type,
+        } => {
+            format!(
+                "Modify existing file ({}: {})",
+                modification_type,
+                sections_modified.join(", ")
+            )
         }
         FileAction::Read { data_read } => {
             format!("Read existing file ({})", data_read)
@@ -851,24 +915,24 @@ mod tests {
     async fn test_integration_docs_manager() {
         let temp_dir = TempDir::new().unwrap();
         let mut manager = IntegrationDocsManager::new(temp_dir.path());
-        
+
         // Load all documentation
         manager.load_all_docs().await.unwrap();
-        
+
         // Verify all simulators are loaded
         assert!(manager.get_docs("msfs").is_some());
         assert!(manager.get_docs("xplane").is_some());
         assert!(manager.get_docs("dcs").is_some());
-        
+
         // Test validation
         let report = manager.validate_docs().await.unwrap();
         println!("Validation report: {:?}", report);
-        
+
         // Generate user documentation
         let msfs_docs = manager.generate_user_docs("msfs").unwrap();
         assert!(msfs_docs.contains("Microsoft Flight Simulator"));
         assert!(msfs_docs.contains("SimConnect"));
-        
+
         let dcs_docs = manager.generate_user_docs("dcs").unwrap();
         assert!(dcs_docs.contains("DCS World"));
         assert!(dcs_docs.contains("Export.lua"));
@@ -879,23 +943,29 @@ mod tests {
         let create_action = FileAction::Create {
             content_description: "Test file".to_string(),
         };
-        assert_eq!(format_file_action(&create_action), "Create new file (Test file)");
-        
+        assert_eq!(
+            format_file_action(&create_action),
+            "Create new file (Test file)"
+        );
+
         let modify_action = FileAction::Modify {
             sections_modified: vec!["section1".to_string(), "section2".to_string()],
             modification_type: "append".to_string(),
         };
-        assert_eq!(format_file_action(&modify_action), "Modify existing file (append: section1, section2)");
+        assert_eq!(
+            format_file_action(&modify_action),
+            "Modify existing file (append: section1, section2)"
+        );
     }
 
     #[test]
     fn test_validation_report() {
         let mut report = ValidationReport::new();
-        
+
         report.add_error("Test error".to_string());
         report.add_warning("Test warning".to_string());
         report.add_info("Test info".to_string());
-        
+
         assert!(report.has_errors());
         assert_eq!(report.errors.len(), 1);
         assert_eq!(report.warnings.len(), 1);

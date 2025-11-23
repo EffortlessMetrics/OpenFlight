@@ -201,7 +201,7 @@ impl BusSnapshot {
     pub fn validate(&self) -> Result<(), BusTypeError> {
         // Kinematics validation is handled by the typed fields themselves
         // Additional cross-field validation can be added here
-        
+
         // Validate engine indices are unique
         let mut engine_indices = std::collections::HashSet::new();
         for engine in &self.engines {
@@ -215,7 +215,8 @@ impl BusSnapshot {
 
         // Validate helicopter data consistency
         if let Some(helo) = &self.helo
-            && (helo.pedals < -100.0 || helo.pedals > 100.0) {
+            && (helo.pedals < -100.0 || helo.pedals > 100.0)
+        {
             return Err(BusTypeError::OutOfRange {
                 field: "helo.pedals".to_string(),
                 value: helo.pedals,
@@ -305,8 +306,6 @@ impl Default for Navigation {
     }
 }
 
-
-
 /// Get current timestamp in nanoseconds since Unix epoch
 fn current_timestamp_ns() -> u64 {
     SystemTime::now()
@@ -331,10 +330,10 @@ mod tests {
     #[test]
     fn test_snapshot_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid snapshot should pass
         assert!(snapshot.validate().is_ok());
-        
+
         // Add duplicate engine indices
         snapshot.engines.push(EngineData {
             index: 0,
@@ -358,14 +357,14 @@ mod tests {
             oil_pressure: None,
             oil_temperature: None,
         });
-        
+
         assert!(snapshot.validate().is_err());
     }
 
     #[test]
     fn test_helo_data_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Dcs, AircraftId::new("UH1H"));
-        
+
         // Valid helicopter data
         snapshot.helo = Some(HeloData {
             nr: Percentage::new(100.0).unwrap(),
@@ -374,9 +373,9 @@ mod tests {
             collective: Percentage::new(50.0).unwrap(),
             pedals: 25.0,
         });
-        
+
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid pedal position
         snapshot.helo.as_mut().unwrap().pedals = 150.0;
         assert!(snapshot.validate().is_err());

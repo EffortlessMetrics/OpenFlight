@@ -3,8 +3,8 @@
 
 //! Replay configuration and settings
 
-use std::time::Duration;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 /// Configuration for replay operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,10 +77,10 @@ impl Default for ReplayConfig {
 impl Default for ToleranceConfig {
     fn default() -> Self {
         Self {
-            axis_epsilon: 1e-6,      // 1 micro-unit for axis outputs
-            ffb_epsilon: 1e-4,       // 0.1 mNm for FFB torque
+            axis_epsilon: 1e-6,             // 1 micro-unit for axis outputs
+            ffb_epsilon: 1e-4,              // 0.1 mNm for FFB torque
             timing_drift_ns_per_s: 100_000, // 0.1ms drift per second
-            max_timing_jitter_ns: 500_000,   // 0.5ms max jitter
+            max_timing_jitter_ns: 500_000,  // 0.5ms max jitter
         }
     }
 }
@@ -91,8 +91,8 @@ impl ToleranceConfig {
         Self {
             axis_epsilon: 1e-8,
             ffb_epsilon: 1e-6,
-            timing_drift_ns_per_s: 10_000,  // 10μs drift per second
-            max_timing_jitter_ns: 50_000,   // 50μs max jitter
+            timing_drift_ns_per_s: 10_000, // 10μs drift per second
+            max_timing_jitter_ns: 50_000,  // 50μs max jitter
         }
     }
 

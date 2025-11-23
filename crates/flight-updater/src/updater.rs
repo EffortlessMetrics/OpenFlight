@@ -105,33 +105,31 @@ impl UpdateManager {
     pub async fn new(config: UpdateConfig) -> crate::Result<Self> {
         // Create update directory
         fs::create_dir_all(&config.update_dir).await?;
-        
+
         // Initialize rollback manager
-        let mut rollback_manager = RollbackManager::new(
-            &config.update_dir,
-            config.max_rollback_versions,
-        )?;
+        let mut rollback_manager =
+            RollbackManager::new(&config.update_dir, config.max_rollback_versions)?;
         rollback_manager.initialize().await?;
-        
+
         // Initialize crash detector
         let startup_file = config.update_dir.join("startup_check");
         let crash_detector = StartupCrashDetector::new(
             startup_file,
             Duration::from_secs(config.startup_timeout_seconds),
         );
-        
+
         // Initialize delta applier
         let delta_applier = DeltaApplier::new(&config.update_dir)?;
-        
+
         // Create HTTP client with timeout
         let http_client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
             .user_agent(format!("flight-hub-updater/{}", config.current_version))
             .build()?;
-        
+
         let mut channel_manager = ChannelManager::new();
         channel_manager.switch_channel(config.channel)?;
-        
+
         Ok(Self {
             config,
             channel_manager,
@@ -141,20 +139,20 @@ impl UpdateManager {
             http_client,
         })
     }
-    
+
     /// Initialize update manager and handle startup crash detection
     pub async fn initialize(&mut self) -> crate::Result<Option<UpdateResult>> {
         tracing::info!("Initializing update manager");
-        
+
         // Mark startup attempt
         self.crash_detector.mark_startup_attempt().await?;
-        
+
         // Check for previous startup crash
         if self.crash_detector.check_previous_crash().await? {
             tracing::warn!("Previous startup crash detected, attempting rollback");
             return self.handle_startup_crash().await.map(Some);
         }
-        
+
         // Record current version if not already recorded
         if let Some(current) = self.rollback_manager.current_version() {
             if current.version != self.config.current_version {
@@ -163,42 +161,36 @@ impl UpdateManager {
         } else {
             self.record_current_version().await?;
         }
-        
+
         Ok(None)
     }
-    
+
     /// Mark successful startup (call after application is fully initialized)
     pub async fn mark_startup_success(&self) -> crate::Result<()> {
         self.crash_detector.mark_startup_success().await
     }
-    
+
     /// Check for available updates
     pub async fn check_for_updates(&self) -> crate::Result<Option<AvailableUpdate>> {
-        let channel_config = self.channel_manager
+        let channel_config = self
+            .channel_manager
             .get_config(self.config.channel)
-            .ok_or_else(|| crate::UpdateError::ChannelNotFound(
-                self.config.channel.to_string()
-            ))?;
-        
+            .ok_or_else(|| crate::UpdateError::ChannelNotFound(self.config.channel.to_string()))?;
+
         tracing::info!("Checking for updates on {} channel", self.config.channel);
-        
+
         // Construct update check URL
         let check_url = format!(
             "{}/check?current_version={}&channel={}",
-            channel_config.update_url,
-            self.config.current_version,
-            self.config.channel
+            channel_config.update_url, self.config.current_version, self.config.channel
         );
-        
+
         // Make HTTP request
-        let response = self.http_client
-            .get(&check_url)
-            .send()
-            .await?;
-        
+        let response = self.http_client.get(&check_url).send().await?;
+
         if response.status().is_success() {
             let update_info: Option<AvailableUpdate> = response.json().await?;
-            
+
             if let Some(ref update) = update_info {
                 tracing::info!(
                     "Update available: {} -> {} ({})",
@@ -209,43 +201,46 @@ impl UpdateManager {
             } else {
                 tracing::info!("No updates available");
             }
-            
+
             Ok(update_info)
         } else {
             tracing::warn!("Update check failed: {}", response.status());
             Ok(None)
         }
     }
-    
+
     /// Download and apply an update
     pub async fn apply_update(&mut self, update: &AvailableUpdate) -> crate::Result<UpdateResult> {
         let start_time = std::time::Instant::now();
-        
+
         tracing::info!("Applying update to version {}", update.version);
-        
+
         // Download update package
         let update_package = self.download_update(update).await?;
-        
+
         // Verify signatures
         self.verify_update_package(&update_package).await?;
-        
+
         // Apply delta patch
         let temp_install_dir = self.config.update_dir.join("temp_install");
         if temp_install_dir.exists() {
             fs::remove_dir_all(&temp_install_dir).await?;
         }
         fs::create_dir_all(&temp_install_dir).await?;
-        
+
         // Copy current installation to temp directory
-        self.copy_directory(&self.config.install_dir, &temp_install_dir).await?;
-        
+        self.copy_directory(&self.config.install_dir, &temp_install_dir)
+            .await?;
+
         // Apply patch to temp directory
-        self.delta_applier.apply_patch(
-            &update_package.delta_patch,
-            &self.config.install_dir,
-            &temp_install_dir,
-        ).await?;
-        
+        self.delta_applier
+            .apply_patch(
+                &update_package.delta_patch,
+                &self.config.install_dir,
+                &temp_install_dir,
+            )
+            .await?;
+
         // Record new version before replacing files
         let new_version_info = VersionInfo::new(
             update.version.clone(),
@@ -253,26 +248,28 @@ impl UpdateManager {
             update.channel,
             self.config.install_dir.clone(),
         );
-        
-        self.rollback_manager.record_version(new_version_info).await?;
-        
+
+        self.rollback_manager
+            .record_version(new_version_info)
+            .await?;
+
         // Replace installation atomically
         let backup_dir = self.config.update_dir.join("current_backup");
         if backup_dir.exists() {
             fs::remove_dir_all(&backup_dir).await?;
         }
-        
+
         // Move current installation to backup
         fs::rename(&self.config.install_dir, &backup_dir).await?;
-        
+
         // Move new installation to final location
         fs::rename(&temp_install_dir, &self.config.install_dir).await?;
-        
+
         // Clean up backup
         fs::remove_dir_all(&backup_dir).await?;
-        
+
         let duration = start_time.elapsed();
-        
+
         Ok(UpdateResult {
             updated: true,
             previous_version: Some(self.config.current_version.clone()),
@@ -283,15 +280,15 @@ impl UpdateManager {
             duration_seconds: duration.as_secs(),
         })
     }
-    
+
     /// Perform manual rollback to previous version
     pub async fn rollback_to_previous(&mut self) -> crate::Result<UpdateResult> {
         tracing::info!("Performing manual rollback");
-        
+
         let start_time = std::time::Instant::now();
         let previous_version = self.rollback_manager.rollback_to_previous().await?;
         let duration = start_time.elapsed();
-        
+
         Ok(UpdateResult {
             updated: true,
             previous_version: Some(self.config.current_version.clone()),
@@ -302,33 +299,33 @@ impl UpdateManager {
             duration_seconds: duration.as_secs(),
         })
     }
-    
+
     /// Get rollback targets
     pub fn get_rollback_targets(&self) -> Vec<&VersionInfo> {
         self.rollback_manager.rollback_targets()
     }
-    
+
     /// Switch update channel
     pub async fn switch_channel(&mut self, channel: Channel) -> crate::Result<()> {
         self.channel_manager.switch_channel(channel)?;
         self.config.channel = channel;
         Ok(())
     }
-    
+
     /// Handle startup crash by rolling back
     async fn handle_startup_crash(&mut self) -> crate::Result<UpdateResult> {
         tracing::error!("Handling startup crash with automatic rollback");
-        
+
         let start_time = std::time::Instant::now();
-        
+
         // Attempt rollback
         match self.rollback_manager.rollback_to_previous().await {
             Ok(previous_version) => {
                 // Clear startup check file
                 let _ = self.crash_detector.mark_startup_success().await;
-                
+
                 let duration = start_time.elapsed();
-                
+
                 Ok(UpdateResult {
                     updated: true,
                     previous_version: Some(self.config.current_version.clone()),
@@ -345,7 +342,7 @@ impl UpdateManager {
             }
         }
     }
-    
+
     /// Record current version in rollback manager
     async fn record_current_version(&mut self) -> crate::Result<()> {
         let version_info = VersionInfo::new(
@@ -354,85 +351,82 @@ impl UpdateManager {
             self.config.channel,
             self.config.install_dir.clone(),
         );
-        
+
         self.rollback_manager.record_version(version_info).await
     }
-    
+
     /// Download update package
     async fn download_update(&self, update: &AvailableUpdate) -> crate::Result<UpdatePackage> {
-        let channel_config = self.channel_manager
-            .get_config(update.channel)
-            .unwrap();
-        
+        let channel_config = self.channel_manager.get_config(update.channel).unwrap();
+
         let download_url = format!(
             "{}/download/{}/{}",
-            channel_config.update_url,
-            update.channel,
-            update.version
+            channel_config.update_url, update.channel, update.version
         );
-        
+
         tracing::info!("Downloading update from: {}", download_url);
-        
-        let response = self.http_client
-            .get(&download_url)
-            .send()
-            .await?;
-        
+
+        let response = self.http_client.get(&download_url).send().await?;
+
         if !response.status().is_success() {
-            return Err(crate::UpdateError::Network(
-                reqwest::Error::from(response.error_for_status().unwrap_err())
-            ));
+            return Err(crate::UpdateError::Network(reqwest::Error::from(
+                response.error_for_status().unwrap_err(),
+            )));
         }
-        
+
         let package_data = response.bytes().await?;
-        
+
         // Parse update package (simplified - would use proper format)
         let package: UpdatePackage = serde_json::from_slice(&package_data)?;
-        
+
         Ok(package)
     }
-    
+
     /// Verify update package signatures
     async fn verify_update_package(&self, package: &UpdatePackage) -> crate::Result<()> {
-        let channel_config = self.channel_manager
+        let channel_config = self
+            .channel_manager
             .get_config(self.config.channel)
             .unwrap();
-        
+
         let verifier = SignatureVerifier::new(&channel_config.public_key)?;
-        
+
         // Verify package signature
         let package_data = serde_json::to_vec(&package.delta_patch)?;
-        
-        if !verifier.verify_content(&package_data, &package.signature).await? {
+
+        if !verifier
+            .verify_content(&package_data, &package.signature)
+            .await?
+        {
             return Err(crate::UpdateError::InvalidSignature(
-                "Package signature verification failed".to_string()
+                "Package signature verification failed".to_string(),
             ));
         }
-        
+
         // Verify signature timestamp
         if !verifier.verify_timestamp(&package.signature, 24) {
             return Err(crate::UpdateError::InvalidSignature(
-                "Package signature is too old".to_string()
+                "Package signature is too old".to_string(),
             ));
         }
-        
+
         tracing::info!("Update package signature verified successfully");
         Ok(())
     }
-    
+
     /// Copy directory iteratively (converted from recursive to avoid async recursion)
     async fn copy_directory(&self, src: &Path, dst: &Path) -> crate::Result<()> {
         fs::create_dir_all(dst).await?;
-        
+
         let mut dirs_to_process = vec![(src.to_path_buf(), dst.to_path_buf())];
-        
+
         while let Some((current_src, current_dst)) = dirs_to_process.pop() {
             let mut entries = fs::read_dir(&current_src).await?;
-            
+
             while let Some(entry) = entries.next_entry().await? {
                 let src_path = entry.path();
                 let dst_path = current_dst.join(entry.file_name());
-                
+
                 if src_path.is_dir() {
                     fs::create_dir_all(&dst_path).await?;
                     dirs_to_process.push((src_path, dst_path));
@@ -441,7 +435,7 @@ impl UpdateManager {
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -465,13 +459,13 @@ mod tests {
     #[tokio::test]
     async fn test_update_manager_creation() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let config = UpdateConfig {
             install_dir: temp_dir.path().join("install"),
             update_dir: temp_dir.path().join("updates"),
             ..Default::default()
         };
-        
+
         let manager = UpdateManager::new(config).await;
         assert!(manager.is_ok());
     }
@@ -479,20 +473,20 @@ mod tests {
     #[tokio::test]
     async fn test_startup_crash_detection() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         let config = UpdateConfig {
             install_dir: temp_dir.path().join("install"),
             update_dir: temp_dir.path().join("updates"),
             startup_timeout_seconds: 1, // Very short for testing
             ..Default::default()
         };
-        
+
         let mut manager = UpdateManager::new(config).await.unwrap();
-        
+
         // Initialize should mark startup attempt
         let result = manager.initialize().await.unwrap();
         assert!(result.is_none()); // No crash on first run
-        
+
         // Mark success
         manager.mark_startup_success().await.unwrap();
     }
@@ -508,10 +502,10 @@ mod tests {
             update_size: 1024,
             duration_seconds: 30,
         };
-        
+
         let json = serde_json::to_string(&result).unwrap();
         let deserialized: UpdateResult = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(result.updated, deserialized.updated);
         assert_eq!(result.previous_version, deserialized.previous_version);
         assert_eq!(result.new_version, deserialized.new_version);

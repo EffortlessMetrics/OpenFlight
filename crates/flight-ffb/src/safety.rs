@@ -51,12 +51,12 @@ impl SafetyState {
             (SafetyState::SafeTorque, SafetyState::HighTorque) => true,
             (SafetyState::SafeTorque, SafetyState::Faulted) => true,
             (SafetyState::SafeTorque, SafetyState::SafeTorque) => true,
-            
+
             // From HighTorque
             (SafetyState::HighTorque, SafetyState::SafeTorque) => true,
             (SafetyState::HighTorque, SafetyState::Faulted) => true,
             (SafetyState::HighTorque, SafetyState::HighTorque) => true,
-            
+
             // From Faulted - only to SafeTorque after power cycle
             (SafetyState::Faulted, SafetyState::SafeTorque) => true,
             (SafetyState::Faulted, _) => false,
@@ -119,7 +119,11 @@ impl SafetyStateManager {
     }
 
     /// Attempt to transition to new state
-    pub fn transition_to(&mut self, target: SafetyState, reason: TransitionReason) -> Result<(), String> {
+    pub fn transition_to(
+        &mut self,
+        target: SafetyState,
+        reason: TransitionReason,
+    ) -> Result<(), String> {
         if !self.current_state.can_transition_to(target) {
             return Err(format!(
                 "Invalid transition from {:?} to {:?}",
@@ -176,7 +180,7 @@ mod tests {
     #[test]
     fn test_safety_state_torque_limits() {
         let device_max = 15.0;
-        
+
         assert_eq!(SafetyState::SafeTorque.max_torque_nm(device_max), 4.5); // 30% of 15
         assert_eq!(SafetyState::HighTorque.max_torque_nm(device_max), 15.0);
         assert_eq!(SafetyState::Faulted.max_torque_nm(device_max), 0.0);
@@ -187,11 +191,11 @@ mod tests {
         // Valid transitions from SafeTorque
         assert!(SafetyState::SafeTorque.can_transition_to(SafetyState::HighTorque));
         assert!(SafetyState::SafeTorque.can_transition_to(SafetyState::Faulted));
-        
+
         // Valid transitions from HighTorque
         assert!(SafetyState::HighTorque.can_transition_to(SafetyState::SafeTorque));
         assert!(SafetyState::HighTorque.can_transition_to(SafetyState::Faulted));
-        
+
         // Faulted can only go to SafeTorque
         assert!(SafetyState::Faulted.can_transition_to(SafetyState::SafeTorque));
         assert!(!SafetyState::Faulted.can_transition_to(SafetyState::HighTorque));
@@ -200,58 +204,71 @@ mod tests {
     #[test]
     fn test_safety_state_manager() {
         let mut manager = SafetyStateManager::new();
-        
+
         // Initial state should be SafeTorque
         assert_eq!(manager.current_state(), SafetyState::SafeTorque);
-        
+
         // Transition to HighTorque
-        manager.transition_to(
-            SafetyState::HighTorque,
-            TransitionReason::UserEnableHighTorque
-        ).unwrap();
+        manager
+            .transition_to(
+                SafetyState::HighTorque,
+                TransitionReason::UserEnableHighTorque,
+            )
+            .unwrap();
         assert_eq!(manager.current_state(), SafetyState::HighTorque);
-        
+
         // Transition to Faulted
-        manager.transition_to(
-            SafetyState::Faulted,
-            TransitionReason::FaultDetected { fault_type: "USB_STALL".to_string() }
-        ).unwrap();
+        manager
+            .transition_to(
+                SafetyState::Faulted,
+                TransitionReason::FaultDetected {
+                    fault_type: "USB_STALL".to_string(),
+                },
+            )
+            .unwrap();
         assert_eq!(manager.current_state(), SafetyState::Faulted);
-        
+
         // Invalid transition from Faulted to HighTorque
-        assert!(manager.transition_to(
-            SafetyState::HighTorque,
-            TransitionReason::UserEnableHighTorque
-        ).is_err());
-        
+        assert!(
+            manager
+                .transition_to(
+                    SafetyState::HighTorque,
+                    TransitionReason::UserEnableHighTorque
+                )
+                .is_err()
+        );
+
         // Valid transition from Faulted to SafeTorque
-        manager.transition_to(
-            SafetyState::SafeTorque,
-            TransitionReason::PowerCycleReset
-        ).unwrap();
+        manager
+            .transition_to(SafetyState::SafeTorque, TransitionReason::PowerCycleReset)
+            .unwrap();
         assert_eq!(manager.current_state(), SafetyState::SafeTorque);
     }
 
     #[test]
     fn test_transition_history() {
         let mut manager = SafetyStateManager::new();
-        
+
         // Should have initial transition
         assert_eq!(manager.get_transition_history().len(), 1);
-        
+
         // Add more transitions
-        manager.transition_to(
-            SafetyState::HighTorque,
-            TransitionReason::UserEnableHighTorque
-        ).unwrap();
-        
-        manager.transition_to(
-            SafetyState::SafeTorque,
-            TransitionReason::UserDisableHighTorque
-        ).unwrap();
-        
+        manager
+            .transition_to(
+                SafetyState::HighTorque,
+                TransitionReason::UserEnableHighTorque,
+            )
+            .unwrap();
+
+        manager
+            .transition_to(
+                SafetyState::SafeTorque,
+                TransitionReason::UserDisableHighTorque,
+            )
+            .unwrap();
+
         assert_eq!(manager.get_transition_history().len(), 3);
-        
+
         // Check last transition
         let last = manager.last_transition().unwrap();
         assert_eq!(last.to, SafetyState::SafeTorque);

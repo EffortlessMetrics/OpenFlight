@@ -6,12 +6,10 @@
 //! Main adapter that coordinates socket bridge, MP detection, and telemetry publishing.
 //! Enforces MP integrity contract and provides clear user messaging.
 
-use crate::mp_detection::{MpDetector, MpDetectionError, SessionType};
+use crate::mp_detection::{MpDetectionError, MpDetector, SessionType};
 use crate::socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
 use anyhow::Result;
-use flight_bus::{
-    snapshot::*, types::*, BusPublisher, BusSnapshot, PublisherError,
-};
+use flight_bus::{BusPublisher, BusSnapshot, PublisherError, snapshot::*, types::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -109,9 +107,9 @@ impl DcsAdapter {
     /// Start the DCS adapter
     pub async fn start(&mut self) -> Result<(), DcsAdapterError> {
         info!("Starting DCS adapter");
-        
+
         self.socket_bridge.start().await?;
-        
+
         info!("DCS adapter started, waiting for connections");
         Ok(())
     }
@@ -152,7 +150,11 @@ impl DcsAdapter {
     }
 
     /// Handle message from DCS
-    async fn handle_message(&mut self, addr: SocketAddr, message: DcsMessage) -> Result<(), DcsAdapterError> {
+    async fn handle_message(
+        &mut self,
+        addr: SocketAddr,
+        message: DcsMessage,
+    ) -> Result<(), DcsAdapterError> {
         match message {
             DcsMessage::Handshake { .. } => {
                 self.handle_handshake(addr, message).await?;
@@ -174,9 +176,13 @@ impl DcsAdapter {
     }
 
     /// Handle handshake from DCS
-    async fn handle_handshake(&mut self, addr: SocketAddr, message: DcsMessage) -> Result<(), DcsAdapterError> {
+    async fn handle_handshake(
+        &mut self,
+        addr: SocketAddr,
+        message: DcsMessage,
+    ) -> Result<(), DcsAdapterError> {
         self.socket_bridge.handshake(addr, message).await?;
-        
+
         if let Some((version, features)) = self.socket_bridge.get_connection_info(addr) {
             let connection = DcsConnection {
                 addr,
@@ -186,36 +192,52 @@ impl DcsAdapter {
                 aircraft: None,
                 session_type: SessionType::Unknown,
             };
-            
+
             self.active_connection = Some(connection);
-            info!("DCS handshake completed with {} (version {})", addr, version);
+            info!(
+                "DCS handshake completed with {} (version {})",
+                addr, version
+            );
         }
 
         Ok(())
     }
 
     /// Handle telemetry from DCS
-    async fn handle_telemetry(&mut self, addr: SocketAddr, message: DcsMessage) -> Result<(), DcsAdapterError> {
+    async fn handle_telemetry(
+        &mut self,
+        addr: SocketAddr,
+        message: DcsMessage,
+    ) -> Result<(), DcsAdapterError> {
         let (timestamp, aircraft_name, session_type_str, data) = match message {
-            DcsMessage::Telemetry { timestamp, aircraft, session_type, data } => {
-                (timestamp, aircraft, session_type, data)
-            }
+            DcsMessage::Telemetry {
+                timestamp,
+                aircraft,
+                session_type,
+                data,
+            } => (timestamp, aircraft, session_type, data),
             _ => return Ok(()),
         };
 
         // Update MP detector
         let mut session_data = data.clone();
-        session_data.insert("session_type".to_string(), serde_json::Value::String(session_type_str));
+        session_data.insert(
+            "session_type".to_string(),
+            serde_json::Value::String(session_type_str),
+        );
         self.mp_detector.update_session(&serde_json::Value::Object(
-            session_data.into_iter().collect()
+            session_data.into_iter().collect(),
         ))?;
 
         // Update connection state
         if let Some(connection) = &mut self.active_connection
-            && connection.addr == addr {
+            && connection.addr == addr
+        {
             connection.last_telemetry = Instant::now();
             connection.aircraft = Some(AircraftId::new(aircraft_name.clone()));
-            connection.session_type = self.mp_detector.current_session()
+            connection.session_type = self
+                .mp_detector
+                .current_session()
                 .map(|s| s.session_type)
                 .unwrap_or(SessionType::Unknown);
         }
@@ -235,28 +257,42 @@ impl DcsAdapter {
     /// Handle heartbeat from DCS
     async fn handle_heartbeat(&mut self, addr: SocketAddr) -> Result<(), DcsAdapterError> {
         if let Some(connection) = &mut self.active_connection
-            && connection.addr == addr {
+            && connection.addr == addr
+        {
             connection.last_telemetry = Instant::now();
         }
         Ok(())
     }
 
     /// Check feature restrictions for MP integrity
-    async fn check_feature_restrictions(&mut self, data: &HashMap<String, serde_json::Value>) -> Result<(), DcsAdapterError> {
+    async fn check_feature_restrictions(
+        &mut self,
+        data: &HashMap<String, serde_json::Value>,
+    ) -> Result<(), DcsAdapterError> {
         // Check for restricted data in MP sessions
         let restricted_fields = ["weapons", "countermeasures", "rwr_contacts"];
-        
+
         for field in &restricted_fields {
             if data.contains_key(*field)
-                && let Err(e) = self.mp_detector.validate_feature(&format!("telemetry_{}", field)) {
+                && let Err(e) = self
+                    .mp_detector
+                    .validate_feature(&format!("telemetry_{}", field))
+            {
                 // Log blocked feature (rate limited)
                 let now = Instant::now();
-                let last_notified = self.blocked_features_notified.get(*field).copied()
+                let last_notified = self
+                    .blocked_features_notified
+                    .get(*field)
+                    .copied()
                     .unwrap_or(Instant::now() - Duration::from_secs(60));
-                
+
                 if now.duration_since(last_notified) > Duration::from_secs(30) {
-                    warn!("Blocked restricted feature '{}' in MP session: {}", field, e);
-                    self.blocked_features_notified.insert(field.to_string(), now);
+                    warn!(
+                        "Blocked restricted feature '{}' in MP session: {}",
+                        field, e
+                    );
+                    self.blocked_features_notified
+                        .insert(field.to_string(), now);
                 }
             }
         }
@@ -273,19 +309,25 @@ impl DcsAdapter {
     ) -> Result<BusSnapshot, DcsAdapterError> {
         let aircraft = AircraftId::new(aircraft_name);
         let mut snapshot = BusSnapshot::new(SimId::Dcs, aircraft);
-        
+
         // Override timestamp from DCS
         snapshot.timestamp = timestamp * 1_000_000; // Convert ms to ns
 
         // Parse kinematics
         if let Some(ias) = data.get("ias").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.ias = ValidatedSpeed::new_knots(ias as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "ias".to_string() })?;
+            snapshot.kinematics.ias = ValidatedSpeed::new_knots(ias as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "ias".to_string(),
+                }
+            })?;
         }
 
         if let Some(tas) = data.get("tas").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.tas = ValidatedSpeed::new_knots(tas as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "tas".to_string() })?;
+            snapshot.kinematics.tas = ValidatedSpeed::new_knots(tas as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "tas".to_string(),
+                }
+            })?;
         }
 
         if let Some(altitude) = data.get("altitude_asl").and_then(|v| v.as_f64()) {
@@ -293,18 +335,29 @@ impl DcsAdapter {
         }
 
         if let Some(heading) = data.get("heading").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.heading = ValidatedAngle::new_degrees(heading as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "heading".to_string() })?;
+            snapshot.kinematics.heading =
+                ValidatedAngle::new_degrees(heading as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "heading".to_string(),
+                    }
+                })?;
         }
 
         if let Some(pitch) = data.get("pitch").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.pitch = ValidatedAngle::new_degrees(pitch as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "pitch".to_string() })?;
+            snapshot.kinematics.pitch =
+                ValidatedAngle::new_degrees(pitch as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "pitch".to_string(),
+                    }
+                })?;
         }
 
         if let Some(bank) = data.get("bank").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.bank = ValidatedAngle::new_degrees(bank as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "bank".to_string() })?;
+            snapshot.kinematics.bank = ValidatedAngle::new_degrees(bank as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "bank".to_string(),
+                }
+            })?;
         }
 
         if let Some(vs) = data.get("vertical_speed").and_then(|v| v.as_f64()) {
@@ -313,18 +366,26 @@ impl DcsAdapter {
 
         // Parse G-forces
         if let Some(g_force) = data.get("g_force").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.g_force = GForce::new(g_force as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "g_force".to_string() })?;
+            snapshot.kinematics.g_force =
+                GForce::new(g_force as f32).map_err(|_| DcsAdapterError::TelemetryParsing {
+                    field: "g_force".to_string(),
+                })?;
         }
 
         if let Some(g_lateral) = data.get("g_lateral").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.g_lateral = GForce::new(g_lateral as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "g_lateral".to_string() })?;
+            snapshot.kinematics.g_lateral =
+                GForce::new(g_lateral as f32).map_err(|_| DcsAdapterError::TelemetryParsing {
+                    field: "g_lateral".to_string(),
+                })?;
         }
 
         if let Some(g_longitudinal) = data.get("g_longitudinal").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.g_longitudinal = GForce::new(g_longitudinal as f32)
-                .map_err(|_| DcsAdapterError::TelemetryParsing { field: "g_longitudinal".to_string() })?;
+            snapshot.kinematics.g_longitudinal =
+                GForce::new(g_longitudinal as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "g_longitudinal".to_string(),
+                    }
+                })?;
         }
 
         // Parse position
@@ -343,16 +404,19 @@ impl DcsAdapter {
                     let engine = EngineData {
                         index,
                         running: true, // Assume running if data present
-                        rpm: engine_data.get("rpm")
+                        rpm: engine_data
+                            .get("rpm")
                             .and_then(|v| v.as_f64())
                             .and_then(|rpm| Percentage::new(rpm as f32).ok())
                             .unwrap_or_else(|| Percentage::new(0.0).unwrap()),
                         manifold_pressure: None,
-                        egt: engine_data.get("temperature")
+                        egt: engine_data
+                            .get("temperature")
                             .and_then(|v| v.as_f64())
                             .map(|t| t as f32),
                         cht: None,
-                        fuel_flow: engine_data.get("fuel_flow")
+                        fuel_flow: engine_data
+                            .get("fuel_flow")
                             .and_then(|v| v.as_f64())
                             .map(|f| f as f32),
                         oil_pressure: None,
@@ -371,15 +435,17 @@ impl DcsAdapter {
         // Rate limit publishing
         let now = Instant::now();
         let min_interval = Duration::from_secs_f32(1.0 / self.config.update_rate);
-        
+
         if now.duration_since(self.last_publish) < min_interval {
             return Ok(());
         }
 
         // Validate snapshot
-        snapshot.validate().map_err(|e| DcsAdapterError::TelemetryParsing { 
-            field: format!("snapshot validation: {}", e) 
-        })?;
+        snapshot
+            .validate()
+            .map_err(|e| DcsAdapterError::TelemetryParsing {
+                field: format!("snapshot validation: {}", e),
+            })?;
 
         // Publish to bus
         self.bus_publisher.publish(snapshot)?;
@@ -394,7 +460,7 @@ impl DcsAdapter {
         if let Some(connection) = &self.active_connection {
             let now = Instant::now();
             let timeout = self.config.connection_timeout;
-            
+
             if now.duration_since(connection.last_telemetry) > timeout {
                 warn!("DCS connection {} timed out", connection.addr);
                 self.active_connection = None;
@@ -444,7 +510,7 @@ mod tests {
     #[test]
     fn test_telemetry_conversion() {
         let adapter = create_test_adapter();
-        
+
         let data = json!({
             "ias": 150.0,
             "tas": 155.0,
@@ -455,13 +521,14 @@ mod tests {
             "g_force": 1.2,
             "latitude": 45.0,
             "longitude": -122.0
-        }).as_object().unwrap().clone();
+        })
+        .as_object()
+        .unwrap()
+        .clone();
 
-        let snapshot = adapter.convert_to_bus_snapshot(
-            1000,
-            "F-16C",
-            &data.into_iter().collect()
-        ).unwrap();
+        let snapshot = adapter
+            .convert_to_bus_snapshot(1000, "F-16C", &data.into_iter().collect())
+            .unwrap();
 
         assert_eq!(snapshot.sim, SimId::Dcs);
         assert_eq!(snapshot.aircraft.icao, "F-16C");
@@ -473,20 +540,20 @@ mod tests {
     #[test]
     fn test_feature_restriction_checking() {
         let mut adapter = create_test_adapter();
-        
+
         // Set up MP session
         let session_data = json!({
             "session_type": "MP",
             "server_name": "Test Server"
         });
-        
+
         adapter.mp_detector.update_session(&session_data).unwrap();
-        
+
         // Check blocked feature message
         let message = adapter.check_feature_blocked("telemetry_weapons");
         assert!(message.is_some());
         assert!(message.unwrap().contains("multiplayer integrity"));
-        
+
         // Check allowed feature
         let message = adapter.check_feature_blocked("telemetry_basic");
         assert!(message.is_none());

@@ -3,7 +3,7 @@
 
 //! Rules evaluator for zero-allocation runtime evaluation
 
-use flight_core::rules::{CompiledRules, BytecodeOp, BytecodeProgram, Action, CompareOp};
+use flight_core::rules::{Action, BytecodeOp, BytecodeProgram, CompareOp, CompiledRules};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -60,25 +60,28 @@ impl RulesEvaluator {
         // Pre-allocate stack
         self.stack.clear();
         self.stack.reserve(program.stack_size);
-        
+
         // Pre-allocate hysteresis state
         self.hysteresis_state.clear();
-        self.hysteresis_state.resize(program.hysteresis_bands.len(), HysteresisState {
-            current_value: 0.0,
-            threshold_value: 0.0,
-            band: 0.0,
-            last_triggered: false,
-        });
-        
+        self.hysteresis_state.resize(
+            program.hysteresis_bands.len(),
+            HysteresisState {
+                current_value: 0.0,
+                threshold_value: 0.0,
+                band: 0.0,
+                last_triggered: false,
+            },
+        );
+
         // Initialize hysteresis bands
         for (i, &band) in program.hysteresis_bands.iter().enumerate() {
             self.hysteresis_state[i].band = band;
         }
-        
+
         // Pre-allocate variable cache
         self.variable_cache.clear();
         self.variable_cache.resize(program.variable_map.len(), 0.0);
-        
+
         // Pre-allocate actions buffer
         self.actions_buffer.clear();
         self.actions_buffer.reserve(program.actions.len());
@@ -86,22 +89,26 @@ impl RulesEvaluator {
 
     /// Evaluate compiled rules against telemetry (zero-allocation after initialization)
     /// Returns reference to internal actions buffer to avoid allocation
-    pub fn evaluate(&mut self, rules: &CompiledRules, telemetry: &HashMap<String, f32>) -> &[Action] {
+    pub fn evaluate(
+        &mut self,
+        rules: &CompiledRules,
+        telemetry: &HashMap<String, f32>,
+    ) -> &[Action] {
         let now = Instant::now();
-        
+
         // Rate limiting: skip evaluation if called too frequently
         if now.duration_since(self.last_eval) < self.min_eval_interval {
             return &self.actions_buffer;
         }
-        
+
         self.last_eval = now;
-        
+
         // Clear actions buffer (reuse allocation)
         self.actions_buffer.clear();
-        
+
         // Update variable cache from telemetry
         self.update_variable_cache(&rules.bytecode, telemetry);
-        
+
         // Execute bytecode
         let mut vm = BytecodeVM {
             stack: &mut self.stack,
@@ -111,13 +118,17 @@ impl RulesEvaluator {
             program: &rules.bytecode,
             pc: 0,
         };
-        
+
         vm.execute();
-        
+
         &self.actions_buffer
     }
 
-    fn update_variable_cache(&mut self, program: &BytecodeProgram, telemetry: &HashMap<String, f32>) {
+    fn update_variable_cache(
+        &mut self,
+        program: &BytecodeProgram,
+        telemetry: &HashMap<String, f32>,
+    ) {
         for (var_name, &index) in &program.variable_map {
             let value = telemetry.get(var_name).copied().unwrap_or(0.0);
             if (index as usize) < self.variable_cache.len() {
@@ -160,10 +171,14 @@ impl<'a> BytecodeVM<'a> {
     fn execute(&mut self) {
         while self.pc < self.program.instructions.len() {
             let instruction = &self.program.instructions[self.pc];
-            
+
             match instruction {
                 BytecodeOp::LoadVar(index) => {
-                    let value = self.variable_cache.get(*index as usize).copied().unwrap_or(0.0);
+                    let value = self
+                        .variable_cache
+                        .get(*index as usize)
+                        .copied()
+                        .unwrap_or(0.0);
                     self.stack.push(value);
                 }
                 BytecodeOp::LoadConst(value) => {
@@ -181,7 +196,8 @@ impl<'a> BytecodeVM<'a> {
                     if self.stack.len() >= 2 {
                         let threshold = self.stack.pop().unwrap();
                         let current = self.stack.pop().unwrap();
-                        let result = self.apply_hysteresis(*hyst_index as usize, current, threshold);
+                        let result =
+                            self.apply_hysteresis(*hyst_index as usize, current, threshold);
                         self.stack.push(if result { 1.0 } else { 0.0 });
                     }
                 }
@@ -209,10 +225,11 @@ impl<'a> BytecodeVM<'a> {
                 }
                 BytecodeOp::JumpFalse(addr) => {
                     if let Some(condition) = self.stack.pop()
-                        && condition == 0.0 {
-                            self.pc = *addr as usize;
-                            continue;
-                        }
+                        && condition == 0.0
+                    {
+                        self.pc = *addr as usize;
+                        continue;
+                    }
                 }
                 BytecodeOp::Jump(addr) => {
                     self.pc = *addr as usize;
@@ -227,7 +244,7 @@ impl<'a> BytecodeVM<'a> {
                     // No operation
                 }
             }
-            
+
             self.pc += 1;
         }
     }
@@ -265,8 +282,6 @@ impl<'a> BytecodeVM<'a> {
         state.last_triggered = new_triggered;
         new_triggered
     }
-
-
 }
 
 impl Default for RulesEvaluator {
@@ -278,22 +293,20 @@ impl Default for RulesEvaluator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_core::rules::{RulesSchema, Rule, RuleDefaults};
+    use flight_core::rules::{Rule, RuleDefaults, RulesSchema};
 
     #[test]
     fn test_bytecode_evaluation() {
         let mut evaluator = RulesEvaluator::new();
-        
+
         // Create a simple rule
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear_down".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 
@@ -307,7 +320,7 @@ mod tests {
 
         let actions = evaluator.evaluate(&compiled, &telemetry);
         assert_eq!(actions.len(), 1);
-        
+
         // Test with gear up
         telemetry.insert("gear_down".to_string(), 0.0);
         let actions = evaluator.evaluate(&compiled, &telemetry);
@@ -317,20 +330,18 @@ mod tests {
     #[test]
     fn test_hysteresis_bytecode() {
         let mut evaluator = RulesEvaluator::new();
-        
+
         // Create rule with hysteresis
         let mut hysteresis = HashMap::new();
         hysteresis.insert("aoa".to_string(), 2.0);
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "aoa > 10".to_string(),
-                    do_action: "led.indexer.blink(rate_hz=6)".to_string(),
-                    action: "led.indexer.blink(rate_hz=6)".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "aoa > 10".to_string(),
+                do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                action: "led.indexer.blink(rate_hz=6)".to_string(),
+            }],
             defaults: Some(RuleDefaults {
                 hysteresis: Some(hysteresis),
             }),
@@ -341,7 +352,7 @@ mod tests {
 
         // Test hysteresis behavior
         let mut telemetry = HashMap::new();
-        
+
         // Start below threshold
         telemetry.insert("aoa".to_string(), 9.0);
         let actions = evaluator.evaluate(&compiled, &telemetry);
@@ -367,16 +378,14 @@ mod tests {
     fn test_rate_limiting() {
         let mut evaluator = RulesEvaluator::new();
         evaluator.set_min_eval_interval(std::time::Duration::from_millis(50));
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear_down".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 
@@ -404,16 +413,14 @@ mod tests {
     fn test_zero_allocation_constraint() {
         // This test verifies that after initialization, no allocations occur
         let mut evaluator = RulesEvaluator::new();
-        
+
         let rules_schema = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
-            rules: vec![
-                Rule {
-                    when: "gear_down".to_string(),
-                    do_action: "led.panel('GEAR').on()".to_string(),
-                    action: "led.panel('GEAR').on()".to_string(),
-                }
-            ],
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
             defaults: None,
         };
 

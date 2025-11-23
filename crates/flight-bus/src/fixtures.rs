@@ -58,7 +58,7 @@ impl SnapshotFixture {
     /// Generate a snapshot for the current time offset
     pub fn generate(&self) -> BusSnapshot {
         let mut snapshot = BusSnapshot::new(self.sim, self.aircraft.clone());
-        
+
         match self.scenario {
             ScenarioType::ColdAndDark => self.apply_cold_and_dark(&mut snapshot),
             ScenarioType::GroundIdle => self.apply_ground_idle(&mut snapshot),
@@ -68,7 +68,7 @@ impl SnapshotFixture {
             ScenarioType::Emergency => self.apply_emergency(&mut snapshot),
             ScenarioType::HeloHover | ScenarioType::Hover => self.apply_helo_hover(&mut snapshot),
         }
-        
+
         snapshot
     }
 
@@ -153,7 +153,7 @@ impl SnapshotFixture {
 
     fn apply_ground_idle(&self, snapshot: &mut BusSnapshot) {
         self.apply_cold_and_dark(snapshot);
-        
+
         // Engine running at idle
         snapshot.engines[0] = EngineData {
             index: 0,
@@ -181,11 +181,11 @@ impl SnapshotFixture {
 
     fn apply_takeoff(&self, snapshot: &mut BusSnapshot) {
         let t = self.time_seconds();
-        
+
         // Simulate takeoff roll and rotation
         let ground_speed = (t * 5.0).min(80.0); // Accelerate to 80 knots
         let ias = ground_speed + 2.0; // Slight difference due to wind
-        
+
         snapshot.kinematics = Kinematics {
             ias: ValidatedSpeed::new_knots(ias).unwrap(),
             tas: ValidatedSpeed::new_knots(ias + 3.0).unwrap(),
@@ -235,8 +235,14 @@ impl SnapshotFixture {
             fuel: {
                 let mut fuel = HashMap::new();
                 let consumption = (t * 0.1).min(5.0); // Fuel consumption
-                fuel.insert("left".to_string(), Percentage::new(100.0 - consumption).unwrap());
-                fuel.insert("right".to_string(), Percentage::new(100.0 - consumption).unwrap());
+                fuel.insert(
+                    "left".to_string(),
+                    Percentage::new(100.0 - consumption).unwrap(),
+                );
+                fuel.insert(
+                    "right".to_string(),
+                    Percentage::new(100.0 - consumption).unwrap(),
+                );
                 fuel
             },
         };
@@ -261,7 +267,7 @@ impl SnapshotFixture {
 
     fn apply_cruise(&self, snapshot: &mut BusSnapshot) {
         let t = self.time_seconds();
-        
+
         snapshot.kinematics = Kinematics {
             ias: ValidatedSpeed::new_knots(120.0).unwrap(),
             tas: ValidatedSpeed::new_knots(135.0).unwrap(), // Higher TAS at altitude
@@ -302,8 +308,14 @@ impl SnapshotFixture {
             fuel: {
                 let mut fuel = HashMap::new();
                 let consumption = 20.0 + t * 0.05; // Gradual fuel consumption
-                fuel.insert("left".to_string(), Percentage::new((100.0 - consumption).max(0.0)).unwrap());
-                fuel.insert("right".to_string(), Percentage::new((100.0 - consumption).max(0.0)).unwrap());
+                fuel.insert(
+                    "left".to_string(),
+                    Percentage::new((100.0 - consumption).max(0.0)).unwrap(),
+                );
+                fuel.insert(
+                    "right".to_string(),
+                    Percentage::new((100.0 - consumption).max(0.0)).unwrap(),
+                );
                 fuel
             },
         };
@@ -343,11 +355,11 @@ impl SnapshotFixture {
 
     fn apply_approach(&self, snapshot: &mut BusSnapshot) {
         let t = self.time_seconds();
-        
+
         // Descending approach
         let altitude = (3000.0 - t * 50.0).max(1000.0);
         let ias = 85.0 + (t * 0.5).min(10.0); // Gradually slow down
-        
+
         snapshot.kinematics = Kinematics {
             ias: ValidatedSpeed::new_knots(ias).unwrap(),
             tas: ValidatedSpeed::new_knots(ias + 2.0).unwrap(),
@@ -413,7 +425,7 @@ impl SnapshotFixture {
     fn apply_emergency(&self, snapshot: &mut BusSnapshot) {
         // Engine failure scenario
         self.apply_cruise(snapshot);
-        
+
         // Failed engine
         snapshot.engines[0] = EngineData {
             index: 0,
@@ -435,7 +447,7 @@ impl SnapshotFixture {
 
     fn apply_helo_hover(&self, snapshot: &mut BusSnapshot) {
         let t = self.time_seconds();
-        
+
         // Hovering helicopter with small oscillations
         snapshot.kinematics = Kinematics {
             ias: ValidatedSpeed::new_knots(0.0).unwrap(),
@@ -512,23 +524,40 @@ impl SnapshotValidator {
         if a.sim != b.sim {
             return Err(format!("Sim mismatch: {:?} != {:?}", a.sim, b.sim));
         }
-        
+
         if a.aircraft != b.aircraft {
-            return Err(format!("Aircraft mismatch: {:?} != {:?}", a.aircraft, b.aircraft));
+            return Err(format!(
+                "Aircraft mismatch: {:?} != {:?}",
+                a.aircraft, b.aircraft
+            ));
         }
 
         // Check kinematics within tolerance
-        self.validate_speed_tolerance(a.kinematics.ias.to_knots(), b.kinematics.ias.to_knots(), "IAS")?;
-        self.validate_angle_tolerance(a.kinematics.heading.to_degrees(), b.kinematics.heading.to_degrees(), "heading")?;
-        self.validate_g_force_tolerance(a.kinematics.g_force.value(), b.kinematics.g_force.value(), "g_force")?;
+        self.validate_speed_tolerance(
+            a.kinematics.ias.to_knots(),
+            b.kinematics.ias.to_knots(),
+            "IAS",
+        )?;
+        self.validate_angle_tolerance(
+            a.kinematics.heading.to_degrees(),
+            b.kinematics.heading.to_degrees(),
+            "heading",
+        )?;
+        self.validate_g_force_tolerance(
+            a.kinematics.g_force.value(),
+            b.kinematics.g_force.value(),
+            "g_force",
+        )?;
 
         Ok(())
     }
 
     fn validate_speed_tolerance(&self, a: f32, b: f32, field: &str) -> Result<(), String> {
         if (a - b).abs() > self.tolerance.speed_knots {
-            Err(format!("{} tolerance exceeded: {} vs {} (tolerance: {})", 
-                       field, a, b, self.tolerance.speed_knots))
+            Err(format!(
+                "{} tolerance exceeded: {} vs {} (tolerance: {})",
+                field, a, b, self.tolerance.speed_knots
+            ))
         } else {
             Ok(())
         }
@@ -536,8 +565,10 @@ impl SnapshotValidator {
 
     fn validate_angle_tolerance(&self, a: f32, b: f32, field: &str) -> Result<(), String> {
         if (a - b).abs() > self.tolerance.angle_degrees {
-            Err(format!("{} tolerance exceeded: {} vs {} (tolerance: {})", 
-                       field, a, b, self.tolerance.angle_degrees))
+            Err(format!(
+                "{} tolerance exceeded: {} vs {} (tolerance: {})",
+                field, a, b, self.tolerance.angle_degrees
+            ))
         } else {
             Ok(())
         }
@@ -545,8 +576,10 @@ impl SnapshotValidator {
 
     fn validate_g_force_tolerance(&self, a: f32, b: f32, field: &str) -> Result<(), String> {
         if (a - b).abs() > self.tolerance.g_force {
-            Err(format!("{} tolerance exceeded: {} vs {} (tolerance: {})", 
-                       field, a, b, self.tolerance.g_force))
+            Err(format!(
+                "{} tolerance exceeded: {} vs {} (tolerance: {})",
+                field, a, b, self.tolerance.g_force
+            ))
         } else {
             Ok(())
         }
@@ -559,9 +592,13 @@ mod tests {
 
     #[test]
     fn test_fixture_cold_and_dark() {
-        let fixture = SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::ColdAndDark);
+        let fixture = SnapshotFixture::new(
+            SimId::Msfs,
+            AircraftId::new("C172"),
+            ScenarioType::ColdAndDark,
+        );
         let snapshot = fixture.generate();
-        
+
         assert_eq!(snapshot.sim, SimId::Msfs);
         assert_eq!(snapshot.aircraft.icao, "C172");
         assert_eq!(snapshot.kinematics.ias.value(), 0.0);
@@ -571,19 +608,20 @@ mod tests {
 
     #[test]
     fn test_fixture_takeoff_progression() {
-        let mut fixture = SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Takeoff);
-        
+        let mut fixture =
+            SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Takeoff);
+
         // Initial state
         let snapshot1 = fixture.generate();
         assert_eq!(snapshot1.kinematics.ias.value(), 2.0); // 0 * 5.0 + 2.0 = 2.0 (wind effect)
         assert_eq!(snapshot1.kinematics.aoa.to_degrees(), 2.0); // Ground roll AoA
         assert!(snapshot1.config.gear.all_down());
-        
+
         // After 10 seconds
         let snapshot2 = fixture.advance(Duration::from_secs(10));
         assert!(snapshot2.kinematics.ias.value() > 0.0);
         assert!(snapshot2.config.gear.all_down());
-        
+
         // After 20 seconds (gear should be up)
         let snapshot3 = fixture.advance(Duration::from_secs(10));
         assert!(snapshot3.kinematics.ias.value() > snapshot2.kinematics.ias.value());
@@ -593,12 +631,13 @@ mod tests {
 
     #[test]
     fn test_helo_hover_fixture() {
-        let fixture = SnapshotFixture::new(SimId::Dcs, AircraftId::new("UH1H"), ScenarioType::HeloHover);
+        let fixture =
+            SnapshotFixture::new(SimId::Dcs, AircraftId::new("UH1H"), ScenarioType::HeloHover);
         let snapshot = fixture.generate();
-        
+
         assert_eq!(snapshot.sim, SimId::Dcs);
         assert!(snapshot.helo.is_some());
-        
+
         let helo = snapshot.helo.unwrap();
         assert_eq!(helo.nr.value(), 100.0);
         assert_eq!(helo.np.value(), 100.0);
@@ -607,27 +646,42 @@ mod tests {
     #[test]
     fn test_snapshot_validator() {
         let validator = SnapshotValidator::new(ValidationTolerance::default());
-        
-        let snapshot1 = SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Cruise).generate();
-        let snapshot2 = SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Cruise).generate();
-        
+
+        let snapshot1 =
+            SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Cruise)
+                .generate();
+        let snapshot2 =
+            SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Cruise)
+                .generate();
+
         // Same scenario should validate
-        assert!(validator.validate_consistency(&snapshot1, &snapshot2).is_ok());
-        
+        assert!(
+            validator
+                .validate_consistency(&snapshot1, &snapshot2)
+                .is_ok()
+        );
+
         // Different aircraft should fail
-        let snapshot3 = SnapshotFixture::new(SimId::Msfs, AircraftId::new("A320"), ScenarioType::Cruise).generate();
-        assert!(validator.validate_consistency(&snapshot1, &snapshot3).is_err());
+        let snapshot3 =
+            SnapshotFixture::new(SimId::Msfs, AircraftId::new("A320"), ScenarioType::Cruise)
+                .generate();
+        assert!(
+            validator
+                .validate_consistency(&snapshot1, &snapshot3)
+                .is_err()
+        );
     }
 
     #[test]
     fn test_fixture_time_advancement() {
-        let mut fixture = SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Takeoff);
-        
+        let mut fixture =
+            SnapshotFixture::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Takeoff);
+
         assert_eq!(fixture.time_seconds(), 0.0);
-        
+
         fixture.advance(Duration::from_secs(5));
         assert_eq!(fixture.time_seconds(), 5.0);
-        
+
         fixture.reset();
         assert_eq!(fixture.time_seconds(), 0.0);
     }

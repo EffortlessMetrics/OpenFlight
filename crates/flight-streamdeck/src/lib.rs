@@ -19,12 +19,12 @@ pub mod profiles;
 pub mod server;
 pub mod verify;
 
-pub use api::{StreamDeckApi, ApiError};
-pub use compatibility::{VersionCompatibility, CompatibilityMatrix, VersionRange};
-pub use plugin::{StreamDeckPlugin, PluginConfig, PluginError};
-pub use profiles::{ProfileManager, SampleProfiles, AircraftType};
-pub use server::{StreamDeckServer, ServerConfig, ServerError};
-pub use verify::{VerifyTest, VerifyResult, EventRoundTrip};
+pub use api::{ApiError, StreamDeckApi};
+pub use compatibility::{CompatibilityMatrix, VersionCompatibility, VersionRange};
+pub use plugin::{PluginConfig, PluginError, StreamDeckPlugin};
+pub use profiles::{AircraftType, ProfileManager, SampleProfiles};
+pub use server::{ServerConfig, ServerError, StreamDeckServer};
+pub use verify::{EventRoundTrip, VerifyResult, VerifyTest};
 
 /// StreamDeck app version information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -60,17 +60,32 @@ impl AppVersion {
             return Err(VersionError::InvalidFormat(version_str.to_string()));
         }
 
-        let major = parts[0].parse().map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
-        let minor = parts[1].parse().map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
-        let patch = parts[2].parse().map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
-        
+        let major = parts[0]
+            .parse()
+            .map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
+        let minor = parts[1]
+            .parse()
+            .map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
+        let patch = parts[2]
+            .parse()
+            .map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?;
+
         let build = if parts.len() == 4 {
-            Some(parts[3].parse().map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?)
+            Some(
+                parts[3]
+                    .parse()
+                    .map_err(|_| VersionError::InvalidFormat(version_str.to_string()))?,
+            )
         } else {
             None
         };
 
-        Ok(Self { major, minor, patch, build })
+        Ok(Self {
+            major,
+            minor,
+            patch,
+            build,
+        })
     }
 }
 
@@ -89,14 +104,14 @@ impl std::fmt::Display for AppVersion {
 pub enum VersionError {
     #[error("Invalid version format: {0}")]
     InvalidFormat(String),
-    
+
     #[error("Version not supported: {version}, supported range: {min_version} - {max_version}")]
     NotSupported {
         version: String,
         min_version: String,
         max_version: String,
     },
-    
+
     #[error("Version compatibility check failed: {0}")]
     CompatibilityCheckFailed(String),
 }
@@ -114,7 +129,7 @@ impl FlightStreamDeck {
     pub fn new() -> Result<Self> {
         let server_config = ServerConfig::default();
         let plugin_config = PluginConfig::default();
-        
+
         Ok(Self {
             server: StreamDeckServer::new(server_config)?,
             plugin: StreamDeckPlugin::new(plugin_config)?,
@@ -137,13 +152,13 @@ impl FlightStreamDeck {
     pub async fn start(&mut self) -> Result<()> {
         // Load sample profiles
         self.profile_manager.load_sample_profiles()?;
-        
+
         // Start the web API server
         self.server.start().await?;
-        
+
         // Initialize the plugin
         self.plugin.initialize().await?;
-        
+
         tracing::info!("StreamDeck integration started successfully");
         Ok(())
     }
@@ -152,13 +167,16 @@ impl FlightStreamDeck {
     pub async fn stop(&mut self) -> Result<()> {
         self.plugin.shutdown().await?;
         self.server.stop().await?;
-        
+
         tracing::info!("StreamDeck integration stopped");
         Ok(())
     }
 
     /// Check version compatibility with StreamDeck app
-    pub fn check_version_compatibility(&self, app_version: &AppVersion) -> Result<bool, VersionError> {
+    pub fn check_version_compatibility(
+        &self,
+        app_version: &AppVersion,
+    ) -> Result<bool, VersionError> {
         self.compatibility.is_compatible(app_version)
     }
 

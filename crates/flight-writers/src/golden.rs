@@ -51,20 +51,20 @@ impl GoldenFileTester {
             if entry.file_type()?.is_dir() {
                 let test_name = entry.file_name().to_string_lossy().to_string();
                 let test_case = self.run_test_case(sim, &test_name, &entry.path()).await?;
-                
+
                 // Extract version and area information
                 if let Some(version) = self.extract_version_from_test_name(&test_name) {
                     if !all_versions.contains(&version) {
                         all_versions.push(version);
                     }
                 }
-                
+
                 if let Some(area) = self.extract_area_from_test_name(&test_name) {
                     if !all_areas.contains(&area) {
                         all_areas.push(area);
                     }
                 }
-                
+
                 test_cases.push(test_case);
             }
         }
@@ -106,10 +106,14 @@ impl GoldenFileTester {
         }
         fs::create_dir_all(&actual_file)?;
 
-        let success = match self.execute_test_case(&input_file, &expected_file, &actual_file).await {
+        let success = match self
+            .execute_test_case(&input_file, &expected_file, &actual_file)
+            .await
+        {
             Ok(()) => {
                 // Compare expected vs actual
-                self.compare_directories(&expected_file, &actual_file).await?
+                self.compare_directories(&expected_file, &actual_file)
+                    .await?
             }
             Err(e) => {
                 warn!("Test case {} failed: {}", test_name, e);
@@ -140,17 +144,19 @@ impl GoldenFileTester {
         actual_file: &Path,
     ) -> Result<()> {
         // Read the writer configuration
-        let config_content = fs::read_to_string(input_file)
-            .context("Failed to read input configuration")?;
-        
+        let config_content =
+            fs::read_to_string(input_file).context("Failed to read input configuration")?;
+
         let config: WriterConfig = serde_json::from_str(&config_content)
             .context("Failed to parse writer configuration")?;
 
         // Create a temporary applier that writes to the actual output directory
         let applier = TestApplier::new(actual_file);
-        
+
         // Apply the configuration
-        applier.apply_test_config(&config).await
+        applier
+            .apply_test_config(&config)
+            .await
             .context("Failed to apply test configuration")?;
 
         Ok(())
@@ -200,7 +206,7 @@ impl GoldenFileTester {
         for entry in fs::read_dir(current_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_file() {
                 let rel_path = path.strip_prefix(base_dir)?;
                 files.insert(rel_path.to_path_buf(), path);
@@ -213,10 +219,9 @@ impl GoldenFileTester {
 
     /// Compare two files for equality
     async fn compare_files(&self, expected: &Path, actual: &Path) -> Result<bool> {
-        let expected_content = fs::read_to_string(expected)
-            .context("Failed to read expected file")?;
-        let actual_content = fs::read_to_string(actual)
-            .context("Failed to read actual file")?;
+        let expected_content =
+            fs::read_to_string(expected).context("Failed to read expected file")?;
+        let actual_content = fs::read_to_string(actual).context("Failed to read actual file")?;
 
         // Normalize line endings for comparison
         let expected_normalized = expected_content.replace("\r\n", "\n");
@@ -228,7 +233,7 @@ impl GoldenFileTester {
     /// Generate a diff between expected and actual directories
     async fn generate_diff(&self, expected: &Path, actual: &Path) -> Result<String> {
         let mut diff_lines = Vec::new();
-        
+
         let expected_files = self.collect_files_recursive(expected)?;
         let actual_files = self.collect_files_recursive(actual)?;
 
@@ -251,16 +256,16 @@ impl GoldenFileTester {
             if let Some(actual_path) = actual_files.get(rel_path) {
                 if !self.compare_files(expected_path, actual_path).await? {
                     diff_lines.push(format!("~ Modified file: {}", rel_path.display()));
-                    
+
                     // Add a simple content diff
                     let expected_content = fs::read_to_string(expected_path)?;
                     let actual_content = fs::read_to_string(actual_path)?;
-                    
+
                     diff_lines.push("  Expected:".to_string());
                     for line in expected_content.lines().take(5) {
                         diff_lines.push(format!("    {}", line));
                     }
-                    
+
                     diff_lines.push("  Actual:".to_string());
                     for line in actual_content.lines().take(5) {
                         diff_lines.push(format!("    {}", line));
@@ -297,14 +302,21 @@ impl GoldenFileTester {
     /// Extract area information from test name
     fn extract_area_from_test_name(&self, test_name: &str) -> Option<String> {
         // Common configuration areas
-        let areas = ["autopilot", "electrical", "fuel", "hydraulics", "engine", "avionics"];
-        
+        let areas = [
+            "autopilot",
+            "electrical",
+            "fuel",
+            "hydraulics",
+            "engine",
+            "avionics",
+        ];
+
         for area in &areas {
             if test_name.to_lowercase().contains(area) {
                 return Some(area.to_string());
             }
         }
-        
+
         None
     }
 
@@ -314,7 +326,7 @@ impl GoldenFileTester {
         // In a real implementation, you'd want to define what constitutes full coverage
         let total_expected_versions = 5; // Example: support last 5 versions
         let total_expected_areas = 10; // Example: 10 configuration areas
-        
+
         let version_coverage = versions.len() as f64 / total_expected_versions as f64;
         let area_coverage = areas.len() as f64 / total_expected_areas as f64;
         let overall_coverage = (version_coverage + area_coverage) / 2.0 * 100.0;
@@ -360,7 +372,7 @@ impl TestApplier {
         // Create a mock file structure and apply diffs to it
         for diff in &config.diffs {
             let output_file = self.output_dir.join(&diff.file);
-            
+
             // Ensure parent directory exists
             if let Some(parent) = output_file.parent() {
                 fs::create_dir_all(parent)?;
@@ -403,43 +415,45 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let golden_dir = temp_dir.path().join("golden");
         let test_dir = golden_dir.join("msfs").join("test_case_v1.36.0_autopilot");
-        
+
         fs::create_dir_all(&test_dir).unwrap();
-        
+
         // Create input configuration
         let input_config = WriterConfig {
             schema: "flight.writer/1".to_string(),
             sim: SimulatorType::MSFS,
             version: "1.36.0".to_string(),
             description: Some("Test configuration".to_string()),
-            diffs: vec![
-                FileDiff {
-                    file: PathBuf::from("test.ini"),
-                    operation: DiffOperation::IniSection {
-                        section: "AUTOPILOT".to_string(),
-                        changes: {
-                            let mut changes = HashMap::new();
-                            changes.insert("enabled".to_string(), "1".to_string());
-                            changes
-                        },
+            diffs: vec![FileDiff {
+                file: PathBuf::from("test.ini"),
+                operation: DiffOperation::IniSection {
+                    section: "AUTOPILOT".to_string(),
+                    changes: {
+                        let mut changes = HashMap::new();
+                        changes.insert("enabled".to_string(), "1".to_string());
+                        changes
                     },
-                    backup: true,
                 },
-            ],
+                backup: true,
+            }],
             verify_scripts: vec![],
         };
-        
+
         let input_file = test_dir.join("input.json");
-        fs::write(&input_file, serde_json::to_string_pretty(&input_config).unwrap()).unwrap();
-        
+        fs::write(
+            &input_file,
+            serde_json::to_string_pretty(&input_config).unwrap(),
+        )
+        .unwrap();
+
         // Create expected output
         let expected_dir = test_dir.join("expected");
         fs::create_dir_all(&expected_dir).unwrap();
         fs::write(expected_dir.join("test.ini"), "[AUTOPILOT]\nenabled=1\n").unwrap();
-        
+
         let tester = GoldenFileTester::new(&golden_dir);
         let result = tester.test_simulator(SimulatorType::MSFS).await.unwrap();
-        
+
         assert!(result.success);
         assert_eq!(result.test_cases.len(), 1);
         assert!(result.test_cases[0].success);

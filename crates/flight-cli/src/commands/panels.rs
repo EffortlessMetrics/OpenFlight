@@ -3,11 +3,11 @@
 
 //! Panel management commands
 
+use crate::client_manager::ClientManager;
 use crate::commands::PanelAction;
 use crate::output::OutputFormat;
-use crate::client_manager::ClientManager;
-use flight_ipc::{ListDevicesRequest, DeviceType};
-use serde_json::{json, Value};
+use flight_ipc::{DeviceType, ListDevicesRequest};
+use serde_json::{Value, json};
 
 pub async fn execute(
     action: &PanelAction,
@@ -16,8 +16,18 @@ pub async fn execute(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
-        PanelAction::Verify { device_id, extended } => {
-            verify_panels(device_id.as_deref(), *extended, output_format, verbose, client_manager).await
+        PanelAction::Verify {
+            device_id,
+            extended,
+        } => {
+            verify_panels(
+                device_id.as_deref(),
+                *extended,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
         }
         PanelAction::Status { device_id } => {
             panel_status(device_id.as_deref(), output_format, verbose, client_manager).await
@@ -33,36 +43,37 @@ async fn verify_panels(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     let mut client = client_manager.get_client().await?;
-    
+
     // Get panel devices
     let request = ListDevicesRequest {
         include_disconnected: false,
         filter_types: vec![DeviceType::Panel as i32, DeviceType::Streamdeck as i32],
     };
-    
+
     let response = client.list_devices(request).await?;
-    
+
     let panels_to_verify: Vec<_> = if let Some(device_id) = device_id {
-        response.devices
+        response
+            .devices
             .into_iter()
             .filter(|d| d.id == device_id)
             .collect()
     } else {
         response.devices
     };
-    
+
     if panels_to_verify.is_empty() {
         let message = if device_id.is_some() {
             format!("Panel device '{}' not found", device_id.unwrap())
         } else {
             "No panel devices found".to_string()
         };
-        
+
         return Err(anyhow::anyhow!("{}", message));
     }
-    
+
     let mut verification_results = Vec::new();
-    
+
     for panel in panels_to_verify {
         // Simulate panel verification (would require actual panel verification RPC)
         let mut panel_result = json!({
@@ -71,13 +82,13 @@ async fn verify_panels(
             "device_type": device_type_to_string(panel.r#type()),
             "verification_status": "pass", // Placeholder
             "led_response_time_ms": 15.2,  // Placeholder
-            "tests_performed": if extended { 
+            "tests_performed": if extended {
                 vec!["led_test", "button_test", "display_test", "latency_test"]
             } else {
                 vec!["led_test", "basic_connectivity"]
             },
         });
-        
+
         if verbose {
             panel_result["detailed_results"] = json!({
                 "led_test": {
@@ -90,7 +101,7 @@ async fn verify_panels(
                     "response_time_ms": 2.1,
                 },
             });
-            
+
             if extended {
                 panel_result["detailed_results"]["latency_test"] = json!({
                     "status": "pass",
@@ -100,10 +111,10 @@ async fn verify_panels(
                 });
             }
         }
-        
+
         verification_results.push(panel_result);
     }
-    
+
     let result = json!({
         "verification_complete": true,
         "panels_verified": verification_results.len(),
@@ -111,7 +122,7 @@ async fn verify_panels(
         "results": verification_results,
         "overall_status": "pass", // Would be computed from individual results
     });
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }
@@ -123,34 +134,35 @@ async fn panel_status(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     let mut client = client_manager.get_client().await?;
-    
+
     // Get panel devices
     let request = ListDevicesRequest {
         include_disconnected: true,
         filter_types: vec![DeviceType::Panel as i32, DeviceType::Streamdeck as i32],
     };
-    
+
     let response = client.list_devices(request).await?;
-    
+
     let panels: Vec<_> = if let Some(device_id) = device_id {
-        response.devices
+        response
+            .devices
             .into_iter()
             .filter(|d| d.id == device_id)
             .collect()
     } else {
         response.devices
     };
-    
+
     if panels.is_empty() {
         let message = if device_id.is_some() {
             format!("Panel device '{}' not found", device_id.unwrap())
         } else {
             "No panel devices found".to_string()
         };
-        
+
         return Err(anyhow::anyhow!("{}", message));
     }
-    
+
     let panel_statuses: Vec<Value> = panels
         .iter()
         .map(|panel| {
@@ -160,7 +172,7 @@ async fn panel_status(
                 "device_type": device_type_to_string(panel.r#type()),
                 "status": device_status_to_string(panel.status()),
             });
-            
+
             if let Some(ref health) = panel.health {
                 status["health"] = json!({
                     "temperature_celsius": health.temperature_celsius,
@@ -169,7 +181,7 @@ async fn panel_status(
                     "active_faults": health.active_faults,
                 });
             }
-            
+
             if verbose {
                 // Add panel-specific status information
                 status["configuration"] = json!({
@@ -177,18 +189,18 @@ async fn panel_status(
                     "led_count": 16,      // Placeholder
                     "button_count": 8,    // Placeholder
                 });
-                
+
                 status["performance"] = json!({
                     "led_update_rate_hz": 60.0,
                     "last_led_update_ms": 16.7,
                     "rule_evaluation_time_us": 45.2,
                 });
             }
-            
+
             status
         })
         .collect();
-    
+
     let result = if panels.len() == 1 {
         panel_statuses.into_iter().next().unwrap()
     } else {
@@ -197,7 +209,7 @@ async fn panel_status(
             "panels": panel_statuses,
         })
     };
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }

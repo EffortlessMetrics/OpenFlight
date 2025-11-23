@@ -9,13 +9,13 @@
 #![cfg_attr(not(feature = "replay"), allow(dead_code, unused_imports))]
 
 #[cfg(feature = "replay")]
-use flight_replay::{ReplayEngine, ReplayConfig, ReplayError, ReplayStats};
-#[cfg(feature = "replay")]
-use flight_core::blackbox::{BlackboxWriter, BlackboxReader, BlackboxConfig};
-#[cfg(feature = "replay")]
 use flight_axis::{AxisEngine, AxisFrame};
 #[cfg(feature = "replay")]
-use flight_bus::{BusSnapshot, SimId, AircraftId};
+use flight_bus::{AircraftId, BusSnapshot, SimId};
+#[cfg(feature = "replay")]
+use flight_core::blackbox::{BlackboxConfig, BlackboxReader, BlackboxWriter};
+#[cfg(feature = "replay")]
+use flight_replay::{ReplayConfig, ReplayEngine, ReplayError, ReplayStats};
 #[cfg(feature = "replay")]
 use std::path::PathBuf;
 #[cfg(feature = "replay")]
@@ -29,21 +29,21 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
-    
+
     println!("=== Flight Hub Capture & Replay Demo ===\n");
 
     // Demo 1: Blackbox Recording
     demo_blackbox_recording().await?;
-    
+
     // Demo 2: Blackbox Reading
     demo_blackbox_reading().await?;
-    
+
     // Demo 3: Replay Engine
     demo_replay_engine().await?;
-    
+
     // Demo 4: Validation and Analysis
     demo_validation_analysis().await?;
-    
+
     // Demo 5: Performance Testing
     demo_performance_testing().await?;
 
@@ -78,11 +78,9 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
     println!("  Output file: {:?}", recording_path);
 
     // Start recording
-    writer.start_recording(
-        "openflight-demo".into(),
-        "msfs".into(),
-        "C172".into()
-    ).await?;
+    writer
+        .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
+        .await?;
     println!("✓ Recording started");
 
     // Simulate a flight session
@@ -95,39 +93,44 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
 
     while start_time.elapsed() < session_duration {
         let timestamp = start_time.elapsed().as_nanos() as u64;
-        
+
         // Record axis frames at 250Hz
-        if frame_count % 4 == 0 { // Every 4ms for 250Hz
+        if frame_count % 4 == 0 {
+            // Every 4ms for 250Hz
             let axis_frame = create_mock_axis_frame(timestamp, frame_count);
             let data = bincode::serialize(&axis_frame)?;
             writer.record_axis_frame(timestamp, &data)?;
             frame_count += 1;
         }
-        
+
         // Record bus snapshots at 60Hz
-        if bus_count % 16 == 0 { // Every 16ms for ~60Hz
+        if bus_count % 16 == 0 {
+            // Every 16ms for ~60Hz
             let bus_snapshot = create_mock_bus_snapshot(timestamp);
             let data = bincode::serialize(&bus_snapshot)?;
             writer.record_bus_snapshot(timestamp, &data)?;
             bus_count += 1;
         }
-        
+
         // Record events occasionally
         if frame_count % 1000 == 0 {
             let event_data = format!("Applied profile for frame {}", frame_count);
             writer.record_event(timestamp, event_data.as_bytes())?;
         }
-        
+
         tokio::time::sleep(Duration::from_millis(1)).await;
     }
 
     // Stop recording
     writer.stop_recording().await?;
     let stats = writer.get_stats();
-    
+
     println!("✓ Recording completed");
     println!("  Duration: {:.1}s", session_duration.as_secs_f32());
-    println!("  Records written: {}", stats.records_written.iter().sum::<u64>());
+    println!(
+        "  Records written: {}",
+        stats.records_written.iter().sum::<u64>()
+    );
     println!("  Bytes written:   {}", stats.bytes_written);
     println!("  Chunks written:  {}", stats.chunks_written);
 
@@ -203,14 +206,19 @@ async fn demo_replay_engine() -> anyhow::Result<()> {
     // Process replay frames
     while let Some(replay_frame) = replay_engine.get_next_frame().await? {
         match replay_frame {
-            flight_replay::ReplayFrame::AxisFrame { axis_name, original_frame, replayed_frame } => {
+            flight_replay::ReplayFrame::AxisFrame {
+                axis_name,
+                original_frame,
+                replayed_frame,
+            } => {
                 // Validate that replayed output matches original
                 let output_diff = (replayed_frame.out - original_frame.out).abs();
-                let timing_diff = (replayed_frame.ts_mono_ns as i64 - original_frame.ts_mono_ns as i64).abs();
-                
+                let timing_diff =
+                    (replayed_frame.ts_mono_ns as i64 - original_frame.ts_mono_ns as i64).abs();
+
                 validation_results.push((output_diff, timing_diff));
                 processed_frames += 1;
-                
+
                 if processed_frames % 100 == 0 {
                     println!("    Processed {} frames", processed_frames);
                 }
@@ -222,7 +230,7 @@ async fn demo_replay_engine() -> anyhow::Result<()> {
                 // Events are informational
             }
         }
-        
+
         // Limit demo to reasonable number of frames
         if processed_frames >= 1000 {
             break;
@@ -266,23 +274,29 @@ async fn demo_validation_analysis() -> anyhow::Result<()> {
     // Apply a simple profile for predictable results
     let profile = create_deterministic_profile();
     axis_engine.apply_profile(&profile)?;
-    
+
     replay_engine.register_axis_engine("test".to_string(), axis_engine)?;
 
     println!("✓ Validation setup completed");
 
     // Run validation
     replay_engine.start_replay().await?;
-    
+
     let mut max_output_error = 0.0f32;
     let mut max_timing_error = 0u64;
     let mut validation_count = 0;
 
     while let Some(frame) = replay_engine.get_next_frame().await? {
-        if let flight_replay::ReplayFrame::AxisFrame { original_frame, replayed_frame, .. } = frame {
+        if let flight_replay::ReplayFrame::AxisFrame {
+            original_frame,
+            replayed_frame,
+            ..
+        } = frame
+        {
             let output_error = (replayed_frame.out - original_frame.out).abs();
-            let timing_error = (replayed_frame.ts_mono_ns as i64 - original_frame.ts_mono_ns as i64).abs() as u64;
-            
+            let timing_error =
+                (replayed_frame.ts_mono_ns as i64 - original_frame.ts_mono_ns as i64).abs() as u64;
+
             max_output_error = max_output_error.max(output_error);
             max_timing_error = max_timing_error.max(timing_error);
             validation_count += 1;
@@ -297,7 +311,7 @@ async fn demo_validation_analysis() -> anyhow::Result<()> {
     println!("  Max output error: {:.2e}", max_output_error);
     println!("  Max timing error: {} ns", max_timing_error);
     println!("  Validation passed: {}", stats.validation_passed);
-    
+
     if stats.validation_passed {
         println!("  ✓ All validations within tolerance");
     } else {
@@ -338,7 +352,7 @@ async fn demo_performance_testing() -> anyhow::Result<()> {
     let mut frame_count = 0;
     while let Some(_frame) = replay_engine.get_next_frame().await? {
         frame_count += 1;
-        
+
         // Process in batches for performance measurement
         if frame_count % 10000 == 0 {
             let elapsed = start_time.elapsed();
@@ -354,17 +368,26 @@ async fn demo_performance_testing() -> anyhow::Result<()> {
     println!("✓ Performance test completed");
     println!("  Total frames: {}", frame_count);
     println!("  Total time: {:.2}s", total_time.as_secs_f32());
-    println!("  Average FPS: {:.0}", frame_count as f64 / total_time.as_secs_f64());
+    println!(
+        "  Average FPS: {:.0}",
+        frame_count as f64 / total_time.as_secs_f64()
+    );
     println!("  Memory usage: {:.1} MB", stats.memory_usage_mb);
-    
+
     // Check if performance meets requirements
     let target_fps = 250.0 * 10.0; // 250Hz * 10x speed
     let actual_fps = frame_count as f64 / total_time.as_secs_f64();
-    
+
     if actual_fps >= target_fps {
-        println!("  ✓ Performance target met ({:.0} >= {:.0} fps)", actual_fps, target_fps);
+        println!(
+            "  ✓ Performance target met ({:.0} >= {:.0} fps)",
+            actual_fps, target_fps
+        );
     } else {
-        println!("  ✗ Performance target missed ({:.0} < {:.0} fps)", actual_fps, target_fps);
+        println!(
+            "  ✗ Performance target missed ({:.0} < {:.0} fps)",
+            actual_fps, target_fps
+        );
     }
 
     Ok(())
@@ -383,20 +406,18 @@ async fn create_sample_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer.start_recording(
-        "openflight-demo".into(),
-        "msfs".into(),
-        "C172".into()
-    ).await?;
+    writer
+        .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
+        .await?;
 
     // Write sample data
     for i in 0..1000 {
         let timestamp = i * 4_000_000; // 4ms intervals for 250Hz
-        
+
         let axis_frame = create_mock_axis_frame(timestamp, i);
         let data = bincode::serialize(&axis_frame)?;
         writer.record_axis_frame(timestamp, &data)?;
-        
+
         // Add bus snapshot every 16ms (60Hz)
         if i % 4 == 0 {
             let bus_snapshot = create_mock_bus_snapshot(timestamp);
@@ -420,20 +441,18 @@ async fn create_deterministic_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer.start_recording(
-        "openflight-demo".into(),
-        "msfs".into(),
-        "test".into()
-    ).await?;
+    writer
+        .start_recording("openflight-demo".into(), "msfs".into(), "test".into())
+        .await?;
 
     // Create deterministic test pattern
     for i in 0..500 {
         let timestamp = i * 4_000_000;
         let input = (i as f32) / 500.0; // Linear ramp 0 to 1
-        
+
         let mut frame = AxisFrame::new(input, timestamp);
         frame.out = input * 0.8; // Simple linear response for validation
-        
+
         let data = bincode::serialize(&frame)?;
         writer.record_axis_frame(timestamp, &data)?;
     }
@@ -453,17 +472,15 @@ async fn create_performance_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer.start_recording(
-        "openflight-demo".into(),
-        "msfs".into(),
-        "C172".into()
-    ).await?;
+    writer
+        .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
+        .await?;
 
     // Create larger dataset for performance testing
     for i in 0..50000 {
         let timestamp = i * 4_000_000;
         let axis_frame = create_mock_axis_frame(timestamp, i);
-        
+
         let data = bincode::serialize(&axis_frame)?;
         writer.record_axis_frame(timestamp, &data)?;
     }
@@ -483,8 +500,11 @@ fn create_mock_axis_frame(timestamp: u64, sequence: u64) -> AxisFrame {
 
 #[cfg(feature = "replay")]
 fn create_mock_bus_snapshot(timestamp: u64) -> BusSnapshot {
-    use flight_bus::{Kinematics, AircraftConfig, Environment, Navigation, GearState, AutopilotState, LightsConfig};
-    use flight_bus::types::{ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearPosition};
+    use flight_bus::types::{GForce, GearPosition, Percentage, ValidatedAngle, ValidatedSpeed};
+    use flight_bus::{
+        AircraftConfig, AutopilotState, Environment, GearState, Kinematics, LightsConfig,
+        Navigation,
+    };
     use std::collections::HashMap;
 
     BusSnapshot {
@@ -545,22 +565,27 @@ fn create_mock_bus_snapshot(timestamp: u64) -> BusSnapshot {
 
 #[cfg(feature = "replay")]
 fn create_deterministic_profile() -> flight_core::profile::Profile {
-    use flight_core::profile::{Profile, AxisConfig, AircraftId};
+    use flight_core::profile::{AircraftId, AxisConfig, Profile};
     use std::collections::HashMap;
 
     let mut axes = HashMap::new();
-    axes.insert("test".to_string(), AxisConfig {
-        deadzone: Some(0.0),
-        expo: Some(0.0),
-        slew_rate: None,
-        detents: vec![],
-        curve: None, // Linear response
-    });
+    axes.insert(
+        "test".to_string(),
+        AxisConfig {
+            deadzone: Some(0.0),
+            expo: Some(0.0),
+            slew_rate: None,
+            detents: vec![],
+            curve: None, // Linear response
+        },
+    );
 
     Profile {
         schema: "flight.profile/1".to_string(),
         sim: Some("test".to_string()),
-        aircraft: Some(AircraftId { icao: "TEST".to_string() }),
+        aircraft: Some(AircraftId {
+            icao: "TEST".to_string(),
+        }),
         axes,
         pof_overrides: None,
     }

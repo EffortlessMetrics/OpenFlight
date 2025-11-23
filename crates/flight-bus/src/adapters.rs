@@ -4,9 +4,7 @@
 //! Adapter helpers and converter functions for different simulators
 
 use crate::snapshot::{BusSnapshot, EngineData};
-use crate::types::{
-    BusTypeError, GForce, Mach, Percentage, SimId, ValidatedAngle, ValidatedSpeed,
-};
+use crate::types::{BusTypeError, GForce, Mach, Percentage, SimId, ValidatedAngle, ValidatedSpeed};
 
 /// Adapter helper trait for converting simulator-specific data to bus format
 pub trait SimAdapter {
@@ -79,7 +77,10 @@ pub mod msfs {
         }
 
         /// Convert MSFS RPM to percentage of redline
-        pub fn convert_rpm_to_percentage(rpm: f64, redline_rpm: f64) -> Result<Percentage, BusTypeError> {
+        pub fn convert_rpm_to_percentage(
+            rpm: f64,
+            redline_rpm: f64,
+        ) -> Result<Percentage, BusTypeError> {
             if redline_rpm <= 0.0 {
                 return Err(BusTypeError::InvalidValue {
                     field: "redline_rpm".to_string(),
@@ -287,7 +288,7 @@ pub mod validation {
         // Validate that ground speed is reasonable compared to IAS
         let ias = snapshot.kinematics.ias.to_knots();
         let gs = snapshot.kinematics.ground_speed.to_knots();
-        
+
         // Ground speed should be within reasonable range of IAS (accounting for wind)
         if (ias - gs).abs() > 100.0 {
             return Err(BusTypeError::InvalidValue {
@@ -303,7 +304,8 @@ pub mod validation {
 
         // Validate helicopter data if present
         if let Some(helo) = &snapshot.helo
-            && (helo.pedals < -100.0 || helo.pedals > 100.0) {
+            && (helo.pedals < -100.0 || helo.pedals > 100.0)
+        {
             return Err(BusTypeError::OutOfRange {
                 field: "helo.pedals".to_string(),
                 value: helo.pedals,

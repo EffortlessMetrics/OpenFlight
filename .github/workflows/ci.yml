@@ -113,6 +113,29 @@ jobs:
         done
         echo "✅ All referenced ADRs exist"
 
+  msrv-check:
+    name: MSRV Check (Rust 1.89.0)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust 1.89.0
+      uses: dtolnay/rust-toolchain@1.89.0
+      with:
+        components: clippy
+        
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: msrv-1.89.0
+        
+    - name: Build with MSRV
+      run: cargo build --all --all-features
+      
+    - name: Run clippy with MSRV
+      run: cargo clippy --workspace -- -Dwarnings
+
   path-filter:
     name: Path Filter
     runs-on: ubuntu-latest

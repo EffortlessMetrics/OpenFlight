@@ -3,11 +3,11 @@
 
 //! Device management commands
 
+use crate::client_manager::ClientManager;
 use crate::commands::DeviceAction;
 use crate::output::{OutputFormat, proto_to_json};
-use crate::client_manager::ClientManager;
-use flight_ipc::{ListDevicesRequest, DeviceType};
-use serde_json::{json, Value};
+use flight_ipc::{DeviceType, ListDevicesRequest};
+use serde_json::{Value, json};
 
 pub async fn execute(
     action: &DeviceAction,
@@ -16,8 +16,18 @@ pub async fn execute(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
-        DeviceAction::List { include_disconnected, filter_types } => {
-            list_devices(include_disconnected, filter_types, output_format, verbose, client_manager).await
+        DeviceAction::List {
+            include_disconnected,
+            filter_types,
+        } => {
+            list_devices(
+                include_disconnected,
+                filter_types,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
         }
         DeviceAction::Info { device_id } => {
             device_info(device_id, output_format, verbose, client_manager).await
@@ -33,7 +43,7 @@ async fn list_devices(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     let mut client = client_manager.get_client().await?;
-    
+
     // Convert string filter types to enum values
     let device_types: Vec<DeviceType> = filter_types
         .iter()
@@ -47,31 +57,35 @@ async fn list_devices(
             _ => None,
         })
         .collect();
-    
+
     let request = ListDevicesRequest {
         include_disconnected: *include_disconnected,
         filter_types: device_types.into_iter().map(|t| t as i32).collect(),
     };
-    
+
     let response = client.list_devices(request).await?;
-    
+
     if response.devices.is_empty() {
         match output_format {
             OutputFormat::Json => {
-                return Ok(Some(json!({
-                    "success": true,
-                    "data": [],
-                    "total_count": 0,
-                    "message": "No devices found"
-                }).to_string()));
+                return Ok(Some(
+                    json!({
+                        "success": true,
+                        "data": [],
+                        "total_count": 0,
+                        "message": "No devices found"
+                    })
+                    .to_string(),
+                ));
             }
             OutputFormat::Human => {
                 return Ok(Some("No devices found".to_string()));
             }
         }
     }
-    
-    let devices: Vec<Value> = response.devices
+
+    let devices: Vec<Value> = response
+        .devices
         .iter()
         .map(|device| {
             let mut device_json = json!({
@@ -80,7 +94,7 @@ async fn list_devices(
                 "type": device_type_to_string(device.r#type()),
                 "status": device_status_to_string(device.status()),
             });
-            
+
             if verbose {
                 if let Some(ref capabilities) = device.capabilities {
                     device_json["capabilities"] = json!({
@@ -92,7 +106,7 @@ async fn list_devices(
                         "supported_protocols": capabilities.supported_protocols,
                     });
                 }
-                
+
                 if let Some(ref health) = device.health {
                     device_json["health"] = json!({
                         "temperature_celsius": health.temperature_celsius,
@@ -102,16 +116,16 @@ async fn list_devices(
                         "active_faults": health.active_faults,
                     });
                 }
-                
+
                 if !device.metadata.is_empty() {
                     device_json["metadata"] = json!(device.metadata);
                 }
             }
-            
+
             device_json
         })
         .collect();
-    
+
     let output = output_format.list(devices, Some(response.total_count));
     Ok(Some(output))
 }
@@ -123,26 +137,27 @@ async fn device_info(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     let mut client = client_manager.get_client().await?;
-    
+
     let request = ListDevicesRequest {
         include_disconnected: true,
         filter_types: vec![],
     };
-    
+
     let response = client.list_devices(request).await?;
-    
-    let device = response.devices
+
+    let device = response
+        .devices
         .iter()
         .find(|d| d.id == device_id)
         .ok_or_else(|| anyhow::anyhow!("Device '{}' not found", device_id))?;
-    
+
     let mut device_json = json!({
         "id": device.id,
         "name": device.name,
         "type": device_type_to_string(device.r#type()),
         "status": device_status_to_string(device.status()),
     });
-    
+
     // Always include detailed info for device info command
     if let Some(ref capabilities) = device.capabilities {
         device_json["capabilities"] = json!({
@@ -154,7 +169,7 @@ async fn device_info(
             "supported_protocols": capabilities.supported_protocols,
         });
     }
-    
+
     if let Some(ref health) = device.health {
         device_json["health"] = json!({
             "temperature_celsius": health.temperature_celsius,
@@ -164,11 +179,11 @@ async fn device_info(
             "active_faults": health.active_faults,
         });
     }
-    
+
     if !device.metadata.is_empty() {
         device_json["metadata"] = json!(device.metadata);
     }
-    
+
     let output = output_format.success(device_json);
     Ok(Some(output))
 }

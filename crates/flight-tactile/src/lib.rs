@@ -13,13 +13,13 @@ pub mod effects;
 pub mod simshaker;
 
 use flight_core::Result;
-use std::sync::Arc;
 use parking_lot::RwLock;
+use std::sync::Arc;
 
 // Re-export main types for convenience
 pub use bridge::{TactileBridge, TactileConfig, TactileStats};
-pub use channel::{ChannelRouter, ChannelMapping, ChannelId};
-pub use effects::{EffectType, EffectIntensity, EffectEvent, EffectProcessor};
+pub use channel::{ChannelId, ChannelMapping, ChannelRouter};
+pub use effects::{EffectEvent, EffectIntensity, EffectProcessor, EffectType};
 pub use simshaker::{SimShakerBridge, SimShakerConfig, SimShakerStatus};
 
 /// Main tactile manager for coordinating all tactile feedback
@@ -42,10 +42,10 @@ impl TactileManager {
     /// Initialize the tactile bridge with configuration
     pub fn initialize(&mut self, config: TactileConfig) -> Result<()> {
         *self.config.write() = config.clone();
-        
+
         let bridge = TactileBridge::new(config, self.enabled.clone())?;
         self.bridge = Some(bridge);
-        
+
         Ok(())
     }
 
@@ -78,11 +78,11 @@ impl TactileManager {
     /// Update configuration
     pub fn update_config(&self, config: TactileConfig) -> Result<()> {
         *self.config.write() = config.clone();
-        
+
         if let Some(bridge) = &self.bridge {
             bridge.update_config(config)?;
         }
-        
+
         Ok(())
     }
 
@@ -100,7 +100,7 @@ impl TactileManager {
         if let Some(bridge) = &self.bridge {
             bridge.process_telemetry(snapshot)?;
         }
-        
+
         Ok(())
     }
 

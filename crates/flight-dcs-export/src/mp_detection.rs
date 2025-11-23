@@ -36,9 +36,7 @@ impl SessionType {
     pub fn blocked_features(&self) -> Vec<&'static str> {
         match self {
             SessionType::SinglePlayer => Vec::new(),
-            SessionType::Multiplayer | SessionType::Unknown => {
-                MP_BLOCKED_FEATURES.to_vec()
-            }
+            SessionType::Multiplayer | SessionType::Unknown => MP_BLOCKED_FEATURES.to_vec(),
         }
     }
 }
@@ -56,7 +54,7 @@ impl std::fmt::Display for SessionType {
 /// Features that are blocked in multiplayer sessions
 const MP_BLOCKED_FEATURES: &[&str] = &[
     "telemetry_weapons",
-    "telemetry_countermeasures", 
+    "telemetry_countermeasures",
     "telemetry_rwr",
     "telemetry_datalink",
     "control_weapons",
@@ -109,18 +107,24 @@ impl MpDetector {
     }
 
     /// Update session information from DCS telemetry
-    pub fn update_session(&mut self, session_data: &serde_json::Value) -> Result<(), MpDetectionError> {
+    pub fn update_session(
+        &mut self,
+        session_data: &serde_json::Value,
+    ) -> Result<(), MpDetectionError> {
         let session_type = self.detect_session_type(session_data)?;
-        
+
         let session = MpSession {
             session_type,
-            server_name: session_data.get("server_name")
+            server_name: session_data
+                .get("server_name")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            player_count: session_data.get("player_count")
+            player_count: session_data
+                .get("player_count")
                 .and_then(|v| v.as_u64())
                 .map(|n| n as u32),
-            mission_name: session_data.get("mission_name")
+            mission_name: session_data
+                .get("mission_name")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
             detected_at: std::time::SystemTime::now()
@@ -140,7 +144,10 @@ impl MpDetector {
     }
 
     /// Detect session type from telemetry data
-    fn detect_session_type(&self, data: &serde_json::Value) -> Result<SessionType, MpDetectionError> {
+    fn detect_session_type(
+        &self,
+        data: &serde_json::Value,
+    ) -> Result<SessionType, MpDetectionError> {
         // Check for explicit session type indicator
         if let Some(session_type_str) = data.get("session_type").and_then(|v| v.as_str()) {
             return match session_type_str.to_uppercase().as_str() {
@@ -151,7 +158,7 @@ impl MpDetector {
         }
 
         // Fallback detection methods
-        
+
         // Check for server name (indicates MP)
         if data.get("server_name").and_then(|v| v.as_str()).is_some() {
             return Ok(SessionType::Multiplayer);
@@ -189,11 +196,12 @@ impl MpDetector {
     /// Validate feature access
     pub fn validate_feature(&self, feature: &str) -> Result<(), MpDetectionError> {
         if !self.is_feature_allowed(feature) {
-            let session_type = self.current_session
+            let session_type = self
+                .current_session
                 .as_ref()
                 .map(|s| s.session_type)
                 .unwrap_or(SessionType::Unknown);
-            
+
             return Err(MpDetectionError::FeatureBlocked {
                 feature: feature.to_string(),
                 session_type,
@@ -215,7 +223,8 @@ impl MpDetector {
     /// Generate user-friendly message for blocked feature
     pub fn blocked_feature_message(&self, feature: &str) -> Option<String> {
         if !self.is_feature_allowed(feature) {
-            let session_type = self.current_session
+            let session_type = self
+                .current_session
                 .as_ref()
                 .map(|s| s.session_type)
                 .unwrap_or(SessionType::Unknown);
@@ -241,7 +250,8 @@ impl MpDetector {
     /// Get MP session banner message
     pub fn mp_banner_message(&self) -> Option<String> {
         if self.is_multiplayer() {
-            let server_name = self.current_session
+            let server_name = self
+                .current_session
                 .as_ref()
                 .and_then(|s| s.server_name.as_ref())
                 .map(|n| format!(" on {}", n))
@@ -273,7 +283,7 @@ mod tests {
         assert!(SessionType::SinglePlayer.allows_feature("telemetry_weapons"));
         assert!(!SessionType::Multiplayer.allows_feature("telemetry_weapons"));
         assert!(!SessionType::Unknown.allows_feature("telemetry_weapons"));
-        
+
         assert!(SessionType::Multiplayer.allows_feature("telemetry_basic"));
         assert!(SessionType::Unknown.allows_feature("telemetry_basic"));
     }
@@ -281,22 +291,22 @@ mod tests {
     #[test]
     fn test_mp_detector_explicit_session_type() {
         let mut detector = MpDetector::new();
-        
+
         let sp_data = json!({
             "session_type": "SP",
             "mission_name": "Test Mission"
         });
-        
+
         detector.update_session(&sp_data).unwrap();
         assert!(detector.is_feature_allowed("telemetry_weapons"));
         assert!(!detector.is_multiplayer());
-        
+
         let mp_data = json!({
             "session_type": "MP",
             "server_name": "Test Server",
             "player_count": 5
         });
-        
+
         detector.update_session(&mp_data).unwrap();
         assert!(!detector.is_feature_allowed("telemetry_weapons"));
         assert!(detector.is_multiplayer());
@@ -305,29 +315,29 @@ mod tests {
     #[test]
     fn test_mp_detector_fallback_detection() {
         let mut detector = MpDetector::new();
-        
+
         // Server name indicates MP
         let mp_data = json!({
             "server_name": "Test Server"
         });
-        
+
         detector.update_session(&mp_data).unwrap();
         assert!(!detector.is_feature_allowed("telemetry_weapons"));
         assert!(detector.is_multiplayer());
-        
+
         // Player count > 1 indicates MP
         let mp_data2 = json!({
             "player_count": 3
         });
-        
+
         detector.update_session(&mp_data2).unwrap();
         assert!(!detector.is_feature_allowed("telemetry_weapons"));
-        
+
         // Player count = 1 indicates SP
         let sp_data = json!({
             "player_count": 1
         });
-        
+
         detector.update_session(&sp_data).unwrap();
         assert!(detector.is_feature_allowed("telemetry_weapons"));
         assert!(!detector.is_multiplayer());
@@ -336,22 +346,25 @@ mod tests {
     #[test]
     fn test_feature_validation() {
         let mut detector = MpDetector::new();
-        
+
         let mp_data = json!({
             "session_type": "MP"
         });
-        
+
         detector.update_session(&mp_data).unwrap();
-        
+
         // Allowed feature should pass
         assert!(detector.validate_feature("telemetry_basic").is_ok());
-        
+
         // Blocked feature should fail
         let result = detector.validate_feature("telemetry_weapons");
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
-            MpDetectionError::FeatureBlocked { feature, session_type } => {
+            MpDetectionError::FeatureBlocked {
+                feature,
+                session_type,
+            } => {
                 assert_eq!(feature, "telemetry_weapons");
                 assert_eq!(session_type, SessionType::Multiplayer);
             }
@@ -362,18 +375,18 @@ mod tests {
     #[test]
     fn test_blocked_feature_message() {
         let mut detector = MpDetector::new();
-        
+
         let mp_data = json!({
             "session_type": "MP",
             "server_name": "Test Server"
         });
-        
+
         detector.update_session(&mp_data).unwrap();
-        
+
         let message = detector.blocked_feature_message("telemetry_weapons");
         assert!(message.is_some());
         assert!(message.unwrap().contains("multiplayer integrity"));
-        
+
         let message = detector.blocked_feature_message("telemetry_basic");
         assert!(message.is_none());
     }
@@ -381,21 +394,21 @@ mod tests {
     #[test]
     fn test_mp_banner_message() {
         let mut detector = MpDetector::new();
-        
+
         // SP session - no banner
         let sp_data = json!({
             "session_type": "SP"
         });
-        
+
         detector.update_session(&sp_data).unwrap();
         assert!(detector.mp_banner_message().is_none());
-        
+
         // MP session - show banner
         let mp_data = json!({
             "session_type": "MP",
             "server_name": "Test Server"
         });
-        
+
         detector.update_session(&mp_data).unwrap();
         let banner = detector.mp_banner_message();
         assert!(banner.is_some());

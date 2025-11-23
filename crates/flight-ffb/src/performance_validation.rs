@@ -7,9 +7,9 @@
 //! FFB mode negotiation and trim operations do not introduce jitter or
 //! latency regressions in the axis processing pipeline.
 
-use std::time::{Duration, Instant};
+use crate::{DeviceCapabilities, FfbConfig, FfbEngine, FfbMode, ModeNegotiator};
 use std::collections::VecDeque;
-use crate::{FfbEngine, FfbConfig, FfbMode, DeviceCapabilities, ModeNegotiator};
+use std::time::{Duration, Instant};
 
 /// Performance metrics for validation
 #[derive(Debug, Clone)]
@@ -114,9 +114,9 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         let metrics = self.measure_engine_performance(&mut engine, "Baseline FFB");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -139,7 +139,7 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         // Set device capabilities to trigger negotiation
         let capabilities = DeviceCapabilities {
             supports_pid: true,
@@ -152,11 +152,13 @@ impl PerformanceValidator {
 
         // Measure negotiation overhead
         let negotiation_start = Instant::now();
-        engine.set_device_capabilities(capabilities).expect("Failed to set capabilities");
+        engine
+            .set_device_capabilities(capabilities)
+            .expect("Failed to set capabilities");
         let negotiation_time = negotiation_start.elapsed();
 
         let metrics = self.measure_engine_performance(&mut engine, "Mode Negotiation");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -187,17 +189,19 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         // Start a trim operation during measurement
         let trim_controller = engine.get_trim_controller_mut();
         let change = crate::SetpointChange {
             target_nm: 5.0,
             limits: crate::TrimLimits::default(),
         };
-        trim_controller.apply_setpoint_change(change).expect("Failed to apply trim change");
+        trim_controller
+            .apply_setpoint_change(change)
+            .expect("Failed to apply trim change");
 
         let metrics = self.measure_engine_performance(&mut engine, "Trim Operation");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -220,7 +224,7 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         // Set up device capabilities
         let capabilities = DeviceCapabilities {
             supports_pid: true,
@@ -230,7 +234,9 @@ impl PerformanceValidator {
             has_health_stream: true,
             supports_interlock: true,
         };
-        engine.set_device_capabilities(capabilities).expect("Failed to set capabilities");
+        engine
+            .set_device_capabilities(capabilities)
+            .expect("Failed to set capabilities");
 
         // Start trim operation
         let trim_controller = engine.get_trim_controller_mut();
@@ -238,10 +244,12 @@ impl PerformanceValidator {
             target_nm: 8.0,
             limits: crate::TrimLimits::default(),
         };
-        trim_controller.apply_setpoint_change(change).expect("Failed to apply trim change");
+        trim_controller
+            .apply_setpoint_change(change)
+            .expect("Failed to apply trim change");
 
         let metrics = self.measure_engine_performance_with_concurrent_ops(&mut engine);
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -264,7 +272,7 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         let capabilities = DeviceCapabilities {
             supports_pid: true,
             supports_raw_torque: true,
@@ -273,10 +281,12 @@ impl PerformanceValidator {
             has_health_stream: true,
             supports_interlock: true,
         };
-        engine.set_device_capabilities(capabilities).expect("Failed to set capabilities");
+        engine
+            .set_device_capabilities(capabilities)
+            .expect("Failed to set capabilities");
 
         let metrics = self.measure_engine_performance(&mut engine, "Raw Torque Mode");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -299,7 +309,7 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         let capabilities = DeviceCapabilities {
             supports_pid: true,
             supports_raw_torque: false,
@@ -308,10 +318,12 @@ impl PerformanceValidator {
             has_health_stream: true,
             supports_interlock: false,
         };
-        engine.set_device_capabilities(capabilities).expect("Failed to set capabilities");
+        engine
+            .set_device_capabilities(capabilities)
+            .expect("Failed to set capabilities");
 
         let metrics = self.measure_engine_performance(&mut engine, "DirectInput Mode");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -334,7 +346,7 @@ impl PerformanceValidator {
         };
 
         let mut engine = FfbEngine::new(config).expect("Failed to create FFB engine");
-        
+
         let capabilities = DeviceCapabilities {
             supports_pid: false,
             supports_raw_torque: false,
@@ -343,10 +355,12 @@ impl PerformanceValidator {
             has_health_stream: false,
             supports_interlock: false,
         };
-        engine.set_device_capabilities(capabilities).expect("Failed to set capabilities");
+        engine
+            .set_device_capabilities(capabilities)
+            .expect("Failed to set capabilities");
 
         let metrics = self.measure_engine_performance(&mut engine, "Telemetry Synthesis Mode");
-        
+
         let mut failures = Vec::new();
         self.validate_metrics(&metrics, &mut failures);
 
@@ -359,19 +373,24 @@ impl PerformanceValidator {
     }
 
     /// Measure engine performance over the configured test duration
-    fn measure_engine_performance(&self, engine: &mut FfbEngine, _test_name: &str) -> PerformanceMetrics {
+    fn measure_engine_performance(
+        &self,
+        engine: &mut FfbEngine,
+        _test_name: &str,
+    ) -> PerformanceMetrics {
         let mut processing_times = Vec::new();
-        let target_interval = Duration::from_nanos(1_000_000_000 / self.config.target_frequency_hz as u64);
+        let target_interval =
+            Duration::from_nanos(1_000_000_000 / self.config.target_frequency_hz as u64);
         let start_time = Instant::now();
         let mut missed_deadlines = 0;
 
         while start_time.elapsed() < self.config.test_duration {
             let iteration_start = Instant::now();
-            
+
             // Simulate axis processing work
             let _ = engine.update();
             engine.update_heartbeat();
-            
+
             // Record axis frame (simulated)
             let _ = engine.record_axis_frame(
                 "test_device".to_string(),
@@ -379,16 +398,16 @@ impl PerformanceValidator {
                 0.6, // processed output
                 2.0, // torque
             );
-            
+
             let processing_time = iteration_start.elapsed();
             let processing_time_us = processing_time.as_secs_f32() * 1_000_000.0;
             processing_times.push(processing_time_us);
-            
+
             // Check for missed deadlines (>5ms processing time)
             if processing_time > Duration::from_millis(5) {
                 missed_deadlines += 1;
             }
-            
+
             // Sleep to maintain target frequency
             let elapsed = iteration_start.elapsed();
             if elapsed < target_interval {
@@ -400,20 +419,24 @@ impl PerformanceValidator {
     }
 
     /// Measure performance with concurrent operations
-    fn measure_engine_performance_with_concurrent_ops(&self, engine: &mut FfbEngine) -> PerformanceMetrics {
+    fn measure_engine_performance_with_concurrent_ops(
+        &self,
+        engine: &mut FfbEngine,
+    ) -> PerformanceMetrics {
         let mut processing_times = Vec::new();
-        let target_interval = Duration::from_nanos(1_000_000_000 / self.config.target_frequency_hz as u64);
+        let target_interval =
+            Duration::from_nanos(1_000_000_000 / self.config.target_frequency_hz as u64);
         let start_time = Instant::now();
         let mut missed_deadlines = 0;
         let mut iteration_count = 0;
 
         while start_time.elapsed() < self.config.test_duration {
             let iteration_start = Instant::now();
-            
+
             // Simulate axis processing work
             let _ = engine.update();
             engine.update_heartbeat();
-            
+
             // Periodically trigger additional operations
             if iteration_count % 50 == 0 {
                 // Simulate mode re-negotiation
@@ -422,7 +445,7 @@ impl PerformanceValidator {
                     let _selection = negotiator.negotiate_mode(&capabilities);
                 }
             }
-            
+
             if iteration_count % 25 == 0 {
                 // Simulate trim adjustments
                 let trim_controller = engine.get_trim_controller_mut();
@@ -432,30 +455,30 @@ impl PerformanceValidator {
                 };
                 let _ = trim_controller.apply_setpoint_change(change);
             }
-            
+
             // Record axis frame
             let _ = engine.record_axis_frame(
                 "test_device".to_string(),
                 (iteration_count as f32 * 0.01) % 2.0 - 1.0, // Sine-like input
                 (iteration_count as f32 * 0.01) % 2.0 - 1.0, // Processed output
-                2.0 + (iteration_count as f32 * 0.1) % 3.0,   // Varying torque
+                2.0 + (iteration_count as f32 * 0.1) % 3.0,  // Varying torque
             );
-            
+
             let processing_time = iteration_start.elapsed();
             let processing_time_us = processing_time.as_secs_f32() * 1_000_000.0;
             processing_times.push(processing_time_us);
-            
+
             // Check for missed deadlines
             if processing_time > Duration::from_millis(5) {
                 missed_deadlines += 1;
             }
-            
+
             // Sleep to maintain target frequency
             let elapsed = iteration_start.elapsed();
             if elapsed < target_interval {
                 std::thread::sleep(target_interval - elapsed);
             }
-            
+
             iteration_count += 1;
         }
 
@@ -463,7 +486,11 @@ impl PerformanceValidator {
     }
 
     /// Calculate performance metrics from processing times
-    fn calculate_metrics(&self, mut processing_times: Vec<f32>, missed_deadlines: usize) -> PerformanceMetrics {
+    fn calculate_metrics(
+        &self,
+        mut processing_times: Vec<f32>,
+        missed_deadlines: usize,
+    ) -> PerformanceMetrics {
         if processing_times.is_empty() {
             return PerformanceMetrics {
                 avg_processing_time_us: 0.0,
@@ -476,19 +503,21 @@ impl PerformanceValidator {
         }
 
         processing_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let sample_count = processing_times.len();
         let avg_processing_time_us = processing_times.iter().sum::<f32>() / sample_count as f32;
         let max_processing_time_us = processing_times[sample_count - 1];
-        
+
         // Calculate p99
         let p99_index = ((sample_count as f32 * 0.99) as usize).min(sample_count - 1);
         let p99_processing_time_us = processing_times[p99_index];
-        
+
         // Calculate jitter (standard deviation)
-        let variance = processing_times.iter()
+        let variance = processing_times
+            .iter()
             .map(|&x| (x - avg_processing_time_us).powi(2))
-            .sum::<f32>() / sample_count as f32;
+            .sum::<f32>()
+            / sample_count as f32;
         let jitter_us = variance.sqrt();
 
         PerformanceMetrics {
@@ -529,7 +558,8 @@ impl PerformanceValidator {
             failures.push("No samples collected during test".to_string());
         }
 
-        if metrics.avg_processing_time_us > 1000.0 { // 1ms average seems excessive
+        if metrics.avg_processing_time_us > 1000.0 {
+            // 1ms average seems excessive
             failures.push(format!(
                 "Average processing time too high: {:.2}μs",
                 metrics.avg_processing_time_us
@@ -550,21 +580,39 @@ impl PerformanceValidator {
         report.push_str(&format!("- Total Tests: {}\n", total_tests));
         report.push_str(&format!("- Passed: {}\n", passed_tests));
         report.push_str(&format!("- Failed: {}\n", failed_tests));
-        report.push_str(&format!("- Success Rate: {:.1}%\n\n", 
-            (passed_tests as f32 / total_tests as f32) * 100.0));
+        report.push_str(&format!(
+            "- Success Rate: {:.1}%\n\n",
+            (passed_tests as f32 / total_tests as f32) * 100.0
+        ));
 
         report.push_str("## Performance Criteria\n");
-        report.push_str(&format!("- Max p99 Latency: {:.2}μs\n", self.config.max_p99_latency_us));
-        report.push_str(&format!("- Max Jitter: {:.2}μs\n", self.config.max_jitter_us));
-        report.push_str(&format!("- Max Missed Deadlines: {}\n", self.config.max_missed_deadlines));
-        report.push_str(&format!("- Test Duration: {:.1}s\n\n", self.config.test_duration.as_secs_f32()));
+        report.push_str(&format!(
+            "- Max p99 Latency: {:.2}μs\n",
+            self.config.max_p99_latency_us
+        ));
+        report.push_str(&format!(
+            "- Max Jitter: {:.2}μs\n",
+            self.config.max_jitter_us
+        ));
+        report.push_str(&format!(
+            "- Max Missed Deadlines: {}\n",
+            self.config.max_missed_deadlines
+        ));
+        report.push_str(&format!(
+            "- Test Duration: {:.1}s\n\n",
+            self.config.test_duration.as_secs_f32()
+        ));
 
         report.push_str("## Test Results\n\n");
-        
+
         for result in results {
-            let status = if result.passed { "✅ PASS" } else { "❌ FAIL" };
+            let status = if result.passed {
+                "✅ PASS"
+            } else {
+                "❌ FAIL"
+            };
             report.push_str(&format!("### {} - {}\n", status, result.name));
-            
+
             let m = &result.metrics;
             report.push_str(&format!("- Samples: {}\n", m.sample_count));
             report.push_str(&format!("- Average: {:.2}μs\n", m.avg_processing_time_us));
@@ -572,22 +620,20 @@ impl PerformanceValidator {
             report.push_str(&format!("- Max: {:.2}μs\n", m.max_processing_time_us));
             report.push_str(&format!("- Jitter: {:.2}μs\n", m.jitter_us));
             report.push_str(&format!("- Missed Deadlines: {}\n", m.missed_deadlines));
-            
+
             if !result.failures.is_empty() {
                 report.push_str("- Failures:\n");
                 for failure in &result.failures {
                     report.push_str(&format!("  - {}\n", failure));
                 }
             }
-            
+
             report.push_str("\n");
         }
 
         report
     }
 }
-
-
 
 impl Default for PerformanceValidator {
     fn default() -> Self {
@@ -613,11 +659,15 @@ mod tests {
             ..Default::default()
         };
         let validator = PerformanceValidator::new(config);
-        
+
         let result = validator.test_baseline_ffb_performance();
-        
+
         // Baseline should pass performance criteria
-        assert!(result.passed, "Baseline performance test failed: {:?}", result.failures);
+        assert!(
+            result.passed,
+            "Baseline performance test failed: {:?}",
+            result.failures
+        );
         assert!(result.metrics.sample_count > 0);
     }
 
@@ -628,20 +678,24 @@ mod tests {
             ..Default::default()
         };
         let validator = PerformanceValidator::new(config);
-        
+
         let result = validator.test_mode_negotiation_performance();
-        
+
         // Mode negotiation should not significantly impact performance
-        assert!(result.passed, "Mode negotiation performance test failed: {:?}", result.failures);
+        assert!(
+            result.passed,
+            "Mode negotiation performance test failed: {:?}",
+            result.failures
+        );
     }
 
     #[test]
     fn test_metrics_calculation() {
         let validator = PerformanceValidator::default();
-        
+
         let processing_times = vec![100.0, 200.0, 150.0, 300.0, 120.0];
         let metrics = validator.calculate_metrics(processing_times, 0);
-        
+
         assert_eq!(metrics.sample_count, 5);
         assert_eq!(metrics.avg_processing_time_us, 174.0);
         assert_eq!(metrics.max_processing_time_us, 300.0);
@@ -651,25 +705,23 @@ mod tests {
     #[test]
     fn test_performance_report_generation() {
         let validator = PerformanceValidator::default();
-        
-        let mock_results = vec![
-            PerformanceResult {
-                name: "Test 1".to_string(),
-                passed: true,
-                metrics: PerformanceMetrics {
-                    avg_processing_time_us: 100.0,
-                    p99_processing_time_us: 200.0,
-                    max_processing_time_us: 250.0,
-                    jitter_us: 50.0,
-                    sample_count: 1000,
-                    missed_deadlines: 0,
-                },
-                failures: vec![],
+
+        let mock_results = vec![PerformanceResult {
+            name: "Test 1".to_string(),
+            passed: true,
+            metrics: PerformanceMetrics {
+                avg_processing_time_us: 100.0,
+                p99_processing_time_us: 200.0,
+                max_processing_time_us: 250.0,
+                jitter_us: 50.0,
+                sample_count: 1000,
+                missed_deadlines: 0,
             },
-        ];
-        
+            failures: vec![],
+        }];
+
         let report = validator.generate_performance_report(&mock_results);
-        
+
         assert!(report.contains("Total Tests: 1"));
         assert!(report.contains("Passed: 1"));
         assert!(report.contains("✅ PASS"));

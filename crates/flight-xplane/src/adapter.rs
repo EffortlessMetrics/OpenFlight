@@ -15,10 +15,10 @@ use crate::{
     web_api::{WebApiClient, WebApiConfig},
 };
 use flight_bus::{
-    adapters::{xplane::XPlaneConverter, SimAdapter},
+    BusPublisher,
+    adapters::{SimAdapter, xplane::XPlaneConverter},
     snapshot::{BusSnapshot, EngineData, Environment, Kinematics, Navigation},
     types::{AircraftId, SimId},
-    BusPublisher,
 };
 use flight_core::{FlightError, Result};
 use serde::{Deserialize, Serialize};
@@ -121,26 +121,29 @@ impl XPlaneAdapter {
     pub fn new(config: XPlaneAdapterConfig, bus_publisher: Arc<BusPublisher>) -> Result<Self> {
         let udp_client = UdpClient::new(config.udp.clone())
             .map_err(|e| FlightError::Configuration(format!("UDP client error: {}", e)))?;
-        
-        let web_api_client = if let Some(web_config) = &config.web_api {
-            Some(WebApiClient::new(web_config.clone())
-                .map_err(|e| FlightError::Configuration(format!("Web API client error: {}", e)))?)
-        } else {
-            None
-        };
+
+        let web_api_client =
+            if let Some(web_config) = &config.web_api {
+                Some(WebApiClient::new(web_config.clone()).map_err(|e| {
+                    FlightError::Configuration(format!("Web API client error: {}", e))
+                })?)
+            } else {
+                None
+            };
 
         let plugin_interface = if config.enable_plugin {
-            Some(PluginInterface::new()
-                .map_err(|e| FlightError::Configuration(format!("Plugin interface error: {}", e)))?)
+            Some(PluginInterface::new().map_err(|e| {
+                FlightError::Configuration(format!("Plugin interface error: {}", e))
+            })?)
         } else {
             None
         };
 
         let dataref_manager = DataRefManager::new();
         let aircraft_detector = AircraftDetector::new();
-        let latency_tracker = LatencyTracker::new(LatencyBudget::new(
-            Duration::from_millis(config.latency_budget_ms),
-        ));
+        let latency_tracker = LatencyTracker::new(LatencyBudget::new(Duration::from_millis(
+            config.latency_budget_ms,
+        )));
 
         Ok(Self {
             config,
@@ -159,7 +162,7 @@ impl XPlaneAdapter {
     /// Start the adapter
     pub async fn start(&self) -> Result<()> {
         info!("Starting X-Plane adapter");
-        
+
         // Set running flag
         *self.running.write().unwrap() = true;
 
@@ -213,10 +216,10 @@ impl XPlaneAdapter {
     /// Test connection to X-Plane
     async fn test_connection(&self) -> Result<()> {
         debug!("Testing connection to X-Plane");
-        
+
         // Try to get a basic DataRef to test connectivity
         let test_dataref = DataRef::new("sim/version/xplane_internal_version".to_string());
-        
+
         match tokio::time::timeout(
             Duration::from_millis(self.config.dataref_timeout_ms),
             self.udp_client.request_dataref(&test_dataref),
@@ -250,13 +253,14 @@ impl XPlaneAdapter {
         let running = self.running.clone();
 
         let handle = tokio::spawn(async move {
-            let mut interval = interval(Duration::from_millis(1000 / config.publish_rate_hz as u64));
-            
+            let mut interval =
+                interval(Duration::from_millis(1000 / config.publish_rate_hz as u64));
+
             while *running.read().unwrap() {
                 interval.tick().await;
-                
+
                 let start_time = Instant::now();
-                
+
                 // Get current aircraft
                 let aircraft = {
                     let aircraft_guard = current_aircraft.read().unwrap();
@@ -281,7 +285,7 @@ impl XPlaneAdapter {
                                     // Measure latency
                                     let latency = start_time.elapsed();
                                     latency_tracker.record_measurement(latency);
-                                    
+
                                     // Check latency budget
                                     if latency.as_millis() as u64 > config.latency_budget_ms {
                                         warn!(
@@ -323,11 +327,13 @@ impl XPlaneAdapter {
         let running = self.running.clone();
 
         let handle = tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(config.aircraft_detection_interval_s as u64));
-            
+            let mut interval = interval(Duration::from_secs(
+                config.aircraft_detection_interval_s as u64,
+            ));
+
             while *running.read().unwrap() {
                 interval.tick().await;
-                
+
                 match aircraft_detector.detect_aircraft(&udp_client).await {
                     Ok(detected) => {
                         let mut aircraft_guard = current_aircraft.write().unwrap();
@@ -335,7 +341,7 @@ impl XPlaneAdapter {
                             Some(current) => current.icao != detected.icao,
                             None => true,
                         };
-                        
+
                         if changed {
                             info!("Aircraft changed to: {}", detected.icao);
                             *aircraft_guard = Some(detected);
@@ -407,7 +413,8 @@ impl XPlaneAdapter {
         if let Some(web_client) = web_api_client {
             for dataref in &datarefs {
                 if !dataref_values.contains_key(&dataref.name)
-                    && let Ok(value) = web_client.get_dataref(&dataref.name).await {
+                    && let Ok(value) = web_client.get_dataref(&dataref.name).await
+                {
                     dataref_values.insert(dataref.name.clone(), value);
                 }
             }
@@ -444,7 +451,8 @@ impl XPlaneAdapter {
         snapshot.navigation = Self::convert_navigation(&raw_data.dataref_values)?;
 
         // Validate the snapshot
-        snapshot.validate()
+        snapshot
+            .validate()
             .map_err(|e| FlightError::Configuration(format!("Snapshot validation error: {}", e)))?;
 
         Ok(snapshot)
@@ -455,19 +463,27 @@ impl XPlaneAdapter {
         let mut kinematics = Kinematics::default();
 
         // Airspeed (m/s to knots conversion)
-        if let Some(DataRefValue::Float(ias_mps)) = datarefs.get("sim/flightmodel/position/indicated_airspeed") {
+        if let Some(DataRefValue::Float(ias_mps)) =
+            datarefs.get("sim/flightmodel/position/indicated_airspeed")
+        {
             kinematics.ias = XPlaneConverter::convert_airspeed_mps(*ias_mps)
                 .map_err(|e| FlightError::Configuration(format!("IAS conversion error: {}", e)))?;
         }
 
-        if let Some(DataRefValue::Float(tas_mps)) = datarefs.get("sim/flightmodel/position/true_airspeed") {
+        if let Some(DataRefValue::Float(tas_mps)) =
+            datarefs.get("sim/flightmodel/position/true_airspeed")
+        {
             kinematics.tas = XPlaneConverter::convert_airspeed_mps(*tas_mps)
                 .map_err(|e| FlightError::Configuration(format!("TAS conversion error: {}", e)))?;
         }
 
-        if let Some(DataRefValue::Float(gs_mps)) = datarefs.get("sim/flightmodel/position/groundspeed") {
-            kinematics.ground_speed = XPlaneConverter::convert_airspeed_mps(*gs_mps)
-                .map_err(|e| FlightError::Configuration(format!("Ground speed conversion error: {}", e)))?;
+        if let Some(DataRefValue::Float(gs_mps)) =
+            datarefs.get("sim/flightmodel/position/groundspeed")
+        {
+            kinematics.ground_speed =
+                XPlaneConverter::convert_airspeed_mps(*gs_mps).map_err(|e| {
+                    FlightError::Configuration(format!("Ground speed conversion error: {}", e))
+                })?;
         }
 
         // Angles
@@ -477,8 +493,9 @@ impl XPlaneAdapter {
         }
 
         if let Some(DataRefValue::Float(beta)) = datarefs.get("sim/flightmodel/position/beta") {
-            kinematics.sideslip = XPlaneConverter::convert_angle_degrees(*beta)
-                .map_err(|e| FlightError::Configuration(format!("Sideslip conversion error: {}", e)))?;
+            kinematics.sideslip = XPlaneConverter::convert_angle_degrees(*beta).map_err(|e| {
+                FlightError::Configuration(format!("Sideslip conversion error: {}", e))
+            })?;
         }
 
         if let Some(DataRefValue::Float(phi)) = datarefs.get("sim/flightmodel/position/phi") {
@@ -487,29 +504,34 @@ impl XPlaneAdapter {
         }
 
         if let Some(DataRefValue::Float(theta)) = datarefs.get("sim/flightmodel/position/theta") {
-            kinematics.pitch = XPlaneConverter::convert_angle_degrees(*theta)
-                .map_err(|e| FlightError::Configuration(format!("Pitch conversion error: {}", e)))?;
+            kinematics.pitch = XPlaneConverter::convert_angle_degrees(*theta).map_err(|e| {
+                FlightError::Configuration(format!("Pitch conversion error: {}", e))
+            })?;
         }
 
         if let Some(DataRefValue::Float(psi)) = datarefs.get("sim/flightmodel/position/psi") {
-            kinematics.heading = XPlaneConverter::convert_angle_degrees(*psi)
-                .map_err(|e| FlightError::Configuration(format!("Heading conversion error: {}", e)))?;
+            kinematics.heading = XPlaneConverter::convert_angle_degrees(*psi).map_err(|e| {
+                FlightError::Configuration(format!("Heading conversion error: {}", e))
+            })?;
         }
 
         // G-forces
         if let Some(DataRefValue::Float(g_normal)) = datarefs.get("sim/flightmodel/forces/g_nrml") {
-            kinematics.g_force = XPlaneConverter::convert_g_force(*g_normal)
-                .map_err(|e| FlightError::Configuration(format!("G-force conversion error: {}", e)))?;
+            kinematics.g_force = XPlaneConverter::convert_g_force(*g_normal).map_err(|e| {
+                FlightError::Configuration(format!("G-force conversion error: {}", e))
+            })?;
         }
 
         if let Some(DataRefValue::Float(g_side)) = datarefs.get("sim/flightmodel/forces/g_side") {
-            kinematics.g_lateral = XPlaneConverter::convert_g_force(*g_side)
-                .map_err(|e| FlightError::Configuration(format!("Lateral G-force conversion error: {}", e)))?;
+            kinematics.g_lateral = XPlaneConverter::convert_g_force(*g_side).map_err(|e| {
+                FlightError::Configuration(format!("Lateral G-force conversion error: {}", e))
+            })?;
         }
 
         if let Some(DataRefValue::Float(g_axil)) = datarefs.get("sim/flightmodel/forces/g_axil") {
-            kinematics.g_longitudinal = XPlaneConverter::convert_g_force(*g_axil)
-                .map_err(|e| FlightError::Configuration(format!("Longitudinal G-force conversion error: {}", e)))?;
+            kinematics.g_longitudinal = XPlaneConverter::convert_g_force(*g_axil).map_err(|e| {
+                FlightError::Configuration(format!("Longitudinal G-force conversion error: {}", e))
+            })?;
         }
 
         // Vertical speed (m/s to ft/min)
@@ -521,11 +543,15 @@ impl XPlaneAdapter {
     }
 
     /// Convert aircraft configuration from X-Plane DataRefs
-    fn convert_aircraft_config(datarefs: &HashMap<String, DataRefValue>) -> Result<flight_bus::snapshot::AircraftConfig> {
+    fn convert_aircraft_config(
+        datarefs: &HashMap<String, DataRefValue>,
+    ) -> Result<flight_bus::snapshot::AircraftConfig> {
         let mut config = flight_bus::snapshot::AircraftConfig::default();
 
         // Gear positions
-        if let Some(DataRefValue::Float(gear_deploy)) = datarefs.get("sim/aircraft/parts/acf_gear_deploy") {
+        if let Some(DataRefValue::Float(gear_deploy)) =
+            datarefs.get("sim/aircraft/parts/acf_gear_deploy")
+        {
             let gear_pos = if *gear_deploy > 0.9 {
                 flight_bus::types::GearPosition::Down
             } else if *gear_deploy < 0.1 {
@@ -533,7 +559,7 @@ impl XPlaneAdapter {
             } else {
                 flight_bus::types::GearPosition::Transitioning
             };
-            
+
             config.gear = flight_bus::types::GearState {
                 nose: gear_pos,
                 left: gear_pos,
@@ -542,15 +568,23 @@ impl XPlaneAdapter {
         }
 
         // Flaps
-        if let Some(DataRefValue::Float(flap_ratio)) = datarefs.get("sim/aircraft/parts/acf_flap_deploy") {
-            config.flaps = XPlaneConverter::convert_ratio_to_percentage(*flap_ratio)
-                .map_err(|e| FlightError::Configuration(format!("Flaps conversion error: {}", e)))?;
+        if let Some(DataRefValue::Float(flap_ratio)) =
+            datarefs.get("sim/aircraft/parts/acf_flap_deploy")
+        {
+            config.flaps =
+                XPlaneConverter::convert_ratio_to_percentage(*flap_ratio).map_err(|e| {
+                    FlightError::Configuration(format!("Flaps conversion error: {}", e))
+                })?;
         }
 
         // Spoilers
-        if let Some(DataRefValue::Float(speedbrake_ratio)) = datarefs.get("sim/aircraft/parts/acf_speedbrake_deploy") {
+        if let Some(DataRefValue::Float(speedbrake_ratio)) =
+            datarefs.get("sim/aircraft/parts/acf_speedbrake_deploy")
+        {
             config.spoilers = XPlaneConverter::convert_ratio_to_percentage(*speedbrake_ratio)
-                .map_err(|e| FlightError::Configuration(format!("Spoilers conversion error: {}", e)))?;
+                .map_err(|e| {
+                    FlightError::Configuration(format!("Spoilers conversion error: {}", e))
+                })?;
         }
 
         Ok(config)
@@ -564,17 +598,19 @@ impl XPlaneAdapter {
         for i in 0..8 {
             let running_key = format!("sim/flightmodel/engine/ENGN_running[{}]", i);
             let n1_key = format!("sim/flightmodel/engine/ENGN_N1_[{}]", i);
-            
+
             if let Some(DataRefValue::Int(running)) = datarefs.get(&running_key) {
                 let engine = EngineData {
                     index: i as u8,
                     running: *running != 0,
                     rpm: if let Some(DataRefValue::Float(n1)) = datarefs.get(&n1_key) {
-                        XPlaneConverter::convert_n1_percentage(*n1)
-                            .map_err(|e| FlightError::Configuration(format!("N1 conversion error: {}", e)))?
+                        XPlaneConverter::convert_n1_percentage(*n1).map_err(|e| {
+                            FlightError::Configuration(format!("N1 conversion error: {}", e))
+                        })?
                     } else {
-                        flight_bus::types::Percentage::new(0.0)
-                            .map_err(|e| FlightError::Configuration(format!("Default RPM error: {}", e)))?
+                        flight_bus::types::Percentage::new(0.0).map_err(|e| {
+                            FlightError::Configuration(format!("Default RPM error: {}", e))
+                        })?
                     },
                     manifold_pressure: None, // TODO: Add if available
                     egt: None,               // TODO: Add if available
@@ -595,24 +631,34 @@ impl XPlaneAdapter {
         let mut environment = Environment::default();
 
         // Altitude
-        if let Some(DataRefValue::Float(alt_m)) = datarefs.get("sim/flightmodel/position/elevation") {
+        if let Some(DataRefValue::Float(alt_m)) = datarefs.get("sim/flightmodel/position/elevation")
+        {
             environment.altitude = XPlaneConverter::convert_altitude_m_to_ft(*alt_m);
         }
 
         // Temperature
-        if let Some(DataRefValue::Float(temp_c)) = datarefs.get("sim/weather/temperature_ambient_c") {
+        if let Some(DataRefValue::Float(temp_c)) = datarefs.get("sim/weather/temperature_ambient_c")
+        {
             environment.oat = XPlaneConverter::convert_temperature_celsius(*temp_c);
         }
 
         // Wind
-        if let Some(DataRefValue::Float(wind_speed_mps)) = datarefs.get("sim/weather/wind_speed_kt[0]") {
+        if let Some(DataRefValue::Float(wind_speed_mps)) =
+            datarefs.get("sim/weather/wind_speed_kt[0]")
+        {
             environment.wind_speed = XPlaneConverter::convert_airspeed_mps(*wind_speed_mps)
-                .map_err(|e| FlightError::Configuration(format!("Wind speed conversion error: {}", e)))?;
+                .map_err(|e| {
+                    FlightError::Configuration(format!("Wind speed conversion error: {}", e))
+                })?;
         }
 
-        if let Some(DataRefValue::Float(wind_dir)) = datarefs.get("sim/weather/wind_direction_degt[0]") {
+        if let Some(DataRefValue::Float(wind_dir)) =
+            datarefs.get("sim/weather/wind_direction_degt[0]")
+        {
             environment.wind_direction = XPlaneConverter::convert_angle_degrees(*wind_dir)
-                .map_err(|e| FlightError::Configuration(format!("Wind direction conversion error: {}", e)))?;
+                .map_err(|e| {
+                    FlightError::Configuration(format!("Wind direction conversion error: {}", e))
+                })?;
         }
 
         Ok(environment)
@@ -627,14 +673,17 @@ impl XPlaneAdapter {
             navigation.latitude = *lat;
         }
 
-        if let Some(DataRefValue::Double(lon)) = datarefs.get("sim/flightmodel/position/longitude") {
+        if let Some(DataRefValue::Double(lon)) = datarefs.get("sim/flightmodel/position/longitude")
+        {
             navigation.longitude = *lon;
         }
 
         // Ground track
         if let Some(DataRefValue::Float(track)) = datarefs.get("sim/flightmodel/position/hpath") {
-            navigation.ground_track = XPlaneConverter::convert_angle_degrees(*track)
-                .map_err(|e| FlightError::Configuration(format!("Ground track conversion error: {}", e)))?;
+            navigation.ground_track =
+                XPlaneConverter::convert_angle_degrees(*track).map_err(|e| {
+                    FlightError::Configuration(format!("Ground track conversion error: {}", e))
+                })?;
         }
 
         Ok(navigation)
@@ -660,12 +709,15 @@ impl SimAdapter for XPlaneAdapter {
     type RawData = XPlaneRawData;
     type Error = XPlaneError;
 
-    fn convert_to_snapshot(&self, raw: Self::RawData) -> std::result::Result<BusSnapshot, XPlaneError> {
+    fn convert_to_snapshot(
+        &self,
+        raw: Self::RawData,
+    ) -> std::result::Result<BusSnapshot, XPlaneError> {
         match Self::convert_raw_to_snapshot(raw) {
             Ok(snapshot) => Ok(snapshot),
             Err(e) => Err(XPlaneError::DataRef {
                 message: e.to_string(),
-            })
+            }),
         }
     }
 
@@ -705,13 +757,12 @@ mod tests {
     use super::*;
     use flight_bus::BusPublisher;
     use std::sync::Arc;
-    
 
     #[tokio::test]
     async fn test_adapter_creation() {
         let config = XPlaneAdapterConfig::default();
         let bus_publisher = Arc::new(BusPublisher::new(60.0));
-        
+
         let adapter = XPlaneAdapter::new(config, bus_publisher);
         assert!(adapter.is_ok());
     }

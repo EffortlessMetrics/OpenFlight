@@ -3,11 +3,11 @@
 
 //! Digital signature verification for updates
 
-use ed25519_dalek::{VerifyingKey, Signature, Verifier};
+use anyhow::anyhow;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use anyhow::anyhow;
 
 /// Update signature containing the signature and metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,11 +26,7 @@ pub struct UpdateSignature {
 
 impl UpdateSignature {
     /// Create a new update signature
-    pub fn new(
-        signature: String,
-        content_hash: String,
-        signer: String,
-    ) -> Self {
+    pub fn new(signature: String, content_hash: String, signer: String) -> Self {
         Self {
             signature,
             content_hash,
@@ -58,14 +54,13 @@ impl SignatureVerifier {
         signature_bytes: &[u8],
     ) -> crate::Result<bool> {
         // Convert Vec<u8> to [u8; 64] with proper error handling
-        let sig_array: [u8; 64] = signature_bytes.try_into()
-            .map_err(|_| crate::UpdateError::InvalidSignature(
-                anyhow!("Invalid signature length").to_string()
-            ))?;
-        
+        let sig_array: [u8; 64] = signature_bytes.try_into().map_err(|_| {
+            crate::UpdateError::InvalidSignature(anyhow!("Invalid signature length").to_string())
+        })?;
+
         // Handle Signature::from_bytes conversion
         let signature = Signature::from_bytes(&sig_array);
-        
+
         // Verify signature
         match verifying_key.verify(message, &signature) {
             Ok(()) => Ok(true),
@@ -75,34 +70,30 @@ impl SignatureVerifier {
             }
         }
     }
-    
+
     /// Helper function to create VerifyingKey from bytes with proper length checks
     pub fn verifying_key_from_bytes(key_bytes: &[u8]) -> crate::Result<VerifyingKey> {
         // Convert Vec<u8> to [u8; 32] with proper error handling
-        let key_array: [u8; 32] = key_bytes.try_into()
-            .map_err(|_| crate::UpdateError::InvalidSignature(
-                anyhow!("Invalid public key length").to_string()
-            ))?;
-        
+        let key_array: [u8; 32] = key_bytes.try_into().map_err(|_| {
+            crate::UpdateError::InvalidSignature(anyhow!("Invalid public key length").to_string())
+        })?;
+
         // Handle VerifyingKey::from_bytes conversion
         VerifyingKey::from_bytes(&key_array)
-            .map_err(|e| crate::UpdateError::InvalidSignature(
-                format!("Invalid public key: {}", e)
-            ))
+            .map_err(|e| crate::UpdateError::InvalidSignature(format!("Invalid public key: {}", e)))
     }
 
     /// Create a new signature verifier with the given public key
     pub fn new(public_key_hex: &str) -> crate::Result<Self> {
-        let key_bytes = hex::decode(public_key_hex)
-            .map_err(|e| crate::UpdateError::InvalidSignature(
-                format!("Invalid public key hex: {}", e)
-            ))?;
-        
+        let key_bytes = hex::decode(public_key_hex).map_err(|e| {
+            crate::UpdateError::InvalidSignature(format!("Invalid public key hex: {}", e))
+        })?;
+
         let verifying_key = Self::verifying_key_from_bytes(&key_bytes)?;
-        
+
         Ok(Self { verifying_key })
     }
-    
+
     /// Verify a signature against file content
     pub async fn verify_file(
         &self,
@@ -112,7 +103,7 @@ impl SignatureVerifier {
         // Read and hash the file
         let content = tokio::fs::read(file_path).await?;
         let content_hash = self.hash_content(&content);
-        
+
         // Verify content hash matches
         if content_hash != signature.content_hash {
             tracing::warn!(
@@ -122,10 +113,10 @@ impl SignatureVerifier {
             );
             return Ok(false);
         }
-        
+
         self.verify_content(&content, signature).await
     }
-    
+
     /// Verify a signature against raw content
     pub async fn verify_content(
         &self,
@@ -134,44 +125,47 @@ impl SignatureVerifier {
     ) -> crate::Result<bool> {
         // Verify algorithm
         if signature.algorithm != "Ed25519" {
-            return Err(crate::UpdateError::InvalidSignature(
-                format!("Unsupported algorithm: {}", signature.algorithm)
-            ));
+            return Err(crate::UpdateError::InvalidSignature(format!(
+                "Unsupported algorithm: {}",
+                signature.algorithm
+            )));
         }
-        
+
         // Decode signature
-        let sig_bytes = hex::decode(&signature.signature)
-            .map_err(|e| crate::UpdateError::InvalidSignature(
-                format!("Invalid signature hex: {}", e)
-            ))?;
-        
+        let sig_bytes = hex::decode(&signature.signature).map_err(|e| {
+            crate::UpdateError::InvalidSignature(format!("Invalid signature hex: {}", e))
+        })?;
+
         // Use helper function for verification
         let result = Self::verify_signature_bytes(&self.verifying_key, content, &sig_bytes)?;
-        
+
         if result {
-            tracing::info!("Signature verification successful for signer: {}", signature.signer);
+            tracing::info!(
+                "Signature verification successful for signer: {}",
+                signature.signer
+            );
         }
-        
+
         Ok(result)
     }
-    
+
     /// Hash content using SHA256
     pub fn hash_content(&self, content: &[u8]) -> String {
         let mut hasher = Sha256::new();
         hasher.update(content);
         hex::encode(hasher.finalize())
     }
-    
+
     /// Verify signature timestamp is within acceptable range
     pub fn verify_timestamp(&self, signature: &UpdateSignature, max_age_hours: u64) -> bool {
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
+
         let age_seconds = now.saturating_sub(signature.timestamp);
         let max_age_seconds = max_age_hours * 3600;
-        
+
         if age_seconds > max_age_seconds {
             tracing::warn!(
                 "Signature too old: {} hours (max: {} hours)",
@@ -180,7 +174,7 @@ impl SignatureVerifier {
             );
             return false;
         }
-        
+
         true
     }
 }
@@ -209,17 +203,17 @@ impl SignatureManifest {
             ),
         }
     }
-    
+
     /// Add a file signature to the manifest
     pub fn add_file_signature(&mut self, file_path: &str, signature: UpdateSignature) {
         self.files.insert(file_path.to_string(), signature);
     }
-    
+
     /// Get signature for a specific file
     pub fn get_file_signature(&self, file_path: &str) -> Option<&UpdateSignature> {
         self.files.get(file_path)
     }
-    
+
     /// Verify all file signatures in the manifest
     pub async fn verify_all_files(
         &self,
@@ -228,18 +222,18 @@ impl SignatureManifest {
     ) -> crate::Result<bool> {
         for (file_path, signature) in &self.files {
             let full_path = base_path.join(file_path);
-            
+
             if !full_path.exists() {
                 tracing::error!("File not found: {}", full_path.display());
                 return Ok(false);
             }
-            
+
             if !verifier.verify_file(&full_path, signature).await? {
                 tracing::error!("Signature verification failed for: {}", file_path);
                 return Ok(false);
             }
         }
-        
+
         Ok(true)
     }
 }
@@ -253,7 +247,7 @@ impl Default for SignatureManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{SigningKey, Signer};
+    use ed25519_dalek::{Signer, SigningKey};
     use rand_core::OsRng;
 
     #[tokio::test]
@@ -261,26 +255,23 @@ mod tests {
         // Generate a test signing key
         let signing_key = SigningKey::generate(&mut OsRng);
         let verifying_key = signing_key.verifying_key();
-        
+
         // Create test content
         let content = b"test update content";
-        
+
         // Sign the content
         let signature_bytes = signing_key.sign(content);
         let signature_hex = hex::encode(signature_bytes.to_bytes());
-        
+
         // Create verifier
         let public_key_hex = hex::encode(verifying_key.to_bytes());
         let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
-        
+
         // Create signature
         let content_hash = verifier.hash_content(content);
-        let update_sig = UpdateSignature::new(
-            signature_hex,
-            content_hash,
-            "test-signer".to_string(),
-        );
-        
+        let update_sig =
+            UpdateSignature::new(signature_hex, content_hash, "test-signer".to_string());
+
         // Verify signature
         let result = verifier.verify_content(content, &update_sig).await.unwrap();
         assert!(result);
@@ -289,15 +280,11 @@ mod tests {
     #[test]
     fn test_signature_timestamp_validation() {
         let verifier = SignatureVerifier::new(&hex::encode([0u8; 32])).unwrap();
-        
+
         // Current timestamp should be valid
-        let current_sig = UpdateSignature::new(
-            String::new(),
-            String::new(),
-            "test".to_string(),
-        );
+        let current_sig = UpdateSignature::new(String::new(), String::new(), "test".to_string());
         assert!(verifier.verify_timestamp(&current_sig, 24));
-        
+
         // Old timestamp should be invalid
         let old_sig = UpdateSignature {
             timestamp: 0, // Unix epoch
@@ -309,15 +296,15 @@ mod tests {
     #[test]
     fn test_signature_manifest() {
         let mut manifest = SignatureManifest::new();
-        
+
         let signature = UpdateSignature::new(
             "test_sig".to_string(),
             "test_hash".to_string(),
             "test_signer".to_string(),
         );
-        
+
         manifest.add_file_signature("test.bin", signature.clone());
-        
+
         let retrieved = manifest.get_file_signature("test.bin").unwrap();
         assert_eq!(retrieved.signature, signature.signature);
         assert_eq!(retrieved.content_hash, signature.content_hash);

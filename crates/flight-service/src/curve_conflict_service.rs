@@ -6,21 +6,23 @@
 //! Provides the main service interface for detecting and resolving
 //! curve conflicts across all axes and simulators.
 
-use flight_axis::{AxisEngine, CurveConflict, ConflictType, ConflictSeverity, ResolutionType, ResolutionDetails};
+use crate::one_click_resolver::{OneClickResolver, OneClickResolverConfig};
+use anyhow::Result;
+use flight_axis::{
+    AxisEngine, ConflictSeverity, ConflictType, CurveConflict, ResolutionDetails, ResolutionType,
+};
 use flight_core::{CurveConflictWriter, WriteResult, WritersConfig};
 use flight_ipc::proto::{
-    DetectCurveConflictsRequest, DetectCurveConflictsResponse, CurveConflict as ProtoCurveConflict,
-    ResolveCurveConflictRequest, ResolveCurveConflictResponse, ConflictType as ProtoConflictType,
-    ConflictSeverity as ProtoConflictSeverity, ResolutionType as ProtoResolutionType,
     ConflictMetadata as ProtoConflictMetadata, ConflictResolution as ProtoConflictResolution,
-    ResolutionAction, ResolutionResult,
+    ConflictSeverity as ProtoConflictSeverity, ConflictType as ProtoConflictType,
+    CurveConflict as ProtoCurveConflict, DetectCurveConflictsRequest, DetectCurveConflictsResponse,
+    ResolutionAction, ResolutionResult, ResolutionType as ProtoResolutionType,
+    ResolveCurveConflictRequest, ResolveCurveConflictResponse,
 };
-use crate::one_click_resolver::{OneClickResolver, OneClickResolverConfig};
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
-use tracing::{info, warn, error, debug};
-use anyhow::Result;
+use tracing::{debug, error, info, warn};
 
 /// Configuration for the curve conflict service
 #[derive(Debug, Clone)]
@@ -78,9 +80,13 @@ impl CurveConflictService {
 
     /// Create new curve conflict service with custom configuration
     pub fn with_config(config: CurveConflictServiceConfig) -> Result<Self> {
-        let writer = Arc::new(CurveConflictWriter::with_config(config.writers_config.clone())?);
-        let one_click_resolver = Arc::new(RwLock::new(OneClickResolver::with_config(OneClickResolverConfig::default())?));
-        
+        let writer = Arc::new(CurveConflictWriter::with_config(
+            config.writers_config.clone(),
+        )?);
+        let one_click_resolver = Arc::new(RwLock::new(OneClickResolver::with_config(
+            OneClickResolverConfig::default(),
+        )?));
+
         Ok(Self {
             config,
             axis_engines: Arc::new(RwLock::new(HashMap::new())),
@@ -93,7 +99,10 @@ impl CurveConflictService {
 
     /// Register an axis engine for conflict detection
     pub fn register_axis_engine(&self, axis_name: String, engine: Arc<AxisEngine>) {
-        info!("Registered axis engine for conflict detection: {}", axis_name);
+        info!(
+            "Registered axis engine for conflict detection: {}",
+            axis_name
+        );
         self.axis_engines.write().insert(axis_name, engine);
     }
 
@@ -111,16 +120,22 @@ impl CurveConflictService {
             version,
             aircraft_id,
         };
-        
+
         *self.current_sim.write() = Some(sim_info.clone());
-        info!("Set current simulator: {} {} ({})", sim_info.sim_id, sim_info.version, sim_info.aircraft_id);
-        
+        info!(
+            "Set current simulator: {} {} ({})",
+            sim_info.sim_id, sim_info.version, sim_info.aircraft_id
+        );
+
         // Clear conflicts cache when simulator changes
         self.conflicts_cache.write().clear();
     }
 
     /// Detect curve conflicts for specified axes
-    pub fn detect_conflicts(&self, request: DetectCurveConflictsRequest) -> DetectCurveConflictsResponse {
+    pub fn detect_conflicts(
+        &self,
+        request: DetectCurveConflictsRequest,
+    ) -> DetectCurveConflictsResponse {
         debug!("Detecting curve conflicts for request: {:?}", request);
 
         let axis_names = if request.axis_names.is_empty() {
@@ -139,9 +154,11 @@ impl CurveConflictService {
                     // Convert to proto format
                     if let Ok(proto_conflict) = self.convert_conflict_to_proto(&conflict) {
                         conflicts.push(proto_conflict);
-                        
+
                         // Update cache
-                        self.conflicts_cache.write().insert(axis_name.clone(), conflict);
+                        self.conflicts_cache
+                            .write()
+                            .insert(axis_name.clone(), conflict);
                     }
                 }
                 Ok(None) => {
@@ -149,7 +166,10 @@ impl CurveConflictService {
                     self.conflicts_cache.write().remove(axis_name);
                 }
                 Err(e) => {
-                    error_message = Some(format!("Failed to detect conflicts for axis '{}': {}", axis_name, e));
+                    error_message = Some(format!(
+                        "Failed to detect conflicts for axis '{}': {}",
+                        axis_name, e
+                    ));
                     error!("Failed to detect conflicts for axis '{}': {}", axis_name, e);
                     break;
                 }
@@ -157,7 +177,7 @@ impl CurveConflictService {
         }
 
         let success = error_message.is_none();
-        
+
         DetectCurveConflictsResponse {
             success,
             conflicts,
@@ -184,7 +204,10 @@ impl CurveConflictService {
     }
 
     /// Resolve a curve conflict
-    pub fn resolve_conflict(&self, request: ResolveCurveConflictRequest) -> ResolveCurveConflictResponse {
+    pub fn resolve_conflict(
+        &self,
+        request: ResolveCurveConflictRequest,
+    ) -> ResolveCurveConflictResponse {
         info!("Resolving curve conflict for axis: {}", request.axis_name);
 
         let resolution = match request.resolution {
@@ -235,7 +258,8 @@ impl CurveConflictService {
 
         // Get conflict after resolution for metrics
         let after_conflict = if verification_passed {
-            self.detect_axis_conflicts(&request.axis_name).unwrap_or(None)
+            self.detect_axis_conflicts(&request.axis_name)
+                .unwrap_or(None)
         } else {
             None
         };
@@ -253,7 +277,7 @@ impl CurveConflictService {
         // Clear conflicts cache if resolution was successful
         if write_result.success && verification_passed {
             self.conflicts_cache.write().remove(&request.axis_name);
-            
+
             // Clear conflicts in the axis engine
             if let Some(engine) = self.axis_engines.read().get(&request.axis_name) {
                 engine.clear_curve_conflicts();
@@ -263,9 +287,14 @@ impl CurveConflictService {
         let result = ResolutionResult {
             applied_resolution: self.convert_resolution_type_to_proto(resolution.r#type()),
             modified_files: write_result.applied_diffs,
-            backup_path: write_result.backup_path.map(|p| p.to_string_lossy().to_string()).unwrap_or_default(),
-            before_metrics: before_conflict.and_then(|c| self.convert_conflict_metadata_to_proto(&c.metadata).ok()),
-            after_metrics: after_conflict.and_then(|c| self.convert_conflict_metadata_to_proto(&c.metadata).ok()),
+            backup_path: write_result
+                .backup_path
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default(),
+            before_metrics: before_conflict
+                .and_then(|c| self.convert_conflict_metadata_to_proto(&c.metadata).ok()),
+            after_metrics: after_conflict
+                .and_then(|c| self.convert_conflict_metadata_to_proto(&c.metadata).ok()),
             verification_passed,
             verification_details: if verification_passed {
                 "Resolution verified successfully".to_string()
@@ -282,10 +311,14 @@ impl CurveConflictService {
     }
 
     /// Apply resolution using the writer system
-    fn apply_resolution(&self, sim_info: &SimulatorInfo, resolution: &ResolutionAction) -> Result<WriteResult> {
+    fn apply_resolution(
+        &self,
+        sim_info: &SimulatorInfo,
+        resolution: &ResolutionAction,
+    ) -> Result<WriteResult> {
         let resolution_type_str = match resolution.r#type() {
             ProtoResolutionType::DisableSimCurve => "disable_sim_curve",
-            ProtoResolutionType::DisableProfileCurve => "disable_profile_curve", 
+            ProtoResolutionType::DisableProfileCurve => "disable_profile_curve",
             ProtoResolutionType::ApplyGainCompensation => "apply_gain_compensation",
             ProtoResolutionType::ReduceCurveStrength => "reduce_curve_strength",
             _ => "unknown",
@@ -293,12 +326,14 @@ impl CurveConflictService {
 
         let parameters: HashMap<String, String> = resolution.parameters.clone();
 
-        self.writer.resolve_curve_conflict(
-            &sim_info.sim_id,
-            &sim_info.version,
-            resolution_type_str,
-            &parameters,
-        ).map_err(|e| anyhow::anyhow!("Writer error: {}", e))
+        self.writer
+            .resolve_curve_conflict(
+                &sim_info.sim_id,
+                &sim_info.version,
+                resolution_type_str,
+                &parameters,
+            )
+            .map_err(|e| anyhow::anyhow!("Writer error: {}", e))
     }
 
     /// Verify that resolution was applied successfully
@@ -334,9 +369,13 @@ impl CurveConflictService {
                 format!("{:?}", resolution.r#type()),
                 resolution.parameters.clone(),
                 write_result.applied_diffs.clone(),
-                write_result.backup_path.as_ref().map(|p| p.to_string_lossy().to_string()),
+                write_result
+                    .backup_path
+                    .as_ref()
+                    .map(|p| p.to_string_lossy().to_string()),
                 success,
-            ).with_metrics(
+            )
+            .with_metrics(
                 before_conflict.map(|c| (&c.metadata).into()),
                 after_conflict.map(|c| (&c.metadata).into()),
             );
@@ -369,7 +408,8 @@ impl CurveConflictService {
 
         let metadata = self.convert_conflict_metadata_to_proto(&conflict.metadata)?;
 
-        let suggested_resolutions = conflict.suggested_resolutions
+        let suggested_resolutions = conflict
+            .suggested_resolutions
             .iter()
             .map(|r| self.convert_resolution_to_proto(r))
             .collect::<Result<Vec<_>>>()?;
@@ -385,7 +425,10 @@ impl CurveConflictService {
     }
 
     /// Convert conflict metadata to proto format
-    fn convert_conflict_metadata_to_proto(&self, metadata: &flight_axis::ConflictMetadata) -> Result<ProtoConflictMetadata> {
+    fn convert_conflict_metadata_to_proto(
+        &self,
+        metadata: &flight_axis::ConflictMetadata,
+    ) -> Result<ProtoConflictMetadata> {
         Ok(ProtoConflictMetadata {
             sim_curve_strength: metadata.sim_curve_strength,
             profile_curve_strength: metadata.profile_curve_strength,
@@ -398,7 +441,10 @@ impl CurveConflictService {
     }
 
     /// Convert resolution to proto format
-    fn convert_resolution_to_proto(&self, resolution: &flight_axis::ConflictResolution) -> Result<ProtoConflictResolution> {
+    fn convert_resolution_to_proto(
+        &self,
+        resolution: &flight_axis::ConflictResolution,
+    ) -> Result<ProtoConflictResolution> {
         let resolution_type = match resolution.resolution_type {
             ResolutionType::DisableSimCurve => ProtoResolutionType::DisableSimCurve,
             ResolutionType::DisableProfileCurve => ProtoResolutionType::DisableProfileCurve,
@@ -435,7 +481,7 @@ impl CurveConflictService {
     /// Clear all conflicts (for testing)
     pub fn clear_all_conflicts(&self) {
         self.conflicts_cache.write().clear();
-        
+
         for engine in self.axis_engines.read().values() {
             engine.clear_curve_conflicts();
         }
@@ -444,7 +490,10 @@ impl CurveConflictService {
     /// Enable/disable automatic conflict detection
     pub fn set_auto_detection_enabled(&mut self, enabled: bool) {
         self.config.auto_detection_enabled = enabled;
-        info!("Automatic conflict detection {}", if enabled { "enabled" } else { "disabled" });
+        info!(
+            "Automatic conflict detection {}",
+            if enabled { "enabled" } else { "disabled" }
+        );
     }
 
     /// Check if automatic detection is enabled
@@ -459,40 +508,48 @@ impl CurveConflictService {
     }
 
     /// Perform one-click resolution of a curve conflict
-    pub fn one_click_resolve(&self, axis_name: &str) -> Result<crate::one_click_resolver::OneClickResult> {
+    pub fn one_click_resolve(
+        &self,
+        axis_name: &str,
+    ) -> Result<crate::one_click_resolver::OneClickResult> {
         // Get the conflict for this axis
-        let conflict = self.conflicts_cache.read()
+        let conflict = self
+            .conflicts_cache
+            .read()
             .get(axis_name)
             .cloned()
             .ok_or_else(|| anyhow::anyhow!("No conflict found for axis '{}'", axis_name))?;
 
         // Get current simulator info
-        let sim_info = self.current_sim.read()
+        let sim_info = self
+            .current_sim
+            .read()
             .clone()
             .ok_or_else(|| anyhow::anyhow!("No current simulator information available"))?;
 
         // Use one-click resolver
         let mut resolver = self.one_click_resolver.write();
-        let result = resolver.resolve_conflict(
-            axis_name,
-            &conflict,
-            &sim_info.sim_id,
-            &sim_info.version,
-        )?;
+        let result =
+            resolver.resolve_conflict(axis_name, &conflict, &sim_info.sim_id, &sim_info.version)?;
 
         // If resolution was successful, clear the conflict from cache and engine
         if result.success {
             self.conflicts_cache.write().remove(axis_name);
-            
+
             if let Some(engine) = self.axis_engines.read().get(axis_name) {
                 engine.clear_curve_conflicts();
             }
-            
-            info!("One-click resolution successful for axis '{}', improvement: {:.1}%", 
-                  axis_name, result.metrics.improvement * 100.0);
+
+            info!(
+                "One-click resolution successful for axis '{}', improvement: {:.1}%",
+                axis_name,
+                result.metrics.improvement * 100.0
+            );
         } else {
-            warn!("One-click resolution failed for axis '{}': {:?}", 
-                  axis_name, result.error_message);
+            warn!(
+                "One-click resolution failed for axis '{}': {:?}",
+                axis_name, result.error_message
+            );
         }
 
         Ok(result)
@@ -521,9 +578,9 @@ mod tests {
     fn test_axis_engine_registration() {
         let service = CurveConflictService::new().unwrap();
         let engine = Arc::new(AxisEngine::new_for_axis("test_axis".to_string()));
-        
+
         service.register_axis_engine("test_axis".to_string(), engine);
-        
+
         assert_eq!(service.axis_engines.read().len(), 1);
         assert!(service.axis_engines.read().contains_key("test_axis"));
     }
@@ -531,13 +588,9 @@ mod tests {
     #[test]
     fn test_simulator_info_setting() {
         let service = CurveConflictService::new().unwrap();
-        
-        service.set_current_simulator(
-            "msfs".to_string(),
-            "1.36.0".to_string(),
-            "C172".to_string(),
-        );
-        
+
+        service.set_current_simulator("msfs".to_string(), "1.36.0".to_string(), "C172".to_string());
+
         let sim_info = service.current_sim.read();
         assert!(sim_info.is_some());
         let info = sim_info.as_ref().unwrap();
@@ -549,15 +602,15 @@ mod tests {
     #[test]
     fn test_conflict_detection_request() {
         let service = CurveConflictService::new().unwrap();
-        
+
         let request = DetectCurveConflictsRequest {
             axis_names: vec!["pitch".to_string()],
             sim_id: "msfs".to_string(),
             aircraft_id: "C172".to_string(),
         };
-        
+
         let response = service.detect_conflicts(request);
-        
+
         // Should succeed even with no registered engines (just return empty conflicts)
         assert!(response.success);
         assert!(response.conflicts.is_empty());
@@ -566,12 +619,12 @@ mod tests {
     #[test]
     fn test_auto_detection_toggle() {
         let mut service = CurveConflictService::new().unwrap();
-        
+
         assert!(service.is_auto_detection_enabled()); // Default is enabled
-        
+
         service.set_auto_detection_enabled(false);
         assert!(!service.is_auto_detection_enabled());
-        
+
         service.set_auto_detection_enabled(true);
         assert!(service.is_auto_detection_enabled());
     }

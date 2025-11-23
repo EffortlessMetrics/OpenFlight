@@ -6,27 +6,27 @@
 //! Main service orchestration layer that coordinates all Flight Hub components
 //! including axis processing, safety systems, auto-profiles, and health monitoring.
 
-use std::sync::Arc;
-use serde::{Deserialize, Serialize};
-use tokio::sync::{RwLock, broadcast};
-use tracing::{info, warn, debug};
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::{RwLock, broadcast};
+use tracing::{debug, info, warn};
 
-use flight_core::{
-    profile::Profile, 
-    aircraft_switch::AutoSwitchConfig,
-    watchdog::{WatchdogSystem, WatchdogConfig},
-};
 use flight_axis::AxisEngine;
+use flight_core::{
+    aircraft_switch::AutoSwitchConfig,
+    profile::Profile,
+    watchdog::{WatchdogConfig, WatchdogSystem},
+};
 
 use crate::{
-    safe_mode::{SafeModeManager, SafeModeConfig, SafeModeStatus},
-    power::{PowerChecker, PowerStatus},
-    health::HealthStream,
-    error_taxonomy::ErrorTaxonomy,
-    curve_conflict_service::CurveConflictService,
-    capability_service::CapabilityService,
     aircraft_auto_switch_service::AircraftAutoSwitchService,
+    capability_service::CapabilityService,
+    curve_conflict_service::CurveConflictService,
+    error_taxonomy::ErrorTaxonomy,
+    health::HealthStream,
+    power::{PowerChecker, PowerStatus},
+    safe_mode::{SafeModeConfig, SafeModeManager, SafeModeStatus},
 };
 
 /// Flight service configuration
@@ -133,10 +133,10 @@ impl FlightService {
     /// Create new Flight Hub service
     pub fn new(config: FlightServiceConfig) -> Self {
         info!("Creating Flight Hub service with config: {:?}", config);
-        
+
         let health = Arc::new(HealthStream::new());
         let error_taxonomy = Arc::new(ErrorTaxonomy::new());
-        
+
         Self {
             config,
             state: Arc::new(RwLock::new(ServiceState::Stopped)),
@@ -152,40 +152,42 @@ impl FlightService {
             shutdown_tx: None,
         }
     }
-    
+
     /// Test-only accessor for health stream
     #[cfg(test)]
     pub(crate) fn test_health_stream(&self) -> &HealthStream {
         &self.health
     }
-    
+
     /// Test-only accessor for error taxonomy
     #[cfg(test)]
     pub(crate) fn test_error_taxonomy(&self) -> &ErrorTaxonomy {
         &self.error_taxonomy
     }
-    
+
     /// Start the service
     pub async fn start(&mut self) -> Result<()> {
         info!("Starting Flight Hub service");
-        
+
         // Update state to starting
         {
             let mut state = self.state.write().await;
             *state = ServiceState::Starting;
         }
-        
+
         // Register core components with health system
         self.health.register_component("service").await;
         self.health.register_component("axis_engine").await;
         self.health.register_component("auto_switch").await;
         self.health.register_component("safety").await;
-        
-        self.health.info("service", "Flight Hub service starting").await;
-        
+
+        self.health
+            .info("service", "Flight Hub service starting")
+            .await;
+
         // Start health maintenance task
         let _health_task = self.health.start_maintenance_task();
-        
+
         // Check power configuration if enabled
         if self.config.enable_power_checks {
             match self.check_power_configuration().await {
@@ -194,25 +196,24 @@ impl FlightService {
                     *power_status = Some(status);
                 }
                 Err(e) => {
-                    self.health.warning(
-                        "service", 
-                        &format!("Power check failed: {}", e)
-                    ).await;
+                    self.health
+                        .warning("service", &format!("Power check failed: {}", e))
+                        .await;
                 }
             }
         }
-        
+
         // Initialize based on mode
         if self.config.safe_mode {
             self.start_safe_mode().await?;
         } else {
             self.start_full_mode().await?;
         }
-        
+
         // Create shutdown channel
         let (shutdown_tx, _) = broadcast::channel(1);
         self.shutdown_tx = Some(shutdown_tx);
-        
+
         // Update state to running
         {
             let mut state = self.state.write().await;
@@ -222,145 +223,184 @@ impl FlightService {
                 ServiceState::Running
             };
         }
-        
-        self.health.info("service", "Flight Hub service started successfully").await;
-        info!("Flight Hub service started in {} mode", 
-              if self.config.safe_mode { "safe" } else { "full" });
-        
+
+        self.health
+            .info("service", "Flight Hub service started successfully")
+            .await;
+        info!(
+            "Flight Hub service started in {} mode",
+            if self.config.safe_mode {
+                "safe"
+            } else {
+                "full"
+            }
+        );
+
         Ok(())
     }
-    
+
     /// Start in safe mode
     async fn start_safe_mode(&mut self) -> Result<()> {
         info!("Starting service in safe mode");
-        
+
         let mut safe_mode = SafeModeManager::new(self.config.safe_mode_config.clone());
-        
+
         match safe_mode.initialize().await {
             Ok(status) => {
-                self.health.info("service", "Safe mode initialized successfully").await;
+                self.health
+                    .info("service", "Safe mode initialized successfully")
+                    .await;
                 debug!("Safe mode status: {:?}", status);
             }
             Err(e) => {
-                self.health.error(
-                    "service", 
-                    &format!("Safe mode initialization failed: {}", e),
-                    self.error_taxonomy.get_error("RT_PRIVILEGE_DENIED").cloned()
-                ).await;
+                self.health
+                    .error(
+                        "service",
+                        &format!("Safe mode initialization failed: {}", e),
+                        self.error_taxonomy
+                            .get_error("RT_PRIVILEGE_DENIED")
+                            .cloned(),
+                    )
+                    .await;
                 return Err(e.into());
             }
         }
-        
+
         self.safe_mode = Some(safe_mode);
         Ok(())
     }
-    
+
     /// Start in full mode
     async fn start_full_mode(&mut self) -> Result<()> {
         info!("Starting service in full mode");
-        
+
         // Initialize axis engine
         self.initialize_axis_engine().await?;
-        
+
         // Initialize auto-switch service
         self.initialize_auto_switch().await?;
-        
+
         // Initialize curve conflict detection
         self.initialize_curve_conflict().await?;
-        
+
         // Initialize capability service
         self.initialize_capability_service().await?;
-        
+
         // Initialize watchdog system
         self.initialize_watchdog().await?;
-        
-        self.health.info("service", "Full mode initialization completed").await;
+
+        self.health
+            .info("service", "Full mode initialization completed")
+            .await;
         Ok(())
     }
-    
+
     /// Initialize axis engine
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine");
-        
+
         let engine = AxisEngine::new();
         self.axis_engine = Some(Arc::new(engine));
-        self.health.info("axis_engine", "Axis engine initialized").await;
+        self.health
+            .info("axis_engine", "Axis engine initialized")
+            .await;
         Ok(())
     }
-    
+
     /// Initialize auto-switch service
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
-        
+
         // Stub implementation - would use real config
         let config = Default::default();
-        
+
         let auto_switch = AircraftAutoSwitchService::new(config);
         self.auto_switch = Some(auto_switch);
-        self.health.info("auto_switch", "Auto-switch service initialized").await;
+        self.health
+            .info("auto_switch", "Auto-switch service initialized")
+            .await;
         Ok(())
     }
-    
+
     /// Initialize curve conflict detection
     async fn initialize_curve_conflict(&mut self) -> Result<()> {
         info!("Initializing curve conflict detection");
-        
+
         self.curve_conflict = Some(CurveConflictService::new()?);
-        self.health.info("curve_conflict", "Curve conflict service initialized").await;
+        self.health
+            .info("curve_conflict", "Curve conflict service initialized")
+            .await;
         Ok(())
     }
-    
+
     /// Initialize capability service
     async fn initialize_capability_service(&mut self) -> Result<()> {
         info!("Initializing capability service");
-        
+
         self.capability_service = Some(CapabilityService::new());
-        self.health.info("capability", "Capability service initialized").await;
+        self.health
+            .info("capability", "Capability service initialized")
+            .await;
         Ok(())
     }
-    
+
     /// Initialize watchdog system
     async fn initialize_watchdog(&mut self) -> Result<()> {
         info!("Initializing watchdog system");
-        
+
         self.watchdog = Some(WatchdogSystem::new());
-        self.health.info("safety", "Watchdog system initialized").await;
+        self.health
+            .info("safety", "Watchdog system initialized")
+            .await;
         Ok(())
     }
-    
+
     /// Check power configuration
     async fn check_power_configuration(&self) -> Result<PowerStatus> {
         info!("Checking power configuration");
-        
+
         let status = PowerChecker::check_power_configuration().await;
-        
+
         match status.overall_status {
             crate::power::PowerCheckStatus::Optimal => {
-                self.health.info("service", "Power configuration is optimal").await;
+                self.health
+                    .info("service", "Power configuration is optimal")
+                    .await;
             }
             crate::power::PowerCheckStatus::Degraded => {
-                self.health.warning("service", "Power configuration has issues that may affect performance").await;
+                self.health
+                    .warning(
+                        "service",
+                        "Power configuration has issues that may affect performance",
+                    )
+                    .await;
             }
             crate::power::PowerCheckStatus::Critical => {
-                self.health.error(
-                    "service",
-                    "Critical power configuration issues detected",
-                    self.error_taxonomy.get_error("POWER_THROTTLING_ACTIVE").cloned()
-                ).await;
+                self.health
+                    .error(
+                        "service",
+                        "Critical power configuration issues detected",
+                        self.error_taxonomy
+                            .get_error("POWER_THROTTLING_ACTIVE")
+                            .cloned(),
+                    )
+                    .await;
             }
         }
-        
+
         Ok(status)
     }
-    
+
     /// Apply a profile
     pub async fn apply_profile(&self, profile: &Profile) -> Result<()> {
         info!("Applying profile: {:?}", profile);
-        
+
         if let Some(_engine) = &self.axis_engine {
             // TODO: Replace with new profile ingestion API when ready
             // For now, safe mode bring-up still works without compile_profile
-            self.health.info("service", "Profile applied successfully").await;
+            self.health
+                .info("service", "Profile applied successfully")
+                .await;
             Ok(())
         } else {
             let msg = "Cannot apply profile - axis engine not initialized";
@@ -368,129 +408,137 @@ impl FlightService {
             Err(anyhow::anyhow!(msg))
         }
     }
-    
+
     /// Get current service state
     pub async fn get_state(&self) -> ServiceState {
         *self.state.read().await
     }
-    
+
     /// Get health status
     pub async fn get_health_status(&self) -> crate::health::HealthStatus {
         self.health.get_health_status().await
     }
-    
+
     /// Get power status
     pub async fn get_power_status(&self) -> Option<PowerStatus> {
         self.power_status.read().await.clone()
     }
-    
+
     /// Get safe mode status
     pub async fn get_safe_mode_status(&self) -> Option<SafeModeStatus> {
-        self.safe_mode.as_ref().map(|safe_mode| safe_mode.get_status())
+        self.safe_mode
+            .as_ref()
+            .map(|safe_mode| safe_mode.get_status())
     }
-    
+
     /// Subscribe to health events
     pub fn subscribe_health(&self) -> broadcast::Receiver<crate::health::HealthEvent> {
         self.health.subscribe()
     }
-    
+
     /// Subscribe to shutdown events
     pub fn subscribe_shutdown(&self) -> Option<broadcast::Receiver<()>> {
         self.shutdown_tx.as_ref().map(|tx| tx.subscribe())
     }
-    
+
     /// Shutdown the service
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down Flight Hub service");
-        
+
         // Update state
         {
             let mut state = self.state.write().await;
             *state = ServiceState::Stopping;
         }
-        
-        self.health.info("service", "Service shutdown initiated").await;
-        
+
+        self.health
+            .info("service", "Service shutdown initiated")
+            .await;
+
         // Send shutdown signal
         if let Some(tx) = &self.shutdown_tx {
             let _ = tx.send(());
         }
-        
+
         // Shutdown components in reverse order (drop handles cleanup)
         if let Some(_watchdog) = self.watchdog.take() {
             debug!("Watchdog system dropped");
         }
-        
+
         if let Some(_capability) = self.capability_service.take() {
             debug!("Capability service dropped");
         }
-        
+
         if let Some(_curve_conflict) = self.curve_conflict.take() {
             debug!("Curve conflict service dropped");
         }
-        
+
         if let Some(_auto_switch) = self.auto_switch.take() {
             debug!("Auto-switch service dropped");
         }
-        
+
         // Shutdown axis engine last
         if let Some(_engine) = self.axis_engine.take() {
             debug!("Axis engine dropped");
         }
-        
+
         // Shutdown safe mode if active
         if let Some(mut safe_mode) = self.safe_mode.take()
-            && let Err(e) = safe_mode.shutdown().await {
+            && let Err(e) = safe_mode.shutdown().await
+        {
             warn!("Safe mode shutdown error: {}", e);
         }
-        
+
         // Update final state
         {
             let mut state = self.state.write().await;
             *state = ServiceState::Stopped;
         }
-        
-        self.health.info("service", "Flight Hub service shutdown completed").await;
+
+        self.health
+            .info("service", "Flight Hub service shutdown completed")
+            .await;
         info!("Flight Hub service shutdown completed");
-        
+
         Ok(())
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_service_creation() {
         let config = FlightServiceConfig::default();
         let service = FlightService::new(config);
-        
+
         assert_eq!(service.get_state().await, ServiceState::Stopped);
     }
-    
+
     #[tokio::test]
     async fn test_safe_mode_service() {
         let mut config = FlightServiceConfig::default();
         config.safe_mode = true;
-        
+
         let mut service = FlightService::new(config);
         let result = service.start().await;
-        
+
         assert!(result.is_ok());
         assert_eq!(service.get_state().await, ServiceState::SafeMode);
-        
+
         let _ = service.shutdown().await;
     }
-    
+
     #[tokio::test]
     async fn test_health_monitoring() {
         let config = FlightServiceConfig::default();
         let service = FlightService::new(config);
-        
+
         let health_status = service.get_health_status().await;
-        assert_eq!(health_status.overall.state, crate::health::HealthState::Healthy);
+        assert_eq!(
+            health_status.overall.state,
+            crate::health::HealthState::Healthy
+        );
     }
 }

@@ -68,7 +68,7 @@ impl Pipeline {
         state_size: usize,
     ) {
         let state_offset = align_to_64(self.total_state_size);
-        
+
         self.step_functions.push(step_fn);
         self.node_metadata.push(NodeMetadata {
             node_id,
@@ -76,17 +76,17 @@ impl Pipeline {
             state_offset,
             state_size,
         });
-        
+
         self.total_state_size = state_offset + state_size;
     }
 
     /// Create runtime state for this pipeline
     pub fn create_state(&self) -> PipelineState {
         let aligned_size = align_to_64(self.total_state_size.max(64));
-        
+
         // Create properly aligned buffer
         let mut state_buffer = vec![0u8; aligned_size];
-        
+
         // Ensure buffer is aligned to 64-byte boundary
         let ptr = state_buffer.as_mut_ptr();
         let alignment = ptr as usize % 64;
@@ -95,7 +95,7 @@ impl Pipeline {
             let extra = 64 - alignment;
             state_buffer.reserve(extra);
             state_buffer.resize(aligned_size + extra, 0);
-            
+
             // Find aligned start within buffer
             let new_ptr = state_buffer.as_mut_ptr();
             let aligned_offset = ((new_ptr as usize + 63) & !63) - new_ptr as usize;
@@ -103,7 +103,8 @@ impl Pipeline {
             state_buffer.truncate(aligned_size);
         }
 
-        let state_offsets = self.node_metadata
+        let state_offsets = self
+            .node_metadata
             .iter()
             .map(|meta| meta.state_offset)
             .collect();
@@ -186,7 +187,7 @@ impl PipelineState {
     #[allow(unsafe_op_in_unsafe_fn)]
     pub(crate) unsafe fn init_with_nodes(&mut self, nodes: &[Arc<dyn Node>]) {
         let base_ptr = self.state_buffer.as_mut_ptr();
-        
+
         for (node, &offset) in nodes.iter().zip(&self.state_offsets) {
             let state_ptr = base_ptr.add(offset);
             node.init_state(state_ptr);

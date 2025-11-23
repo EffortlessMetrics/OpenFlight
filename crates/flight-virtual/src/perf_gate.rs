@@ -6,10 +6,10 @@
 //! Provides automated performance testing that fails builds
 //! when timing regressions are detected.
 
-use std::time::{Duration, Instant};
-use flight_scheduler::{Scheduler, SchedulerConfig};
-use flight_scheduler::metrics::TimingValidator;
 use crate::loopback::LoopbackHid;
+use flight_scheduler::metrics::TimingValidator;
+use flight_scheduler::{Scheduler, SchedulerConfig};
+use std::time::{Duration, Instant};
 
 /// Performance gate configuration
 #[derive(Debug, Clone)]
@@ -100,23 +100,23 @@ impl PerfGate {
     /// Run complete performance gate test
     pub fn run(&mut self) -> PerfResult {
         let start_time = Instant::now();
-        
+
         println!("Running performance gate tests...");
         println!("  Target frequency: {}Hz", self.config.frequency_hz);
         println!("  Test duration: {:?}", self.config.duration);
-        
+
         // Run timing discipline test
         let timing_result = self.run_timing_test();
-        
+
         // Run HID latency test
         let hid_result = self.run_hid_latency_test();
-        
+
         let total_duration = start_time.elapsed();
         let passed = timing_result.passed && hid_result.passed;
-        
+
         // Print results
         self.print_results(&timing_result, &hid_result, passed);
-        
+
         PerfResult {
             passed,
             timing_result,
@@ -127,29 +127,29 @@ impl PerfGate {
 
     fn run_timing_test(&self) -> TimingTestResult {
         println!("\n=== Timing Discipline Test ===");
-        
+
         let scheduler_config = SchedulerConfig {
             frequency_hz: self.config.frequency_hz,
             busy_spin_us: 65,
             pll_gain: 0.001,
             measure_jitter: true,
         };
-        
+
         let mut scheduler = Scheduler::new(scheduler_config);
         let mut validator = TimingValidator::new(self.config.frequency_hz, self.config.duration);
-        
+
         let start = Instant::now();
         let mut tick_count = 0u64;
-        
+
         // Run scheduler for specified duration
         loop {
             let result = scheduler.wait_for_tick();
             tick_count += 1;
-            
+
             if !validator.record_and_check(result.timestamp) {
                 break;
             }
-            
+
             // Progress reporting every 10 seconds
             if tick_count % (self.config.frequency_hz as u64 * 10) == 0 {
                 let elapsed = start.elapsed().as_secs();
@@ -157,16 +157,16 @@ impl PerfGate {
                 println!("  Progress: {}s / {}s", elapsed, target);
             }
         }
-        
+
         let final_stats = scheduler.get_stats();
         let validation_result = validator.finalize();
-        
+
         let jitter_p99 = validation_result.jitter_stats.p99_ns;
         let miss_rate = final_stats.miss_rate;
-        
-        let passed = jitter_p99.abs() <= self.config.max_jitter_p99_ns 
-                    && miss_rate <= self.config.max_miss_rate;
-        
+
+        let passed = jitter_p99.abs() <= self.config.max_jitter_p99_ns
+            && miss_rate <= self.config.max_miss_rate;
+
         TimingTestResult {
             passed,
             total_ticks: final_stats.total_ticks,
@@ -179,27 +179,27 @@ impl PerfGate {
 
     fn run_hid_latency_test(&self) -> HidLatencyResult {
         println!("\n=== HID Latency Test ===");
-        
+
         let loopback = LoopbackHid::with_config(1024, Duration::from_micros(10));
-        
+
         println!("  Testing {} HID writes...", self.config.hid_samples);
-        
+
         let latencies = loopback.test_write_latency(self.config.hid_samples);
-        
+
         // Calculate statistics
-        let mut latencies_us: Vec<u64> = latencies.iter()
-            .map(|d| d.as_micros() as u64)
-            .collect();
-        
+        let mut latencies_us: Vec<u64> = latencies.iter().map(|d| d.as_micros() as u64).collect();
+
         latencies_us.sort_unstable();
-        
+
         let avg_latency_us = latencies_us.iter().sum::<u64>() as f64 / latencies_us.len() as f64;
         let p99_idx = (latencies_us.len() * 99) / 100;
         let p99_latency_us = latencies_us[p99_idx.min(latencies_us.len() - 1)];
-        let max_latency_us = *latencies_us.last().expect("Latency samples should not be empty");
-        
+        let max_latency_us = *latencies_us
+            .last()
+            .expect("Latency samples should not be empty");
+
         let passed = p99_latency_us <= self.config.max_hid_latency_p99_us;
-        
+
         HidLatencyResult {
             passed,
             samples: latencies_us.len(),
@@ -209,31 +209,48 @@ impl PerfGate {
         }
     }
 
-    fn print_results(&self, timing: &TimingTestResult, hid: &HidLatencyResult, overall_passed: bool) {
+    fn print_results(
+        &self,
+        timing: &TimingTestResult,
+        hid: &HidLatencyResult,
+        overall_passed: bool,
+    ) {
         println!("\n=== Performance Gate Results ===");
-        
+
         // Timing results
         println!("Timing Test:");
         println!("  Status: {}", if timing.passed { "PASS" } else { "FAIL" });
         println!("  Total ticks: {}", timing.total_ticks);
         println!("  Missed ticks: {}", timing.missed_ticks);
-        println!("  Miss rate: {:.6}% (limit: {:.3}%)", 
-                timing.miss_rate * 100.0, self.config.max_miss_rate * 100.0);
-        println!("  Jitter p99: {}μs (limit: {}μs)", 
-                timing.jitter_p99_ns / 1000, self.config.max_jitter_p99_ns / 1000);
+        println!(
+            "  Miss rate: {:.6}% (limit: {:.3}%)",
+            timing.miss_rate * 100.0,
+            self.config.max_miss_rate * 100.0
+        );
+        println!(
+            "  Jitter p99: {}μs (limit: {}μs)",
+            timing.jitter_p99_ns / 1000,
+            self.config.max_jitter_p99_ns / 1000
+        );
         println!("  Duration: {:?}", timing.duration);
-        
+
         // HID results
         println!("\nHID Latency Test:");
         println!("  Status: {}", if hid.passed { "PASS" } else { "FAIL" });
         println!("  Samples: {}", hid.samples);
         println!("  Average: {:.1}μs", hid.avg_latency_us);
-        println!("  p99: {}μs (limit: {}μs)", hid.p99_latency_us, self.config.max_hid_latency_p99_us);
+        println!(
+            "  p99: {}μs (limit: {}μs)",
+            hid.p99_latency_us, self.config.max_hid_latency_p99_us
+        );
         println!("  Max: {}μs", hid.max_latency_us);
-        
+
         // Overall result
-        println!("\nOverall Result: {}", if overall_passed { "PASS" } else { "FAIL" });
-        
+        println!(
+            "\nOverall Result: {}",
+            if overall_passed { "PASS" } else { "FAIL" }
+        );
+
         if !overall_passed {
             println!("\n❌ Performance gate FAILED - build should be rejected");
             // Don't call std::process::exit(1) - let the test framework handle failures
@@ -251,7 +268,7 @@ pub fn quick_perf_check() -> bool {
         hid_samples: 100,
         ..Default::default()
     };
-    
+
     let mut gate = PerfGate::new(config);
     let result = gate.run();
     result.passed
@@ -264,7 +281,7 @@ pub fn full_perf_validation() -> PerfResult {
         hid_samples: 10000,
         ..Default::default()
     };
-    
+
     let mut gate = PerfGate::new(config);
     gate.run()
 }
@@ -287,14 +304,14 @@ mod tests {
         let config = PerfGateConfig {
             duration: Duration::from_millis(100), // Very quick test
             hid_samples: 10,
-            max_jitter_p99_ns: 5_000_000, // Lenient for test
+            max_jitter_p99_ns: 5_000_000,   // Lenient for test
             max_hid_latency_p99_us: 10_000, // Lenient for test
             ..Default::default()
         };
-        
+
         let mut gate = PerfGate::new(config);
         let result = gate.run();
-        
+
         // Should complete without crashing
         assert!(result.timing_result.total_ticks > 0);
         assert!(result.hid_result.samples > 0);
@@ -307,10 +324,10 @@ mod tests {
             max_hid_latency_p99_us: 1000,
             ..Default::default()
         };
-        
+
         let gate = PerfGate::new(config);
         let result = gate.run_hid_latency_test();
-        
+
         assert_eq!(result.samples, 100);
         assert!(result.avg_latency_us > 0.0);
         assert!(result.p99_latency_us > 0);

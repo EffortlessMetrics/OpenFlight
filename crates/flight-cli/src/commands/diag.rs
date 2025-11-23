@@ -3,10 +3,10 @@
 
 //! Diagnostics and recording commands
 
+use crate::client_manager::ClientManager;
 use crate::commands::DiagAction;
 use crate::output::OutputFormat;
-use crate::client_manager::ClientManager;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::path::Path;
 
 pub async fn execute(
@@ -16,18 +16,40 @@ pub async fn execute(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
-        DiagAction::Record { output, duration, include_performance } => {
-            start_recording(output, *duration, *include_performance, output_format, verbose, client_manager).await
+        DiagAction::Record {
+            output,
+            duration,
+            include_performance,
+        } => {
+            start_recording(
+                output,
+                *duration,
+                *include_performance,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
         }
-        DiagAction::Replay { input, start_time, duration, validate } => {
-            replay_recording(input, *start_time, *duration, *validate, output_format, verbose, client_manager).await
+        DiagAction::Replay {
+            input,
+            start_time,
+            duration,
+            validate,
+        } => {
+            replay_recording(
+                input,
+                *start_time,
+                *duration,
+                *validate,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
         }
-        DiagAction::Status => {
-            recording_status(output_format, verbose, client_manager).await
-        }
-        DiagAction::Stop => {
-            stop_recording(output_format, verbose, client_manager).await
-        }
+        DiagAction::Status => recording_status(output_format, verbose, client_manager).await,
+        DiagAction::Stop => stop_recording(output_format, verbose, client_manager).await,
     }
 }
 
@@ -42,15 +64,18 @@ async fn start_recording(
     // Validate output path
     if let Some(parent) = output_path.parent() {
         if !parent.exists() {
-            return Err(anyhow::anyhow!("Output directory '{}' does not exist", parent.display()));
+            return Err(anyhow::anyhow!(
+                "Output directory '{}' does not exist",
+                parent.display()
+            ));
         }
     }
-    
+
     // Check file extension
     if output_path.extension().and_then(|s| s.to_str()) != Some("fbb") {
         return Err(anyhow::anyhow!("Output file must have .fbb extension"));
     }
-    
+
     // Note: Actual recording would require a StartRecording RPC method
     // For now, simulate the recording start
     let mut result = json!({
@@ -59,7 +84,7 @@ async fn start_recording(
         "include_performance": include_performance,
         "format": "FBB1",
     });
-    
+
     if let Some(duration) = duration {
         result["duration_seconds"] = json!(duration);
         result["estimated_end_time"] = json!(chrono::Utc::now().timestamp() + duration as i64);
@@ -67,7 +92,7 @@ async fn start_recording(
         result["duration"] = json!("continuous");
         result["stop_instruction"] = json!("Use 'flightctl diag stop' to stop recording");
     }
-    
+
     if verbose {
         result["recording_details"] = json!({
             "streams": {
@@ -87,7 +112,7 @@ async fn start_recording(
             }
         });
     }
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }
@@ -103,13 +128,16 @@ async fn replay_recording(
 ) -> anyhow::Result<Option<String>> {
     // Validate input file
     if !input_path.exists() {
-        return Err(anyhow::anyhow!("Recording file '{}' does not exist", input_path.display()));
+        return Err(anyhow::anyhow!(
+            "Recording file '{}' does not exist",
+            input_path.display()
+        ));
     }
-    
+
     if input_path.extension().and_then(|s| s.to_str()) != Some("fbb") {
         return Err(anyhow::anyhow!("Input file must have .fbb extension"));
     }
-    
+
     // Note: Actual replay would require a ReplayRecording RPC method
     // For now, simulate the replay process
     let mut result = json!({
@@ -117,15 +145,15 @@ async fn replay_recording(
         "input_file": input_path.display().to_string(),
         "validate_outputs": validate,
     });
-    
+
     if let Some(start_time) = start_time {
         result["start_time_seconds"] = json!(start_time);
     }
-    
+
     if let Some(duration) = duration {
         result["duration_seconds"] = json!(duration);
     }
-    
+
     // Simulate file analysis
     result["file_info"] = json!({
         "format_version": "FBB1",
@@ -134,7 +162,7 @@ async fn replay_recording(
         "streams_found": ["axis_frames", "bus_snapshots", "events"],
         "index_entries": 1805,
     });
-    
+
     if validate {
         result["validation"] = json!({
             "enabled": true,
@@ -145,7 +173,7 @@ async fn replay_recording(
             }
         });
     }
-    
+
     if verbose {
         result["replay_details"] = json!({
             "engine_mode": "offline",
@@ -158,7 +186,7 @@ async fn replay_recording(
             }
         });
     }
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }
@@ -183,7 +211,7 @@ async fn recording_status(
             "file_size_bytes": 25165824
         }
     });
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }
@@ -203,7 +231,7 @@ async fn stop_recording(
         "total_drops": 0,
         "integrity_check": "passed"
     });
-    
+
     if verbose {
         result["statistics"] = json!({
             "axis_frames_recorded": 31425,
@@ -214,7 +242,7 @@ async fn stop_recording(
             "compression_ratio": 0.73
         });
     }
-    
+
     let output = output_format.success(result);
     Ok(Some(output))
 }

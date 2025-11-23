@@ -41,13 +41,13 @@ pub fn disable_power_throttling() -> std::result::Result<(), Box<dyn std::error:
 #[allow(dead_code)]
 pub fn check_rt_configuration() -> RTConfigStatus {
     let issues = Vec::new();
-    
+
     // Simplified check - in a full implementation this would check:
     // - Power plan settings
     // - Battery status
     // - CPU throttling settings
     // - USB selective suspend
-    
+
     RTConfigStatus { issues }
 }
 

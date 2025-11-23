@@ -8,8 +8,8 @@
 
 use flight_bus::types::AircraftId;
 use flight_simconnect_sys::{
-    constants::*, SimConnectApi, HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE,
-    SIMCONNECT_PERIOD, SIMCONNECT_REQUESTID,
+    HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE, SIMCONNECT_PERIOD,
+    SIMCONNECT_REQUESTID, SimConnectApi, constants::*,
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -204,7 +204,10 @@ impl AircraftDetector {
     }
 
     /// Process aircraft data from SimConnect
-    pub fn process_aircraft_data(&mut self, data: &[u8]) -> Result<Option<AircraftInfo>, DetectionError> {
+    pub fn process_aircraft_data(
+        &mut self,
+        data: &[u8],
+    ) -> Result<Option<AircraftInfo>, DetectionError> {
         if data.len() < 256 + 32 + 32 + 64 + 32 + 32 + 4 + 4 {
             return Err(DetectionError::InvalidFormat);
         }
@@ -266,12 +269,17 @@ impl AircraftDetector {
         };
 
         // Check if aircraft changed
-        let aircraft_changed = self.current_aircraft.as_ref()
+        let aircraft_changed = self
+            .current_aircraft
+            .as_ref()
             .map(|current| current.atc_model != aircraft_info.atc_model)
             .unwrap_or(true);
 
         if aircraft_changed {
-            info!("Aircraft detected: {} ({})", aircraft_info.title, aircraft_info.atc_model);
+            info!(
+                "Aircraft detected: {} ({})",
+                aircraft_info.title, aircraft_info.atc_model
+            );
             self.current_aircraft = Some(aircraft_info.clone());
 
             // Notify callbacks
@@ -332,11 +340,7 @@ fn extract_string(data: &[u8]) -> String {
 /// Extract optional string (empty if all zeros or whitespace)
 fn extract_optional_string(data: &[u8]) -> Option<String> {
     let s = extract_string(data);
-    if s.trim().is_empty() {
-        None
-    } else {
-        Some(s)
-    }
+    if s.trim().is_empty() { None } else { Some(s) }
 }
 
 /// Parse aircraft category from string
@@ -379,14 +383,16 @@ fn extract_icao_from_title(title: &str) -> Option<String> {
     for pattern in &patterns {
         if let Ok(re) = regex::Regex::new(pattern)
             && let Some(captures) = re.captures(title)
-            && let Some(model) = captures.get(1) {
+            && let Some(model) = captures.get(1)
+        {
             return Some(format!("C{}", model.as_str())); // Simplified mapping
         }
     }
 
     // Fallback: try to extract any alphanumeric sequence that looks like an ICAO
     if let Ok(re) = regex::Regex::new(r"[A-Z]\d{3}|[A-Z]{2}\d{2}|[A-Z]{3}\d")
-        && let Some(m) = re.find(title) {
+        && let Some(m) = re.find(title)
+    {
         return Some(m.as_str().to_string());
     }
 
@@ -413,47 +419,62 @@ impl AircraftDatabase {
         let mut mappings = HashMap::new();
 
         // General Aviation
-        mappings.insert("C172".to_string(), AircraftMapping {
-            icao: "C172".to_string(),
-            name: "Cessna 172".to_string(),
-            category: AircraftCategory::Airplane,
-            engine_type: EngineType::Piston,
-            profile_hints: vec!["ga".to_string(), "single-engine".to_string()],
-        });
+        mappings.insert(
+            "C172".to_string(),
+            AircraftMapping {
+                icao: "C172".to_string(),
+                name: "Cessna 172".to_string(),
+                category: AircraftCategory::Airplane,
+                engine_type: EngineType::Piston,
+                profile_hints: vec!["ga".to_string(), "single-engine".to_string()],
+            },
+        );
 
-        mappings.insert("PA28".to_string(), AircraftMapping {
-            icao: "PA28".to_string(),
-            name: "Piper Cherokee".to_string(),
-            category: AircraftCategory::Airplane,
-            engine_type: EngineType::Piston,
-            profile_hints: vec!["ga".to_string(), "single-engine".to_string()],
-        });
+        mappings.insert(
+            "PA28".to_string(),
+            AircraftMapping {
+                icao: "PA28".to_string(),
+                name: "Piper Cherokee".to_string(),
+                category: AircraftCategory::Airplane,
+                engine_type: EngineType::Piston,
+                profile_hints: vec!["ga".to_string(), "single-engine".to_string()],
+            },
+        );
 
         // Commercial Aviation
-        mappings.insert("A320".to_string(), AircraftMapping {
-            icao: "A320".to_string(),
-            name: "Airbus A320".to_string(),
-            category: AircraftCategory::Airplane,
-            engine_type: EngineType::Jet,
-            profile_hints: vec!["airliner".to_string(), "fbw".to_string()],
-        });
+        mappings.insert(
+            "A320".to_string(),
+            AircraftMapping {
+                icao: "A320".to_string(),
+                name: "Airbus A320".to_string(),
+                category: AircraftCategory::Airplane,
+                engine_type: EngineType::Jet,
+                profile_hints: vec!["airliner".to_string(), "fbw".to_string()],
+            },
+        );
 
-        mappings.insert("B738".to_string(), AircraftMapping {
-            icao: "B738".to_string(),
-            name: "Boeing 737-800".to_string(),
-            category: AircraftCategory::Airplane,
-            engine_type: EngineType::Jet,
-            profile_hints: vec!["airliner".to_string(), "boeing".to_string()],
-        });
+        mappings.insert(
+            "B738".to_string(),
+            AircraftMapping {
+                icao: "B738".to_string(),
+                name: "Boeing 737-800".to_string(),
+                category: AircraftCategory::Airplane,
+                engine_type: EngineType::Jet,
+                profile_hints: vec!["airliner".to_string(), "boeing".to_string()],
+            },
+        );
 
         // Helicopters
-        mappings.insert("R22".to_string(), AircraftMapping {
-            icao: "R22".to_string(),
-            name: "Robinson R22".to_string(),
-            category: AircraftCategory::Helicopter,
-            engine_type: EngineType::Piston,
-            profile_hints: vec!["helicopter".to_string(), "training".to_string()],
-        });
+        mappings.insert(
+            "R22".to_string(),
+            AircraftMapping {
+                icao: "R22".to_string(),
+                name: "Robinson R22".to_string(),
+                category: AircraftCategory::Helicopter,
+                engine_type: EngineType::Piston,
+                profile_hints: vec!["helicopter".to_string(), "training".to_string()],
+            },
+        );
 
         Self { mappings }
     }
@@ -517,11 +538,23 @@ mod tests {
 
     #[test]
     fn test_aircraft_category_parsing() {
-        assert_eq!(parse_aircraft_category("AIRPLANE"), AircraftCategory::Airplane);
-        assert_eq!(parse_aircraft_category("airplane"), AircraftCategory::Airplane);
-        assert_eq!(parse_aircraft_category("HELICOPTER"), AircraftCategory::Helicopter);
+        assert_eq!(
+            parse_aircraft_category("AIRPLANE"),
+            AircraftCategory::Airplane
+        );
+        assert_eq!(
+            parse_aircraft_category("airplane"),
+            AircraftCategory::Airplane
+        );
+        assert_eq!(
+            parse_aircraft_category("HELICOPTER"),
+            AircraftCategory::Helicopter
+        );
         assert_eq!(parse_aircraft_category("GLIDER"), AircraftCategory::Glider);
-        assert_eq!(parse_aircraft_category("UNKNOWN"), AircraftCategory::Unknown);
+        assert_eq!(
+            parse_aircraft_category("UNKNOWN"),
+            AircraftCategory::Unknown
+        );
     }
 
     #[test]
@@ -537,7 +570,7 @@ mod tests {
     #[test]
     fn test_aircraft_database() {
         let db = AircraftDatabase::new();
-        
+
         let c172 = db.get_mapping("C172").unwrap();
         assert_eq!(c172.name, "Cessna 172");
         assert_eq!(c172.category, AircraftCategory::Airplane);
@@ -554,7 +587,7 @@ mod tests {
     #[test]
     fn test_aircraft_id_conversion() {
         let detector = AircraftDetector::new();
-        
+
         let aircraft_info = AircraftInfo {
             title: "Cessna 172 Skyhawk".to_string(),
             atc_model: "C172".to_string(),

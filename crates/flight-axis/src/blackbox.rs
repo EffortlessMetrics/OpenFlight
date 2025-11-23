@@ -8,13 +8,13 @@
 
 use crate::CurveConflict;
 #[cfg(test)]
-use crate::{ConflictType, ConflictSeverity};
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::{ConflictSeverity, ConflictType};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::time::Instant;
-#[cfg(feature = "serde")]
-use serde::{Serialize, Deserialize};
-use tracing::{info, warn, debug};
+use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::{debug, info, warn};
 
 /// Blackbox event types for curve conflicts
 #[derive(Debug, Clone)]
@@ -236,11 +236,7 @@ impl BlackboxAnnotator {
 
         self.add_event(event);
 
-        debug!(
-            axis = axis_name,
-            reason = reason,
-            "Curve conflict cleared"
-        );
+        debug!(axis = axis_name, reason = reason, "Curve conflict cleared");
     }
 
     /// Annotate pre-fault capture (2s before fault detection)
@@ -296,7 +292,11 @@ impl BlackboxAnnotator {
         // For now, we'll use structured logging
         for event in &self.event_buffer {
             match event {
-                BlackboxEvent::ConflictDetected { timestamp, axis_name, conflict } => {
+                BlackboxEvent::ConflictDetected {
+                    timestamp,
+                    axis_name,
+                    conflict,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -308,7 +308,13 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Curve conflict detected"
                     );
                 }
-                BlackboxEvent::ResolutionApplied { timestamp, axis_name, resolution_type, success, details } => {
+                BlackboxEvent::ResolutionApplied {
+                    timestamp,
+                    axis_name,
+                    resolution_type,
+                    success,
+                    details,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -320,7 +326,11 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Resolution applied"
                     );
                 }
-                BlackboxEvent::ConflictCleared { timestamp, axis_name, reason } => {
+                BlackboxEvent::ConflictCleared {
+                    timestamp,
+                    axis_name,
+                    reason,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -330,7 +340,12 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Conflict cleared"
                     );
                 }
-                BlackboxEvent::PreFaultCapture { timestamp, axis_name, capture_duration_ms, sample_count } => {
+                BlackboxEvent::PreFaultCapture {
+                    timestamp,
+                    axis_name,
+                    capture_duration_ms,
+                    sample_count,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -341,7 +356,12 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Pre-fault capture"
                     );
                 }
-                BlackboxEvent::CapabilityModeChanged { timestamp, axis_name, old_mode, new_mode } => {
+                BlackboxEvent::CapabilityModeChanged {
+                    timestamp,
+                    axis_name,
+                    old_mode,
+                    new_mode,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -352,7 +372,14 @@ impl BlackboxAnnotator {
                         "BLACKBOX: Capability mode changed"
                     );
                 }
-                BlackboxEvent::OutputClamped { timestamp, axis_name, original_output, clamped_output, capability_mode, limit_type } => {
+                BlackboxEvent::OutputClamped {
+                    timestamp,
+                    axis_name,
+                    original_output,
+                    clamped_output,
+                    capability_mode,
+                    limit_type,
+                } => {
                     info!(
                         target: "blackbox",
                         timestamp = timestamp,
@@ -385,7 +412,7 @@ impl BlackboxAnnotator {
     /// Set maximum buffer size
     pub fn set_max_buffer_size(&mut self, size: usize) {
         self.max_buffer_size = size;
-        
+
         // Flush if current buffer exceeds new limit
         if self.event_buffer.len() >= size {
             self.flush();
@@ -393,7 +420,11 @@ impl BlackboxAnnotator {
     }
 
     /// Annotate capability mode change
-    pub fn annotate_capability_mode_changed(&mut self, axis_name: &str, new_mode: flight_core::profile::CapabilityMode) {
+    pub fn annotate_capability_mode_changed(
+        &mut self,
+        axis_name: &str,
+        new_mode: flight_core::profile::CapabilityMode,
+    ) {
         if !self.enabled {
             return;
         }
@@ -497,7 +528,7 @@ impl From<&crate::ConflictMetadata> for ConflictData {
     fn from(metadata: &crate::ConflictMetadata) -> Self {
         Self {
             conflict_type: "Unknown".to_string(), // Metadata doesn't have conflict type
-            severity: "Unknown".to_string(), // Metadata doesn't have severity
+            severity: "Unknown".to_string(),      // Metadata doesn't have severity
             description: "Metadata only".to_string(),
             sim_curve_strength: metadata.sim_curve_strength,
             profile_curve_strength: metadata.profile_curve_strength,
@@ -583,14 +614,18 @@ mod tests {
     fn test_conflict_annotation() {
         let mut annotator = BlackboxAnnotator::new();
         let conflict = create_test_conflict();
-        
+
         annotator.annotate_conflict_detected("test_axis", &conflict);
-        
+
         let events = annotator.get_buffered_events();
         assert_eq!(events.len(), 1);
-        
+
         match &events[0] {
-            BlackboxEvent::ConflictDetected { axis_name, conflict, .. } => {
+            BlackboxEvent::ConflictDetected {
+                axis_name,
+                conflict,
+                ..
+            } => {
                 assert_eq!(axis_name, "test_axis");
                 assert_eq!(conflict.conflict_type, "DoubleCurve");
                 assert_eq!(conflict.severity, "Medium");
@@ -609,14 +644,19 @@ mod tests {
             Some("/backup/path".to_string()),
             true,
         );
-        
+
         annotator.annotate_resolution_applied("test_axis", "DisableSimCurve", true, details);
-        
+
         let events = annotator.get_buffered_events();
         assert_eq!(events.len(), 1);
-        
+
         match &events[0] {
-            BlackboxEvent::ResolutionApplied { axis_name, resolution_type, success, .. } => {
+            BlackboxEvent::ResolutionApplied {
+                axis_name,
+                resolution_type,
+                success,
+                ..
+            } => {
                 assert_eq!(axis_name, "test_axis");
                 assert_eq!(resolution_type, "DisableSimCurve");
                 assert!(success);
@@ -629,13 +669,13 @@ mod tests {
     fn test_buffer_flush() {
         let mut annotator = BlackboxAnnotator::new();
         annotator.set_max_buffer_size(2);
-        
+
         let conflict = create_test_conflict();
-        
+
         // Add first event
         annotator.annotate_conflict_detected("axis1", &conflict);
         assert_eq!(annotator.get_buffered_events().len(), 1);
-        
+
         // Add second event - should trigger flush
         annotator.annotate_conflict_detected("axis2", &conflict);
         assert_eq!(annotator.get_buffered_events().len(), 0); // Buffer should be empty after flush
@@ -645,10 +685,10 @@ mod tests {
     fn test_disabled_annotation() {
         let mut annotator = BlackboxAnnotator::new();
         annotator.set_enabled(false);
-        
+
         let conflict = create_test_conflict();
         annotator.annotate_conflict_detected("test_axis", &conflict);
-        
+
         assert_eq!(annotator.get_buffered_events().len(), 0);
     }
 
@@ -656,7 +696,7 @@ mod tests {
     fn test_conflict_data_conversion() {
         let conflict = create_test_conflict();
         let conflict_data: ConflictData = (&conflict).into();
-        
+
         assert_eq!(conflict_data.conflict_type, "DoubleCurve");
         assert_eq!(conflict_data.severity, "Medium");
         assert_eq!(conflict_data.description, "Test conflict");

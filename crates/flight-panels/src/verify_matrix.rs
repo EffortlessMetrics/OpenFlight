@@ -6,11 +6,11 @@
 //! Provides systematic testing of panel configurations to detect drift
 //! and automated repair capabilities for Saitek/Logitech panels.
 
-use crate::saitek::{SaitekPanelWriter, PanelType, VerifyTestResult};
-use flight_core::{Result, FlightError};
+use crate::saitek::{PanelType, SaitekPanelWriter, VerifyTestResult};
+use flight_core::{FlightError, Result};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{info, warn, error, debug};
+use tracing::{debug, error, info, warn};
 
 /// Verify matrix for systematic panel testing
 pub struct VerifyMatrix {
@@ -118,7 +118,7 @@ impl VerifyMatrix {
     /// Create new verify matrix
     pub fn new(panel_writer: SaitekPanelWriter) -> Self {
         let mut test_configs = HashMap::new();
-        
+
         // Configure default test parameters for each panel type
         for &panel_type in &[
             PanelType::RadioPanel,
@@ -127,13 +127,16 @@ impl VerifyMatrix {
             PanelType::BIP,
             PanelType::FIP,
         ] {
-            test_configs.insert(panel_type, VerifyConfig {
+            test_configs.insert(
                 panel_type,
-                latency_threshold: Duration::from_millis(20), // Per requirements
-                test_iterations: 10,
-                iteration_interval: Duration::from_millis(100),
-                extended_tests: false,
-            });
+                VerifyConfig {
+                    panel_type,
+                    latency_threshold: Duration::from_millis(20), // Per requirements
+                    test_iterations: 10,
+                    iteration_interval: Duration::from_millis(100),
+                    extended_tests: false,
+                },
+            );
         }
 
         Self {
@@ -155,15 +158,22 @@ impl VerifyMatrix {
     pub fn run_full_matrix(&mut self) -> Result<Vec<MatrixTestResult>> {
         info!("Starting full verify matrix run");
         let start_time = Instant::now();
-        
-        let panels: Vec<_> = self.panel_writer.get_panels().into_iter()
+
+        let panels: Vec<_> = self
+            .panel_writer
+            .get_panels()
+            .into_iter()
             .map(|p| (p.device_info.device_path.clone(), p.panel_type))
             .collect();
         let mut results = Vec::new();
 
         for (panel_path, panel_type) in panels {
-            info!("Running matrix tests for {} panel: {}", panel_type.name(), panel_path);
-            
+            info!(
+                "Running matrix tests for {} panel: {}",
+                panel_type.name(),
+                panel_path
+            );
+
             match self.run_panel_matrix(&panel_path, panel_type) {
                 Ok(result) => {
                     results.push(result);
@@ -177,19 +187,32 @@ impl VerifyMatrix {
 
         self.last_matrix_run = Some(start_time);
         let total_duration = start_time.elapsed();
-        
-        info!("Full verify matrix completed in {:?}: {}/{} panels passed", 
-              total_duration, 
-              results.iter().filter(|r| r.success).count(),
-              results.len());
+
+        info!(
+            "Full verify matrix completed in {:?}: {}/{} panels passed",
+            total_duration,
+            results.iter().filter(|r| r.success).count(),
+            results.len()
+        );
 
         Ok(results)
     }
 
     /// Run verify matrix for a specific panel
-    pub fn run_panel_matrix(&mut self, panel_path: &str, panel_type: PanelType) -> Result<MatrixTestResult> {
-        let config = self.test_configs.get(&panel_type)
-            .ok_or_else(|| FlightError::Configuration(format!("No test config for panel type: {:?}", panel_type)))?
+    pub fn run_panel_matrix(
+        &mut self,
+        panel_path: &str,
+        panel_type: PanelType,
+    ) -> Result<MatrixTestResult> {
+        let config = self
+            .test_configs
+            .get(&panel_type)
+            .ok_or_else(|| {
+                FlightError::Configuration(format!(
+                    "No test config for panel type: {:?}",
+                    panel_type
+                ))
+            })?
             .clone();
 
         let start_time = Instant::now();
@@ -198,16 +221,20 @@ impl VerifyMatrix {
 
         // Run multiple test iterations
         for iteration in 0..config.test_iterations {
-            debug!("Running iteration {} for panel {}", iteration + 1, panel_path);
-            
+            debug!(
+                "Running iteration {} for panel {}",
+                iteration + 1,
+                panel_path
+            );
+
             // Start verify test
             self.panel_writer.start_verify_test(panel_path)?;
-            
+
             // Wait for test completion
             let mut test_result = None;
             let iteration_start = Instant::now();
             let timeout = Duration::from_secs(30); // 30-second timeout per iteration
-            
+
             while iteration_start.elapsed() < timeout {
                 match self.panel_writer.update_verify_test()? {
                     Some(result) => {
@@ -219,18 +246,18 @@ impl VerifyMatrix {
                     }
                 }
             }
-            
+
             let result = test_result.ok_or_else(|| {
                 FlightError::Hardware(format!("Verify test timeout for panel {}", panel_path))
             })?;
-            
+
             // Collect latency data
             for step_result in &result.step_results {
                 all_latencies.push(step_result.actual_latency);
             }
-            
+
             test_results.push(result);
-            
+
             // Wait between iterations
             if iteration < config.test_iterations - 1 {
                 std::thread::sleep(config.iteration_interval);
@@ -238,21 +265,22 @@ impl VerifyMatrix {
         }
 
         let total_duration = start_time.elapsed();
-        
+
         // Calculate latency statistics
         let latency_stats = self.calculate_latency_stats(&all_latencies);
-        
+
         // Check for drift
         let drift_analysis = self.analyze_drift(panel_path, &test_results)?;
-        
+
         // Attempt repair if drift detected
         let mut repair_attempted = false;
         let mut repair_successful = false;
-        
-        if drift_analysis.drift_detected && drift_analysis.recommended_action == DriftAction::Repair {
+
+        if drift_analysis.drift_detected && drift_analysis.recommended_action == DriftAction::Repair
+        {
             info!("Drift detected for panel {}, attempting repair", panel_path);
             repair_attempted = true;
-            
+
             match self.panel_writer.repair_panel_drift(panel_path) {
                 Ok(()) => {
                     repair_successful = true;
@@ -265,9 +293,9 @@ impl VerifyMatrix {
         }
 
         // Determine overall success
-        let success = test_results.iter().all(|r| r.success) && 
-                     latency_stats.p99_latency <= config.latency_threshold &&
-                     (!drift_analysis.drift_detected || repair_successful);
+        let success = test_results.iter().all(|r| r.success)
+            && latency_stats.p99_latency <= config.latency_threshold
+            && (!drift_analysis.drift_detected || repair_successful);
 
         let matrix_result = MatrixTestResult {
             panel_path: panel_path.to_string(),
@@ -282,7 +310,8 @@ impl VerifyMatrix {
         };
 
         // Store in history
-        self.test_history.entry(panel_path.to_string())
+        self.test_history
+            .entry(panel_path.to_string())
             .or_default()
             .push(test_results.into_iter().last().unwrap()); // Store last result
 
@@ -308,16 +337,20 @@ impl VerifyMatrix {
         let len = sorted_latencies.len();
         let sum: u128 = sorted_latencies.iter().sum();
         let mean_nanos = sum / len as u128;
-        
+
         let p99_index = ((len as f64) * 0.99) as usize;
-        let p99_nanos = sorted_latencies.get(p99_index).copied().unwrap_or(sorted_latencies[len - 1]);
-        
+        let p99_nanos = sorted_latencies
+            .get(p99_index)
+            .copied()
+            .unwrap_or(sorted_latencies[len - 1]);
+
         let max_nanos = sorted_latencies[len - 1];
         let min_nanos = sorted_latencies[0];
-        
+
         // Calculate variance
         let variance = if len > 1 {
-            let variance_sum: f64 = sorted_latencies.iter()
+            let variance_sum: f64 = sorted_latencies
+                .iter()
                 .map(|&nanos| {
                     let diff = nanos as f64 - mean_nanos as f64;
                     diff * diff
@@ -339,7 +372,11 @@ impl VerifyMatrix {
     }
 
     /// Analyze drift from test history
-    fn analyze_drift(&self, panel_path: &str, current_results: &[VerifyTestResult]) -> Result<DriftAnalysis> {
+    fn analyze_drift(
+        &self,
+        panel_path: &str,
+        current_results: &[VerifyTestResult],
+    ) -> Result<DriftAnalysis> {
         let history = match self.test_history.get(panel_path) {
             Some(history) if history.len() >= self.drift_thresholds.min_samples => history,
             _ => {
@@ -356,7 +393,8 @@ impl VerifyMatrix {
 
         // Filter history to analysis window
         let _cutoff_time = Instant::now() - self.drift_thresholds.analysis_window;
-        let recent_history: Vec<_> = history.iter()
+        let recent_history: Vec<_> = history
+            .iter()
             .filter(|_result| {
                 // Approximate time filtering - in real implementation, we'd store timestamps
                 true // For now, use all history
@@ -375,13 +413,14 @@ impl VerifyMatrix {
 
         // Calculate trends
         let latency_trend = self.calculate_latency_trend(&recent_history, current_results);
-        let failure_rate_trend = self.calculate_failure_rate_trend(&recent_history, current_results);
-        
+        let failure_rate_trend =
+            self.calculate_failure_rate_trend(&recent_history, current_results);
+
         // Determine if drift is detected
         let latency_drift = latency_trend > self.drift_thresholds.max_latency_increase;
         let failure_drift = failure_rate_trend > self.drift_thresholds.max_failure_rate;
         let drift_detected = latency_drift || failure_drift;
-        
+
         // Calculate confidence based on sample size and trend consistency
         let confidence = if drift_detected {
             let sample_confidence = (recent_history.len() as f64 / 20.0).min(1.0); // Max confidence at 20+ samples
@@ -390,7 +429,7 @@ impl VerifyMatrix {
         } else {
             0.5 // Neutral confidence when no drift
         };
-        
+
         // Determine recommended action
         let recommended_action = if drift_detected {
             if latency_trend > 100.0 || failure_rate_trend > 50.0 {
@@ -414,18 +453,24 @@ impl VerifyMatrix {
     }
 
     /// Calculate latency trend (percentage change)
-    fn calculate_latency_trend(&self, history: &[&VerifyTestResult], current: &[VerifyTestResult]) -> f64 {
+    fn calculate_latency_trend(
+        &self,
+        history: &[&VerifyTestResult],
+        current: &[VerifyTestResult],
+    ) -> f64 {
         if history.is_empty() || current.is_empty() {
             return 0.0;
         }
 
         // Calculate average latency from history
-        let historical_latencies: Vec<_> = history.iter()
+        let historical_latencies: Vec<_> = history
+            .iter()
             .flat_map(|result| result.step_results.iter())
             .map(|step| step.actual_latency.as_nanos() as f64)
             .collect();
-        
-        let current_latencies: Vec<_> = current.iter()
+
+        let current_latencies: Vec<_> = current
+            .iter()
             .flat_map(|result| result.step_results.iter())
             .map(|step| step.actual_latency.as_nanos() as f64)
             .collect();
@@ -434,7 +479,8 @@ impl VerifyMatrix {
             return 0.0;
         }
 
-        let historical_avg = historical_latencies.iter().sum::<f64>() / historical_latencies.len() as f64;
+        let historical_avg =
+            historical_latencies.iter().sum::<f64>() / historical_latencies.len() as f64;
         let current_avg = current_latencies.iter().sum::<f64>() / current_latencies.len() as f64;
 
         if historical_avg > 0.0 {
@@ -445,18 +491,24 @@ impl VerifyMatrix {
     }
 
     /// Calculate failure rate trend (percentage change)
-    fn calculate_failure_rate_trend(&self, history: &[&VerifyTestResult], current: &[VerifyTestResult]) -> f64 {
+    fn calculate_failure_rate_trend(
+        &self,
+        history: &[&VerifyTestResult],
+        current: &[VerifyTestResult],
+    ) -> f64 {
         if history.is_empty() || current.is_empty() {
             return 0.0;
         }
 
         // Calculate failure rates
-        let historical_failures = history.iter()
+        let historical_failures = history
+            .iter()
             .map(|result| if result.success { 0.0 } else { 1.0 })
             .sum::<f64>();
         let historical_rate = historical_failures / history.len() as f64;
 
-        let current_failures = current.iter()
+        let current_failures = current
+            .iter()
             .map(|result| if result.success { 0.0 } else { 1.0 })
             .sum::<f64>();
         let current_rate = current_failures / current.len() as f64;
@@ -527,10 +579,10 @@ impl Default for DriftThresholds {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_hid::{HidAdapter};
     use flight_core::WatchdogSystem;
+    use flight_hid::HidAdapter;
     use std::sync::{Arc, Mutex};
-    
+
     fn create_test_hid_adapter() -> HidAdapter {
         let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
         HidAdapter::new(watchdog)
@@ -541,7 +593,7 @@ mod tests {
         let hid_adapter = create_test_hid_adapter();
         let panel_writer = crate::saitek::SaitekPanelWriter::new(hid_adapter);
         let matrix = VerifyMatrix::new(panel_writer);
-        
+
         assert_eq!(matrix.test_configs.len(), 5); // All panel types configured
         assert!(matrix.needs_matrix_run()); // Should need initial run
     }
@@ -551,7 +603,7 @@ mod tests {
         let hid_adapter = create_test_hid_adapter();
         let panel_writer = crate::saitek::SaitekPanelWriter::new(hid_adapter);
         let matrix = VerifyMatrix::new(panel_writer);
-        
+
         let latencies = vec![
             Duration::from_millis(5),
             Duration::from_millis(10),
@@ -559,9 +611,9 @@ mod tests {
             Duration::from_millis(20),
             Duration::from_millis(25),
         ];
-        
+
         let stats = matrix.calculate_latency_stats(&latencies);
-        
+
         assert_eq!(stats.samples_count, 5);
         assert_eq!(stats.min_latency, Duration::from_millis(5));
         assert_eq!(stats.max_latency, Duration::from_millis(25));
@@ -572,11 +624,14 @@ mod tests {
     #[test]
     fn test_drift_thresholds() {
         let thresholds = DriftThresholds::default();
-        
+
         assert_eq!(thresholds.max_latency_increase, 50.0);
         assert_eq!(thresholds.max_failure_rate, 10.0);
         assert_eq!(thresholds.min_samples, 5);
-        assert_eq!(thresholds.analysis_window, Duration::from_secs(24 * 60 * 60));
+        assert_eq!(
+            thresholds.analysis_window,
+            Duration::from_secs(24 * 60 * 60)
+        );
     }
 
     #[test]
@@ -588,7 +643,7 @@ mod tests {
             iteration_interval: Duration::from_millis(100),
             extended_tests: false,
         };
-        
+
         assert_eq!(config.panel_type, PanelType::RadioPanel);
         assert_eq!(config.latency_threshold, Duration::from_millis(20));
         assert_eq!(config.test_iterations, 10);

@@ -10,13 +10,17 @@
 #![cfg_attr(not(feature = "integration"), allow(dead_code, unused_imports))]
 
 #[cfg(feature = "integration")]
-use flight_bus::{BusSnapshot, HeloData, Kinematics, AircraftConfig, Environment, Navigation, SimId, AircraftId, ValidatedSpeed, ValidatedAngle, GForce, Percentage, GearState, types::GearPosition, AutopilotState, LightsConfig};
+use flight_bus::{
+    AircraftConfig, AircraftId, AutopilotState, BusSnapshot, Environment, GForce, GearState,
+    HeloData, Kinematics, LightsConfig, Navigation, Percentage, SimId, ValidatedAngle,
+    ValidatedSpeed, types::GearPosition,
+};
 #[cfg(feature = "integration")]
-use flight_ffb::{TelemetrySynthEngine, TelemetrySynthConfig, FfbEngine, FfbConfig, FfbMode};
-#[cfg(feature = "integration")]
-use std::time::{Duration, Instant};
+use flight_ffb::{FfbConfig, FfbEngine, FfbMode, TelemetrySynthConfig, TelemetrySynthEngine};
 #[cfg(feature = "integration")]
 use std::collections::HashMap;
+#[cfg(feature = "integration")]
+use std::time::{Duration, Instant};
 
 #[cfg(feature = "integration")]
 #[tokio::main(flavor = "current_thread")]
@@ -31,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
     // Create telemetry synthesis configuration
     let mut synth_config = TelemetrySynthConfig::default();
     synth_config.rate_limiting.min_interval_ms = 50; // 20Hz update rate
-    
+
     // Create and configure FFB engine for telemetry synthesis
     let mut ffb_config = FfbConfig {
         max_torque_nm: 15.0,
@@ -40,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
         mode: FfbMode::TelemetrySynth,
         device_path: None,
     };
-    
+
     let mut ffb_engine = FfbEngine::new(ffb_config)?;
     ffb_engine.enable_telemetry_synthesis(synth_config)?;
 
@@ -65,21 +69,23 @@ fn main() {
 fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n1. Stall Buffet Demo");
     println!("-------------------");
-    
+
     let mut snapshot = create_base_snapshot();
-    
+
     // Gradually increase angle of attack to demonstrate stall buffet
     for aoa in [8.0, 10.0, 12.0, 14.0, 16.0, 18.0] {
         snapshot.kinematics.aoa = ValidatedAngle::new_degrees(aoa)?;
-        
+
         if let Some(output) = ffb_engine.update_telemetry_synthesis(&snapshot)? {
-            println!("AoA: {:.1}° -> Torque: {:.2} Nm, Intensity: {:.2}, Effects: {:?}", 
-                     aoa, output.torque_nm, output.intensity, output.active_effects);
+            println!(
+                "AoA: {:.1}° -> Torque: {:.2} Nm, Intensity: {:.2}, Effects: {:?}",
+                aoa, output.torque_nm, output.intensity, output.active_effects
+            );
         }
-        
+
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     Ok(())
 }
 
@@ -87,9 +93,9 @@ fn demo_stall_buffet(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
 fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n2. Touchdown Impulse Demo");
     println!("------------------------");
-    
+
     let mut snapshot = create_base_snapshot();
-    
+
     // Simulate approach and touchdown
     let approach_sequence = [
         (-100.0, 100.0), // Approach
@@ -98,19 +104,21 @@ fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
         (-100.0, 10.0),  // Touchdown transition
         (0.0, 5.0),      // On ground
     ];
-    
+
     for (vs, alt) in approach_sequence {
         snapshot.kinematics.vertical_speed = vs;
         snapshot.environment.altitude = alt;
-        
+
         if let Some(output) = ffb_engine.update_telemetry_synthesis(&snapshot)? {
-            println!("VS: {:.0} fpm, Alt: {:.0} ft -> Torque: {:.2} Nm, Effects: {:?}", 
-                     vs, alt, output.torque_nm, output.active_effects);
+            println!(
+                "VS: {:.0} fpm, Alt: {:.0} ft -> Torque: {:.2} Nm, Effects: {:?}",
+                vs, alt, output.torque_nm, output.active_effects
+            );
         }
-        
+
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     Ok(())
 }
 
@@ -118,22 +126,24 @@ fn demo_touchdown_impulse(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
 fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n3. Ground Roll Demo");
     println!("------------------");
-    
+
     let mut snapshot = create_base_snapshot();
     snapshot.kinematics.g_force = GForce::new(1.0)?; // On ground
-    
+
     // Simulate taxi and takeoff roll
     for speed in [0.0, 10.0, 30.0, 60.0, 80.0, 100.0] {
         snapshot.kinematics.ground_speed = ValidatedSpeed::new_knots(speed)?;
-        
+
         if let Some(output) = ffb_engine.update_telemetry_synthesis(&snapshot)? {
-            println!("Ground Speed: {:.0} kt -> Torque: {:.2} Nm, Effects: {:?}", 
-                     speed, output.torque_nm, output.active_effects);
+            println!(
+                "Ground Speed: {:.0} kt -> Torque: {:.2} Nm, Effects: {:?}",
+                speed, output.torque_nm, output.active_effects
+            );
         }
-        
+
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     Ok(())
 }
 
@@ -141,34 +151,34 @@ fn demo_ground_roll(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
 fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n4. Gear Warning Demo");
     println!("-------------------");
-    
+
     let mut snapshot = create_base_snapshot();
-    
+
     // Set up gear warning conditions (low speed, gear up, low altitude)
     snapshot.config.gear = GearState {
         nose: GearPosition::Up,
         left: GearPosition::Up,
         right: GearPosition::Up,
     };
-    
+
     let warning_scenarios = [
         (150.0, 1500.0, "High speed, high altitude - no warning"),
         (100.0, 1500.0, "Low speed, high altitude - no warning"),
         (150.0, 500.0, "High speed, low altitude - no warning"),
         (100.0, 500.0, "Low speed, low altitude - WARNING!"),
     ];
-    
+
     for (speed, altitude, description) in warning_scenarios {
         snapshot.kinematics.ias = ValidatedSpeed::new_knots(speed)?;
         snapshot.environment.altitude = altitude;
-        
+
         if let Some(output) = ffb_engine.update_telemetry_synthesis(&snapshot)? {
             println!("{} -> Effects: {:?}", description, output.active_effects);
         }
-        
+
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     Ok(())
 }
 
@@ -176,9 +186,9 @@ fn demo_gear_warning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
 fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n5. Helicopter Effects Demo");
     println!("-------------------------");
-    
+
     let mut snapshot = create_base_snapshot();
-    
+
     // Add helicopter data with various rotor conditions
     let rotor_scenarios = [
         (100.0, 100.0, 50.0, "Normal operations"),
@@ -186,7 +196,7 @@ fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
         (100.0, 90.0, 85.0, "Low Np warning"),
         (85.0, 85.0, 95.0, "Both rotors low - critical!"),
     ];
-    
+
     for (nr, np, torque, description) in rotor_scenarios {
         snapshot.helo = Some(HeloData {
             nr: Percentage::new(nr)?,
@@ -195,15 +205,17 @@ fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
             collective: Percentage::new(50.0)?,
             pedals: 0.0,
         });
-        
+
         if let Some(output) = ffb_engine.update_telemetry_synthesis(&snapshot)? {
-            println!("{} (Nr: {:.0}%, Np: {:.0}%) -> Torque: {:.2} Nm, Effects: {:?}", 
-                     description, nr, np, output.torque_nm, output.active_effects);
+            println!(
+                "{} (Nr: {:.0}%, Np: {:.0}%) -> Torque: {:.2} Nm, Effects: {:?}",
+                description, nr, np, output.torque_nm, output.active_effects
+            );
         }
-        
+
         std::thread::sleep(Duration::from_millis(100));
     }
-    
+
     Ok(())
 }
 
@@ -211,42 +223,42 @@ fn demo_helicopter_effects(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
 fn demo_user_tuning(ffb_engine: &mut FfbEngine) -> anyhow::Result<()> {
     println!("\n6. User Tuning Demo");
     println!("------------------");
-    
+
     let mut snapshot = create_base_snapshot();
     snapshot.kinematics.aoa = ValidatedAngle::new_degrees(15.0)?; // Trigger stall buffet
-    
+
     // Get baseline output
     let baseline = ffb_engine.update_telemetry_synthesis(&snapshot)?;
     if let Some(output) = baseline {
         println!("Baseline stall buffet: {:.2} Nm", output.torque_nm);
     }
-    
+
     // Adjust user tuning
     if let Some(synth_engine) = ffb_engine.get_telemetry_synth_mut() {
         let tuning = synth_engine.get_user_tuning_mut();
-        
+
         // Reduce stall buffet intensity
         tuning.set_stall_buffet_intensity(0.5);
         println!("Reduced stall buffet intensity to 50%");
-        
+
         let reduced = ffb_engine.update_telemetry_synthesis(&snapshot)?;
         if let Some(output) = reduced {
             println!("Reduced stall buffet: {:.2} Nm", output.torque_nm);
         }
-        
+
         // Increase global intensity
         tuning.set_global_intensity(1.5);
         println!("Increased global intensity to 150%");
-        
+
         let enhanced = ffb_engine.update_telemetry_synthesis(&snapshot)?;
         if let Some(output) = enhanced {
             println!("Enhanced stall buffet: {:.2} Nm", output.torque_nm);
         }
-        
+
         // Show all tuning values
         println!("Current tuning values: {:?}", tuning.get_all_values());
     }
-    
+
     Ok(())
 }
 

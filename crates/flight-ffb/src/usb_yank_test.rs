@@ -6,15 +6,15 @@
 //! Provides comprehensive testing for USB disconnect scenarios to validate
 //! the 50ms torque-to-zero requirement and fault response timing.
 
-use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 
-use crate::fault::{FaultType, FaultRecord};
-use crate::soft_stop::{SoftStopController, SoftStopConfig};
 use crate::audio::{AudioCueSystem, AudioCueType};
-use crate::blackbox::{BlackboxRecorder, BlackboxEntry};
+use crate::blackbox::{BlackboxEntry, BlackboxRecorder};
+use crate::fault::{FaultRecord, FaultType};
+use crate::soft_stop::{SoftStopConfig, SoftStopController};
 
 /// USB yank test configuration
 #[derive(Debug, Clone)]
@@ -266,7 +266,7 @@ impl UsbYankTestRunner {
         // Setup: ensure device is connected and set initial torque
         self.mock_device.reconnect();
         self.soft_stop_controller.reset();
-        
+
         // Set initial torque
         if let Err(e) = self.mock_device.write_torque(self.config.initial_torque_nm) {
             return Err(UsbYankTestError::SetupFailed { message: e });
@@ -274,23 +274,30 @@ impl UsbYankTestRunner {
 
         // Record initial state in blackbox
         let test_start = Instant::now();
-        self.blackbox.record(BlackboxEntry::SystemEvent {
-            timestamp: test_start,
-            event_type: "USB_YANK_TEST_START".to_string(),
-            details: format!("Iteration {}, initial torque: {} Nm", iteration, self.config.initial_torque_nm),
-        }).ok();
+        self.blackbox
+            .record(BlackboxEntry::SystemEvent {
+                timestamp: test_start,
+                event_type: "USB_YANK_TEST_START".to_string(),
+                details: format!(
+                    "Iteration {}, initial torque: {} Nm",
+                    iteration, self.config.initial_torque_nm
+                ),
+            })
+            .ok();
 
         // Simulate USB disconnect
         self.mock_device.disconnect();
         let disconnect_time = Instant::now();
 
         // Record fault in blackbox
-        self.blackbox.record(BlackboxEntry::Fault {
-            timestamp: disconnect_time,
-            fault_type: "USB_DISCONNECT".to_string(),
-            fault_code: "HID_DEVICE_LOST".to_string(),
-            context: format!("USB yank test iteration {}", iteration),
-        }).ok();
+        self.blackbox
+            .record(BlackboxEntry::Fault {
+                timestamp: disconnect_time,
+                fault_type: "USB_DISCONNECT".to_string(),
+                fault_code: "HID_DEVICE_LOST".to_string(),
+                context: format!("USB yank test iteration {}", iteration),
+            })
+            .ok();
 
         // Start fault capture
         let fault_entry = BlackboxEntry::Fault {
@@ -302,7 +309,10 @@ impl UsbYankTestRunner {
         self.blackbox.start_fault_capture(fault_entry).ok();
 
         // Start soft-stop ramp
-        if let Err(e) = self.soft_stop_controller.start_ramp(self.config.initial_torque_nm) {
+        if let Err(e) = self
+            .soft_stop_controller
+            .start_ramp(self.config.initial_torque_nm)
+        {
             errors.push(format!("Failed to start soft-stop: {}", e));
         }
 
@@ -319,15 +329,15 @@ impl UsbYankTestRunner {
         // Monitor torque ramp to zero
         let mut torque_zero_time = Duration::MAX;
         let mut current_torque = self.config.initial_torque_nm;
-        
+
         let timeout = disconnect_time + self.config.max_torque_zero_time * 2; // Allow extra time for measurement
-        
+
         while Instant::now() < timeout {
             // Update soft-stop controller
             match self.soft_stop_controller.update() {
                 Ok(Some(torque)) => {
                     current_torque = torque;
-                    
+
                     // Record sample if capturing timing
                     if self.config.capture_timing {
                         let elapsed = disconnect_time.elapsed();
@@ -335,12 +345,14 @@ impl UsbYankTestRunner {
                     }
 
                     // Record in blackbox
-                    self.blackbox.record(BlackboxEntry::FfbState {
-                        timestamp: Instant::now(),
-                        safety_state: "SOFT_STOP_RAMP".to_string(),
-                        torque_setpoint: torque,
-                        actual_torque: torque,
-                    }).ok();
+                    self.blackbox
+                        .record(BlackboxEntry::FfbState {
+                            timestamp: Instant::now(),
+                            safety_state: "SOFT_STOP_RAMP".to_string(),
+                            torque_setpoint: torque,
+                            actual_torque: torque,
+                        })
+                        .ok();
 
                     // Check if we've reached zero
                     if torque == 0.0 {
@@ -377,14 +389,16 @@ impl UsbYankTestRunner {
         }
 
         // Record test completion
-        self.blackbox.record(BlackboxEntry::SystemEvent {
-            timestamp: Instant::now(),
-            event_type: "USB_YANK_TEST_COMPLETE".to_string(),
-            details: format!(
-                "Iteration {}, passed: {}, torque_zero_time: {:?}",
-                iteration, passed, torque_zero_time
-            ),
-        }).ok();
+        self.blackbox
+            .record(BlackboxEntry::SystemEvent {
+                timestamp: Instant::now(),
+                event_type: "USB_YANK_TEST_COMPLETE".to_string(),
+                details: format!(
+                    "Iteration {}, passed: {}, torque_zero_time: {:?}",
+                    iteration, passed, torque_zero_time
+                ),
+            })
+            .ok();
 
         Ok(UsbYankTestResult {
             iteration,
@@ -434,7 +448,12 @@ impl UsbYankTestRunner {
 
             (avg, max, min, stddev)
         } else {
-            (Duration::ZERO, Duration::ZERO, Duration::ZERO, Duration::ZERO)
+            (
+                Duration::ZERO,
+                Duration::ZERO,
+                Duration::ZERO,
+                Duration::ZERO,
+            )
         };
 
         UsbYankTestStatistics {
@@ -473,22 +492,22 @@ mod tests {
     #[test]
     fn test_mock_usb_device() {
         let device = MockUsbDevice::new();
-        
+
         assert!(device.is_connected());
         assert_eq!(device.get_current_torque(), 0.0);
-        
+
         // Write torque
         device.write_torque(5.0).unwrap();
         assert_eq!(device.get_current_torque(), 5.0);
-        
+
         // Disconnect
         device.disconnect();
         assert!(!device.is_connected());
-        
+
         // Write should fail when disconnected
         let result = device.write_torque(3.0);
         assert!(result.is_err());
-        
+
         // Reconnect
         device.reconnect();
         assert!(device.is_connected());
@@ -502,17 +521,23 @@ mod tests {
             max_torque_zero_time: Duration::ZERO,
             ..Default::default()
         };
-        
+
         let result = UsbYankTestRunner::new(invalid_config);
-        assert!(matches!(result, Err(UsbYankTestError::InvalidConfig { .. })));
-        
+        assert!(matches!(
+            result,
+            Err(UsbYankTestError::InvalidConfig { .. })
+        ));
+
         let invalid_config2 = UsbYankTestConfig {
             initial_torque_nm: -1.0,
             ..Default::default()
         };
-        
+
         let result2 = UsbYankTestRunner::new(invalid_config2);
-        assert!(matches!(result2, Err(UsbYankTestError::InvalidConfig { .. })));
+        assert!(matches!(
+            result2,
+            Err(UsbYankTestError::InvalidConfig { .. })
+        ));
     }
 
     #[test]
@@ -525,10 +550,10 @@ mod tests {
             test_audio_cues: false, // Disable for test
             ..Default::default()
         };
-        
+
         let mut runner = UsbYankTestRunner::new(config).unwrap();
         let result = runner.run_single_test(0).unwrap();
-        
+
         assert_eq!(result.iteration, 0);
         assert_eq!(result.initial_torque, 5.0);
         // The test should pass since our mock implementation is fast
@@ -546,13 +571,13 @@ mod tests {
             capture_timing: true,
             test_audio_cues: false,
         };
-        
+
         let mut runner = UsbYankTestRunner::new(config).unwrap();
         let suite = runner.run_test_suite().unwrap();
-        
+
         assert_eq!(suite.results.len(), 3);
         assert_eq!(suite.statistics.total_tests, 3);
-        
+
         // All tests should pass with our mock implementation
         assert!(suite.statistics.pass_rate > 0.0);
     }
@@ -591,10 +616,10 @@ mod tests {
                 errors: vec!["Timeout".to_string()],
             },
         ];
-        
+
         let runner = UsbYankTestRunner::default();
         let stats = runner.calculate_statistics(&results);
-        
+
         assert_eq!(stats.total_tests, 3);
         assert_eq!(stats.passed_tests, 2);
         assert_eq!(stats.failed_tests, 1);
@@ -612,13 +637,13 @@ mod tests {
             test_audio_cues: false,
             ..Default::default()
         };
-        
+
         let mut runner = UsbYankTestRunner::new(config).unwrap();
         let result = runner.run_single_test(0).unwrap();
-        
+
         // Should have captured some torque samples
         assert!(!result.torque_samples.is_empty());
-        
+
         // Samples should show decreasing torque over time
         if result.torque_samples.len() > 1 {
             let first_sample = result.torque_samples[0].1;

@@ -3,8 +3,8 @@
 
 //! Replay metrics and performance tracking
 
-use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
+use std::time::{Duration, Instant};
 
 /// Comprehensive replay metrics
 pub struct ReplayMetrics {
@@ -114,12 +114,12 @@ impl ReplayMetrics {
         }
 
         let frame_start = Instant::now();
-        
+
         self.frames_processed += 1;
         self.axis_outputs.push(axis_output);
         self.ffb_outputs.push(ffb_output);
         self.timestamps.push(timestamp_ns);
-        
+
         // Record processing time (simulated)
         let processing_time = frame_start.elapsed();
         self.processing_times.push(processing_time);
@@ -142,18 +142,34 @@ impl ReplayMetrics {
 
     /// Get performance metrics
     pub fn get_performance_metrics(&self) -> PerformanceMetrics {
-        let total_duration = self.start_time
+        let total_duration = self
+            .start_time
             .map(|start| start.elapsed())
             .unwrap_or(Duration::from_secs(0));
 
-        let (avg_frame_time, max_frame_time, min_frame_time) = if !self.processing_times.is_empty() {
+        let (avg_frame_time, max_frame_time, min_frame_time) = if !self.processing_times.is_empty()
+        {
             let total_processing: Duration = self.processing_times.iter().sum();
             let avg = total_processing / self.processing_times.len() as u32;
-            let max = self.processing_times.iter().max().copied().unwrap_or(Duration::from_secs(0));
-            let min = self.processing_times.iter().min().copied().unwrap_or(Duration::from_secs(0));
+            let max = self
+                .processing_times
+                .iter()
+                .max()
+                .copied()
+                .unwrap_or(Duration::from_secs(0));
+            let min = self
+                .processing_times
+                .iter()
+                .min()
+                .copied()
+                .unwrap_or(Duration::from_secs(0));
             (avg, max, min)
         } else {
-            (Duration::from_secs(0), Duration::from_secs(0), Duration::from_secs(0))
+            (
+                Duration::from_secs(0),
+                Duration::from_secs(0),
+                Duration::from_secs(0),
+            )
         };
 
         let frames_per_second = if total_duration.as_secs_f64() > 0.0 {
@@ -198,12 +214,11 @@ impl ReplayMetrics {
         let max_value = values.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
         let sum: f32 = values.iter().sum();
         let avg_value = sum / values.len() as f32;
-        
-        let variance: f32 = values.iter()
-            .map(|&x| (x - avg_value).powi(2))
-            .sum::<f32>() / values.len() as f32;
+
+        let variance: f32 =
+            values.iter().map(|&x| (x - avg_value).powi(2)).sum::<f32>() / values.len() as f32;
         let std_deviation = variance.sqrt();
-        
+
         let range = max_value - min_value;
 
         OutputStats {
@@ -229,9 +244,9 @@ impl ReplayMetrics {
         // Calculate timing errors (difference from expected 4ms intervals)
         let expected_interval_ns = 4_000_000u64; // 4ms = 250Hz
         let mut timing_errors = Vec::new();
-        
+
         for i in 1..self.timestamps.len() {
-            let actual_interval = self.timestamps[i] - self.timestamps[i-1];
+            let actual_interval = self.timestamps[i] - self.timestamps[i - 1];
             let error = if actual_interval > expected_interval_ns {
                 actual_interval - expected_interval_ns
             } else {
@@ -250,14 +265,17 @@ impl ReplayMetrics {
 
         // Calculate standard deviation of timing errors
         let avg_error_f64 = avg_timing_error_ns as f64;
-        let variance = timing_errors.iter()
+        let variance = timing_errors
+            .iter()
             .map(|&error| (error as f64 - avg_error_f64).powi(2))
-            .sum::<f64>() / timing_errors.len() as f64;
+            .sum::<f64>()
+            / timing_errors.len() as f64;
         let timing_error_std_ns = variance.sqrt() as u64;
 
         // Calculate percentage within tolerance (500μs = 500,000ns)
         let tolerance_ns = 500_000u64;
-        let within_tolerance = timing_errors.iter()
+        let within_tolerance = timing_errors
+            .iter()
             .filter(|&&error| error <= tolerance_ns)
             .count();
         let frames_within_tolerance_pct = if !timing_errors.is_empty() {
@@ -361,12 +379,12 @@ mod tests {
     fn test_frame_recording() {
         let mut metrics = ReplayMetrics::new(true);
         metrics.start();
-        
+
         metrics.record_frame_processed(1000000, 0.5, 2.0);
         metrics.record_frame_processed(2000000, 0.6, 2.1);
-        
+
         assert_eq!(metrics.get_frames_processed(), 2);
-        
+
         let accuracy = metrics.get_accuracy_metrics();
         assert_eq!(accuracy.frames_analyzed, 2);
         assert_eq!(accuracy.axis_stats.min_value, 0.5);
@@ -377,12 +395,12 @@ mod tests {
     fn test_performance_metrics() {
         let mut metrics = ReplayMetrics::new(true);
         metrics.start();
-        
+
         // Record some frames
         for i in 0..100 {
             metrics.record_frame_processed(i * 4_000_000, 0.5, 2.0);
         }
-        
+
         let performance = metrics.get_performance_metrics();
         assert_eq!(performance.frames_per_second > 0.0, true);
         assert!(performance.total_duration > Duration::from_secs(0));
@@ -391,13 +409,13 @@ mod tests {
     #[test]
     fn test_output_statistics() {
         let mut metrics = ReplayMetrics::new(true);
-        
+
         // Record frames with known values
         let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         for (i, &value) in values.iter().enumerate() {
             metrics.record_frame_processed(i as u64 * 4_000_000, value, value * 2.0);
         }
-        
+
         let accuracy = metrics.get_accuracy_metrics();
         assert_eq!(accuracy.axis_stats.min_value, 1.0);
         assert_eq!(accuracy.axis_stats.max_value, 5.0);
@@ -408,12 +426,12 @@ mod tests {
     #[test]
     fn test_timing_statistics() {
         let mut metrics = ReplayMetrics::new(true);
-        
+
         // Record frames with regular 4ms intervals
         for i in 0..10 {
             metrics.record_frame_processed(i * 4_000_000, 0.5, 2.0);
         }
-        
+
         let accuracy = metrics.get_accuracy_metrics();
         assert_eq!(accuracy.timing_stats.avg_timing_error_ns, 0);
         assert_eq!(accuracy.timing_stats.frames_within_tolerance_pct, 100.0);
@@ -422,13 +440,13 @@ mod tests {
     #[test]
     fn test_timing_with_jitter() {
         let mut metrics = ReplayMetrics::new(true);
-        
+
         // Record frames with some jitter
         let timestamps = vec![0, 4_100_000, 8_050_000, 12_200_000]; // Some timing variation
         for (i, &timestamp) in timestamps.iter().enumerate() {
             metrics.record_frame_processed(timestamp, 0.5, 2.0);
         }
-        
+
         let accuracy = metrics.get_accuracy_metrics();
         assert!(accuracy.timing_stats.avg_timing_error_ns > 0);
         assert!(accuracy.timing_stats.max_timing_error_ns > 0);
@@ -438,13 +456,13 @@ mod tests {
     fn test_metrics_reset() {
         let mut metrics = ReplayMetrics::new(true);
         metrics.start();
-        
+
         metrics.record_frame_processed(1000000, 0.5, 2.0);
         assert_eq!(metrics.get_frames_processed(), 1);
-        
+
         metrics.reset();
         assert_eq!(metrics.get_frames_processed(), 0);
-        
+
         let performance = metrics.get_performance_metrics();
         assert_eq!(performance.total_duration, Duration::from_secs(0));
     }
@@ -452,10 +470,10 @@ mod tests {
     #[test]
     fn test_disabled_metrics() {
         let mut metrics = ReplayMetrics::new(false);
-        
+
         metrics.record_frame_processed(1000000, 0.5, 2.0);
         assert_eq!(metrics.get_frames_processed(), 0);
-        
+
         let performance = metrics.get_performance_metrics();
         assert_eq!(performance.frames_per_second, 0.0);
     }

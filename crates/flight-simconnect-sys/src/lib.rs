@@ -3,7 +3,6 @@
     clippy::not_unsafe_ptr_arg_deref,
     clippy::missing_transmute_annotations
 )]
-
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -20,11 +19,11 @@
 //! All SimConnect API calls are wrapped in safe Rust interfaces with proper error handling.
 //! The underlying FFI is marked as unsafe but exposed through safe abstractions.
 
-use std::ffi::{c_char, c_void, CString};
+use std::ffi::{CString, c_char, c_void};
 use std::ptr;
-use windows::core::{HRESULT, PCSTR, s};
 use windows::Win32::Foundation::{HANDLE, HWND};
 use windows::Win32::System::LibraryLoader::GetProcAddress;
+use windows::core::{HRESULT, PCSTR, s};
 
 /// SimConnect handle type
 pub type HSIMCONNECT = *mut c_void;
@@ -245,8 +244,11 @@ type SimConnect_Open = unsafe extern "system" fn(
 
 type SimConnect_Close = unsafe extern "system" fn(hSimConnect: HSIMCONNECT) -> HRESULT;
 
-type SimConnect_CallDispatch =
-    unsafe extern "system" fn(hSimConnect: HSIMCONNECT, pCallback: *mut c_void, pContext: *mut c_void) -> HRESULT;
+type SimConnect_CallDispatch = unsafe extern "system" fn(
+    hSimConnect: HSIMCONNECT,
+    pCallback: *mut c_void,
+    pContext: *mut c_void,
+) -> HRESULT;
 
 type SimConnect_GetNextDispatch = unsafe extern "system" fn(
     hSimConnect: HSIMCONNECT,
@@ -276,8 +278,11 @@ type SimConnect_RequestDataOnSimObject = unsafe extern "system" fn(
     limit: u32,
 ) -> HRESULT;
 
-type SimConnect_MapClientEventToSimEvent =
-    unsafe extern "system" fn(hSimConnect: HSIMCONNECT, EventID: SIMCONNECT_EVENTID, EventName: PCSTR) -> HRESULT;
+type SimConnect_MapClientEventToSimEvent = unsafe extern "system" fn(
+    hSimConnect: HSIMCONNECT,
+    EventID: SIMCONNECT_EVENTID,
+    EventName: PCSTR,
+) -> HRESULT;
 
 type SimConnect_TransmitClientEvent = unsafe extern "system" fn(
     hSimConnect: HSIMCONNECT,
@@ -288,14 +293,17 @@ type SimConnect_TransmitClientEvent = unsafe extern "system" fn(
     Flags: u32,
 ) -> HRESULT;
 
-type SimConnect_SubscribeToSystemEvent =
-    unsafe extern "system" fn(hSimConnect: HSIMCONNECT, EventID: SIMCONNECT_EVENTID, SystemEventName: PCSTR) -> HRESULT;
+type SimConnect_SubscribeToSystemEvent = unsafe extern "system" fn(
+    hSimConnect: HSIMCONNECT,
+    EventID: SIMCONNECT_EVENTID,
+    SystemEventName: PCSTR,
+) -> HRESULT;
 
 /// SimConnect API wrapper with dynamic loading support
 pub struct SimConnectApi {
     #[cfg(feature = "dynamic")]
     _library: windows::Win32::Foundation::HMODULE,
-    
+
     // Function pointers
     open: SimConnect_Open,
     close: SimConnect_Close,
@@ -329,10 +337,10 @@ impl SimConnectApi {
     #[cfg(feature = "dynamic")]
     fn load_dynamic() -> Result<Self, SimConnectError> {
         use windows::Win32::System::LibraryLoader::LoadLibraryA;
-        
+
         let library_name = CString::new("SimConnect.dll").unwrap();
         let library = unsafe { LoadLibraryA(PCSTR(library_name.as_ptr() as *const u8)) };
-        
+
         let library = match library {
             Ok(lib) => {
                 if lib.is_invalid() {
@@ -347,7 +355,9 @@ impl SimConnectApi {
         let open = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_Open"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_Open".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_Open".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_Open>(proc.unwrap())
         };
@@ -355,7 +365,9 @@ impl SimConnectApi {
         let close = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_Close"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_Close".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_Close".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_Close>(proc.unwrap())
         };
@@ -363,7 +375,9 @@ impl SimConnectApi {
         let call_dispatch = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_CallDispatch"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_CallDispatch".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_CallDispatch".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_CallDispatch>(proc.unwrap())
         };
@@ -371,7 +385,9 @@ impl SimConnectApi {
         let get_next_dispatch = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_GetNextDispatch"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_GetNextDispatch".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_GetNextDispatch".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_GetNextDispatch>(proc.unwrap())
         };
@@ -379,7 +395,9 @@ impl SimConnectApi {
         let add_to_data_definition = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_AddToDataDefinition"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_AddToDataDefinition".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_AddToDataDefinition".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_AddToDataDefinition>(proc.unwrap())
         };
@@ -387,7 +405,9 @@ impl SimConnectApi {
         let request_data_on_sim_object = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_RequestDataOnSimObject"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_RequestDataOnSimObject".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_RequestDataOnSimObject".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_RequestDataOnSimObject>(proc.unwrap())
         };
@@ -395,7 +415,9 @@ impl SimConnectApi {
         let map_client_event_to_sim_event = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_MapClientEventToSimEvent"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_MapClientEventToSimEvent".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_MapClientEventToSimEvent".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_MapClientEventToSimEvent>(proc.unwrap())
         };
@@ -403,7 +425,9 @@ impl SimConnectApi {
         let transmit_client_event = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_TransmitClientEvent"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_TransmitClientEvent".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_TransmitClientEvent".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_TransmitClientEvent>(proc.unwrap())
         };
@@ -411,7 +435,9 @@ impl SimConnectApi {
         let subscribe_to_system_event = unsafe {
             let proc = GetProcAddress(library, s!("SimConnect_SubscribeToSystemEvent"));
             if proc.is_none() {
-                return Err(SimConnectError::FunctionNotFound("SimConnect_SubscribeToSystemEvent".to_string()));
+                return Err(SimConnectError::FunctionNotFound(
+                    "SimConnect_SubscribeToSystemEvent".to_string(),
+                ));
             }
             std::mem::transmute::<_, SimConnect_SubscribeToSystemEvent>(proc.unwrap())
         };
@@ -443,7 +469,11 @@ impl SimConnectApi {
                 ConfigIndex: u32,
             ) -> HRESULT;
             fn SimConnect_Close(hSimConnect: HSIMCONNECT) -> HRESULT;
-            fn SimConnect_CallDispatch(hSimConnect: HSIMCONNECT, pCallback: *mut c_void, pContext: *mut c_void) -> HRESULT;
+            fn SimConnect_CallDispatch(
+                hSimConnect: HSIMCONNECT,
+                pCallback: *mut c_void,
+                pContext: *mut c_void,
+            ) -> HRESULT;
             fn SimConnect_GetNextDispatch(
                 hSimConnect: HSIMCONNECT,
                 ppData: *mut *mut SIMCONNECT_RECV,
@@ -543,7 +573,10 @@ impl SimConnectApi {
     }
 
     /// Get the next dispatch message
-    pub fn get_next_dispatch(&self, handle: HSIMCONNECT) -> Result<Option<Vec<u8>>, SimConnectError> {
+    pub fn get_next_dispatch(
+        &self,
+        handle: HSIMCONNECT,
+    ) -> Result<Option<Vec<u8>>, SimConnectError> {
         let mut data_ptr: *mut SIMCONNECT_RECV = ptr::null_mut();
         let mut data_size: u32 = 0;
 
@@ -605,7 +638,9 @@ impl SimConnectApi {
         period: SIMCONNECT_PERIOD,
     ) -> Result<(), SimConnectError> {
         let result = unsafe {
-            (self.request_data_on_sim_object)(handle, request_id, define_id, object_id, period, 0, 0, 0, 0)
+            (self.request_data_on_sim_object)(
+                handle, request_id, define_id, object_id, period, 0, 0, 0, 0,
+            )
         };
 
         if result.is_ok() {
@@ -625,7 +660,11 @@ impl SimConnectApi {
         let event_cstr = CString::new(event_name).map_err(|_| SimConnectError::InvalidParameter)?;
 
         let result = unsafe {
-            (self.map_client_event_to_sim_event)(handle, event_id, PCSTR(event_cstr.as_ptr() as *const u8))
+            (self.map_client_event_to_sim_event)(
+                handle,
+                event_id,
+                PCSTR(event_cstr.as_ptr() as *const u8),
+            )
         };
 
         if result.is_ok() {
@@ -643,7 +682,8 @@ impl SimConnectApi {
         event_id: SIMCONNECT_EVENTID,
         data: u32,
     ) -> Result<(), SimConnectError> {
-        let result = unsafe { (self.transmit_client_event)(handle, object_id, event_id, data, 0, 0) };
+        let result =
+            unsafe { (self.transmit_client_event)(handle, object_id, event_id, data, 0, 0) };
 
         if result.is_ok() {
             Ok(())
@@ -659,10 +699,15 @@ impl SimConnectApi {
         event_id: SIMCONNECT_EVENTID,
         system_event_name: &str,
     ) -> Result<(), SimConnectError> {
-        let event_cstr = CString::new(system_event_name).map_err(|_| SimConnectError::InvalidParameter)?;
+        let event_cstr =
+            CString::new(system_event_name).map_err(|_| SimConnectError::InvalidParameter)?;
 
         let result = unsafe {
-            (self.subscribe_to_system_event)(handle, event_id, PCSTR(event_cstr.as_ptr() as *const u8))
+            (self.subscribe_to_system_event)(
+                handle,
+                event_id,
+                PCSTR(event_cstr.as_ptr() as *const u8),
+            )
         };
 
         if result.is_ok() {

@@ -6,14 +6,14 @@
 //! Provides REST API endpoints for StreamDeck plugin integration with
 //! telemetry data, profile management, and event handling.
 
-use crate::{AppVersion, VersionCompatibility, ProfileManager, AircraftType};
 use crate::compatibility::CompatibilityStatus;
+use crate::{AircraftType, AppVersion, ProfileManager, VersionCompatibility};
 use axum::{
+    Router,
     extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
     routing::{get, post},
-    Router,
 };
 use flight_bus::BusSnapshot;
 use serde::{Deserialize, Serialize};
@@ -21,23 +21,23 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::RwLock;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// API error types
 #[derive(Debug, Error)]
 pub enum ApiError {
     #[error("Version not supported: {0}")]
     VersionNotSupported(String),
-    
+
     #[error("Profile not found: {0}")]
     ProfileNotFound(String),
-    
+
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
-    
+
     #[error("Internal server error: {0}")]
     InternalError(String),
-    
+
     #[error("Telemetry not available")]
     TelemetryNotAvailable,
 }
@@ -163,10 +163,7 @@ pub struct ApiState {
 }
 
 impl ApiState {
-    pub fn new(
-        compatibility: VersionCompatibility,
-        profile_manager: ProfileManager,
-    ) -> Self {
+    pub fn new(compatibility: VersionCompatibility, profile_manager: ProfileManager) -> Self {
         Self {
             compatibility: Arc::new(RwLock::new(compatibility)),
             profile_manager: Arc::new(RwLock::new(profile_manager)),
@@ -224,12 +221,15 @@ async fn version_check(
         Ok(version) => version,
         Err(e) => {
             warn!("Invalid version format: {}", e);
-            return Ok(Json(ApiResponse::error(format!("Invalid version format: {}", e))));
+            return Ok(Json(ApiResponse::error(format!(
+                "Invalid version format: {}",
+                e
+            ))));
         }
     };
 
     let mut compatibility = state.compatibility.write().await;
-    
+
     let is_compatible = match compatibility.is_compatible(&app_version) {
         Ok(compatible) => compatible,
         Err(e) => {
@@ -275,11 +275,13 @@ async fn get_telemetry(
     Query(query): Query<TelemetryQuery>,
 ) -> Result<Json<ApiResponse<TelemetryResponse>>, StatusCode> {
     let telemetry = state.telemetry.read().await;
-    
+
     let snapshot = match telemetry.as_ref() {
         Some(snapshot) => snapshot,
         None => {
-            return Ok(Json(ApiResponse::error("Telemetry not available".to_string())));
+            return Ok(Json(ApiResponse::error(
+                "Telemetry not available".to_string(),
+            )));
         }
     };
 
@@ -287,12 +289,12 @@ async fn get_telemetry(
         // Filter specific fields
         let requested_fields: Vec<&str> = fields.split(',').collect();
         let mut filtered_data = serde_json::Map::new();
-        
+
         let full_data = serde_json::to_value(snapshot).map_err(|e| {
             error!("Failed to serialize telemetry: {}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-        
+
         if let serde_json::Value::Object(obj) = full_data {
             for field in requested_fields {
                 if let Some(value) = obj.get(field.trim()) {
@@ -300,7 +302,7 @@ async fn get_telemetry(
                 }
             }
         }
-        
+
         serde_json::Value::Object(filtered_data)
     } else {
         // Return all data
@@ -326,9 +328,9 @@ async fn list_profiles(
 ) -> Result<Json<ApiResponse<ProfileListResponse>>, StatusCode> {
     let profile_manager = state.profile_manager.read().await;
     let profiles = profile_manager.get_profiles();
-    
+
     let mut profile_info = HashMap::new();
-    
+
     for (aircraft_type, profile_data) in profiles {
         let info = ProfileInfo {
             name: format!("{:?} Sample Profile", aircraft_type),
@@ -340,14 +342,14 @@ async fn list_profiles(
                 .unwrap()
                 .as_secs(),
         };
-        
+
         profile_info.insert(format!("{:?}", aircraft_type), info);
     }
-    
+
     let response = ProfileListResponse {
         profiles: profile_info,
     };
-    
+
     Ok(Json(ApiResponse::success(response)))
 }
 
@@ -357,22 +359,28 @@ async fn get_profile(
     Path(aircraft_type): Path<String>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
     let profile_manager = state.profile_manager.read().await;
-    
+
     let aircraft_type_enum = match aircraft_type.to_lowercase().as_str() {
         "ga" => AircraftType::GA,
         "airbus" => AircraftType::Airbus,
         "helo" => AircraftType::Helo,
         _ => {
-            return Ok(Json(ApiResponse::error(format!("Unknown aircraft type: {}", aircraft_type))));
+            return Ok(Json(ApiResponse::error(format!(
+                "Unknown aircraft type: {}",
+                aircraft_type
+            ))));
         }
     };
-    
+
     let profiles = profile_manager.get_profiles();
-    
+
     if let Some(profile) = profiles.get(&aircraft_type_enum) {
         Ok(Json(ApiResponse::success(profile.clone())))
     } else {
-        Ok(Json(ApiResponse::error(format!("Profile not found for aircraft type: {}", aircraft_type))))
+        Ok(Json(ApiResponse::error(format!(
+            "Profile not found for aircraft type: {}",
+            aircraft_type
+        ))))
     }
 }
 
@@ -382,16 +390,16 @@ async fn subscribe_events(
     Json(request): Json<EventSubscriptionRequest>,
 ) -> Result<Json<ApiResponse<EventSubscriptionResponse>>, StatusCode> {
     let subscription_id = uuid::Uuid::new_v4().to_string();
-    
+
     let mut subscriptions = state.event_subscriptions.write().await;
     subscriptions.insert(subscription_id.clone(), request.events.clone());
-    
+
     let response = EventSubscriptionResponse {
         subscription_id: subscription_id.clone(),
         subscribed_events: request.events,
         websocket_url: format!("ws://localhost:8080/api/v1/events/ws/{}", subscription_id),
     };
-    
+
     info!("Created event subscription: {}", subscription_id);
     Ok(Json(ApiResponse::success(response)))
 }
@@ -406,18 +414,16 @@ async fn health_check() -> Json<ApiResponse<serde_json::Value>> {
             .unwrap()
             .as_secs()
     });
-    
+
     Json(ApiResponse::success(health_data))
 }
 
 /// Get API status endpoint
-async fn get_status(
-    State(state): State<ApiState>,
-) -> Json<ApiResponse<serde_json::Value>> {
+async fn get_status(State(state): State<ApiState>) -> Json<ApiResponse<serde_json::Value>> {
     let compatibility = state.compatibility.read().await;
     let telemetry = state.telemetry.read().await;
     let subscriptions = state.event_subscriptions.read().await;
-    
+
     let status_data = serde_json::json!({
         "api_version": "1.0.0",
         "telemetry_available": telemetry.is_some(),
@@ -425,7 +431,7 @@ async fn get_status(
         "available_features": compatibility.get_available_features(),
         "compatibility_status": compatibility.get_compatibility_status()
     });
-    
+
     Json(ApiResponse::success(status_data))
 }
 
@@ -442,7 +448,7 @@ fn count_actions_in_profile(profile: &serde_json::Value) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{VersionCompatibility, ProfileManager};
+    use crate::{ProfileManager, VersionCompatibility};
     use axum::http::StatusCode;
     use axum_test::TestServer;
 
@@ -450,7 +456,7 @@ mod tests {
         let compatibility = VersionCompatibility::new();
         let mut profile_manager = ProfileManager::new();
         profile_manager.load_sample_profiles().unwrap();
-        
+
         StreamDeckApi::new(compatibility, profile_manager)
     }
 
@@ -465,17 +471,14 @@ mod tests {
             plugin_uuid: "test-uuid".to_string(),
         };
 
-        let response = server
-            .post("/api/v1/version/check")
-            .json(&request)
-            .await;
+        let response = server.post("/api/v1/version/check").json(&request).await;
 
         assert_eq!(response.status_code(), StatusCode::OK);
-        
+
         let body: ApiResponse<VersionCheckResponse> = response.json();
         assert!(body.success);
         assert!(body.data.is_some());
-        
+
         let data = body.data.unwrap();
         assert!(data.compatible);
         assert_eq!(data.status, "fully_supported");
@@ -489,7 +492,7 @@ mod tests {
 
         let response = server.get("/api/v1/health").await;
         assert_eq!(response.status_code(), StatusCode::OK);
-        
+
         let body: ApiResponse<serde_json::Value> = response.json();
         assert!(body.success);
         assert!(body.data.is_some());
@@ -503,11 +506,11 @@ mod tests {
 
         let response = server.get("/api/v1/profiles").await;
         assert_eq!(response.status_code(), StatusCode::OK);
-        
+
         let body: ApiResponse<ProfileListResponse> = response.json();
         assert!(body.success);
         assert!(body.data.is_some());
-        
+
         let data = body.data.unwrap();
         assert!(!data.profiles.is_empty());
     }
@@ -520,7 +523,7 @@ mod tests {
 
         let response = server.get("/api/v1/profiles/ga").await;
         assert_eq!(response.status_code(), StatusCode::OK);
-        
+
         let body: ApiResponse<serde_json::Value> = response.json();
         assert!(body.success);
         assert!(body.data.is_some());
@@ -534,7 +537,7 @@ mod tests {
 
         let response = server.get("/api/v1/telemetry").await;
         assert_eq!(response.status_code(), StatusCode::OK);
-        
+
         let body: ApiResponse<TelemetryResponse> = response.json();
         assert!(!body.success);
         assert!(body.error.is_some());
