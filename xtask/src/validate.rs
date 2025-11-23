@@ -1,0 +1,452 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
+//! Full validation pipeline implementation.
+//!
+//! This module implements the `cargo xtask validate` command, which runs:
+//! 1. Schema validation (spec ledger and documentation front matter)
+//! 2. Code quality checks (via check::run_check())
+//! 3. Public API verification (if cargo-public-api is installed)
+//!
+//! The validation pipeline generates a comprehensive report at
+//! docs/validation_report.md with timestamps, commit hashes, and check results.
+
+use anyhow::{Context, Result};
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use crate::front_matter;
+use crate::schema;
+
+/// Result of a validation check.
+#[derive(Debug, Clone)]
+struct CheckResult {
+    name: String,
+    passed: bool,
+    details: Option<String>,
+}
+
+impl CheckResult {
+    fn new(name: impl Into<String>, passed: bool) -> Self {
+        Self {
+            name: name.into(),
+            passed,
+            details: None,
+        }
+    }
+
+    fn with_details(name: impl Into<String>, passed: bool, details: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            passed,
+            details: Some(details.into()),
+        }
+    }
+}
+
+/// Run full validation pipeline.
+///
+/// This function executes all validation checks in the required order:
+/// 1. Schema validation (per INF-REQ-12)
+/// 2. Code quality checks
+/// 3. Public API verification
+///
+/// After all checks complete, it generates docs/validation_report.md with
+/// detailed results.
+///
+/// # Returns
+///
+/// Returns `Ok(())` if all checks pass, or an error if any check fails.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Schema validation fails
+/// - Code quality checks fail
+/// - Report generation fails
+pub fn run_validate() -> Result<()> {
+    println!("🔍 Running full validation pipeline...\n");
+
+    let mut results = Vec::new();
+    let mut all_passed = true;
+
+    // Step 1: Schema Validation
+    println!("📋 Step 1: Schema Validation");
+    println!("─────────────────────────────");
+    let schema_result = validate_schemas();
+    match &schema_result {
+        Ok(()) => {
+            println!("✅ Schema validation passed\n");
+            results.push(CheckResult::new("Schema Validation", true));
+        }
+        Err(e) => {
+            eprintln!("❌ Schema validation failed: {}\n", e);
+            results.push(CheckResult::with_details(
+                "Schema Validation",
+                false,
+                e.to_string(),
+            ));
+            all_passed = false;
+        }
+    }
+
+    // Step 2: Code Quality (via check::run_check())
+    println!("🔧 Step 2: Code Quality Checks");
+    println!("─────────────────────────────");
+    let check_result = crate::check::run_check();
+    match &check_result {
+        Ok(()) => {
+            results.push(CheckResult::new("Formatting", true));
+            results.push(CheckResult::new("Clippy", true));
+            results.push(CheckResult::new("Unit Tests", true));
+        }
+        Err(e) => {
+            eprintln!("❌ Code quality checks failed: {}\n", e);
+            // Parse which specific checks failed from the error message
+            let error_msg = e.to_string();
+            results.push(CheckResult::new(
+                "Formatting",
+                !error_msg.to_lowercase().contains("formatting"),
+            ));
+            results.push(CheckResult::new(
+                "Clippy",
+                !error_msg.to_lowercase().contains("clippy"),
+            ));
+            results.push(CheckResult::new(
+                "Unit Tests",
+                !error_msg.to_lowercase().contains("test"),
+            ));
+            all_passed = false;
+        }
+    }
+
+    // Step 3: Public API Verification
+    println!("📦 Step 3: Public API Verification");
+    println!("─────────────────────────────");
+    let api_result = verify_public_api();
+    match &api_result {
+        Ok(passed) => {
+            if *passed {
+                println!("✅ Public API verification passed\n");
+                results.push(CheckResult::new("Public API", true));
+            } else {
+                println!("⚠️  cargo-public-api not installed, skipping\n");
+                results.push(CheckResult::with_details(
+                    "Public API",
+                    true,
+                    "Skipped (cargo-public-api not installed)".to_string(),
+                ));
+            }
+        }
+        Err(e) => {
+            eprintln!("❌ Public API verification failed: {}\n", e);
+            results.push(CheckResult::with_details("Public API", false, e.to_string()));
+            all_passed = false;
+        }
+    }
+
+    // Step 4: Generate Report
+    println!("📄 Step 4: Generating Validation Report");
+    println!("─────────────────────────────");
+    generate_validation_report(&results)?;
+    println!("✅ Report generated at docs/validation_report.md\n");
+
+    // Final result
+    if all_passed {
+        println!("✅ All validation checks passed!");
+        Ok(())
+    } else {
+        anyhow::bail!("Some validation checks failed. See docs/validation_report.md for details.");
+    }
+}
+
+/// Validate all schemas (spec ledger and documentation front matter).
+///
+/// This function validates:
+/// - specs/spec_ledger.yaml against schemas/spec_ledger.schema.json
+/// - All docs/**/*.md front matter against schemas/front_matter.schema.json
+///
+/// # Returns
+///
+/// Returns `Ok(())` if all schemas validate successfully, or an error
+/// describing the first validation failure encountered.
+fn validate_schemas() -> Result<()> {
+    let mut all_errors = Vec::new();
+
+    // Validate spec ledger
+    println!("  Validating specs/spec_ledger.yaml...");
+    let spec_ledger_path = Path::new("specs/spec_ledger.yaml");
+    let spec_ledger_schema = Path::new("schemas/spec_ledger.schema.json");
+
+    if spec_ledger_path.exists() && spec_ledger_schema.exists() {
+        match schema::validate_yaml_against_schema(spec_ledger_path, spec_ledger_schema) {
+            Ok(()) => println!("    ✓ spec_ledger.yaml is valid"),
+            Err(errors) => {
+                println!("    ✗ spec_ledger.yaml has {} error(s)", errors.len());
+                for error in &errors {
+                    eprintln!("{}", error.format());
+                }
+                all_errors.extend(errors);
+            }
+        }
+    } else {
+        if !spec_ledger_path.exists() {
+            println!("    ⚠ specs/spec_ledger.yaml not found (skipping)");
+        }
+        if !spec_ledger_schema.exists() {
+            println!("    ⚠ schemas/spec_ledger.schema.json not found (skipping)");
+        }
+    }
+
+    // Validate documentation front matter
+    println!("  Validating documentation front matter...");
+    let docs_dir = Path::new("docs");
+    let front_matter_schema = Path::new("schemas/front_matter.schema.json");
+
+    if docs_dir.exists() && front_matter_schema.exists() {
+        match validate_all_front_matter(docs_dir, front_matter_schema) {
+            Ok(count) => println!("    ✓ {} document(s) validated", count),
+            Err(errors) => {
+                println!("    ✗ Front matter validation failed");
+                all_errors.extend(errors);
+            }
+        }
+    } else {
+        if !docs_dir.exists() {
+            println!("    ⚠ docs/ directory not found (skipping)");
+        }
+        if !front_matter_schema.exists() {
+            println!("    ⚠ schemas/front_matter.schema.json not found (skipping)");
+        }
+    }
+
+    if all_errors.is_empty() {
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "Schema validation failed with {} error(s)",
+            all_errors.len()
+        )
+    }
+}
+
+/// Validate all documentation front matter against the schema.
+///
+/// This function collects all markdown files with front matter and validates
+/// each one against the front matter schema.
+///
+/// # Returns
+///
+/// Returns `Ok(count)` with the number of documents validated, or `Err`
+/// containing all validation errors encountered.
+fn validate_all_front_matter(
+    docs_dir: &Path,
+    schema_path: &Path,
+) -> Result<usize, Vec<schema::SchemaError>> {
+    // Collect all front matter
+    let docs = front_matter::collect_all_front_matter(docs_dir)
+        .map_err(|e| {
+            vec![schema::SchemaError {
+                code: "INF-SCHEMA-010".to_string(),
+                message: format!("Failed to collect front matter: {}", e),
+                file_path: docs_dir.display().to_string(),
+                line: None,
+                column: None,
+                expected: None,
+                found: None,
+                suggestion: Some("Check that docs/ directory is readable".to_string()),
+            }]
+        })?;
+
+    let mut all_errors = Vec::new();
+    let mut validated_count = 0;
+
+    // Validate each document's front matter
+    for (path, front_matter) in &docs {
+        // Convert front matter to YAML for validation
+        let yaml_str = serde_yaml::to_string(front_matter).map_err(|e| {
+            vec![schema::SchemaError {
+                code: "INF-SCHEMA-011".to_string(),
+                message: format!("Failed to serialize front matter: {}", e),
+                file_path: path.display().to_string(),
+                line: None,
+                column: None,
+                expected: None,
+                found: None,
+                suggestion: None,
+            }]
+        })?;
+
+        // Write to temporary file for validation
+        let temp_path = PathBuf::from(format!("/tmp/front_matter_{}.yaml", validated_count));
+        std::fs::write(&temp_path, &yaml_str).map_err(|e| {
+            vec![schema::SchemaError {
+                code: "INF-SCHEMA-012".to_string(),
+                message: format!("Failed to write temp file: {}", e),
+                file_path: path.display().to_string(),
+                line: None,
+                column: None,
+                expected: None,
+                found: None,
+                suggestion: None,
+            }]
+        })?;
+
+        // Validate against schema
+        match schema::validate_yaml_against_schema(&temp_path, schema_path) {
+            Ok(()) => {
+                validated_count += 1;
+            }
+            Err(mut errors) => {
+                // Update error file paths to point to the actual doc file
+                for error in &mut errors {
+                    error.file_path = path.display().to_string();
+                }
+                all_errors.extend(errors);
+            }
+        }
+
+        // Clean up temp file
+        let _ = std::fs::remove_file(&temp_path);
+    }
+
+    if all_errors.is_empty() {
+        Ok(validated_count)
+    } else {
+        Err(all_errors)
+    }
+}
+
+/// Verify public API using cargo-public-api if installed.
+///
+/// This function checks if cargo-public-api is installed and runs it if available.
+/// If not installed, it logs a warning and returns Ok(false) to indicate the check
+/// was skipped (not a failure).
+///
+/// # Returns
+///
+/// Returns:
+/// - `Ok(true)` if cargo-public-api is installed and verification passed
+/// - `Ok(false)` if cargo-public-api is not installed (skipped)
+/// - `Err` if cargo-public-api is installed but verification failed
+fn verify_public_api() -> Result<bool> {
+    // Check if cargo-public-api is installed
+    let check_installed = Command::new("cargo")
+        .args(["public-api", "--version"])
+        .output();
+
+    match check_installed {
+        Ok(output) if output.status.success() => {
+            println!("  Running cargo public-api...");
+
+            // Run public API verification
+            let status = Command::new("cargo")
+                .args(["public-api"])
+                .status()
+                .context("Failed to execute cargo public-api")?;
+
+            if status.success() {
+                Ok(true)
+            } else {
+                anyhow::bail!("cargo public-api reported API changes or errors")
+            }
+        }
+        _ => {
+            println!("  ⚠️  cargo-public-api not installed, skipping");
+            println!("     Install with: cargo install cargo-public-api");
+            Ok(false)
+        }
+    }
+}
+
+/// Generate validation report at docs/validation_report.md.
+///
+/// The report includes:
+/// - Auto-generated header with timestamp and commit hash
+/// - Table of all checks with pass/fail status
+/// - Summary count of failures
+///
+/// # Arguments
+///
+/// * `results` - Vector of check results to include in the report
+fn generate_validation_report(results: &[CheckResult]) -> Result<()> {
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    let commit_hash = get_git_commit_hash().unwrap_or_else(|_| "unknown".to_string());
+
+    let mut report = String::new();
+
+    // Header
+    report.push_str("<!--\n");
+    report.push_str("  AUTO-GENERATED FILE: DO NOT EDIT BY HAND.\n");
+    report.push_str("  Generated by: cargo xtask validate\n");
+    report.push_str(&format!("  Generated at: {}\n", timestamp));
+    report.push_str(&format!("  Git commit: {}\n", commit_hash));
+    report.push_str("  Source of truth: specs/spec_ledger.yaml, schemas/*.json, docs/**/*.md\n");
+    report.push_str("-->\n\n");
+
+    // Title
+    report.push_str("# Validation Report\n\n");
+    report.push_str(&format!("**Generated:** {}\n\n", timestamp));
+    report.push_str(&format!("**Commit:** {}\n\n", commit_hash));
+
+    // Summary
+    let total_checks = results.len();
+    let passed_checks = results.iter().filter(|r| r.passed).count();
+    let failed_checks = total_checks - passed_checks;
+
+    report.push_str("## Summary\n\n");
+    report.push_str(&format!("- **Total Checks:** {}\n", total_checks));
+    report.push_str(&format!("- **Passed:** {}\n", passed_checks));
+    report.push_str(&format!("- **Failed:** {}\n\n", failed_checks));
+
+    // Results table
+    report.push_str("## Check Results\n\n");
+    report.push_str("| Check | Status | Details |\n");
+    report.push_str("|-------|--------|----------|\n");
+
+    for result in results {
+        let status = if result.passed { "✅ Pass" } else { "❌ Fail" };
+        let details = result
+            .details
+            .as_ref()
+            .map(|d| d.as_str())
+            .unwrap_or("-");
+        report.push_str(&format!("| {} | {} | {} |\n", result.name, status, details));
+    }
+
+    report.push_str("\n");
+
+    // Write report
+    let report_path = Path::new("docs/validation_report.md");
+
+    // Ensure docs directory exists
+    if let Some(parent) = report_path.parent() {
+        std::fs::create_dir_all(parent)
+            .context("Failed to create docs directory")?;
+    }
+
+    std::fs::write(report_path, report)
+        .context("Failed to write validation report")?;
+
+    Ok(())
+}
+
+/// Get the current git commit hash.
+///
+/// Returns the short commit hash (7 characters) if available, or an error
+/// if git is not available or the repository is not initialized.
+fn get_git_commit_hash() -> Result<String> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--short", "HEAD"])
+        .output()
+        .context("Failed to execute git command")?;
+
+    if output.status.success() {
+        let hash = String::from_utf8(output.stdout)
+            .context("Git output is not valid UTF-8")?
+            .trim()
+            .to_string();
+        Ok(hash)
+    } else {
+        anyhow::bail!("Git command failed")
+    }
+}

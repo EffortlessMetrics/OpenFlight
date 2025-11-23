@@ -115,7 +115,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: All four docs exist with valid YAML front matter between `---` delimiters
   - _Requirements: INF-REQ-1.1, INF-REQ-1.2_
 
-- [ ] 7. Implement front matter parsing
+- [x] 7. Implement front matter parsing
+
+
+
+
+
   - Create `xtask/src/front_matter.rs` module
   - Implement `extract_front_matter(content: &str) -> Option<&str>` - extracts text between first `---` and second `---`
   - Implement `parse_front_matter(yaml: &str) -> Result<FrontMatter>` - parses YAML into FrontMatter struct
@@ -127,6 +132,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
     - Files with no front matter (skipped or flagged as warning)
   - Acceptance: Tests pass for all edge cases
   - _Requirements: INF-REQ-1.4_
+
 
 - [ ] 8. Implement cargo xtask validate command (Phase 1 version)
   - Create `xtask/src/validate.rs` module with `pub fn run_validate() -> anyhow::Result<()>`

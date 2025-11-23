@@ -11,6 +11,7 @@ use std::env;
 
 mod check;
 mod config;
+mod front_matter;
 mod schema;
 
 #[derive(Parser)]
