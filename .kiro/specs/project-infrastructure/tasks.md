@@ -483,7 +483,9 @@ This phase addresses the gap between implementation and validation by aligning s
 
 -
 
-- [ ] 26. Update spec ledger with command-based test references for INF-REQ-3
+- [x] 26. Update spec ledger with command-based test references for INF-REQ-3
+
+
   - For INF-REQ-3 (BDD Integration), update all AC test references:
     - AC-3.1 (Feature file naming): `tests: [cmd:cargo xtask ac-status]`
     - AC-3.2 (Scenario tagging): `tests: [cmd:cargo xtask ac-status]`
@@ -495,7 +497,9 @@ This phase addresses the gap between implementation and validation by aligning s
   - Run `cargo xtask validate` and verify no INF-XREF-002 errors for INF-REQ-3
   - _Requirements: INF-REQ-2.3_
 
-- [ ] 27. Update spec ledger with command-based test references for INF-REQ-4
+- [-] 27. Update spec ledger with command-based test references for INF-REQ-4
+
+
   - For INF-REQ-4 (Infrastructure as Code), update all AC test references:
     - AC-4.1 (Local config location): `tests: [cmd:cargo xtask validate-infra]`
     - AC-4.2 (CI config location): `tests: [cmd:cargo xtask validate-infra]`
