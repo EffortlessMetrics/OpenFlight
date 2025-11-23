@@ -11,7 +11,7 @@
 //! docs/validation_report.md with timestamps, commit hashes, and check results.
 
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 use crate::front_matter;
@@ -92,6 +92,11 @@ pub fn run_validate() -> Result<()> {
     // Step 2: Code Quality (via check::run_check())
     println!("🔧 Step 2: Code Quality Checks");
     println!("─────────────────────────────");
+    
+    // Note: check::run_check() runs all checks and returns a single error if any fail.
+    // We can't determine which specific checks failed from the error message alone,
+    // so we mark all as failed if check fails. For more granular reporting, we would
+    // need to refactor check.rs to return individual check results.
     let check_result = crate::check::run_check();
     match &check_result {
         Ok(()) => {
@@ -101,19 +106,11 @@ pub fn run_validate() -> Result<()> {
         }
         Err(e) => {
             eprintln!("❌ Code quality checks failed: {}\n", e);
-            // Parse which specific checks failed from the error message
-            let error_msg = e.to_string();
-            results.push(CheckResult::new(
-                "Formatting",
-                !error_msg.to_lowercase().contains("formatting"),
-            ));
-            results.push(CheckResult::new(
-                "Clippy",
-                !error_msg.to_lowercase().contains("clippy"),
-            ));
-            results.push(CheckResult::new(
-                "Unit Tests",
-                !error_msg.to_lowercase().contains("test"),
+            // Since we can't determine which specific checks failed, mark all as failed
+            results.push(CheckResult::with_details(
+                "Code Quality (fmt, clippy, tests)",
+                false,
+                "One or more checks failed. See output above for details.".to_string(),
             ));
             all_passed = false;
         }
@@ -277,7 +274,8 @@ fn validate_all_front_matter(
         })?;
 
         // Write to temporary file for validation
-        let temp_path = PathBuf::from(format!("/tmp/front_matter_{}.yaml", validated_count));
+        let temp_dir = std::env::temp_dir();
+        let temp_path = temp_dir.join(format!("front_matter_{}.yaml", validated_count));
         std::fs::write(&temp_path, &yaml_str).map_err(|e| {
             vec![schema::SchemaError {
                 code: "INF-SCHEMA-012".to_string(),
@@ -322,6 +320,8 @@ fn validate_all_front_matter(
 /// If not installed, it logs a warning and returns Ok(false) to indicate the check
 /// was skipped (not a failure).
 ///
+/// For workspaces, this runs cargo public-api on each core crate individually.
+///
 /// # Returns
 ///
 /// Returns:
@@ -336,18 +336,27 @@ fn verify_public_api() -> Result<bool> {
 
     match check_installed {
         Ok(output) if output.status.success() => {
-            println!("  Running cargo public-api...");
+            println!("  Running cargo public-api on core crates...");
 
-            // Run public API verification
-            let status = Command::new("cargo")
-                .args(["public-api"])
-                .status()
-                .context("Failed to execute cargo public-api")?;
+            // Run public API verification on each core crate
+            let mut all_passed = true;
+            for crate_name in crate::config::CORE_CRATES {
+                println!("    Checking {}...", crate_name);
+                let status = Command::new("cargo")
+                    .args(["public-api", "-p", crate_name])
+                    .status()
+                    .context(format!("Failed to execute cargo public-api for {}", crate_name))?;
 
-            if status.success() {
+                if !status.success() {
+                    eprintln!("    ✗ Public API check failed for {}", crate_name);
+                    all_passed = false;
+                }
+            }
+
+            if all_passed {
                 Ok(true)
             } else {
-                anyhow::bail!("cargo public-api reported API changes or errors")
+                anyhow::bail!("cargo public-api reported API changes or errors in one or more crates")
             }
         }
         _ => {

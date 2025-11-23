@@ -13,6 +13,7 @@ mod check;
 mod config;
 mod front_matter;
 mod schema;
+mod validate;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -56,11 +57,7 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Check => check::run_check(),
-        Commands::Validate => {
-            println!("Running full validation...");
-            println!("✓ Validate command placeholder - implementation in next task");
-            Ok(())
-        }
+        Commands::Validate => validate::run_validate(),
         Commands::AcStatus => {
             println!("Generating feature status report...");
             println!("✓ AcStatus command placeholder - implementation in next task");

@@ -134,7 +134,9 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - _Requirements: INF-REQ-1.4_
 
 
-- [ ] 8. Implement cargo xtask validate command (Phase 1 version)
+- [x] 8. Implement cargo xtask validate command (Phase 1 version)
+
+
   - Create `xtask/src/validate.rs` module with `pub fn run_validate() -> anyhow::Result<()>`
   - Implement validation pipeline in order:
     1. Schema validation: validate specs/spec_ledger.yaml and all docs/**/*.md front matter
