@@ -21,7 +21,10 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 ## Phase 1: Minimal Infrastructure Spine
 
-- [ ] 1. Create xtask crate with basic structure
+- [-] 1. Create xtask crate with basic structure
+
+
+
   - Create `xtask/` directory with Cargo.toml
   - Add dependencies: clap, serde, serde_yaml, serde_json, jsonschema, walkdir, regex, anyhow
   - Create `xtask/src/main.rs` with CLI entry point using clap
