@@ -115,7 +115,7 @@ The system maintains strict performance requirements:
 
 Flight Hub follows security best practices:
 
-- **Supply Chain Security**: `cargo-deny` enforces approved licenses and bans vulnerable crates
+- **Supply Chain Security**: `cargo-deny` enforces approved licenses and bans vulnerable crates - SLSA and shift-left being added
 - **Security Auditing**: `cargo-audit` checks for known vulnerabilities in dependencies
 - **Local-Only Operation**: No network listeners by default, IPC uses local pipes/sockets only
 - **Signed Binaries**: All distributed binaries are code-signed (production builds)
