@@ -176,7 +176,13 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `docker compose -f infra/local/docker-compose.yml config` exits 0
   - _Requirements: INF-REQ-8.1, INF-REQ-8.2, INF-REQ-8.3, INF-REQ-8.4, INF-REQ-8.5_
 
-- [-] 10. Create CI configuration
+- [x] 10. Create CI configuration
+
+
+
+
+
+
 
 
 
@@ -203,6 +209,8 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
     ```
   - Acceptance: Workflow file is valid YAML and references `cargo xtask validate`
   - _Requirements: INF-REQ-9.1, INF-REQ-9.2, INF-REQ-9.5, INF-REQ-9.6, INF-REQ-9.7_
+- [-] 11. Checkpoint - Verify Phase 1 complete
+
 
 - [ ] 11. Checkpoint - Verify Phase 1 complete
 
@@ -220,6 +228,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 ## Phase 2: Refinements and Quality Overlays
 
 - [ ] 12. Implement cross-reference checking module
+
   - Create `xtask/src/cross_ref.rs` module
   - Implement `build_req_index(ledger: &SpecLedger) -> (HashSet<String>, HashSet<String>)` - returns (req_ids, ac_ids)
   - Implement `validate_doc_links(docs: &[(PathBuf, FrontMatter)], req_ids: &HashSet<String>) -> Vec<CrossRefError>` - checks links.requirements

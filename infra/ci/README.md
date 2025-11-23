@@ -1,295 +1,279 @@
 # CI Configuration
 
-This directory documents the Continuous Integration (CI) pipeline for the Flight Hub project.
+This directory contains documentation for the Flight Hub Continuous Integration (CI) pipeline.
 
 ## Overview
 
-The CI pipeline enforces quality gates to ensure code quality, correctness, and maintainability. All checks must pass before code can be merged to the main branch.
+The CI pipeline enforces quality gates and ensures all code changes meet project standards before merging. All CI jobs use the same `cargo xtask` commands as local development to maintain consistency.
 
 ## CI Jobs and Their Purpose
 
-### 1. Validate Job (`validate`)
-**Purpose**: Unified quality gate that runs all validation checks via `cargo xtask validate`
+### 1. Validation Pipeline (`validate`)
+**Purpose**: Runs the comprehensive validation suite using `cargo xtask validate`
 
 **What it does**:
-- Schema validation (spec ledger, front matter, infrastructure invariants)
+- Schema validation (spec ledger, front matter, invariants)
 - Cross-reference checking (docs ↔ ledger ↔ tests ↔ Gherkin)
-- Code formatting verification (`cargo fmt --check`)
-- Linting for core crates (`cargo clippy` with `-D warnings`)
-- Unit tests for core crates
-- Public API stability verification (if `cargo-public-api` is installed)
-- Generates validation report artifact
-
-**Runs on**: All pushes and pull requests
+- Code quality checks (formatting, clippy, tests)
+- Public API verification
+- Generates validation and feature status reports
 
 **Artifacts**:
-- `docs/validation_report.md` - Comprehensive validation results
+- `validation-report` - docs/validation_report.md
+- `feature-status` - docs/feature_status.md
+
+**Timeout**: 10 minutes
 
 ### 2. Test Suite (`test`)
-**Purpose**: Run comprehensive test suite across platforms and Rust versions
+**Purpose**: Runs comprehensive test suite across multiple platforms and Rust versions
 
 **What it does**:
-- Formatting checks
+- Formatting checks (`cargo fmt --all -- --check`)
 - Clippy linting (general and strict for core crates)
-- File descriptor safety tests
-- Critical pattern verification
-- Unit tests and doc tests
+- File descriptor safety tests for public API crates
+- Critical pattern verification (Profile::merge_with, BlackboxWriter, etc.)
+- Full test suite (`cargo test --all-features --workspace`)
+- Documentation tests (`cargo test --doc --workspace`)
 - ADR link validation
 
-**Runs on**: Ubuntu and Windows, with stable and MSRV (1.89.0)
+**Platforms**: Ubuntu, Windows
+**Rust versions**: stable, 1.89.0
+**Timeout**: 10 minutes (Ubuntu), 20 minutes (Windows)
 
 ### 3. MSRV Check (`msrv-check`)
-**Purpose**: Verify compatibility with Minimum Supported Rust Version
+**Purpose**: Ensures code builds with Minimum Supported Rust Version (1.89.0)
 
 **What it does**:
-- Build all crates with Rust 1.89.0
-- Run clippy with MSRV
+- Builds all crates with MSRV
+- Runs clippy with strict warnings
 
-**Runs on**: Ubuntu
+**Timeout**: 30 minutes
 
-### 4. Clippy Core (`clippy-core`)
-**Purpose**: Strict linting for flight-core crate
+### 4. Path Filter (`path-filter`)
+**Purpose**: Determines which crates changed to optimize CI runs
 
-**What it does**:
-- Run clippy with `-D warnings` on flight-core
-- Conditional execution based on path filters
+**Outputs**:
+- `ipc`: Changes in flight-ipc
+- `hid`: Changes in flight-hid
+- `core`: Changes in flight-core or workspace config
 
-**Runs on**: Ubuntu and Windows
+### 5. Clippy - Core Crates
+**Purpose**: Strict clippy checks for core crates
 
-### 5. Clippy IPC Benches (`clippy-ipc-benches`)
-**Purpose**: Lint IPC benchmarks with optional unblock mode
+**Jobs**:
+- `clippy-core`: flight-core specific checks
+- `clippy-ipc-benches`: IPC benchmark checks (strict and unblock modes)
 
-**What it does**:
-- Strict mode: Clippy with dependencies
-- Unblock mode: Clippy without dependencies (requires `clippy-unblock` label)
-
-**Runs on**: Ubuntu and Windows
+**Timeout**: 30 minutes (Ubuntu), 45 minutes (Windows)
 
 ### 6. Public API Guard (`public-api-check`)
-**Purpose**: Prevent unintended public API changes
+**Purpose**: Prevents unintended breaking changes to public APIs
 
 **What it does**:
-- Compare public API against main branch
-- Check flight-core, flight-ipc, and flight-hid
-- Retry with nightly if stable fails
+- Checks public API changes for flight-core, flight-ipc, flight-hid
+- Compares against main branch
+- Falls back to nightly toolchain if needed
 
 **Runs on**: Pull requests only
+**Timeout**: 30 minutes
 
-### 7. Gated Tests (`gated-ipc-smoke`, `gated-hid-smoke`)
-**Purpose**: Run feature-gated tests that require special setup
+### 7. Gated Feature Tests
+**Purpose**: Tests optional features that require special setup
 
-**What it does**:
-- Smoke test IPC benchmarks
-- Smoke test HID with ofp1-tests feature
+**Jobs**:
+- `gated-ipc-smoke`: IPC benchmark smoke tests
+- `gated-hid-smoke`: HID feature tests
 
-**Runs on**: Scheduled runs, manual dispatch, or with `run-gated` label
+**Triggers**: Schedule, workflow_dispatch, 'run-gated' label, or path changes
+**Timeout**: 30 minutes
 
 ### 8. Cross-Platform Verification (`cross-platform`)
-**Purpose**: Verify workspace builds on all platforms
+**Purpose**: Ensures code works across all supported platforms
 
 **What it does**:
-- Check entire workspace
-- Run clippy with strict warnings
-- Verify formatting
+- Workspace checks
+- Strict clippy on all targets
+- Formatting verification
 
-**Runs on**: Scheduled runs (daily at 3 AM UTC)
+**Runs on**: Scheduled builds only
+**Platforms**: Ubuntu, Windows
+**Timeout**: 30 minutes (Ubuntu), 45 minutes (Windows)
 
 ### 9. Security Audit (`security`)
-**Purpose**: Check for security vulnerabilities and supply chain issues
+**Purpose**: Checks for security vulnerabilities and supply chain issues
 
 **What it does**:
-- Run `cargo audit` for known vulnerabilities
-- Run `cargo deny` for license and dependency policy
-- Validate HTTP stack unification (no native-tls, openssl, hyper-tls)
+- `cargo audit` - checks for known vulnerabilities
+- `cargo deny` - enforces license and dependency policies
+- HTTP stack unification validation (ensures rustls, no native-tls/openssl)
+- Hyper version consistency checks
 
-**Runs on**: All pushes and pull requests
+**Timeout**: 30 minutes
 
 ### 10. Build Release (`build`)
-**Purpose**: Verify release builds succeed
+**Purpose**: Verifies release builds succeed
 
 **What it does**:
-- Build workspace in release mode
-- Upload artifacts for flightd and flightctl
+- Builds workspace in release mode
+- Uploads artifacts (flightd, flightctl)
 
-**Runs on**: Ubuntu and Windows
+**Platforms**: Ubuntu, Windows
+**Timeout**: 30 minutes (Ubuntu), 45 minutes (Windows)
 
 ### 11. Feature Powerset Testing (`feature-powerset`)
-**Purpose**: Test feature combinations for compatibility
+**Purpose**: Tests various feature combinations to catch feature interaction bugs
 
 **What it does**:
-- Run `cargo hack` with feature powerset (depth 2)
-- Verify workspace dependency alignment
+- Uses `cargo-hack` to test feature combinations (depth 2)
+- Verifies workspace dependency alignment
+- Checks tokio, futures, tonic version consistency
 
-**Runs on**: All pushes and pull requests
+**Timeout**: 30 minutes
 
 ### 12. Performance Tests (`performance`)
-**Purpose**: Run benchmarks and check for regressions
+**Purpose**: Runs benchmark suite to detect performance regressions
 
 **What it does**:
-- Run all workspace benchmarks
+- Runs all workspace benchmarks
 - Performance regression detection (TODO)
 
-**Runs on**: All pushes and pull requests
+**Timeout**: 30 minutes
 
 ## Quality Gates Enforced
 
-The following quality gates MUST pass for code to be merged:
+All checks must pass before code can be merged. The following quality gates are enforced:
 
-### 1. Code Formatting
-- **Tool**: `cargo fmt --all -- --check`
-- **Standard**: Rust 2024 edition formatting rules
-- **Enforcement**: All jobs that run formatting checks
+### Code Quality
+- ✅ **Formatting**: All code must be formatted with `rustfmt`
+- ✅ **Linting**: Core crates must pass clippy with `-D warnings`
+- ✅ **Tests**: All unit tests and doc tests must pass
+- ✅ **MSRV**: Code must build with Rust 1.89.0
 
-### 2. Linting (Clippy)
-- **Tool**: `cargo clippy`
-- **Standard**: 
-  - Core crates: `-D warnings` (no warnings allowed)
-  - Other crates: Warnings allowed for development ergonomics
-- **Core crates**: flight-core, flight-axis, flight-bus, flight-hid, flight-ipc, flight-service, flight-simconnect, flight-panels
-- **Enforcement**: `test`, `clippy-core`, `clippy-ipc-benches` jobs
+### Documentation
+- ✅ **Schema Validation**: All YAML/JSON must conform to schemas
+- ✅ **Cross-References**: All requirement links must be valid
+- ✅ **ADR Links**: All referenced ADRs must exist
 
-### 3. Unit Tests
-- **Tool**: `cargo test`
-- **Coverage**: All workspace crates
-- **Enforcement**: `test` job
+### Security
+- ✅ **Audit**: No known security vulnerabilities
+- ✅ **Supply Chain**: Dependencies must meet license/policy requirements
+- ✅ **HTTP Stack**: Only rustls allowed (no native-tls/openssl)
 
-### 4. API Stability
-- **Tool**: `cargo-public-api`
-- **Standard**: No breaking changes to public APIs without review
-- **Crates monitored**: flight-core, flight-ipc, flight-hid
-- **Enforcement**: `public-api-check` job (PR only)
+### API Stability
+- ✅ **Public API**: Breaking changes must be intentional and documented
+- ✅ **Feature Compatibility**: Feature combinations must work correctly
 
-### 5. Schema Validation
-- **Tool**: `cargo xtask validate`
-- **Standard**: All YAML/JSON files must conform to schemas
-- **Files checked**:
-  - `specs/spec_ledger.yaml` → `schemas/spec_ledger.schema.json`
-  - `docs/**/*.md` front matter → `schemas/front_matter.schema.json`
-  - `infra/**/invariants.yaml` → `schemas/invariants.schema.json`
-- **Enforcement**: `validate` job
-
-### 6. Cross-Reference Integrity
-- **Tool**: `cargo xtask validate`
-- **Standard**: All requirement links, test references, and Gherkin tags must be valid
-- **Checks**:
-  - Documentation → spec ledger (requirement links)
-  - Spec ledger → codebase (test references)
-  - Gherkin → spec ledger (tags)
-- **Enforcement**: `validate` job
-
-### 7. Security
-- **Tools**: `cargo audit`, `cargo deny`
-- **Standard**: No known vulnerabilities, compliant licenses
-- **Enforcement**: `security` job
-
-### 8. MSRV Compatibility
-- **Tool**: Build and clippy with Rust 1.89.0
-- **Standard**: Code must compile and pass clippy on MSRV
-- **Enforcement**: `msrv-check` job
+### Platform Support
+- ✅ **Cross-Platform**: Code must work on Ubuntu and Windows
+- ✅ **Architecture**: Builds must succeed on all target platforms
 
 ## Guarantees
 
-When CI passes, the following guarantees are provided:
+The CI pipeline provides the following guarantees:
 
-1. **Code Quality**: All code is formatted, linted, and passes strict clippy checks for core crates
-2. **Correctness**: All unit tests pass on both Ubuntu and Windows
-3. **API Stability**: Public APIs have not changed unexpectedly (for PRs)
-4. **Documentation Integrity**: All documentation links and cross-references are valid
-5. **Schema Compliance**: All structured data conforms to defined schemas
-6. **Security**: No known vulnerabilities in dependencies
-7. **MSRV Compatibility**: Code compiles and works on Rust 1.89.0
-8. **Cross-Platform**: Code builds successfully on Linux and Windows
+1. **All checks must pass for merge**: No code can be merged if any CI job fails
+2. **Consistent validation**: CI uses the same `cargo xtask` commands as local development
+3. **Platform compatibility**: Code is tested on Ubuntu and Windows
+4. **MSRV compliance**: Code builds with Rust 1.89.0
+5. **Security**: No known vulnerabilities or banned dependencies
+6. **API stability**: Public API changes are detected and reviewed
+7. **Test coverage**: All tests pass on all supported platforms
+8. **Documentation accuracy**: All cross-references are valid
 
-## Running CI Checks Locally
+## Error Reporting
 
-### Quick Check (Fast)
+CI jobs emit structured errors following the format:
+```
+[ERROR] <error_code>: <message>
+  File: <path>:<line>:<column>
+  Expected: <expected_value>
+  Found: <actual_value>
+  Suggestion: <fix_suggestion>
+```
+
+Error code families:
+- `INF-SCHEMA-xxx`: Schema validation errors
+- `INF-XREF-xxx`: Cross-reference errors
+- `INF-INFRA-xxx`: Infrastructure validation errors
+- `INF-VALID-xxx`: General validation pipeline errors
+
+## Running CI Locally
+
+To run the same checks locally that CI runs:
+
 ```bash
+# Fast smoke test (fmt, clippy, core tests)
 cargo xtask check
-```
-Runs: formatting, clippy for core crates, unit tests for core crates (~30 seconds)
 
-### Full Validation (Comprehensive)
-```bash
+# Full validation pipeline (same as CI validate job)
 cargo xtask validate
-```
-Runs: all checks from `cargo xtask check` plus:
-- Schema validation
-- Cross-reference checking
-- Public API verification
-- Benchmark compilation
-- Report generation (~5 minutes)
 
-### Individual Checks
-```bash
-# Formatting
-cargo fmt --all -- --check
+# Generate feature status report
+cargo xtask ac-status
 
-# Clippy (core crates)
-cargo clippy -p flight-core -p flight-virtual -p flight-hid -p flight-ipc -- -D warnings
-
-# Tests (core crates)
-cargo test -p flight-core -p flight-virtual -p flight-hid -p flight-ipc
-
-# Security audit
-cargo audit
-cargo deny check
-
-# Public API check
-cargo public-api -p flight-core --diff-git origin/main..HEAD
+# Validate infrastructure configs
+cargo xtask validate-infra
 ```
 
-## CI Configuration Files
+## Triggering Gated Tests
 
-- **Workflow definition**: `.github/workflows/ci.yml`
-- **Clippy configuration**: `clippy.toml`
-- **Cargo deny configuration**: `deny.toml`
-- **Invariants**: `infra/local/invariants.yaml`, `infra/ci/invariants.yaml` (if exists)
+Some tests are gated behind labels or schedules:
 
-## Troubleshooting
+- **Gated features**: Add `run-gated` label to PR
+- **Clippy unblock mode**: Add `clippy-unblock` label to PR
+- **Manual trigger**: Use workflow_dispatch in GitHub Actions UI
 
-### CI Fails on Formatting
-**Solution**: Run `cargo fmt --all` locally and commit the changes
+## Caching Strategy
 
-### CI Fails on Clippy
-**Solution**: Run `cargo clippy -p <crate> -- -D warnings` locally and fix warnings
+CI uses multiple caching strategies to improve performance:
 
-### CI Fails on Tests
-**Solution**: Run `cargo test -p <crate>` locally and fix failing tests
+1. **Swatinem/rust-cache**: Automatic Rust dependency caching
+2. **actions/cache**: Manual caching for specific tools (cargo-public-api, etc.)
+3. **Toolchain hash**: Cache keys include Rust toolchain version for isolation
 
-### CI Fails on Schema Validation
-**Solution**: Run `cargo xtask validate` locally to see detailed error messages with file paths and line numbers
+## Concurrency Control
 
-### CI Fails on Cross-References
-**Solution**: Run `cargo xtask validate` locally and check `docs/validation_report.md` for broken links
+CI uses concurrency groups to cancel outdated runs:
+```yaml
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+```
 
-### CI Fails on Public API Check
-**Solution**: Review API changes with `cargo public-api -p <crate> --diff-git origin/main..HEAD`
-- If changes are intentional, document them in the PR description
-- If changes are unintentional, refactor to avoid breaking changes
+This ensures only the latest commit in a PR runs CI, saving resources.
 
-## Adding New CI Checks
+## Timeout Configuration
 
-When adding new CI checks:
+Jobs have different timeouts based on platform and complexity:
+- Fast checks: 10 minutes
+- Standard checks: 30 minutes
+- Windows builds: 45 minutes (longer due to platform overhead)
 
-1. **Implement in xtask first**: Add the check to the xtask framework
-2. **Test locally**: Verify the check works with `cargo xtask <command>`
-3. **Update CI workflow**: Add or modify jobs in `.github/workflows/ci.yml`
-4. **Document here**: Update this README with the new check's purpose and guarantees
-5. **Update validation report**: Ensure new checks appear in `docs/validation_report.md`
+## Maintenance
 
-## CI Performance
+### Adding New Quality Gates
 
-Target execution times:
-- `validate` job: < 10 minutes
-- `test` job: < 10 minutes (Ubuntu), < 20 minutes (Windows)
-- `clippy-core` job: < 30 minutes
-- `security` job: < 30 minutes
-- Total pipeline: < 45 minutes
+1. Implement the check in `xtask/` crate first
+2. Add to `cargo xtask validate` command
+3. Test locally: `cargo xtask validate`
+4. CI will automatically pick up the new check
 
-## Related Documentation
+### Updating Dependencies
 
-- [xtask Commands](../../xtask/README.md) (if exists)
-- [Validation Report](../../docs/validation_report.md) (generated)
-- [Feature Status](../../docs/feature_status.md) (generated)
-- [Infrastructure Requirements](../../.kiro/specs/project-infrastructure/requirements.md)
-- [Infrastructure Design](../../.kiro/specs/project-infrastructure/design.md)
+1. Update `Cargo.toml` files
+2. Run `cargo update`
+3. Verify locally: `cargo xtask validate`
+4. CI will verify on all platforms
+
+### Modifying CI Jobs
+
+1. Edit `.github/workflows/ci.yml`
+2. Validate YAML syntax
+3. Test with workflow_dispatch if possible
+4. Monitor first run carefully
+
+## References
+
+- **Validation Pipeline**: See `.kiro/specs/project-infrastructure/design.md`
+- **Requirements**: See `.kiro/specs/project-infrastructure/requirements.md` (INF-REQ-9)
+- **xtask Commands**: See `xtask/src/main.rs`
