@@ -177,11 +177,11 @@ impl VirtualDevice {
         }
 
         // Simulate packet loss
-        if self.config.packet_loss_rate > 0.0 {
-            if rand::random::<f64>() < self.config.packet_loss_rate {
-                self.stats.packet_losses.fetch_add(1, Ordering::Relaxed);
-                return None;
-            }
+        if self.config.packet_loss_rate > 0.0
+            && rand::random::<f64>() < self.config.packet_loss_rate
+        {
+            self.stats.packet_losses.fetch_add(1, Ordering::Relaxed);
+            return None;
         }
 
         let state = self.state.lock();

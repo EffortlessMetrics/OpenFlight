@@ -92,7 +92,7 @@ pub fn run_validate() -> Result<()> {
     // Step 2: Code Quality (via check::run_check())
     println!("🔧 Step 2: Code Quality Checks");
     println!("─────────────────────────────");
-    
+
     // Note: check::run_check() runs all checks and returns a single error if any fail.
     // We can't determine which specific checks failed from the error message alone,
     // so we mark all as failed if check fails. For more granular reporting, we would
@@ -136,7 +136,11 @@ pub fn run_validate() -> Result<()> {
         }
         Err(e) => {
             eprintln!("❌ Public API verification failed: {}\n", e);
-            results.push(CheckResult::with_details("Public API", false, e.to_string()));
+            results.push(CheckResult::with_details(
+                "Public API",
+                false,
+                e.to_string(),
+            ));
             all_passed = false;
         }
     }
@@ -240,19 +244,18 @@ fn validate_all_front_matter(
     schema_path: &Path,
 ) -> Result<usize, Vec<schema::SchemaError>> {
     // Collect all front matter
-    let docs = front_matter::collect_all_front_matter(docs_dir)
-        .map_err(|e| {
-            vec![schema::SchemaError {
-                code: "INF-SCHEMA-010".to_string(),
-                message: format!("Failed to collect front matter: {}", e),
-                file_path: docs_dir.display().to_string(),
-                line: None,
-                column: None,
-                expected: None,
-                found: None,
-                suggestion: Some("Check that docs/ directory is readable".to_string()),
-            }]
-        })?;
+    let docs = front_matter::collect_all_front_matter(docs_dir).map_err(|e| {
+        vec![schema::SchemaError {
+            code: "INF-SCHEMA-010".to_string(),
+            message: format!("Failed to collect front matter: {}", e),
+            file_path: docs_dir.display().to_string(),
+            line: None,
+            column: None,
+            expected: None,
+            found: None,
+            suggestion: Some("Check that docs/ directory is readable".to_string()),
+        }]
+    })?;
 
     let mut all_errors = Vec::new();
     let mut validated_count = 0;
@@ -345,7 +348,10 @@ fn verify_public_api() -> Result<bool> {
                 let status = Command::new("cargo")
                     .args(["public-api", "-p", crate_name])
                     .status()
-                    .context(format!("Failed to execute cargo public-api for {}", crate_name))?;
+                    .context(format!(
+                        "Failed to execute cargo public-api for {}",
+                        crate_name
+                    ))?;
 
                 if !status.success() {
                     eprintln!("    ✗ Public API check failed for {}", crate_name);
@@ -356,7 +362,9 @@ fn verify_public_api() -> Result<bool> {
             if all_passed {
                 Ok(true)
             } else {
-                anyhow::bail!("cargo public-api reported API changes or errors in one or more crates")
+                anyhow::bail!(
+                    "cargo public-api reported API changes or errors in one or more crates"
+                )
             }
         }
         _ => {
@@ -413,12 +421,12 @@ fn generate_validation_report(results: &[CheckResult]) -> Result<()> {
     report.push_str("|-------|--------|----------|\n");
 
     for result in results {
-        let status = if result.passed { "✅ Pass" } else { "❌ Fail" };
-        let details = result
-            .details
-            .as_ref()
-            .map(|d| d.as_str())
-            .unwrap_or("-");
+        let status = if result.passed {
+            "✅ Pass"
+        } else {
+            "❌ Fail"
+        };
+        let details = result.details.as_ref().map(|d| d.as_str()).unwrap_or("-");
         report.push_str(&format!("| {} | {} | {} |\n", result.name, status, details));
     }
 
@@ -429,12 +437,10 @@ fn generate_validation_report(results: &[CheckResult]) -> Result<()> {
 
     // Ensure docs directory exists
     if let Some(parent) = report_path.parent() {
-        std::fs::create_dir_all(parent)
-            .context("Failed to create docs directory")?;
+        std::fs::create_dir_all(parent).context("Failed to create docs directory")?;
     }
 
-    std::fs::write(report_path, report)
-        .context("Failed to write validation report")?;
+    std::fs::write(report_path, report).context("Failed to write validation report")?;
 
     Ok(())
 }

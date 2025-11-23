@@ -20,15 +20,14 @@
 //! ## Client Connection
 //!
 //! ```rust,no_run
-//! use flight_ipc::{ClientConfig, client::FlightClient};
+//! use flight_ipc::client::FlightClient;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let config = ClientConfig::default();
-//!     let mut client = FlightClient::connect(config).await?;
+//!     let mut client = FlightClient::connect().await?;
 //!     
-//!     let devices = client.list_devices().await?;
-//!     println!("Found {} devices", devices.len());
+//!     // Use the client for IPC operations
+//!     println!("Connected to Flight service");
 //!     
 //!     Ok(())
 //! }
@@ -37,12 +36,11 @@
 //! ## Server Setup
 //!
 //! ```rust,no_run
-//! use flight_ipc::{ServerConfig, server::FlightServer};
+//! use flight_ipc::server::FlightServer;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let config = ServerConfig::default();
-//!     let server = FlightServer::new(config);
+//!     let server = FlightServer::new();
 //!     
 //!     server.serve().await?;
 //!     Ok(())

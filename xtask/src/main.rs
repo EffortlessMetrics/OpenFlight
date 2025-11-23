@@ -83,7 +83,10 @@ fn main() -> Result<()> {
 
             match schema::validate_yaml_against_schema(yaml_path, schema_path) {
                 Ok(()) => {
-                    println!("✓ Validation successful: {} conforms to schema", yaml_path.display());
+                    println!(
+                        "✓ Validation successful: {} conforms to schema",
+                        yaml_path.display()
+                    );
                     Ok(())
                 }
                 Err(errors) => {

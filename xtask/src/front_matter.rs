@@ -19,16 +19,16 @@ use walkdir::WalkDir;
 pub struct FrontMatter {
     /// Unique document identifier (e.g., DOC-CORE-AXIS)
     pub doc_id: String,
-    
+
     /// Document kind/band
     pub kind: DocKind,
-    
+
     /// Area or crate this document relates to
     pub area: Area,
-    
+
     /// Document status
     pub status: DocStatus,
-    
+
     /// Links to other artifacts
     #[serde(default)]
     pub links: Links,
@@ -76,11 +76,11 @@ pub struct Links {
     /// Requirement IDs (REQ-* or INF-REQ-*)
     #[serde(default)]
     pub requirements: Vec<String>,
-    
+
     /// Task IDs
     #[serde(default)]
     pub tasks: Vec<String>,
-    
+
     /// ADR IDs
     #[serde(default)]
     pub adrs: Vec<String>,
@@ -112,10 +112,10 @@ pub fn extract_front_matter(content: &str) -> Option<&str> {
     if !content.starts_with("---") {
         return None;
     }
-    
+
     // Find the second --- delimiter
     let after_first_delimiter = &content[3..]; // Skip first "---"
-    
+
     // Look for the closing ---
     if let Some(end_pos) = after_first_delimiter.find("\n---") {
         // Extract the text between delimiters, skipping the newline after first ---
@@ -126,10 +126,10 @@ pub fn extract_front_matter(content: &str) -> Option<&str> {
         } else {
             0
         };
-        
+
         return Some(&after_first_delimiter[start..end_pos]);
     }
-    
+
     None
 }
 
@@ -151,8 +151,7 @@ pub fn extract_front_matter(content: &str) -> Option<&str> {
 /// - Required fields are missing
 /// - Field values don't match expected types or enums
 pub fn parse_front_matter(yaml: &str) -> Result<FrontMatter> {
-    serde_yaml::from_str(yaml)
-        .context("Failed to parse front matter YAML")
+    serde_yaml::from_str(yaml).context("Failed to parse front matter YAML")
 }
 
 /// Collect all front matter from markdown files in a directory tree.
@@ -180,34 +179,34 @@ pub fn parse_front_matter(yaml: &str) -> Result<FrontMatter> {
 /// - Front matter exists but is malformed
 pub fn collect_all_front_matter(docs_dir: &Path) -> Result<Vec<(PathBuf, FrontMatter)>> {
     let mut results = Vec::new();
-    
+
     for entry in WalkDir::new(docs_dir)
         .follow_links(false)
         .into_iter()
         .filter_map(|e| e.ok())
     {
         let path = entry.path();
-        
+
         // Only process .md files
         if !path.is_file() || path.extension().and_then(|s| s.to_str()) != Some("md") {
             continue;
         }
-        
+
         // Read file content
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read file: {}", path.display()))?;
-        
+
         // Extract front matter
         if let Some(yaml) = extract_front_matter(&content) {
             // Parse front matter
             let front_matter = parse_front_matter(yaml)
                 .with_context(|| format!("Failed to parse front matter in: {}", path.display()))?;
-            
+
             results.push((path.to_path_buf(), front_matter));
         }
         // Files without front matter are silently skipped
     }
-    
+
     Ok(results)
 }
 
@@ -266,7 +265,7 @@ links:
 "#;
         let result = parse_front_matter(yaml);
         assert!(result.is_ok());
-        
+
         let front_matter = result.unwrap();
         assert_eq!(front_matter.doc_id, "DOC-CORE-AXIS");
         assert_eq!(front_matter.kind, DocKind::Concept);
@@ -289,7 +288,7 @@ links:
 "#;
         let result = parse_front_matter(yaml);
         assert!(result.is_ok());
-        
+
         let front_matter = result.unwrap();
         assert_eq!(front_matter.doc_id, "DOC-TEST");
         assert_eq!(front_matter.kind, DocKind::HowTo);
@@ -334,24 +333,31 @@ links:
     #[test]
     fn test_collect_all_front_matter() {
         // This test requires fixture files to exist
-        let fixtures_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/fixtures/minimal/docs");
-        
+        let fixtures_dir =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/minimal/docs");
+
         // Skip test if fixtures don't exist yet
         if !fixtures_dir.exists() {
             eprintln!("Skipping test_collect_all_front_matter: fixtures not yet created");
             return;
         }
-        
+
         let result = collect_all_front_matter(&fixtures_dir);
         assert!(result.is_ok());
-        
+
         let docs = result.unwrap();
-        assert!(!docs.is_empty(), "Should find at least one doc with front matter");
-        
+        assert!(
+            !docs.is_empty(),
+            "Should find at least one doc with front matter"
+        );
+
         // Verify all returned docs have valid front matter
         for (path, front_matter) in &docs {
-            assert!(!front_matter.doc_id.is_empty(), "doc_id should not be empty for {}", path.display());
+            assert!(
+                !front_matter.doc_id.is_empty(),
+                "doc_id should not be empty for {}",
+                path.display()
+            );
         }
     }
 
@@ -394,7 +400,7 @@ links:
 "#;
         let result = parse_front_matter(yaml);
         assert!(result.is_ok());
-        
+
         let front_matter = result.unwrap();
         assert!(front_matter.links.requirements.is_empty());
         assert!(front_matter.links.tasks.is_empty());

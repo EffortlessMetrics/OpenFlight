@@ -90,93 +90,87 @@ pub fn validate_yaml_against_schema(
     schema_path: &Path,
 ) -> Result<(), Vec<SchemaError>> {
     // Read the original YAML text for line number reporting
-    let yaml_text = std::fs::read_to_string(yaml_path)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-001".to_string(),
-                message: format!("Failed to read YAML file: {}", e),
-                file_path: yaml_path.display().to_string(),
-                line: None,
-                column: None,
-                expected: None,
-                found: None,
-                suggestion: Some("Ensure the file exists and is readable".to_string()),
-            }]
-        })?;
+    let yaml_text = std::fs::read_to_string(yaml_path).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-001".to_string(),
+            message: format!("Failed to read YAML file: {}", e),
+            file_path: yaml_path.display().to_string(),
+            line: None,
+            column: None,
+            expected: None,
+            found: None,
+            suggestion: Some("Ensure the file exists and is readable".to_string()),
+        }]
+    })?;
 
     // Parse YAML into serde_yaml::Value
-    let yaml_value: YamlValue = serde_yaml::from_str(&yaml_text)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-002".to_string(),
-                message: format!("Invalid YAML syntax: {}", e),
-                file_path: yaml_path.display().to_string(),
-                line: e.location().map(|loc| loc.line()),
-                column: e.location().map(|loc| loc.column()),
-                expected: Some("Valid YAML syntax".to_string()),
-                found: Some("Malformed YAML".to_string()),
-                suggestion: Some("Check YAML syntax, indentation, and special characters".to_string()),
-            }]
-        })?;
+    let yaml_value: YamlValue = serde_yaml::from_str(&yaml_text).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-002".to_string(),
+            message: format!("Invalid YAML syntax: {}", e),
+            file_path: yaml_path.display().to_string(),
+            line: e.location().map(|loc| loc.line()),
+            column: e.location().map(|loc| loc.column()),
+            expected: Some("Valid YAML syntax".to_string()),
+            found: Some("Malformed YAML".to_string()),
+            suggestion: Some("Check YAML syntax, indentation, and special characters".to_string()),
+        }]
+    })?;
 
     // Convert YAML to JSON for jsonschema validation
-    let json_value: JsonValue = serde_json::to_value(&yaml_value)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-003".to_string(),
-                message: format!("Failed to convert YAML to JSON: {}", e),
-                file_path: yaml_path.display().to_string(),
-                line: None,
-                column: None,
-                expected: None,
-                found: None,
-                suggestion: Some("Ensure YAML contains only JSON-compatible types".to_string()),
-            }]
-        })?;
+    let json_value: JsonValue = serde_json::to_value(&yaml_value).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-003".to_string(),
+            message: format!("Failed to convert YAML to JSON: {}", e),
+            file_path: yaml_path.display().to_string(),
+            line: None,
+            column: None,
+            expected: None,
+            found: None,
+            suggestion: Some("Ensure YAML contains only JSON-compatible types".to_string()),
+        }]
+    })?;
 
     // Read and parse the schema
-    let schema_text = std::fs::read_to_string(schema_path)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-004".to_string(),
-                message: format!("Failed to read schema file: {}", e),
-                file_path: schema_path.display().to_string(),
-                line: None,
-                column: None,
-                expected: None,
-                found: None,
-                suggestion: Some("Ensure the schema file exists and is readable".to_string()),
-            }]
-        })?;
+    let schema_text = std::fs::read_to_string(schema_path).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-004".to_string(),
+            message: format!("Failed to read schema file: {}", e),
+            file_path: schema_path.display().to_string(),
+            line: None,
+            column: None,
+            expected: None,
+            found: None,
+            suggestion: Some("Ensure the schema file exists and is readable".to_string()),
+        }]
+    })?;
 
-    let schema_json: JsonValue = serde_json::from_str(&schema_text)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-005".to_string(),
-                message: format!("Invalid JSON schema: {}", e),
-                file_path: schema_path.display().to_string(),
-                line: None,
-                column: None,
-                expected: Some("Valid JSON".to_string()),
-                found: Some("Malformed JSON".to_string()),
-                suggestion: Some("Check JSON syntax in schema file".to_string()),
-            }]
-        })?;
+    let schema_json: JsonValue = serde_json::from_str(&schema_text).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-005".to_string(),
+            message: format!("Invalid JSON schema: {}", e),
+            file_path: schema_path.display().to_string(),
+            line: None,
+            column: None,
+            expected: Some("Valid JSON".to_string()),
+            found: Some("Malformed JSON".to_string()),
+            suggestion: Some("Check JSON syntax in schema file".to_string()),
+        }]
+    })?;
 
     // Compile the schema
-    let compiled_schema = Validator::new(&schema_json)
-        .map_err(|e| {
-            vec![SchemaError {
-                code: "INF-SCHEMA-006".to_string(),
-                message: format!("Failed to compile schema: {}", e),
-                file_path: schema_path.display().to_string(),
-                line: None,
-                column: None,
-                expected: Some("Valid JSON Schema Draft 7".to_string()),
-                found: Some("Invalid schema definition".to_string()),
-                suggestion: Some("Ensure schema follows JSON Schema Draft 7 specification".to_string()),
-            }]
-        })?;
+    let compiled_schema = Validator::new(&schema_json).map_err(|e| {
+        vec![SchemaError {
+            code: "INF-SCHEMA-006".to_string(),
+            message: format!("Failed to compile schema: {}", e),
+            file_path: schema_path.display().to_string(),
+            line: None,
+            column: None,
+            expected: Some("Valid JSON Schema Draft 7".to_string()),
+            found: Some("Invalid schema definition".to_string()),
+            suggestion: Some("Ensure schema follows JSON Schema Draft 7 specification".to_string()),
+        }]
+    })?;
 
     // Validate the JSON against the schema
     if compiled_schema.is_valid(&json_value) {
@@ -184,9 +178,7 @@ pub fn validate_yaml_against_schema(
     }
 
     // If validation failed, collect all errors
-    let validation_errors: Vec<_> = compiled_schema
-        .iter_errors(&json_value)
-        .collect();
+    let validation_errors: Vec<_> = compiled_schema.iter_errors(&json_value).collect();
 
     if validation_errors.is_empty() {
         return Ok(());
@@ -198,22 +190,19 @@ pub fn validate_yaml_against_schema(
         .map(|(idx, error)| {
             let instance_path = error.instance_path.to_string();
             let schema_path_str = error.schema_path.to_string();
-            
+
             // Try to extract line number from instance path
             let line = estimate_line_number(&yaml_text, &instance_path);
-            
+
             // Generate error code based on index
             let code = format!("INF-SCHEMA-{:03}", 100 + idx);
-            
+
             // Create detailed error message
             let message = format!("{}", error);
-            
+
             // Generate expected/found/suggestion based on error type
-            let (expected, found, suggestion) = generate_error_details(
-                &error.to_string(),
-                &instance_path,
-                &schema_path_str,
-            );
+            let (expected, found, suggestion) =
+                generate_error_details(&error.to_string(), &instance_path, &schema_path_str);
 
             SchemaError {
                 code,
@@ -242,14 +231,14 @@ fn estimate_line_number(yaml_text: &str, instance_path: &str) -> Option<usize> {
 
     // Extract the last component of the path
     let path_parts: Vec<&str> = instance_path.split('/').filter(|s| !s.is_empty()).collect();
-    
+
     if path_parts.is_empty() {
         return Some(1);
     }
 
     // Search for the field name in the YAML text
     let search_term = path_parts.last().unwrap();
-    
+
     for (line_num, line) in yaml_text.lines().enumerate() {
         if line.contains(search_term) {
             return Some(line_num + 1);
@@ -360,8 +349,8 @@ mod tests {
 
     #[test]
     fn test_spec_ledger_missing_required() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/spec_ledger_missing_required.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/spec_ledger_missing_required.yaml");
         let schema_path = schemas_dir().join("spec_ledger.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -377,8 +366,8 @@ mod tests {
 
     #[test]
     fn test_spec_ledger_invalid_id_pattern() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/spec_ledger_invalid_id_pattern.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/spec_ledger_invalid_id_pattern.yaml");
         let schema_path = schemas_dir().join("spec_ledger.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -393,8 +382,8 @@ mod tests {
 
     #[test]
     fn test_spec_ledger_additional_properties() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/spec_ledger_additional_properties.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/spec_ledger_additional_properties.yaml");
         let schema_path = schemas_dir().join("spec_ledger.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -410,12 +399,15 @@ mod tests {
 
     #[test]
     fn test_spec_ledger_empty_test_object() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/spec_ledger_empty_test_object.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/spec_ledger_empty_test_object.yaml");
         let schema_path = schemas_dir().join("spec_ledger.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
-        assert!(result.is_err(), "Empty test object should fail minProperties");
+        assert!(
+            result.is_err(),
+            "Empty test object should fail minProperties"
+        );
 
         if let Err(errors) = result {
             assert!(!errors.is_empty(), "Should have at least one error");
@@ -424,8 +416,8 @@ mod tests {
 
     #[test]
     fn test_front_matter_missing_links() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/front_matter_missing_links.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/front_matter_missing_links.yaml");
         let schema_path = schemas_dir().join("front_matter.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -440,8 +432,7 @@ mod tests {
 
     #[test]
     fn test_front_matter_invalid_kind() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/front_matter_invalid_kind.yaml");
+        let yaml_path = fixtures_dir().join("invalid/schema_errors/front_matter_invalid_kind.yaml");
         let schema_path = schemas_dir().join("front_matter.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -454,8 +445,8 @@ mod tests {
 
     #[test]
     fn test_front_matter_additional_properties() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/front_matter_additional_properties.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/front_matter_additional_properties.yaml");
         let schema_path = schemas_dir().join("front_matter.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -468,8 +459,8 @@ mod tests {
 
     #[test]
     fn test_invariants_missing_rust_version() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/invariants_missing_rust_version.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/invariants_missing_rust_version.yaml");
         let schema_path = schemas_dir().join("invariants.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -482,8 +473,8 @@ mod tests {
 
     #[test]
     fn test_invariants_invalid_port_name() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/invariants_invalid_port_name.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/invariants_invalid_port_name.yaml");
         let schema_path = schemas_dir().join("invariants.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -496,8 +487,8 @@ mod tests {
 
     #[test]
     fn test_invariants_invalid_env_var_name() {
-        let yaml_path = fixtures_dir()
-            .join("invalid/schema_errors/invariants_invalid_env_var_name.yaml");
+        let yaml_path =
+            fixtures_dir().join("invalid/schema_errors/invariants_invalid_env_var_name.yaml");
         let schema_path = schemas_dir().join("invariants.schema.json");
 
         let result = validate_yaml_against_schema(&yaml_path, &schema_path);
@@ -516,7 +507,10 @@ mod tests {
             file_path: "specs/spec_ledger.yaml".to_string(),
             line: Some(15),
             column: Some(3),
-            expected: Some("status field with value 'draft', 'implemented', 'tested', or 'deprecated'".to_string()),
+            expected: Some(
+                "status field with value 'draft', 'implemented', 'tested', or 'deprecated'"
+                    .to_string(),
+            ),
             found: Some("(field missing)".to_string()),
             suggestion: Some("Add 'status: draft' to requirement REQ-3".to_string()),
         };

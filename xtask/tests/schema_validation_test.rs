@@ -18,14 +18,26 @@ fn test_schema_module_exists() {
 #[test]
 fn test_fixtures_exist() {
     let fixtures_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
-    
+
     // Verify minimal fixtures exist
     assert!(fixtures_dir.join("minimal/specs/spec_ledger.yaml").exists());
-    
+
     // Verify invalid fixtures exist
-    assert!(fixtures_dir.join("invalid/schema_errors/spec_ledger_missing_required.yaml").exists());
-    assert!(fixtures_dir.join("invalid/schema_errors/front_matter_missing_links.yaml").exists());
-    assert!(fixtures_dir.join("invalid/schema_errors/invariants_missing_rust_version.yaml").exists());
+    assert!(
+        fixtures_dir
+            .join("invalid/schema_errors/spec_ledger_missing_required.yaml")
+            .exists()
+    );
+    assert!(
+        fixtures_dir
+            .join("invalid/schema_errors/front_matter_missing_links.yaml")
+            .exists()
+    );
+    assert!(
+        fixtures_dir
+            .join("invalid/schema_errors/invariants_missing_rust_version.yaml")
+            .exists()
+    );
 }
 
 #[test]
@@ -34,7 +46,7 @@ fn test_schemas_exist() {
         .parent()
         .unwrap()
         .join("schemas");
-    
+
     // Verify all three schemas exist
     assert!(schemas_dir.join("spec_ledger.schema.json").exists());
     assert!(schemas_dir.join("front_matter.schema.json").exists());
