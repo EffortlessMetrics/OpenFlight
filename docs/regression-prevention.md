@@ -1,3 +1,14 @@
+---
+doc_id: DOC-REGRESSION-PREVENTION
+kind: reference
+area: ci
+status: active
+links:
+  requirements: [INF-REQ-5]
+  tasks: []
+  adrs: []
+---
+
 # Regression Prevention Guide
 
 This document describes the regression prevention measures implemented in the OpenFlight workspace to maintain code quality and prevent compilation errors from reoccurring.

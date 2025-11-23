@@ -383,7 +383,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: Both feature files exist, tags are valid, and appear in `cargo xtask ac-status` output
   - _Requirements: INF-REQ-3.1, INF-REQ-3.2_
 
-- [ ] 20. Add comprehensive documentation with front matter
+- [x] 20. Add comprehensive documentation with front matter
+
+
+
+
+
   - Add front matter to existing docs in docs/ directory (if any exist without it)
   - Create additional concept docs for major crates:
     - `docs/concepts/flight-hid.md` (area: flight-hid, links to REQ-3)

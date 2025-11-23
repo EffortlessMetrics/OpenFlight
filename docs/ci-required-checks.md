@@ -1,3 +1,14 @@
+---
+doc_id: DOC-CI-REQUIRED-CHECKS
+kind: reference
+area: ci
+status: active
+links:
+  requirements: [INF-REQ-9]
+  tasks: []
+  adrs: []
+---
+
 # CI Required Checks Configuration
 
 This document describes the required status checks that should be configured in GitHub repository settings for PR approval.

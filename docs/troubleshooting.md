@@ -1,3 +1,14 @@
+---
+doc_id: DOC-TROUBLESHOOTING
+kind: how-to
+area: infra
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # Flight Hub Troubleshooting Guide
 
 This guide helps resolve common issues with Flight Hub installation, configuration, and simulator integration.

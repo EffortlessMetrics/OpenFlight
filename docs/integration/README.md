@@ -1,3 +1,14 @@
+---
+doc_id: DOC-INTEGRATION-OVERVIEW
+kind: reference
+area: infra
+status: active
+links:
+  requirements: [REQ-5, REQ-6, REQ-7]
+  tasks: []
+  adrs: []
+---
+
 # Flight Hub Integration Documentation
 
 This directory contains comprehensive documentation about what Flight Hub touches in each supported flight simulator, including files, ports, variables, and how to revert changes.
