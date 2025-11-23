@@ -11,6 +11,7 @@ use std::env;
 
 mod check;
 mod config;
+mod schema;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
