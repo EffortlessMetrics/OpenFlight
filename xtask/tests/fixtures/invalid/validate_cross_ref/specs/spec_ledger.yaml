@@ -1,0 +1,8 @@
+requirements:
+  - id: REQ-1
+    name: Valid Requirement
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "Valid acceptance criteria"
+        tests: []

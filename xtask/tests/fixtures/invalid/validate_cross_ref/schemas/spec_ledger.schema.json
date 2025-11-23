@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["requirements"],
+  "additionalProperties": false,
+  "properties": {
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "ac"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(REQ|INF-REQ)-[0-9]+$"
+          },
+          "name": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "implemented", "tested", "deprecated"]
+          },
+          "ac": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "description"],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^AC-[0-9]+\\.[0-9]+$"
+                },
+                "description": { "type": "string" },
+                "tests": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "type": "string" },
+                      {
+                        "type": "object",
+                        "minProperties": 1,
+                        "additionalProperties": false,
+                        "properties": {
+                          "test": { "type": "string" },
+                          "feature": { "type": "string" },
+                          "command": { "type": "string" }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

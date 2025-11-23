@@ -274,7 +274,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: Tests pass for valid/invalid tags and both feature-level and scenario-level tag extraction
   - _Requirements: INF-REQ-3.2, INF-REQ-3.3, INF-REQ-6.3_
 
-- [ ] 14. Integrate cross-reference checks into validate
+- [x] 14. Integrate cross-reference checks into validate
+
+
+
+
+
   - Update `xtask/src/validate.rs` to run cross-reference checks after schema validation, before code quality checks
   - Add cross-reference results to docs/validation_report.md with sections:
     - Broken requirement links (docs → ledger)
@@ -285,7 +290,10 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: Create test fixture with broken link, run `cargo xtask validate`, verify error appears in report and exit code is 1
   - _Requirements: INF-REQ-6.5, INF-REQ-6.7_
 
-- [ ] 15. Implement cargo xtask ac-status command
+-
+
+- [-] 15. Implement cargo xtask ac-status command
+
   - Create `xtask/src/ac_status.rs` module
   - Implement `generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario]) -> String`:
     - Reuse Property 8 logic for status computation per (REQ, AC):
@@ -301,6 +309,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - _Requirements: INF-REQ-10.3, INF-REQ-11.1, INF-REQ-11.4_
 
 - [ ] 16. Implement cargo xtask normalize-docs command
+
   - Create `xtask/src/normalize_docs.rs` module
   - Implement `verify_doc_id_uniqueness(docs: &[(PathBuf, FrontMatter)]) -> Result<()>` - checks for duplicate doc_ids
   - Implement `generate_docs_index(docs: &[(PathBuf, FrontMatter)]) -> String`:

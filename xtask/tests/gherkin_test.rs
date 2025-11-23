@@ -20,8 +20,8 @@ mod front_matter;
 fn test_parse_minimal_fixture_features() {
     let features_dir = Path::new("tests/fixtures/minimal/specs/features");
 
-    let scenarios = gherkin::parse_feature_files(features_dir)
-        .expect("Failed to parse feature files");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).expect("Failed to parse feature files");
 
     assert!(!scenarios.is_empty(), "Should find at least one scenario");
 
@@ -41,8 +41,8 @@ fn test_parse_minimal_fixture_features() {
 fn test_parse_feature_extracts_tags() {
     let features_dir = Path::new("tests/fixtures/minimal/specs/features");
 
-    let scenarios = gherkin::parse_feature_files(features_dir)
-        .expect("Failed to parse feature files");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).expect("Failed to parse feature files");
 
     // Find the first scenario
     let first_scenario = scenarios
@@ -69,8 +69,8 @@ fn test_parse_feature_extracts_tags() {
 fn test_parse_feature_multiple_tags() {
     let features_dir = Path::new("tests/fixtures/minimal/specs/features");
 
-    let scenarios = gherkin::parse_feature_files(features_dir)
-        .expect("Failed to parse feature files");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).expect("Failed to parse feature files");
 
     // Find the second scenario which has multiple tags
     let second_scenario = scenarios
@@ -87,15 +87,12 @@ fn test_parse_feature_multiple_tags() {
 fn test_validate_gherkin_tags_with_valid_tags() {
     let features_dir = Path::new("tests/fixtures/minimal/specs/features");
 
-    let scenarios = gherkin::parse_feature_files(features_dir)
-        .expect("Failed to parse feature files");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).expect("Failed to parse feature files");
 
     // Create valid requirement and AC IDs
     let req_ids: HashSet<String> = ["REQ-1"].iter().map(|s| s.to_string()).collect();
-    let ac_ids: HashSet<String> = ["AC-1.1", "AC-1.2"]
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
+    let ac_ids: HashSet<String> = ["AC-1.1", "AC-1.2"].iter().map(|s| s.to_string()).collect();
 
     let errors = gherkin::validate_gherkin_tags(&scenarios, &req_ids, &ac_ids);
 
@@ -110,8 +107,8 @@ fn test_validate_gherkin_tags_with_valid_tags() {
 fn test_validate_gherkin_tags_with_invalid_tags() {
     let features_dir = Path::new("tests/fixtures/invalid/gherkin_invalid_tags");
 
-    let scenarios = gherkin::parse_feature_files(features_dir)
-        .expect("Failed to parse feature files");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).expect("Failed to parse feature files");
 
     // Create valid requirement and AC IDs (but not the ones in the invalid fixture)
     let req_ids: HashSet<String> = ["REQ-1"].iter().map(|s| s.to_string()).collect();
@@ -119,10 +116,7 @@ fn test_validate_gherkin_tags_with_invalid_tags() {
 
     let errors = gherkin::validate_gherkin_tags(&scenarios, &req_ids, &ac_ids);
 
-    assert!(
-        !errors.is_empty(),
-        "Invalid tags should produce errors"
-    );
+    assert!(!errors.is_empty(), "Invalid tags should produce errors");
 
     // Check that we get errors for the invalid tags
     let error_messages: Vec<String> = errors.iter().map(|e| e.format()).collect();

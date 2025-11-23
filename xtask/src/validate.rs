@@ -14,7 +14,9 @@ use anyhow::{Context, Result};
 use std::path::Path;
 use std::process::Command;
 
+use crate::cross_ref;
 use crate::front_matter;
+use crate::gherkin;
 use crate::schema;
 
 /// Result of a validation check.
@@ -47,8 +49,9 @@ impl CheckResult {
 ///
 /// This function executes all validation checks in the required order:
 /// 1. Schema validation (per INF-REQ-12)
-/// 2. Code quality checks
-/// 3. Public API verification
+/// 2. Cross-reference checks (per INF-REQ-6)
+/// 3. Code quality checks
+/// 4. Public API verification
 ///
 /// After all checks complete, it generates docs/validation_report.md with
 /// detailed results.
@@ -61,6 +64,7 @@ impl CheckResult {
 ///
 /// Returns an error if:
 /// - Schema validation fails
+/// - Cross-reference checks fail
 /// - Code quality checks fail
 /// - Report generation fails
 pub fn run_validate() -> Result<()> {
@@ -68,6 +72,7 @@ pub fn run_validate() -> Result<()> {
 
     let mut results = Vec::new();
     let mut all_passed = true;
+    let mut cross_ref_details = Vec::new();
 
     // Step 1: Schema Validation
     println!("📋 Step 1: Schema Validation");
@@ -89,8 +94,39 @@ pub fn run_validate() -> Result<()> {
         }
     }
 
-    // Step 2: Code Quality (via check::run_check())
-    println!("🔧 Step 2: Code Quality Checks");
+    // Step 2: Cross-Reference Checks
+    println!("🔗 Step 2: Cross-Reference Checks");
+    println!("─────────────────────────────");
+    let cross_ref_result = validate_cross_references();
+    match &cross_ref_result {
+        Ok(details) => {
+            if details.is_empty() {
+                println!("✅ Cross-reference validation passed\n");
+                results.push(CheckResult::new("Cross-Reference Validation", true));
+            } else {
+                println!("❌ Cross-reference validation failed\n");
+                results.push(CheckResult::with_details(
+                    "Cross-Reference Validation",
+                    false,
+                    format!("{} error(s) found", details.len()),
+                ));
+                cross_ref_details = details.clone();
+                all_passed = false;
+            }
+        }
+        Err(e) => {
+            eprintln!("❌ Cross-reference validation failed: {}\n", e);
+            results.push(CheckResult::with_details(
+                "Cross-Reference Validation",
+                false,
+                e.to_string(),
+            ));
+            all_passed = false;
+        }
+    }
+
+    // Step 3: Code Quality (via check::run_check())
+    println!("🔧 Step 3: Code Quality Checks");
     println!("─────────────────────────────");
 
     // Note: check::run_check() runs all checks and returns a single error if any fail.
@@ -116,8 +152,8 @@ pub fn run_validate() -> Result<()> {
         }
     }
 
-    // Step 3: Public API Verification
-    println!("📦 Step 3: Public API Verification");
+    // Step 4: Public API Verification
+    println!("📦 Step 4: Public API Verification");
     println!("─────────────────────────────");
     let api_result = verify_public_api();
     match &api_result {
@@ -145,10 +181,10 @@ pub fn run_validate() -> Result<()> {
         }
     }
 
-    // Step 4: Generate Report
-    println!("📄 Step 4: Generating Validation Report");
+    // Step 5: Generate Report
+    println!("📄 Step 5: Generating Validation Report");
     println!("─────────────────────────────");
-    generate_validation_report(&results)?;
+    generate_validation_report(&results, &cross_ref_details)?;
     println!("✅ Report generated at docs/validation_report.md\n");
 
     // Final result
@@ -375,17 +411,146 @@ fn verify_public_api() -> Result<bool> {
     }
 }
 
+/// Validate cross-references between artifacts.
+///
+/// This function performs cross-reference validation:
+/// - Documentation → Spec ledger (requirement links)
+/// - Spec ledger → Codebase (test references)
+/// - Gherkin → Spec ledger (tags)
+/// - Orphaned documentation (docs with no requirement links)
+///
+/// # Returns
+///
+/// Returns `Ok(Vec<String>)` with formatted error messages for each issue found,
+/// or an error if validation cannot be performed.
+fn validate_cross_references() -> Result<Vec<String>> {
+    let mut all_errors = Vec::new();
+
+    // Load spec ledger
+    let spec_ledger_path = Path::new("specs/spec_ledger.yaml");
+    if !spec_ledger_path.exists() {
+        println!("  ⚠️  specs/spec_ledger.yaml not found, skipping cross-reference checks");
+        return Ok(all_errors);
+    }
+
+    let spec_ledger_content =
+        std::fs::read_to_string(spec_ledger_path).context("Failed to read spec ledger")?;
+    let spec_ledger: cross_ref::SpecLedger =
+        serde_yaml::from_str(&spec_ledger_content).context("Failed to parse spec ledger")?;
+
+    // Build requirement and AC indexes
+    let (req_ids, ac_ids) = cross_ref::build_req_index(&spec_ledger);
+
+    // Load documentation front matter
+    let docs_dir = Path::new("docs");
+    let docs = if docs_dir.exists() {
+        front_matter::collect_all_front_matter(docs_dir)
+            .context("Failed to collect documentation front matter")?
+    } else {
+        println!("  ⚠️  docs/ directory not found, skipping documentation checks");
+        Vec::new()
+    };
+
+    // Parse Gherkin features
+    let features_dir = Path::new("specs/features");
+    let scenarios =
+        gherkin::parse_feature_files(features_dir).context("Failed to parse Gherkin features")?;
+
+    // Check 1: Documentation → Spec ledger (requirement links)
+    println!("  Checking documentation requirement links...");
+    let doc_link_errors = cross_ref::validate_doc_links(&docs, &req_ids);
+    if doc_link_errors.is_empty() {
+        println!("    ✓ All documentation links are valid");
+    } else {
+        println!("    ✗ Found {} broken link(s)", doc_link_errors.len());
+        for error in &doc_link_errors {
+            eprintln!("{}", error.format());
+            all_errors.push(error.format());
+        }
+    }
+
+    // Check 2: Spec ledger → Codebase (test references)
+    println!("  Checking test references...");
+    let test_ref_errors = cross_ref::validate_test_references(&spec_ledger);
+    let test_errors: Vec<_> = test_ref_errors.iter().filter(|e| !e.is_warning()).collect();
+    let test_warnings: Vec<_> = test_ref_errors.iter().filter(|e| e.is_warning()).collect();
+
+    if test_errors.is_empty() && test_warnings.is_empty() {
+        println!("    ✓ All test references are valid");
+    } else {
+        if !test_errors.is_empty() {
+            println!("    ✗ Found {} missing test(s)", test_errors.len());
+            for error in &test_errors {
+                eprintln!("{}", error.format());
+                all_errors.push(error.format());
+            }
+        }
+        if !test_warnings.is_empty() {
+            println!(
+                "    ⚠️  Found {} external crate reference(s)",
+                test_warnings.len()
+            );
+            for warning in &test_warnings {
+                eprintln!("{}", warning.format());
+            }
+        }
+    }
+
+    // Check 3: Gherkin → Spec ledger (tags)
+    println!("  Checking Gherkin tags...");
+    let gherkin_errors = gherkin::validate_gherkin_tags(&scenarios, &req_ids, &ac_ids);
+    if gherkin_errors.is_empty() {
+        println!("    ✓ All Gherkin tags are valid");
+    } else {
+        println!("    ✗ Found {} invalid tag(s)", gherkin_errors.len());
+        for error in &gherkin_errors {
+            eprintln!("{}", error.format());
+            all_errors.push(error.format());
+        }
+    }
+
+    // Check 4: Orphaned documentation (docs with no requirement links)
+    println!("  Checking for orphaned documentation...");
+    let orphaned_docs: Vec<_> = docs
+        .iter()
+        .filter(|(_, fm)| fm.links.requirements.is_empty())
+        .collect();
+
+    if orphaned_docs.is_empty() {
+        println!("    ✓ No orphaned documentation found");
+    } else {
+        println!(
+            "    ⚠️  Found {} document(s) with no requirement links",
+            orphaned_docs.len()
+        );
+        for (path, _) in &orphaned_docs {
+            let warning = format!(
+                "[WARN] INF-XREF-200: Orphaned documentation\n  \
+                 File: {}\n  \
+                 Suggestion: Add requirement links to front matter or mark as reference documentation",
+                path.display()
+            );
+            eprintln!("{}", warning);
+            // Note: Orphaned docs are warnings, not errors, so we don't add them to all_errors
+        }
+    }
+
+    Ok(all_errors)
+}
+
 /// Generate validation report at docs/validation_report.md.
 ///
 /// The report includes:
 /// - Auto-generated header with timestamp and commit hash
 /// - Table of all checks with pass/fail status
 /// - Summary count of failures
+/// - Cross-reference error details (if any)
 ///
 /// # Arguments
 ///
 /// * `results` - Vector of check results to include in the report
-fn generate_validation_report(results: &[CheckResult]) -> Result<()> {
+/// * `cross_ref_details` - Vector of cross-reference error messages
+fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[String]) -> Result<()> {
     let timestamp = chrono::Utc::now().to_rfc3339();
     let commit_hash = get_git_commit_hash().unwrap_or_else(|_| "unknown".to_string());
 
@@ -431,6 +596,60 @@ fn generate_validation_report(results: &[CheckResult]) -> Result<()> {
     }
 
     report.push_str("\n");
+
+    // Cross-reference details section
+    if !cross_ref_details.is_empty() {
+        report.push_str("## Cross-Reference Issues\n\n");
+        report.push_str(&format!(
+            "Found {} cross-reference error(s):\n\n",
+            cross_ref_details.len()
+        ));
+
+        // Group errors by type
+        let mut broken_links = Vec::new();
+        let mut missing_tests = Vec::new();
+        let mut invalid_tags = Vec::new();
+
+        for detail in cross_ref_details {
+            if detail.contains("INF-XREF-001") {
+                broken_links.push(detail);
+            } else if detail.contains("INF-XREF-002") {
+                missing_tests.push(detail);
+            } else if detail.contains("INF-XREF-003") {
+                invalid_tags.push(detail);
+            }
+        }
+
+        if !broken_links.is_empty() {
+            report.push_str("### Broken Requirement Links (docs → ledger)\n\n");
+            report.push_str("```\n");
+            for error in &broken_links {
+                report.push_str(error);
+                report.push_str("\n\n");
+            }
+            report.push_str("```\n\n");
+        }
+
+        if !missing_tests.is_empty() {
+            report.push_str("### Missing Test References (ledger → codebase)\n\n");
+            report.push_str("```\n");
+            for error in &missing_tests {
+                report.push_str(error);
+                report.push_str("\n\n");
+            }
+            report.push_str("```\n\n");
+        }
+
+        if !invalid_tags.is_empty() {
+            report.push_str("### Invalid Gherkin Tags (features → ledger)\n\n");
+            report.push_str("```\n");
+            for error in &invalid_tags {
+                report.push_str(error);
+                report.push_str("\n\n");
+            }
+            report.push_str("```\n\n");
+        }
+    }
 
     // Write report
     let report_path = Path::new("docs/validation_report.md");

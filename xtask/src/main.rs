@@ -9,6 +9,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::env;
 
+mod ac_status;
 mod check;
 mod config;
 mod cross_ref;
@@ -60,11 +61,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Check => check::run_check(),
         Commands::Validate => validate::run_validate(),
-        Commands::AcStatus => {
-            println!("Generating feature status report...");
-            println!("✓ AcStatus command placeholder - implementation in next task");
-            Ok(())
-        }
+        Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => {
             println!("Normalizing documentation...");
             println!("✓ NormalizeDocs command placeholder - implementation in next task");
