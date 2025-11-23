@@ -404,30 +404,31 @@ requirements:
       - id: AC-4.1
         description: "WHEN defining local development environments THEN configuration SHALL be in infra/local/"
         tests:
-          - xtask::validate_infra::validate_local_config
+          - cmd:cargo xtask validate-infra
       - id: AC-4.2
         description: "WHEN defining CI environments THEN configuration SHALL be in infra/ci/"
         tests:
-          - xtask::validate_infra::validate_ci_config
+          - cmd:cargo xtask validate-infra
       - id: AC-4.3
         description: "WHEN defining deployment environments THEN configuration SHALL be in infra/k8s/ or infra/terraform/"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate-infra
       - id: AC-4.4
         description: "WHEN infrastructure contracts are defined THEN invariants.yaml SHALL specify ports, env vars, resources"
         tests:
-          - xtask::schema::validate_yaml_against_schema
+          - cmd:cargo xtask validate-infra
       - id: AC-4.5
         description: "WHEN validating infrastructure THEN the system SHALL run dry-run commands"
         tests:
-          - xtask::validate_infra::run_docker_compose_validation
-          - xtask::validate_infra::run_kubectl_validation
+          - cmd:cargo xtask validate-infra
       - id: AC-4.6
         description: "WHEN infrastructure changes THEN validation SHALL check against invariants"
         tests:
-          - xtask::validate_infra::cross_check_invariants
+          - cmd:cargo xtask validate-infra
       - id: AC-4.7
         description: "WHEN creating infrastructure components THEN they SHALL include inline comments"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate-infra
 
   # Infrastructure Requirement: Automated Validation
   - id: INF-REQ-5
