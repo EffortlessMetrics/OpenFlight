@@ -465,7 +465,11 @@ This phase addresses the gap between implementation and validation by aligning s
   - Run `cargo xtask validate` and verify no INF-XREF-002 errors for INF-REQ-1
   - _Requirements: INF-REQ-2.3_
 
-- [ ] 25. Update spec ledger with command-based test references for INF-REQ-2
+- [x] 25. Update spec ledger with command-based test references for INF-REQ-2
+
+
+
+
   - For INF-REQ-2 (Spec Ledger and Traceability), update all AC test references:
     - AC-2.1 (Requirements in ledger): `tests: [cmd:cargo xtask validate]`
     - AC-2.2 (AC IDs nested): `tests: [cmd:cargo xtask validate]`
@@ -476,6 +480,8 @@ This phase addresses the gap between implementation and validation by aligning s
     - AC-2.7 (Schema compliance): `tests: [cmd:cargo xtask validate]`
   - Run `cargo xtask validate` and verify no INF-XREF-002 errors for INF-REQ-2
   - _Requirements: INF-REQ-2.3_
+
+-
 
 - [ ] 26. Update spec ledger with command-based test references for INF-REQ-3
   - For INF-REQ-3 (BDD Integration), update all AC test references:

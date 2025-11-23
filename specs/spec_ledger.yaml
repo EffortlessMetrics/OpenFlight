@@ -333,31 +333,31 @@ requirements:
       - id: AC-2.1
         description: "WHEN requirements are defined THEN they SHALL be recorded in specs/spec_ledger.yaml with unique IDs"
         tests:
-          - xtask::schema::validate_yaml_against_schema
+          - cmd:cargo xtask validate
       - id: AC-2.2
         description: "WHEN acceptance criteria are defined THEN they SHALL be nested under requirements with unique AC IDs"
         tests:
-          - xtask::schema::validate_yaml_against_schema
+          - cmd:cargo xtask validate
       - id: AC-2.3
         description: "WHEN tests are written THEN they SHALL be linked to AC IDs using test module paths"
         tests:
-          - xtask::cross_ref::validate_test_references
+          - cmd:cargo xtask validate
       - id: AC-2.4
         description: "WHEN validating the ledger THEN the system SHALL verify all referenced test paths exist"
         tests:
-          - xtask::cross_ref::validate_test_references
+          - cmd:cargo xtask validate
       - id: AC-2.5
         description: "WHEN generating coverage reports THEN the system SHALL produce a table showing REQ, AC, test status"
         tests:
-          - xtask::ac_status::generate_feature_status
+          - cmd:cargo xtask ac-status
       - id: AC-2.6
         description: "WHEN a requirement has status: tested THEN at least one test SHALL be linked to each AC"
         tests:
-          - xtask::validate::check_tested_requirements
+          - cmd:cargo xtask validate
       - id: AC-2.7
         description: "WHEN the spec ledger is updated THEN it SHALL validate against schema"
         tests:
-          - xtask::schema::validate_yaml_against_schema
+          - cmd:cargo xtask validate
 
   # Infrastructure Requirement: BDD Integration
   - id: INF-REQ-3
@@ -368,30 +368,32 @@ requirements:
       - id: AC-3.1
         description: "WHEN Gherkin features are created THEN they SHALL be stored in specs/features/"
         tests:
-          - xtask::gherkin::parse_feature_files
+          - cmd:cargo xtask ac-status
       - id: AC-3.2
         description: "WHEN Gherkin scenarios are written THEN they SHALL be tagged with @REQ-* and @AC-* tags"
         tests:
-          - xtask::gherkin::extract_req_tags
-          - xtask::gherkin::extract_ac_tags
+          - cmd:cargo xtask ac-status
       - id: AC-3.3
         description: "WHEN validating BDD coverage THEN the system SHALL cross-reference Gherkin tags with spec ledger"
         tests:
-          - xtask::gherkin::validate_gherkin_tags
+          - cmd:cargo xtask validate
       - id: AC-3.4
         description: "WHEN generating feature status reports THEN the system SHALL list which REQs have Gherkin scenarios"
         tests:
-          - xtask::ac_status::generate_feature_status
+          - cmd:cargo xtask ac-status
       - id: AC-3.5
         description: "WHEN BDD execution is enabled THEN Gherkin features SHALL map to step definitions"
-        tests: []
+        tests:
+          - cmd:cargo test -p specs
       - id: AC-3.6
         description: "WHEN a requirement has status: implemented or tested THEN at least one Gherkin scenario SHALL exist"
         tests:
-          - xtask::validate::check_gherkin_coverage
+          - cmd:cargo xtask validate
+          - cmd:cargo test -p specs
       - id: AC-3.7
         description: "WHEN Gherkin scenarios fail THEN the failure SHALL be traceable back to AC ID"
-        tests: []
+        tests:
+          - cmd:cargo test -p specs
 
   # Infrastructure Requirement: IaC Management
   - id: INF-REQ-4
