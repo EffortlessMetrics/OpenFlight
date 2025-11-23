@@ -123,9 +123,34 @@ This design prioritizes mechanical checkability over human interpretation, enabl
 ```
 
 **Test Reference Format**:
-- Simple string format: `"<crate>::<module_path>::<test_fn_name>"`
-- Examples: `"flight_core::aircraft_switch::tests::test_phase_of_flight_determination"`
-- Object format requires at least one of: `test`, `feature`, or `command`
+
+The spec ledger supports two primary test reference formats:
+
+1. **Function-Based Test References** (for unit and integration tests):
+   - Simple string format: `"<crate>::<module_path>::<test_fn_name>"`
+   - Examples: `"flight_core::aircraft_switch::tests::test_phase_of_flight_determination"`
+   - Use case: Product requirements (REQ-*), unit-level checks, specific code behaviors
+   - Validation: Cross-reference checker verifies the test function exists in the codebase
+
+2. **Command-Based Test References** (for infrastructure and system-level validation):
+   - Format: `"cmd:<shell command>"`
+   - Examples: 
+     - `"cmd:cargo xtask validate"`
+     - `"cmd:cargo test -p specs"`
+     - `"cmd:cargo xtask ac-status"`
+   - Semantics: Test is validated by running the command and checking exit code (0 = pass, non-zero = fail)
+   - Use case: Infrastructure requirements (INF-REQ-*), integration-level checks, system-wide properties
+   - Validation: Cross-reference checker recognizes `cmd:` prefix and treats as command-based test
+
+3. **Object Format** (for complex test specifications):
+   - Requires at least one of: `test`, `feature`, or `command`
+   - Allows mixing multiple test types for comprehensive validation
+
+**Choosing the Right Format**:
+- Use **function-based tests** when validating specific code behaviors, algorithms, or data structures
+- Use **command-based tests** when validating infrastructure, tooling, or system-wide properties that span multiple components
+- Infrastructure requirements (INF-REQ-*) typically use command-based tests
+- Product requirements (REQ-*) typically use function-based tests
 
 **Schema Validation Scope**:
 JSON Schema enforces structural validity. Status-dependent constraints (e.g., "status: tested ⇒ tests non-empty") are enforced in `cargo xtask validate` via Properties 1 and 8.

@@ -564,7 +564,12 @@ This phase addresses the gap between implementation and validation by aligning s
   - Acceptance: Full validation pipeline passes with no cross-reference errors
   - _Requirements: INF-REQ-5.1, INF-REQ-6.5_
 
-- [ ] 30. Document command-based test reference pattern
+- [x] 30. Document command-based test reference pattern
+
+
+
+
+
   - Update `.kiro/specs/project-infrastructure/design.md` in the "Test Reference Format" section
   - Add documentation for `cmd:` prefix:
     - Format: `cmd:<shell command>`
