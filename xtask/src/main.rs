@@ -13,6 +13,7 @@ mod check;
 mod config;
 mod cross_ref;
 mod front_matter;
+mod gherkin;
 mod schema;
 mod validate;
 

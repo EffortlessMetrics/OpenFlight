@@ -214,6 +214,11 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 
 
+
+
+
+
+
 - [ ] 11. Checkpoint - Verify Phase 1 complete
 
   - Run `cargo xtask check` and verify exit code 0
@@ -249,7 +254,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: Tests pass for broken links, missing tests, and external crate warnings
   - _Requirements: INF-REQ-6.1, INF-REQ-6.2, INF-REQ-6.6_
 
-- [ ] 13. Implement Gherkin parsing and validation
+-
+
+- [x] 13. Implement Gherkin parsing and validation
+
+
+
   - Create `xtask/src/gherkin.rs` module
   - Implement `parse_feature_files(features_dir: &Path) -> Vec<GherkinScenario>`:
     - Parse .feature files in specs/features/

@@ -69,10 +69,7 @@ pub enum TestReference {
 #[derive(Debug, Clone)]
 pub enum CrossRefError {
     /// Broken requirement link in documentation
-    BrokenRequirementLink {
-        doc_path: PathBuf,
-        req_id: String,
-    },
+    BrokenRequirementLink { doc_path: PathBuf, req_id: String },
     /// Missing test reference in codebase
     MissingTest {
         req_id: String,
@@ -357,10 +354,9 @@ fn search_for_test_function(crate_path: &str, test_fn: &str) -> Result<bool> {
     // Try to use ripgrep
     let output = Command::new("rg")
         .args(&[
-            "-l",           // List files with matches
+            "-l", // List files with matches
             "--type", "rust", // Only search Rust files
-            &pattern,
-            crate_path,
+            &pattern, crate_path,
         ])
         .output();
 
@@ -404,8 +400,8 @@ fn search_for_test_function(crate_path: &str, test_fn: &str) -> Result<bool> {
 fn load_workspace_members() -> Result<HashSet<String>> {
     // Find the workspace root Cargo.toml
     let cargo_toml_path = find_workspace_cargo_toml()?;
-    let content = std::fs::read_to_string(&cargo_toml_path)
-        .context("Failed to read workspace Cargo.toml")?;
+    let content =
+        std::fs::read_to_string(&cargo_toml_path).context("Failed to read workspace Cargo.toml")?;
 
     let mut members = HashSet::new();
 
@@ -628,7 +624,10 @@ mod tests {
 
         let members = members.unwrap();
         if members.is_empty() {
-            eprintln!("No workspace members found. Current dir: {:?}", std::env::current_dir());
+            eprintln!(
+                "No workspace members found. Current dir: {:?}",
+                std::env::current_dir()
+            );
         }
         assert!(!members.is_empty(), "Should find workspace members");
 
