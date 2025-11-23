@@ -309,12 +309,13 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Wire ac-status command into main.rs CLI
   - Acceptance: `cargo xtask ac-status` generates docs/feature_status.md with all columns and status icons
   - _Requirements: INF-REQ-10.3, INF-REQ-11.1, INF-REQ-11.4_
+
 - [x] 16. Implement cargo xtask normalize-docs command
 
 
 
 
-- [ ] 16. Implement cargo xtask normalize-docs command
+
 
   - Create `xtask/src/normalize_docs.rs` module
   - Implement `verify_doc_id_uniqueness(docs: &[(PathBuf, FrontMatter)]) -> Result<()>` - checks for duplicate doc_ids
@@ -330,7 +331,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo xtask normalize-docs` generates docs/README.md with tables grouped by band and area
   - _Requirements: INF-REQ-10.4, INF-REQ-11.3_
 
-- [ ] 17. Implement cargo xtask validate-infra command
+- [x] 17. Implement cargo xtask validate-infra command
+
+
+
+
+
   - Create `xtask/src/validate_infra.rs` module
   - Implement Docker Compose validation:
     - Run `docker compose -f infra/local/docker-compose.yml config`

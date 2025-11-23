@@ -18,6 +18,7 @@ mod gherkin;
 mod normalize_docs;
 mod schema;
 mod validate;
+mod validate_infra;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -64,11 +65,7 @@ fn main() -> Result<()> {
         Commands::Validate => validate::run_validate(),
         Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
-        Commands::ValidateInfra => {
-            println!("Validating infrastructure...");
-            println!("✓ ValidateInfra command placeholder - implementation in next task");
-            Ok(())
-        }
+        Commands::ValidateInfra => validate_infra::run_validate_infra(),
         Commands::ValidateSchema {
             yaml_path,
             schema_path,
