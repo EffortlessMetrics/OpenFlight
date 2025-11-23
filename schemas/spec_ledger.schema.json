@@ -24,6 +24,11 @@
             "description": "Human-readable requirement name",
             "minLength": 1
           },
+          "kind": {
+            "type": "string",
+            "description": "Optional requirement kind for filtering",
+            "enum": ["product", "infra"]
+          },
           "status": {
             "type": "string",
             "description": "Current implementation status of the requirement",

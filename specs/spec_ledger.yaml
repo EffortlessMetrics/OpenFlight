@@ -3,26 +3,680 @@
 # This file is validated against schemas/spec_ledger.schema.json
 
 requirements:
+  # ============================================================================
+  # PRODUCT REQUIREMENTS (REQ-*)
+  # ============================================================================
+
   # Product Requirement: Real-Time Axis Processing
   - id: REQ-1
     name: Real-Time Axis Processing
-    status: draft
+    kind: product
+    status: implemented
     ac:
       - id: AC-1.1
         description: "Processing latency SHALL be ≤ 5ms p99"
-        tests: []
+        tests:
+          - flight-axis::tests::performance_validation::test_rt_performance_requirements
       - id: AC-1.2
         description: "Jitter SHALL be ≤ 0.5ms p99 at 250Hz"
-        tests: []
+        tests:
+          - flight-axis::tests::performance_validation::test_jitter_requirements
+
+  # Product Requirement: Multi-Simulator Support
+  - id: REQ-2
+    name: Multi-Simulator Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-2.1
+        description: "WHEN connecting to MSFS THEN the system SHALL establish SimConnect communication"
+        tests:
+          - flight-simconnect::tests::integration_tests
+      - id: AC-2.2
+        description: "WHEN connecting to DCS THEN the system SHALL establish export script communication"
+        tests:
+          - flight-dcs-export::adapter
+      - id: AC-2.3
+        description: "WHEN connecting to X-Plane THEN the system SHALL establish UDP communication"
+        tests:
+          - flight-xplane::adapter
+
+  # Product Requirement: Force Feedback Safety
+  - id: REQ-3
+    name: Force Feedback Safety Systems
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-3.1
+        description: "WHEN FFB device is initialized THEN safety interlocks SHALL be engaged"
+        tests:
+          - flight-ffb::safety
+          - flight-ffb::interlock
+      - id: AC-3.2
+        description: "WHEN unsafe condition is detected THEN FFB SHALL be disabled immediately"
+        tests:
+          - flight-ffb::fault
+      - id: AC-3.3
+        description: "WHEN device is disconnected THEN FFB SHALL gracefully shut down"
+        tests:
+          - flight-ffb::usb_yank_test
+
+  # Product Requirement: Profile Management
+  - id: REQ-4
+    name: Profile Management and Auto-Switching
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-4.1
+        description: "WHEN aircraft changes THEN the system SHALL automatically switch profiles"
+        tests:
+          - flight-core::aircraft_switch
+          - flight-service::aircraft_auto_switch_service
+      - id: AC-4.2
+        description: "WHEN profile is loaded THEN all axis mappings SHALL be applied"
+        tests:
+          - flight-core::profile
+      - id: AC-4.3
+        description: "WHEN profile is invalid THEN the system SHALL report errors and use safe defaults"
+        tests:
+          - flight-core::profile
+
+  # Product Requirement: Panel Integration
+  - id: REQ-5
+    name: Panel and StreamDeck Integration
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-5.1
+        description: "WHEN panel is connected THEN the system SHALL detect and initialize it"
+        tests:
+          - flight-panels::cougar
+          - flight-panels::saitek
+      - id: AC-5.2
+        description: "WHEN LED rules are defined THEN the system SHALL update panel LEDs accordingly"
+        tests:
+          - flight-panels::led
+          - flight-panels::evaluator
+      - id: AC-5.3
+        description: "WHEN StreamDeck is connected THEN the system SHALL provide API integration"
+        tests:
+          - flight-streamdeck::api
+          - flight-streamdeck::server
+
+  # Product Requirement: IPC Communication
+  - id: REQ-6
+    name: Inter-Process Communication
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-6.1
+        description: "WHEN client connects THEN the system SHALL establish gRPC connection"
+        tests:
+          - flight-ipc::client
+          - flight-ipc::server
+      - id: AC-6.2
+        description: "WHEN messages are sent THEN they SHALL use Protobuf serialization"
+        tests:
+          - flight-ipc::transport
+      - id: AC-6.3
+        description: "WHEN connection is lost THEN the system SHALL handle reconnection gracefully"
+        tests:
+          - flight-ipc::tests::integration_tests
+
+  # Product Requirement: Real-Time Scheduling
+  - id: REQ-7
+    name: Real-Time Scheduling
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-7.1
+        description: "WHEN scheduler starts THEN it SHALL maintain 250Hz timing"
+        tests:
+          - flight-scheduler::pll
+          - flight-scheduler::tests
+      - id: AC-7.2
+        description: "WHEN running on Windows THEN it SHALL use high-resolution timers"
+        tests:
+          - flight-scheduler::windows
+      - id: AC-7.3
+        description: "WHEN running on Linux THEN it SHALL use POSIX real-time scheduling"
+        tests:
+          - flight-scheduler::unix
+
+  # Product Requirement: HID Device Support
+  - id: REQ-8
+    name: HID Device Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-8.1
+        description: "WHEN HID device is connected THEN the system SHALL enumerate it"
+        tests:
+          - flight-hid::ofp1
+      - id: AC-8.2
+        description: "WHEN reading HID reports THEN the system SHALL parse them correctly"
+        tests:
+          - flight-hid::ofp1
+      - id: AC-8.3
+        description: "WHEN file descriptors are managed THEN they SHALL be properly closed"
+        tests:
+          - flight-hid::fd_safety_tests
+
+  # Product Requirement: Diagnostics and Blackbox
+  - id: REQ-9
+    name: Diagnostics and Blackbox Recording
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-9.1
+        description: "WHEN system runs THEN it SHALL record telemetry to blackbox"
+        tests:
+          - flight-axis::blackbox
+          - flight-core::blackbox
+      - id: AC-9.2
+        description: "WHEN events occur THEN they SHALL be logged with tracing"
+        tests:
+          - flight-tracing::events
+          - flight-tracing::tracepoints
+      - id: AC-9.3
+        description: "WHEN performance counters are enabled THEN they SHALL track metrics"
+        tests:
+          - flight-axis::counters
+          - flight-tracing::counters
+
+  # Product Requirement: Configuration Management
+  - id: REQ-10
+    name: Configuration Management (Writers as Data)
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-10.1
+        description: "WHEN configuration is loaded THEN it SHALL be validated against schema"
+        tests:
+          - flight-writers::types
+          - flight-writers::verify
+      - id: AC-10.2
+        description: "WHEN configuration changes THEN the system SHALL detect differences"
+        tests:
+          - flight-writers::diff
+      - id: AC-10.3
+        description: "WHEN configuration is invalid THEN the system SHALL provide repair suggestions"
+        tests:
+          - flight-writers::repair
+
+  # Product Requirement: Update System
+  - id: REQ-11
+    name: Update and Rollback System
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-11.1
+        description: "WHEN update is available THEN the system SHALL verify signatures"
+        tests:
+          - flight-updater::signature
+      - id: AC-11.2
+        description: "WHEN applying update THEN the system SHALL use delta patches"
+        tests:
+          - flight-updater::delta
+      - id: AC-11.3
+        description: "WHEN update fails THEN the system SHALL rollback to previous version"
+        tests:
+          - flight-updater::rollback
+
+  # Product Requirement: Virtual Device Support
+  - id: REQ-12
+    name: Virtual Device Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-12.1
+        description: "WHEN virtual device is created THEN it SHALL emulate OFP1 protocol"
+        tests:
+          - flight-virtual::ofp1_emulator
+          - flight-virtual::tests::ofp1_integration
+      - id: AC-12.2
+        description: "WHEN loopback mode is enabled THEN the system SHALL route data internally"
+        tests:
+          - flight-virtual::loopback
+      - id: AC-12.3
+        description: "WHEN performance is measured THEN it SHALL meet requirements"
+        tests:
+          - flight-virtual::perf_gate
+
+  # Product Requirement: Replay System
+  - id: REQ-13
+    name: Replay and Validation System
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-13.1
+        description: "WHEN replay is started THEN it SHALL process recorded data"
+        tests:
+          - flight-replay::offline_engine
+          - flight-replay::harness
+      - id: AC-13.2
+        description: "WHEN comparing replays THEN it SHALL detect differences"
+        tests:
+          - flight-replay::comparison
+      - id: AC-13.3
+        description: "WHEN validating behavior THEN it SHALL check acceptance criteria"
+        tests:
+          - flight-replay::acceptance
+          - flight-replay::validation
+
+  # Product Requirement: CLI Interface
+  - id: REQ-14
+    name: Command-Line Interface
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-14.1
+        description: "WHEN CLI is invoked THEN it SHALL connect to service via IPC"
+        tests:
+          - flight-cli::client_manager
+          - flight-cli::tests::integration_tests
+      - id: AC-14.2
+        description: "WHEN commands are executed THEN they SHALL provide formatted output"
+        tests:
+          - flight-cli::output
+      - id: AC-14.3
+        description: "WHEN service is unavailable THEN CLI SHALL report clear error"
+        tests:
+          - flight-cli::tests::integration_tests
+
+  # ============================================================================
+  # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
+  # ============================================================================
 
   # Infrastructure Requirement: Structured Documentation
   - id: INF-REQ-1
     name: Structured Documentation System
-    status: draft
+    kind: infra
+    status: implemented
     ac:
       - id: AC-1.1
         description: "WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/"
-        tests: []
+        tests:
+          - xtask::validate::check_doc_structure
       - id: AC-1.2
         description: "WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields"
+        tests:
+          - xtask::front_matter::parse_front_matter
+      - id: AC-1.3
+        description: "WHEN documentation references requirements THEN it SHALL use stable requirement IDs"
+        tests:
+          - xtask::cross_ref::validate_doc_links
+      - id: AC-1.4
+        description: "WHEN validating documentation THEN the system SHALL verify all doc_id fields are unique"
+        tests:
+          - xtask::normalize_docs::verify_doc_id_uniqueness
+      - id: AC-1.5
+        description: "WHEN generating documentation indexes THEN the system SHALL produce markdown tables grouped by area and kind"
+        tests:
+          - xtask::normalize_docs::generate_docs_index
+      - id: AC-1.6
+        description: "WHERE a crate or feature area is referenced THEN at least one concept document SHALL exist"
+        tests:
+          - xtask::cross_ref::validate_crate_documentation
+      - id: AC-1.7
+        description: "WHEN documentation status changes THEN the front matter status field SHALL be updated"
         tests: []
+
+  # Infrastructure Requirement: Spec Ledger and Traceability
+  - id: INF-REQ-2
+    name: Spec Ledger and Traceability
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-2.1
+        description: "WHEN requirements are defined THEN they SHALL be recorded in specs/spec_ledger.yaml with unique IDs"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-2.2
+        description: "WHEN acceptance criteria are defined THEN they SHALL be nested under requirements with unique AC IDs"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-2.3
+        description: "WHEN tests are written THEN they SHALL be linked to AC IDs using test module paths"
+        tests:
+          - xtask::cross_ref::validate_test_references
+      - id: AC-2.4
+        description: "WHEN validating the ledger THEN the system SHALL verify all referenced test paths exist"
+        tests:
+          - xtask::cross_ref::validate_test_references
+      - id: AC-2.5
+        description: "WHEN generating coverage reports THEN the system SHALL produce a table showing REQ, AC, test status"
+        tests:
+          - xtask::ac_status::generate_feature_status
+      - id: AC-2.6
+        description: "WHEN a requirement has status: tested THEN at least one test SHALL be linked to each AC"
+        tests:
+          - xtask::validate::check_tested_requirements
+      - id: AC-2.7
+        description: "WHEN the spec ledger is updated THEN it SHALL validate against schema"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+
+  # Infrastructure Requirement: BDD Integration
+  - id: INF-REQ-3
+    name: Behavior-Driven Development Integration
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-3.1
+        description: "WHEN Gherkin features are created THEN they SHALL be stored in specs/features/"
+        tests:
+          - xtask::gherkin::parse_feature_files
+      - id: AC-3.2
+        description: "WHEN Gherkin scenarios are written THEN they SHALL be tagged with @REQ-* and @AC-* tags"
+        tests:
+          - xtask::gherkin::extract_req_tags
+          - xtask::gherkin::extract_ac_tags
+      - id: AC-3.3
+        description: "WHEN validating BDD coverage THEN the system SHALL cross-reference Gherkin tags with spec ledger"
+        tests:
+          - xtask::gherkin::validate_gherkin_tags
+      - id: AC-3.4
+        description: "WHEN generating feature status reports THEN the system SHALL list which REQs have Gherkin scenarios"
+        tests:
+          - xtask::ac_status::generate_feature_status
+      - id: AC-3.5
+        description: "WHEN BDD execution is enabled THEN Gherkin features SHALL map to step definitions"
+        tests: []
+      - id: AC-3.6
+        description: "WHEN a requirement has status: implemented or tested THEN at least one Gherkin scenario SHALL exist"
+        tests:
+          - xtask::validate::check_gherkin_coverage
+      - id: AC-3.7
+        description: "WHEN Gherkin scenarios fail THEN the failure SHALL be traceable back to AC ID"
+        tests: []
+
+  # Infrastructure Requirement: IaC Management
+  - id: INF-REQ-4
+    name: Infrastructure as Code Management
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-4.1
+        description: "WHEN defining local development environments THEN configuration SHALL be in infra/local/"
+        tests:
+          - xtask::validate_infra::validate_local_config
+      - id: AC-4.2
+        description: "WHEN defining CI environments THEN configuration SHALL be in infra/ci/"
+        tests:
+          - xtask::validate_infra::validate_ci_config
+      - id: AC-4.3
+        description: "WHEN defining deployment environments THEN configuration SHALL be in infra/k8s/ or infra/terraform/"
+        tests: []
+      - id: AC-4.4
+        description: "WHEN infrastructure contracts are defined THEN invariants.yaml SHALL specify ports, env vars, resources"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-4.5
+        description: "WHEN validating infrastructure THEN the system SHALL run dry-run commands"
+        tests:
+          - xtask::validate_infra::run_docker_compose_validation
+          - xtask::validate_infra::run_kubectl_validation
+      - id: AC-4.6
+        description: "WHEN infrastructure changes THEN validation SHALL check against invariants"
+        tests:
+          - xtask::validate_infra::cross_check_invariants
+      - id: AC-4.7
+        description: "WHEN creating infrastructure components THEN they SHALL include inline comments"
+        tests: []
+
+  # Infrastructure Requirement: Automated Validation
+  - id: INF-REQ-5
+    name: Automated Validation Framework
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-5.1
+        description: "WHEN running validation THEN it SHALL be invoked via cargo xtask validate"
+        tests:
+          - xtask::validate::run_validate
+      - id: AC-5.2
+        description: "WHEN validation completes THEN it SHALL update docs/validation_report.md"
+        tests:
+          - xtask::validate::generate_validation_report
+      - id: AC-5.3
+        description: "WHEN validation fails THEN it SHALL provide actionable error messages"
+        tests:
+          - xtask::validate::format_errors
+      - id: AC-5.4
+        description: "WHEN adding new quality gates THEN they SHALL be integrated into xtask validate"
+        tests: []
+      - id: AC-5.5
+        description: "WHEN validation is run in CI THEN it SHALL use the same xtask commands"
+        tests: []
+      - id: AC-5.6
+        description: "WHEN validation detects issues THEN it SHALL exit with non-zero status"
+        tests:
+          - xtask::validate::run_validate
+      - id: AC-5.7
+        description: "WHEN validation runs THEN it SHALL complete without exceeding timeouts"
+        tests: []
+
+  # Infrastructure Requirement: Cross-Reference Checking
+  - id: INF-REQ-6
+    name: Cross-Reference and Consistency Checking
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-6.1
+        description: "WHEN checking documentation THEN the system SHALL verify requirement IDs exist in spec ledger"
+        tests:
+          - xtask::cross_ref::validate_doc_links
+      - id: AC-6.2
+        description: "WHEN checking spec ledger THEN the system SHALL verify test paths exist in codebase"
+        tests:
+          - xtask::cross_ref::validate_test_references
+      - id: AC-6.3
+        description: "WHEN checking Gherkin features THEN the system SHALL verify tags match spec ledger"
+        tests:
+          - xtask::gherkin::validate_gherkin_tags
+      - id: AC-6.4
+        description: "WHEN checking ADRs THEN the system SHALL verify cross-references are valid"
+        tests:
+          - xtask::cross_ref::validate_adr_links
+      - id: AC-6.5
+        description: "WHEN generating cross-reference reports THEN the system SHALL list orphaned docs and broken links"
+        tests:
+          - xtask::validate::generate_validation_report
+      - id: AC-6.6
+        description: "WHEN a requirement is removed THEN the system SHALL identify all references"
+        tests:
+          - xtask::cross_ref::find_requirement_references
+      - id: AC-6.7
+        description: "WHEN running cross-reference checks THEN they SHALL be included in cargo xtask validate"
+        tests:
+          - xtask::validate::run_validate
+
+  # Infrastructure Requirement: Task-Driven Maintenance
+  - id: INF-REQ-7
+    name: Task-Driven Maintenance Workflow
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-7.1
+        description: "WHEN defining maintenance tasks THEN they SHALL include title, motivation, steps, and acceptance"
+        tests: []
+      - id: AC-7.2
+        description: "WHEN tasks reference files THEN they SHALL use relative paths from workspace root"
+        tests: []
+      - id: AC-7.3
+        description: "WHEN tasks include validation THEN they SHALL specify exact commands"
+        tests: []
+      - id: AC-7.4
+        description: "WHEN tasks are executed THEN Kiro SHALL follow steps sequentially"
+        tests: []
+      - id: AC-7.5
+        description: "WHEN tasks fail THEN Kiro SHALL provide diagnostic information"
+        tests: []
+      - id: AC-7.6
+        description: "WHEN new maintenance needs arise THEN they SHALL be encoded as tasks"
+        tests: []
+      - id: AC-7.7
+        description: "WHEN tasks are completed THEN acceptance commands SHALL be re-run"
+        tests: []
+
+  # Infrastructure Requirement: Local Development Environment
+  - id: INF-REQ-8
+    name: Local Development Environment
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-8.1
+        description: "WHEN setting up locally THEN the canonical environment SHALL be defined"
+        tests: []
+      - id: AC-8.2
+        description: "WHEN local environment starts THEN it SHALL build with Rust 1.89.0 and edition 2024"
+        tests:
+          - command: docker compose -f infra/local/docker-compose.yml config
+      - id: AC-8.3
+        description: "WHEN services are exposed THEN they SHALL use documented ports in invariants.yaml"
+        tests:
+          - xtask::validate_infra::cross_check_invariants
+      - id: AC-8.4
+        description: "WHEN environment is started THEN source code SHALL be bind-mounted"
+        tests: []
+      - id: AC-8.5
+        description: "WHEN validating environment THEN health check endpoints SHALL return 200"
+        tests:
+          - command: curl -f http://localhost:8080/health
+      - id: AC-8.6
+        description: "WHEN environment variables are required THEN they SHALL be documented"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-8.7
+        description: "WHEN environment is updated THEN changes SHALL be reflected in config and docs"
+        tests: []
+
+  # Infrastructure Requirement: CI Configuration
+  - id: INF-REQ-9
+    name: Continuous Integration Configuration
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-9.1
+        description: "WHEN CI jobs are defined THEN they SHALL be documented in infra/ci/README.md"
+        tests: []
+      - id: AC-9.2
+        description: "WHEN CI runs validation THEN it SHALL use cargo xtask commands"
+        tests: []
+      - id: AC-9.3
+        description: "WHEN CI detects failures THEN xtask SHALL emit errors with [ERROR] prefix"
+        tests:
+          - xtask::validate::format_errors
+      - id: AC-9.4
+        description: "WHEN CI configuration changes THEN documentation SHALL be updated"
+        tests: []
+      - id: AC-9.5
+        description: "WHEN adding new CI checks THEN they SHALL be added to xtask first"
+        tests: []
+      - id: AC-9.6
+        description: "WHEN CI runs THEN it SHALL use cargo xtask validate"
+        tests: []
+      - id: AC-9.7
+        description: "WHEN CI completes THEN it SHALL upload validation reports as artifacts"
+        tests: []
+
+  # Infrastructure Requirement: xtask Automation
+  - id: INF-REQ-10
+    name: xtask Automation Framework
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-10.1
+        description: "WHEN running cargo xtask check THEN it SHALL execute fmt, clippy, and tests"
+        tests:
+          - xtask::check::run_check
+      - id: AC-10.2
+        description: "WHEN running cargo xtask validate THEN it SHALL execute full quality gate"
+        tests:
+          - xtask::validate::run_validate
+      - id: AC-10.3
+        description: "WHEN running cargo xtask ac-status THEN it SHALL generate feature_status.md"
+        tests:
+          - xtask::ac_status::generate_feature_status
+      - id: AC-10.4
+        description: "WHEN running cargo xtask normalize-docs THEN it SHALL update front matter"
+        tests:
+          - xtask::normalize_docs::run_normalize
+      - id: AC-10.5
+        description: "WHEN running cargo xtask validate-infra THEN it SHALL run dry-run validation"
+        tests:
+          - xtask::validate_infra::run_validate_infra
+      - id: AC-10.6
+        description: "WHEN xtask commands fail THEN they SHALL provide clear error messages"
+        tests:
+          - xtask::validate::format_errors
+      - id: AC-10.7
+        description: "WHEN adding new automation THEN it SHALL be implemented as xtask subcommand"
+        tests: []
+
+  # Infrastructure Requirement: Documentation Generation
+  - id: INF-REQ-11
+    name: Documentation Generation and Reporting
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-11.1
+        description: "WHEN cargo xtask ac-status runs THEN it SHALL generate feature_status.md"
+        tests:
+          - xtask::ac_status::generate_feature_status
+      - id: AC-11.2
+        description: "WHEN cargo xtask validate runs THEN it SHALL update validation_report.md"
+        tests:
+          - xtask::validate::generate_validation_report
+      - id: AC-11.3
+        description: "WHEN cargo xtask normalize-docs runs THEN it SHALL generate docs/README.md"
+        tests:
+          - xtask::normalize_docs::generate_docs_index
+      - id: AC-11.4
+        description: "WHEN reports are generated THEN they SHALL include timestamps and commit hashes"
+        tests:
+          - xtask::validate::generate_validation_report
+      - id: AC-11.5
+        description: "WHEN reports are updated THEN they SHALL be formatted as valid markdown"
+        tests: []
+      - id: AC-11.6
+        description: "WHEN viewing reports THEN they SHALL be human-readable"
+        tests: []
+      - id: AC-11.7
+        description: "WHEN cross-reference issues are found THEN they SHALL be listed in validation_report.md"
+        tests:
+          - xtask::validate::generate_validation_report
+
+  # Infrastructure Requirement: Schema Validation
+  - id: INF-REQ-12
+    name: Schema Validation and Enforcement
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-12.1
+        description: "WHEN validating spec ledgers THEN the system SHALL enforce spec_ledger.schema.json"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-12.2
+        description: "WHEN validating front matter THEN the system SHALL enforce front_matter.schema.json"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-12.3
+        description: "WHEN validating Gherkin tags THEN the system SHALL verify pattern matching"
+        tests:
+          - xtask::gherkin::validate_gherkin_tags
+      - id: AC-12.4
+        description: "WHEN schema validation fails THEN the system SHALL report file paths and line numbers"
+        tests:
+          - xtask::schema::validate_yaml_against_schema
+      - id: AC-12.5
+        description: "WHEN schemas are updated THEN the system SHALL provide migration guidance"
+        tests: []
+      - id: AC-12.6
+        description: "WHEN adding new metadata fields THEN they SHALL be documented in schema"
+        tests: []
+      - id: AC-12.7
+        description: "WHEN running cargo xtask validate THEN schema checks SHALL be performed first"
+        tests:
+          - xtask::validate::run_validate

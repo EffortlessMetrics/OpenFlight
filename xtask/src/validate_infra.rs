@@ -124,7 +124,8 @@ pub fn run_validate_infra() -> Result<()> {
             println!("✅ {}\n", msg);
         }
         Ok(None) => {
-            let warning = "[WARN] INF-INFRA-100: Docker not available, skipping Docker Compose validation";
+            let warning =
+                "[WARN] INF-INFRA-100: Docker not available, skipping Docker Compose validation";
             println!("⚠️  {}\n", warning);
             warnings.push(warning.to_string());
         }
@@ -182,7 +183,10 @@ pub fn run_validate_infra() -> Result<()> {
     println!("Warnings: {}", warnings.len());
 
     if !all_errors.is_empty() {
-        println!("\n❌ Infrastructure validation failed with {} error(s):", all_errors.len());
+        println!(
+            "\n❌ Infrastructure validation failed with {} error(s):",
+            all_errors.len()
+        );
         for error in &all_errors {
             eprintln!("\n{}", error.format());
         }
@@ -190,7 +194,10 @@ pub fn run_validate_infra() -> Result<()> {
     }
 
     if !warnings.is_empty() {
-        println!("\n⚠️  {} warning(s) - some checks were skipped", warnings.len());
+        println!(
+            "\n⚠️  {} warning(s) - some checks were skipped",
+            warnings.len()
+        );
     }
 
     println!("\n✅ Infrastructure validation passed!");
@@ -251,7 +258,7 @@ fn validate_all_invariants() -> Result<usize, Vec<InfraError>> {
             }
             Err(schema_errors) => {
                 println!("    ✗ {} error(s) found", schema_errors.len());
-                
+
                 // Convert schema errors to infra errors
                 for schema_error in schema_errors {
                     eprintln!("{}", schema_error.format());
@@ -294,9 +301,7 @@ fn validate_docker_compose() -> Result<Option<String>> {
     }
 
     // Check if docker compose is available
-    let check_docker = Command::new("docker")
-        .args(["compose", "version"])
-        .output();
+    let check_docker = Command::new("docker").args(["compose", "version"]).output();
 
     match check_docker {
         Ok(output) if output.status.success() => {

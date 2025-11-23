@@ -351,7 +351,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo xtask validate-infra` validates invariants and runs dry-run checks where tools are available
   - _Requirements: INF-REQ-10.5, INF-REQ-4.5, INF-REQ-4.6_
 
-- [ ] 18. Expand spec ledger with full requirements
+- [x] 18. Expand spec ledger with full requirements
+
+
+
+
+
   - Add all Flight Hub requirements (REQ-2 through REQ-14) to specs/spec_ledger.yaml
   - Add all infrastructure requirements (INF-REQ-2 through INF-REQ-12)
   - Consider adding optional `kind` field to requirements: `product` vs `infra` for easier filtering

@@ -10,7 +10,7 @@ use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::front_matter::{collect_all_front_matter, FrontMatter};
+use crate::front_matter::{FrontMatter, collect_all_front_matter};
 
 /// Verify that all doc_id values are unique across all documentation files.
 ///
@@ -140,8 +140,7 @@ pub fn generate_docs_index(docs: &[(PathBuf, FrontMatter)]) -> Result<String> {
             output.push_str(&format!("## {}\n\n", band_title));
 
             // Group by area within this band
-            let mut by_area: HashMap<String, Vec<&(PathBuf, FrontMatter, String)>> =
-                HashMap::new();
+            let mut by_area: HashMap<String, Vec<&(PathBuf, FrontMatter, String)>> = HashMap::new();
 
             for doc in docs_in_band {
                 let area_key = format!("{:?}", doc.1.area).to_lowercase();
@@ -239,7 +238,10 @@ pub fn run_normalize_docs() -> Result<()> {
     let docs = collect_all_front_matter(docs_dir)
         .context("Failed to collect front matter from documentation")?;
 
-    println!("  Found {} documentation files with front matter", docs.len());
+    println!(
+        "  Found {} documentation files with front matter",
+        docs.len()
+    );
 
     // Verify doc_id uniqueness
     println!("  Verifying doc_id uniqueness...");
