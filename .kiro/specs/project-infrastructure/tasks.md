@@ -205,6 +205,7 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - _Requirements: INF-REQ-9.1, INF-REQ-9.2, INF-REQ-9.5, INF-REQ-9.6, INF-REQ-9.7_
 
 - [ ] 11. Checkpoint - Verify Phase 1 complete
+
   - Run `cargo xtask check` and verify exit code 0
   - Run `cargo xtask validate` and verify exit code 0
   - Verify `docs/validation_report.md` exists and contains auto-generated header, timestamp, commit hash, and check results
