@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  flight-service:
+    image: rust:1.89.0
+    container_name: flight-service-local
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+      - FLIGHT_CONFIG_PATH=${FLIGHT_CONFIG_PATH:-/workspace}
+      - RUST_BACKTRACE=${RUST_BACKTRACE:-0}
+    command: >
+      bash -c "
+        echo 'Installing dependencies...' &&
+        apt-get update -qq &&
+        apt-get install -y -qq curl &&
+        echo 'Building flight-service...' &&
+        cargo build --release -p flight-service &&
+        echo 'Starting flight-service...' &&
+        cargo run --release -p flight-service
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2Gi

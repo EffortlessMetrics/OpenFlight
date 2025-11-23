@@ -1,0 +1,24 @@
+environment: local-development
+rust_version: "1.89.0"
+rust_edition: "2024"
+
+ports:
+  flight-service: 8080
+
+env_vars:
+  RUST_LOG:
+    required: false
+    default: "info"
+    description: "Logging level for tracing subsystem. Valid values: trace, debug, info, warn, error"
+  FLIGHT_CONFIG_PATH:
+    required: false
+    default: "/workspace"
+    description: "Path to flight configuration directory containing profiles and settings"
+  RUST_BACKTRACE:
+    required: false
+    default: "0"
+    description: "Enable Rust backtraces on panic. Set to '1' for backtraces, 'full' for verbose backtraces"
+
+resources:
+  cpu_limit: "2"
+  memory_limit: "2Gi"

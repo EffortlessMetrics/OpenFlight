@@ -151,7 +151,10 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo xtask validate` generates docs/validation_report.md with all sections present
   - _Requirements: INF-REQ-5.1, INF-REQ-5.2, INF-REQ-10.2_
 
-- [ ] 9. Create local development environment
+- [-] 9. Create local development environment
+
+
+
   - Create `infra/local/` directory
   - Create `infra/local/README.md` documenting:
     - Setup instructions
@@ -172,6 +175,8 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - _Requirements: INF-REQ-8.1, INF-REQ-8.2, INF-REQ-8.3, INF-REQ-8.4, INF-REQ-8.5_
 
 - [ ] 10. Create CI configuration
+
+
   - Create `infra/ci/` directory
   - Create `infra/ci/README.md` documenting:
     - CI jobs and their purpose
