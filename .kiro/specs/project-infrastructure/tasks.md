@@ -429,7 +429,13 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 ## Optional: BDD Step Runner
 
-- [ ]* 22. Create specs crate for BDD execution
+- [x] 22. Create specs crate for BDD execution
+
+
+
+
+
+
   - Create `specs/` crate in workspace with Cargo.toml
   - Add cucumber-rs dependency
   - Implement step definitions for common patterns:

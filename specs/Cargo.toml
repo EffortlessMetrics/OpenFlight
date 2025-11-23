@@ -1,0 +1,28 @@
+[package]
+name = "specs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+cucumber = "0.21"
+tokio = { workspace = true }
+anyhow = { workspace = true }
+
+# Dependencies for axis processing tests
+flight-core = { path = "../crates/flight-core" }
+flight-axis = { path = "../crates/flight-axis" }
+flight-scheduler = { path = "../crates/flight-scheduler" }
+flight-bus = { path = "../crates/flight-bus" }
+
+# Dependencies for documentation validation tests
+serde = { workspace = true }
+serde_yaml = "0.9"
+walkdir = "2.4"
+regex = "1.10"
+
+[[test]]
+name = "cucumber"
+harness = false

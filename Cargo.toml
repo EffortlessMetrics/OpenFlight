@@ -25,6 +25,7 @@ members = [
     "crates/flight-updater",
     "examples",
     "xtask",
+    "specs",
 ]
 
 
