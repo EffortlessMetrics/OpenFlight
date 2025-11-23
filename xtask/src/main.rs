@@ -15,6 +15,7 @@ mod config;
 mod cross_ref;
 mod front_matter;
 mod gherkin;
+mod normalize_docs;
 mod schema;
 mod validate;
 
@@ -62,11 +63,7 @@ fn main() -> Result<()> {
         Commands::Check => check::run_check(),
         Commands::Validate => validate::run_validate(),
         Commands::AcStatus => ac_status::run_ac_status(),
-        Commands::NormalizeDocs => {
-            println!("Normalizing documentation...");
-            println!("✓ NormalizeDocs command placeholder - implementation in next task");
-            Ok(())
-        }
+        Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
         Commands::ValidateInfra => {
             println!("Validating infrastructure...");
             println!("✓ ValidateInfra command placeholder - implementation in next task");

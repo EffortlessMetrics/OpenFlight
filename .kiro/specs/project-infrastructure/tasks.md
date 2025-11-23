@@ -292,7 +292,9 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 -
 
-- [-] 15. Implement cargo xtask ac-status command
+- [x] 15. Implement cargo xtask ac-status command
+
+
 
   - Create `xtask/src/ac_status.rs` module
   - Implement `generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario]) -> String`:
@@ -307,6 +309,10 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Wire ac-status command into main.rs CLI
   - Acceptance: `cargo xtask ac-status` generates docs/feature_status.md with all columns and status icons
   - _Requirements: INF-REQ-10.3, INF-REQ-11.1, INF-REQ-11.4_
+- [x] 16. Implement cargo xtask normalize-docs command
+
+
+
 
 - [ ] 16. Implement cargo xtask normalize-docs command
 
