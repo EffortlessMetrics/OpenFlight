@@ -366,7 +366,11 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: specs/spec_ledger.yaml contains all 26 requirements (14 product + 12 infra) and validates successfully
   - _Requirements: INF-REQ-2.1, INF-REQ-2.3_
 
-- [ ] 19. Create Gherkin features for key requirements
+- [x] 19. Create Gherkin features for key requirements
+
+
+
+
   - Create `specs/features/` directory
   - Standardize naming convention: use `req_<N>_<description>.feature` for both product and infra requirements
   - Create `specs/features/req_1_axis_processing.feature` with scenarios for REQ-1:
