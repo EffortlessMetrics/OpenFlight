@@ -100,7 +100,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo run --manifest-path xtask/Cargo.toml -- validate-schema specs/spec_ledger.yaml schemas/spec_ledger.schema.json` exits 0
   - _Requirements: INF-REQ-2.1, INF-REQ-2.2_
 
-- [ ] 6. Create documentation structure with seed docs
+- [x] 6. Create documentation structure with seed docs
+
+
+
+
+
   - Create `docs/` directory structure: requirements/, design/, concepts/, how-to/, reference/, adr/
   - Create `docs/requirements/overview.md` with front matter (doc_id: DOC-REQ-OVERVIEW, kind: requirements, area: infra, status: draft, links: {requirements: [], tasks: [], adrs: []})
   - Create `docs/concepts/flight-core.md` with front matter (doc_id: DOC-CORE-OVERVIEW, kind: concept, area: flight-core, status: draft, links: {requirements: [REQ-1], tasks: [], adrs: []})
