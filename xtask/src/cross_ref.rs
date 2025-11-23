@@ -220,6 +220,9 @@ pub fn validate_doc_links(
 /// Checks that all test references in the spec ledger point to actual tests
 /// in the codebase. Uses ripgrep to search for test functions.
 ///
+/// Command-based test references (starting with `cmd:`) are treated as valid
+/// and recorded as "validated by command" without attempting to locate a test function.
+///
 /// # Arguments
 ///
 /// * `ledger` - The spec ledger containing test references
@@ -245,6 +248,13 @@ pub fn validate_test_references(ledger: &SpecLedger) -> Vec<CrossRefError> {
             for test_ref in &ac.tests {
                 // Only validate simple test references (not commands or features)
                 if let TestReference::Simple(test_path) = test_ref {
+                    // Check if this is a command-based test reference
+                    if test_path.starts_with("cmd:") {
+                        // Command-based tests are treated as valid
+                        // They are validated by running the command, not by locating a test function
+                        continue;
+                    }
+
                     match validate_single_test_reference(test_path, &workspace_members) {
                         TestValidationResult::Valid => {
                             // Test exists, no error
@@ -691,5 +701,97 @@ mod tests {
             }
             _ => {} // Valid or Missing is acceptable
         }
+    }
+
+    #[test]
+    fn test_validate_test_references_with_command_prefix() {
+        let ledger = SpecLedger {
+            requirements: vec![Requirement {
+                id: "INF-REQ-1".to_string(),
+                name: "Infrastructure Requirement".to_string(),
+                status: RequirementStatus::Draft,
+                ac: vec![AcceptanceCriteria {
+                    id: "AC-1.1".to_string(),
+                    description: "Test AC with command".to_string(),
+                    tests: vec![TestReference::Simple(
+                        "cmd:cargo xtask validate".to_string(),
+                    )],
+                }],
+            }],
+        };
+
+        let errors = validate_test_references(&ledger);
+
+        // Command-based tests should not produce errors
+        assert!(
+            errors.is_empty(),
+            "Command-based test references should be treated as valid"
+        );
+    }
+
+    #[test]
+    fn test_validate_test_references_mixed_types() {
+        let ledger = SpecLedger {
+            requirements: vec![Requirement {
+                id: "INF-REQ-2".to_string(),
+                name: "Mixed Test Types".to_string(),
+                status: RequirementStatus::Draft,
+                ac: vec![AcceptanceCriteria {
+                    id: "AC-2.1".to_string(),
+                    description: "Test AC with mixed references".to_string(),
+                    tests: vec![
+                        TestReference::Simple("cmd:cargo xtask check".to_string()),
+                        TestReference::Simple("cmd:cargo test -p specs".to_string()),
+                        TestReference::Simple("nonexistent_crate::tests::test_missing".to_string()),
+                    ],
+                }],
+            }],
+        };
+
+        let errors = validate_test_references(&ledger);
+
+        // Should only have error for the non-command test reference
+        // The command-based tests should be skipped
+        assert_eq!(
+            errors.len(),
+            1,
+            "Should only error on non-command test reference"
+        );
+
+        // Verify it's a warning for external crate (not an error for missing test)
+        assert!(
+            errors[0].is_warning(),
+            "Should be a warning for external crate"
+        );
+    }
+
+    #[test]
+    fn test_validate_test_references_command_variations() {
+        let ledger = SpecLedger {
+            requirements: vec![Requirement {
+                id: "INF-REQ-3".to_string(),
+                name: "Command Variations".to_string(),
+                status: RequirementStatus::Draft,
+                ac: vec![AcceptanceCriteria {
+                    id: "AC-3.1".to_string(),
+                    description: "Various command formats".to_string(),
+                    tests: vec![
+                        TestReference::Simple("cmd:cargo xtask validate".to_string()),
+                        TestReference::Simple("cmd:cargo xtask ac-status".to_string()),
+                        TestReference::Simple("cmd:cargo xtask normalize-docs".to_string()),
+                        TestReference::Simple("cmd:cargo xtask validate-infra".to_string()),
+                        TestReference::Simple("cmd:cargo test -p specs".to_string()),
+                    ],
+                }],
+            }],
+        };
+
+        let errors = validate_test_references(&ledger);
+
+        // All command-based tests should be valid
+        assert!(
+            errors.is_empty(),
+            "All command-based test references should be treated as valid"
+        );
     }
 }

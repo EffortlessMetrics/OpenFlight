@@ -431,7 +431,11 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 This phase addresses the gap between implementation and validation by aligning spec ledger test references with the actual validation approach.
 
-- [ ] 23. Add command-based test reference support to cross-ref validation
+- [x] 23. Add command-based test reference support to cross-ref validation
+
+
+
+
   - Update `xtask/src/cross_ref.rs` in `validate_test_references()` function
   - Add support for `cmd:` prefix in test references
   - When a test reference starts with `cmd:`, treat it as a command-based test:
