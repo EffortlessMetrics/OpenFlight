@@ -37,7 +37,11 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
   - Acceptance: `cargo xtask --help` displays available commands
   - _Requirements: INF-REQ-10.1_
 
-- [ ] 2. Implement cargo xtask check command
+- [x] 2. Implement cargo xtask check command
+
+
+
+
   - Create `xtask/src/check.rs` module with `pub fn run_check() -> anyhow::Result<()>` function
   - Implement formatting check: `cargo fmt --all -- --check`
   - Implement clippy for core crates: loop over config::CORE_CRATES and run `cargo clippy -p <crate> -- -D warnings`

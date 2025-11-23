@@ -13,9 +13,4 @@
 ///
 /// This is the single source of truth for which crates are included in fast checks.
 /// It does not need to include every workspace member.
-pub const CORE_CRATES: &[&str] = &[
-    "flight-core",
-    "flight-virtual",
-    "flight-hid",
-    "flight-ipc",
-];
+pub const CORE_CRATES: &[&str] = &["flight-core", "flight-virtual", "flight-hid", "flight-ipc"];

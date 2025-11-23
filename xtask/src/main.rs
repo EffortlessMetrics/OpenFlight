@@ -9,6 +9,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::env;
 
+mod check;
 mod config;
 
 #[derive(Parser)]
@@ -23,16 +24,16 @@ struct Cli {
 enum Commands {
     /// Fast local smoke test (fmt, clippy, core tests)
     Check,
-    
+
     /// Full quality gate (check + benches, API, cross-ref)
     Validate,
-    
+
     /// Generate feature status report
     AcStatus,
-    
+
     /// Normalize documentation front matter
     NormalizeDocs,
-    
+
     /// Validate infrastructure configurations
     ValidateInfra,
 }
@@ -40,16 +41,11 @@ enum Commands {
 fn main() -> Result<()> {
     // Ensure we're running from the workspace root
     ensure_workspace_root()?;
-    
+
     let cli = Cli::parse();
-    
+
     match cli.command {
-        Commands::Check => {
-            println!("Running fast local checks...");
-            println!("Core crates: {:?}", config::CORE_CRATES);
-            println!("✓ Check command placeholder - implementation in next task");
-            Ok(())
-        }
+        Commands::Check => check::run_check(),
         Commands::Validate => {
             println!("Running full validation...");
             println!("✓ Validate command placeholder - implementation in next task");
@@ -81,7 +77,7 @@ fn main() -> Result<()> {
 fn ensure_workspace_root() -> Result<()> {
     // Get the current executable's directory (xtask binary location)
     let current_dir = env::current_dir()?;
-    
+
     // Look for Cargo.toml in current directory or parent directories
     let mut search_dir = current_dir.clone();
     loop {
@@ -93,12 +89,15 @@ fn ensure_workspace_root() -> Result<()> {
                 // Found workspace root, change to it if not already there
                 if search_dir != current_dir {
                     env::set_current_dir(&search_dir)?;
-                    println!("Changed directory to workspace root: {}", search_dir.display());
+                    println!(
+                        "Changed directory to workspace root: {}",
+                        search_dir.display()
+                    );
                 }
                 return Ok(());
             }
         }
-        
+
         // Move up one directory
         if let Some(parent) = search_dir.parent() {
             search_dir = parent.to_path_buf();
