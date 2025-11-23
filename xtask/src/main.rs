@@ -8,7 +8,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::env;
-use std::path::PathBuf;
 
 mod config;
 

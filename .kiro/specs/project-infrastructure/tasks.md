@@ -21,7 +21,9 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 ## Phase 1: Minimal Infrastructure Spine
 
-- [-] 1. Create xtask crate with basic structure
+- [x] 1. Create xtask crate with basic structure
+
+
 
 
 
