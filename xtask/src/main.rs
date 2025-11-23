@@ -37,6 +37,14 @@ enum Commands {
 
     /// Validate infrastructure configurations
     ValidateInfra,
+
+    /// Validate a YAML file against a JSON schema (for testing)
+    ValidateSchema {
+        /// Path to the YAML file to validate
+        yaml_path: String,
+        /// Path to the JSON schema file
+        schema_path: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -66,6 +74,28 @@ fn main() -> Result<()> {
             println!("Validating infrastructure...");
             println!("✓ ValidateInfra command placeholder - implementation in next task");
             Ok(())
+        }
+        Commands::ValidateSchema {
+            yaml_path,
+            schema_path,
+        } => {
+            use std::path::Path;
+            let yaml_path = Path::new(&yaml_path);
+            let schema_path = Path::new(&schema_path);
+
+            match schema::validate_yaml_against_schema(yaml_path, schema_path) {
+                Ok(()) => {
+                    println!("✓ Validation successful: {} conforms to schema", yaml_path.display());
+                    Ok(())
+                }
+                Err(errors) => {
+                    eprintln!("✗ Validation failed with {} error(s):", errors.len());
+                    for error in errors {
+                        eprintln!("{}", error.format());
+                    }
+                    anyhow::bail!("Schema validation failed");
+                }
+            }
         }
     }
 }

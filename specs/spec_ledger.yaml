@@ -1,0 +1,28 @@
+# Spec Ledger
+# Machine-readable mapping of requirements to acceptance criteria and tests
+# This file is validated against schemas/spec_ledger.schema.json
+
+requirements:
+  # Product Requirement: Real-Time Axis Processing
+  - id: REQ-1
+    name: Real-Time Axis Processing
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "Processing latency SHALL be ≤ 5ms p99"
+        tests: []
+      - id: AC-1.2
+        description: "Jitter SHALL be ≤ 0.5ms p99 at 250Hz"
+        tests: []
+
+  # Infrastructure Requirement: Structured Documentation
+  - id: INF-REQ-1
+    name: Structured Documentation System
+    status: draft
+    ac:
+      - id: AC-1.1
+        description: "WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/"
+        tests: []
+      - id: AC-1.2
+        description: "WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields"
+        tests: []

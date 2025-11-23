@@ -88,7 +88,9 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
 
 -
 
-- [ ] 5. Create minimal spec ledger
+- [x] 5. Create minimal spec ledger
+
+
   - Create `specs/` directory
   - Create `specs/spec_ledger.yaml` with seed content:
     - One product requirement (REQ-1: Real-Time Axis Processing) with 2 ACs, status: draft
