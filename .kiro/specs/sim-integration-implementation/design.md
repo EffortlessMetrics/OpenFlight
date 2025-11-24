@@ -73,10 +73,17 @@ All simulator adapters follow the same pattern:
 
 The BusSnapshot is the central data contract that all simulator adapters populate and all consumers read.
 
-**Data Structure:**
+**Internal vs ABI Representation:**
+
+The design separates ergonomic Rust types from ABI-safe wire formats:
+
+- **BusSnapshot**: Internal, ergonomic struct with String, Option<T>, etc. for adapter logic
+- **BusSnapshotRaw**: POD representation for lock-free ring buffers, FFI, and cross-thread sharing
+
+**Internal Data Structure:**
 
 ```rust
-#[repr(C)]
+// Internal, ergonomic representation (NOT repr(C))
 pub struct BusSnapshot {
     // Identity
     pub sim_id: SimId,              // msfs, xplane, dcs, none
@@ -186,6 +193,88 @@ pub struct ValidFlags {
 - Altitudes: meters
 - Dimensionless: g-load, mach number
 - Ratios: -1.0 to 1.0 for control inputs
+
+**ABI-Safe Wire Format:**
+
+```rust
+// POD representation for lock-free ring buffers and FFI
+#[repr(C)]
+pub struct BusSnapshotRaw {
+    // Identity (fixed-size arrays + lengths)
+    pub sim_id: u8,  // 0=none, 1=msfs, 2=xplane, 3=dcs
+    pub aircraft_type: [u8; 64],
+    pub aircraft_type_len: u8,
+    pub aircraft_name: [u8; 128],
+    pub aircraft_name_len: u8,
+    
+    // Kinematics (plain floats)
+    pub attitude_roll: f32,
+    pub attitude_pitch: f32,
+    pub attitude_yaw: f32,
+    pub angular_rate_p: f32,
+    pub angular_rate_q: f32,
+    pub angular_rate_r: f32,
+    pub velocity_body_x: f32,
+    pub velocity_body_y: f32,
+    pub velocity_body_z: f32,
+    pub velocity_ias: f32,
+    pub velocity_tas: f32,
+    pub velocity_vs: f32,
+    pub altitude_agl: f32,
+    pub altitude_msl: f32,
+    pub nz_g: f32,
+    
+    // Aero
+    pub alpha: f32,
+    pub beta: f32,
+    pub mach: f32,
+    
+    // Flight condition
+    pub on_ground: u8,  // 0=false, 1=true
+    pub gear_handle: u8,
+    pub gear_position: f32,
+    pub flaps_handle: u8,
+    pub flaps_position: f32,
+    
+    // Controls
+    pub pitch_ratio: f32,
+    pub roll_ratio: f32,
+    pub yaw_ratio: f32,
+    pub trim_pitch: f32,
+    pub trim_roll: f32,
+    pub trim_yaw: f32,
+    pub ap_master: u8,
+    pub ap_heading_lock: u8,
+    pub ap_altitude_lock: u8,
+    
+    // Metadata (bitflags instead of bools)
+    pub valid_flags: u32,  // Bitfield: 0x01=attitude, 0x02=velocities, 0x04=controls, 0x08=aero, 0x10=kinematics
+    pub safe_for_ffb: u8,
+    pub source_sim_timestamp: u64,
+    pub bus_timestamp: u64,
+}
+
+impl From<&BusSnapshot> for BusSnapshotRaw {
+    fn from(snapshot: &BusSnapshot) -> Self {
+        // Conversion logic...
+    }
+}
+
+impl From<&BusSnapshotRaw> for BusSnapshot {
+    fn from(raw: &BusSnapshotRaw) -> Self {
+        // Conversion logic...
+    }
+}
+```
+
+**Bus Publishing Model:**
+
+- **Single Producer**: Exactly one active adapter at a time writes BusSnapshot into a lock-free ring buffer
+- **Consumers**: FFB engine, profile manager, UI read the latest snapshot each loop
+- **Immutability**: Each snapshot is treated as immutable by consumers
+- **Rate Mismatch**: Adapters are event-driven (30-90 Hz); the 250 Hz FFB loop holds the last known snapshot
+- **No Interpolation**: v1 uses last-known-good snapshot; no time-aware filtering or interpolation
+- **Handoff**: Bounded lock-free SPSC ring buffer of BusSnapshotRaw for cross-thread communication
 
 
 ### MSFS SimConnect Adapter
@@ -359,10 +448,39 @@ impl MsfsAdapter {
 
 **Sanity Gate:**
 
+The Sanity Gate validates telemetry plausibility and controls the safe_for_ffb flag through a state machine.
+
+**State Machine:**
+
+```
+Disconnected → Connecting → Booting → Loading → ActiveFlight ⇄ Paused
+                                                      ↓
+                                                   Faulted
+```
+
+**State Transitions (MSFS):**
+
+- **Disconnected → Connecting**: SimConnect connection attempt initiated
+- **Connecting → Booting**: SimConnect connection established
+- **Booting → Loading**: Valid telemetry received, waiting for initialized position
+- **Loading → ActiveFlight**: SIM_ON_GROUND valid and SIMULATION_STATE indicates active flight
+- **ActiveFlight → Paused**: Sim reports paused state
+- **Paused → ActiveFlight**: Sim resumes
+- **Any → Faulted**: Sanity violation count exceeds threshold
+- **Faulted → Disconnected**: Power cycle or explicit fault clear
+
+**safe_for_ffb Rules:**
+
+- `true` only in ActiveFlight state
+- `false` in all other states (Disconnected, Booting, Loading, Paused, Faulted)
+
 ```rust
 pub struct SanityGate {
     state: AdapterState,
-    last_snapshot: Option<BusSnapshot>,
+    // Store only minimal previous state for sanity checks (not full snapshot)
+    last_attitude: Option<Attitude>,
+    last_velocities: Option<Velocities>,
+    last_timestamp: u64,
     violation_count: u32,
     violation_threshold: u32,  // Default: 10
     last_violation_log: Instant,
@@ -378,11 +496,11 @@ impl SanityGate {
         }
         
         // Check for physically implausible jumps
-        if let Some(last) = &self.last_snapshot {
-            let dt = (snapshot.bus_timestamp - last.bus_timestamp) as f64 / 1e9;
+        if let (Some(last_att), Some(last_vel)) = (&self.last_attitude, &self.last_velocities) {
+            let dt = (snapshot.bus_timestamp - self.last_timestamp) as f64 / 1e9;
             
             // Attitude shouldn't change > 180 deg/s
-            let d_pitch = (snapshot.attitude.pitch - last.attitude.pitch).abs();
+            let d_pitch = (snapshot.attitude.pitch - last_att.pitch).abs();
             if d_pitch / dt > std::f32::consts::PI {
                 self.record_violation("Implausible pitch rate");
                 self.mark_invalid(snapshot);
@@ -398,7 +516,10 @@ impl SanityGate {
         // Only set safe_for_ffb in ActiveFlight
         snapshot.safe_for_ffb = matches!(self.state, AdapterState::ActiveFlight);
         
-        self.last_snapshot = Some(snapshot.clone());
+        // Store minimal state for next check
+        self.last_attitude = Some(snapshot.attitude);
+        self.last_velocities = Some(snapshot.velocities);
+        self.last_timestamp = snapshot.bus_timestamp;
     }
     
     fn record_violation(&mut self, reason: &str) {
