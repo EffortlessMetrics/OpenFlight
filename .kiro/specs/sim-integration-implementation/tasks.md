@@ -1,17 +1,30 @@
 # Implementation Plan
 
-This task list provides a series of discrete, incremental coding steps to implement the simulator integration layer, force feedback protocols, and platform-specific runtime infrastructure for Flight Hub v1.
+This task list provides a series of discrete, incremental coding steps to complete and polish the simulator integration layer, force feedback protocols, and platform-specific runtime infrastructure for Flight Hub v1.
+
+**Current Implementation Status:**
+- ✅ Core BusSnapshot structure and types exist in `flight-bus`
+- ✅ MSFS SimConnect adapter exists in `flight-simconnect`
+- ✅ X-Plane UDP adapter exists in `flight-xplane`
+- ✅ DCS Export.lua adapter exists in `flight-dcs-export`
+- ✅ FFB engine framework exists in `flight-ffb`
+- ✅ Real-time scheduler exists in `flight-scheduler`
+- 📋 DirectInput FFB device I/O needs completion
+- 📋 Windows MMCSS/high-res timers need completion
+- 📋 Linux rtkit integration needs completion
+- 📋 Packaging and distribution infrastructure needs implementation
+- 📋 Comprehensive testing and documentation needs completion
 
 All context documents (requirements, design) are available during implementation. Each task builds on previous tasks to ensure continuous integration and early validation of core functionality.
 
 ## Task List
 
-- [ ] 1. Implement core BusSnapshot types and validation
-  - Create type-safe BusSnapshot structure with validated types (ValidatedSpeed, ValidatedAngle, Percentage, GForce, Mach)
-  - Implement core fields only: sim identifier, aircraft identifier, timestamp, attitude, angular rates, velocities, kinematics, aerodynamics, aircraft state, control inputs, trim state, validity flags
-  - Implement validation methods for core field range checking
-  - Add unit conversion utilities (degrees↔radians, knots↔m/s, feet↔meters, FPM↔m/s)
-  - Implement snapshot age calculation API
+- [ ] 1. Review and enhance core BusSnapshot types and validation
+  - Review existing BusSnapshot structure in `crates/flight-bus/src/snapshot.rs`
+  - Verify all core fields are present: sim identifier, aircraft identifier, timestamp, attitude, angular rates, velocities, kinematics, aerodynamics, aircraft state, control inputs, trim state, validity flags
+  - Enhance validation methods for core field range checking if needed
+  - Verify unit conversion utilities exist (degrees↔radians, knots↔m/s, feet↔meters, FPM↔m/s)
+  - Verify snapshot age calculation API exists
   - _Requirements: BUS-CORE-01.1, BUS-CORE-01.2, BUS-CORE-01.3, BUS-CORE-01.4, BUS-CORE-01.5, BUS-CORE-01.6, BUS-CORE-01.7, BUS-CORE-01.8, BUS-CORE-01.9, BUS-CORE-01.10, BUS-CORE-01.11, BUS-CORE-01.15_
 
 - [ ] 1.1 Write unit tests for core BusSnapshot validation
@@ -21,9 +34,10 @@ All context documents (requirements, design) are available during implementation
   - Test core field validation (attitude, velocities, g-loads within ranges)
   - _Requirements: BUS-CORE-01.12, BUS-CORE-01.14_
 
-- [ ] 1.2 Implement extended BusSnapshot fields
-  - Implement extended fields: engines list, fuel per tank, helicopter telemetry block, environment, navigation, autopilot, lights
-  - Implement validation for extended fields (unique engine indices, helicopter pedal ranges, extended field ranges)
+- [ ] 1.2 Review and enhance extended BusSnapshot fields
+  - Review existing extended fields in BusSnapshot: engines list, fuel per tank, helicopter telemetry block, environment, navigation, autopilot, lights
+  - Add any missing extended fields
+  - Enhance validation for extended fields (unique engine indices, helicopter pedal ranges, extended field ranges)
   - _Requirements: BUS-EXTENDED-01.1, BUS-EXTENDED-01.2, BUS-EXTENDED-01.3, BUS-EXTENDED-01.4, BUS-EXTENDED-01.5, BUS-EXTENDED-01.6, BUS-EXTENDED-01.7, BUS-EXTENDED-01.8_
 
 - [ ] 1.3 Write unit tests for extended BusSnapshot validation
@@ -32,11 +46,12 @@ All context documents (requirements, design) are available during implementation
   - Test extended field range validation
   - _Requirements: BUS-EXTENDED-01.8, BUS-EXTENDED-01.9_
 
-- [ ] 2. Implement MSFS SimConnect adapter connection management
-  - Create MsfsAdapter struct with connection state machine
-  - Implement local SimConnect connection without SimConnect.cfg requirement
-  - Implement exponential backoff reconnection logic (up to 30s between attempts)
-  - Implement connection loss detection and state transitions
+- [ ] 2. Review and enhance MSFS SimConnect adapter connection management
+  - Review existing MsfsAdapter in `crates/flight-simconnect/src/adapter.rs`
+  - Verify connection state machine implementation
+  - Verify local SimConnect connection works without SimConnect.cfg requirement
+  - Enhance exponential backoff reconnection logic if needed (up to 30s between attempts)
+  - Verify connection loss detection and state transitions
   - _Requirements: MSFS-INT-01.1, MSFS-INT-01.2, MSFS-INT-01.19_
 
 - [ ] 2.1 Write unit tests for MSFS connection management
@@ -45,11 +60,12 @@ All context documents (requirements, design) are available during implementation
   - Test connection loss detection
   - _Requirements: MSFS-INT-01.2, MSFS-INT-01.19_
 
-- [ ] 3. Implement MSFS SimConnect data definitions and telemetry mapping
-  - Register high-rate telemetry data definition with explicit units for each SimVar
-  - Register low-rate identity data definition
-  - Implement SimVar → BusSnapshot field mapping with unit conversions
-  - Implement dispatch queue draining to handle burst events
+- [ ] 3. Review and enhance MSFS SimConnect data definitions and telemetry mapping
+  - Review existing data definitions in MSFS adapter
+  - Verify high-rate telemetry data definition with explicit units for each SimVar
+  - Verify low-rate identity data definition
+  - Review SimVar → BusSnapshot field mapping with unit conversions
+  - Verify dispatch queue draining handles burst events correctly
   - _Requirements: MSFS-INT-01.3, MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6_
 
 - [ ] 3.1 Write unit tests for MSFS telemetry mapping
@@ -60,13 +76,14 @@ All context documents (requirements, design) are available during implementation
   - Use fixture data from tests/fixtures/msfs_c172_cruise.json
   - _Requirements: MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6, SIM-TEST-01.2_
 
-- [ ] 4. Implement MSFS Sanity Gate state machine
-  - Create SanityGate struct with state machine (Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted)
-  - Implement state transition logic with explicit criteria
-  - Implement safe_for_ffb flag control (true only in ActiveFlight)
-  - Implement NaN/Inf detection with rate-limited logging
-  - Implement physically implausible jump detection
-  - Implement sanity violation counter with configurable threshold
+- [ ] 4. Review and enhance MSFS Sanity Gate state machine
+  - Review existing sanity gate implementation in MSFS adapter
+  - Verify state machine has all required states (Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted)
+  - Verify state transition logic with explicit criteria
+  - Verify safe_for_ffb flag control (true only in ActiveFlight)
+  - Verify NaN/Inf detection with rate-limited logging
+  - Verify physically implausible jump detection
+  - Verify sanity violation counter with configurable threshold
   - _Requirements: MSFS-INT-01.9, MSFS-INT-01.10, MSFS-INT-01.11, MSFS-INT-01.12, MSFS-INT-01.13, MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16_
 
 - [ ] 4.1 Write unit tests for MSFS Sanity Gate
@@ -76,10 +93,11 @@ All context documents (requirements, design) are available during implementation
   - Test safe_for_ffb flag behavior in each state
   - _Requirements: MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16, SIM-TEST-01.2, SIM-TEST-01.8_
 
-- [ ] 5. Implement MSFS update rate monitoring and metrics
-  - Implement conditional 60 Hz target (when sim FPS ≥60)
-  - Expose metrics for actual update rate and jitter via shared metrics system (Task 41) under sim.msfs.* namespace
-  - Implement aircraft change detection via TITLE SimVar
+- [ ] 5. Review and enhance MSFS update rate monitoring and metrics
+  - Review existing update rate monitoring
+  - Verify conditional 60 Hz target (when sim FPS ≥60)
+  - Verify metrics for actual update rate and jitter are exposed via shared metrics system (Task 41) under sim.msfs.* namespace
+  - Verify aircraft change detection via TITLE SimVar
   - _Requirements: MSFS-INT-01.7, MSFS-INT-01.8, MSFS-INT-01.17_
 
 - [ ] 5.1 Write integration tests for MSFS adapter
@@ -93,11 +111,11 @@ All context documents (requirements, design) are available during implementation
   - Document unit conversions in code comments
   - _Requirements: MSFS-INT-01.Doc.1, MSFS-INT-01.Doc.2_
 
-- [ ] 7. Implement X-Plane UDP adapter packet parsing
-  - Create XPlaneAdapter struct with UDP socket
-  - Implement DATA packet format parser (36-byte records)
-  - Implement data group extraction (groups 3, 4, 16, 17, 18, 21)
-  - Implement graceful handling of missing data groups
+- [ ] 7. Review and enhance X-Plane UDP adapter packet parsing
+  - Review existing XPlaneAdapter in `crates/flight-xplane/src/`
+  - Verify DATA packet format parser (36-byte records)
+  - Verify data group extraction (groups 3, 4, 16, 17, 18, 21)
+  - Verify graceful handling of missing data groups
   - _Requirements: XPLANE-INT-01.1, XPLANE-INT-01.2, XPLANE-INT-01.3, XPLANE-INT-01.6_
 
 - [ ] 7.1 Write unit tests for X-Plane packet parsing
@@ -106,11 +124,11 @@ All context documents (requirements, design) are available during implementation
   - Test malformed packet handling
   - _Requirements: XPLANE-INT-01.2, XPLANE-INT-01.6, SIM-TEST-01.3_
 
-- [ ] 8. Implement X-Plane telemetry mapping and connection monitoring
-  - Implement data group → BusSnapshot field mapping with unit conversions
-  - Implement connection timeout detection (2 seconds)
-  - Expose connection timeout metrics via shared metrics system (Task 41) under sim.xplane.* namespace
-  - Implement aircraft identity handling for UDP-only mode (sim=XPLANE, coarse aircraft_class, identity='unknown')
+- [ ] 8. Review and enhance X-Plane telemetry mapping and connection monitoring
+  - Review existing data group → BusSnapshot field mapping with unit conversions
+  - Verify connection timeout detection (2 seconds)
+  - Verify connection timeout metrics are exposed via shared metrics system (Task 41) under sim.xplane.* namespace
+  - Verify aircraft identity handling for UDP-only mode (sim=XPLANE, coarse aircraft_class, identity='unknown')
   - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.7, XPLANE-INT-01.13_
 
 - [ ] 8.1 Write unit tests for X-Plane telemetry mapping
@@ -126,20 +144,22 @@ All context documents (requirements, design) are available during implementation
   - Provide setup instructions for X-Plane Data Output screen configuration
   - _Requirements: XPLANE-INT-01.Doc.1, XPLANE-INT-01.Doc.2_
 
-- [ ] 10. Implement DCS Export.lua script
-  - Create FlightHubExport.lua with LuaExportStart/Stop/AfterNextFrame hooks
-  - Implement proper chaining to existing Export.lua hooks (store previous functions, call in deterministic order)
-  - Implement self-aircraft telemetry gathering using LoGet* functions
-  - Implement MP integrity check compliance (whitelist self-aircraft data, annotate mp_detected flag)
-  - Implement non-blocking UDP transmission to localhost
-  - Implement 60Hz target rate via LuaExportActivityNextEvent
+- [ ] 10. Review and enhance DCS Export.lua script
+  - Review existing FlightHubExport.lua in `crates/flight-dcs-export/`
+  - Verify LuaExportStart/Stop/AfterNextFrame hooks
+  - Verify proper chaining to existing Export.lua hooks (store previous functions, call in deterministic order)
+  - Verify self-aircraft telemetry gathering using LoGet* functions
+  - Verify MP integrity check compliance (whitelist self-aircraft data, annotate mp_detected flag)
+  - Verify non-blocking UDP transmission to localhost
+  - Verify 60Hz target rate via LuaExportActivityNextEvent
   - _Requirements: DCS-INT-01.4, DCS-INT-01.5, DCS-INT-01.6, DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.9, DCS-INT-01.10, DCS-INT-01.11, DCS-INT-01.12_
 
-- [ ] 11. Implement DCS installer and uninstaller
-  - Implement DCS variant detection (DCS, DCS.openbeta, DCS.openalpha)
-  - Implement Export.lua backup and append logic
-  - Implement FlightHubExport.lua deployment to Scripts/FlightHub/
-  - Implement uninstaller with backup restoration
+- [ ] 11. Review and enhance DCS installer and uninstaller
+  - Review existing DCS installer implementation
+  - Verify DCS variant detection (DCS, DCS.openbeta, DCS.openalpha)
+  - Verify Export.lua backup and append logic
+  - Verify FlightHubExport.lua deployment to Scripts/FlightHub/
+  - Verify uninstaller with backup restoration
   - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
 
 - [ ] 11.1 Write unit tests for DCS installer
@@ -148,15 +168,15 @@ All context documents (requirements, design) are available during implementation
   - Test uninstaller backup restoration
   - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
 
-- [ ] 12. Implement DCS Rust adapter
-  - Create DcsAdapter struct with UDP socket
-  - Implement JSON packet parsing
-  - Implement Lua value → BusSnapshot field mapping with unit conversions
-  - Implement nil handling for graceful degradation
-  - Implement MP status annotation (mp_detected flag, no invalidation of self-aircraft data)
-  - Implement connection timeout detection (2 seconds)
-  - Expose connection timeout and MP status metrics via shared metrics system (Task 41) under sim.dcs.* namespace
-  - Implement aircraft change detection via unit type
+- [ ] 12. Review and enhance DCS Rust adapter
+  - Review existing DcsAdapter in `crates/flight-dcs-export/src/`
+  - Verify JSON packet parsing
+  - Verify Lua value → BusSnapshot field mapping with unit conversions
+  - Verify nil handling for graceful degradation
+  - Verify MP status annotation (mp_detected flag, no invalidation of self-aircraft data)
+  - Verify connection timeout detection (2 seconds)
+  - Verify connection timeout and MP status metrics are exposed via shared metrics system (Task 41) under sim.dcs.* namespace
+  - Verify aircraft change detection via unit type
   - _Requirements: DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15_
 
 - [ ] 12.1 Write unit tests for DCS adapter
@@ -175,11 +195,13 @@ All context documents (requirements, design) are available during implementation
   - Verify all MSFS, X-Plane, and DCS adapter unit and integration tests pass
   - Verify all mapping documentation is complete
 
-- [ ] 15. Implement DirectInput FFB device abstraction
-  - Create DirectInputFfbDevice struct with IDirectInputDevice8 interface
-  - Implement device enumeration and connection
-  - Implement capability querying (supports_pid, max_torque_nm, min_period_us)
-  - Implement device acquisition and cooperative level setting
+- [ ] 15. Complete DirectInput FFB device abstraction
+  - Review existing FFB framework in `crates/flight-ffb/src/`
+  - Complete DirectInputFfbDevice implementation with IDirectInputDevice8 interface
+  - Complete device enumeration and connection
+  - Complete capability querying (supports_pid, max_torque_nm, min_period_us)
+  - Complete device acquisition and cooperative level setting
+  - Note: Safety framework exists, device I/O needs completion
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
 
 - [ ] 15.1 Write unit tests for DirectInput device abstraction
@@ -188,12 +210,12 @@ All context documents (requirements, design) are available during implementation
   - Test device acquisition
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
 
-- [ ] 16. Implement DirectInput FFB effect creation and management
-  - Implement constant force effect creation for pitch and roll axes
-  - Implement periodic (sine) effect creation for buffeting/vibration
-  - Implement condition effects (spring/damper) for centering
-  - Implement effect parameter updates via SetParameters
-  - Implement effect start/stop control
+- [ ] 16. Complete DirectInput FFB effect creation and management
+  - Complete constant force effect creation for pitch and roll axes
+  - Complete periodic (sine) effect creation for buffeting/vibration
+  - Complete condition effects (spring/damper) for centering
+  - Complete effect parameter updates via SetParameters
+  - Complete effect start/stop control
   - _Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
 
 - [ ] 16.1 Write unit tests for FFB effect management
@@ -203,19 +225,19 @@ All context documents (requirements, design) are available during implementation
   - Test effect parameter updates
   - _Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
 
-- [ ] 17. Implement XInput rumble integration
-  - Create XInputRumbleDevice struct
-  - Implement rumble channel mapping (low-freq and high-freq motors)
-  - Document XInput limitations (vibration only, no directional torque)
+- [ ] 17. Review and enhance XInput rumble integration
+  - Review existing XInput integration in FFB framework
+  - Verify rumble channel mapping (low-freq and high-freq motors)
+  - Verify documentation of XInput limitations (vibration only, no directional torque)
   - _Requirements: FFB-HID-01.5_
 
-- [ ] 18. Implement FFB safety envelope
-  - Create FfbSafetyEnvelope struct with torque limits
-  - Implement torque magnitude clamping to device max_torque_nm
-  - Implement slew rate limiting (ΔNm/Δt ≤ configured limit)
-  - Implement jerk limiting (Δ²Nm/Δt² ≤ configured limit)
-  - Implement safe_for_ffb flag enforcement (zero torque when false)
-  - Implement 50ms ramp-to-zero on fault with explicit fault timestamp tracking
+- [ ] 18. Review and enhance FFB safety envelope
+  - Review existing FfbSafetyEnvelope implementation (safety framework exists)
+  - Verify torque magnitude clamping to device max_torque_nm
+  - Verify slew rate limiting (ΔNm/Δt ≤ configured limit)
+  - Verify jerk limiting (Δ²Nm/Δt² ≤ configured limit)
+  - Verify safe_for_ffb flag enforcement (zero torque when false)
+  - Verify 50ms ramp-to-zero on fault with explicit fault timestamp tracking
   - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6_
 
 - [ ] 18.1 Write unit tests for FFB safety envelope
@@ -226,15 +248,15 @@ All context documents (requirements, design) are available during implementation
   - Test 50ms ramp-to-zero timing
   - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6, SIM-TEST-01.10, QG-FFB-SAFETY_
 
-- [ ] 19. Implement FFB fault detection and handling
-  - Create FaultDetector struct
-  - Implement USB OUT stall detection (≥3 frames)
-  - Implement NaN/Inf detection in FFB pipeline
-  - Implement device health monitoring (over-temp, over-current)
-  - Implement device disconnect detection (within 100ms)
-  - Implement fault categorization (hardware-critical vs transient)
-  - Implement fault state latching with power cycle requirement for hardware-critical faults
-  - Implement explicit "clear fault" for transient faults
+- [ ] 19. Review and enhance FFB fault detection and handling
+  - Review existing FaultDetector implementation (safety framework exists)
+  - Verify USB OUT stall detection (≥3 frames)
+  - Verify NaN/Inf detection in FFB pipeline
+  - Verify device health monitoring (over-temp, over-current)
+  - Verify device disconnect detection (within 100ms)
+  - Verify fault categorization (hardware-critical vs transient)
+  - Verify fault state latching with power cycle requirement for hardware-critical faults
+  - Verify explicit "clear fault" for transient faults
   - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11_
 
 - [ ] 19.1 Write unit tests for FFB fault detection
@@ -245,11 +267,11 @@ All context documents (requirements, design) are available during implementation
   - Test fault categorization and latching
   - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11, SIM-TEST-01.10, QG-FFB-SAFETY_
 
-- [ ] 20. Implement FFB blackbox recorder
-  - Create BlackboxRecorder struct
-  - Implement high-rate capture (≥250 Hz) of BusSnapshot, FFB setpoints, and device feedback
-  - Implement 2-second pre-fault and 1-second post-fault buffering
-  - Implement bounded, rotating log storage (size/age-limited)
+- [ ] 20. Review and enhance FFB blackbox recorder
+  - Review existing BlackboxRecorder implementation (safety framework exists)
+  - Verify high-rate capture (≥250 Hz) of BusSnapshot, FFB setpoints, and device feedback
+  - Verify 2-second pre-fault and 1-second post-fault buffering
+  - Verify bounded, rotating log storage (size/age-limited)
   - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13_
 
 - [ ] 20.1 Write unit tests for blackbox recorder
@@ -258,22 +280,25 @@ All context documents (requirements, design) are available during implementation
   - Test bounded storage and rotation
   - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13, QG-FFB-SAFETY_
 
-- [ ] 21. Implement FFB emergency stop
-  - Implement UI button for emergency stop
-  - Implement hardware button support (if device supports it)
-  - Implement immediate FFB disable on emergency stop
+- [ ] 21. Review and enhance FFB emergency stop
+  - Review existing emergency stop implementation
+  - Verify UI button for emergency stop
+  - Verify hardware button support (if device supports it)
+  - Verify immediate FFB disable on emergency stop
   - _Requirements: FFB-SAFETY-01.14_
 
 - [ ] 22. Checkpoint – all FFB safety tests passing before starting runtime work
   - Verify all DirectInput FFB device, effect management, safety envelope, fault detection, and blackbox recorder tests pass
   - Verify emergency stop functionality is implemented and tested
 
-- [ ] 23. Implement Windows real-time thread configuration
-  - Create WindowsRtThread struct
-  - Implement thread priority elevation (THREAD_PRIORITY_TIME_CRITICAL)
-  - Implement MMCSS registration with "Games" or "Pro Audio" task
-  - Implement power throttling disable via PROCESS_POWER_THROTTLING_EXECUTION_SPEED
-  - Implement QueryPerformanceCounter (QPC) monotonic clock
+- [ ] 23. Complete Windows real-time thread configuration
+  - Review existing scheduler implementation in `crates/flight-scheduler/src/`
+  - Complete WindowsRtThread implementation
+  - Complete thread priority elevation (THREAD_PRIORITY_TIME_CRITICAL)
+  - Complete MMCSS registration with "Games" or "Pro Audio" task
+  - Complete power throttling disable via PROCESS_POWER_THROTTLING_EXECUTION_SPEED
+  - Verify QueryPerformanceCounter (QPC) monotonic clock
+  - Note: Basic implementation exists, MMCSS integration needs completion
   - _Requirements: WIN-RT-01.1, WIN-RT-01.2, WIN-RT-01.3, WIN-RT-01.8_
 
 - [ ] 23.1 Write platform-specific integration tests for Windows RT thread configuration
@@ -283,11 +308,13 @@ All context documents (requirements, design) are available during implementation
   - Test QPC monotonic clock
   - _Requirements: WIN-RT-01.1, WIN-RT-01.2, WIN-RT-01.3, WIN-RT-01.8, RT-TEST-01.1_
 
-- [ ] 24. Implement Windows high-resolution timer loop
-  - Implement CreateWaitableTimerEx with CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
-  - Implement fallback to timeBeginPeriod(1) if high-resolution timer unavailable
-  - Implement 250 Hz tick loop with periodic timer
-  - Implement final 50-80μs busy-spin using QPC
+- [ ] 24. Complete Windows high-resolution timer loop
+  - Review existing timer loop implementation
+  - Complete CreateWaitableTimerEx with CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+  - Complete fallback to timeBeginPeriod(1) if high-resolution timer unavailable
+  - Verify 250 Hz tick loop with periodic timer
+  - Verify final 50-80μs busy-spin using QPC
+  - Note: Basic implementation exists, high-resolution timer integration needs completion
   - _Requirements: WIN-RT-01.4, WIN-RT-01.5_
 
 - [ ] 24.1 Write platform-specific integration tests for Windows timer loop
@@ -325,13 +352,15 @@ All context documents (requirements, design) are available during implementation
   - Mark as #[ignore] by default, opt-in via CI job
   - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
 
-- [ ] 27. Implement Linux real-time thread configuration
-  - Create LinuxRtThread struct
-  - Implement SCHED_FIFO scheduling request via pthread_setschedparam
-  - Implement rtkit D-Bus integration for privilege acquisition
-  - Implement fallback to normal priority with warning
-  - Implement mlockall(MCL_CURRENT | MCL_FUTURE) for memory locking
-  - Implement RLIMIT_RTPRIO and RLIMIT_MEMLOCK validation
+- [ ] 27. Complete Linux real-time thread configuration
+  - Review existing Linux scheduler implementation
+  - Complete LinuxRtThread implementation
+  - Verify SCHED_FIFO scheduling request via pthread_setschedparam
+  - Complete rtkit D-Bus integration for privilege acquisition
+  - Verify fallback to normal priority with warning
+  - Verify mlockall(MCL_CURRENT | MCL_FUTURE) for memory locking
+  - Verify RLIMIT_RTPRIO and RLIMIT_MEMLOCK validation
+  - Note: Basic implementation exists, full rtkit integration needs completion
   - Note: Linux FFB output is out of scope for v1; this work is for timing harness + input loop only
   - _Requirements: LINUX-RT-01.1, LINUX-RT-01.2, LINUX-RT-01.3, LINUX-RT-01.4, LINUX-RT-01.7, LINUX-RT-01.11_
 
