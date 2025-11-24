@@ -4,7 +4,7 @@
 //! Offline engine implementations for replay
 
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -403,11 +403,6 @@ mod tests {
                 mach: flight_bus::Mach::new(0.18).unwrap(),
                 vertical_speed: 0.0,
             },
-            angular_rates: flight_bus::snapshot::AngularRates {
-                p: 0.0,
-                q: 0.0,
-                r: 0.0,
-            },
             config: flight_bus::AircraftConfig {
                 gear: flight_bus::GearState {
                     nose: flight_bus::GearPosition::Up,
@@ -429,15 +424,6 @@ mod tests {
                 yaw: 0.0,
                 throttle: vec![0.75],
             },
-            trim_state: flight_bus::snapshot::TrimState {
-                elevator: 0.0,
-                aileron: 0.0,
-                rudder: 0.0,
-            },
-            helo: None,
-            engines: Vec::new(),
-            environment: flight_bus::Environment::default(),
-            navigation: flight_bus::Navigation::default(),
             validity: flight_bus::snapshot::ValidityFlags {
                 safe_for_ffb: true,
                 attitude_valid: true,
@@ -447,6 +433,7 @@ mod tests {
                 aero_valid: true,
                 position_valid: true,
             },
+            ..Default::default()
         };
 
         let output = engine

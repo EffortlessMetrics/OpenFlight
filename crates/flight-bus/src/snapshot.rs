@@ -243,6 +243,26 @@ pub struct LightsConfig {
     pub wing: bool,
 }
 
+impl Default for BusSnapshot {
+    fn default() -> Self {
+        Self {
+            sim: SimId::Unknown,
+            aircraft: AircraftId::new("unknown"),
+            timestamp: 0,
+            kinematics: Kinematics::default(),
+            angular_rates: AngularRates::default(),
+            config: AircraftConfig::default(),
+            control_inputs: ControlInputs::default(),
+            trim_state: TrimState::default(),
+            helo: None,
+            engines: Vec::new(),
+            environment: Environment::default(),
+            navigation: Navigation::default(),
+            validity: ValidityFlags::default(),
+        }
+    }
+}
+
 impl BusSnapshot {
     /// Create a new snapshot with current timestamp
     pub fn new(sim: SimId, aircraft: AircraftId) -> Self {
