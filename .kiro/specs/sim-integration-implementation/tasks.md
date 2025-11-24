@@ -276,11 +276,17 @@ All context documents (requirements, design) are available during implementation
   - Document MP integrity check compliance (whitelisted data, restrictions)
   - _Requirements: DCS-INT-01.Doc.1, DCS-INT-01.Doc.2_
 
-- [ ] 14. Checkpoint – all adapter tests passing before starting FFB tasks
+- [x] 14. Checkpoint – all adapter tests passing before starting FFB tasks
+
+
+
+
+
   - Verify all MSFS, X-Plane, and DCS adapter unit and integration tests pass
   - Verify all mapping documentation is complete
 
 - [ ] 15. Complete DirectInput FFB device abstraction
+
   - Review existing FFB framework in `crates/flight-ffb/src/`
   - Complete DirectInputFfbDevice implementation with IDirectInputDevice8 interface
   - Complete device enumeration and connection
