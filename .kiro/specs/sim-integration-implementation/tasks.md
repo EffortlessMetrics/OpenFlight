@@ -144,7 +144,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 - [x] All adapter unit and integration tests pass
 
 
-- [-] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
+- [x] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
 
 
 - [ ] Sanity violations only occur when deliberately injecting nonsense
@@ -209,6 +209,8 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - _Requirements: CI Quality Gates_
 
 - [x] P1.5 Phase 1 Checkpoint
+
+
 
 
   **Phase:** 1 - Adapters
