@@ -224,7 +224,7 @@ All context documents (requirements, design) are available during implementation
   - Test jerk limiting
   - Test safe_for_ffb enforcement
   - Test 50ms ramp-to-zero timing
-  - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6, SIM-TEST-01.10_
+  - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6, SIM-TEST-01.10, QG-FFB-SAFETY_
 
 - [ ] 19. Implement FFB fault detection and handling
   - Create FaultDetector struct
@@ -243,7 +243,7 @@ All context documents (requirements, design) are available during implementation
   - Test device health monitoring
   - Test disconnect detection
   - Test fault categorization and latching
-  - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11, SIM-TEST-01.10_
+  - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11, SIM-TEST-01.10, QG-FFB-SAFETY_
 
 - [ ] 20. Implement FFB blackbox recorder
   - Create BlackboxRecorder struct
@@ -253,10 +253,10 @@ All context documents (requirements, design) are available during implementation
   - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13_
 
 - [ ] 20.1 Write unit tests for blackbox recorder
-  - Test high-rate capture
-  - Test pre/post-fault buffering
+  - Test high-rate capture (≥250 Hz)
+  - Test pre/post-fault buffering (2s before, 1s after)
   - Test bounded storage and rotation
-  - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13_
+  - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13, QG-FFB-SAFETY_
 
 - [ ] 21. Implement FFB emergency stop
   - Implement UI button for emergency stop
@@ -470,8 +470,10 @@ All context documents (requirements, design) are available during implementation
   - Implement cargo xtask validate-dcs-export
   - _Requirements: SIM-TEST-01.9_
 
-- [ ] 43. Final Checkpoint - Ensure all tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 43. Checkpoint – all tests and quality gates passing before tagging a release
+  - Verify all unit tests, integration tests, and platform-specific tests pass
+  - Verify all CI quality gates pass (QG-SIM-MAPPING, QG-UNIT-CONV, QG-SANITY-GATE, QG-FFB-SAFETY, QG-RT-JITTER, QG-HID-LATENCY, QG-LEGAL-DOC)
+  - Verify all documentation is complete
 
 - [ ] 44. Create CI quality gate enforcement
   - Implement QG-SIM-MAPPING: Fail if any adapter lacks complete mapping table documentation
@@ -496,7 +498,8 @@ All context documents (requirements, design) are available during implementation
   - Verify zero missed ticks
   - Verify RSS delta <10%
   - Verify no memory leaks
-  - _Requirements: RT-TEST-01.8_
+  - Run on both Intel and AMD hardware runners
+  - _Requirements: RT-TEST-01.8, RT-TEST-01.11_
 
 - [ ] 46. Create user documentation
   - Create installation guide for Windows (MSI)
