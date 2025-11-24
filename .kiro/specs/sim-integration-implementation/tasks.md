@@ -29,7 +29,9 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 **Goal:** Lock down canonical BusSnapshot schema and mapping docs. All adapters know exactly what they're targeting.
 
 **Exit Criteria:**
-- [-] All three mapping docs exist and match BusSnapshot schema
+- [x] All three mapping docs exist and match BusSnapshot schema
+
+
 
 
 
