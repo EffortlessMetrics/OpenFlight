@@ -195,7 +195,12 @@ All context documents (requirements, design) are available during implementation
   - Test connection timeout detection
   - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.13, SIM-TEST-01.3_
 
-- [ ] 9. Create X-Plane data group mapping documentation
+- [x] 9. Create X-Plane data group mapping documentation
+
+
+
+
+
   - Document all data group indices → BusSnapshot field mappings in docs/integration/xplane.md
   - Document unit conversions per data group
   - Provide setup instructions for X-Plane Data Output screen configuration
