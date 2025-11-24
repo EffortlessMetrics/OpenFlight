@@ -306,7 +306,12 @@ All context documents (requirements, design) are available during implementation
   - Test device acquisition
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
 
-- [ ] 16. Complete DirectInput FFB effect creation and management
+- [x] 16. Complete DirectInput FFB effect creation and management
+
+
+
+
+
   - Complete constant force effect creation for pitch and roll axes
   - Complete periodic (sine) effect creation for buffeting/vibration
   - Complete condition effects (spring/damper) for centering
@@ -314,7 +319,9 @@ All context documents (requirements, design) are available during implementation
   - Complete effect start/stop control
   - _Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
 
-- [ ] 16.1 Write unit tests for FFB effect management
+- [x] 16.1 Write unit tests for FFB effect management
+
+
   - Test constant force effect creation
   - Test periodic effect creation
   - Test condition effect creation

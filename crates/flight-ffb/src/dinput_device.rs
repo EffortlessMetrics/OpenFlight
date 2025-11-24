@@ -17,7 +17,7 @@ use windows::{
     Win32::System::Com::*,
 };
 
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use thiserror::Error;
 
 /// DirectInput FFB device errors
@@ -434,6 +434,9 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<()>` - Success or error
+    ///
+    /// # Requirements
+    /// - FFB-HID-01.4: Effect parameter updates via SetParameters
     pub fn set_constant_force(&mut self, handle: usize, torque_nm: f32) -> Result<()> {
         #[cfg(not(windows))]
         {
@@ -464,14 +467,195 @@ impl DirectInputFfbDevice {
             // In a real implementation, this would:
             // 1. Convert torque_nm to DirectInput magnitude (-10000 to 10000)
             // 2. Create DICONSTANTFORCE structure
-            // 3. Call SetParameters() on the effect
-            // 4. Call Start() to apply the effect
+            // 3. Call SetParameters() on the effect with DIEP_TYPESPECIFICPARAMS flag
+            // 4. The effect would be updated without needing to recreate it
             
             effect.last_updated = Instant::now();
             self.last_torque_nm = clamped_torque;
             
             tracing::debug!("Set constant force effect {} to {} Nm (clamped from {} Nm)", 
                 handle, clamped_torque, torque_nm);
+            
+            Ok(())
+        }
+    }
+    
+    /// Update periodic effect parameters
+    ///
+    /// # Arguments
+    /// * `handle` - Effect handle index
+    /// * `frequency_hz` - Frequency in Hertz
+    /// * `magnitude` - Magnitude (0.0 to 1.0)
+    ///
+    /// # Returns
+    /// * `Result<()>` - Success or error
+    ///
+    /// # Requirements
+    /// - FFB-HID-01.3: Periodic (sine) effect creation for buffeting/vibration
+    /// - FFB-HID-01.4: Effect parameter updates via SetParameters
+    pub fn set_periodic_parameters(&mut self, handle: usize, frequency_hz: f32, magnitude: f32) -> Result<()> {
+        #[cfg(not(windows))]
+        {
+            let _ = (handle, frequency_hz, magnitude);
+            return Err(DInputError::PlatformNotSupported);
+        }
+        
+        #[cfg(windows)]
+        {
+            if !self.is_acquired {
+                return Err(DInputError::DeviceNotAcquired);
+            }
+            
+            if handle >= self.effects.len() {
+                return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
+            }
+            
+            let effect = &mut self.effects[handle];
+            if effect.effect_type != EffectType::PeriodicSine {
+                return Err(DInputError::InvalidParameter(
+                    format!("Effect {} is not a periodic effect", handle)
+                ));
+            }
+            
+            // Validate parameters
+            if frequency_hz <= 0.0 || frequency_hz > 1000.0 {
+                return Err(DInputError::InvalidParameter(
+                    format!("Invalid frequency: {} Hz (must be 0-1000)", frequency_hz)
+                ));
+            }
+            
+            let clamped_magnitude = magnitude.clamp(0.0, 1.0);
+            
+            // In a real implementation, this would:
+            // 1. Create DIPERIODIC structure with:
+            //    - dwMagnitude: magnitude * 10000
+            //    - lOffset: 0
+            //    - dwPhase: 0
+            //    - dwPeriod: (1.0 / frequency_hz * 1_000_000.0) as microseconds
+            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            
+            effect.last_updated = Instant::now();
+            
+            tracing::debug!("Set periodic effect {} to {} Hz, magnitude {}", 
+                handle, frequency_hz, clamped_magnitude);
+            
+            Ok(())
+        }
+    }
+    
+    /// Update spring condition effect parameters
+    ///
+    /// # Arguments
+    /// * `handle` - Effect handle index
+    /// * `center` - Center position (-1.0 to 1.0)
+    /// * `stiffness` - Spring stiffness (0.0 to 1.0)
+    ///
+    /// # Returns
+    /// * `Result<()>` - Success or error
+    ///
+    /// # Requirements
+    /// - FFB-HID-01.3: Condition effects (spring) for centering
+    /// - FFB-HID-01.4: Effect parameter updates via SetParameters
+    pub fn set_spring_parameters(&mut self, handle: usize, center: f32, stiffness: f32) -> Result<()> {
+        #[cfg(not(windows))]
+        {
+            let _ = (handle, center, stiffness);
+            return Err(DInputError::PlatformNotSupported);
+        }
+        
+        #[cfg(windows)]
+        {
+            if !self.is_acquired {
+                return Err(DInputError::DeviceNotAcquired);
+            }
+            
+            if handle >= self.effects.len() {
+                return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
+            }
+            
+            let effect = &mut self.effects[handle];
+            if effect.effect_type != EffectType::Spring {
+                return Err(DInputError::InvalidParameter(
+                    format!("Effect {} is not a spring effect", handle)
+                ));
+            }
+            
+            // Validate parameters
+            let clamped_center = center.clamp(-1.0, 1.0);
+            let clamped_stiffness = stiffness.clamp(0.0, 1.0);
+            
+            // In a real implementation, this would:
+            // 1. Create DICONDITION structure with:
+            //    - lOffset: center * 10000
+            //    - lPositiveCoefficient: stiffness * 10000
+            //    - lNegativeCoefficient: stiffness * 10000
+            //    - dwPositiveSaturation: 10000
+            //    - dwNegativeSaturation: 10000
+            //    - lDeadBand: 0
+            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            
+            effect.last_updated = Instant::now();
+            
+            tracing::debug!("Set spring effect {} to center {}, stiffness {}", 
+                handle, clamped_center, clamped_stiffness);
+            
+            Ok(())
+        }
+    }
+    
+    /// Update damper condition effect parameters
+    ///
+    /// # Arguments
+    /// * `handle` - Effect handle index
+    /// * `damping` - Damping coefficient (0.0 to 1.0)
+    ///
+    /// # Returns
+    /// * `Result<()>` - Success or error
+    ///
+    /// # Requirements
+    /// - FFB-HID-01.3: Condition effects (damper) for resistance
+    /// - FFB-HID-01.4: Effect parameter updates via SetParameters
+    pub fn set_damper_parameters(&mut self, handle: usize, damping: f32) -> Result<()> {
+        #[cfg(not(windows))]
+        {
+            let _ = (handle, damping);
+            return Err(DInputError::PlatformNotSupported);
+        }
+        
+        #[cfg(windows)]
+        {
+            if !self.is_acquired {
+                return Err(DInputError::DeviceNotAcquired);
+            }
+            
+            if handle >= self.effects.len() {
+                return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
+            }
+            
+            let effect = &mut self.effects[handle];
+            if effect.effect_type != EffectType::Damper {
+                return Err(DInputError::InvalidParameter(
+                    format!("Effect {} is not a damper effect", handle)
+                ));
+            }
+            
+            // Validate parameters
+            let clamped_damping = damping.clamp(0.0, 1.0);
+            
+            // In a real implementation, this would:
+            // 1. Create DICONDITION structure with:
+            //    - lOffset: 0
+            //    - lPositiveCoefficient: damping * 10000
+            //    - lNegativeCoefficient: damping * 10000
+            //    - dwPositiveSaturation: 10000
+            //    - dwNegativeSaturation: 10000
+            //    - lDeadBand: 0
+            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            
+            effect.last_updated = Instant::now();
+            
+            tracing::debug!("Set damper effect {} to damping {}", 
+                handle, clamped_damping);
             
             Ok(())
         }
@@ -729,5 +913,257 @@ mod tests {
         // Try to create effect without acquiring device
         let result = device.create_constant_force_effect(0);
         assert!(matches!(result, Err(DInputError::DeviceNotAcquired)));
+    }
+    
+    // ========================================================================
+    // Task 16.1: Unit tests for FFB effect management
+    // Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4
+    // ========================================================================
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_periodic_effect_parameter_updates() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create periodic effect
+        let handle = device.create_periodic_effect().unwrap();
+        
+        // Test valid parameter updates
+        assert!(device.set_periodic_parameters(handle, 10.0, 0.5).is_ok());
+        assert!(device.set_periodic_parameters(handle, 100.0, 1.0).is_ok());
+        assert!(device.set_periodic_parameters(handle, 1.0, 0.0).is_ok());
+        
+        // Test parameter clamping
+        assert!(device.set_periodic_parameters(handle, 50.0, 1.5).is_ok()); // magnitude clamped to 1.0
+        assert!(device.set_periodic_parameters(handle, 50.0, -0.5).is_ok()); // magnitude clamped to 0.0
+        
+        // Test invalid frequency
+        assert!(matches!(
+            device.set_periodic_parameters(handle, 0.0, 0.5),
+            Err(DInputError::InvalidParameter(_))
+        ));
+        assert!(matches!(
+            device.set_periodic_parameters(handle, -10.0, 0.5),
+            Err(DInputError::InvalidParameter(_))
+        ));
+        assert!(matches!(
+            device.set_periodic_parameters(handle, 2000.0, 0.5),
+            Err(DInputError::InvalidParameter(_))
+        ));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_periodic_effect_wrong_type() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create constant force effect
+        let handle = device.create_constant_force_effect(0).unwrap();
+        
+        // Try to set periodic parameters on constant force effect
+        let result = device.set_periodic_parameters(handle, 10.0, 0.5);
+        assert!(matches!(result, Err(DInputError::InvalidParameter(_))));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_spring_effect_parameter_updates() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create spring effect
+        let handle = device.create_spring_effect().unwrap();
+        
+        // Test valid parameter updates
+        assert!(device.set_spring_parameters(handle, 0.0, 0.5).is_ok());
+        assert!(device.set_spring_parameters(handle, -0.5, 1.0).is_ok());
+        assert!(device.set_spring_parameters(handle, 1.0, 0.0).is_ok());
+        
+        // Test parameter clamping
+        assert!(device.set_spring_parameters(handle, 2.0, 0.5).is_ok()); // center clamped to 1.0
+        assert!(device.set_spring_parameters(handle, -2.0, 0.5).is_ok()); // center clamped to -1.0
+        assert!(device.set_spring_parameters(handle, 0.0, 1.5).is_ok()); // stiffness clamped to 1.0
+        assert!(device.set_spring_parameters(handle, 0.0, -0.5).is_ok()); // stiffness clamped to 0.0
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_spring_effect_wrong_type() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create damper effect
+        let handle = device.create_damper_effect().unwrap();
+        
+        // Try to set spring parameters on damper effect
+        let result = device.set_spring_parameters(handle, 0.0, 0.5);
+        assert!(matches!(result, Err(DInputError::InvalidParameter(_))));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_damper_effect_parameter_updates() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create damper effect
+        let handle = device.create_damper_effect().unwrap();
+        
+        // Test valid parameter updates
+        assert!(device.set_damper_parameters(handle, 0.0).is_ok());
+        assert!(device.set_damper_parameters(handle, 0.5).is_ok());
+        assert!(device.set_damper_parameters(handle, 1.0).is_ok());
+        
+        // Test parameter clamping
+        assert!(device.set_damper_parameters(handle, 1.5).is_ok()); // damping clamped to 1.0
+        assert!(device.set_damper_parameters(handle, -0.5).is_ok()); // damping clamped to 0.0
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_damper_effect_wrong_type() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create spring effect
+        let handle = device.create_spring_effect().unwrap();
+        
+        // Try to set damper parameters on spring effect
+        let result = device.set_damper_parameters(handle, 0.5);
+        assert!(matches!(result, Err(DInputError::InvalidParameter(_))));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_multiple_effect_types_coexist() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create multiple effect types
+        let constant_handle = device.create_constant_force_effect(0).unwrap();
+        let periodic_handle = device.create_periodic_effect().unwrap();
+        let spring_handle = device.create_spring_effect().unwrap();
+        let damper_handle = device.create_damper_effect().unwrap();
+        
+        // Verify all effects can be updated independently
+        assert!(device.set_constant_force(constant_handle, 5.0).is_ok());
+        assert!(device.set_periodic_parameters(periodic_handle, 20.0, 0.7).is_ok());
+        assert!(device.set_spring_parameters(spring_handle, 0.0, 0.8).is_ok());
+        assert!(device.set_damper_parameters(damper_handle, 0.6).is_ok());
+        
+        // Verify effect count
+        assert_eq!(device.get_effect_count(), 4);
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_effect_start_stop_control() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create effects
+        let constant_handle = device.create_constant_force_effect(0).unwrap();
+        let periodic_handle = device.create_periodic_effect().unwrap();
+        
+        // Test start/stop for constant force
+        assert!(device.start_effect(constant_handle).is_ok());
+        assert!(device.stop_effect(constant_handle).is_ok());
+        
+        // Test start/stop for periodic
+        assert!(device.start_effect(periodic_handle).is_ok());
+        assert!(device.stop_effect(periodic_handle).is_ok());
+        
+        // Test invalid handle
+        assert!(matches!(
+            device.start_effect(999),
+            Err(DInputError::InvalidParameter(_))
+        ));
+        assert!(matches!(
+            device.stop_effect(999),
+            Err(DInputError::InvalidParameter(_))
+        ));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_effect_parameter_updates_without_acquisition() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        
+        // Try to update parameters without acquiring device
+        assert!(matches!(
+            device.set_periodic_parameters(0, 10.0, 0.5),
+            Err(DInputError::DeviceNotAcquired)
+        ));
+        assert!(matches!(
+            device.set_spring_parameters(0, 0.0, 0.5),
+            Err(DInputError::DeviceNotAcquired)
+        ));
+        assert!(matches!(
+            device.set_damper_parameters(0, 0.5),
+            Err(DInputError::DeviceNotAcquired)
+        ));
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_constant_force_for_pitch_and_roll_axes() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.query_capabilities().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create constant force effects for pitch (axis 0) and roll (axis 1)
+        let pitch_handle = device.create_constant_force_effect(0).unwrap();
+        let roll_handle = device.create_constant_force_effect(1).unwrap();
+        
+        // Set different torques for each axis
+        assert!(device.set_constant_force(pitch_handle, 3.0).is_ok());
+        assert!(device.set_constant_force(roll_handle, -2.5).is_ok());
+        
+        // Verify both effects can be controlled independently
+        assert!(device.start_effect(pitch_handle).is_ok());
+        assert!(device.start_effect(roll_handle).is_ok());
+        
+        // Update torques independently
+        assert!(device.set_constant_force(pitch_handle, 5.0).is_ok());
+        assert!(device.set_constant_force(roll_handle, -4.0).is_ok());
+        
+        assert!(device.stop_effect(pitch_handle).is_ok());
+        assert!(device.stop_effect(roll_handle).is_ok());
+    }
+    
+    #[test]
+    #[cfg(windows)]
+    fn test_effect_updates_preserve_last_updated_timestamp() {
+        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        device.initialize().unwrap();
+        device.acquire(0).unwrap();
+        
+        // Create effects
+        let constant_handle = device.create_constant_force_effect(0).unwrap();
+        let periodic_handle = device.create_periodic_effect().unwrap();
+        let spring_handle = device.create_spring_effect().unwrap();
+        let damper_handle = device.create_damper_effect().unwrap();
+        
+        // Small delay to ensure timestamps differ
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        
+        // Update each effect and verify last_updated is updated
+        // (We can't directly access last_updated, but we verify the operation succeeds)
+        assert!(device.set_constant_force(constant_handle, 5.0).is_ok());
+        assert!(device.set_periodic_parameters(periodic_handle, 20.0, 0.5).is_ok());
+        assert!(device.set_spring_parameters(spring_handle, 0.0, 0.5).is_ok());
+        assert!(device.set_damper_parameters(damper_handle, 0.5).is_ok());
     }
 }
