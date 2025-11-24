@@ -49,14 +49,19 @@ This specification defines the target for Flight Hub v1:
 4. WHEN receiving telemetry THEN the adapter SHALL populate BusSnapshot fields using the mapping: PLANE_PITCH_DEGREES → attitude.pitch (converted to radians), PLANE_BANK_DEGREES → attitude.roll (radians), PLANE_HEADING_DEGREES_TRUE → attitude.yaw (radians)
 5. WHEN receiving telemetry THEN the adapter SHALL map ROTATION_VELOCITY_BODY_X/Y/Z → angular_rates.p/q/r (rad/s), INDICATED_AIRSPEED → velocities.ias (m/s), VERTICAL_SPEED → velocities.vs (m/s)
 6. WHEN receiving telemetry THEN the adapter SHALL map G_FORCE → kinematics.nz_g, INCIDENCE_ALPHA → aero.alpha (rad), INCIDENCE_BETA → aero.beta (rad)
-7. WHEN receiving telemetry THEN the adapter SHALL target a minimum effective BusSnapshot update rate of 60 Hz with jitter p99 ≤ 10ms
-8. WHEN sim state changes THEN the adapter SHALL implement a Sanity Gate with states: Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted
-9. WHEN in Sanity Gate state THEN the adapter SHALL only set BusSnapshot.safe_for_ffb = true in ActiveFlight state
-10. WHEN telemetry values are NaN or Inf THEN the adapter SHALL mark those fields as invalid, transition to Faulted on repeated violations (configurable threshold), and log at most once per 5 seconds
-11. WHEN attitude or velocity values change by more than physically plausible amounts in one frame THEN the adapter SHALL drop that packet and increment a sanity_violation counter
-12. WHEN aircraft changes THEN the adapter SHALL detect via TITLE SimVar and trigger profile switching within 500ms
-13. WHEN implementing THEN the adapter SHALL be read-only with no event injection to minimize legal and safety risk
-14. WHEN connection is lost THEN the adapter SHALL mark all BusSnapshot fields as invalid and transition to Disconnected state
+7. WHEN the simulator frame rate is ≥60 FPS THEN the adapter SHALL target ≥60 Hz BusSnapshot updates with p99 jitter ≤10 ms
+8. WHEN operating THEN the adapter SHALL expose metrics for actual update rate and jitter so that behavior at lower sim frame rates is observable
+9. WHEN sim state changes THEN the adapter SHALL implement a Sanity Gate with states: Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted
+10. WHEN transitioning from Booting to Loading THEN the adapter SHALL verify SimConnect is connected and at least one valid frame of core telemetry has been received
+11. WHEN transitioning from Loading to ActiveFlight THEN the adapter SHALL verify position, attitude, and airspeed are valid and stable for N consecutive frames (configurable, default 10) and the sim reports initialized flight state
+12. WHEN MSFS reports paused state THEN the adapter SHALL transition from any state to Paused; WHEN resumed THEN the adapter SHALL transition from Paused to ActiveFlight
+13. WHEN the sanity_violation counter exceeds a configurable threshold within a sliding time window THEN the adapter SHALL transition from any state to Faulted
+14. WHEN in Sanity Gate state THEN BusSnapshot.safe_for_ffb SHALL be true only in ActiveFlight; it SHALL be false in all other states
+15. WHEN telemetry values are NaN or Inf THEN the adapter SHALL mark those fields as invalid, transition to Faulted on repeated violations (configurable threshold), and log at most once per 5 seconds
+16. WHEN attitude or velocity values change by more than physically plausible amounts in one frame THEN the adapter SHALL drop that packet and increment a sanity_violation counter
+17. WHEN aircraft changes THEN the adapter SHALL detect via TITLE SimVar and trigger profile switching within 500ms
+18. WHEN implementing THEN the adapter SHALL be read-only with no event injection to minimize legal and safety risk
+19. WHEN connection is lost THEN the adapter SHALL mark all BusSnapshot fields as invalid and transition to Disconnected state
 
 #### Documentation
 
@@ -72,17 +77,16 @@ This specification defines the target for Flight Hub v1:
 1. WHEN implementing THEN the adapter SHALL support UDP data output mode where users configure X-Plane's "Data Output" screen to send to Flight Hub's listening port
 2. WHEN receiving UDP packets THEN the adapter SHALL parse the DATA packet format with 36-byte records per data group (4-byte index + 8×4-byte floats)
 3. WHEN mapping data groups THEN the adapter SHALL support: group 3 (speeds: IAS, TAS, GS), group 4 (Mach, VVI, g-load), group 16 (angular velocities P/Q/R), group 17 (pitch/roll/heading), group 18 (alpha/beta), group 21 (body velocities)
-4. WHEN mapping data groups THEN the adapter SHALL convert: group 17 angles from degrees to ValidatedAngle, group 16 rates from deg/s to rad/s, group 3 speeds from knots to ValidatedSpeed
-5. WHEN mapping DataRefs THEN the adapter SHALL explicitly document unit conversions per DataRef in code comments and mapping docs, using BusSnapshot typed fields
-6. WHEN a DataRef is missing from UDP output THEN the adapter SHALL gracefully handle missing groups without crashing
-7. WHEN implementing UDP-only mode THEN the adapter SHALL document that aircraft identity may be unavailable or inferred poorly, with true identity-based profile switching requiring the plugin
+4. WHEN mapping data groups THEN the adapter SHALL convert: group 17 angles from degrees to radians, group 16 rates from deg/s to rad/s, group 3 speeds from knots to m/s
+5. WHEN mapping data groups THEN the adapter SHALL explicitly document unit conversions per data group in code comments and mapping docs
+6. WHEN a data group is missing from UDP output THEN the adapter SHALL gracefully handle missing groups without crashing
+7. WHEN implementing UDP-only mode THEN the adapter SHALL always set sim = XPLANE and MAY set a coarse aircraft_class (e.g., fixed-wing / helicopter) based on available data; precise aircraft identity SHALL be treated as 'unknown' unless provided by a plugin
 8. WHEN implementing future plugin THEN it SHALL register a flight loop callback via XPLMRegisterFlightLoopCallback at maximum rate (period = 0)
 9. WHEN implementing future plugin THEN the flight loop SHALL read required DataRefs, write to lock-free queue, and return quickly with no blocking I/O or allocations
 10. WHEN implementing future plugin THEN it SHALL communicate with Flight Hub via UDP or named pipe with binary packet format containing version header and timestamp
 11. WHEN implementing future plugin THEN the plugin adapter SHALL populate the same BusSnapshot fields as the UDP adapter and SHALL be a drop-in replacement at the bus boundary
 12. WHEN aircraft changes THEN the adapter SHALL detect via aircraft path/name (plugin mode) or heuristics (UDP mode) and trigger profile switching
 13. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and transition to disconnected state
-14. WHEN implementing THEN the adapter SHALL provide web API integration for querying X-Plane state via HTTP endpoints
 
 #### Documentation
 
@@ -99,43 +103,64 @@ This specification defines the target for Flight Hub v1:
 2. WHEN installing THEN the system SHALL check for existing Export.lua in Saved Games\DCS\Scripts\ and append a dofile reference rather than overwriting
 3. WHEN no Export.lua exists THEN the installer SHALL create a minimal one that dofiles Flight Hub's script and preserves compatibility with future tools
 4. WHEN implementing the export script THEN it SHALL define LuaExportStart, LuaExportStop, and LuaExportAfterNextFrame hooks
-5. WHEN exporting data THEN the script SHALL use only self-aircraft functions: LoGetSelfData, LoGetIndicatedAirSpeed, LoGetAccelerationUnits, LoGetAngleOfAttack, LoGetTrueAirSpeed, LoGetAltitudeAboveGroundLevel
-6. WHEN exporting data THEN the adapter SHALL normalize all values to the canonical BusSnapshot typed fields and document any non-obvious unit conversions in code comments
-7. WHEN export functions return nil THEN the script SHALL handle gracefully by marking fields invalid without spamming logs or crashing
-8. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL annotate MP status via mp_detected flag but SHALL NOT invalidate self-aircraft telemetry
-9. WHEN MP restrictions prevent access to world objects THEN the adapter SHALL continue exporting self-aircraft data (attitude, velocities, g-load, IAS/TAS, AoA) which are allowed by integrity check
-10. WHEN exporting data THEN the script SHALL NOT export world objects, RWR data, or tactical information that could provide unfair advantage
-11. WHEN sending data THEN the script SHALL use non-blocking UDP to localhost with target rate of 60Hz via LuaExportActivityNextEvent
-12. WHEN aircraft changes THEN the adapter SHALL detect via unit type (self_data.Name) and trigger profile switching
-13. WHEN uninstalling THEN the system SHALL restore the backed-up original Export.lua if one existed (with .flighthub_backup extension)
-14. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and log the disconnection
-15. WHEN implementing the Lua script THEN it SHALL properly chain to existing Export.lua hooks by storing previous hook functions and calling them before/after Flight Hub logic
+5. WHEN implementing the Lua script THEN it SHALL properly chain to existing Export.lua hooks by storing previous hook functions and calling them in a deterministic order (existing tools first or last, as documented), and SHALL NOT drop or shadow any existing Export.lua hooks
+6. WHEN exporting data THEN the script SHALL use only self-aircraft functions: LoGetSelfData, LoGetIndicatedAirSpeed, LoGetAccelerationUnits, LoGetAngleOfAttack, LoGetTrueAirSpeed, LoGetAltitudeAboveGroundLevel
+7. WHEN exporting data THEN the adapter SHALL normalize all values to the canonical BusSnapshot fields and document any non-obvious unit conversions in code comments
+8. WHEN export functions return nil THEN the script SHALL handle gracefully by marking fields invalid without spamming logs or crashing
+9. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL continue exporting self-aircraft attitude, velocities, g-load, IAS/TAS, and AoA
+10. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL NOT export world objects, RWR data, or tactical information
+11. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL annotate MP status via mp_detected for UI/logging without invalidating self-aircraft telemetry
+12. WHEN sending data THEN the script SHALL use non-blocking UDP to localhost with target rate of 60Hz via LuaExportActivityNextEvent
+13. WHEN aircraft changes THEN the adapter SHALL detect via unit type (self_data.Name) and trigger profile switching
+14. WHEN uninstalling THEN the system SHALL restore the backed-up original Export.lua if one existed (with .flighthub_backup extension)
+15. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and log the disconnection
 
 #### Documentation
 
 1. WHEN documenting THEN the adapter SHALL maintain a mapping table in docs/integration/dcs.md listing each Lua API function → BusSnapshot field mapping with units
 2. WHEN documenting THEN the system SHALL maintain MP integrity check compliance documentation explaining which data is exported and why it's allowed
 
-### Requirement 4: Normalized Telemetry Bus (BUS-01)
+### Requirement 4: Normalized Telemetry Bus - Core (BUS-CORE-01)
 
-**User Story:** As a Flight Hub developer, I want a canonical BusSnapshot structure with clear unit conventions, so that all simulator adapters feed a consistent data model to the FFB and profile systems.
+**User Story:** As a Flight Hub developer, I want a canonical BusSnapshot structure with clear unit conventions for core telemetry required for FFB and profile switching, so that all simulator adapters feed a consistent data model.
 
 #### Acceptance Criteria
 
-1. WHEN defining BusSnapshot THEN it SHALL include: sim (SimId enum), aircraft (AircraftId with ICAO and variant), timestamp (monotonic nanoseconds)
-2. WHEN defining kinematics THEN it SHALL use validated types: ValidatedSpeed for ias/tas/ground_speed, ValidatedAngle for aoa/sideslip/bank/pitch/heading, GForce for g-forces, Mach for mach number
-3. WHEN defining kinematics THEN it SHALL include: vertical_speed (feet per minute), g_force (vertical), g_lateral, g_longitudinal
-4. WHEN defining aircraft configuration THEN it SHALL include: GearState (per-gear positions), flaps/spoilers (Percentage), AutopilotState, ap_altitude/ap_heading/ap_speed targets, LightsConfig, fuel (HashMap per tank)
-5. WHEN defining helicopter data THEN it SHALL include optional HeloData: nr/np/torque/collective (Percentage), pedals (-100 to 100)
-6. WHEN defining engine data THEN it SHALL include Vec<EngineData>: index, running, rpm, manifold_pressure, egt, cht, fuel_flow, oil_pressure, oil_temperature
-7. WHEN defining environment THEN it SHALL include: altitude/pressure_altitude (feet), oat (Celsius), wind_speed/wind_direction, visibility (statute miles), cloud_coverage
-8. WHEN defining navigation THEN it SHALL include: latitude/longitude (degrees), ground_track, distance_to_dest/time_to_dest, active_waypoint
-9. WHEN using typed values THEN the system SHALL enforce validation at construction: Percentage (0-100), GForce (-20 to 20), Mach (0-5), ValidatedSpeed (0-1000 knots or 0-500 m/s), ValidatedAngle (-180 to 180 degrees or -π to π radians)
-10. WHEN normalizing units THEN adapters SHALL use the validated types which handle unit conversions: ValidatedSpeed.to_knots(), ValidatedAngle.to_degrees()
-11. WHEN defining coordinate frames THEN all adapters SHALL populate fields using standard aerospace conventions: bank/pitch/heading for attitude, positive values per standard definitions
-12. WHEN the bus schema evolves THEN it SHALL use additive-only changes with version field to maintain backward compatibility
-13. WHEN validating snapshots THEN the system SHALL check: unique engine indices, helicopter pedals in range (-100 to 100), all typed fields within their defined ranges
-14. WHEN querying snapshot age THEN the system SHALL provide age_ms() method returning milliseconds since snapshot creation
+1. WHEN defining BusSnapshot core fields THEN it SHALL include: sim identifier (enum), aircraft identifier with ICAO and variant, timestamp (monotonic nanoseconds)
+2. WHEN defining attitude THEN it SHALL include: bank, pitch, heading fields with explicit units and validated range constraints (e.g., -180° to +180° or -π to +π radians)
+3. WHEN defining angular rates THEN it SHALL include: p, q, r fields with explicit units (rad/s) and validated range constraints
+4. WHEN defining velocities THEN it SHALL include: indicated airspeed, true airspeed, vertical speed fields with explicit units (m/s for IAS/TAS, m/s for vertical speed) and validated range constraints (e.g., default 0-500 kts equivalent or 0-260 m/s)
+5. WHEN defining velocities THEN it SHALL include: body velocity components (forward, lateral, vertical) with explicit units (m/s)
+6. WHEN defining kinematics THEN it SHALL include: vertical g-load, lateral g-load, longitudinal g-load fields with explicit units and validated range constraints (e.g., -20g to +20g)
+7. WHEN defining aerodynamics THEN it SHALL include: angle of attack, sideslip angle fields with explicit units (radians) and validated range constraints
+8. WHEN defining aircraft state THEN it SHALL include: on-ground flag, gear handle position, flaps handle position, normalized gear positions (0-1), normalized flaps position (0-1)
+9. WHEN defining control inputs THEN it SHALL include: stick/yoke position, rudder position, throttle position with normalized ranges and explicit units
+10. WHEN defining trim state THEN it SHALL include: elevator trim, aileron trim, rudder trim with normalized ranges
+11. WHEN defining validity THEN it SHALL include: safe_for_ffb flag and per-field validity indicators
+12. WHEN adapters convert from simulator units THEN they SHALL convert to the canonical bus units (e.g., FPM → m/s, degrees → radians, knots → m/s) and document conversions in mapping docs
+13. WHEN defining coordinate frames THEN all adapters SHALL populate fields using standard aerospace conventions: bank/pitch/heading for attitude, positive values per standard definitions
+14. WHEN the bus schema evolves THEN it SHALL use additive-only changes with version field to maintain backward compatibility
+15. WHEN querying snapshot age THEN the system SHALL expose an API to compute snapshot age in milliseconds
+
+#### Documentation
+
+1. WHEN documenting THEN the BusSnapshot structure SHALL be fully documented in docs/ with field definitions, units, coordinate frames, and sign conventions
+
+### Requirement 5: Normalized Telemetry Bus - Extended (BUS-EXTENDED-01)
+
+**User Story:** As a Flight Hub developer, I want extended telemetry fields for advanced features, so that future capabilities can leverage richer simulator data without blocking v1 core functionality.
+
+#### Acceptance Criteria
+
+1. WHEN defining extended engine data THEN it SHALL include a per-engine list of engines with: index, running flag, rpm, manifold pressure, EGT, CHT, fuel flow, oil pressure, oil temperature with explicit units
+2. WHEN defining extended fuel data THEN it SHALL include fuel quantities per tank, addressable by tank identifier, with explicit units
+3. WHEN defining extended helicopter data THEN it SHALL include optional helicopter telemetry block (present only when provided by the simulator): rotor RPM (Nr), engine RPM (Np), torque, collective position, pedal position with explicit units and ranges
+4. WHEN defining extended environment THEN it SHALL include: altitude, pressure altitude, outside air temperature, wind speed, wind direction, visibility, cloud coverage with explicit units
+5. WHEN defining extended navigation THEN it SHALL include: latitude, longitude, ground track, distance to destination, time to destination, active waypoint identifier with explicit units
+6. WHEN defining extended autopilot THEN it SHALL include: autopilot state, altitude target, heading target, speed target with explicit units
+7. WHEN defining extended lights THEN it SHALL include: lights configuration (beacon, nav, strobe, landing, taxi, etc.) as boolean flags
+8. WHEN validating extended snapshots THEN the system SHALL check: unique engine indices, helicopter pedals in valid range, all fields within their defined ranges
+9. WHEN implementing v1 THEN extended fields MAY be partially implemented; full coverage is reserved for later versions
 
 #### Documentation
 
@@ -175,10 +200,12 @@ This specification defines the target for Flight Hub v1:
 6. WHEN NaN or Inf appears in FFB pipeline THEN the system SHALL trigger fault handler and ramp to zero within 50ms
 7. WHEN device reports over-temp or over-current THEN the system SHALL immediately disable FFB and latch fault state
 8. WHEN device disconnects THEN the system SHALL detect within 100ms and ensure outputs were ramped to safe within 50ms
-9. WHEN in SafeTorque/Faulted state THEN the system SHALL stop issuing any non-zero torque commands, continue to process inputs and telemetry for UI/debugging, and surface a latched fault indicator to UI/telemetry until power cycle or explicit "clear fault" command
-10. WHEN fault occurs THEN the blackbox recorder SHALL capture at least: BusSnapshot at ≥250 Hz, FFB setpoints and actual device feedback, for 2 seconds before and 1 second after the fault trigger
-11. WHEN in SafeTorque state THEN the system SHALL require power cycle to clear latched faults and re-enable high-torque mode
-12. WHEN implementing emergency stop THEN the system SHALL provide both UI button and hardware button (if supported) to immediately disable FFB
+9. WHEN faults are categorized THEN hardware-critical faults (e.g., device over-temp, over-current) SHALL require a power cycle to re-enable high-torque mode
+10. WHEN faults are categorized THEN transient faults (e.g., NaN in pipeline, USB OUT stall) MAY be cleared via explicit "clear fault" user action after the cause is resolved
+11. WHEN in SafeTorque/Faulted state THEN the system SHALL stop issuing any non-zero torque commands, continue to process inputs and telemetry for UI/debugging, and surface a latched fault indicator to UI/telemetry
+12. WHEN fault occurs THEN the blackbox recorder SHALL capture at least: BusSnapshot at ≥250 Hz, FFB setpoints and actual device feedback, for 2 seconds before and 1 second after the fault trigger
+13. WHEN storing blackbox recordings THEN they SHALL be stored in a bounded, rotating log (size- or age-limited) to prevent unbounded disk usage
+14. WHEN implementing emergency stop THEN the system SHALL provide both UI button and hardware button (if supported) to immediately disable FFB
 
 ### Requirement 7: Windows Runtime Scheduling (WIN-RT-01)
 
@@ -224,14 +251,16 @@ This specification defines the target for Flight Hub v1:
 1. WHEN distributing Windows binaries THEN all EXE and DLL files SHALL be signed with an OV or EV code signing certificate
 2. WHEN building releases THEN CI SHALL automatically sign all binaries before packaging
 3. WHEN creating Windows installer THEN it SHALL be packaged as MSI and signed with the same certificate
-4. WHEN installing on Windows THEN the installer SHALL: install main EXE and libraries, optionally deploy X-Plane plugin to configured path, optionally install DCS Export.lua shim with backup of original
-5. WHEN installing THEN the installer SHALL display product posture statement and EULA summary
-6. WHEN installing THEN sim integration components SHALL be opt-in toggles, not installed by default
-7. WHEN uninstalling on Windows THEN the uninstaller SHALL: remove installed binaries, remove X-Plane plugin if installed, restore backed-up Export.lua if it existed
-8. WHEN distributing Linux binaries THEN the system SHALL provide AppImage, .deb, and .rpm packages
-9. WHEN installing on Linux THEN packages SHALL include udev rules for device access without root
-10. WHEN documenting Linux install THEN instructions SHALL cover: adding user to required groups (input, plugdev), optional RT priority configuration via limits.conf
-11. WHEN implementing THEN the system SHALL NOT ship custom kernel-mode drivers in v1; where virtual devices are required on Windows, the system MAY depend on third-party signed drivers (e.g., ViGEmBus), provided their licenses are included in installer documentation
+4. WHEN installing on Windows THEN core Flight Hub binaries MAY be installed per-user
+5. WHEN installing simulator integration components THEN installation of X-Plane plugin, DCS Export.lua shim, and any optional virtual device drivers MAY require elevated privileges and per-machine install scope; the installer SHALL surface these options explicitly
+6. WHEN installing on Windows THEN the installer SHALL: install main EXE and libraries, optionally deploy X-Plane plugin to configured path, optionally install DCS Export.lua shim with backup of original
+7. WHEN installing THEN the installer SHALL display product posture statement and EULA summary
+8. WHEN installing THEN sim integration components SHALL be opt-in toggles, not installed by default
+9. WHEN uninstalling on Windows THEN the uninstaller SHALL: remove installed binaries, remove X-Plane plugin if installed, restore backed-up Export.lua if it existed
+10. WHEN distributing Linux binaries THEN the system SHALL provide at least one native Linux package format (e.g., AppImage or .deb); additional formats (e.g., .rpm) MAY be added as needed
+11. WHEN installing on Linux THEN packages SHALL include udev rules for device access without root
+12. WHEN documenting Linux install THEN instructions SHALL cover: adding user to required groups (input, plugdev), optional RT priority configuration via limits.conf
+13. WHEN implementing THEN the system SHALL NOT ship custom kernel-mode drivers in v1; where virtual devices are required on Windows, the system MAY depend on third-party signed drivers (e.g., ViGEmBus), provided their licenses are included in installer documentation
 
 #### Documentation
 
@@ -262,14 +291,15 @@ This specification defines the target for Flight Hub v1:
 
 1. WHEN testing adapters THEN each SHALL have a unit test suite that feeds known raw values and asserts correct BusSnapshot content
 2. WHEN testing MSFS adapter THEN tests SHALL verify: unit conversions (degrees to radians, feet to meters, knots to m/s), state machine transitions, sanity gate behavior with NaN/Inf values
-3. WHEN testing X-Plane adapter THEN tests SHALL verify: UDP packet parsing, DataRef mapping, handling of missing DataRefs
+3. WHEN testing X-Plane adapter THEN tests SHALL verify: UDP packet parsing, data group mapping, handling of missing data groups
 4. WHEN testing DCS adapter THEN tests SHALL verify: Lua value parsing, nil handling, MP-safe mode restrictions
 5. WHEN implementing integration tests THEN the system SHALL use recorded telemetry fixtures from each sim for replay testing
 6. WHEN implementing fixtures THEN each simulator adapter's unit tests SHALL include at least one recorded fixture file per sim version family (e.g., MSFS 2020, X-Plane 12, DCS stable) stored under tests/fixtures
-7. WHEN testing connection handling THEN tests SHALL verify: reconnection with exponential backoff, graceful handling of sim process start/stop, proper cleanup on disconnect
-8. WHEN testing sanity gates THEN tests SHALL inject: NaN/Inf values, physically implausible jumps, rapid state transitions
-9. WHEN implementing cmd: tests THEN the system SHALL provide: cargo xtask validate-msfs-telemetry, cargo xtask validate-xplane-telemetry, cargo xtask validate-dcs-export
-10. WHEN testing FFB safety THEN tests SHALL verify: torque clamping, rate limiting, fault detection and response, safe ramp-down on disconnect
+7. WHEN implementing fixtures THEN they SHALL be checked into version control under tests/fixtures and MUST NOT depend on untracked local captures
+8. WHEN testing connection handling THEN tests SHALL verify: reconnection with exponential backoff, graceful handling of sim process start/stop, proper cleanup on disconnect
+9. WHEN testing sanity gates THEN tests SHALL inject: NaN/Inf values, physically implausible jumps, rapid state transitions
+10. WHEN implementing cmd: tests THEN the system SHALL provide: cargo xtask validate-msfs-telemetry, cargo xtask validate-xplane-telemetry, cargo xtask validate-dcs-export
+11. WHEN testing FFB safety THEN tests SHALL verify: torque clamping, rate limiting, fault detection and response, safe ramp-down on disconnect
 
 #### Documentation
 
@@ -284,13 +314,14 @@ This specification defines the target for Flight Hub v1:
 1. WHEN testing Windows RT THEN tests SHALL verify: MMCSS registration succeeds, thread priority is elevated, power throttling is disabled, QPC provides monotonic timestamps
 2. WHEN testing Linux RT THEN tests SHOULD verify: SCHED_FIFO acquisition (when permitted), mlockall succeeds, clock_nanosleep provides accurate timing, fallback to normal priority works
 3. WHEN measuring jitter THEN tests SHALL run for ≥10 minutes and compute p99 of tick interval error with first 5s warm-up discarded
-4. WHEN testing on hardware-backed CI runners THEN the system SHALL verify 250Hz axis loop achieves p99 jitter ≤0.5ms; on virtualized runners, the jitter test MAY report metrics without failing the build
-5. WHEN testing HID writes on hardware-backed CI runners THEN the system SHALL measure and verify p99 latency ≤300μs; when a tagged hardware runner is unavailable, the test MAY be skipped
-6. WHEN testing power management THEN tests SHALL verify: PowerSetRequest is called when active, requests are cleared when idle, system can sleep when Flight Hub is idle
-7. WHEN testing FFB timing THEN tests SHALL verify: torque ramp to zero completes within 50ms on fault, effect updates occur at target rate (500-1000Hz for raw torque)
-8. WHEN implementing soak tests THEN the system SHALL run 24-48h with synthetic telemetry and verify: zero missed ticks, RSS delta <10%, no memory leaks
-9. WHEN testing THEN CI SHALL include quality gates on hardware-backed runners that fail builds if: 250Hz p99 jitter >0.5ms, HID write p99 >300μs, any blackbox drops in 10-minute capture
-10. WHEN testing cross-platform THEN the system SHALL run timing tests on both Intel and AMD processors to catch platform-specific issues
+4. WHEN testing on hardware-backed CI runners THEN the system SHALL verify 250Hz axis loop achieves p99 jitter ≤0.5ms
+5. WHEN testing on virtualized CI runners THEN the jitter test MUST run in report-only mode and MUST NOT fail the build
+6. WHEN testing HID writes on hardware-backed CI runners THEN the system SHALL measure and verify p99 latency ≤300μs; when a tagged hardware runner is unavailable, the test MAY be skipped
+7. WHEN testing power management THEN tests SHALL verify: PowerSetRequest is called when active, requests are cleared when idle, system can sleep when Flight Hub is idle
+8. WHEN testing FFB timing THEN tests SHALL verify: torque ramp to zero completes within 50ms on fault, effect updates occur at target rate (500-1000Hz for raw torque)
+9. WHEN implementing soak tests THEN the system SHALL run 24-48h with synthetic telemetry and verify: zero missed ticks, RSS delta <10%, no memory leaks
+10. WHEN testing THEN CI SHALL include quality gates on hardware-backed runners that fail builds if: 250Hz p99 jitter >0.5ms, HID write p99 >300μs, any blackbox drops in 10-minute capture
+11. WHEN testing cross-platform THEN the system SHALL run timing tests on both Intel and AMD processors to catch platform-specific issues
 
 ## CI Quality Gates
 
@@ -298,14 +329,14 @@ The following quality gates are enforced as build requirements:
 
 **QG-SIM-MAPPING (MUST):** Fail if any simulator adapter lacks complete mapping table documentation.
 
-**QG-UNIT-CONV (MUST):** Fail if unit conversion tests don't cover all BusSnapshot fields populated by each adapter.
+**QG-UNIT-CONV (MUST):** Fail if unit conversion tests don't cover all BusSnapshot fields populated by each v1 adapter.
 
 **QG-SANITY-GATE (MUST):** Fail if sanity gate tests don't inject NaN/Inf and verify proper handling.
 
 **QG-FFB-SAFETY (MUST):** Fail if FFB safety tests don't verify torque ramp-down within 50ms on all fault types.
 
-**QG-RT-JITTER (MUST):** Fail if 250Hz p99 jitter >0.5ms on CI runners.
+**QG-RT-JITTER (MUST):** Fail if 250Hz p99 jitter >0.5ms on hardware-backed CI runners; on virtualized CI runners the jitter test MUST run in report-only mode and MUST NOT fail the build.
 
-**QG-HID-LATENCY (MUST):** Fail if HID write p99 >300μs on physical test hardware.
+**QG-HID-LATENCY (MUST):** Fail if HID write p99 >300μs on hardware-backed CI runners; when a tagged hardware runner is unavailable, the test MAY be skipped.
 
 **QG-LEGAL-DOC (MUST):** Fail if product posture document is not present or not referenced in required locations.
