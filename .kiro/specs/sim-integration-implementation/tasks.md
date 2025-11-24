@@ -174,14 +174,21 @@ All context documents (requirements, design) are available during implementation
   - Test malformed packet handling
   - _Requirements: XPLANE-INT-01.2, XPLANE-INT-01.6, SIM-TEST-01.3_
 
-- [ ] 8. Review and enhance X-Plane telemetry mapping and connection monitoring
+- [x] 8. Review and enhance X-Plane telemetry mapping and connection monitoring
+
+
+
+
+
   - Review existing data group → BusSnapshot field mapping with unit conversions
   - Verify connection timeout detection (2 seconds)
   - Verify connection timeout metrics are exposed via shared metrics system (Task 41) under sim.xplane.* namespace
   - Verify aircraft identity handling for UDP-only mode (sim=XPLANE, coarse aircraft_class, identity='unknown')
   - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.7, XPLANE-INT-01.13_
 
-- [ ] 8.1 Write unit tests for X-Plane telemetry mapping
+- [x] 8.1 Write unit tests for X-Plane telemetry mapping
+
+
   - Test angle conversion (degrees → radians)
   - Test rate conversion (deg/s → rad/s)
   - Test speed conversion (knots → m/s)
