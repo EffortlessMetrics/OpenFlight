@@ -145,10 +145,10 @@ impl SafetyEnvelope {
         };
 
         // **Requirement FFB-SAFETY-01.6**: Handle fault ramp-down
-        // If in fault state, override with ramp-to-zero
-        let target_torque = if let Some(fault_time) = self.state.fault_timestamp {
+        // If in fault state, override with direct ramp-to-zero (bypasses rate limiting)
+        let (final_torque, final_slew_rate) = if let Some(fault_time) = self.state.fault_timestamp {
             let elapsed = now.duration_since(fault_time);
-            if elapsed >= self.config.fault_ramp_time {
+            let torque = if elapsed >= self.config.fault_ramp_time {
                 // Ramp complete, stay at zero
                 0.0
             } else {
@@ -156,35 +156,42 @@ impl SafetyEnvelope {
                 let progress = elapsed.as_secs_f32() / self.config.fault_ramp_time.as_secs_f32();
                 let ramp_factor = 1.0 - progress;
                 self.state.fault_initial_torque_nm * ramp_factor
-            }
+            };
+            (torque, 0.0) // Reset slew rate during fault
         } else {
-            target_torque
+            // Normal operation: apply all safety constraints
+
+            // **Requirement FFB-SAFETY-01.1**: Clamp to device maximum
+            let clamped_torque = target_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
+
+            // Calculate desired change
+            let desired_delta = clamped_torque - self.state.last_torque_nm;
+            let _desired_slew_rate = desired_delta / dt;
+
+            // **Requirement FFB-SAFETY-01.3**: Apply slew rate limiting
+            let max_delta = self.config.max_slew_rate_nm_per_s * dt;
+            let limited_delta = desired_delta.clamp(-max_delta, max_delta);
+            let limited_slew_rate = limited_delta / dt;
+
+            // **Requirement FFB-SAFETY-01.3**: Apply jerk limiting
+            let desired_jerk = (limited_slew_rate - self.state.last_slew_rate_nm_per_s) / dt;
+            let max_jerk = self.config.max_jerk_nm_per_s2;
+            let limited_jerk = desired_jerk.clamp(-max_jerk, max_jerk);
+            let final_slew_rate = self.state.last_slew_rate_nm_per_s + (limited_jerk * dt);
+
+            // Calculate final torque
+            let final_delta = final_slew_rate * dt;
+            let final_torque = self.state.last_torque_nm + final_delta;
+
+            // Final clamp to ensure we never exceed limits due to numerical errors
+            let clamped_final = final_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
+            
+            // Recalculate actual slew rate based on clamped output
+            let actual_delta = clamped_final - self.state.last_torque_nm;
+            let actual_slew_rate = actual_delta / dt;
+            
+            (clamped_final, actual_slew_rate)
         };
-
-        // **Requirement FFB-SAFETY-01.1**: Clamp to device maximum
-        let clamped_torque = target_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
-
-        // Calculate desired change
-        let desired_delta = clamped_torque - self.state.last_torque_nm;
-        let _desired_slew_rate = desired_delta / dt;
-
-        // **Requirement FFB-SAFETY-01.3**: Apply slew rate limiting
-        let max_delta = self.config.max_slew_rate_nm_per_s * dt;
-        let limited_delta = desired_delta.clamp(-max_delta, max_delta);
-        let limited_slew_rate = limited_delta / dt;
-
-        // **Requirement FFB-SAFETY-01.3**: Apply jerk limiting
-        let desired_jerk = (limited_slew_rate - self.state.last_slew_rate_nm_per_s) / dt;
-        let max_jerk_delta = self.config.max_jerk_nm_per_s2 * dt;
-        let limited_jerk = desired_jerk.clamp(-max_jerk_delta, max_jerk_delta);
-        let final_slew_rate = self.state.last_slew_rate_nm_per_s + (limited_jerk * dt);
-
-        // Calculate final torque
-        let final_delta = final_slew_rate * dt;
-        let final_torque = self.state.last_torque_nm + final_delta;
-
-        // Final clamp to ensure we never exceed limits due to numerical errors
-        let final_torque = final_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
 
         // Update state
         self.state.last_torque_nm = final_torque;

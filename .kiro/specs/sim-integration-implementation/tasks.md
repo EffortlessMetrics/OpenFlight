@@ -241,7 +241,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 **Goal:** FFB pipeline exists, is safe by design, and is integrated with DirectInput/XInput. Can be disabled globally while hardening runtime.
 
 **Exit Criteria:**
-- [ ] Pure-Rust tests for SafetyEnvelope and mapping logic pass
+- [x] Pure-Rust tests for SafetyEnvelope and mapping logic pass
+
+
+
+
 - [ ] Sim-disabled harness can feed synthetic snapshots into FFB engine
 - [ ] No safety thresholds violated in tests
 - [ ] Faults produce blackbox dumps and latched indicators
