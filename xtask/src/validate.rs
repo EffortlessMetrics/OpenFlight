@@ -152,8 +152,46 @@ pub fn run_validate() -> Result<()> {
         }
     }
 
-    // Step 4: Public API Verification
-    println!("📦 Step 4: Public API Verification");
+    // Step 4: Quality Gates
+    println!("🚦 Step 4: Quality Gates");
+    println!("─────────────────────────────");
+    let qg_results = run_quality_gates();
+    match &qg_results {
+        Ok(gate_results) => {
+            for gate_result in gate_results {
+                if gate_result.passed {
+                    println!("✅ {} passed", gate_result.gate_name);
+                    results.push(CheckResult::new(&gate_result.gate_name, true));
+                } else {
+                    println!("❌ {} failed", gate_result.gate_name);
+                    let details = gate_result
+                        .details
+                        .clone()
+                        .unwrap_or_else(|| "No details provided".to_string());
+                    eprintln!("   {}", details);
+                    results.push(CheckResult::with_details(
+                        &gate_result.gate_name,
+                        false,
+                        details,
+                    ));
+                    all_passed = false;
+                }
+            }
+            println!();
+        }
+        Err(e) => {
+            eprintln!("❌ Quality gate checks failed: {}\n", e);
+            results.push(CheckResult::with_details(
+                "Quality Gates",
+                false,
+                e.to_string(),
+            ));
+            all_passed = false;
+        }
+    }
+
+    // Step 5: Public API Verification
+    println!("📦 Step 5: Public API Verification");
     println!("─────────────────────────────");
     let api_result = verify_public_api();
     match &api_result {
@@ -181,8 +219,8 @@ pub fn run_validate() -> Result<()> {
         }
     }
 
-    // Step 5: Generate Report
-    println!("📄 Step 5: Generating Validation Report");
+    // Step 6: Generate Report
+    println!("📄 Step 6: Generating Validation Report");
     println!("─────────────────────────────");
     generate_validation_report(&results, &cross_ref_details)?;
     println!("✅ Report generated at docs/validation_report.md\n");
@@ -409,6 +447,36 @@ fn verify_public_api() -> Result<bool> {
             Ok(false)
         }
     }
+}
+
+/// Run all quality gate checks.
+///
+/// This function executes all quality gates defined in the sim-integration-implementation spec:
+/// - QG-SIM-MAPPING: Verify simulator mapping documentation exists
+/// - Additional gates will be added as they are implemented
+///
+/// # Returns
+///
+/// Returns `Ok(Vec<QualityGateResult>)` with results for each gate, or an error
+/// if the quality gate checks cannot be performed.
+fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
+    let mut results = Vec::new();
+
+    // QG-SIM-MAPPING: Check for simulator mapping documentation
+    println!("  Checking QG-SIM-MAPPING (simulator mapping docs)...");
+    let sim_mapping_result = crate::quality_gates::check_sim_mapping_docs()
+        .context("Failed to check simulator mapping documentation")?;
+    results.push(sim_mapping_result);
+
+    // Future quality gates will be added here:
+    // - QG-UNIT-CONV: Unit conversion test coverage
+    // - QG-SANITY-GATE: Sanity gate tests
+    // - QG-FFB-SAFETY: FFB safety tests
+    // - QG-RT-JITTER: Real-time jitter tests
+    // - QG-HID-LATENCY: HID latency tests
+    // - QG-LEGAL-DOC: Legal documentation
+
+    Ok(results)
 }
 
 /// Validate cross-references between artifacts.

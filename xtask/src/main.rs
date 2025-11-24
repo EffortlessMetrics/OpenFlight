@@ -16,6 +16,7 @@ mod cross_ref;
 mod front_matter;
 mod gherkin;
 mod normalize_docs;
+mod quality_gates;
 mod schema;
 mod validate;
 mod validate_infra;

@@ -40,7 +40,9 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] QG-SIM-MAPPING enabled (checks for file presence)
+- [-] QG-SIM-MAPPING enabled (checks for file presence)
+
+
 - [ ] QG-UNIT-CONV enabled (checks test coverage of all BusSnapshot fields)
 
 ### Task List
@@ -107,7 +109,8 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Document unit conversions, coordinate frames, and sign conventions for each
   - _Requirements: MSFS-INT-01.Doc.*, XPLANE-INT-01.Doc.*, DCS-INT-01.Doc.*_
 
-- [ ] P0.3 Enable Phase 0 CI quality gates
+- [-] P0.3 Enable Phase 0 CI quality gates
+
   **Phase:** 0 - Baseline
   **Status:** Not started
   - Implement QG-SIM-MAPPING: Fail if any adapter lacks complete mapping table documentation
