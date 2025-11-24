@@ -48,6 +48,51 @@ This document reflects the implemented architecture. The core safety, scheduling
 5. **Observable**: Every adapter and runtime component exposes metrics for validation
 6. **Testable**: Recorded fixtures drive integration tests; synthetic loads drive soak tests
 
+### Key Design Decisions and Rationale
+
+**Why SI units on the bus?**
+- Eliminates ambiguity: one canonical representation
+- Simplifies FFB synthesis: no unit conversions in hot path
+- Adapters do conversion once at boundary, consumers never worry about units
+- Trade-off: Adapters must convert, but this is explicit and testable
+
+**Why separate attitude/velocities/aero structs instead of flat Kinematics?**
+- Matches how adapters naturally group data (SimConnect data definitions, X-Plane data groups)
+- Allows per-group validity flags (attitude valid but aero invalid)
+- Clearer field names: `snapshot.attitude.pitch` vs `snapshot.kinematics.pitch`
+- Easier to extend: add new groups without polluting a single large struct
+
+**Why validity flags instead of Option<T>?**
+- Performance: no allocation, no branching on every field access
+- Consumers can choose: use invalid data with caution or skip entirely
+- Sanity gate sets flags, consumers decide policy
+- Matches real-world: partial telemetry is common (e.g., X-Plane UDP missing groups)
+
+**Why SafeTorque as limited envelope, not "off"?**
+- Allows gradual power-up: user can test FFB at low power before full envelope
+- Provides fallback mode if device reports thermal/current warnings
+- Matches real-world device behavior: many wheels have "soft" and "full" modes
+- Trade-off: More complex than binary on/off, but safer and more flexible
+
+**Why one DirectInput effect per axis?**
+- Simpler mental model: pitch effect, roll effect
+- Independent control: update pitch without touching roll
+- Easier debugging: can disable one axis independently
+- Trade-off: Two effects vs one multi-axis effect, but DirectInput overhead is negligible
+
+**Why JSON for DCS Export.lua wire format?**
+- Debuggability: can inspect packets with text tools
+- Ease of implementation: Lua has built-in JSON support
+- Flexibility: easy to add fields without breaking parser
+- Trade-off: Larger packets than binary, but 60Hz @ ~500 bytes is trivial on localhost UDP
+- Future: can swap to binary if profiling shows need
+
+**Why separate Sanity Gate per adapter instead of shared?**
+- Sim-specific thresholds: MSFS GA vs DCS fighter have different plausible rates
+- Sim-specific state machines: MSFS has "Paused", DCS doesn't
+- Adapter-specific metrics: each adapter tracks its own violation count
+- Trade-off: Code duplication, but clearer ownership and easier to tune per-sim
+
 ## Architecture
 
 ### System Context
@@ -119,6 +164,12 @@ The actual implementation uses a sophisticated type-safe approach with validated
 **Actual Data Structure:**
 
 **Unit Convention:** All linear distances and altitudes on the bus are in **meters**. All angles are in **radians**. All speeds are in **m/s**. Adapters convert from simulator-native units to these canonical SI units.
+
+**Coordinate Frame Convention:** 
+- **Attitude angles**: Standard aerospace convention (pitch positive nose up, roll positive right wing down, yaw/heading in radians true heading)
+- **Angular rates**: Body frame (P=roll rate about X axis, Q=pitch rate about Y axis, R=yaw rate about Z axis)
+- **Body velocities**: Aerospace body frame (X=forward, Y=right, Z=down)
+- **All adapters** convert simulator-native frames to these conventions, even if sims differ internally
 
 ```rust
 /// Complete telemetry snapshot published on the bus
@@ -348,6 +399,9 @@ pub struct AircraftId {
 ```rust
 impl BusSnapshot {
     /// Validate all fields in the snapshot
+    /// 
+    /// This validates structural consistency (unique indices, valid ranges for extended fields).
+    /// It does NOT validate plausibility of telemetry values - that's the Sanity Gate's job.
     pub fn validate(&self) -> Result<(), BusTypeError> {
         // Validate engine indices are unique
         let mut engine_indices = std::collections::HashSet::new();
@@ -372,6 +426,10 @@ impl BusSnapshot {
             }
         }
         
+        // Note: Core telemetry fields (attitude, velocities, aero) are NOT range-checked here.
+        // The Sanity Gate handles plausibility checks (NaN/Inf, physically implausible jumps).
+        // This separation keeps validation fast and focused on structural consistency.
+        
         Ok(())
     }
     
@@ -383,6 +441,16 @@ impl BusSnapshot {
         } else {
             0
         }
+    }
+    
+    /// Check if snapshot has NaN or Inf in core telemetry fields
+    pub fn has_nan_or_inf(&self) -> bool {
+        self.attitude.pitch.is_nan() || self.attitude.pitch.is_infinite() ||
+        self.attitude.roll.is_nan() || self.attitude.roll.is_infinite() ||
+        self.attitude.yaw.is_nan() || self.attitude.yaw.is_infinite() ||
+        self.velocities.ias.is_nan() || self.velocities.ias.is_infinite() ||
+        self.velocities.tas.is_nan() || self.velocities.tas.is_infinite() ||
+        self.velocities.vs.is_nan() || self.velocities.vs.is_infinite()
     }
 }
 ```
@@ -625,12 +693,14 @@ pub struct SanityGate {
     violation_count: u32,
     violation_threshold: u32,  // Default: 10
     last_violation_log: Instant,
+    // Configurable thresholds (from aircraft profile or config)
+    max_attitude_rate_rad_per_s: f32,  // Default: π (180°/s for GA), higher for fighters
 }
 
 impl SanityGate {
     pub fn check(&mut self, snapshot: &mut BusSnapshot) {
-        // Check for NaN/Inf
-        if self.has_nan_or_inf(snapshot) {
+        // Check for NaN/Inf using BusSnapshot's built-in method
+        if snapshot.has_nan_or_inf() {
             self.record_violation("NaN or Inf detected");
             self.mark_invalid(snapshot);
             return;
@@ -638,17 +708,51 @@ impl SanityGate {
         
         // Check for physically implausible jumps
         if let (Some(last_att), Some(last_vel)) = (&self.last_attitude, &self.last_velocities) {
-            let dt = (snapshot.bus_timestamp - self.last_timestamp) as f64 / 1e9;
+            let dt = (snapshot.timestamp - self.last_timestamp) as f64 / 1e9;
             
-            // Attitude shouldn't change > 180 deg/s
-            let d_pitch = (snapshot.attitude.pitch - last_att.pitch).abs();
-            if d_pitch / dt > std::f32::consts::PI {
-                self.record_violation("Implausible pitch rate");
-                self.mark_invalid(snapshot);
-                return;
+            if dt > 0.0 && dt < 1.0 {  // Sanity check on dt itself
+                // Pitch and roll: simple absolute difference (no wrap-around)
+                let d_pitch = (snapshot.attitude.pitch - last_att.pitch).abs();
+                let d_roll = (snapshot.attitude.roll - last_att.roll).abs();
+                
+                // Heading: wrap-around aware (179° → -179° is 2°, not 358°)
+                let d_yaw = {
+                    let mut diff = snapshot.attitude.yaw - last_att.yaw;
+                    // Normalize to [-π, π]
+                    while diff > std::f32::consts::PI { diff -= 2.0 * std::f32::consts::PI; }
+                    while diff < -std::f32::consts::PI { diff += 2.0 * std::f32::consts::PI; }
+                    diff.abs()
+                };
+                
+                // Configurable thresholds (default: π rad/s = 180°/s for GA, higher for fighters)
+                let max_rate_rad_per_s = self.max_attitude_rate_rad_per_s;  // From config
+                
+                if d_pitch / dt as f32 > max_rate_rad_per_s {
+                    self.record_violation("Implausible pitch rate");
+                    self.mark_invalid(snapshot);
+                    return;
+                }
+                
+                if d_roll / dt as f32 > max_rate_rad_per_s {
+                    self.record_violation("Implausible roll rate");
+                    self.mark_invalid(snapshot);
+                    return;
+                }
+                
+                if d_yaw / dt as f32 > max_rate_rad_per_s {
+                    self.record_violation("Implausible yaw rate");
+                    self.mark_invalid(snapshot);
+                    return;
+                }
+                
+                // Velocity checks (similar pattern)
+                let d_ias = (snapshot.velocities.ias - last_vel.ias).abs();
+                if d_ias / dt as f32 > 100.0 {  // 100 m/s² = ~10g acceleration
+                    self.record_violation("Implausible IAS change");
+                    self.mark_invalid(snapshot);
+                    return;
+                }
             }
-            
-            // Similar checks for roll, yaw, velocities...
         }
         
         // Update state machine based on sim state
@@ -660,7 +764,7 @@ impl SanityGate {
         // Store minimal state for next check
         self.last_attitude = Some(snapshot.attitude);
         self.last_velocities = Some(snapshot.velocities);
-        self.last_timestamp = snapshot.bus_timestamp;
+        self.last_timestamp = snapshot.timestamp;
     }
     
     fn record_violation(&mut self, reason: &str) {
@@ -2428,6 +2532,41 @@ The export destination is configurable via `~/.config/flighthub/telemetry.toml`.
 
 ## Testing Strategy
 
+### Testing Philosophy
+
+Flight Hub uses a **dual testing approach** that combines unit tests and property-based tests to provide comprehensive coverage:
+
+**Unit Tests:**
+- Verify specific examples and known-good cases
+- Test edge cases (empty inputs, boundary values, error conditions)
+- Fast to run, easy to debug when they fail
+- Provide concrete documentation of expected behavior
+- Example: "120 knots converts to 61.73 m/s"
+
+**Property-Based Tests:**
+- Verify universal properties that should hold across all inputs
+- Generate random inputs to explore the input space
+- Catch bugs that specific examples miss
+- Provide mathematical guarantees about correctness
+- Example: "For any valid angle, converting to radians and back yields the original value"
+
+**Why Both?**
+- Unit tests catch concrete bugs in specific scenarios
+- Property tests verify general correctness across the input space
+- Together they provide defense-in-depth: unit tests are your first line, property tests are your safety net
+- Unit tests document intent, property tests enforce invariants
+
+**When to Use Each:**
+- **Unit test** when you have a specific example or edge case to verify
+- **Property test** when you have a rule that should hold for all inputs
+- **Both** for critical functionality (e.g., unit conversions, sanity gates, FFB safety)
+
+**Property Test Examples:**
+- Round-trip properties: `parse(format(x)) == x` for any x
+- Invariants: `filter(list).length <= list.length` for any list
+- Idempotence: `sort(sort(x)) == sort(x)` for any x
+- Metamorphic: `map(f, map(g, x)) == map(f∘g, x)` for any x
+
 ### Adapter Testing
 
 **Unit Tests with Fixtures:**
@@ -2607,6 +2746,296 @@ Jitter tests are run on **hardware-backed runners** with:
 
 Generic CI nodes (shared VMs, variable CPU allocation) may skip or downgrade jitter tests to avoid false failures. The test harness detects virtualization and adjusts expectations accordingly.
 ```
+
+## Implementation Checklist
+
+Use this checklist when implementing or reviewing adapter/FFB/runtime code:
+
+### BusSnapshot Population
+- [ ] All fields use correct units (meters, radians, m/s)
+- [ ] Coordinate frames match aerospace conventions
+- [ ] Validity flags set after populating each group
+- [ ] `timestamp` field populated with monotonic nanoseconds
+- [ ] `sim` and `aircraft` fields populated correctly
+- [ ] No fields left at default/zero unless intentionally invalid
+
+### Unit Conversions
+- [ ] Source units documented in comments
+- [ ] Conversion constants explicit (not magic numbers)
+- [ ] Unit tests verify conversions with known values
+- [ ] No double-conversions (check if source is already in target units)
+
+### Sanity Gate
+- [ ] Uses `snapshot.has_nan_or_inf()` for NaN/Inf detection
+- [ ] Heading wrap-around handled correctly (normalize to [-π, π])
+- [ ] Thresholds configurable per aircraft profile
+- [ ] State machine transitions documented and tested
+- [ ] `safe_for_ffb` only true in ActiveFlight state
+- [ ] Violation counting and rate-limited logging implemented
+
+### FFB Safety
+- [ ] SafeTorque implements limited envelope (30% max), not zero
+- [ ] Faulted state outputs zero torque
+- [ ] `fault_initial_torque` captured at fault detection
+- [ ] Ramp-to-zero completes within 50ms (tested)
+- [ ] Slew rate and jerk limits enforced
+- [ ] Device capabilities queried or loaded from config
+
+### Adapter Connection Management
+- [ ] Exponential backoff on reconnection (up to 30s)
+- [ ] Connection timeout detection (2s for UDP adapters)
+- [ ] Graceful handling of sim process start/stop
+- [ ] Metrics exposed for connection state and update rate
+- [ ] Proper cleanup on disconnect
+
+### Testing
+- [ ] Unit tests for all unit conversions
+- [ ] Unit tests for sanity gate state transitions
+- [ ] Unit tests for NaN/Inf handling
+- [ ] Fixture-based integration tests with recorded telemetry
+- [ ] Property tests for round-trip conversions (if applicable)
+- [ ] FFB safety tests verify 50ms ramp-down
+
+### Documentation
+- [ ] Mapping table complete (SimVar/DataGroup/Lua → BusSnapshot)
+- [ ] Unit conversions documented in code comments
+- [ ] Coordinate frame conventions documented
+- [ ] Setup instructions for users (X-Plane Data Output, DCS Export.lua)
+
+## Common Implementation Pitfalls and Solutions
+
+This section documents common mistakes and their solutions, based on the QA feedback and design review.
+
+### BusSnapshot Field Access
+
+**Pitfall:** Accessing fields that don't exist (e.g., `snapshot.kinematics.nz_g` when structure uses `snapshot.attitude`, `snapshot.velocities`, etc.)
+
+**Solution:** Always refer to the canonical BusSnapshot structure definition. Use `snapshot.attitude.pitch`, not `snapshot.kinematics.pitch`.
+
+### Unit Conversions
+
+**Pitfall:** Forgetting to convert units, or converting twice (e.g., MSFS "PLANE PITCH DEGREES" is actually in radians, converting again gives wrong values)
+
+**Solution:** 
+- Document source units in comments: `// MSFS returns radians despite "DEGREES" in name`
+- Use explicit conversion constants: `0.3048` for ft→m, `0.514444` for kt→m/s
+- Write unit tests that verify conversions with known values
+
+### Altitude Units
+
+**Pitfall:** Mixing feet and meters for altitudes (e.g., `Environment.altitude` documented as feet but populated with meters)
+
+**Solution:** Bus convention is **meters for all distances**. Adapters convert feet→meters at boundary.
+
+### Validity Flags
+
+**Pitfall:** Forgetting to set `snapshot.valid.attitude = true` after populating attitude fields
+
+**Solution:** Set validity flags immediately after populating the corresponding group. Use pattern:
+```rust
+snapshot.attitude.pitch = ...;
+snapshot.attitude.roll = ...;
+snapshot.valid.attitude = true;  // Set flag after group is complete
+```
+
+### Heading Wrap-Around
+
+**Pitfall:** Treating heading change 179° → -179° as 358° change instead of 2°
+
+**Solution:** Normalize angle differences to [-π, π] before computing rates:
+```rust
+let mut diff = new_yaw - old_yaw;
+while diff > PI { diff -= 2.0 * PI; }
+while diff < -PI { diff += 2.0 * PI; }
+```
+
+### FFB Ramp-Down
+
+**Pitfall:** Using `self.last_setpoint` as initial torque for ramp, but `last_setpoint` changes each tick, causing slow ramp
+
+**Solution:** Capture `fault_initial_torque` exactly once when fault is detected, ramp from that fixed value to zero.
+
+### SafeTorque Semantics
+
+**Pitfall:** Treating `SafeTorque` as "FFB off" and outputting zero torque
+
+**Solution:** `SafeTorque` is a limited envelope (30% of max). Only `Faulted` state outputs zero torque.
+
+### DCS MP Field Naming
+
+**Pitfall:** Using inconsistent field names (`mp_detected`, `mp_limited`, `mp_status`)
+
+**Solution:** Standardize on `mp_detected: bool` throughout Lua and Rust code.
+
+### Sanity Gate Thresholds
+
+**Pitfall:** Hardcoding 180°/s threshold for all aircraft (too strict for fighters, too loose for gliders)
+
+**Solution:** Make `max_attitude_rate_rad_per_s` configurable per aircraft profile. Default: π rad/s for GA.
+
+### DirectInput Effect Lifetime
+
+**Pitfall:** Creating effects every frame instead of creating once and updating parameters
+
+**Solution:** Create effects in `new()` or `create_effects()`, store in `EffectPool`, update via `SetParameters()`.
+
+### Timestamp Fields
+
+**Pitfall:** Using `snapshot.bus_timestamp` (old name) instead of `snapshot.timestamp`
+
+**Solution:** Canonical field is `timestamp: u64` (monotonic nanoseconds). No `bus_timestamp` field exists.
+
+## External Facts Checklist
+
+This section documents external information that must be verified against official sources before v1.1 release. These are details not determined by our architecture but by simulator APIs, OS behavior, device capabilities, and licensing.
+
+### MSFS SimConnect: Units and SimVar Semantics
+
+**Action Required:** Build authoritative SimVar mapping table from official SDK documentation.
+
+**Known Issues:**
+- Some `*DEGREES` SimVars are actually in radians (e.g., `PLANE PITCH DEGREES` returns radians per SDK docs)
+- G FORCE units and sign conventions need explicit verification
+- Gear/flap variables: some are "percent over 100" vs true percentages
+- Control surface POSITION ranges: verify all are truly [-1,1] or if some are [0,1]
+
+**Deliverable:** Complete `docs/integration/msfs-simvar-mapping.md` with:
+- SimVar name → BusSnapshot field mapping
+- Underlying/default unit from SDK
+- Requested unit string in data definition
+- Expected range and sign conventions
+- Any sim-version differences (MSFS 2020 vs 2024)
+
+**Reference:** https://docs.flightsimulator.com (SimVar and Units tables)
+
+### X-Plane: DATA Packet Format and Group Definitions
+
+**Action Required:** Verify UDP packet format and data group semantics against official documentation.
+
+**Known Issues:**
+- Header format: confirm 5-byte header ("DATA" + 1 padding byte) vs 4-byte
+- Record layout: confirm 36 bytes = i32 index + 8×f32 values
+- Data group indices: verify which float index maps to which field for groups 3, 4, 16, 17, 18, 21
+- Coordinate frame and sign conventions for body velocities and angular rates
+
+**Deliverable:** Complete `docs/integration/xplane-data-groups.md` with:
+- Packet format specification (header + record layout)
+- Data group index → field mapping table
+- Unit and sign conventions per group
+- X-Plane 11 vs 12 differences (if any)
+
+**Reference:** XPPython3 UDP docs, Laminar UDP reference (nuclearprojects.com, X-Plane.Org Forum)
+
+### DCS Export.lua: API and Multiplayer Integrity
+
+**Action Required:** Document exact API behavior and MP integrity check compliance.
+
+**Known Issues:**
+- LoGet* function units and coordinate frames need explicit documentation
+- Behavior when data unavailable (SP vs MP, spectator vs pilot, ground vs menu)
+- MP integrity check: confirm self-aircraft data is always allowed
+- Server IC policy: some servers may disable all exports regardless of data type
+
+**Deliverable:** Complete `docs/integration/dcs-export-api.md` with:
+- LoGet* function → BusSnapshot field mapping
+- Coordinate frame and units for each function
+- Behavior when functions return nil
+- MP integrity check whitelist (what's allowed, what's restricted)
+- Detection and handling of IC-disabled servers
+
+**Reference:** Hoggit DCS export wiki (wiki.hoggitworld.com), ED Forums
+
+### DirectInput FFB: Effect Model and Scaling
+
+**Action Required:** Clarify per-axis force model and device capability querying.
+
+**Known Issues:**
+- Per-axis forces: decide between (a) one effect per axis or (b) one multi-axis effect with vector direction
+- Device capabilities: no generic API for max_torque_nm, min_period_us, thermal/current limits
+- Vendor-specific HID feature reports or out-of-band docs needed per device
+
+**Deliverable:**
+- Finalize per-axis API design in `FfbDevice` trait
+- Create `devices/<vid-pid>.toml` config format for device-specific capabilities
+- Document capability query approach (vendor SDKs, calibration procedure, or operator-supplied config)
+
+**Reference:** Microsoft DirectInput FFB docs (Microsoft Learn)
+
+### OS Scheduling: MMCSS, rtkit, and Power Requests
+
+**Action Required:** Verify OS-specific scheduling behavior and edge cases.
+
+**Windows MMCSS:**
+- Confirm "Games" task category exists and provides expected priority boost on Windows 10/11
+- Consider "Pro Audio" for 250 Hz loop (short, regular bursts)
+- Document registry configuration dependencies
+
+**Windows PowerSetRequest:**
+- PowerRequestExecutionRequired implies PowerRequestSystemRequired on S3 systems
+- Modern Standby: execution requests expire after ~5 minutes on DC power
+- Document "power mode not fully honored" warning for Modern Standby systems
+
+**Linux rtkit:**
+- Verify DBus interface signature: `MakeThreadRealtime(u64 thread_id, u32 priority)`
+- Common client bug: passing signed int32 where uint32 expected
+- Document `org.freedesktop.portal.Realtime` proxy vs system bus `RealtimeKit1`
+
+**Deliverable:** Update runtime docs with OS-specific behavior and limitations
+
+**Reference:** Microsoft Learn (MMCSS, PowerSetRequest), rtkit DBus spec
+
+### Packaging and Drivers: ViGEm and udev
+
+**ViGEm Licensing:**
+- License: BSD-3-Clause (free to redistribute)
+- Supported OS: Windows 10/11 only (no Win7)
+- Document version/OS support matrix
+
+**Linux udev:**
+- Group names vary by distro: `input`, `plugdev`, or others
+- Secure-by-default desktops may restrict `/dev/hidraw*` access
+- Document group requirements per target distro (Ubuntu, Fedora, Arch)
+
+**Deliverable:** Update installer docs with OS/distro-specific requirements
+
+**Reference:** ViGEmBus GitHub, distro-specific udev documentation
+
+### Legal and EULA Constraints
+
+**Simulator EULAs:**
+- Many aircraft/scenery vendors: "For personal entertainment only; not approved for flight training"
+- Combination of Flight Hub + specific addon may cross vendor's line for paid training
+- Document: "Check your sim/add-on EULAs before using Flight Hub in commercial or training setups"
+
+**Export Control:**
+- Microsoft and others include general export-control language
+- Acknowledge in legal appendix
+
+**Deliverable:** Update product posture document with EULA and export control notes
+
+### Hardware Behavior (Cannot Be Looked Up)
+
+**Action Required:** Measure and document on target hardware.
+
+**Loop Jitter:**
+- Measure 250 Hz loop jitter on Intel desktop, AMD desktop, laptop with Modern Standby
+- Record p99 jitter per platform
+- Document acceptable thresholds per platform type
+
+**HID Write Latency:**
+- Measure HID write p99 latency on target devices
+- Document per-device latency characteristics
+
+**FFB Device Behavior:**
+- Maximum sustained torque vs peak torque
+- Thermal throttling patterns
+- USB yank / brown-out behavior
+- Keep-alive effect requirements (some devices need periodic updates)
+
+**Deliverable:** Create `docs/hardware-notes/<device>.md` per tested device with:
+- Measured jitter and HID latency
+- Safe `max_torque_nm`, `max_slew_rate_nm_per_s`
+- Vendor quirks and workarounds
 
 ## Security and Legal Compliance
 

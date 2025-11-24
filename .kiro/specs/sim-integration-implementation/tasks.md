@@ -1,661 +1,604 @@
 # Implementation Plan
 
-This task list provides a series of discrete, incremental coding steps to complete and polish the simulator integration layer, force feedback protocols, and platform-specific runtime infrastructure for Flight Hub v1.
+This task list provides a phased, dependency-aware implementation plan for Flight Hub v1. Tasks are organized into phases with clear exit criteria and integrated CI quality gates.
+
+**Implementation Philosophy:**
+- **Phases build on each other**: Adapters → FFB → Runtime → Packaging → CI
+- **CI gates are first-class**: Quality gates are acceptance criteria for phases, not afterthoughts
+- **Test as you build**: Unit tests, property tests, and integration tests are part of each phase
+- **Hardware validation matters**: Jitter and latency tests run on real hardware, not just VMs
 
 **Current Implementation Status:**
-- ✅ Core BusSnapshot structure and types exist in `flight-bus`
-- ✅ MSFS SimConnect adapter exists in `flight-simconnect`
-- ✅ X-Plane UDP adapter exists in `flight-xplane`
-- ✅ DCS Export.lua adapter exists in `flight-dcs-export`
-- ✅ FFB engine framework exists in `flight-ffb`
-- ✅ Real-time scheduler exists in `flight-scheduler`
-- 📋 DirectInput FFB device I/O needs completion
-- 📋 Windows MMCSS/high-res timers need completion
-- 📋 Linux rtkit integration needs completion
-- 📋 Packaging and distribution infrastructure needs implementation
-- 📋 Comprehensive testing and documentation needs completion
+- ✅ Core BusSnapshot structure exists (needs finalization per Phase 0)
+- ✅ MSFS/X-Plane/DCS adapters exist (need completion per Phase 1)
+- � FFBu engine framework exists (API + stubs, integration pending per Phase 2)
+- � Reala-time scheduler exists (basic implementation, MMCSS/rtkit pending per Phase 3)
+- 📋 DirectInput FFB device I/O (stubs exist, real COM calls pending)
+- 📋 Packaging and distribution (not started)
 
-All context documents (requirements, design) are available during implementation. Each task builds on previous tasks to ensure continuous integration and early validation of core functionality.
+**Legend:**
+- ✅ Complete and tested
+- 🔄 In progress (API exists, integration or real implementation pending)
+- 📋 Not started
+- 🚧 Blocked (waiting on dependency)
 
-## Task List
+---
 
-- [x] 1. Review and enhance core BusSnapshot types and validation
+## Phase 0: Baseline Schema and Docs
 
+**Goal:** Lock down canonical BusSnapshot schema and mapping docs. All adapters know exactly what they're targeting.
 
+**Exit Criteria:**
+- [ ] All three mapping docs exist and match BusSnapshot schema
+- [ ] Unit tests for unit conversions pass (deg↔rad, kt↔m/s, ft↔m, fpm↔m/s)
+- [ ] QG-SIM-MAPPING enabled (checks for file presence)
+- [ ] QG-UNIT-CONV enabled (checks test coverage of all BusSnapshot fields)
 
+### Task List
 
+- [x] P0.1 Finalize BusSnapshot schema
+  **Phase:** 0 - Baseline
+  **Status:** Complete
+  - Lock SI unit conventions (meters, radians, m/s)
+  - Ensure structure matches design doc: attitude, velocities, aero, altitude_msl/agl, controls, config, valid, safe_for_ffb
+  - Implement `has_nan_or_inf()` method
+  - Implement `age_ms()` method
+  - Implement structural `validate()` (unique engine indices, helo pedal ranges)
+  - _Requirements: BUS-CORE-01.*, BUS-EXTENDED-01.*_
 
-  - Review existing BusSnapshot structure in `crates/flight-bus/src/snapshot.rs`
-  - Verify all core fields are present: sim identifier, aircraft identifier, timestamp, attitude, angular rates, velocities, kinematics, aerodynamics, aircraft state, control inputs, trim state, validity flags
-  - Enhance validation methods for core field range checking if needed
-  - Verify unit conversion utilities exist (degrees↔radians, knots↔m/s, feet↔meters, FPM↔m/s)
-  - Verify snapshot age calculation API exists
-  - _Requirements: BUS-CORE-01.1, BUS-CORE-01.2, BUS-CORE-01.3, BUS-CORE-01.4, BUS-CORE-01.5, BUS-CORE-01.6, BUS-CORE-01.7, BUS-CORE-01.8, BUS-CORE-01.9, BUS-CORE-01.10, BUS-CORE-01.11, BUS-CORE-01.15_
+- [x] P0.1.1 Write unit tests for BusSnapshot
+  **Phase:** 0 - Baseline
+  **Status:** Complete
+  - Test unit conversion utilities (deg↔rad, kt↔m/s, ft↔m, fpm↔m/s)
+  - Test `has_nan_or_inf()` detection
+  - Test `age_ms()` calculation
+  - Test structural validation (unique indices, ranges)
+  - _Requirements: BUS-CORE-01.12, BUS-CORE-01.14, BUS-EXTENDED-01.8_
 
-- [x] 1.1 Write unit tests for core BusSnapshot validation
+- [x] P1.1 Complete MSFS SimConnect adapter
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - Connection state machine: Disconnected → Connecting → Booting → Loading → ActiveFlight ⇄ Paused → Faulted
+  - Data definitions with explicit units for each SimVar
+  - SimVar → BusSnapshot mapping with unit conversions (deg→rad, kt→m/s, ft→m, fpm→m/s)
+  - Dispatch queue draining for burst events
+  - Exponential backoff reconnection (up to 30s)
+  - Aircraft change detection via TITLE SimVar
+  - _Requirements: MSFS-INT-01.*_
 
+- [x] P1.1.1 Complete MSFS Sanity Gate
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - NaN/Inf detection via `snapshot.has_nan_or_inf()`
+  - Physically implausible jump detection with wrap-around for heading
+  - Configurable thresholds (`max_attitude_rate_rad_per_s` from aircraft profile)
+  - State machine transitions with explicit criteria
+  - `safe_for_ffb` only true in ActiveFlight
+  - Rate-limited logging (max once per 5s)
+  - _Requirements: MSFS-INT-01.9-16_
 
-  - Test validated type construction and range enforcement for core fields
-  - Test unit conversion accuracy (degrees↔radians, knots↔m/s, FPM↔m/s)
-  - Test snapshot age calculation
-  - Test core field validation (attitude, velocities, g-loads within ranges)
-  - _Requirements: BUS-CORE-01.12, BUS-CORE-01.14_
-
-- [x] 1.2 Review and enhance extended BusSnapshot fields
-
-
-  - Review existing extended fields in BusSnapshot: engines list, fuel per tank, helicopter telemetry block, environment, navigation, autopilot, lights
-  - Add any missing extended fields
-  - Enhance validation for extended fields (unique engine indices, helicopter pedal ranges, extended field ranges)
-  - _Requirements: BUS-EXTENDED-01.1, BUS-EXTENDED-01.2, BUS-EXTENDED-01.3, BUS-EXTENDED-01.4, BUS-EXTENDED-01.5, BUS-EXTENDED-01.6, BUS-EXTENDED-01.7, BUS-EXTENDED-01.8_
-
-- [x] 1.3 Write unit tests for extended BusSnapshot validation
-
-
-  - Test unique engine indices validation
-  - Test helicopter pedal range validation (-100 to 100)
-  - Test extended field range validation
-  - _Requirements: BUS-EXTENDED-01.8, BUS-EXTENDED-01.9_
-
-- [x] 2. Review and enhance MSFS SimConnect adapter connection management
-
-
-
-
-
-  - Review existing MsfsAdapter in `crates/flight-simconnect/src/adapter.rs`
-  - Verify connection state machine implementation
-  - Verify local SimConnect connection works without SimConnect.cfg requirement
-  - Enhance exponential backoff reconnection logic if needed (up to 30s between attempts)
-  - Verify connection loss detection and state transitions
-  - _Requirements: MSFS-INT-01.1, MSFS-INT-01.2, MSFS-INT-01.19_
-
-- [x] 2.1 Write unit tests for MSFS connection management
-
-
-  - Test connection state transitions
-  - Test exponential backoff timing
-  - Test connection loss detection
-  - _Requirements: MSFS-INT-01.2, MSFS-INT-01.19_
-
-- [x] 3. Review and enhance MSFS SimConnect data definitions and telemetry mapping
-
-
-
-
-
-  - Review existing data definitions in MSFS adapter
-  - Verify high-rate telemetry data definition with explicit units for each SimVar
-  - Verify low-rate identity data definition
-  - Review SimVar → BusSnapshot field mapping with unit conversions
-  - Verify dispatch queue draining handles burst events correctly
-  - _Requirements: MSFS-INT-01.3, MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6_
-
-- [x] 3.1 Write unit tests for MSFS telemetry mapping
-
-
-  - Test attitude conversion (degrees → radians)
-  - Test velocity conversion (knots → m/s, FPM → m/s, ft/s → m/s)
-  - Test angular rate mapping (already rad/s)
-  - Test g-load and aero mapping
-  - Use fixture data from tests/fixtures/msfs_c172_cruise.json
-  - _Requirements: MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6, SIM-TEST-01.2_
-
-- [x] 4. Review and enhance MSFS Sanity Gate state machine
-
-
-
-
-
-  - Review existing sanity gate implementation in MSFS adapter
-  - Verify state machine has all required states (Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted)
-  - Verify state transition logic with explicit criteria
-  - Verify safe_for_ffb flag control (true only in ActiveFlight)
-  - Verify NaN/Inf detection with rate-limited logging
-  - Verify physically implausible jump detection
-  - Verify sanity violation counter with configurable threshold
-  - _Requirements: MSFS-INT-01.9, MSFS-INT-01.10, MSFS-INT-01.11, MSFS-INT-01.12, MSFS-INT-01.13, MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16_
-
-- [x] 4.1 Write unit tests for MSFS Sanity Gate
-
-
-  - Test state transitions (Booting→Loading→ActiveFlight, ActiveFlight⇄Paused, Any→Faulted)
-  - Test NaN/Inf detection and violation counting
-  - Test physically implausible jump detection
-  - Test safe_for_ffb flag behavior in each state
-  - _Requirements: MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16, SIM-TEST-01.2, SIM-TEST-01.8_
-
-- [x] 5. Review and enhance MSFS update rate monitoring and metrics
-
-
-
-
-
-  - Review existing update rate monitoring
-  - Verify conditional 60 Hz target (when sim FPS ≥60)
-  - Verify metrics for actual update rate and jitter are exposed via shared metrics system (Task 41) under sim.msfs.* namespace
-  - Verify aircraft change detection via TITLE SimVar
-  - _Requirements: MSFS-INT-01.7, MSFS-INT-01.8, MSFS-INT-01.17_
-
-- [x] 5.1 Write integration tests for MSFS adapter
-
-
-  - Test complete adapter lifecycle with recorded fixtures
+- [x] P1.1.2 Write MSFS adapter tests
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - Unit tests for all unit conversions
+  - Unit tests for state transitions
+  - Unit tests for NaN/Inf detection and violation counting
+  - Unit tests for implausible jump detection
+  - Fixture-based integration tests with recorded telemetry
   - Test reconnection behavior
   - Test aircraft change detection
-  - _Requirements: SIM-TEST-01.1, SIM-TEST-01.5, SIM-TEST-01.7_
-
-- [x] 6. Create MSFS SimVar mapping documentation
-
-
-
-
-
-  - Document all SimVar → BusSnapshot field mappings in docs/integration/msfs-simvar-mapping.md
-  - Document unit conversions in code comments
-  - _Requirements: MSFS-INT-01.Doc.1, MSFS-INT-01.Doc.2_
-
-- [x] 7. Review and enhance X-Plane UDP adapter packet parsing
-
-
-
-
-  - Review existing XPlaneAdapter in `crates/flight-xplane/src/`
-  - Verify DATA packet format parser (36-byte records)
-  - Verify data group extraction (groups 3, 4, 16, 17, 18, 21)
-  - Verify graceful handling of missing data groups
-  - _Requirements: XPLANE-INT-01.1, XPLANE-INT-01.2, XPLANE-INT-01.3, XPLANE-INT-01.6_
-
-- [x] 7.1 Write unit tests for X-Plane packet parsing
-
-
-  - Test DATA packet parsing with valid data
-  - Test handling of missing data groups
-  - Test malformed packet handling
-  - _Requirements: XPLANE-INT-01.2, XPLANE-INT-01.6, SIM-TEST-01.3_
-
-- [x] 8. Review and enhance X-Plane telemetry mapping and connection monitoring
-
-
-
-
-
-  - Review existing data group → BusSnapshot field mapping with unit conversions
-  - Verify connection timeout detection (2 seconds)
-  - Verify connection timeout metrics are exposed via shared metrics system (Task 41) under sim.xplane.* namespace
-  - Verify aircraft identity handling for UDP-only mode (sim=XPLANE, coarse aircraft_class, identity='unknown')
-  - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.7, XPLANE-INT-01.13_
-
-- [x] 8.1 Write unit tests for X-Plane telemetry mapping
-
-
-  - Test angle conversion (degrees → radians)
-  - Test rate conversion (deg/s → rad/s)
-  - Test speed conversion (knots → m/s)
-  - Test connection timeout detection
-  - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.13, SIM-TEST-01.3_
-
-- [x] 9. Create X-Plane data group mapping documentation
-
-
-
-
-
-  - Document all data group indices → BusSnapshot field mappings in docs/integration/xplane.md
-  - Document unit conversions per data group
-  - Provide setup instructions for X-Plane Data Output screen configuration
-  - _Requirements: XPLANE-INT-01.Doc.1, XPLANE-INT-01.Doc.2_
-
-- [x] 10. Review and enhance DCS Export.lua script
-
-
-
-
-
-  - Review existing FlightHubExport.lua in `crates/flight-dcs-export/`
-  - Verify LuaExportStart/Stop/AfterNextFrame hooks
-  - Verify proper chaining to existing Export.lua hooks (store previous functions, call in deterministic order)
-  - Verify self-aircraft telemetry gathering using LoGet* functions
-  - Verify MP integrity check compliance (whitelist self-aircraft data, annotate mp_detected flag)
-  - Verify non-blocking UDP transmission to localhost
-  - Verify 60Hz target rate via LuaExportActivityNextEvent
-  - _Requirements: DCS-INT-01.4, DCS-INT-01.5, DCS-INT-01.6, DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.9, DCS-INT-01.10, DCS-INT-01.11, DCS-INT-01.12_
-
-- [x] 11. Review and enhance DCS installer and uninstaller
-
-
-
-
-
-  - Review existing DCS installer implementation
-  - Verify DCS variant detection (DCS, DCS.openbeta, DCS.openalpha)
-  - Verify Export.lua backup and append logic
-  - Verify FlightHubExport.lua deployment to Scripts/FlightHub/
-  - Verify uninstaller with backup restoration
-  - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
-
-- [x] 11.1 Write unit tests for DCS installer
-
-
-  - Test variant detection
-  - Test Export.lua backup and append logic
-  - Test uninstaller backup restoration
-  - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
-
-- [x] 12. Review and enhance DCS Rust adapter
-
-
-
-
-
-  - Review existing DcsAdapter in `crates/flight-dcs-export/src/`
-  - Verify JSON packet parsing
-  - Verify Lua value → BusSnapshot field mapping with unit conversions
-  - Verify nil handling for graceful degradation
-  - Verify MP status annotation (mp_detected flag, no invalidation of self-aircraft data)
-  - Verify connection timeout detection (2 seconds)
-  - Verify connection timeout and MP status metrics are exposed via shared metrics system (Task 41) under sim.dcs.* namespace
-  - Verify aircraft change detection via unit type
-  - _Requirements: DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15_
-
-- [x] 12.1 Write unit tests for DCS adapter
-
-  - Test JSON parsing and field mapping
-  - Test nil handling
-  - Test MP status annotation behavior
-  - Test connection timeout detection
-  - _Requirements: DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.15, SIM-TEST-01.4_
-
-- [x] 13. Create DCS Lua API mapping documentation
-
-
-
-
-
-  - Document all Lua API functions → BusSnapshot field mappings in docs/integration/dcs.md
-  - Document MP integrity check compliance (whitelisted data, restrictions)
-  - _Requirements: DCS-INT-01.Doc.1, DCS-INT-01.Doc.2_
-
-- [x] 14. Checkpoint – all adapter tests passing before starting FFB tasks
-
-
-
-
-
-  - Verify all MSFS, X-Plane, and DCS adapter unit and integration tests pass
-  - Verify all mapping documentation is complete
-
-- [x] 15. Complete DirectInput FFB device abstraction
-
-
-
-
-  - Review existing FFB framework in `crates/flight-ffb/src/`
-  - Complete DirectInputFfbDevice implementation with IDirectInputDevice8 interface
-  - Complete device enumeration and connection
-  - Complete capability querying (supports_pid, max_torque_nm, min_period_us)
-  - Complete device acquisition and cooperative level setting
-  - Note: Safety framework exists, device I/O needs completion
+  - _Requirements: SIM-TEST-01.1, SIM-TEST-01.2, SIM-TEST-01.5, SIM-TEST-01.7, SIM-TEST-01.8_
+
+- [x] P0.2 Create simulator mapping documentation
+  **Phase:** 0 - Baseline
+  **Status:** Complete
+  - Create `docs/integration/msfs-simvar-mapping.md` with complete SimVar → BusSnapshot mapping
+  - Create `docs/integration/xplane-data-groups.md` with DATA group → BusSnapshot mapping
+  - Create `docs/integration/dcs-export-api.md` with LoGet* → BusSnapshot mapping
+  - Document unit conversions, coordinate frames, and sign conventions for each
+  - _Requirements: MSFS-INT-01.Doc.*, XPLANE-INT-01.Doc.*, DCS-INT-01.Doc.*_
+
+- [ ] P0.3 Enable Phase 0 CI quality gates
+  **Phase:** 0 - Baseline
+  **Status:** Not started
+  - Implement QG-SIM-MAPPING: Fail if any adapter lacks complete mapping table documentation
+  - Implement QG-UNIT-CONV: Fail if unit conversion tests don't cover all BusSnapshot fields
+  - Wire gates into CI pipeline
+  - Verify gates pass
+  - _Requirements: CI Quality Gates_
+
+---
+
+## Phase 1: Adapters and Sanity Gates
+
+**Goal:** All three sims feed clean, sane BusSnapshots into the bus. FFB still disabled.
+
+**Exit Criteria:**
+- [ ] All adapter unit and integration tests pass
+- [ ] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
+- [ ] Sanity violations only occur when deliberately injecting nonsense
+- [ ] QG-SANITY-GATE enabled and passing (tests inject NaN/Inf and implausible jumps)
+
+- [x] P1.2 Complete X-Plane UDP adapter
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - DATA packet parser (5-byte header + 36-byte records)
+  - Data group extraction (groups 3, 4, 16, 17, 18, 21)
+  - Graceful handling of missing groups
+  - Data group → BusSnapshot mapping with unit conversions (deg→rad, deg/s→rad/s, kt→m/s)
+  - Connection timeout detection (2s no packets → Disconnected)
+  - Aircraft identity handling for UDP-only mode (limited info)
+  - _Requirements: XPLANE-INT-01.*_
+
+- [x] P1.2.1 Write X-Plane adapter tests
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - Unit tests for DATA packet parsing
+  - Unit tests for missing/malformed packets
+  - Unit tests for all unit conversions
+  - Unit tests for connection timeout
+  - _Requirements: SIM-TEST-01.3_
+
+- [x] P1.3 Complete DCS Export.lua and adapter
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - Export.lua with proper hook chaining
+  - Self-aircraft telemetry only (LoGet* functions)
+  - MP integrity check compliance (`mp_detected` flag, no world objects)
+  - Non-blocking UDP to localhost at 60Hz
+  - Rust adapter: JSON parsing, nil handling, unit conversions
+  - Connection timeout detection (2s)
+  - Aircraft change detection via unit type
+  - _Requirements: DCS-INT-01.*_
+
+- [x] P1.3.1 Complete DCS installer
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - DCS variant detection (DCS, DCS.openbeta, DCS.openalpha)
+  - Export.lua backup and append logic
+  - FlightHubExport.lua deployment
+  - Uninstaller with backup restoration
+  - _Requirements: DCS-INT-01.1-3, DCS-INT-01.14_
+
+- [x] P1.3.2 Write DCS adapter and installer tests
+  **Phase:** 1 - Adapters
+  **Status:** Complete (needs verification)
+  - Unit tests for JSON parsing and field mapping
+  - Unit tests for nil handling
+  - Unit tests for MP status annotation
+  - Unit tests for installer (variant detection, backup/restore)
+  - _Requirements: SIM-TEST-01.4_
+
+- [ ] P1.4 Enable Phase 1 CI quality gate
+  **Phase:** 1 - Adapters
+  **Status:** Not started
+  - Implement QG-SANITY-GATE: Tests must inject NaN/Inf and implausible jumps, verify safe_for_ffb goes false
+  - Wire gate into CI pipeline
+  - Verify gate passes for all three adapters
+  - _Requirements: CI Quality Gates_
+
+- [ ] P1.5 Phase 1 Checkpoint
+  **Phase:** 1 - Adapters
+  **Status:** Not started
+  - Run all adapter tests: `cargo test -p flight-simconnect -p flight-xplane -p flight-dcs-export`
+  - Verify all tests pass
+  - Run adapters in harness, verify no NaN/Inf under normal use
+  - Verify sanity violations only when injecting nonsense
+  - Verify QG-SANITY-GATE passes
+  - **Exit criteria met before proceeding to Phase 2**
+
+---
+
+## Phase 2: FFB Engine, Safety, and Backends
+
+**Goal:** FFB pipeline exists, is safe by design, and is integrated with DirectInput/XInput. Can be disabled globally while hardening runtime.
+
+**Exit Criteria:**
+- [ ] Pure-Rust tests for SafetyEnvelope and mapping logic pass
+- [ ] Sim-disabled harness can feed synthetic snapshots into FFB engine
+- [ ] No safety thresholds violated in tests
+- [ ] Faults produce blackbox dumps and latched indicators
+- [ ] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
+
+- [ ] P2.1 Complete DirectInput device abstraction
+  **Phase:** 2 - FFB
+  **Status:** In progress (API + stubs exist, real COM calls pending)
+  - RAII wrapper for IDirectInputDevice8 and IDirectInputEffect
+  - Real CreateEffect calls (not stubs) for:
+    - Constant force (decide: one per axis or multi-axis with direction)
+    - Sine periodic
+    - Spring and damper condition effects
+  - Error mapping from HRESULT to local error enum
+  - Device enumeration and acquisition
+  - Capability querying (or load from config file per device)
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
+  - **Blocked by:** Locked test binaries (see troubleshooting)
 
-- [x] 15.1 Write unit tests for DirectInput device abstraction
+- [ ] P2.1.1 Decide and document per-axis FFB topology
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Decide: one effect per axis (pitch, roll) OR one multi-axis effect with direction vector
+  - Document decision in design.md
+  - Implement API: `set_constant_force_pitch_nm(f32)` / `set_constant_force_roll_nm(f32)` OR `set_constant_force_xy(pitch_nm, roll_nm)`
+  - _Requirements: FFB-HID-01.2_
 
+- [ ] P2.1.2 Write DirectInput device tests
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Unit tests via mocks or fake DirectInput under cfg(test)
+  - Integration test that acquires device and creates effects (hardware-gated, optional)
+  - _Requirements: FFB-HID-01.1, FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
 
-  - Test device enumeration
-  - Test capability querying
-  - Test device acquisition
-  - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
+- [ ] P2.2 Wire SafetyEnvelope into FFB pipeline
+  **Phase:** 2 - FFB
+  **Status:** In progress (SafetyEnvelope type exists, integration pending)
+  - Pipeline: raw_torque → SafetyEnvelope::apply_limits(safe_for_ffb) → DirectInput/XInput/OFP-1
+  - Guarantee:
+    - Torque never exceeds device max_torque_nm
+    - Slew and jerk limits enforced per axis
+    - When safe_for_ffb == false, ramp to zero in ≤50ms from fault detection
+    - Hardware-critical faults (over-temp/current) latch, require power cycle
+  - Capture `fault_initial_torque` at fault detection (not `last_setpoint`)
+  - _Requirements: FFB-SAFETY-01.1-6_
 
-- [x] 16. Complete DirectInput FFB effect creation and management
+- [ ] P2.2.1 Write SafetyEnvelope integration tests
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Pure Rust tests for clamping, slew, jerk
+  - Test 50ms ramp from arbitrary starting torque (use `fault_initial_torque`)
+  - Test SafeTorque mode (30% envelope) vs HighTorque (100%) vs Faulted (0%)
+  - _Requirements: FFB-SAFETY-01.1-6, QG-FFB-SAFETY_
 
-
-
-
-
-  - Complete constant force effect creation for pitch and roll axes
-  - Complete periodic (sine) effect creation for buffeting/vibration
-  - Complete condition effects (spring/damper) for centering
-  - Complete effect parameter updates via SetParameters
-  - Complete effect start/stop control
-  - _Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
-
-- [x] 16.1 Write unit tests for FFB effect management
-
-
-  - Test constant force effect creation
-  - Test periodic effect creation
-  - Test condition effect creation
-  - Test effect parameter updates
-  - _Requirements: FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
-
-- [x] 17. Review and enhance XInput rumble integration
-
-
-
-
-  - Review existing XInput integration in FFB framework
-  - Verify rumble channel mapping (low-freq and high-freq motors)
-  - Verify documentation of XInput limitations (vibration only, no directional torque)
+- [ ] P2.3 Complete XInput rumble backend
+  **Phase:** 2 - FFB
+  **Status:** In progress (module exists, mode negotiation wiring pending)
+  - Implement `XInputRumbleDevice::apply_vibration(low: f32, high: f32)`
+  - Side-effect free mapping from FFB synthesis → two rumble channels
+  - Wire into mode negotiation:
+    - DirectInput FFB when FFB device present
+    - XInput rumble when only XInput available
+    - Off when nothing available
   - _Requirements: FFB-HID-01.5_
 
-- [x] 18. Review and enhance FFB safety envelope
+- [ ] P2.3.1 Write XInput rumble tests
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Unit tests for mapping logic (mock XInputSetState)
+  - No requirement for real controller in CI
+  - _Requirements: FFB-HID-01.5_
 
+- [ ] P2.4 Complete fault detection and blackbox
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Wire fault detection to:
+    - USB OUT stalls (≥3 writes failing/timeouts)
+    - NaNs in pipeline before SafetyEnvelope
+    - Device health stream (where supported)
+  - Blackbox ring buffer:
+    - Capture BusSnapshot (≥250 Hz), FFB setpoints, device status
+    - 2s pre-fault + 1s post-fault dump on fault
+    - Bounded, rotating log (size/age-limited)
+  - Emergency stop:
+    - UI button and optional hardware button
+    - Bypasses everything, jumps to ramp-down
+  - _Requirements: FFB-SAFETY-01.5-14_
 
-
-
-
-  - Review existing FfbSafetyEnvelope implementation (safety framework exists)
-  - Verify torque magnitude clamping to device max_torque_nm
-  - Verify slew rate limiting (ΔNm/Δt ≤ configured limit)
-  - Verify jerk limiting (Δ²Nm/Δt² ≤ configured limit)
-  - Verify safe_for_ffb flag enforcement (zero torque when false)
-  - Verify 50ms ramp-to-zero on fault with explicit fault timestamp tracking
-  - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6_
-
-- [x] 18.1 Write unit tests for FFB safety envelope
-
-
-  - Test torque clamping
-  - Test slew rate limiting
-  - Test jerk limiting
-  - Test safe_for_ffb enforcement
-  - Test 50ms ramp-to-zero timing
-  - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6, SIM-TEST-01.10, QG-FFB-SAFETY_
-
-- [ ] 19. Review and enhance FFB fault detection and handling
-  - Review existing FaultDetector implementation (safety framework exists)
-  - Verify USB OUT stall detection (≥3 frames)
-  - Verify NaN/Inf detection in FFB pipeline
-  - Verify device health monitoring (over-temp, over-current)
-  - Verify device disconnect detection (within 100ms)
-  - Verify fault categorization (hardware-critical vs transient)
-  - Verify fault state latching with power cycle requirement for hardware-critical faults
-  - Verify explicit "clear fault" for transient faults
-  - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11_
-
-- [ ] 19.1 Write unit tests for FFB fault detection
+- [ ] P2.4.1 Write fault detection and blackbox tests
+  **Phase:** 2 - FFB
+  **Status:** Not started
   - Test USB stall detection
-  - Test NaN/Inf detection
+  - Test NaN/Inf detection in pipeline
   - Test device health monitoring
-  - Test disconnect detection
-  - Test fault categorization and latching
-  - _Requirements: FFB-SAFETY-01.5, FFB-SAFETY-01.6, FFB-SAFETY-01.7, FFB-SAFETY-01.8, FFB-SAFETY-01.9, FFB-SAFETY-01.10, FFB-SAFETY-01.11, SIM-TEST-01.10, QG-FFB-SAFETY_
+  - Test disconnect detection (within 100ms)
+  - Test fault categorization (hardware-critical vs transient)
+  - Test blackbox capture rate and buffering
+  - Test emergency stop
+  - _Requirements: FFB-SAFETY-01.5-14, QG-FFB-SAFETY_
 
-- [ ] 20. Review and enhance FFB blackbox recorder
-  - Review existing BlackboxRecorder implementation (safety framework exists)
-  - Verify high-rate capture (≥250 Hz) of BusSnapshot, FFB setpoints, and device feedback
-  - Verify 2-second pre-fault and 1-second post-fault buffering
-  - Verify bounded, rotating log storage (size/age-limited)
-  - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13_
+- [ ] P2.5 Enable Phase 2 CI quality gate
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Implement QG-FFB-SAFETY: Verify 50ms ramp-down on all fault types
+  - Wire gate into CI pipeline
+  - Verify gate passes
+  - _Requirements: CI Quality Gates_
 
-- [ ] 20.1 Write unit tests for blackbox recorder
-  - Test high-rate capture (≥250 Hz)
-  - Test pre/post-fault buffering (2s before, 1s after)
-  - Test bounded storage and rotation
-  - _Requirements: FFB-SAFETY-01.12, FFB-SAFETY-01.13, QG-FFB-SAFETY_
+- [ ] P2.6 Phase 2 Checkpoint
+  **Phase:** 2 - FFB
+  **Status:** Not started
+  - Run all FFB tests: `cargo test -p flight-ffb`
+  - Verify pure-Rust tests for SafetyEnvelope pass
+  - Run sim-disabled harness with synthetic snapshots
+  - Verify no safety thresholds violated
+  - Verify faults produce blackbox dumps
+  - Verify QG-FFB-SAFETY passes
+  - **Exit criteria met before proceeding to Phase 3**
 
-- [ ] 21. Review and enhance FFB emergency stop
-  - Review existing emergency stop implementation
-  - Verify UI button for emergency stop
-  - Verify hardware button support (if device supports it)
-  - Verify immediate FFB disable on emergency stop
-  - _Requirements: FFB-SAFETY-01.14_
+---
 
-- [ ] 22. Checkpoint – all FFB safety tests passing before starting runtime work
-  - Verify all DirectInput FFB device, effect management, safety envelope, fault detection, and blackbox recorder tests pass
-  - Verify emergency stop functionality is implemented and tested
+## Phase 3: Runtime Scheduling & Timing
 
-- [ ] 23. Complete Windows real-time thread configuration
-  - Review existing scheduler implementation in `crates/flight-scheduler/src/`
-  - Complete WindowsRtThread implementation
-  - Complete thread priority elevation (THREAD_PRIORITY_TIME_CRITICAL)
-  - Complete MMCSS registration with "Games" or "Pro Audio" task
-  - Complete power throttling disable via PROCESS_POWER_THROTTLING_EXECUTION_SPEED
-  - Verify QueryPerformanceCounter (QPC) monotonic clock
-  - Note: Basic implementation exists, MMCSS integration needs completion
-  - _Requirements: WIN-RT-01.1, WIN-RT-01.2, WIN-RT-01.3, WIN-RT-01.8_
+**Goal:** 250 Hz axis loop and 500-1000 Hz raw torque loop behave as specified on real hardware. FFB can be enabled with high confidence.
 
-- [ ] 23.1 Write platform-specific integration tests for Windows RT thread configuration
-  - Test thread priority elevation (gated to #[cfg(windows)], run on hardware-backed CI runners)
+**Exit Criteria:**
+- [ ] Hardware-backed CI jobs exist and are green for 250 Hz jitter and HID latency
+- [ ] Metrics around loop timing and HID latency visible
+- [ ] Soak tests pass (24-48h, no missed ticks, RSS <10% growth, no blackbox drops)
+
+- [ ] P3.1 Complete Windows RT scheduling
+  **Phase:** 3 - Runtime
+  **Status:** In progress (basic scheduler exists, MMCSS pending)
+  - MMCSS registration (AvSetMmThreadCharacteristicsW with "Games" or "Pro Audio")
+  - SetThreadPriority(THREAD_PRIORITY_TIME_CRITICAL)
+  - High-res timer (CreateWaitableTimerEx + 50-80μs busy-spin)
+  - Power throttling disable (PROCESS_POWER_THROTTLING_EXECUTION_SPEED)
+  - HID writes via WriteFile with overlapped I/O (no HidD_SetOutputReport in hot path)
+  - PowerSetRequest when active, cleared when idle
+  - _Requirements: WIN-RT-01.*_
+
+- [ ] P3.1.1 Write Windows RT tests (hardware-backed)
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Test thread priority elevation (#[cfg(windows)])
   - Test MMCSS registration
-  - Test power throttling disable
-  - Test QPC monotonic clock
-  - _Requirements: WIN-RT-01.1, WIN-RT-01.2, WIN-RT-01.3, WIN-RT-01.8, RT-TEST-01.1_
-
-- [ ] 24. Complete Windows high-resolution timer loop
-  - Review existing timer loop implementation
-  - Complete CreateWaitableTimerEx with CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
-  - Complete fallback to timeBeginPeriod(1) if high-resolution timer unavailable
-  - Verify 250 Hz tick loop with periodic timer
-  - Verify final 50-80μs busy-spin using QPC
-  - Note: Basic implementation exists, high-resolution timer integration needs completion
-  - _Requirements: WIN-RT-01.4, WIN-RT-01.5_
-
-- [ ] 24.1 Write platform-specific integration tests for Windows timer loop
-  - Test high-resolution timer creation (gated to #[cfg(windows)], run on hardware-backed CI runners)
-  - Test fallback to timeBeginPeriod(1)
+  - Test high-res timer creation and fallback
   - Test 250 Hz tick timing
-  - Test busy-spin final portion
-  - _Requirements: WIN-RT-01.4, WIN-RT-01.5, RT-TEST-01.1_
+  - Test PowerSetRequest behavior
+  - **Requires hardware-backed CI runners**
+  - _Requirements: WIN-RT-01.*, RT-TEST-01.1_
 
-- [ ] 25. Implement Windows power management integration
-  - Implement PowerSetRequest with EXECUTION_REQUIRED and SYSTEM_REQUIRED when active
-  - Implement power request clearing when idle
-  - _Requirements: WIN-RT-01.6, WIN-RT-01.7_
+- [ ] P3.2 Complete Linux RT harness (v1-limited)
+  **Phase:** 3 - Runtime
+  **Status:** In progress (basic scheduler exists, rtkit pending)
+  - SCHED_FIFO via pthread_setschedparam or rtkit D-Bus
+  - clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME) loop
+  - mlockall when RT active
+  - Limits validation and warnings
+  - Note: v1 only needs timing harness + input loop, not FFB output
+  - _Requirements: LINUX-RT-01.*_
 
-- [ ] 25.1 Write platform-specific integration tests for Windows power management
-  - Test PowerSetRequest when active (gated to #[cfg(windows)], run on hardware-backed CI runners)
-  - Test power request clearing when idle
-  - _Requirements: WIN-RT-01.6, WIN-RT-01.7, RT-TEST-01.6_
-
-- [ ] 26. Implement Windows HID write optimization
-  - Implement WriteFile with FILE_FLAG_OVERLAPPED for non-blocking I/O
-  - Avoid HidD_SetOutputReport in hot path
-  - _Requirements: WIN-RT-01.9, WIN-RT-01.10_
-
-- [ ] 26.1 Implement HID write latency measurement harness
-  - Create latency measurement harness that sends synthetic OUT reports at target rate
-  - Measure end-to-end write latency into a histogram
-  - Expose p99 latency as a metric
-  - Run only on hardware-backed CI runners with actual HID devices
-  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
-
-- [ ] 26.2 Write HID latency CI test
-  - Create test that asserts p99 ≤ 300μs on hardware-backed runners
-  - Skip test (or report-only) when hardware tag not present
-  - Mark as #[ignore] by default, opt-in via CI job
-  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
-
-- [ ] 27. Complete Linux real-time thread configuration
-  - Review existing Linux scheduler implementation
-  - Complete LinuxRtThread implementation
-  - Verify SCHED_FIFO scheduling request via pthread_setschedparam
-  - Complete rtkit D-Bus integration for privilege acquisition
-  - Verify fallback to normal priority with warning
-  - Verify mlockall(MCL_CURRENT | MCL_FUTURE) for memory locking
-  - Verify RLIMIT_RTPRIO and RLIMIT_MEMLOCK validation
-  - Note: Basic implementation exists, full rtkit integration needs completion
-  - Note: Linux FFB output is out of scope for v1; this work is for timing harness + input loop only
-  - _Requirements: LINUX-RT-01.1, LINUX-RT-01.2, LINUX-RT-01.3, LINUX-RT-01.4, LINUX-RT-01.7, LINUX-RT-01.11_
-
-- [ ] 27.1 Write platform-specific integration tests for Linux RT thread configuration
-  - Test SCHED_FIFO scheduling request (gated to #[cfg(target_os = "linux")], run on hardware-backed CI runners)
+- [ ] P3.2.1 Write Linux RT tests (hardware-backed)
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Test SCHED_FIFO scheduling (#[cfg(target_os = "linux")])
   - Test rtkit integration
   - Test fallback to normal priority
-  - Test mlockall
-  - Test limits validation
-  - _Requirements: LINUX-RT-01.1, LINUX-RT-01.2, LINUX-RT-01.3, LINUX-RT-01.4, LINUX-RT-01.7, RT-TEST-01.2_
+  - Test clock_nanosleep timing
+  - **Requires hardware-backed CI runners**
+  - _Requirements: LINUX-RT-01.*, RT-TEST-01.2_
 
-- [ ] 28. Implement Linux high-resolution timer loop
-  - Implement clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME) with absolute target times
-  - Implement 250 Hz tick loop
-  - Implement final portion busy-spin using clock_gettime(CLOCK_MONOTONIC)
-  - _Requirements: LINUX-RT-01.5, LINUX-RT-01.6_
-
-- [ ] 28.1 Write platform-specific integration tests for Linux timer loop
-  - Test clock_nanosleep with absolute times (gated to #[cfg(target_os = "linux")], run on hardware-backed CI runners)
-  - Test 250 Hz tick timing
-  - Test busy-spin final portion
-  - _Requirements: LINUX-RT-01.5, LINUX-RT-01.6, RT-TEST-01.2_
-
-- [ ] 29. Implement Linux RT metrics exposure
-  - Expose metrics for RT scheduling status via shared metrics system (Task 41) under runtime.* namespace
-  - Expose metrics for timing accuracy at normal priority
-  - _Requirements: LINUX-RT-01.8_
-
-- [ ] 30. Create Linux RT setup helper script
-  - Create scripts/setup-linux-rt.sh with /etc/security/limits.conf entries
-  - Document RT priority configuration in installation docs
+- [ ] P3.2.2 Create Linux RT setup helper
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Create scripts/setup-linux-rt.sh with limits.conf entries
+  - Document RT priority configuration
   - _Requirements: LINUX-RT-01.10_
 
-- [ ] 31. Implement runtime jitter measurement
-  - Create JitterMeasurement struct
-  - Implement tick deviation recording
-  - Implement p99 jitter calculation
-  - Implement 5-second warm-up period
-  - _Requirements: RT-TEST-01.3_
+- [ ] P3.3 Implement jitter measurement harness
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - JitterMeasurement struct with tick deviation recording
+  - p99 jitter calculation
+  - 5s warm-up period, ≥10 minute run
+  - Intel + AMD hardware runners
+  - _Requirements: RT-TEST-01.3, RT-TEST-01.11_
 
-- [ ] 31.1 Write long-running jitter tests
-  - Test 250 Hz axis loop jitter on hardware-backed runners (p99 ≤0.5ms)
-  - Test report-only mode on virtualized runners
-  - Run for ≥10 minutes with 5s warm-up
-  - Mark as #[ignore] by default, opt-in via CI job
+- [ ] P3.3.1 Write jitter CI tests
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Test 250 Hz p99 ≤0.5ms on hardware-backed runners
+  - Report-only mode on virtualized runners
+  - Mark as #[ignore], opt-in via CI job
   - _Requirements: RT-TEST-01.3, RT-TEST-01.4, RT-TEST-01.5_
 
-- [ ] 31.2 Add hardware matrix coverage for jitter tests
-  - Run jitter tests on both Intel and AMD hardware runners
-  - Record results separately for each platform
-  - Wire CI labels/runners for Intel vs AMD coverage
-  - _Requirements: RT-TEST-01.11_
+- [ ] P3.4 Implement HID latency measurement harness
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Measure end-to-end HID write latency
+  - Histogram with p99 metric
+  - Run only on hardware-backed runners with actual devices
+  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
 
-- [ ] 32. Checkpoint – all runtime tests passing before packaging
-  - Verify all Windows and Linux RT thread configuration, timer loop, power management, and HID write tests pass
-  - Verify jitter measurement and HID latency measurement harnesses are implemented
-  - Verify metrics are exposed via shared metrics system
+- [ ] P3.4.1 Write HID latency CI test
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Assert p99 ≤300μs on hardware-backed runners
+  - Skip when hardware tag not present
+  - Mark as #[ignore], opt-in via CI job
+  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
 
-- [ ] 33. Implement Windows code signing infrastructure
-  - Create scripts/sign-binaries.ps1 for code signing
-  - Implement signing for all EXE and DLL files
-  - Integrate signing into CI build process
-  - Note: MSI signing will be implemented in Task 34 after MSI packaging is complete
-  - _Requirements: PKG-01.1, PKG-01.2_
-
-- [ ] 34. Implement Windows MSI installer
-  - Create WiX configuration for MSI package
-  - Implement core binaries installation (per-user option)
-  - Implement simulator integration components as opt-in features
-  - Implement elevated privileges requirement for sim integrations and virtual drivers
-  - Implement product posture statement display
-  - Implement EULA summary display
-  - Implement MSI signing using infrastructure from Task 33
-  - Note: Initial MSI may be unsigned for internal dev; final release MSI is signed
-  - _Requirements: PKG-01.1, PKG-01.3, PKG-01.4, PKG-01.5, PKG-01.6, PKG-01.7, PKG-01.8_
-
-- [ ] 35. Implement Windows uninstaller
-  - Implement binary removal
-  - Implement X-Plane plugin removal (if installed)
-  - Implement DCS Export.lua restoration (if backed up)
-  - _Requirements: PKG-01.9_
-
-- [ ] 36. Implement Linux package formats
-  - Create Debian package (.deb) with control, rules, changelog, copyright files
-  - Create udev rules for device access without root
-  - Create postinst script for user group management and udev reload
-  - Implement at least one additional format (AppImage or .rpm) as optional stretch goal
-  - Note: Linux FFB output is out of scope for v1; packaging is for timing harness + input loop only
-  - _Requirements: PKG-01.10, PKG-01.11_
-
-- [ ] 37. Create Linux installation documentation
-  - Document user group requirements (input, plugdev)
-  - Document RT priority configuration via limits.conf
-  - Document udev rules installation
-  - _Requirements: PKG-01.12_
-
-- [ ] 38. Create third-party components inventory
-  - Document all bundled libraries and drivers in third-party-components.toml
-  - Include licenses, versions, and usage for each component
-  - Ship required license texts with product
-  - _Requirements: PKG-01.13, PKG-01.Doc.1_
-
-- [ ] 39. Create product posture document
-  - Create docs/product-posture.md with product positioning statement
-  - Document what Flight Hub is and is not
-  - Document simulator integration approach (official APIs only)
-  - Document data handling policies
-  - Reference in README, website, installer, and integration module comments
-  - _Requirements: LEGAL-01.1, LEGAL-01.5, LEGAL-01.6, LEGAL-01.10_
-
-- [ ] 40. Create "What We Touch" documentation for each simulator
-  - Create docs/integration/msfs-what-we-touch.md
-  - Create docs/integration/xplane-what-we-touch.md
-  - Create docs/integration/dcs-what-we-touch.md
-  - Document files modified, ports used, variables accessed, reversion steps
-  - _Requirements: LEGAL-01.7_
-
-- [ ] 41. Implement telemetry and metrics system
-  - Implement hierarchical metric naming (sim.<sim_name>.<metric>, ffb.<metric>, runtime.<metric>, bus.<metric>)
-  - Implement metric types (gauges, counters, histograms)
-  - Implement Prometheus exporter (optional, HTTP endpoint at :9090/metrics)
-  - Implement in-process ring buffer for UI display (60 seconds)
-  - Implement log-structured metric snapshots (JSON lines)
-  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3, RT-TEST-01.4, RT-TEST-01.5, RT-TEST-01.6, Design: Telemetry and Metrics_
-
-- [ ] 41.1 Write unit tests for metrics system
-  - Test metric naming and scoping (per-adapter, per-device, not per-aircraft)
-  - Test metric type behavior (gauges, counters, histograms)
-  - Test Prometheus export format
-  - Test ring buffer retention (60 seconds)
-  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3, QG-RT-JITTER, QG-HID-LATENCY_
-
-- [ ] 42. Implement cargo xtask validation commands
-  - Implement cargo xtask validate-msfs-telemetry
-  - Implement cargo xtask validate-xplane-telemetry
-  - Implement cargo xtask validate-dcs-export
-  - _Requirements: SIM-TEST-01.9_
-
-- [ ] 43. Checkpoint – all tests and quality gates passing before tagging a release
-  - Verify all unit tests, integration tests, and platform-specific tests pass
-  - Verify all CI quality gates pass (QG-SIM-MAPPING, QG-UNIT-CONV, QG-SANITY-GATE, QG-FFB-SAFETY, QG-RT-JITTER, QG-HID-LATENCY, QG-LEGAL-DOC)
-  - Verify all documentation is complete
-
-- [ ] 44. Create CI quality gate enforcement
-  - Implement QG-SIM-MAPPING: Fail if any adapter lacks complete mapping table documentation
-  - Implement QG-UNIT-CONV: Fail if unit conversion tests don't cover all v1 BusSnapshot fields
-  - Implement QG-SANITY-GATE: Fail if sanity gate tests don't inject NaN/Inf and verify handling
-  - Implement QG-FFB-SAFETY: Fail if FFB safety tests don't verify 50ms ramp-down on all fault types
-  - Implement QG-RT-JITTER: Fail if 250Hz p99 jitter >0.5ms on hardware-backed runners; report-only on virtualized
-  - Implement QG-HID-LATENCY: Fail if HID write p99 >300μs on hardware-backed runners; skip when unavailable
-  - Implement QG-LEGAL-DOC: Fail if product posture document is not present or not referenced in required locations
-  - _Requirements: CI Quality Gates section_
-
-- [ ] 45. Create comprehensive integration test suite
-  - Create fixture files for each simulator (MSFS, X-Plane, DCS) under tests/fixtures/
-  - Implement replay testing with recorded telemetry fixtures
-  - Test complete adapter lifecycle (connect, telemetry, disconnect)
-  - Test reconnection with exponential backoff
-  - Test sanity gate with NaN/Inf injection and implausible jumps
-  - _Requirements: SIM-TEST-01.5, SIM-TEST-01.6, SIM-TEST-01.7, SIM-TEST-01.8_
-
-- [ ] 45.1 Implement soak tests
-  - Run 24-48h with synthetic telemetry
+- [ ] P3.5 Implement soak tests
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - 24-48h run with synthetic telemetry
   - Verify zero missed ticks
   - Verify RSS delta <10%
-  - Verify no memory leaks
-  - Run on both Intel and AMD hardware runners
+  - Verify no blackbox drops
+  - Run on Intel + AMD hardware
   - _Requirements: RT-TEST-01.8, RT-TEST-01.11_
 
-- [ ] 46. Create user documentation
-  - Create installation guide for Windows (MSI)
-  - Create installation guide for Linux (.deb, AppImage)
-  - Create simulator setup guides (MSFS, X-Plane Data Output, DCS Export.lua)
-  - Create FFB device configuration guide
-  - Create troubleshooting guide
-  - _Requirements: General documentation requirements_
+- [ ] P3.6 Enable Phase 3 CI quality gates
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Implement QG-RT-JITTER: Fail if 250Hz p99 >0.5ms on hardware, report-only on VMs
+  - Implement QG-HID-LATENCY: Fail if HID write p99 >300μs on hardware, skip when unavailable
+  - Wire gates into CI pipeline
+  - Verify gates pass
+  - _Requirements: CI Quality Gates_
 
-- [ ] 47. Final validation and release preparation
-  - Run all unit tests, integration tests, and quality gates
-  - Verify all documentation is complete and accurate
-  - Verify code signing works correctly
-  - Verify installers work on clean systems
-  - Verify uninstallers properly clean up
+- [ ] P3.7 Phase 3 Checkpoint
+  **Phase:** 3 - Runtime
+  **Status:** Not started
+  - Hardware-backed CI jobs green for jitter and HID latency
+  - Metrics visible for loop timing and HID latency
+  - Soak tests pass
+  - QG-RT-JITTER and QG-HID-LATENCY pass
+  - **Exit criteria met before proceeding to Phase 4**
+
+---
+
+## Phase 4: Packaging, Installers, and Legal
+
+**Goal:** Binaries that normal people can install/uninstall without breaking sims, with clear legal posture.
+
+**Exit Criteria:**
+- [ ] Installers tested on clean Win10/11 and mainstream Linux distro
+- [ ] Uninstall leaves sims in original state
+- [ ] QG-LEGAL-DOC passes (posture/docs exist and referenced)
+
+- [ ] P4.1 Implement Windows code signing and MSI installer
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - Code signing infrastructure (scripts/sign-binaries.ps1)
+  - Sign all EXE and DLL files
+  - WiX configuration for MSI
+  - Per-user core binaries, opt-in sim integrations
+  - Elevated privileges for sim integrations
+  - Product posture and EULA display
+  - MSI signing
+  - _Requirements: PKG-01.1-8_
+
+- [ ] P4.2 Implement Windows uninstaller
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - Binary removal
+  - X-Plane plugin removal (if installed)
+  - DCS Export.lua restoration (if backed up)
+  - _Requirements: PKG-01.9_
+
+- [ ] P4.3 Implement Linux packages
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - .deb package with udev rules
+  - postinst script for group management
+  - Optional: AppImage or .rpm
+  - Note: v1 Linux is timing harness + input loop only, no FFB output
+  - _Requirements: PKG-01.10-12_
+
+- [ ] P4.4 Create legal and compliance documentation
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - Product posture document (docs/product-posture.md)
+  - "What We Touch" docs per sim
+  - Third-party components inventory
+  - Ship license texts
+  - Reference posture in README, installer, integration modules
+  - _Requirements: LEGAL-01.*, PKG-01.13_
+
+- [ ] P4.5 Enable Phase 4 CI quality gate
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - Implement QG-LEGAL-DOC: Fail if posture doc missing or not referenced
+  - Wire gate into CI pipeline
+  - Verify gate passes
+  - _Requirements: CI Quality Gates_
+
+- [ ] P4.6 Phase 4 Checkpoint
+  **Phase:** 4 - Packaging
+  **Status:** Not started
+  - Installers tested on clean Win10/11 and Linux distro
+  - Uninstall leaves sims in original state
+  - QG-LEGAL-DOC passes
+  - **Exit criteria met before proceeding to Phase 5**
+
+---
+
+## Phase 5: Metrics, CI Gates, and Ship It
+
+**Goal:** Observability in place, CI enforces all guarantees, candidate release passes all gates.
+
+**Exit Criteria:**
+- [ ] All CI quality gates enabled and passing
+- [ ] Metrics visible for any given run
+- [ ] Candidate release build passes all gates
+- [ ] User documentation complete
+
+- [ ] P5.1 Implement metrics system
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - Hierarchical naming (sim.*, ffb.*, runtime.*, bus.*)
+  - Metric types (gauges, counters, histograms)
+  - Optional Prometheus exporter (:9090/metrics)
+  - In-process ring buffer for UI (60s)
+  - Log-structured snapshots (JSON lines)
+  - _Requirements: Design: Telemetry and Metrics_
+
+- [ ] P5.1.1 Write metrics system tests
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - Test naming and scoping
+  - Test metric types
+  - Test Prometheus export format
+  - Test ring buffer retention
+  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3_
+
+- [ ] P5.2 Implement cargo xtask validation commands
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - cargo xtask validate-msfs-telemetry
+  - cargo xtask validate-xplane-telemetry
+  - cargo xtask validate-dcs-export
+  - _Requirements: SIM-TEST-01.9_
+
+- [ ] P5.3 Create comprehensive integration test suite
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - Fixture files for each sim (tests/fixtures/)
+  - Replay testing with recorded telemetry
+  - Complete adapter lifecycle tests
+  - Reconnection with exponential backoff
+  - Sanity gate with NaN/Inf injection
+  - _Requirements: SIM-TEST-01.5-8_
+
+- [ ] P5.4 Create user documentation
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - Installation guides (Windows MSI, Linux .deb/AppImage)
+  - Simulator setup guides (MSFS, X-Plane, DCS)
+  - FFB device configuration guide
+  - Troubleshooting guide
+  - _Requirements: General documentation_
+
+- [ ] P5.5 Final validation and release preparation
+  **Phase:** 5 - CI & Metrics
+  **Status:** Not started
+  - Run all tests and quality gates
+  - Verify documentation complete
+  - Verify code signing works
+  - Verify installers on clean systems
+  - Verify uninstallers clean up properly
   - Create release notes
+  - **Ship v1!**
+
+---
+
+## Troubleshooting
+
+### Locked Test Binaries (LNK1104)
+
+**Problem:** Tests fail to run with "LNK1104: cannot open file" because previous test run left binaries locked.
+
+**Solution:**
+1. Kill all cargo/test processes: `taskkill /F /IM cargo.exe /IM *.exe`
+2. Delete target/debug/deps/*.pdb files
+3. Re-run tests
+
+**Prevention:** Add to CONTRIBUTING.md so contributors know the workaround.
+
+### Hardware-Backed CI Runners
+
+**Problem:** Jitter and HID latency tests require real hardware, not VMs.
+
+**Solution:**
+- Tag CI runners with `hardware: true`
+- Gate tests with `#[cfg_attr(not(feature = "hardware"), ignore)]`
+- Run in report-only mode on VMs (don't fail builds)
+
+### DirectInput COM Calls
+
+**Problem:** DirectInput tests may fail without real FFB device attached.
+
+**Solution:**
+- Use mocks or fake DirectInput under `cfg(test)`
+- Mark hardware integration tests as `#[ignore]`, opt-in via CI job
+- Document device requirements in test comments
