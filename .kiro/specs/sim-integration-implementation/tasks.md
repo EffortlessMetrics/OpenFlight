@@ -266,7 +266,12 @@ All context documents (requirements, design) are available during implementation
   - Test connection timeout detection
   - _Requirements: DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.15, SIM-TEST-01.4_
 
-- [ ] 13. Create DCS Lua API mapping documentation
+- [x] 13. Create DCS Lua API mapping documentation
+
+
+
+
+
   - Document all Lua API functions → BusSnapshot field mappings in docs/integration/dcs.md
   - Document MP integrity check compliance (whitelisted data, restrictions)
   - _Requirements: DCS-INT-01.Doc.1, DCS-INT-01.Doc.2_
