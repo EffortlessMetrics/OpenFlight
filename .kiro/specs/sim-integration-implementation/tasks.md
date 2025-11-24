@@ -338,7 +338,12 @@ All context documents (requirements, design) are available during implementation
   - Verify documentation of XInput limitations (vibration only, no directional torque)
   - _Requirements: FFB-HID-01.5_
 
-- [ ] 18. Review and enhance FFB safety envelope
+- [x] 18. Review and enhance FFB safety envelope
+
+
+
+
+
   - Review existing FfbSafetyEnvelope implementation (safety framework exists)
   - Verify torque magnitude clamping to device max_torque_nm
   - Verify slew rate limiting (ΔNm/Δt ≤ configured limit)
@@ -347,7 +352,9 @@ All context documents (requirements, design) are available during implementation
   - Verify 50ms ramp-to-zero on fault with explicit fault timestamp tracking
   - _Requirements: FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6_
 
-- [ ] 18.1 Write unit tests for FFB safety envelope
+- [x] 18.1 Write unit tests for FFB safety envelope
+
+
   - Test torque clamping
   - Test slew rate limiting
   - Test jerk limiting
