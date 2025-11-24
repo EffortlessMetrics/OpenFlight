@@ -40,7 +40,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [-] QG-SIM-MAPPING enabled (checks for file presence)
+- [x] QG-SIM-MAPPING enabled (checks for file presence)
+
+
+
+
 
 
 - [ ] QG-UNIT-CONV enabled (checks test coverage of all BusSnapshot fields)

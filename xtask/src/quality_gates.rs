@@ -98,12 +98,29 @@ pub fn check_sim_mapping_docs() -> Result<QualityGateResult> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
 
     #[test]
     fn test_sim_mapping_docs_exist() {
+        // Ensure we're running from workspace root
+        // Tests run from the crate directory, so we need to navigate up
+        let original_dir = env::current_dir().expect("Failed to get current directory");
+        
+        // Navigate to workspace root (parent of xtask)
+        let workspace_root = original_dir
+            .parent()
+            .expect("Failed to get parent directory");
+        
+        env::set_current_dir(workspace_root)
+            .expect("Failed to change to workspace root");
+        
         // This test verifies that the mapping documentation files exist
         // It will fail if any required files are missing
         let result = check_sim_mapping_docs().expect("QG-SIM-MAPPING check failed");
+        
+        // Restore original directory
+        env::set_current_dir(original_dir)
+            .expect("Failed to restore original directory");
         
         if !result.passed {
             panic!(
