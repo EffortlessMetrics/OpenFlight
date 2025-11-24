@@ -29,7 +29,10 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 **Goal:** Lock down canonical BusSnapshot schema and mapping docs. All adapters know exactly what they're targeting.
 
 **Exit Criteria:**
-- [ ] All three mapping docs exist and match BusSnapshot schema
+- [-] All three mapping docs exist and match BusSnapshot schema
+
+
+
 - [ ] Unit tests for unit conversions pass (deg↔rad, kt↔m/s, ft↔m, fpm↔m/s)
 - [ ] QG-SIM-MAPPING enabled (checks for file presence)
 - [ ] QG-UNIT-CONV enabled (checks test coverage of all BusSnapshot fields)
