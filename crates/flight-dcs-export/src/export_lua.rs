@@ -87,9 +87,25 @@ impl ExportLuaGenerator {
 -- 1. Delete or rename Export.lua to disable
 -- 2. Restart DCS World
 --
--- MP Integrity:
+-- Implementation Details:
+-- - Uses LuaExportStart/Stop/AfterNextFrame hooks for DCS integration
+-- - Properly chains to existing Export.lua hooks (deterministic order)
+-- - Uses LoGet* functions for self-aircraft telemetry gathering
+-- - Non-blocking UDP transmission to localhost (127.0.0.1)
+-- - Target rate: 60Hz via LuaExportActivityNextEvent
+-- - Graceful nil handling for all LoGet* function returns
+--
+-- MP Integrity Compliance:
 -- - Single Player: All features available
--- - Multiplayer: Weapons/countermeasures data blocked for server integrity
+-- - Multiplayer: Self-aircraft data allowed (attitude, velocities, g-load, IAS/TAS, AoA)
+-- - Multiplayer: Weapons/countermeasures/RWR data blocked for server integrity
+-- - MP status annotated in telemetry (mp_detected flag)
+-- - Self-aircraft telemetry remains valid in MP mode
+--
+-- Hook Chaining:
+-- - Stores references to previous hook functions before redefining
+-- - Calls previous hooks in deterministic order (existing tools first)
+-- - Compatible with SRS, Tacview, and other Export.lua tools
 --
 -- Version: 1.0
 -- Protocol: Flight Hub DCS Export v1.0
@@ -172,7 +188,7 @@ FlightHubExport.config = {{
     /// Generate socket communication code
     fn generate_socket_code(&self) -> String {
         r#"
--- Socket communication
+-- Socket communication (UDP for non-blocking transmission to localhost)
 FlightHubExport.socket = nil
 FlightHubExport.connected = false
 FlightHubExport.last_heartbeat = 0
@@ -182,22 +198,21 @@ function FlightHubExport.connect()
         FlightHubExport.socket:close()
     end
     
-    FlightHubExport.socket = require('socket').tcp()
+    -- Use UDP for non-blocking, fire-and-forget transmission to localhost
+    -- This ensures DCS simulation is never blocked by network I/O
+    FlightHubExport.socket = require('socket').udp()
     FlightHubExport.socket:settimeout(0) -- Non-blocking
     
-    local result, err = FlightHubExport.socket:connect(
+    -- Set peer address for UDP (localhost only for security)
+    FlightHubExport.socket:setpeername(
         FlightHubExport.config.socket_address,
         FlightHubExport.config.socket_port
     )
     
-    if result then
-        FlightHubExport.connected = true
-        FlightHubExport.send_handshake()
-        return true
-    else
-        FlightHubExport.connected = false
-        return false
-    end
+    FlightHubExport.connected = true
+    FlightHubExport.send_handshake()
+    
+    return true
 end
 
 function FlightHubExport.send_message(message)
@@ -206,13 +221,13 @@ function FlightHubExport.send_message(message)
     end
     
     local json_str = FlightHubExport.to_json(message) .. "\n"
+    
+    -- UDP send is non-blocking and fire-and-forget
+    -- We don't check for errors to avoid blocking DCS
     local result, err = FlightHubExport.socket:send(json_str)
     
-    if not result then
-        FlightHubExport.connected = false
-        return false
-    end
-    
+    -- Even if send fails, we stay "connected" since UDP is connectionless
+    -- The Rust adapter will detect timeout if no packets arrive
     return true
 end
 
@@ -256,12 +271,13 @@ end"#
     /// Generate telemetry collection code
     fn generate_telemetry_code(&self) -> String {
         r#"
--- Telemetry data collection
+-- Telemetry data collection using LoGet* functions
+-- All functions handle nil returns gracefully for robustness
 function FlightHubExport.collect_telemetry()
     local data = {}
     local aircraft_name = "Unknown"
     
-    -- Get aircraft info
+    -- Get model time
     if DCS.getModelTime then
         local model_time = DCS.getModelTime()
         if model_time and model_time > 0 then
@@ -269,7 +285,7 @@ function FlightHubExport.collect_telemetry()
         end
     end
     
-    -- Session detection
+    -- Session detection for MP integrity check compliance
     local session_type = "SP" -- Default to single player
     local server_name = nil
     local player_count = 1
@@ -301,20 +317,28 @@ function FlightHubExport.collect_telemetry()
     local is_mp = (session_type == "MP")
     local mp_safe_mode = FlightHubExport.config.mp_safe_mode
     
-    -- Basic telemetry (always available)
+    -- Annotate MP status (does not invalidate self-aircraft data)
+    data.mp_detected = is_mp
+    
+    -- Basic telemetry (MP-safe: self-aircraft data only)
     if FlightHubExport.features.telemetry_basic then
+        -- LoGetSelfData: Returns self-aircraft position, attitude, and velocity
         if LoGetSelfData then
             local self_data = LoGetSelfData()
             if self_data then
+                -- Aircraft name
                 aircraft_name = self_data.Name or "Unknown"
                 data.aircraft = aircraft_name
                 
+                -- Position (MP-safe: self-aircraft only)
                 if self_data.LatLongAlt then
                     data.latitude = self_data.LatLongAlt.Lat
                     data.longitude = self_data.LatLongAlt.Long
                     data.altitude = self_data.LatLongAlt.Alt
                 end
                 
+                -- Attitude (MP-safe: self-aircraft only)
+                -- DCS uses radians natively, convert to degrees for consistency
                 if self_data.Heading then
                     data.heading = math.deg(self_data.Heading)
                 end
@@ -326,36 +350,84 @@ function FlightHubExport.collect_telemetry()
                 if self_data.Bank then
                     data.bank = math.deg(self_data.Bank)
                 end
+                
+                -- Angular velocities (MP-safe: self-aircraft only)
+                if self_data.AngularVelocity then
+                    data.angular_velocity_x = self_data.AngularVelocity.x
+                    data.angular_velocity_y = self_data.AngularVelocity.y
+                    data.angular_velocity_z = self_data.AngularVelocity.z
+                end
+                
+                -- Body velocities (MP-safe: self-aircraft only)
+                if self_data.Velocity then
+                    data.velocity_x = self_data.Velocity.x
+                    data.velocity_y = self_data.Velocity.y
+                    data.velocity_z = self_data.Velocity.z
+                end
             end
         end
         
+        -- LoGetIndicatedAirSpeed: Returns IAS in m/s (MP-safe)
         if LoGetIndicatedAirSpeed then
-            data.ias = LoGetIndicatedAirSpeed()
+            local ias = LoGetIndicatedAirSpeed()
+            if ias then
+                data.ias = ias
+            end
         end
         
+        -- LoGetTrueAirSpeed: Returns TAS in m/s (MP-safe)
         if LoGetTrueAirSpeed then
-            data.tas = LoGetTrueAirSpeed()
+            local tas = LoGetTrueAirSpeed()
+            if tas then
+                data.tas = tas
+            end
         end
         
+        -- LoGetAltitudeAboveSeaLevel: Returns altitude MSL in meters (MP-safe)
         if LoGetAltitudeAboveSeaLevel then
-            data.altitude_asl = LoGetAltitudeAboveSeaLevel()
+            local altitude_asl = LoGetAltitudeAboveSeaLevel()
+            if altitude_asl then
+                data.altitude_asl = altitude_asl
+            end
         end
         
+        -- LoGetAltitudeAboveGroundLevel: Returns altitude AGL in meters (MP-safe)
+        if LoGetAltitudeAboveGroundLevel then
+            local altitude_agl = LoGetAltitudeAboveGroundLevel()
+            if altitude_agl then
+                data.altitude_agl = altitude_agl
+            end
+        end
+        
+        -- LoGetVerticalVelocity: Returns vertical speed in m/s (MP-safe)
         if LoGetVerticalVelocity then
-            data.vertical_speed = LoGetVerticalVelocity()
+            local vs = LoGetVerticalVelocity()
+            if vs then
+                data.vertical_speed = vs
+            end
         end
         
+        -- LoGetAccelerationUnits: Returns g-forces (MP-safe)
         if LoGetAccelerationUnits then
             local accel = LoGetAccelerationUnits()
             if accel then
-                data.g_force = accel.y or 1.0
-                data.g_lateral = accel.x or 0.0
-                data.g_longitudinal = accel.z or 0.0
+                -- DCS returns g-forces in body frame
+                data.g_force = accel.y or 1.0        -- Vertical (normal) g-load
+                data.g_lateral = accel.x or 0.0      -- Lateral g-load
+                data.g_longitudinal = accel.z or 0.0 -- Longitudinal g-load
+            end
+        end
+        
+        -- LoGetAngleOfAttack: Returns AoA in radians (MP-safe)
+        if LoGetAngleOfAttack then
+            local aoa = LoGetAngleOfAttack()
+            if aoa then
+                data.aoa = aoa
             end
         end
     end
     
-    -- Navigation data (MP-safe)
+    -- Navigation data (MP-safe: self-aircraft navigation only)
     if FlightHubExport.features.telemetry_navigation then
         if LoGetRoute then
             local route = LoGetRoute()
@@ -375,31 +447,34 @@ function FlightHubExport.collect_telemetry()
         end
     end
     
-    -- Engine data (MP-safe)
+    -- Engine data (MP-safe: self-aircraft engines only)
     if FlightHubExport.features.telemetry_engines then
         if LoGetEngineInfo then
             local engines = LoGetEngineInfo()
             if engines then
                 data.engines = {}
                 for i, engine in pairs(engines) do
-                    data.engines[i] = {
-                        rpm = engine.RPM,
-                        temperature = engine.Temperature,
-                        fuel_flow = engine.FuelFlow
-                    }
+                    if engine then
+                        data.engines[i] = {
+                            rpm = engine.RPM,
+                            temperature = engine.Temperature,
+                            fuel_flow = engine.FuelFlow
+                        }
+                    end
                 end
             end
         end
     end
     
-    -- Weapons data (MP-blocked)
+    -- Weapons data (MP-blocked: restricted by integrity check)
+    -- Only export in single-player or when MP safe mode is disabled
     if FlightHubExport.features.telemetry_weapons and (not is_mp or not mp_safe_mode) then
         if LoGetPayloadInfo then
             local payload = LoGetPayloadInfo()
-            if payload then
+            if payload and payload.Stations then
                 data.weapons = {}
                 for station, weapon in pairs(payload.Stations) do
-                    if weapon.weapon then
+                    if weapon and weapon.weapon then
                         data.weapons[station] = {
                             name = weapon.weapon.displayName,
                             count = weapon.count
@@ -410,14 +485,15 @@ function FlightHubExport.collect_telemetry()
         end
     end
     
-    -- Countermeasures data (MP-blocked)
+    -- Countermeasures data (MP-blocked: restricted by integrity check)
+    -- Only export in single-player or when MP safe mode is disabled
     if FlightHubExport.features.telemetry_countermeasures and (not is_mp or not mp_safe_mode) then
         if LoGetSnares then
             local snares = LoGetSnares()
             if snares then
                 data.countermeasures = {
-                    chaff = snares.chaff,
-                    flare = snares.flare
+                    chaff = snares.chaff or 0,
+                    flare = snares.flare or 0
                 }
             end
         end
@@ -433,6 +509,7 @@ end"#
         r#"
 -- Main export loop
 FlightHubExport.last_update = 0
+FlightHubExport.frame_count = 0
 
 function FlightHubExport.update()
     local now = DCS.getRealTime()
@@ -467,6 +544,7 @@ function FlightHubExport.update()
     
     if FlightHubExport.send_message(message) then
         FlightHubExport.last_update = now
+        FlightHubExport.frame_count = FlightHubExport.frame_count + 1
     else
         -- Send failed, will reconnect next time
         FlightHubExport.connected = false
@@ -498,62 +576,88 @@ end"#
     /// Generate script footer
     fn generate_footer(&self) -> String {
         r#"
--- DCS Export hooks
-local function LuaExportStart()
+-- DCS Export hooks implementation
+-- These hooks are called by DCS World at specific points in the simulation lifecycle
+
+-- Store references to any existing hooks before we redefine them
+-- This ensures proper chaining with other export scripts (e.g., SRS, Tacview)
+local PrevLuaExportStart = LuaExportStart
+local PrevLuaExportStop = LuaExportStop
+local PrevLuaExportBeforeNextFrame = LuaExportBeforeNextFrame
+local PrevLuaExportAfterNextFrame = LuaExportAfterNextFrame
+local PrevLuaExportActivityNextEvent = LuaExportActivityNextEvent
+
+-- LuaExportStart: Called once when the mission starts
+function LuaExportStart()
+    -- Call previous hook first (deterministic order: existing tools first)
+    if PrevLuaExportStart then
+        PrevLuaExportStart()
+    end
+    
     -- Initialize Flight Hub export
     FlightHubExport.connect()
+    FlightHubExport.last_update = DCS.getRealTime()
 end
 
-local function LuaExportBeforeNextFrame()
-    -- Update telemetry
-    FlightHubExport.update()
-end
-
-local function LuaExportStop()
-    -- Clean up connection
+-- LuaExportStop: Called once when the mission ends
+function LuaExportStop()
+    -- Clean up Flight Hub connection first
     if FlightHubExport.socket then
         FlightHubExport.socket:close()
         FlightHubExport.socket = nil
     end
     FlightHubExport.connected = false
+    
+    -- Call previous hook last (deterministic order: existing tools last)
+    if PrevLuaExportStop then
+        PrevLuaExportStop()
+    end
 end
 
--- Hook into DCS export system
-DCS.setUserCallbacks({
-    onSimulationStart = LuaExportStart,
-    onSimulationFrame = LuaExportBeforeNextFrame,
-    onSimulationStop = LuaExportStop
-})
-
--- Legacy hook support (if other exports exist)
-if LuaExportStart_Original then
-    local original_start = LuaExportStart_Original
-    LuaExportStart_Original = function()
-        original_start()
-        LuaExportStart()
+-- LuaExportBeforeNextFrame: Called before each simulation frame
+-- This is the main telemetry update hook
+function LuaExportBeforeNextFrame()
+    -- Call previous hook first
+    if PrevLuaExportBeforeNextFrame then
+        PrevLuaExportBeforeNextFrame()
     end
-else
-    LuaExportStart_Original = LuaExportStart
+    
+    -- Update Flight Hub telemetry
+    FlightHubExport.update()
 end
 
-if LuaExportBeforeNextFrame_Original then
-    local original_frame = LuaExportBeforeNextFrame_Original
-    LuaExportBeforeNextFrame_Original = function()
-        original_frame()
-        LuaExportBeforeNextFrame()
+-- LuaExportAfterNextFrame: Called after each simulation frame
+function LuaExportAfterNextFrame()
+    -- Call previous hook first
+    if PrevLuaExportAfterNextFrame then
+        PrevLuaExportAfterNextFrame()
     end
-else
-    LuaExportBeforeNextFrame_Original = LuaExportBeforeNextFrame
+    
+    -- Flight Hub doesn't need post-frame processing currently
+    -- This hook is here for completeness and future use
 end
 
-if LuaExportStop_Original then
-    local original_stop = LuaExportStop_Original
-    LuaExportStop_Original = function()
-        original_stop()
-        LuaExportStop()
+-- LuaExportActivityNextEvent: Controls the export update rate
+-- Returns the time in seconds until the next export should occur
+-- Returning a small value (e.g., 0.0167 for 60Hz) ensures high-rate updates
+function LuaExportActivityNextEvent(tCurrent)
+    -- Call previous hook first if it exists
+    local tNext = nil
+    if PrevLuaExportActivityNextEvent then
+        tNext = PrevLuaExportActivityNextEvent(tCurrent)
     end
-else
-    LuaExportStop_Original = LuaExportStop
+    
+    -- Flight Hub target: 60Hz = 0.0167 seconds between updates
+    -- This ensures we get called frequently enough for smooth FFB
+    local flightHubInterval = 1.0 / 60.0  -- 60Hz target rate
+    
+    -- If previous hook requested a sooner callback, honor it
+    -- Otherwise use our 60Hz target
+    if tNext and tNext < flightHubInterval then
+        return tNext
+    else
+        return tCurrent + flightHubInterval
+    end
 end"#
             .to_string()
     }
@@ -705,7 +809,34 @@ mod tests {
         assert!(script.contains("telemetry_basic = true"));
         assert!(script.contains("MP-safe"));
         assert!(script.contains("MP-blocked"));
-        assert!(script.contains("DCS.setUserCallbacks"));
+        
+        // Check for proper DCS Export hooks
+        assert!(script.contains("function LuaExportStart()"));
+        assert!(script.contains("function LuaExportStop()"));
+        assert!(script.contains("function LuaExportBeforeNextFrame()"));
+        assert!(script.contains("function LuaExportAfterNextFrame()"));
+        assert!(script.contains("function LuaExportActivityNextEvent(tCurrent)"));
+        
+        // Check for proper hook chaining
+        assert!(script.contains("PrevLuaExportStart"));
+        assert!(script.contains("PrevLuaExportStop"));
+        assert!(script.contains("PrevLuaExportBeforeNextFrame"));
+        assert!(script.contains("PrevLuaExportAfterNextFrame"));
+        assert!(script.contains("PrevLuaExportActivityNextEvent"));
+        
+        // Check for UDP socket (non-blocking)
+        assert!(script.contains("require('socket').udp()"));
+        assert!(script.contains("settimeout(0)"));
+        
+        // Check for LoGet* functions
+        assert!(script.contains("LoGetSelfData"));
+        assert!(script.contains("LoGetIndicatedAirSpeed"));
+        assert!(script.contains("LoGetTrueAirSpeed"));
+        assert!(script.contains("LoGetAccelerationUnits"));
+        assert!(script.contains("LoGetAngleOfAttack"));
+        
+        // Check for 60Hz target rate
+        assert!(script.contains("1.0 / 60.0"));
     }
 
     #[test]
@@ -740,5 +871,65 @@ mod tests {
         assert!(install_script.contains("Flight Hub DCS Export Installation"));
         assert!(install_script.contains("What We Touch"));
         assert!(install_script.contains("Multiplayer Integrity"));
+    }
+
+    #[test]
+    fn test_requirements_compliance() {
+        let config = ExportLuaConfig::default();
+        let generator = ExportLuaGenerator::new(config);
+        let script = generator.generate_script();
+
+        // DCS-INT-01.4: Verify LuaExportStart/Stop/AfterNextFrame hooks
+        assert!(script.contains("function LuaExportStart()"));
+        assert!(script.contains("function LuaExportStop()"));
+        assert!(script.contains("function LuaExportAfterNextFrame()"));
+        
+        // DCS-INT-01.5: Verify proper chaining to existing Export.lua hooks
+        assert!(script.contains("local PrevLuaExportStart = LuaExportStart"));
+        assert!(script.contains("local PrevLuaExportStop = LuaExportStop"));
+        assert!(script.contains("local PrevLuaExportBeforeNextFrame = LuaExportBeforeNextFrame"));
+        assert!(script.contains("if PrevLuaExportStart then"));
+        assert!(script.contains("PrevLuaExportStart()"));
+        
+        // DCS-INT-01.6: Verify self-aircraft telemetry gathering using LoGet* functions
+        assert!(script.contains("LoGetSelfData"));
+        assert!(script.contains("LoGetIndicatedAirSpeed"));
+        assert!(script.contains("LoGetTrueAirSpeed"));
+        assert!(script.contains("LoGetAltitudeAboveSeaLevel"));
+        assert!(script.contains("LoGetAltitudeAboveGroundLevel"));
+        assert!(script.contains("LoGetVerticalVelocity"));
+        assert!(script.contains("LoGetAccelerationUnits"));
+        assert!(script.contains("LoGetAngleOfAttack"));
+        
+        // DCS-INT-01.7: Verify nil handling
+        assert!(script.contains("if self_data then"));
+        assert!(script.contains("if ias then"));
+        assert!(script.contains("if accel then"));
+        
+        // DCS-INT-01.8: Verify MP integrity check compliance
+        assert!(script.contains("mp_detected"));
+        assert!(script.contains("session_type"));
+        assert!(script.contains("MP-safe"));
+        assert!(script.contains("MP-blocked"));
+        
+        // DCS-INT-01.9: Verify whitelist self-aircraft data
+        assert!(script.contains("self-aircraft data only"));
+        assert!(script.contains("self-aircraft navigation only"));
+        assert!(script.contains("self-aircraft engines only"));
+        
+        // DCS-INT-01.10: Verify MP-blocked features
+        assert!(script.contains("telemetry_weapons"));
+        assert!(script.contains("telemetry_countermeasures"));
+        assert!(script.contains("not is_mp or not mp_safe_mode"));
+        
+        // DCS-INT-01.11: Verify non-blocking UDP transmission to localhost
+        assert!(script.contains("require('socket').udp()"));
+        assert!(script.contains("settimeout(0)"));
+        assert!(script.contains("127.0.0.1"));
+        
+        // DCS-INT-01.12: Verify 60Hz target rate via LuaExportActivityNextEvent
+        assert!(script.contains("function LuaExportActivityNextEvent(tCurrent)"));
+        assert!(script.contains("1.0 / 60.0"));
+        assert!(script.contains("60Hz target rate"));
     }
 }

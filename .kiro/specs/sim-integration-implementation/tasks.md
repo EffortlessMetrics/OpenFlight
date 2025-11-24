@@ -206,7 +206,12 @@ All context documents (requirements, design) are available during implementation
   - Provide setup instructions for X-Plane Data Output screen configuration
   - _Requirements: XPLANE-INT-01.Doc.1, XPLANE-INT-01.Doc.2_
 
-- [ ] 10. Review and enhance DCS Export.lua script
+- [x] 10. Review and enhance DCS Export.lua script
+
+
+
+
+
   - Review existing FlightHubExport.lua in `crates/flight-dcs-export/`
   - Verify LuaExportStart/Stop/AfterNextFrame hooks
   - Verify proper chaining to existing Export.lua hooks (store previous functions, call in deterministic order)
