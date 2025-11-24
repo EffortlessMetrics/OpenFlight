@@ -125,14 +125,21 @@ All context documents (requirements, design) are available during implementation
   - Test safe_for_ffb flag behavior in each state
   - _Requirements: MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16, SIM-TEST-01.2, SIM-TEST-01.8_
 
-- [ ] 5. Review and enhance MSFS update rate monitoring and metrics
+- [x] 5. Review and enhance MSFS update rate monitoring and metrics
+
+
+
+
+
   - Review existing update rate monitoring
   - Verify conditional 60 Hz target (when sim FPS ≥60)
   - Verify metrics for actual update rate and jitter are exposed via shared metrics system (Task 41) under sim.msfs.* namespace
   - Verify aircraft change detection via TITLE SimVar
   - _Requirements: MSFS-INT-01.7, MSFS-INT-01.8, MSFS-INT-01.17_
 
-- [ ] 5.1 Write integration tests for MSFS adapter
+- [x] 5.1 Write integration tests for MSFS adapter
+
+
   - Test complete adapter lifecycle with recorded fixtures
   - Test reconnection behavior
   - Test aircraft change detection

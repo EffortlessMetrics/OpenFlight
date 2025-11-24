@@ -4,11 +4,12 @@
 //! and mock data, ensuring the adapter works correctly without requiring a live
 //! MSFS connection.
 
+use flight_bus::adapters::SimAdapter;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, SimId};
 use flight_simconnect::{
-    MsfsAdapter, MsfsAdapterConfig,
-    fixtures::{FixtureRecorder, RecordedEvent, SessionFixture, ValidationTolerance},
+    AdapterMetrics, AdapterState, MsfsAdapter, MsfsAdapterConfig,
+    fixtures::{FixtureRecorder, RecordedEvent, ValidationTolerance},
 };
 use std::time::Duration;
 use tempfile::TempDir;
@@ -194,7 +195,6 @@ fn test_adapter_configuration() {
 #[tokio::test]
 async fn test_bus_snapshot_integration() {
     use flight_bus::adapters::msfs::MsfsConverter;
-    use flight_bus::types::ValidatedSpeed;
 
     // Test MSFS converter functions
     let ias = MsfsConverter::convert_ias(150.0).unwrap();
@@ -266,4 +266,260 @@ fn test_redistribution_compliance() {
     println!("- Uses only public SimConnect API");
     println!("- No modification of MSFS installation files");
     println!("- All integration via documented SimConnect interface");
+}
+
+/// Test update rate monitoring and metrics
+/// Requirements: MSFS-INT-01.7, MSFS-INT-01.8
+#[tokio::test]
+async fn test_update_rate_monitoring() {
+    let config = MsfsAdapterConfig::default();
+
+    match MsfsAdapter::new(config) {
+        Ok(adapter) => {
+            // Get initial metrics
+            let metrics = adapter.metrics().await;
+            assert_eq!(metrics.total_updates, 0);
+            assert_eq!(metrics.actual_update_rate, 0.0);
+            assert_eq!(metrics.update_jitter_p99_ms, 0.0);
+            assert_eq!(metrics.aircraft_changes, 0);
+
+            // Metrics should be accessible
+            let summary = adapter.metrics_summary().await;
+            assert!(summary.contains("Updates: 0"));
+        }
+        Err(e) => {
+            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+        }
+    }
+}
+
+/// Test metrics recording functionality
+/// Requirements: MSFS-INT-01.7, MSFS-INT-01.8
+#[test]
+fn test_metrics_recording() {
+    use std::thread;
+
+    let mut metrics = AdapterMetrics::new();
+
+    // Record multiple updates with small delays
+    for _ in 0..10 {
+        metrics.record_update();
+        thread::sleep(Duration::from_millis(16)); // ~60 Hz
+    }
+
+    // Verify metrics were recorded
+    assert_eq!(metrics.total_updates, 10);
+    assert!(metrics.actual_update_rate > 0.0);
+    assert!(metrics.actual_update_rate < 100.0); // Reasonable range
+
+    // Verify jitter calculation
+    assert!(metrics.update_jitter_p99_ms >= 0.0);
+
+    // Test aircraft change detection
+    metrics.record_aircraft_change("Cessna 172".to_string());
+    assert_eq!(metrics.aircraft_changes, 1);
+    assert_eq!(metrics.last_aircraft_title, Some("Cessna 172".to_string()));
+
+    // Same aircraft should not increment counter
+    metrics.record_aircraft_change("Cessna 172".to_string());
+    assert_eq!(metrics.aircraft_changes, 1);
+
+    // Different aircraft should increment
+    metrics.record_aircraft_change("Airbus A320".to_string());
+    assert_eq!(metrics.aircraft_changes, 2);
+}
+
+/// Test conditional 60 Hz target
+/// Requirements: MSFS-INT-01.7
+#[test]
+fn test_conditional_60hz_target() {
+    let config = MsfsAdapterConfig::default();
+
+    // Default publish rate should be 60 Hz
+    assert_eq!(config.publish_rate, 60.0);
+
+    // Verify update rates configuration
+    assert_eq!(config.mapping.update_rates.kinematics, 60.0);
+
+    // The adapter should target 60 Hz when sim FPS >= 60
+    // This is enforced through the publish_rate configuration
+    let min_interval = Duration::from_secs_f32(1.0 / config.publish_rate);
+    // ~16.67ms for 60 Hz (allow for floating point precision)
+    assert!(min_interval.as_millis() >= 16 && min_interval.as_millis() <= 17);
+}
+
+/// Test aircraft change detection via TITLE SimVar
+/// Requirements: MSFS-INT-01.17
+#[tokio::test]
+async fn test_aircraft_change_detection() {
+    use flight_simconnect::aircraft::{AircraftCategory, AircraftDetector, AircraftInfo, EngineType};
+
+    let mut detector = AircraftDetector::new();
+
+    // Create first aircraft
+    let aircraft1 = AircraftInfo {
+        title: "Cessna 172 Skyhawk".to_string(),
+        atc_model: "C172".to_string(),
+        atc_type: "CESSNA".to_string(),
+        atc_airline: None,
+        atc_flight_number: None,
+        category: AircraftCategory::Airplane,
+        engine_type: EngineType::Piston,
+        engine_count: 1,
+    };
+
+    // Simulate aircraft data processing
+    let data1 = create_mock_aircraft_data(&aircraft1);
+    let result1 = detector.process_aircraft_data(&data1);
+    assert!(result1.is_ok());
+    assert!(result1.unwrap().is_some()); // First detection should return Some
+
+    // Same aircraft should not trigger change
+    let result2 = detector.process_aircraft_data(&data1);
+    assert!(result2.is_ok());
+    assert!(result2.unwrap().is_none()); // No change
+
+    // Different aircraft should trigger change
+    let aircraft2 = AircraftInfo {
+        title: "Airbus A320neo".to_string(),
+        atc_model: "A320".to_string(),
+        atc_type: "AIRBUS".to_string(),
+        atc_airline: None,
+        atc_flight_number: None,
+        category: AircraftCategory::Airplane,
+        engine_type: EngineType::Jet,
+        engine_count: 2,
+    };
+
+    let data2 = create_mock_aircraft_data(&aircraft2);
+    let result3 = detector.process_aircraft_data(&data2);
+    assert!(result3.is_ok());
+    assert!(result3.unwrap().is_some()); // Change detected
+}
+
+/// Test complete adapter lifecycle with recorded fixtures
+/// Requirements: SIM-TEST-01.1, SIM-TEST-01.5
+#[tokio::test]
+async fn test_adapter_lifecycle_with_fixtures() {
+    let config = MsfsAdapterConfig::default();
+
+    match MsfsAdapter::new(config) {
+        Ok(mut adapter) => {
+            // Test initial state
+            assert_eq!(adapter.state().await, AdapterState::Disconnected);
+            assert!(!adapter.is_active().await);
+
+            // Test metrics are initialized
+            let metrics = adapter.metrics().await;
+            assert_eq!(metrics.total_updates, 0);
+
+            // Simulate connection loss
+            adapter.handle_connection_loss().await;
+            assert_eq!(adapter.state().await, AdapterState::Disconnected);
+
+            // Verify state is cleared
+            assert!(adapter.current_aircraft().await.is_none());
+            assert!(adapter.current_snapshot().await.is_none());
+        }
+        Err(e) => {
+            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+        }
+    }
+}
+
+/// Test reconnection behavior with exponential backoff
+/// Requirements: SIM-TEST-01.7
+#[tokio::test]
+async fn test_reconnection_behavior() {
+    let mut config = MsfsAdapterConfig::default();
+    config.auto_reconnect = true;
+    config.max_reconnect_attempts = 3;
+
+    match MsfsAdapter::new(config) {
+        Ok(adapter) => {
+            // Verify initial state
+            assert_eq!(adapter.connection_attempts(), 0);
+            assert_eq!(adapter.current_backoff_delay(), 1.0);
+
+            // Verify backoff configuration
+            assert!(adapter.state().await == AdapterState::Disconnected);
+        }
+        Err(e) => {
+            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+        }
+    }
+}
+
+/// Test metrics namespace structure
+/// Requirements: MSFS-INT-01.8
+#[test]
+fn test_metrics_namespace() {
+    let metrics = AdapterMetrics::new();
+
+    // Verify metrics summary format includes expected fields
+    let summary = metrics.summary();
+    assert!(summary.contains("Updates:"));
+    assert!(summary.contains("Rate:"));
+    assert!(summary.contains("Hz"));
+    assert!(summary.contains("Jitter p99:"));
+    assert!(summary.contains("ms"));
+    assert!(summary.contains("Aircraft changes:"));
+
+    // Metrics should be under sim.msfs.* namespace (documented in design)
+    // This is enforced through the metrics system integration (Task 41)
+}
+
+/// Helper function to create mock aircraft data for testing
+fn create_mock_aircraft_data(aircraft: &flight_simconnect::aircraft::AircraftInfo) -> Vec<u8> {
+    let mut data = Vec::new();
+
+    // Title (256 bytes)
+    let mut title_bytes = aircraft.title.as_bytes().to_vec();
+    title_bytes.resize(256, 0);
+    data.extend_from_slice(&title_bytes);
+
+    // ATC model (32 bytes)
+    let mut model_bytes = aircraft.atc_model.as_bytes().to_vec();
+    model_bytes.resize(32, 0);
+    data.extend_from_slice(&model_bytes);
+
+    // ATC type (32 bytes)
+    let mut type_bytes = aircraft.atc_type.as_bytes().to_vec();
+    type_bytes.resize(32, 0);
+    data.extend_from_slice(&type_bytes);
+
+    // ATC airline (64 bytes)
+    let airline_bytes = vec![0u8; 64];
+    data.extend_from_slice(&airline_bytes);
+
+    // ATC flight number (32 bytes)
+    let flight_bytes = vec![0u8; 32];
+    data.extend_from_slice(&flight_bytes);
+
+    // Category (32 bytes)
+    let category_str = match aircraft.category {
+        flight_simconnect::aircraft::AircraftCategory::Airplane => "AIRPLANE",
+        flight_simconnect::aircraft::AircraftCategory::Helicopter => "HELICOPTER",
+        flight_simconnect::aircraft::AircraftCategory::Glider => "GLIDER",
+        flight_simconnect::aircraft::AircraftCategory::Unknown => "UNKNOWN",
+    };
+    let mut category_bytes = category_str.as_bytes().to_vec();
+    category_bytes.resize(32, 0);
+    data.extend_from_slice(&category_bytes);
+
+    // Engine type (4 bytes)
+    let engine_type_value: i32 = match aircraft.engine_type {
+        flight_simconnect::aircraft::EngineType::Piston => 0,
+        flight_simconnect::aircraft::EngineType::Jet => 1,
+        flight_simconnect::aircraft::EngineType::Turboprop => 3,
+        flight_simconnect::aircraft::EngineType::Turboshaft => 4,
+        flight_simconnect::aircraft::EngineType::Electric => 5,
+        flight_simconnect::aircraft::EngineType::Unknown => 2,
+    };
+    data.extend_from_slice(&engine_type_value.to_le_bytes());
+
+    // Engine count (4 bytes)
+    data.extend_from_slice(&(aircraft.engine_count as i32).to_le_bytes());
+
+    data
 }

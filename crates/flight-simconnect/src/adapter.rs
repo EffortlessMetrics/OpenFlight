@@ -94,6 +94,86 @@ pub enum AdapterState {
     Error,
 }
 
+/// Adapter metrics for monitoring update rate and jitter
+#[derive(Debug, Clone, Default)]
+pub struct AdapterMetrics {
+    /// Total number of telemetry updates received
+    pub total_updates: u64,
+    /// Last update timestamp
+    pub last_update_time: Option<Instant>,
+    /// Update intervals (for jitter calculation)
+    pub update_intervals: Vec<Duration>,
+    /// Maximum interval buffer size
+    pub max_interval_samples: usize,
+    /// Actual update rate (Hz) - calculated from recent intervals
+    pub actual_update_rate: f32,
+    /// Update jitter (p99 in milliseconds)
+    pub update_jitter_p99_ms: f32,
+    /// Last aircraft title (for change detection)
+    pub last_aircraft_title: Option<String>,
+    /// Aircraft change count
+    pub aircraft_changes: u64,
+}
+
+impl AdapterMetrics {
+    /// Create new metrics with default buffer size
+    pub fn new() -> Self {
+        Self {
+            max_interval_samples: 100, // Keep last 100 samples for jitter calculation
+            ..Default::default()
+        }
+    }
+
+    /// Record a telemetry update
+    pub fn record_update(&mut self) {
+        self.total_updates += 1;
+        let now = Instant::now();
+
+        if let Some(last_time) = self.last_update_time {
+            let interval = now.duration_since(last_time);
+            self.update_intervals.push(interval);
+
+            // Keep only recent samples
+            if self.update_intervals.len() > self.max_interval_samples {
+                self.update_intervals.remove(0);
+            }
+
+            // Calculate actual update rate from recent intervals
+            if !self.update_intervals.is_empty() {
+                let avg_interval: Duration = self.update_intervals.iter().sum::<Duration>()
+                    / self.update_intervals.len() as u32;
+                self.actual_update_rate = 1.0 / avg_interval.as_secs_f32();
+
+                // Calculate p99 jitter
+                let mut sorted_intervals = self.update_intervals.clone();
+                sorted_intervals.sort();
+                let p99_index = (sorted_intervals.len() as f32 * 0.99) as usize;
+                if p99_index < sorted_intervals.len() {
+                    self.update_jitter_p99_ms = sorted_intervals[p99_index].as_secs_f32() * 1000.0;
+                }
+            }
+        }
+
+        self.last_update_time = Some(now);
+    }
+
+    /// Record aircraft change
+    pub fn record_aircraft_change(&mut self, title: String) {
+        if self.last_aircraft_title.as_ref() != Some(&title) {
+            self.aircraft_changes += 1;
+            self.last_aircraft_title = Some(title);
+        }
+    }
+
+    /// Get metrics summary for logging/monitoring
+    pub fn summary(&self) -> String {
+        format!(
+            "Updates: {}, Rate: {:.1} Hz, Jitter p99: {:.2} ms, Aircraft changes: {}",
+            self.total_updates, self.actual_update_rate, self.update_jitter_p99_ms, self.aircraft_changes
+        )
+    }
+}
+
 /// Main MSFS SimConnect adapter
 pub struct MsfsAdapter {
     /// Adapter configuration
@@ -124,6 +204,8 @@ pub struct MsfsAdapter {
     last_connection_attempt: Option<Instant>,
     /// Current backoff delay in seconds
     current_backoff_delay: f64,
+    /// Adapter metrics
+    metrics: Arc<RwLock<AdapterMetrics>>,
 }
 
 impl MsfsAdapter {
@@ -146,6 +228,7 @@ impl MsfsAdapter {
             connection_attempts: 0,
             last_connection_attempt: None,
             current_backoff_delay: 1.0, // Start with 1 second
+            metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
         })
     }
 
@@ -526,6 +609,13 @@ impl MsfsAdapter {
                 return Ok(());
             }
 
+            // Record metrics
+            {
+                let mut metrics = self.metrics.write().await;
+                metrics.record_update();
+                metrics.record_aircraft_change(aircraft.title.clone());
+            }
+
             *self.current_snapshot.write().await = Some(snapshot.clone());
 
             if let Err(e) = self.snapshot_sender.send(snapshot) {
@@ -537,7 +627,7 @@ impl MsfsAdapter {
     }
 
     /// Handle connection loss by transitioning to disconnected state
-    pub(crate) async fn handle_connection_loss(&mut self) {
+    pub async fn handle_connection_loss(&mut self) {
         warn!("SimConnect connection lost, transitioning to Disconnected state");
         
         // Clean up session
@@ -564,6 +654,16 @@ impl MsfsAdapter {
     /// Get connection attempts count for testing
     pub fn connection_attempts(&self) -> u32 {
         self.connection_attempts
+    }
+
+    /// Get adapter metrics
+    pub async fn metrics(&self) -> AdapterMetrics {
+        self.metrics.read().await.clone()
+    }
+
+    /// Get metrics summary string
+    pub async fn metrics_summary(&self) -> String {
+        self.metrics.read().await.summary()
     }
 }
 
