@@ -152,7 +152,9 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [-] QG-SANITY-GATE enabled and passing (tests inject NaN/Inf and implausible jumps)
+- [x] QG-SANITY-GATE enabled and passing (tests inject NaN/Inf and implausible jumps)
+
+
 
 
 
@@ -207,6 +209,8 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - _Requirements: SIM-TEST-01.4_
 
 - [x] P1.4 Enable Phase 1 CI quality gate
+
+
 
 
   **Phase:** 1 - Adapters
