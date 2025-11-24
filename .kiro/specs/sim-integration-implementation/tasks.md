@@ -141,8 +141,12 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 **Goal:** All three sims feed clean, sane BusSnapshots into the bus. FFB still disabled.
 
 **Exit Criteria:**
-- [ ] All adapter unit and integration tests pass
-- [ ] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
+- [x] All adapter unit and integration tests pass
+
+
+- [-] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
+
+
 - [ ] Sanity violations only occur when deliberately injecting nonsense
 - [ ] QG-SANITY-GATE enabled and passing (tests inject NaN/Inf and implausible jumps)
 
@@ -204,7 +208,9 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Verify gate passes for all three adapters
   - _Requirements: CI Quality Gates_
 
-- [ ] P1.5 Phase 1 Checkpoint
+- [x] P1.5 Phase 1 Checkpoint
+
+
   **Phase:** 1 - Adapters
   **Status:** Not started
   - Run all adapter tests: `cargo test -p flight-simconnect -p flight-xplane -p flight-dcs-export`
