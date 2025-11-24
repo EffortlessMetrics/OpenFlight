@@ -6,6 +6,23 @@ This design document provides the detailed technical architecture for implementi
 
 The design follows a "boring reliability" principle: use well-established patterns, official SDK interfaces, and conservative safety margins. Each simulator adapter is a pure mapping layer that normalizes heterogeneous telemetry into the canonical BusSnapshot structure, while the FFB and runtime layers provide deterministic, zero-surprise behavior under all conditions including faults.
 
+### Implementation Status
+
+**Core components implemented:**
+- ✅ Type-safe BusSnapshot with validated types (ValidatedSpeed, ValidatedAngle, Percentage, GForce, Mach)
+- ✅ MSFS SimConnect adapter with connection management and telemetry mapping
+- ✅ X-Plane UDP adapter with DATA packet parsing and web API integration
+- ✅ DCS Export.lua adapter with installer and MP integrity check compliance
+- ✅ Comprehensive unit tests with fixtures for all adapters
+- ✅ Documentation in docs/integration/ for MSFS, X-Plane, and DCS
+
+**Components in progress or planned:**
+- 🚧 FFB DirectInput implementation (design complete, implementation in progress)
+- 🚧 Windows/Linux runtime scheduling (design complete, implementation in progress)
+- 📋 Packaging and distribution infrastructure (design complete, not yet implemented)
+
+This document reflects both the implemented architecture and the design for remaining components.
+
 ### Design Principles
 
 1. **Schema-First**: BusSnapshot is the contract; adapters are pure decoders
@@ -73,196 +90,190 @@ All simulator adapters follow the same pattern:
 
 The BusSnapshot is the central data contract that all simulator adapters populate and all consumers read.
 
-**Internal vs ABI Representation:**
+**Type-Safe Design:**
 
-The design separates ergonomic Rust types from ABI-safe wire formats:
+The actual implementation uses a sophisticated type-safe approach with validated types that enforce ranges and units at construction time:
 
-- **BusSnapshot**: Internal, ergonomic struct with String, Option<T>, etc. for adapter logic
-- **BusSnapshotRaw**: POD representation for lock-free ring buffers, FFI, and cross-thread sharing
+- **ValidatedSpeed**: Enforces 0-1000 knots or 0-500 m/s range with unit tracking
+- **ValidatedAngle**: Enforces -180 to 180 degrees or -π to π radians with unit tracking
+- **Percentage**: Enforces 0-100 range with normalized conversion (0.0-1.0)
+- **GForce**: Enforces -20 to 20 range for g-load values
+- **Mach**: Enforces 0-5 range for Mach number
 
-**Internal Data Structure:**
+**Actual Data Structure:**
 
 ```rust
-// Internal, ergonomic representation (NOT repr(C))
+/// Complete telemetry snapshot published on the bus
 pub struct BusSnapshot {
-    // Identity
-    pub sim_id: SimId,              // msfs, xplane, dcs, none
-    pub aircraft_type: String,       // ICAO or internal type
-    pub aircraft_name: String,       // Display name
-    pub livery: Option<String>,
-    
-    // Kinematics (canonical units)
-    pub attitude: Attitude,          // roll, pitch, yaw (radians)
-    pub angular_rates: AngularRates, // p, q, r (rad/s)
-    pub velocities: Velocities,      // body X/Y/Z (m/s), ias, tas, vs
-    pub altitude_agl: f32,           // meters
-    pub altitude_msl: f32,           // meters
-    pub kinematics: Kinematics,      // nz_g, load_vector_body
-    
-    // Aerodynamics
-    pub aero: Aero,                  // alpha, beta, mach
-    
-    // Flight condition
-    pub on_ground: bool,
-    pub gear_handle: u8,
-    pub gear_position: f32,          // 0.0 = up, 1.0 = down
-    pub flaps_handle: u8,
-    pub flaps_position: f32,
-    pub weight_on_wheels: WoWFlags,
-    
-    // Controls
-    pub controls: Controls,          // stick/yoke ratios, trim, AP state
-    
-    // Metadata
-    pub valid_flags: ValidFlags,     // per-group validity
-    pub source_sim_timestamp: u64,   // sim's time (if available)
-    pub bus_timestamp: u64,          // Flight Hub monotonic time (ns)
-    pub safe_for_ffb: bool,          // Sanity gate output
+    /// Simulator identifier
+    pub sim: SimId,
+    /// Aircraft identifier
+    pub aircraft: AircraftId,
+    /// Monotonic timestamp in nanoseconds
+    pub timestamp: u64,
+    /// Flight kinematics data
+    pub kinematics: Kinematics,
+    /// Aircraft configuration
+    pub config: AircraftConfig,
+    /// Helicopter-specific data (if applicable)
+    pub helo: Option<HeloData>,
+    /// Engine data
+    pub engines: Vec<EngineData>,
+    /// Environmental data
+    pub environment: Environment,
+    /// Navigation data
+    pub navigation: Navigation,
 }
 
-#[repr(C)]
-pub struct Attitude {
-    pub roll: f32,   // radians, right-hand rule
-    pub pitch: f32,  // radians
-    pub yaw: f32,    // radians
-}
-
-#[repr(C)]
-pub struct AngularRates {
-    pub p: f32,  // rad/s, rotation about body X
-    pub q: f32,  // rad/s, rotation about body Y
-    pub r: f32,  // rad/s, rotation about body Z
-}
-
-#[repr(C)]
-pub struct Velocities {
-    pub body_x: f32,  // m/s, forward
-    pub body_y: f32,  // m/s, right
-    pub body_z: f32,  // m/s, down
-    pub ias: f32,     // m/s
-    pub tas: f32,     // m/s
-    pub vs: f32,      // m/s, vertical speed
-}
-
-#[repr(C)]
+/// Flight kinematics and performance data
 pub struct Kinematics {
-    pub nz_g: f32,                      // g along body Z (dimensionless)
-    pub load_vector_body: Option<[f32; 3]>, // optional full load vector
+    /// Indicated airspeed (validated, unit-aware)
+    pub ias: ValidatedSpeed,
+    /// True airspeed (validated, unit-aware)
+    pub tas: ValidatedSpeed,
+    /// Ground speed (validated, unit-aware)
+    pub ground_speed: ValidatedSpeed,
+    /// Angle of attack (validated, unit-aware)
+    pub aoa: ValidatedAngle,
+    /// Sideslip angle (validated, unit-aware)
+    pub sideslip: ValidatedAngle,
+    /// Bank angle (validated, unit-aware)
+    pub bank: ValidatedAngle,
+    /// Pitch angle (validated, unit-aware)
+    pub pitch: ValidatedAngle,
+    /// Heading (magnetic, validated, unit-aware)
+    pub heading: ValidatedAngle,
+    /// G-force (vertical, validated range)
+    pub g_force: GForce,
+    /// G-force lateral (validated range)
+    pub g_lateral: GForce,
+    /// G-force longitudinal (validated range)
+    pub g_longitudinal: GForce,
+    /// Mach number (validated range)
+    pub mach: Mach,
+    /// Vertical speed (feet per minute)
+    pub vertical_speed: f32,
 }
 
-#[repr(C)]
-pub struct Aero {
-    pub alpha: f32,  // rad, angle of attack
-    pub beta: f32,   // rad, sideslip angle
-    pub mach: f32,   // dimensionless (optional, 0.0 if unavailable)
-}
-
-#[repr(C)]
-pub struct Controls {
-    pub pitch_ratio: f32,  // -1.0 to 1.0
-    pub roll_ratio: f32,   // -1.0 to 1.0
-    pub yaw_ratio: f32,    // -1.0 to 1.0
-    pub trim_pitch: f32,
-    pub trim_roll: f32,
-    pub trim_yaw: f32,
+/// Aircraft configuration and systems
+pub struct AircraftConfig {
+    /// Landing gear state (per-gear positions)
+    pub gear: GearState,
+    /// Flaps position (validated percentage)
+    pub flaps: Percentage,
+    /// Spoilers position (validated percentage)
+    pub spoilers: Percentage,
+    /// Autopilot state
     pub ap_state: AutopilotState,
+    /// Autopilot altitude target (feet)
+    pub ap_altitude: Option<f32>,
+    /// Autopilot heading target (validated angle)
+    pub ap_heading: Option<ValidatedAngle>,
+    /// Autopilot speed target (validated speed)
+    pub ap_speed: Option<ValidatedSpeed>,
+    /// Lights configuration
+    pub lights: LightsConfig,
+    /// Fuel quantity (percentage per tank)
+    pub fuel: HashMap<String, Percentage>,
 }
 
-#[repr(C)]
-pub struct ValidFlags {
-    pub attitude_valid: bool,
-    pub velocities_valid: bool,
-    pub controls_valid: bool,
-    pub aero_valid: bool,
-    pub kinematics_valid: bool,
+/// Helicopter-specific telemetry
+pub struct HeloData {
+    /// Main rotor RPM (percentage of nominal)
+    pub nr: Percentage,
+    /// Power turbine RPM (percentage of nominal)
+    pub np: Percentage,
+    /// Torque (percentage of maximum)
+    pub torque: Percentage,
+    /// Collective position (percentage)
+    pub collective: Percentage,
+    /// Anti-torque pedal position (-100 to 100)
+    pub pedals: f32,
+}
+
+/// Engine telemetry data
+pub struct EngineData {
+    pub index: u8,
+    pub running: bool,
+    pub rpm: Percentage,
+    pub manifold_pressure: Option<f32>,
+    pub egt: Option<f32>,
+    pub cht: Option<f32>,
+    pub fuel_flow: Option<f32>,
+    pub oil_pressure: Option<f32>,
+    pub oil_temperature: Option<f32>,
+}
+
+/// Environmental conditions
+pub struct Environment {
+    pub altitude: f32,              // feet
+    pub pressure_altitude: f32,     // feet
+    pub oat: f32,                   // Celsius
+    pub wind_speed: ValidatedSpeed,
+    pub wind_direction: ValidatedAngle,
+    pub visibility: f32,            // statute miles
+    pub cloud_coverage: Percentage,
+}
+
+/// Navigation and position data
+pub struct Navigation {
+    pub latitude: f64,
+    pub longitude: f64,
+    pub ground_track: ValidatedAngle,
+    pub distance_to_dest: Option<f32>,
+    pub time_to_dest: Option<f32>,
+    pub active_waypoint: Option<String>,
 }
 ```
 
-**Coordinate Frame Convention:**
+**Type Safety Benefits:**
 
-- Body axes: +X forward, +Y to right wing, +Z down (right-handed)
-- Attitude: roll/pitch/yaw follow standard aerospace convention (right-hand rule)
-- Angular rates p/q/r: rotation about body X/Y/Z in rad/s, right-hand rule
-- All adapters MUST convert their native coordinate systems into this canonical frame
+1. **Compile-time validation**: Invalid values cannot be constructed
+2. **Unit tracking**: Speeds and angles carry their units (knots/m/s, degrees/radians)
+3. **Automatic conversion**: `ValidatedSpeed.to_knots()`, `ValidatedAngle.to_degrees()`
+4. **Range enforcement**: Percentage (0-100), GForce (-20 to 20), Mach (0-5)
+5. **Clear semantics**: Type names document expected ranges and units
 
-**Unit Conventions:**
-
-- Angles: radians
-- Angular rates: rad/s
-- Linear velocities: m/s
-- Altitudes: meters
-- Dimensionless: g-load, mach number
-- Ratios: -1.0 to 1.0 for control inputs
-
-**ABI-Safe Wire Format:**
+**Validation Methods:**
 
 ```rust
-// POD representation for lock-free ring buffers and FFI
-#[repr(C)]
-pub struct BusSnapshotRaw {
-    // Identity (fixed-size arrays + lengths)
-    pub sim_id: u8,  // 0=none, 1=msfs, 2=xplane, 3=dcs
-    pub aircraft_type: [u8; 64],
-    pub aircraft_type_len: u8,
-    pub aircraft_name: [u8; 128],
-    pub aircraft_name_len: u8,
-    
-    // Kinematics (plain floats)
-    pub attitude_roll: f32,
-    pub attitude_pitch: f32,
-    pub attitude_yaw: f32,
-    pub angular_rate_p: f32,
-    pub angular_rate_q: f32,
-    pub angular_rate_r: f32,
-    pub velocity_body_x: f32,
-    pub velocity_body_y: f32,
-    pub velocity_body_z: f32,
-    pub velocity_ias: f32,
-    pub velocity_tas: f32,
-    pub velocity_vs: f32,
-    pub altitude_agl: f32,
-    pub altitude_msl: f32,
-    pub nz_g: f32,
-    
-    // Aero
-    pub alpha: f32,
-    pub beta: f32,
-    pub mach: f32,
-    
-    // Flight condition
-    pub on_ground: u8,  // 0=false, 1=true
-    pub gear_handle: u8,
-    pub gear_position: f32,
-    pub flaps_handle: u8,
-    pub flaps_position: f32,
-    
-    // Controls
-    pub pitch_ratio: f32,
-    pub roll_ratio: f32,
-    pub yaw_ratio: f32,
-    pub trim_pitch: f32,
-    pub trim_roll: f32,
-    pub trim_yaw: f32,
-    pub ap_master: u8,
-    pub ap_heading_lock: u8,
-    pub ap_altitude_lock: u8,
-    
-    // Metadata (bitflags instead of bools)
-    pub valid_flags: u32,  // Bitfield: 0x01=attitude, 0x02=velocities, 0x04=controls, 0x08=aero, 0x10=kinematics
-    pub safe_for_ffb: u8,
-    pub source_sim_timestamp: u64,
-    pub bus_timestamp: u64,
-}
-
-impl From<&BusSnapshot> for BusSnapshotRaw {
-    fn from(snapshot: &BusSnapshot) -> Self {
-        // Conversion logic...
+impl BusSnapshot {
+    /// Validate all fields in the snapshot
+    pub fn validate(&self) -> Result<(), BusTypeError> {
+        // Validate engine indices are unique
+        let mut engine_indices = std::collections::HashSet::new();
+        for engine in &self.engines {
+            if !engine_indices.insert(engine.index) {
+                return Err(BusTypeError::InvalidValue {
+                    field: "engines".to_string(),
+                    reason: format!("Duplicate engine index: {}", engine.index),
+                });
+            }
+        }
+        
+        // Validate helicopter data consistency
+        if let Some(helo) = &self.helo {
+            if helo.pedals < -100.0 || helo.pedals > 100.0 {
+                return Err(BusTypeError::OutOfRange {
+                    field: "helo.pedals".to_string(),
+                    value: helo.pedals,
+                    min: -100.0,
+                    max: 100.0,
+                });
+            }
+        }
+        
+        Ok(())
     }
-}
-
-impl From<&BusSnapshotRaw> for BusSnapshot {
-    fn from(raw: &BusSnapshotRaw) -> Self {
-        // Conversion logic...
+    
+    /// Get age of snapshot in milliseconds
+    pub fn age_ms(&self) -> u64 {
+        let now = current_timestamp_ns();
+        if now > self.timestamp {
+            (now - self.timestamp) / 1_000_000
+        } else {
+            0
+        }
     }
 }
 ```
