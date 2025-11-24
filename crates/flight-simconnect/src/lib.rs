@@ -35,6 +35,7 @@ pub mod aircraft;
 pub mod events;
 pub mod fixtures;
 pub mod mapping;
+pub mod sanity_gate;
 pub mod session;
 pub mod transport;
 
@@ -44,4 +45,5 @@ pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
 pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
 pub use mapping::{MappingConfig, MappingError, VariableMapping};
+pub use sanity_gate::{SanityGate, SanityGateConfig, SanityState};
 pub use session::{SessionConfig, SessionError, SimConnectSession};

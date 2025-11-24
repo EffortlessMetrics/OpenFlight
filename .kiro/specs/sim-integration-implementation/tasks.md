@@ -101,7 +101,10 @@ All context documents (requirements, design) are available during implementation
   - Use fixture data from tests/fixtures/msfs_c172_cruise.json
   - _Requirements: MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6, SIM-TEST-01.2_
 
-- [-] 4. Review and enhance MSFS Sanity Gate state machine
+- [x] 4. Review and enhance MSFS Sanity Gate state machine
+
+
+
 
 
   - Review existing sanity gate implementation in MSFS adapter
@@ -113,7 +116,9 @@ All context documents (requirements, design) are available during implementation
   - Verify sanity violation counter with configurable threshold
   - _Requirements: MSFS-INT-01.9, MSFS-INT-01.10, MSFS-INT-01.11, MSFS-INT-01.12, MSFS-INT-01.13, MSFS-INT-01.14, MSFS-INT-01.15, MSFS-INT-01.16_
 
-- [ ] 4.1 Write unit tests for MSFS Sanity Gate
+- [x] 4.1 Write unit tests for MSFS Sanity Gate
+
+
   - Test state transitions (Booting→Loading→ActiveFlight, ActiveFlight⇄Paused, Any→Faulted)
   - Test NaN/Inf detection and violation counting
   - Test physically implausible jump detection
