@@ -246,10 +246,15 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] Sim-disabled harness can feed synthetic snapshots into FFB engine
+- [x] Sim-disabled harness can feed synthetic snapshots into FFB engine
+
+
+
+
 - [ ] No safety thresholds violated in tests
 - [ ] Faults produce blackbox dumps and latched indicators
-- [ ] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
+- [-] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
+
 
 - [ ] P2.1 Complete DirectInput device abstraction
   **Phase:** 2 - FFB

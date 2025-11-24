@@ -32,6 +32,7 @@ pub mod harness;
 pub mod metrics;
 pub mod offline_engine;
 pub mod replay_config;
+pub mod synthetic_harness;
 pub mod validation;
 
 pub use acceptance::{AcceptanceResult, AcceptanceTest, AcceptanceTestRunner};
@@ -41,6 +42,9 @@ pub use metrics::{AccuracyMetrics, PerformanceMetrics, ReplayMetrics};
 pub use offline_engine::{EngineState, OfflineAxisEngine, OfflineFfbEngine};
 pub use replay_config::ToleranceConfig;
 pub use replay_config::{ReplayConfig, ReplayMode, TimingMode};
+pub use synthetic_harness::{
+    HarnessResults, SyntheticHarness, SyntheticHarnessConfig, TelemetryPattern,
+};
 pub use validation::{ReplayValidator, ValidationError, ValidationResult, ValidationSuite};
 
 pub use flight_axis::AxisFrame;

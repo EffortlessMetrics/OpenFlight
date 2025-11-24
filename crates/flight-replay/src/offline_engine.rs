@@ -403,6 +403,11 @@ mod tests {
                 mach: flight_bus::Mach::new(0.18).unwrap(),
                 vertical_speed: 0.0,
             },
+            angular_rates: flight_bus::snapshot::AngularRates {
+                p: 0.0,
+                q: 0.0,
+                r: 0.0,
+            },
             config: flight_bus::AircraftConfig {
                 gear: flight_bus::GearState {
                     nose: flight_bus::GearPosition::Up,
@@ -418,10 +423,30 @@ mod tests {
                 lights: flight_bus::LightsConfig::default(),
                 fuel: std::collections::HashMap::new(),
             },
+            control_inputs: flight_bus::snapshot::ControlInputs {
+                pitch: 0.0,
+                roll: 0.0,
+                yaw: 0.0,
+                throttle: vec![0.75],
+            },
+            trim_state: flight_bus::snapshot::TrimState {
+                elevator: 0.0,
+                aileron: 0.0,
+                rudder: 0.0,
+            },
             helo: None,
             engines: Vec::new(),
             environment: flight_bus::Environment::default(),
             navigation: flight_bus::Navigation::default(),
+            validity: flight_bus::snapshot::ValidityFlags {
+                safe_for_ffb: true,
+                attitude_valid: true,
+                angular_rates_valid: true,
+                velocities_valid: true,
+                kinematics_valid: true,
+                aero_valid: true,
+                position_valid: true,
+            },
         };
 
         let output = engine
