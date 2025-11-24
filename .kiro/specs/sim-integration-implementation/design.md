@@ -311,14 +311,19 @@ impl MsfsAdapter {
 
 **SimConnect Data Definitions:**
 
-The adapter registers one data definition containing all required SimVars:
+The adapter registers two data definitions:
+
+1. **High-rate telemetry** (requested every frame, 30-90 Hz)
+2. **Low-rate identity** (requested on aircraft change or periodically at 1 Hz)
+
+**Note:** The SimVar table below is illustrative. Actual unit strings and SimVar names should match the canonical mapping document at `docs/integration/msfs-simvar-mapping.md`.
 
 ```rust
-// Data definition ID
+// High-rate telemetry data definition
 const FLIGHT_DATA_DEF: u32 = 0;
 
-// SimVars to register (with explicit units)
-const SIMVARS: &[(&str, &str, SimConnectDataType)] = &[
+// SimVars to register for high-rate updates (with explicit units)
+const HIGH_RATE_SIMVARS: &[(&str, &str, SimConnectDataType)] = &[
     // Attitude
     ("PLANE PITCH DEGREES", "degrees", F64),
     ("PLANE BANK DEGREES", "degrees", F64),
@@ -367,13 +372,19 @@ const SIMVARS: &[(&str, &str, SimConnectDataType)] = &[
     ("AUTOPILOT MASTER", "bool", I32),
     ("AUTOPILOT HEADING LOCK", "bool", I32),
     ("AUTOPILOT ALTITUDE LOCK", "bool", I32),
-    
-    // Aircraft identity
+];
+
+// Low-rate identity data definition (1 Hz or on aircraft change)
+const IDENTITY_DATA_DEF: u32 = 1;
+
+const IDENTITY_SIMVARS: &[(&str, &str, SimConnectDataType)] = &[
     ("TITLE", "string", STRING256),
     ("ATC TYPE", "string", STRING256),
     ("ATC MODEL", "string", STRING256),
 ];
 ```
+
+**Rationale:** Separating identity into a low-rate subscription avoids re-allocating and copying potentially large strings every frame, reducing cache pressure on the hot path. The adapter stores "last seen title" and a hash to detect aircraft changes.
 
 **Unit Conversion:**
 
@@ -579,24 +590,27 @@ impl MsfsAdapter {
     fn poll_simconnect(&mut self) -> Option<BusSnapshot> {
         let conn = self.connection.as_mut()?;
         
-        match conn.get_next_dispatch() {
-            Ok(Some(DispatchResult::SimObjectData(data))) => {
-                let mut snapshot = self.map_to_bus_snapshot(&data);
-                self.sanity_gate.check(&mut snapshot);
-                self.metrics.update_rate.record();
-                Some(snapshot)
-            }
-            Ok(Some(DispatchResult::Quit)) => {
-                self.disconnect();
-                None
-            }
-            Ok(None) => None,
-            Err(e) => {
-                error!("SimConnect error: {}", e);
-                self.disconnect();
-                None
+        // Drain the dispatch queue each tick to handle bursts of events
+        // SimConnect often delivers multiple messages per frame
+        let mut latest_snapshot = None;
+        
+        while let Ok(Some(msg)) = conn.get_next_dispatch() {
+            match msg {
+                DispatchResult::SimObjectData(data) => {
+                    let mut snapshot = self.map_to_bus_snapshot(&data);
+                    self.sanity_gate.check(&mut snapshot);
+                    self.metrics.update_rate.record();
+                    latest_snapshot = Some(snapshot);
+                }
+                DispatchResult::Quit => {
+                    self.disconnect();
+                    return None;
+                }
+                _ => {}
             }
         }
+        
+        latest_snapshot
     }
 }
 ```
@@ -604,6 +618,10 @@ impl MsfsAdapter {
 **Update Rate:**
 
 The adapter requests data at SIMCONNECT_PERIOD_SIM_FRAME which typically delivers 30-90 Hz depending on sim frame rate. The adapter targets a minimum effective rate of 60 Hz and exposes metrics to verify actual delivery rate.
+
+**Dispatch Queue Handling:**
+
+The `poll_simconnect()` method drains the entire dispatch queue each tick rather than processing only one message. This handles burst scenarios where SimConnect delivers multiple events per frame, ensuring we always use the latest telemetry data.
 
 
 ### X-Plane UDP Adapter
@@ -627,6 +645,18 @@ impl XPlaneAdapter {
 }
 ```
 
+**Aircraft Identity Limitation (UDP-only mode):**
+
+**Important:** UDP DATA packets do not carry aircraft identity information (aircraft path/name). In v1 UDP-only mode:
+
+- Aircraft identity may be unavailable or inferred poorly from heuristics
+- Profile switching based on aircraft type may fall back to class-level heuristics
+- True identity-based profile switching requires either:
+  - The full X-Plane plugin (future v2 feature), or
+  - A minimal companion plugin that sends identity over UDP
+
+This limitation is documented in requirements as acceptable for v1.
+
 **UDP Packet Format:**
 
 X-Plane sends DATA packets with this structure:
@@ -639,7 +669,22 @@ Records: N × 36-byte records
     Data (8 × 4 bytes, f32) - 8 float values
 ```
 
-**Data Group Indices (partial list):**
+**Required Data Output Configuration:**
+
+Users must enable the following Data Output indices in X-Plane's "Settings > Data Output" screen:
+
+| Index | Group Name | Contains | Recommended Rate |
+|-------|------------|----------|------------------|
+| 3 | Speeds | IAS, TAS, ground speed | 20/sec |
+| 4 | Mach, VVI, G-load | Mach number, vertical speed, g-forces | 20/sec |
+| 16 | Angular velocities | P, Q, R (deg/s) | 20/sec |
+| 17 | Pitch, roll, headings | Attitude angles | 20/sec |
+| 18 | Alpha, beta, etc. | Angle of attack, sideslip | 20/sec |
+| 21 | Body velocities | Vx, Vy, Vz in body frame | 20/sec |
+
+**Setup Instructions:** In X-Plane, navigate to Settings > Data Output, check the "UDP" column for indices 3, 4, 16, 17, 18, and 21. Set the rate to "20 per second" for optimal balance between latency and CPU usage.
+
+**Data Group Indices:**
 
 ```rust
 const DATA_GROUP_SPEEDS: i32 = 3;      // IAS, TAS, GS, etc.
@@ -843,7 +888,7 @@ local FlightHub = {
     port = 7778,
     export_interval = 1.0 / 60.0,  -- 60 Hz target
     last_export_time = 0,
-    mp_safe_mode = false,
+    mp_detected = false,
 }
 
 function FlightHub.LuaExportStart()
@@ -853,8 +898,8 @@ function FlightHub.LuaExportStart()
     -- Detect MP mode (heuristic: check if certain functions are restricted)
     local test_data = LoGetWorldObjects()
     if test_data == nil then
-        FlightHub.mp_safe_mode = true
-        log.write("FlightHub", log.INFO, "MP safe mode enabled")
+        FlightHub.mp_detected = true
+        log.write("FlightHub", log.INFO, "Multiplayer mode detected")
     end
 end
 
@@ -893,23 +938,89 @@ function FlightHub.gather_telemetry()
     local accel = LoGetAccelerationUnits()
     local aoa = LoGetAngleOfAttack()
     
-    -- In MP safe mode, limit to essential data
-    if FlightHub.mp_safe_mode then
-        return {
-            timestamp = LoGetModelTime(),
-            mp_limited = true,
-            attitude = {
-                pitch = self_data.Pitch,
-                roll = self_data.Bank,
-                yaw = self_data.Heading,
-            },
-            ias = ias,
-        }
-    end
+    -- MP Integrity Check Whitelist:
+    -- Always allowed: self attitude, self velocities, self g-load, IAS/TAS, AoA
+    -- Never exported in MP: world objects, RWR, sensors, weapons
     
-    -- Full telemetry in SP
-    return {
+    -- Build telemetry with self-aircraft data (allowed in both SP and MP)
+    local telemetry = {
         timestamp = LoGetModelTime(),
+        mp_detected = FlightHub.mp_detected,
+        attitude = {
+            pitch = self_data.Pitch,
+            roll = self_data.Bank,
+            yaw = self_data.Heading,
+        },
+        angular_rates = {
+            p = self_data.AngularVelocity.x,
+            q = self_data.AngularVelocity.y,
+            r = self_data.AngularVelocity.z,
+        },
+        velocities = {
+            body_x = self_data.Velocity.x,
+            body_y = self_data.Velocity.y,
+            body_z = self_data.Velocity.z,
+        },
+        ias = ias,
+        tas = LoGetTrueAirSpeed(),
+        aoa = aoa,
+        accel = {
+            x = accel.x,
+            y = accel.y,
+            z = accel.z,
+        },
+        altitude_asl = self_data.Altitude,
+        altitude_agl = LoGetAltitudeAboveGroundLevel(),
+        unit_type = self_data.Name,
+    }
+    
+    -- Note: We do NOT invalidate self-aircraft data in MP mode
+    -- The Rust adapter will annotate MP status but keep valid self-aircraft telemetry
+    
+    return telemetry
+end
+
+-- Properly chain to existing Export.lua hooks
+local PrevLuaExportStart = LuaExportStart
+local PrevLuaExportStop = LuaExportStop
+local PrevLuaExportAfterNextFrame = LuaExportAfterNextFrame
+
+function LuaExportStart()
+    if PrevLuaExportStart then PrevLuaExportStart() end
+    FlightHub.LuaExportStart()
+end
+
+function LuaExportStop()
+    FlightHub.LuaExportStop()
+    if PrevLuaExportStop then PrevLuaExportStop() end
+end
+
+function LuaExportAfterNextFrame()
+    if PrevLuaExportAfterNextFrame then PrevLuaExportAfterNextFrame() end
+    FlightHub.LuaExportAfterNextFrame()
+end
+```
+
+**Export.lua Chaining Pattern:**
+
+The script properly chains to existing Export.lua hooks by:
+1. Storing references to previous hook functions before redefining them
+2. Calling previous hooks at appropriate points (before or after Flight Hub logic)
+3. This ensures compatibility with SRS, Tacview, and other tools that use Export.lua
+
+**JSON Wire Format:**
+
+v1 uses JSON for the UDP payload for debuggability and ease of implementation. The payload schema is under Flight Hub's control and can be swapped to a compact binary encoding in future versions if performance profiling indicates a need.
+
+**Multiplayer Integrity Check Compliance:**
+
+The adapter respects DCS's Multiplayer Integrity Check by:
+- **Always exporting** self-aircraft data (attitude, velocities, g-load, IAS/TAS, AoA) - these are allowed by IC
+- **Never exporting** world objects, RWR data, sensors, or weapons data in MP mode
+- **Annotating** MP status in the payload (`mp_detected` flag) for UI/logging purposes
+- **Not invalidating** self-aircraft telemetry just because MP is active
+
+This approach provides the minimal set of data needed for FFB while respecting IC restrictions.estamp = LoGetModelTime(),
         mp_limited = false,
         attitude = {
             pitch = self_data.Pitch,
@@ -955,15 +1066,15 @@ pub struct DcsAdapter {
     sanity_gate: SanityGate,
     metrics: AdapterMetrics,
     last_packet_time: Instant,
-    mp_limited_mode: bool,
+    mp_detected: bool,  // Annotation only, does not affect data validity
 }
 
 impl DcsAdapter {
     fn map_to_bus_snapshot(&self, json: &serde_json::Value) -> BusSnapshot {
         let mut snapshot = BusSnapshot::default();
         
-        // Check if MP limited mode
-        self.mp_limited_mode = json["mp_limited"].as_bool().unwrap_or(false);
+        // Check if MP detected (annotation only, does not invalidate self-aircraft data)
+        let mp_detected = json["mp_detected"].as_bool().unwrap_or(false);
         
         // Attitude (DCS uses radians natively)
         if let Some(att) = json["attitude"].as_object() {
@@ -994,11 +1105,13 @@ impl DcsAdapter {
         
         // Aero
         snapshot.aero.alpha = json["aoa"].as_f64().unwrap_or(0.0) as f32;
+        snapshot.valid_flags.aero_valid = true;
         
         // Acceleration → g-load
         if let Some(accel) = json["accel"].as_object() {
             let az = accel["z"].as_f64().unwrap_or(0.0) as f32;
             snapshot.kinematics.nz_g = -az / 9.81; // Convert m/s² to g
+            snapshot.valid_flags.kinematics_valid = true;
         }
         
         // Altitudes (meters)
@@ -1014,12 +1127,12 @@ impl DcsAdapter {
         
         snapshot.bus_timestamp = self.monotonic_now_ns();
         
-        // Mark fields as invalid if in MP limited mode
-        if self.mp_limited_mode {
-            snapshot.valid_flags.velocities_valid = false;
-            snapshot.valid_flags.aero_valid = false;
-            snapshot.valid_flags.kinematics_valid = false;
-        }
+        // Store MP status for UI/logging (does NOT invalidate self-aircraft data)
+        self.mp_detected = mp_detected;
+        
+        // Note: We do NOT invalidate self-aircraft telemetry in MP mode
+        // Self-aircraft data (attitude, velocities, g-load, IAS/TAS, AoA) is allowed by IC
+        // Only world objects, RWR, sensors, and weapons are restricted in MP
         
         snapshot
     }
@@ -1140,8 +1253,10 @@ pub struct DirectInputFfbDevice {
 pub struct FfbCapabilities {
     pub supports_pid: bool,
     pub supports_raw_torque: bool,
-    pub max_torque_nm: f32,
-    pub min_period_us: u32,
+    pub max_torque_nm: f32,          // Queried from device firmware or config
+    pub min_period_us: u32,           // Queried from device firmware
+    pub thermal_limit_c: Option<f32>, // Optional thermal limit
+    pub current_limit_a: Option<f32>, // Optional current limit
     pub has_health_stream: bool,
 }
 
@@ -1152,11 +1267,31 @@ pub enum SafetyState {
 }
 ```
 
+**Torque Direction Mapping:**
+
+For a 2-axis stick (pitch and roll), Flight Hub maintains separate torque values for each axis:
+
+- **Pitch torque** → DirectInput Y axis (constant force effect)
+- **Roll torque** → DirectInput X axis (constant force effect)
+
+Each axis has its own `torque_nm` value and independent constant-force effect. The `set_constant_force()` method is called per-axis with the corresponding torque value.
+
+**Device Calibration:**
+
+On first connect, Flight Hub queries the device firmware (via HID feature reports or vendor-specific protocols) for:
+
+- `max_torque_nm`: Maximum rated torque for the device
+- `min_period_us`: Minimum update period supported
+- Thermal and current limits (if available)
+
+Per-device calibration is stored in a configuration file (e.g., `~/.config/flighthub/devices/<device_id>.toml`) rather than hardcoded constants. This allows Flight Hub to respect device-specific safety limits.
+
 **Effect Management:**
 
 ```rust
 pub struct EffectPool {
-    constant_force: Option<ComPtr<IDirectInputEffect>>,
+    constant_force_pitch: Option<ComPtr<IDirectInputEffect>>,  // Y axis
+    constant_force_roll: Option<ComPtr<IDirectInputEffect>>,   // X axis
     spring: Option<ComPtr<IDirectInputEffect>>,
     damper: Option<ComPtr<IDirectInputEffect>>,
     periodic_sine: Option<ComPtr<IDirectInputEffect>>,
@@ -1295,6 +1430,7 @@ pub struct FfbSafetyEnvelope {
     max_jerk_nm_per_s2: f32,
     last_setpoint: f32,
     last_setpoint_time: Instant,
+    fault_start_time: Option<Instant>,  // Explicit fault timestamp for 50ms enforcement
     fault_detector: FaultDetector,
 }
 
@@ -1302,7 +1438,14 @@ impl FfbSafetyEnvelope {
     pub fn apply_limits(&mut self, desired_torque: f32, safe_for_ffb: bool) -> f32 {
         // If not safe, ramp to zero
         if !safe_for_ffb {
+            // Record fault start time if not already faulted
+            if self.fault_start_time.is_none() {
+                self.fault_start_time = Some(Instant::now());
+            }
             return self.ramp_to_zero();
+        } else {
+            // Clear fault state when safe again
+            self.fault_start_time = None;
         }
         
         // Clamp magnitude
@@ -1334,16 +1477,24 @@ impl FfbSafetyEnvelope {
     }
     
     fn ramp_to_zero(&mut self) -> f32 {
-        // Ramp to zero within 50ms
-        let ramp_time = 0.050; // 50ms
-        let dt = (Instant::now() - self.last_setpoint_time).as_secs_f32();
+        // Ramp to zero within 50ms, enforced from fault_start_time
+        let ramp_time = 0.050; // 50ms hard requirement
         
-        if dt >= ramp_time {
+        if let Some(fault_start) = self.fault_start_time {
+            let dt = fault_start.elapsed().as_secs_f32();
+            
+            if dt >= ramp_time {
+                self.last_setpoint = 0.0;
+                0.0
+            } else {
+                let progress = dt / ramp_time;
+                let initial_torque = self.last_setpoint;
+                initial_torque * (1.0 - progress)
+            }
+        } else {
+            // Fallback: immediate zero if no fault_start_time
             self.last_setpoint = 0.0;
             0.0
-        } else {
-            let progress = dt / ramp_time;
-            self.last_setpoint * (1.0 - progress)
         }
     }
 }
@@ -1404,10 +1555,16 @@ impl XInputRumbleDevice {
         Ok(())
     }
 }
-
-// Note: XInput rumble is mapped into FFB synthesis as coarse vibration only.
-// Full stick torque modeling is NOT attempted through XInput.
 ```
+
+**XInput Limitations:**
+
+XInput rumble is mapped into FFB synthesis as **coarse vibration only**. The two rumble motors provide:
+
+- Low-frequency motor: Used for buffeting and stall vibration
+- High-frequency motor: Used for engine vibration and fine effects
+
+**Important:** Full stick torque modeling (directional forces, spring centering, damping) is **NOT** attempted through XInput. XInput devices are limited to simple vibration effects and cannot provide realistic control loading. For full FFB, a DirectInput-compatible force feedback device is required.
 
 
 ## Platform Runtime Implementation
@@ -1441,7 +1598,9 @@ impl WindowsRtThread {
             );
             
             if timer.is_null() {
-                // Fallback: use timeBeginPeriod(1)
+                // Fallback: use timeBeginPeriod(1) to improve timer resolution
+                // We measure actual jitter with and without timeBeginPeriod(1) on target hardware
+                // and enable it only when necessary (high jitter without it)
                 timeBeginPeriod(1);
             }
             
@@ -1517,7 +1676,9 @@ impl WindowsRtThread {
                     ControlFlow::Break => break,
                 }
                 
-                // Busy-spin for final 50-80μs to minimize jitter
+                // Busy-spin for final portion to minimize jitter
+                // Configurable: 50-80μs is the default, tunable for jitter vs CPU trade-off
+                let busy_spin_threshold_ns = 80_000; // Configurable via settings
                 let target_end = *tick_start.QuadPart() + 
                     (period_ns as i64 * self.qpc_freq / 1_000_000_000);
                 
@@ -1532,8 +1693,8 @@ impl WindowsRtThread {
                         break;
                     }
                     
-                    if remaining_ns < 80_000 { // < 80μs
-                        // Busy-spin
+                    if remaining_ns < busy_spin_threshold_ns {
+                        // Busy-spin for precise timing
                         std::hint::spin_loop();
                     } else {
                         // Still have time, yield
@@ -1806,6 +1967,14 @@ echo "RT limits configured. Please log out and log back in for changes to take e
     
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" />
     
+    <!-- Note: Core Flight Hub can be per-user, but simulator integrations and 
+         virtual controller drivers may require per-machine/admin install to:
+         - Drop files into Program Files
+         - Install drivers like ViGEmBus
+         - Modify system-level simulator configurations
+         
+         The installer detects privilege level and adjusts feature availability accordingly. -->
+    
     <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
     
     <MediaTemplate EmbedCab="yes" />
@@ -1921,10 +2090,17 @@ Write-Host "All binaries signed successfully"
 name = "ViGEmBus"
 version = "1.21.442"
 license = "BSD-3-Clause"
-usage = "Optional virtual gamepad driver for XInput output"
+usage = "Virtual gamepad driver for XInput output (optional)"
 url = "https://github.com/ViGEm/ViGEmBus"
 included_in_installer = false
 user_must_install = true
+install_flow = "user_prerequisite"
+graceful_degradation = "XInput output disabled if not present"
+notes = """
+ViGEmBus is required only if the user wants to expose virtual XInput controllers.
+Flight Hub detects its presence via registry keys and degrades gracefully if missing.
+The installer provides a link to download ViGEmBus but does not bundle it.
+"""
 
 [[component]]
 name = "SimConnect SDK"
@@ -1934,7 +2110,8 @@ usage = "MSFS telemetry integration"
 url = "https://docs.flightsimulator.com/html/Programming_Tools/SimConnect/SimConnect_SDK.htm"
 included_in_installer = false
 user_must_install = false
-notes = "Installed with MSFS"
+install_flow = "bundled_with_sim"
+notes = "Installed with MSFS, no separate installation required"
 
 [[component]]
 name = "tokio"
@@ -1946,6 +2123,13 @@ included_in_installer = true
 
 # ... more components
 ```
+
+**Install Flow for Virtual Controller Drivers:**
+
+1. **Detection**: Flight Hub checks for ViGEmBus via registry key `HKLM\SOFTWARE\Nefarius Software Solutions e.U.\ViGEmBus`
+2. **Graceful Degradation**: If not present, XInput output features are disabled in the UI
+3. **User Guidance**: The installer provides a link to the ViGEmBus download page if the user selects XInput features
+4. **No Bundling**: ViGEmBus is not bundled to avoid licensing complications and ensure users get the latest version
 
 ### Linux Packaging
 
@@ -2070,6 +2254,52 @@ AppImage:
   arch: x86_64
   update-information: guess
 ```
+
+## Telemetry and Metrics
+
+Flight Hub exposes comprehensive metrics for validation, debugging, and performance monitoring.
+
+### Naming Convention
+
+Metrics follow a hierarchical naming scheme:
+
+- `sim.<sim_name>.<metric>` - Simulator adapter metrics
+- `ffb.<metric>` - Force feedback metrics
+- `runtime.<metric>` - Runtime loop metrics
+- `bus.<metric>` - Telemetry bus metrics
+
+Examples:
+- `sim.msfs.update_hz` - MSFS adapter update rate
+- `sim.msfs.sanity_violations` - Sanity gate violation count
+- `ffb.usb_write_latency_p99` - 99th percentile USB write latency
+- `ffb.torque_setpoint_nm` - Current torque setpoint
+- `runtime.loop_jitter_p99_us` - 99th percentile loop jitter in microseconds
+- `bus.snapshot_age_ms` - Age of latest BusSnapshot
+
+### Cardinality Discipline
+
+Metrics are scoped per-adapter or per-device, **not** per-aircraft. This prevents cardinality explosion and keeps metric storage bounded.
+
+- ✅ Good: `sim.msfs.update_hz` (one metric per adapter)
+- ❌ Bad: `sim.msfs.update_hz{aircraft="C172"}` (unbounded cardinality)
+
+Aircraft-specific information is logged but not exposed as high-cardinality metrics.
+
+### Export Destinations
+
+Metrics can be exported to multiple destinations:
+
+1. **Prometheus Exporter** (optional): HTTP endpoint at `:9090/metrics` for Prometheus scraping
+2. **In-Process Ring Buffer**: Latest 60 seconds of metrics stored in memory for UI display
+3. **Log-Structured**: Periodic metric snapshots written to structured logs (JSON lines)
+
+The export destination is configurable via `~/.config/flighthub/telemetry.toml`.
+
+### Metric Types
+
+- **Gauges**: Current value (e.g., `ffb.torque_setpoint_nm`)
+- **Counters**: Monotonically increasing (e.g., `sim.msfs.sanity_violations`)
+- **Histograms**: Distribution of values (e.g., `ffb.usb_write_latency_p99`)
 
 ## Testing Strategy
 
@@ -2243,6 +2473,16 @@ fn test_axis_loop_jitter() {
 }
 ```
 
+**Test Environment Requirements:**
+
+Jitter tests are run on **hardware-backed runners** with:
+- Non-virtualized hardware (bare metal or dedicated VM with CPU pinning)
+- Fixed CPU governor (performance mode, no frequency scaling)
+- Isolated CPU cores (via kernel boot parameters on Linux)
+
+Generic CI nodes (shared VMs, variable CPU allocation) may skip or downgrade jitter tests to avoid false failures. The test harness detects virtualization and adjusts expectations accordingly.
+```
+
 ## Security and Legal Compliance
 
 ### Product Posture Document
@@ -2344,5 +2584,44 @@ Simply close Flight Hub. No files are modified, so no reversion is needed.
 Flight Hub does not affect multiplayer integrity. It only reads telemetry data that is already available to the pilot.
 ```
 
-This design provides a complete, implementable specification for the simulator integration layer, FFB protocols, and platform runtime infrastructure. All components follow the established patterns from the parent flight-hub spec while providing the concrete details needed for implementation.
+## Version Scope and Future Work
+
+### v1 Scope (This Design)
+
+The following components are **in scope for v1** and fully specified in this design:
+
+- MSFS SimConnect adapter (UDP and local IPC)
+- X-Plane UDP adapter (user-configured Data Output)
+- DCS Export.lua adapter (JSON over UDP)
+- Windows DirectInput FFB (constant force, spring, damper)
+- Windows real-time scheduling (MMCSS, waitable timers)
+- Linux real-time scheduling (rtkit, SCHED_FIFO)
+- BusSnapshot normalization and sanity gating
+- Packaging and distribution (MSI, .deb, AppImage)
+
+### v2 and Future Work
+
+The following components are **out of scope for v1** and marked as future work:
+
+- **X-Plane Plugin (v2):** Full plugin with DataRef access and aircraft identity
+  - The "Future Plugin Design" section in this document is illustrative only
+  - v1 relies on UDP Data Output; plugin is a v2 enhancement
+  
+- **Linux FFB Support (v2 Candidate):** evdev-based force feedback on Linux
+  - The Linux FFB code in this document is a candidate implementation
+  - v1 focuses on Windows DirectInput; Linux FFB is a v2 feature
+  
+- **Kernel-Level Drivers:** Any custom kernel drivers (e.g., OFP-1 driver)
+  - Explicitly out of scope for v1
+  - Flight Hub v1 uses existing HID and DirectInput infrastructure
+
+- **Binary Telemetry Protocols:** Compact binary encoding for DCS/X-Plane
+  - v1 uses JSON for debuggability
+  - Binary protocols are a performance optimization for v2+
+
+### Design Document Purpose
+
+This design provides a complete, implementable specification for the v1 simulator integration layer, FFB protocols, and platform runtime infrastructure. All components follow the established patterns from the parent flight-hub spec while providing the concrete details needed for implementation.
+
+Future work sections are included for architectural continuity but should not be interpreted as v1 delivery commitments.
 
