@@ -78,7 +78,12 @@ All context documents (requirements, design) are available during implementation
   - Test connection loss detection
   - _Requirements: MSFS-INT-01.2, MSFS-INT-01.19_
 
-- [ ] 3. Review and enhance MSFS SimConnect data definitions and telemetry mapping
+- [x] 3. Review and enhance MSFS SimConnect data definitions and telemetry mapping
+
+
+
+
+
   - Review existing data definitions in MSFS adapter
   - Verify high-rate telemetry data definition with explicit units for each SimVar
   - Verify low-rate identity data definition
@@ -86,7 +91,9 @@ All context documents (requirements, design) are available during implementation
   - Verify dispatch queue draining handles burst events correctly
   - _Requirements: MSFS-INT-01.3, MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6_
 
-- [ ] 3.1 Write unit tests for MSFS telemetry mapping
+- [x] 3.1 Write unit tests for MSFS telemetry mapping
+
+
   - Test attitude conversion (degrees → radians)
   - Test velocity conversion (knots → m/s, FPM → m/s, ft/s → m/s)
   - Test angular rate mapping (already rad/s)
@@ -94,7 +101,9 @@ All context documents (requirements, design) are available during implementation
   - Use fixture data from tests/fixtures/msfs_c172_cruise.json
   - _Requirements: MSFS-INT-01.4, MSFS-INT-01.5, MSFS-INT-01.6, SIM-TEST-01.2_
 
-- [ ] 4. Review and enhance MSFS Sanity Gate state machine
+- [-] 4. Review and enhance MSFS Sanity Gate state machine
+
+
   - Review existing sanity gate implementation in MSFS adapter
   - Verify state machine has all required states (Disconnected, Booting, Loading, ActiveFlight, Paused, Faulted)
   - Verify state transition logic with explicit criteria

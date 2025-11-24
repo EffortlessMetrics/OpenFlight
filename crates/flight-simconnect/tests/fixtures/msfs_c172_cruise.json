@@ -1,0 +1,41 @@
+{
+  "description": "C172 in cruise at 2500ft, 100 knots",
+  "simvars": {
+    "AIRSPEED INDICATED": 100.0,
+    "AIRSPEED TRUE": 105.0,
+    "GROUND VELOCITY": 98.0,
+    "INCIDENCE ALPHA": 3.5,
+    "INCIDENCE BETA": 0.2,
+    "ATTITUDE BANK DEGREES": 2.0,
+    "ATTITUDE PITCH DEGREES": 5.0,
+    "ATTITUDE HEADING DEGREES": 270.0,
+    "G FORCE": 1.0,
+    "G FORCE LATERAL": 0.05,
+    "G FORCE LONGITUDINAL": 0.1,
+    "AIRSPEED MACH": 0.15,
+    "VERTICAL SPEED": 0.0,
+    "ROTATION VELOCITY BODY X": 0.01,
+    "ROTATION VELOCITY BODY Y": 0.02,
+    "ROTATION VELOCITY BODY Z": 0.005
+  },
+  "expected_bus_values": {
+    "ias_knots": 100.0,
+    "tas_knots": 105.0,
+    "ground_speed_knots": 98.0,
+    "aoa_degrees": 3.5,
+    "aoa_radians": 0.061087,
+    "sideslip_degrees": 0.2,
+    "sideslip_radians": 0.003491,
+    "bank_degrees": 2.0,
+    "bank_radians": 0.034907,
+    "pitch_degrees": 5.0,
+    "pitch_radians": 0.087266,
+    "heading_degrees": -90.0,
+    "heading_radians": -1.570796,
+    "g_force": 1.0,
+    "g_lateral": 0.05,
+    "g_longitudinal": 0.1,
+    "mach": 0.15,
+    "vertical_speed_fpm": 0.0
+  }
+}
