@@ -147,7 +147,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 - [x] Adapters can run in harness that logs BusSnapshots with no NaN/Inf under normal use
 
 
-- [ ] Sanity violations only occur when deliberately injecting nonsense
+- [x] Sanity violations only occur when deliberately injecting nonsense
+
+
+
+
 - [ ] QG-SANITY-GATE enabled and passing (tests inject NaN/Inf and implausible jumps)
 
 - [x] P1.2 Complete X-Plane UDP adapter
