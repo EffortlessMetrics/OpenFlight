@@ -51,6 +51,8 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
+
+
 ### Task List
 
 - [x] P0.1 Finalize BusSnapshot schema
@@ -116,6 +118,8 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - _Requirements: MSFS-INT-01.Doc.*, XPLANE-INT-01.Doc.*, DCS-INT-01.Doc.*_
 
 - [x] P0.3 Enable Phase 0 CI quality gates
+
+
 
 
 
