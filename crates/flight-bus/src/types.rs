@@ -169,6 +169,15 @@ impl ValidatedSpeed {
             SpeedUnit::Kph => self.speed.value * 0.539957,
         }
     }
+
+    /// Convert to meters per second
+    pub fn to_mps(&self) -> f32 {
+        match self.speed.unit {
+            SpeedUnit::Knots => self.speed.value * 0.514444,
+            SpeedUnit::Mps => self.speed.value,
+            SpeedUnit::Kph => self.speed.value * 0.277778,
+        }
+    }
 }
 
 /// Validated angle with unit checking
@@ -225,6 +234,14 @@ impl ValidatedAngle {
         match self.angle.unit {
             AngleUnit::Degrees => self.angle.value,
             AngleUnit::Radians => self.angle.value.to_degrees(),
+        }
+    }
+
+    /// Convert to radians
+    pub fn to_radians(&self) -> f32 {
+        match self.angle.unit {
+            AngleUnit::Degrees => self.angle.value.to_radians(),
+            AngleUnit::Radians => self.angle.value,
         }
     }
 }

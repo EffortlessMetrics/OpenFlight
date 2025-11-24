@@ -19,7 +19,12 @@ All context documents (requirements, design) are available during implementation
 
 ## Task List
 
-- [ ] 1. Review and enhance core BusSnapshot types and validation
+- [x] 1. Review and enhance core BusSnapshot types and validation
+
+
+
+
+
   - Review existing BusSnapshot structure in `crates/flight-bus/src/snapshot.rs`
   - Verify all core fields are present: sim identifier, aircraft identifier, timestamp, attitude, angular rates, velocities, kinematics, aerodynamics, aircraft state, control inputs, trim state, validity flags
   - Enhance validation methods for core field range checking if needed
@@ -27,20 +32,26 @@ All context documents (requirements, design) are available during implementation
   - Verify snapshot age calculation API exists
   - _Requirements: BUS-CORE-01.1, BUS-CORE-01.2, BUS-CORE-01.3, BUS-CORE-01.4, BUS-CORE-01.5, BUS-CORE-01.6, BUS-CORE-01.7, BUS-CORE-01.8, BUS-CORE-01.9, BUS-CORE-01.10, BUS-CORE-01.11, BUS-CORE-01.15_
 
-- [ ] 1.1 Write unit tests for core BusSnapshot validation
+- [x] 1.1 Write unit tests for core BusSnapshot validation
+
+
   - Test validated type construction and range enforcement for core fields
   - Test unit conversion accuracy (degrees↔radians, knots↔m/s, FPM↔m/s)
   - Test snapshot age calculation
   - Test core field validation (attitude, velocities, g-loads within ranges)
   - _Requirements: BUS-CORE-01.12, BUS-CORE-01.14_
 
-- [ ] 1.2 Review and enhance extended BusSnapshot fields
+- [x] 1.2 Review and enhance extended BusSnapshot fields
+
+
   - Review existing extended fields in BusSnapshot: engines list, fuel per tank, helicopter telemetry block, environment, navigation, autopilot, lights
   - Add any missing extended fields
   - Enhance validation for extended fields (unique engine indices, helicopter pedal ranges, extended field ranges)
   - _Requirements: BUS-EXTENDED-01.1, BUS-EXTENDED-01.2, BUS-EXTENDED-01.3, BUS-EXTENDED-01.4, BUS-EXTENDED-01.5, BUS-EXTENDED-01.6, BUS-EXTENDED-01.7, BUS-EXTENDED-01.8_
 
-- [ ] 1.3 Write unit tests for extended BusSnapshot validation
+- [x] 1.3 Write unit tests for extended BusSnapshot validation
+
+
   - Test unique engine indices validation
   - Test helicopter pedal range validation (-100 to 100)
   - Test extended field range validation

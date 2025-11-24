@@ -11,6 +11,60 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Angular rates in body frame (rad/s)
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct AngularRates {
+    /// Roll rate (rad/s)
+    pub p: f32,
+    /// Pitch rate (rad/s)
+    pub q: f32,
+    /// Yaw rate (rad/s)
+    pub r: f32,
+}
+
+/// Control inputs (normalized -1.0 to 1.0 or 0.0 to 1.0)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ControlInputs {
+    /// Pitch control (-1.0 to 1.0, negative = nose down)
+    pub pitch: f32,
+    /// Roll control (-1.0 to 1.0, negative = left roll)
+    pub roll: f32,
+    /// Yaw control (-1.0 to 1.0, negative = left yaw)
+    pub yaw: f32,
+    /// Throttle (0.0 to 1.0 per engine)
+    pub throttle: Vec<f32>,
+}
+
+/// Trim state (normalized -1.0 to 1.0)
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct TrimState {
+    /// Elevator trim (-1.0 to 1.0)
+    pub elevator: f32,
+    /// Aileron trim (-1.0 to 1.0)
+    pub aileron: f32,
+    /// Rudder trim (-1.0 to 1.0)
+    pub rudder: f32,
+}
+
+/// Validity flags for telemetry data
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct ValidityFlags {
+    /// Safe for force feedback output
+    pub safe_for_ffb: bool,
+    /// Attitude data is valid
+    pub attitude_valid: bool,
+    /// Angular rates are valid
+    pub angular_rates_valid: bool,
+    /// Velocities are valid
+    pub velocities_valid: bool,
+    /// Kinematics (g-loads) are valid
+    pub kinematics_valid: bool,
+    /// Aerodynamics (AoA, sideslip) are valid
+    pub aero_valid: bool,
+    /// Position data is valid
+    pub position_valid: bool,
+}
+
 /// Complete telemetry snapshot published on the bus
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BusSnapshot {
@@ -22,8 +76,14 @@ pub struct BusSnapshot {
     pub timestamp: u64,
     /// Flight kinematics data
     pub kinematics: Kinematics,
+    /// Angular rates (body frame)
+    pub angular_rates: AngularRates,
     /// Aircraft configuration
     pub config: AircraftConfig,
+    /// Control inputs
+    pub control_inputs: ControlInputs,
+    /// Trim state
+    pub trim_state: TrimState,
     /// Helicopter-specific data (if applicable)
     pub helo: Option<HeloData>,
     /// Engine data
@@ -32,6 +92,8 @@ pub struct BusSnapshot {
     pub environment: Environment,
     /// Navigation data
     pub navigation: Navigation,
+    /// Validity flags
+    pub validity: ValidityFlags,
 }
 
 /// Flight kinematics and performance data
@@ -189,11 +251,15 @@ impl BusSnapshot {
             aircraft,
             timestamp: current_timestamp_ns(),
             kinematics: Kinematics::default(),
+            angular_rates: AngularRates::default(),
             config: AircraftConfig::default(),
+            control_inputs: ControlInputs::default(),
+            trim_state: TrimState::default(),
             helo: None,
             engines: Vec::new(),
             environment: Environment::default(),
             navigation: Navigation::default(),
+            validity: ValidityFlags::default(),
         }
     }
 
@@ -214,14 +280,110 @@ impl BusSnapshot {
         }
 
         // Validate helicopter data consistency
-        if let Some(helo) = &self.helo
-            && (helo.pedals < -100.0 || helo.pedals > 100.0)
-        {
+        if let Some(helo) = &self.helo {
+            if helo.pedals < -100.0 || helo.pedals > 100.0 {
+                return Err(BusTypeError::OutOfRange {
+                    field: "helo.pedals".to_string(),
+                    value: helo.pedals,
+                    min: -100.0,
+                    max: 100.0,
+                });
+            }
+        }
+
+        // Validate control inputs are in valid ranges
+        if self.control_inputs.pitch < -1.0 || self.control_inputs.pitch > 1.0 {
             return Err(BusTypeError::OutOfRange {
-                field: "helo.pedals".to_string(),
-                value: helo.pedals,
-                min: -100.0,
-                max: 100.0,
+                field: "control_inputs.pitch".to_string(),
+                value: self.control_inputs.pitch,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+        if self.control_inputs.roll < -1.0 || self.control_inputs.roll > 1.0 {
+            return Err(BusTypeError::OutOfRange {
+                field: "control_inputs.roll".to_string(),
+                value: self.control_inputs.roll,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+        if self.control_inputs.yaw < -1.0 || self.control_inputs.yaw > 1.0 {
+            return Err(BusTypeError::OutOfRange {
+                field: "control_inputs.yaw".to_string(),
+                value: self.control_inputs.yaw,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+        for (idx, throttle) in self.control_inputs.throttle.iter().enumerate() {
+            if *throttle < 0.0 || *throttle > 1.0 {
+                return Err(BusTypeError::OutOfRange {
+                    field: format!("control_inputs.throttle[{}]", idx),
+                    value: *throttle,
+                    min: 0.0,
+                    max: 1.0,
+                });
+            }
+        }
+
+        // Validate trim state is in valid ranges
+        if self.trim_state.elevator < -1.0 || self.trim_state.elevator > 1.0 {
+            return Err(BusTypeError::OutOfRange {
+                field: "trim_state.elevator".to_string(),
+                value: self.trim_state.elevator,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+        if self.trim_state.aileron < -1.0 || self.trim_state.aileron > 1.0 {
+            return Err(BusTypeError::OutOfRange {
+                field: "trim_state.aileron".to_string(),
+                value: self.trim_state.aileron,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+        if self.trim_state.rudder < -1.0 || self.trim_state.rudder > 1.0 {
+            return Err(BusTypeError::OutOfRange {
+                field: "trim_state.rudder".to_string(),
+                value: self.trim_state.rudder,
+                min: -1.0,
+                max: 1.0,
+            });
+        }
+
+        // Validate angular rates are reasonable (not NaN or Inf)
+        if !self.angular_rates.p.is_finite() {
+            return Err(BusTypeError::InvalidValue {
+                field: "angular_rates.p".to_string(),
+                reason: "Value is not finite".to_string(),
+            });
+        }
+        if !self.angular_rates.q.is_finite() {
+            return Err(BusTypeError::InvalidValue {
+                field: "angular_rates.q".to_string(),
+                reason: "Value is not finite".to_string(),
+            });
+        }
+        if !self.angular_rates.r.is_finite() {
+            return Err(BusTypeError::InvalidValue {
+                field: "angular_rates.r".to_string(),
+                reason: "Value is not finite".to_string(),
+            });
+        }
+
+        // Validate environment fields are reasonable
+        if !self.environment.altitude.is_finite() {
+            return Err(BusTypeError::InvalidValue {
+                field: "environment.altitude".to_string(),
+                reason: "Value is not finite".to_string(),
+            });
+        }
+        if !self.environment.oat.is_finite() {
+            return Err(BusTypeError::InvalidValue {
+                field: "environment.oat".to_string(),
+                reason: "Value is not finite".to_string(),
             });
         }
 
@@ -306,6 +468,51 @@ impl Default for Navigation {
     }
 }
 
+impl Default for AngularRates {
+    fn default() -> Self {
+        Self {
+            p: 0.0,
+            q: 0.0,
+            r: 0.0,
+        }
+    }
+}
+
+impl Default for ControlInputs {
+    fn default() -> Self {
+        Self {
+            pitch: 0.0,
+            roll: 0.0,
+            yaw: 0.0,
+            throttle: Vec::new(),
+        }
+    }
+}
+
+impl Default for TrimState {
+    fn default() -> Self {
+        Self {
+            elevator: 0.0,
+            aileron: 0.0,
+            rudder: 0.0,
+        }
+    }
+}
+
+impl Default for ValidityFlags {
+    fn default() -> Self {
+        Self {
+            safe_for_ffb: false,
+            attitude_valid: false,
+            angular_rates_valid: false,
+            velocities_valid: false,
+            kinematics_valid: false,
+            aero_valid: false,
+            position_valid: false,
+        }
+    }
+}
+
 /// Get current timestamp in nanoseconds since Unix epoch
 fn current_timestamp_ns() -> u64 {
     SystemTime::now()
@@ -317,7 +524,7 @@ fn current_timestamp_ns() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_core::units::SpeedUnit;
+    use flight_core::units::{conversions, SpeedUnit};
 
     #[test]
     fn test_bus_snapshot_creation() {
@@ -402,5 +609,499 @@ mod tests {
         assert!(config.gear.all_down());
         assert_eq!(config.flaps.value(), 0.0);
         assert_eq!(config.ap_state, AutopilotState::Off);
+    }
+
+    // Core field validation tests
+    #[test]
+    fn test_validated_speed_construction() {
+        // Valid speeds
+        assert!(ValidatedSpeed::new_knots(150.0).is_ok());
+        assert!(ValidatedSpeed::new_mps(77.2).is_ok());
+        
+        // Out of range speeds
+        assert!(ValidatedSpeed::new_knots(-1.0).is_err());
+        assert!(ValidatedSpeed::new_knots(1001.0).is_err());
+        assert!(ValidatedSpeed::new_mps(-1.0).is_err());
+        assert!(ValidatedSpeed::new_mps(501.0).is_err());
+    }
+
+    #[test]
+    fn test_validated_angle_construction() {
+        // Valid angles
+        assert!(ValidatedAngle::new_degrees(45.0).is_ok());
+        assert!(ValidatedAngle::new_radians(0.785).is_ok());
+        
+        // Out of range angles
+        assert!(ValidatedAngle::new_degrees(-181.0).is_err());
+        assert!(ValidatedAngle::new_degrees(181.0).is_err());
+        assert!(ValidatedAngle::new_radians(-3.15).is_err());
+        assert!(ValidatedAngle::new_radians(3.15).is_err());
+    }
+
+    #[test]
+    fn test_g_force_validation() {
+        // Valid g-forces
+        assert!(GForce::new(1.0).is_ok());
+        assert!(GForce::new(-5.0).is_ok());
+        assert!(GForce::new(10.0).is_ok());
+        
+        // Out of range g-forces
+        assert!(GForce::new(-21.0).is_err());
+        assert!(GForce::new(21.0).is_err());
+    }
+
+    #[test]
+    fn test_mach_validation() {
+        // Valid Mach numbers
+        assert!(Mach::new(0.0).is_ok());
+        assert!(Mach::new(0.85).is_ok());
+        assert!(Mach::new(2.5).is_ok());
+        
+        // Out of range Mach numbers
+        assert!(Mach::new(-0.1).is_err());
+        assert!(Mach::new(5.1).is_err());
+    }
+
+    // Unit conversion tests
+    #[test]
+    fn test_degrees_to_radians_conversion() {
+        let angle = ValidatedAngle::new_degrees(180.0).unwrap();
+        let radians = angle.to_radians();
+        assert!((radians - std::f32::consts::PI).abs() < 0.001);
+        
+        let angle = ValidatedAngle::new_degrees(90.0).unwrap();
+        let radians = angle.to_radians();
+        assert!((radians - std::f32::consts::FRAC_PI_2).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_radians_to_degrees_conversion() {
+        let angle = ValidatedAngle::new_radians(std::f32::consts::PI).unwrap();
+        let degrees = angle.to_degrees();
+        assert!((degrees - 180.0).abs() < 0.001);
+        
+        let angle = ValidatedAngle::new_radians(std::f32::consts::FRAC_PI_2).unwrap();
+        let degrees = angle.to_degrees();
+        assert!((degrees - 90.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_knots_to_mps_conversion() {
+        let speed = ValidatedSpeed::new_knots(100.0).unwrap();
+        let mps = speed.to_mps();
+        assert!((mps - 51.4444).abs() < 0.001);
+        
+        // Test conversion utility
+        let mps = conversions::knots_to_mps(100.0);
+        assert!((mps - 51.4444).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_mps_to_knots_conversion() {
+        let speed = ValidatedSpeed::new_mps(50.0).unwrap();
+        let knots = speed.to_knots();
+        assert!((knots - 97.192).abs() < 0.01);
+        
+        // Test conversion utility
+        let knots = conversions::mps_to_knots(50.0);
+        assert!((knots - 97.192).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_feet_to_meters_conversion() {
+        let meters = conversions::feet_to_meters(1000.0);
+        assert!((meters - 304.8).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_meters_to_feet_conversion() {
+        let feet = conversions::meters_to_feet(304.8);
+        assert!((feet - 1000.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_fpm_to_mps_conversion() {
+        let mps = conversions::fpm_to_mps(1000.0);
+        assert!((mps - 5.08).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_mps_to_fpm_conversion() {
+        let fpm = conversions::mps_to_fpm(5.08);
+        assert!((fpm - 1000.0).abs() < 1.0);
+    }
+
+    // Snapshot age calculation tests
+    #[test]
+    fn test_snapshot_age_calculation() {
+        let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Age should be very small immediately after creation
+        assert!(snapshot.age_ms() < 10);
+        
+        // Wait and check age increases
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        let age = snapshot.age_ms();
+        assert!(age >= 50 && age < 100);
+    }
+
+    // Core field range validation tests
+    #[test]
+    fn test_attitude_field_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid attitude values
+        snapshot.kinematics.pitch = ValidatedAngle::new_degrees(10.0).unwrap();
+        snapshot.kinematics.bank = ValidatedAngle::new_degrees(-15.0).unwrap();
+        snapshot.kinematics.heading = ValidatedAngle::new_degrees(90.0).unwrap();
+        assert!(snapshot.validate().is_ok());
+    }
+
+    #[test]
+    fn test_velocity_field_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid velocity values
+        snapshot.kinematics.ias = ValidatedSpeed::new_knots(120.0).unwrap();
+        snapshot.kinematics.tas = ValidatedSpeed::new_knots(130.0).unwrap();
+        snapshot.kinematics.ground_speed = ValidatedSpeed::new_knots(125.0).unwrap();
+        assert!(snapshot.validate().is_ok());
+    }
+
+    #[test]
+    fn test_g_load_field_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid g-load values
+        snapshot.kinematics.g_force = GForce::new(2.5).unwrap();
+        snapshot.kinematics.g_lateral = GForce::new(-0.5).unwrap();
+        snapshot.kinematics.g_longitudinal = GForce::new(0.2).unwrap();
+        assert!(snapshot.validate().is_ok());
+    }
+
+    #[test]
+    fn test_angular_rates_defaults() {
+        let rates = AngularRates::default();
+        assert_eq!(rates.p, 0.0);
+        assert_eq!(rates.q, 0.0);
+        assert_eq!(rates.r, 0.0);
+    }
+
+    #[test]
+    fn test_control_inputs_defaults() {
+        let controls = ControlInputs::default();
+        assert_eq!(controls.pitch, 0.0);
+        assert_eq!(controls.roll, 0.0);
+        assert_eq!(controls.yaw, 0.0);
+        assert!(controls.throttle.is_empty());
+    }
+
+    #[test]
+    fn test_trim_state_defaults() {
+        let trim = TrimState::default();
+        assert_eq!(trim.elevator, 0.0);
+        assert_eq!(trim.aileron, 0.0);
+        assert_eq!(trim.rudder, 0.0);
+    }
+
+    #[test]
+    fn test_validity_flags_defaults() {
+        let validity = ValidityFlags::default();
+        assert!(!validity.safe_for_ffb);
+        assert!(!validity.attitude_valid);
+        assert!(!validity.angular_rates_valid);
+        assert!(!validity.velocities_valid);
+        assert!(!validity.kinematics_valid);
+        assert!(!validity.aero_valid);
+        assert!(!validity.position_valid);
+    }
+
+    // Extended field validation tests
+    #[test]
+    fn test_unique_engine_indices_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("B737"));
+        
+        // Add engines with unique indices
+        snapshot.engines.push(EngineData {
+            index: 0,
+            running: true,
+            rpm: Percentage::new(75.0).unwrap(),
+            manifold_pressure: Some(29.92),
+            egt: Some(650.0),
+            cht: Some(380.0),
+            fuel_flow: Some(12.5),
+            oil_pressure: Some(55.0),
+            oil_temperature: Some(85.0),
+        });
+        snapshot.engines.push(EngineData {
+            index: 1,
+            running: true,
+            rpm: Percentage::new(75.0).unwrap(),
+            manifold_pressure: Some(29.92),
+            egt: Some(650.0),
+            cht: Some(380.0),
+            fuel_flow: Some(12.5),
+            oil_pressure: Some(55.0),
+            oil_temperature: Some(85.0),
+        });
+        
+        // Should pass with unique indices
+        assert!(snapshot.validate().is_ok());
+        
+        // Add duplicate engine index
+        snapshot.engines.push(EngineData {
+            index: 0, // Duplicate
+            running: false,
+            rpm: Percentage::new(0.0).unwrap(),
+            manifold_pressure: None,
+            egt: None,
+            cht: None,
+            fuel_flow: None,
+            oil_pressure: None,
+            oil_temperature: None,
+        });
+        
+        // Should fail with duplicate indices
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_helicopter_pedal_range_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Dcs, AircraftId::new("UH1H"));
+        
+        // Valid pedal positions
+        snapshot.helo = Some(HeloData {
+            nr: Percentage::new(100.0).unwrap(),
+            np: Percentage::new(100.0).unwrap(),
+            torque: Percentage::new(75.0).unwrap(),
+            collective: Percentage::new(50.0).unwrap(),
+            pedals: -100.0,
+        });
+        assert!(snapshot.validate().is_ok());
+        
+        snapshot.helo.as_mut().unwrap().pedals = 100.0;
+        assert!(snapshot.validate().is_ok());
+        
+        snapshot.helo.as_mut().unwrap().pedals = 0.0;
+        assert!(snapshot.validate().is_ok());
+        
+        // Invalid pedal positions
+        snapshot.helo.as_mut().unwrap().pedals = -100.1;
+        assert!(snapshot.validate().is_err());
+        
+        snapshot.helo.as_mut().unwrap().pedals = 100.1;
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_control_inputs_range_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid control inputs
+        snapshot.control_inputs.pitch = 0.5;
+        snapshot.control_inputs.roll = -0.3;
+        snapshot.control_inputs.yaw = 0.1;
+        snapshot.control_inputs.throttle = vec![0.75];
+        assert!(snapshot.validate().is_ok());
+        
+        // Invalid pitch
+        snapshot.control_inputs.pitch = 1.1;
+        assert!(snapshot.validate().is_err());
+        snapshot.control_inputs.pitch = 0.0;
+        
+        // Invalid roll
+        snapshot.control_inputs.roll = -1.1;
+        assert!(snapshot.validate().is_err());
+        snapshot.control_inputs.roll = 0.0;
+        
+        // Invalid yaw
+        snapshot.control_inputs.yaw = 1.5;
+        assert!(snapshot.validate().is_err());
+        snapshot.control_inputs.yaw = 0.0;
+        
+        // Invalid throttle
+        snapshot.control_inputs.throttle = vec![1.1];
+        assert!(snapshot.validate().is_err());
+        snapshot.control_inputs.throttle = vec![-0.1];
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_trim_state_range_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid trim state
+        snapshot.trim_state.elevator = 0.2;
+        snapshot.trim_state.aileron = -0.1;
+        snapshot.trim_state.rudder = 0.05;
+        assert!(snapshot.validate().is_ok());
+        
+        // Invalid elevator trim
+        snapshot.trim_state.elevator = 1.1;
+        assert!(snapshot.validate().is_err());
+        snapshot.trim_state.elevator = 0.0;
+        
+        // Invalid aileron trim
+        snapshot.trim_state.aileron = -1.1;
+        assert!(snapshot.validate().is_err());
+        snapshot.trim_state.aileron = 0.0;
+        
+        // Invalid rudder trim
+        snapshot.trim_state.rudder = 1.5;
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_angular_rates_finite_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid angular rates
+        snapshot.angular_rates.p = 0.1;
+        snapshot.angular_rates.q = -0.05;
+        snapshot.angular_rates.r = 0.02;
+        assert!(snapshot.validate().is_ok());
+        
+        // Invalid angular rates (NaN)
+        snapshot.angular_rates.p = f32::NAN;
+        assert!(snapshot.validate().is_err());
+        snapshot.angular_rates.p = 0.0;
+        
+        // Invalid angular rates (Inf)
+        snapshot.angular_rates.q = f32::INFINITY;
+        assert!(snapshot.validate().is_err());
+        snapshot.angular_rates.q = 0.0;
+        
+        snapshot.angular_rates.r = f32::NEG_INFINITY;
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_environment_finite_validation() {
+        let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Valid environment
+        snapshot.environment.altitude = 5000.0;
+        snapshot.environment.oat = 15.0;
+        assert!(snapshot.validate().is_ok());
+        
+        // Invalid altitude (NaN)
+        snapshot.environment.altitude = f32::NAN;
+        assert!(snapshot.validate().is_err());
+        snapshot.environment.altitude = 5000.0;
+        
+        // Invalid OAT (Inf)
+        snapshot.environment.oat = f32::INFINITY;
+        assert!(snapshot.validate().is_err());
+    }
+
+    #[test]
+    fn test_extended_fields_present() {
+        let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        
+        // Verify all extended fields are present
+        assert!(snapshot.engines.is_empty()); // Empty but present
+        assert!(snapshot.config.fuel.is_empty()); // Empty but present
+        assert!(snapshot.helo.is_none()); // Optional
+        assert_eq!(snapshot.environment.altitude, 0.0);
+        assert_eq!(snapshot.navigation.latitude, 0.0);
+        assert_eq!(snapshot.config.ap_state, AutopilotState::Off);
+        assert!(!snapshot.config.lights.nav);
+    }
+
+    #[test]
+    fn test_engine_data_fields() {
+        let engine = EngineData {
+            index: 0,
+            running: true,
+            rpm: Percentage::new(75.0).unwrap(),
+            manifold_pressure: Some(29.92),
+            egt: Some(650.0),
+            cht: Some(380.0),
+            fuel_flow: Some(12.5),
+            oil_pressure: Some(55.0),
+            oil_temperature: Some(85.0),
+        };
+        
+        assert_eq!(engine.index, 0);
+        assert!(engine.running);
+        assert_eq!(engine.rpm.value(), 75.0);
+        assert_eq!(engine.manifold_pressure, Some(29.92));
+        assert_eq!(engine.egt, Some(650.0));
+        assert_eq!(engine.cht, Some(380.0));
+        assert_eq!(engine.fuel_flow, Some(12.5));
+        assert_eq!(engine.oil_pressure, Some(55.0));
+        assert_eq!(engine.oil_temperature, Some(85.0));
+    }
+
+    #[test]
+    fn test_helicopter_data_fields() {
+        let helo = HeloData {
+            nr: Percentage::new(100.0).unwrap(),
+            np: Percentage::new(95.0).unwrap(),
+            torque: Percentage::new(75.0).unwrap(),
+            collective: Percentage::new(50.0).unwrap(),
+            pedals: 25.0,
+        };
+        
+        assert_eq!(helo.nr.value(), 100.0);
+        assert_eq!(helo.np.value(), 95.0);
+        assert_eq!(helo.torque.value(), 75.0);
+        assert_eq!(helo.collective.value(), 50.0);
+        assert_eq!(helo.pedals, 25.0);
+    }
+
+    #[test]
+    fn test_environment_fields() {
+        let env = Environment {
+            altitude: 5000.0,
+            pressure_altitude: 5200.0,
+            oat: 10.0,
+            wind_speed: ValidatedSpeed::new_knots(15.0).unwrap(),
+            wind_direction: ValidatedAngle::new_degrees(90.0).unwrap(),
+            visibility: 10.0,
+            cloud_coverage: Percentage::new(25.0).unwrap(),
+        };
+        
+        assert_eq!(env.altitude, 5000.0);
+        assert_eq!(env.pressure_altitude, 5200.0);
+        assert_eq!(env.oat, 10.0);
+        assert_eq!(env.wind_speed.to_knots(), 15.0);
+        assert_eq!(env.wind_direction.to_degrees(), 90.0);
+        assert_eq!(env.visibility, 10.0);
+        assert_eq!(env.cloud_coverage.value(), 25.0);
+    }
+
+    #[test]
+    fn test_navigation_fields() {
+        let nav = Navigation {
+            latitude: 47.6062,
+            longitude: -122.3321,
+            ground_track: ValidatedAngle::new_degrees(90.0).unwrap(),
+            distance_to_dest: Some(125.5),
+            time_to_dest: Some(45.0),
+            active_waypoint: Some("KSEA".to_string()),
+        };
+        
+        assert_eq!(nav.latitude, 47.6062);
+        assert_eq!(nav.longitude, -122.3321);
+        assert_eq!(nav.ground_track.to_degrees(), 90.0);
+        assert_eq!(nav.distance_to_dest, Some(125.5));
+        assert_eq!(nav.time_to_dest, Some(45.0));
+        assert_eq!(nav.active_waypoint, Some("KSEA".to_string()));
+    }
+
+    #[test]
+    fn test_lights_config() {
+        let mut lights = LightsConfig::default();
+        assert!(!lights.nav);
+        assert!(!lights.beacon);
+        assert!(!lights.strobe);
+        assert!(!lights.landing);
+        assert!(!lights.taxi);
+        
+        lights.nav = true;
+        lights.beacon = true;
+        assert!(lights.nav);
+        assert!(lights.beacon);
     }
 }
