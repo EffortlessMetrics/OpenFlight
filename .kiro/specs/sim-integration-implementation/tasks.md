@@ -316,259 +316,293 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 ---
 
-## Phase 3: Runtime Scheduling & Timing
+## Phase 3 – FFB safety, faults, and observability
 
-**Goal:** 250 Hz axis loop and 500-1000 Hz raw torque loop behave as specified on real hardware. FFB can be enabled with high confidence.
+**Goal:** FFB fault detection, blackbox recording, and emergency stop are fully implemented and tested.
 
 **Exit Criteria:**
-- [ ] Hardware-backed CI jobs exist and are green for 250 Hz jitter and HID latency
-- [ ] Metrics around loop timing and HID latency visible
-- [ ] Soak tests pass (24-48h, no missed ticks, RSS <10% growth, no blackbox drops)
+- [ ] All FFB safety tests passing (fault detection, 50 ms ramp, estop)
+- [ ] Blackbox recorder exercised in tests and visible in logs
+- [ ] QG-FFB-SAFETY gate wired in CI
 
-- [ ] P3.1 Complete Windows RT scheduling
-  **Phase:** 3 - Runtime
-  **Status:** In progress (basic scheduler exists, MMCSS pending)
-  - MMCSS registration (AvSetMmThreadCharacteristicsW with "Games" or "Pro Audio")
-  - SetThreadPriority(THREAD_PRIORITY_TIME_CRITICAL)
-  - High-res timer (CreateWaitableTimerEx + 50-80μs busy-spin)
-  - Power throttling disable (PROCESS_POWER_THROTTLING_EXECUTION_SPEED)
-  - HID writes via WriteFile with overlapped I/O (no HidD_SetOutputReport in hot path)
-  - PowerSetRequest when active, cleared when idle
-  - _Requirements: WIN-RT-01.*_
+- [ ] 19. Implement FFB fault detection and handling (FFB-SAFETY-02, FFB-SAFETY-03)
+  - [ ] 19.1 Add `FaultReason` enum and fault state machine to `flight-ffb`
+  - [ ] 19.2 Detect USB OUT stalls (N consecutive failed writes → `UsbStall`)
+  - [ ] 19.3 Detect NaN/Inf in FFB pipeline inputs → `NaNInPipeline`
+  - [ ] 19.4 Integrate device health (over-temp/over-current) where available → hardware-critical faults
+  - [ ] 19.5 Detect device disconnects from HID/DirectInput return codes
+  - [ ] 19.6 Implement `clear_fault()` semantics (transient vs hardware-critical)
+  - [ ]* 19.7 Unit tests for all fault paths
+  - _Requirements: FFB-SAFETY-02, FFB-SAFETY-03_
 
-- [ ] P3.1.1 Write Windows RT tests (hardware-backed)
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Test thread priority elevation (#[cfg(windows)])
-  - Test MMCSS registration
-  - Test high-res timer creation and fallback
-  - Test 250 Hz tick timing
-  - Test PowerSetRequest behavior
-  - **Requires hardware-backed CI runners**
-  - _Requirements: WIN-RT-01.*, RT-TEST-01.1_
+- [ ] 20. Implement FFB blackbox recorder (FFB-BLACKBOX-01)
+  - [ ] 20.1 Add `BlackboxSample` and `BlackboxRecorder` ring buffer (≥3 s window @ ≥250 Hz)
+  - [ ] 20.2 Wire recorder into FFB loop (pre- and post-fault sampling)
+  - [ ] 20.3 Implement export of 3 s window (2 s pre + 1 s post) to compressed file
+  - [ ] 20.4 Add log rotation (max N files or total size) under `logs/blackbox`
+  - [ ]* 20.5 Unit tests for ring buffer, export window, and rotation
+  - _Requirements: FFB-BLACKBOX-01_
 
-- [ ] P3.2 Complete Linux RT harness (v1-limited)
-  **Phase:** 3 - Runtime
-  **Status:** In progress (basic scheduler exists, rtkit pending)
-  - SCHED_FIFO via pthread_setschedparam or rtkit D-Bus
-  - clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME) loop
-  - mlockall when RT active
-  - Limits validation and warnings
-  - Note: v1 only needs timing harness + input loop, not FFB output
-  - _Requirements: LINUX-RT-01.*_
+- [ ] 21. Implement FFB emergency stop (FFB-SAFETY-04)
+  - [ ] 21.1 Add `FfbController::emergency_stop()` / `clear_emergency_stop()` APIs
+  - [ ] 21.2 Wire emergency stop into safety state machine (`FaultReason::UserEStop`)
+  - [ ] 21.3 Reuse 50 ms ramp-to-zero path for estop starting from current torque
+  - [ ] 21.4 Bind estop to UI action (big red button)
+  - [ ]* 21.5 (Optional) Bind hardware E-stop input if available via HID
+  - _Requirements: FFB-SAFETY-04_
 
-- [ ] P3.2.1 Write Linux RT tests (hardware-backed)
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Test SCHED_FIFO scheduling (#[cfg(target_os = "linux")])
-  - Test rtkit integration
-  - Test fallback to normal priority
-  - Test clock_nanosleep timing
-  - **Requires hardware-backed CI runners**
-  - _Requirements: LINUX-RT-01.*, RT-TEST-01.2_
-
-- [ ] P3.2.2 Create Linux RT setup helper
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Create scripts/setup-linux-rt.sh with limits.conf entries
-  - Document RT priority configuration
-  - _Requirements: LINUX-RT-01.10_
-
-- [ ] P3.3 Implement jitter measurement harness
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - JitterMeasurement struct with tick deviation recording
-  - p99 jitter calculation
-  - 5s warm-up period, ≥10 minute run
-  - Intel + AMD hardware runners
-  - _Requirements: RT-TEST-01.3, RT-TEST-01.11_
-
-- [ ] P3.3.1 Write jitter CI tests
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Test 250 Hz p99 ≤0.5ms on hardware-backed runners
-  - Report-only mode on virtualized runners
-  - Mark as #[ignore], opt-in via CI job
-  - _Requirements: RT-TEST-01.3, RT-TEST-01.4, RT-TEST-01.5_
-
-- [ ] P3.4 Implement HID latency measurement harness
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Measure end-to-end HID write latency
-  - Histogram with p99 metric
-  - Run only on hardware-backed runners with actual devices
-  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
-
-- [ ] P3.4.1 Write HID latency CI test
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Assert p99 ≤300μs on hardware-backed runners
-  - Skip when hardware tag not present
-  - Mark as #[ignore], opt-in via CI job
-  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
-
-- [ ] P3.5 Implement soak tests
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - 24-48h run with synthetic telemetry
-  - Verify zero missed ticks
-  - Verify RSS delta <10%
-  - Verify no blackbox drops
-  - Run on Intel + AMD hardware
-  - _Requirements: RT-TEST-01.8, RT-TEST-01.11_
-
-- [ ] P3.6 Enable Phase 3 CI quality gates
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Implement QG-RT-JITTER: Fail if 250Hz p99 >0.5ms on hardware, report-only on VMs
-  - Implement QG-HID-LATENCY: Fail if HID write p99 >300μs on hardware, skip when unavailable
-  - Wire gates into CI pipeline
-  - Verify gates pass
-  - _Requirements: CI Quality Gates_
-
-- [ ] P3.7 Phase 3 Checkpoint
-  **Phase:** 3 - Runtime
-  **Status:** Not started
-  - Hardware-backed CI jobs green for jitter and HID latency
-  - Metrics visible for loop timing and HID latency
-  - Soak tests pass
-  - QG-RT-JITTER and QG-HID-LATENCY pass
-  - **Exit criteria met before proceeding to Phase 4**
+- [ ] 22. Checkpoint – FFB safety & observability
+  - [ ] 22.1 All FFB safety tests passing (fault detection, 50 ms ramp, estop)
+  - [ ] 22.2 Blackbox recorder exercised in tests and visible in logs
+  - [ ] 22.3 Wire `QG-FFB-SAFETY` gate in CI (unit tests + basic blackbox check)
 
 ---
 
-## Phase 4: Packaging, Installers, and Legal
+## Phase 4 – Runtime scheduling and timing
 
-**Goal:** Binaries that normal people can install/uninstall without breaking sims, with clear legal posture.
+**Goal:** Windows and Linux real-time paths complete with jitter measurement and HID latency validation.
 
 **Exit Criteria:**
-- [ ] Installers tested on clean Win10/11 and mainstream Linux distro
-- [ ] Uninstall leaves sims in original state
-- [ ] QG-LEGAL-DOC passes (posture/docs exist and referenced)
+- [ ] Windows RT + timers + power integration verified
+- [ ] Linux RT + timers + metrics verified
+- [ ] Jitter tests green on hardware matrix
+- [ ] HID latency test green on HID runner
+- [ ] QG-RT-JITTER and QG-HID-LATENCY wired into CI
 
-- [ ] P4.1 Implement Windows code signing and MSI installer
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - Code signing infrastructure (scripts/sign-binaries.ps1)
-  - Sign all EXE and DLL files
-  - WiX configuration for MSI
-  - Per-user core binaries, opt-in sim integrations
-  - Elevated privileges for sim integrations
-  - Product posture and EULA display
-  - MSI signing
-  - _Requirements: PKG-01.1-8_
+### Windows real-time path
 
-- [ ] P4.2 Implement Windows uninstaller
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - Binary removal
-  - X-Plane plugin removal (if installed)
-  - DCS Export.lua restoration (if backed up)
-  - _Requirements: PKG-01.9_
+- [ ] 23. Complete Windows real-time thread configuration (RT-WIN-01)
+  - [ ] 23.1 Implement `WindowsRtThread` abstraction:
+    - [ ] 23.1.1 MMCSS registration via `AvSetMmThreadCharacteristicsW` ("Games" or "Pro Audio")
+    - [ ] 23.1.2 Elevate thread priority (`SetThreadPriority`)
+    - [ ] 23.1.3 Disable process power throttling (`SetProcessInformation`)
+    - [ ] 23.1.4 RAII for registration / restoration on drop
+  - [ ]* 23.2 Platform-specific integration tests:
+    - [ ]* 23.2.1 Verify non-zero MMCSS handle
+    - [ ]* 23.2.2 Verify priority change via `GetThreadPriority`
+  - _Requirements: RT-WIN-01_
 
-- [ ] P4.3 Implement Linux packages
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - .deb package with udev rules
-  - postinst script for group management
-  - Optional: AppImage or .rpm
-  - Note: v1 Linux is timing harness + input loop only, no FFB output
-  - _Requirements: PKG-01.10-12_
+- [ ] 24. Complete Windows high-resolution timer loop (RT-WIN-02)
+  - [ ] 24.1 Implement 250 Hz loop using high-resolution waitable timers:
+    - [ ] 24.1.1 `CreateWaitableTimerExW` with high-res flag (where supported)
+    - [ ] 24.1.2 Fallback to `timeBeginPeriod(1)` + standard waitable timer
+    - [ ] 24.1.3 Busy-spin final ~50–80 µs based on QPC
+  - [ ]* 24.2 Platform-specific timer tests:
+    - [ ]* 24.2.1 No-op tick harness measuring intervals via QPC
+    - [ ]* 24.2.2 Compute p99 jitter and export as metrics (feeds QG-RT-JITTER)
+  - _Requirements: RT-WIN-02_
 
-- [ ] P4.4 Create legal and compliance documentation
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - Product posture document (docs/product-posture.md)
-  - "What We Touch" docs per sim
-  - Third-party components inventory
-  - Ship license texts
-  - Reference posture in README, installer, integration modules
-  - _Requirements: LEGAL-01.*, PKG-01.13_
+- [ ] 25. Implement Windows power management integration (RT-WIN-03)
+  - [ ] 25.1 Implement `PowerManager` wrapper:
+    - [ ] 25.1.1 Use `PowerCreateRequest` + `PowerSetRequest` for EXECUTION/SYSTEM_REQUIRED
+    - [ ] 25.1.2 Tie lifetime to "active sim + active FFB device" state
+    - [ ] 25.1.3 Clear requests when idle
+  - [ ]* 25.2 Platform-specific tests:
+    - [ ]* 25.2.1 Harness asserts request handles exist when active and are cleared when idle
+  - _Requirements: RT-WIN-03_
 
-- [ ] P4.5 Enable Phase 4 CI quality gate
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - Implement QG-LEGAL-DOC: Fail if posture doc missing or not referenced
-  - Wire gate into CI pipeline
-  - Verify gate passes
-  - _Requirements: CI Quality Gates_
+- [ ] 26. Implement Windows HID write optimization and latency harness (RT-WIN-04)
+  - [ ] 26.1 Optimize HID writes:
+    - [ ] 26.1.1 Open devices with `FILE_FLAG_OVERLAPPED`
+    - [ ] 26.1.2 Implement async `WriteFile` using an OVERLAPPED struct pool
+    - [ ] 26.1.3 Avoid `HidD_SetOutputReport` in FFB hot path
+  - [ ] 26.2 Implement HID latency measurement harness:
+    - [ ] 26.2.1 `flight-hid-bench` tool sends synthetic OUT reports at 1 kHz
+    - [ ] 26.2.2 Measure submit → completion latency via QPC; build histogram
+  - [ ]* 26.3 Add HID latency CI test:
+    - [ ]* 26.3.1 Hardware-tagged job runs harness; asserts p99 ≤ configured budget
+    - [ ]* 26.3.2 Non-tagged jobs skip gracefully but still report metrics
+  - _Requirements: RT-WIN-04_
 
-- [ ] P4.6 Phase 4 Checkpoint
-  **Phase:** 4 - Packaging
-  **Status:** Not started
-  - Installers tested on clean Win10/11 and Linux distro
-  - Uninstall leaves sims in original state
-  - QG-LEGAL-DOC passes
-  - **Exit criteria met before proceeding to Phase 5**
+### Linux real-time path
+
+- [ ] 27. Complete Linux real-time thread configuration (RT-LINUX-01)
+  - [ ] 27.1 Implement `LinuxRtThread` abstraction:
+    - [ ] 27.1.1 Prefer rtkit DBus (`MakeThreadRealtime(u64, u32)`)
+    - [ ] 27.1.2 Fallback to `sched_setscheduler` with `SCHED_FIFO`
+    - [ ] 27.1.3 Call `mlockall(MCL_CURRENT|MCL_FUTURE)` on success
+    - [ ] 27.1.4 Validate `RLIMIT_RTPRIO` and `RLIMIT_MEMLOCK`; emit warnings/metrics
+  - [ ]* 27.2 Platform-specific tests:
+    - [ ]* 27.2.1 Test under allowed RT limits (policy/priority as expected)
+    - [ ]* 27.2.2 Test without RT privileges (correct fallback + warning)
+  - _Requirements: RT-LINUX-01_
+
+- [ ] 28. Implement Linux high-resolution timer loop (RT-LINUX-02)
+  - [ ] 28.1 Implement 250 Hz loop via `clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, ...)`
+  - [ ] 28.2 Busy-spin final ~50 µs with `clock_gettime`
+  - [ ]* 28.3 Platform-specific timer tests:
+    - [ ]* 28.3.1 No-op tick harness measuring intervals; compute jitter
+  - _Requirements: RT-LINUX-02_
+
+- [ ] 29. Implement Linux RT metrics exposure (RT-LINUX-03)
+  - [ ] 29.1 Export metrics:
+    - [ ] 29.1.1 `runtime.linux.rt_enabled`
+    - [ ] 29.1.2 `runtime.linux.sched_policy`, `runtime.linux.priority`
+    - [ ] 29.1.3 `runtime.linux.mlockall_success`
+  - [ ] 29.2 Hook into central metrics system (Task 41)
+  - _Requirements: RT-LINUX-03_
+
+- [ ] 30. Create Linux RT setup helper script (RT-LINUX-04)
+  - [ ] 30.1 `scripts/setup-linux-rt.sh`:
+    - [ ] 30.1.1 Configure `/etc/security/limits.conf` for `rtprio`/`memlock`
+    - [ ] 30.1.2 Print instructions for logout/login and group membership
+  - [ ] 30.2 Document script usage in Linux install docs
+  - _Requirements: RT-LINUX-04_
+
+### Cross-platform jitter & checkpoints
+
+- [ ] 31. Implement runtime jitter measurement (RT-JITTER-01)
+  - [ ] 31.1 Implement `JitterMeasurement` helper:
+    - [ ] 31.1.1 Accept target Hz; record deviation vs ideal period (skip warmup)
+    - [ ] 31.1.2 Compute p50/p95/p99; export as metrics
+  - [ ]* 31.2 Long-running jitter tests:
+    - [ ]* 31.2.1 10-minute synthetic loop @ 250 Hz on hardware runners
+    - [ ]* 31.2.2 Assert p99 ≤ configured budget on "realtime-capable" runners
+    - [ ]* 31.2.3 Report-only mode on virtualized runners
+  - [ ]* 31.3 Add hardware matrix coverage:
+    - [ ]* 31.3.1 `windows-intel`, `windows-amd`, `linux-intel`, `linux-amd` jobs
+  - _Requirements: RT-JITTER-01_
+
+- [ ] 32. Checkpoint – runtime & timing
+  - [ ] 32.1 Windows RT + timers + power integration verified
+  - [ ] 32.2 Linux RT + timers + metrics verified
+  - [ ] 32.3 Jitter tests green on hardware matrix
+  - [ ] 32.4 HID latency test green on HID runner
+  - [ ] 32.5 `QG-RT-JITTER` and `QG-HID-LATENCY` wired into CI
 
 ---
 
-## Phase 5: Metrics, CI Gates, and Ship It
+## Phase 5 – Packaging and distribution
 
-**Goal:** Observability in place, CI enforces all guarantees, candidate release passes all gates.
+**Goal:** Installers and packages for Windows and Linux that can be deployed to end users.
 
 **Exit Criteria:**
-- [ ] All CI quality gates enabled and passing
-- [ ] Metrics visible for any given run
-- [ ] Candidate release build passes all gates
+- [ ] Installers tested on clean Win10/11 and at least one Linux distro
+- [ ] Uninstallers restore sims to original state
+- [ ] All artifacts signed and include license inventory
+
+- [ ] 33. Implement Windows code signing infrastructure (PKG-WIN-01)
+  - [ ] 33.1 Integrate `signtool` into CI; sign all EXE/DLL/MSI artifacts
+  - [ ] 33.2 Fail "release" jobs if any artifact is unsigned
+  - _Requirements: PKG-WIN-01_
+
+- [ ] 34. Implement Windows MSI installer (PKG-WIN-02)
+  - [ ] 34.1 Create WiX project:
+    - [ ] 34.1.1 Features: core, sim integrations (MSFS/X-Plane/DCS)
+    - [ ] 34.1.2 Correct install scope (per-user vs per-machine) by feature
+  - [ ] 34.2 Custom actions:
+    - [ ] 34.2.1 Display product posture summary / EULA excerpt
+    - [ ] 34.2.2 Write sim config files in a reversible way
+  - _Requirements: PKG-WIN-02_
+
+- [ ] 35. Implement Windows uninstaller (PKG-WIN-03)
+  - [ ] 35.1 Remove all installed binaries
+  - [ ] 35.2 Restore `Export.lua` from `.flighthub_backup` if present
+  - [ ] 35.3 Remove X-Plane plugin(s) and any integration stubs
+  - [ ] 35.4 Leave sims in original state if possible
+  - _Requirements: PKG-WIN-03_
+
+- [ ] 36. Implement Linux package formats (PKG-LINUX-01)
+  - [ ] 36.1 Build `.deb`:
+    - [ ] 36.1.1 Ship binaries in `/usr/bin`
+    - [ ] 36.1.2 Include udev rules for `/dev/hidraw*`
+  - [ ]* 36.2 Optionally build AppImage or `.rpm` for other distros
+  - [ ] 36.3 Postinst script:
+    - [ ] 36.3.1 Add user to relevant groups
+    - [ ] 36.3.2 Reload udev rules
+  - _Requirements: PKG-LINUX-01_
+
+- [ ] 37. Create Linux installation documentation (PKG-LINUX-02)
+  - [ ] 37.1 Document package installation
+  - [ ] 37.2 Document RT setup script usage (Task 30)
+  - [ ] 37.3 Document group membership and log locations
+  - _Requirements: PKG-LINUX-02_
+
+- [ ] 38. Create third-party components inventory (PKG-LICENSE-01)
+  - [ ] 38.1 Generate `third-party-components.toml` from dependencies
+  - [ ] 38.2 Collect and ship licenses for all redistributed components
+  - [ ] 38.3 Link inventory from installer and docs
+  - _Requirements: PKG-LICENSE-01_
+
+---
+
+## Phase 6 – Legal posture, metrics, CI, and docs
+
+**Goal:** Complete observability, legal documentation, CI quality gates, and user documentation.
+
+**Exit Criteria:**
+- [ ] All QG-* checks have CI jobs and are passing
+- [ ] Product posture and "What We Touch" docs exist
 - [ ] User documentation complete
+- [ ] Full test matrix green
 
-- [ ] P5.1 Implement metrics system
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - Hierarchical naming (sim.*, ffb.*, runtime.*, bus.*)
-  - Metric types (gauges, counters, histograms)
-  - Optional Prometheus exporter (:9090/metrics)
-  - In-process ring buffer for UI (60s)
-  - Log-structured snapshots (JSON lines)
-  - _Requirements: Design: Telemetry and Metrics_
+- [ ] 39. Create product posture document (LEGAL-01)
+  - [ ] 39.1 Write `docs/product-posture.md` (accessory posture, not certified training)
+  - [ ] 39.2 Include export-control/EULA reminders from sim vendors
+  - [ ] 39.3 Link from README and installer
+  - _Requirements: LEGAL-01_
 
-- [ ] P5.1.1 Write metrics system tests
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - Test naming and scoping
-  - Test metric types
-  - Test Prometheus export format
-  - Test ring buffer retention
-  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3_
+- [ ] 40. Create "What We Touch" documentation for each simulator (LEGAL-02)
+  - [ ] 40.1 For MSFS: files, APIs, SimVars, ports
+  - [ ] 40.2 For X-Plane: plugins, datarefs, UDP ports
+  - [ ] 40.3 For DCS: `Export.lua`, data, ports
+  - [ ] 40.4 Document how to revert all changes
+  - _Requirements: LEGAL-02_
 
-- [ ] P5.2 Implement cargo xtask validation commands
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - cargo xtask validate-msfs-telemetry
-  - cargo xtask validate-xplane-telemetry
-  - cargo xtask validate-dcs-export
-  - _Requirements: SIM-TEST-01.9_
+- [ ] 41. Implement telemetry and metrics system (METRICS-01)
+  - [ ] 41.1 Implement metrics core (counters, gauges, histograms)
+  - [ ] 41.2 Define namespaces: `sim.*`, `ffb.*`, `runtime.*`, `bus.*`
+  - [ ] 41.3 Implement in-process exporter (for UI)
+  - [ ]* 41.4 Optional Prometheus exporter
+  - [ ]* 41.5 Unit tests for metrics creation, updates, and export
+  - _Requirements: METRICS-01_
 
-- [ ] P5.3 Create comprehensive integration test suite
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - Fixture files for each sim (tests/fixtures/)
-  - Replay testing with recorded telemetry
-  - Complete adapter lifecycle tests
-  - Reconnection with exponential backoff
-  - Sanity gate with NaN/Inf injection
-  - _Requirements: SIM-TEST-01.5-8_
+- [ ] 42. Implement `cargo xtask` validation commands (CI-TOOLS-01)
+  - [ ] 42.1 `cargo xtask validate-msfs-telemetry`
+  - [ ] 42.2 `cargo xtask validate-xplane-telemetry`
+  - [ ] 42.3 `cargo xtask validate-dcs-export`
+  - [ ] 42.4 Each xtask replays fixtures and checks mapping + sanity behaviour
+  - _Requirements: CI-TOOLS-01_
 
-- [ ] P5.4 Create user documentation
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - Installation guides (Windows MSI, Linux .deb/AppImage)
-  - Simulator setup guides (MSFS, X-Plane, DCS)
-  - FFB device configuration guide
-  - Troubleshooting guide
-  - _Requirements: General documentation_
+- [ ] 43. Checkpoint – all tests and quality gates passing before release (CI-GATES-01)
+  - [ ] 43.1 Ensure all QG-* checks have CI jobs:
+    - [ ] QG-SIM-MAPPING
+    - [ ] QG-UNIT-CONV
+    - [ ] QG-SANITY-GATE
+    - [ ] QG-FFB-SAFETY
+    - [ ] QG-RT-JITTER
+    - [ ] QG-HID-LATENCY
+    - [ ] QG-LEGAL-DOC
+  - _Requirements: CI-GATES-01_
 
-- [ ] P5.5 Final validation and release preparation
-  **Phase:** 5 - CI & Metrics
-  **Status:** Not started
-  - Run all tests and quality gates
-  - Verify documentation complete
-  - Verify code signing works
-  - Verify installers on clean systems
-  - Verify uninstallers clean up properly
-  - Create release notes
-  - **Ship v1!**
+- [ ] 44. Create CI quality gate enforcement (CI-GATES-02)
+  - [ ] 44.1 Wire QG-* jobs as required checks on main/release branches
+  - [ ] 44.2 Document gates in `CONTRIBUTING.md`
+  - _Requirements: CI-GATES-02_
+
+- [ ] 45. Create comprehensive integration test suite (TEST-INTEG-01)
+  - [ ] 45.1 Fixture-based tests for each sim (connect → stream → disconnect → reconnect)
+  - [ ] 45.2 End-to-end test: sim fixture → bus → FFB → safety → no faults under normal conditions
+  - _Requirements: TEST-INTEG-01_
+
+- [ ]* 46. Implement soak tests (TEST-INTEG-02)
+  - [ ]* 46.1 24–48h synthetic telemetry + FFB loop on hardware
+  - [ ]* 46.2 Assert no missed ticks beyond threshold; RSS stable; blackbox present on any faults
+  - _Requirements: TEST-INTEG-02_
+
+- [ ] 47. Create user documentation (DOCS-USER-01)
+  - [ ] 47.1 Install guides (Windows, Linux)
+  - [ ] 47.2 Per-sim setup guides
+  - [ ] 47.3 FFB device configuration and safety guidelines
+  - [ ] 47.4 Troubleshooting (RT not enabled, no FFB, perms, etc.)
+  - _Requirements: DOCS-USER-01_
+
+- [ ] 48. Final validation and release preparation (RELEASE-01)
+  - [ ] 48.1 Run full test matrix (unit, integration, RT, HID, soak)
+  - [ ] 48.2 Verify installers on clean Win10/11 and at least one Linux distro
+  - [ ] 48.3 Check all CI quality gates green
+  - [ ] 48.4 Tag release and archive artifacts (binaries, installers, docs)
+  - _Requirements: RELEASE-01_
 
 ---
 
