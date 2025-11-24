@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 
 pub mod audio;
 pub mod blackbox;
+pub mod dinput_device;
 pub mod fault;
 #[cfg(test)]
 pub mod hil_tests;
@@ -47,6 +48,7 @@ mod tests;
 
 pub use audio::*;
 pub use blackbox::*;
+pub use dinput_device::*;
 pub use fault::*;
 #[cfg(test)]
 pub use hil_tests::*;

@@ -285,7 +285,10 @@ All context documents (requirements, design) are available during implementation
   - Verify all MSFS, X-Plane, and DCS adapter unit and integration tests pass
   - Verify all mapping documentation is complete
 
-- [ ] 15. Complete DirectInput FFB device abstraction
+- [x] 15. Complete DirectInput FFB device abstraction
+
+
+
 
   - Review existing FFB framework in `crates/flight-ffb/src/`
   - Complete DirectInputFfbDevice implementation with IDirectInputDevice8 interface
@@ -295,7 +298,9 @@ All context documents (requirements, design) are available during implementation
   - Note: Safety framework exists, device I/O needs completion
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
 
-- [ ] 15.1 Write unit tests for DirectInput device abstraction
+- [x] 15.1 Write unit tests for DirectInput device abstraction
+
+
   - Test device enumeration
   - Test capability querying
   - Test device acquisition
