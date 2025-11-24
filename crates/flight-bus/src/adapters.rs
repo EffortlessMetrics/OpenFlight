@@ -26,57 +26,108 @@ pub mod msfs {
     use super::*;
 
     /// Convert MSFS SimConnect units to normalized values
+    ///
+    /// All conversion functions include explicit unit documentation and formulas.
+    /// See docs/integration/msfs-simvar-mapping.md for complete mapping table.
     pub struct MsfsConverter;
 
     impl MsfsConverter {
         /// Convert MSFS indicated airspeed (knots) to ValidatedSpeed
+        ///
+        /// **SimVar**: `AIRSPEED INDICATED` (knots)
+        /// **Target**: `kinematics.ias` (m/s internally, but ValidatedSpeed handles conversion)
+        /// **Conversion**: ValidatedSpeed stores in knots, converts to m/s on demand
+        /// **Formula**: 1 knot = 0.514444 m/s
         pub fn convert_ias(value: f64) -> Result<ValidatedSpeed, BusTypeError> {
             ValidatedSpeed::new_knots(value as f32)
         }
 
         /// Convert MSFS true airspeed (knots) to ValidatedSpeed
+        ///
+        /// **SimVar**: `AIRSPEED TRUE` (knots)
+        /// **Target**: `kinematics.tas` (m/s internally)
+        /// **Conversion**: 1 knot = 0.514444 m/s
         pub fn convert_tas(value: f64) -> Result<ValidatedSpeed, BusTypeError> {
             ValidatedSpeed::new_knots(value as f32)
         }
 
         /// Convert MSFS ground speed (knots) to ValidatedSpeed
+        ///
+        /// **SimVar**: `GROUND VELOCITY` (knots)
+        /// **Target**: `kinematics.ground_speed` (m/s internally)
+        /// **Conversion**: 1 knot = 0.514444 m/s
         pub fn convert_ground_speed(value: f64) -> Result<ValidatedSpeed, BusTypeError> {
             ValidatedSpeed::new_knots(value as f32)
         }
 
         /// Convert MSFS angle (degrees) to ValidatedAngle
+        ///
+        /// **SimVars**: `ATTITUDE PITCH DEGREES`, `ATTITUDE BANK DEGREES`, `ATTITUDE HEADING DEGREES`,
+        ///              `INCIDENCE ALPHA`, `INCIDENCE BETA`
+        /// **Target**: Various angle fields (radians internally)
+        /// **Conversion**: radians = degrees × (π / 180) ≈ degrees × 0.0174533
+        /// **Normalization**: Angles are normalized to -180° to +180° range before conversion
         pub fn convert_angle_degrees(value: f64) -> Result<ValidatedAngle, BusTypeError> {
             // Normalize to -180 to 180 range
+            // Formula: ((value % 360) + 540) % 360 - 180
             let normalized = ((value % 360.0) + 540.0) % 360.0 - 180.0;
             ValidatedAngle::new_degrees(normalized as f32)
         }
 
         /// Convert MSFS angle (radians) to ValidatedAngle
+        ///
+        /// **SimVars**: Angular rates (already in radians)
+        /// **Target**: Various angle fields
+        /// **Conversion**: None (already in radians)
         pub fn convert_angle_radians(value: f64) -> Result<ValidatedAngle, BusTypeError> {
             ValidatedAngle::new_radians(value as f32)
         }
 
         /// Convert MSFS G-force to GForce
+        ///
+        /// **SimVars**: `G FORCE`, `G FORCE LATERAL`, `G FORCE LONGITUDINAL`
+        /// **Target**: `kinematics.g_force`, `kinematics.g_lateral`, `kinematics.g_longitudinal`
+        /// **Conversion**: None (already in g units where 1g = 9.81 m/s²)
+        /// **Range**: -20g to +20g enforced by GForce type
         pub fn convert_g_force(value: f64) -> Result<GForce, BusTypeError> {
             GForce::new(value as f32)
         }
 
         /// Convert MSFS Mach number to Mach
+        ///
+        /// **SimVar**: `AIRSPEED MACH`
+        /// **Target**: `kinematics.mach`
+        /// **Conversion**: None (already in Mach units)
+        /// **Range**: 0-5 enforced by Mach type
         pub fn convert_mach(value: f64) -> Result<Mach, BusTypeError> {
             Mach::new(value as f32)
         }
 
         /// Convert MSFS percentage (0-100) to Percentage
+        ///
+        /// **SimVars**: `FLAPS HANDLE PERCENT`, `GEAR POSITION`, etc.
+        /// **Target**: Various percentage fields
+        /// **Conversion**: Stored as 0-100, normalized to 0.0-1.0 on demand
+        /// **Range**: 0-100 enforced by Percentage type
         pub fn convert_percentage(value: f64) -> Result<Percentage, BusTypeError> {
             Percentage::new(value as f32)
         }
 
         /// Convert MSFS normalized value (0-1) to Percentage
+        ///
+        /// **SimVars**: Some control positions (0-1 range)
+        /// **Target**: Various percentage fields
+        /// **Conversion**: normalized × 100 = percentage
         pub fn convert_normalized_to_percentage(value: f64) -> Result<Percentage, BusTypeError> {
             Percentage::from_normalized(value as f32)
         }
 
         /// Convert MSFS RPM to percentage of redline
+        ///
+        /// **SimVar**: `GENERAL ENG RPM:N` (RPM)
+        /// **Target**: `engines[N-1].rpm` (percentage)
+        /// **Conversion**: percentage = (rpm / redline_rpm) × 100
+        /// **Note**: Requires aircraft-specific redline RPM value
         pub fn convert_rpm_to_percentage(
             rpm: f64,
             redline_rpm: f64,
@@ -87,11 +138,18 @@ pub mod msfs {
                     reason: "Redline RPM must be positive".to_string(),
                 });
             }
+            // Formula: percentage = (rpm / redline_rpm) × 100
             let percentage = (rpm / redline_rpm * 100.0).clamp(0.0, 100.0);
             Percentage::new(percentage as f32)
         }
 
         /// Convert MSFS fuel quantity (gallons) to percentage of capacity
+        ///
+        /// **SimVars**: `FUEL TANK LEFT MAIN QUANTITY`, `FUEL TANK RIGHT MAIN QUANTITY`, etc.
+        /// **Target**: `config.fuel[tank_id]` (percentage)
+        /// **Conversion**: percentage = (current / capacity) × 100
+        /// **Units**: US gallons
+        /// **Note**: Requires aircraft-specific tank capacity values
         pub fn convert_fuel_to_percentage(
             current_gallons: f64,
             capacity_gallons: f64,
@@ -102,6 +160,7 @@ pub mod msfs {
                     reason: "Fuel capacity must be positive".to_string(),
                 });
             }
+            // Formula: percentage = (current / capacity) × 100
             let percentage = (current_gallons / capacity_gallons * 100.0).clamp(0.0, 100.0);
             Percentage::new(percentage as f32)
         }

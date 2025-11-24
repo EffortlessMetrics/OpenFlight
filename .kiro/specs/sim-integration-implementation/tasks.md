@@ -145,7 +145,12 @@ All context documents (requirements, design) are available during implementation
   - Test aircraft change detection
   - _Requirements: SIM-TEST-01.1, SIM-TEST-01.5, SIM-TEST-01.7_
 
-- [ ] 6. Create MSFS SimVar mapping documentation
+- [x] 6. Create MSFS SimVar mapping documentation
+
+
+
+
+
   - Document all SimVar → BusSnapshot field mappings in docs/integration/msfs-simvar-mapping.md
   - Document unit conversions in code comments
   - _Requirements: MSFS-INT-01.Doc.1, MSFS-INT-01.Doc.2_
