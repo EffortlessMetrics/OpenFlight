@@ -468,8 +468,13 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
         .context("Failed to check simulator mapping documentation")?;
     results.push(sim_mapping_result);
 
+    // QG-UNIT-CONV: Check unit conversion test coverage
+    println!("  Checking QG-UNIT-CONV (unit conversion test coverage)...");
+    let unit_conv_result = crate::quality_gates::check_unit_conversion_coverage()
+        .context("Failed to check unit conversion test coverage")?;
+    results.push(unit_conv_result);
+
     // Future quality gates will be added here:
-    // - QG-UNIT-CONV: Unit conversion test coverage
     // - QG-SANITY-GATE: Sanity gate tests
     // - QG-FFB-SAFETY: FFB safety tests
     // - QG-RT-JITTER: Real-time jitter tests

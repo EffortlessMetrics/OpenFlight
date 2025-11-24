@@ -26,17 +26,25 @@ Quality gates are automated checks that enforce critical requirements before cod
 - Unit conversions are documented and verifiable
 - Mapping completeness can be audited
 
-## Planned Quality Gates
-
-The following quality gates are defined in the spec but not yet implemented:
-
 ### QG-UNIT-CONV
 
-**Status:** 📋 Not Started
+**Status:** ✅ Implemented
 
 **Purpose:** Verify that unit conversion tests cover all BusSnapshot fields populated by each v1 adapter.
 
-**Requirements:** Unit tests must exist for all conversions (degrees→radians, feet→meters, knots→m/s, etc.)
+**Requirements:** Unit tests must exist for all conversions:
+- Degrees ↔ Radians (for attitude angles, AoA, sideslip, wind direction)
+- Knots ↔ m/s (for IAS, TAS, ground speed, wind speed)
+- Feet ↔ Meters (for altitudes: MSL, AGL, pressure altitude)
+- FPM ↔ m/s (for vertical speed)
+
+**Failure Condition:** Build fails if any of the required unit conversion test functions are missing from `crates/flight-bus/src/snapshot.rs`.
+
+**Rationale:** Per sim-integration-implementation spec requirements BUS-CORE-01.12 and SIM-TEST-01.2, all unit conversions must be tested to ensure correct data transformation from simulator-native units to the canonical SI units used in BusSnapshot. This prevents subtle bugs where incorrect conversion factors or missing conversions could lead to incorrect FFB output or profile behavior.
+
+## Planned Quality Gates
+
+The following quality gates are defined in the spec but not yet implemented:
 
 ### QG-SANITY-GATE
 
