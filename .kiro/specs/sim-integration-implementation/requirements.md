@@ -70,21 +70,24 @@ This specification defines the target for Flight Hub v1:
 #### Acceptance Criteria
 
 1. WHEN implementing THEN the adapter SHALL support UDP data output mode where users configure X-Plane's "Data Output" screen to send to Flight Hub's listening port
-2. WHEN receiving UDP packets THEN the adapter SHALL parse the DATA packet format with 36-byte records per data group
-3. WHEN mapping DataRefs THEN the adapter SHALL use: sim/flightmodel/position/theta → attitude.pitch, sim/flightmodel/position/phi → attitude.roll, sim/flightmodel/position/psi → attitude.yaw (all in radians)
-4. WHEN mapping DataRefs THEN the adapter SHALL use: sim/flightmodel/position/P/Q/R → angular_rates.p/q/r (rad/s), sim/flightmodel/position/indicated_airspeed → velocities.ias (converted to m/s)
-5. WHEN mapping DataRefs THEN the adapter SHALL explicitly document unit conversions per DataRef in code comments and mapping docs, normalizing to the same units as BUS-01
-6. WHEN a DataRef is missing from UDP output THEN the adapter SHALL mark that BusSnapshot field as invalid without crashing
-7. WHEN implementing future plugin THEN it SHALL register a flight loop callback via XPLMRegisterFlightLoopCallback at maximum rate (period = 0)
-8. WHEN implementing future plugin THEN the flight loop SHALL read required DataRefs, write to lock-free queue, and return quickly with no blocking I/O or allocations
-9. WHEN implementing future plugin THEN it SHALL communicate with Flight Hub via UDP or named pipe with binary packet format containing version header and timestamp
-10. WHEN implementing future plugin THEN the plugin adapter SHALL populate the same BusSnapshot fields as the UDP adapter and SHALL be a drop-in replacement at the bus boundary
-11. WHEN aircraft changes THEN the adapter SHALL detect via aircraft path/name and trigger profile switching
-12. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and transition to disconnected state
+2. WHEN receiving UDP packets THEN the adapter SHALL parse the DATA packet format with 36-byte records per data group (4-byte index + 8×4-byte floats)
+3. WHEN mapping data groups THEN the adapter SHALL support: group 3 (speeds: IAS, TAS, GS), group 4 (Mach, VVI, g-load), group 16 (angular velocities P/Q/R), group 17 (pitch/roll/heading), group 18 (alpha/beta), group 21 (body velocities)
+4. WHEN mapping data groups THEN the adapter SHALL convert: group 17 angles from degrees to ValidatedAngle, group 16 rates from deg/s to rad/s, group 3 speeds from knots to ValidatedSpeed
+5. WHEN mapping DataRefs THEN the adapter SHALL explicitly document unit conversions per DataRef in code comments and mapping docs, using BusSnapshot typed fields
+6. WHEN a DataRef is missing from UDP output THEN the adapter SHALL gracefully handle missing groups without crashing
+7. WHEN implementing UDP-only mode THEN the adapter SHALL document that aircraft identity may be unavailable or inferred poorly, with true identity-based profile switching requiring the plugin
+8. WHEN implementing future plugin THEN it SHALL register a flight loop callback via XPLMRegisterFlightLoopCallback at maximum rate (period = 0)
+9. WHEN implementing future plugin THEN the flight loop SHALL read required DataRefs, write to lock-free queue, and return quickly with no blocking I/O or allocations
+10. WHEN implementing future plugin THEN it SHALL communicate with Flight Hub via UDP or named pipe with binary packet format containing version header and timestamp
+11. WHEN implementing future plugin THEN the plugin adapter SHALL populate the same BusSnapshot fields as the UDP adapter and SHALL be a drop-in replacement at the bus boundary
+12. WHEN aircraft changes THEN the adapter SHALL detect via aircraft path/name (plugin mode) or heuristics (UDP mode) and trigger profile switching
+13. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and transition to disconnected state
+14. WHEN implementing THEN the adapter SHALL provide web API integration for querying X-Plane state via HTTP endpoints
 
 #### Documentation
 
-1. WHEN documenting THEN the adapter SHALL maintain a mapping table in docs/ listing each DataRef → BusSnapshot field mapping with units
+1. WHEN documenting THEN the adapter SHALL maintain a mapping table in docs/integration/xplane.md listing each data group index → BusSnapshot field mapping with units
+2. WHEN documenting THEN the system SHALL provide setup instructions for configuring X-Plane's Data Output screen with required indices and rates
 
 ### Requirement 3: DCS World Integration (DCS-INT-01)
 
@@ -92,24 +95,26 @@ This specification defines the target for Flight Hub v1:
 
 #### Acceptance Criteria
 
-1. WHEN installing THEN the installer SHALL detect all installed DCS variants under Saved Games and offer per-variant installation of the Export.lua shim
+1. WHEN installing THEN the installer SHALL detect all installed DCS variants (DCS, DCS.openbeta, DCS.openalpha) under Saved Games and offer per-variant installation
 2. WHEN installing THEN the system SHALL check for existing Export.lua in Saved Games\DCS\Scripts\ and append a dofile reference rather than overwriting
 3. WHEN no Export.lua exists THEN the installer SHALL create a minimal one that dofiles Flight Hub's script and preserves compatibility with future tools
 4. WHEN implementing the export script THEN it SHALL define LuaExportStart, LuaExportStop, and LuaExportAfterNextFrame hooks
-5. WHEN exporting data THEN the script SHALL use only self-aircraft functions: LoGetSelfData, LoGetIndicatedAirSpeed, LoGetAccelerationUnits
-6. WHEN exporting data THEN the adapter SHALL normalize all values to the canonical BusSnapshot units and document any non-obvious unit conversions in code comments
+5. WHEN exporting data THEN the script SHALL use only self-aircraft functions: LoGetSelfData, LoGetIndicatedAirSpeed, LoGetAccelerationUnits, LoGetAngleOfAttack, LoGetTrueAirSpeed, LoGetAltitudeAboveGroundLevel
+6. WHEN exporting data THEN the adapter SHALL normalize all values to the canonical BusSnapshot typed fields and document any non-obvious unit conversions in code comments
 7. WHEN export functions return nil THEN the script SHALL handle gracefully by marking fields invalid without spamming logs or crashing
-8. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL limit exports to the minimal set needed for FFB and profile switching
-9. WHEN MP restrictions prevent access to required telemetry THEN the adapter SHALL degrade gracefully to reduced BusSnapshot (e.g., attitude only) and surface "Limited telemetry (MP restrictions)" status to UI/logs
+8. WHEN in multiplayer with integrity check enabled THEN the adapter SHALL annotate MP status via mp_detected flag but SHALL NOT invalidate self-aircraft telemetry
+9. WHEN MP restrictions prevent access to world objects THEN the adapter SHALL continue exporting self-aircraft data (attitude, velocities, g-load, IAS/TAS, AoA) which are allowed by integrity check
 10. WHEN exporting data THEN the script SHALL NOT export world objects, RWR data, or tactical information that could provide unfair advantage
 11. WHEN sending data THEN the script SHALL use non-blocking UDP to localhost with target rate of 60Hz via LuaExportActivityNextEvent
-12. WHEN aircraft changes THEN the adapter SHALL detect via unit type and trigger profile switching
-13. WHEN uninstalling THEN the system SHALL restore the backed-up original Export.lua if one existed
-14. WHEN connection is lost THEN the adapter SHALL mark BusSnapshot as invalid and log the disconnection
+12. WHEN aircraft changes THEN the adapter SHALL detect via unit type (self_data.Name) and trigger profile switching
+13. WHEN uninstalling THEN the system SHALL restore the backed-up original Export.lua if one existed (with .flighthub_backup extension)
+14. WHEN connection is lost or no packets received for 2 seconds THEN the adapter SHALL mark BusSnapshot as invalid and log the disconnection
+15. WHEN implementing the Lua script THEN it SHALL properly chain to existing Export.lua hooks by storing previous hook functions and calling them before/after Flight Hub logic
 
 #### Documentation
 
-1. WHEN documenting THEN the adapter SHALL maintain a mapping table in docs/ listing each Lua API function → BusSnapshot field mapping with units
+1. WHEN documenting THEN the adapter SHALL maintain a mapping table in docs/integration/dcs.md listing each Lua API function → BusSnapshot field mapping with units
+2. WHEN documenting THEN the system SHALL maintain MP integrity check compliance documentation explaining which data is exported and why it's allowed
 
 ### Requirement 4: Normalized Telemetry Bus (BUS-01)
 
@@ -117,24 +122,25 @@ This specification defines the target for Flight Hub v1:
 
 #### Acceptance Criteria
 
-1. WHEN defining BusSnapshot THEN it SHALL include: sim_id (msfs/xplane/dcs/none), aircraft_type, aircraft_name, livery
-2. WHEN defining kinematics THEN it SHALL use canonical units: attitude (roll/pitch/yaw in radians), angular_rates (p/q/r in rad/s), velocities (body X/Y/Z in m/s), altitude_agl and altitude_msl (meters), ias and tas (m/s), vs (m/s)
-3. WHEN defining kinematics THEN it SHALL include: nz_g (dimensionless, g along body Z), load_vector_body (optional 3-vector)
-4. WHEN defining aero THEN it SHALL include: alpha (rad), beta (rad), mach (dimensionless, optional)
-5. WHEN defining flight condition THEN it SHALL include: on_ground (bool), gear_handle and gear_position, flaps_handle and flaps_position, weight_on_wheels flags
-6. WHEN defining controls THEN it SHALL include: pilot stick/yoke ratios (pitch/roll/yaw normalized -1 to 1), trim positions, autopilot mode and engagement flags
-7. WHEN defining metadata THEN it SHALL include: valid flags per group (attitude_valid, velocities_valid, controls_valid, aero_valid), source_sim_timestamp (sim's time), bus_timestamp (Flight Hub monotonic time)
-8. WHEN a simulator cannot provide a field THEN the adapter SHALL set the corresponding valid flag to false
-9. WHEN adapters populate aero and kinematics.nz_g THEN they SHOULD do so when the simulator exposes them; otherwise they SHALL mark the corresponding valid flags false
-10. WHEN normalizing units THEN adapters SHALL convert: degrees to radians, feet to meters, knots to m/s, with conversions documented in adapter code comments
-11. WHEN defining coordinate frames THEN all adapters SHALL convert their native coordinate systems into the canonical frame: body axes +X forward, +Y to right wing, +Z down (right-handed)
-12. WHEN defining attitude THEN roll, pitch, yaw SHALL follow standard aerospace convention (right-hand rule)
-13. WHEN defining angular rates THEN p/q/r SHALL represent rotation about body X/Y/Z in rad/s using right-hand rule
-14. WHEN the bus schema evolves THEN it SHALL use additive-only changes with version field to maintain backward compatibility
+1. WHEN defining BusSnapshot THEN it SHALL include: sim (SimId enum), aircraft (AircraftId with ICAO and variant), timestamp (monotonic nanoseconds)
+2. WHEN defining kinematics THEN it SHALL use validated types: ValidatedSpeed for ias/tas/ground_speed, ValidatedAngle for aoa/sideslip/bank/pitch/heading, GForce for g-forces, Mach for mach number
+3. WHEN defining kinematics THEN it SHALL include: vertical_speed (feet per minute), g_force (vertical), g_lateral, g_longitudinal
+4. WHEN defining aircraft configuration THEN it SHALL include: GearState (per-gear positions), flaps/spoilers (Percentage), AutopilotState, ap_altitude/ap_heading/ap_speed targets, LightsConfig, fuel (HashMap per tank)
+5. WHEN defining helicopter data THEN it SHALL include optional HeloData: nr/np/torque/collective (Percentage), pedals (-100 to 100)
+6. WHEN defining engine data THEN it SHALL include Vec<EngineData>: index, running, rpm, manifold_pressure, egt, cht, fuel_flow, oil_pressure, oil_temperature
+7. WHEN defining environment THEN it SHALL include: altitude/pressure_altitude (feet), oat (Celsius), wind_speed/wind_direction, visibility (statute miles), cloud_coverage
+8. WHEN defining navigation THEN it SHALL include: latitude/longitude (degrees), ground_track, distance_to_dest/time_to_dest, active_waypoint
+9. WHEN using typed values THEN the system SHALL enforce validation at construction: Percentage (0-100), GForce (-20 to 20), Mach (0-5), ValidatedSpeed (0-1000 knots or 0-500 m/s), ValidatedAngle (-180 to 180 degrees or -π to π radians)
+10. WHEN normalizing units THEN adapters SHALL use the validated types which handle unit conversions: ValidatedSpeed.to_knots(), ValidatedAngle.to_degrees()
+11. WHEN defining coordinate frames THEN all adapters SHALL populate fields using standard aerospace conventions: bank/pitch/heading for attitude, positive values per standard definitions
+12. WHEN the bus schema evolves THEN it SHALL use additive-only changes with version field to maintain backward compatibility
+13. WHEN validating snapshots THEN the system SHALL check: unique engine indices, helicopter pedals in range (-100 to 100), all typed fields within their defined ranges
+14. WHEN querying snapshot age THEN the system SHALL provide age_ms() method returning milliseconds since snapshot creation
 
 #### Documentation
 
 1. WHEN documenting THEN the BusSnapshot structure SHALL be fully documented in docs/ with field definitions, units, coordinate frames, and sign conventions
+2. WHEN implementing THEN the system SHALL use Rust's type system to enforce unit safety and validation at compile time where possible
 
 ### Requirement 5: Force Feedback HID Protocol (FFB-HID-01)
 
