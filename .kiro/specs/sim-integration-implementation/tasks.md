@@ -8,17 +8,29 @@ All context documents (requirements, design) are available during implementation
 
 - [ ] 1. Implement core BusSnapshot types and validation
   - Create type-safe BusSnapshot structure with validated types (ValidatedSpeed, ValidatedAngle, Percentage, GForce, Mach)
-  - Implement validation methods for range checking and field consistency
-  - Add unit conversion utilities (degrees↔radians, knots↔m/s, feet↔meters)
+  - Implement core fields only: sim identifier, aircraft identifier, timestamp, attitude, angular rates, velocities, kinematics, aerodynamics, aircraft state, control inputs, trim state, validity flags
+  - Implement validation methods for core field range checking
+  - Add unit conversion utilities (degrees↔radians, knots↔m/s, feet↔meters, FPM↔m/s)
   - Implement snapshot age calculation API
-  - _Requirements: BUS-CORE-01.1, BUS-CORE-01.2, BUS-CORE-01.3, BUS-CORE-01.4, BUS-CORE-01.5, BUS-CORE-01.6, BUS-CORE-01.7, BUS-CORE-01.15_
+  - _Requirements: BUS-CORE-01.1, BUS-CORE-01.2, BUS-CORE-01.3, BUS-CORE-01.4, BUS-CORE-01.5, BUS-CORE-01.6, BUS-CORE-01.7, BUS-CORE-01.8, BUS-CORE-01.9, BUS-CORE-01.10, BUS-CORE-01.11, BUS-CORE-01.15_
 
-- [ ] 1.1 Write unit tests for BusSnapshot validation
-  - Test validated type construction and range enforcement
-  - Test unit conversion accuracy
+- [ ] 1.1 Write unit tests for core BusSnapshot validation
+  - Test validated type construction and range enforcement for core fields
+  - Test unit conversion accuracy (degrees↔radians, knots↔m/s, FPM↔m/s)
   - Test snapshot age calculation
-  - Test field validation (unique engine indices, helicopter pedal ranges)
-  - _Requirements: BUS-CORE-01.9, BUS-EXTENDED-01.8_
+  - Test core field validation (attitude, velocities, g-loads within ranges)
+  - _Requirements: BUS-CORE-01.12, BUS-CORE-01.14_
+
+- [ ] 1.2 Implement extended BusSnapshot fields
+  - Implement extended fields: engines list, fuel per tank, helicopter telemetry block, environment, navigation, autopilot, lights
+  - Implement validation for extended fields (unique engine indices, helicopter pedal ranges, extended field ranges)
+  - _Requirements: BUS-EXTENDED-01.1, BUS-EXTENDED-01.2, BUS-EXTENDED-01.3, BUS-EXTENDED-01.4, BUS-EXTENDED-01.5, BUS-EXTENDED-01.6, BUS-EXTENDED-01.7, BUS-EXTENDED-01.8_
+
+- [ ] 1.3 Write unit tests for extended BusSnapshot validation
+  - Test unique engine indices validation
+  - Test helicopter pedal range validation (-100 to 100)
+  - Test extended field range validation
+  - _Requirements: BUS-EXTENDED-01.8, BUS-EXTENDED-01.9_
 
 - [ ] 2. Implement MSFS SimConnect adapter connection management
   - Create MsfsAdapter struct with connection state machine
@@ -66,7 +78,7 @@ All context documents (requirements, design) are available during implementation
 
 - [ ] 5. Implement MSFS update rate monitoring and metrics
   - Implement conditional 60 Hz target (when sim FPS ≥60)
-  - Expose metrics for actual update rate and jitter
+  - Expose metrics for actual update rate and jitter via shared metrics system (Task 41) under sim.msfs.* namespace
   - Implement aircraft change detection via TITLE SimVar
   - _Requirements: MSFS-INT-01.7, MSFS-INT-01.8, MSFS-INT-01.17_
 
@@ -97,6 +109,7 @@ All context documents (requirements, design) are available during implementation
 - [ ] 8. Implement X-Plane telemetry mapping and connection monitoring
   - Implement data group → BusSnapshot field mapping with unit conversions
   - Implement connection timeout detection (2 seconds)
+  - Expose connection timeout metrics via shared metrics system (Task 41) under sim.xplane.* namespace
   - Implement aircraft identity handling for UDP-only mode (sim=XPLANE, coarse aircraft_class, identity='unknown')
   - _Requirements: XPLANE-INT-01.4, XPLANE-INT-01.5, XPLANE-INT-01.7, XPLANE-INT-01.13_
 
@@ -142,6 +155,7 @@ All context documents (requirements, design) are available during implementation
   - Implement nil handling for graceful degradation
   - Implement MP status annotation (mp_detected flag, no invalidation of self-aircraft data)
   - Implement connection timeout detection (2 seconds)
+  - Expose connection timeout and MP status metrics via shared metrics system (Task 41) under sim.dcs.* namespace
   - Implement aircraft change detection via unit type
   - _Requirements: DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15_
 
@@ -157,8 +171,9 @@ All context documents (requirements, design) are available during implementation
   - Document MP integrity check compliance (whitelisted data, restrictions)
   - _Requirements: DCS-INT-01.Doc.1, DCS-INT-01.Doc.2_
 
-- [ ] 14. Checkpoint - Ensure all adapter tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 14. Checkpoint – all adapter tests passing before starting FFB tasks
+  - Verify all MSFS, X-Plane, and DCS adapter unit and integration tests pass
+  - Verify all mapping documentation is complete
 
 - [ ] 15. Implement DirectInput FFB device abstraction
   - Create DirectInputFfbDevice struct with IDirectInputDevice8 interface
@@ -249,8 +264,9 @@ All context documents (requirements, design) are available during implementation
   - Implement immediate FFB disable on emergency stop
   - _Requirements: FFB-SAFETY-01.14_
 
-- [ ] 22. Checkpoint - Ensure all FFB safety tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 22. Checkpoint – all FFB safety tests passing before starting runtime work
+  - Verify all DirectInput FFB device, effect management, safety envelope, fault detection, and blackbox recorder tests pass
+  - Verify emergency stop functionality is implemented and tested
 
 - [ ] 23. Implement Windows real-time thread configuration
   - Create WindowsRtThread struct
@@ -260,8 +276,8 @@ All context documents (requirements, design) are available during implementation
   - Implement QueryPerformanceCounter (QPC) monotonic clock
   - _Requirements: WIN-RT-01.1, WIN-RT-01.2, WIN-RT-01.3, WIN-RT-01.8_
 
-- [ ] 23.1 Write unit tests for Windows RT thread configuration
-  - Test thread priority elevation
+- [ ] 23.1 Write platform-specific integration tests for Windows RT thread configuration
+  - Test thread priority elevation (gated to #[cfg(windows)], run on hardware-backed CI runners)
   - Test MMCSS registration
   - Test power throttling disable
   - Test QPC monotonic clock
@@ -274,8 +290,8 @@ All context documents (requirements, design) are available during implementation
   - Implement final 50-80μs busy-spin using QPC
   - _Requirements: WIN-RT-01.4, WIN-RT-01.5_
 
-- [ ] 24.1 Write unit tests for Windows timer loop
-  - Test high-resolution timer creation
+- [ ] 24.1 Write platform-specific integration tests for Windows timer loop
+  - Test high-resolution timer creation (gated to #[cfg(windows)], run on hardware-backed CI runners)
   - Test fallback to timeBeginPeriod(1)
   - Test 250 Hz tick timing
   - Test busy-spin final portion
@@ -286,8 +302,8 @@ All context documents (requirements, design) are available during implementation
   - Implement power request clearing when idle
   - _Requirements: WIN-RT-01.6, WIN-RT-01.7_
 
-- [ ] 25.1 Write unit tests for Windows power management
-  - Test PowerSetRequest when active
+- [ ] 25.1 Write platform-specific integration tests for Windows power management
+  - Test PowerSetRequest when active (gated to #[cfg(windows)], run on hardware-backed CI runners)
   - Test power request clearing when idle
   - _Requirements: WIN-RT-01.6, WIN-RT-01.7, RT-TEST-01.6_
 
@@ -296,6 +312,19 @@ All context documents (requirements, design) are available during implementation
   - Avoid HidD_SetOutputReport in hot path
   - _Requirements: WIN-RT-01.9, WIN-RT-01.10_
 
+- [ ] 26.1 Implement HID write latency measurement harness
+  - Create latency measurement harness that sends synthetic OUT reports at target rate
+  - Measure end-to-end write latency into a histogram
+  - Expose p99 latency as a metric
+  - Run only on hardware-backed CI runners with actual HID devices
+  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
+
+- [ ] 26.2 Write HID latency CI test
+  - Create test that asserts p99 ≤ 300μs on hardware-backed runners
+  - Skip test (or report-only) when hardware tag not present
+  - Mark as #[ignore] by default, opt-in via CI job
+  - _Requirements: RT-TEST-01.6, QG-HID-LATENCY_
+
 - [ ] 27. Implement Linux real-time thread configuration
   - Create LinuxRtThread struct
   - Implement SCHED_FIFO scheduling request via pthread_setschedparam
@@ -303,10 +332,11 @@ All context documents (requirements, design) are available during implementation
   - Implement fallback to normal priority with warning
   - Implement mlockall(MCL_CURRENT | MCL_FUTURE) for memory locking
   - Implement RLIMIT_RTPRIO and RLIMIT_MEMLOCK validation
-  - _Requirements: LINUX-RT-01.1, LINUX-RT-01.2, LINUX-RT-01.3, LINUX-RT-01.4, LINUX-RT-01.7_
+  - Note: Linux FFB output is out of scope for v1; this work is for timing harness + input loop only
+  - _Requirements: LINUX-RT-01.1, LINUX-RT-01.2, LINUX-RT-01.3, LINUX-RT-01.4, LINUX-RT-01.7, LINUX-RT-01.11_
 
-- [ ] 27.1 Write unit tests for Linux RT thread configuration
-  - Test SCHED_FIFO scheduling request
+- [ ] 27.1 Write platform-specific integration tests for Linux RT thread configuration
+  - Test SCHED_FIFO scheduling request (gated to #[cfg(target_os = "linux")], run on hardware-backed CI runners)
   - Test rtkit integration
   - Test fallback to normal priority
   - Test mlockall
@@ -319,14 +349,14 @@ All context documents (requirements, design) are available during implementation
   - Implement final portion busy-spin using clock_gettime(CLOCK_MONOTONIC)
   - _Requirements: LINUX-RT-01.5, LINUX-RT-01.6_
 
-- [ ] 28.1 Write unit tests for Linux timer loop
-  - Test clock_nanosleep with absolute times
+- [ ] 28.1 Write platform-specific integration tests for Linux timer loop
+  - Test clock_nanosleep with absolute times (gated to #[cfg(target_os = "linux")], run on hardware-backed CI runners)
   - Test 250 Hz tick timing
   - Test busy-spin final portion
   - _Requirements: LINUX-RT-01.5, LINUX-RT-01.6, RT-TEST-01.2_
 
 - [ ] 29. Implement Linux RT metrics exposure
-  - Expose metrics for RT scheduling status
+  - Expose metrics for RT scheduling status via shared metrics system (Task 41) under runtime.* namespace
   - Expose metrics for timing accuracy at normal priority
   - _Requirements: LINUX-RT-01.8_
 
@@ -346,26 +376,37 @@ All context documents (requirements, design) are available during implementation
   - Test 250 Hz axis loop jitter on hardware-backed runners (p99 ≤0.5ms)
   - Test report-only mode on virtualized runners
   - Run for ≥10 minutes with 5s warm-up
+  - Mark as #[ignore] by default, opt-in via CI job
   - _Requirements: RT-TEST-01.3, RT-TEST-01.4, RT-TEST-01.5_
 
-- [ ] 32. Checkpoint - Ensure all runtime tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 31.2 Add hardware matrix coverage for jitter tests
+  - Run jitter tests on both Intel and AMD hardware runners
+  - Record results separately for each platform
+  - Wire CI labels/runners for Intel vs AMD coverage
+  - _Requirements: RT-TEST-01.11_
 
-- [ ] 33. Implement Windows MSI installer
+- [ ] 32. Checkpoint – all runtime tests passing before packaging
+  - Verify all Windows and Linux RT thread configuration, timer loop, power management, and HID write tests pass
+  - Verify jitter measurement and HID latency measurement harnesses are implemented
+  - Verify metrics are exposed via shared metrics system
+
+- [ ] 33. Implement Windows code signing infrastructure
+  - Create scripts/sign-binaries.ps1 for code signing
+  - Implement signing for all EXE and DLL files
+  - Integrate signing into CI build process
+  - Note: MSI signing will be implemented in Task 34 after MSI packaging is complete
+  - _Requirements: PKG-01.1, PKG-01.2_
+
+- [ ] 34. Implement Windows MSI installer
   - Create WiX configuration for MSI package
   - Implement core binaries installation (per-user option)
   - Implement simulator integration components as opt-in features
   - Implement elevated privileges requirement for sim integrations and virtual drivers
   - Implement product posture statement display
   - Implement EULA summary display
+  - Implement MSI signing using infrastructure from Task 33
+  - Note: Initial MSI may be unsigned for internal dev; final release MSI is signed
   - _Requirements: PKG-01.1, PKG-01.3, PKG-01.4, PKG-01.5, PKG-01.6, PKG-01.7, PKG-01.8_
-
-- [ ] 34. Implement Windows code signing
-  - Create scripts/sign-binaries.ps1 for code signing
-  - Implement signing for all EXE and DLL files
-  - Implement MSI signing
-  - Integrate signing into CI build process
-  - _Requirements: PKG-01.1, PKG-01.2, PKG-01.3_
 
 - [ ] 35. Implement Windows uninstaller
   - Implement binary removal
@@ -377,7 +418,8 @@ All context documents (requirements, design) are available during implementation
   - Create Debian package (.deb) with control, rules, changelog, copyright files
   - Create udev rules for device access without root
   - Create postinst script for user group management and udev reload
-  - Implement at least one additional format (AppImage or .rpm) as optional
+  - Implement at least one additional format (AppImage or .rpm) as optional stretch goal
+  - Note: Linux FFB output is out of scope for v1; packaging is for timing harness + input loop only
   - _Requirements: PKG-01.10, PKG-01.11_
 
 - [ ] 37. Create Linux installation documentation
@@ -413,13 +455,14 @@ All context documents (requirements, design) are available during implementation
   - Implement Prometheus exporter (optional, HTTP endpoint at :9090/metrics)
   - Implement in-process ring buffer for UI display (60 seconds)
   - Implement log-structured metric snapshots (JSON lines)
-  - _Requirements: Telemetry and Metrics section in design_
+  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3, RT-TEST-01.4, RT-TEST-01.5, RT-TEST-01.6, Design: Telemetry and Metrics_
 
 - [ ] 41.1 Write unit tests for metrics system
-  - Test metric naming and scoping
-  - Test metric type behavior
+  - Test metric naming and scoping (per-adapter, per-device, not per-aircraft)
+  - Test metric type behavior (gauges, counters, histograms)
   - Test Prometheus export format
-  - Test ring buffer retention
+  - Test ring buffer retention (60 seconds)
+  - _Requirements: LINUX-RT-01.8, RT-TEST-01.3, QG-RT-JITTER, QG-HID-LATENCY_
 
 - [ ] 42. Implement cargo xtask validation commands
   - Implement cargo xtask validate-msfs-telemetry
