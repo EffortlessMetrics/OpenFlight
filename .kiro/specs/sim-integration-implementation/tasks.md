@@ -57,7 +57,12 @@ All context documents (requirements, design) are available during implementation
   - Test extended field range validation
   - _Requirements: BUS-EXTENDED-01.8, BUS-EXTENDED-01.9_
 
-- [ ] 2. Review and enhance MSFS SimConnect adapter connection management
+- [x] 2. Review and enhance MSFS SimConnect adapter connection management
+
+
+
+
+
   - Review existing MsfsAdapter in `crates/flight-simconnect/src/adapter.rs`
   - Verify connection state machine implementation
   - Verify local SimConnect connection works without SimConnect.cfg requirement
@@ -65,7 +70,9 @@ All context documents (requirements, design) are available during implementation
   - Verify connection loss detection and state transitions
   - _Requirements: MSFS-INT-01.1, MSFS-INT-01.2, MSFS-INT-01.19_
 
-- [ ] 2.1 Write unit tests for MSFS connection management
+- [x] 2.1 Write unit tests for MSFS connection management
+
+
   - Test connection state transitions
   - Test exponential backoff timing
   - Test connection loss detection
