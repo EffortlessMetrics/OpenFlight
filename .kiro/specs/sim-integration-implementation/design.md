@@ -30,12 +30,12 @@ The design follows a "boring reliability" principle: use well-established patter
 - ✅ Comprehensive unit tests with fixtures for all adapters
 - ✅ Documentation in docs/integration/ for MSFS, X-Plane, and DCS
 
-**Components planned but not yet implemented:**
-- 📋 DirectInput FFB device integration (safety framework exists, device I/O pending)
-- 📋 Windows MMCSS and high-resolution timer integration (basic implementation exists)
-- 📋 Linux rtkit D-Bus integration (basic implementation exists, full rtkit pending)
-- 📋 Packaging and distribution infrastructure (MSI, .deb, .rpm, code signing)
-- 📋 OFP-1 raw torque protocol implementation (framework exists)
+**Components planned but not yet fully implemented:**
+- 📋 DirectInput FFB device I/O (safety framework complete, device enumeration and effect management pending)
+- 📋 Windows MMCSS and high-resolution timer integration (basic scheduler exists, MMCSS registration pending)
+- 📋 Linux rtkit D-Bus integration (basic scheduler exists, full rtkit D-Bus calls pending)
+- 📋 Packaging and distribution infrastructure (MSI, .deb, code signing)
+- 📋 OFP-1 raw torque protocol (framework exists, device communication pending)
 
 This document reflects the implemented architecture. The core safety, scheduling, and telemetry systems are production-ready.
 
@@ -118,91 +118,164 @@ The actual implementation uses a sophisticated type-safe approach with validated
 
 **Actual Data Structure:**
 
+**Unit Convention:** All linear distances and altitudes on the bus are in **meters**. All angles are in **radians**. All speeds are in **m/s**. Adapters convert from simulator-native units to these canonical SI units.
+
 ```rust
 /// Complete telemetry snapshot published on the bus
 pub struct BusSnapshot {
     /// Simulator identifier
     pub sim: SimId,
-    /// Aircraft identifier
+    /// Aircraft identifier (ICAO code + variant)
     pub aircraft: AircraftId,
     /// Monotonic timestamp in nanoseconds
     pub timestamp: u64,
-    /// Flight kinematics data
-    pub kinematics: Kinematics,
+    
+    /// Attitude angles (radians)
+    pub attitude: Attitude,
+    /// Angular rates (rad/s)
+    pub angular_rates: AngularRates,
+    /// Velocities (m/s)
+    pub velocities: Velocities,
+    /// Aerodynamic data
+    pub aero: Aero,
+    /// Altitudes (meters)
+    pub altitude_msl: f32,
+    pub altitude_agl: f32,
+    
+    /// Flight condition flags
+    pub on_ground: bool,
+    
+    /// Control inputs and trim
+    pub controls: Controls,
+    
     /// Aircraft configuration
     pub config: AircraftConfig,
+    
     /// Helicopter-specific data (if applicable)
     pub helo: Option<HeloData>,
+    
     /// Engine data
     pub engines: Vec<EngineData>,
+    
     /// Environmental data
     pub environment: Environment,
+    
     /// Navigation data
     pub navigation: Navigation,
+    
+    /// Validity flags
+    pub valid: ValidFlags,
+    
+    /// Safety flag for FFB
+    pub safe_for_ffb: bool,
 }
 
-/// Flight kinematics and performance data
-pub struct Kinematics {
-    /// Indicated airspeed (validated, unit-aware)
-    pub ias: ValidatedSpeed,
-    /// True airspeed (validated, unit-aware)
-    pub tas: ValidatedSpeed,
-    /// Ground speed (validated, unit-aware)
-    pub ground_speed: ValidatedSpeed,
-    /// Angle of attack (validated, unit-aware)
-    pub aoa: ValidatedAngle,
-    /// Sideslip angle (validated, unit-aware)
-    pub sideslip: ValidatedAngle,
-    /// Bank angle (validated, unit-aware)
-    pub bank: ValidatedAngle,
-    /// Pitch angle (validated, unit-aware)
-    pub pitch: ValidatedAngle,
-    /// Heading (magnetic, validated, unit-aware)
-    pub heading: ValidatedAngle,
-    /// G-force (vertical, validated range)
-    pub g_force: GForce,
-    /// G-force lateral (validated range)
-    pub g_lateral: GForce,
-    /// G-force longitudinal (validated range)
-    pub g_longitudinal: GForce,
-    /// Mach number (validated range)
-    pub mach: Mach,
-    /// Vertical speed (feet per minute)
-    pub vertical_speed: f32,
+/// Attitude angles (all in radians)
+pub struct Attitude {
+    /// Pitch angle (radians, positive nose up)
+    pub pitch: f32,
+    /// Roll/bank angle (radians, positive right wing down)
+    pub roll: f32,
+    /// Heading/yaw angle (radians, true heading)
+    pub yaw: f32,
+}
+
+/// Angular rates (all in rad/s, body frame)
+pub struct AngularRates {
+    /// Roll rate (rad/s, body X axis)
+    pub p: f32,
+    /// Pitch rate (rad/s, body Y axis)
+    pub q: f32,
+    /// Yaw rate (rad/s, body Z axis)
+    pub r: f32,
+}
+
+/// Velocities (all in m/s)
+pub struct Velocities {
+    /// Indicated airspeed (m/s)
+    pub ias: f32,
+    /// True airspeed (m/s)
+    pub tas: f32,
+    /// Vertical speed (m/s, positive up)
+    pub vs: f32,
+    /// Body frame velocities (m/s)
+    pub body_x: f32,  // Forward
+    pub body_y: f32,  // Right
+    pub body_z: f32,  // Down
+}
+
+/// Aerodynamic data
+pub struct Aero {
+    /// Angle of attack (radians)
+    pub alpha: f32,
+    /// Sideslip angle (radians)
+    pub beta: f32,
+    /// Mach number
+    pub mach: f32,
+}
+
+/// Control inputs and trim
+pub struct Controls {
+    /// Pitch control position (-1 to 1, positive nose up)
+    pub pitch_ratio: f32,
+    /// Roll control position (-1 to 1, positive right)
+    pub roll_ratio: f32,
+    /// Yaw control position (-1 to 1, positive right)
+    pub yaw_ratio: f32,
+    /// Elevator trim position (radians or normalized)
+    pub trim_pitch: f32,
+    /// Aileron trim position (normalized -1 to 1)
+    pub trim_roll: f32,
+    /// Rudder trim position (normalized -1 to 1)
+    pub trim_yaw: f32,
+    /// Autopilot state
+    pub ap_state: AutopilotState,
 }
 
 /// Aircraft configuration and systems
 pub struct AircraftConfig {
-    /// Landing gear state (per-gear positions)
-    pub gear: GearState,
-    /// Flaps position (validated percentage)
-    pub flaps: Percentage,
-    /// Spoilers position (validated percentage)
-    pub spoilers: Percentage,
-    /// Autopilot state
-    pub ap_state: AutopilotState,
-    /// Autopilot altitude target (feet)
-    pub ap_altitude: Option<f32>,
-    /// Autopilot heading target (validated angle)
-    pub ap_heading: Option<ValidatedAngle>,
-    /// Autopilot speed target (validated speed)
-    pub ap_speed: Option<ValidatedSpeed>,
+    /// Landing gear handle position (0=up, 1=down)
+    pub gear_handle: u8,
+    /// Landing gear position (0.0=up, 1.0=down)
+    pub gear_position: f32,
+    /// Flaps handle index
+    pub flaps_handle: u8,
+    /// Flaps position (0.0=up, 1.0=full)
+    pub flaps_position: f32,
+    /// Spoilers position (0.0=retracted, 1.0=full)
+    pub spoilers: f32,
     /// Lights configuration
     pub lights: LightsConfig,
     /// Fuel quantity (percentage per tank)
-    pub fuel: HashMap<String, Percentage>,
+    pub fuel: HashMap<String, f32>,
+}
+
+/// Autopilot state
+pub struct AutopilotState {
+    pub master: bool,
+    pub heading_lock: bool,
+    pub altitude_lock: bool,
+}
+
+/// Lights configuration
+pub struct LightsConfig {
+    pub beacon: bool,
+    pub nav: bool,
+    pub strobe: bool,
+    pub landing: bool,
+    pub taxi: bool,
 }
 
 /// Helicopter-specific telemetry
 pub struct HeloData {
-    /// Main rotor RPM (percentage of nominal)
-    pub nr: Percentage,
-    /// Power turbine RPM (percentage of nominal)
-    pub np: Percentage,
-    /// Torque (percentage of maximum)
-    pub torque: Percentage,
-    /// Collective position (percentage)
-    pub collective: Percentage,
+    /// Main rotor RPM (percentage of nominal, 0-100)
+    pub nr: f32,
+    /// Power turbine RPM (percentage of nominal, 0-100)
+    pub np: f32,
+    /// Torque (percentage of maximum, 0-100)
+    pub torque: f32,
+    /// Collective position (percentage, 0-100)
+    pub collective: f32,
     /// Anti-torque pedal position (-100 to 100)
     pub pedals: f32,
 }
@@ -211,34 +284,54 @@ pub struct HeloData {
 pub struct EngineData {
     pub index: u8,
     pub running: bool,
-    pub rpm: Percentage,
-    pub manifold_pressure: Option<f32>,
-    pub egt: Option<f32>,
-    pub cht: Option<f32>,
-    pub fuel_flow: Option<f32>,
-    pub oil_pressure: Option<f32>,
-    pub oil_temperature: Option<f32>,
+    pub rpm: f32,  // Percentage of nominal
+    pub manifold_pressure: Option<f32>,  // inHg
+    pub egt: Option<f32>,  // Celsius
+    pub cht: Option<f32>,  // Celsius
+    pub fuel_flow: Option<f32>,  // gallons/hour
+    pub oil_pressure: Option<f32>,  // PSI
+    pub oil_temperature: Option<f32>,  // Celsius
 }
 
 /// Environmental conditions
 pub struct Environment {
-    pub altitude: f32,              // feet
-    pub pressure_altitude: f32,     // feet
+    pub pressure_altitude: f32,     // meters
     pub oat: f32,                   // Celsius
-    pub wind_speed: ValidatedSpeed,
-    pub wind_direction: ValidatedAngle,
-    pub visibility: f32,            // statute miles
-    pub cloud_coverage: Percentage,
+    pub wind_speed: f32,            // m/s
+    pub wind_direction: f32,        // radians
+    pub visibility: f32,            // meters
+    pub cloud_coverage: f32,        // percentage 0-100
 }
 
 /// Navigation and position data
 pub struct Navigation {
     pub latitude: f64,
     pub longitude: f64,
-    pub ground_track: ValidatedAngle,
-    pub distance_to_dest: Option<f32>,
-    pub time_to_dest: Option<f32>,
+    pub ground_track: f32,  // radians
+    pub distance_to_dest: Option<f32>,  // meters
+    pub time_to_dest: Option<f32>,  // seconds
     pub active_waypoint: Option<String>,
+}
+
+/// Validity flags for data groups
+pub struct ValidFlags {
+    pub attitude: bool,
+    pub velocities: bool,
+    pub aero: bool,
+}
+
+/// Simulator identifier
+pub enum SimId {
+    Msfs,
+    XPlane,
+    Dcs,
+}
+
+/// Aircraft identifier
+pub struct AircraftId {
+    pub icao: String,
+    pub variant: String,
+    pub name: String,
 }
 ```
 
@@ -415,6 +508,8 @@ const IDENTITY_SIMVARS: &[(&str, &str, SimConnectDataType)] = &[
 
 **Unit Conversion:**
 
+All conversions follow the canonical bus convention: **meters for distances, radians for angles, m/s for speeds**.
+
 ```rust
 impl MsfsAdapter {
     fn map_to_bus_snapshot(&self, raw: &SimConnectData) -> BusSnapshot {
@@ -425,43 +520,43 @@ impl MsfsAdapter {
         snapshot.attitude.roll = raw.bank_deg.to_radians();
         snapshot.attitude.yaw = raw.heading_deg.to_radians();
         
-        // Angular rates (already rad/s)
+        // Angular rates (already rad/s from SimConnect)
         snapshot.angular_rates.p = raw.rot_vel_body_x;
         snapshot.angular_rates.q = raw.rot_vel_body_y;
         snapshot.angular_rates.r = raw.rot_vel_body_z;
         
         // Velocities (knots → m/s, ft/s → m/s, fpm → m/s)
-        snapshot.velocities.ias = raw.ias_kt * 0.514444;
+        snapshot.velocities.ias = raw.ias_kt * 0.514444;  // 1 knot = 0.514444 m/s
         snapshot.velocities.tas = raw.tas_kt * 0.514444;
-        snapshot.velocities.vs = raw.vs_fpm * 0.00508;
-        snapshot.velocities.body_x = raw.vel_body_x_fps * 0.3048;
+        snapshot.velocities.vs = raw.vs_fpm * 0.00508;    // 1 fpm = 0.00508 m/s
+        snapshot.velocities.body_x = raw.vel_body_x_fps * 0.3048;  // 1 ft/s = 0.3048 m/s
         snapshot.velocities.body_y = raw.vel_body_y_fps * 0.3048;
         snapshot.velocities.body_z = raw.vel_body_z_fps * 0.3048;
-        
-        // Kinematics
-        snapshot.kinematics.nz_g = raw.g_force;
         
         // Aero (degrees → radians)
         snapshot.aero.alpha = raw.alpha_deg.to_radians();
         snapshot.aero.beta = raw.beta_deg.to_radians();
+        snapshot.aero.mach = raw.mach;  // Dimensionless
         
         // Altitudes (feet → meters)
-        snapshot.altitude_agl = raw.alt_agl_ft * 0.3048;
+        snapshot.altitude_agl = raw.alt_agl_ft * 0.3048;  // 1 ft = 0.3048 m
         snapshot.altitude_msl = raw.alt_msl_ft * 0.3048;
         
         // Flight condition
         snapshot.on_ground = raw.on_ground != 0;
-        snapshot.gear_handle = if raw.gear_handle != 0 { 1 } else { 0 };
-        snapshot.gear_position = raw.gear_position / 100.0;
-        snapshot.flaps_handle = raw.flaps_handle_index as u8;
-        snapshot.flaps_position = raw.flaps_handle_pct / 100.0;
+        
+        // Aircraft configuration
+        snapshot.config.gear_handle = if raw.gear_handle != 0 { 1 } else { 0 };
+        snapshot.config.gear_position = raw.gear_position / 100.0;  // Percent → 0-1
+        snapshot.config.flaps_handle = raw.flaps_handle_index as u8;
+        snapshot.config.flaps_position = raw.flaps_handle_pct / 100.0;  // Percent → 0-1
         
         // Controls (SimConnect positions are -1 to 1 or 0 to 1)
         snapshot.controls.pitch_ratio = raw.elevator_position;
         snapshot.controls.roll_ratio = raw.aileron_position;
         snapshot.controls.yaw_ratio = raw.rudder_position;
-        snapshot.controls.trim_pitch = raw.elevator_trim;
-        snapshot.controls.trim_roll = raw.aileron_trim_pct / 100.0;
+        snapshot.controls.trim_pitch = raw.elevator_trim;  // Already in radians
+        snapshot.controls.trim_roll = raw.aileron_trim_pct / 100.0;  // Percent → -1 to 1
         snapshot.controls.trim_yaw = raw.rudder_trim_pct / 100.0;
         
         // Autopilot
@@ -472,12 +567,20 @@ impl MsfsAdapter {
         };
         
         // Identity
-        snapshot.sim_id = SimId::Msfs;
-        snapshot.aircraft_name = raw.title.clone();
-        snapshot.aircraft_type = raw.atc_type.clone();
+        snapshot.sim = SimId::Msfs;
+        snapshot.aircraft = AircraftId {
+            icao: extract_icao(&raw.atc_type),
+            variant: raw.atc_model.clone(),
+            name: raw.title.clone(),
+        };
         
         // Timestamps
-        snapshot.bus_timestamp = self.monotonic_now_ns();
+        snapshot.timestamp = self.monotonic_now_ns();
+        
+        // Validity flags (set by sanity gate)
+        snapshot.valid.attitude = true;
+        snapshot.valid.velocities = true;
+        snapshot.valid.aero = true;
         
         snapshot
     }
@@ -756,49 +859,55 @@ impl XPlaneAdapter {
         
         // Attitude (group 17: pitch, roll, heading_true, heading_mag)
         if let Some(att) = groups.get(&DATA_GROUP_ATTITUDE) {
-            snapshot.attitude.pitch = att[0].to_radians();
+            snapshot.attitude.pitch = att[0].to_radians();  // degrees → radians
             snapshot.attitude.roll = att[1].to_radians();
-            snapshot.attitude.yaw = att[2].to_radians();
-            snapshot.valid_flags.attitude_valid = true;
+            snapshot.attitude.yaw = att[2].to_radians();  // Use true heading
+            snapshot.valid.attitude = true;
         }
         
         // Angular rates (group 16: P, Q, R in deg/s)
         if let Some(rates) = groups.get(&DATA_GROUP_ANGULAR_RATES) {
-            snapshot.angular_rates.p = rates[0].to_radians();
+            snapshot.angular_rates.p = rates[0].to_radians();  // deg/s → rad/s
             snapshot.angular_rates.q = rates[1].to_radians();
             snapshot.angular_rates.r = rates[2].to_radians();
         }
         
         // Speeds (group 3: IAS, TAS in knots)
         if let Some(speeds) = groups.get(&DATA_GROUP_SPEEDS) {
-            snapshot.velocities.ias = speeds[0] * 0.514444; // knots → m/s
+            snapshot.velocities.ias = speeds[0] * 0.514444;  // knots → m/s
             snapshot.velocities.tas = speeds[1] * 0.514444;
-            snapshot.valid_flags.velocities_valid = true;
+            snapshot.valid.velocities = true;
         }
         
-        // Mach and g-load (group 4)
+        // Mach and vertical speed (group 4)
         if let Some(mach_data) = groups.get(&DATA_GROUP_MACH) {
-            snapshot.aero.mach = mach_data[0];
-            snapshot.kinematics.nz_g = mach_data[4]; // g-load normal
-            snapshot.velocities.vs = mach_data[1] * 0.00508; // fpm → m/s
+            snapshot.aero.mach = mach_data[0];  // Dimensionless
+            snapshot.velocities.vs = mach_data[1] * 0.00508;  // fpm → m/s
         }
         
         // AoA and sideslip (group 18: alpha, beta in degrees)
         if let Some(aoa_data) = groups.get(&DATA_GROUP_AOA) {
-            snapshot.aero.alpha = aoa_data[0].to_radians();
+            snapshot.aero.alpha = aoa_data[0].to_radians();  // degrees → radians
             snapshot.aero.beta = aoa_data[1].to_radians();
-            snapshot.valid_flags.aero_valid = true;
+            snapshot.valid.aero = true;
         }
         
-        // Body velocities (group 21: vx, vy, vz in m/s)
+        // Body velocities (group 21: vx, vy, vz in m/s - already SI units)
         if let Some(vel) = groups.get(&DATA_GROUP_VELOCITIES) {
-            snapshot.velocities.body_x = vel[0];
+            snapshot.velocities.body_x = vel[0];  // m/s (no conversion needed)
             snapshot.velocities.body_y = vel[1];
             snapshot.velocities.body_z = vel[2];
         }
         
-        snapshot.sim_id = SimId::XPlane;
-        snapshot.bus_timestamp = self.monotonic_now_ns();
+        // Identity (UDP mode: limited aircraft info)
+        snapshot.sim = SimId::XPlane;
+        snapshot.aircraft = AircraftId {
+            icao: "UNKN".to_string(),  // Not available in UDP mode
+            variant: "".to_string(),
+            name: "X-Plane Aircraft".to_string(),
+        };
+        
+        snapshot.timestamp = self.monotonic_now_ns();
         
         snapshot
     }
@@ -1047,42 +1156,13 @@ The adapter respects DCS's Multiplayer Integrity Check by:
 - **Annotating** MP status in the payload (`mp_detected` flag) for UI/logging purposes
 - **Not invalidating** self-aircraft telemetry just because MP is active
 
-This approach provides the minimal set of data needed for FFB while respecting IC restrictions.estamp = LoGetModelTime(),
-        mp_limited = false,
-        attitude = {
-            pitch = self_data.Pitch,
-            roll = self_data.Bank,
-            yaw = self_data.Heading,
-        },
-        angular_rates = {
-            p = self_data.AngularVelocity.x,
-            q = self_data.AngularVelocity.y,
-            r = self_data.AngularVelocity.z,
-        },
-        velocities = {
-            body_x = self_data.Velocity.x,
-            body_y = self_data.Velocity.y,
-            body_z = self_data.Velocity.z,
-        },
-        ias = ias,
-        tas = LoGetTrueAirSpeed(),
-        aoa = aoa,
-        accel = {
-            x = accel.x,
-            y = accel.y,
-            z = accel.z,
-        },
-        altitude_asl = self_data.Altitude,
-        altitude_agl = LoGetAltitudeAboveGroundLevel(),
-        unit_type = self_data.Name,
-    }
-end
+This approach provides the minimal set of data needed for FFB while respecting IC restrictions.
 
--- Register hooks
-LuaExportStart = FlightHub.LuaExportStart
-LuaExportStop = FlightHub.LuaExportStop
-LuaExportAfterNextFrame = FlightHub.LuaExportAfterNextFrame
-```
+**Note:** The complete Lua script is shown earlier in this section. The key points are:
+- Uses `mp_detected` field consistently (not `mp_limited`)
+- Properly chains existing Export.lua hooks
+- Sends telemetry at 60Hz via non-blocking UDP
+- Handles nil returns gracefully
 
 **Rust Adapter:**
 
@@ -1103,62 +1183,57 @@ impl DcsAdapter {
         // Check if MP detected (annotation only, does not invalidate self-aircraft data)
         let mp_detected = json["mp_detected"].as_bool().unwrap_or(false);
         
-        // Attitude (DCS uses radians natively)
+        // Attitude (DCS uses radians natively - no conversion needed)
         if let Some(att) = json["attitude"].as_object() {
             snapshot.attitude.pitch = att["pitch"].as_f64().unwrap_or(0.0) as f32;
             snapshot.attitude.roll = att["roll"].as_f64().unwrap_or(0.0) as f32;
             snapshot.attitude.yaw = att["yaw"].as_f64().unwrap_or(0.0) as f32;
-            snapshot.valid_flags.attitude_valid = true;
+            snapshot.valid.attitude = true;
         }
         
-        // Angular rates (rad/s)
+        // Angular rates (rad/s - no conversion needed)
         if let Some(rates) = json["angular_rates"].as_object() {
             snapshot.angular_rates.p = rates["p"].as_f64().unwrap_or(0.0) as f32;
             snapshot.angular_rates.q = rates["q"].as_f64().unwrap_or(0.0) as f32;
             snapshot.angular_rates.r = rates["r"].as_f64().unwrap_or(0.0) as f32;
         }
         
-        // Velocities (DCS uses m/s natively)
+        // Velocities (DCS uses m/s natively - no conversion needed)
         if let Some(vel) = json["velocities"].as_object() {
             snapshot.velocities.body_x = vel["body_x"].as_f64().unwrap_or(0.0) as f32;
             snapshot.velocities.body_y = vel["body_y"].as_f64().unwrap_or(0.0) as f32;
             snapshot.velocities.body_z = vel["body_z"].as_f64().unwrap_or(0.0) as f32;
-            snapshot.valid_flags.velocities_valid = true;
+            snapshot.valid.velocities = true;
         }
         
-        // Speeds (m/s)
+        // Speeds (m/s - no conversion needed)
         snapshot.velocities.ias = json["ias"].as_f64().unwrap_or(0.0) as f32;
         snapshot.velocities.tas = json["tas"].as_f64().unwrap_or(0.0) as f32;
         
-        // Aero
+        // Aero (radians - no conversion needed)
         snapshot.aero.alpha = json["aoa"].as_f64().unwrap_or(0.0) as f32;
-        snapshot.valid_flags.aero_valid = true;
+        snapshot.aero.beta = 0.0;  // Not provided by DCS Export API
+        snapshot.valid.aero = true;
         
-        // Acceleration → g-load
-        if let Some(accel) = json["accel"].as_object() {
-            let az = accel["z"].as_f64().unwrap_or(0.0) as f32;
-            snapshot.kinematics.nz_g = -az / 9.81; // Convert m/s² to g
-            snapshot.valid_flags.kinematics_valid = true;
-        }
-        
-        // Altitudes (meters)
+        // Altitudes (DCS uses meters natively - no conversion needed)
         snapshot.altitude_msl = json["altitude_asl"].as_f64().unwrap_or(0.0) as f32;
         snapshot.altitude_agl = json["altitude_agl"].as_f64().unwrap_or(0.0) as f32;
         
         // Aircraft identity
-        snapshot.sim_id = SimId::Dcs;
-        snapshot.aircraft_type = json["unit_type"]
-            .as_str()
-            .unwrap_or("unknown")
-            .to_string();
+        snapshot.sim = SimId::Dcs;
+        snapshot.aircraft = AircraftId {
+            icao: extract_dcs_icao(json["unit_type"].as_str().unwrap_or("unknown")),
+            variant: "".to_string(),
+            name: json["unit_type"].as_str().unwrap_or("unknown").to_string(),
+        };
         
-        snapshot.bus_timestamp = self.monotonic_now_ns();
+        snapshot.timestamp = self.monotonic_now_ns();
         
         // Store MP status for UI/logging (does NOT invalidate self-aircraft data)
         self.mp_detected = mp_detected;
         
         // Note: We do NOT invalidate self-aircraft telemetry in MP mode
-        // Self-aircraft data (attitude, velocities, g-load, IAS/TAS, AoA) is allowed by IC
+        // Self-aircraft data (attitude, velocities, IAS/TAS, AoA) is allowed by IC
         // Only world objects, RWR, sensors, and weapons are restricted in MP
         
         snapshot
@@ -1287,21 +1362,28 @@ pub struct FfbCapabilities {
     pub has_health_stream: bool,
 }
 
+/// Safety state machine for FFB output
+/// 
+/// SafeTorque: Limited torque envelope (e.g., 30% of max_torque_nm, stricter slew limits)
+/// HighTorque: Full torque envelope (100% of max_torque_nm, normal slew limits)
+/// Faulted: FFB disabled, zero torque output, requires explicit recovery
 pub enum SafetyState {
-    SafeTorque,
-    HighTorque,
-    Faulted { reason: FaultReason, timestamp: Instant },
+    SafeTorque,   // Limited envelope mode
+    HighTorque,   // Full envelope mode
+    Faulted { reason: FaultReason, timestamp: Instant },  // FFB disabled
 }
 ```
 
 **Torque Direction Mapping:**
 
-For a 2-axis stick (pitch and roll), Flight Hub maintains separate torque values for each axis:
+For a 2-axis stick (pitch and roll), Flight Hub uses **one constant-force effect per axis**:
 
-- **Pitch torque** → DirectInput Y axis (constant force effect)
-- **Roll torque** → DirectInput X axis (constant force effect)
+- **Pitch torque** → DirectInput Y axis (separate constant force effect)
+- **Roll torque** → DirectInput X axis (separate constant force effect)
 
-Each axis has its own `torque_nm` value and independent constant-force effect. The `set_constant_force()` method is called per-axis with the corresponding torque value.
+**API Design:** The FFB engine exposes `set_constant_force_pitch(torque_nm: f32)` and `set_constant_force_roll(torque_nm: f32)` methods. Each method updates its corresponding axis-specific DirectInput effect independently. This is simpler than using a single multi-axis effect with vector direction calculations.
+
+**Implementation Note:** The `set_constant_force()` example shown is for a single axis. In practice, the device maintains two separate effects (pitch and roll) and updates them independently.
 
 **Device Calibration:**
 
@@ -1396,17 +1478,28 @@ impl DirectInputFfbDevice {
     }
     
     pub fn set_constant_force(&mut self, torque_nm: f32) -> Result<()> {
-        // Safety checks
-        if !matches!(self.safety_state, SafetyState::HighTorque) {
-            return self.set_zero_torque();
-        }
-        
-        // Clamp to device limits
-        let clamped = torque_nm.clamp(-self.capabilities.max_torque_nm, 
-                                       self.capabilities.max_torque_nm);
+        // Apply safety envelope based on state
+        let effective_torque = match self.safety_state {
+            SafetyState::Faulted { .. } => 0.0,  // Faulted: zero torque
+            SafetyState::SafeTorque => {
+                // SafeTorque: limit to 30% of max with stricter slew
+                let limited = torque_nm.clamp(
+                    -self.capabilities.max_torque_nm * 0.3,
+                    self.capabilities.max_torque_nm * 0.3
+                );
+                limited
+            }
+            SafetyState::HighTorque => {
+                // HighTorque: full envelope
+                torque_nm.clamp(
+                    -self.capabilities.max_torque_nm,
+                    self.capabilities.max_torque_nm
+                )
+            }
+        };
         
         // Convert to DirectInput magnitude (-10000 to 10000)
-        let magnitude = (clamped / self.capabilities.max_torque_nm * 10000.0) as i32;
+        let magnitude = (effective_torque / self.capabilities.max_torque_nm * 10000.0) as i32;
         
         let constant_force = DICONSTANTFORCE {
             lMagnitude: magnitude,
@@ -1425,7 +1518,7 @@ impl DirectInputFfbDevice {
             effect.Start(1, 0)?;
         }
         
-        self.metrics.last_torque_nm = clamped;
+        self.metrics.last_torque_nm = effective_torque;
         Ok(())
     }
     
@@ -1458,6 +1551,7 @@ pub struct FfbSafetyEnvelope {
     last_setpoint: f32,
     last_setpoint_time: Instant,
     fault_start_time: Option<Instant>,  // Explicit fault timestamp for 50ms enforcement
+    fault_initial_torque: f32,  // Torque at moment of fault detection
     fault_detector: FaultDetector,
 }
 
@@ -1465,9 +1559,10 @@ impl FfbSafetyEnvelope {
     pub fn apply_limits(&mut self, desired_torque: f32, safe_for_ffb: bool) -> f32 {
         // If not safe, ramp to zero
         if !safe_for_ffb {
-            // Record fault start time if not already faulted
+            // Record fault start time and initial torque if not already faulted
             if self.fault_start_time.is_none() {
                 self.fault_start_time = Some(Instant::now());
+                self.fault_initial_torque = self.last_setpoint;  // Capture torque at fault
             }
             return self.ramp_to_zero();
         } else {
@@ -1505,6 +1600,7 @@ impl FfbSafetyEnvelope {
     
     fn ramp_to_zero(&mut self) -> f32 {
         // Ramp to zero within 50ms, enforced from fault_start_time
+        // Uses fault_initial_torque captured at fault detection for consistent ramp
         let ramp_time = 0.050; // 50ms hard requirement
         
         if let Some(fault_start) = self.fault_start_time {
@@ -1515,8 +1611,10 @@ impl FfbSafetyEnvelope {
                 0.0
             } else {
                 let progress = dt / ramp_time;
-                let initial_torque = self.last_setpoint;
-                initial_torque * (1.0 - progress)
+                // Ramp from fault_initial_torque (captured at fault) to zero
+                let current = self.fault_initial_torque * (1.0 - progress);
+                self.last_setpoint = current;
+                current
             }
         } else {
             // Fallback: immediate zero if no fault_start_time

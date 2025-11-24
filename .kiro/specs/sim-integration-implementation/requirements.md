@@ -167,7 +167,7 @@ This specification defines the target for Flight Hub v1:
 1. WHEN documenting THEN the BusSnapshot structure SHALL be fully documented in docs/ with field definitions, units, coordinate frames, and sign conventions
 2. WHEN implementing THEN the system SHALL use Rust's type system to enforce unit safety and validation at compile time where possible
 
-### Requirement 5: Force Feedback HID Protocol (FFB-HID-01)
+### Requirement 6: Force Feedback HID Protocol (FFB-HID-01)
 
 **User Story:** As a Flight Hub developer, I want to implement DirectInput FFB on Windows and evdev FFB on Linux, so that force feedback devices receive properly formatted effects without requiring kernel drivers.
 
@@ -186,7 +186,7 @@ This specification defines the target for Flight Hub v1:
 11. WHEN implementing THEN the system SHALL target Windows for FFB output with Linux support as optional enhancement
 12. WHEN implementing THEN the system SHALL stay entirely in user-mode with no kernel driver requirements
 
-### Requirement 6: FFB Safety Envelope (FFB-SAFETY-01)
+### Requirement 7: FFB Safety Envelope (FFB-SAFETY-01)
 
 **User Story:** As a Flight Hub developer, I want comprehensive FFB safety checks and fault handling, so that force feedback never causes harm even when telemetry is invalid or devices malfunction.
 
@@ -207,7 +207,7 @@ This specification defines the target for Flight Hub v1:
 13. WHEN storing blackbox recordings THEN they SHALL be stored in a bounded, rotating log (size- or age-limited) to prevent unbounded disk usage
 14. WHEN implementing emergency stop THEN the system SHALL provide both UI button and hardware button (if supported) to immediately disable FFB
 
-### Requirement 7: Windows Runtime Scheduling (WIN-RT-01)
+### Requirement 8: Windows Runtime Scheduling (WIN-RT-01)
 
 **User Story:** As a Flight Hub developer, I want to use Windows real-time scheduling APIs correctly, so that the axis and FFB loops meet their timing guarantees on Windows systems.
 
@@ -224,7 +224,7 @@ This specification defines the target for Flight Hub v1:
 9. WHEN implementing HID writes THEN the system SHALL use WriteFile on handles opened with FILE_FLAG_OVERLAPPED for non-blocking I/O
 10. WHEN implementing HID writes THEN the system SHALL avoid HidD_SetOutputReport in the hot path due to performance characteristics
 
-### Requirement 8: Linux Runtime Scheduling (LINUX-RT-01)
+### Requirement 9: Linux Runtime Scheduling (LINUX-RT-01)
 
 **User Story:** As a Flight Hub developer, I want to use Linux real-time scheduling correctly with proper fallbacks, so that Flight Hub works well on Linux systems with and without RT privileges.
 
@@ -242,7 +242,7 @@ This specification defines the target for Flight Hub v1:
 10. WHEN documenting THEN the system SHALL provide /etc/security/limits.conf entries needed for RT operation and ship a helper script to apply them
 11. WHEN implementing v1 THEN Linux RT support MAY be limited to a timing test harness and non-FFB input loop; full parity with Windows FFB loops is deferred
 
-### Requirement 9: Packaging and Code Signing (PKG-01)
+### Requirement 10: Packaging and Code Signing (PKG-01)
 
 **User Story:** As a Flight Hub developer, I want proper packaging and code signing infrastructure, so that users can install and trust Flight Hub binaries on their systems.
 
@@ -266,7 +266,7 @@ This specification defines the target for Flight Hub v1:
 
 1. WHEN distributing THEN the project SHALL maintain a third-party components inventory (licenses, versions, and usage) for all bundled libraries and drivers, and SHALL ship required license texts with the product
 
-### Requirement 10: Legal and Licensing Compliance (LEGAL-01)
+### Requirement 11: Legal and Licensing Compliance (LEGAL-01)
 
 **User Story:** As a Flight Hub product owner, I want clear legal guardrails and compliance documentation, so that Flight Hub respects simulator EULAs and operates within established ecosystem norms.
 
@@ -283,7 +283,7 @@ This specification defines the target for Flight Hub v1:
 9. WHEN implementing THEN the system SHALL use only official SDK interfaces: SimConnect for MSFS, plugin SDK/UDP for X-Plane, Export.lua for DCS
 10. WHEN distributing THEN the system SHALL include product posture document referenced in: README, website, installer, and integration module comments
 
-### Requirement 11: Simulator Adapter Testing (SIM-TEST-01)
+### Requirement 12: Simulator Adapter Testing (SIM-TEST-01)
 
 **User Story:** As a Flight Hub developer, I want comprehensive adapter testing infrastructure, so that simulator integrations are validated against known-good data and edge cases.
 
