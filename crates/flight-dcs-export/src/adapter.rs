@@ -39,7 +39,7 @@ impl Default for DcsAdapterConfig {
             socket_config: SocketBridgeConfig::default(),
             bus_max_rate_hz: 60.0,
             update_rate: 30.0, // 30Hz
-            connection_timeout: Duration::from_secs(10),
+            connection_timeout: Duration::from_secs(2), // 2 second timeout per requirements
             enforce_mp_integrity: true,
         }
     }
@@ -80,7 +80,7 @@ pub struct DcsAdapter {
     config: DcsAdapterConfig,
     socket_bridge: SocketBridge,
     bus_publisher: BusPublisher,
-    mp_detector: MpDetector,
+    pub(crate) mp_detector: MpDetector,
     active_connection: Option<DcsConnection>,
     last_publish: Instant,
     blocked_features_notified: HashMap<String, Instant>,
@@ -301,7 +301,7 @@ impl DcsAdapter {
     }
 
     /// Convert DCS telemetry to bus snapshot
-    fn convert_to_bus_snapshot(
+    pub fn convert_to_bus_snapshot(
         &self,
         timestamp: u64,
         aircraft_name: &str,
@@ -487,6 +487,37 @@ impl DcsAdapter {
     /// Check if feature is blocked with user message
     pub fn check_feature_blocked(&self, feature: &str) -> Option<String> {
         self.mp_detector.blocked_feature_message(feature)
+    }
+
+    /// Get connection timeout status (for metrics)
+    pub fn is_connection_timeout(&self) -> bool {
+        if let Some(connection) = &self.active_connection {
+            let now = Instant::now();
+            now.duration_since(connection.last_telemetry) > self.config.connection_timeout
+        } else {
+            false
+        }
+    }
+
+    /// Get time since last telemetry (for metrics)
+    pub fn time_since_last_telemetry(&self) -> Option<Duration> {
+        self.active_connection
+            .as_ref()
+            .map(|conn| Instant::now().duration_since(conn.last_telemetry))
+    }
+
+    /// Check if currently in multiplayer session (for testing)
+    pub fn is_multiplayer(&self) -> bool {
+        self.mp_detector.is_multiplayer()
+    }
+
+    /// Update MP detector session (for testing)
+    pub fn update_mp_session(
+        &mut self,
+        session_data: &serde_json::Value,
+    ) -> Result<(), DcsAdapterError> {
+        self.mp_detector.update_session(session_data)?;
+        Ok(())
     }
 }
 

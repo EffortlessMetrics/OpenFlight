@@ -1,0 +1,38 @@
+{
+  "description": "F-16C in cruise at 15000ft, 350 knots",
+  "lua_values": {
+    "ias": 350.0,
+    "tas": 380.0,
+    "altitude_asl": 15000.0,
+    "heading": 90.0,
+    "pitch": 3.0,
+    "bank": -5.0,
+    "vertical_speed": 0.0,
+    "g_force": 1.1,
+    "g_lateral": -0.05,
+    "g_longitudinal": 0.15,
+    "latitude": 45.5,
+    "longitude": -122.8,
+    "engines": {
+      "0": {
+        "rpm": 85.0,
+        "temperature": 650.0,
+        "fuel_flow": 1200.0
+      }
+    }
+  },
+  "expected_bus_values": {
+    "ias_knots": 350.0,
+    "tas_knots": 380.0,
+    "altitude_ft": 15000.0,
+    "heading_degrees": 90.0,
+    "pitch_degrees": 3.0,
+    "bank_degrees": -5.0,
+    "vertical_speed_fps": 0.0,
+    "g_force": 1.1,
+    "g_lateral": -0.05,
+    "g_longitudinal": 0.15,
+    "latitude": 45.5,
+    "longitude": -122.8
+  }
+}

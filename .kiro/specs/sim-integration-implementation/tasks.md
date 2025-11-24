@@ -242,7 +242,12 @@ All context documents (requirements, design) are available during implementation
   - Test uninstaller backup restoration
   - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
 
-- [ ] 12. Review and enhance DCS Rust adapter
+- [x] 12. Review and enhance DCS Rust adapter
+
+
+
+
+
   - Review existing DcsAdapter in `crates/flight-dcs-export/src/`
   - Verify JSON packet parsing
   - Verify Lua value → BusSnapshot field mapping with unit conversions
@@ -253,7 +258,8 @@ All context documents (requirements, design) are available during implementation
   - Verify aircraft change detection via unit type
   - _Requirements: DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15_
 
-- [ ] 12.1 Write unit tests for DCS adapter
+- [x] 12.1 Write unit tests for DCS adapter
+
   - Test JSON parsing and field mapping
   - Test nil handling
   - Test MP status annotation behavior

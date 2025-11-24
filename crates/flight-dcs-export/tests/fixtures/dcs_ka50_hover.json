@@ -1,0 +1,43 @@
+{
+  "description": "Ka-50 helicopter in hover at 100ft AGL",
+  "lua_values": {
+    "ias": 5.0,
+    "tas": 5.0,
+    "altitude_asl": 100.0,
+    "heading": 180.0,
+    "pitch": 2.0,
+    "bank": 1.0,
+    "vertical_speed": 0.0,
+    "g_force": 1.0,
+    "g_lateral": 0.02,
+    "g_longitudinal": 0.05,
+    "latitude": 43.2,
+    "longitude": 41.8,
+    "engines": {
+      "0": {
+        "rpm": 95.0,
+        "temperature": 580.0,
+        "fuel_flow": 800.0
+      },
+      "1": {
+        "rpm": 95.0,
+        "temperature": 575.0,
+        "fuel_flow": 790.0
+      }
+    }
+  },
+  "expected_bus_values": {
+    "ias_knots": 5.0,
+    "tas_knots": 5.0,
+    "altitude_ft": 100.0,
+    "heading_degrees": 180.0,
+    "pitch_degrees": 2.0,
+    "bank_degrees": 1.0,
+    "vertical_speed_fps": 0.0,
+    "g_force": 1.0,
+    "g_lateral": 0.02,
+    "g_longitudinal": 0.05,
+    "latitude": 43.2,
+    "longitude": 41.8
+  }
+}
