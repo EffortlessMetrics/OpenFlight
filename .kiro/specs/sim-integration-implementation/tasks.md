@@ -109,7 +109,9 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Document unit conversions, coordinate frames, and sign conventions for each
   - _Requirements: MSFS-INT-01.Doc.*, XPLANE-INT-01.Doc.*, DCS-INT-01.Doc.*_
 
-- [-] P0.3 Enable Phase 0 CI quality gates
+- [x] P0.3 Enable Phase 0 CI quality gates
+
+
 
   **Phase:** 0 - Baseline
   **Status:** Not started

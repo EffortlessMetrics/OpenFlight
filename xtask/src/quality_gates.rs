@@ -11,7 +11,7 @@
 //! - QG-HID-LATENCY: Verify HID latency tests (future)
 //! - QG-LEGAL-DOC: Verify legal documentation (future)
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::Path;
 
 /// Result of a quality gate check.
