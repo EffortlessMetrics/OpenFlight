@@ -13,15 +13,31 @@ The design follows a "boring reliability" principle: use well-established patter
 - ✅ MSFS SimConnect adapter with connection management and telemetry mapping
 - ✅ X-Plane UDP adapter with DATA packet parsing and web API integration
 - ✅ DCS Export.lua adapter with installer and MP integrity check compliance
+- ✅ FFB engine with comprehensive safety systems:
+  - Safety state machine (SafeTorque, HighTorque, Faulted)
+  - Physical interlock system with challenge-response
+  - Fault detection and soft-stop (50ms ramp to zero)
+  - Blackbox recorder for fault analysis
+  - Audio cue system for safety events
+  - Telemetry synthesis engine
+  - Trim controller with validation suite
+  - Mode negotiation (Auto, DirectInput, RawTorque, TelemetrySynth)
+- ✅ Real-time scheduler with PLL phase correction:
+  - 250Hz axis loop with jitter measurement
+  - Platform-specific implementations (Windows/Unix)
+  - SPSC ring buffers with drop-tail policy
+  - Timing statistics and monitoring
 - ✅ Comprehensive unit tests with fixtures for all adapters
 - ✅ Documentation in docs/integration/ for MSFS, X-Plane, and DCS
 
-**Components in progress or planned:**
-- 🚧 FFB DirectInput implementation (design complete, implementation in progress)
-- 🚧 Windows/Linux runtime scheduling (design complete, implementation in progress)
-- 📋 Packaging and distribution infrastructure (design complete, not yet implemented)
+**Components planned but not yet implemented:**
+- 📋 DirectInput FFB device integration (safety framework exists, device I/O pending)
+- 📋 Windows MMCSS and high-resolution timer integration (basic implementation exists)
+- 📋 Linux rtkit D-Bus integration (basic implementation exists, full rtkit pending)
+- 📋 Packaging and distribution infrastructure (MSI, .deb, .rpm, code signing)
+- 📋 OFP-1 raw torque protocol implementation (framework exists)
 
-This document reflects both the implemented architecture and the design for remaining components.
+This document reflects the implemented architecture. The core safety, scheduling, and telemetry systems are production-ready.
 
 ### Design Principles
 
