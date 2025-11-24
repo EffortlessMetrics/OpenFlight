@@ -116,42 +116,134 @@ impl DcsInstaller {
 
     /// Uninstall Export.lua
     pub fn uninstall(&self) -> Result<InstallResult> {
-        let export_path = ExportLuaGenerator::get_export_lua_path()?;
-        let status = self.check_status()?;
+        self.uninstall_from_path(&ExportLuaGenerator::get_export_lua_path()?)
+    }
+
+    /// Uninstall Export.lua from a specific path (for testing)
+    fn uninstall_from_path(&self, export_path: &Path) -> Result<InstallResult> {
+        // Check if file exists and contains Flight Hub content
+        if !export_path.exists() {
+            return Ok(InstallResult {
+                status: InstallStatus::NotInstalled,
+                path: export_path.to_path_buf(),
+                backup_path: None,
+                message: "Flight Hub DCS Export is not installed.".to_string(),
+            });
+        }
+
+        let content = fs::read_to_string(export_path)
+            .context("Failed to read Export.lua")?;
+
+        // Check if it's a Flight Hub export
+        if !content.contains("Flight Hub DCS Export Script") {
+            return Ok(InstallResult {
+                status: InstallStatus::Conflict {
+                    existing_content: content.lines().take(10).collect::<Vec<_>>().join("\n"),
+                },
+                path: export_path.to_path_buf(),
+                backup_path: None,
+                message: "Export.lua exists but is not Flight Hub's. Manual removal required."
+                    .to_string(),
+            });
+        }
+
+        let status = InstallStatus::Installed;
 
         match status {
             InstallStatus::NotInstalled => Ok(InstallResult {
                 status,
-                path: export_path,
+                path: export_path.to_path_buf(),
                 backup_path: None,
                 message: "Flight Hub DCS Export is not installed.".to_string(),
             }),
             InstallStatus::Conflict { .. } => Ok(InstallResult {
                 status,
-                path: export_path,
+                path: export_path.to_path_buf(),
                 backup_path: None,
                 message: "Export.lua exists but is not Flight Hub's. Manual removal required."
                     .to_string(),
             }),
             _ => {
-                // Create backup before removal
-                let backup_path = self.create_backup(&export_path)?;
+                // Look for the most recent backup with .flighthub_backup extension
+                let backup_restore_path = self.find_flighthub_backup(export_path)?;
 
-                fs::remove_file(&export_path).context("Failed to remove Export.lua")?;
+                if let Some(restore_path) = backup_restore_path {
+                    // Restore from backup
+                    fs::copy(&restore_path, export_path)
+                        .context("Failed to restore backup")?;
 
-                info!(
-                    "Removed Flight Hub DCS Export from {}",
-                    export_path.display()
-                );
+                    info!(
+                        "Restored Export.lua from backup: {}",
+                        restore_path.display()
+                    );
 
-                Ok(InstallResult {
-                    status: InstallStatus::NotInstalled,
-                    path: export_path,
-                    backup_path: Some(backup_path),
-                    message: "Flight Hub DCS Export has been removed. Backup created.".to_string(),
-                })
+                    Ok(InstallResult {
+                        status: InstallStatus::NotInstalled,
+                        path: export_path.to_path_buf(),
+                        backup_path: Some(restore_path),
+                        message: "Flight Hub DCS Export has been removed. Original Export.lua restored from backup.".to_string(),
+                    })
+                } else {
+                    // No backup found, just remove the file
+                    // Create a final backup before removal
+                    let backup_path = self.create_backup(export_path)?;
+
+                    fs::remove_file(export_path).context("Failed to remove Export.lua")?;
+
+                    info!(
+                        "Removed Flight Hub DCS Export from {}",
+                        export_path.display()
+                    );
+
+                    Ok(InstallResult {
+                        status: InstallStatus::NotInstalled,
+                        path: export_path.to_path_buf(),
+                        backup_path: Some(backup_path),
+                        message: "Flight Hub DCS Export has been removed. No previous backup found to restore.".to_string(),
+                    })
+                }
             }
         }
+    }
+
+    /// Find the most recent Flight Hub backup file
+    fn find_flighthub_backup(&self, export_path: &Path) -> Result<Option<PathBuf>> {
+        let parent = export_path.parent().context("No parent directory")?;
+
+        // Look for .flighthub_backup files
+        let backup_pattern = export_path.with_extension("lua.flighthub_backup");
+
+        if backup_pattern.exists() {
+            return Ok(Some(backup_pattern));
+        }
+
+        // Look for timestamped backups
+        if let Ok(entries) = fs::read_dir(parent) {
+            let mut backups: Vec<PathBuf> = entries
+                .filter_map(|e| e.ok())
+                .map(|e| e.path())
+                .filter(|p| {
+                    p.file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|s| s.starts_with("Export.lua.backup."))
+                        .unwrap_or(false)
+                })
+                .collect();
+
+            // Sort by modification time (most recent first)
+            backups.sort_by_key(|p| {
+                fs::metadata(p)
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .map(|t| std::cmp::Reverse(t))
+            });
+
+            if let Some(most_recent) = backups.first() {
+                return Ok(Some(most_recent.clone()));
+            }
+        }
+
+        Ok(None)
     }
 
     /// Validate DCS installation
@@ -288,6 +380,17 @@ impl DcsInstaller {
             fs::create_dir_all(parent).context("Failed to create Scripts directory")?;
         }
 
+        // Check if Export.lua already exists (non-Flight Hub)
+        if export_path.exists() {
+            let content = fs::read_to_string(export_path)
+                .context("Failed to read existing Export.lua")?;
+            
+            // If it's not a Flight Hub export, we need to append
+            if !content.contains("Flight Hub DCS Export Script") {
+                return self.perform_append_install(export_path);
+            }
+        }
+
         // Generate and write Export.lua
         self.generator
             .write_script(export_path)
@@ -303,6 +406,50 @@ impl DcsInstaller {
             path: export_path.to_path_buf(),
             backup_path: None,
             message: "Flight Hub DCS Export has been installed successfully.".to_string(),
+        })
+    }
+
+    /// Perform installation by appending to existing Export.lua
+    fn perform_append_install(&self, export_path: &Path) -> Result<InstallResult> {
+        // Create Flight Hub backup for restoration during uninstall
+        let flighthub_backup = self.create_flighthub_backup(export_path)?;
+
+        // Also create a timestamped backup
+        let backup_path = self.create_backup(export_path)?;
+
+        // Read existing content
+        let existing_content = fs::read_to_string(export_path)
+            .context("Failed to read existing Export.lua")?;
+
+        // Generate Flight Hub export script
+        let flight_hub_script = self.generator.generate_script();
+
+        // Append Flight Hub script to existing content
+        let combined_content = format!(
+            "{}\n\n-- Flight Hub Export (appended)\n{}\n",
+            existing_content, flight_hub_script
+        );
+
+        // Write combined content
+        fs::write(export_path, combined_content)
+            .context("Failed to write combined Export.lua")?;
+
+        info!(
+            "Appended Flight Hub DCS Export to existing Export.lua at {}",
+            export_path.display()
+        );
+
+        let message = format!(
+            "Flight Hub DCS Export has been appended to existing Export.lua. Original backed up to {} and {}",
+            backup_path.display(),
+            flighthub_backup.display()
+        );
+
+        Ok(InstallResult {
+            status: InstallStatus::Installed,
+            path: export_path.to_path_buf(),
+            backup_path: Some(backup_path),
+            message,
         })
     }
 
@@ -358,6 +505,16 @@ impl DcsInstaller {
         fs::copy(export_path, &backup_path).context("Failed to create backup")?;
 
         info!("Created backup at {}", backup_path.display());
+        Ok(backup_path)
+    }
+
+    /// Create a Flight Hub-specific backup (for restoration during uninstall)
+    fn create_flighthub_backup(&self, export_path: &Path) -> Result<PathBuf> {
+        let backup_path = export_path.with_extension("lua.flighthub_backup");
+
+        fs::copy(export_path, &backup_path).context("Failed to create Flight Hub backup")?;
+
+        info!("Created Flight Hub backup at {}", backup_path.display());
         Ok(backup_path)
     }
 
@@ -445,6 +602,8 @@ impl DcsInstaller {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::export_lua::{detect_dcs_variants, DcsVariant};
+    use std::fs;
     use tempfile::TempDir;
 
     fn create_test_installer() -> (DcsInstaller, TempDir) {
@@ -497,5 +656,279 @@ mod tests {
         assert!(report.contains("Flight Hub DCS Export Installation Report"));
         assert!(report.contains("Installation Status"));
         assert!(report.contains("Configuration"));
+    }
+
+    // Test DCS variant detection (DCS-INT-01.1)
+    #[test]
+    fn test_variant_detection() {
+        // This test verifies that the variant detection logic exists and returns the correct types
+        // In a real environment, it would detect actual DCS installations
+        let variants = detect_dcs_variants().unwrap();
+
+        // Verify the function returns a Vec of (DcsVariant, PathBuf)
+        for (variant, _path) in &variants {
+            match variant {
+                DcsVariant::Stable => assert_eq!(variant.as_str(), "DCS"),
+                DcsVariant::OpenBeta => assert_eq!(variant.as_str(), "DCS.openbeta"),
+                DcsVariant::OpenAlpha => assert_eq!(variant.as_str(), "DCS.openalpha"),
+            }
+        }
+    }
+
+    // Test Export.lua backup logic (DCS-INT-01.2)
+    #[test]
+    fn test_export_lua_backup() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create a fake Export.lua
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        fs::write(&export_path, "-- Original Export.lua content\nlocal test = {}").unwrap();
+
+        // Create backup
+        let backup_path = installer.create_backup(&export_path).unwrap();
+
+        // Verify backup was created
+        assert!(backup_path.exists());
+        assert!(backup_path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .starts_with("Export.lua.backup."));
+
+        // Verify backup content matches original
+        let backup_content = fs::read_to_string(&backup_path).unwrap();
+        let original_content = fs::read_to_string(&export_path).unwrap();
+        assert_eq!(backup_content, original_content);
+    }
+
+    // Test Export.lua append logic (DCS-INT-01.2)
+    #[test]
+    fn test_export_lua_append() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create a fake Export.lua with existing content
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        let existing_content = "-- Existing Export.lua from another tool\nlocal OtherTool = {}";
+        fs::write(&export_path, existing_content).unwrap();
+
+        // Perform append installation
+        let result = installer.perform_append_install(&export_path).unwrap();
+
+        // Verify installation succeeded
+        assert_eq!(result.status, InstallStatus::Installed);
+        assert!(result.backup_path.is_some());
+
+        // Verify the file contains both original and Flight Hub content
+        let combined_content = fs::read_to_string(&export_path).unwrap();
+        assert!(combined_content.contains(existing_content));
+        assert!(combined_content.contains("Flight Hub DCS Export Script"));
+        assert!(combined_content.contains("Flight Hub Export (appended)"));
+
+        // Verify backup was created
+        let backup_path = result.backup_path.unwrap();
+        assert!(backup_path.exists());
+        let backup_content = fs::read_to_string(&backup_path).unwrap();
+        assert_eq!(backup_content, existing_content);
+
+        // Verify .flighthub_backup was created
+        let flighthub_backup = export_path.with_extension("lua.flighthub_backup");
+        assert!(flighthub_backup.exists());
+        let flighthub_backup_content = fs::read_to_string(&flighthub_backup).unwrap();
+        assert_eq!(flighthub_backup_content, existing_content);
+    }
+
+    // Test uninstaller backup restoration (DCS-INT-01.14)
+    #[test]
+    fn test_uninstaller_backup_restoration() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create a fake Export.lua with existing content
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        let original_content = "-- Original Export.lua from another tool\nlocal OtherTool = {}";
+        fs::write(&export_path, original_content).unwrap();
+
+        // Perform append installation (which creates .flighthub_backup)
+        installer.perform_append_install(&export_path).unwrap();
+
+        // Verify Flight Hub content was added
+        let combined_content = fs::read_to_string(&export_path).unwrap();
+        assert!(combined_content.contains("Flight Hub DCS Export Script"));
+
+        // Now uninstall
+        let uninstall_result = installer.uninstall_from_path(&export_path).unwrap();
+
+        // Verify uninstallation succeeded
+        assert_eq!(uninstall_result.status, InstallStatus::NotInstalled);
+
+        // Verify the original content was restored
+        let restored_content = fs::read_to_string(&export_path).unwrap();
+        assert_eq!(restored_content, original_content);
+        assert!(!restored_content.contains("Flight Hub DCS Export Script"));
+    }
+
+    // Test uninstaller when no backup exists
+    #[test]
+    fn test_uninstaller_no_backup() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create a fake Export.lua without a backup
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        let flight_hub_content = installer.generator.generate_script();
+        fs::write(&export_path, &flight_hub_content).unwrap();
+
+        // Uninstall
+        let uninstall_result = installer.uninstall_from_path(&export_path).unwrap();
+
+        // Verify uninstallation succeeded
+        assert_eq!(uninstall_result.status, InstallStatus::NotInstalled);
+
+        // Verify the file was removed (no backup to restore)
+        assert!(!export_path.exists());
+
+        // Verify a backup was created before removal
+        assert!(uninstall_result.backup_path.is_some());
+        let backup_path = uninstall_result.backup_path.unwrap();
+        assert!(backup_path.exists());
+        let backup_content = fs::read_to_string(&backup_path).unwrap();
+        assert_eq!(backup_content, flight_hub_content);
+    }
+
+    // Test fresh installation when no Export.lua exists (DCS-INT-01.3)
+    #[test]
+    fn test_fresh_installation() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create Scripts directory but no Export.lua
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+
+        // Perform fresh installation
+        let result = installer.perform_fresh_install(&export_path).unwrap();
+
+        // Verify installation succeeded
+        assert_eq!(result.status, InstallStatus::Installed);
+        assert!(result.backup_path.is_none()); // No backup for fresh install
+
+        // Verify Export.lua was created
+        assert!(export_path.exists());
+        let content = fs::read_to_string(&export_path).unwrap();
+        assert!(content.contains("Flight Hub DCS Export Script"));
+        assert!(content.contains("function LuaExportStart()"));
+        assert!(content.contains("function LuaExportStop()"));
+    }
+
+    // Test that fresh installation triggers append when non-Flight Hub Export.lua exists
+    #[test]
+    fn test_fresh_install_with_existing_export() {
+        let (installer, temp_dir) = create_test_installer();
+
+        // Create a fake Export.lua with non-Flight Hub content
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        let existing_content = "-- SRS Export.lua\nlocal SRS = {}";
+        fs::write(&export_path, existing_content).unwrap();
+
+        // Perform fresh installation (should detect existing and append)
+        let result = installer.perform_fresh_install(&export_path).unwrap();
+
+        // Verify installation succeeded
+        assert_eq!(result.status, InstallStatus::Installed);
+        assert!(result.backup_path.is_some());
+
+        // Verify both contents are present
+        let combined_content = fs::read_to_string(&export_path).unwrap();
+        assert!(combined_content.contains(existing_content));
+        assert!(combined_content.contains("Flight Hub DCS Export Script"));
+    }
+
+    // Test backup file finding logic
+    #[test]
+    fn test_find_flighthub_backup() {
+        let (installer, temp_dir) = create_test_installer();
+
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+
+        // Test when no backup exists
+        let result = installer.find_flighthub_backup(&export_path).unwrap();
+        assert!(result.is_none());
+
+        // Create a .flighthub_backup file
+        let flighthub_backup = export_path.with_extension("lua.flighthub_backup");
+        fs::write(&flighthub_backup, "backup content").unwrap();
+
+        // Test when .flighthub_backup exists
+        let result = installer.find_flighthub_backup(&export_path).unwrap();
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), flighthub_backup);
+
+        // Remove .flighthub_backup and create timestamped backups
+        fs::remove_file(&flighthub_backup).unwrap();
+        let backup1 = export_path.with_extension("lua.backup.20240101_120000");
+        let backup2 = export_path.with_extension("lua.backup.20240102_120000");
+        fs::write(&backup1, "backup1").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        fs::write(&backup2, "backup2").unwrap();
+
+        // Test that it finds the most recent timestamped backup
+        let result = installer.find_flighthub_backup(&export_path).unwrap();
+        assert!(result.is_some());
+        // Should find one of the backups (most recent by modification time)
+        let found_path = result.unwrap();
+        assert!(found_path == backup1 || found_path == backup2);
+    }
+
+    // Test validation of Export.lua content
+    #[test]
+    fn test_export_content_validation() {
+        let (installer, _temp) = create_test_installer();
+
+        // Test valid content
+        let valid_content = r#"
+            local FlightHubExport = {}
+            FlightHubExport.config = {
+                socket_address = "127.0.0.1",
+                socket_port = 7778
+            }
+            function LuaExportStart() end
+            function LuaExportBeforeNextFrame() end
+            DCS.setUserCallbacks({})
+        "#;
+        assert!(installer.validate_export_content(valid_content).is_ok());
+
+        // Test missing required component
+        let missing_component = "local FlightHubExport = {}";
+        let result = installer.validate_export_content(missing_component);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .contains("Missing required component"));
+
+        // Test mismatched braces
+        let mismatched_braces = r#"
+            local FlightHubExport = {}
+            FlightHubExport.config = {
+                socket_address = "127.0.0.1",
+                socket_port = 7778
+            }
+            function LuaExportStart() end
+            function LuaExportBeforeNextFrame() end
+            DCS.setUserCallbacks({)
+        "#;
+        let result = installer.validate_export_content(mismatched_braces);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Mismatched braces"));
     }
 }

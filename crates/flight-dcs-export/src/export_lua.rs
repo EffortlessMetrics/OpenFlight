@@ -48,6 +48,73 @@ pub struct ExportLuaGenerator {
     config: ExportLuaConfig,
 }
 
+/// DCS variant identifier
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DcsVariant {
+    Stable,
+    OpenBeta,
+    OpenAlpha,
+}
+
+impl DcsVariant {
+    pub fn as_str(&self) -> &str {
+        match self {
+            DcsVariant::Stable => "DCS",
+            DcsVariant::OpenBeta => "DCS.openbeta",
+            DcsVariant::OpenAlpha => "DCS.openalpha",
+        }
+    }
+}
+
+/// Detect all installed DCS variants
+pub fn detect_dcs_variants() -> Result<Vec<(DcsVariant, PathBuf)>> {
+    let home_dir = dirs::home_dir().context("Could not determine home directory")?;
+
+    let mut variants = Vec::new();
+
+    // Check all possible DCS variant paths
+    let variant_paths = [
+        (DcsVariant::OpenAlpha, "Saved Games/DCS.openalpha"),
+        (DcsVariant::OpenBeta, "Saved Games/DCS.openbeta"),
+        (DcsVariant::Stable, "Saved Games/DCS"),
+        (DcsVariant::OpenAlpha, "Documents/DCS.openalpha"),
+        (DcsVariant::OpenBeta, "Documents/DCS.openbeta"),
+        (DcsVariant::Stable, "Documents/DCS"),
+    ];
+
+    for (variant, path) in &variant_paths {
+        let full_path = home_dir.join(path);
+        if full_path.exists() {
+            // Avoid duplicates (same variant in different locations)
+            if !variants.iter().any(|(v, _)| v == variant) {
+                variants.push((variant.clone(), full_path));
+            }
+        }
+    }
+
+    Ok(variants)
+}
+
+/// Get DCS Saved Games path for a specific variant
+pub fn get_dcs_variant_path(variant: &DcsVariant) -> Result<PathBuf> {
+    let home_dir = dirs::home_dir().context("Could not determine home directory")?;
+
+    // Try Saved Games first, then Documents
+    let paths = [
+        home_dir.join(format!("Saved Games/{}", variant.as_str())),
+        home_dir.join(format!("Documents/{}", variant.as_str())),
+    ];
+
+    for path in &paths {
+        if path.exists() {
+            return Ok(path.clone());
+        }
+    }
+
+    // Return the preferred path even if it doesn't exist
+    Ok(paths[0].clone())
+}
+
 impl ExportLuaGenerator {
     /// Create new generator with config
     pub fn new(config: ExportLuaConfig) -> Self {
@@ -670,26 +737,31 @@ end"#
         Ok(())
     }
 
-    /// Get default DCS Saved Games path
+    /// Get default DCS Saved Games path (prefers openbeta)
     pub fn get_dcs_saved_games_path() -> Result<PathBuf> {
-        let home_dir = dirs::home_dir().context("Could not determine home directory")?;
+        let variants = detect_dcs_variants()?;
 
-        // Try common DCS paths
-        let dcs_paths = [
-            "Saved Games/DCS.openbeta",
-            "Saved Games/DCS",
-            "Documents/DCS.openbeta",
-            "Documents/DCS",
-        ];
+        // Prefer openbeta, then openalpha, then stable
+        for (variant, path) in &variants {
+            if matches!(variant, DcsVariant::OpenBeta) {
+                return Ok(path.clone());
+            }
+        }
 
-        for path in &dcs_paths {
-            let full_path = home_dir.join(path);
-            if full_path.exists() {
-                return Ok(full_path);
+        for (variant, path) in &variants {
+            if matches!(variant, DcsVariant::OpenAlpha) {
+                return Ok(path.clone());
+            }
+        }
+
+        for (variant, path) in &variants {
+            if matches!(variant, DcsVariant::Stable) {
+                return Ok(path.clone());
             }
         }
 
         // Default to DCS.openbeta if none found
+        let home_dir = dirs::home_dir().context("Could not determine home directory")?;
         Ok(home_dir.join("Saved Games/DCS.openbeta"))
     }
 

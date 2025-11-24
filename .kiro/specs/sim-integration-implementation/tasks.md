@@ -221,7 +221,12 @@ All context documents (requirements, design) are available during implementation
   - Verify 60Hz target rate via LuaExportActivityNextEvent
   - _Requirements: DCS-INT-01.4, DCS-INT-01.5, DCS-INT-01.6, DCS-INT-01.7, DCS-INT-01.8, DCS-INT-01.9, DCS-INT-01.10, DCS-INT-01.11, DCS-INT-01.12_
 
-- [ ] 11. Review and enhance DCS installer and uninstaller
+- [x] 11. Review and enhance DCS installer and uninstaller
+
+
+
+
+
   - Review existing DCS installer implementation
   - Verify DCS variant detection (DCS, DCS.openbeta, DCS.openalpha)
   - Verify Export.lua backup and append logic
@@ -229,7 +234,9 @@ All context documents (requirements, design) are available during implementation
   - Verify uninstaller with backup restoration
   - _Requirements: DCS-INT-01.1, DCS-INT-01.2, DCS-INT-01.3, DCS-INT-01.14_
 
-- [ ] 11.1 Write unit tests for DCS installer
+- [x] 11.1 Write unit tests for DCS installer
+
+
   - Test variant detection
   - Test Export.lua backup and append logic
   - Test uninstaller backup restoration
