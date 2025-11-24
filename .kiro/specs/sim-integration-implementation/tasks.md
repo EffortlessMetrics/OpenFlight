@@ -35,7 +35,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] Unit tests for unit conversions pass (deg↔rad, kt↔m/s, ft↔m, fpm↔m/s)
+- [x] Unit tests for unit conversions pass (deg↔rad, kt↔m/s, ft↔m, fpm↔m/s)
+
+
+
+
 - [ ] QG-SIM-MAPPING enabled (checks for file presence)
 - [ ] QG-UNIT-CONV enabled (checks test coverage of all BusSnapshot fields)
 
