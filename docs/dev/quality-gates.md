@@ -42,17 +42,35 @@ Quality gates are automated checks that enforce critical requirements before cod
 
 **Rationale:** Per sim-integration-implementation spec requirements BUS-CORE-01.12 and SIM-TEST-01.2, all unit conversions must be tested to ensure correct data transformation from simulator-native units to the canonical SI units used in BusSnapshot. This prevents subtle bugs where incorrect conversion factors or missing conversions could lead to incorrect FFB output or profile behavior.
 
+### QG-SANITY-GATE
+
+**Status:** ✅ Implemented
+
+**Purpose:** Verify that sanity gate tests inject NaN/Inf and implausible jumps, and verify proper handling.
+
+**Requirements:** Tests must inject:
+- NaN values in telemetry fields
+- Inf values in telemetry fields
+- Physically implausible jumps (attitude, velocity)
+- Verification that `safe_for_ffb` goes false when violations occur
+
+**Failure Condition:** Build fails if any of the required sanity gate test categories are missing from `crates/flight-simconnect/tests/sanity_gate_tests.rs`.
+
+**Rationale:** Per sim-integration-implementation spec requirements MSFS-INT-01.15, MSFS-INT-01.16, and SIM-TEST-01.9, sanity gate tests must verify that the adapter correctly detects and handles invalid telemetry data. This ensures:
+- NaN/Inf values are detected and marked invalid
+- Physically implausible jumps are detected (e.g., 90° pitch change in 16ms)
+- The `safe_for_ffb` flag is set to false when violations occur
+- The system transitions to Faulted state when violation thresholds are exceeded
+
+**Test Coverage:** The quality gate verifies that tests exist for:
+- NaN detection (e.g., `test_nan_detection_in_angular_rates`)
+- Inf detection (e.g., `test_inf_detection_in_angular_rates`)
+- Implausible jump detection (e.g., `test_implausible_pitch_jump_detection`, `test_implausible_velocity_jump_detection`)
+- safe_for_ffb behavior (e.g., `test_safe_for_ffb_false_in_faulted`, `test_safe_for_ffb_true_in_active_flight`)
+
 ## Planned Quality Gates
 
 The following quality gates are defined in the spec but not yet implemented:
-
-### QG-SANITY-GATE
-
-**Status:** 📋 Not Started
-
-**Purpose:** Verify that sanity gate tests inject NaN/Inf and verify proper handling.
-
-**Requirements:** Tests must inject invalid data and verify `safe_for_ffb` goes false.
 
 ### QG-FFB-SAFETY
 

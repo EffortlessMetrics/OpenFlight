@@ -474,8 +474,13 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
         .context("Failed to check unit conversion test coverage")?;
     results.push(unit_conv_result);
 
+    // QG-SANITY-GATE: Check sanity gate tests
+    println!("  Checking QG-SANITY-GATE (sanity gate tests)...");
+    let sanity_gate_result = crate::quality_gates::check_sanity_gate_tests()
+        .context("Failed to check sanity gate tests")?;
+    results.push(sanity_gate_result);
+
     // Future quality gates will be added here:
-    // - QG-SANITY-GATE: Sanity gate tests
     // - QG-FFB-SAFETY: FFB safety tests
     // - QG-RT-JITTER: Real-time jitter tests
     // - QG-HID-LATENCY: HID latency tests
