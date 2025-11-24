@@ -42,6 +42,7 @@ pub mod trim_hil_tests;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
+pub mod xinput_rumble;
 
 #[cfg(test)]
 mod tests;
@@ -66,6 +67,7 @@ pub use trim_hil_tests::*;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
+pub use xinput_rumble::*;
 
 /// Main force feedback engine with safety systems
 pub struct FfbEngine {
