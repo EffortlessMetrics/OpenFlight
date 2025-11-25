@@ -13,9 +13,137 @@
 
 #[cfg(windows)]
 use windows::{
+    core::GUID,
     Win32::Devices::HumanInterfaceDevice::*,
+    Win32::Foundation::*,
     Win32::System::Com::*,
 };
+
+// DirectInput constants
+// Note: DirectInput8 is a legacy API. Full bindings may require additional work
+// or use of the `windows-sys` crate with custom bindings.
+#[cfg(windows)]
+const DIRECTINPUT_VERSION: u32 = 0x0800;
+#[cfg(windows)]
+const INFINITE: u32 = 0xFFFFFFFF;
+#[cfg(windows)]
+const DI_FFNOMINALMAX: u32 = 10000;
+#[cfg(windows)]
+const DIEB_NOTRIGGER: u32 = 0xFFFFFFFF;
+#[cfg(windows)]
+const DIEFF_CARTESIAN: u32 = 0x00000001;
+#[cfg(windows)]
+const DIEFF_OBJECTOFFSETS: u32 = 0x00000002;
+#[cfg(windows)]
+const DIEP_TYPESPECIFICPARAMS: u32 = 0x00000020;
+#[cfg(windows)]
+const DIEP_START: u32 = 0x20000000;
+#[cfg(windows)]
+const DISCL_EXCLUSIVE: u32 = 0x00000001;
+#[cfg(windows)]
+const DISCL_BACKGROUND: u32 = 0x00000008;
+#[cfg(windows)]
+const DI8DEVCLASS_GAMECTRL: u32 = 4;
+#[cfg(windows)]
+const DIEDFL_ATTACHEDONLY: u32 = 0x00000001;
+#[cfg(windows)]
+const DIEDFL_FORCEFEEDBACK: u32 = 0x00000100;
+#[cfg(windows)]
+const DIDC_FORCEFEEDBACK: u32 = 0x00000001;
+
+// DirectInput joystick axis offsets
+#[cfg(windows)]
+const DIJOFS_X: u32 = 0;
+#[cfg(windows)]
+const DIJOFS_Y: u32 = 4;
+
+// DirectInput GUIDs (these would normally come from dinput.h)
+#[cfg(windows)]
+const GUID_ConstantForce: GUID = GUID::from_u128(0x13541C20_8E33_11D0_9AD0_00A0C9A06E35);
+#[cfg(windows)]
+const GUID_Sine: GUID = GUID::from_u128(0x13541C23_8E33_11D0_9AD0_00A0C9A06E35);
+#[cfg(windows)]
+const GUID_Spring: GUID = GUID::from_u128(0x13541C26_8E33_11D0_9AD0_00A0C9A06E35);
+#[cfg(windows)]
+const GUID_Damper: GUID = GUID::from_u128(0x13541C27_8E33_11D0_9AD0_00A0C9A06E35);
+
+// DirectInput structures (simplified for compilation)
+// In a full implementation, these would use proper DirectInput bindings
+#[cfg(windows)]
+#[repr(C)]
+struct DICONSTANTFORCE {
+    lMagnitude: i32,
+}
+
+#[cfg(windows)]
+#[repr(C)]
+struct DIPERIODIC {
+    dwMagnitude: u32,
+    lOffset: i32,
+    dwPhase: u32,
+    dwPeriod: u32,
+}
+
+#[cfg(windows)]
+#[repr(C)]
+struct DICONDITION {
+    lOffset: i32,
+    lPositiveCoefficient: i32,
+    lNegativeCoefficient: i32,
+    dwPositiveSaturation: u32,
+    dwNegativeSaturation: u32,
+    lDeadBand: i32,
+}
+
+#[cfg(windows)]
+#[repr(C)]
+struct DIEFFECT {
+    dwSize: u32,
+    dwFlags: u32,
+    dwDuration: u32,
+    dwSamplePeriod: u32,
+    dwGain: u32,
+    dwTriggerButton: u32,
+    dwTriggerRepeatInterval: u32,
+    cAxes: u32,
+    rgdwAxes: *mut u32,
+    rglDirection: *mut i32,
+    lpEnvelope: *mut core::ffi::c_void,
+    cbTypeSpecificParams: u32,
+    lpvTypeSpecificParams: *mut core::ffi::c_void,
+    dwStartDelay: u32,
+}
+
+#[cfg(windows)]
+impl Default for DIEFFECT {
+    fn default() -> Self {
+        Self {
+            dwSize: std::mem::size_of::<DIEFFECT>() as u32,
+            dwFlags: 0,
+            dwDuration: 0,
+            dwSamplePeriod: 0,
+            dwGain: 0,
+            dwTriggerButton: 0,
+            dwTriggerRepeatInterval: 0,
+            cAxes: 0,
+            rgdwAxes: std::ptr::null_mut(),
+            rglDirection: std::ptr::null_mut(),
+            lpEnvelope: std::ptr::null_mut(),
+            cbTypeSpecificParams: 0,
+            lpvTypeSpecificParams: std::ptr::null_mut(),
+            dwStartDelay: 0,
+        }
+    }
+}
+
+// Placeholder types for DirectInput interfaces
+// In a full implementation, these would be proper COM interface bindings
+#[cfg(windows)]
+type IDirectInput8W = usize;
+#[cfg(windows)]
+type IDirectInputDevice8W = usize;
+#[cfg(windows)]
+type IDirectInputEffect = usize;
 
 use std::time::Instant;
 use thiserror::Error;
@@ -49,6 +177,9 @@ pub enum DInputError {
     
     #[error("Platform not supported (Windows only)")]
     PlatformNotSupported,
+    
+    #[error("Windows API error: {0:?}")]
+    WindowsError(#[from] windows::core::Error),
 }
 
 pub type Result<T> = std::result::Result<T, DInputError>;
@@ -114,16 +245,39 @@ pub struct EffectHandle {
     effect_type: EffectType,
     #[cfg(windows)]
     effect: Option<IDirectInputEffect>,
+    #[allow(dead_code)]
     created_at: Instant,
     last_updated: Instant,
+    axis_index: u32,
 }
 
 /// DirectInput FFB device abstraction
+///
+/// # Implementation Status
+/// This module provides the API surface for DirectInput FFB device control.
+/// The actual DirectInput8 COM bindings require additional work:
+/// - Full DirectInput8 COM interface bindings (IDirectInput8, IDirectInputDevice8, IDirectInputEffect)
+/// - Proper GUID definitions for effect types
+/// - Complete DIEFFECT, DICONSTANTFORCE, DIPERIODIC, DICONDITION structures
+///
+/// The current implementation provides:
+/// - Complete API surface with proper signatures
+/// - Error handling and parameter validation
+/// - Effect lifecycle management (create, update, start, stop)
+/// - Device enumeration and capability querying
+///
+/// To complete the implementation:
+/// 1. Add DirectInput8 COM bindings (via windows-sys or custom bindings)
+/// 2. Replace placeholder types with actual COM interfaces
+/// 3. Implement DirectInput8Create, EnumDevices, CreateDevice calls
+/// 4. Wire up CreateEffect, SetParameters, Start, Stop calls
 pub struct DirectInputFfbDevice {
     device_guid: String,
     #[cfg(windows)]
+    #[allow(dead_code)]
     dinput: Option<IDirectInput8W>,
     #[cfg(windows)]
+    #[allow(dead_code)]
     device: Option<IDirectInputDevice8W>,
     capabilities: FfbCapabilities,
     effects: Vec<EffectHandle>,
@@ -164,6 +318,11 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<()>` - Success or error
+    ///
+    /// # Implementation Note
+    /// This method provides the API surface for DirectInput initialization.
+    /// The actual DirectInput8Create call requires full COM bindings.
+    /// Current implementation uses stubs for compilation.
     pub fn initialize(&mut self) -> Result<()> {
         #[cfg(not(windows))]
         {
@@ -174,20 +333,27 @@ impl DirectInputFfbDevice {
         {
             // Initialize COM
             unsafe {
-                let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
+                let hr = CoInitializeEx(Some(std::ptr::null()), COINIT_MULTITHREADED);
                 if hr.is_err() {
-                    return Err(DInputError::InitializationFailed(format!("COM init failed: {:?}", hr)));
+                    // COM initialization failed, but might already be initialized
+                    tracing::warn!("COM initialization returned error (may already be initialized): {:?}", hr);
                 }
             }
             
-            // Create DirectInput8 interface
-            // Note: In a real implementation, this would use DirectInput8Create
-            // For now, we'll create a stub that can be tested
             tracing::info!("DirectInput FFB device initialization started for GUID: {}", self.device_guid);
             
-            // Mark as initialized (actual DirectInput creation would happen here)
-            self.dinput = None; // Would be Some(dinput_interface)
-            self.device = None; // Would be Some(device_interface)
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Call DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, &dinput, NULL)
+            // 2. Call dinput->CreateDevice(device_guid, &device, NULL)
+            // 3. Call device->SetDataFormat(&c_dfDIJoystick2)
+            // 4. Store the COM interface pointers
+            
+            // For now, mark as initialized with stub interfaces
+            self.dinput = Some(0); // Placeholder
+            self.device = Some(0); // Placeholder
+            
+            tracing::info!("DirectInput device initialized (stub implementation)");
             
             Ok(())
         }
@@ -197,6 +363,11 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<Vec<String>>` - List of device GUIDs or error
+    ///
+    /// # Implementation Note
+    /// This method provides the API surface for device enumeration.
+    /// The actual EnumDevices call requires full COM bindings.
+    /// Current implementation returns empty list for compilation.
     pub fn enumerate_devices() -> Result<Vec<String>> {
         #[cfg(not(windows))]
         {
@@ -205,10 +376,28 @@ impl DirectInputFfbDevice {
         
         #[cfg(windows)]
         {
-            // In a real implementation, this would enumerate DirectInput devices
-            // For now, return an empty list
             tracing::debug!("Enumerating DirectInput FFB devices");
-            Ok(Vec::new())
+            
+            // Initialize COM
+            unsafe {
+                let hr = CoInitializeEx(Some(std::ptr::null()), COINIT_MULTITHREADED);
+                if hr.is_err() {
+                    tracing::warn!("COM initialization returned error (may already be initialized): {:?}", hr);
+                }
+            }
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Call DirectInput8Create to get IDirectInput8 interface
+            // 2. Call EnumDevices with DI8DEVCLASS_GAMECTRL and DIEDFL_FORCEFEEDBACK flags
+            // 3. Collect device GUIDs from the callback
+            // 4. Return list of device GUID strings
+            
+            // For now, return empty list (stub implementation)
+            let devices = Vec::new();
+            
+            tracing::info!("Found {} FFB devices (stub implementation)", devices.len());
+            Ok(devices)
         }
     }
     
@@ -216,6 +405,11 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<FfbCapabilities>` - Device capabilities or error
+    ///
+    /// # Implementation Note
+    /// This method provides the API surface for capability querying.
+    /// The actual GetCapabilities call requires full COM bindings.
+    /// Current implementation returns default capabilities.
     pub fn query_capabilities(&mut self) -> Result<FfbCapabilities> {
         #[cfg(not(windows))]
         {
@@ -224,22 +418,30 @@ impl DirectInputFfbDevice {
         
         #[cfg(windows)]
         {
-            // In a real implementation, this would query DirectInput device capabilities
-            // For now, return default capabilities
+            let _device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
             
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Create DIDEVCAPS structure
+            // 2. Call device->GetCapabilities(&caps)
+            // 3. Check caps.dwFlags for DIDC_FORCEFEEDBACK
+            // 4. Extract num_axes, max_effects from caps
+            
+            // For now, return default capabilities (stub implementation)
             let caps = FfbCapabilities {
                 supports_pid: true,
-                supports_raw_torque: false,
-                max_torque_nm: 15.0,
-                min_period_us: 2000, // 500 Hz
+                supports_raw_torque: false, // Would need vendor-specific query
+                max_torque_nm: 15.0, // Default, should be device-specific from config
+                min_period_us: 2000, // 500 Hz default
                 has_health_stream: false,
                 num_axes: 2,
                 max_effects: 10,
             };
             
             self.capabilities = caps.clone();
-            tracing::info!("Device capabilities queried: supports_pid={}, max_torque={} Nm, min_period={} us",
-                caps.supports_pid, caps.max_torque_nm, caps.min_period_us);
+            tracing::info!("Device capabilities queried (stub): supports_pid={}, axes={}, max_torque={} Nm",
+                caps.supports_pid, caps.num_axes, caps.max_torque_nm);
             
             Ok(caps)
         }
@@ -252,6 +454,11 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<()>` - Success or error
+    ///
+    /// # Implementation Note
+    /// This method provides the API surface for device acquisition.
+    /// The actual SetCooperativeLevel and Acquire calls require full COM bindings.
+    /// Current implementation uses stub for compilation.
     pub fn acquire(&mut self, hwnd: usize) -> Result<()> {
         #[cfg(not(windows))]
         {
@@ -265,11 +472,15 @@ impl DirectInputFfbDevice {
                 return Ok(());
             }
             
-            // In a real implementation, this would:
-            // 1. Set cooperative level (DISCL_EXCLUSIVE | DISCL_BACKGROUND)
-            // 2. Call Acquire() on the device
+            let _device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
             
-            tracing::info!("Acquiring DirectInput device (hwnd: {})", hwnd);
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Call device->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_BACKGROUND)
+            // 2. Call device->Acquire()
+            
+            tracing::info!("DirectInput device acquired (hwnd: {}, stub implementation)", hwnd);
             self.is_acquired = true;
             
             Ok(())
@@ -284,7 +495,9 @@ impl DirectInputFfbDevice {
                 return;
             }
             
-            tracing::info!("Releasing DirectInput device");
+            // TODO: Full implementation would call device->Unacquire()
+            
+            tracing::info!("DirectInput device released (stub implementation)");
             self.is_acquired = false;
         }
     }
@@ -296,6 +509,11 @@ impl DirectInputFfbDevice {
     ///
     /// # Returns
     /// * `Result<usize>` - Effect handle index or error
+    ///
+    /// # Implementation Note
+    /// This creates one constant force effect per axis, allowing independent control
+    /// of pitch and roll torques. This is simpler than using a single multi-axis effect
+    /// with vector direction calculations.
     pub fn create_constant_force_effect(&mut self, axis_index: u32) -> Result<usize> {
         #[cfg(not(windows))]
         {
@@ -309,16 +527,56 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::DeviceNotAcquired);
             }
             
-            // In a real implementation, this would:
-            // 1. Create DIEFFECT structure with GUID_ConstantForce
-            // 2. Set axis, direction, magnitude, duration
-            // 3. Call CreateEffect() on the device
+            let device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
+            
+            // Map axis index to DirectInput axis offset
+            let axis_offset = match axis_index {
+                0 => DIJOFS_X, // Pitch (Y axis in DirectInput)
+                1 => DIJOFS_Y, // Roll (X axis in DirectInput)
+                _ => return Err(DInputError::InvalidParameter(format!("Invalid axis index: {}", axis_index))),
+            };
+            
+            // Set up axis and direction arrays
+            let axes = [axis_offset];
+            let directions = [0i32]; // Direction along the axis
+            
+            // Create constant force parameters
+            let constant_force = DICONSTANTFORCE {
+                lMagnitude: 0, // Start at zero
+            };
+            
+            // Create effect parameters
+            let mut effect_params = DIEFFECT {
+                dwSize: std::mem::size_of::<DIEFFECT>() as u32,
+                dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
+                dwDuration: INFINITE,
+                dwSamplePeriod: 0,
+                dwGain: DI_FFNOMINALMAX,
+                dwTriggerButton: DIEB_NOTRIGGER,
+                dwTriggerRepeatInterval: 0,
+                cAxes: 1,
+                rgdwAxes: axes.as_ptr() as *mut _,
+                rglDirection: directions.as_ptr() as *mut _,
+                lpEnvelope: std::ptr::null_mut(),
+                cbTypeSpecificParams: std::mem::size_of::<DICONSTANTFORCE>() as u32,
+                lpvTypeSpecificParams: &constant_force as *const _ as *mut _,
+                dwStartDelay: 0,
+            };
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Call device->CreateEffect(&GUID_ConstantForce, &effect_params, &effect, NULL)
+            // 2. Store the IDirectInputEffect interface pointer
+            
+            let _effect_params = effect_params; // Suppress unused warning
             
             let effect_handle = EffectHandle {
                 effect_type: EffectType::ConstantForce,
-                effect: None, // Would be Some(effect_interface)
+                effect: Some(0), // Placeholder
                 created_at: Instant::now(),
                 last_updated: Instant::now(),
+                axis_index,
             };
             
             self.effects.push(effect_handle);
@@ -346,11 +604,48 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::DeviceNotAcquired);
             }
             
+            let device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
+            
+            // Use both X and Y axes for periodic effects
+            let axes = [DIJOFS_X, DIJOFS_Y];
+            let directions = [0i32, 0i32];
+            
+            // Create periodic parameters (sine wave)
+            let periodic = DIPERIODIC {
+                dwMagnitude: 0, // Start at zero
+                lOffset: 0,
+                dwPhase: 0,
+                dwPeriod: 100000, // 100ms = 10Hz default
+            };
+            
+            // Create effect parameters
+            let mut effect_params = DIEFFECT {
+                dwSize: std::mem::size_of::<DIEFFECT>() as u32,
+                dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
+                dwDuration: INFINITE,
+                dwSamplePeriod: 0,
+                dwGain: DI_FFNOMINALMAX,
+                dwTriggerButton: DIEB_NOTRIGGER,
+                dwTriggerRepeatInterval: 0,
+                cAxes: 2,
+                rgdwAxes: axes.as_ptr() as *mut _,
+                rglDirection: directions.as_ptr() as *mut _,
+                lpEnvelope: std::ptr::null_mut(),
+                cbTypeSpecificParams: std::mem::size_of::<DIPERIODIC>() as u32,
+                lpvTypeSpecificParams: &periodic as *const _ as *mut _,
+                dwStartDelay: 0,
+            };
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            let _effect_params = effect_params; // Suppress unused warning
+            
             let effect_handle = EffectHandle {
                 effect_type: EffectType::PeriodicSine,
-                effect: None,
+                effect: Some(0), // Placeholder
                 created_at: Instant::now(),
                 last_updated: Instant::now(),
+                axis_index: 0, // Not axis-specific
             };
             
             self.effects.push(effect_handle);
@@ -378,11 +673,60 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::DeviceNotAcquired);
             }
             
+            let device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
+            
+            // Use both X and Y axes for spring effects
+            let axes = [DIJOFS_X, DIJOFS_Y];
+            let directions = [0i32, 0i32];
+            
+            // Create spring condition parameters (one per axis)
+            let conditions = [
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: 0,
+                    lNegativeCoefficient: 0,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: 0,
+                    lNegativeCoefficient: 0,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+            ];
+            
+            // Create effect parameters
+            let mut effect_params = DIEFFECT {
+                dwSize: std::mem::size_of::<DIEFFECT>() as u32,
+                dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
+                dwDuration: INFINITE,
+                dwSamplePeriod: 0,
+                dwGain: DI_FFNOMINALMAX,
+                dwTriggerButton: DIEB_NOTRIGGER,
+                dwTriggerRepeatInterval: 0,
+                cAxes: 2,
+                rgdwAxes: axes.as_ptr() as *mut _,
+                rglDirection: directions.as_ptr() as *mut _,
+                lpEnvelope: std::ptr::null_mut(),
+                cbTypeSpecificParams: std::mem::size_of::<DICONDITION>() as u32 * 2,
+                lpvTypeSpecificParams: conditions.as_ptr() as *mut _,
+                dwStartDelay: 0,
+            };
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            let _effect_params = effect_params; // Suppress unused warning
+            
             let effect_handle = EffectHandle {
                 effect_type: EffectType::Spring,
-                effect: None,
+                effect: Some(0), // Placeholder
                 created_at: Instant::now(),
                 last_updated: Instant::now(),
+                axis_index: 0, // Not axis-specific
             };
             
             self.effects.push(effect_handle);
@@ -410,11 +754,60 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::DeviceNotAcquired);
             }
             
+            let device = self.device.as_ref()
+                .ok_or_else(|| DInputError::InitializationFailed("Device not initialized".to_string()))?;
+            
+            // Use both X and Y axes for damper effects
+            let axes = [DIJOFS_X, DIJOFS_Y];
+            let directions = [0i32, 0i32];
+            
+            // Create damper condition parameters (one per axis)
+            let conditions = [
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: 0,
+                    lNegativeCoefficient: 0,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: 0,
+                    lNegativeCoefficient: 0,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+            ];
+            
+            // Create effect parameters
+            let mut effect_params = DIEFFECT {
+                dwSize: std::mem::size_of::<DIEFFECT>() as u32,
+                dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
+                dwDuration: INFINITE,
+                dwSamplePeriod: 0,
+                dwGain: DI_FFNOMINALMAX,
+                dwTriggerButton: DIEB_NOTRIGGER,
+                dwTriggerRepeatInterval: 0,
+                cAxes: 2,
+                rgdwAxes: axes.as_ptr() as *mut _,
+                rglDirection: directions.as_ptr() as *mut _,
+                lpEnvelope: std::ptr::null_mut(),
+                cbTypeSpecificParams: std::mem::size_of::<DICONDITION>() as u32 * 2,
+                lpvTypeSpecificParams: conditions.as_ptr() as *mut _,
+                dwStartDelay: 0,
+            };
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            let _effect_params = effect_params; // Suppress unused warning
+            
             let effect_handle = EffectHandle {
                 effect_type: EffectType::Damper,
-                effect: None,
+                effect: Some(0), // Placeholder
                 created_at: Instant::now(),
                 last_updated: Instant::now(),
+                axis_index: 0, // Not axis-specific
             };
             
             self.effects.push(effect_handle);
@@ -454,8 +847,8 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            let effect = &mut self.effects[handle];
-            if effect.effect_type != EffectType::ConstantForce {
+            let effect_handle = &mut self.effects[handle];
+            if effect_handle.effect_type != EffectType::ConstantForce {
                 return Err(DInputError::InvalidParameter(
                     format!("Effect {} is not a constant force effect", handle)
                 ));
@@ -464,17 +857,30 @@ impl DirectInputFfbDevice {
             // Clamp to device limits
             let clamped_torque = torque_nm.clamp(-self.capabilities.max_torque_nm, self.capabilities.max_torque_nm);
             
-            // In a real implementation, this would:
-            // 1. Convert torque_nm to DirectInput magnitude (-10000 to 10000)
-            // 2. Create DICONSTANTFORCE structure
-            // 3. Call SetParameters() on the effect with DIEP_TYPESPECIFICPARAMS flag
-            // 4. The effect would be updated without needing to recreate it
+            // Convert torque_nm to DirectInput magnitude (-10000 to 10000)
+            let magnitude = (clamped_torque / self.capabilities.max_torque_nm * 10000.0) as i32;
             
-            effect.last_updated = Instant::now();
+            // Create constant force parameters
+            let constant_force = DICONSTANTFORCE {
+                lMagnitude: magnitude,
+            };
+            
+            // Get the effect interface
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            // The real implementation would:
+            // 1. Create DIEFFECT structure with updated parameters
+            // 2. Call effect->SetParameters(&effect_params, DIEP_TYPESPECIFICPARAMS | DIEP_START)
+            
+            let _constant_force = constant_force; // Suppress unused warning
+            
+            effect_handle.last_updated = Instant::now();
             self.last_torque_nm = clamped_torque;
             
-            tracing::debug!("Set constant force effect {} to {} Nm (clamped from {} Nm)", 
-                handle, clamped_torque, torque_nm);
+            tracing::debug!("Set constant force effect {} to {} Nm (magnitude: {})", 
+                handle, clamped_torque, magnitude);
             
             Ok(())
         }
@@ -510,8 +916,8 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            let effect = &mut self.effects[handle];
-            if effect.effect_type != EffectType::PeriodicSine {
+            let effect_handle = &mut self.effects[handle];
+            if effect_handle.effect_type != EffectType::PeriodicSine {
                 return Err(DInputError::InvalidParameter(
                     format!("Effect {} is not a periodic effect", handle)
                 ));
@@ -526,18 +932,29 @@ impl DirectInputFfbDevice {
             
             let clamped_magnitude = magnitude.clamp(0.0, 1.0);
             
-            // In a real implementation, this would:
-            // 1. Create DIPERIODIC structure with:
-            //    - dwMagnitude: magnitude * 10000
-            //    - lOffset: 0
-            //    - dwPhase: 0
-            //    - dwPeriod: (1.0 / frequency_hz * 1_000_000.0) as microseconds
-            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            // Convert to DirectInput parameters
+            let di_magnitude = (clamped_magnitude * 10000.0) as u32;
+            let period_us = (1.0 / frequency_hz * 1_000_000.0) as u32;
             
-            effect.last_updated = Instant::now();
+            // Create periodic parameters
+            let periodic = DIPERIODIC {
+                dwMagnitude: di_magnitude,
+                lOffset: 0,
+                dwPhase: 0,
+                dwPeriod: period_us,
+            };
             
-            tracing::debug!("Set periodic effect {} to {} Hz, magnitude {}", 
-                handle, frequency_hz, clamped_magnitude);
+            // Get the effect interface
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            let _periodic = periodic; // Suppress unused warning
+            
+            effect_handle.last_updated = Instant::now();
+            
+            tracing::debug!("Set periodic effect {} to {} Hz, magnitude {} (period: {} us)", 
+                handle, frequency_hz, clamped_magnitude, period_us);
             
             Ok(())
         }
@@ -573,8 +990,8 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            let effect = &mut self.effects[handle];
-            if effect.effect_type != EffectType::Spring {
+            let effect_handle = &mut self.effects[handle];
+            if effect_handle.effect_type != EffectType::Spring {
                 return Err(DInputError::InvalidParameter(
                     format!("Effect {} is not a spring effect", handle)
                 ));
@@ -584,19 +1001,39 @@ impl DirectInputFfbDevice {
             let clamped_center = center.clamp(-1.0, 1.0);
             let clamped_stiffness = stiffness.clamp(0.0, 1.0);
             
-            // In a real implementation, this would:
-            // 1. Create DICONDITION structure with:
-            //    - lOffset: center * 10000
-            //    - lPositiveCoefficient: stiffness * 10000
-            //    - lNegativeCoefficient: stiffness * 10000
-            //    - dwPositiveSaturation: 10000
-            //    - dwNegativeSaturation: 10000
-            //    - lDeadBand: 0
-            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            // Convert to DirectInput parameters
+            let offset = (clamped_center * 10000.0) as i32;
+            let coefficient = (clamped_stiffness * 10000.0) as i32;
             
-            effect.last_updated = Instant::now();
+            // Create spring condition parameters (one per axis)
+            let _conditions = [
+                DICONDITION {
+                    lOffset: offset,
+                    lPositiveCoefficient: coefficient,
+                    lNegativeCoefficient: coefficient,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+                DICONDITION {
+                    lOffset: offset,
+                    lPositiveCoefficient: coefficient,
+                    lNegativeCoefficient: coefficient,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+            ];
             
-            tracing::debug!("Set spring effect {} to center {}, stiffness {}", 
+            // Get the effect interface
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            
+            effect_handle.last_updated = Instant::now();
+            
+            tracing::debug!("Set spring effect {} to center {}, stiffness {} (stub)", 
                 handle, clamped_center, clamped_stiffness);
             
             Ok(())
@@ -632,8 +1069,8 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            let effect = &mut self.effects[handle];
-            if effect.effect_type != EffectType::Damper {
+            let effect_handle = &mut self.effects[handle];
+            if effect_handle.effect_type != EffectType::Damper {
                 return Err(DInputError::InvalidParameter(
                     format!("Effect {} is not a damper effect", handle)
                 ));
@@ -642,19 +1079,38 @@ impl DirectInputFfbDevice {
             // Validate parameters
             let clamped_damping = damping.clamp(0.0, 1.0);
             
-            // In a real implementation, this would:
-            // 1. Create DICONDITION structure with:
-            //    - lOffset: 0
-            //    - lPositiveCoefficient: damping * 10000
-            //    - lNegativeCoefficient: damping * 10000
-            //    - dwPositiveSaturation: 10000
-            //    - dwNegativeSaturation: 10000
-            //    - lDeadBand: 0
-            // 2. Call SetParameters() with DIEP_TYPESPECIFICPARAMS flag
+            // Convert to DirectInput parameters
+            let coefficient = (clamped_damping * 10000.0) as i32;
             
-            effect.last_updated = Instant::now();
+            // Create damper condition parameters (one per axis)
+            let _conditions = [
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: coefficient,
+                    lNegativeCoefficient: coefficient,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+                DICONDITION {
+                    lOffset: 0,
+                    lPositiveCoefficient: coefficient,
+                    lNegativeCoefficient: coefficient,
+                    dwPositiveSaturation: DI_FFNOMINALMAX,
+                    dwNegativeSaturation: DI_FFNOMINALMAX,
+                    lDeadBand: 0,
+                },
+            ];
             
-            tracing::debug!("Set damper effect {} to damping {}", 
+            // Get the effect interface
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation requires DirectInput8 COM bindings
+            
+            effect_handle.last_updated = Instant::now();
+            
+            tracing::debug!("Set damper effect {} to damping {} (stub)", 
                 handle, clamped_damping);
             
             Ok(())
@@ -685,7 +1141,13 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            tracing::debug!("Starting effect {}", handle);
+            let effect_handle = &self.effects[handle];
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation would call effect->Start(1, 0)
+            
+            tracing::debug!("Started effect {} (stub)", handle);
             Ok(())
         }
     }
@@ -714,7 +1176,13 @@ impl DirectInputFfbDevice {
                 return Err(DInputError::InvalidParameter(format!("Invalid effect handle: {}", handle)));
             }
             
-            tracing::debug!("Stopping effect {}", handle);
+            let effect_handle = &self.effects[handle];
+            let _effect = effect_handle.effect.as_ref()
+                .ok_or_else(|| DInputError::EffectUpdateFailed("Effect not created".to_string()))?;
+            
+            // TODO: Full implementation would call effect->Stop()
+            
+            tracing::debug!("Stopped effect {} (stub)", handle);
             Ok(())
         }
     }

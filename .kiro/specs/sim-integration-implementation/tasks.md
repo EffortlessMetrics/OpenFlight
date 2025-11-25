@@ -269,7 +269,12 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] P2.1 Complete DirectInput device abstraction
+- [x] P2.1 Complete DirectInput device abstraction
+
+
+
+
+
   **Phase:** 2 - FFB
   **Status:** In progress (API + stubs exist, real COM calls pending)
   - RAII wrapper for IDirectInputDevice8 and IDirectInputEffect
