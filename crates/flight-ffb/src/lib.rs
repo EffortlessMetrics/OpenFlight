@@ -312,7 +312,15 @@ impl FfbEngine {
             })?;
 
         // Record fault in fault detector
-        self.fault_detector.record_fault(fault.clone());
+        let fault_record = self.fault_detector.record_fault(fault.clone());
+
+        // Log latched fault indicator
+        tracing::error!(
+            "LATCHED FAULT: {} (code: {}, KB: {})",
+            fault_record.fault_type.description(),
+            fault_record.error_code,
+            fault_record.kb_article_url
+        );
 
         // Immediate safety response
         match fault {
@@ -432,6 +440,21 @@ impl FfbEngine {
         self.fault_detector.get_fault_history_slice()
     }
 
+    /// Get latched fault indicator (returns most recent fault if in faulted state)
+    pub fn get_latched_fault(&self) -> Option<&FaultRecord> {
+        if self.safety_state == SafetyState::Faulted {
+            // Return the most recent fault
+            self.fault_detector.get_fault_history().back()
+        } else {
+            None
+        }
+    }
+
+    /// Check if system has latched fault
+    pub fn has_latched_fault(&self) -> bool {
+        self.safety_state == SafetyState::Faulted
+    }
+
     /// Update engine (should be called regularly from main loop)
     pub fn update(&mut self) -> Result<()> {
         // Update soft-stop controller
@@ -461,6 +484,20 @@ impl FfbEngine {
             .map_err(|e| FfbError::DeviceError {
                 message: e.to_string(),
             })?;
+
+        // Check for completed fault captures and save them
+        let completed_captures = self.blackbox_recorder.get_completed_captures();
+        if !completed_captures.is_empty() {
+            // Save the most recent completed capture if we haven't saved it yet
+            if let Some(last_capture) = completed_captures.last() {
+                if last_capture.complete {
+                    // Save to disk
+                    if let Err(e) = self.blackbox_recorder.save_fault_capture(last_capture) {
+                        tracing::warn!("Failed to save fault capture: {}", e);
+                    }
+                }
+            }
+        }
 
         Ok(())
     }

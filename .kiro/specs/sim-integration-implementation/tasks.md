@@ -256,7 +256,12 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] Faults produce blackbox dumps and latched indicators
+- [x] Faults produce blackbox dumps and latched indicators
+
+
+
+
+
 - [-] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
 
 

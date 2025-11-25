@@ -363,16 +363,37 @@ impl BlackboxRecorder {
         &self.circular_buffer
     }
 
-    /// Save fault capture to file (simplified implementation)
+    /// Save fault capture to file
     pub fn save_fault_capture(&self, capture: &FaultCapture) -> BlackboxResult<String> {
+        use std::fs;
+        use std::io::Write;
+
+        // Determine save directory
+        let save_dir = if let Some(ref dir) = self.config.save_directory {
+            std::path::PathBuf::from(dir)
+        } else {
+            // Default to logs/blackbox in current directory
+            std::path::PathBuf::from("logs/blackbox")
+        };
+
+        // Create directory if it doesn't exist
+        if let Err(e) = fs::create_dir_all(&save_dir) {
+            return Err(BlackboxError::SaveFailed {
+                message: format!("Failed to create blackbox directory: {}", e),
+            });
+        }
+
+        // Generate filename with timestamp
         let filename = format!(
             "fault_capture_{}.txt",
             capture.fault_time.elapsed().as_millis()
         );
+        let filepath = save_dir.join(&filename);
 
-        // In a real implementation, this would write to actual file
+        // Build content
         let mut content = String::new();
         content.push_str(&format!("Fault Capture Report\n"));
+        content.push_str(&format!("======================\n\n"));
         content.push_str(&format!("Fault Time: {:?}\n", capture.fault_time.elapsed()));
         content.push_str(&format!(
             "Fault Entry: {}\n",
@@ -382,6 +403,7 @@ impl BlackboxRecorder {
             "\nPre-fault entries ({}):\n",
             capture.pre_fault_entries.len()
         ));
+        content.push_str(&format!("------------------------\n"));
 
         for entry in &capture.pre_fault_entries {
             content.push_str(&format!("{}\n", entry.serialize()));
@@ -391,13 +413,22 @@ impl BlackboxRecorder {
             "\nPost-fault entries ({}):\n",
             capture.post_fault_entries.len()
         ));
+        content.push_str(&format!("------------------------\n"));
         for entry in &capture.post_fault_entries {
             content.push_str(&format!("{}\n", entry.serialize()));
         }
 
-        // TODO: Actually write to file system
-        tracing::info!("Saved fault capture to {}", filename);
-        tracing::debug!("Capture content:\n{}", content);
+        // Write to file
+        let mut file = fs::File::create(&filepath).map_err(|e| BlackboxError::SaveFailed {
+            message: format!("Failed to create file: {}", e),
+        })?;
+
+        file.write_all(content.as_bytes())
+            .map_err(|e| BlackboxError::SaveFailed {
+                message: format!("Failed to write to file: {}", e),
+            })?;
+
+        tracing::info!("Saved fault capture to {}", filepath.display());
 
         Ok(filename)
     }

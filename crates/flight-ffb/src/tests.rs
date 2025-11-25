@@ -1274,3 +1274,6 @@ mod trim_correctness_tests {
         test_replay_reproducibility();
     }
 }
+
+
+mod fault_blackbox_integration;
