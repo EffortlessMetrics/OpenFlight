@@ -35,6 +35,8 @@ pub mod ofp1_integration;
 pub mod performance_validation;
 pub mod safety;
 pub mod safety_envelope;
+#[cfg(test)]
+pub mod safety_threshold_validation;
 pub mod soft_stop;
 pub mod telemetry_synth;
 pub mod trim;

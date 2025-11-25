@@ -251,7 +251,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [ ] No safety thresholds violated in tests
+- [x] No safety thresholds violated in tests
+
+
+
+
 - [ ] Faults produce blackbox dumps and latched indicators
 - [-] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
 
