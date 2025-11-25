@@ -301,7 +301,12 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Implement API: `set_constant_force_pitch_nm(f32)` / `set_constant_force_roll_nm(f32)` OR `set_constant_force_xy(pitch_nm, roll_nm)`
   - _Requirements: FFB-HID-01.2_
 
-- [ ] P2.1.2 Write DirectInput device tests
+- [x] P2.1.2 Write DirectInput device tests
+
+
+
+
+
   **Phase:** 2 - FFB
   **Status:** Not started
   - Unit tests via mocks or fake DirectInput under cfg(test)

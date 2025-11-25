@@ -1277,3 +1277,9 @@ mod trim_correctness_tests {
 
 
 mod fault_blackbox_integration;
+
+
+// DirectInput device tests module
+#[cfg(test)]
+#[path = "tests/dinput_device_tests.rs"]
+mod dinput_device_tests;
