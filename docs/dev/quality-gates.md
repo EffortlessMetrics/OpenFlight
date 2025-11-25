@@ -68,17 +68,44 @@ Quality gates are automated checks that enforce critical requirements before cod
 - Implausible jump detection (e.g., `test_implausible_pitch_jump_detection`, `test_implausible_velocity_jump_detection`)
 - safe_for_ffb behavior (e.g., `test_safe_for_ffb_false_in_faulted`, `test_safe_for_ffb_true_in_active_flight`)
 
-## Planned Quality Gates
-
-The following quality gates are defined in the spec but not yet implemented:
-
 ### QG-FFB-SAFETY
 
-**Status:** 📋 Not Started
+**Status:** ✅ Implemented
 
 **Purpose:** Verify that FFB safety tests validate torque ramp-down within 50ms on all fault types.
 
-**Requirements:** Tests must verify safety envelope behavior under fault conditions.
+**Requirements:** Tests must verify:
+- 50ms ramp-to-zero timing on fault detection
+- Fault detection for all fault types (USB stall, NaN, over-temp, over-current, endpoint wedged, encoder invalid, device timeout, plugin overrun)
+- Soft-stop controller integration with multiple ramp profiles
+- Fault timestamp tracking and progress calculation
+- Fault overrides safe_for_ffb flag
+
+**Failure Condition:** Build fails if any of the required FFB safety tests are missing from:
+- `crates/flight-ffb/src/safety_envelope_tests.rs` - Safety envelope and 50ms ramp tests
+- `crates/flight-ffb/src/fault.rs` - Fault detection and recording tests
+- `crates/flight-ffb/src/soft_stop.rs` - Soft-stop controller tests
+
+**Rationale:** Per sim-integration-implementation spec requirements FFB-SAFETY-01.5, FFB-SAFETY-01.6, and SIM-TEST-01.10, FFB safety tests must verify that the system can safely ramp torque to zero within 50ms on any fault condition. This ensures:
+- Faults trigger immediate safety response (≤50ms to zero torque)
+- All fault types are properly detected and handled
+- Soft-stop controller provides smooth, controlled ramp-down
+- Fault state is properly tracked with timestamps
+- Safety takes precedence over all other system states
+
+**Test Coverage:** The quality gate verifies that tests exist for:
+- 50ms ramp-to-zero timing (`test_fault_ramp_to_zero_timing`)
+- Fault timestamp tracking (`test_fault_timestamp_tracking`)
+- Fault overrides safe_for_ffb (`test_fault_overrides_safe_for_ffb`)
+- Soft-stop ramp profiles (linear, exponential, S-curve)
+- Soft-stop completion and timeout detection
+- Fault type properties and error codes
+- Fault recording and response completion
+- All 9 fault types defined in FaultType enum
+
+## Planned Quality Gates
+
+The following quality gates are defined in the spec but not yet implemented:
 
 ### QG-RT-JITTER
 

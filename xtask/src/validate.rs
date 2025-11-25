@@ -480,8 +480,13 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
         .context("Failed to check sanity gate tests")?;
     results.push(sanity_gate_result);
 
+    // QG-FFB-SAFETY: Check FFB safety tests
+    println!("  Checking QG-FFB-SAFETY (FFB safety tests)...");
+    let ffb_safety_result = crate::quality_gates::check_ffb_safety_tests()
+        .context("Failed to check FFB safety tests")?;
+    results.push(ffb_safety_result);
+
     // Future quality gates will be added here:
-    // - QG-FFB-SAFETY: FFB safety tests
     // - QG-RT-JITTER: Real-time jitter tests
     // - QG-HID-LATENCY: HID latency tests
     // - QG-LEGAL-DOC: Legal documentation

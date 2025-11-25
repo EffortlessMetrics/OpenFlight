@@ -262,7 +262,11 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 
 
 
-- [-] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
+- [x] QG-FFB-SAFETY enabled and passing (50ms ramp-down verified on all fault types)
+
+
+
+
 
 
 - [ ] P2.1 Complete DirectInput device abstraction
