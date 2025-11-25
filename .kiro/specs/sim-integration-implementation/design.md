@@ -1478,16 +1478,100 @@ pub enum SafetyState {
 }
 ```
 
+**Per-Axis FFB Topology Decision:**
+
+**Decision:** Flight Hub uses **one constant-force effect per axis** (pitch and roll) rather than a single multi-axis effect with direction vectors.
+
+**Rationale:**
+1. **Simpler Mental Model**: Separate pitch and roll effects are easier to reason about than vector direction calculations
+2. **Independent Control**: Each axis can be updated without affecting the other, reducing coupling
+3. **Easier Debugging**: Individual axes can be disabled or monitored independently during development and troubleshooting
+4. **Negligible Overhead**: DirectInput overhead for two effects vs one multi-axis effect is minimal (< 1% CPU impact)
+5. **Better Testability**: Each axis can be tested in isolation with dedicated unit tests
+
 **Torque Direction Mapping:**
 
-For a 2-axis stick (pitch and roll), Flight Hub uses **one constant-force effect per axis**:
+For a 2-axis stick (pitch and roll), Flight Hub maps torques as follows:
 
-- **Pitch torque** → DirectInput Y axis (separate constant force effect)
-- **Roll torque** → DirectInput X axis (separate constant force effect)
+- **Pitch torque** → DirectInput Y axis (DIJOFS_Y) via separate constant force effect
+- **Roll torque** → DirectInput X axis (DIJOFS_X) via separate constant force effect
 
-**API Design:** The FFB engine exposes `set_constant_force_pitch(torque_nm: f32)` and `set_constant_force_roll(torque_nm: f32)` methods. Each method updates its corresponding axis-specific DirectInput effect independently. This is simpler than using a single multi-axis effect with vector direction calculations.
+**API Design:**
 
-**Implementation Note:** The `set_constant_force()` example shown is for a single axis. In practice, the device maintains two separate effects (pitch and roll) and updates them independently.
+The FFB device abstraction exposes per-axis torque control methods:
+
+```rust
+impl DirectInputFfbDevice {
+    /// Set pitch axis torque (DirectInput Y axis)
+    /// 
+    /// # Arguments
+    /// * `torque_nm` - Torque in Newton-meters (positive = nose up)
+    /// 
+    /// # Requirements
+    /// - FFB-HID-01.2: Constant force effects for sustained loads
+    pub fn set_constant_force_pitch_nm(&mut self, torque_nm: f32) -> Result<()>;
+    
+    /// Set roll axis torque (DirectInput X axis)
+    /// 
+    /// # Arguments
+    /// * `torque_nm` - Torque in Newton-meters (positive = right wing down)
+    /// 
+    /// # Requirements
+    /// - FFB-HID-01.2: Constant force effects for sustained loads
+    pub fn set_constant_force_roll_nm(&mut self, torque_nm: f32) -> Result<()>;
+}
+```
+
+**Implementation Details:**
+
+Each axis maintains its own DirectInput effect handle:
+
+```rust
+pub struct EffectPool {
+    constant_force_pitch: Option<ComPtr<IDirectInputEffect>>,  // Y axis (DIJOFS_Y)
+    constant_force_roll: Option<ComPtr<IDirectInputEffect>>,   // X axis (DIJOFS_X)
+    spring: Option<ComPtr<IDirectInputEffect>>,
+    damper: Option<ComPtr<IDirectInputEffect>>,
+    periodic_sine: Option<ComPtr<IDirectInputEffect>>,
+}
+```
+
+Effects are created with single-axis parameters:
+
+```rust
+// Pitch effect (Y axis)
+let pitch_effect_params = DIEFFECT {
+    cAxes: 1,
+    rgdwAxes: [DIJOFS_Y].as_ptr() as *mut _,
+    rglDirection: [0].as_ptr() as *mut _,
+    // ... other parameters
+};
+
+// Roll effect (X axis)
+let roll_effect_params = DIEFFECT {
+    cAxes: 1,
+    rgdwAxes: [DIJOFS_X].as_ptr() as *mut _,
+    rglDirection: [0].as_ptr() as *mut _,
+    // ... other parameters
+};
+```
+
+**Alternative Considered and Rejected:**
+
+A single multi-axis effect with direction vectors was considered:
+
+```rust
+// Alternative: single multi-axis effect (NOT USED)
+pub fn set_constant_force_xy(&mut self, pitch_nm: f32, roll_nm: f32) -> Result<()>;
+```
+
+This approach was rejected because:
+- Requires vector magnitude and direction calculations on every update
+- Couples pitch and roll updates (can't update one without the other)
+- More complex to test (requires testing all combinations of pitch/roll)
+- No performance benefit (DirectInput effect overhead is negligible)
+
+**Implementation Note:** The current implementation in `crates/flight-ffb/src/dinput_device.rs` uses `create_constant_force_effect(axis_index)` where `axis_index` 0 = pitch (Y axis) and `axis_index` 1 = roll (X axis). The higher-level FFB engine will wrap these with the semantic `set_constant_force_pitch_nm()` and `set_constant_force_roll_nm()` methods.
 
 **Device Calibration:**
 

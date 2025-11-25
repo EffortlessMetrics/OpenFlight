@@ -288,7 +288,12 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - _Requirements: FFB-HID-01.1, FFB-HID-01.9_
   - **Blocked by:** Locked test binaries (see troubleshooting)
 
-- [ ] P2.1.1 Decide and document per-axis FFB topology
+- [x] P2.1.1 Decide and document per-axis FFB topology
+
+
+
+
+
   **Phase:** 2 - FFB
   **Status:** Not started
   - Decide: one effect per axis (pitch, roll) OR one multi-axis effect with direction vector
