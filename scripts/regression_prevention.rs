@@ -127,8 +127,9 @@ fn verify_critical_patterns() {
     println!("🔍 Verifying critical patterns are fixed...");
     
     // Pattern 1: Profile::merge should be replaced with Profile::merge_with
+    // Only check in crates/ and src/ directories to avoid false positives in docs/scripts
     let profile_merge_check = Command::new("git")
-        .args(&["grep", "-n", "Profile::merge("])
+        .args(&["grep", "-n", "Profile::merge(", "crates/", "src/"])
         .output()
         .expect("Failed to run git grep");
         
@@ -140,7 +141,7 @@ fn verify_critical_patterns() {
     
     // Pattern 2: BlackboxWriter::new? should not have ? operator if it returns T not Result<T, E>
     let blackbox_writer_check = Command::new("git")
-        .args(&["grep", "-n", "BlackboxWriter::new.*?"])
+        .args(&["grep", "-n", "BlackboxWriter::new.*?", "crates/", "src/"])
         .output()
         .expect("Failed to run git grep");
         
@@ -152,7 +153,7 @@ fn verify_critical_patterns() {
     
     // Pattern 3: Engine::new should have 2 arguments
     let engine_new_check = Command::new("git")
-        .args(&["grep", "-n", "Engine::new("])
+        .args(&["grep", "-n", "Engine::new(", "crates/", "src/"])
         .output()
         .expect("Failed to run git grep");
         
@@ -169,6 +170,7 @@ fn verify_critical_patterns() {
     }
     
     // Pattern 4: Check for unaligned references in packed structs
+    // Clippy runs on workspace so it's fine
     let packed_ref_check = Command::new("cargo")
         .args(&["clippy", "--workspace", "--", "-W", "clippy::unaligned_references"])
         .output()
@@ -182,7 +184,7 @@ fn verify_critical_patterns() {
     
     // Pattern 5: Check for criterion::black_box usage (should be std::hint::black_box)
     let black_box_check = Command::new("git")
-        .args(&["grep", "-n", "criterion::black_box"])
+        .args(&["grep", "-n", "criterion::black_box", "crates/", "src/"])
         .output()
         .expect("Failed to run git grep");
         

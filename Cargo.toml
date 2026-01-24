@@ -35,7 +35,6 @@ edition = "2024"
 rust-version = "1.89.0"
 authors = ["Flight Hub Team"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/flight-hub/flight-hub"
 repository = "git@github.com:EffortlessMetrics/OpenFlight.git"
 homepage = "https://flight-hub.dev"
 
