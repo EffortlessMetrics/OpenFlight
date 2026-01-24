@@ -19,7 +19,7 @@ crossbeam.workspace = true
 parking_lot.workspace = true
 thiserror.workspace = true
 serde = { workspace = true, features = ["derive"], optional = true }
-bincode = "1.3"
+bincode = "3.0.0"
 
 [features]
 default = []

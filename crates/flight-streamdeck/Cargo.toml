@@ -19,10 +19,10 @@ flight-panels = { path = "../flight-panels" }
 
 # Web API dependencies
 tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
-axum = "0.7"
-tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "trace"] }
-hyper = "1.0"
+axum = "0.8.8"
+tower = "0.5.3"
+tower-http = { version = "0.6.8", features = ["cors", "trace"] }
+hyper = "1.8.1"
 
 # Serialization
 serde = { workspace = true }
@@ -34,21 +34,21 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 # Version handling
-semver = "1.0"
+semver = "1.0.27"
 
 # Async utilities
 futures = { workspace = true }
 tokio-util = { workspace = true }
 
 # UUID generation
-uuid = { version = "1.6", features = ["v4", "serde"] }
+uuid = { version = "1.19.0", features = ["v4", "serde"] }
 
 # Random number generation
-fastrand = "2.0"
+fastrand = "2.3.0"
 
 [dev-dependencies]
 tempfile = { workspace = true }
 criterion = { workspace = true }
 proptest = { workspace = true }
-tokio-test = "0.4"
-axum-test = "14.0"
+tokio-test = "0.4.5"
+axum-test = "18.7.0"

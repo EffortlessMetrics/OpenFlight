@@ -17,15 +17,15 @@ flight-bus = { path = "../flight-bus" }
 flight-panels = { path = "../flight-panels" }
 flight-hid = { path = "../flight-hid" }
 flight-virtual = { path = "../flight-virtual" }
-thiserror = "1.0"
-tracing = "0.1"
+thiserror = "2.0.18"
+tracing = "0.1.44"
 crossbeam.workspace = true
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 # Compression for blackbox fault capture exports (FFB-BLACKBOX-01)
-flate2 = "1.0"
+flate2 = "1.1.8"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.62.2", features = [
     "Win32_Devices_HumanInterfaceDevice",
     "Win32_Foundation",
     "Win32_System_Com",
@@ -39,4 +39,4 @@ examples-optin = []
 
 [dev-dependencies]
 tempfile.workspace = true
-filetime = "0.2"
+filetime = "0.2.27"
