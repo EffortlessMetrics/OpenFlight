@@ -5,6 +5,7 @@
 
 use crate::snapshot::{BusSnapshot, EngineData};
 use crate::types::{BusTypeError, GForce, Mach, Percentage, SimId, ValidatedAngle, ValidatedSpeed};
+use flight_core::units::{angles, conversions};
 
 /// Adapter helper trait for converting simulator-specific data to bus format
 pub trait SimAdapter {
@@ -68,10 +69,8 @@ pub mod msfs {
         /// **Conversion**: radians = degrees × (π / 180) ≈ degrees × 0.0174533
         /// **Normalization**: Angles are normalized to -180° to +180° range before conversion
         pub fn convert_angle_degrees(value: f64) -> Result<ValidatedAngle, BusTypeError> {
-            // Normalize to -180 to 180 range
-            // Formula: ((value % 360) + 540) % 360 - 180
-            let normalized = ((value % 360.0) + 540.0) % 360.0 - 180.0;
-            ValidatedAngle::new_degrees(normalized as f32)
+            let normalized = angles::normalize_degrees_signed(value as f32);
+            ValidatedAngle::new_degrees(normalized)
         }
 
         /// Convert MSFS angle (radians) to ValidatedAngle
@@ -111,15 +110,6 @@ pub mod msfs {
         /// **Range**: 0-100 enforced by Percentage type
         pub fn convert_percentage(value: f64) -> Result<Percentage, BusTypeError> {
             Percentage::new(value as f32)
-        }
-
-        /// Convert MSFS normalized value (0-1) to Percentage
-        ///
-        /// **SimVars**: Some control positions (0-1 range)
-        /// **Target**: Various percentage fields
-        /// **Conversion**: normalized × 100 = percentage
-        pub fn convert_normalized_to_percentage(value: f64) -> Result<Percentage, BusTypeError> {
-            Percentage::from_normalized(value as f32)
         }
 
         /// Convert MSFS RPM to percentage of redline
@@ -188,13 +178,8 @@ pub mod xplane {
         /// Convert X-Plane angle (degrees) to ValidatedAngle
         pub fn convert_angle_degrees(value: f32) -> Result<ValidatedAngle, BusTypeError> {
             // X-Plane uses different conventions for some angles
-            let normalized = ((value % 360.0) + 540.0) % 360.0 - 180.0;
+            let normalized = angles::normalize_degrees_signed(value);
             ValidatedAngle::new_degrees(normalized)
-        }
-
-        /// Convert X-Plane ratio (0-1) to Percentage
-        pub fn convert_ratio_to_percentage(value: f32) -> Result<Percentage, BusTypeError> {
-            Percentage::from_normalized(value)
         }
 
         /// Convert X-Plane G-force (G units) to GForce
@@ -204,7 +189,7 @@ pub mod xplane {
 
         /// Convert X-Plane altitude (meters) to feet
         pub fn convert_altitude_m_to_ft(meters: f32) -> f32 {
-            meters * 3.28084
+            conversions::meters_to_feet(meters)
         }
 
         /// Convert X-Plane temperature (Celsius) - pass through
@@ -237,14 +222,9 @@ pub mod dcs {
             ValidatedAngle::new_radians(value as f32)
         }
 
-        /// Convert DCS normalized value (0-1) to Percentage
-        pub fn convert_normalized_to_percentage(value: f64) -> Result<Percentage, BusTypeError> {
-            Percentage::from_normalized(value as f32)
-        }
-
         /// Convert DCS altitude (meters) to feet
         pub fn convert_altitude_m_to_ft(meters: f64) -> f32 {
-            (meters * 3.28084) as f32
+            conversions::meters_to_feet(meters as f32)
         }
 
         /// Convert DCS G-force to GForce
@@ -257,20 +237,6 @@ pub mod dcs {
             Mach::new(value as f32)
         }
 
-        /// Convert DCS engine RPM percentage to Percentage
-        pub fn convert_engine_rpm_percentage(value: f64) -> Result<Percentage, BusTypeError> {
-            Percentage::new((value * 100.0) as f32)
-        }
-
-        /// Convert DCS fuel quantity (0-1) to Percentage
-        pub fn convert_fuel_percentage(value: f64) -> Result<Percentage, BusTypeError> {
-            Percentage::from_normalized(value as f32)
-        }
-
-        /// Convert DCS helicopter rotor RPM (0-1) to Percentage
-        pub fn convert_rotor_rpm_percentage(value: f64) -> Result<Percentage, BusTypeError> {
-            Percentage::from_normalized(value as f32)
-        }
     }
 }
 
@@ -415,7 +381,7 @@ mod tests {
             let pct = MsfsConverter::convert_percentage(75.0).unwrap();
             assert_eq!(pct.value(), 75.0);
 
-            let pct = MsfsConverter::convert_normalized_to_percentage(0.75).unwrap();
+            let pct = Percentage::from_normalized(0.75).unwrap();
             assert_eq!(pct.value(), 75.0);
 
             // Test out of range
@@ -457,7 +423,7 @@ mod tests {
 
         #[test]
         fn test_xplane_ratio_conversion() {
-            let pct = XPlaneConverter::convert_ratio_to_percentage(0.75).unwrap();
+            let pct = Percentage::from_normalized(0.75).unwrap();
             assert_eq!(pct.value(), 75.0);
         }
 
@@ -496,7 +462,7 @@ mod tests {
 
         #[test]
         fn test_dcs_normalized_conversion() {
-            let pct = DcsConverter::convert_normalized_to_percentage(0.65).unwrap();
+            let pct = Percentage::from_normalized(0.65).unwrap();
             assert_eq!(pct.value(), 65.0);
         }
 
@@ -508,13 +474,13 @@ mod tests {
 
         #[test]
         fn test_dcs_engine_rpm_conversion() {
-            let rpm_pct = DcsConverter::convert_engine_rpm_percentage(0.85).unwrap();
+            let rpm_pct = Percentage::from_normalized(0.85).unwrap();
             assert_eq!(rpm_pct.value(), 85.0);
         }
 
         #[test]
         fn test_dcs_rotor_rpm_conversion() {
-            let rotor_pct = DcsConverter::convert_rotor_rpm_percentage(1.0).unwrap();
+            let rotor_pct = Percentage::from_normalized(1.0).unwrap();
             assert_eq!(rotor_pct.value(), 100.0);
         }
     }

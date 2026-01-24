@@ -9,7 +9,7 @@ use crate::types::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use flight_core::time;
 
 /// Angular rates in body frame (rad/s)
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -533,12 +533,9 @@ impl Default for ValidityFlags {
     }
 }
 
-/// Get current timestamp in nanoseconds since Unix epoch
+/// Get current monotonic timestamp in nanoseconds since process start
 fn current_timestamp_ns() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos() as u64
+    time::monotonic_now_ns()
 }
 
 #[cfg(test)]

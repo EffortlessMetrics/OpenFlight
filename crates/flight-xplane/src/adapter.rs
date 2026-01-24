@@ -18,9 +18,11 @@ use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
     snapshot::{BusSnapshot, EngineData, Environment, Kinematics, Navigation},
-    types::{AircraftId, SimId},
+    types::{AircraftId, Percentage, SimId},
 };
 use flight_core::{FlightError, Result};
+use flight_core::time;
+use flight_core::units::conversions;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -116,6 +118,7 @@ pub struct XPlaneAdapter {
     running: Arc<RwLock<bool>>,
     last_packet_time: Arc<RwLock<Option<Instant>>>,
     connection_timeout: Duration,
+    start_time: Instant,
 }
 
 impl XPlaneAdapter {
@@ -160,6 +163,7 @@ impl XPlaneAdapter {
             running: Arc::new(RwLock::new(false)),
             last_packet_time: Arc::new(RwLock::new(None)),
             connection_timeout: Duration::from_secs(2), // XPLANE-INT-01.13: 2 second timeout
+            start_time: Instant::now(),
         })
     }
 
@@ -257,6 +261,7 @@ impl XPlaneAdapter {
         let running = self.running.clone();
         let last_packet_time = self.last_packet_time.clone();
         let connection_timeout = self.connection_timeout;
+        let adapter_start = self.start_time;
 
         let handle = tokio::spawn(async move {
             let mut interval =
@@ -308,7 +313,7 @@ impl XPlaneAdapter {
                             }
 
                             // Convert to bus snapshot
-                            match Self::convert_raw_to_snapshot(raw_data) {
+                            match Self::convert_raw_to_snapshot(raw_data, adapter_start) {
                                 Ok(snapshot) => {
                                     // Measure latency
                                     let latency = start_time.elapsed();
@@ -461,14 +466,15 @@ impl XPlaneAdapter {
     /// WHEN implementing UDP-only mode THEN the adapter SHALL always set sim = XPLANE 
     /// and MAY set a coarse aircraft_class (e.g., fixed-wing / helicopter) based on available data; 
     /// precise aircraft identity SHALL be treated as 'unknown' unless provided by a plugin
-    fn convert_raw_to_snapshot(raw_data: XPlaneRawData) -> Result<BusSnapshot> {
+    fn convert_raw_to_snapshot(raw_data: XPlaneRawData, start_time: Instant) -> Result<BusSnapshot> {
         // XPLANE-INT-01.7: Always set sim = XPLANE for UDP-only mode
         // Aircraft identity may be 'unknown' or coarse class in UDP-only mode
         let aircraft_id = AircraftId::new(&raw_data.aircraft_info.icao);
         let mut snapshot = BusSnapshot::new(SimId::XPlane, aircraft_id);
 
-        // Update timestamp
-        snapshot.timestamp = raw_data.timestamp.elapsed().as_nanos() as u64;
+        // Update timestamp (monotonic since adapter start)
+        let elapsed = raw_data.timestamp.saturating_duration_since(start_time);
+        snapshot.timestamp = time::elapsed_to_ns(elapsed);
 
         // Convert kinematics data
         snapshot.kinematics = Self::convert_kinematics(&raw_data.dataref_values)?;
@@ -586,7 +592,7 @@ impl XPlaneAdapter {
         // Vertical speed conversion: m/s → ft/min (XPLANE-INT-01.4)
         // Conversion: ft/min = m/s × 196.85
         if let Some(DataRefValue::Float(vs_mps)) = datarefs.get("sim/flightmodel/position/vh_ind") {
-            kinematics.vertical_speed = vs_mps * 196.85; // m/s to ft/min
+            kinematics.vertical_speed = conversions::mps_to_fpm(*vs_mps);
         }
 
         Ok(kinematics)
@@ -622,7 +628,7 @@ impl XPlaneAdapter {
             datarefs.get("sim/aircraft/parts/acf_flap_deploy")
         {
             config.flaps =
-                XPlaneConverter::convert_ratio_to_percentage(*flap_ratio).map_err(|e| {
+                Percentage::from_normalized(*flap_ratio).map_err(|e| {
                     FlightError::Configuration(format!("Flaps conversion error: {}", e))
                 })?;
         }
@@ -631,7 +637,7 @@ impl XPlaneAdapter {
         if let Some(DataRefValue::Float(speedbrake_ratio)) =
             datarefs.get("sim/aircraft/parts/acf_speedbrake_deploy")
         {
-            config.spoilers = XPlaneConverter::convert_ratio_to_percentage(*speedbrake_ratio)
+            config.spoilers = Percentage::from_normalized(*speedbrake_ratio)
                 .map_err(|e| {
                     FlightError::Configuration(format!("Spoilers conversion error: {}", e))
                 })?;
@@ -787,7 +793,7 @@ impl SimAdapter for XPlaneAdapter {
         &self,
         raw: Self::RawData,
     ) -> std::result::Result<BusSnapshot, XPlaneError> {
-        match Self::convert_raw_to_snapshot(raw) {
+        match Self::convert_raw_to_snapshot(raw, self.start_time) {
             Ok(snapshot) => Ok(snapshot),
             Err(e) => Err(XPlaneError::DataRef {
                 message: e.to_string(),
@@ -1061,7 +1067,8 @@ mod tests {
         };
         
         // Convert to snapshot
-        let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw_data).unwrap();
+        let snapshot =
+            XPlaneAdapter::convert_raw_to_snapshot(raw_data, Instant::now()).unwrap();
         
         // Verify sim is always XPLANE (XPLANE-INT-01.7)
         assert_eq!(snapshot.sim, flight_bus::types::SimId::XPlane);

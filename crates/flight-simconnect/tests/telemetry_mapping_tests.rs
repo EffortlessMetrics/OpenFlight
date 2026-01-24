@@ -10,6 +10,7 @@
 //! - MSFS-INT-01.6: Angular rate mapping (already rad/s), g-load and aero mapping
 
 use flight_bus::adapters::msfs::MsfsConverter;
+use flight_bus::types::Percentage;
 use std::f32::consts::PI;
 
 
@@ -439,20 +440,20 @@ fn test_percentage_conversions() {
     assert_eq!(pct_0.value(), 0.0);
 
     // Test normalized to percentage (0-1 → 0-100)
-    let norm_50 = MsfsConverter::convert_normalized_to_percentage(0.5).unwrap();
+    let norm_50 = Percentage::from_normalized(0.5).unwrap();
     assert_eq!(norm_50.value(), 50.0);
 
-    let norm_100 = MsfsConverter::convert_normalized_to_percentage(1.0).unwrap();
+    let norm_100 = Percentage::from_normalized(1.0).unwrap();
     assert_eq!(norm_100.value(), 100.0);
 
-    let norm_0 = MsfsConverter::convert_normalized_to_percentage(0.0).unwrap();
+    let norm_0 = Percentage::from_normalized(0.0).unwrap();
     assert_eq!(norm_0.value(), 0.0);
 
     // Test out of range
     assert!(MsfsConverter::convert_percentage(-5.0).is_err());
     assert!(MsfsConverter::convert_percentage(105.0).is_err());
-    assert!(MsfsConverter::convert_normalized_to_percentage(-0.1).is_err());
-    assert!(MsfsConverter::convert_normalized_to_percentage(1.1).is_err());
+    assert!(Percentage::from_normalized(-0.1).is_err());
+    assert!(Percentage::from_normalized(1.1).is_err());
 }
 
 /// Test RPM to percentage conversion

@@ -8,6 +8,7 @@
 //! DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15, SIM-TEST-01.4
 
 use flight_dcs_export::{DcsAdapter, DcsAdapterConfig};
+use flight_core::time;
 use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -373,7 +374,7 @@ fn test_timestamp_conversion() {
         .expect("Should convert timestamp");
 
     // Verify timestamp is converted to nanoseconds
-    assert_eq!(snapshot.timestamp, dcs_timestamp_ms * 1_000_000);
+    assert_eq!(snapshot.timestamp, time::to_ns_from_ms(dcs_timestamp_ms));
 }
 
 #[test]

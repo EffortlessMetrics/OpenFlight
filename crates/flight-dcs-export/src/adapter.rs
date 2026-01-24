@@ -10,6 +10,7 @@ use crate::mp_detection::{MpDetectionError, MpDetector, SessionType};
 use crate::socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
 use anyhow::Result;
 use flight_bus::{BusPublisher, BusSnapshot, PublisherError, snapshot::*, types::*};
+use flight_core::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -311,7 +312,7 @@ impl DcsAdapter {
         let mut snapshot = BusSnapshot::new(SimId::Dcs, aircraft);
 
         // Override timestamp from DCS
-        snapshot.timestamp = timestamp * 1_000_000; // Convert ms to ns
+        snapshot.timestamp = time::to_ns_from_ms(timestamp);
 
         // Parse kinematics
         if let Some(ias) = data.get("ias").and_then(|v| v.as_f64()) {

@@ -3,7 +3,7 @@
 
 //! Bus telemetry types with comprehensive unit safety and validation
 
-use flight_core::units::{Angle, AngleUnit, Speed, SpeedUnit};
+use flight_core::units::{Angle, AngleUnit, Speed, SpeedUnit, conversions};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
@@ -165,17 +165,17 @@ impl ValidatedSpeed {
     pub fn to_knots(&self) -> f32 {
         match self.speed.unit {
             SpeedUnit::Knots => self.speed.value,
-            SpeedUnit::Mps => self.speed.value * 1.94384,
-            SpeedUnit::Kph => self.speed.value * 0.539957,
+            SpeedUnit::Mps => conversions::mps_to_knots(self.speed.value),
+            SpeedUnit::Kph => conversions::kph_to_knots(self.speed.value),
         }
     }
 
     /// Convert to meters per second
     pub fn to_mps(&self) -> f32 {
         match self.speed.unit {
-            SpeedUnit::Knots => self.speed.value * 0.514444,
+            SpeedUnit::Knots => conversions::knots_to_mps(self.speed.value),
             SpeedUnit::Mps => self.speed.value,
-            SpeedUnit::Kph => self.speed.value * 0.277778,
+            SpeedUnit::Kph => conversions::kph_to_mps(self.speed.value),
         }
     }
 }
