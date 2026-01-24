@@ -36,6 +36,7 @@ rust-version = "1.89.0"
 authors = ["Flight Hub Team"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/flight-hub/flight-hub"
+repository = "https://github.com/EffortlessMetrics/OpenFlight"
 homepage = "https://flight-hub.dev"
 
 [workspace.dependencies]
