@@ -40,7 +40,7 @@ homepage = "https://flight-hub.dev"
 
 [workspace.dependencies]
 # Core dependencies
-tokio = { version = "1.35", features = [
+tokio = { version = "1.49.0", features = [
     "macros",
     "rt-multi-thread",
     "time",
@@ -48,25 +48,25 @@ tokio = { version = "1.35", features = [
     "signal",
     "sync",
 ] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-anyhow = "1.0"
-thiserror = "2.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", default-features = false, features = [
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+anyhow = "1.0.100"
+thiserror = "2.0.18"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", default-features = false, features = [
     "fmt",
     "env-filter",
 ] }
 
 # IPC and serialization - gRPC stack unified to 0.14.x
-prost = "0.14.1"
+prost = "0.14.3"
 # tonic configured with built-in transport features based on usage in flight-ipc
 # Uses tonic::transport::Server and tonic::transport::Channel for IPC communication
 # Features: transport (includes client/server), codegen (for proto compilation)
 tonic = { version = "0.14.2", features = ["transport", "codegen"] }
 tonic-build = "0.14.2"
-prost-build = "0.14.1"
-prost-types = "0.14.1"
+prost-build = "0.14.3"
+prost-types = "0.14.3"
 protobuf-codegen = "4.33.4-release"
 
 # HTTP client
@@ -77,36 +77,36 @@ reqwest = { version = "0.13.1", default-features = false, features = [
 ] }
 
 # Real-time and performance
-crossbeam = "0.8"
-parking_lot = "0.12"
-once_cell = "1.19"
+crossbeam = "0.8.4"
+parking_lot = "0.12.5"
+once_cell = "1.21.3"
 
 # Platform-specific dependencies (defined in individual crates)
-windows = { version = "0.62", features = [
+windows = { version = "0.62.2", features = [
     "Win32_System_Threading",
     "Win32_System_Performance",
     "Win32_Devices_HumanInterfaceDevice",
     "Win32_Storage_FileSystem",
 ] }
-libc = "0.2"
+libc = "0.2.180"
 nix = "0.31.1"
 
 # Additional dependencies
 criterion = "0.8.1"
-proptest = "1.4"
-tempfile = "3.8"
-clap = { version = "4.4", default-features = false, features = [
+proptest = "1.9.0"
+tempfile = "3.24.0"
+clap = { version = "4.5.54", default-features = false, features = [
     "std",
     "derive",
 ] }
 
 # Async and futures ecosystem - aligned versions
-futures = "0.3"
-futures-core = "0.3"
-tokio-stream = "0.1"
-tokio-util = "0.7"
+futures = "0.3.31"
+futures-core = "0.3.31"
+tokio-stream = "0.1.18"
+tokio-util = "0.7.18"
 
-cc = "1.0"
+cc = "1.2.54"
 
 
 [profile.release]
