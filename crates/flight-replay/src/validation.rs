@@ -554,7 +554,7 @@ mod tests {
         for i in 0..1000 {
             let timestamp = i * 4_000_000;
             let axis_data =
-                bincode::serialize(&flight_axis::AxisFrame::new(0.5, timestamp)).unwrap();
+                postcard::to_allocvec(&flight_axis::AxisFrame::new(0.5, timestamp)).unwrap();
             writer.record_axis_frame(timestamp, &axis_data).unwrap();
         }
 

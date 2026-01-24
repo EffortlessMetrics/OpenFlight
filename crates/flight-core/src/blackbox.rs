@@ -10,7 +10,7 @@
 //! - Size target <30MB/3min
 
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{self, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio::time::interval;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 /// Blackbox writer errors
 #[derive(Error, Debug)]
@@ -29,7 +29,7 @@ pub enum BlackboxError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Serialization error: {0}")]
-    Serialization(#[from] bincode::Error),
+    Serialization(#[from] postcard::Error),
     #[error("Writer already started")]
     AlreadyStarted,
     #[error("Writer not started")]
@@ -43,10 +43,12 @@ pub enum BlackboxError {
 /// Blackbox file format constants
 pub const FBB_MAGIC: &[u8; 4] = b"FBB1";
 pub const FBB_ENDIAN_MARKER: u32 = 0x12345678;
+pub const FBB_FORMAT_VERSION: u32 = 2;
 pub const CHUNK_SIZE: usize = 6 * 1024; // 6KB chunks
 pub const INDEX_INTERVAL_MS: u64 = 100; // Index every 100ms
 pub const FLUSH_INTERVAL_MS: u64 = 1000; // Flush every 1s
 pub const MAX_BUFFER_SIZE: usize = 1024 * 1024; // 1MB buffer before dropping
+const FOOTER_LEN_BYTES: u64 = 4;
 
 /// Stream types in the blackbox format
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -75,6 +77,7 @@ impl StreamType {
 pub struct BlackboxHeader {
     pub magic: [u8; 4],
     pub endian_marker: u32,
+    pub format_version: u32,
     pub app_version: String,
     pub timebase_ns: u64,
     pub sim_id: String,
@@ -97,6 +100,7 @@ pub struct BlackboxFooter {
     pub end_timestamp: u64,
     pub total_entries: [u64; 3], // Total entries per stream type
     pub index_offset: u64,
+    pub index_len: u32,
     pub index_count: u32,
     pub crc32c: u32,
 }
@@ -146,29 +150,27 @@ pub struct BlackboxStats {
 }
 
 /// Internal writer state
-#[allow(dead_code)]
 struct WriterState {
     file: BufWriter<File>,
-    current_chunk: Vec<u8>,
+    file_path: PathBuf,
+    file_offset: u64,
     index_entries: Vec<IndexEntry>,
-    last_index_time: Instant,
-    start_time: Instant,
-    header: BlackboxHeader,
-    stats: BlackboxStats,
+    last_index_timestamp_ns: Option<u64>,
     stream_counters: [u32; 3],
+    last_record_timestamp_ns: u64,
+    record_buffer: Vec<u8>,
 }
 
 /// Blackbox writer implementation
 pub struct BlackboxWriter {
     config: BlackboxConfig,
-    #[allow(dead_code)]
-    state: Option<WriterState>,
     record_tx: Option<mpsc::UnboundedSender<BlackboxRecord>>,
     record_rx: Option<mpsc::UnboundedReceiver<BlackboxRecord>>,
     running: Arc<AtomicBool>,
     stats: Arc<Mutex<BlackboxStats>>,
     drop_counter: Arc<AtomicU64>,
     current_header: Option<BlackboxHeader>,
+    writer_handle: Option<tokio::task::JoinHandle<anyhow::Result<()>>>,
 }
 
 impl BlackboxWriter {
@@ -178,13 +180,13 @@ impl BlackboxWriter {
 
         Self {
             config,
-            state: None,
             record_tx: Some(record_tx),
             record_rx: Some(record_rx),
             running: Arc::new(AtomicBool::new(false)),
             stats: Arc::new(Mutex::new(BlackboxStats::default())),
             drop_counter: Arc::new(AtomicU64::new(0)),
             current_header: None,
+            writer_handle: None,
         }
     }
 
@@ -221,6 +223,7 @@ impl BlackboxWriter {
         let header = BlackboxHeader {
             magic: *FBB_MAGIC,
             endian_marker: FBB_ENDIAN_MARKER,
+            format_version: FBB_FORMAT_VERSION,
             app_version,
             timebase_ns: 0,
             sim_id,
@@ -229,10 +232,14 @@ impl BlackboxWriter {
             start_timestamp: timestamp,
         };
 
-        self.current_header = Some(header);
+        self.current_header = Some(header.clone());
 
-        // Create placeholder file for testing
-        std::fs::write(&filepath, b"FBB1_placeholder")?;
+        let file = File::create(&filepath).context("Failed to create blackbox file")?;
+        let mut writer = BufWriter::new(file);
+        let header_bytes =
+            wire::encode_alloc(&header).map_err(BlackboxError::from)?;
+        wire::write_len_prefixed(&mut writer, &header_bytes)?;
+        let file_offset = 4_u64 + header_bytes.len() as u64;
 
         self.running.store(true, Ordering::Release);
 
@@ -242,10 +249,21 @@ impl BlackboxWriter {
         let stats = Arc::clone(&self.stats);
         let drop_counter = Arc::clone(&self.drop_counter);
         let config = self.config.clone();
+        let writer_path = filepath.clone();
+        let state = WriterState {
+            file: writer,
+            file_path: writer_path,
+            file_offset,
+            index_entries: Vec::new(),
+            last_index_timestamp_ns: None,
+            stream_counters: [0; 3],
+            last_record_timestamp_ns: 0,
+            record_buffer: vec![0u8; config.buffer_size.max(1)],
+        };
 
-        tokio::spawn(async move {
-            Self::writer_task(record_rx, running, stats, drop_counter, config).await;
-        });
+        self.writer_handle = Some(tokio::spawn(async move {
+            Self::writer_task(record_rx, running, stats, drop_counter, config, state).await
+        }));
 
         info!("Blackbox recording started: {}", filepath.display());
         Ok(filepath)
@@ -258,9 +276,17 @@ impl BlackboxWriter {
         }
 
         self.running.store(false, Ordering::Release);
+        self.record_tx.take(); // Close channel to drain writer task
 
-        // Wait longer for the writer task to finish and flush all data
-        tokio::time::sleep(Duration::from_millis(500)).await;
+        if let Some(handle) = self.writer_handle.take() {
+            match handle.await {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => return Err(err),
+                Err(err) => {
+                    return Err(anyhow::anyhow!("Blackbox writer task failed: {err}"));
+                }
+            }
+        }
 
         // Get final stats from the shared stats
         let final_stats = self.stats.lock().unwrap().clone();
@@ -324,8 +350,10 @@ impl BlackboxWriter {
         stats: Arc<Mutex<BlackboxStats>>,
         drop_counter: Arc<AtomicU64>,
         config: BlackboxConfig,
-    ) {
+        mut state: WriterState,
+    ) -> Result<()> {
         let mut flush_interval = interval(Duration::from_millis(FLUSH_INTERVAL_MS));
+        let index_interval_ns = INDEX_INTERVAL_MS.saturating_mul(1_000_000);
 
         loop {
             tokio::select! {
@@ -342,10 +370,46 @@ impl BlackboxWriter {
                                 stats_guard.drops_total += 1;
                                 stats_guard.drops_by_stream[record.stream_type.to_index()] += 1;
                             } else {
-                                // Process record
-                                let mut stats_guard = stats.lock().unwrap();
-                                stats_guard.records_written[record.stream_type.to_index()] += 1;
-                                stats_guard.bytes_written += record.data.len() as u64;
+                                let stream_index = record.stream_type.to_index();
+                                state.stream_counters[stream_index] =
+                                    state.stream_counters[stream_index].saturating_add(1);
+
+                                {
+                                    let mut stats_guard = stats.lock().unwrap();
+                                    stats_guard.records_written[stream_index] += 1;
+                                    stats_guard.bytes_written += record.data.len() as u64;
+                                }
+
+                                state.last_record_timestamp_ns = record.timestamp_ns;
+
+                                let record_offset = state.file_offset;
+                                let mut record_bytes_storage = Vec::new();
+                                let record_bytes = match wire::encode_into_slice(
+                                    &record,
+                                    &mut state.record_buffer,
+                                ) {
+                                    Ok(len) => &state.record_buffer[..len],
+                                    Err(postcard::Error::SerializeBufferFull) => {
+                                        record_bytes_storage = wire::encode_alloc(&record)?;
+                                        record_bytes_storage.as_slice()
+                                    }
+                                    Err(err) => return Err(err.into()),
+                                };
+
+                                wire::write_len_prefixed(&mut state.file, record_bytes)?;
+                                state.file_offset += 4_u64 + record_bytes.len() as u64;
+
+                                let should_index = state.last_index_timestamp_ns.map_or(true, |last| {
+                                    record.timestamp_ns.saturating_sub(last) >= index_interval_ns
+                                });
+                                if should_index {
+                                    state.index_entries.push(IndexEntry {
+                                        timestamp_ns: record.timestamp_ns,
+                                        file_offset: record_offset,
+                                        stream_counts: state.stream_counters,
+                                    });
+                                    state.last_index_timestamp_ns = Some(record.timestamp_ns);
+                                }
                             }
                         }
                         None => break, // Channel closed
@@ -354,63 +418,149 @@ impl BlackboxWriter {
 
                 // Periodic flush
                 _ = flush_interval.tick() => {
-                    // Update flush stats
+                    let flush_start = Instant::now();
+                    state.file.flush()?;
+                    let flush_duration = flush_start.elapsed().as_micros() as u64;
+
                     let mut stats_guard = stats.lock().unwrap();
                     stats_guard.flush_count += 1;
-
-                    if !running.load(Ordering::Acquire) {
-                        break;
-                    }
+                    stats_guard.last_flush_duration_us = flush_duration;
+                    stats_guard.max_flush_duration_us =
+                        stats_guard.max_flush_duration_us.max(flush_duration);
                 }
             }
         }
 
+        if !running.load(Ordering::Acquire) {
+            state.file.flush()?;
+        }
+
+        Self::finalize_writer(&mut state, &stats)?;
         debug!("Blackbox writer task finished");
+        Ok(())
+    }
+
+    fn finalize_writer(state: &mut WriterState, stats: &Arc<Mutex<BlackboxStats>>) -> Result<()> {
+        let index_offset = state.file_offset;
+        let index_bytes = wire::encode_alloc(&state.index_entries)?;
+        let index_len = u32::try_from(index_bytes.len())
+            .map_err(|_| anyhow::anyhow!("Index length exceeds u32::MAX"))?;
+        let index_count = u32::try_from(state.index_entries.len())
+            .map_err(|_| anyhow::anyhow!("Index entry count exceeds u32::MAX"))?;
+
+        wire::write_len_prefixed(&mut state.file, &index_bytes)?;
+        state.file_offset += 4_u64 + index_bytes.len() as u64;
+        state.file.flush()?;
+
+        let crc32c = {
+            let mut file = File::open(&state.file_path)
+                .context("Failed to open blackbox file for CRC")?;
+            calculate_crc32c_len(&mut file, state.file_offset)?
+        };
+
+        let total_entries = {
+            let stats_guard = stats.lock().unwrap();
+            stats_guard.records_written
+        };
+
+        let footer = BlackboxFooter {
+            end_timestamp: state.last_record_timestamp_ns,
+            total_entries,
+            index_offset,
+            index_len,
+            index_count,
+            crc32c,
+        };
+
+        let footer_bytes = wire::encode_alloc(&footer)?;
+        let footer_len = u32::try_from(footer_bytes.len())
+            .map_err(|_| anyhow::anyhow!("Footer length exceeds u32::MAX"))?;
+        state.file.write_all(&footer_bytes)?;
+        state.file.write_all(&footer_len.to_le_bytes())?;
+        state.file.flush()?;
+
+        Ok(())
     }
 }
 
 /// Blackbox reader for validation and replay
 pub struct BlackboxReader {
-    #[allow(dead_code)]
     file: File,
     header: BlackboxHeader,
     footer: BlackboxFooter,
     index: Vec<IndexEntry>,
+    data_len: u64,
 }
 
 impl BlackboxReader {
     /// Open and validate a blackbox file
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref()).context("Failed to open blackbox file")?;
+        let mut file = File::open(path.as_ref()).context("Failed to open blackbox file")?;
 
-        // For testing, we'll create a header that matches what was written
-        // In a real implementation, this would be read from the file
-        let header = BlackboxHeader {
-            magic: *FBB_MAGIC,
-            endian_marker: FBB_ENDIAN_MARKER,
-            app_version: "1.0.0".to_string(), // This should match the test
-            timebase_ns: 0,
-            sim_id: "test_sim".to_string(),
-            aircraft_id: "test_aircraft".to_string(),
-            recording_mode: "normal".to_string(),
-            start_timestamp: 0,
-        };
+        let header_bytes = wire::read_len_prefixed(&mut file)?;
+        let header: BlackboxHeader =
+            wire::decode(&header_bytes).map_err(BlackboxError::from)?;
 
-        let footer = BlackboxFooter {
-            end_timestamp: 0,
-            total_entries: [0, 0, 0],
-            index_offset: 0,
-            index_count: 0,
-            crc32c: 0,
-        };
+        if header.magic != *FBB_MAGIC {
+            return Err(anyhow::anyhow!("Invalid blackbox magic"));
+        }
+        if header.endian_marker != FBB_ENDIAN_MARKER {
+            return Err(anyhow::anyhow!("Unsupported blackbox endianness"));
+        }
+        if header.format_version != FBB_FORMAT_VERSION {
+            warn!(
+                "Blackbox format version mismatch: file={}, expected={}",
+                header.format_version, FBB_FORMAT_VERSION
+            );
+        }
 
-        let index = Vec::new();
+        let file_len = file.metadata()?.len();
+        if file_len < FOOTER_LEN_BYTES {
+            return Err(anyhow::anyhow!("Blackbox file too small"));
+        }
+
+        file.seek(SeekFrom::End(-(FOOTER_LEN_BYTES as i64)))?;
+        let mut footer_len_bytes = [0u8; 4];
+        file.read_exact(&mut footer_len_bytes)?;
+        let footer_len = u32::from_le_bytes(footer_len_bytes) as u64;
+        let footer_len_usize = usize::try_from(footer_len)
+            .map_err(|_| anyhow::anyhow!("Footer length too large"))?;
+
+        let footer_start = file_len
+            .checked_sub(FOOTER_LEN_BYTES + footer_len)
+            .ok_or_else(|| anyhow::anyhow!("Blackbox footer length exceeds file size"))?;
+        file.seek(SeekFrom::Start(footer_start))?;
+
+        let mut footer_bytes = vec![0u8; footer_len_usize];
+        file.read_exact(&mut footer_bytes)?;
+        let footer: BlackboxFooter =
+            wire::decode(&footer_bytes).map_err(BlackboxError::from)?;
+
+        let data_len = footer_start;
+        if footer.index_offset > data_len {
+            return Err(anyhow::anyhow!("Index offset exceeds data length"));
+        }
+
+        let mut index = Vec::new();
+        if footer.index_len > 0 {
+            file.seek(SeekFrom::Start(footer.index_offset))?;
+            let index_bytes = wire::read_len_prefixed(&mut file)?;
+            if footer.index_len != index_bytes.len() as u32 {
+                warn!(
+                    "Index length mismatch: footer={}, actual={}",
+                    footer.index_len,
+                    index_bytes.len()
+                );
+            }
+            index = wire::decode(&index_bytes).map_err(BlackboxError::from)?;
+        }
 
         Ok(Self {
             file,
             header,
             footer,
             index,
+            data_len,
         })
     }
 
@@ -431,7 +581,15 @@ impl BlackboxReader {
 
     /// Validate file integrity
     pub fn validate(&mut self) -> Result<bool> {
-        // CRC was already checked in open()
+        let crc32c = calculate_crc32c_len(&mut self.file, self.data_len)?;
+        if crc32c != self.footer.crc32c {
+            return Err(BlackboxError::CorruptionDetected {
+                expected: self.footer.crc32c,
+                actual: crc32c,
+            }
+            .into());
+        }
+
         // Additional validation could include:
         // - Index consistency
         // - Record count verification
@@ -441,23 +599,68 @@ impl BlackboxReader {
         Ok(true)
     }
 
-    /// Calculate CRC32C checksum
-    #[allow(dead_code)]
-    fn calculate_crc32c(file: &mut File) -> Result<u32> {
-        use std::io::Read;
+}
 
-        let mut hasher = crc32c::Crc32cHasher::new();
-        let mut buffer = [0u8; 8192];
+fn calculate_crc32c_len(file: &mut File, len: u64) -> Result<u32> {
+    let mut hasher = crc32c::Crc32cHasher::new();
+    let mut buffer = [0u8; 8192];
+    file.seek(SeekFrom::Start(0))?;
 
-        loop {
-            let bytes_read = file.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break;
-            }
-            hasher.update(&buffer[..bytes_read]);
+    let mut remaining = len;
+    while remaining > 0 {
+        let to_read = buffer.len().min(remaining as usize);
+        let bytes_read = file.read(&mut buffer[..to_read])?;
+        if bytes_read == 0 {
+            return Err(anyhow::anyhow!(
+                "Unexpected EOF while computing CRC32C"
+            ));
         }
+        hasher.update(&buffer[..bytes_read]);
+        remaining = remaining.saturating_sub(bytes_read as u64);
+    }
 
-        Ok(hasher.finalize())
+    Ok(hasher.finalize())
+}
+
+mod wire {
+    use super::io;
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
+    use std::io::{Read, Write};
+
+    pub fn write_len_prefixed<W: Write>(writer: &mut W, bytes: &[u8]) -> io::Result<()> {
+        let len: u32 = bytes
+            .len()
+            .try_into()
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "length exceeds u32"))?;
+        writer.write_all(&len.to_le_bytes())?;
+        writer.write_all(bytes)?;
+        Ok(())
+    }
+
+    pub fn read_len_prefixed<R: Read>(reader: &mut R) -> io::Result<Vec<u8>> {
+        let mut len_bytes = [0u8; 4];
+        reader.read_exact(&mut len_bytes)?;
+        let len = u32::from_le_bytes(len_bytes) as usize;
+        let mut buf = vec![0u8; len];
+        reader.read_exact(&mut buf)?;
+        Ok(buf)
+    }
+
+    pub fn encode_alloc<T: Serialize>(value: &T) -> Result<Vec<u8>, postcard::Error> {
+        postcard::to_allocvec(value)
+    }
+
+    pub fn encode_into_slice<T: Serialize>(
+        value: &T,
+        buffer: &mut [u8],
+    ) -> Result<usize, postcard::Error> {
+        let used = postcard::to_slice(value, buffer)?;
+        Ok(used.len())
+    }
+
+    pub fn decode<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, postcard::Error> {
+        postcard::from_bytes(bytes)
     }
 }
 
@@ -669,27 +872,14 @@ mod tests {
             .await
             .unwrap();
 
-        let start_time = Instant::now();
-        let target_duration = Duration::from_secs(1); // 1 second test for faster execution
-        let mut record_count = 0u64;
-
-        // Simulate 250Hz axis frames for 1 second
-        while start_time.elapsed() < target_duration {
-            let timestamp = start_time.elapsed().as_nanos() as u64;
+        let record_count_target = 5_000u64;
+        for i in 0..record_count_target {
+            let timestamp = i * 4_000_000;
             let axis_data = vec![0u8; 64]; // 64 bytes per axis frame
-
             writer.record_axis_frame(timestamp, &axis_data).unwrap();
-            record_count += 1;
-
-            // No sleep for test speed - just generate records as fast as possible
         }
 
         let stats = writer.stop_recording().await.unwrap();
-
-        println!(
-            "Debug: record_count = {}, stats.records_written = {:?}",
-            record_count, stats.records_written
-        );
 
         // Verify zero drops for 1-second capture
         assert_eq!(
@@ -697,22 +887,20 @@ mod tests {
             "Should have zero drops for 1-second capture"
         );
 
-        // Verify reasonable record count (without sleep, should be much higher)
-        assert!(
-            record_count > 1000,
-            "Should have recorded substantial number of frames, got {}",
-            record_count
+        assert_eq!(
+            stats.records_written[StreamType::AxisFrames.to_index()],
+            record_count_target
         );
 
-        // Verify file size is reasonable (should be much less than 30MB for 1s)
+        // Verify file size is reasonable
         let file_size = std::fs::metadata(&filepath).unwrap().len();
         assert!(
-            file_size < 1024 * 1024,
-            "File size should be reasonable for 1s capture"
+            file_size < 2 * 1024 * 1024,
+            "File size should be reasonable for test capture"
         );
 
         println!("Performance test results:");
-        println!("  Records: {}", record_count);
+        println!("  Records: {}", record_count_target);
         println!("  File size: {} bytes", file_size);
         println!("  Drops: {}", stats.drops_total);
         println!("  Flush count: {}", stats.flush_count);
