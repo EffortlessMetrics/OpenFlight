@@ -8,7 +8,6 @@
 //! DirectInput, Raw Torque, and Telemetry Synthesis modes.
 
 use crate::{DeviceCapabilities, FfbMode, TrimLimits};
-use std::time::Duration;
 
 /// FFB mode selection policy
 #[derive(Debug, Clone)]

@@ -67,10 +67,10 @@ tonic = { version = "0.14.2", features = ["transport", "codegen"] }
 tonic-build = "0.14.2"
 prost-build = "0.14.1"
 prost-types = "0.14.1"
-protobuf-codegen = "4.33.1-release"
+protobuf-codegen = "4.33.4-release"
 
 # HTTP client
-reqwest = { version = "0.12.8", default-features = false, features = [
+reqwest = { version = "0.13.1", default-features = false, features = [
     "rustls-tls",
     "http2",
     "json",
@@ -89,10 +89,10 @@ windows = { version = "0.62", features = [
     "Win32_Storage_FileSystem",
 ] }
 libc = "0.2"
-nix = "0.30"
+nix = "0.31.1"
 
 # Additional dependencies
-criterion = "0.7"
+criterion = "0.8.1"
 proptest = "1.4"
 tempfile = "3.8"
 clap = { version = "4.4", default-features = false, features = [

@@ -32,6 +32,28 @@ pub enum FaultType {
     EncoderInvalid,
     /// General device communication timeout
     DeviceTimeout,
+    /// Device disconnected unexpectedly
+    ///
+    /// **Category:** Transient - can be cleared after reconnection
+    /// **Response:** 50ms ramp to zero (if possible), audio cue
+    /// **Detection:** Within 100ms of actual disconnect
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.8**
+    DeviceDisconnect,
+    /// User-initiated emergency stop (UI button)
+    ///
+    /// **Category:** Transient - can be cleared via user action
+    /// **Response:** Immediate 50ms ramp to zero, audio cue
+    ///
+    /// **Validates: Requirement FFB-SAFETY-04**
+    UserEmergencyStop,
+    /// Hardware emergency stop button pressed
+    ///
+    /// **Category:** Transient - can be cleared via user action
+    /// **Response:** Immediate 50ms ramp to zero, audio cue
+    ///
+    /// **Validates: Requirement FFB-SAFETY-04**
+    HardwareEmergencyStop,
 }
 
 impl FaultType {
@@ -47,6 +69,9 @@ impl FaultType {
             FaultType::EndpointWedged => "HID_ENDPOINT_WEDGED",
             FaultType::EncoderInvalid => "ENCODER_INVALID",
             FaultType::DeviceTimeout => "DEVICE_TIMEOUT",
+            FaultType::DeviceDisconnect => "DEVICE_DISCONNECT",
+            FaultType::UserEmergencyStop => "FFB_USER_ESTOP",
+            FaultType::HardwareEmergencyStop => "FFB_HW_ESTOP",
         }
     }
 
@@ -62,6 +87,9 @@ impl FaultType {
             FaultType::EndpointWedged => "https://docs.flight-hub.dev/kb/hid-endpoint-wedged",
             FaultType::EncoderInvalid => "https://docs.flight-hub.dev/kb/encoder-invalid",
             FaultType::DeviceTimeout => "https://docs.flight-hub.dev/kb/device-timeout",
+            FaultType::DeviceDisconnect => "https://docs.flight-hub.dev/kb/device-disconnect",
+            FaultType::UserEmergencyStop => "https://docs.flight-hub.dev/kb/ffb-emergency-stop",
+            FaultType::HardwareEmergencyStop => "https://docs.flight-hub.dev/kb/ffb-emergency-stop",
         }
     }
 
@@ -77,6 +105,9 @@ impl FaultType {
             FaultType::EndpointWedged => "USB endpoint completely wedged",
             FaultType::EncoderInvalid => "Device encoder providing invalid readings",
             FaultType::DeviceTimeout => "Device communication timeout",
+            FaultType::DeviceDisconnect => "Device disconnected unexpectedly",
+            FaultType::UserEmergencyStop => "User-initiated emergency stop",
+            FaultType::HardwareEmergencyStop => "Hardware emergency stop button pressed",
         }
     }
 
@@ -90,12 +121,18 @@ impl FaultType {
             | FaultType::OverCurrent
             | FaultType::EndpointWedged
             | FaultType::EncoderInvalid
-            | FaultType::DeviceTimeout => true,
+            | FaultType::DeviceTimeout
+            | FaultType::DeviceDisconnect
+            | FaultType::UserEmergencyStop
+            | FaultType::HardwareEmergencyStop => true,
             FaultType::PluginOverrun => false, // Plugin faults don't affect FFB
         }
     }
 
     /// Get maximum allowed response time for this fault
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.8**
+    /// Device disconnect detection should be within 100ms
     pub fn max_response_time(&self) -> Duration {
         match self {
             FaultType::UsbStall
@@ -104,9 +141,13 @@ impl FaultType {
             | FaultType::OverTemp
             | FaultType::OverCurrent
             | FaultType::EncoderInvalid
-            | FaultType::DeviceTimeout => Duration::from_millis(50),
+            | FaultType::DeviceTimeout
+            | FaultType::UserEmergencyStop
+            | FaultType::HardwareEmergencyStop => Duration::from_millis(50),
             FaultType::EndpointWedged => Duration::from_millis(100),
             FaultType::PluginOverrun => Duration::from_millis(100),
+            // Device disconnect detection should be within 100ms
+            FaultType::DeviceDisconnect => Duration::from_millis(100),
         }
     }
 
@@ -122,7 +163,38 @@ impl FaultType {
             FaultType::EndpointWedged => FaultThreshold::Duration(Duration::from_millis(100)),
             FaultType::EncoderInvalid => FaultThreshold::Immediate,
             FaultType::DeviceTimeout => FaultThreshold::Duration(Duration::from_secs(1)),
+            // Device disconnect is detected immediately from return codes
+            FaultType::DeviceDisconnect => FaultThreshold::Immediate,
+            // Emergency stops are immediate
+            FaultType::UserEmergencyStop => FaultThreshold::Immediate,
+            FaultType::HardwareEmergencyStop => FaultThreshold::Immediate,
         }
+    }
+
+    /// Check if this fault is a transient fault (can be cleared after recovery)
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.10**
+    pub fn is_transient(&self) -> bool {
+        match self {
+            FaultType::UsbStall
+            | FaultType::EndpointError
+            | FaultType::EndpointWedged
+            | FaultType::DeviceTimeout
+            | FaultType::DeviceDisconnect
+            | FaultType::PluginOverrun
+            | FaultType::NanValue
+            | FaultType::UserEmergencyStop
+            | FaultType::HardwareEmergencyStop => true,
+            // Hardware-critical faults require power cycle
+            FaultType::OverTemp | FaultType::OverCurrent | FaultType::EncoderInvalid => false,
+        }
+    }
+
+    /// Check if this fault is hardware-critical (requires power cycle)
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.9**
+    pub fn is_hardware_critical(&self) -> bool {
+        !self.is_transient()
     }
 }
 
@@ -387,7 +459,10 @@ impl FaultDetector {
             | FaultType::OverCurrent
             | FaultType::EndpointWedged
             | FaultType::EncoderInvalid
-            | FaultType::DeviceTimeout => FaultAction::TorqueZero50ms,
+            | FaultType::DeviceTimeout
+            | FaultType::DeviceDisconnect
+            | FaultType::UserEmergencyStop
+            | FaultType::HardwareEmergencyStop => FaultAction::TorqueZero50ms,
             FaultType::PluginOverrun => FaultAction::QuarantineComponent,
         };
 
@@ -706,6 +781,143 @@ impl FaultDetector {
                 .max(),
             fault_storm_detected: self.is_in_fault_storm(),
         }
+    }
+
+    // =========================================================================
+    // Device Disconnect Detection
+    // **Validates: Requirement FFB-SAFETY-01.8**
+    // =========================================================================
+
+    /// Record device disconnect from HID/DirectInput return codes
+    ///
+    /// This method should be called when HID or DirectInput operations return
+    /// error codes indicating device disconnection. Common disconnect indicators:
+    ///
+    /// **HID (Windows):**
+    /// - `ERROR_DEVICE_NOT_CONNECTED` (0x48F / 1167)
+    /// - `ERROR_GEN_FAILURE` (0x1F / 31) - often indicates disconnect
+    /// - `ERROR_NO_SUCH_DEVICE` (0x2 / 2)
+    ///
+    /// **DirectInput:**
+    /// - `DIERR_INPUTLOST` (0x8007001E) - device lost
+    /// - `DIERR_NOTACQUIRED` (0x8007000C) - device not acquired (may indicate disconnect)
+    /// - `DIERR_UNPLUGGED` (0x80040209) - device unplugged
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.8**
+    /// Device disconnect detected within 100ms, outputs ramped to safe within 50ms
+    ///
+    /// # Arguments
+    /// * `error_code` - The error code from HID/DirectInput operation
+    /// * `context` - Description of the operation that failed
+    ///
+    /// # Returns
+    /// * `Some(FaultRecord)` if disconnect was detected
+    /// * `None` if error code doesn't indicate disconnect
+    pub fn check_disconnect_from_error_code(
+        &mut self,
+        error_code: i32,
+        context: &str,
+    ) -> Option<FaultRecord> {
+        // Check for HID disconnect error codes (Windows)
+        let is_disconnect = matches!(
+            error_code,
+            // ERROR_DEVICE_NOT_CONNECTED
+            1167 |
+            // ERROR_NO_SUCH_DEVICE / ERROR_FILE_NOT_FOUND
+            2 |
+            // ERROR_GEN_FAILURE (often indicates disconnect)
+            31 |
+            // DIERR_INPUTLOST (0x8007001E as i32)
+            -2147024866 |
+            // DIERR_UNPLUGGED (0x80040209 as i32)
+            -2147220983 |
+            // DIERR_NOTACQUIRED (0x8007000C as i32)
+            -2147024884
+        );
+
+        if is_disconnect {
+            self.add_system_event(
+                "DEVICE_DISCONNECT".to_string(),
+                format!(
+                    "Device disconnect detected from error code {} in {}",
+                    error_code, context
+                ),
+                EventSeverity::Critical,
+            );
+            Some(self.record_fault(FaultType::DeviceDisconnect))
+        } else {
+            None
+        }
+    }
+
+    /// Record device disconnect directly
+    ///
+    /// This method should be called when device disconnection is detected
+    /// through other means (e.g., device enumeration, hotplug events).
+    ///
+    /// **Validates: Requirement FFB-SAFETY-01.8**
+    ///
+    /// # Arguments
+    /// * `device_id` - Identifier of the disconnected device
+    /// * `context` - Additional context about the disconnect
+    ///
+    /// # Returns
+    /// * `FaultRecord` for the disconnect fault
+    pub fn record_device_disconnect(&mut self, device_id: &str, context: &str) -> FaultRecord {
+        self.add_system_event(
+            "DEVICE_DISCONNECT".to_string(),
+            format!("Device {} disconnected: {}", device_id, context),
+            EventSeverity::Critical,
+        );
+        self.record_fault(FaultType::DeviceDisconnect)
+    }
+
+    /// Check if an HRESULT indicates device disconnection
+    ///
+    /// This is a helper for DirectInput error handling.
+    ///
+    /// # Arguments
+    /// * `hresult` - The HRESULT from a DirectInput operation
+    ///
+    /// # Returns
+    /// * `true` if the HRESULT indicates device disconnection
+    pub fn is_disconnect_hresult(hresult: i32) -> bool {
+        matches!(
+            hresult,
+            // DIERR_INPUTLOST
+            -2147024866 |
+            // DIERR_UNPLUGGED
+            -2147220983 |
+            // DIERR_NOTACQUIRED (may indicate disconnect)
+            -2147024884 |
+            // E_HANDLE (invalid handle, device may be gone)
+            -2147024890
+        )
+    }
+
+    /// Check if a Windows error code indicates device disconnection
+    ///
+    /// This is a helper for HID error handling.
+    ///
+    /// # Arguments
+    /// * `error_code` - The Windows error code
+    ///
+    /// # Returns
+    /// * `true` if the error code indicates device disconnection
+    pub fn is_disconnect_win32_error(error_code: u32) -> bool {
+        matches!(
+            error_code,
+            // ERROR_DEVICE_NOT_CONNECTED
+            1167 |
+            // ERROR_NO_SUCH_DEVICE / ERROR_FILE_NOT_FOUND
+            2 |
+            // ERROR_GEN_FAILURE
+            31 |
+            // ERROR_BAD_COMMAND
+            22 |
+            // ERROR_NOT_READY
+            21
+        )
     }
 }
 

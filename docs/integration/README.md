@@ -19,6 +19,12 @@ This directory contains comprehensive documentation about what Flight Hub touche
 - [X-Plane](./xplane.md) - DataRef integration and preference modifications  
 - [DCS World](./dcs.md) - Export.lua integration and multiplayer considerations
 
+## Force Feedback Integration
+
+- [FFB Emergency Stop UI Integration](./ffb-emergency-stop.md) - How to bind the emergency stop to a UI button
+- [XInput Integration Guide](./xinput-integration-guide.md) - XInput rumble integration
+- [XInput Limitations](./xinput-limitations.md) - XInput vs DirectInput FFB capabilities
+
 ## Quick Reference
 
 ### Files Modified by Flight Hub

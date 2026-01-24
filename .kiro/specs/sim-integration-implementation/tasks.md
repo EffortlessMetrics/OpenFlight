@@ -313,7 +313,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Integration test that acquires device and creates effects (hardware-gated, optional)
   - _Requirements: FFB-HID-01.1, FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4_
 
-- [ ] P2.2 Wire SafetyEnvelope into FFB pipeline
+- [x] P2.2 Wire SafetyEnvelope into FFB pipeline
   **Phase:** 2 - FFB
   **Status:** In progress (SafetyEnvelope type exists, integration pending)
   - Pipeline: raw_torque → SafetyEnvelope::apply_limits(safe_for_ffb) → DirectInput/XInput/OFP-1
@@ -325,7 +325,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Capture `fault_initial_torque` at fault detection (not `last_setpoint`)
   - _Requirements: FFB-SAFETY-01.1-6_
 
-- [ ] P2.2.1 Write SafetyEnvelope integration tests
+- [x] P2.2.1 Write SafetyEnvelope integration tests
   **Phase:** 2 - FFB
   **Status:** Not started
   - Pure Rust tests for clamping, slew, jerk
@@ -333,7 +333,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Test SafeTorque mode (30% envelope) vs HighTorque (100%) vs Faulted (0%)
   - _Requirements: FFB-SAFETY-01.1-6, QG-FFB-SAFETY_
 
-- [ ] P2.3 Complete XInput rumble backend
+- [x] P2.3 Complete XInput rumble backend
   **Phase:** 2 - FFB
   **Status:** In progress (module exists, mode negotiation wiring pending)
   - Implement `XInputRumbleDevice::apply_vibration(low: f32, high: f32)`
@@ -344,14 +344,14 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
     - Off when nothing available
   - _Requirements: FFB-HID-01.5_
 
-- [ ] P2.3.1 Write XInput rumble tests
+- [x] P2.3.1 Write XInput rumble tests
   **Phase:** 2 - FFB
   **Status:** Not started
   - Unit tests for mapping logic (mock XInputSetState)
   - No requirement for real controller in CI
   - _Requirements: FFB-HID-01.5_
 
-- [ ] P2.4 Complete fault detection and blackbox
+- [x] P2.4 Complete fault detection and blackbox
   **Phase:** 2 - FFB
   **Status:** Not started
   - Wire fault detection to:
@@ -367,7 +367,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
     - Bypasses everything, jumps to ramp-down
   - _Requirements: FFB-SAFETY-01.5-14_
 
-- [ ] P2.4.1 Write fault detection and blackbox tests
+- [x] P2.4.1 Write fault detection and blackbox tests
   **Phase:** 2 - FFB
   **Status:** Not started
   - Test USB stall detection
@@ -379,7 +379,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Test emergency stop
   - _Requirements: FFB-SAFETY-01.5-14, QG-FFB-SAFETY_
 
-- [ ] P2.5 Enable Phase 2 CI quality gate
+- [x] P2.5 Enable Phase 2 CI quality gate
   **Phase:** 2 - FFB
   **Status:** Not started
   - Implement QG-FFB-SAFETY: Verify 50ms ramp-down on all fault types
@@ -387,7 +387,7 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
   - Verify gate passes
   - _Requirements: CI Quality Gates_
 
-- [ ] P2.6 Phase 2 Checkpoint
+- [x] P2.6 Phase 2 Checkpoint
   **Phase:** 2 - FFB
   **Status:** Not started
   - Run all FFB tests: `cargo test -p flight-ffb`
@@ -409,35 +409,35 @@ This task list provides a phased, dependency-aware implementation plan for Fligh
 - [ ] Blackbox recorder exercised in tests and visible in logs
 - [ ] QG-FFB-SAFETY gate wired in CI
 
-- [ ] 19. Implement FFB fault detection and handling (FFB-SAFETY-02, FFB-SAFETY-03)
-  - [ ] 19.1 Add `FaultReason` enum and fault state machine to `flight-ffb`
-  - [ ] 19.2 Detect USB OUT stalls (N consecutive failed writes → `UsbStall`)
-  - [ ] 19.3 Detect NaN/Inf in FFB pipeline inputs → `NaNInPipeline`
-  - [ ] 19.4 Integrate device health (over-temp/over-current) where available → hardware-critical faults
-  - [ ] 19.5 Detect device disconnects from HID/DirectInput return codes
-  - [ ] 19.6 Implement `clear_fault()` semantics (transient vs hardware-critical)
+- [x] 19. Implement FFB fault detection and handling (FFB-SAFETY-02, FFB-SAFETY-03)
+  - [x] 19.1 Add `FaultReason` enum and fault state machine to `flight-ffb`
+  - [x] 19.2 Detect USB OUT stalls (N consecutive failed writes → `UsbStall`)
+  - [x] 19.3 Detect NaN/Inf in FFB pipeline inputs → `NaNInPipeline`
+  - [x] 19.4 Integrate device health (over-temp/over-current) where available → hardware-critical faults
+  - [x] 19.5 Detect device disconnects from HID/DirectInput return codes
+  - [x] 19.6 Implement `clear_fault()` semantics (transient vs hardware-critical)
   - [ ]* 19.7 Unit tests for all fault paths
   - _Requirements: FFB-SAFETY-02, FFB-SAFETY-03_
 
-- [ ] 20. Implement FFB blackbox recorder (FFB-BLACKBOX-01)
-  - [ ] 20.1 Add `BlackboxSample` and `BlackboxRecorder` ring buffer (≥3 s window @ ≥250 Hz)
-  - [ ] 20.2 Wire recorder into FFB loop (pre- and post-fault sampling)
-  - [ ] 20.3 Implement export of 3 s window (2 s pre + 1 s post) to compressed file
-  - [ ] 20.4 Add log rotation (max N files or total size) under `logs/blackbox`
+- [x] 20. Implement FFB blackbox recorder (FFB-BLACKBOX-01)
+  - [x] 20.1 Add `BlackboxSample` and `BlackboxRecorder` ring buffer (≥3 s window @ ≥250 Hz)
+  - [x] 20.2 Wire recorder into FFB loop (pre- and post-fault sampling)
+  - [x] 20.3 Implement export of 3 s window (2 s pre + 1 s post) to compressed file
+  - [x] 20.4 Add log rotation (max N files or total size) under `logs/blackbox`
   - [ ]* 20.5 Unit tests for ring buffer, export window, and rotation
   - _Requirements: FFB-BLACKBOX-01_
 
-- [ ] 21. Implement FFB emergency stop (FFB-SAFETY-04)
-  - [ ] 21.1 Add `FfbController::emergency_stop()` / `clear_emergency_stop()` APIs
-  - [ ] 21.2 Wire emergency stop into safety state machine (`FaultReason::UserEStop`)
-  - [ ] 21.3 Reuse 50 ms ramp-to-zero path for estop starting from current torque
-  - [ ] 21.4 Bind estop to UI action (big red button)
+- [x] 21. Implement FFB emergency stop (FFB-SAFETY-04)
+  - [x] 21.1 Add `FfbController::emergency_stop()` / `clear_emergency_stop()` APIs
+  - [x] 21.2 Wire emergency stop into safety state machine (`FaultReason::UserEStop`)
+  - [x] 21.3 Reuse 50 ms ramp-to-zero path for estop starting from current torque
+  - [x] 21.4 Bind estop to UI action (big red button)
   - [ ]* 21.5 (Optional) Bind hardware E-stop input if available via HID
   - _Requirements: FFB-SAFETY-04_
 
-- [ ] 22. Checkpoint – FFB safety & observability
-  - [ ] 22.1 All FFB safety tests passing (fault detection, 50 ms ramp, estop)
-  - [ ] 22.2 Blackbox recorder exercised in tests and visible in logs
+- [-] 22. Checkpoint – FFB safety & observability
+  - [x] 22.1 All FFB safety tests passing (fault detection, 50 ms ramp, estop)
+  - [-] 22.2 Blackbox recorder exercised in tests and visible in logs
   - [ ] 22.3 Wire `QG-FFB-SAFETY` gate in CI (unit tests + basic blackbox check)
 
 ---
