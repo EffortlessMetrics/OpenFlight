@@ -7,7 +7,7 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-cucumber = "0.21"
+cucumber = "0.22.1"
 tokio = { workspace = true }
 anyhow = { workspace = true }
 
@@ -19,9 +19,9 @@ flight-bus = { path = "../crates/flight-bus" }
 
 # Dependencies for documentation validation tests
 serde = { workspace = true }
-serde_yaml = "0.9"
-walkdir = "2.4"
-regex = "1.10"
+serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
+walkdir = "2.5.0"
+regex = "1.12.2"
 
 [[test]]
 name = "cucumber"
