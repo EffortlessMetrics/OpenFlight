@@ -7,8 +7,8 @@
 //! and connection timeout detection per requirements DCS-INT-01.7, DCS-INT-01.8,
 //! DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15, SIM-TEST-01.4
 
-use flight_dcs_export::{DcsAdapter, DcsAdapterConfig};
 use flight_core::time;
+use flight_dcs_export::{DcsAdapter, DcsAdapterConfig};
 use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -21,12 +21,7 @@ fn create_test_adapter() -> DcsAdapter {
 
 /// Helper to create telemetry data map
 fn create_telemetry_data(values: serde_json::Value) -> HashMap<String, serde_json::Value> {
-    values
-        .as_object()
-        .unwrap()
-        .clone()
-        .into_iter()
-        .collect()
+    values.as_object().unwrap().clone().into_iter().collect()
 }
 
 #[test]
@@ -147,9 +142,11 @@ fn test_mp_status_annotation_single_player() {
 
     // Verify SP session allows all features
     assert!(adapter.check_feature_blocked("telemetry_weapons").is_none());
-    assert!(adapter
-        .check_feature_blocked("telemetry_countermeasures")
-        .is_none());
+    assert!(
+        adapter
+            .check_feature_blocked("telemetry_countermeasures")
+            .is_none()
+    );
     assert!(!adapter.is_multiplayer());
 }
 
@@ -369,12 +366,15 @@ fn test_timestamp_conversion() {
     // DCS timestamp is in milliseconds
     let dcs_timestamp_ms = 1000u64;
 
+    let before = time::monotonic_now_ns();
     let snapshot = adapter
         .convert_to_bus_snapshot(dcs_timestamp_ms, "F-16C", &data)
         .expect("Should convert timestamp");
+    let after = time::monotonic_now_ns();
 
-    // Verify timestamp is converted to nanoseconds
-    assert_eq!(snapshot.timestamp, time::to_ns_from_ms(dcs_timestamp_ms));
+    // Verify timestamp is monotonic and captured during conversion
+    assert!(snapshot.timestamp >= before);
+    assert!(snapshot.timestamp <= after);
 }
 
 #[test]

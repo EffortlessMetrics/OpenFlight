@@ -160,7 +160,11 @@ fn test_normal_flight_variations_no_violations() {
                 eprintln!("FAIL: {} - {}", result.test_name, result.message);
             }
         }
-        panic!("{} out of {} normal flight scenarios failed", failed, results.len());
+        panic!(
+            "{} out of {} normal flight scenarios failed",
+            failed,
+            results.len()
+        );
     }
 }
 
@@ -171,11 +175,26 @@ fn test_injected_nan_is_detectable() {
 
     // Test NaN injection in various fields
     let test_cases: Vec<(&str, Box<dyn Fn(&mut BusSnapshot)>)> = vec![
-        ("Angular rate P", Box::new(|s: &mut BusSnapshot| s.angular_rates.p = f32::NAN)),
-        ("Angular rate Q", Box::new(|s: &mut BusSnapshot| s.angular_rates.q = f32::NAN)),
-        ("Angular rate R", Box::new(|s: &mut BusSnapshot| s.angular_rates.r = f32::NAN)),
-        ("Altitude", Box::new(|s: &mut BusSnapshot| s.environment.altitude = f32::NAN)),
-        ("OAT", Box::new(|s: &mut BusSnapshot| s.environment.oat = f32::NAN)),
+        (
+            "Angular rate P",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.p = f32::NAN),
+        ),
+        (
+            "Angular rate Q",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.q = f32::NAN),
+        ),
+        (
+            "Angular rate R",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.r = f32::NAN),
+        ),
+        (
+            "Altitude",
+            Box::new(|s: &mut BusSnapshot| s.environment.altitude = f32::NAN),
+        ),
+        (
+            "OAT",
+            Box::new(|s: &mut BusSnapshot| s.environment.oat = f32::NAN),
+        ),
     ];
 
     for (name, inject_fn) in test_cases {
@@ -204,7 +223,11 @@ fn test_injected_nan_is_detectable() {
                 eprintln!("FAIL: {} - {}", result.test_name, result.message);
             }
         }
-        panic!("{} out of {} NaN injection tests failed", failed, results.len());
+        panic!(
+            "{} out of {} NaN injection tests failed",
+            failed,
+            results.len()
+        );
     }
 }
 
@@ -215,11 +238,26 @@ fn test_injected_inf_is_detectable() {
 
     // Test Inf injection in various fields
     let test_cases: Vec<(&str, Box<dyn Fn(&mut BusSnapshot)>)> = vec![
-        ("Angular rate P +Inf", Box::new(|s: &mut BusSnapshot| s.angular_rates.p = f32::INFINITY)),
-        ("Angular rate Q -Inf", Box::new(|s: &mut BusSnapshot| s.angular_rates.q = f32::NEG_INFINITY)),
-        ("Angular rate R +Inf", Box::new(|s: &mut BusSnapshot| s.angular_rates.r = f32::INFINITY)),
-        ("Altitude +Inf", Box::new(|s: &mut BusSnapshot| s.environment.altitude = f32::INFINITY)),
-        ("OAT -Inf", Box::new(|s: &mut BusSnapshot| s.environment.oat = f32::NEG_INFINITY)),
+        (
+            "Angular rate P +Inf",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.p = f32::INFINITY),
+        ),
+        (
+            "Angular rate Q -Inf",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.q = f32::NEG_INFINITY),
+        ),
+        (
+            "Angular rate R +Inf",
+            Box::new(|s: &mut BusSnapshot| s.angular_rates.r = f32::INFINITY),
+        ),
+        (
+            "Altitude +Inf",
+            Box::new(|s: &mut BusSnapshot| s.environment.altitude = f32::INFINITY),
+        ),
+        (
+            "OAT -Inf",
+            Box::new(|s: &mut BusSnapshot| s.environment.oat = f32::NEG_INFINITY),
+        ),
     ];
 
     for (name, inject_fn) in test_cases {
@@ -248,7 +286,11 @@ fn test_injected_inf_is_detectable() {
                 eprintln!("FAIL: {} - {}", result.test_name, result.message);
             }
         }
-        panic!("{} out of {} Inf injection tests failed", failed, results.len());
+        panic!(
+            "{} out of {} Inf injection tests failed",
+            failed,
+            results.len()
+        );
     }
 }
 
@@ -359,9 +401,8 @@ fn test_implausible_jumps_are_detectable() {
 
     // Calculate the change
     let dt = (snapshot2.timestamp - snapshot1.timestamp) as f64 / 1e9;
-    let d_pitch = (snapshot2.kinematics.pitch.to_radians()
-        - snapshot1.kinematics.pitch.to_radians())
-    .abs();
+    let d_pitch =
+        (snapshot2.kinematics.pitch.to_radians() - snapshot1.kinematics.pitch.to_radians()).abs();
     let pitch_rate = d_pitch / dt as f32;
 
     // At 60Hz (16ms), a 90 degree change is 90/0.016 = 5625 deg/s = 98.2 rad/s
@@ -452,10 +493,8 @@ fn test_comprehensive_harness_no_violations() {
         let t = i as f32 * 0.016; // Time in seconds
         snapshot.kinematics.pitch =
             ValidatedAngle::new_degrees(5.0 + (t * 0.5).sin() * 2.0).unwrap();
-        snapshot.kinematics.bank =
-            ValidatedAngle::new_degrees((t * 0.3).sin() * 5.0).unwrap();
-        snapshot.kinematics.ias =
-            ValidatedSpeed::new_knots(120.0 + (t * 0.2).sin() * 5.0).unwrap();
+        snapshot.kinematics.bank = ValidatedAngle::new_degrees((t * 0.3).sin() * 5.0).unwrap();
+        snapshot.kinematics.ias = ValidatedSpeed::new_knots(120.0 + (t * 0.2).sin() * 5.0).unwrap();
 
         // Verify no NaN/Inf
         if snapshot.kinematics.pitch.to_radians().is_nan()

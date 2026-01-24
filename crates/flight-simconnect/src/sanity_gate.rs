@@ -143,7 +143,10 @@ impl SanityGate {
 
     /// Transition to Disconnected state
     pub fn transition_to_disconnected(&mut self) {
-        debug!("Sanity Gate: {} -> Disconnected", format!("{:?}", self.state));
+        debug!(
+            "Sanity Gate: {} -> Disconnected",
+            format!("{:?}", self.state)
+        );
         self.reset();
     }
 
@@ -151,7 +154,7 @@ impl SanityGate {
     pub fn set_sim_paused(&mut self, paused: bool) {
         if paused != self.sim_paused {
             self.sim_paused = paused;
-            
+
             if paused && self.state == SanityState::ActiveFlight {
                 debug!("Sanity Gate: ActiveFlight -> Paused");
                 self.state = SanityState::Paused;
@@ -294,7 +297,7 @@ impl SanityGate {
                 // Check if telemetry is stable
                 if self.is_telemetry_stable(snapshot) {
                     self.stable_frame_count += 1;
-                    
+
                     if self.stable_frame_count >= self.config.stable_frames_required {
                         debug!(
                             "Sanity Gate: Loading -> ActiveFlight (after {} stable frames)",
@@ -347,17 +350,18 @@ impl SanityGate {
     /// Record a sanity violation
     fn record_violation(&mut self, reason: &str) {
         let now = Instant::now();
-        
+
         // Add to violation timestamps
         self.violation_timestamps.push(now);
-        
+
         // Remove old violations outside the window
         let window = Duration::from_secs_f64(self.config.violation_window_secs);
-        self.violation_timestamps.retain(|&ts| now.duration_since(ts) < window);
-        
+        self.violation_timestamps
+            .retain(|&ts| now.duration_since(ts) < window);
+
         // Update violation count
         self.violation_count = self.violation_timestamps.len() as u32;
-        
+
         // Rate-limited logging
         if now.duration_since(self.last_violation_log)
             > Duration::from_secs_f64(self.config.log_rate_limit_secs)
@@ -368,7 +372,7 @@ impl SanityGate {
             );
             self.last_violation_log = now;
         }
-        
+
         // Check if we should transition to Faulted
         if self.violation_count >= self.config.violation_threshold {
             warn!(
@@ -421,11 +425,13 @@ fn angle_diff(a: f32, b: f32) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_bus::types::{AircraftId, GForce, Mach, Percentage, SimId, ValidatedAngle, ValidatedSpeed};
+    use flight_bus::types::{
+        AircraftId, GForce, Mach, Percentage, SimId, ValidatedAngle, ValidatedSpeed,
+    };
 
     fn create_test_snapshot() -> BusSnapshot {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Set valid core telemetry
         snapshot.kinematics.pitch = ValidatedAngle::new_degrees(5.0).unwrap();
         snapshot.kinematics.bank = ValidatedAngle::new_degrees(0.0).unwrap();
@@ -437,18 +443,18 @@ mod tests {
         snapshot.kinematics.g_lateral = GForce::new(0.0).unwrap();
         snapshot.kinematics.g_longitudinal = GForce::new(0.0).unwrap();
         snapshot.kinematics.mach = Mach::new(0.18).unwrap();
-        
+
         snapshot.angular_rates.p = 0.0;
         snapshot.angular_rates.q = 0.0;
         snapshot.angular_rates.r = 0.0;
-        
+
         snapshot.environment.altitude = 5000.0;
         snapshot.environment.oat = 15.0;
-        
+
         snapshot.validity.attitude_valid = true;
         snapshot.validity.velocities_valid = true;
         snapshot.validity.kinematics_valid = true;
-        
+
         snapshot
     }
 
@@ -463,7 +469,7 @@ mod tests {
     fn test_state_transition_booting() {
         let mut gate = SanityGate::new();
         assert_eq!(gate.state(), SanityState::Disconnected);
-        
+
         gate.transition_to_booting();
         assert_eq!(gate.state(), SanityState::Booting);
     }
@@ -472,7 +478,7 @@ mod tests {
     fn test_state_transition_disconnected() {
         let mut gate = SanityGate::new();
         gate.transition_to_booting();
-        
+
         gate.transition_to_disconnected();
         assert_eq!(gate.state(), SanityState::Disconnected);
         assert_eq!(gate.violation_count(), 0);
@@ -482,12 +488,12 @@ mod tests {
     fn test_nan_detection() {
         let mut gate = SanityGate::new();
         gate.transition_to_booting();
-        
+
         let mut snapshot = create_test_snapshot();
         snapshot.angular_rates.p = f32::NAN;
-        
+
         gate.check(&mut snapshot);
-        
+
         assert!(!snapshot.validity.safe_for_ffb);
         assert!(gate.violation_count() > 0);
     }
@@ -496,12 +502,12 @@ mod tests {
     fn test_inf_detection() {
         let mut gate = SanityGate::new();
         gate.transition_to_booting();
-        
+
         let mut snapshot = create_test_snapshot();
         snapshot.angular_rates.q = f32::INFINITY;
-        
+
         gate.check(&mut snapshot);
-        
+
         assert!(!snapshot.validity.safe_for_ffb);
         assert!(gate.violation_count() > 0);
     }
@@ -510,7 +516,7 @@ mod tests {
     fn test_angle_diff() {
         // Test normal case
         assert!((angle_diff(0.5, 0.3) - 0.2).abs() < 0.001);
-        
+
         // Test wraparound
         let diff = angle_diff(0.1, 6.2); // Near 0 and near 2π
         assert!(diff < 0.2); // Should be small, not ~6.1

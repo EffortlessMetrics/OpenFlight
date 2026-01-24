@@ -39,7 +39,7 @@ impl Default for DcsAdapterConfig {
         Self {
             socket_config: SocketBridgeConfig::default(),
             bus_max_rate_hz: 60.0,
-            update_rate: 30.0, // 30Hz
+            update_rate: 30.0,                          // 30Hz
             connection_timeout: Duration::from_secs(2), // 2 second timeout per requirements
             enforce_mp_integrity: true,
         }
@@ -304,15 +304,15 @@ impl DcsAdapter {
     /// Convert DCS telemetry to bus snapshot
     pub fn convert_to_bus_snapshot(
         &self,
-        timestamp: u64,
+        _timestamp_ms: u64,
         aircraft_name: &str,
         data: &HashMap<String, serde_json::Value>,
     ) -> Result<BusSnapshot, DcsAdapterError> {
         let aircraft = AircraftId::new(aircraft_name);
         let mut snapshot = BusSnapshot::new(SimId::Dcs, aircraft);
 
-        // Override timestamp from DCS
-        snapshot.timestamp = time::to_ns_from_ms(timestamp);
+        // BusSnapshot timestamp is monotonic since process start
+        snapshot.timestamp = time::monotonic_now_ns();
 
         // Parse kinematics
         if let Some(ias) = data.get("ias").and_then(|v| v.as_f64()) {

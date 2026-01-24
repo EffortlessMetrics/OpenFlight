@@ -11,9 +11,9 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tracing::{debug, info};
 
 use flight_bus::{
-    snapshot::{AngularRates, ControlInputs, TrimState, ValidityFlags},
     AircraftConfig, AircraftId, BusSnapshot, Environment, GForce, Kinematics, LightsConfig, Mach,
     Navigation, Percentage, SimId, ValidatedAngle, ValidatedSpeed,
+    snapshot::{AngularRates, ControlInputs, TrimState, ValidityFlags},
 };
 use flight_ffb::{FfbConfig, FfbEngine, FfbMode, SafetyState};
 
@@ -57,8 +57,8 @@ pub struct SyntheticHarness {
 impl SyntheticHarness {
     /// Create a new synthetic harness
     pub fn new(config: SyntheticHarnessConfig) -> Result<Self> {
-        let ffb_engine = FfbEngine::new(config.ffb_config.clone())
-            .context("Failed to create FFB engine")?;
+        let ffb_engine =
+            FfbEngine::new(config.ffb_config.clone()).context("Failed to create FFB engine")?;
 
         Ok(Self {
             config,
@@ -475,11 +475,7 @@ mod tests {
                 "Pattern {:?} produced no frames",
                 pattern
             );
-            assert_eq!(
-                results.error_count, 0,
-                "Pattern {:?} had errors",
-                pattern
-            );
+            assert_eq!(results.error_count, 0, "Pattern {:?} had errors", pattern);
         }
     }
 

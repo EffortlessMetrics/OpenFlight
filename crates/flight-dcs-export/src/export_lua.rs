@@ -881,32 +881,32 @@ mod tests {
         assert!(script.contains("telemetry_basic = true"));
         assert!(script.contains("MP-safe"));
         assert!(script.contains("MP-blocked"));
-        
+
         // Check for proper DCS Export hooks
         assert!(script.contains("function LuaExportStart()"));
         assert!(script.contains("function LuaExportStop()"));
         assert!(script.contains("function LuaExportBeforeNextFrame()"));
         assert!(script.contains("function LuaExportAfterNextFrame()"));
         assert!(script.contains("function LuaExportActivityNextEvent(tCurrent)"));
-        
+
         // Check for proper hook chaining
         assert!(script.contains("PrevLuaExportStart"));
         assert!(script.contains("PrevLuaExportStop"));
         assert!(script.contains("PrevLuaExportBeforeNextFrame"));
         assert!(script.contains("PrevLuaExportAfterNextFrame"));
         assert!(script.contains("PrevLuaExportActivityNextEvent"));
-        
+
         // Check for UDP socket (non-blocking)
         assert!(script.contains("require('socket').udp()"));
         assert!(script.contains("settimeout(0)"));
-        
+
         // Check for LoGet* functions
         assert!(script.contains("LoGetSelfData"));
         assert!(script.contains("LoGetIndicatedAirSpeed"));
         assert!(script.contains("LoGetTrueAirSpeed"));
         assert!(script.contains("LoGetAccelerationUnits"));
         assert!(script.contains("LoGetAngleOfAttack"));
-        
+
         // Check for 60Hz target rate
         assert!(script.contains("1.0 / 60.0"));
     }
@@ -955,14 +955,14 @@ mod tests {
         assert!(script.contains("function LuaExportStart()"));
         assert!(script.contains("function LuaExportStop()"));
         assert!(script.contains("function LuaExportAfterNextFrame()"));
-        
+
         // DCS-INT-01.5: Verify proper chaining to existing Export.lua hooks
         assert!(script.contains("local PrevLuaExportStart = LuaExportStart"));
         assert!(script.contains("local PrevLuaExportStop = LuaExportStop"));
         assert!(script.contains("local PrevLuaExportBeforeNextFrame = LuaExportBeforeNextFrame"));
         assert!(script.contains("if PrevLuaExportStart then"));
         assert!(script.contains("PrevLuaExportStart()"));
-        
+
         // DCS-INT-01.6: Verify self-aircraft telemetry gathering using LoGet* functions
         assert!(script.contains("LoGetSelfData"));
         assert!(script.contains("LoGetIndicatedAirSpeed"));
@@ -972,33 +972,33 @@ mod tests {
         assert!(script.contains("LoGetVerticalVelocity"));
         assert!(script.contains("LoGetAccelerationUnits"));
         assert!(script.contains("LoGetAngleOfAttack"));
-        
+
         // DCS-INT-01.7: Verify nil handling
         assert!(script.contains("if self_data then"));
         assert!(script.contains("if ias then"));
         assert!(script.contains("if accel then"));
-        
+
         // DCS-INT-01.8: Verify MP integrity check compliance
         assert!(script.contains("mp_detected"));
         assert!(script.contains("session_type"));
         assert!(script.contains("MP-safe"));
         assert!(script.contains("MP-blocked"));
-        
+
         // DCS-INT-01.9: Verify whitelist self-aircraft data
         assert!(script.contains("self-aircraft data only"));
         assert!(script.contains("self-aircraft navigation only"));
         assert!(script.contains("self-aircraft engines only"));
-        
+
         // DCS-INT-01.10: Verify MP-blocked features
         assert!(script.contains("telemetry_weapons"));
         assert!(script.contains("telemetry_countermeasures"));
         assert!(script.contains("not is_mp or not mp_safe_mode"));
-        
+
         // DCS-INT-01.11: Verify non-blocking UDP transmission to localhost
         assert!(script.contains("require('socket').udp()"));
         assert!(script.contains("settimeout(0)"));
         assert!(script.contains("127.0.0.1"));
-        
+
         // DCS-INT-01.12: Verify 60Hz target rate via LuaExportActivityNextEvent
         assert!(script.contains("function LuaExportActivityNextEvent(tCurrent)"));
         assert!(script.contains("1.0 / 60.0"));

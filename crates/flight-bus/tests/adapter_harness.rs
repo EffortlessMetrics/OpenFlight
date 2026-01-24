@@ -351,12 +351,9 @@ mod tests {
     /// Requirements: MSFS-INT-01.15 - No NaN/Inf during dynamic flight
     #[test]
     fn test_msfs_takeoff_no_nan_inf() {
-        let mut harness = AdapterHarness::new(
-            SimId::Msfs,
-            AircraftId::new("C172"),
-            ScenarioType::Takeoff,
-        )
-        .with_duration(Duration::from_secs(10));
+        let mut harness =
+            AdapterHarness::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Takeoff)
+                .with_duration(Duration::from_secs(10));
 
         let result = harness.run();
         result.print_summary();
@@ -488,9 +485,12 @@ mod tests {
     /// Requirements: MSFS-INT-01.15 - No NaN/Inf during abnormal conditions
     #[test]
     fn test_msfs_emergency_no_nan_inf() {
-        let mut harness =
-            AdapterHarness::new(SimId::Msfs, AircraftId::new("C172"), ScenarioType::Emergency)
-                .with_duration(Duration::from_secs(10));
+        let mut harness = AdapterHarness::new(
+            SimId::Msfs,
+            AircraftId::new("C172"),
+            ScenarioType::Emergency,
+        )
+        .with_duration(Duration::from_secs(10));
 
         let result = harness.run();
         result.print_summary();
@@ -572,9 +572,8 @@ mod tests {
 
         for scenario in scenarios {
             println!("\nTesting scenario: {:?}", scenario);
-            let mut harness =
-                AdapterHarness::new(SimId::Msfs, AircraftId::new("C172"), scenario)
-                    .with_duration(Duration::from_secs(5));
+            let mut harness = AdapterHarness::new(SimId::Msfs, AircraftId::new("C172"), scenario)
+                .with_duration(Duration::from_secs(5));
 
             let result = harness.run();
             result.print_summary();

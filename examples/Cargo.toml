@@ -95,9 +95,9 @@ anyhow = "1.0.100"
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "time", "sync"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["fmt", "env-filter"] }
-bincode = "3.0.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+postcard = { workspace = true }
 flight-core = { path = "../crates/flight-core" }
 flight-bus = { path = "../crates/flight-bus" }
 flight-ffb = { path = "../crates/flight-ffb" }

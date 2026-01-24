@@ -288,7 +288,10 @@ async fn test_update_rate_monitoring() {
             assert!(summary.contains("Updates: 0"));
         }
         Err(e) => {
-            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+            println!(
+                "Adapter creation failed (expected on systems without SimConnect): {}",
+                e
+            );
         }
     }
 }
@@ -352,7 +355,9 @@ fn test_conditional_60hz_target() {
 /// Requirements: MSFS-INT-01.17
 #[tokio::test]
 async fn test_aircraft_change_detection() {
-    use flight_simconnect::aircraft::{AircraftCategory, AircraftDetector, AircraftInfo, EngineType};
+    use flight_simconnect::aircraft::{
+        AircraftCategory, AircraftDetector, AircraftInfo, EngineType,
+    };
 
     let mut detector = AircraftDetector::new();
 
@@ -422,7 +427,10 @@ async fn test_adapter_lifecycle_with_fixtures() {
             assert!(adapter.current_snapshot().await.is_none());
         }
         Err(e) => {
-            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+            println!(
+                "Adapter creation failed (expected on systems without SimConnect): {}",
+                e
+            );
         }
     }
 }
@@ -445,7 +453,10 @@ async fn test_reconnection_behavior() {
             assert!(adapter.state().await == AdapterState::Disconnected);
         }
         Err(e) => {
-            println!("Adapter creation failed (expected on systems without SimConnect): {}", e);
+            println!(
+                "Adapter creation failed (expected on systems without SimConnect): {}",
+                e
+            );
         }
     }
 }

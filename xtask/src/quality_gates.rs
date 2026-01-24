@@ -130,7 +130,7 @@ pub fn check_sim_mapping_docs() -> Result<QualityGateResult> {
 /// - `passed = false` with details about missing tests if any are missing
 pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
     let test_file_path = "crates/flight-bus/src/snapshot.rs";
-    
+
     // Check if the test file exists
     if !Path::new(test_file_path).exists() {
         return Ok(QualityGateResult::with_details(
@@ -139,25 +139,46 @@ pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
             format!("Test file not found: {}", test_file_path),
         ));
     }
-    
+
     // Read the test file
     let test_content = fs::read_to_string(test_file_path)?;
-    
+
     // Required unit conversion tests
     // These correspond to the core unit conversions needed for BusSnapshot fields
     let required_tests = vec![
-        ("test_degrees_to_radians_conversion", "Degrees → Radians (attitude angles, AoA, sideslip)"),
-        ("test_radians_to_degrees_conversion", "Radians → Degrees (reverse conversion)"),
-        ("test_knots_to_mps_conversion", "Knots → m/s (IAS, TAS, ground speed)"),
-        ("test_mps_to_knots_conversion", "m/s → Knots (reverse conversion)"),
-        ("test_feet_to_meters_conversion", "Feet → Meters (altitudes)"),
-        ("test_meters_to_feet_conversion", "Meters → Feet (reverse conversion)"),
+        (
+            "test_degrees_to_radians_conversion",
+            "Degrees → Radians (attitude angles, AoA, sideslip)",
+        ),
+        (
+            "test_radians_to_degrees_conversion",
+            "Radians → Degrees (reverse conversion)",
+        ),
+        (
+            "test_knots_to_mps_conversion",
+            "Knots → m/s (IAS, TAS, ground speed)",
+        ),
+        (
+            "test_mps_to_knots_conversion",
+            "m/s → Knots (reverse conversion)",
+        ),
+        (
+            "test_feet_to_meters_conversion",
+            "Feet → Meters (altitudes)",
+        ),
+        (
+            "test_meters_to_feet_conversion",
+            "Meters → Feet (reverse conversion)",
+        ),
         ("test_fpm_to_mps_conversion", "FPM → m/s (vertical speed)"),
-        ("test_mps_to_fpm_conversion", "m/s → FPM (reverse conversion)"),
+        (
+            "test_mps_to_fpm_conversion",
+            "m/s → FPM (reverse conversion)",
+        ),
     ];
-    
+
     let mut missing_tests = Vec::new();
-    
+
     for (test_name, description) in &required_tests {
         // Check if the test function exists
         let test_pattern = format!("fn {}()", test_name);
@@ -165,7 +186,7 @@ pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
             missing_tests.push(format!("{} ({})", test_name, description));
         }
     }
-    
+
     if missing_tests.is_empty() {
         Ok(QualityGateResult::new("QG-UNIT-CONV", true))
     } else {
@@ -213,7 +234,7 @@ pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
 /// - `passed = false` with details about missing tests if any are missing
 pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
     let test_file_path = "crates/flight-simconnect/tests/sanity_gate_tests.rs";
-    
+
     // Check if the test file exists
     if !Path::new(test_file_path).exists() {
         return Ok(QualityGateResult::with_details(
@@ -222,24 +243,27 @@ pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
             format!("Test file not found: {}", test_file_path),
         ));
     }
-    
+
     // Read the test file
     let test_content = fs::read_to_string(test_file_path)?;
-    
+
     // Required test categories with patterns to search for
     let required_test_categories = vec![
         ("NaN detection", vec!["test_nan_detection"]),
         ("Inf detection", vec!["test_inf_detection"]),
-        ("Implausible jump detection", vec!["test_implausible_", "_jump_detection"]),
+        (
+            "Implausible jump detection",
+            vec!["test_implausible_", "_jump_detection"],
+        ),
         ("safe_for_ffb behavior", vec!["test_safe_for_ffb_"]),
     ];
-    
+
     let mut missing_categories = Vec::new();
     let mut found_tests = Vec::new();
-    
+
     for (category_name, patterns) in &required_test_categories {
         let mut found = false;
-        
+
         // Check if any of the patterns match
         for pattern in patterns {
             if test_content.contains(pattern) {
@@ -250,12 +274,12 @@ pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
                 break;
             }
         }
-        
+
         if !found {
             missing_categories.push(category_name.to_string());
         }
     }
-    
+
     if missing_categories.is_empty() {
         let details = format!(
             "All required sanity gate test categories present:\n  - {}",
@@ -314,20 +338,23 @@ pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
 pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
     // Check for safety envelope tests
     let safety_envelope_test_file = "crates/flight-ffb/src/safety_envelope_tests.rs";
-    
+
     if !Path::new(safety_envelope_test_file).exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
             false,
-            format!("Safety envelope test file not found: {}", safety_envelope_test_file),
+            format!(
+                "Safety envelope test file not found: {}",
+                safety_envelope_test_file
+            ),
         ));
     }
-    
+
     let safety_envelope_content = fs::read_to_string(safety_envelope_test_file)?;
-    
+
     // Check for fault.rs tests
     let fault_test_file = "crates/flight-ffb/src/fault.rs";
-    
+
     if !Path::new(fault_test_file).exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
@@ -335,47 +362,51 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
             format!("Fault detection file not found: {}", fault_test_file),
         ));
     }
-    
+
     let fault_content = fs::read_to_string(fault_test_file)?;
-    
+
     // Check for soft_stop.rs tests
     let soft_stop_test_file = "crates/flight-ffb/src/soft_stop.rs";
-    
+
     if !Path::new(soft_stop_test_file).exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
             false,
-            format!("Soft-stop controller file not found: {}", soft_stop_test_file),
+            format!(
+                "Soft-stop controller file not found: {}",
+                soft_stop_test_file
+            ),
         ));
     }
-    
+
     let soft_stop_content = fs::read_to_string(soft_stop_test_file)?;
-    
+
     // Required test categories
     let mut missing_tests: Vec<String> = Vec::new();
     let mut found_tests = Vec::new();
-    
+
     // 1. Check for 50ms ramp-to-zero timing test
     if safety_envelope_content.contains("test_fault_ramp_to_zero_timing") {
         found_tests.push("50ms ramp-to-zero timing test");
     } else {
         missing_tests.push("test_fault_ramp_to_zero_timing (50ms ramp verification)".to_string());
     }
-    
+
     // 2. Check for fault timestamp tracking test
     if safety_envelope_content.contains("test_fault_timestamp_tracking") {
         found_tests.push("Fault timestamp tracking test");
     } else {
-        missing_tests.push("test_fault_timestamp_tracking (explicit timestamp tracking)".to_string());
+        missing_tests
+            .push("test_fault_timestamp_tracking (explicit timestamp tracking)".to_string());
     }
-    
+
     // 3. Check for fault override test
     if safety_envelope_content.contains("test_fault_overrides_safe_for_ffb") {
         found_tests.push("Fault overrides safe_for_ffb test");
     } else {
         missing_tests.push("test_fault_overrides_safe_for_ffb (fault precedence)".to_string());
     }
-    
+
     // 4. Check for soft-stop controller tests
     let soft_stop_test_patterns = vec![
         ("test_linear_ramp", "Linear ramp profile"),
@@ -383,7 +414,7 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
         ("test_ramp_completion", "Ramp completion"),
         ("test_ramp_timeout", "Ramp timeout detection"),
     ];
-    
+
     for (pattern, description) in &soft_stop_test_patterns {
         if soft_stop_content.contains(pattern) {
             found_tests.push(description);
@@ -391,7 +422,7 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
             missing_tests.push(format!("{} ({})", pattern, description));
         }
     }
-    
+
     // 5. Check for fault type tests in fault.rs
     // Extract all fault types from the FaultType enum
     let fault_types = vec![
@@ -405,15 +436,18 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
         ("EncoderInvalid", "Invalid encoder readings"),
         ("DeviceTimeout", "Device communication timeout"),
     ];
-    
+
     // Check that fault.rs has tests for fault recording and response
     let fault_test_patterns = vec![
         ("test_fault_type_properties", "Fault type properties"),
         ("test_fault_recording", "Fault recording"),
-        ("test_fault_response_completion", "Fault response completion"),
+        (
+            "test_fault_response_completion",
+            "Fault response completion",
+        ),
         ("test_soft_stop_recording", "Soft-stop recording"),
     ];
-    
+
     for (pattern, description) in &fault_test_patterns {
         if fault_content.contains(pattern) {
             found_tests.push(description);
@@ -421,24 +455,26 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
             missing_tests.push(format!("{} ({})", pattern, description));
         }
     }
-    
+
     // 6. Verify that all fault types are covered
     // Check that FaultType enum exists and has all expected variants
     let mut missing_fault_types = Vec::new();
     for (fault_type, description) in &fault_types {
         let enum_pattern = format!("{}:", fault_type);
-        if !fault_content.contains(&enum_pattern) && !fault_content.contains(&format!("FaultType::{}", fault_type)) {
+        if !fault_content.contains(&enum_pattern)
+            && !fault_content.contains(&format!("FaultType::{}", fault_type))
+        {
             missing_fault_types.push(format!("{} ({})", fault_type, description));
         }
     }
-    
+
     if !missing_fault_types.is_empty() {
         missing_tests.push(format!(
             "Missing fault types in FaultType enum: {}",
             missing_fault_types.join(", ")
         ));
     }
-    
+
     // Generate result
     if missing_tests.is_empty() {
         let details = format!(
@@ -476,111 +512,111 @@ mod tests {
         // Ensure we're running from workspace root
         // Tests run from the crate directory, so we need to navigate up
         let original_dir = env::current_dir().expect("Failed to get current directory");
-        
+
         // Navigate to workspace root (parent of xtask)
         let workspace_root = original_dir
             .parent()
             .expect("Failed to get parent directory");
-        
-        env::set_current_dir(workspace_root)
-            .expect("Failed to change to workspace root");
-        
+
+        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
+
         // This test verifies that the mapping documentation files exist
         // It will fail if any required files are missing
         let result = check_sim_mapping_docs().expect("QG-SIM-MAPPING check failed");
-        
+
         // Restore original directory
-        env::set_current_dir(original_dir)
-            .expect("Failed to restore original directory");
-        
+        env::set_current_dir(original_dir).expect("Failed to restore original directory");
+
         if !result.passed {
             panic!(
                 "QG-SIM-MAPPING failed: {}",
-                result.details.unwrap_or_else(|| "Unknown error".to_string())
+                result
+                    .details
+                    .unwrap_or_else(|| "Unknown error".to_string())
             );
         }
     }
-    
+
     #[test]
     fn test_unit_conversion_coverage() {
         // Ensure we're running from workspace root
         let original_dir = env::current_dir().expect("Failed to get current directory");
-        
+
         // Navigate to workspace root (parent of xtask)
         let workspace_root = original_dir
             .parent()
             .expect("Failed to get parent directory");
-        
-        env::set_current_dir(workspace_root)
-            .expect("Failed to change to workspace root");
-        
+
+        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
+
         // This test verifies that all required unit conversion tests exist
         let result = check_unit_conversion_coverage().expect("QG-UNIT-CONV check failed");
-        
+
         // Restore original directory
-        env::set_current_dir(original_dir)
-            .expect("Failed to restore original directory");
-        
+        env::set_current_dir(original_dir).expect("Failed to restore original directory");
+
         if !result.passed {
             panic!(
                 "QG-UNIT-CONV failed: {}",
-                result.details.unwrap_or_else(|| "Unknown error".to_string())
+                result
+                    .details
+                    .unwrap_or_else(|| "Unknown error".to_string())
             );
         }
     }
-    
+
     #[test]
     fn test_sanity_gate_tests_exist() {
         // Ensure we're running from workspace root
         let original_dir = env::current_dir().expect("Failed to get current directory");
-        
+
         // Navigate to workspace root (parent of xtask)
         let workspace_root = original_dir
             .parent()
             .expect("Failed to get parent directory");
-        
-        env::set_current_dir(workspace_root)
-            .expect("Failed to change to workspace root");
-        
+
+        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
+
         // This test verifies that all required sanity gate tests exist
         let result = check_sanity_gate_tests().expect("QG-SANITY-GATE check failed");
-        
+
         // Restore original directory
-        env::set_current_dir(original_dir)
-            .expect("Failed to restore original directory");
-        
+        env::set_current_dir(original_dir).expect("Failed to restore original directory");
+
         if !result.passed {
             panic!(
                 "QG-SANITY-GATE failed: {}",
-                result.details.unwrap_or_else(|| "Unknown error".to_string())
+                result
+                    .details
+                    .unwrap_or_else(|| "Unknown error".to_string())
             );
         }
     }
-    
+
     #[test]
     fn test_ffb_safety_tests_exist() {
         // Ensure we're running from workspace root
         let original_dir = env::current_dir().expect("Failed to get current directory");
-        
+
         // Navigate to workspace root (parent of xtask)
         let workspace_root = original_dir
             .parent()
             .expect("Failed to get parent directory");
-        
-        env::set_current_dir(workspace_root)
-            .expect("Failed to change to workspace root");
-        
+
+        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
+
         // This test verifies that all required FFB safety tests exist
         let result = check_ffb_safety_tests().expect("QG-FFB-SAFETY check failed");
-        
+
         // Restore original directory
-        env::set_current_dir(original_dir)
-            .expect("Failed to restore original directory");
-        
+        env::set_current_dir(original_dir).expect("Failed to restore original directory");
+
         if !result.passed {
             panic!(
                 "QG-FFB-SAFETY failed: {}",
-                result.details.unwrap_or_else(|| "Unknown error".to_string())
+                result
+                    .details
+                    .unwrap_or_else(|| "Unknown error".to_string())
             );
         }
     }

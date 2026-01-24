@@ -16,6 +16,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use crate::time;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -49,6 +50,16 @@ pub const INDEX_INTERVAL_MS: u64 = 100; // Index every 100ms
 pub const FLUSH_INTERVAL_MS: u64 = 1000; // Flush every 1s
 pub const MAX_BUFFER_SIZE: usize = 1024 * 1024; // 1MB buffer before dropping
 const FOOTER_LEN_BYTES: u64 = 4;
+const MAX_HEADER_LEN: usize = 1 << 20; // 1MB
+const MAX_FOOTER_LEN: usize = 1 << 20; // 1MB
+const MAX_INDEX_LEN: usize = 64 * 1024 * 1024; // 64MB
+const RECORD_QUEUE_MAX: usize = 8192;
+const RECORD_QUEUE_DIVISOR: usize = 128;
+
+fn record_queue_capacity(buffer_size: usize) -> usize {
+    let derived = buffer_size / RECORD_QUEUE_DIVISOR;
+    derived.clamp(1, RECORD_QUEUE_MAX)
+}
 
 /// Stream types in the blackbox format
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -79,16 +90,20 @@ pub struct BlackboxHeader {
     pub endian_marker: u32,
     pub format_version: u32,
     pub app_version: String,
+    /// Unix epoch time in nanoseconds captured at process start.
+    /// Add monotonic timestamps to obtain wall-clock time.
     pub timebase_ns: u64,
     pub sim_id: String,
     pub aircraft_id: String,
     pub recording_mode: String,
+    /// Monotonic timestamp in nanoseconds since process start at recording start.
     pub start_timestamp: u64,
 }
 
 /// Index entry for seeking within the file
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IndexEntry {
+    /// Monotonic timestamp in nanoseconds since process start
     pub timestamp_ns: u64,
     pub file_offset: u64,
     pub stream_counts: [u32; 3], // Count per stream type
@@ -97,6 +112,7 @@ pub struct IndexEntry {
 /// Blackbox footer with integrity check
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlackboxFooter {
+    /// Monotonic timestamp in nanoseconds since process start at recording end
     pub end_timestamp: u64,
     pub total_entries: [u64; 3], // Total entries per stream type
     pub index_offset: u64,
@@ -108,6 +124,7 @@ pub struct BlackboxFooter {
 /// A single blackbox record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlackboxRecord {
+    /// Monotonic timestamp in nanoseconds since process start
     pub timestamp_ns: u64,
     pub stream_type: StreamType,
     pub data: Vec<u8>,
@@ -164,8 +181,8 @@ struct WriterState {
 /// Blackbox writer implementation
 pub struct BlackboxWriter {
     config: BlackboxConfig,
-    record_tx: Option<mpsc::UnboundedSender<BlackboxRecord>>,
-    record_rx: Option<mpsc::UnboundedReceiver<BlackboxRecord>>,
+    record_tx: Option<mpsc::Sender<BlackboxRecord>>,
+    record_rx: Option<mpsc::Receiver<BlackboxRecord>>,
     running: Arc<AtomicBool>,
     stats: Arc<Mutex<BlackboxStats>>,
     drop_counter: Arc<AtomicU64>,
@@ -176,7 +193,8 @@ pub struct BlackboxWriter {
 impl BlackboxWriter {
     /// Create a new blackbox writer
     pub fn new(config: BlackboxConfig) -> Self {
-        let (record_tx, record_rx) = mpsc::unbounded_channel();
+        let queue_capacity = record_queue_capacity(config.buffer_size);
+        let (record_tx, record_rx) = mpsc::channel(queue_capacity);
 
         Self {
             config,
@@ -206,7 +224,7 @@ impl BlackboxWriter {
             .context("Failed to create blackbox output directory")?;
 
         // Generate filename with timestamp
-        let timestamp = SystemTime::now()
+        let wall_timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
@@ -215,7 +233,7 @@ impl BlackboxWriter {
             sim_id,
             aircraft_id,
             app_version.replace('.', "_"),
-            timestamp
+            wall_timestamp
         );
         let filepath = self.config.output_dir.join(filename);
 
@@ -225,19 +243,18 @@ impl BlackboxWriter {
             endian_marker: FBB_ENDIAN_MARKER,
             format_version: FBB_FORMAT_VERSION,
             app_version,
-            timebase_ns: 0,
+            timebase_ns: time::unix_base_ns(),
             sim_id,
             aircraft_id,
             recording_mode: "normal".to_string(),
-            start_timestamp: timestamp,
+            start_timestamp: time::monotonic_now_ns(),
         };
 
         self.current_header = Some(header.clone());
 
         let file = File::create(&filepath).context("Failed to create blackbox file")?;
         let mut writer = BufWriter::new(file);
-        let header_bytes =
-            wire::encode_alloc(&header).map_err(BlackboxError::from)?;
+        let header_bytes = wire::encode_alloc(&header).map_err(BlackboxError::from)?;
         wire::write_len_prefixed(&mut writer, &header_bytes)?;
         let file_offset = 4_u64 + header_bytes.len() as u64;
 
@@ -332,12 +349,23 @@ impl BlackboxWriter {
             data: data.to_vec(),
         };
 
-        if let Some(ref tx) = self.record_tx
-            && tx.send(record).is_err()
-        {
-            // Channel closed, increment drop counter
-            self.drop_counter.fetch_add(1, Ordering::Relaxed);
-            warn!("Blackbox record dropped - channel closed");
+        if let Some(ref tx) = self.record_tx {
+            match tx.try_send(record) {
+                Ok(()) => {}
+                Err(mpsc::error::TrySendError::Full(_record)) => {
+                    self.drop_counter.fetch_add(1, Ordering::Relaxed);
+                    let mut stats_guard = self.stats.lock().unwrap();
+                    stats_guard.drops_total += 1;
+                    stats_guard.drops_by_stream[stream_type.to_index()] += 1;
+                }
+                Err(mpsc::error::TrySendError::Closed(_record)) => {
+                    self.drop_counter.fetch_add(1, Ordering::Relaxed);
+                    let mut stats_guard = self.stats.lock().unwrap();
+                    stats_guard.drops_total += 1;
+                    stats_guard.drops_by_stream[stream_type.to_index()] += 1;
+                    warn!("Blackbox record dropped - channel closed");
+                }
+            }
         }
 
         Ok(())
@@ -345,7 +373,7 @@ impl BlackboxWriter {
 
     /// Background writer task
     async fn writer_task(
-        mut record_rx: mpsc::UnboundedReceiver<BlackboxRecord>,
+        mut record_rx: mpsc::Receiver<BlackboxRecord>,
         running: Arc<AtomicBool>,
         stats: Arc<Mutex<BlackboxStats>>,
         drop_counter: Arc<AtomicU64>,
@@ -453,8 +481,8 @@ impl BlackboxWriter {
         state.file.flush()?;
 
         let crc32c = {
-            let mut file = File::open(&state.file_path)
-                .context("Failed to open blackbox file for CRC")?;
+            let mut file =
+                File::open(&state.file_path).context("Failed to open blackbox file for CRC")?;
             calculate_crc32c_len(&mut file, state.file_offset)?
         };
 
@@ -497,9 +525,8 @@ impl BlackboxReader {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mut file = File::open(path.as_ref()).context("Failed to open blackbox file")?;
 
-        let header_bytes = wire::read_len_prefixed(&mut file)?;
-        let header: BlackboxHeader =
-            wire::decode(&header_bytes).map_err(BlackboxError::from)?;
+        let header_bytes = wire::read_len_prefixed(&mut file, MAX_HEADER_LEN)?;
+        let header: BlackboxHeader = wire::decode(&header_bytes).map_err(BlackboxError::from)?;
 
         if header.magic != *FBB_MAGIC {
             return Err(anyhow::anyhow!("Invalid blackbox magic"));
@@ -523,8 +550,11 @@ impl BlackboxReader {
         let mut footer_len_bytes = [0u8; 4];
         file.read_exact(&mut footer_len_bytes)?;
         let footer_len = u32::from_le_bytes(footer_len_bytes) as u64;
-        let footer_len_usize = usize::try_from(footer_len)
-            .map_err(|_| anyhow::anyhow!("Footer length too large"))?;
+        if footer_len > MAX_FOOTER_LEN as u64 {
+            return Err(anyhow::anyhow!("Footer length too large"));
+        }
+        let footer_len_usize =
+            usize::try_from(footer_len).map_err(|_| anyhow::anyhow!("Footer length too large"))?;
 
         let footer_start = file_len
             .checked_sub(FOOTER_LEN_BYTES + footer_len)
@@ -533,18 +563,38 @@ impl BlackboxReader {
 
         let mut footer_bytes = vec![0u8; footer_len_usize];
         file.read_exact(&mut footer_bytes)?;
-        let footer: BlackboxFooter =
-            wire::decode(&footer_bytes).map_err(BlackboxError::from)?;
+        let footer: BlackboxFooter = wire::decode(&footer_bytes).map_err(BlackboxError::from)?;
 
         let data_len = footer_start;
         if footer.index_offset > data_len {
             return Err(anyhow::anyhow!("Index offset exceeds data length"));
         }
+        if footer.index_len > 0 {
+            if footer.index_len as usize > MAX_INDEX_LEN {
+                return Err(anyhow::anyhow!("Index length too large"));
+            }
+            let index_end = footer
+                .index_offset
+                .checked_add(4_u64 + footer.index_len as u64)
+                .ok_or_else(|| anyhow::anyhow!("Index range overflows"))?;
+            if index_end > data_len {
+                return Err(anyhow::anyhow!("Index range exceeds data length"));
+            }
+        }
+
+        let crc32c = calculate_crc32c_len(&mut file, data_len)?;
+        if crc32c != footer.crc32c {
+            return Err(BlackboxError::CorruptionDetected {
+                expected: footer.crc32c,
+                actual: crc32c,
+            }
+            .into());
+        }
 
         let mut index = Vec::new();
         if footer.index_len > 0 {
             file.seek(SeekFrom::Start(footer.index_offset))?;
-            let index_bytes = wire::read_len_prefixed(&mut file)?;
+            let index_bytes = wire::read_len_prefixed(&mut file, footer.index_len as usize)?;
             if footer.index_len != index_bytes.len() as u32 {
                 warn!(
                     "Index length mismatch: footer={}, actual={}",
@@ -598,7 +648,6 @@ impl BlackboxReader {
         info!("Blackbox file validation passed");
         Ok(true)
     }
-
 }
 
 fn calculate_crc32c_len(file: &mut File, len: u64) -> Result<u32> {
@@ -611,9 +660,7 @@ fn calculate_crc32c_len(file: &mut File, len: u64) -> Result<u32> {
         let to_read = buffer.len().min(remaining as usize);
         let bytes_read = file.read(&mut buffer[..to_read])?;
         if bytes_read == 0 {
-            return Err(anyhow::anyhow!(
-                "Unexpected EOF while computing CRC32C"
-            ));
+            return Err(anyhow::anyhow!("Unexpected EOF while computing CRC32C"));
         }
         hasher.update(&buffer[..bytes_read]);
         remaining = remaining.saturating_sub(bytes_read as u64);
@@ -624,8 +671,8 @@ fn calculate_crc32c_len(file: &mut File, len: u64) -> Result<u32> {
 
 mod wire {
     use super::io;
-    use serde::de::DeserializeOwned;
     use serde::Serialize;
+    use serde::de::DeserializeOwned;
     use std::io::{Read, Write};
 
     pub fn write_len_prefixed<W: Write>(writer: &mut W, bytes: &[u8]) -> io::Result<()> {
@@ -638,10 +685,16 @@ mod wire {
         Ok(())
     }
 
-    pub fn read_len_prefixed<R: Read>(reader: &mut R) -> io::Result<Vec<u8>> {
+    pub fn read_len_prefixed<R: Read>(reader: &mut R, max_len: usize) -> io::Result<Vec<u8>> {
         let mut len_bytes = [0u8; 4];
         reader.read_exact(&mut len_bytes)?;
         let len = u32::from_le_bytes(len_bytes) as usize;
+        if len > max_len {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "frame too large",
+            ));
+        }
         let mut buf = vec![0u8; len];
         reader.read_exact(&mut buf)?;
         Ok(buf)

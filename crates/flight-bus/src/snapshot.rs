@@ -7,9 +7,9 @@ use crate::types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearState, Mach, Percentage, SimId,
     ValidatedAngle, ValidatedSpeed,
 };
+use flight_core::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use flight_core::time;
 
 /// Angular rates in body frame (rad/s)
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -72,7 +72,7 @@ pub struct BusSnapshot {
     pub sim: SimId,
     /// Aircraft identifier
     pub aircraft: AircraftId,
-    /// Monotonic timestamp in nanoseconds
+    /// Monotonic timestamp in nanoseconds since process start
     pub timestamp: u64,
     /// Flight kinematics data
     pub kinematics: Kinematics,
@@ -541,7 +541,7 @@ fn current_timestamp_ns() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_core::units::{conversions, SpeedUnit};
+    use flight_core::units::{SpeedUnit, conversions};
 
     #[test]
     fn test_bus_snapshot_creation() {
@@ -634,7 +634,7 @@ mod tests {
         // Valid speeds
         assert!(ValidatedSpeed::new_knots(150.0).is_ok());
         assert!(ValidatedSpeed::new_mps(77.2).is_ok());
-        
+
         // Out of range speeds
         assert!(ValidatedSpeed::new_knots(-1.0).is_err());
         assert!(ValidatedSpeed::new_knots(1001.0).is_err());
@@ -647,7 +647,7 @@ mod tests {
         // Valid angles
         assert!(ValidatedAngle::new_degrees(45.0).is_ok());
         assert!(ValidatedAngle::new_radians(0.785).is_ok());
-        
+
         // Out of range angles
         assert!(ValidatedAngle::new_degrees(-181.0).is_err());
         assert!(ValidatedAngle::new_degrees(181.0).is_err());
@@ -661,7 +661,7 @@ mod tests {
         assert!(GForce::new(1.0).is_ok());
         assert!(GForce::new(-5.0).is_ok());
         assert!(GForce::new(10.0).is_ok());
-        
+
         // Out of range g-forces
         assert!(GForce::new(-21.0).is_err());
         assert!(GForce::new(21.0).is_err());
@@ -673,7 +673,7 @@ mod tests {
         assert!(Mach::new(0.0).is_ok());
         assert!(Mach::new(0.85).is_ok());
         assert!(Mach::new(2.5).is_ok());
-        
+
         // Out of range Mach numbers
         assert!(Mach::new(-0.1).is_err());
         assert!(Mach::new(5.1).is_err());
@@ -685,7 +685,7 @@ mod tests {
         let angle = ValidatedAngle::new_degrees(180.0).unwrap();
         let radians = angle.to_radians();
         assert!((radians - std::f32::consts::PI).abs() < 0.001);
-        
+
         let angle = ValidatedAngle::new_degrees(90.0).unwrap();
         let radians = angle.to_radians();
         assert!((radians - std::f32::consts::FRAC_PI_2).abs() < 0.001);
@@ -696,7 +696,7 @@ mod tests {
         let angle = ValidatedAngle::new_radians(std::f32::consts::PI).unwrap();
         let degrees = angle.to_degrees();
         assert!((degrees - 180.0).abs() < 0.001);
-        
+
         let angle = ValidatedAngle::new_radians(std::f32::consts::FRAC_PI_2).unwrap();
         let degrees = angle.to_degrees();
         assert!((degrees - 90.0).abs() < 0.001);
@@ -707,7 +707,7 @@ mod tests {
         let speed = ValidatedSpeed::new_knots(100.0).unwrap();
         let mps = speed.to_mps();
         assert!((mps - 51.4444).abs() < 0.001);
-        
+
         // Test conversion utility
         let mps = conversions::knots_to_mps(100.0);
         assert!((mps - 51.4444).abs() < 0.001);
@@ -718,7 +718,7 @@ mod tests {
         let speed = ValidatedSpeed::new_mps(50.0).unwrap();
         let knots = speed.to_knots();
         assert!((knots - 97.192).abs() < 0.01);
-        
+
         // Test conversion utility
         let knots = conversions::mps_to_knots(50.0);
         assert!((knots - 97.192).abs() < 0.01);
@@ -752,10 +752,10 @@ mod tests {
     #[test]
     fn test_snapshot_age_calculation() {
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Age should be very small immediately after creation
         assert!(snapshot.age_ms() < 10);
-        
+
         // Wait and check age increases
         std::thread::sleep(std::time::Duration::from_millis(50));
         let age = snapshot.age_ms();
@@ -766,7 +766,7 @@ mod tests {
     #[test]
     fn test_attitude_field_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid attitude values
         snapshot.kinematics.pitch = ValidatedAngle::new_degrees(10.0).unwrap();
         snapshot.kinematics.bank = ValidatedAngle::new_degrees(-15.0).unwrap();
@@ -777,7 +777,7 @@ mod tests {
     #[test]
     fn test_velocity_field_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid velocity values
         snapshot.kinematics.ias = ValidatedSpeed::new_knots(120.0).unwrap();
         snapshot.kinematics.tas = ValidatedSpeed::new_knots(130.0).unwrap();
@@ -788,7 +788,7 @@ mod tests {
     #[test]
     fn test_g_load_field_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid g-load values
         snapshot.kinematics.g_force = GForce::new(2.5).unwrap();
         snapshot.kinematics.g_lateral = GForce::new(-0.5).unwrap();
@@ -837,7 +837,7 @@ mod tests {
     #[test]
     fn test_unique_engine_indices_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("B737"));
-        
+
         // Add engines with unique indices
         snapshot.engines.push(EngineData {
             index: 0,
@@ -861,10 +861,10 @@ mod tests {
             oil_pressure: Some(55.0),
             oil_temperature: Some(85.0),
         });
-        
+
         // Should pass with unique indices
         assert!(snapshot.validate().is_ok());
-        
+
         // Add duplicate engine index
         snapshot.engines.push(EngineData {
             index: 0, // Duplicate
@@ -877,7 +877,7 @@ mod tests {
             oil_pressure: None,
             oil_temperature: None,
         });
-        
+
         // Should fail with duplicate indices
         assert!(snapshot.validate().is_err());
     }
@@ -885,7 +885,7 @@ mod tests {
     #[test]
     fn test_helicopter_pedal_range_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Dcs, AircraftId::new("UH1H"));
-        
+
         // Valid pedal positions
         snapshot.helo = Some(HeloData {
             nr: Percentage::new(100.0).unwrap(),
@@ -895,17 +895,17 @@ mod tests {
             pedals: -100.0,
         });
         assert!(snapshot.validate().is_ok());
-        
+
         snapshot.helo.as_mut().unwrap().pedals = 100.0;
         assert!(snapshot.validate().is_ok());
-        
+
         snapshot.helo.as_mut().unwrap().pedals = 0.0;
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid pedal positions
         snapshot.helo.as_mut().unwrap().pedals = -100.1;
         assert!(snapshot.validate().is_err());
-        
+
         snapshot.helo.as_mut().unwrap().pedals = 100.1;
         assert!(snapshot.validate().is_err());
     }
@@ -913,29 +913,29 @@ mod tests {
     #[test]
     fn test_control_inputs_range_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid control inputs
         snapshot.control_inputs.pitch = 0.5;
         snapshot.control_inputs.roll = -0.3;
         snapshot.control_inputs.yaw = 0.1;
         snapshot.control_inputs.throttle = vec![0.75];
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid pitch
         snapshot.control_inputs.pitch = 1.1;
         assert!(snapshot.validate().is_err());
         snapshot.control_inputs.pitch = 0.0;
-        
+
         // Invalid roll
         snapshot.control_inputs.roll = -1.1;
         assert!(snapshot.validate().is_err());
         snapshot.control_inputs.roll = 0.0;
-        
+
         // Invalid yaw
         snapshot.control_inputs.yaw = 1.5;
         assert!(snapshot.validate().is_err());
         snapshot.control_inputs.yaw = 0.0;
-        
+
         // Invalid throttle
         snapshot.control_inputs.throttle = vec![1.1];
         assert!(snapshot.validate().is_err());
@@ -946,23 +946,23 @@ mod tests {
     #[test]
     fn test_trim_state_range_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid trim state
         snapshot.trim_state.elevator = 0.2;
         snapshot.trim_state.aileron = -0.1;
         snapshot.trim_state.rudder = 0.05;
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid elevator trim
         snapshot.trim_state.elevator = 1.1;
         assert!(snapshot.validate().is_err());
         snapshot.trim_state.elevator = 0.0;
-        
+
         // Invalid aileron trim
         snapshot.trim_state.aileron = -1.1;
         assert!(snapshot.validate().is_err());
         snapshot.trim_state.aileron = 0.0;
-        
+
         // Invalid rudder trim
         snapshot.trim_state.rudder = 1.5;
         assert!(snapshot.validate().is_err());
@@ -971,23 +971,23 @@ mod tests {
     #[test]
     fn test_angular_rates_finite_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid angular rates
         snapshot.angular_rates.p = 0.1;
         snapshot.angular_rates.q = -0.05;
         snapshot.angular_rates.r = 0.02;
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid angular rates (NaN)
         snapshot.angular_rates.p = f32::NAN;
         assert!(snapshot.validate().is_err());
         snapshot.angular_rates.p = 0.0;
-        
+
         // Invalid angular rates (Inf)
         snapshot.angular_rates.q = f32::INFINITY;
         assert!(snapshot.validate().is_err());
         snapshot.angular_rates.q = 0.0;
-        
+
         snapshot.angular_rates.r = f32::NEG_INFINITY;
         assert!(snapshot.validate().is_err());
     }
@@ -995,17 +995,17 @@ mod tests {
     #[test]
     fn test_environment_finite_validation() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Valid environment
         snapshot.environment.altitude = 5000.0;
         snapshot.environment.oat = 15.0;
         assert!(snapshot.validate().is_ok());
-        
+
         // Invalid altitude (NaN)
         snapshot.environment.altitude = f32::NAN;
         assert!(snapshot.validate().is_err());
         snapshot.environment.altitude = 5000.0;
-        
+
         // Invalid OAT (Inf)
         snapshot.environment.oat = f32::INFINITY;
         assert!(snapshot.validate().is_err());
@@ -1014,7 +1014,7 @@ mod tests {
     #[test]
     fn test_extended_fields_present() {
         let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-        
+
         // Verify all extended fields are present
         assert!(snapshot.engines.is_empty()); // Empty but present
         assert!(snapshot.config.fuel.is_empty()); // Empty but present
@@ -1038,7 +1038,7 @@ mod tests {
             oil_pressure: Some(55.0),
             oil_temperature: Some(85.0),
         };
-        
+
         assert_eq!(engine.index, 0);
         assert!(engine.running);
         assert_eq!(engine.rpm.value(), 75.0);
@@ -1059,7 +1059,7 @@ mod tests {
             collective: Percentage::new(50.0).unwrap(),
             pedals: 25.0,
         };
-        
+
         assert_eq!(helo.nr.value(), 100.0);
         assert_eq!(helo.np.value(), 95.0);
         assert_eq!(helo.torque.value(), 75.0);
@@ -1078,7 +1078,7 @@ mod tests {
             visibility: 10.0,
             cloud_coverage: Percentage::new(25.0).unwrap(),
         };
-        
+
         assert_eq!(env.altitude, 5000.0);
         assert_eq!(env.pressure_altitude, 5200.0);
         assert_eq!(env.oat, 10.0);
@@ -1098,7 +1098,7 @@ mod tests {
             time_to_dest: Some(45.0),
             active_waypoint: Some("KSEA".to_string()),
         };
-        
+
         assert_eq!(nav.latitude, 47.6062);
         assert_eq!(nav.longitude, -122.3321);
         assert_eq!(nav.ground_track.to_degrees(), 90.0);
@@ -1115,7 +1115,7 @@ mod tests {
         assert!(!lights.strobe);
         assert!(!lights.landing);
         assert!(!lights.taxi);
-        
+
         lights.nav = true;
         lights.beacon = true;
         assert!(lights.nav);

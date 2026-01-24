@@ -131,8 +131,7 @@ impl DcsInstaller {
             });
         }
 
-        let content = fs::read_to_string(export_path)
-            .context("Failed to read Export.lua")?;
+        let content = fs::read_to_string(export_path).context("Failed to read Export.lua")?;
 
         // Check if it's a Flight Hub export
         if !content.contains("Flight Hub DCS Export Script") {
@@ -169,8 +168,7 @@ impl DcsInstaller {
 
                 if let Some(restore_path) = backup_restore_path {
                     // Restore from backup
-                    fs::copy(&restore_path, export_path)
-                        .context("Failed to restore backup")?;
+                    fs::copy(&restore_path, export_path).context("Failed to restore backup")?;
 
                     info!(
                         "Restored Export.lua from backup: {}",
@@ -382,9 +380,9 @@ impl DcsInstaller {
 
         // Check if Export.lua already exists (non-Flight Hub)
         if export_path.exists() {
-            let content = fs::read_to_string(export_path)
-                .context("Failed to read existing Export.lua")?;
-            
+            let content =
+                fs::read_to_string(export_path).context("Failed to read existing Export.lua")?;
+
             // If it's not a Flight Hub export, we need to append
             if !content.contains("Flight Hub DCS Export Script") {
                 return self.perform_append_install(export_path);
@@ -418,8 +416,8 @@ impl DcsInstaller {
         let backup_path = self.create_backup(export_path)?;
 
         // Read existing content
-        let existing_content = fs::read_to_string(export_path)
-            .context("Failed to read existing Export.lua")?;
+        let existing_content =
+            fs::read_to_string(export_path).context("Failed to read existing Export.lua")?;
 
         // Generate Flight Hub export script
         let flight_hub_script = self.generator.generate_script();
@@ -431,8 +429,7 @@ impl DcsInstaller {
         );
 
         // Write combined content
-        fs::write(export_path, combined_content)
-            .context("Failed to write combined Export.lua")?;
+        fs::write(export_path, combined_content).context("Failed to write combined Export.lua")?;
 
         info!(
             "Appended Flight Hub DCS Export to existing Export.lua at {}",
@@ -602,7 +599,7 @@ impl DcsInstaller {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::export_lua::{detect_dcs_variants, DcsVariant};
+    use crate::export_lua::{DcsVariant, detect_dcs_variants};
     use std::fs;
     use tempfile::TempDir;
 
@@ -684,19 +681,25 @@ mod tests {
         let scripts_dir = temp_dir.path().join("Scripts");
         fs::create_dir_all(&scripts_dir).unwrap();
         let export_path = scripts_dir.join("Export.lua");
-        fs::write(&export_path, "-- Original Export.lua content\nlocal test = {}").unwrap();
+        fs::write(
+            &export_path,
+            "-- Original Export.lua content\nlocal test = {}",
+        )
+        .unwrap();
 
         // Create backup
         let backup_path = installer.create_backup(&export_path).unwrap();
 
         // Verify backup was created
         assert!(backup_path.exists());
-        assert!(backup_path
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .starts_with("Export.lua.backup."));
+        assert!(
+            backup_path
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .starts_with("Export.lua.backup.")
+        );
 
         // Verify backup content matches original
         let backup_content = fs::read_to_string(&backup_path).unwrap();
@@ -912,9 +915,7 @@ mod tests {
         let missing_component = "local FlightHubExport = {}";
         let result = installer.validate_export_content(missing_component);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .contains("Missing required component"));
+        assert!(result.unwrap_err().contains("Missing required component"));
 
         // Test mismatched braces
         let mismatched_braces = r#"

@@ -17,6 +17,7 @@ use flight_bus::{
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
+use flight_core::time;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -878,11 +879,8 @@ impl XPlaneScenarioRunner {
         // This is a simplified conversion for testing
         // In the real adapter, this would use the full conversion logic
 
-        // Set timestamp to current time (in nanoseconds since epoch)
-        snapshot.timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64;
+        // BusSnapshot timestamp is monotonic since process start
+        snapshot.timestamp = time::monotonic_now_ns();
 
         Ok(snapshot)
     }

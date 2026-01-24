@@ -72,10 +72,7 @@ fn main() -> anyhow::Result<()> {
         println!("  Missed frames:   {}", results.missed_frames);
         println!("  Duration:        {:?}", results.duration);
         println!("  Success rate:    {:.2}%", results.success_rate() * 100.0);
-        println!(
-            "  Actual FPS:      {:.2}",
-            results.actual_frame_rate()
-        );
+        println!("  Actual FPS:      {:.2}", results.actual_frame_rate());
         println!("  Safety state:    {:?}", results.final_safety_state);
         println!(
             "  Status:          {}",

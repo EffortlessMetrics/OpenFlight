@@ -138,11 +138,7 @@ impl SafetyEnvelope {
 
         // **Requirement FFB-SAFETY-01.4**: Enforce safe_for_ffb flag
         // When safe_for_ffb is false, output zero torque regardless of desired value
-        let target_torque = if safe_for_ffb {
-            desired_torque_nm
-        } else {
-            0.0
-        };
+        let target_torque = if safe_for_ffb { desired_torque_nm } else { 0.0 };
 
         // **Requirement FFB-SAFETY-01.6**: Handle fault ramp-down
         // If in fault state, override with direct ramp-to-zero (bypasses rate limiting)
@@ -162,7 +158,8 @@ impl SafetyEnvelope {
             // Normal operation: apply all safety constraints
 
             // **Requirement FFB-SAFETY-01.1**: Clamp to device maximum
-            let clamped_torque = target_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
+            let clamped_torque =
+                target_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
 
             // Calculate desired change
             let desired_delta = clamped_torque - self.state.last_torque_nm;
@@ -184,12 +181,13 @@ impl SafetyEnvelope {
             let final_torque = self.state.last_torque_nm + final_delta;
 
             // Final clamp to ensure we never exceed limits due to numerical errors
-            let clamped_final = final_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
-            
+            let clamped_final =
+                final_torque.clamp(-self.config.max_torque_nm, self.config.max_torque_nm);
+
             // Recalculate actual slew rate based on clamped output
             let actual_delta = clamped_final - self.state.last_torque_nm;
             let actual_slew_rate = actual_delta / dt;
-            
+
             (clamped_final, actual_slew_rate)
         };
 

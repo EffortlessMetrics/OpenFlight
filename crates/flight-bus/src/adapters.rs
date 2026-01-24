@@ -236,7 +236,6 @@ pub mod dcs {
         pub fn convert_mach(value: f64) -> Result<Mach, BusTypeError> {
             Mach::new(value as f32)
         }
-
     }
 }
 

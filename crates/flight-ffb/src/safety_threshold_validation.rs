@@ -277,9 +277,18 @@ mod tests {
         }
 
         println!("✓ Extended operation test completed - 10,000 iterations");
-        println!("  Max observed torque: {:.2} Nm (limit: {:.2} Nm)", max_observed_torque, max_torque);
-        println!("  Max observed slew rate: {:.2} Nm/s (limit: {:.2} Nm/s)", max_observed_slew_rate, max_slew_rate);
-        println!("  Max observed jerk: {:.2} Nm/s² (limit: {:.2} Nm/s²)", max_observed_jerk, max_jerk);
+        println!(
+            "  Max observed torque: {:.2} Nm (limit: {:.2} Nm)",
+            max_observed_torque, max_torque
+        );
+        println!(
+            "  Max observed slew rate: {:.2} Nm/s (limit: {:.2} Nm/s)",
+            max_observed_slew_rate, max_slew_rate
+        );
+        println!(
+            "  Max observed jerk: {:.2} Nm/s² (limit: {:.2} Nm/s²)",
+            max_observed_jerk, max_jerk
+        );
         println!("  No violations detected");
     }
 

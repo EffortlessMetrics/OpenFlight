@@ -427,7 +427,7 @@ fn test_heading_wraparound_handling() {
     // At 16ms (0.016s), 2 degrees = 0.0349 radians
     // Rate = 0.0349 / 0.016 = 2.18 rad/s, which is > 0.1 rad/frame
     // So this will actually trigger a violation with max_attitude_change_rad: 0.1
-    
+
     // Let's use a more permissive threshold
     let mut gate2 = SanityGate::with_config(SanityGateConfig {
         max_attitude_change_rad: 3.0, // Very permissive
