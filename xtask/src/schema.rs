@@ -188,8 +188,8 @@ pub fn validate_yaml_against_schema(
         .into_iter()
         .enumerate()
         .map(|(idx, error)| {
-            let instance_path = error.instance_path.to_string();
-            let schema_path_str = error.schema_path.to_string();
+            let instance_path = error.instance_path().to_string();
+            let schema_path_str = error.schema_path().to_string();
 
             // Try to extract line number from instance path
             let line = estimate_line_number(&yaml_text, &instance_path);
