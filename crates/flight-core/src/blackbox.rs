@@ -115,7 +115,7 @@ pub struct IndexEntry {
 pub struct BlackboxFooter {
     /// Monotonic timestamp in nanoseconds since process start at recording end
     pub end_timestamp: u64,
-    pub total_entries: [u64; 3], // Total entries per stream type
+    pub total_entries: [u32; 3], // Total entries per stream type
     /// Byte offset to the start of the index frame (length prefix).
     pub index_offset: u64,
     /// Length of the index payload (excludes the 4-byte length prefix).
@@ -383,7 +383,7 @@ impl BlackboxWriter {
     }
 
     fn note_drop(
-        drop_counter: &AtomicU64,
+        drop_counter: &Arc<AtomicU64>,
         stats: &Arc<Mutex<BlackboxStats>>,
         stream_type: StreamType,
         reason: &'static str,
@@ -523,7 +523,16 @@ impl BlackboxWriter {
 
         let total_entries = {
             let stats_guard = stats.lock().unwrap();
-            stats_guard.records_written
+            [
+                u32::try_from(stats_guard.records_written[0]).map_err(|_| {
+                    anyhow::anyhow!("Total entries for AxisFrames exceeds u32::MAX")
+                })?,
+                u32::try_from(stats_guard.records_written[1]).map_err(|_| {
+                    anyhow::anyhow!("Total entries for BusSnapshots exceeds u32::MAX")
+                })?,
+                u32::try_from(stats_guard.records_written[2])
+                    .map_err(|_| anyhow::anyhow!("Total entries for Events exceeds u32::MAX"))?,
+            ]
         };
 
         let footer = BlackboxFooter {
