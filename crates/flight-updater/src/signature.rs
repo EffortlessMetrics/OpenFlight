@@ -248,7 +248,7 @@ impl Default for SignatureManifest {
 mod tests {
     use super::*;
     use ed25519_dalek::{Signer, SigningKey};
-    use rand_core::OsRng;
+    use rand::rngs::OsRng;
 
     #[tokio::test]
     async fn test_signature_verification() {

@@ -105,6 +105,7 @@ pub struct BlackboxHeader {
 pub struct IndexEntry {
     /// Monotonic timestamp in nanoseconds since process start
     pub timestamp_ns: u64,
+    /// Byte offset to the start of the record frame (length prefix).
     pub file_offset: u64,
     pub stream_counts: [u32; 3], // Count per stream type
 }
@@ -115,7 +116,9 @@ pub struct BlackboxFooter {
     /// Monotonic timestamp in nanoseconds since process start at recording end
     pub end_timestamp: u64,
     pub total_entries: [u64; 3], // Total entries per stream type
+    /// Byte offset to the start of the index frame (length prefix).
     pub index_offset: u64,
+    /// Length of the index payload (excludes the 4-byte length prefix).
     pub index_len: u32,
     pub index_count: u32,
     pub crc32c: u32,
@@ -159,6 +162,7 @@ pub struct BlackboxStats {
     pub bytes_written: u64,
     pub drops_total: u64,
     pub drops_by_stream: [u64; 3],
+    pub record_queue_capacity: usize,
     pub chunks_written: u64,
     pub flush_count: u64,
     pub last_flush_duration_us: u64,
@@ -195,13 +199,17 @@ impl BlackboxWriter {
     pub fn new(config: BlackboxConfig) -> Self {
         let queue_capacity = record_queue_capacity(config.buffer_size);
         let (record_tx, record_rx) = mpsc::channel(queue_capacity);
+        let stats = Arc::new(Mutex::new(BlackboxStats {
+            record_queue_capacity: queue_capacity,
+            ..Default::default()
+        }));
 
         Self {
             config,
             record_tx: Some(record_tx),
             record_rx: Some(record_rx),
             running: Arc::new(AtomicBool::new(false)),
-            stats: Arc::new(Mutex::new(BlackboxStats::default())),
+            stats,
             drop_counter: Arc::new(AtomicU64::new(0)),
             current_header: None,
             writer_handle: None,
@@ -353,22 +361,47 @@ impl BlackboxWriter {
             match tx.try_send(record) {
                 Ok(()) => {}
                 Err(mpsc::error::TrySendError::Full(_record)) => {
-                    self.drop_counter.fetch_add(1, Ordering::Relaxed);
-                    let mut stats_guard = self.stats.lock().unwrap();
-                    stats_guard.drops_total += 1;
-                    stats_guard.drops_by_stream[stream_type.to_index()] += 1;
+                    Self::note_drop(
+                        &self.drop_counter,
+                        &self.stats,
+                        stream_type,
+                        "queue full",
+                    );
                 }
                 Err(mpsc::error::TrySendError::Closed(_record)) => {
-                    self.drop_counter.fetch_add(1, Ordering::Relaxed);
-                    let mut stats_guard = self.stats.lock().unwrap();
-                    stats_guard.drops_total += 1;
-                    stats_guard.drops_by_stream[stream_type.to_index()] += 1;
-                    warn!("Blackbox record dropped - channel closed");
+                    Self::note_drop(
+                        &self.drop_counter,
+                        &self.stats,
+                        stream_type,
+                        "channel closed",
+                    );
                 }
             }
         }
 
         Ok(())
+    }
+
+    fn note_drop(
+        drop_counter: &AtomicU64,
+        stats: &Arc<Mutex<BlackboxStats>>,
+        stream_type: StreamType,
+        reason: &'static str,
+    ) {
+        let previous = drop_counter.fetch_add(1, Ordering::Relaxed);
+        {
+            let mut stats_guard = stats.lock().unwrap();
+            stats_guard.drops_total += 1;
+            stats_guard.drops_by_stream[stream_type.to_index()] += 1;
+        }
+        if previous == 0 {
+            warn!(
+                target: "blackbox",
+                "Blackbox drops detected (reason={}, stream={:?})",
+                reason,
+                stream_type
+            );
+        }
     }
 
     /// Background writer task
@@ -393,10 +426,12 @@ impl BlackboxWriter {
 
                             // Simple drop logic: if record is too large for buffer, drop it
                             if record_size > config.buffer_size / 10 { // Drop if record > 10% of buffer
-                                drop_counter.fetch_add(1, Ordering::Relaxed);
-                                let mut stats_guard = stats.lock().unwrap();
-                                stats_guard.drops_total += 1;
-                                stats_guard.drops_by_stream[record.stream_type.to_index()] += 1;
+                                Self::note_drop(
+                                    &drop_counter,
+                                    &stats,
+                                    record.stream_type,
+                                    "record too large",
+                                );
                             } else {
                                 let stream_index = record.stream_type.to_index();
                                 state.stream_counters[stream_index] =
