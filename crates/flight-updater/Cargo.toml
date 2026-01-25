@@ -32,7 +32,7 @@ tracing = { workspace = true }
 
 # Crypto and signatures
 ed25519-dalek = { version = "2.2.0", features = ["rand_core"] }
-rand_core = { version = "0.6.4", features = ["getrandom"] }
+rand_core = { version = "0.9.5", features = ["getrandom"] }
 sha2 = "0.10.9"
 hex = "0.4.3"
 
