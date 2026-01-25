@@ -613,17 +613,15 @@ impl BlackboxReader {
         if footer.index_offset > data_len {
             return Err(anyhow::anyhow!("Index offset exceeds data length"));
         }
-        if footer.index_len > 0 {
-            if footer.index_len as usize > MAX_INDEX_LEN {
-                return Err(anyhow::anyhow!("Index length too large"));
-            }
-            let index_end = footer
-                .index_offset
-                .checked_add(4_u64 + footer.index_len as u64)
-                .ok_or_else(|| anyhow::anyhow!("Index range overflows"))?;
-            if index_end > data_len {
-                return Err(anyhow::anyhow!("Index range exceeds data length"));
-            }
+        if footer.index_len as usize > MAX_INDEX_LEN {
+            return Err(anyhow::anyhow!("Index length too large"));
+        }
+        let index_end = footer
+            .index_offset
+            .checked_add(4_u64 + footer.index_len as u64)
+            .ok_or_else(|| anyhow::anyhow!("Index range overflows"))?;
+        if index_end > data_len {
+            return Err(anyhow::anyhow!("Index range exceeds data length"));
         }
 
         let crc32c = calculate_crc32c_len(&mut file, data_len)?;
