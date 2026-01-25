@@ -10,9 +10,8 @@
 //! - MSFS-INT-01.6: Angular rate mapping (already rad/s), g-load and aero mapping
 
 use flight_bus::adapters::msfs::MsfsConverter;
+use flight_bus::types::Percentage;
 use std::f32::consts::PI;
-
-
 
 /// Test attitude conversion (degrees → radians)
 /// Requirements: MSFS-INT-01.4
@@ -80,7 +79,7 @@ fn test_velocity_conversion_knots_to_mps() {
     let ias_knots = 100.0_f32;
     let ias = MsfsConverter::convert_ias(ias_knots as f64).unwrap();
     assert_eq!(ias.to_knots(), ias_knots);
-    
+
     // Verify m/s conversion (1 knot = 0.514444 m/s)
     let expected_mps = ias_knots * 0.514444;
     assert!(
@@ -94,7 +93,7 @@ fn test_velocity_conversion_knots_to_mps() {
     let tas_knots = 105.0_f32;
     let tas = MsfsConverter::convert_tas(tas_knots as f64).unwrap();
     assert_eq!(tas.to_knots(), tas_knots);
-    
+
     let expected_mps = tas_knots * 0.514444;
     assert!(
         (tas.to_mps() - expected_mps).abs() < 0.01,
@@ -107,7 +106,7 @@ fn test_velocity_conversion_knots_to_mps() {
     let gs_knots = 98.0_f32;
     let gs = MsfsConverter::convert_ground_speed(gs_knots as f64).unwrap();
     assert_eq!(gs.to_knots(), gs_knots);
-    
+
     let expected_mps = gs_knots * 0.514444;
     assert!(
         (gs.to_mps() - expected_mps).abs() < 0.01,
@@ -178,7 +177,7 @@ fn test_body_velocity_conversion_fps_to_mps() {
 fn test_angular_rate_mapping_passthrough() {
     // Angular rates from SimConnect are already in rad/s
     // Test that they pass through without conversion
-    
+
     let p_rad_s: f32 = 0.01; // Roll rate
     let q_rad_s: f32 = 0.02; // Pitch rate
     let r_rad_s: f32 = 0.005; // Yaw rate
@@ -250,7 +249,7 @@ fn test_aero_angle_mapping() {
     let aoa_deg = 3.5_f32;
     let aoa = MsfsConverter::convert_angle_degrees(aoa_deg as f64).unwrap();
     assert_eq!(aoa.to_degrees(), aoa_deg, "AoA degrees should match");
-    
+
     let expected_rad = aoa_deg * PI / 180.0;
     assert!(
         (aoa.to_radians() - expected_rad).abs() < 0.0001,
@@ -261,7 +260,7 @@ fn test_aero_angle_mapping() {
     let beta_deg = 0.2_f32;
     let beta = MsfsConverter::convert_angle_degrees(beta_deg as f64).unwrap();
     assert_eq!(beta.to_degrees(), beta_deg, "Sideslip degrees should match");
-    
+
     let expected_rad = beta_deg * PI / 180.0;
     assert!(
         (beta.to_radians() - expected_rad).abs() < 0.0001,
@@ -270,7 +269,11 @@ fn test_aero_angle_mapping() {
 
     // Test negative AoA (nose down)
     let aoa_neg = MsfsConverter::convert_angle_degrees(-2.0).unwrap();
-    assert_eq!(aoa_neg.to_degrees(), -2.0, "Negative AoA should be preserved");
+    assert_eq!(
+        aoa_neg.to_degrees(),
+        -2.0,
+        "Negative AoA should be preserved"
+    );
 
     // Test large sideslip angle
     let beta_large = MsfsConverter::convert_angle_degrees(15.0).unwrap();
@@ -287,11 +290,7 @@ fn test_aero_angle_mapping() {
 fn test_mach_number_mapping() {
     // Test subsonic Mach number
     let mach_subsonic = MsfsConverter::convert_mach(0.15).unwrap();
-    assert_eq!(
-        mach_subsonic.value(),
-        0.15,
-        "Subsonic Mach should be 0.15"
-    );
+    assert_eq!(mach_subsonic.value(), 0.15, "Subsonic Mach should be 0.15");
 
     // Test transonic Mach number
     let mach_transonic = MsfsConverter::convert_mach(0.85).unwrap();
@@ -439,20 +438,20 @@ fn test_percentage_conversions() {
     assert_eq!(pct_0.value(), 0.0);
 
     // Test normalized to percentage (0-1 → 0-100)
-    let norm_50 = MsfsConverter::convert_normalized_to_percentage(0.5).unwrap();
+    let norm_50 = Percentage::from_normalized(0.5).unwrap();
     assert_eq!(norm_50.value(), 50.0);
 
-    let norm_100 = MsfsConverter::convert_normalized_to_percentage(1.0).unwrap();
+    let norm_100 = Percentage::from_normalized(1.0).unwrap();
     assert_eq!(norm_100.value(), 100.0);
 
-    let norm_0 = MsfsConverter::convert_normalized_to_percentage(0.0).unwrap();
+    let norm_0 = Percentage::from_normalized(0.0).unwrap();
     assert_eq!(norm_0.value(), 0.0);
 
     // Test out of range
     assert!(MsfsConverter::convert_percentage(-5.0).is_err());
     assert!(MsfsConverter::convert_percentage(105.0).is_err());
-    assert!(MsfsConverter::convert_normalized_to_percentage(-0.1).is_err());
-    assert!(MsfsConverter::convert_normalized_to_percentage(1.1).is_err());
+    assert!(Percentage::from_normalized(-0.1).is_err());
+    assert!(Percentage::from_normalized(1.1).is_err());
 }
 
 /// Test RPM to percentage conversion

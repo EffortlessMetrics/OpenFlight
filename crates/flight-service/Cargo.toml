@@ -35,4 +35,4 @@ clap.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
-tokio-test = "0.4"
+tokio-test = "0.4.5"

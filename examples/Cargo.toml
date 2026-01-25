@@ -91,13 +91,13 @@ replay            = ["dep:flight-replay", "dep:tempfile"]  # legacy gate for rep
 
 [dependencies]
 # Core always available
-anyhow = "1"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-bincode = "1"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+anyhow = "1.0.100"
+tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "time", "sync"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["fmt", "env-filter"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+postcard = { workspace = true }
 flight-core = { path = "../crates/flight-core" }
 flight-bus = { path = "../crates/flight-bus" }
 flight-ffb = { path = "../crates/flight-ffb" }
@@ -110,7 +110,7 @@ flight-simconnect = { path = "../crates/flight-simconnect", optional = true }
 flight-streamdeck = { path = "../crates/flight-streamdeck", optional = true }
 flight-panels     = { path = "../crates/flight-panels", optional = true }
 flight-hid        = { path = "../crates/flight-hid", optional = true }
-tempfile          = { version = "3", optional = true }
+tempfile          = { version = "3.24.0", optional = true }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

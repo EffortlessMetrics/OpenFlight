@@ -24,6 +24,6 @@ tracing = { workspace = true }
 parking_lot = { workspace = true }
 
 [dev-dependencies]
-tokio-test = "0.4"
+tokio-test = "0.4.5"
 proptest = { workspace = true }
 tempfile = { workspace = true }

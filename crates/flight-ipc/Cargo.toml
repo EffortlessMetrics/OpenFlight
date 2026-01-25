@@ -55,10 +55,10 @@ tonic-build.workspace = true
 prost-build.workspace = true
 
 [dev-dependencies]
-tokio-test = "0.4"
+tokio-test = "0.4.5"
 tempfile.workspace = true
 criterion.workspace = true
-chrono = "0.4"
+chrono = "0.4.43"
 tokio-stream = { workspace = true, features = ["sync"] }
 tracing-subscriber.workspace = true
 

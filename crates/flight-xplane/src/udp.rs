@@ -399,12 +399,12 @@ impl UdpClient {
     }
 
     /// Handle DATA output messages
-    /// 
+    ///
     /// Parses X-Plane DATA packets which contain 36-byte records.
     /// Each record has:
     /// - 4 bytes: data group index (i32)
     /// - 32 bytes: 8 float values (8 × 4 bytes)
-    /// 
+    ///
     /// Requirements: XPLANE-INT-01.2, XPLANE-INT-01.3, XPLANE-INT-01.6
     fn handle_data_output(
         data: &[u8],
@@ -466,7 +466,7 @@ impl UdpClient {
     }
 
     /// Cache values from DATA output based on index
-    /// 
+    ///
     /// Maps X-Plane DATA output indices to DataRef names and caches the values.
     /// Supports the required data groups for Flight Hub v1:
     /// - Group 3: Speeds (IAS, TAS, GS)
@@ -475,9 +475,9 @@ impl UdpClient {
     /// - Group 17: Pitch, roll, headings
     /// - Group 18: Alpha, beta
     /// - Group 21: Body velocities
-    /// 
+    ///
     /// Gracefully handles missing or unknown data groups (XPLANE-INT-01.6)
-    /// 
+    ///
     /// Requirements: XPLANE-INT-01.3
     fn cache_data_output_values(
         index: i32,
@@ -505,7 +505,10 @@ impl UdpClient {
                     "sim/flightmodel/position/groundspeed".to_string(),
                     (DataRefValue::Float(values[2]), now),
                 );
-                trace!("Cached speeds: IAS={}, TAS={}, GS={}", values[0], values[1], values[2]);
+                trace!(
+                    "Cached speeds: IAS={}, TAS={}, GS={}",
+                    values[0], values[1], values[2]
+                );
             }
             4 => {
                 // Group 4: Mach, VVI, G-load
@@ -530,7 +533,10 @@ impl UdpClient {
                     "sim/flightmodel/forces/g_side".to_string(),
                     (DataRefValue::Float(values[6]), now),
                 );
-                trace!("Cached Mach/VVI/G: Mach={}, VVI={}, Gnrml={}", values[0], values[1], values[4]);
+                trace!(
+                    "Cached Mach/VVI/G: Mach={}, VVI={}, Gnrml={}",
+                    values[0], values[1], values[4]
+                );
             }
             16 => {
                 // Group 16: Angular velocities (deg/s)
@@ -547,7 +553,10 @@ impl UdpClient {
                     "sim/flightmodel/position/R".to_string(),
                     (DataRefValue::Float(values[2]), now),
                 );
-                trace!("Cached angular rates: P={}, Q={}, R={}", values[0], values[1], values[2]);
+                trace!(
+                    "Cached angular rates: P={}, Q={}, R={}",
+                    values[0], values[1], values[2]
+                );
             }
             17 => {
                 // Group 17: Pitch, roll, headings (degrees)
@@ -568,7 +577,10 @@ impl UdpClient {
                     "sim/flightmodel/position/magpsi".to_string(),
                     (DataRefValue::Float(values[3]), now),
                 );
-                trace!("Cached attitude: pitch={}, roll={}, heading={}", values[0], values[1], values[2]);
+                trace!(
+                    "Cached attitude: pitch={}, roll={}, heading={}",
+                    values[0], values[1], values[2]
+                );
             }
             18 => {
                 // Group 18: Alpha, beta, etc. (degrees)
@@ -606,7 +618,10 @@ impl UdpClient {
                     "sim/flightmodel/position/local_vz".to_string(),
                     (DataRefValue::Float(values[2]), now),
                 );
-                trace!("Cached body velocities: vx={}, vy={}, vz={}", values[0], values[1], values[2]);
+                trace!(
+                    "Cached body velocities: vx={}, vy={}, vz={}",
+                    values[0], values[1], values[2]
+                );
             }
             20 => {
                 // Group 20: Position (lat/lon/alt) - bonus, not required for v1 but useful
@@ -623,7 +638,10 @@ impl UdpClient {
                     "sim/flightmodel/position/elevation".to_string(),
                     (DataRefValue::Float(values[2]), now),
                 );
-                trace!("Cached position: lat={}, lon={}, alt={}", values[0], values[1], values[2]);
+                trace!(
+                    "Cached position: lat={}, lon={}, alt={}",
+                    values[0], values[1], values[2]
+                );
             }
             _ => {
                 // Unknown or unsupported index - gracefully ignore (XPLANE-INT-01.6)
@@ -824,27 +842,31 @@ mod tests {
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
-        
+
         // Verify speeds
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
         assert!(cache_guard.contains_key("sim/flightmodel/position/true_airspeed"));
         assert!(cache_guard.contains_key("sim/flightmodel/position/groundspeed"));
-        
+
         // Verify attitude
         assert!(cache_guard.contains_key("sim/flightmodel/position/theta"));
         assert!(cache_guard.contains_key("sim/flightmodel/position/phi"));
         assert!(cache_guard.contains_key("sim/flightmodel/position/psi"));
-        
+
         // Verify Mach/VVI/G
         assert!(cache_guard.contains_key("sim/flightmodel/misc/machno"));
         assert!(cache_guard.contains_key("sim/flightmodel/position/vh_ind"));
         assert!(cache_guard.contains_key("sim/flightmodel/forces/g_nrml"));
 
         // Verify values
-        if let Some((DataRefValue::Float(pitch), _)) = cache_guard.get("sim/flightmodel/position/theta") {
+        if let Some((DataRefValue::Float(pitch), _)) =
+            cache_guard.get("sim/flightmodel/position/theta")
+        {
             assert_eq!(*pitch, 5.0);
         }
-        if let Some((DataRefValue::Float(g_nrml), _)) = cache_guard.get("sim/flightmodel/forces/g_nrml") {
+        if let Some((DataRefValue::Float(g_nrml), _)) =
+            cache_guard.get("sim/flightmodel/forces/g_nrml")
+        {
             assert_eq!(*g_nrml, 1.2);
         }
     }
@@ -867,19 +889,19 @@ mod tests {
 
         // Group 3: Speeds
         add_group(3, [150.0, 155.0, 145.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        
+
         // Group 4: Mach/VVI/G
         add_group(4, [0.45, 500.0, 0.0, 0.0, 1.2, 0.1, 0.05, 0.0]);
-        
+
         // Group 16: Angular velocities
         add_group(16, [2.5, -1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        
+
         // Group 17: Attitude
         add_group(17, [5.0, 10.0, 270.0, 275.0, 0.0, 0.0, 0.0, 0.0]);
-        
+
         // Group 18: Alpha/Beta
         add_group(18, [3.5, -0.5, 270.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        
+
         // Group 21: Body velocities
         add_group(21, [75.0, 2.0, -1.5, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
@@ -888,7 +910,7 @@ mod tests {
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
-        
+
         // Verify all required groups are cached
         // Group 3
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
@@ -927,15 +949,15 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should succeed even with missing groups
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
-        
+
         // Group 3 should be cached
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
-        
+
         // Other groups should not be present
         assert!(!cache_guard.contains_key("sim/flightmodel/position/theta"));
         assert!(!cache_guard.contains_key("sim/flightmodel/position/alpha"));
@@ -964,12 +986,12 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should succeed and skip unknown group
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
-        
+
         // Known group should be cached
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
     }
@@ -982,7 +1004,7 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should return error for malformed packet
         assert!(result.is_err());
     }
@@ -994,7 +1016,7 @@ mod tests {
         let mut data = Vec::new();
         data.extend_from_slice(b"XXXX"); // Invalid header
         data.push(0);
-        
+
         // Add valid data
         data.extend_from_slice(&3i32.to_le_bytes());
         for _ in 0..8 {
@@ -1003,7 +1025,7 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should return error for invalid header
         assert!(result.is_err());
     }
@@ -1031,15 +1053,15 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should succeed and process complete record, ignore incomplete
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
-        
+
         // First record should be cached
         assert!(cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"));
-        
+
         // Incomplete record should not be cached
         assert!(!cache_guard.contains_key("sim/flightmodel/position/theta"));
     }
@@ -1063,7 +1085,7 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         assert!(result.is_ok());
 
         let cache_guard = cache.read().unwrap();
@@ -1080,7 +1102,7 @@ mod tests {
 
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_data_output(&data, &cache);
-        
+
         // Should succeed with no records
         assert!(result.is_ok());
 

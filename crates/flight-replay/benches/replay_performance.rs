@@ -32,7 +32,7 @@ async fn create_benchmark_blackbox(frame_count: usize) -> (TempDir, std::path::P
         let timestamp = i as u64 * 4_000_000; // 4ms intervals
         let input_value = 0.5 * (i as f32 / 1000.0).sin();
         let frame = AxisFrame::new(input_value, timestamp);
-        let axis_data = bincode::serialize(&frame).unwrap();
+        let axis_data = postcard::to_allocvec(&frame).unwrap();
         writer.record_axis_frame(timestamp, &axis_data).unwrap();
     }
 

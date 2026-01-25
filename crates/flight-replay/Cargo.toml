@@ -22,7 +22,7 @@ anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tokio = { workspace = true, features = ["time"] }
-bincode = "1.3"
+postcard.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

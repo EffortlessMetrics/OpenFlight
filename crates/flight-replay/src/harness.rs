@@ -416,7 +416,7 @@ mod tests {
         // Write some test data
         for i in 0..100 {
             let timestamp = i * 4_000_000; // 4ms intervals
-            let axis_data = bincode::serialize(&AxisFrame::new(0.5, timestamp)).unwrap();
+            let axis_data = postcard::to_allocvec(&AxisFrame::new(0.5, timestamp)).unwrap();
             writer.record_axis_frame(timestamp, &axis_data).unwrap();
         }
 

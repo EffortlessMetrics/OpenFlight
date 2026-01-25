@@ -72,6 +72,7 @@ pub mod process_detection;
 pub mod profile;
 pub mod rules;
 pub mod security;
+pub mod time;
 pub mod units;
 pub mod watchdog;
 pub mod writers;

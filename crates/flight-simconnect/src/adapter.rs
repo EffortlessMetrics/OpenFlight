@@ -169,7 +169,10 @@ impl AdapterMetrics {
     pub fn summary(&self) -> String {
         format!(
             "Updates: {}, Rate: {:.1} Hz, Jitter p99: {:.2} ms, Aircraft changes: {}",
-            self.total_updates, self.actual_update_rate, self.update_jitter_p99_ms, self.aircraft_changes
+            self.total_updates,
+            self.actual_update_rate,
+            self.update_jitter_p99_ms,
+            self.aircraft_changes
         )
     }
 }
@@ -629,20 +632,20 @@ impl MsfsAdapter {
     /// Handle connection loss by transitioning to disconnected state
     pub async fn handle_connection_loss(&mut self) {
         warn!("SimConnect connection lost, transitioning to Disconnected state");
-        
+
         // Clean up session
         if let Some(mut session) = self.session.take() {
             let _ = session.disconnect();
         }
-        
+
         // Clear current state
         *self.current_aircraft.write().await = None;
         *self.current_snapshot.write().await = None;
         self.variable_mapping = None;
-        
+
         // Transition to disconnected
         *self.state.write().await = AdapterState::Disconnected;
-        
+
         info!("Adapter state transitioned to Disconnected, will attempt reconnection if enabled");
     }
 

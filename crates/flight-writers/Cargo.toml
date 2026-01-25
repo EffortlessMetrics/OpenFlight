@@ -23,8 +23,8 @@ tokio.workspace = true
 
 # File system operations
 tempfile.workspace = true
-regex = "1.10"
-sha2 = "0.10"
+regex = "1.12.2"
+sha2 = "0.10.9"
 
 # Testing
 proptest = { workspace = true, optional = true }
@@ -36,9 +36,9 @@ flight-ipc = { path = "../flight-ipc" }
 [dev-dependencies]
 proptest.workspace = true
 tempfile.workspace = true
-tokio-test = "0.4"
+tokio-test = "0.4.5"
 clap = { workspace = true }
-chrono = "0.4"
+chrono = "0.4.43"
 tracing-subscriber.workspace = true
 
 [features]

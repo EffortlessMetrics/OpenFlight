@@ -15,9 +15,11 @@ use flight_bus::{AircraftId, BusSnapshot, SimId};
 #[cfg(feature = "replay")]
 use flight_core::blackbox::{BlackboxConfig, BlackboxReader, BlackboxWriter};
 #[cfg(feature = "replay")]
+use flight_core::time;
+#[cfg(feature = "replay")]
 use flight_replay::{ReplayConfig, ReplayEngine, ReplayError, ReplayStats};
 #[cfg(feature = "replay")]
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 #[cfg(feature = "replay")]
 use std::time::{Duration, Instant};
 #[cfg(feature = "replay")]
@@ -63,10 +65,10 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
 
     // Create temporary directory for demo files
     let temp_dir = TempDir::new()?;
-    let recording_path = temp_dir.path().join("demo_flight.fbb");
+    let output_dir = temp_dir.path().to_path_buf();
 
     let config = BlackboxConfig {
-        output_dir: recording_path.clone(),
+        output_dir: output_dir.clone(),
         max_file_size_mb: 100,
         max_recording_duration: std::time::Duration::from_secs(3600),
         enable_compression: true,
@@ -75,13 +77,14 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
 
     let mut writer = BlackboxWriter::new(config);
     println!("✓ Blackbox writer initialized");
-    println!("  Output file: {:?}", recording_path);
+    println!("  Output dir: {:?}", output_dir);
 
     // Start recording
-    writer
+    let recording_path = writer
         .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
         .await?;
     println!("✓ Recording started");
+    println!("  Output file: {:?}", recording_path);
 
     // Simulate a flight session
     let session_duration = Duration::from_secs(10);
@@ -92,13 +95,13 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
     println!("  Simulating flight data...");
 
     while start_time.elapsed() < session_duration {
-        let timestamp = start_time.elapsed().as_nanos() as u64;
+        let timestamp = time::monotonic_now_ns();
 
         // Record axis frames at 250Hz
         if frame_count % 4 == 0 {
             // Every 4ms for 250Hz
             let axis_frame = create_mock_axis_frame(timestamp, frame_count);
-            let data = bincode::serialize(&axis_frame)?;
+            let data = postcard::to_allocvec(&axis_frame)?;
             writer.record_axis_frame(timestamp, &data)?;
             frame_count += 1;
         }
@@ -107,7 +110,7 @@ async fn demo_blackbox_recording() -> anyhow::Result<()> {
         if bus_count % 16 == 0 {
             // Every 16ms for ~60Hz
             let bus_snapshot = create_mock_bus_snapshot(timestamp);
-            let data = bincode::serialize(&bus_snapshot)?;
+            let data = postcard::to_allocvec(&bus_snapshot)?;
             writer.record_bus_snapshot(timestamp, &data)?;
             bus_count += 1;
         }
@@ -144,8 +147,7 @@ async fn demo_blackbox_reading() -> anyhow::Result<()> {
 
     // Create a sample recording first
     let temp_dir = TempDir::new()?;
-    let recording_path = temp_dir.path().join("sample.fbb");
-    create_sample_recording(&recording_path).await?;
+    let recording_path = create_sample_recording(temp_dir.path()).await?;
 
     // Read the recording
     let mut reader = BlackboxReader::open(&recording_path)?;
@@ -173,8 +175,7 @@ async fn demo_replay_engine() -> anyhow::Result<()> {
 
     // Create sample recording
     let temp_dir = TempDir::new()?;
-    let recording_path = temp_dir.path().join("replay_test.fbb");
-    create_sample_recording(&recording_path).await?;
+    let recording_path = create_sample_recording(temp_dir.path()).await?;
 
     let config = ReplayConfig {
         playback_speed: 1.0,
@@ -255,8 +256,7 @@ async fn demo_validation_analysis() -> anyhow::Result<()> {
 
     // Create test data with known characteristics
     let temp_dir = TempDir::new()?;
-    let recording_path = temp_dir.path().join("validation_test.fbb");
-    create_deterministic_recording(&recording_path).await?;
+    let recording_path = create_deterministic_recording(temp_dir.path()).await?;
 
     let config = ReplayConfig {
         playback_speed: 1.0,
@@ -329,8 +329,7 @@ async fn demo_performance_testing() -> anyhow::Result<()> {
 
     // Create a larger recording for performance testing
     let temp_dir = TempDir::new()?;
-    let recording_path = temp_dir.path().join("perf_test.fbb");
-    create_performance_recording(&recording_path).await?;
+    let recording_path = create_performance_recording(temp_dir.path()).await?;
 
     let config = ReplayConfig {
         playback_speed: 10.0, // 10x speed for performance test
@@ -396,9 +395,9 @@ async fn demo_performance_testing() -> anyhow::Result<()> {
 // Helper functions
 
 #[cfg(feature = "replay")]
-async fn create_sample_recording(path: &PathBuf) -> anyhow::Result<()> {
+async fn create_sample_recording(output_dir: &Path) -> anyhow::Result<PathBuf> {
     let config = BlackboxConfig {
-        output_dir: path.clone(),
+        output_dir: output_dir.to_path_buf(),
         max_file_size_mb: 10,
         max_recording_duration: std::time::Duration::from_secs(60),
         enable_compression: false,
@@ -406,34 +405,35 @@ async fn create_sample_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer
+    let recording_path = writer
         .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
         .await?;
 
     // Write sample data
+    let base_ts = time::monotonic_now_ns();
     for i in 0..1000 {
-        let timestamp = i * 4_000_000; // 4ms intervals for 250Hz
+        let timestamp = base_ts.saturating_add((i as u64) * 4_000_000); // 4ms intervals for 250Hz
 
         let axis_frame = create_mock_axis_frame(timestamp, i);
-        let data = bincode::serialize(&axis_frame)?;
+        let data = postcard::to_allocvec(&axis_frame)?;
         writer.record_axis_frame(timestamp, &data)?;
 
         // Add bus snapshot every 16ms (60Hz)
         if i % 4 == 0 {
             let bus_snapshot = create_mock_bus_snapshot(timestamp);
-            let data = bincode::serialize(&bus_snapshot)?;
+            let data = postcard::to_allocvec(&bus_snapshot)?;
             writer.record_bus_snapshot(timestamp, &data)?;
         }
     }
 
     writer.stop_recording().await?;
-    Ok(())
+    Ok(recording_path)
 }
 
 #[cfg(feature = "replay")]
-async fn create_deterministic_recording(path: &PathBuf) -> anyhow::Result<()> {
+async fn create_deterministic_recording(output_dir: &Path) -> anyhow::Result<PathBuf> {
     let config = BlackboxConfig {
-        output_dir: path.clone(),
+        output_dir: output_dir.to_path_buf(),
         max_file_size_mb: 10,
         max_recording_duration: std::time::Duration::from_secs(60),
         enable_compression: false,
@@ -441,30 +441,31 @@ async fn create_deterministic_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer
+    let recording_path = writer
         .start_recording("openflight-demo".into(), "msfs".into(), "test".into())
         .await?;
 
     // Create deterministic test pattern
+    let base_ts = time::monotonic_now_ns();
     for i in 0..500 {
-        let timestamp = i * 4_000_000;
+        let timestamp = base_ts.saturating_add((i as u64) * 4_000_000);
         let input = (i as f32) / 500.0; // Linear ramp 0 to 1
 
         let mut frame = AxisFrame::new(input, timestamp);
         frame.out = input * 0.8; // Simple linear response for validation
 
-        let data = bincode::serialize(&frame)?;
+        let data = postcard::to_allocvec(&frame)?;
         writer.record_axis_frame(timestamp, &data)?;
     }
 
     writer.stop_recording().await?;
-    Ok(())
+    Ok(recording_path)
 }
 
 #[cfg(feature = "replay")]
-async fn create_performance_recording(path: &PathBuf) -> anyhow::Result<()> {
+async fn create_performance_recording(output_dir: &Path) -> anyhow::Result<PathBuf> {
     let config = BlackboxConfig {
-        output_dir: path.clone(),
+        output_dir: output_dir.to_path_buf(),
         max_file_size_mb: 50,
         max_recording_duration: std::time::Duration::from_secs(300),
         enable_compression: true,
@@ -472,21 +473,22 @@ async fn create_performance_recording(path: &PathBuf) -> anyhow::Result<()> {
     };
 
     let mut writer = BlackboxWriter::new(config);
-    writer
+    let recording_path = writer
         .start_recording("openflight-demo".into(), "msfs".into(), "C172".into())
         .await?;
 
     // Create larger dataset for performance testing
+    let base_ts = time::monotonic_now_ns();
     for i in 0..50000 {
-        let timestamp = i * 4_000_000;
+        let timestamp = base_ts.saturating_add((i as u64) * 4_000_000);
         let axis_frame = create_mock_axis_frame(timestamp, i);
 
-        let data = bincode::serialize(&axis_frame)?;
+        let data = postcard::to_allocvec(&axis_frame)?;
         writer.record_axis_frame(timestamp, &data)?;
     }
 
     writer.stop_recording().await?;
-    Ok(())
+    Ok(recording_path)
 }
 
 #[cfg(feature = "replay")]

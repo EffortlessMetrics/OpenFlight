@@ -1,5 +1,7 @@
 # Flight Hub
 
+[![Repo](https://img.shields.io/badge/repo-EffortlessMetrics%2FOpenFlight-blue?logo=github&style=flat-square)](https://github.com/EffortlessMetrics/OpenFlight)
+
 A comprehensive PC flight simulation input management system that provides a unified control plane for flight controls, panels, and force feedback devices across multiple simulators.
 
 ## Features
