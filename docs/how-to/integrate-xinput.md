@@ -1,3 +1,14 @@
+---
+doc_id: DOC-HOWTO-INTEGRATE-XINPUT
+kind: how-to
+area: flight-ffb
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # XInput Rumble Integration Guide
 
 ## Overview

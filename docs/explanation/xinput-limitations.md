@@ -1,3 +1,14 @@
+---
+doc_id: DOC-XINPUT-LIMITATIONS
+kind: explanation
+area: flight-ffb
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # XInput Rumble Integration - Limitations and Usage
 
 ## Overview

@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-IPC-OVERVIEW
-kind: concept
+kind: explanation
 area: flight-ipc
 status: active
 links:

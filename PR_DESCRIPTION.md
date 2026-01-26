@@ -1,35 +1,44 @@
-# Pull Request: Migrate blackbox framing to postcard; unify time + units; fix reqwest TLS feature
+# PR: Repo Cleanup, Diataxis Documentation Reorg, and Roadmap Definition
 
-## Why
-- bincode 3.x is a tombstone; postcard framing gives explicit control + bounded decoding.
-- unify bus timestamp semantics (monotonic) across adapters.
-- prevent platform build break (reqwest feature mismatch).
+## Summary
+This PR performs a major cleanup of the repository root and restructures the documentation to align with the **Diataxis framework**. It also establishes high-level project management documents including a Roadmap, Changelog, and Priority tracking to guide the project's journey toward production readiness.
 
-## What changed
-- postcard wire format: len-prefixed header/record/index; footer trailer; CRC checked on open.
-- blackbox: index offsets documented as frame start; queue capacity recorded in stats; drop warning on first drop.
-- flight_core::time: monotonic + unix base captured at start; unix_now derived without wall-clock jumps.
-- flight_core::units: canonical conversions + angle normalization; adapters consume them.
-- reqwest: workspace policy uses rustls-native-certs for 0.13.1.
-- flight-updater: use rand::rngs::OsRng; remove rand_core feature mismatch.
+##  Changes
 
-## Safety surfaces
-- bounded frame reads (MAX_* caps), checked range math, CRC verification on open.
-- bounded queue + drop-tail behavior + counters + drop health warning.
+### 1. Documentation Restructuring (Diataxis Framework)
+The `docs/` directory has been reorganized into the four standard Diataxis quadrants to distinct user needs:
 
-## Glass Cockpit (target/perf-dashboard/latest.json, 2026-01-24 22:10:05Z)
-| Metric | Value |
-| --- | --- |
-| jitter_p50_us | 150.0 |
-| jitter_p99_us | 450.0 |
-| hid_p99_us | 280.0 |
-| deadline_misses | 2 |
-| writer_drops | 0 |
-| duration_s | 60.0 |
-| platform | windows |
+*   **Tutorials** (`docs/tutorials/`): Added `getting-started.md` as a step-by-step entry point for new developers.
+*   **How-To Guides** (`docs/how-to/`): Grouped practical, goal-oriented guides (e.g., `run-benchmarks.md`, `integrate-xinput.md`).
+*   **Explanation** (`docs/explanation/`): Renamed from `concepts/`; contains deep-dive architectural docs (e.g., `flight-core.md`, `quality-gates.md`).
+*   **Reference** (`docs/reference/`): Consolidated technical specifications and third-party license info.
+
+**Infrastructure Updates:**
+*   Updated `xtask` source code (`front_matter.rs`, `normalize_docs.rs`) to support new document kinds (`tutorial`, `explanation`).
+*   Regenerated `docs/README.md` to reflect the new structure.
+
+### 2. Project Management & Strategy
+Established clear documentation for project status and governance:
+
+*   **`ROADMAP.md`**: Created a detailed roadmap covering Milestones 0-7, defining the path from "Foundation" to "Production Readiness."
+*   **`CHANGELOG.md`**: Documented recent unreleased features (FFB Safety Envelope, Blackbox, Sim Adapters) and historical context.
+*   **`docs/NOW_NEXT_LATER.md`**: Added a strategic prioritization document to focus current efforts on "Production Readiness" and "Runtime Reliability."
+*   **`docs/GOVERNANCE.md`**: Defined the project's core values (Safety First, Real-Time Reliability), RFC process, and contributor roles.
+*   **`CONTRIBUTING.md`**: Created a clear entry point for contributors, linking to the priority docs and defining the validation pipeline.
+
+### 3. Repository Cleanup
+*   Removed root-level clutter.
+*   Moved development-specific documentation (e.g., `CROSS_REF_MODULE.md`) into `docs/dev/` or `docs/explanation/` as appropriate.
 
 ## Verification
-- `rg -n "\bbincode\b" crates examples -S`
-- `cargo tree -i bincode` (no package in graph)
-- `cargo check -p flight-updater`
-- `cargo check -p flight-core`
+*   **Documentation Index**: Ran `cargo xtask normalize-docs`.
+    *   ✅ Generated `docs/README.md` with correct grouping (Tutorials, How-To, Explanation, Reference).
+    *   ✅ Verified all doc links and metadata.
+*   **Validation**:
+    *   ✅ `cargo xtask check` passes (no broken links or lint errors).
+
+## Checklist
+- [x] Documentation updated (Diataxis structure implemented).
+- [x] Roadmap and Changelog created.
+- [x] `xtask` tooling updated to support new documentation schema.
+- [x] `CONTRIBUTING.md` updated with new workflow instructions.

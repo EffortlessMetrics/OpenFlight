@@ -361,12 +361,7 @@ impl BlackboxWriter {
             match tx.try_send(record) {
                 Ok(()) => {}
                 Err(mpsc::error::TrySendError::Full(_record)) => {
-                    Self::note_drop(
-                        &self.drop_counter,
-                        &self.stats,
-                        stream_type,
-                        "queue full",
-                    );
+                    Self::note_drop(&self.drop_counter, &self.stats, stream_type, "queue full");
                 }
                 Err(mpsc::error::TrySendError::Closed(_record)) => {
                     Self::note_drop(
@@ -446,23 +441,21 @@ impl BlackboxWriter {
                                 state.last_record_timestamp_ns = record.timestamp_ns;
 
                                 let record_offset = state.file_offset;
-                                let mut record_bytes_storage = Vec::new();
                                 let record_bytes = match wire::encode_into_slice(
                                     &record,
                                     &mut state.record_buffer,
                                 ) {
-                                    Ok(len) => &state.record_buffer[..len],
+                                    Ok(len) => std::borrow::Cow::Borrowed(&state.record_buffer[..len]),
                                     Err(postcard::Error::SerializeBufferFull) => {
-                                        record_bytes_storage = wire::encode_alloc(&record)?;
-                                        record_bytes_storage.as_slice()
+                                        std::borrow::Cow::Owned(wire::encode_alloc(&record)?)
                                     }
                                     Err(err) => return Err(err.into()),
                                 };
 
-                                wire::write_len_prefixed(&mut state.file, record_bytes)?;
+                                wire::write_len_prefixed(&mut state.file, &record_bytes)?;
                                 state.file_offset += 4_u64 + record_bytes.len() as u64;
 
-                                let should_index = state.last_index_timestamp_ns.map_or(true, |last| {
+                                let should_index = state.last_index_timestamp_ns.is_none_or(|last| {
                                     record.timestamp_ns.saturating_sub(last) >= index_interval_ns
                                 });
                                 if should_index {

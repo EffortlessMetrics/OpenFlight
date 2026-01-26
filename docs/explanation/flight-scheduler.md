@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-SCHEDULER-OVERVIEW
-kind: concept
+kind: explanation
 area: flight-scheduler
 status: active
 links:

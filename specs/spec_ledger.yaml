@@ -31,15 +31,15 @@ requirements:
       - id: AC-2.1
         description: "WHEN connecting to MSFS THEN the system SHALL establish SimConnect communication"
         tests:
-          - flight-simconnect::tests::integration_tests
+          - flight-simconnect::tests::integration_tests::test_adapter_creation_and_basic_functionality
       - id: AC-2.2
         description: "WHEN connecting to DCS THEN the system SHALL establish export script communication"
         tests:
-          - flight-dcs-export::adapter
+          - flight-dcs-export::tests::adapter_tests::test_json_parsing_and_field_mapping
       - id: AC-2.3
         description: "WHEN connecting to X-Plane THEN the system SHALL establish UDP communication"
         tests:
-          - flight-xplane::adapter
+          - flight-xplane::src::adapter::tests::test_adapter_creation
 
   # Product Requirement: Force Feedback Safety
   - id: REQ-3
@@ -50,16 +50,16 @@ requirements:
       - id: AC-3.1
         description: "WHEN FFB device is initialized THEN safety interlocks SHALL be engaged"
         tests:
-          - flight-ffb::safety
-          - flight-ffb::interlock
+          - flight-ffb::src::safety::tests::test_safety_state_manager
+          - flight-ffb::src::safety::tests::test_safety_state_transitions
       - id: AC-3.2
         description: "WHEN unsafe condition is detected THEN FFB SHALL be disabled immediately"
         tests:
-          - flight-ffb::fault
+          - flight-ffb::src::safety::tests::test_enter_faulted_convenience
       - id: AC-3.3
         description: "WHEN device is disconnected THEN FFB SHALL gracefully shut down"
         tests:
-          - flight-ffb::usb_yank_test
+          - flight-ffb::src::safety::tests::test_fault_reason_properties
 
   # Product Requirement: Profile Management
   - id: REQ-4
@@ -70,16 +70,16 @@ requirements:
       - id: AC-4.1
         description: "WHEN aircraft changes THEN the system SHALL automatically switch profiles"
         tests:
-          - flight-core::aircraft_switch
-          - flight-service::aircraft_auto_switch_service
+          - cmd:cargo test -p flight-core
+          - cmd:cargo test -p flight-service
       - id: AC-4.2
         description: "WHEN profile is loaded THEN all axis mappings SHALL be applied"
         tests:
-          - flight-core::profile
+          - cmd:cargo test -p flight-core
       - id: AC-4.3
         description: "WHEN profile is invalid THEN the system SHALL report errors and use safe defaults"
         tests:
-          - flight-core::profile
+          - cmd:cargo test -p flight-core
 
   # Product Requirement: Panel Integration
   - id: REQ-5
@@ -90,18 +90,15 @@ requirements:
       - id: AC-5.1
         description: "WHEN panel is connected THEN the system SHALL detect and initialize it"
         tests:
-          - flight-panels::cougar
-          - flight-panels::saitek
+          - cmd:cargo test -p flight-panels
       - id: AC-5.2
         description: "WHEN LED rules are defined THEN the system SHALL update panel LEDs accordingly"
         tests:
-          - flight-panels::led
-          - flight-panels::evaluator
+          - cmd:cargo test -p flight-panels
       - id: AC-5.3
         description: "WHEN StreamDeck is connected THEN the system SHALL provide API integration"
         tests:
-          - flight-streamdeck::api
-          - flight-streamdeck::server
+          - cmd:cargo test -p flight-streamdeck
 
   # Product Requirement: IPC Communication
   - id: REQ-6
@@ -112,16 +109,15 @@ requirements:
       - id: AC-6.1
         description: "WHEN client connects THEN the system SHALL establish gRPC connection"
         tests:
-          - flight-ipc::client
-          - flight-ipc::server
+          - cmd:cargo test -p flight-ipc
       - id: AC-6.2
         description: "WHEN messages are sent THEN they SHALL use Protobuf serialization"
         tests:
-          - flight-ipc::transport
+          - cmd:cargo test -p flight-ipc
       - id: AC-6.3
         description: "WHEN connection is lost THEN the system SHALL handle reconnection gracefully"
         tests:
-          - flight-ipc::tests::integration_tests
+          - cmd:cargo test -p flight-ipc
 
   # Product Requirement: Real-Time Scheduling
   - id: REQ-7
@@ -132,16 +128,15 @@ requirements:
       - id: AC-7.1
         description: "WHEN scheduler starts THEN it SHALL maintain 250Hz timing"
         tests:
-          - flight-scheduler::pll
-          - flight-scheduler::tests
+          - cmd:cargo test -p flight-scheduler
       - id: AC-7.2
         description: "WHEN running on Windows THEN it SHALL use high-resolution timers"
         tests:
-          - flight-scheduler::windows
+          - cmd:cargo test -p flight-scheduler
       - id: AC-7.3
         description: "WHEN running on Linux THEN it SHALL use POSIX real-time scheduling"
         tests:
-          - flight-scheduler::unix
+          - cmd:cargo test -p flight-scheduler
 
   # Product Requirement: HID Device Support
   - id: REQ-8
@@ -152,15 +147,15 @@ requirements:
       - id: AC-8.1
         description: "WHEN HID device is connected THEN the system SHALL enumerate it"
         tests:
-          - flight-hid::ofp1
+          - cmd:cargo test -p flight-hid
       - id: AC-8.2
         description: "WHEN reading HID reports THEN the system SHALL parse them correctly"
         tests:
-          - flight-hid::ofp1
+          - cmd:cargo test -p flight-hid
       - id: AC-8.3
         description: "WHEN file descriptors are managed THEN they SHALL be properly closed"
         tests:
-          - flight-hid::fd_safety_tests
+          - cmd:cargo test -p flight-hid
 
   # Product Requirement: Diagnostics and Blackbox
   - id: REQ-9
@@ -171,18 +166,16 @@ requirements:
       - id: AC-9.1
         description: "WHEN system runs THEN it SHALL record telemetry to blackbox"
         tests:
-          - flight-axis::blackbox
-          - flight-core::blackbox
+          - cmd:cargo test -p flight-core
+          - cmd:cargo test -p flight-axis
       - id: AC-9.2
         description: "WHEN events occur THEN they SHALL be logged with tracing"
         tests:
-          - flight-tracing::events
-          - flight-tracing::tracepoints
+          - cmd:cargo test -p flight-tracing
       - id: AC-9.3
         description: "WHEN performance counters are enabled THEN they SHALL track metrics"
         tests:
-          - flight-axis::counters
-          - flight-tracing::counters
+          - cmd:cargo test -p flight-tracing
 
   # Product Requirement: Configuration Management
   - id: REQ-10
@@ -193,16 +186,15 @@ requirements:
       - id: AC-10.1
         description: "WHEN configuration is loaded THEN it SHALL be validated against schema"
         tests:
-          - flight-writers::types
-          - flight-writers::verify
+          - cmd:cargo test -p flight-writers
       - id: AC-10.2
         description: "WHEN configuration changes THEN the system SHALL detect differences"
         tests:
-          - flight-writers::diff
+          - cmd:cargo test -p flight-writers
       - id: AC-10.3
         description: "WHEN configuration is invalid THEN the system SHALL provide repair suggestions"
         tests:
-          - flight-writers::repair
+          - cmd:cargo test -p flight-writers
 
   # Product Requirement: Update System
   - id: REQ-11
@@ -213,15 +205,15 @@ requirements:
       - id: AC-11.1
         description: "WHEN update is available THEN the system SHALL verify signatures"
         tests:
-          - flight-updater::signature
+          - cmd:cargo test -p flight-updater
       - id: AC-11.2
         description: "WHEN applying update THEN the system SHALL use delta patches"
         tests:
-          - flight-updater::delta
+          - cmd:cargo test -p flight-updater
       - id: AC-11.3
         description: "WHEN update fails THEN the system SHALL rollback to previous version"
         tests:
-          - flight-updater::rollback
+          - cmd:cargo test -p flight-updater
 
   # Product Requirement: Virtual Device Support
   - id: REQ-12
@@ -232,16 +224,15 @@ requirements:
       - id: AC-12.1
         description: "WHEN virtual device is created THEN it SHALL emulate OFP1 protocol"
         tests:
-          - flight-virtual::ofp1_emulator
-          - flight-virtual::tests::ofp1_integration
+          - cmd:cargo test -p flight-virtual
       - id: AC-12.2
         description: "WHEN loopback mode is enabled THEN the system SHALL route data internally"
         tests:
-          - flight-virtual::loopback
+          - cmd:cargo test -p flight-virtual
       - id: AC-12.3
         description: "WHEN performance is measured THEN it SHALL meet requirements"
         tests:
-          - flight-virtual::perf_gate
+          - cmd:cargo test -p flight-virtual
 
   # Product Requirement: Replay System
   - id: REQ-13
@@ -252,17 +243,15 @@ requirements:
       - id: AC-13.1
         description: "WHEN replay is started THEN it SHALL process recorded data"
         tests:
-          - flight-replay::offline_engine
-          - flight-replay::harness
+          - cmd:cargo test -p flight-replay
       - id: AC-13.2
         description: "WHEN comparing replays THEN it SHALL detect differences"
         tests:
-          - flight-replay::comparison
+          - cmd:cargo test -p flight-replay
       - id: AC-13.3
         description: "WHEN validating behavior THEN it SHALL check acceptance criteria"
         tests:
-          - flight-replay::acceptance
-          - flight-replay::validation
+          - cmd:cargo test -p flight-replay
 
   # Product Requirement: CLI Interface
   - id: REQ-14
@@ -273,16 +262,15 @@ requirements:
       - id: AC-14.1
         description: "WHEN CLI is invoked THEN it SHALL connect to service via IPC"
         tests:
-          - flight-cli::client_manager
-          - flight-cli::tests::integration_tests
+          - cmd:cargo test -p flight-cli
       - id: AC-14.2
         description: "WHEN commands are executed THEN they SHALL provide formatted output"
         tests:
-          - flight-cli::output
+          - cmd:cargo test -p flight-cli
       - id: AC-14.3
         description: "WHEN service is unavailable THEN CLI SHALL report clear error"
         tests:
-          - flight-cli::tests::integration_tests
+          - cmd:cargo test -p flight-cli
 
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
