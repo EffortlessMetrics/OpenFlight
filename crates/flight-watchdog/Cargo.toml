@@ -16,5 +16,4 @@ tokio.workspace = true
 crossbeam.workspace = true
 
 [dev-dependencies]
-proptest.workspace = true
 tokio-test = "0.4.5"
