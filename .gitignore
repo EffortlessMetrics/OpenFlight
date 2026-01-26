@@ -28,3 +28,6 @@ Thumbs.db
 # Flight Hub specific
 *.fbb
 flight-hub.log
+
+mutants.out
+mutants.out.old

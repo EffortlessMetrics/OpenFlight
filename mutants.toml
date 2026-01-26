@@ -1,0 +1,29 @@
+# Configuration for cargo-mutants
+
+# Timeout multiplier relative to the baseline test run
+# Increase this if mutants are being killed by timeouts on slow machines
+timeout_multiplier = 2.0
+
+# Exclude specific files or patterns from mutation
+# We exclude tests and benchmarks as mutating them doesn't help find bugs in code
+exclude = [
+    "**/*_test.rs",
+    "**/tests/**",
+    "**/benches/**",
+    "**/examples/**",
+]
+
+# Exclude specific functions that might be false positives or irrelevant
+# e.g., logging functions or purely display logic
+skip_calls = [
+    "println!",
+    "eprintln!",
+    "tracing::info!", 
+    "tracing::debug!",
+    "tracing::warn!",
+    "tracing::error!",
+    "tracing::trace!",
+]
+
+# Additional arguments to cargo test
+additional_cargo_test_args = []
