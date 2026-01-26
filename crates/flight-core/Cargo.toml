@@ -25,6 +25,8 @@ indexmap = { version = "2.13.0", features = ["serde"] }
 flight-units = { path = "../flight-units" }
 flight-rules = { path = "../flight-rules" }
 flight-profile = { path = "../flight-profile" }
+flight-process-detection = { path = "../flight-process-detection" }
+flight-writers = { path = "../flight-writers" }
 
 [target.'cfg(windows)'.dependencies]
 windows = { workspace = true, features = [

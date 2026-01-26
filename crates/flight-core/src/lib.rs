@@ -68,16 +68,16 @@
 pub mod aircraft_switch;
 pub mod blackbox;
 pub mod error;
-pub mod process_detection;
 pub mod security;
 pub mod time;
 pub mod watchdog;
-pub mod writers;
 
 // Re-exports from microcrates
 pub use flight_units as units;
 pub use flight_rules as rules;
 pub use flight_profile as profile;
+pub use flight_process_detection as process_detection;
+pub use flight_writers as writers;
 
 
 pub use aircraft_switch::{
@@ -91,6 +91,7 @@ pub use blackbox::{
 pub use error::{FlightError, Result};
 pub use process_detection::{
     DetectedProcess, DetectionMetrics, ProcessDefinition, ProcessDetectionConfig, ProcessDetector,
+    SimId, ProcessDetectionError,
 };
 pub use profile::{CapabilityContext, CapabilityLimits, CapabilityMode};
 pub use security::{
@@ -105,4 +106,5 @@ pub use watchdog::{
 };
 pub use writers::{
     BackupInfo, CurveConflictWriter, VerificationResult, WriteResult, WritersConfig,
+    CurveConflictError,
 };
