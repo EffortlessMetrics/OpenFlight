@@ -815,3 +815,90 @@ impl Node for MixerNode {
         "mixer"
     }
 }
+
+#[cfg(test)]
+mod prop_tests {
+    use super::*;
+    use crate::AxisFrame;
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test DeadzoneNode behavior
+        #[test]
+        fn prop_deadzone_node_step(
+            threshold in 0.0f32..=0.9f32,
+            input_val in -1.0f32..=1.0f32
+        ) {
+            let mut node = DeadzoneNode::new(threshold);
+            let mut frame = AxisFrame::new(input_val, 1000);
+            frame.out = input_val; // Initialize out same as in
+            
+            node.step(&mut frame);
+            
+            if input_val.abs() < threshold {
+                prop_assert_eq!(frame.out, 0.0);
+            } else {
+                prop_assert!(frame.out.abs() > 0.0);
+                prop_assert!(frame.out.abs() <= 1.0);
+                // Should preserve sign
+                prop_assert_eq!(frame.out.signum(), input_val.signum());
+            }
+        }
+
+        // Test CurveNode behavior
+        #[test]
+        fn prop_curve_node_step(
+            expo in -1.0f32..=1.0f32,
+            input_val in -1.0f32..=1.0f32
+        ) {
+            let mut node = CurveNode::new(expo);
+            let mut frame = AxisFrame::new(input_val, 1000);
+            frame.out = input_val;
+
+            node.step(&mut frame);
+
+            prop_assert!(frame.out.abs() <= 1.0);
+            // Should preserve sign
+            if input_val != 0.0 {
+                prop_assert_eq!(frame.out.signum(), input_val.signum());
+            }
+            // Should be monotonic
+            // (Strict monotonicity checks are hard with floats, but sign check covers most basic regressions)
+        }
+
+        // Test MixerConfig validation logic
+        #[test]
+        fn prop_mixer_config_validation(
+            scale in -10.0f32..=10.0f32,
+            gain in 0.0f32..=10.0f32,
+            output_name in "[a-z_]+"
+        ) {
+            let config = MixerConfig::new(output_name)
+                .add_input_with_gain("test_input", scale, gain);
+                
+            prop_assert!(config.validate().is_ok());
+        }
+
+        // Test MixerNode processing (basic single input pass-through check)
+        #[test]
+        fn prop_mixer_process_single(
+            input_val in -1.0f32..=1.0f32,
+            scale in -1.0f32..=1.0f32,
+            gain in 0.0f32..=2.0f32
+        ) {
+            let config = MixerConfig::new("test")
+                .add_input_with_gain("in1", scale, gain);
+            
+            let mixer = MixerNode::new(config).unwrap();
+            let inputs = vec![input_val];
+            let mut output = 0.0;
+            
+            mixer.process_inputs(&inputs, &mut output);
+            
+            let expected_raw = input_val * scale * gain;
+            let expected_clamped = expected_raw.clamp(-1.0, 1.0);
+            
+            prop_assert!((output - expected_clamped).abs() < 1e-5);
+        }
+    }
+}
