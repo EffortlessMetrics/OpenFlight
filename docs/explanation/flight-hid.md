@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-HID-OVERVIEW
-kind: concept
+kind: explanation
 area: flight-hid
 status: active
 links:

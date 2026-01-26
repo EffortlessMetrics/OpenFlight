@@ -126,11 +126,13 @@ pub fn generate_docs_index(docs: &[(PathBuf, FrontMatter)]) -> Result<String> {
 
     // Define the order of bands
     let band_order = vec![
+        ("tutorial", "Tutorials"),
+        ("howto", "How-To Guides"),
+        ("explanation", "Explanation"),
+        ("reference", "Reference"),
         ("requirements", "Requirements"),
         ("design", "Design"),
         ("concept", "Concepts"),
-        ("howto", "How-To Guides"),
-        ("reference", "Reference"),
         ("adr", "Architecture Decision Records"),
     ];
 

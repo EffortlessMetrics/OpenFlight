@@ -44,6 +44,8 @@ pub enum DocKind {
     HowTo,
     Reference,
     Adr,
+    Tutorial,
+    Explanation,
 }
 
 /// Area enumeration for documentation.

@@ -1,3 +1,14 @@
+---
+doc_id: DOC-SUPPLY-CHAIN-SECURITY
+kind: explanation
+area: infra
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # Flight Hub Supply Chain Security
 
 This document describes the comprehensive supply chain security implementation for Flight Hub, addressing the requirements specified in task 37 and SEC-01.

@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-INTEGRATION-OVERVIEW
-kind: reference
+kind: explanation
 area: infra
 status: active
 links:

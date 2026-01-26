@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-REGRESSION-PREVENTION
-kind: reference
+kind: explanation
 area: ci
 status: active
 links:

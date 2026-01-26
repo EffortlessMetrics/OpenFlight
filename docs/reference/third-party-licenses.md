@@ -1,3 +1,14 @@
+---
+doc_id: DOC-THIRD-PARTY-LICENSES
+kind: reference
+area: infra
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # Third-Party Licenses
 
 This document contains the licenses of all third-party dependencies used in Flight Hub.

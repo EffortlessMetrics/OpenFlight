@@ -1,3 +1,14 @@
+---
+doc_id: DOC-QUALITY-GATES
+kind: explanation
+area: ci
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # Quality Gates
 
 This document describes the CI quality gates implemented for Flight Hub, as defined in the sim-integration-implementation spec.
