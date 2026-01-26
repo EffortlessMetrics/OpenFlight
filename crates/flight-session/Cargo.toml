@@ -17,5 +17,4 @@ flight-profile = { path = "../flight-profile" }
 flight-process-detection = { path = "../flight-process-detection" }
 
 [dev-dependencies]
-proptest.workspace = true
 tempfile.workspace = true

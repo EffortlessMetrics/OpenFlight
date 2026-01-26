@@ -8,9 +8,6 @@ use thiserror::Error;
 /// Flight Hub error types
 #[derive(Error, Debug)]
 pub enum FlightError {
-    #[error("Profile validation error: {0}")]
-    ProfileValidation(String),
-
     #[error("Rules validation error: {0}")]
     RulesValidation(String),
 
@@ -25,9 +22,6 @@ pub enum FlightError {
 
     #[error("Writer error: {0}")]
     Writer(String),
-
-    #[error("Aircraft auto-switch error: {0}")]
-    AutoSwitch(String),
 
     #[error("Hardware error: {0}")]
     Hardware(String),
@@ -52,6 +46,9 @@ pub enum FlightError {
 
     #[error("Rules error: {0}")]
     Rules(#[from] flight_rules::RulesError),
+
+    #[error("Session error: {0}")]
+    Session(#[from] flight_session::SessionError),
 }
 
 /// Result type alias for Flight Hub operations

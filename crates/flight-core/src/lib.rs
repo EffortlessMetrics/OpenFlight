@@ -65,7 +65,6 @@
 //! rules.validate().expect("Rules should be valid");
 //! ```
 
-pub mod aircraft_switch;
 pub mod error;
 
 // Re-exports from microcrates
@@ -77,11 +76,12 @@ pub use flight_writers as writers;
 pub use flight_security as security;
 pub use flight_blackbox as blackbox;
 pub use flight_watchdog as watchdog;
+pub use flight_session as aircraft_switch;
 
 
 pub use aircraft_switch::{
     AircraftAutoSwitch, AutoSwitchConfig, CompiledProfile, DetectedAircraft, HysteresisBand,
-    PhaseOfFlight, PofHysteresisConfig, SwitchMetrics, SwitchResult,
+    PhaseOfFlight, PofHysteresisConfig, SwitchMetrics, SwitchResult, SessionError,
 };
 pub use blackbox::{
     BlackboxHeader, BlackboxRecord, BlackboxError,

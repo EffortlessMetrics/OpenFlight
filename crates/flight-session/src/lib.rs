@@ -7,11 +7,34 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
-use crate::profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
-use crate::{FlightError, Result};
+use flight_profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-pub use crate::process_detection::SimId;
+#[derive(Debug, Error)]
+pub enum SessionError {
+    #[error("Profile validation error: {0}")]
+    ProfileValidation(String),
+    
+    #[error("Configuration error: {0}")]
+    Configuration(String),
+
+    #[error("Profile error: {0}")]
+    Profile(#[from] flight_profile::ProfileError),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+
+    #[error("Auto-switch error: {0}")]
+    AutoSwitch(String),
+}
+
+pub type Result<T> = std::result::Result<T, SessionError>;
+
+pub use flight_process_detection::SimId;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -320,7 +343,7 @@ impl AircraftAutoSwitch {
     pub async fn start(&self) -> Result<()> {
         let mut rx =
             self.switch_rx.write().await.take().ok_or_else(|| {
-                FlightError::AutoSwitch("Auto-switch already started".to_string())
+                SessionError::AutoSwitch("Auto-switch already started".to_string())
             })?;
 
         let state = Arc::clone(&self.state);
@@ -400,7 +423,7 @@ impl AircraftAutoSwitch {
         self.switch_tx
             .send(SwitchRequest::AircraftDetected(aircraft))
             .map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to send aircraft detection: {}", e))
+                SessionError::AutoSwitch(format!("Failed to send aircraft detection: {}", e))
             })?;
         Ok(())
     }
@@ -411,7 +434,7 @@ impl AircraftAutoSwitch {
             self.switch_tx
                 .send(SwitchRequest::TelemetryUpdate(snapshot))
                 .map_err(|e| {
-                    FlightError::AutoSwitch(format!("Failed to send telemetry update: {}", e))
+                    SessionError::AutoSwitch(format!("Failed to send telemetry update: {}", e))
                 })?;
         }
         Ok(())
@@ -422,7 +445,7 @@ impl AircraftAutoSwitch {
         info!("Forcing switch to aircraft: {}", aircraft_id);
         self.switch_tx
             .send(SwitchRequest::ForceSwitch(aircraft_id))
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to send force switch: {}", e)))?;
+            .map_err(|e| SessionError::AutoSwitch(format!("Failed to send force switch: {}", e)))?;
         Ok(())
     }
 
@@ -432,7 +455,7 @@ impl AircraftAutoSwitch {
         self.switch_tx
             .send(SwitchRequest::InvalidateCache(aircraft_id))
             .map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to send cache invalidation: {}", e))
+                SessionError::AutoSwitch(format!("Failed to send cache invalidation: {}", e))
             })?;
         Ok(())
     }
@@ -736,7 +759,7 @@ impl AircraftAutoSwitch {
         }
 
         if profiles.is_empty() {
-            return Err(FlightError::AutoSwitch(format!(
+            return Err(SessionError::AutoSwitch(format!(
                 "No profiles found for aircraft: {}",
                 aircraft_id
             )));
@@ -752,7 +775,7 @@ impl AircraftAutoSwitch {
         let content = tokio::fs::read_to_string(&profile_path)
             .await
             .map_err(|e| {
-                FlightError::AutoSwitch(format!(
+                SessionError::AutoSwitch(format!(
                     "Failed to read profile {}: {}",
                     profile_path.display(),
                     e
@@ -760,7 +783,7 @@ impl AircraftAutoSwitch {
             })?;
 
         let profile: Profile = serde_json::from_str(&content).map_err(|e| {
-            FlightError::AutoSwitch(format!(
+            SessionError::AutoSwitch(format!(
                 "Failed to parse profile {}: {}",
                 profile_path.display(),
                 e
@@ -1069,7 +1092,7 @@ impl PofTracker {
 }
 
 impl std::str::FromStr for PhaseOfFlight {
-    type Err = FlightError;
+    type Err = SessionError;
 
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
@@ -1082,7 +1105,7 @@ impl std::str::FromStr for PhaseOfFlight {
             "approach" => Ok(PhaseOfFlight::Approach),
             "landing" => Ok(PhaseOfFlight::Landing),
             "goaround" => Ok(PhaseOfFlight::GoAround),
-            _ => Err(FlightError::AutoSwitch(format!(
+            _ => Err(SessionError::AutoSwitch(format!(
                 "Unknown phase of flight: {}",
                 s
             ))),
