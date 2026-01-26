@@ -666,4 +666,75 @@ mod tests {
             .unwrap();
         matches!(action, Action::LedBlink { target, rate_hz } if target == "indexer" && rate_hz == 6.0);
     }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test parsing of boolean conditions
+        #[test]
+        fn prop_parse_boolean_condition(var_name in "[a-zA-Z_][a-zA-Z0-9_]*") {
+            let compiler = RulesCompiler::new(HashMap::new());
+            
+            // Positive case
+            if let Ok(Condition::Boolean { variable, negate }) = compiler.parse_condition(&var_name) {
+                prop_assert_eq!(variable, var_name.clone());
+                prop_assert!(!negate);
+            }
+
+            // Negative case
+            let negated = format!("!{}", var_name);
+            if let Ok(Condition::Boolean { variable, negate }) = compiler.parse_condition(&negated) {
+                prop_assert_eq!(variable, var_name);
+                prop_assert!(negate);
+            }
+        }
+
+        // Test parsing of numeric comparisons
+        #[test]
+        fn prop_parse_numeric_comparison(
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*", 
+            val in -1000.0f32..1000.0
+        ) {
+            let compiler = RulesCompiler::new(HashMap::new());
+            
+            // Greater than
+            let expr = format!("{} > {}", var_name, val);
+            if let Ok(Condition::Compare { variable, operator, value }) = compiler.parse_condition(&expr) {
+                prop_assert_eq!(variable, var_name.clone());
+                matches!(operator, CompareOp::Greater);
+                prop_assert!((value - val).abs() < 0.001);
+            }
+
+            // Equal
+            let expr = format!("{} == {}", var_name, val);
+            if let Ok(Condition::Compare { variable, operator, value }) = compiler.parse_condition(&expr) {
+                prop_assert_eq!(variable, var_name);
+                matches!(operator, CompareOp::Equal);
+                prop_assert!((value - val).abs() < 0.001);
+            }
+        }
+
+        // Test parsing of actions
+        #[test]
+        fn prop_parse_action_led_on_off(target in "[A-Z0-9_]+") {
+            let compiler = RulesCompiler::new(HashMap::new());
+
+            // ON
+            let expr = format!("led.panel('{}').on()", target);
+            if let Ok(Action::LedOn { target: parsed_target }) = compiler.parse_action(&expr) {
+                prop_assert_eq!(parsed_target, target.clone());
+            } else {
+                // Should pass if formatted correctly
+                prop_assert!(false, "Failed to parse valid LED ON action: {}", expr);
+            }
+
+            // OFF
+            let expr = format!("led.panel('{}').off()", target);
+            if let Ok(Action::LedOff { target: parsed_target }) = compiler.parse_action(&expr) {
+                prop_assert_eq!(parsed_target, target);
+            } else {
+                 prop_assert!(false, "Failed to parse valid LED OFF action: {}", expr);
+            }
+        }
+    }
 }

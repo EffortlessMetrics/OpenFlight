@@ -650,4 +650,67 @@ mod tests {
         assert!(!detector.is_sim_detected(SimId::XPlane).await);
         assert!(!detector.is_sim_detected(SimId::Dcs).await);
     }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Verify that process matching logic works correctly with various inputs
+        #[test]
+        fn prop_check_simulator_processes_match(
+            name_fragment in "[a-zA-Z0-9]+",
+            other_fragment in "[a-zA-Z0-9]+"
+        ) {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            
+            rt.block_on(async {
+                let definition = ProcessDefinition {
+                    process_names: vec![format!("{}.exe", name_fragment)],
+                    window_titles: vec![],
+                    process_paths: vec![],
+                    min_confidence: 0.5,
+                };
+
+                // Exact match case
+                let processes = vec![SystemProcess {
+                    pid: 123,
+                    name: format!("{}.exe", name_fragment),
+                    path: PathBuf::from("C:\\test\\path"),
+                    window_title: None,
+                }];
+
+                let detected = ProcessDetector::check_simulator_processes(
+                    SimId::Msfs,
+                    &definition,
+                    &processes,
+                    false
+                ).await.unwrap();
+
+                prop_assert!(detected.is_some());
+                if let Some(d) = detected {
+                    prop_assert!(d.confidence >= 0.6);
+                }
+
+                // Non-match case
+                if name_fragment != other_fragment {
+                    let processes = vec![SystemProcess {
+                        pid: 123,
+                        name: format!("{}.exe", other_fragment),
+                        path: PathBuf::from("C:\\test\\path"),
+                        window_title: None,
+                    }];
+
+                    let detected = ProcessDetector::check_simulator_processes(
+                        SimId::Msfs,
+                        &definition,
+                        &processes,
+                        false
+                    ).await.unwrap();
+
+                    prop_assert!(detected.is_none());
+                }
+                
+                Ok(())
+            }).unwrap();
+        }
+    }
 }
