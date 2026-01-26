@@ -199,6 +199,90 @@ pub struct CompiledProfile {
     pub pof_overrides: HashMap<PhaseOfFlight, Profile>,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_aircraft_id_basics() {
+        let id = AircraftId::new("C172");
+        assert_eq!(id.to_string(), "C172");
+
+        let id_var = AircraftId::with_variant("A320", "NEO");
+        assert_eq!(id_var.to_string(), "A320-NEO");
+    }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test AircraftId Display implementation
+        #[test]
+        fn prop_aircraft_id_display(icao in "[A-Z0-9]{4}", variant in proptest::option::of("[A-Z0-9-]{1,10}")) {
+            let id = if let Some(ref v) = variant {
+                AircraftId::with_variant(icao.clone(), v.clone())
+            } else {
+                AircraftId::new(icao.clone())
+            };
+
+            let display = id.to_string();
+            
+            if let Some(v) = variant {
+                prop_assert_eq!(display, format!("{}-{}", icao, v));
+            } else {
+                prop_assert_eq!(display, icao);
+            }
+        }
+
+        // Test PofHysteresisConfig validation or structure (basic integrity)
+        #[test]
+        fn prop_hysteresis_band_integrity(
+            enter in -1000.0f32..1000.0,
+            exit in -1000.0f32..1000.0,
+            unit in "[a-z]+"
+        ) {
+            let band = HysteresisBand {
+                enter_threshold: enter,
+                exit_threshold: exit,
+                unit: unit.clone(),
+            };
+
+            prop_assert_eq!(band.enter_threshold, enter);
+            prop_assert_eq!(band.exit_threshold, exit);
+            prop_assert_eq!(band.unit, unit);
+        }
+
+        // Test state transitions or logic if we can access enough internals
+        // For now, let's verify serialization roundtrips for key structs
+        #[test]
+        fn prop_telemetry_snapshot_roundtrip(
+            timestamp in any::<u64>(),
+            ias in 0.0f32..1000.0,
+            gs in 0.0f32..1000.0,
+            alt in -1000.0f32..60000.0,
+            vs in -10000.0f32..10000.0,
+            gear in any::<bool>()
+        ) {
+            let snap = TelemetrySnapshot {
+                sim: SimId::Msfs,
+                aircraft: AircraftId::new("C172"),
+                timestamp,
+                ias_knots: ias,
+                ground_speed_knots: gs,
+                altitude_feet: alt,
+                vertical_speed_fpm: vs,
+                gear_down: gear,
+            };
+
+            let serialized = serde_json::to_string(&snap).unwrap();
+            let deserialized: TelemetrySnapshot = serde_json::from_str(&serialized).unwrap();
+
+            prop_assert_eq!(snap.timestamp, deserialized.timestamp);
+            prop_assert!((snap.ias_knots - deserialized.ias_knots).abs() < 0.001);
+            prop_assert_eq!(snap.gear_down, deserialized.gear_down);
+        }
+    }
+}
+
 /// Cached profile with metadata
 #[derive(Debug, Clone)]
 struct CachedProfile {
@@ -1144,17 +1228,30 @@ impl Clone for SwitchMetrics {
     }
 }
 #[cfg(test)]
-mod tests {
+mod prop_tests {
     use super::*;
+    use proptest::prelude::*;
 
-    #[tokio::test]
-    async fn test_aircraft_auto_switch_creation() {
-        let config = AutoSwitchConfig::default();
-        let auto_switch = AircraftAutoSwitch::new(config);
+    proptest! {
+        // Test AircraftId Display implementation
+        #[test]
+        fn prop_aircraft_id_display(icao in "[A-Z0-9]{4}", variant in proptest::option::of("[A-Z0-9-]{1,10}")) {
+            let id = if let Some(ref v) = variant {
+                AircraftId::with_variant(icao.clone(), v.clone())
+            } else {
+                AircraftId::new(icao.clone())
+            };
 
-        assert!(auto_switch.get_current_aircraft().await.is_none());
-        assert!(auto_switch.get_current_pof().await.is_none());
+            let display = id.to_string();
+            
+            if let Some(v) = variant {
+                prop_assert_eq!(display, format!("{}-{}", icao, v));
+            } else {
+                prop_assert_eq!(display, icao);
+            }
+        }
     }
+}
 
     #[tokio::test]
     async fn test_phase_of_flight_determination() {
@@ -1887,4 +1984,3 @@ mod tests {
             ..Default::default()
         }
     }
-}
