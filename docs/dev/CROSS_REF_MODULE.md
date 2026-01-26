@@ -4,7 +4,7 @@ kind: explanation
 area: ci
 status: active
 links:
-  requirements: []
+  requirements: ["INF-REQ-6"]
   tasks: []
   adrs: []
 ---

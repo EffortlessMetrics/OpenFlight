@@ -4,7 +4,7 @@ kind: tutorial
 area: infra
 status: active
 links:
-  requirements: []
+  requirements: ["INF-REQ-8"]
   tasks: []
   adrs: []
 ---

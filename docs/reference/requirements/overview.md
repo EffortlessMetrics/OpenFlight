@@ -4,7 +4,7 @@ kind: requirements
 area: infra
 status: draft
 links:
-  requirements: []
+  requirements: ["INF-REQ-2"]
   tasks: []
   adrs: []
 ---

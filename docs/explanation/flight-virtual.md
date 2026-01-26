@@ -4,7 +4,7 @@ kind: explanation
 area: flight-virtual
 status: draft
 links:
-  requirements: []
+  requirements: ["REQ-12"]
   tasks: []
   adrs: []
 ---
