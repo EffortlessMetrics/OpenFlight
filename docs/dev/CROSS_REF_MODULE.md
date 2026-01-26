@@ -1,3 +1,14 @@
+---
+doc_id: DOC-DEV-CROSS-REF
+kind: explanation
+area: ci
+status: active
+links:
+  requirements: []
+  tasks: []
+  adrs: []
+---
+
 # Cross-Reference Checking Module
 
 ## Overview

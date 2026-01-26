@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-CORE-OVERVIEW
-kind: concept
+kind: explanation
 area: flight-core
 status: draft
 links:

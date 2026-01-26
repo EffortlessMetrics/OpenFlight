@@ -1,9 +1,0 @@
-{
-  "timestamp": 1759263743,
-  "description": "Disable MSFS built-in control curves",
-  "affected_files": [
-    "MSFS/UserCfg.opt"
-  ],
-  "backup_dir": "backups\\backup_msfs_1759263743",
-  "writer_config": "msfs_1.36.0"
-}

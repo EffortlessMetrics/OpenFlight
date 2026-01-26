@@ -1,6 +1,6 @@
 ---
 doc_id: DOC-VIRTUAL-OVERVIEW
-kind: concept
+kind: explanation
 area: flight-virtual
 status: draft
 links:
