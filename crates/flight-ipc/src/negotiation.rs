@@ -213,4 +213,67 @@ mod tests {
         assert!(response.success);
         assert_eq!(response.enabled_features, vec!["device-management"]);
     }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test version parsing with valid generated versions
+        #[test]
+        fn prop_parse_valid_version(major in 0u32..100, minor in 0u32..100, patch in 0u32..100) {
+            let version_str = format!("{}.{}.{}", major, minor, patch);
+            let version = Version::parse(&version_str).unwrap();
+            
+            prop_assert_eq!(version.major, major);
+            prop_assert_eq!(version.minor, minor);
+            prop_assert_eq!(version.patch, patch);
+        }
+
+        // Test version compatibility logic
+        #[test]
+        fn prop_version_compatibility(
+            major in 1u32..100, 
+            minor1 in 0u32..100, 
+            minor2 in 0u32..100
+        ) {
+            let v1 = Version { major, minor: minor1, patch: 0 };
+            let v2 = Version { major, minor: minor2, patch: 0 };
+
+            // Same major version: compatible if v1 >= v2
+            if minor1 >= minor2 {
+                prop_assert!(v1.is_compatible_with(&v2));
+            } else {
+                prop_assert!(!v1.is_compatible_with(&v2));
+            }
+        }
+
+        // Test feature negotiation intersection
+        #[test]
+        fn prop_feature_negotiation_intersection(
+            ref client_feats in proptest::collection::vec("[a-z]+", 0..10),
+            ref server_feats in proptest::collection::vec("[a-z]+", 0..10)
+        ) {
+            let request = NegotiateFeaturesRequest {
+                client_version: PROTOCOL_VERSION.to_string(),
+                supported_features: client_feats.clone(),
+                preferred_transport: TransportType::Unspecified.into(),
+            };
+
+            let response = negotiate_features(&request, server_feats).unwrap();
+
+            if response.success {
+                // Enabled features should be subset of both
+                for feat in &response.enabled_features {
+                    prop_assert!(client_feats.contains(feat));
+                    prop_assert!(server_feats.contains(feat));
+                }
+
+                // Check count matches intersection
+                let client_set: HashSet<_> = client_feats.iter().collect();
+                let server_set: HashSet<_> = server_feats.iter().collect();
+                let intersection_count = client_set.intersection(&server_set).count();
+                
+                prop_assert_eq!(response.enabled_features.len(), intersection_count);
+            }
+        }
+    }
 }
