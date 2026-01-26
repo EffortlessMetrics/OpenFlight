@@ -74,7 +74,7 @@ pub mod conversions {
 
     /// Convert meters per second to knots
     pub fn mps_to_knots(mps: f32) -> f32 {
-        mps * 1.94384
+        mps / 0.514444
     }
 
     /// Convert kilometers per hour to meters per second
@@ -104,7 +104,7 @@ pub mod conversions {
 
     /// Convert meters to feet
     pub fn meters_to_feet(meters: f32) -> f32 {
-        meters * 3.28084
+        meters / 0.3048
     }
 
     /// Convert feet per minute to meters per second
