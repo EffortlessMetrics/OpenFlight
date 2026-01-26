@@ -69,13 +69,16 @@ pub mod aircraft_switch;
 pub mod blackbox;
 pub mod error;
 pub mod process_detection;
-pub mod profile;
-pub mod rules;
 pub mod security;
 pub mod time;
-pub mod units;
 pub mod watchdog;
 pub mod writers;
+
+// Re-exports from microcrates
+pub use flight_units as units;
+pub use flight_rules as rules;
+pub use flight_profile as profile;
+
 
 pub use aircraft_switch::{
     AircraftAutoSwitch, AutoSwitchConfig, CompiledProfile, DetectedAircraft, HysteresisBand,

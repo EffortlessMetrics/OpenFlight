@@ -1,4 +1,4 @@
-use flight_core::units::{angles, conversions};
+use flight_units::{angles, conversions};
 use proptest::prelude::*;
 
 proptest! {

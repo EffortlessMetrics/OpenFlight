@@ -3,9 +3,18 @@
 
 //! Rules DSL for panel LED control
 
-use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum RulesError {
+    #[error("Validation error: {0}")]
+    Validation(String),
+}
+
+pub type Result<T> = std::result::Result<T, RulesError>;
+
 
 /// Rules DSL schema version 1
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -139,7 +148,7 @@ impl RulesSchema {
     /// Validate rules schema and syntax
     pub fn validate(&self) -> Result<()> {
         if self.schema != "flight.ledmap/1" {
-            return Err(FlightError::RulesValidation(format!(
+            return Err(RulesError::Validation(format!(
                 "Unsupported schema version: {}",
                 self.schema
             )));
@@ -148,7 +157,7 @@ impl RulesSchema {
         // Validate each rule
         for (index, rule) in self.rules.iter().enumerate() {
             if let Err(e) = self.validate_rule(rule) {
-                return Err(FlightError::RulesValidation(format!(
+                return Err(RulesError::Validation(format!(
                     "Rule {}: {}",
                     index + 1,
                     e
@@ -260,7 +269,7 @@ impl RulesCompiler {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
             let value = value_str.parse::<f32>().map_err(|_| {
-                FlightError::RulesValidation(format!("Invalid number: {}", value_str))
+                RulesError::Validation(format!("Invalid number: {}", value_str))
             })?;
 
             return Ok(Condition::Compare {
@@ -274,7 +283,7 @@ impl RulesCompiler {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
             let value = value_str.parse::<f32>().map_err(|_| {
-                FlightError::RulesValidation(format!("Invalid number: {}", value_str))
+                RulesError::Validation(format!("Invalid number: {}", value_str))
             })?;
 
             return Ok(Condition::Compare {
@@ -286,7 +295,7 @@ impl RulesCompiler {
 
         // TODO: Implement full parser for complex conditions
 
-        Err(FlightError::RulesValidation(format!(
+        Err(RulesError::Validation(format!(
             "Unsupported condition syntax: {}",
             condition_str
         )))
@@ -317,7 +326,7 @@ impl RulesCompiler {
             let rate_str = &action_str[start + 8..start + 8 + end];
             let rate_hz = rate_str
                 .parse::<f32>()
-                .map_err(|_| FlightError::RulesValidation(format!("Invalid rate: {}", rate_str)))?;
+                .map_err(|_| RulesError::Validation(format!("Invalid rate: {}", rate_str)))?;
 
             return Ok(Action::LedBlink {
                 target: "indexer".to_string(),
@@ -327,7 +336,7 @@ impl RulesCompiler {
 
         // TODO: Implement full parser for all action types
 
-        Err(FlightError::RulesValidation(format!(
+        Err(RulesError::Validation(format!(
             "Unsupported action syntax: {}",
             action_str
         )))

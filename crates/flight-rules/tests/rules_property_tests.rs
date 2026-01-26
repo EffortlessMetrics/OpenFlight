@@ -1,4 +1,4 @@
-use flight_core::rules::{Rule, RulesSchema};
+use flight_rules::{Rule, RulesSchema};
 use proptest::prelude::*;
 
 proptest! {

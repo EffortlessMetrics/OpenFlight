@@ -34,6 +34,12 @@ pub enum FlightError {
 
     #[error("Security error: {0}")]
     Security(#[from] crate::security::SecurityError),
+
+    #[error("Rules error: {0}")]
+    Rules(#[from] flight_rules::RulesError),
+
+    #[error("Profile error: {0}")]
+    Profile(#[from] flight_profile::ProfileError),
 }
 
 /// Result type alias for Flight Hub operations

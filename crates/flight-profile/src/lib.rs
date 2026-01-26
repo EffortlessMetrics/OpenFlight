@@ -21,7 +21,7 @@
 //! ## Basic Profile Creation
 //!
 //! ```rust
-//! use flight_core::profile::{Profile, AxisConfig, AircraftId};
+//! use flight_profile::{Profile, AxisConfig, AircraftId};
 //! use std::collections::HashMap;
 //!
 //! let mut axes = HashMap::new();
@@ -48,7 +48,7 @@
 //! ## Profile Merging
 //!
 //! ```rust
-//! # use flight_core::profile::{Profile, AxisConfig, AircraftId};
+//! # use flight_profile::{Profile, AxisConfig, AircraftId};
 //! # use std::collections::HashMap;
 //! # let base_profile = Profile {
 //! #     schema: "flight.profile/1".to_string(),
@@ -69,9 +69,17 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
-use crate::error::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ProfileError {
+    #[error("Validation error: {0}")]
+    Validation(String),
+}
+
+pub type Result<T> = std::result::Result<T, ProfileError>;
 
 /// Flight profile schema version
 pub const PROFILE_SCHEMA_VERSION: &str = "flight.profile/1";
@@ -206,7 +214,7 @@ impl Profile {
     pub fn validate_with_capabilities(&self, context: &CapabilityContext) -> Result<()> {
         // Check schema version
         if self.schema != PROFILE_SCHEMA_VERSION {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "Unsupported schema version: {}",
                 self.schema
             )));
@@ -310,7 +318,7 @@ impl Profile {
         if let Some(deadzone) = config.deadzone
             && !(0.0..=MAX_DEADZONE).contains(&deadzone)
         {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.deadzone: Deadzone must be between 0.0 and {}",
                 axis_name, MAX_DEADZONE
             )));
@@ -320,7 +328,7 @@ impl Profile {
         if let Some(expo) = config.expo
             && (expo < 0.0 || expo > context.limits.max_expo)
         {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.expo: Expo must be between 0.0 and {} in {:?} mode",
                 axis_name, context.limits.max_expo, context.mode
             )));
@@ -330,7 +338,7 @@ impl Profile {
         if let Some(slew_rate) = config.slew_rate
             && (slew_rate < 0.0 || slew_rate > context.limits.max_slew_rate)
         {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.slew_rate: Slew rate must be between 0.0 and {} in {:?} mode",
                 axis_name, context.limits.max_slew_rate, context.mode
             )));
@@ -351,7 +359,7 @@ impl Profile {
 
     fn validate_curve_monotonic(&self, axis_name: &str, curve: &[CurvePoint]) -> Result<()> {
         if curve.len() < 2 {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.curve: Curve must have at least 2 points",
                 axis_name
             )));
@@ -359,7 +367,7 @@ impl Profile {
 
         for i in 1..curve.len() {
             if curve[i].input <= curve[i - 1].input {
-                return Err(FlightError::ProfileValidation(format!(
+                return Err(ProfileError::Validation(format!(
                     "axes.{}.curve[{}]: Curve input values must be strictly increasing (monotonic)",
                     axis_name, i
                 )));
@@ -371,14 +379,14 @@ impl Profile {
 
     fn validate_detent(&self, axis_name: &str, index: usize, detent: &DetentZone) -> Result<()> {
         if detent.position < -1.0 || detent.position > 1.0 {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.detents[{}].position: Detent position must be between -1.0 and 1.0",
                 axis_name, index
             )));
         }
 
         if detent.width <= 0.0 || detent.width > 0.5 {
-            return Err(FlightError::ProfileValidation(format!(
+            return Err(ProfileError::Validation(format!(
                 "axes.{}.detents[{}].width: Detent width must be between 0.0 and 0.5",
                 axis_name, index
             )));

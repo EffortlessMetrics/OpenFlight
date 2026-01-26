@@ -22,6 +22,9 @@ tokio.workspace = true
 postcard.workspace = true
 sha2 = "0.10.9"
 indexmap = { version = "2.13.0", features = ["serde"] }
+flight-units = { path = "../flight-units" }
+flight-rules = { path = "../flight-rules" }
+flight-profile = { path = "../flight-profile" }
 
 [target.'cfg(windows)'.dependencies]
 windows = { workspace = true, features = [

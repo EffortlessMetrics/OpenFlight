@@ -1,4 +1,4 @@
-use flight_core::profile::{Profile, AxisConfig, AircraftId, DetentZone, CurvePoint, PROFILE_SCHEMA_VERSION};
+use flight_profile::{Profile, AxisConfig, AircraftId, DetentZone, CurvePoint, PROFILE_SCHEMA_VERSION};
 use proptest::prelude::*;
 
 prop_compose! {
