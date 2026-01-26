@@ -12,18 +12,27 @@ repository.workspace = true
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
-serde_json.workspace = true
+tracing.workspace = true
+once_cell.workspace = true
+tokio.workspace = true
+postcard.workspace = true
+sha2 = "0.10.9"
+indexmap = { version = "2.13.0", features = ["serde"] }
 flight-units = { path = "../flight-units" }
 flight-rules = { path = "../flight-rules" }
 flight-profile = { path = "../flight-profile" }
-flight-process-detection = { path = "../flight-process-detection" }
-flight-writers = { path = "../flight-writers" }
-flight-security = { path = "../flight-security" }
-flight-blackbox = { path = "../flight-blackbox" }
-flight-watchdog = { path = "../flight-watchdog" }
-flight-session = { path = "../flight-session" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_ProcessStatus", 
+    "Win32_System_Threading"
+] }
 
 [dev-dependencies]
 proptest.workspace = true
