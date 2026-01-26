@@ -27,6 +27,7 @@ libc.workspace = true
 nix.workspace = true
 
 [dev-dependencies]
+proptest.workspace = true
 criterion.workspace = true
 
 [features]

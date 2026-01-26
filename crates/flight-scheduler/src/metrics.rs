@@ -187,7 +187,13 @@ impl TimingValidator {
     /// Get final validation results
     pub fn finalize(self) -> ValidationResult {
         let stats = self.metrics.get_stats();
-        let elapsed = self.start_time.elapsed();
+        // Use last recorded tick time if available, otherwise fallback to wall clock
+        // This supports both real-time execution and simulated time in tests
+        let elapsed = self
+            .metrics
+            .last_tick
+            .map(|t| t.duration_since(self.start_time))
+            .unwrap_or_else(|| self.start_time.elapsed());
 
         ValidationResult {
             duration: elapsed,
