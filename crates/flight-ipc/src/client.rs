@@ -6,7 +6,14 @@
 use crate::{
     ClientConfig, IpcError, NegotiationResult,
     negotiation::{Version, validate_required_features},
-    proto::NegotiateFeaturesRequest,
+    proto::{
+        NegotiateFeaturesRequest, ListDevicesRequest, ListDevicesResponse,
+        OneClickResolveRequest, OneClickResolveResponse,
+        SetCapabilityModeRequest, SetCapabilityModeResponse,
+        DetectCurveConflictsRequest, DetectCurveConflictsResponse,
+        ResolveCurveConflictRequest, ResolveCurveConflictResponse,
+        ApplyProfileRequest, ApplyProfileResponse,
+    },
 };
 use anyhow::Result;
 use std::time::Duration;
@@ -138,6 +145,80 @@ impl FlightClient {
         };
 
         Ok(response)
+    }
+
+    /// List connected devices (placeholder implementation)
+    pub async fn list_devices(
+        &mut self,
+        _request: ListDevicesRequest,
+    ) -> Result<ListDevicesResponse, IpcError> {
+        Ok(ListDevicesResponse {
+            devices: vec![],
+            total_count: 0,
+        })
+    }
+
+    /// Resolve conflicts (placeholder implementation)
+    pub async fn one_click_resolve(
+        &mut self,
+        _request: OneClickResolveRequest,
+    ) -> Result<OneClickResolveResponse, IpcError> {
+        Ok(OneClickResolveResponse {
+            success: false,
+            error_message: "Not implemented".to_string(),
+            result: None,
+        })
+    }
+
+    /// Set capability mode (placeholder implementation)
+    pub async fn set_capability_mode(
+        &mut self,
+        _request: SetCapabilityModeRequest,
+    ) -> Result<SetCapabilityModeResponse, IpcError> {
+        Ok(SetCapabilityModeResponse {
+            success: false,
+            error_message: "Not implemented".to_string(),
+            affected_axes: vec![],
+            applied_limits: None,
+        })
+    }
+
+    /// Detect curve conflicts (placeholder implementation)
+    pub async fn detect_curve_conflicts(
+        &mut self,
+        _request: DetectCurveConflictsRequest,
+    ) -> Result<DetectCurveConflictsResponse, IpcError> {
+        Ok(DetectCurveConflictsResponse {
+            success: false,
+            error_message: "Not implemented".to_string(),
+            conflicts: vec![],
+        })
+    }
+
+    /// Resolve curve conflict (placeholder implementation)
+    pub async fn resolve_curve_conflict(
+        &mut self,
+        _request: ResolveCurveConflictRequest,
+    ) -> Result<ResolveCurveConflictResponse, IpcError> {
+        Ok(ResolveCurveConflictResponse {
+            success: false,
+            error_message: "Not implemented".to_string(),
+            result: None,
+        })
+    }
+
+    /// Apply profile (placeholder implementation)
+    pub async fn apply_profile(
+        &mut self,
+        _request: ApplyProfileRequest,
+    ) -> Result<ApplyProfileResponse, IpcError> {
+        Ok(ApplyProfileResponse {
+            success: false,
+            error_message: "Not implemented".to_string(),
+            validation_errors: vec![],
+            effective_profile_hash: String::new(),
+            compile_time_ms: 0,
+        })
     }
 
     /// Validate that a required feature is enabled

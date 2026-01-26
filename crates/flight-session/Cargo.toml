@@ -1,0 +1,20 @@
+[package]
+name = "flight-session"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+flight-profile = { path = "../flight-profile" }
+flight-process-detection = { path = "../flight-process-detection" }
+
+[dev-dependencies]
+tempfile.workspace = true

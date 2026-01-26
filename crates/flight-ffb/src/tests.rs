@@ -2234,7 +2234,7 @@ mod usb_stall_integration_tests {
         assert_eq!(engine.safety_state(), SafetyState::Faulted);
 
         // Reset from fault (simulating power cycle)
-        engine.reset_from_fault(true).unwrap();
+        engine.reset_after_power_cycle(true).unwrap();
 
         // Should be back to SafeTorque
         assert_eq!(

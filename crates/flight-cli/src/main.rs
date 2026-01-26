@@ -3,6 +3,8 @@
 
 //! Flight Hub CLI - Command line interface with full parity to UI functionality
 
+#![allow(unused)]
+
 #[cfg(feature = "cli")]
 use clap::{Parser, Subcommand};
 #[cfg(feature = "cli")]

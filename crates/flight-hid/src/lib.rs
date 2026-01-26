@@ -11,8 +11,9 @@ mod fd_safety_tests;
 pub mod ofp1;
 
 use flight_core::{
-    ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent, WatchdogSystem,
+    ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent,
 };
+use flight_watchdog::WatchdogSystem;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

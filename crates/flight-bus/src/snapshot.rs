@@ -7,7 +7,7 @@ use crate::types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearState, Mach, Percentage, SimId,
     ValidatedAngle, ValidatedSpeed,
 };
-use flight_core::time;
+use std::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -535,7 +535,11 @@ impl Default for ValidityFlags {
 
 /// Get current monotonic timestamp in nanoseconds since process start
 fn current_timestamp_ns() -> u64 {
-    time::monotonic_now_ns()
+    // Standard library doesn't expose raw monotonic ticks easily, so we use Instant
+    // This is relative to an arbitrary point, but consistent within a run
+    static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    let start = START.get_or_init(std::time::Instant::now);
+    std::time::Instant::now().duration_since(*start).as_nanos() as u64
 }
 
 #[cfg(test)]

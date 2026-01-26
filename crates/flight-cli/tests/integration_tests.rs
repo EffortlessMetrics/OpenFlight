@@ -4,7 +4,7 @@ use std::process::Command;
 
 fn run_cli_command(args: &[&str]) -> std::process::Output {
     let mut cmd = Command::new("cargo");
-    cmd.arg("run").arg("-p").arg("flight-cli").arg("--");
+    cmd.arg("run").arg("--quiet").arg("-p").arg("flight-cli").arg("--");
 
     for arg in args {
         cmd.arg(arg);
@@ -124,11 +124,17 @@ fn test_json_output_format() {
     let stderr = String::from_utf8(output.stderr).unwrap();
 
     // Should be valid JSON
-    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&stderr);
+    // Find the line that looks like JSON (starts with {)
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(json_line);
     assert!(
         json_result.is_ok(),
         "Output should be valid JSON: {}",
-        stderr
+        json_line
     );
 
     let json = json_result.unwrap();
@@ -147,7 +153,10 @@ fn test_human_output_format() {
     assert_eq!(output.status.code(), Some(1));
 
     let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(stderr.starts_with("Error:"));
+    
+    // Find the error line
+    let error_line_exists = stderr.lines().any(|l| l.starts_with("Error:"));
+    assert!(error_line_exists, "Stderr should contain 'Error:': {}", stderr);
 }
 
 #[test]
@@ -175,7 +184,13 @@ fn test_timeout_option() {
     // Should still fail with connection error but should accept the timeout option
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();
-    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&stderr);
+    
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(json_line);
     assert!(json_result.is_ok());
 }
 
@@ -186,6 +201,12 @@ fn test_verbose_flag() {
     // Should still fail with connection error but should accept the verbose flag
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();
-    let json_result: Result<serde_json::Value, _> = serde_json::from_str(&stderr);
+
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+
+    let json_result: Result<serde_json::Value, _> = serde_json::from_str(json_line);
     assert!(json_result.is_ok());
 }

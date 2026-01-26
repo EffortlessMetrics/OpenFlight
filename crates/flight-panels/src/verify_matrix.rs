@@ -579,7 +579,7 @@ impl Default for DriftThresholds {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_core::WatchdogSystem;
+    use flight_watchdog::WatchdogSystem;
     use flight_hid::HidAdapter;
     use std::sync::{Arc, Mutex};
 
