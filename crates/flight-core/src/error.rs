@@ -32,12 +32,6 @@ pub enum FlightError {
     #[error("Hardware error: {0}")]
     Hardware(String),
 
-    #[error("Security error: {0}")]
-    Security(#[from] crate::security::SecurityError),
-
-    #[error("Rules error: {0}")]
-    Rules(#[from] flight_rules::RulesError),
-
     #[error("Profile error: {0}")]
     Profile(#[from] flight_profile::ProfileError),
 
@@ -46,6 +40,18 @@ pub enum FlightError {
 
     #[error("Writers error: {0}")]
     Writers(#[from] flight_writers::CurveConflictError),
+
+    #[error("Security error: {0}")]
+    Security(#[from] flight_security::SecurityError),
+
+    #[error("Blackbox error: {0}")]
+    Blackbox(#[from] flight_blackbox::BlackboxError),
+
+    #[error("Watchdog error: {0}")]
+    Watchdog(#[from] flight_watchdog::WatchdogError),
+
+    #[error("Rules error: {0}")]
+    Rules(#[from] flight_rules::RulesError),
 }
 
 /// Result type alias for Flight Hub operations

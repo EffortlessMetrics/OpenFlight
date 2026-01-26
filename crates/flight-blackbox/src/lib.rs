@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use crate::time;
+mod time;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

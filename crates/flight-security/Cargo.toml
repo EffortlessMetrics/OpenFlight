@@ -1,0 +1,19 @@
+[package]
+name = "flight-security"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+libc.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio.workspace = true
