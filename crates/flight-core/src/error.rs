@@ -40,6 +40,12 @@ pub enum FlightError {
 
     #[error("Profile error: {0}")]
     Profile(#[from] flight_profile::ProfileError),
+
+    #[error("Process detection error: {0}")]
+    ProcessDetection(#[from] flight_process_detection::ProcessDetectionError),
+
+    #[error("Writers error: {0}")]
+    Writers(#[from] flight_writers::CurveConflictError),
 }
 
 /// Result type alias for Flight Hub operations

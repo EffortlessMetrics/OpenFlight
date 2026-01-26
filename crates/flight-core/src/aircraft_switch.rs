@@ -10,6 +10,8 @@
 use crate::profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
+
+pub use crate::process_detection::SimId;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -18,24 +20,7 @@ use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
 /// Simulator identifier
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SimId {
-    Msfs,
-    XPlane,
-    Dcs,
-    Unknown,
-}
-
-impl std::fmt::Display for SimId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SimId::Msfs => write!(f, "MSFS"),
-            SimId::XPlane => write!(f, "X-Plane"),
-            SimId::Dcs => write!(f, "DCS"),
-            SimId::Unknown => write!(f, "Unknown"),
-        }
-    }
-}
+// Removed SimId definition here, now using crate::process_detection::SimId
 
 /// Aircraft identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

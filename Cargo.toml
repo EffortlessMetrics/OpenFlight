@@ -26,6 +26,7 @@ members = [
     "crates/flight-units",
     "crates/flight-rules",
     "crates/flight-profile",
+    "crates/flight-process-detection",
     "examples",
     "xtask",
     "specs",

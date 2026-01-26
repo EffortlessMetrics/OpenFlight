@@ -12,6 +12,7 @@ pub mod repair;
 pub mod rollback;
 pub mod types;
 pub mod verify;
+pub mod curve_conflict;
 
 pub use diff::*;
 pub use golden::*;
@@ -19,6 +20,7 @@ pub use repair::*;
 pub use rollback::*;
 pub use types::*;
 pub use verify::*;
+pub use curve_conflict::*;
 
 use anyhow::Result;
 use std::path::Path;
