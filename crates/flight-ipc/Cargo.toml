@@ -61,6 +61,7 @@ criterion.workspace = true
 chrono = "0.4.43"
 tokio-stream = { workspace = true, features = ["sync"] }
 tracing-subscriber.workspace = true
+proptest.workspace = true
 
 [[bench]]
 name = "ipc_benchmarks"

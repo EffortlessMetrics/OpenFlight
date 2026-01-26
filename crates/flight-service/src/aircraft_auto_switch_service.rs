@@ -9,7 +9,7 @@
 use flight_bus::{BusPublisher, BusSnapshot, Subscriber as BusSubscriber, SubscriptionConfig};
 use flight_core::{
     AircraftAutoSwitch, AutoSwitchConfig, DetectedAircraft, DetectedProcess, FlightError,
-    PhaseOfFlight, ProcessDetectionConfig, ProcessDetector, Result, SwitchMetrics,
+    PhaseOfFlight, ProcessDetectionConfig, ProcessDetector, Result, SessionError, SwitchMetrics,
 };
 // Import bus and core types with aliases to avoid conflicts
 use flight_bus::{AircraftId as BusAircraftId, SimId as BusSimId};
@@ -226,7 +226,7 @@ impl AircraftAutoSwitchService {
         // Subscribe to bus for telemetry updates
         let subscriber = bus_publisher
             .subscribe(SubscriptionConfig::default())
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to subscribe to bus: {}", e)))?;
+            .map_err(|e| FlightError::Session(SessionError::AutoSwitch(format!("Failed to subscribe to bus: {}", e))))?;
 
         *self.bus_subscriber.write().await = Some(subscriber);
 
@@ -236,7 +236,7 @@ impl AircraftAutoSwitchService {
             .write()
             .await
             .take()
-            .ok_or_else(|| FlightError::AutoSwitch("Service already started".to_string()))?;
+            .ok_or_else(|| FlightError::Session(SessionError::AutoSwitch("Service already started".to_string())))?;
 
         let auto_switch = Arc::clone(&self.auto_switch);
         let _process_detector = Arc::clone(&self.process_detector);
@@ -315,7 +315,7 @@ impl AircraftAutoSwitchService {
         // Send shutdown event
         self.service_tx
             .send(ServiceEvent::Shutdown)
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to send shutdown: {}", e)))?;
+            .map_err(|e| FlightError::Session(SessionError::AutoSwitch(format!("Failed to send shutdown: {}", e))))?;
 
         Ok(())
     }
@@ -352,6 +352,7 @@ impl AircraftAutoSwitchService {
         self.auto_switch
             .force_switch(map_aircraft_id(aircraft_id))
             .await
+            .map_err(FlightError::Session)
     }
 
     /// Start monitoring process detection

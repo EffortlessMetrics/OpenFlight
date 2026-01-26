@@ -10,7 +10,6 @@ use crate::mp_detection::{MpDetectionError, MpDetector, SessionType};
 use crate::socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
 use anyhow::Result;
 use flight_bus::{BusPublisher, BusSnapshot, PublisherError, snapshot::*, types::*};
-use flight_core::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -312,7 +311,10 @@ impl DcsAdapter {
         let mut snapshot = BusSnapshot::new(SimId::Dcs, aircraft);
 
         // BusSnapshot timestamp is monotonic since process start
-        snapshot.timestamp = time::monotonic_now_ns();
+        // Using Instant to approximate process-relative monotonic time
+        static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+        let start = START.get_or_init(Instant::now);
+        snapshot.timestamp = Instant::now().duration_since(*start).as_nanos() as u64;
 
         // Parse kinematics
         if let Some(ias) = data.get("ias").and_then(|v| v.as_f64()) {

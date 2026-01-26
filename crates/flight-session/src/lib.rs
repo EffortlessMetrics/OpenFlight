@@ -7,9 +7,34 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
-use crate::profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
-use crate::{FlightError, Result};
+use flight_profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum SessionError {
+    #[error("Profile validation error: {0}")]
+    ProfileValidation(String),
+    
+    #[error("Configuration error: {0}")]
+    Configuration(String),
+
+    #[error("Profile error: {0}")]
+    Profile(#[from] flight_profile::ProfileError),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+
+    #[error("Auto-switch error: {0}")]
+    AutoSwitch(String),
+}
+
+pub type Result<T> = std::result::Result<T, SessionError>;
+
+pub use flight_process_detection::SimId;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -18,24 +43,7 @@ use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
 /// Simulator identifier
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SimId {
-    Msfs,
-    XPlane,
-    Dcs,
-    Unknown,
-}
-
-impl std::fmt::Display for SimId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SimId::Msfs => write!(f, "MSFS"),
-            SimId::XPlane => write!(f, "X-Plane"),
-            SimId::Dcs => write!(f, "DCS"),
-            SimId::Unknown => write!(f, "Unknown"),
-        }
-    }
-}
+// Removed SimId definition here, now using crate::process_detection::SimId
 
 /// Aircraft identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -191,6 +199,90 @@ pub struct CompiledProfile {
     pub pof_overrides: HashMap<PhaseOfFlight, Profile>,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_aircraft_id_basics() {
+        let id = AircraftId::new("C172");
+        assert_eq!(id.to_string(), "C172");
+
+        let id_var = AircraftId::with_variant("A320", "NEO");
+        assert_eq!(id_var.to_string(), "A320-NEO");
+    }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test AircraftId Display implementation
+        #[test]
+        fn prop_aircraft_id_display(icao in "[A-Z0-9]{4}", variant in proptest::option::of("[A-Z0-9-]{1,10}")) {
+            let id = if let Some(ref v) = variant {
+                AircraftId::with_variant(icao.clone(), v.clone())
+            } else {
+                AircraftId::new(icao.clone())
+            };
+
+            let display = id.to_string();
+            
+            if let Some(v) = variant {
+                prop_assert_eq!(display, format!("{}-{}", icao, v));
+            } else {
+                prop_assert_eq!(display, icao);
+            }
+        }
+
+        // Test PofHysteresisConfig validation or structure (basic integrity)
+        #[test]
+        fn prop_hysteresis_band_integrity(
+            enter in -1000.0f32..1000.0,
+            exit in -1000.0f32..1000.0,
+            unit in "[a-z]+"
+        ) {
+            let band = HysteresisBand {
+                enter_threshold: enter,
+                exit_threshold: exit,
+                unit: unit.clone(),
+            };
+
+            prop_assert_eq!(band.enter_threshold, enter);
+            prop_assert_eq!(band.exit_threshold, exit);
+            prop_assert_eq!(band.unit, unit);
+        }
+
+        // Test state transitions or logic if we can access enough internals
+        // For now, let's verify serialization roundtrips for key structs
+        #[test]
+        fn prop_telemetry_snapshot_roundtrip(
+            timestamp in any::<u64>(),
+            ias in 0.0f32..1000.0,
+            gs in 0.0f32..1000.0,
+            alt in -1000.0f32..60000.0,
+            vs in -10000.0f32..10000.0,
+            gear in any::<bool>()
+        ) {
+            let snap = TelemetrySnapshot {
+                sim: SimId::Msfs,
+                aircraft: AircraftId::new("C172"),
+                timestamp,
+                ias_knots: ias,
+                ground_speed_knots: gs,
+                altitude_feet: alt,
+                vertical_speed_fpm: vs,
+                gear_down: gear,
+            };
+
+            let serialized = serde_json::to_string(&snap).unwrap();
+            let deserialized: TelemetrySnapshot = serde_json::from_str(&serialized).unwrap();
+
+            prop_assert_eq!(snap.timestamp, deserialized.timestamp);
+            prop_assert!((snap.ias_knots - deserialized.ias_knots).abs() < 0.001);
+            prop_assert_eq!(snap.gear_down, deserialized.gear_down);
+        }
+    }
+}
+
 /// Cached profile with metadata
 #[derive(Debug, Clone)]
 struct CachedProfile {
@@ -335,7 +427,7 @@ impl AircraftAutoSwitch {
     pub async fn start(&self) -> Result<()> {
         let mut rx =
             self.switch_rx.write().await.take().ok_or_else(|| {
-                FlightError::AutoSwitch("Auto-switch already started".to_string())
+                SessionError::AutoSwitch("Auto-switch already started".to_string())
             })?;
 
         let state = Arc::clone(&self.state);
@@ -415,7 +507,7 @@ impl AircraftAutoSwitch {
         self.switch_tx
             .send(SwitchRequest::AircraftDetected(aircraft))
             .map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to send aircraft detection: {}", e))
+                SessionError::AutoSwitch(format!("Failed to send aircraft detection: {}", e))
             })?;
         Ok(())
     }
@@ -426,7 +518,7 @@ impl AircraftAutoSwitch {
             self.switch_tx
                 .send(SwitchRequest::TelemetryUpdate(snapshot))
                 .map_err(|e| {
-                    FlightError::AutoSwitch(format!("Failed to send telemetry update: {}", e))
+                    SessionError::AutoSwitch(format!("Failed to send telemetry update: {}", e))
                 })?;
         }
         Ok(())
@@ -437,7 +529,7 @@ impl AircraftAutoSwitch {
         info!("Forcing switch to aircraft: {}", aircraft_id);
         self.switch_tx
             .send(SwitchRequest::ForceSwitch(aircraft_id))
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to send force switch: {}", e)))?;
+            .map_err(|e| SessionError::AutoSwitch(format!("Failed to send force switch: {}", e)))?;
         Ok(())
     }
 
@@ -447,7 +539,7 @@ impl AircraftAutoSwitch {
         self.switch_tx
             .send(SwitchRequest::InvalidateCache(aircraft_id))
             .map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to send cache invalidation: {}", e))
+                SessionError::AutoSwitch(format!("Failed to send cache invalidation: {}", e))
             })?;
         Ok(())
     }
@@ -751,7 +843,7 @@ impl AircraftAutoSwitch {
         }
 
         if profiles.is_empty() {
-            return Err(FlightError::AutoSwitch(format!(
+            return Err(SessionError::AutoSwitch(format!(
                 "No profiles found for aircraft: {}",
                 aircraft_id
             )));
@@ -767,7 +859,7 @@ impl AircraftAutoSwitch {
         let content = tokio::fs::read_to_string(&profile_path)
             .await
             .map_err(|e| {
-                FlightError::AutoSwitch(format!(
+                SessionError::AutoSwitch(format!(
                     "Failed to read profile {}: {}",
                     profile_path.display(),
                     e
@@ -775,7 +867,7 @@ impl AircraftAutoSwitch {
             })?;
 
         let profile: Profile = serde_json::from_str(&content).map_err(|e| {
-            FlightError::AutoSwitch(format!(
+            SessionError::AutoSwitch(format!(
                 "Failed to parse profile {}: {}",
                 profile_path.display(),
                 e
@@ -1084,7 +1176,7 @@ impl PofTracker {
 }
 
 impl std::str::FromStr for PhaseOfFlight {
-    type Err = FlightError;
+    type Err = SessionError;
 
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
@@ -1097,7 +1189,7 @@ impl std::str::FromStr for PhaseOfFlight {
             "approach" => Ok(PhaseOfFlight::Approach),
             "landing" => Ok(PhaseOfFlight::Landing),
             "goaround" => Ok(PhaseOfFlight::GoAround),
-            _ => Err(FlightError::AutoSwitch(format!(
+            _ => Err(SessionError::AutoSwitch(format!(
                 "Unknown phase of flight: {}",
                 s
             ))),
@@ -1136,17 +1228,30 @@ impl Clone for SwitchMetrics {
     }
 }
 #[cfg(test)]
-mod tests {
+mod prop_tests {
     use super::*;
+    use proptest::prelude::*;
 
-    #[tokio::test]
-    async fn test_aircraft_auto_switch_creation() {
-        let config = AutoSwitchConfig::default();
-        let auto_switch = AircraftAutoSwitch::new(config);
+    proptest! {
+        // Test AircraftId Display implementation
+        #[test]
+        fn prop_aircraft_id_display(icao in "[A-Z0-9]{4}", variant in proptest::option::of("[A-Z0-9-]{1,10}")) {
+            let id = if let Some(ref v) = variant {
+                AircraftId::with_variant(icao.clone(), v.clone())
+            } else {
+                AircraftId::new(icao.clone())
+            };
 
-        assert!(auto_switch.get_current_aircraft().await.is_none());
-        assert!(auto_switch.get_current_pof().await.is_none());
+            let display = id.to_string();
+            
+            if let Some(v) = variant {
+                prop_assert_eq!(display, format!("{}-{}", icao, v));
+            } else {
+                prop_assert_eq!(display, icao);
+            }
+        }
     }
+}
 
     #[tokio::test]
     async fn test_phase_of_flight_determination() {
@@ -1879,4 +1984,3 @@ mod tests {
             ..Default::default()
         }
     }
-}

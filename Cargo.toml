@@ -23,6 +23,14 @@ members = [
     "crates/flight-cli",
     "crates/flight-ui",
     "crates/flight-updater",
+    "crates/flight-units",
+    "crates/flight-rules",
+    "crates/flight-profile",
+    "crates/flight-process-detection",
+    "crates/flight-security",
+    "crates/flight-blackbox",
+    "crates/flight-watchdog",
+    "crates/flight-session",
     "examples",
     "xtask",
     "specs",
@@ -99,6 +107,9 @@ tempfile = "3.24.0"
 clap = { version = "4.5.54", default-features = false, features = [
     "std",
     "derive",
+    "help",
+    "usage",
+    "error-context",
 ] }
 
 # Async and futures ecosystem - aligned versions

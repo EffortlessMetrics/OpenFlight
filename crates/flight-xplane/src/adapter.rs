@@ -20,7 +20,6 @@ use flight_bus::{
     snapshot::{BusSnapshot, EngineData, Environment, Kinematics, Navigation},
     types::{AircraftId, Percentage, SimId},
 };
-use flight_core::time;
 use flight_core::units::conversions;
 use flight_core::{FlightError, Result};
 use serde::{Deserialize, Serialize};
@@ -479,7 +478,10 @@ impl XPlaneAdapter {
         let mut snapshot = BusSnapshot::new(SimId::XPlane, aircraft_id);
 
         // BusSnapshot timestamp is monotonic since process start
-        snapshot.timestamp = time::monotonic_now_ns();
+        // Using Instant to approximate process-relative monotonic time
+        static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+        let start = START.get_or_init(Instant::now);
+        snapshot.timestamp = Instant::now().duration_since(*start).as_nanos() as u64;
 
         // Convert kinematics data
         snapshot.kinematics = Self::convert_kinematics(&raw_data.dataref_values)?;

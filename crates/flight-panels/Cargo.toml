@@ -18,6 +18,7 @@ tests-optin = []
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-watchdog = { path = "../flight-watchdog" }
 flight-hid = { path = "../flight-hid" }
 serde.workspace = true
 serde_json.workspace = true

@@ -1,0 +1,33 @@
+{
+  "schema": "flight.profile/1",
+  "sim": "msfs",
+  "aircraft": {
+    "icao": "C172"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.05,
+      "expo": 0.2,
+      "slew_rate": 10.0,
+      "detents": []
+    }
+  },
+  "pof_overrides": {
+    "cruise": {
+      "axes": {
+        "pitch": {
+          "expo": 0.1,
+          "detents": []
+        }
+      }
+    },
+    "approach": {
+      "axes": {
+        "pitch": {
+          "expo": 0.3,
+          "detents": []
+        }
+      }
+    }
+  }
+}

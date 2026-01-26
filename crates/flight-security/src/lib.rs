@@ -8,7 +8,6 @@
 
 pub mod verification;
 
-use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -20,6 +19,8 @@ pub use verification::{
     SecurityRecommendation, SecuritySeverity, SecurityVerificationResult, SecurityVerifier,
     VerificationConfig, VerificationError, VerificationStatus,
 };
+
+pub type Result<T> = std::result::Result<T, SecurityError>;
 
 #[derive(Debug, Error)]
 pub enum SecurityError {
@@ -286,20 +287,16 @@ impl SecurityManager {
                 }
                 SignatureStatus::Unsigned => {
                     if !self.config.allow_unsigned {
-                        return Err(FlightError::Security(
-                            SecurityError::SignatureVerificationFailed {
-                                reason: "Plugin is unsigned and unsigned plugins are not allowed"
-                                    .to_string(),
-                            },
-                        ));
+                        return Err(SecurityError::SignatureVerificationFailed {
+                            reason: "Plugin is unsigned and unsigned plugins are not allowed"
+                                .to_string(),
+                        });
                     }
                 }
                 SignatureStatus::Invalid { reason } => {
-                    return Err(FlightError::Security(
-                        SecurityError::SignatureVerificationFailed {
-                            reason: reason.clone(),
-                        },
-                    ));
+                    return Err(SecurityError::SignatureVerificationFailed {
+                        reason: reason.clone(),
+                    });
                 }
             }
         }
@@ -404,18 +401,18 @@ impl SecurityManager {
     pub fn validate_ipc_acl(&self, client_info: &IpcClientInfo) -> Result<()> {
         // Check if current user only mode is enabled
         if self.acl_config.current_user_only && client_info.user_id != get_current_user_id()? {
-            return Err(FlightError::Security(SecurityError::AclValidationFailed {
+            return Err(SecurityError::AclValidationFailed {
                 reason: "Access denied: current user only mode enabled".to_string(),
-            }));
+            });
         }
 
         // Check allowed users list
         if !self.acl_config.allowed_users.is_empty()
             && !self.acl_config.allowed_users.contains(&client_info.user_id)
         {
-            return Err(FlightError::Security(SecurityError::AclValidationFailed {
+            return Err(SecurityError::AclValidationFailed {
                 reason: "Access denied: user not in allowed list".to_string(),
-            }));
+            });
         }
 
         // Platform-specific ACL validation
@@ -455,11 +452,10 @@ impl SecurityManager {
                 .as_secs();
 
             if now > *valid_until {
-                return Err(FlightError::Security(
-                    SecurityError::SignatureVerificationFailed {
+                return Err(SecurityError::SignatureVerificationFailed {
                         reason: "Certificate has expired".to_string(),
-                    },
-                ));
+                    }
+                );
             }
         }
 
@@ -472,14 +468,14 @@ impl SecurityManager {
             match (capability, &manifest.plugin_type) {
                 // File system and network access only allowed for native plugins
                 (PluginCapability::FileSystem { .. }, PluginType::Wasm) => {
-                    return Err(FlightError::Security(SecurityError::InvalidManifest {
+                    return Err(SecurityError::InvalidManifest {
                         reason: "WASM plugins cannot request file system access".to_string(),
-                    }));
+                    });
                 }
                 (PluginCapability::Network { .. }, PluginType::Wasm) => {
-                    return Err(FlightError::Security(SecurityError::InvalidManifest {
+                    return Err(SecurityError::InvalidManifest {
                         reason: "WASM plugins cannot request network access".to_string(),
-                    }));
+                    });
                 }
                 _ => {} // Other capabilities are valid for both types
             }

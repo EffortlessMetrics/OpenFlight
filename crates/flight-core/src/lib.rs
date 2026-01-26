@@ -65,41 +65,43 @@
 //! rules.validate().expect("Rules should be valid");
 //! ```
 
-pub mod aircraft_switch;
-pub mod blackbox;
 pub mod error;
-pub mod process_detection;
-pub mod profile;
-pub mod rules;
-pub mod security;
-pub mod time;
-pub mod units;
-pub mod watchdog;
-pub mod writers;
+
+// Re-exports from microcrates
+pub use flight_units as units;
+pub use flight_rules as rules;
+pub use flight_profile as profile;
+pub use flight_process_detection as process_detection;
+pub use flight_writers as writers;
+pub use flight_security as security;
+pub use flight_blackbox as blackbox;
+pub use flight_watchdog as watchdog;
+pub use flight_session as aircraft_switch;
+
 
 pub use aircraft_switch::{
     AircraftAutoSwitch, AutoSwitchConfig, CompiledProfile, DetectedAircraft, HysteresisBand,
-    PhaseOfFlight, PofHysteresisConfig, SwitchMetrics, SwitchResult,
+    PhaseOfFlight, PofHysteresisConfig, SwitchMetrics, SwitchResult, SessionError,
 };
 pub use blackbox::{
-    BlackboxConfig, BlackboxError, BlackboxFooter, BlackboxHeader, BlackboxReader, BlackboxRecord,
-    BlackboxStats, BlackboxWriter, IndexEntry, StreamType,
+    BlackboxHeader, BlackboxRecord, BlackboxError,
 };
 pub use error::{FlightError, Result};
 pub use process_detection::{
     DetectedProcess, DetectionMetrics, ProcessDefinition, ProcessDetectionConfig, ProcessDetector,
+    SimId, ProcessDetectionError,
 };
 pub use profile::{CapabilityContext, CapabilityLimits, CapabilityMode};
 pub use security::{
     AclConfig, IpcClientInfo, PluginCapability, PluginCapabilityManifest, PluginType,
     SecurityConfig, SecurityError, SecurityManager, SignatureStatus, TelemetryConfig,
-    TelemetryDataType,
+    TelemetryDataType, VerificationStatus, SecurityVerifier, VerificationConfig,
 };
 pub use watchdog::{
     ComponentType, PluginOverrunStats, QuarantineStatus, SyntheticFault, WatchdogAction,
     WatchdogConfig, WatchdogError, WatchdogEvent, WatchdogEventType, WatchdogHealthSummary,
-    WatchdogSystem,
 };
 pub use writers::{
     BackupInfo, CurveConflictWriter, VerificationResult, WriteResult, WritersConfig,
+    CurveConflictError,
 };

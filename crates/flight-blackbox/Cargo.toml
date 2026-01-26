@@ -1,0 +1,23 @@
+[package]
+name = "flight-blackbox"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+postcard.workspace = true
+sha2 = "0.10.9"
+tokio.workspace = true
+anyhow.workspace = true
+chrono = "0.4.43"
+
+[dev-dependencies]
+proptest.workspace = true
+tempfile.workspace = true

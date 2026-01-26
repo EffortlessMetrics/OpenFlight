@@ -30,8 +30,6 @@ sha2 = "0.10.9"
 proptest = { workspace = true, optional = true }
 
 # Internal dependencies
-flight-core = { path = "../flight-core" }
-flight-ipc = { path = "../flight-ipc" }
 
 [dev-dependencies]
 proptest.workspace = true

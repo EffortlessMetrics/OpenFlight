@@ -6,14 +6,44 @@
 //! Provides cross-platform process detection for flight simulators with
 //! fast detection times and reliable process monitoring.
 
-use crate::aircraft_switch::SimId;
-use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, mpsc};
 use tracing::warn;
+use thiserror::Error;
+
+/// Error type for process detection
+#[derive(Debug, Error)]
+pub enum ProcessDetectionError {
+    #[error("Platform error: {0}")]
+    Platform(String),
+    #[error("System error: {0}")]
+    System(String),
+}
+
+pub type Result<T> = std::result::Result<T, ProcessDetectionError>;
+
+/// Simulator identifier
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SimId {
+    Msfs,
+    XPlane,
+    Dcs,
+    Unknown,
+}
+
+impl std::fmt::Display for SimId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SimId::Msfs => write!(f, "MSFS"),
+            SimId::XPlane => write!(f, "X-Plane"),
+            SimId::Dcs => write!(f, "DCS"),
+            SimId::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
 
 /// Process detection system for flight simulators
 #[derive(Debug)]
@@ -193,7 +223,7 @@ impl ProcessDetector {
     pub async fn stop(&self) -> Result<()> {
         self.detection_tx
             .send(DetectionEvent::Shutdown)
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to send shutdown: {}", e)))?;
+            .map_err(|e| ProcessDetectionError::System(format!("Failed to send shutdown: {}", e)))?;
         Ok(())
     }
 
@@ -303,7 +333,7 @@ impl ProcessDetector {
         }
         #[cfg(not(any(target_os = "windows", target_os = "linux")))]
         {
-            Err(FlightError::AutoSwitch(
+            Err(ProcessDetectionError::Platform(
                 "Unsupported platform for process detection".to_string(),
             ))
         }
@@ -398,7 +428,7 @@ impl ProcessDetector {
 
         unsafe {
             let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to create process snapshot: {}", e))
+                ProcessDetectionError::System(format!("Failed to create process snapshot: {}", e))
             })?;
 
             let mut entry = PROCESSENTRY32W {
@@ -466,11 +496,11 @@ impl ProcessDetector {
 
         // Read /proc directory
         let proc_dir = fs::read_dir("/proc")
-            .map_err(|e| FlightError::AutoSwitch(format!("Failed to read /proc: {}", e)))?;
+            .map_err(|e| ProcessDetectionError::System(format!("Failed to read /proc: {}", e)))?;
 
         for entry in proc_dir {
             let entry = entry.map_err(|e| {
-                FlightError::AutoSwitch(format!("Failed to read proc entry: {}", e))
+                ProcessDetectionError::System(format!("Failed to read proc entry: {}", e))
             })?;
             let file_name = entry.file_name();
             let file_name_str = file_name.to_string_lossy();
@@ -619,5 +649,68 @@ mod tests {
         assert!(!detector.is_sim_detected(SimId::Msfs).await);
         assert!(!detector.is_sim_detected(SimId::XPlane).await);
         assert!(!detector.is_sim_detected(SimId::Dcs).await);
+    }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        // Verify that process matching logic works correctly with various inputs
+        #[test]
+        fn prop_check_simulator_processes_match(
+            name_fragment in "[a-zA-Z0-9]+",
+            other_fragment in "[a-zA-Z0-9]+"
+        ) {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            
+            rt.block_on(async {
+                let definition = ProcessDefinition {
+                    process_names: vec![format!("{}.exe", name_fragment)],
+                    window_titles: vec![],
+                    process_paths: vec![],
+                    min_confidence: 0.5,
+                };
+
+                // Exact match case
+                let processes = vec![SystemProcess {
+                    pid: 123,
+                    name: format!("{}.exe", name_fragment),
+                    path: PathBuf::from("C:\\test\\path"),
+                    window_title: None,
+                }];
+
+                let detected = ProcessDetector::check_simulator_processes(
+                    SimId::Msfs,
+                    &definition,
+                    &processes,
+                    false
+                ).await.unwrap();
+
+                prop_assert!(detected.is_some());
+                if let Some(d) = detected {
+                    prop_assert!(d.confidence >= 0.6);
+                }
+
+                // Non-match case
+                if name_fragment != other_fragment {
+                    let processes = vec![SystemProcess {
+                        pid: 123,
+                        name: format!("{}.exe", other_fragment),
+                        path: PathBuf::from("C:\\test\\path"),
+                        window_title: None,
+                    }];
+
+                    let detected = ProcessDetector::check_simulator_processes(
+                        SimId::Msfs,
+                        &definition,
+                        &processes,
+                        false
+                    ).await.unwrap();
+
+                    prop_assert!(detected.is_none());
+                }
+                
+                Ok(())
+            }).unwrap();
+        }
     }
 }

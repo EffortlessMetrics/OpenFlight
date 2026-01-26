@@ -7,7 +7,6 @@
 //! and connection timeout detection per requirements DCS-INT-01.7, DCS-INT-01.8,
 //! DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15, SIM-TEST-01.4
 
-use flight_core::time;
 use flight_dcs_export::{DcsAdapter, DcsAdapterConfig};
 use serde_json::json;
 use std::collections::HashMap;
@@ -366,15 +365,20 @@ fn test_timestamp_conversion() {
     // DCS timestamp is in milliseconds
     let dcs_timestamp_ms = 1000u64;
 
-    let before = time::monotonic_now_ns();
-    let snapshot = adapter
+    let snapshot1 = adapter
         .convert_to_bus_snapshot(dcs_timestamp_ms, "F-16C", &data)
         .expect("Should convert timestamp");
-    let after = time::monotonic_now_ns();
 
-    // Verify timestamp is monotonic and captured during conversion
-    assert!(snapshot.timestamp >= before);
-    assert!(snapshot.timestamp <= after);
+    // Sleep a tiny bit to ensure time passes
+    std::thread::sleep(std::time::Duration::from_millis(1));
+
+    let snapshot2 = adapter
+        .convert_to_bus_snapshot(dcs_timestamp_ms + 100, "F-16C", &data)
+        .expect("Should convert timestamp");
+
+    // Verify timestamp is monotonic
+    assert!(snapshot1.timestamp > 0);
+    assert!(snapshot2.timestamp >= snapshot1.timestamp);
 }
 
 #[test]

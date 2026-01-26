@@ -6,13 +6,27 @@
 //! Provides table-driven configuration changes with golden tests,
 //! verify/repair functionality, and one-click rollback.
 
-use crate::{FlightError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, info, warn};
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum CurveConflictError {
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Serialization error: {0}")]
+    Serialization(#[from] serde_json::Error),
+    #[error("Configuration error: {0}")]
+    Configuration(String),
+    #[error("Writer error: {0}")]
+    Writer(String),
+}
+
+pub type Result<T> = std::result::Result<T, CurveConflictError>;
 
 /// Configuration for the writers system
 #[derive(Debug, Clone)]
@@ -40,26 +54,26 @@ impl Default for WritersConfig {
 
 /// Writer configuration for a specific simulator and version
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WriterConfig {
+pub struct CcWriterConfig {
     pub sim: String,
     pub version: String,
     pub description: String,
-    pub diffs: Vec<ConfigDiff>,
-    pub verification_tests: Vec<VerificationTest>,
+    pub diffs: Vec<CcConfigDiff>,
+    pub verification_tests: Vec<CcVerificationTest>,
 }
 
 /// A configuration change to apply
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigDiff {
+pub struct CcConfigDiff {
     pub file: String,
     pub section: Option<String>,
     pub changes: HashMap<String, String>,
-    pub operation: DiffOperation,
+    pub operation: CcDiffOperation,
 }
 
 /// Type of operation to perform
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum DiffOperation {
+pub enum CcDiffOperation {
     /// Set key-value pairs
     Set,
     /// Remove keys
@@ -72,7 +86,7 @@ pub enum DiffOperation {
 
 /// Verification test to run after applying changes
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VerificationTest {
+pub struct CcVerificationTest {
     pub name: String,
     pub description: String,
     pub test_type: VerificationTestType,
@@ -124,7 +138,7 @@ pub struct BackupInfo {
 /// Curve conflict resolution writer
 pub struct CurveConflictWriter {
     config: WritersConfig,
-    sim_configs: HashMap<String, WriterConfig>,
+    sim_configs: HashMap<String, CcWriterConfig>,
 }
 
 impl CurveConflictWriter {
@@ -148,7 +162,7 @@ impl CurveConflictWriter {
     fn load_configurations(&mut self) -> Result<()> {
         if !self.config.config_dir.exists() {
             fs::create_dir_all(&self.config.config_dir).map_err(|e| {
-                FlightError::Writer(format!("Failed to create config directory: {}", e))
+                CurveConflictError::Writer(format!("Failed to create config directory: {}", e))
             })?;
 
             // Create default configurations
@@ -162,7 +176,7 @@ impl CurveConflictWriter {
                 let path = entry.path();
                 if path.extension().and_then(|s| s.to_str()) == Some("json")
                     && let Ok(content) = fs::read_to_string(&path)
-                    && let Ok(config) = serde_json::from_str::<WriterConfig>(&content)
+                    && let Ok(config) = serde_json::from_str::<CcWriterConfig>(&content)
                 {
                     let key = format!("{}_{}", config.sim, config.version);
                     self.sim_configs.insert(key, config);
@@ -177,11 +191,11 @@ impl CurveConflictWriter {
     /// Create default writer configurations for common simulators
     fn create_default_configurations(&self) -> Result<()> {
         // MSFS configuration for disabling sim curves
-        let msfs_config = WriterConfig {
+        let msfs_config = CcWriterConfig {
             sim: "msfs".to_string(),
             version: "1.36.0".to_string(),
             description: "Disable MSFS built-in control curves".to_string(),
-            diffs: vec![ConfigDiff {
+            diffs: vec![CcConfigDiff {
                 file: "MSFS/UserCfg.opt".to_string(),
                 section: Some("[CONTROLS]".to_string()),
                 changes: {
@@ -190,9 +204,9 @@ impl CurveConflictWriter {
                     changes.insert("DisableNonLinearControls".to_string(), "1".to_string());
                     changes
                 },
-                operation: DiffOperation::Set,
+                operation: CcDiffOperation::Set,
             }],
-            verification_tests: vec![VerificationTest {
+            verification_tests: vec![CcVerificationTest {
                 name: "check_linear_curves".to_string(),
                 description: "Verify linear curves are enabled".to_string(),
                 test_type: VerificationTestType::FileContains,
@@ -201,11 +215,11 @@ impl CurveConflictWriter {
         };
 
         // X-Plane configuration
-        let xplane_config = WriterConfig {
+        let xplane_config = CcWriterConfig {
             sim: "xplane".to_string(),
             version: "12.0".to_string(),
             description: "Disable X-Plane control response curves".to_string(),
-            diffs: vec![ConfigDiff {
+            diffs: vec![CcConfigDiff {
                 file: "X-Plane 12/Output/preferences/X-Plane Joystick Settings.prf".to_string(),
                 section: None,
                 changes: {
@@ -213,9 +227,9 @@ impl CurveConflictWriter {
                     changes.insert("_joy_use_linear_curves".to_string(), "1".to_string());
                     changes
                 },
-                operation: DiffOperation::Set,
+                operation: CcDiffOperation::Set,
             }],
-            verification_tests: vec![VerificationTest {
+            verification_tests: vec![CcVerificationTest {
                 name: "check_xplane_linear".to_string(),
                 description: "Verify X-Plane uses linear curves".to_string(),
                 test_type: VerificationTestType::FileContains,
@@ -224,11 +238,11 @@ impl CurveConflictWriter {
         };
 
         // DCS configuration
-        let dcs_config = WriterConfig {
+        let dcs_config = CcWriterConfig {
             sim: "dcs".to_string(),
             version: "2.9".to_string(),
             description: "Disable DCS control curves via options.lua".to_string(),
-            diffs: vec![ConfigDiff {
+            diffs: vec![CcConfigDiff {
                 file: "DCS World/Config/options.lua".to_string(),
                 section: Some("options = {".to_string()),
                 changes: {
@@ -236,9 +250,9 @@ impl CurveConflictWriter {
                     changes.insert("useLinearCurves".to_string(), "true".to_string());
                     changes
                 },
-                operation: DiffOperation::Set,
+                operation: CcDiffOperation::Set,
             }],
-            verification_tests: vec![VerificationTest {
+            verification_tests: vec![CcVerificationTest {
                 name: "check_dcs_linear".to_string(),
                 description: "Verify DCS uses linear curves".to_string(),
                 test_type: VerificationTestType::FileContains,
@@ -255,15 +269,15 @@ impl CurveConflictWriter {
     }
 
     /// Save a writer configuration to disk
-    fn save_config(&self, config: &WriterConfig) -> Result<()> {
+    fn save_config(&self, config: &CcWriterConfig) -> Result<()> {
         let filename = format!("{}_{}.json", config.sim, config.version);
         let path = self.config.config_dir.join(filename);
 
         let json = serde_json::to_string_pretty(config)
-            .map_err(|e| FlightError::Writer(format!("Failed to serialize config: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to serialize config: {}", e)))?;
 
         fs::write(&path, json)
-            .map_err(|e| FlightError::Writer(format!("Failed to write config file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to write config file: {}", e)))?;
 
         Ok(())
     }
@@ -278,7 +292,7 @@ impl CurveConflictWriter {
     ) -> Result<WriteResult> {
         let config_key = format!("{}_{}", sim, version);
         let config = self.sim_configs.get(&config_key).ok_or_else(|| {
-            FlightError::Configuration(format!("No writer config found for {} {}", sim, version))
+            CurveConflictError::Configuration(format!("No writer config found for {} {}", sim, version))
         })?;
 
         info!(
@@ -340,15 +354,15 @@ impl CurveConflictWriter {
     }
 
     /// Apply a single configuration diff
-    fn apply_diff(&self, diff: &ConfigDiff, parameters: &HashMap<String, String>) -> Result<()> {
+    fn apply_diff(&self, diff: &CcConfigDiff, parameters: &HashMap<String, String>) -> Result<()> {
         let expanded_path = self.expand_parameters(&diff.file, parameters);
         let target_path = Path::new(&expanded_path);
 
         match diff.operation {
-            DiffOperation::Set => self.apply_set_diff(target_path, diff, parameters),
-            DiffOperation::Remove => self.apply_remove_diff(target_path, diff),
-            DiffOperation::Append => self.apply_append_diff(target_path, diff, parameters),
-            DiffOperation::Replace => self.apply_replace_diff(target_path, diff, parameters),
+            CcDiffOperation::Set => self.apply_set_diff(target_path, diff, parameters),
+            CcDiffOperation::Remove => self.apply_remove_diff(target_path, diff),
+            CcDiffOperation::Append => self.apply_append_diff(target_path, diff, parameters),
+            CcDiffOperation::Replace => self.apply_replace_diff(target_path, diff, parameters),
         }
     }
 
@@ -356,18 +370,18 @@ impl CurveConflictWriter {
     fn apply_set_diff(
         &self,
         path: &Path,
-        diff: &ConfigDiff,
+        diff: &CcConfigDiff,
         parameters: &HashMap<String, String>,
     ) -> Result<()> {
         if !path.exists() {
-            return Err(FlightError::Writer(format!(
+            return Err(CurveConflictError::Writer(format!(
                 "Target file does not exist: {:?}",
                 path
             )));
         }
 
         let content = fs::read_to_string(path)
-            .map_err(|e| FlightError::Writer(format!("Failed to read file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to read file: {}", e)))?;
 
         let mut modified_content = content;
 
@@ -410,19 +424,19 @@ impl CurveConflictWriter {
         }
 
         fs::write(path, modified_content)
-            .map_err(|e| FlightError::Writer(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to write file: {}", e)))?;
 
         Ok(())
     }
 
     /// Apply a REMOVE operation
-    fn apply_remove_diff(&self, path: &Path, diff: &ConfigDiff) -> Result<()> {
+    fn apply_remove_diff(&self, path: &Path, diff: &CcConfigDiff) -> Result<()> {
         if !path.exists() {
             return Ok(()); // File doesn't exist, nothing to remove
         }
 
         let content = fs::read_to_string(path)
-            .map_err(|e| FlightError::Writer(format!("Failed to read file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to read file: {}", e)))?;
 
         let lines: Vec<&str> = content.lines().collect();
         let mut new_lines = Vec::new();
@@ -444,7 +458,7 @@ impl CurveConflictWriter {
 
         let modified_content = new_lines.join("\n");
         fs::write(path, modified_content)
-            .map_err(|e| FlightError::Writer(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to write file: {}", e)))?;
 
         Ok(())
     }
@@ -453,12 +467,12 @@ impl CurveConflictWriter {
     fn apply_append_diff(
         &self,
         path: &Path,
-        diff: &ConfigDiff,
+        diff: &CcConfigDiff,
         parameters: &HashMap<String, String>,
     ) -> Result<()> {
         let mut content = if path.exists() {
             fs::read_to_string(path)
-                .map_err(|e| FlightError::Writer(format!("Failed to read file: {}", e)))?
+                .map_err(|e| CurveConflictError::Writer(format!("Failed to read file: {}", e)))?
         } else {
             String::new()
         };
@@ -470,7 +484,7 @@ impl CurveConflictWriter {
         }
 
         fs::write(path, content)
-            .map_err(|e| FlightError::Writer(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to write file: {}", e)))?;
 
         Ok(())
     }
@@ -479,7 +493,7 @@ impl CurveConflictWriter {
     fn apply_replace_diff(
         &self,
         path: &Path,
-        diff: &ConfigDiff,
+        diff: &CcConfigDiff,
         parameters: &HashMap<String, String>,
     ) -> Result<()> {
         let new_content = diff
@@ -490,7 +504,7 @@ impl CurveConflictWriter {
             .join("\n");
 
         fs::write(path, new_content)
-            .map_err(|e| FlightError::Writer(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to write file: {}", e)))?;
 
         Ok(())
     }
@@ -508,13 +522,13 @@ impl CurveConflictWriter {
     }
 
     /// Check if we should create a backup for this configuration
-    fn should_create_backup(&self, _config: &WriterConfig) -> bool {
+    fn should_create_backup(&self, _config: &CcWriterConfig) -> bool {
         // Always create backups for safety
         true
     }
 
     /// Create backup of files that will be modified
-    fn create_backup(&self, config: &WriterConfig) -> Result<PathBuf> {
+    fn create_backup(&self, config: &CcWriterConfig) -> Result<PathBuf> {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -524,7 +538,7 @@ impl CurveConflictWriter {
         let backup_path = self.config.backup_dir.join(&backup_name);
 
         fs::create_dir_all(&backup_path).map_err(|e| {
-            FlightError::Writer(format!("Failed to create backup directory: {}", e))
+            CurveConflictError::Writer(format!("Failed to create backup directory: {}", e))
         })?;
 
         // Copy files that will be modified
@@ -564,7 +578,7 @@ impl CurveConflictWriter {
     }
 
     /// Run a verification test
-    fn run_verification_test(&self, test: &VerificationTest) -> VerificationResult {
+    fn run_verification_test(&self, test: &CcVerificationTest) -> VerificationResult {
         match test.test_type {
             VerificationTestType::FileExists => {
                 let path = Path::new(&test.expected_result);
@@ -646,14 +660,14 @@ impl CurveConflictWriter {
         let info_path = backup_path.join("backup_info.json");
 
         if !info_path.exists() {
-            return Err(FlightError::Writer("Backup info not found".to_string()));
+            return Err(CurveConflictError::Writer("Backup info not found".to_string()));
         }
 
         let info_content = fs::read_to_string(&info_path)
-            .map_err(|e| FlightError::Writer(format!("Failed to read backup info: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to read backup info: {}", e)))?;
 
         let backup_info: BackupInfo = serde_json::from_str(&info_content)
-            .map_err(|e| FlightError::Writer(format!("Failed to parse backup info: {}", e)))?;
+            .map_err(|e| CurveConflictError::Writer(format!("Failed to parse backup info: {}", e)))?;
 
         let mut applied_diffs = Vec::new();
         let mut success = true;
@@ -766,9 +780,9 @@ mod tests {
     #[test]
     fn test_diff_operations() {
         // Test the different diff operation types
-        assert!(matches!(DiffOperation::Set, DiffOperation::Set));
-        assert!(matches!(DiffOperation::Remove, DiffOperation::Remove));
-        assert!(matches!(DiffOperation::Append, DiffOperation::Append));
-        assert!(matches!(DiffOperation::Replace, DiffOperation::Replace));
+        assert!(matches!(CcDiffOperation::Set, CcDiffOperation::Set));
+        assert!(matches!(CcDiffOperation::Remove, CcDiffOperation::Remove));
+        assert!(matches!(CcDiffOperation::Append, CcDiffOperation::Append));
+        assert!(matches!(CcDiffOperation::Replace, CcDiffOperation::Replace));
     }
 }

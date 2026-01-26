@@ -1269,3 +1269,54 @@ mod basic_tests {
         assert!(stats.last_execution.is_some());
     }
 }
+
+#[cfg(test)]
+mod prop_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test component type display logic
+        #[test]
+        fn prop_component_type_display(id in "[a-zA-Z0-9_-]+") {
+            let usb = ComponentType::UsbEndpoint(id.clone());
+            prop_assert!(usb.display_name().contains(&id));
+            prop_assert!(usb.display_name().contains("USB Endpoint"));
+            prop_assert_eq!(usb.id(), &id);
+
+            let native = ComponentType::NativePlugin(id.clone());
+            prop_assert!(native.display_name().contains(&id));
+            prop_assert!(native.display_name().contains("Native Plugin"));
+            prop_assert_eq!(native.id(), &id);
+
+            let wasm = ComponentType::WasmPlugin(id.clone());
+            prop_assert!(wasm.display_name().contains(&id));
+            prop_assert!(wasm.display_name().contains("WASM Plugin"));
+            prop_assert_eq!(wasm.id(), &id);
+        }
+
+        // Test WatchdogConfig defaults and ranges
+        #[test]
+        fn prop_watchdog_config_validity(
+            max_execution_micros in 1u64..1_000_000,
+            usb_timeout_ms in 1u64..10_000,
+            max_consecutive_failures in 1u32..100,
+            failure_rate_window_secs in 1u64..3600,
+            max_failures_per_window in 1u32..1000
+        ) {
+            let config = WatchdogConfig {
+                max_execution_time: Duration::from_micros(max_execution_micros),
+                usb_timeout: Duration::from_millis(usb_timeout_ms),
+                max_consecutive_failures,
+                failure_rate_window: Duration::from_secs(failure_rate_window_secs),
+                max_failures_per_window,
+                enable_nan_guards: true,
+                is_critical: false,
+            };
+
+            prop_assert!(config.max_execution_time.as_micros() > 0);
+            prop_assert!(config.usb_timeout.as_millis() > 0);
+            prop_assert!(config.max_consecutive_failures > 0);
+        }
+    }
+}
