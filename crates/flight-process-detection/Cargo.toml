@@ -22,3 +22,4 @@ windows = { workspace = true, features = [
 ] }
 
 [dev-dependencies]
+proptest.workspace = true
