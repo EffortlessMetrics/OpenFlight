@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Documentation**:
+    - Comprehensive X-Plane data group mapping and integration tutorials.
+    - Supply chain security audit and "What We Touch" documentation.
+    - Cross-reference checking module documentation (`docs/dev/CROSS_REF_MODULE.md`).
 - **Flight Hub Core**:
     - Complete FFB Safety Envelope with 50ms ramp-down guarantee.
     - Blackbox recorder for capturing high-frequency FFB and Axis events (pre/post-fault).
@@ -23,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Gherkin (BDD) feature file parsing and status reporting.
 
 ### Changed
+- **Data Serialization**:
+    - Migrated Blackbox recorder framing to `postcard` for compact, zero-copy serialization.
+    - Unified time bases and unit conversions across telemetry systems.
 - **Repository Health**:
     - Migrated to Rust 2024 Edition.
     - Pinned MSRV to 1.89.0.

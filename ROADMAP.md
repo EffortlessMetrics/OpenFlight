@@ -25,23 +25,42 @@ This roadmap outlines the development path for the OpenFlight ecosystem, organiz
 ## 2. Platform Runtime & Timing (The "Real-Time" Promise)
 **Goal:** OS-level integration to guarantee timing constraints on Windows and Linux.
 
-*   📅 **Windows RT Optimization**: MMCSS registration, High-Res timers, Power management.
-*   📅 **Linux RT Optimization**: rtkit/SCHED_FIFO integration, udev rules.
-*   📅 **Jitter & Latency Validation**: Hardware-backed CI gates for jitter (p99 < 0.5ms) and HID latency.
+*   📅 **Windows RT Optimization**:
+    *   MMCSS registration ("Games" / "Pro Audio" profiles).
+    *   High-Res Waitable Timers (1μs resolution).
+    *   Power Management (prevent core parking/throttling).
+    *   HID Overlapped I/O for non-blocking writes.
+*   📅 **Linux RT Optimization**:
+    *   `rtkit` integration for unprivileged RT scheduling.
+    *   `CLOCK_MONOTONIC` absolute timers.
+    *   `udev` rules for low-latency HID access.
+*   📅 **Jitter & Latency Validation**:
+    *   Hardware-backed CI gates for jitter (p99 < 0.5ms).
+    *   End-to-end HID latency measurement harness.
 
 ## 3. Packaging & Distribution
 **Goal:** User-friendly installers and secure update channels.
 
-*   📅 **Windows Installer**: Signed MSI with WiX, system/user scope handling.
-*   📅 **Linux Packaging**: `.deb` packages with udev rules, potentially AppImage/RPM.
-*   📅 **Update System**: Stable/Beta/Canary channels with rollback capabilities.
-*   📅 **Legal Posture**: License inventory and "What We Touch" documentation per simulator.
+*   📅 **Windows Installer**:
+    *   Signed MSI using WiX Toolset.
+    *   Per-user vs Per-machine scope handling.
+    *   Firewall rule automation.
+*   📅 **Linux Packaging**:
+    *   `.deb` packages with systemd user units.
+    *   AppImage for portable distribution.
+    *   Post-install scripts for group membership (`input`/`dialout`).
+*   📅 **Update System**:
+    *   Stable/Beta/Canary channels.
+    *   Delta updates to reduce bandwidth.
+    *   Automatic rollback on startup crash.
 
 ## 4. Telemetry & Observability
 **Goal:** Deep visibility into the system for debugging and user trust.
 
 *   ✅ **Blackbox Recorder**: Flight data recorder for FFB and Axis events.
-*   📅 **Metrics System**: System-wide counters/histograms (sim.*, ffb.*, runtime.*).
+*   📅 **Metrics System**:
+    *   In-process counters/histograms (sim.*, ffb.*, runtime.*).
+    *   Prometheus exporter (optional).
 *   📅 **Dashboard**: Visualization of performance metrics.
 
 ## 5. Project Infrastructure
@@ -52,3 +71,4 @@ This roadmap outlines the development path for the OpenFlight ecosystem, organiz
 *   ✅ **BDD Integration**: Gherkin feature files linked to implementation coverage.
 *   ✅ **Local Dev Environment**: Docker-based infra setup.
 *   ✅ **Repo Health**: Rust 2024 edition, MSRV 1.89.0 enforcement, CI hardening.
+*   ✅ **Cross-Reference Checking**: Automated link validation between Specs, Docs, and Code.
