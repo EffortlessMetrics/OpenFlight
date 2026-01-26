@@ -11,6 +11,8 @@ exclude = [
     "**/tests/**",
     "**/benches/**",
     "**/examples/**",
+    "**/fuzz/**",
+    "**/xtask/**",
 ]
 
 # Exclude specific functions that might be false positives or irrelevant

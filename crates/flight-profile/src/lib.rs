@@ -556,4 +556,78 @@ mod tests {
             pof_overrides: None,
         }
     }
+
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn prop_profile_roundtrip(
+            deadzone in 0.0f32..0.5,
+            expo in 0.0f32..1.0,
+            slew_rate in 0.0f32..100.0,
+            axis_name in "[a-z]+"
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                axis_name,
+                AxisConfig {
+                    deadzone: Some(deadzone),
+                    expo: Some(expo),
+                    slew_rate: Some(slew_rate),
+                    detents: vec![],
+                    curve: None,
+                },
+            );
+
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: Some("msfs".to_string()),
+                aircraft: Some(AircraftId {
+                    icao: "C172".to_string(),
+                }),
+                axes,
+                pof_overrides: None,
+            };
+
+            // Should be valid
+            prop_assert!(profile.validate().is_ok());
+
+            // Canonicalization round trip
+            let canonical = profile.canonicalize();
+            let parsed: Profile = serde_json::from_str(&canonical).unwrap();
+            
+            // Note: Floating point comparison issues may arise if we compare directly
+            // but the canonicalize fn rounds to 6 decimals, so it should be stable.
+            // We verify the hash is stable.
+            prop_assert_eq!(profile.effective_hash(), parsed.effective_hash());
+        }
+
+        #[test]
+        fn prop_capability_enforcement_kid_mode(
+            expo in 0.31f32..1.0, // Values > 0.3 should fail in Kid mode
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                "test_axis".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: Some(expo),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                },
+            );
+
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None,
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+
+            let kid_context = CapabilityContext::for_mode(CapabilityMode::Kid);
+            prop_assert!(profile.validate_with_capabilities(&kid_context).is_err());
+        }
+    }
 }

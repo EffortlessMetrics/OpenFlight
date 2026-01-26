@@ -121,6 +121,7 @@ pub mod conversions {
 #[cfg(test)]
 mod tests {
     use super::{angles, conversions};
+    use proptest::prelude::*;
 
     #[test]
     fn test_normalize_degrees_signed() {
@@ -147,5 +148,50 @@ mod tests {
 
         let knots = conversions::kph_to_knots(18.52); // ~10 knots
         assert!((knots - 10.0).abs() < 0.05);
+    }
+
+    proptest! {
+        // Test angle normalization properties
+        #[test]
+        fn prop_normalize_degrees_signed_range(val in -10000.0f32..10000.0) {
+            let normalized = angles::normalize_degrees_signed(val);
+            prop_assert!(normalized >= -180.0);
+            prop_assert!(normalized <= 180.0);
+            
+            // Should be congruent modulo 360
+            let diff = (normalized - val) % 360.0;
+            let diff = if diff.abs() > 0.001 { diff.abs() } else { 0.0 };
+            prop_assert!(diff < 0.001 || (diff - 360.0).abs() < 0.001);
+        }
+
+        #[test]
+        fn prop_normalize_degrees_unsigned_range(val in -10000.0f32..10000.0) {
+            let normalized = angles::normalize_degrees_unsigned(val);
+            prop_assert!(normalized >= 0.0);
+            prop_assert!(normalized < 360.0);
+        }
+
+        // Test round-trip conversion properties
+        #[test]
+        fn prop_knots_mps_roundtrip(val in 0.0f32..10000.0) {
+            let mps = conversions::knots_to_mps(val);
+            let back = conversions::mps_to_knots(mps);
+            // 0.1% error tolerance for float math
+            prop_assert!((val - back).abs() < val * 0.001 + 0.0001);
+        }
+
+        #[test]
+        fn prop_kph_mps_roundtrip(val in 0.0f32..10000.0) {
+            let mps = conversions::kph_to_mps(val);
+            let back = conversions::mps_to_kph(mps);
+            prop_assert!((val - back).abs() < val * 0.001 + 0.0001);
+        }
+
+        #[test]
+        fn prop_feet_meters_roundtrip(val in 0.0f32..100000.0) {
+            let meters = conversions::feet_to_meters(val);
+            let back = conversions::meters_to_feet(meters);
+            prop_assert!((val - back).abs() < val * 0.001 + 0.0001);
+        }
     }
 }
