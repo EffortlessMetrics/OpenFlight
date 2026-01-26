@@ -66,9 +66,9 @@ impl QualityGateResult {
 /// - `passed = false` with details about missing files if any are missing
 pub fn check_sim_mapping_docs() -> Result<QualityGateResult> {
     let required_files = vec![
-        "docs/integration/msfs-simvar-mapping.md",
-        "docs/integration/xplane-data-groups.md",
-        "docs/integration/dcs-export-api.md",
+        "docs/reference/msfs-mapping.md",
+        "docs/reference/xplane-mapping.md",
+        "docs/reference/dcs-api.md",
     ];
 
     let mut missing_files = Vec::new();

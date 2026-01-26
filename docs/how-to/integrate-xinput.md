@@ -4,7 +4,7 @@ kind: how-to
 area: flight-ffb
 status: active
 links:
-  requirements: []
+  requirements: ["REQ-8"]
   tasks: []
   adrs: []
 ---

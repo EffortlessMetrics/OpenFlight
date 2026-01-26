@@ -14,7 +14,7 @@
     "kind": {
       "type": "string",
       "description": "Documentation category (band)",
-      "enum": ["requirements", "design", "concept", "how-to", "reference", "adr"]
+      "enum": ["requirements", "design", "concept", "how-to", "reference", "adr", "explanation", "tutorial"]
     },
     "area": {
       "type": "string",

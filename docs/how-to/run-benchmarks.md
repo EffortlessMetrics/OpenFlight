@@ -4,7 +4,7 @@ kind: how-to
 area: ci
 status: active
 links:
-  requirements: []
+  requirements: ["REQ-1"]
   tasks: []
   adrs: []
 ---

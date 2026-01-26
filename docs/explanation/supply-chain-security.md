@@ -4,7 +4,7 @@ kind: explanation
 area: infra
 status: active
 links:
-  requirements: []
+  requirements: ["INF-REQ-9"]
   tasks: []
   adrs: []
 ---

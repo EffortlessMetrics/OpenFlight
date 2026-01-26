@@ -4,7 +4,7 @@ kind: how-to
 area: ci
 status: draft
 links:
-  requirements: []
+  requirements: ["INF-REQ-10"]
   tasks: []
   adrs: []
 ---
