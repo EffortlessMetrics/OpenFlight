@@ -145,7 +145,7 @@ type IDirectInputEffect = usize;
 
 use flight_metrics::{
     MetricsRegistry,
-    common::{DEVICE_ERRORS_TOTAL, DEVICE_OPERATION_LATENCY_MS, DEVICE_OPERATIONS_TOTAL},
+    common::{DeviceMetricNames, FFB_DEVICE_METRICS},
 };
 use std::sync::Arc;
 use std::time::Instant;
@@ -288,6 +288,8 @@ pub struct DirectInputFfbDevice {
     last_torque_nm: f32,
     /// Shared metrics registry
     metrics_registry: Arc<MetricsRegistry>,
+    /// Device metric names
+    device_metrics: DeviceMetricNames,
 }
 
 impl DirectInputFfbDevice {
@@ -316,6 +318,7 @@ impl DirectInputFfbDevice {
                 is_acquired: false,
                 last_torque_nm: 0.0,
                 metrics_registry: Arc::new(MetricsRegistry::new()),
+                device_metrics: FFB_DEVICE_METRICS,
             })
         }
     }
@@ -342,6 +345,35 @@ impl DirectInputFfbDevice {
                 is_acquired: false,
                 last_torque_nm: 0.0,
                 metrics_registry,
+                device_metrics: FFB_DEVICE_METRICS,
+            })
+        }
+    }
+
+    /// Create a new DirectInput FFB device with shared metrics registry and custom metric names
+    pub fn new_with_metrics_and_device_metrics(
+        device_guid: String,
+        metrics_registry: Arc<MetricsRegistry>,
+        device_metrics: DeviceMetricNames,
+    ) -> Result<Self> {
+        #[cfg(not(windows))]
+        {
+            let _ = (device_guid, metrics_registry, device_metrics);
+            return Err(DInputError::PlatformNotSupported);
+        }
+
+        #[cfg(windows)]
+        {
+            Ok(Self {
+                device_guid,
+                dinput: None,
+                device: None,
+                capabilities: FfbCapabilities::default(),
+                effects: Vec::new(),
+                is_acquired: false,
+                last_torque_nm: 0.0,
+                metrics_registry,
+                device_metrics,
             })
         }
     }
@@ -352,13 +384,15 @@ impl DirectInputFfbDevice {
     }
 
     fn record_metrics<T>(&self, start: Instant, result: &Result<T>) {
-        self.metrics_registry.inc_counter(DEVICE_OPERATIONS_TOTAL, 1);
+        self.metrics_registry
+            .inc_counter(self.device_metrics.operations_total, 1);
         self.metrics_registry.observe(
-            DEVICE_OPERATION_LATENCY_MS,
+            self.device_metrics.operation_latency_ms,
             start.elapsed().as_secs_f64() * 1000.0,
         );
         if result.is_err() {
-            self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+            self.metrics_registry
+                .inc_counter(self.device_metrics.errors_total, 1);
         }
     }
 

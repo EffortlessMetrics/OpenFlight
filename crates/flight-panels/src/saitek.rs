@@ -16,7 +16,7 @@ use flight_core::{FlightError, Result};
 use flight_hid::{HidAdapter, HidDeviceInfo, HidOperationResult};
 use flight_metrics::{
     MetricsRegistry,
-    common::{DEVICE_ERRORS_TOTAL, DEVICE_OPERATION_LATENCY_MS, DEVICE_OPERATIONS_TOTAL},
+    common::{DeviceMetricNames, PANEL_DEVICE_METRICS},
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -191,6 +191,8 @@ pub struct SaitekPanelWriter {
     hid_adapter: HidAdapter,
     /// Shared metrics registry
     metrics_registry: Arc<MetricsRegistry>,
+    /// Device metric names
+    device_metrics: DeviceMetricNames,
     /// Connected panels by device path
     panels: HashMap<String, PanelInfo>,
     /// LED states by panel and LED name
@@ -240,6 +242,7 @@ impl SaitekPanelWriter {
         Self {
             hid_adapter,
             metrics_registry: Arc::new(MetricsRegistry::new()),
+            device_metrics: PANEL_DEVICE_METRICS,
             panels: HashMap::new(),
             led_states: HashMap::new(),
             latency_samples: Vec::new(),
@@ -257,6 +260,26 @@ impl SaitekPanelWriter {
         Self {
             hid_adapter,
             metrics_registry,
+            device_metrics: PANEL_DEVICE_METRICS,
+            panels: HashMap::new(),
+            led_states: HashMap::new(),
+            latency_samples: Vec::new(),
+            max_latency_samples: 1000,
+            min_write_interval: Duration::from_millis(8),
+            verify_state: None,
+        }
+    }
+
+    /// Create new Saitek panel writer with shared metrics registry and custom metric names
+    pub fn new_with_metrics_and_device_metrics(
+        hid_adapter: HidAdapter,
+        metrics_registry: Arc<MetricsRegistry>,
+        device_metrics: DeviceMetricNames,
+    ) -> Self {
+        Self {
+            hid_adapter,
+            metrics_registry,
+            device_metrics,
             panels: HashMap::new(),
             led_states: HashMap::new(),
             latency_samples: Vec::new(),
@@ -448,16 +471,29 @@ impl SaitekPanelWriter {
         led_state: &PanelLedState,
     ) -> Result<()> {
         let write_start = Instant::now();
-        self.metrics_registry.inc_counter(DEVICE_OPERATIONS_TOTAL, 1);
+        self.metrics_registry
+            .inc_counter(self.device_metrics.operations_total, 1);
 
         // Build HID report for this panel type
-        let report = self.build_led_report(panel_path, led_name, led_state)?;
+        let report = match self.build_led_report(panel_path, led_name, led_state) {
+            Ok(report) => report,
+            Err(err) => {
+                let write_latency = write_start.elapsed();
+                self.metrics_registry.observe(
+                    self.device_metrics.operation_latency_ms,
+                    write_latency.as_secs_f64() * 1000.0,
+                );
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
+                return Err(err);
+            }
+        };
 
         // Write to HID device
         let write_result = self.hid_adapter.write_output(panel_path, &report);
         let write_latency = write_start.elapsed();
         self.metrics_registry.observe(
-            DEVICE_OPERATION_LATENCY_MS,
+            self.device_metrics.operation_latency_ms,
             write_latency.as_secs_f64() * 1000.0,
         );
 
@@ -485,7 +521,8 @@ impl SaitekPanelWriter {
                 Ok(())
             }
             Ok(HidOperationResult::Stall) => {
-                self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!("HID stall writing LED {} on {}", led_name, panel_path);
                 Err(FlightError::Hardware(format!(
                     "HID stall writing to {}",
@@ -493,7 +530,8 @@ impl SaitekPanelWriter {
                 )))
             }
             Ok(HidOperationResult::Timeout) => {
-                self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!("HID timeout writing LED {} on {}", led_name, panel_path);
                 Err(FlightError::Hardware(format!(
                     "HID timeout writing to {}",
@@ -504,7 +542,8 @@ impl SaitekPanelWriter {
                 error_code,
                 description,
             }) => {
-                self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!(
                     "HID error writing LED {} on {}: {} - {}",
                     led_name, panel_path, error_code, description
@@ -515,7 +554,8 @@ impl SaitekPanelWriter {
                 )))
             }
             Err(err) => {
-                self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 Err(err)
             }
         }

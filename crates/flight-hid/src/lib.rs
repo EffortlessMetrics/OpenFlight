@@ -15,7 +15,7 @@ use flight_core::{
 };
 use flight_metrics::{
     MetricsRegistry,
-    common::{DEVICE_ERRORS_TOTAL, DEVICE_OPERATION_LATENCY_MS, DEVICE_OPERATIONS_TOTAL},
+    common::{DeviceMetricNames, HID_DEVICE_METRICS},
 };
 use flight_watchdog::WatchdogSystem;
 use std::collections::HashMap;
@@ -88,6 +88,8 @@ pub struct HidAdapter {
     watchdog: Arc<Mutex<WatchdogSystem>>,
     /// Shared metrics registry
     metrics_registry: Arc<MetricsRegistry>,
+    /// Device metric names
+    device_metrics: DeviceMetricNames,
     /// Connected devices
     devices: HashMap<String, HidDeviceInfo>,
     /// Endpoint states
@@ -102,6 +104,7 @@ impl HidAdapter {
         Self {
             watchdog,
             metrics_registry: Arc::new(MetricsRegistry::new()),
+            device_metrics: HID_DEVICE_METRICS,
             devices: HashMap::new(),
             endpoint_states: HashMap::new(),
             is_running: false,
@@ -116,6 +119,23 @@ impl HidAdapter {
         Self {
             watchdog,
             metrics_registry,
+            device_metrics: HID_DEVICE_METRICS,
+            devices: HashMap::new(),
+            endpoint_states: HashMap::new(),
+            is_running: false,
+        }
+    }
+
+    /// Create new HID adapter with shared metrics registry and custom metric names.
+    pub fn new_with_metrics_and_device_metrics(
+        watchdog: Arc<Mutex<WatchdogSystem>>,
+        metrics_registry: Arc<MetricsRegistry>,
+        device_metrics: DeviceMetricNames,
+    ) -> Self {
+        Self {
+            watchdog,
+            metrics_registry,
+            device_metrics,
             devices: HashMap::new(),
             endpoint_states: HashMap::new(),
             is_running: false,
@@ -364,13 +384,15 @@ impl HidAdapter {
             endpoint_id.device_path, endpoint_id.endpoint_type
         ));
 
-        self.metrics_registry.inc_counter(DEVICE_OPERATIONS_TOTAL, 1);
+        self.metrics_registry
+            .inc_counter(self.device_metrics.operations_total, 1);
 
         // Check if component is quarantined
         if let Ok(watchdog) = self.watchdog.lock()
             && watchdog.is_quarantined(&component)
         {
-            self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+            self.metrics_registry
+                .inc_counter(self.device_metrics.errors_total, 1);
             return Err(FlightError::Configuration(format!(
                 "USB endpoint {} is quarantined",
                 endpoint_id.device_path
@@ -382,7 +404,7 @@ impl HidAdapter {
         let operation_time = start_time.elapsed();
 
         self.metrics_registry.observe(
-            DEVICE_OPERATION_LATENCY_MS,
+            self.device_metrics.operation_latency_ms,
             operation_time.as_secs_f64() * 1000.0,
         );
         let had_error = !matches!(result, HidOperationResult::Success { .. });
@@ -454,7 +476,8 @@ impl HidAdapter {
         }
 
         if had_error {
-            self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
+            self.metrics_registry
+                .inc_counter(self.device_metrics.errors_total, 1);
         }
 
         Ok(result)
