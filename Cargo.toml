@@ -82,6 +82,7 @@ protobuf-codegen = "4.33.4-release"
 
 # HTTP client
 reqwest = { version = "0.13.1", default-features = false, features = [
+    "rustls",
     "rustls-native-certs",
     "http2",
     "json",

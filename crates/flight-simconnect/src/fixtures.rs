@@ -8,10 +8,10 @@
 //! of adapter behavior without requiring a live MSFS connection.
 
 use flight_bus::snapshot::BusSnapshot;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+#[cfg(feature = "serde")]
 use std::fs::File;
+#[cfg(feature = "serde")]
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};

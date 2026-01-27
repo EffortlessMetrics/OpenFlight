@@ -12,6 +12,13 @@ use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
 use flight_adapter_common::{AdapterMetrics, AdapterState};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{
+        ADAPTER_ERRORS_TOTAL, ADAPTER_TIME_SINCE_LAST_PACKET_MS, ADAPTER_UPDATE_LATENCY_MS,
+        ADAPTER_UPDATES_TOTAL,
+    },
+};
 use flight_bus::adapters::SimAdapter;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, BusTypeError, SimId};
@@ -110,6 +117,8 @@ pub struct MsfsAdapter {
     current_backoff_delay: f64,
     /// Adapter metrics
     metrics: Arc<RwLock<AdapterMetrics>>,
+    /// Shared metrics registry
+    metrics_registry: Arc<MetricsRegistry>,
 }
 
 impl MsfsAdapter {
@@ -133,6 +142,7 @@ impl MsfsAdapter {
             last_connection_attempt: None,
             current_backoff_delay: 1.0, // Start with 1 second
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
+            metrics_registry: Arc::new(MetricsRegistry::new()),
         })
     }
 
@@ -322,6 +332,8 @@ impl MsfsAdapter {
                         && let Err(e) = self.attempt_reconnect().await
                     {
                         error!("Reconnection attempt failed: {}", e);
+                        self.metrics_registry
+                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                         self.connection_attempts += 1;
                     }
                 }
@@ -329,6 +341,8 @@ impl MsfsAdapter {
                     // Try to detect aircraft
                     if let Err(e) = self.detect_aircraft().await {
                         warn!("Aircraft detection failed: {}", e);
+                        self.metrics_registry
+                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::DetectingAircraft => {
@@ -338,6 +352,8 @@ impl MsfsAdapter {
                     // Update telemetry
                     if let Err(e) = self.update_telemetry().await {
                         warn!("Telemetry update failed: {}", e);
+                        self.metrics_registry
+                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::Error => {
@@ -491,11 +507,16 @@ impl MsfsAdapter {
     async fn update_telemetry(&mut self) -> Result<(), MsfsAdapterError> {
         // Rate limiting
         let now = Instant::now();
+        self.metrics_registry.set_gauge(
+            ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+            now.duration_since(self.last_update).as_secs_f64() * 1000.0,
+        );
         let min_interval = Duration::from_secs_f32(1.0 / self.config.publish_rate);
         if now.duration_since(self.last_update) < min_interval {
             return Ok(());
         }
         self.last_update = now;
+        let update_start = Instant::now();
 
         // Create or update bus snapshot
         let aircraft_info = self.current_aircraft.read().await;
@@ -510,6 +531,8 @@ impl MsfsAdapter {
             // Validate and publish snapshot
             if let Err(e) = snapshot.validate() {
                 warn!("Snapshot validation failed: {}", e);
+                self.metrics_registry
+                    .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                 return Ok(());
             }
 
@@ -519,11 +542,18 @@ impl MsfsAdapter {
                 metrics.record_update();
                 metrics.record_aircraft_change(aircraft.title.clone());
             }
+            self.metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
+            self.metrics_registry.observe(
+                ADAPTER_UPDATE_LATENCY_MS,
+                update_start.elapsed().as_secs_f64() * 1000.0,
+            );
 
             *self.current_snapshot.write().await = Some(snapshot.clone());
 
             if let Err(e) = self.snapshot_sender.send(snapshot) {
                 warn!("Failed to publish snapshot: {}", e);
+                self.metrics_registry
+                    .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
         }
 
@@ -563,6 +593,11 @@ impl MsfsAdapter {
     /// Get adapter metrics
     pub async fn metrics(&self) -> AdapterMetrics {
         self.metrics.read().await.clone()
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
     }
 
     /// Get metrics summary string
