@@ -381,24 +381,21 @@ impl StreamDeckPlugin {
 
 /// Mock subscriber for testing
 struct MockSubscriber {
+    id: SubscriberId,
     config: SubscriptionConfig,
 }
 
 impl MockSubscriber {
     fn new(config: SubscriptionConfig) -> Self {
-        Self { config }
+        // Placeholder id until the real bus subscriber wiring is in place.
+        let id = unsafe { std::mem::transmute(1u64) };
+        Self { id, config }
     }
 }
 
 impl TelemetrySubscriber for MockSubscriber {
     fn get_id(&self) -> &SubscriberId {
-        // In a real implementation, this would store the actual SubscriberId
-        // For now, we'll use a static placeholder
-        static PLACEHOLDER_ID: std::sync::OnceLock<SubscriberId> = std::sync::OnceLock::new();
-        PLACEHOLDER_ID.get_or_init(|| {
-            // Create a mock SubscriberId - in real implementation this would come from the publisher
-            unsafe { std::mem::transmute(1u64) }
-        })
+        &self.id
     }
 
     fn get_config(&self) -> &SubscriptionConfig {

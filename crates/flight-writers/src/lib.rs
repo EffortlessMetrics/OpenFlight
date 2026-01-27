@@ -27,7 +27,6 @@ use std::path::Path;
 
 /// Main Writers API for managing simulator configurations
 pub struct Writers {
-    config_dir: std::path::PathBuf,
     golden_dir: std::path::PathBuf,
     backup_dir: std::path::PathBuf,
 }
@@ -44,11 +43,7 @@ impl Writers {
         std::fs::create_dir_all(&golden_dir)?;
         std::fs::create_dir_all(&backup_dir)?;
 
-        Ok(Self {
-            config_dir,
-            golden_dir,
-            backup_dir,
-        })
+        Ok(Self { golden_dir, backup_dir })
     }
 
     /// Apply a writer configuration to the target simulator
@@ -65,7 +60,8 @@ impl Writers {
 
     /// Repair simulator configuration by applying minimal diffs
     pub async fn repair(&self, verify_result: &VerifyResult) -> AnyResult<RepairResult> {
-        let repairer = ConfigRepairer::new(&self.config_dir, &self.backup_dir);
+        // ConfigRepairer currently ignores the config_dir parameter.
+        let repairer = ConfigRepairer::new(&self.backup_dir, &self.backup_dir);
         repairer.repair(verify_result).await
     }
 

@@ -5,7 +5,7 @@
 
 use crate::diff::WriterApplier;
 use crate::types::*;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result as AnyResult};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
@@ -22,7 +22,7 @@ impl ConfigRepairer {
     }
 
     /// Repair configuration based on verification results
-    pub async fn repair(&self, verify_result: &VerifyResult) -> Result<RepairResult> {
+    pub async fn repair(&self, verify_result: &VerifyResult) -> AnyResult<RepairResult> {
         info!(
             "Starting repair for {} version {} ({} mismatched files)",
             verify_result.sim,
@@ -80,7 +80,7 @@ impl ConfigRepairer {
     }
 
     /// Generate a repair configuration from verification results
-    fn generate_repair_config(&self, verify_result: &VerifyResult) -> Result<WriterConfig> {
+    fn generate_repair_config(&self, verify_result: &VerifyResult) -> AnyResult<WriterConfig> {
         debug!("Generating repair configuration");
 
         let mut diffs = Vec::new();
@@ -110,7 +110,7 @@ impl ConfigRepairer {
     }
 
     /// Generate a diff for a file mismatch
-    fn generate_diff_for_mismatch(&self, mismatch: &FileMismatch) -> Result<FileDiff> {
+    fn generate_diff_for_mismatch(&self, mismatch: &FileMismatch) -> AnyResult<FileDiff> {
         match &mismatch.mismatch_type {
             MismatchType::Missing => {
                 // For missing files, we need to determine what content should be there
@@ -137,7 +137,7 @@ impl ConfigRepairer {
     }
 
     /// Generate a repair diff for content mismatches
-    fn generate_content_repair_diff(&self, file_path: &Path) -> Result<FileDiff> {
+    fn generate_content_repair_diff(&self, file_path: &Path) -> AnyResult<FileDiff> {
         // This is a simplified implementation
         // In practice, you'd want to:
         // 1. Load the expected content from golden files
@@ -194,7 +194,7 @@ impl ConfigRepairer {
         &self,
         file_path: &Path,
         expected_operation: &DiffOperation,
-    ) -> Result<Vec<FileDiff>> {
+    ) -> AnyResult<Vec<FileDiff>> {
         debug!("Analyzing file for repair suggestions: {:?}", file_path);
 
         let mut suggestions = Vec::new();
@@ -289,7 +289,7 @@ impl ConfigRepairer {
         current_content: &str,
         target_section: &str,
         desired_changes: &std::collections::HashMap<String, String>,
-    ) -> Result<std::collections::HashMap<String, String>> {
+    ) -> AnyResult<std::collections::HashMap<String, String>> {
         let mut minimal_changes = std::collections::HashMap::new();
         let mut current_values = std::collections::HashMap::new();
         let mut in_target_section = false;
@@ -334,7 +334,7 @@ impl ConfigRepairer {
         &self,
         file_path: &Path,
         patches: &[crate::types::JsonPatchOp],
-    ) -> Result<Vec<crate::types::JsonPatchOp>> {
+    ) -> AnyResult<Vec<crate::types::JsonPatchOp>> {
         let current_content =
             std::fs::read_to_string(file_path).context("Failed to read JSON file")?;
 
@@ -379,7 +379,7 @@ impl ConfigRepairer {
     }
 
     /// Get a value from JSON at the specified path
-    fn get_json_value(&self, json: &serde_json::Value, path: &str) -> Result<serde_json::Value> {
+    fn get_json_value(&self, json: &serde_json::Value, path: &str) -> AnyResult<serde_json::Value> {
         let parts: Vec<&str> = path.trim_start_matches('/').split('/').collect();
         let mut current = json;
 

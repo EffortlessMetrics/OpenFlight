@@ -43,8 +43,6 @@ pub enum BlackboxError {
 pub const FBB_MAGIC: &[u8; 4] = b"FBB1";
 pub const FBB_ENDIAN_MARKER: u32 = 0x12345678;
 pub const FBB_FORMAT_VERSION: u32 = 2;
-pub const CHUNK_SIZE: usize = 6 * 1024; // 6KB chunks
-pub const INDEX_INTERVAL_MS: u64 = 100; // Index every 100ms
 pub const FLUSH_INTERVAL_MS: u64 = 1000; // Flush every 1s
 pub const MAX_BUFFER_SIZE: usize = 1024 * 1024; // 1MB buffer before dropping
 const RECORD_QUEUE_MAX: usize = 8192;
@@ -167,8 +165,6 @@ pub struct BlackboxStats {
 /// Internal writer state
 struct WriterState {
     file: BufWriter<File>,
-    file_offset: u64,
-    stream_counters: [u32; 3],
 }
 
 /// Blackbox writer implementation
@@ -178,7 +174,6 @@ pub struct BlackboxWriter {
     record_rx: Option<mpsc::Receiver<BlackboxRecord>>,
     running: Arc<AtomicBool>,
     drop_counter: Arc<AtomicU64>,
-    current_header: Option<BlackboxHeader>,
     writer_handle: Option<tokio::task::JoinHandle<anyhow::Result<()>>>,
 }
 
@@ -194,7 +189,6 @@ impl BlackboxWriter {
             record_rx: Some(rx),
             running: Arc::new(AtomicBool::new(false)),
             drop_counter: Arc::new(AtomicU64::new(0)),
-            current_header: None,
             writer_handle: None,
         }
     }
@@ -229,8 +223,6 @@ impl BlackboxWriter {
             recording_mode: mode,
             start_timestamp: start_monotonic,
         };
-        self.current_header = Some(header.clone());
-
         let rx = self
             .record_rx
             .take()
@@ -300,8 +292,6 @@ async fn run_writer(
     let file = File::create(&path).map_err(BlackboxError::Io)?;
     let mut writer = WriterState {
         file: BufWriter::new(file),
-        file_offset: 0,
-        stream_counters: [0; 3],
     };
 
     // Write header
@@ -309,7 +299,6 @@ async fn run_writer(
     let header_len = header_bytes.len() as u32;
     writer.file.write_all(&header_len.to_le_bytes())?;
     writer.file.write_all(&header_bytes)?;
-    writer.file_offset += 4 + header_len as u64;
 
     let mut flush_interval = interval(Duration::from_millis(FLUSH_INTERVAL_MS));
     
@@ -343,8 +332,6 @@ impl WriterState {
         let len = bytes.len() as u32;
         self.file.write_all(&len.to_le_bytes())?;
         self.file.write_all(&bytes)?;
-        self.file_offset += 4 + len as u64;
-        self.stream_counters[record.stream_type.to_index()] += 1;
         Ok(())
     }
 }

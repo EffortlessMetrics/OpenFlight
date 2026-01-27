@@ -20,7 +20,7 @@ use thiserror::Error;
 use tokio::net::TcpListener;
 
 use tower_http::cors::CorsLayer;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 /// Server configuration
 #[derive(Debug, Clone)]
