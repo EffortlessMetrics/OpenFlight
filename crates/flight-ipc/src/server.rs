@@ -194,6 +194,10 @@ fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
         return DeviceType::Throttle;
     }
 
+    if device_support::is_vkb_gladiator_device(device_info) {
+        return DeviceType::Joystick;
+    }
+
     if device_info.usage_page == device_support::USAGE_PAGE_GENERIC_DESKTOP
         && device_info.usage == device_support::USAGE_JOYSTICK
     {
@@ -209,6 +213,10 @@ fn device_name(device_info: &flight_hid::HidDeviceInfo) -> String {
     }
 
     if let Some(model) = device_support::vkb_stecs_variant(device_info) {
+        return model.name().to_string();
+    }
+
+    if let Some(model) = device_support::vkb_gladiator_variant(device_info) {
         return model.name().to_string();
     }
 
@@ -271,6 +279,14 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
         if let Ok(json) = serde_json::to_string(control_map) {
             metadata.insert("control_map".to_string(), json);
         }
+    }
+
+    if let Some(model) = device_support::vkb_gladiator_variant(device_info) {
+        metadata.insert(
+            "device_family".to_string(),
+            "vkb-gladiator-nxt-evo".to_string(),
+        );
+        metadata.insert("model".to_string(), model.name().to_string());
     }
 
     metadata

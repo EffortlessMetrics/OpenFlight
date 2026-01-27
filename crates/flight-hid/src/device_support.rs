@@ -14,8 +14,14 @@ pub const VKB_VENDOR_ID: u16 = 0x231D;
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67A;
 
+pub const VKB_STECS_LEFT_SPACE_MINI_PID: u16 = 0x0136;
 pub const VKB_STECS_RIGHT_SPACE_MINI_PID: u16 = 0x013A;
 pub const VKB_STECS_LEFT_SPACE_MINI_PLUS_PID: u16 = 0x0137;
+pub const VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID: u16 = 0x013B;
+pub const VKB_STECS_LEFT_SPACE_STANDARD_PID: u16 = 0x0138;
+pub const VKB_STECS_RIGHT_SPACE_STANDARD_PID: u16 = 0x013C;
+pub const VKB_GLADIATOR_NXT_EVO_RIGHT_PID: u16 = 0x0200;
+pub const VKB_GLADIATOR_NXT_EVO_LEFT_PID: u16 = 0x0201;
 
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
 
@@ -51,7 +57,11 @@ impl TFlightModel {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VkbStecsVariant {
     RightSpaceThrottleGripMini,
+    LeftSpaceThrottleGripMini,
+    RightSpaceThrottleGripMiniPlus,
     LeftSpaceThrottleGripMiniPlus,
+    RightSpaceThrottleGripStandard,
+    LeftSpaceThrottleGripStandard,
 }
 
 impl VkbStecsVariant {
@@ -60,9 +70,36 @@ impl VkbStecsVariant {
             VkbStecsVariant::RightSpaceThrottleGripMini => {
                 "VKB STECS Right Space Throttle Grip Mini"
             }
+            VkbStecsVariant::LeftSpaceThrottleGripMini => {
+                "VKB STECS Left Space Throttle Grip Mini"
+            }
+            VkbStecsVariant::RightSpaceThrottleGripMiniPlus => {
+                "VKB STECS Right Space Throttle Grip Mini+"
+            }
             VkbStecsVariant::LeftSpaceThrottleGripMiniPlus => {
                 "VKB STECS Left Space Throttle Grip Mini+"
             }
+            VkbStecsVariant::RightSpaceThrottleGripStandard => {
+                "VKB STECS Right Space Throttle Grip Standard"
+            }
+            VkbStecsVariant::LeftSpaceThrottleGripStandard => {
+                "VKB STECS Left Space Throttle Grip Standard"
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VkbGladiatorVariant {
+    NxtEvoRight,
+    NxtEvoLeft,
+}
+
+impl VkbGladiatorVariant {
+    pub fn name(&self) -> &'static str {
+        match self {
+            VkbGladiatorVariant::NxtEvoRight => "VKB Gladiator NXT EVO Right",
+            VkbGladiatorVariant::NxtEvoLeft => "VKB Gladiator NXT EVO Left",
         }
     }
 }
@@ -375,7 +412,7 @@ const VKB_STECS_NOTES: [&str; 3] = [
     "Treat this map as a baseline; prefer HID usage/descriptor for authority.",
 ];
 
-const VKB_STECS_RIGHT_AXES: [AxisControl; 5] = [
+const VKB_STECS_RIGHT_MINI_AXES: [AxisControl; 5] = [
     AxisControl {
         usage: AxisUsage::Rx,
         name: "STECS SpaceBrake",
@@ -398,7 +435,7 @@ const VKB_STECS_RIGHT_AXES: [AxisControl; 5] = [
     },
 ];
 
-const VKB_STECS_RIGHT_BUTTONS: [ButtonControl; 29] = [
+const VKB_STECS_RIGHT_MINI_BUTTONS: [ButtonControl; 29] = [
     ButtonControl {
         index: 1,
         name: "STECS Sys",
@@ -517,7 +554,149 @@ const VKB_STECS_RIGHT_BUTTONS: [ButtonControl; 29] = [
     },
 ];
 
-const VKB_STECS_LEFT_AXES: [AxisControl; 5] = [
+const VKB_STECS_LEFT_MINI_AXES: [AxisControl; 5] = [
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "STECS SpaceBrake",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "STECS Laser Power",
+    },
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "STECS [x52prox]",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "STECS [x52proy]",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "STECS [x52z]",
+    },
+];
+
+const VKB_STECS_LEFT_MINI_BUTTONS: [ButtonControl; 29] = [
+    ButtonControl {
+        index: 1,
+        name: "STECS Sys",
+    },
+    ButtonControl {
+        index: 2,
+        name: "STECS Start",
+    },
+    ButtonControl {
+        index: 3,
+        name: "STECS Mode 1",
+    },
+    ButtonControl {
+        index: 4,
+        name: "STECS Mode 2",
+    },
+    ButtonControl {
+        index: 5,
+        name: "STECS Mode 3",
+    },
+    ButtonControl {
+        index: 6,
+        name: "STECS Mode 4",
+    },
+    ButtonControl {
+        index: 7,
+        name: "STECS Mode 5",
+    },
+    ButtonControl {
+        index: 8,
+        name: "STECS B1",
+    },
+    ButtonControl {
+        index: 9,
+        name: "STECS Trigger",
+    },
+    ButtonControl {
+        index: 10,
+        name: "STECS B2",
+    },
+    ButtonControl {
+        index: 11,
+        name: "STECS Speed Lim [x360LThumb]",
+    },
+    ButtonControl {
+        index: 12,
+        name: "STECS Speed Lim [ps4PadU]",
+    },
+    ButtonControl {
+        index: 13,
+        name: "STECS Speed Lim [ps4PadD]",
+    },
+    ButtonControl {
+        index: 14,
+        name: "STECS PHat [x360LThumb]",
+    },
+    ButtonControl {
+        index: 15,
+        name: "STECS Hat1 [x360LThumb]",
+    },
+    ButtonControl {
+        index: 16,
+        name: "STECS PHat [ps4PadU]",
+    },
+    ButtonControl {
+        index: 17,
+        name: "STECS PHat [ps4PadD]",
+    },
+    ButtonControl {
+        index: 18,
+        name: "STECS PHat [ps4PadL]",
+    },
+    ButtonControl {
+        index: 19,
+        name: "STECS PHat [ps4PadR]",
+    },
+    ButtonControl {
+        index: 20,
+        name: "STECS Hat1 [ps4PadL]",
+    },
+    ButtonControl {
+        index: 21,
+        name: "STECS Hat1 [ps4PadR]",
+    },
+    ButtonControl {
+        index: 22,
+        name: "STECS Hat1 [ps4PadD]",
+    },
+    ButtonControl {
+        index: 23,
+        name: "STECS Hat1 [ps4PadU]",
+    },
+    ButtonControl {
+        index: 24,
+        name: "STECS H1 [ps4PadD]",
+    },
+    ButtonControl {
+        index: 25,
+        name: "STECS H1 [ps4PadU]",
+    },
+    ButtonControl {
+        index: 26,
+        name: "STECS H1 [x360LThumb]",
+    },
+    ButtonControl {
+        index: 27,
+        name: "STECS H2 [ps4PadL]",
+    },
+    ButtonControl {
+        index: 28,
+        name: "STECS H2 [ps4PadR]",
+    },
+    ButtonControl {
+        index: 29,
+        name: "STECS H2 [x360LThumb]",
+    },
+];
+
+const VKB_STECS_LEFT_MINI_PLUS_AXES: [AxisControl; 5] = [
     AxisControl {
         usage: AxisUsage::Rx,
         name: "LSTECS SpaceBrake",
@@ -540,7 +719,7 @@ const VKB_STECS_LEFT_AXES: [AxisControl; 5] = [
     },
 ];
 
-const VKB_STECS_LEFT_BUTTONS: [ButtonControl; 42] = [
+const VKB_STECS_LEFT_MINI_PLUS_BUTTONS: [ButtonControl; 42] = [
     ButtonControl {
         index: 1,
         name: "LSTECS Sys",
@@ -711,27 +890,750 @@ const VKB_STECS_LEFT_BUTTONS: [ButtonControl; 42] = [
     },
 ];
 
-const VKB_STECS_RIGHT_ENCODERS: [EncoderControl; 0] = [];
-const VKB_STECS_LEFT_ENCODERS: [EncoderControl; 1] = [EncoderControl {
+const VKB_STECS_RIGHT_MINI_PLUS_AXES: [AxisControl; 5] = [
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "RSTECS SpaceBrake",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "RSTECS Laser Power",
+    },
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "RSTECS [x52prox]",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "RSTECS [x52proy]",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "RSTECS Throttle",
+    },
+];
+
+const VKB_STECS_RIGHT_MINI_PLUS_BUTTONS: [ButtonControl; 42] = [
+    ButtonControl {
+        index: 1,
+        name: "RSTECS Sys",
+    },
+    ButtonControl {
+        index: 2,
+        name: "RSTECS Start",
+    },
+    ButtonControl {
+        index: 3,
+        name: "RSTECS Mode 1",
+    },
+    ButtonControl {
+        index: 4,
+        name: "RSTECS Mode 2",
+    },
+    ButtonControl {
+        index: 5,
+        name: "RSTECS Mode 3",
+    },
+    ButtonControl {
+        index: 6,
+        name: "RSTECS Mode 4",
+    },
+    ButtonControl {
+        index: 7,
+        name: "RSTECS Mode 5",
+    },
+    ButtonControl {
+        index: 8,
+        name: "RSTECS Rot CCW",
+    },
+    ButtonControl {
+        index: 9,
+        name: "RSTECS Rot CW",
+    },
+    ButtonControl {
+        index: 10,
+        name: "RSTECS Safe",
+    },
+    ButtonControl {
+        index: 11,
+        name: "RSTECS #1",
+    },
+    ButtonControl {
+        index: 12,
+        name: "RSTECS #2",
+    },
+    ButtonControl {
+        index: 13,
+        name: "RSTECS #3",
+    },
+    ButtonControl {
+        index: 14,
+        name: "RSTECS #4",
+    },
+    ButtonControl {
+        index: 15,
+        name: "RSTECS Armed",
+    },
+    ButtonControl {
+        index: 16,
+        name: "RSTECS Rot [ps4PadU]",
+    },
+    ButtonControl {
+        index: 17,
+        name: "RSTECS Rot [ps4PadD]",
+    },
+    ButtonControl {
+        index: 18,
+        name: "RSTECS Rot [ps4PadR]",
+    },
+    ButtonControl {
+        index: 19,
+        name: "RSTECS Rot [ps4PadL]",
+    },
+    ButtonControl {
+        index: 20,
+        name: "RSTECS Rot Click",
+    },
+    ButtonControl {
+        index: 21,
+        name: "RSTECS B1",
+    },
+    ButtonControl {
+        index: 22,
+        name: "RSTECS Trigger",
+    },
+    ButtonControl {
+        index: 23,
+        name: "RSTECS B2",
+    },
+    ButtonControl {
+        index: 24,
+        name: "RSTECS Speed Lim [x360LThumb]",
+    },
+    ButtonControl {
+        index: 25,
+        name: "RSTECS Speed Lim [ps4PadU]",
+    },
+    ButtonControl {
+        index: 26,
+        name: "RSTECS Speed Lim [ps4PadD]",
+    },
+    ButtonControl {
+        index: 27,
+        name: "RSTECS PHat [x360LThumb]",
+    },
+    ButtonControl {
+        index: 28,
+        name: "RSTECS Hat1 [x360LThumb]",
+    },
+    ButtonControl {
+        index: 29,
+        name: "RSTECS PHat [ps4PadU]",
+    },
+    ButtonControl {
+        index: 30,
+        name: "RSTECS PHat [ps4PadD]",
+    },
+    ButtonControl {
+        index: 31,
+        name: "RSTECS PHat [ps4PadR]",
+    },
+    ButtonControl {
+        index: 32,
+        name: "RSTECS PHat [ps4PadL]",
+    },
+    ButtonControl {
+        index: 33,
+        name: "RSTECS Hat1 [ps4PadR]",
+    },
+    ButtonControl {
+        index: 34,
+        name: "RSTECS Hat1 [ps4PadL]",
+    },
+    ButtonControl {
+        index: 35,
+        name: "RSTECS Hat1 [ps4PadD]",
+    },
+    ButtonControl {
+        index: 36,
+        name: "RSTECS Hat1 [ps4PadU]",
+    },
+    ButtonControl {
+        index: 37,
+        name: "RSTECS H1 [ps4PadD]",
+    },
+    ButtonControl {
+        index: 38,
+        name: "RSTECS H1 [ps4PadU]",
+    },
+    ButtonControl {
+        index: 39,
+        name: "RSTECS H1 [x360LThumb]",
+    },
+    ButtonControl {
+        index: 40,
+        name: "RSTECS H2 [ps4PadL]",
+    },
+    ButtonControl {
+        index: 41,
+        name: "RSTECS H2 [ps4PadR]",
+    },
+    ButtonControl {
+        index: 42,
+        name: "RSTECS H2 [x360LThumb]",
+    },
+];
+
+const VKB_STECS_LEFT_STANDARD_AXES: [AxisControl; 5] = [
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "STECS - Space Brake",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "STECS - Laser Power",
+    },
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "STECS - [x52prox]",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "STECS - [x52proy]",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "STECS - [x52z]",
+    },
+];
+
+const VKB_STECS_LEFT_STANDARD_BUTTONS: [ButtonControl; 53] = [
+    ButtonControl {
+        index: 1,
+        name: "STECS - Base Sys",
+    },
+    ButtonControl {
+        index: 2,
+        name: "STECS - Base Start",
+    },
+    ButtonControl {
+        index: 3,
+        name: "STECS - Base Mode 1",
+    },
+    ButtonControl {
+        index: 4,
+        name: "STECS - Base Mode 2",
+    },
+    ButtonControl {
+        index: 5,
+        name: "STECS - Base Mode 3",
+    },
+    ButtonControl {
+        index: 6,
+        name: "STECS - Base Mode 4",
+    },
+    ButtonControl {
+        index: 7,
+        name: "STECS - Base Mode 5",
+    },
+    ButtonControl {
+        index: 8,
+        name: "STECS - B1",
+    },
+    ButtonControl {
+        index: 9,
+        name: "STECS - Trigger",
+    },
+    ButtonControl {
+        index: 10,
+        name: "STECS - B2",
+    },
+    ButtonControl {
+        index: 11,
+        name: "STECS - Speed Push",
+    },
+    ButtonControl {
+        index: 12,
+        name: "STECS - Speed Up",
+    },
+    ButtonControl {
+        index: 13,
+        name: "STECS - Speed Down",
+    },
+    ButtonControl {
+        index: 14,
+        name: "STECS - Index Push",
+    },
+    ButtonControl {
+        index: 15,
+        name: "STECS - HAT1 Push",
+    },
+    ButtonControl {
+        index: 16,
+        name: "STECS - Index Fore",
+    },
+    ButtonControl {
+        index: 17,
+        name: "STECS - Index Back",
+    },
+    ButtonControl {
+        index: 18,
+        name: "STECS - Index Left",
+    },
+    ButtonControl {
+        index: 19,
+        name: "STECS - Index Right",
+    },
+    ButtonControl {
+        index: 20,
+        name: "STECS - HAT1 Back",
+    },
+    ButtonControl {
+        index: 21,
+        name: "STECS - HAT1 Fore",
+    },
+    ButtonControl {
+        index: 22,
+        name: "STECS - HAT1 Down",
+    },
+    ButtonControl {
+        index: 23,
+        name: "STECS - HAT1 Up",
+    },
+    ButtonControl {
+        index: 24,
+        name: "STECS - H1 Down",
+    },
+    ButtonControl {
+        index: 25,
+        name: "STECS - H1 Up",
+    },
+    ButtonControl {
+        index: 26,
+        name: "STECS - H1 Push",
+    },
+    ButtonControl {
+        index: 27,
+        name: "STECS - H2 Back",
+    },
+    ButtonControl {
+        index: 28,
+        name: "STECS - H2 Fore",
+    },
+    ButtonControl {
+        index: 29,
+        name: "STECS - H2 Push",
+    },
+    ButtonControl {
+        index: 30,
+        name: "STECS - STEM A1",
+    },
+    ButtonControl {
+        index: 31,
+        name: "STECS - STEM A2",
+    },
+    ButtonControl {
+        index: 32,
+        name: "STECS - STEM C1",
+    },
+    ButtonControl {
+        index: 33,
+        name: "STECS - STEM B1",
+    },
+    ButtonControl {
+        index: 34,
+        name: "STECS - STEM B2",
+    },
+    ButtonControl {
+        index: 35,
+        name: "STECS - STEM B3",
+    },
+    ButtonControl {
+        index: 36,
+        name: "STECS - STEM B4",
+    },
+    ButtonControl {
+        index: 37,
+        name: "STECS - STEM B5",
+    },
+    ButtonControl {
+        index: 38,
+        name: "STECS - STEM Sw1 Up",
+    },
+    ButtonControl {
+        index: 39,
+        name: "STECS - STEM Sw1 Mid",
+    },
+    ButtonControl {
+        index: 40,
+        name: "STECS - STEM Sw1 Down",
+    },
+    ButtonControl {
+        index: 41,
+        name: "STECS - STEM Sw2 Up",
+    },
+    ButtonControl {
+        index: 42,
+        name: "STECS - STEM Sw2 Mid",
+    },
+    ButtonControl {
+        index: 43,
+        name: "STECS - STEM Sw2 Down",
+    },
+    ButtonControl {
+        index: 44,
+        name: "STECS - STEM Tgl Up",
+    },
+    ButtonControl {
+        index: 45,
+        name: "STECS - STEM Tgl Down",
+    },
+    ButtonControl {
+        index: 46,
+        name: "STECS - STEM Enc1 CCW",
+    },
+    ButtonControl {
+        index: 47,
+        name: "STECS - STEM Enc1 CW",
+    },
+    ButtonControl {
+        index: 48,
+        name: "STECS - STEM Enc2 CCW",
+    },
+    ButtonControl {
+        index: 49,
+        name: "STECS - STEM Enc2 CW",
+    },
+    ButtonControl {
+        index: 50,
+        name: "STECS - STEM Enc1 Push",
+    },
+    ButtonControl {
+        index: 51,
+        name: "STECS - STEM Enc2 Push",
+    },
+    ButtonControl {
+        index: 52,
+        name: "STECS - STEM Flap Up",
+    },
+    ButtonControl {
+        index: 53,
+        name: "STECS - STEM Flap Down",
+    },
+];
+
+const VKB_STECS_RIGHT_STANDARD_AXES: [AxisControl; 5] = [
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "STECS - Space Brake",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "STECS - Laser Power",
+    },
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "STECS - [x52prox]",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "STECS - [x52proy]",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "STECS - [x52z]",
+    },
+];
+
+const VKB_STECS_RIGHT_STANDARD_BUTTONS: [ButtonControl; 53] = [
+    ButtonControl {
+        index: 1,
+        name: "STECS - Base Sys",
+    },
+    ButtonControl {
+        index: 2,
+        name: "STECS - Base Start",
+    },
+    ButtonControl {
+        index: 3,
+        name: "STECS - Base Mode 1",
+    },
+    ButtonControl {
+        index: 4,
+        name: "STECS - Base Mode 2",
+    },
+    ButtonControl {
+        index: 5,
+        name: "STECS - Base Mode 3",
+    },
+    ButtonControl {
+        index: 6,
+        name: "STECS - Base Mode 4",
+    },
+    ButtonControl {
+        index: 7,
+        name: "STECS - Base Mode 5",
+    },
+    ButtonControl {
+        index: 8,
+        name: "STECS - B1",
+    },
+    ButtonControl {
+        index: 9,
+        name: "STECS - Trigger",
+    },
+    ButtonControl {
+        index: 10,
+        name: "STECS - B2",
+    },
+    ButtonControl {
+        index: 11,
+        name: "STECS - Speed Push",
+    },
+    ButtonControl {
+        index: 12,
+        name: "STECS - Speed Up",
+    },
+    ButtonControl {
+        index: 13,
+        name: "STECS - Speed Down",
+    },
+    ButtonControl {
+        index: 14,
+        name: "STECS - Index Push",
+    },
+    ButtonControl {
+        index: 15,
+        name: "STECS - HAT1 Push",
+    },
+    ButtonControl {
+        index: 16,
+        name: "STECS - Index Fore",
+    },
+    ButtonControl {
+        index: 17,
+        name: "STECS - Index Back",
+    },
+    ButtonControl {
+        index: 18,
+        name: "STECS - Index Right",
+    },
+    ButtonControl {
+        index: 19,
+        name: "STECS - Index Left",
+    },
+    ButtonControl {
+        index: 20,
+        name: "STECS - HAT1 Back",
+    },
+    ButtonControl {
+        index: 21,
+        name: "STECS - HAT1 Fore",
+    },
+    ButtonControl {
+        index: 22,
+        name: "STECS - HAT1 Down",
+    },
+    ButtonControl {
+        index: 23,
+        name: "STECS - HAT1 Up",
+    },
+    ButtonControl {
+        index: 24,
+        name: "STECS - H1 Down",
+    },
+    ButtonControl {
+        index: 25,
+        name: "STECS - H1 Up",
+    },
+    ButtonControl {
+        index: 26,
+        name: "STECS - H1 Push",
+    },
+    ButtonControl {
+        index: 27,
+        name: "STECS - H2 Back",
+    },
+    ButtonControl {
+        index: 28,
+        name: "STECS - H2 Fore",
+    },
+    ButtonControl {
+        index: 29,
+        name: "STECS - H2 Push",
+    },
+    ButtonControl {
+        index: 30,
+        name: "STECS - STEM A1",
+    },
+    ButtonControl {
+        index: 31,
+        name: "STECS - STEM A2",
+    },
+    ButtonControl {
+        index: 32,
+        name: "STECS - STEM C1",
+    },
+    ButtonControl {
+        index: 33,
+        name: "STECS - STEM B1",
+    },
+    ButtonControl {
+        index: 34,
+        name: "STECS - STEM B2",
+    },
+    ButtonControl {
+        index: 35,
+        name: "STECS - STEM B3",
+    },
+    ButtonControl {
+        index: 36,
+        name: "STECS - STEM B4",
+    },
+    ButtonControl {
+        index: 37,
+        name: "STECS - STEM B5",
+    },
+    ButtonControl {
+        index: 38,
+        name: "STECS - STEM Sw1 Up",
+    },
+    ButtonControl {
+        index: 39,
+        name: "STECS - STEM Sw1 Mid",
+    },
+    ButtonControl {
+        index: 40,
+        name: "STECS - STEM Sw1 Down",
+    },
+    ButtonControl {
+        index: 41,
+        name: "STECS - STEM Sw2 Up",
+    },
+    ButtonControl {
+        index: 42,
+        name: "STECS - STEM Sw2 Mid",
+    },
+    ButtonControl {
+        index: 43,
+        name: "STECS - STEM Sw2 Down",
+    },
+    ButtonControl {
+        index: 44,
+        name: "STECS - STEM Tgl Up",
+    },
+    ButtonControl {
+        index: 45,
+        name: "STECS - STEM Tgl Down",
+    },
+    ButtonControl {
+        index: 46,
+        name: "STECS - STEM Enc1 CCW",
+    },
+    ButtonControl {
+        index: 47,
+        name: "STECS - STEM Enc1 CW",
+    },
+    ButtonControl {
+        index: 48,
+        name: "STECS - STEM Enc2 CCW",
+    },
+    ButtonControl {
+        index: 49,
+        name: "STECS - STEM Enc2 CW",
+    },
+    ButtonControl {
+        index: 50,
+        name: "STECS - STEM Enc1 Push",
+    },
+    ButtonControl {
+        index: 51,
+        name: "STECS - STEM Enc2 Push",
+    },
+    ButtonControl {
+        index: 52,
+        name: "STECS - STEM Flap Up",
+    },
+    ButtonControl {
+        index: 53,
+        name: "STECS - STEM Flap Down",
+    },
+];
+
+const VKB_STECS_RIGHT_MINI_ENCODERS: [EncoderControl; 0] = [];
+const VKB_STECS_LEFT_MINI_ENCODERS: [EncoderControl; 0] = [];
+const VKB_STECS_LEFT_MINI_PLUS_ENCODERS: [EncoderControl; 1] = [EncoderControl {
     name: "LSTECS Rot",
     cw_button: 9,
     ccw_button: 8,
     press_button: Some(20),
 }];
+const VKB_STECS_RIGHT_MINI_PLUS_ENCODERS: [EncoderControl; 1] = [EncoderControl {
+    name: "RSTECS Rot",
+    cw_button: 9,
+    ccw_button: 8,
+    press_button: Some(20),
+}];
+const VKB_STECS_STANDARD_ENCODERS: [EncoderControl; 2] = [
+    EncoderControl {
+        name: "STECS - STEM Enc1",
+        cw_button: 47,
+        ccw_button: 46,
+        press_button: Some(50),
+    },
+    EncoderControl {
+        name: "STECS - STEM Enc2",
+        cw_button: 49,
+        ccw_button: 48,
+        press_button: Some(51),
+    },
+];
 
-const VKB_STECS_RIGHT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+const VKB_STECS_RIGHT_MINI_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
     schema: VKB_STECS_CONTROL_MAP_SCHEMA,
-    axes: &VKB_STECS_RIGHT_AXES,
-    buttons: &VKB_STECS_RIGHT_BUTTONS,
-    encoders: &VKB_STECS_RIGHT_ENCODERS,
+    axes: &VKB_STECS_RIGHT_MINI_AXES,
+    buttons: &VKB_STECS_RIGHT_MINI_BUTTONS,
+    encoders: &VKB_STECS_RIGHT_MINI_ENCODERS,
     notes: &VKB_STECS_NOTES,
 };
 
-const VKB_STECS_LEFT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+const VKB_STECS_LEFT_MINI_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
     schema: VKB_STECS_CONTROL_MAP_SCHEMA,
-    axes: &VKB_STECS_LEFT_AXES,
-    buttons: &VKB_STECS_LEFT_BUTTONS,
-    encoders: &VKB_STECS_LEFT_ENCODERS,
+    axes: &VKB_STECS_LEFT_MINI_AXES,
+    buttons: &VKB_STECS_LEFT_MINI_BUTTONS,
+    encoders: &VKB_STECS_LEFT_MINI_ENCODERS,
+    notes: &VKB_STECS_NOTES,
+};
+
+const VKB_STECS_LEFT_MINI_PLUS_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_STECS_CONTROL_MAP_SCHEMA,
+    axes: &VKB_STECS_LEFT_MINI_PLUS_AXES,
+    buttons: &VKB_STECS_LEFT_MINI_PLUS_BUTTONS,
+    encoders: &VKB_STECS_LEFT_MINI_PLUS_ENCODERS,
+    notes: &VKB_STECS_NOTES,
+};
+
+const VKB_STECS_RIGHT_MINI_PLUS_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_STECS_CONTROL_MAP_SCHEMA,
+    axes: &VKB_STECS_RIGHT_MINI_PLUS_AXES,
+    buttons: &VKB_STECS_RIGHT_MINI_PLUS_BUTTONS,
+    encoders: &VKB_STECS_RIGHT_MINI_PLUS_ENCODERS,
+    notes: &VKB_STECS_NOTES,
+};
+
+const VKB_STECS_LEFT_STANDARD_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_STECS_CONTROL_MAP_SCHEMA,
+    axes: &VKB_STECS_LEFT_STANDARD_AXES,
+    buttons: &VKB_STECS_LEFT_STANDARD_BUTTONS,
+    encoders: &VKB_STECS_STANDARD_ENCODERS,
+    notes: &VKB_STECS_NOTES,
+};
+
+const VKB_STECS_RIGHT_STANDARD_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_STECS_CONTROL_MAP_SCHEMA,
+    axes: &VKB_STECS_RIGHT_STANDARD_AXES,
+    buttons: &VKB_STECS_RIGHT_STANDARD_BUTTONS,
+    encoders: &VKB_STECS_STANDARD_ENCODERS,
     notes: &VKB_STECS_NOTES,
 };
 
@@ -746,6 +1648,22 @@ pub fn tflight_default_mapping(axis_mode: AxisMode) -> DefaultMapping {
     }
 }
 
+pub fn vkb_gladiator_variant(device_info: &HidDeviceInfo) -> Option<VkbGladiatorVariant> {
+    if device_info.vendor_id != VKB_VENDOR_ID {
+        return None;
+    }
+
+    match device_info.product_id {
+        VKB_GLADIATOR_NXT_EVO_RIGHT_PID => Some(VkbGladiatorVariant::NxtEvoRight),
+        VKB_GLADIATOR_NXT_EVO_LEFT_PID => Some(VkbGladiatorVariant::NxtEvoLeft),
+        _ => None,
+    }
+}
+
+pub fn is_vkb_gladiator_device(device_info: &HidDeviceInfo) -> bool {
+    vkb_gladiator_variant(device_info).is_some()
+}
+
 pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant> {
     if device_info.vendor_id != VKB_VENDOR_ID {
         return None;
@@ -753,7 +1671,13 @@ pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant>
 
     match device_info.product_id {
         VKB_STECS_RIGHT_SPACE_MINI_PID => Some(VkbStecsVariant::RightSpaceThrottleGripMini),
+        VKB_STECS_LEFT_SPACE_MINI_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripMini),
+        VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID => Some(VkbStecsVariant::RightSpaceThrottleGripMiniPlus),
         VKB_STECS_LEFT_SPACE_MINI_PLUS_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus),
+        VKB_STECS_RIGHT_SPACE_STANDARD_PID => {
+            Some(VkbStecsVariant::RightSpaceThrottleGripStandard)
+        }
+        VKB_STECS_LEFT_SPACE_STANDARD_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripStandard),
         _ => None,
     }
 }
@@ -764,8 +1688,12 @@ pub fn is_vkb_stecs_device(device_info: &HidDeviceInfo) -> bool {
 
 pub fn vkb_stecs_control_map(variant: VkbStecsVariant) -> &'static DeviceControlMap {
     match variant {
-        VkbStecsVariant::RightSpaceThrottleGripMini => &VKB_STECS_RIGHT_CONTROL_MAP,
-        VkbStecsVariant::LeftSpaceThrottleGripMiniPlus => &VKB_STECS_LEFT_CONTROL_MAP,
+        VkbStecsVariant::RightSpaceThrottleGripMini => &VKB_STECS_RIGHT_MINI_CONTROL_MAP,
+        VkbStecsVariant::LeftSpaceThrottleGripMini => &VKB_STECS_LEFT_MINI_CONTROL_MAP,
+        VkbStecsVariant::RightSpaceThrottleGripMiniPlus => &VKB_STECS_RIGHT_MINI_PLUS_CONTROL_MAP,
+        VkbStecsVariant::LeftSpaceThrottleGripMiniPlus => &VKB_STECS_LEFT_MINI_PLUS_CONTROL_MAP,
+        VkbStecsVariant::RightSpaceThrottleGripStandard => &VKB_STECS_RIGHT_STANDARD_CONTROL_MAP,
+        VkbStecsVariant::LeftSpaceThrottleGripStandard => &VKB_STECS_LEFT_STANDARD_CONTROL_MAP,
     }
 }
 
@@ -787,6 +1715,20 @@ mod tests {
                 u8::from_str_radix(token, 16).ok()
             })
             .collect()
+    }
+
+    fn vkb_device(product_id: u16) -> HidDeviceInfo {
+        HidDeviceInfo {
+            vendor_id: VKB_VENDOR_ID,
+            product_id,
+            serial_number: None,
+            manufacturer: None,
+            product_name: None,
+            device_path: "/dev/test-vkb".to_string(),
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_JOYSTICK,
+            report_descriptor: None,
+        }
     }
 
     #[test]
@@ -871,23 +1813,58 @@ mod tests {
 
     #[test]
     fn test_vkb_stecs_variant_detection() {
-        let device_info = HidDeviceInfo {
-            vendor_id: VKB_VENDOR_ID,
-            product_id: VKB_STECS_RIGHT_SPACE_MINI_PID,
-            serial_number: None,
-            manufacturer: None,
-            product_name: None,
-            device_path: "/dev/test-vkb".to_string(),
-            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
-            usage: USAGE_JOYSTICK,
-            report_descriptor: None,
-        };
-
+        let device_info = vkb_device(VKB_STECS_RIGHT_SPACE_MINI_PID);
         assert_eq!(
             vkb_stecs_variant(&device_info),
             Some(VkbStecsVariant::RightSpaceThrottleGripMini)
         );
         assert!(is_vkb_stecs_device(&device_info));
+
+        let device_info = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PID);
+        assert_eq!(
+            vkb_stecs_variant(&device_info),
+            Some(VkbStecsVariant::LeftSpaceThrottleGripMini)
+        );
+
+        let device_info = vkb_device(VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID);
+        assert_eq!(
+            vkb_stecs_variant(&device_info),
+            Some(VkbStecsVariant::RightSpaceThrottleGripMiniPlus)
+        );
+
+        let device_info = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PLUS_PID);
+        assert_eq!(
+            vkb_stecs_variant(&device_info),
+            Some(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus)
+        );
+
+        let device_info = vkb_device(VKB_STECS_RIGHT_SPACE_STANDARD_PID);
+        assert_eq!(
+            vkb_stecs_variant(&device_info),
+            Some(VkbStecsVariant::RightSpaceThrottleGripStandard)
+        );
+
+        let device_info = vkb_device(VKB_STECS_LEFT_SPACE_STANDARD_PID);
+        assert_eq!(
+            vkb_stecs_variant(&device_info),
+            Some(VkbStecsVariant::LeftSpaceThrottleGripStandard)
+        );
+    }
+
+    #[test]
+    fn test_vkb_gladiator_variant_detection() {
+        let device_info = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        assert_eq!(
+            vkb_gladiator_variant(&device_info),
+            Some(VkbGladiatorVariant::NxtEvoRight)
+        );
+        assert!(is_vkb_gladiator_device(&device_info));
+
+        let device_info = vkb_device(VKB_GLADIATOR_NXT_EVO_LEFT_PID);
+        assert_eq!(
+            vkb_gladiator_variant(&device_info),
+            Some(VkbGladiatorVariant::NxtEvoLeft)
+        );
     }
 
     #[test]
@@ -910,6 +1887,12 @@ mod tests {
         assert_eq!(control_map.encoders[0].cw_button, 9);
         assert_eq!(control_map.encoders[0].ccw_button, 8);
         assert_eq!(control_map.encoders[0].press_button, Some(20));
+
+        let control_map = vkb_stecs_control_map(VkbStecsVariant::RightSpaceThrottleGripStandard);
+        assert_eq!(control_map.encoders.len(), 2);
+        assert_eq!(control_map.encoders[0].cw_button, 47);
+        assert_eq!(control_map.encoders[0].ccw_button, 46);
+        assert_eq!(control_map.encoders[0].press_button, Some(50));
     }
 
     #[test]

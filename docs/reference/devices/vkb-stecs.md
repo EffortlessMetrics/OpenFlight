@@ -16,7 +16,7 @@ guidance for VKB STECS-class throttles.
 
 ## Scope
 
-- Devices: VKB STECS Space Throttle (Mini / Mini+ grips)
+- Devices: VKB STECS Space Throttle (Mini / Mini+ / Standard grips)
 - Interface: USB HID joystick/throttle (not force feedback)
 - Focus: baseline control naming, encoder semantics, and profile safety
 
@@ -24,8 +24,12 @@ guidance for VKB STECS-class throttles.
 
 - Vendor ID: 0x231D (VKB-Sim)
 - Known PIDs observed in community button maps:
+  - 0x0136: STECS Left Space Throttle Grip Mini
   - 0x013A: STECS Right Space Throttle Grip Mini
   - 0x0137: STECS Left Space Throttle Grip Mini+
+  - 0x013B: STECS Right Space Throttle Grip Mini+
+  - 0x0138: STECS Left Space Throttle Grip Standard
+  - 0x013C: STECS Right Space Throttle Grip Standard
 
 Notes:
 - Treat the PID list as a fingerprint set, not a single constant.
@@ -38,7 +42,7 @@ OpenFlight ships a baseline control map derived from Elite Dangerous button map
 files. The map is surfaced in device metadata as `control_map` and should be
 treated as a *best-effort* naming hint, not a hard guarantee.
 
-### Right Space Throttle Grip Mini (PID 0x013A)
+### Mini grips (PIDs 0x0136 left, 0x013A right)
 
 - Axes: RX, RY, X, Y, Z (5 total)
 - Buttons: 1-29
@@ -54,21 +58,44 @@ Axis names:
 | Y | STECS [x52proy] |
 | Z | STECS [x52z] |
 
-### Left Space Throttle Grip Mini+ (PID 0x0137)
+### Mini+ grips (PIDs 0x0137 left, 0x013B right)
 
 - Axes: RX, RY, X, Y, Z (5 total)
 - Buttons: 1-42
-- Encoders: `LSTECS Rot` (CW=9, CCW=8, Press=20)
+- Encoders:
+  - `LSTECS Rot` (Left Mini+), `RSTECS Rot` (Right Mini+)
+  - CW=9, CCW=8, Press=20
+
+Axis names:
+
+| Usage | Left Mini+ | Right Mini+ |
+| --- | --- | --- |
+| RX | LSTECS SpaceBrake | RSTECS SpaceBrake |
+| RY | LSTECS Laser Power | RSTECS Laser Power |
+| X | LSTECS [x52prox] | RSTECS [x52prox] |
+| Y | LSTECS [x52proy] | RSTECS [x52proy] |
+| Z | LSTECS Throttle | RSTECS Throttle |
+
+### Standard grips (PIDs 0x0138 left, 0x013C right)
+
+- Axes: RX, RY, X, Y, Z (5 total)
+- Buttons: 1-53
+- Encoders:
+  - `STECS - STEM Enc1` (CW=47, CCW=46, Press=50)
+  - `STECS - STEM Enc2` (CW=49, CCW=48, Press=51)
 
 Axis names:
 
 | Usage | Name |
 | --- | --- |
-| RX | LSTECS SpaceBrake |
-| RY | LSTECS Laser Power |
-| X | LSTECS [x52prox] |
-| Y | LSTECS [x52proy] |
-| Z | LSTECS Throttle |
+| RX | STECS - Space Brake |
+| RY | STECS - Laser Power |
+| X | STECS - [x52prox] |
+| Y | STECS - [x52proy] |
+| Z | STECS - [x52z] |
+
+Notes:
+- Standard left/right grips swap the "Index Left/Right" button names at indices 18/19.
 
 ## OpenFlight integration guidance
 
@@ -115,4 +142,3 @@ To build a definitive STECS mapping, capture:
   - USBPcap + Wireshark for report samples
 - Linux:
   - `lsusb -v`, `usbhid-dump`, `evtest`, `hid-recorder`
-
