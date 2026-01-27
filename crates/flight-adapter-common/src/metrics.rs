@@ -57,8 +57,7 @@ impl AdapterMetrics {
                 sorted_intervals.sort();
                 let p99_index = (sorted_intervals.len() as f32 * 0.99) as usize;
                 if p99_index < sorted_intervals.len() {
-                    self.update_jitter_p99_ms =
-                        sorted_intervals[p99_index].as_secs_f32() * 1000.0;
+                    self.update_jitter_p99_ms = sorted_intervals[p99_index].as_secs_f32() * 1000.0;
                 }
             }
         }

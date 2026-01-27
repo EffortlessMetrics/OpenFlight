@@ -49,7 +49,9 @@ impl ReconnectionStrategy {
             return self.initial_backoff.min(self.max_backoff);
         }
 
-        let exp = 2u64.checked_pow(attempt.saturating_sub(1)).unwrap_or(u64::MAX);
+        let exp = 2u64
+            .checked_pow(attempt.saturating_sub(1))
+            .unwrap_or(u64::MAX);
         let base_ms = self.initial_backoff.as_millis() as u64;
         let backoff_ms = base_ms.saturating_mul(exp);
         let backoff = Duration::from_millis(backoff_ms);
@@ -68,11 +70,8 @@ mod tests {
 
     #[test]
     fn test_backoff_progression() {
-        let strategy = ReconnectionStrategy::new(
-            5,
-            Duration::from_secs(1),
-            Duration::from_secs(30),
-        );
+        let strategy =
+            ReconnectionStrategy::new(5, Duration::from_secs(1), Duration::from_secs(30));
 
         assert_eq!(strategy.next_backoff(1), Duration::from_secs(1));
         assert_eq!(strategy.next_backoff(2), Duration::from_secs(2));
@@ -84,11 +83,8 @@ mod tests {
 
     #[test]
     fn test_should_retry() {
-        let strategy = ReconnectionStrategy::new(
-            3,
-            Duration::from_secs(1),
-            Duration::from_secs(10),
-        );
+        let strategy =
+            ReconnectionStrategy::new(3, Duration::from_secs(1), Duration::from_secs(10));
 
         assert!(strategy.should_retry(1));
         assert!(strategy.should_retry(3));

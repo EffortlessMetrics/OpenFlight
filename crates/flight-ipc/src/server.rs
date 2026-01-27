@@ -65,7 +65,11 @@ use anyhow::Result;
 use flight_core::SecurityManager;
 use flight_core::watchdog::WatchdogSystem;
 use flight_hid::{HidAdapter, device_support};
-use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::SystemTime,
+};
 use tokio::sync::broadcast;
 use tonic::{Request, Response, Status};
 use tracing::{debug, info, warn};
@@ -186,6 +190,10 @@ fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
         return DeviceType::Joystick;
     }
 
+    if device_support::is_vkb_stecs_device(device_info) {
+        return DeviceType::Throttle;
+    }
+
     if device_info.usage_page == device_support::USAGE_PAGE_GENERIC_DESKTOP
         && device_info.usage == device_support::USAGE_JOYSTICK
     {
@@ -197,6 +205,10 @@ fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
 
 fn device_name(device_info: &flight_hid::HidDeviceInfo) -> String {
     if let Some(model) = device_support::tflight_model(device_info) {
+        return model.name().to_string();
+    }
+
+    if let Some(model) = device_support::vkb_stecs_variant(device_info) {
         return model.name().to_string();
     }
 
@@ -248,6 +260,16 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
 
         if let Some(note) = device_support::default_mapping_note(axis_mode) {
             metadata.insert("note.default_mapping".to_string(), note.to_string());
+        }
+    }
+
+    if let Some(model) = device_support::vkb_stecs_variant(device_info) {
+        metadata.insert("device_family".to_string(), "vkb-stecs".to_string());
+        metadata.insert("model".to_string(), model.name().to_string());
+
+        let control_map = device_support::vkb_stecs_control_map(model);
+        if let Ok(json) = serde_json::to_string(control_map) {
+            metadata.insert("control_map".to_string(), json);
         }
     }
 

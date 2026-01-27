@@ -12,11 +12,11 @@
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::sync::mpsc;
@@ -211,7 +211,7 @@ impl BlackboxWriter {
             .duration_since(UNIX_EPOCH)
             .unwrap_or(Duration::from_secs(0))
             .as_nanos() as u64;
-        let start_monotonic = 0; 
+        let start_monotonic = 0;
 
         let header = BlackboxHeader {
             magic: *FBB_MAGIC,
@@ -224,29 +224,22 @@ impl BlackboxWriter {
             recording_mode: mode,
             start_timestamp: start_monotonic,
         };
-        let rx = self
-            .record_rx
-            .take()
-            .ok_or(BlackboxError::AlreadyStarted)?;
+        let rx = self.record_rx.take().ok_or(BlackboxError::AlreadyStarted)?;
         let config = self.config.clone();
         let running = self.running.clone();
-        
+
         // Ensure output directory exists
         tokio::fs::create_dir_all(&config.output_dir).await?;
 
         let timestamp = chrono::DateTime::<chrono::Utc>::from(now);
-        let filename = format!(
-            "flight_{}.fbb",
-            timestamp.format("%Y%m%d_%H%M%S")
-        );
+        let filename = format!("flight_{}.fbb", timestamp.format("%Y%m%d_%H%M%S"));
         let path = config.output_dir.join(filename);
         let path_for_writer = path.clone();
 
         running.store(true, Ordering::SeqCst);
 
-        let handle = tokio::spawn(async move {
-            run_writer(path_for_writer, header, rx, running).await
-        });
+        let handle =
+            tokio::spawn(async move { run_writer(path_for_writer, header, rx, running).await });
 
         self.current_path = Some(path.clone());
         self.writer_handle = Some(handle);
@@ -363,7 +356,7 @@ async fn run_writer(
     writer.file.write_all(&header_bytes)?;
 
     let mut flush_interval = interval(Duration::from_millis(FLUSH_INTERVAL_MS));
-    
+
     while running.load(Ordering::Relaxed) {
         tokio::select! {
             Some(record) = rx.recv() => {
@@ -375,16 +368,16 @@ async fn run_writer(
             else => break,
         }
     }
-    
+
     // Write footer on close
     let _now_ns = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or(Duration::from_secs(0))
         .as_nanos() as u64;
-        
+
     // Placeholder footer writing logic
     writer.file.flush()?;
-    
+
     Ok(())
 }
 
@@ -430,10 +423,7 @@ impl BlackboxReader {
             bail!("Invalid endian marker: {:#x}", self.header.endian_marker);
         }
         if self.header.format_version != FBB_FORMAT_VERSION {
-            bail!(
-                "Unsupported format version: {}",
-                self.header.format_version
-            );
+            bail!("Unsupported format version: {}", self.header.format_version);
         }
         Ok(())
     }

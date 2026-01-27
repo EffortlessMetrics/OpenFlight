@@ -4,8 +4,8 @@
 //! Tests for Cougar MFD writer
 
 use super::*;
-use flight_watchdog::WatchdogSystem;
 use flight_hid::{HidAdapter, HidDeviceInfo};
+use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 

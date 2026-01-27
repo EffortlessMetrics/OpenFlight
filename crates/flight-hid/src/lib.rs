@@ -6,15 +6,13 @@
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
 
+pub mod device_support;
 #[cfg(test)]
 mod fd_safety_tests;
-pub mod device_support;
 pub mod hid_descriptor;
 pub mod ofp1;
 
-use flight_core::{
-    ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent,
-};
+use flight_core::{ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent};
 use flight_metrics::{
     MetricsRegistry,
     common::{DeviceMetricNames, HID_DEVICE_METRICS},

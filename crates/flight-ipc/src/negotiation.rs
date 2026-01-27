@@ -222,7 +222,7 @@ mod tests {
         fn prop_parse_valid_version(major in 0u32..100, minor in 0u32..100, patch in 0u32..100) {
             let version_str = format!("{}.{}.{}", major, minor, patch);
             let version = Version::parse(&version_str).unwrap();
-            
+
             prop_assert_eq!(version.major, major);
             prop_assert_eq!(version.minor, minor);
             prop_assert_eq!(version.patch, patch);
@@ -231,8 +231,8 @@ mod tests {
         // Test version compatibility logic
         #[test]
         fn prop_version_compatibility(
-            major in 1u32..100, 
-            minor1 in 0u32..100, 
+            major in 1u32..100,
+            minor1 in 0u32..100,
             minor2 in 0u32..100
         ) {
             let v1 = Version { major, minor: minor1, patch: 0 };
@@ -271,7 +271,7 @@ mod tests {
                 let client_set: HashSet<_> = client_feats.iter().collect();
                 let server_set: HashSet<_> = server_feats.iter().collect();
                 let intersection_count = client_set.intersection(&server_set).count();
-                
+
                 prop_assert_eq!(response.enabled_features.len(), intersection_count);
             }
         }

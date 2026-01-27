@@ -37,7 +37,10 @@ impl MetricsRegistry {
 
     /// Increment a counter by the provided delta.
     pub fn inc_counter(&self, name: &str, delta: u64) {
-        let mut counters = self.counters.write().expect("metrics counters lock poisoned");
+        let mut counters = self
+            .counters
+            .write()
+            .expect("metrics counters lock poisoned");
         let counter = counters
             .entry(name.to_string())
             .or_insert_with(|| AtomicU64::new(0));
@@ -82,7 +85,10 @@ impl MetricsRegistry {
         let mut metrics = Vec::new();
 
         {
-            let counters = self.counters.read().expect("metrics counters lock poisoned");
+            let counters = self
+                .counters
+                .read()
+                .expect("metrics counters lock poisoned");
             for (name, value) in counters.iter() {
                 metrics.push(Metric::Counter {
                     name: name.clone(),
@@ -166,7 +172,10 @@ impl Histogram {
     }
 
     fn observe(&self, value: f64) {
-        let mut samples = self.samples.lock().expect("histogram samples lock poisoned");
+        let mut samples = self
+            .samples
+            .lock()
+            .expect("histogram samples lock poisoned");
         samples.push_back(value);
         if samples.len() > self.max_samples {
             samples.pop_front();
@@ -174,7 +183,10 @@ impl Histogram {
     }
 
     fn summary(&self) -> Option<HistogramSummary> {
-        let samples = self.samples.lock().expect("histogram samples lock poisoned");
+        let samples = self
+            .samples
+            .lock()
+            .expect("histogram samples lock poisoned");
         if samples.is_empty() {
             return None;
         }

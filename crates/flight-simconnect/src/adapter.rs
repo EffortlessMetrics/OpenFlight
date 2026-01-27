@@ -12,6 +12,9 @@ use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
 use flight_adapter_common::{AdapterMetrics, AdapterState};
+use flight_bus::adapters::SimAdapter;
+use flight_bus::snapshot::BusSnapshot;
+use flight_bus::types::{AircraftId, BusTypeError, SimId};
 use flight_metrics::{
     MetricsRegistry,
     common::{
@@ -19,9 +22,6 @@ use flight_metrics::{
         ADAPTER_UPDATES_TOTAL,
     },
 };
-use flight_bus::adapters::SimAdapter;
-use flight_bus::snapshot::BusSnapshot;
-use flight_bus::types::{AircraftId, BusTypeError, SimId};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -332,8 +332,7 @@ impl MsfsAdapter {
                         && let Err(e) = self.attempt_reconnect().await
                     {
                         error!("Reconnection attempt failed: {}", e);
-                        self.metrics_registry
-                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                         self.connection_attempts += 1;
                     }
                 }
@@ -341,8 +340,7 @@ impl MsfsAdapter {
                     // Try to detect aircraft
                     if let Err(e) = self.detect_aircraft().await {
                         warn!("Aircraft detection failed: {}", e);
-                        self.metrics_registry
-                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::DetectingAircraft => {
@@ -352,8 +350,7 @@ impl MsfsAdapter {
                     // Update telemetry
                     if let Err(e) = self.update_telemetry().await {
                         warn!("Telemetry update failed: {}", e);
-                        self.metrics_registry
-                            .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::Error => {
@@ -531,8 +528,7 @@ impl MsfsAdapter {
             // Validate and publish snapshot
             if let Err(e) = snapshot.validate() {
                 warn!("Snapshot validation failed: {}", e);
-                self.metrics_registry
-                    .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                 return Ok(());
             }
 
@@ -552,8 +548,7 @@ impl MsfsAdapter {
 
             if let Err(e) = self.snapshot_sender.send(snapshot) {
                 warn!("Failed to publish snapshot: {}", e);
-                self.metrics_registry
-                    .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
         }
 

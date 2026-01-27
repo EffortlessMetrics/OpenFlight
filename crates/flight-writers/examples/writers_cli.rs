@@ -1,6 +1,6 @@
 //! Example CLI for the Writers system
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use flight_writers::{RollbackManager, SimulatorType, WriterConfig, Writers};
 use std::path::PathBuf;

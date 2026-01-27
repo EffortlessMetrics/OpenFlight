@@ -157,7 +157,7 @@ mod tests {
             let normalized = angles::normalize_degrees_signed(val);
             prop_assert!(normalized >= -180.0);
             prop_assert!(normalized <= 180.0);
-            
+
             // Should be congruent modulo 360
             let diff = (normalized - val) % 360.0;
             let diff = if diff.abs() > 0.001 { diff.abs() } else { 0.0 };

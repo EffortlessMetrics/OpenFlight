@@ -414,8 +414,8 @@ impl TelemetrySubscriber for MockSubscriber {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::time::{Duration, timeout};
     use tokio::sync::mpsc;
+    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_plugin_creation() {
@@ -510,7 +510,10 @@ mod tests {
             .as_ref()
             .expect("subscriber should be initialized");
         let sub_config = subscriber.get_config();
-        assert_eq!(sub_config.max_rate_hz, config.telemetry_update_rate_hz as f32);
+        assert_eq!(
+            sub_config.max_rate_hz,
+            config.telemetry_update_rate_hz as f32
+        );
         assert_eq!(sub_config.buffer_size, config.event_buffer_size);
         assert!(sub_config.drop_on_full);
     }

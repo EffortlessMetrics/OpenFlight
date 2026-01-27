@@ -11,7 +11,10 @@ pub enum Metric {
     /// Gauge metric (current value).
     Gauge { name: String, value: f64 },
     /// Histogram summary.
-    Histogram { name: String, summary: HistogramSummary },
+    Histogram {
+        name: String,
+        summary: HistogramSummary,
+    },
 }
 
 /// Summary statistics for histogram metrics.

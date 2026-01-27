@@ -206,7 +206,7 @@ mod prop_tests {
         ) {
             let mut pll = Pll::new(0.001, base_period);
             let corrected = pll.update(error_ns as f64);
-            
+
             // Correction should oppose the error
             if error_ns > 0 {
                 // If we are late (positive error), period should decrease to catch up

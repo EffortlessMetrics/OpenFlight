@@ -4,8 +4,8 @@
 //! Tests for Saitek/Logitech panel writer
 
 use super::*;
-use flight_watchdog::WatchdogSystem;
 use flight_hid::HidAdapter;
+use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 

@@ -6,21 +6,21 @@
 //! This crate provides a table-driven approach to managing simulator configurations
 //! through versioned JSON diffs, golden file testing, and verify/repair functionality.
 
+pub mod curve_conflict;
 pub mod diff;
 pub mod golden;
 pub mod repair;
 pub mod rollback;
 pub mod types;
 pub mod verify;
-pub mod curve_conflict;
 
+pub use curve_conflict::*;
 pub use diff::*;
 pub use golden::*;
 pub use repair::*;
 pub use rollback::*;
 pub use types::*;
 pub use verify::*;
-pub use curve_conflict::*;
 
 use anyhow::Result as AnyResult;
 use std::path::Path;
@@ -43,7 +43,10 @@ impl Writers {
         std::fs::create_dir_all(&golden_dir)?;
         std::fs::create_dir_all(&backup_dir)?;
 
-        Ok(Self { golden_dir, backup_dir })
+        Ok(Self {
+            golden_dir,
+            backup_dir,
+        })
     }
 
     /// Apply a writer configuration to the target simulator

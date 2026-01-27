@@ -10,7 +10,7 @@ proptest! {
     fn test_degrees_radians_roundtrip(degrees in -720.0f32..720.0f32) {
         let radians = conversions::degrees_to_radians(degrees);
         let back_to_degrees = conversions::radians_to_degrees(radians);
-        
+
         // Floating point comparison with epsilon
         prop_assert!((degrees - back_to_degrees).abs() < 1e-4);
     }
@@ -19,7 +19,7 @@ proptest! {
     fn test_radians_degrees_roundtrip(radians in -10.0f32..10.0f32) {
         let degrees = conversions::radians_to_degrees(radians);
         let back_to_radians = conversions::degrees_to_radians(degrees);
-        
+
         prop_assert!((radians - back_to_radians).abs() < 1e-4);
     }
 
@@ -46,12 +46,12 @@ proptest! {
     fn test_normalize_degrees_signed_periodicity(degrees in -10000.0f32..10000.0f32) {
         let n1 = angles::normalize_degrees_signed(degrees);
         let n2 = angles::normalize_degrees_signed(degrees + 360.0);
-        
+
         // They should be effectively the same
         let diff = (n1 - n2).abs();
         prop_assert!(diff < 1e-3);
     }
-    
+
     //
     // Speed Conversions
     //
@@ -74,21 +74,21 @@ proptest! {
     fn test_knots_kph_consistency(knots in 0.0f32..1000.0f32) {
         // Direct conversion
         let kph_direct = conversions::knots_to_kph(knots);
-        
+
         // Indirect conversion via MPS
         let mps = conversions::knots_to_mps(knots);
         let kph_indirect = conversions::mps_to_kph(mps);
-        
+
         prop_assert!((kph_direct - kph_indirect).abs() < 1e-4);
     }
 
     #[test]
     fn test_kph_knots_consistency(kph in 0.0f32..1000.0f32) {
         let knots_direct = conversions::kph_to_knots(kph);
-        
+
         let mps = conversions::kph_to_mps(kph);
         let knots_indirect = conversions::mps_to_knots(mps);
-        
+
         prop_assert!((knots_direct - knots_indirect).abs() < 1e-4);
     }
 

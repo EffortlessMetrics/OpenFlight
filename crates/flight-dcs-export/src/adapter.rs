@@ -193,10 +193,13 @@ impl DcsAdapter {
         }
 
         // Maintain connections
-        self.socket_bridge.maintain_connections().await.map_err(|err| {
-            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-            err
-        })?;
+        self.socket_bridge
+            .maintain_connections()
+            .await
+            .map_err(|err| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                err
+            })?;
 
         // Check connection health
         self.check_connection_health().await?;
@@ -311,8 +314,7 @@ impl DcsAdapter {
 
         let update_latency = update_start.elapsed();
         self.metrics.record_update();
-        self.metrics
-            .record_aircraft_change(aircraft_name.clone());
+        self.metrics.record_aircraft_change(aircraft_name.clone());
         self.metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
         self.metrics_registry.observe(
             ADAPTER_UPDATE_LATENCY_MS,

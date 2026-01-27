@@ -499,7 +499,6 @@ impl SaitekPanelWriter {
 
         match write_result {
             Ok(HidOperationResult::Success { bytes_transferred }) => {
-
                 // Track latency
                 self.latency_samples.push(write_latency);
                 if self.latency_samples.len() > self.max_latency_samples {

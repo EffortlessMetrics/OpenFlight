@@ -9,15 +9,15 @@ use prost::Message;
 
 #[allow(unused_imports)]
 use flight_ipc::{
-    ApplyProfileRequest, NegotiateFeaturesRequest, ListDevicesRequest,
-    HealthSubscribeRequest, DetectCurveConflictsRequest
+    ApplyProfileRequest, DetectCurveConflictsRequest, HealthSubscribeRequest, ListDevicesRequest,
+    NegotiateFeaturesRequest,
 };
 
 proptest! {
     //
     // Fuzzing Protobuf Deserialization
     //
-    
+
     #[test]
     fn test_negotiate_features_fuzz(bytes in prop::collection::vec(any::<u8>(), 0..1024)) {
         // Should return Err on invalid data, but never panic
@@ -42,14 +42,14 @@ proptest! {
     //
     // Fuzzing JSON Payload in ApplyProfileRequest
     //
-    
+
     #[test]
     fn test_apply_profile_json_fuzz(json_str in "\\PC*") {
         // Construct a valid request with invalid JSON
         // The server implementation (not tested here directly, but the parsing logic)
-        // would handle this. 
+        // would handle this.
         // Here we just verify that constructing the message is fine.
-        
+
         let _req = ApplyProfileRequest {
             profile_json: json_str,
             validate_only: true,

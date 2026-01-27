@@ -15,7 +15,7 @@ use thiserror::Error;
 pub enum SessionError {
     #[error("Profile validation error: {0}")]
     ProfileValidation(String),
-    
+
     #[error("Configuration error: {0}")]
     Configuration(String),
 
@@ -225,7 +225,7 @@ mod tests {
             };
 
             let display = id.to_string();
-            
+
             if let Some(v) = variant {
                 prop_assert_eq!(display, format!("{}-{}", icao, v));
             } else {
@@ -1243,7 +1243,7 @@ mod prop_tests {
             };
 
             let display = id.to_string();
-            
+
             if let Some(v) = variant {
                 prop_assert_eq!(display, format!("{}-{}", icao, v));
             } else {
@@ -1253,736 +1253,694 @@ mod prop_tests {
     }
 }
 
-    #[tokio::test]
-    async fn test_phase_of_flight_determination() {
-        // Create test snapshot for ground phase
-        let mut snapshot = create_test_snapshot();
-        snapshot.ground_speed_knots = 2.0;
+#[tokio::test]
+async fn test_phase_of_flight_determination() {
+    // Create test snapshot for ground phase
+    let mut snapshot = create_test_snapshot();
+    snapshot.ground_speed_knots = 2.0;
 
-        let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(pof, PhaseOfFlight::Ground);
+    let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(pof, PhaseOfFlight::Ground);
 
-        // Test taxi phase
-        snapshot.ground_speed_knots = 15.0;
-        snapshot.gear_down = true;
+    // Test taxi phase
+    snapshot.ground_speed_knots = 15.0;
+    snapshot.gear_down = true;
 
-        let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(pof, PhaseOfFlight::Taxi);
+    let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(pof, PhaseOfFlight::Taxi);
 
-        // Test cruise phase
-        snapshot.ias_knots = 180.0;
-        snapshot.vertical_speed_fpm = 50.0; // Stable
-        snapshot.altitude_feet = 8000.0;
+    // Test cruise phase
+    snapshot.ias_knots = 180.0;
+    snapshot.vertical_speed_fpm = 50.0; // Stable
+    snapshot.altitude_feet = 8000.0;
 
-        let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(pof, PhaseOfFlight::Cruise);
-    }
+    let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(pof, PhaseOfFlight::Cruise);
+}
 
-    #[tokio::test]
-    async fn test_hysteresis_logic() {
-        let config = PofHysteresisConfig::default();
-        let mut tracker = PofTracker::new();
-        let now = Instant::now();
+#[tokio::test]
+async fn test_hysteresis_logic() {
+    let config = PofHysteresisConfig::default();
+    let mut tracker = PofTracker::new();
+    let now = Instant::now();
 
-        // Test IAS hysteresis
-        let band = config.hysteresis_bands.get("ias").unwrap();
+    // Test IAS hysteresis
+    let band = config.hysteresis_bands.get("ias").unwrap();
 
-        // Below enter threshold - should not be in condition
-        AircraftAutoSwitch::update_parameter_hysteresis(
-            &mut tracker.hysteresis_state,
-            "ias",
-            85.0,
-            band,
-            now,
-        );
+    // Below enter threshold - should not be in condition
+    AircraftAutoSwitch::update_parameter_hysteresis(
+        &mut tracker.hysteresis_state,
+        "ias",
+        85.0,
+        band,
+        now,
+    );
 
-        let state = tracker.hysteresis_state.get("ias").unwrap();
-        assert!(!state.in_condition);
+    let state = tracker.hysteresis_state.get("ias").unwrap();
+    assert!(!state.in_condition);
 
-        // Above enter threshold - should enter condition
-        AircraftAutoSwitch::update_parameter_hysteresis(
-            &mut tracker.hysteresis_state,
-            "ias",
-            95.0,
-            band,
-            now,
-        );
+    // Above enter threshold - should enter condition
+    AircraftAutoSwitch::update_parameter_hysteresis(
+        &mut tracker.hysteresis_state,
+        "ias",
+        95.0,
+        band,
+        now,
+    );
 
-        let state = tracker.hysteresis_state.get("ias").unwrap();
-        assert!(state.in_condition);
+    let state = tracker.hysteresis_state.get("ias").unwrap();
+    assert!(state.in_condition);
 
-        // Above exit threshold but below enter - should stay in condition
-        AircraftAutoSwitch::update_parameter_hysteresis(
-            &mut tracker.hysteresis_state,
-            "ias",
-            105.0,
-            band,
-            now,
-        );
+    // Above exit threshold but below enter - should stay in condition
+    AircraftAutoSwitch::update_parameter_hysteresis(
+        &mut tracker.hysteresis_state,
+        "ias",
+        105.0,
+        band,
+        now,
+    );
 
-        let state = tracker.hysteresis_state.get("ias").unwrap();
-        assert!(state.in_condition);
+    let state = tracker.hysteresis_state.get("ias").unwrap();
+    assert!(state.in_condition);
 
-        // Below exit threshold - should exit condition
-        AircraftAutoSwitch::update_parameter_hysteresis(
-            &mut tracker.hysteresis_state,
-            "ias",
-            95.0,
-            band,
-            now,
-        );
+    // Below exit threshold - should exit condition
+    AircraftAutoSwitch::update_parameter_hysteresis(
+        &mut tracker.hysteresis_state,
+        "ias",
+        95.0,
+        band,
+        now,
+    );
 
-        let state = tracker.hysteresis_state.get("ias").unwrap();
-        assert!(!state.in_condition);
-    }
+    let state = tracker.hysteresis_state.get("ias").unwrap();
+    assert!(!state.in_condition);
+}
 
-    #[tokio::test]
-    async fn test_profile_hierarchy_loading() {
-        // Use test fixture instead of creating temporary profiles
-        let config = test_profile_repo();
-        let aircraft_id = AircraftId::new("C172");
+#[tokio::test]
+async fn test_profile_hierarchy_loading() {
+    // Use test fixture instead of creating temporary profiles
+    let config = test_profile_repo();
+    let aircraft_id = AircraftId::new("C172");
 
-        // Load the C172 profile from fixtures
-        let profiles =
-            AircraftAutoSwitch::load_profile_hierarchy(&aircraft_id, SimId::Msfs, &config)
-                .await
-                .unwrap();
+    // Load the C172 profile from fixtures
+    let profiles = AircraftAutoSwitch::load_profile_hierarchy(&aircraft_id, SimId::Msfs, &config)
+        .await
+        .unwrap();
 
-        // Should load at least the aircraft profile
-        assert!(!profiles.is_empty());
+    // Should load at least the aircraft profile
+    assert!(!profiles.is_empty());
 
-        // Test that the profile has expected axes
-        let aircraft_profile = &profiles[0];
-        assert!(aircraft_profile.axes.contains_key("pitch"));
+    // Test that the profile has expected axes
+    let aircraft_profile = &profiles[0];
+    assert!(aircraft_profile.axes.contains_key("pitch"));
 
-        // Verify the profile has pof_overrides
-        assert!(aircraft_profile.pof_overrides.is_some());
-        let pof_overrides = aircraft_profile.pof_overrides.as_ref().unwrap();
-        assert!(pof_overrides.contains_key("cruise"));
-        assert!(pof_overrides.contains_key("approach"));
-    }
+    // Verify the profile has pof_overrides
+    assert!(aircraft_profile.pof_overrides.is_some());
+    let pof_overrides = aircraft_profile.pof_overrides.as_ref().unwrap();
+    assert!(pof_overrides.contains_key("cruise"));
+    assert!(pof_overrides.contains_key("approach"));
+}
 
-    #[tokio::test]
-    async fn test_switch_timing_budget() {
-        let mut config = test_profile_repo();
-        config.max_switch_time = Duration::from_millis(100); // Very tight budget for testing
+#[tokio::test]
+async fn test_switch_timing_budget() {
+    let mut config = test_profile_repo();
+    config.max_switch_time = Duration::from_millis(100); // Very tight budget for testing
 
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
 
-        let aircraft = DetectedAircraft {
-            sim: SimId::Msfs,
-            aircraft_id: AircraftId::new("C172"),
-            process_name: "FlightSimulator.exe".to_string(),
-            detection_time: Instant::now(),
-            confidence: 0.9,
-        };
+    let aircraft = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("C172"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
 
-        // This should complete but may exceed the tight timing budget
-        auto_switch.on_aircraft_detected(aircraft).await.unwrap();
+    // This should complete but may exceed the tight timing budget
+    auto_switch.on_aircraft_detected(aircraft).await.unwrap();
 
-        // Give some time for processing
-        tokio::time::sleep(Duration::from_millis(200)).await;
+    // Give some time for processing
+    tokio::time::sleep(Duration::from_millis(200)).await;
 
-        let metrics = auto_switch.get_metrics().await;
-        assert!(metrics.total_switches > 0);
-    }
+    let metrics = auto_switch.get_metrics().await;
+    assert!(metrics.total_switches > 0);
+}
 
-    #[tokio::test]
-    async fn test_pof_override_application() {
-        // Use test fixture with C172 profile that has PoF overrides
-        let config = test_profile_repo();
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
+#[tokio::test]
+async fn test_pof_override_application() {
+    // Use test fixture with C172 profile that has PoF overrides
+    let config = test_profile_repo();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
 
-        // Simulate aircraft detection
-        let aircraft = DetectedAircraft {
-            sim: SimId::Msfs,
-            aircraft_id: AircraftId::new("C172"),
-            process_name: "FlightSimulator.exe".to_string(),
-            detection_time: Instant::now(),
-            confidence: 0.9,
-        };
+    // Simulate aircraft detection
+    let aircraft = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("C172"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
 
-        auto_switch.on_aircraft_detected(aircraft).await.unwrap();
+    auto_switch.on_aircraft_detected(aircraft).await.unwrap();
 
-        // Wait for processing
-        tokio::time::sleep(Duration::from_millis(100)).await;
+    // Wait for processing
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // Create approach phase telemetry
-        let mut snapshot = create_test_snapshot();
-        snapshot.ias_knots = 90.0;
-        snapshot.altitude_feet = 1500.0;
-        snapshot.gear_down = false;
+    // Create approach phase telemetry
+    let mut snapshot = create_test_snapshot();
+    snapshot.ias_knots = 90.0;
+    snapshot.altitude_feet = 1500.0;
+    snapshot.gear_down = false;
 
-        // Send multiple telemetry updates to satisfy consecutive frames requirement
-        // Default config requires 4 consecutive frames
-        for _ in 0..5 {
-            auto_switch
-                .on_telemetry_update(snapshot.clone())
-                .await
-                .unwrap();
-            tokio::time::sleep(Duration::from_millis(5)).await; // Simulate frame timing at ~200Hz
-        }
-
-        // Wait for PoF processing
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        // Check that PoF was detected (this is a simplified test)
-        let current_pof = auto_switch.get_current_pof().await;
-        assert!(current_pof.is_some());
-    }
-
-    #[tokio::test]
-    async fn test_cache_invalidation() {
-        let config = AutoSwitchConfig::default();
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
-
-        let aircraft_id = AircraftId::new("C172");
-
-        // Invalidate specific aircraft cache
+    // Send multiple telemetry updates to satisfy consecutive frames requirement
+    // Default config requires 4 consecutive frames
+    for _ in 0..5 {
         auto_switch
-            .invalidate_cache(Some(aircraft_id.clone()))
+            .on_telemetry_update(snapshot.clone())
             .await
             .unwrap();
-
-        // Invalidate entire cache
-        auto_switch.invalidate_cache(None).await.unwrap();
-
-        // Should not fail
-        tokio::time::sleep(Duration::from_millis(50)).await;
+        tokio::time::sleep(Duration::from_millis(5)).await; // Simulate frame timing at ~200Hz
     }
 
-    #[tokio::test]
-    async fn test_force_switch() {
-        let config = test_profile_repo();
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
+    // Wait for PoF processing
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        let aircraft_id = AircraftId::new("C172");
+    // Check that PoF was detected (this is a simplified test)
+    let current_pof = auto_switch.get_current_pof().await;
+    assert!(current_pof.is_some());
+}
 
-        // Force switch to C172 which has a profile in fixtures
-        auto_switch.force_switch(aircraft_id).await.unwrap();
+#[tokio::test]
+async fn test_cache_invalidation() {
+    let config = AutoSwitchConfig::default();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
 
-        // Wait for processing
-        tokio::time::sleep(Duration::from_millis(100)).await;
+    let aircraft_id = AircraftId::new("C172");
 
-        let metrics = auto_switch.get_metrics().await;
-        // Should have attempted at least one switch
-        assert!(metrics.total_switches > 0);
-    }
+    // Invalidate specific aircraft cache
+    auto_switch
+        .invalidate_cache(Some(aircraft_id.clone()))
+        .await
+        .unwrap();
 
-    #[test]
-    fn test_phase_of_flight_string_conversion() {
-        assert_eq!(
-            "ground".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Ground
-        );
-        assert_eq!(
-            "taxi".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Taxi
-        );
-        assert_eq!(
-            "takeoff".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Takeoff
-        );
-        assert_eq!(
-            "climb".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Climb
-        );
-        assert_eq!(
-            "cruise".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Cruise
-        );
-        assert_eq!(
-            "descent".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Descent
-        );
-        assert_eq!(
-            "approach".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Approach
-        );
-        assert_eq!(
-            "landing".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::Landing
-        );
-        assert_eq!(
-            "goaround".parse::<PhaseOfFlight>().unwrap(),
-            PhaseOfFlight::GoAround
-        );
+    // Invalidate entire cache
+    auto_switch.invalidate_cache(None).await.unwrap();
 
-        assert_eq!(PhaseOfFlight::Ground.to_string(), "ground");
-        assert_eq!(PhaseOfFlight::Approach.to_string(), "approach");
-        assert_eq!(PhaseOfFlight::GoAround.to_string(), "goaround");
+    // Should not fail
+    tokio::time::sleep(Duration::from_millis(50)).await;
+}
 
-        assert!("invalid".parse::<PhaseOfFlight>().is_err());
-    }
+#[tokio::test]
+async fn test_force_switch() {
+    let config = test_profile_repo();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
 
-    #[test]
-    fn test_hysteresis_band_configuration() {
-        let config = PofHysteresisConfig::default();
+    let aircraft_id = AircraftId::new("C172");
 
-        assert!(config.hysteresis_bands.contains_key("ias"));
-        assert!(config.hysteresis_bands.contains_key("altitude"));
-        assert!(config.hysteresis_bands.contains_key("ground_speed"));
+    // Force switch to C172 which has a profile in fixtures
+    auto_switch.force_switch(aircraft_id).await.unwrap();
 
-        let ias_band = config.hysteresis_bands.get("ias").unwrap();
-        assert_eq!(ias_band.enter_threshold, 90.0);
-        assert_eq!(ias_band.exit_threshold, 100.0);
-        assert_eq!(ias_band.unit, "knots");
+    // Wait for processing
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // Verify consecutive frames requirement
-        assert_eq!(config.consecutive_frames_required, 4);
-    }
+    let metrics = auto_switch.get_metrics().await;
+    // Should have attempted at least one switch
+    assert!(metrics.total_switches > 0);
+}
 
-    #[tokio::test]
-    async fn test_consecutive_frames_hysteresis() {
-        let mut config = AutoSwitchConfig::default();
-        config.pof_hysteresis.consecutive_frames_required = 3;
-        config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+#[test]
+fn test_phase_of_flight_string_conversion() {
+    assert_eq!(
+        "ground".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Ground
+    );
+    assert_eq!(
+        "taxi".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Taxi
+    );
+    assert_eq!(
+        "takeoff".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Takeoff
+    );
+    assert_eq!(
+        "climb".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Climb
+    );
+    assert_eq!(
+        "cruise".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Cruise
+    );
+    assert_eq!(
+        "descent".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Descent
+    );
+    assert_eq!(
+        "approach".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Approach
+    );
+    assert_eq!(
+        "landing".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::Landing
+    );
+    assert_eq!(
+        "goaround".parse::<PhaseOfFlight>().unwrap(),
+        PhaseOfFlight::GoAround
+    );
 
-        let mut tracker = PofTracker::new();
+    assert_eq!(PhaseOfFlight::Ground.to_string(), "ground");
+    assert_eq!(PhaseOfFlight::Approach.to_string(), "approach");
+    assert_eq!(PhaseOfFlight::GoAround.to_string(), "goaround");
 
-        // Start in Ground phase
-        let mut snapshot = create_test_snapshot();
-        snapshot.ground_speed_knots = 2.0;
-        snapshot.altitude_feet = 0.0;
+    assert!("invalid".parse::<PhaseOfFlight>().is_err());
+}
+
+#[test]
+fn test_hysteresis_band_configuration() {
+    let config = PofHysteresisConfig::default();
+
+    assert!(config.hysteresis_bands.contains_key("ias"));
+    assert!(config.hysteresis_bands.contains_key("altitude"));
+    assert!(config.hysteresis_bands.contains_key("ground_speed"));
+
+    let ias_band = config.hysteresis_bands.get("ias").unwrap();
+    assert_eq!(ias_band.enter_threshold, 90.0);
+    assert_eq!(ias_band.exit_threshold, 100.0);
+    assert_eq!(ias_band.unit, "knots");
+
+    // Verify consecutive frames requirement
+    assert_eq!(config.consecutive_frames_required, 4);
+}
+
+#[tokio::test]
+async fn test_consecutive_frames_hysteresis() {
+    let mut config = AutoSwitchConfig::default();
+    config.pof_hysteresis.consecutive_frames_required = 3;
+    config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+
+    let mut tracker = PofTracker::new();
+
+    // Start in Ground phase
+    let mut snapshot = create_test_snapshot();
+    snapshot.ground_speed_knots = 2.0;
+    snapshot.altitude_feet = 0.0;
+
+    let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(pof, PhaseOfFlight::Ground);
+
+    // Initialize current PoF
+    tracker.current_pof = Some(PhaseOfFlight::Ground);
+    tracker.pof_enter_time = Some(Instant::now());
+
+    // Wait to satisfy min_phase_time
+    tokio::time::sleep(Duration::from_millis(150)).await;
+
+    // Change to Cruise conditions
+    snapshot.ias_knots = 180.0;
+    snapshot.vertical_speed_fpm = 50.0;
+    snapshot.altitude_feet = 8000.0;
+
+    let new_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(new_pof, PhaseOfFlight::Cruise);
+
+    // Frame 1 - should not transition yet
+    let changed =
+        AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, new_pof, &snapshot, &config)
+            .await
+            .unwrap();
+    assert!(!changed, "Should not transition on first frame");
+    assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
+    assert_eq!(tracker.candidate_pof, Some(PhaseOfFlight::Cruise));
+    assert_eq!(
+        *tracker
+            .consecutive_frames
+            .get(&PhaseOfFlight::Cruise)
+            .unwrap(),
+        1
+    );
+
+    // Frame 2 - still not enough
+    let changed =
+        AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, new_pof, &snapshot, &config)
+            .await
+            .unwrap();
+    assert!(!changed, "Should not transition on second frame");
+    assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
+    assert_eq!(
+        *tracker
+            .consecutive_frames
+            .get(&PhaseOfFlight::Cruise)
+            .unwrap(),
+        2
+    );
+
+    // Frame 3 - should transition now (3 consecutive frames)
+    let changed =
+        AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, new_pof, &snapshot, &config)
+            .await
+            .unwrap();
+    assert!(changed, "Should transition on third consecutive frame");
+    assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Cruise));
+    assert_eq!(tracker.candidate_pof, None);
+    assert!(tracker.consecutive_frames.is_empty());
+}
+
+#[tokio::test]
+async fn test_phase_flip_flop_prevention() {
+    let mut config = AutoSwitchConfig::default();
+    config.pof_hysteresis.consecutive_frames_required = 4;
+    config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+
+    let mut tracker = PofTracker::new();
+    tracker.current_pof = Some(PhaseOfFlight::Cruise);
+    tracker.pof_enter_time = Some(Instant::now());
+
+    // Wait to satisfy min_phase_time
+    tokio::time::sleep(Duration::from_millis(150)).await;
+
+    let mut snapshot = create_test_snapshot();
+
+    // Simulate flip-flopping between Cruise and Descent
+    for i in 0..10 {
+        if i % 2 == 0 {
+            // Cruise conditions
+            snapshot.ias_knots = 180.0;
+            snapshot.vertical_speed_fpm = 50.0;
+            snapshot.altitude_feet = 8000.0;
+        } else {
+            // Descent conditions (but only for 1 frame)
+            snapshot.ias_knots = 180.0;
+            snapshot.vertical_speed_fpm = -400.0;
+            snapshot.altitude_feet = 7900.0;
+        }
 
         let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(pof, PhaseOfFlight::Ground);
+        let changed =
+            AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, pof, &snapshot, &config)
+                .await
+                .unwrap();
 
-        // Initialize current PoF
-        tracker.current_pof = Some(PhaseOfFlight::Ground);
-        tracker.pof_enter_time = Some(Instant::now());
-
-        // Wait to satisfy min_phase_time
-        tokio::time::sleep(Duration::from_millis(150)).await;
-
-        // Change to Cruise conditions
-        snapshot.ias_knots = 180.0;
-        snapshot.vertical_speed_fpm = 50.0;
-        snapshot.altitude_feet = 8000.0;
-
-        let new_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(new_pof, PhaseOfFlight::Cruise);
-
-        // Frame 1 - should not transition yet
-        let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            new_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-        assert!(!changed, "Should not transition on first frame");
-        assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
-        assert_eq!(tracker.candidate_pof, Some(PhaseOfFlight::Cruise));
-        assert_eq!(
-            *tracker
-                .consecutive_frames
-                .get(&PhaseOfFlight::Cruise)
-                .unwrap(),
-            1
+        // Should never transition because we never get 4 consecutive frames
+        assert!(
+            !changed,
+            "Should not transition during flip-flop at iteration {}",
+            i
         );
-
-        // Frame 2 - still not enough
-        let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            new_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-        assert!(!changed, "Should not transition on second frame");
-        assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
         assert_eq!(
-            *tracker
-                .consecutive_frames
-                .get(&PhaseOfFlight::Cruise)
-                .unwrap(),
-            2
+            tracker.current_pof,
+            Some(PhaseOfFlight::Cruise),
+            "Should remain in Cruise during flip-flop at iteration {}",
+            i
         );
+    }
+}
 
-        // Frame 3 - should transition now (3 consecutive frames)
+#[tokio::test]
+async fn test_consecutive_frames_reset_on_different_candidate() {
+    let mut config = AutoSwitchConfig::default();
+    config.pof_hysteresis.consecutive_frames_required = 3;
+    config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+
+    let mut tracker = PofTracker::new();
+    tracker.current_pof = Some(PhaseOfFlight::Ground);
+    tracker.pof_enter_time = Some(Instant::now());
+
+    // Wait to satisfy min_phase_time
+    tokio::time::sleep(Duration::from_millis(150)).await;
+
+    let mut snapshot = create_test_snapshot();
+
+    // Build up frames for Cruise
+    snapshot.ias_knots = 180.0;
+    snapshot.vertical_speed_fpm = 50.0;
+    snapshot.altitude_feet = 8000.0;
+
+    let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(cruise_pof, PhaseOfFlight::Cruise);
+
+    // Frame 1 for Cruise
+    AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, cruise_pof, &snapshot, &config)
+        .await
+        .unwrap();
+    assert_eq!(
+        *tracker
+            .consecutive_frames
+            .get(&PhaseOfFlight::Cruise)
+            .unwrap(),
+        1
+    );
+
+    // Frame 2 for Cruise
+    AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, cruise_pof, &snapshot, &config)
+        .await
+        .unwrap();
+    assert_eq!(
+        *tracker
+            .consecutive_frames
+            .get(&PhaseOfFlight::Cruise)
+            .unwrap(),
+        2
+    );
+
+    // Suddenly change to Descent (interrupts Cruise candidate)
+    snapshot.vertical_speed_fpm = -400.0;
+    snapshot.altitude_feet = 7500.0;
+
+    let descent_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(descent_pof, PhaseOfFlight::Descent);
+
+    // Frame 1 for Descent - should reset Cruise counter
+    AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, descent_pof, &snapshot, &config)
+        .await
+        .unwrap();
+
+    assert_eq!(tracker.candidate_pof, Some(PhaseOfFlight::Descent));
+    assert_eq!(
+        *tracker
+            .consecutive_frames
+            .get(&PhaseOfFlight::Descent)
+            .unwrap(),
+        1
+    );
+    assert!(
+        !tracker
+            .consecutive_frames
+            .contains_key(&PhaseOfFlight::Cruise),
+        "Cruise counter should be cleared"
+    );
+}
+
+#[tokio::test]
+async fn test_min_phase_time_with_consecutive_frames() {
+    let mut config = AutoSwitchConfig::default();
+    config.pof_hysteresis.consecutive_frames_required = 2;
+    config.pof_hysteresis.min_phase_time = Duration::from_millis(200);
+
+    let mut tracker = PofTracker::new();
+    tracker.current_pof = Some(PhaseOfFlight::Ground);
+    tracker.pof_enter_time = Some(Instant::now());
+
+    let mut snapshot = create_test_snapshot();
+    snapshot.ias_knots = 180.0;
+    snapshot.vertical_speed_fpm = 50.0;
+    snapshot.altitude_feet = 8000.0;
+
+    let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+
+    // Get 2 consecutive frames immediately (before min_phase_time)
+    AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, cruise_pof, &snapshot, &config)
+        .await
+        .unwrap();
+
+    let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
+        &mut tracker,
+        cruise_pof,
+        &snapshot,
+        &config,
+    )
+    .await
+    .unwrap();
+
+    // Should not transition yet because min_phase_time not satisfied
+    assert!(!changed, "Should not transition before min_phase_time");
+    assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
+
+    // Wait for min_phase_time
+    tokio::time::sleep(Duration::from_millis(250)).await;
+
+    // Now try again with 2 consecutive frames
+    tracker.candidate_pof = None;
+    tracker.consecutive_frames.clear();
+
+    AircraftAutoSwitch::update_pof_with_hysteresis(&mut tracker, cruise_pof, &snapshot, &config)
+        .await
+        .unwrap();
+
+    let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
+        &mut tracker,
+        cruise_pof,
+        &snapshot,
+        &config,
+    )
+    .await
+    .unwrap();
+
+    // Should transition now
+    assert!(changed, "Should transition after min_phase_time");
+    assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Cruise));
+}
+
+#[tokio::test]
+async fn test_stable_phase_resets_counters() {
+    let mut config = AutoSwitchConfig::default();
+    config.pof_hysteresis.consecutive_frames_required = 3;
+    config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+
+    let mut tracker = PofTracker::new();
+    tracker.current_pof = Some(PhaseOfFlight::Cruise);
+    tracker.pof_enter_time = Some(Instant::now());
+
+    let mut snapshot = create_test_snapshot();
+    snapshot.ias_knots = 180.0;
+    snapshot.vertical_speed_fpm = 50.0;
+    snapshot.altitude_feet = 8000.0;
+
+    let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    assert_eq!(cruise_pof, PhaseOfFlight::Cruise);
+
+    // Send same phase multiple times
+    for _ in 0..5 {
         let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
             &mut tracker,
-            new_pof,
+            cruise_pof,
             &snapshot,
             &config,
         )
         .await
         .unwrap();
-        assert!(changed, "Should transition on third consecutive frame");
+
+        assert!(!changed, "Should not change when stable");
         assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Cruise));
-        assert_eq!(tracker.candidate_pof, None);
-        assert!(tracker.consecutive_frames.is_empty());
-    }
-
-    #[tokio::test]
-    async fn test_phase_flip_flop_prevention() {
-        let mut config = AutoSwitchConfig::default();
-        config.pof_hysteresis.consecutive_frames_required = 4;
-        config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
-
-        let mut tracker = PofTracker::new();
-        tracker.current_pof = Some(PhaseOfFlight::Cruise);
-        tracker.pof_enter_time = Some(Instant::now());
-
-        // Wait to satisfy min_phase_time
-        tokio::time::sleep(Duration::from_millis(150)).await;
-
-        let mut snapshot = create_test_snapshot();
-
-        // Simulate flip-flopping between Cruise and Descent
-        for i in 0..10 {
-            if i % 2 == 0 {
-                // Cruise conditions
-                snapshot.ias_knots = 180.0;
-                snapshot.vertical_speed_fpm = 50.0;
-                snapshot.altitude_feet = 8000.0;
-            } else {
-                // Descent conditions (but only for 1 frame)
-                snapshot.ias_knots = 180.0;
-                snapshot.vertical_speed_fpm = -400.0;
-                snapshot.altitude_feet = 7900.0;
-            }
-
-            let pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-            let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-                &mut tracker,
-                pof,
-                &snapshot,
-                &config,
-            )
-            .await
-            .unwrap();
-
-            // Should never transition because we never get 4 consecutive frames
-            assert!(
-                !changed,
-                "Should not transition during flip-flop at iteration {}",
-                i
-            );
-            assert_eq!(
-                tracker.current_pof,
-                Some(PhaseOfFlight::Cruise),
-                "Should remain in Cruise during flip-flop at iteration {}",
-                i
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn test_consecutive_frames_reset_on_different_candidate() {
-        let mut config = AutoSwitchConfig::default();
-        config.pof_hysteresis.consecutive_frames_required = 3;
-        config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
-
-        let mut tracker = PofTracker::new();
-        tracker.current_pof = Some(PhaseOfFlight::Ground);
-        tracker.pof_enter_time = Some(Instant::now());
-
-        // Wait to satisfy min_phase_time
-        tokio::time::sleep(Duration::from_millis(150)).await;
-
-        let mut snapshot = create_test_snapshot();
-
-        // Build up frames for Cruise
-        snapshot.ias_knots = 180.0;
-        snapshot.vertical_speed_fpm = 50.0;
-        snapshot.altitude_feet = 8000.0;
-
-        let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(cruise_pof, PhaseOfFlight::Cruise);
-
-        // Frame 1 for Cruise
-        AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
         assert_eq!(
-            *tracker
-                .consecutive_frames
-                .get(&PhaseOfFlight::Cruise)
-                .unwrap(),
-            1
-        );
-
-        // Frame 2 for Cruise
-        AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-        assert_eq!(
-            *tracker
-                .consecutive_frames
-                .get(&PhaseOfFlight::Cruise)
-                .unwrap(),
-            2
-        );
-
-        // Suddenly change to Descent (interrupts Cruise candidate)
-        snapshot.vertical_speed_fpm = -400.0;
-        snapshot.altitude_feet = 7500.0;
-
-        let descent_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(descent_pof, PhaseOfFlight::Descent);
-
-        // Frame 1 for Descent - should reset Cruise counter
-        AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            descent_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-
-        assert_eq!(tracker.candidate_pof, Some(PhaseOfFlight::Descent));
-        assert_eq!(
-            *tracker
-                .consecutive_frames
-                .get(&PhaseOfFlight::Descent)
-                .unwrap(),
-            1
+            tracker.candidate_pof, None,
+            "Should have no candidate when stable"
         );
         assert!(
-            !tracker
-                .consecutive_frames
-                .contains_key(&PhaseOfFlight::Cruise),
-            "Cruise counter should be cleared"
+            tracker.consecutive_frames.is_empty(),
+            "Should have no frame counters when stable"
         );
     }
+}
 
-    #[tokio::test]
-    async fn test_min_phase_time_with_consecutive_frames() {
-        let mut config = AutoSwitchConfig::default();
-        config.pof_hysteresis.consecutive_frames_required = 2;
-        config.pof_hysteresis.min_phase_time = Duration::from_millis(200);
+#[tokio::test]
+async fn test_metrics_tracking() {
+    let config = test_profile_repo();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
 
-        let mut tracker = PofTracker::new();
-        tracker.current_pof = Some(PhaseOfFlight::Ground);
-        tracker.pof_enter_time = Some(Instant::now());
+    let initial_metrics = auto_switch.get_metrics().await;
+    assert_eq!(initial_metrics.total_switches, 0);
+    assert_eq!(initial_metrics.successful_switches, 0);
+    assert_eq!(initial_metrics.failed_switches, 0);
 
-        let mut snapshot = create_test_snapshot();
-        snapshot.ias_knots = 180.0;
-        snapshot.vertical_speed_fpm = 50.0;
-        snapshot.altitude_feet = 8000.0;
+    // Simulate some activity
+    let aircraft = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("C172"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
 
-        let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
+    auto_switch.on_aircraft_detected(aircraft).await.unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // Get 2 consecutive frames immediately (before min_phase_time)
-        AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
+    let updated_metrics = auto_switch.get_metrics().await;
+    assert!(updated_metrics.total_switches > initial_metrics.total_switches);
+}
+
+#[tokio::test]
+async fn test_committed_switches_counter() {
+    let config = test_profile_repo();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
+
+    let initial_metrics = auto_switch.get_metrics().await;
+    assert_eq!(initial_metrics.committed_switches, 0);
+
+    // First switch to C172
+    let aircraft1 = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("C172"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
+
+    auto_switch
+        .on_aircraft_detected(aircraft1.clone())
         .await
         .unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
+    let metrics_after_first = auto_switch.get_metrics().await;
+    assert_eq!(
+        metrics_after_first.committed_switches, 1,
+        "First switch should increment counter"
+    );
+
+    // Switch to same aircraft (C172) - should NOT increment
+    auto_switch.on_aircraft_detected(aircraft1).await.unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let metrics_after_same = auto_switch.get_metrics().await;
+    assert_eq!(
+        metrics_after_same.committed_switches, 1,
+        "Same aircraft should not increment counter"
+    );
+
+    // Force switch to same aircraft - should NOT increment (Option 1 semantics)
+    auto_switch
+        .force_switch(AircraftId::new("C172"))
         .await
         .unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
 
-        // Should not transition yet because min_phase_time not satisfied
-        assert!(!changed, "Should not transition before min_phase_time");
-        assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Ground));
+    let metrics_after_force_same = auto_switch.get_metrics().await;
+    assert_eq!(
+        metrics_after_force_same.committed_switches, 1,
+        "Force switch to same aircraft should not increment counter"
+    );
+}
 
-        // Wait for min_phase_time
-        tokio::time::sleep(Duration::from_millis(250)).await;
-
-        // Now try again with 2 consecutive frames
-        tracker.candidate_pof = None;
-        tracker.consecutive_frames.clear();
-
-        AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-
-        let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-            &mut tracker,
-            cruise_pof,
-            &snapshot,
-            &config,
-        )
-        .await
-        .unwrap();
-
-        // Should transition now
-        assert!(changed, "Should transition after min_phase_time");
-        assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Cruise));
+#[cfg(test)]
+fn create_test_snapshot() -> TelemetrySnapshot {
+    TelemetrySnapshot {
+        sim: SimId::Msfs,
+        aircraft: AircraftId::new("C172"),
+        timestamp: 0,
+        ias_knots: 0.0,
+        ground_speed_knots: 0.0,
+        altitude_feet: 0.0,
+        vertical_speed_fpm: 0.0,
+        gear_down: true,
     }
+}
 
-    #[tokio::test]
-    async fn test_stable_phase_resets_counters() {
-        let mut config = AutoSwitchConfig::default();
-        config.pof_hysteresis.consecutive_frames_required = 3;
-        config.pof_hysteresis.min_phase_time = Duration::from_millis(100);
+/// Test helper function that returns AutoSwitchConfig pointing to fixtures directory
+#[cfg(test)]
+fn test_profile_repo() -> AutoSwitchConfig {
+    let fixture_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles");
 
-        let mut tracker = PofTracker::new();
-        tracker.current_pof = Some(PhaseOfFlight::Cruise);
-        tracker.pof_enter_time = Some(Instant::now());
-
-        let mut snapshot = create_test_snapshot();
-        snapshot.ias_knots = 180.0;
-        snapshot.vertical_speed_fpm = 50.0;
-        snapshot.altitude_feet = 8000.0;
-
-        let cruise_pof = AircraftAutoSwitch::determine_phase_of_flight(&snapshot);
-        assert_eq!(cruise_pof, PhaseOfFlight::Cruise);
-
-        // Send same phase multiple times
-        for _ in 0..5 {
-            let changed = AircraftAutoSwitch::update_pof_with_hysteresis(
-                &mut tracker,
-                cruise_pof,
-                &snapshot,
-                &config,
-            )
-            .await
-            .unwrap();
-
-            assert!(!changed, "Should not change when stable");
-            assert_eq!(tracker.current_pof, Some(PhaseOfFlight::Cruise));
-            assert_eq!(
-                tracker.candidate_pof, None,
-                "Should have no candidate when stable"
-            );
-            assert!(
-                tracker.consecutive_frames.is_empty(),
-                "Should have no frame counters when stable"
-            );
-        }
+    AutoSwitchConfig {
+        profile_paths: vec![
+            fixture_dir.clone(), // global
+            fixture_dir.clone(), // sim
+            fixture_dir,         // aircraft
+        ],
+        ..Default::default()
     }
-
-    #[tokio::test]
-    async fn test_metrics_tracking() {
-        let config = test_profile_repo();
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
-
-        let initial_metrics = auto_switch.get_metrics().await;
-        assert_eq!(initial_metrics.total_switches, 0);
-        assert_eq!(initial_metrics.successful_switches, 0);
-        assert_eq!(initial_metrics.failed_switches, 0);
-
-        // Simulate some activity
-        let aircraft = DetectedAircraft {
-            sim: SimId::Msfs,
-            aircraft_id: AircraftId::new("C172"),
-            process_name: "FlightSimulator.exe".to_string(),
-            detection_time: Instant::now(),
-            confidence: 0.9,
-        };
-
-        auto_switch.on_aircraft_detected(aircraft).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        let updated_metrics = auto_switch.get_metrics().await;
-        assert!(updated_metrics.total_switches > initial_metrics.total_switches);
-    }
-
-    #[tokio::test]
-    async fn test_committed_switches_counter() {
-        let config = test_profile_repo();
-        let auto_switch = AircraftAutoSwitch::new(config);
-        auto_switch.start().await.unwrap();
-
-        let initial_metrics = auto_switch.get_metrics().await;
-        assert_eq!(initial_metrics.committed_switches, 0);
-
-        // First switch to C172
-        let aircraft1 = DetectedAircraft {
-            sim: SimId::Msfs,
-            aircraft_id: AircraftId::new("C172"),
-            process_name: "FlightSimulator.exe".to_string(),
-            detection_time: Instant::now(),
-            confidence: 0.9,
-        };
-
-        auto_switch
-            .on_aircraft_detected(aircraft1.clone())
-            .await
-            .unwrap();
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        let metrics_after_first = auto_switch.get_metrics().await;
-        assert_eq!(
-            metrics_after_first.committed_switches, 1,
-            "First switch should increment counter"
-        );
-
-        // Switch to same aircraft (C172) - should NOT increment
-        auto_switch.on_aircraft_detected(aircraft1).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        let metrics_after_same = auto_switch.get_metrics().await;
-        assert_eq!(
-            metrics_after_same.committed_switches, 1,
-            "Same aircraft should not increment counter"
-        );
-
-        // Force switch to same aircraft - should NOT increment (Option 1 semantics)
-        auto_switch
-            .force_switch(AircraftId::new("C172"))
-            .await
-            .unwrap();
-        tokio::time::sleep(Duration::from_millis(100)).await;
-
-        let metrics_after_force_same = auto_switch.get_metrics().await;
-        assert_eq!(
-            metrics_after_force_same.committed_switches, 1,
-            "Force switch to same aircraft should not increment counter"
-        );
-    }
-
-    #[cfg(test)]
-    fn create_test_snapshot() -> TelemetrySnapshot {
-        TelemetrySnapshot {
-            sim: SimId::Msfs,
-            aircraft: AircraftId::new("C172"),
-            timestamp: 0,
-            ias_knots: 0.0,
-            ground_speed_knots: 0.0,
-            altitude_feet: 0.0,
-            vertical_speed_fpm: 0.0,
-            gear_down: true,
-        }
-    }
-
-    /// Test helper function that returns AutoSwitchConfig pointing to fixtures directory
-    #[cfg(test)]
-    fn test_profile_repo() -> AutoSwitchConfig {
-        let fixture_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles");
-
-        AutoSwitchConfig {
-            profile_paths: vec![
-                fixture_dir.clone(), // global
-                fixture_dir.clone(), // sim
-                fixture_dir,         // aircraft
-            ],
-            ..Default::default()
-        }
-    }
+}

@@ -1,4 +1,6 @@
-use flight_profile::{Profile, AxisConfig, AircraftId, DetentZone, CurvePoint, PROFILE_SCHEMA_VERSION};
+use flight_profile::{
+    AircraftId, AxisConfig, CurvePoint, DetentZone, PROFILE_SCHEMA_VERSION, Profile,
+};
 use proptest::prelude::*;
 
 prop_compose! {
@@ -58,15 +60,15 @@ proptest! {
         let c2 = profile.canonicalize();
         prop_assert_eq!(c1, c2);
     }
-    
+
     #[test]
     fn test_merge_idempotent(base in arb_profile(), override_profile in arb_profile()) {
         // (Base.merge(Override)).merge(Override) == Base.merge(Override)
         // Applying the same override twice should be the same as applying it once
-        
+
         let merged1 = base.merge_with(&override_profile).unwrap();
         let merged2 = merged1.merge_with(&override_profile).unwrap();
-        
+
         prop_assert_eq!(merged1, merged2);
     }
 

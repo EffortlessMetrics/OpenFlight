@@ -305,8 +305,7 @@ impl XPlaneAdapter {
             match self.test_connection().await {
                 Ok(()) => return Ok(()),
                 Err(err) => {
-                    self.metrics_registry
-                        .inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                    self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
 
                     if !strategy.should_retry(attempt) {
                         return Err(err);
@@ -428,7 +427,8 @@ impl XPlaneAdapter {
                                     {
                                         let mut metrics_guard = metrics.write().unwrap();
                                         metrics_guard.record_update();
-                                        metrics_guard.record_aircraft_change(aircraft.title.clone());
+                                        metrics_guard
+                                            .record_aircraft_change(aircraft.title.clone());
                                     }
                                     *state.write().unwrap() = AdapterState::Active;
 

@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{debug, info, warn};
 use thiserror::Error;
+use tracing::{debug, info, warn};
 
 #[derive(Error, Debug)]
 pub enum CurveConflictError {
@@ -273,11 +273,13 @@ impl CurveConflictWriter {
         let filename = format!("{}_{}.json", config.sim, config.version);
         let path = self.config.config_dir.join(filename);
 
-        let json = serde_json::to_string_pretty(config)
-            .map_err(|e| CurveConflictError::Writer(format!("Failed to serialize config: {}", e)))?;
+        let json = serde_json::to_string_pretty(config).map_err(|e| {
+            CurveConflictError::Writer(format!("Failed to serialize config: {}", e))
+        })?;
 
-        fs::write(&path, json)
-            .map_err(|e| CurveConflictError::Writer(format!("Failed to write config file: {}", e)))?;
+        fs::write(&path, json).map_err(|e| {
+            CurveConflictError::Writer(format!("Failed to write config file: {}", e))
+        })?;
 
         Ok(())
     }
@@ -292,7 +294,10 @@ impl CurveConflictWriter {
     ) -> Result<WriteResult> {
         let config_key = format!("{}_{}", sim, version);
         let config = self.sim_configs.get(&config_key).ok_or_else(|| {
-            CurveConflictError::Configuration(format!("No writer config found for {} {}", sim, version))
+            CurveConflictError::Configuration(format!(
+                "No writer config found for {} {}",
+                sim, version
+            ))
         })?;
 
         info!(
@@ -660,14 +665,18 @@ impl CurveConflictWriter {
         let info_path = backup_path.join("backup_info.json");
 
         if !info_path.exists() {
-            return Err(CurveConflictError::Writer("Backup info not found".to_string()));
+            return Err(CurveConflictError::Writer(
+                "Backup info not found".to_string(),
+            ));
         }
 
-        let info_content = fs::read_to_string(&info_path)
-            .map_err(|e| CurveConflictError::Writer(format!("Failed to read backup info: {}", e)))?;
+        let info_content = fs::read_to_string(&info_path).map_err(|e| {
+            CurveConflictError::Writer(format!("Failed to read backup info: {}", e))
+        })?;
 
-        let backup_info: BackupInfo = serde_json::from_str(&info_content)
-            .map_err(|e| CurveConflictError::Writer(format!("Failed to parse backup info: {}", e)))?;
+        let backup_info: BackupInfo = serde_json::from_str(&info_content).map_err(|e| {
+            CurveConflictError::Writer(format!("Failed to parse backup info: {}", e))
+        })?;
 
         let mut applied_diffs = Vec::new();
         let mut success = true;
