@@ -7,9 +7,10 @@ use crate::{
     ServerConfig,
     negotiation::negotiate_features,
     proto::{
-        ApplyProfileRequest, ApplyProfileResponse, GetServiceInfoRequest, GetServiceInfoResponse,
-        HealthEvent, HealthSubscribeRequest, ListDevicesRequest, ListDevicesResponse,
-        NegotiateFeaturesRequest, NegotiateFeaturesResponse, ServiceStatus,
+        ApplyProfileRequest, ApplyProfileResponse, Device, DeviceCapabilities, DeviceStatus,
+        DeviceType, GetServiceInfoRequest, GetServiceInfoResponse, HealthEvent,
+        HealthSubscribeRequest, ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest,
+        NegotiateFeaturesResponse, ServiceStatus,
     },
 };
 
@@ -62,7 +63,9 @@ where
 }
 use anyhow::Result;
 use flight_core::SecurityManager;
-use std::{collections::HashMap, sync::Arc, time::SystemTime};
+use flight_core::watchdog::WatchdogSystem;
+use flight_hid::{HidAdapter, device_support};
+use std::{collections::HashMap, sync::{Arc, Mutex}, time::SystemTime};
 use tokio::sync::broadcast;
 use tonic::{Request, Response, Status};
 use tracing::{debug, info, warn};
@@ -101,6 +104,156 @@ impl DeviceManager for MockDeviceManager {
     }
 }
 
+/// HID-backed device manager for basic device enumeration.
+pub struct HidDeviceManager {
+    adapter: Mutex<HidAdapter>,
+}
+
+impl std::fmt::Debug for HidDeviceManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HidDeviceManager").finish()
+    }
+}
+
+impl HidDeviceManager {
+    pub fn new() -> Self {
+        let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
+        let adapter = HidAdapter::new(watchdog);
+        Self {
+            adapter: Mutex::new(adapter),
+        }
+    }
+}
+
+impl Default for HidDeviceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DeviceManager for HidDeviceManager {
+    fn list_devices(&self, request: &ListDevicesRequest) -> Result<ListDevicesResponse, Status> {
+        let mut adapter = self
+            .adapter
+            .lock()
+            .map_err(|_| Status::internal("HID adapter lock poisoned"))?;
+
+        adapter
+            .start()
+            .map_err(|e| Status::internal(format!("HID adapter start failed: {}", e)))?;
+
+        let mut devices = Vec::new();
+        for device_info in adapter.get_all_devices() {
+            let device_type = classify_device_type(device_info);
+            if !request.filter_types.is_empty()
+                && !request.filter_types.contains(&(device_type as i32))
+            {
+                continue;
+            }
+
+            let device = Device {
+                id: device_info
+                    .serial_number
+                    .clone()
+                    .unwrap_or_else(|| device_info.device_path.clone()),
+                name: device_name(device_info),
+                r#type: device_type.into(),
+                status: DeviceStatus::Connected.into(),
+                capabilities: Some(DeviceCapabilities {
+                    supports_force_feedback: false,
+                    supports_raw_torque: false,
+                    max_torque_nm: 0,
+                    min_period_us: 1000,
+                    has_health_stream: false,
+                    supported_protocols: vec!["hid".to_string()],
+                }),
+                health: None,
+                metadata: build_device_metadata(device_info),
+            };
+
+            devices.push(device);
+        }
+
+        Ok(ListDevicesResponse {
+            total_count: devices.len() as i32,
+            devices,
+        })
+    }
+}
+
+fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
+    if device_support::is_tflight_device(device_info) {
+        return DeviceType::Joystick;
+    }
+
+    if device_info.usage_page == device_support::USAGE_PAGE_GENERIC_DESKTOP
+        && device_info.usage == device_support::USAGE_JOYSTICK
+    {
+        return DeviceType::Joystick;
+    }
+
+    DeviceType::Unspecified
+}
+
+fn device_name(device_info: &flight_hid::HidDeviceInfo) -> String {
+    if let Some(model) = device_support::tflight_model(device_info) {
+        return model.name().to_string();
+    }
+
+    device_info
+        .product_name
+        .clone()
+        .unwrap_or_else(|| "HID Device".to_string())
+}
+
+fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<String, String> {
+    let mut metadata = HashMap::new();
+
+    metadata.insert(
+        "vendor_id".to_string(),
+        format!("{:04X}", device_info.vendor_id),
+    );
+    metadata.insert(
+        "product_id".to_string(),
+        format!("{:04X}", device_info.product_id),
+    );
+    metadata.insert("device_path".to_string(), device_info.device_path.clone());
+
+    if let Some(manufacturer) = &device_info.manufacturer {
+        metadata.insert("manufacturer".to_string(), manufacturer.clone());
+    }
+
+    if let Some(product_name) = &device_info.product_name {
+        metadata.insert("product_name".to_string(), product_name.clone());
+    }
+
+    if let Some(model) = device_support::tflight_model(device_info) {
+        metadata.insert("device_family".to_string(), "tflight-hotas".to_string());
+        metadata.insert("model".to_string(), model.name().to_string());
+
+        let axis_mode = device_support::axis_mode_from_device_info(device_info);
+        metadata.insert("axis_mode".to_string(), axis_mode.as_str().to_string());
+
+        if let Some(warning) = device_support::axis_mode_warning(axis_mode) {
+            metadata.insert("warning.axis_mode".to_string(), warning.to_string());
+        }
+
+        metadata.insert(
+            "note.driver".to_string(),
+            device_support::driver_note().to_string(),
+        );
+
+        let mapping = device_support::tflight_default_mapping(axis_mode);
+        metadata.insert("default_mapping".to_string(), mapping.as_hint_string());
+
+        if let Some(note) = device_support::default_mapping_note(axis_mode) {
+            metadata.insert("note.default_mapping".to_string(), note.to_string());
+        }
+    }
+
+    metadata
+}
+
 #[derive(Debug)]
 pub struct MockProfileManager;
 
@@ -129,7 +282,7 @@ impl FlightServiceImpl {
             health_sender,
             service_start_time: SystemTime::now(),
             security_manager: Arc::new(tokio::sync::RwLock::new(SecurityManager::new())),
-            device_manager: Arc::new(MockDeviceManager),
+            device_manager: Arc::new(HidDeviceManager::new()),
             profile_manager: Arc::new(MockProfileManager),
         }
     }

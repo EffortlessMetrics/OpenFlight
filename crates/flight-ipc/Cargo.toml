@@ -37,6 +37,7 @@ tracing.workspace = true
 tokio-stream = { workspace = true, features = ["sync"] }
 futures-core = { workspace = true }
 flight-core = { path = "../flight-core" }
+flight-hid = { path = "../flight-hid" }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

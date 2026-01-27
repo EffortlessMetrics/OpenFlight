@@ -32,6 +32,7 @@ impl CougarMfdFixture {
                     device_path: "/test/hidraw0".to_string(),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
                 expected_led_count: 25,
                 verify_pattern_steps: 14, // Based on the verify pattern
@@ -48,6 +49,7 @@ impl CougarMfdFixture {
                     device_path: "/test/hidraw1".to_string(),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
                 expected_led_count: 25,
                 verify_pattern_steps: 14,
@@ -64,6 +66,7 @@ impl CougarMfdFixture {
                     device_path: "/test/hidraw2".to_string(),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
                 expected_led_count: 13,
                 verify_pattern_steps: 10, // Center has fewer steps

@@ -30,6 +30,7 @@ impl MockHidAdapter {
                     product_name: Some("Cougar MFD Left".to_string()),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
                 // Mock Cougar MFD Right
                 HidDeviceInfo {
@@ -41,6 +42,7 @@ impl MockHidAdapter {
                     product_name: Some("Cougar MFD Right".to_string()),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
             ],
             write_latency: Duration::from_micros(500), // 0.5ms default

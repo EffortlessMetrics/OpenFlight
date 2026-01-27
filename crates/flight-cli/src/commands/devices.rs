@@ -95,6 +95,22 @@ async fn list_devices(
                 "status": device_status_to_string(device.status()),
             });
 
+            let warnings: Vec<String> = device
+                .metadata
+                .iter()
+                .filter_map(|(key, value)| {
+                    if key.starts_with("warning.") {
+                        Some(value.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            if !warnings.is_empty() {
+                device_json["warnings"] = json!(warnings);
+            }
+
             if verbose {
                 if let Some(ref capabilities) = device.capabilities {
                     device_json["capabilities"] = json!({
@@ -157,6 +173,22 @@ async fn device_info(
         "type": device_type_to_string(device.r#type()),
         "status": device_status_to_string(device.status()),
     });
+
+    let warnings: Vec<String> = device
+        .metadata
+        .iter()
+        .filter_map(|(key, value)| {
+            if key.starts_with("warning.") {
+                Some(value.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if !warnings.is_empty() {
+        device_json["warnings"] = json!(warnings);
+    }
 
     // Always include detailed info for device info command
     if let Some(ref capabilities) = device.capabilities {

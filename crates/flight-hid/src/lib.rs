@@ -8,6 +8,8 @@
 
 #[cfg(test)]
 mod fd_safety_tests;
+pub mod device_support;
+pub mod hid_descriptor;
 pub mod ofp1;
 
 use flight_core::{
@@ -49,6 +51,8 @@ pub struct HidDeviceInfo {
     pub device_path: String,
     pub usage_page: u16,
     pub usage: u16,
+    /// Optional HID report descriptor for usage parsing and quirks.
+    pub report_descriptor: Option<Vec<u8>>,
 }
 
 /// HID endpoint state tracking
@@ -200,6 +204,7 @@ impl HidAdapter {
             device_path: "/dev/hidraw0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         self.register_device(device_info)?;
@@ -850,6 +855,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         assert!(adapter.register_device(device_info.clone()).is_ok());
@@ -870,6 +876,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         adapter.register_device(device_info.clone()).unwrap();
@@ -891,6 +898,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         adapter.register_device(device_info.clone()).unwrap();
