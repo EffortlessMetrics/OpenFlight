@@ -13,6 +13,10 @@ pub mod ofp1;
 use flight_core::{
     ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent,
 };
+use flight_metrics::{
+    MetricsRegistry,
+    common::{DEVICE_ERRORS_TOTAL, DEVICE_OPERATION_LATENCY_MS, DEVICE_OPERATIONS_TOTAL},
+};
 use flight_watchdog::WatchdogSystem;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -82,6 +86,8 @@ pub enum HidOperationResult {
 pub struct HidAdapter {
     /// Watchdog system for monitoring
     watchdog: Arc<Mutex<WatchdogSystem>>,
+    /// Shared metrics registry
+    metrics_registry: Arc<MetricsRegistry>,
     /// Connected devices
     devices: HashMap<String, HidDeviceInfo>,
     /// Endpoint states
@@ -95,10 +101,30 @@ impl HidAdapter {
     pub fn new(watchdog: Arc<Mutex<WatchdogSystem>>) -> Self {
         Self {
             watchdog,
+            metrics_registry: Arc::new(MetricsRegistry::new()),
             devices: HashMap::new(),
             endpoint_states: HashMap::new(),
             is_running: false,
         }
+    }
+
+    /// Create new HID adapter with shared metrics registry
+    pub fn new_with_metrics(
+        watchdog: Arc<Mutex<WatchdogSystem>>,
+        metrics_registry: Arc<MetricsRegistry>,
+    ) -> Self {
+        Self {
+            watchdog,
+            metrics_registry,
+            devices: HashMap::new(),
+            endpoint_states: HashMap::new(),
+            is_running: false,
+        }
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
     }
 
     /// Start the HID adapter
@@ -338,10 +364,13 @@ impl HidAdapter {
             endpoint_id.device_path, endpoint_id.endpoint_type
         ));
 
+        self.metrics_registry.inc_counter(DEVICE_OPERATIONS_TOTAL, 1);
+
         // Check if component is quarantined
         if let Ok(watchdog) = self.watchdog.lock()
             && watchdog.is_quarantined(&component)
         {
+            self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
             return Err(FlightError::Configuration(format!(
                 "USB endpoint {} is quarantined",
                 endpoint_id.device_path
@@ -351,6 +380,12 @@ impl HidAdapter {
         let start_time = Instant::now();
         let result = operation(endpoint_id);
         let operation_time = start_time.elapsed();
+
+        self.metrics_registry.observe(
+            DEVICE_OPERATION_LATENCY_MS,
+            operation_time.as_secs_f64() * 1000.0,
+        );
+        let had_error = !matches!(result, HidOperationResult::Success { .. });
 
         // Update endpoint state and notify watchdog
         if let Some(state) = self.endpoint_states.get_mut(endpoint_id) {
@@ -416,6 +451,10 @@ impl HidAdapter {
                     error!("USB endpoint error: {} - {}", error_code, description);
                 }
             }
+        }
+
+        if had_error {
+            self.metrics_registry.inc_counter(DEVICE_ERRORS_TOTAL, 1);
         }
 
         Ok(result)
