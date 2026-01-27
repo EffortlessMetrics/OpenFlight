@@ -24,13 +24,19 @@ pub const VKB_GLADIATOR_NXT_EVO_RIGHT_PID: u16 = 0x0200;
 pub const VKB_GLADIATOR_NXT_EVO_LEFT_PID: u16 = 0x0201;
 
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
+pub const USAGE_PAGE_BUTTON: u16 = 0x09;
 
 pub const USAGE_JOYSTICK: u16 = 0x04;
 pub const USAGE_X: u16 = 0x30;
 pub const USAGE_Y: u16 = 0x31;
+pub const USAGE_Z: u16 = 0x32;
+pub const USAGE_RX: u16 = 0x33;
+pub const USAGE_RY: u16 = 0x34;
 pub const USAGE_RZ: u16 = 0x35;
 pub const USAGE_SLIDER: u16 = 0x36;
 pub const USAGE_DIAL: u16 = 0x37;
+pub const USAGE_WHEEL: u16 = 0x38;
+pub const USAGE_HAT_SWITCH: u16 = 0x39;
 
 pub const AXIS_MODE_WARNING: &str =
     "Rudder sources are merged. Switch to full-axis mode for separate yaw inputs.";
@@ -70,9 +76,7 @@ impl VkbStecsVariant {
             VkbStecsVariant::RightSpaceThrottleGripMini => {
                 "VKB STECS Right Space Throttle Grip Mini"
             }
-            VkbStecsVariant::LeftSpaceThrottleGripMini => {
-                "VKB STECS Left Space Throttle Grip Mini"
-            }
+            VkbStecsVariant::LeftSpaceThrottleGripMini => "VKB STECS Left Space Throttle Grip Mini",
             VkbStecsVariant::RightSpaceThrottleGripMiniPlus => {
                 "VKB STECS Right Space Throttle Grip Mini+"
             }
@@ -347,6 +351,197 @@ pub struct DeviceControlMap {
     pub buttons: &'static [ButtonControl],
     pub encoders: &'static [EncoderControl],
     pub notes: &'static [&'static str],
+}
+
+const DESCRIPTOR_DISCOVERY_SCHEMA: &str = "flight.hid-discovery/1";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct DescriptorCounts {
+    pub axes: usize,
+    pub hats: usize,
+    pub buttons: usize,
+    pub other: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiscoveredAxis {
+    pub usage_page: u16,
+    pub usage: u16,
+    pub index: u8,
+    pub label: String,
+    pub suggested_logical: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiscoveredHat {
+    pub usage_page: u16,
+    pub usage: u16,
+    pub index: u8,
+    pub label: String,
+    pub suggested_logical: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DiscoveredButton {
+    pub usage_page: u16,
+    pub usage: u16,
+    pub index: u16,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DescriptorDiscovery {
+    pub schema: &'static str,
+    pub counts: DescriptorCounts,
+    pub usages: Vec<HidUsage>,
+    pub axes: Vec<DiscoveredAxis>,
+    pub hats: Vec<DiscoveredHat>,
+    pub buttons: Vec<DiscoveredButton>,
+    pub notes: Vec<String>,
+}
+
+const DESCRIPTOR_DISCOVERY_NOTES: [&str; 2] = [
+    "Derived from HID report descriptor usage tags; treat as best-effort.",
+    "Prefer logical min/max and report sizes when building authoritative maps.",
+];
+
+const VKB_DISCOVERY_NOTES: [&str; 2] = [
+    "VKBDevCfg can remap hats, ministicks, and axes; do not hardcode order.",
+    "GNX modules may expose multiple HID devices or collections; group by serial or arrival time.",
+];
+
+const VKB_GLADIATOR_DISCOVERY_NOTES: [&str; 2] = [
+    "Omni Throttle uses the same USB PID as Gladiator NXT EVO variants.",
+    "Treat default mappings as hints; prefer descriptor-first discovery.",
+];
+
+fn axis_label_for_usage(usage: u16) -> Option<&'static str> {
+    match usage {
+        USAGE_X => Some("X"),
+        USAGE_Y => Some("Y"),
+        USAGE_Z => Some("Z"),
+        USAGE_RX => Some("Rx"),
+        USAGE_RY => Some("Ry"),
+        USAGE_RZ => Some("Rz"),
+        USAGE_SLIDER => Some("Slider"),
+        USAGE_DIAL => Some("Dial"),
+        USAGE_WHEEL => Some("Wheel"),
+        _ => None,
+    }
+}
+
+fn suggested_logical_for_axis(usage: u16) -> Option<&'static str> {
+    match usage {
+        USAGE_X => Some("roll"),
+        USAGE_Y => Some("pitch"),
+        USAGE_RZ => Some("yaw_candidate"),
+        USAGE_SLIDER | USAGE_DIAL | USAGE_WHEEL => Some("throttle_candidate"),
+        _ => None,
+    }
+}
+
+fn suggested_logical_for_hat(usage: u16) -> Option<&'static str> {
+    if usage == USAGE_HAT_SWITCH {
+        Some("pov")
+    } else {
+        None
+    }
+}
+
+fn push_note_lines(target: &mut Vec<String>, notes: &[&str]) {
+    for note in notes {
+        target.push((*note).to_string());
+    }
+}
+
+pub fn descriptor_discovery_from_usages(usages: &[HidUsage]) -> DescriptorDiscovery {
+    let mut axes = Vec::new();
+    let mut hats = Vec::new();
+    let mut buttons = Vec::new();
+    let mut axis_index: u8 = 0;
+    let mut hat_index: u8 = 0;
+
+    for usage in usages {
+        if usage.usage_page == USAGE_PAGE_GENERIC_DESKTOP {
+            if usage.usage == USAGE_HAT_SWITCH {
+                hats.push(DiscoveredHat {
+                    usage_page: usage.usage_page,
+                    usage: usage.usage,
+                    index: hat_index,
+                    label: "Hat switch".to_string(),
+                    suggested_logical: suggested_logical_for_hat(usage.usage).map(str::to_string),
+                });
+                hat_index = hat_index.saturating_add(1);
+                continue;
+            }
+
+            if let Some(label) = axis_label_for_usage(usage.usage) {
+                axes.push(DiscoveredAxis {
+                    usage_page: usage.usage_page,
+                    usage: usage.usage,
+                    index: axis_index,
+                    label: label.to_string(),
+                    suggested_logical: suggested_logical_for_axis(usage.usage).map(str::to_string),
+                });
+                axis_index = axis_index.saturating_add(1);
+                continue;
+            }
+        }
+
+        if usage.usage_page == USAGE_PAGE_BUTTON {
+            let index = usage.usage;
+            buttons.push(DiscoveredButton {
+                usage_page: usage.usage_page,
+                usage: usage.usage,
+                index,
+                label: format!("Button {}", index),
+            });
+        }
+    }
+
+    let counts = DescriptorCounts {
+        axes: axes.len(),
+        hats: hats.len(),
+        buttons: buttons.len(),
+        other: usages
+            .len()
+            .saturating_sub(axes.len() + hats.len() + buttons.len()),
+    };
+
+    let mut notes = Vec::new();
+    push_note_lines(&mut notes, &DESCRIPTOR_DISCOVERY_NOTES);
+
+    DescriptorDiscovery {
+        schema: DESCRIPTOR_DISCOVERY_SCHEMA,
+        counts,
+        usages: usages.to_vec(),
+        axes,
+        hats,
+        buttons,
+        notes,
+    }
+}
+
+pub fn descriptor_discovery_from_descriptor(descriptor: &[u8]) -> DescriptorDiscovery {
+    let usages = extract_usages(descriptor);
+    descriptor_discovery_from_usages(&usages)
+}
+
+pub fn descriptor_discovery_from_device_info(
+    device_info: &HidDeviceInfo,
+) -> Option<DescriptorDiscovery> {
+    let descriptor = device_info.report_descriptor.as_deref()?;
+    let mut discovery = descriptor_discovery_from_descriptor(descriptor);
+
+    if device_info.vendor_id == VKB_VENDOR_ID {
+        push_note_lines(&mut discovery.notes, &VKB_DISCOVERY_NOTES);
+    }
+
+    if is_vkb_gladiator_device(device_info) {
+        push_note_lines(&mut discovery.notes, &VKB_GLADIATOR_DISCOVERY_NOTES);
+    }
+
+    Some(discovery)
 }
 
 const TFLIGHT_MAPPING_SEPARATE: [ControlBinding; 6] = [
@@ -1672,11 +1867,11 @@ pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant>
     match device_info.product_id {
         VKB_STECS_RIGHT_SPACE_MINI_PID => Some(VkbStecsVariant::RightSpaceThrottleGripMini),
         VKB_STECS_LEFT_SPACE_MINI_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripMini),
-        VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID => Some(VkbStecsVariant::RightSpaceThrottleGripMiniPlus),
-        VKB_STECS_LEFT_SPACE_MINI_PLUS_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus),
-        VKB_STECS_RIGHT_SPACE_STANDARD_PID => {
-            Some(VkbStecsVariant::RightSpaceThrottleGripStandard)
+        VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID => {
+            Some(VkbStecsVariant::RightSpaceThrottleGripMiniPlus)
         }
+        VKB_STECS_LEFT_SPACE_MINI_PLUS_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus),
+        VKB_STECS_RIGHT_SPACE_STANDARD_PID => Some(VkbStecsVariant::RightSpaceThrottleGripStandard),
         VKB_STECS_LEFT_SPACE_STANDARD_PID => Some(VkbStecsVariant::LeftSpaceThrottleGripStandard),
         _ => None,
     }
@@ -1774,6 +1969,45 @@ mod tests {
         ];
 
         assert_eq!(axis_mode_from_usages(&usages), AxisMode::Separate);
+    }
+
+    #[test]
+    fn test_descriptor_discovery_from_usages() {
+        let usages = vec![
+            HidUsage {
+                usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+                usage: USAGE_X,
+            },
+            HidUsage {
+                usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+                usage: USAGE_Y,
+            },
+            HidUsage {
+                usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+                usage: USAGE_HAT_SWITCH,
+            },
+            HidUsage {
+                usage_page: USAGE_PAGE_BUTTON,
+                usage: 1,
+            },
+            HidUsage {
+                usage_page: USAGE_PAGE_BUTTON,
+                usage: 2,
+            },
+            HidUsage {
+                usage_page: 0xFF00,
+                usage: 1,
+            },
+        ];
+
+        let discovery = descriptor_discovery_from_usages(&usages);
+        assert_eq!(discovery.counts.axes, 2);
+        assert_eq!(discovery.counts.hats, 1);
+        assert_eq!(discovery.counts.buttons, 2);
+        assert_eq!(discovery.counts.other, 1);
+        assert_eq!(discovery.axes[0].label, "X");
+        assert_eq!(discovery.hats[0].label, "Hat switch");
+        assert_eq!(discovery.buttons[0].label, "Button 1");
     }
 
     #[test]

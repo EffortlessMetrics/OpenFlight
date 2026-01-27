@@ -7,7 +7,9 @@
 //! for basic device identification and axis-mode quirks. It is not a full
 //! HID descriptor implementation.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use serde::Serialize;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct HidUsage {
     pub usage_page: u16,
     pub usage: u16,

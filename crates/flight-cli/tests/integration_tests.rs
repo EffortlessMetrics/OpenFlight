@@ -43,6 +43,7 @@ fn test_devices_help() {
     assert!(stdout.contains("Device management commands"));
     assert!(stdout.contains("list"));
     assert!(stdout.contains("info"));
+    assert!(stdout.contains("dump"));
 }
 
 #[test]
