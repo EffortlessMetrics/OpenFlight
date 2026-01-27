@@ -11,6 +11,7 @@ use crate::aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
+use flight_adapter_common::{AdapterMetrics, AdapterState};
 use flight_bus::adapters::SimAdapter;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, BusTypeError, SimId};
@@ -75,106 +76,6 @@ pub enum MsfsAdapterError {
     Configuration(String),
     #[error("Timeout: {0}")]
     Timeout(String),
-}
-
-/// MSFS adapter state
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AdapterState {
-    /// Disconnected from MSFS
-    Disconnected,
-    /// Connecting to MSFS
-    Connecting,
-    /// Connected but no aircraft detected
-    Connected,
-    /// Aircraft detected, setting up data definitions
-    DetectingAircraft,
-    /// Fully operational
-    Active,
-    /// Error state
-    Error,
-}
-
-/// Adapter metrics for monitoring update rate and jitter
-#[derive(Debug, Clone, Default)]
-pub struct AdapterMetrics {
-    /// Total number of telemetry updates received
-    pub total_updates: u64,
-    /// Last update timestamp
-    pub last_update_time: Option<Instant>,
-    /// Update intervals (for jitter calculation)
-    pub update_intervals: Vec<Duration>,
-    /// Maximum interval buffer size
-    pub max_interval_samples: usize,
-    /// Actual update rate (Hz) - calculated from recent intervals
-    pub actual_update_rate: f32,
-    /// Update jitter (p99 in milliseconds)
-    pub update_jitter_p99_ms: f32,
-    /// Last aircraft title (for change detection)
-    pub last_aircraft_title: Option<String>,
-    /// Aircraft change count
-    pub aircraft_changes: u64,
-}
-
-impl AdapterMetrics {
-    /// Create new metrics with default buffer size
-    pub fn new() -> Self {
-        Self {
-            max_interval_samples: 100, // Keep last 100 samples for jitter calculation
-            ..Default::default()
-        }
-    }
-
-    /// Record a telemetry update
-    pub fn record_update(&mut self) {
-        self.total_updates += 1;
-        let now = Instant::now();
-
-        if let Some(last_time) = self.last_update_time {
-            let interval = now.duration_since(last_time);
-            self.update_intervals.push(interval);
-
-            // Keep only recent samples
-            if self.update_intervals.len() > self.max_interval_samples {
-                self.update_intervals.remove(0);
-            }
-
-            // Calculate actual update rate from recent intervals
-            if !self.update_intervals.is_empty() {
-                let avg_interval: Duration = self.update_intervals.iter().sum::<Duration>()
-                    / self.update_intervals.len() as u32;
-                self.actual_update_rate = 1.0 / avg_interval.as_secs_f32();
-
-                // Calculate p99 jitter
-                let mut sorted_intervals = self.update_intervals.clone();
-                sorted_intervals.sort();
-                let p99_index = (sorted_intervals.len() as f32 * 0.99) as usize;
-                if p99_index < sorted_intervals.len() {
-                    self.update_jitter_p99_ms = sorted_intervals[p99_index].as_secs_f32() * 1000.0;
-                }
-            }
-        }
-
-        self.last_update_time = Some(now);
-    }
-
-    /// Record aircraft change
-    pub fn record_aircraft_change(&mut self, title: String) {
-        if self.last_aircraft_title.as_ref() != Some(&title) {
-            self.aircraft_changes += 1;
-            self.last_aircraft_title = Some(title);
-        }
-    }
-
-    /// Get metrics summary for logging/monitoring
-    pub fn summary(&self) -> String {
-        format!(
-            "Updates: {}, Rate: {:.1} Hz, Jitter p99: {:.2} ms, Aircraft changes: {}",
-            self.total_updates,
-            self.actual_update_rate,
-            self.update_jitter_p99_ms,
-            self.aircraft_changes
-        )
-    }
 }
 
 /// Main MSFS SimConnect adapter

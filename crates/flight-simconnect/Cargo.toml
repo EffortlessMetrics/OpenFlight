@@ -14,6 +14,7 @@ repository.workspace = true
 [dependencies]
 flight-core = { path = "../flight-core" }
 flight-bus = { path = "../flight-bus" }
+flight-adapter-common = { path = "../flight-adapter-common" }
 flight-simconnect-sys = { path = "../flight-simconnect-sys" }
 tokio = { workspace = true }
 serde = { workspace = true, optional = true }

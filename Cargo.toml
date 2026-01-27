@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/flight-adapter-common",
     "crates/flight-core",
     "crates/flight-ipc",
     "crates/flight-axis",
@@ -8,6 +9,7 @@ members = [
     "crates/flight-virtual",
     "crates/flight-ffb",
     "crates/flight-hid",
+    "crates/flight-metrics",
     "crates/flight-bus",
     "crates/flight-simconnect-sys",
     "crates/flight-simconnect",

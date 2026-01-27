@@ -40,7 +40,8 @@ pub mod session;
 pub mod transport;
 
 // Re-export main types
-pub use adapter::{AdapterMetrics, AdapterState, MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
+pub use adapter::{MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
+pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
 pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
