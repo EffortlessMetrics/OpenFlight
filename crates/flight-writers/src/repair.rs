@@ -11,14 +11,12 @@ use tracing::{debug, info, warn};
 
 /// Repairs simulator configurations by applying minimal diffs
 pub struct ConfigRepairer {
-    config_dir: PathBuf,
     backup_dir: PathBuf,
 }
 
 impl ConfigRepairer {
-    pub fn new<P: AsRef<Path>>(config_dir: P, backup_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(_config_dir: P, backup_dir: P) -> Self {
         Self {
-            config_dir: config_dir.as_ref().to_path_buf(),
             backup_dir: backup_dir.as_ref().to_path_buf(),
         }
     }

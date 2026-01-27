@@ -269,8 +269,7 @@ impl StreamDeckPlugin {
 
         // Create subscriber (in a real implementation, this would connect to the bus)
         // For now, we'll create a mock subscriber
-        let subscriber_id = format!("streamdeck-{}", self.config.plugin_uuid);
-        let subscriber = MockSubscriber::new(subscriber_id, subscription_config);
+        let subscriber = MockSubscriber::new(subscription_config);
         self.telemetry_subscriber = Some(Box::new(subscriber));
 
         debug!("Telemetry subscription initialized");
@@ -382,13 +381,12 @@ impl StreamDeckPlugin {
 
 /// Mock subscriber for testing
 struct MockSubscriber {
-    id: String,
     config: SubscriptionConfig,
 }
 
 impl MockSubscriber {
-    fn new(id: String, config: SubscriptionConfig) -> Self {
-        Self { id, config }
+    fn new(config: SubscriptionConfig) -> Self {
+        Self { config }
     }
 }
 

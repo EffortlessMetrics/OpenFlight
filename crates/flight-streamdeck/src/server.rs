@@ -251,7 +251,6 @@ impl Drop for StreamDeckServer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::time::{Duration, timeout};
 
     #[tokio::test]
     async fn test_server_creation() {

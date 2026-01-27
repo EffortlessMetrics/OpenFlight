@@ -1958,6 +1958,7 @@ mod prop_tests {
         );
     }
 
+    #[cfg(test)]
     fn create_test_snapshot() -> TelemetrySnapshot {
         TelemetrySnapshot {
             sim: SimId::Msfs,
@@ -1972,6 +1973,7 @@ mod prop_tests {
     }
 
     /// Test helper function that returns AutoSwitchConfig pointing to fixtures directory
+    #[cfg(test)]
     fn test_profile_repo() -> AutoSwitchConfig {
         let fixture_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles");
 

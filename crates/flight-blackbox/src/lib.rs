@@ -10,19 +10,17 @@
 //! - Size target <30MB/3min
 
 use std::fs::File;
-use std::io::{self, BufWriter, Read, Seek, SeekFrom, Write};
-use std::path::{Path, PathBuf};
+use std::io::{BufWriter, Write};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-mod time;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio::time::interval;
-use tracing::{debug, info, warn};
 
 /// Blackbox writer errors
 #[derive(Error, Debug)]
@@ -49,10 +47,6 @@ pub const CHUNK_SIZE: usize = 6 * 1024; // 6KB chunks
 pub const INDEX_INTERVAL_MS: u64 = 100; // Index every 100ms
 pub const FLUSH_INTERVAL_MS: u64 = 1000; // Flush every 1s
 pub const MAX_BUFFER_SIZE: usize = 1024 * 1024; // 1MB buffer before dropping
-const FOOTER_LEN_BYTES: u64 = 4;
-const MAX_HEADER_LEN: usize = 1 << 20; // 1MB
-const MAX_FOOTER_LEN: usize = 1 << 20; // 1MB
-const MAX_INDEX_LEN: usize = 64 * 1024 * 1024; // 64MB
 const RECORD_QUEUE_MAX: usize = 8192;
 const RECORD_QUEUE_DIVISOR: usize = 128;
 
@@ -173,13 +167,8 @@ pub struct BlackboxStats {
 /// Internal writer state
 struct WriterState {
     file: BufWriter<File>,
-    file_path: PathBuf,
     file_offset: u64,
-    index_entries: Vec<IndexEntry>,
-    last_index_timestamp_ns: Option<u64>,
     stream_counters: [u32; 3],
-    last_record_timestamp_ns: u64,
-    record_buffer: Vec<u8>,
 }
 
 /// Blackbox writer implementation
@@ -188,7 +177,6 @@ pub struct BlackboxWriter {
     record_tx: Option<mpsc::Sender<BlackboxRecord>>,
     record_rx: Option<mpsc::Receiver<BlackboxRecord>>,
     running: Arc<AtomicBool>,
-    stats: Arc<Mutex<BlackboxStats>>,
     drop_counter: Arc<AtomicU64>,
     current_header: Option<BlackboxHeader>,
     writer_handle: Option<tokio::task::JoinHandle<anyhow::Result<()>>>,
@@ -205,7 +193,6 @@ impl BlackboxWriter {
             record_tx: Some(tx),
             record_rx: Some(rx),
             running: Arc::new(AtomicBool::new(false)),
-            stats: Arc::new(Mutex::new(BlackboxStats::default())),
             drop_counter: Arc::new(AtomicU64::new(0)),
             current_header: None,
             writer_handle: None,
@@ -279,7 +266,7 @@ impl BlackboxWriter {
                     // In a real implementation we would update stats here
                     // For this simplified version, we skip the lock to avoid contention
                 }
-                Err(e) => {
+                Err(_) => {
                     self.drop_counter.fetch_add(1, Ordering::Relaxed);
                     return Err(BlackboxError::BufferOverflow.into());
                 }
@@ -313,13 +300,8 @@ async fn run_writer(
     let file = File::create(&path).map_err(BlackboxError::Io)?;
     let mut writer = WriterState {
         file: BufWriter::new(file),
-        file_path: path,
         file_offset: 0,
-        index_entries: Vec::new(),
-        last_index_timestamp_ns: None,
         stream_counters: [0; 3],
-        last_record_timestamp_ns: 0,
-        record_buffer: Vec::with_capacity(CHUNK_SIZE),
     };
 
     // Write header
@@ -344,7 +326,7 @@ async fn run_writer(
     }
     
     // Write footer on close
-    let now_ns = SystemTime::now()
+    let _now_ns = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or(Duration::from_secs(0))
         .as_nanos() as u64;
