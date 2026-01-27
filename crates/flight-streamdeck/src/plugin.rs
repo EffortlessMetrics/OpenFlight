@@ -420,6 +420,7 @@ impl TelemetrySubscriber for MockSubscriber {
 mod tests {
     use super::*;
     use tokio::time::{Duration, timeout};
+    use tokio::sync::mpsc;
 
     #[tokio::test]
     async fn test_plugin_creation() {
@@ -495,5 +496,116 @@ mod tests {
         let verify_result = result.unwrap();
         assert!(verify_result.success);
         assert!(verify_result.round_trip_time_ms > 0);
+    }
+
+    #[tokio::test]
+    async fn test_telemetry_subscription_uses_config() {
+        let config = PluginConfig {
+            telemetry_update_rate_hz: 42,
+            event_buffer_size: 256,
+            ..PluginConfig::default()
+        };
+        let mut plugin = StreamDeckPlugin::new(config.clone()).unwrap();
+
+        let result = plugin.initialize_telemetry_subscription().await;
+        assert!(result.is_ok());
+
+        let subscriber = plugin
+            .telemetry_subscriber
+            .as_ref()
+            .expect("subscriber should be initialized");
+        let sub_config = subscriber.get_config();
+        assert_eq!(sub_config.max_rate_hz, config.telemetry_update_rate_hz as f32);
+        assert_eq!(sub_config.buffer_size, config.event_buffer_size);
+        assert!(sub_config.drop_on_full);
+    }
+
+    #[tokio::test]
+    async fn test_start_event_processing_requires_receiver() {
+        let config = PluginConfig::default();
+        let mut plugin = StreamDeckPlugin::new(config).unwrap();
+
+        plugin.event_rx.take();
+        let result = plugin.start_event_processing().await;
+
+        assert!(matches!(result, Err(PluginError::NotInitialized)));
+    }
+
+    #[tokio::test]
+    async fn test_send_event_fails_when_channel_closed() {
+        let config = PluginConfig::default();
+        let mut plugin = StreamDeckPlugin::new(config).unwrap();
+
+        plugin.event_rx.take();
+
+        let event = PluginEvent::ActionTriggered {
+            action_uuid: "test-action".to_string(),
+            context: "test-context".to_string(),
+        };
+
+        let result = plugin.send_event(event);
+        assert!(matches!(result, Err(PluginError::EventProcessingFailed(_))));
+    }
+
+    #[tokio::test]
+    async fn test_event_processing_loop_sets_disconnected_on_channel_close() {
+        let (event_tx, event_rx) = mpsc::unbounded_channel();
+        drop(event_tx);
+
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+        let _shutdown_tx = shutdown_tx;
+
+        let state = Arc::new(RwLock::new(PluginState::Connected));
+        let current_telemetry = Arc::new(RwLock::new(None));
+
+        StreamDeckPlugin::event_processing_loop(
+            event_rx,
+            shutdown_rx,
+            Arc::clone(&state),
+            Arc::clone(&current_telemetry),
+        )
+        .await;
+
+        let final_state = state.read().await.clone();
+        assert!(matches!(final_state, PluginState::Disconnected));
+    }
+
+    #[tokio::test]
+    async fn test_telemetry_update_event_updates_current_telemetry() {
+        let config = PluginConfig::default();
+        let mut plugin = StreamDeckPlugin::new(config).unwrap();
+
+        plugin.initialize().await.unwrap();
+
+        let snapshot = BusSnapshot::default();
+        plugin
+            .send_event(PluginEvent::TelemetryUpdate(snapshot.clone()))
+            .unwrap();
+
+        let result = timeout(Duration::from_secs(1), async {
+            loop {
+                if let Some(current) = plugin.get_current_telemetry().await {
+                    return current;
+                }
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await;
+
+        assert!(result.is_ok());
+        let current = result.unwrap();
+        assert_eq!(current, snapshot);
+    }
+
+    #[tokio::test]
+    async fn test_shutdown_leaves_state_as_shutdown() {
+        let config = PluginConfig::default();
+        let mut plugin = StreamDeckPlugin::new(config).unwrap();
+
+        plugin.initialize().await.unwrap();
+        plugin.shutdown().await.unwrap();
+
+        let state = plugin.get_state().await;
+        assert!(matches!(state, PluginState::Shutdown));
     }
 }
