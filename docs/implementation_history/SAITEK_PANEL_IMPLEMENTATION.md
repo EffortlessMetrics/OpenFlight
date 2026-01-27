@@ -8,13 +8,13 @@ I have successfully implemented task 20 from the Flight Hub specification: "Sait
 
 ### Core Components
 
-1. **SaitekPanelWriter** (`crates/flight-panels/src/saitek.rs`)
+1. **SaitekPanelWriter** (`crates/flight-panels-saitek/src/saitek.rs`)
    - HID driver for common panel hardware (Radio Panel, Multi Panel, Switch Panel, BIP, FIP)
    - Mapping from rules engine to LEDs/switches
    - ≤20ms latency validation with comprehensive tracking
    - Rate limiting (≥8ms minimum interval per requirements)
 
-2. **VerifyMatrix** (`crates/flight-panels/src/verify_matrix.rs`)
+2. **VerifyMatrix** (`crates/flight-panels-saitek/src/verify_matrix.rs`)
    - Systematic testing framework for panel configurations
    - Drift detection and automated repair capabilities
    - Comprehensive latency analysis and trend monitoring

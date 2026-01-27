@@ -6,10 +6,11 @@
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
 
-pub mod device_support;
+pub use flight_hid_support::HidDeviceInfo;
+pub use flight_hid_support::device_support;
 #[cfg(test)]
 mod fd_safety_tests;
-pub mod hid_descriptor;
+pub use flight_hid_support::hid_descriptor;
 pub mod ofp1;
 
 use flight_core::{ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent};
@@ -36,21 +37,6 @@ pub enum EndpointType {
     Input,
     Output,
     Feature,
-}
-
-/// HID device information
-#[derive(Debug, Clone)]
-pub struct HidDeviceInfo {
-    pub vendor_id: u16,
-    pub product_id: u16,
-    pub serial_number: Option<String>,
-    pub manufacturer: Option<String>,
-    pub product_name: Option<String>,
-    pub device_path: String,
-    pub usage_page: u16,
-    pub usage: u16,
-    /// Optional HID report descriptor for usage parsing and quirks.
-    pub report_descriptor: Option<Vec<u8>>,
 }
 
 /// HID endpoint state tracking

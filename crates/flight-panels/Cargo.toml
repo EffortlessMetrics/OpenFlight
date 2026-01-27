@@ -13,21 +13,19 @@ repository.workspace = true
 
 [features]
 default = []
-test-helpers = []
-tests-optin = []
+test-helpers = ["flight-panels-core/test-helpers"]
+tests-optin = ["test-helpers"]
 
 [dependencies]
 flight-core = { path = "../flight-core" }
-flight-watchdog = { path = "../flight-watchdog" }
 flight-hid = { path = "../flight-hid" }
-flight-metrics = { path = "../flight-metrics" }
-serde.workspace = true
-serde_json.workspace = true
-anyhow.workspace = true
-thiserror.workspace = true
-tracing.workspace = true
+flight-panels-core = { path = "../flight-panels-core" }
+flight-panels-saitek = { path = "../flight-panels-saitek" }
+flight-panels-cougar = { path = "../flight-panels-cougar" }
 
 [dev-dependencies]
+flight-panels-core = { path = "../flight-panels-core", features = ["test-helpers"] }
+flight-watchdog = { path = "../flight-watchdog" }
 proptest.workspace = true
 tempfile.workspace = true
 
