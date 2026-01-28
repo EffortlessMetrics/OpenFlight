@@ -4,8 +4,8 @@
 //! Tests for Saitek/Logitech panel writer
 
 use super::*;
-use flight_watchdog::WatchdogSystem;
 use flight_hid::HidAdapter;
+use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -24,6 +24,7 @@ fn create_test_device_info(panel_type: PanelType) -> HidDeviceInfo {
         device_path: format!("/dev/test_{:04x}", panel_type as u16),
         usage_page: 0x01,
         usage: 0x04,
+        report_descriptor: None,
     }
 }
 

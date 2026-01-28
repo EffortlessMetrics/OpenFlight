@@ -40,10 +40,11 @@ pub mod session;
 pub mod transport;
 
 // Re-export main types
-pub use adapter::{AdapterMetrics, AdapterState, MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
+pub use adapter::{MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
 pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
 pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
+pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use mapping::{MappingConfig, MappingError, VariableMapping};
 pub use sanity_gate::{SanityGate, SanityGateConfig, SanityState};
 pub use session::{SessionConfig, SessionError, SimConnectSession};

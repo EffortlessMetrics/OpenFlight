@@ -15,7 +15,6 @@ pub enum RulesError {
 
 pub type Result<T> = std::result::Result<T, RulesError>;
 
-
 /// Rules DSL schema version 1
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RulesSchema {
@@ -157,11 +156,7 @@ impl RulesSchema {
         // Validate each rule
         for (index, rule) in self.rules.iter().enumerate() {
             if let Err(e) = self.validate_rule(rule) {
-                return Err(RulesError::Validation(format!(
-                    "Rule {}: {}",
-                    index + 1,
-                    e
-                )));
+                return Err(RulesError::Validation(format!("Rule {}: {}", index + 1, e)));
             }
         }
 
@@ -268,9 +263,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" == ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
 
             return Ok(Condition::Compare {
                 variable,
@@ -282,9 +277,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" > ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
 
             return Ok(Condition::Compare {
                 variable,
@@ -674,7 +669,7 @@ mod tests {
         #[test]
         fn prop_parse_boolean_condition(var_name in "[a-zA-Z_][a-zA-Z0-9_]*") {
             let compiler = RulesCompiler::new(HashMap::new());
-            
+
             // Positive case
             if let Ok(Condition::Boolean { variable, negate }) = compiler.parse_condition(&var_name) {
                 prop_assert_eq!(variable, var_name.clone());
@@ -692,11 +687,11 @@ mod tests {
         // Test parsing of numeric comparisons
         #[test]
         fn prop_parse_numeric_comparison(
-            var_name in "[a-zA-Z_][a-zA-Z0-9_]*", 
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
             val in -1000.0f32..1000.0
         ) {
             let compiler = RulesCompiler::new(HashMap::new());
-            
+
             // Greater than
             let expr = format!("{} > {}", var_name, val);
             if let Ok(Condition::Compare { variable, operator, value }) = compiler.parse_condition(&expr) {

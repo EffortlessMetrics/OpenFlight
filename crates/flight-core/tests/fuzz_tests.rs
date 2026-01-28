@@ -1,5 +1,5 @@
-use flight_profile::{Profile, PROFILE_SCHEMA_VERSION};
-use flight_rules::{RulesSchema, Rule};
+use flight_profile::{PROFILE_SCHEMA_VERSION, Profile};
+use flight_rules::{Rule, RulesSchema};
 use proptest::prelude::*;
 
 //
@@ -54,7 +54,7 @@ proptest! {
         // Construct a partial profile with weird values
         // We use string interpolation or manual JSON construction to bypass type checks if we were using structs directly?
         // No, we can use the struct.
-        
+
         use flight_profile::{AxisConfig, AircraftId};
         use std::collections::HashMap;
 
@@ -113,7 +113,7 @@ proptest! {
     #[test]
     fn test_units_normalization_robustness(val in arb_weird_f32()) {
         use flight_units::angles;
-        
+
         let _ = angles::normalize_degrees_signed(val);
         let _ = angles::normalize_degrees_unsigned(val);
     }
@@ -121,7 +121,7 @@ proptest! {
     #[test]
     fn test_units_conversion_robustness(val in arb_weird_f32()) {
         use flight_units::conversions;
-        
+
         // These are pure math, should not panic even with NaN/Inf
         let _ = conversions::degrees_to_radians(val);
         let _ = conversions::knots_to_mps(val);

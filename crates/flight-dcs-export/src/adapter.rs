@@ -9,7 +9,15 @@
 use crate::mp_detection::{MpDetectionError, MpDetector, SessionType};
 use crate::socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
 use anyhow::Result;
+use flight_adapter_common::{AdapterConfig, AdapterError, AdapterMetrics, AdapterState};
 use flight_bus::{BusPublisher, BusSnapshot, PublisherError, snapshot::*, types::*};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{
+        ADAPTER_ERRORS_TOTAL, ADAPTER_TIME_SINCE_LAST_PACKET_MS, ADAPTER_UPDATE_LATENCY_MS,
+        ADAPTER_UPDATES_TOTAL,
+    },
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -45,6 +53,24 @@ impl Default for DcsAdapterConfig {
     }
 }
 
+impl AdapterConfig for DcsAdapterConfig {
+    fn publish_rate_hz(&self) -> f32 {
+        self.update_rate
+    }
+
+    fn connection_timeout(&self) -> Duration {
+        self.connection_timeout
+    }
+
+    fn max_reconnect_attempts(&self) -> u32 {
+        0
+    }
+
+    fn enable_auto_reconnect(&self) -> bool {
+        false
+    }
+}
+
 /// DCS adapter errors
 #[derive(Error, Debug)]
 pub enum DcsAdapterError {
@@ -62,6 +88,8 @@ pub enum DcsAdapterError {
     ConnectionTimeout,
     #[error("Invalid aircraft data: {reason}")]
     InvalidAircraft { reason: String },
+    #[error(transparent)]
+    Adapter(#[from] AdapterError),
 }
 
 /// DCS connection state
@@ -81,6 +109,9 @@ pub struct DcsAdapter {
     socket_bridge: SocketBridge,
     bus_publisher: BusPublisher,
     pub(crate) mp_detector: MpDetector,
+    state: AdapterState,
+    metrics: AdapterMetrics,
+    metrics_registry: MetricsRegistry,
     active_connection: Option<DcsConnection>,
     last_publish: Instant,
     blocked_features_notified: HashMap<String, Instant>,
@@ -98,6 +129,9 @@ impl DcsAdapter {
             socket_bridge,
             bus_publisher,
             mp_detector,
+            state: AdapterState::Disconnected,
+            metrics: AdapterMetrics::new(),
+            metrics_registry: MetricsRegistry::new(),
             active_connection: None,
             last_publish: Instant::now(),
             blocked_features_notified: HashMap::new(),
@@ -108,7 +142,12 @@ impl DcsAdapter {
     pub async fn start(&mut self) -> Result<(), DcsAdapterError> {
         info!("Starting DCS adapter");
 
-        self.socket_bridge.start().await?;
+        self.state = AdapterState::Connecting;
+        if let Err(err) = self.socket_bridge.start().await {
+            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            self.state = AdapterState::Error;
+            return Err(err.into());
+        }
 
         info!("DCS adapter started, waiting for connections");
         Ok(())
@@ -130,18 +169,37 @@ impl DcsAdapter {
     /// Update adapter state
     async fn update(&mut self) -> Result<(), DcsAdapterError> {
         // Accept new connections
-        if let Some(addr) = self.socket_bridge.accept_connection().await? {
-            info!("New DCS connection from {}", addr);
+        match self.socket_bridge.accept_connection().await {
+            Ok(Some(addr)) => {
+                info!("New DCS connection from {}", addr);
+            }
+            Ok(None) => {}
+            Err(err) => {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                return Err(err.into());
+            }
         }
 
         // Process messages
-        let messages = self.socket_bridge.process_messages().await?;
+        let messages = self.socket_bridge.process_messages().await.map_err(|err| {
+            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            err
+        })?;
         for (addr, message) in messages {
-            self.handle_message(addr, message).await?;
+            if let Err(err) = self.handle_message(addr, message).await {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                return Err(err);
+            }
         }
 
         // Maintain connections
-        self.socket_bridge.maintain_connections().await?;
+        self.socket_bridge
+            .maintain_connections()
+            .await
+            .map_err(|err| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                err
+            })?;
 
         // Check connection health
         self.check_connection_health().await?;
@@ -167,6 +225,7 @@ impl DcsAdapter {
             }
             DcsMessage::Error { code, message } => {
                 warn!("DCS error from {}: {} - {}", addr, code, message);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
             _ => {
                 debug!("Unhandled message from {}: {:?}", addr, message);
@@ -194,6 +253,7 @@ impl DcsAdapter {
             };
 
             self.active_connection = Some(connection);
+            self.state = AdapterState::Connected;
             info!(
                 "DCS handshake completed with {} (version {})",
                 addr, version
@@ -218,6 +278,7 @@ impl DcsAdapter {
             } => (timestamp, aircraft, session_type, data),
             _ => return Ok(()),
         };
+        let update_start = Instant::now();
 
         // Update MP detector
         let mut session_data = data.clone();
@@ -251,6 +312,22 @@ impl DcsAdapter {
         let snapshot = self.convert_to_bus_snapshot(timestamp, &aircraft_name, &data)?;
         self.publish_snapshot(snapshot).await?;
 
+        let update_latency = update_start.elapsed();
+        self.metrics.record_update();
+        self.metrics.record_aircraft_change(aircraft_name.clone());
+        self.metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
+        self.metrics_registry.observe(
+            ADAPTER_UPDATE_LATENCY_MS,
+            update_latency.as_secs_f64() * 1000.0,
+        );
+        if let Some(since) = self.time_since_last_telemetry() {
+            self.metrics_registry.set_gauge(
+                ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+                since.as_secs_f64() * 1000.0,
+            );
+        }
+        self.state = AdapterState::Active;
+
         Ok(())
     }
 
@@ -260,6 +337,9 @@ impl DcsAdapter {
             && connection.addr == addr
         {
             connection.last_telemetry = Instant::now();
+            if !matches!(self.state, AdapterState::Active) {
+                self.state = AdapterState::Connected;
+            }
         }
         Ok(())
     }
@@ -463,11 +543,21 @@ impl DcsAdapter {
         if let Some(connection) = &self.active_connection {
             let now = Instant::now();
             let timeout = self.config.connection_timeout;
+            let since = now.duration_since(connection.last_telemetry);
 
-            if now.duration_since(connection.last_telemetry) > timeout {
+            self.metrics_registry.set_gauge(
+                ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+                since.as_secs_f64() * 1000.0,
+            );
+
+            if since > timeout {
                 warn!("DCS connection {} timed out", connection.addr);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                 self.active_connection = None;
+                self.state = AdapterState::Disconnected;
             }
+        } else if matches!(self.state, AdapterState::Active | AdapterState::Connected) {
+            self.state = AdapterState::Disconnected;
         }
         Ok(())
     }
@@ -490,6 +580,21 @@ impl DcsAdapter {
     /// Check if feature is blocked with user message
     pub fn check_feature_blocked(&self, feature: &str) -> Option<String> {
         self.mp_detector.blocked_feature_message(feature)
+    }
+
+    /// Get current adapter state
+    pub fn state(&self) -> AdapterState {
+        self.state
+    }
+
+    /// Get adapter metrics snapshot
+    pub fn metrics(&self) -> AdapterMetrics {
+        self.metrics.clone()
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> &MetricsRegistry {
+        &self.metrics_registry
     }
 
     /// Get connection timeout status (for metrics)

@@ -192,6 +192,57 @@ impl Scheduler {
     }
 }
 
+#[cfg(test)]
+mod prop_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        // Test PLL phase correction logic
+        #[test]
+        fn prop_pll_convergence(
+            error_ns in -1_000_000i64..1_000_000i64, // +/- 1ms error
+            base_period in 3_000_000f64..5_000_000f64 // 3-5ms period
+        ) {
+            let mut pll = Pll::new(0.001, base_period);
+            let corrected = pll.update(error_ns as f64);
+
+            // Correction should oppose the error
+            if error_ns > 0 {
+                // If we are late (positive error), period should decrease to catch up
+                prop_assert!(corrected < base_period);
+            } else if error_ns < 0 {
+                // If we are early (negative error), period should increase to slow down
+                prop_assert!(corrected > base_period);
+            } else {
+                prop_assert!((corrected - base_period).abs() < 1e-9);
+            }
+
+            // Correction should be bounded (prevent extreme swings)
+            let max_change = base_period * 0.1; // 10% max change usually
+            prop_assert!((corrected - base_period).abs() <= max_change * 2.0); // Rough check
+        }
+
+        // Test SchedulerConfig validity
+        #[test]
+        fn prop_scheduler_config_validity(
+            frequency_hz in 1u32..1000,
+            busy_spin_us in 0u32..1000
+        ) {
+            let config = SchedulerConfig {
+                frequency_hz,
+                busy_spin_us,
+                pll_gain: 0.001,
+                measure_jitter: true,
+            };
+
+            let scheduler = Scheduler::new(config);
+            // Just verifying construction doesn't panic and values are derived correctly
+            prop_assert!(scheduler.period_ns > 0);
+        }
+    }
+}
+
 /// Result of a scheduler tick
 #[derive(Debug, Clone)]
 pub struct TickResult {

@@ -595,7 +595,7 @@ mod tests {
             // Canonicalization round trip
             let canonical = profile.canonicalize();
             let parsed: Profile = serde_json::from_str(&canonical).unwrap();
-            
+
             // Note: Floating point comparison issues may arise if we compare directly
             // but the canonicalize fn rounds to 6 decimals, so it should be stable.
             // We verify the hash is stable.

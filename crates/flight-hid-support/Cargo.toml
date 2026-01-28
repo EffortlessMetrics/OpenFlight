@@ -1,0 +1,16 @@
+[package]
+name = "flight-hid-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dependencies]
+flight-hid-types = { path = "../flight-hid-types" }
+serde.workspace = true

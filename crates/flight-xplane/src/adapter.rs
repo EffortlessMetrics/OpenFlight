@@ -14,6 +14,9 @@ use crate::{
     udp::{UdpClient, UdpConfig},
     web_api::{WebApiClient, WebApiConfig},
 };
+use flight_adapter_common::{
+    AdapterConfig, AdapterError, AdapterMetrics, AdapterState, ReconnectionStrategy,
+};
 use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
@@ -22,6 +25,13 @@ use flight_bus::{
 };
 use flight_core::units::conversions;
 use flight_core::{FlightError, Result};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{
+        ADAPTER_ERRORS_TOTAL, ADAPTER_TIME_SINCE_LAST_PACKET_MS, ADAPTER_UPDATE_LATENCY_MS,
+        ADAPTER_UPDATES_TOTAL,
+    },
+};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -47,6 +57,8 @@ pub enum XPlaneError {
     LatencyBudget { actual_ms: u64, budget_ms: u64 },
     #[error("Configuration error: {message}")]
     Config { message: String },
+    #[error(transparent)]
+    Adapter(#[from] AdapterError),
     #[error("Connection timeout")]
     Timeout,
     #[error("X-Plane not running or not responding")]
@@ -95,6 +107,24 @@ impl Default for XPlaneAdapterConfig {
     }
 }
 
+impl AdapterConfig for XPlaneAdapterConfig {
+    fn publish_rate_hz(&self) -> f32 {
+        self.publish_rate_hz as f32
+    }
+
+    fn connection_timeout(&self) -> Duration {
+        Duration::from_millis(self.dataref_timeout_ms)
+    }
+
+    fn max_reconnect_attempts(&self) -> u32 {
+        self.max_retries
+    }
+
+    fn enable_auto_reconnect(&self) -> bool {
+        self.max_retries > 0
+    }
+}
+
 /// Raw X-Plane telemetry data
 #[derive(Debug, Clone)]
 pub struct XPlaneRawData {
@@ -113,6 +143,9 @@ pub struct XPlaneAdapter {
     aircraft_detector: AircraftDetector,
     latency_tracker: LatencyTracker,
     bus_publisher: Arc<BusPublisher>,
+    state: Arc<RwLock<AdapterState>>,
+    metrics: Arc<RwLock<AdapterMetrics>>,
+    metrics_registry: Arc<MetricsRegistry>,
     current_aircraft: Arc<RwLock<Option<DetectedAircraft>>>,
     running: Arc<RwLock<bool>>,
     last_packet_time: Arc<RwLock<Option<Instant>>>,
@@ -158,6 +191,9 @@ impl XPlaneAdapter {
             aircraft_detector,
             latency_tracker,
             bus_publisher,
+            state: Arc::new(RwLock::new(AdapterState::Disconnected)),
+            metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
+            metrics_registry: Arc::new(MetricsRegistry::new()),
             current_aircraft: Arc::new(RwLock::new(None)),
             running: Arc::new(RwLock::new(false)),
             last_packet_time: Arc::new(RwLock::new(None)),
@@ -172,9 +208,14 @@ impl XPlaneAdapter {
 
         // Set running flag
         *self.running.write().unwrap() = true;
+        *self.state.write().unwrap() = AdapterState::Connecting;
 
         // Test connection to X-Plane
-        self.test_connection().await?;
+        if let Err(err) = self.test_connection_with_retries().await {
+            *self.state.write().unwrap() = AdapterState::Error;
+            return Err(err);
+        }
+        *self.state.write().unwrap() = AdapterState::Connected;
 
         // Start telemetry publishing task
         let publish_handle = self.start_telemetry_publisher().await?;
@@ -217,6 +258,7 @@ impl XPlaneAdapter {
     pub async fn stop(&self) -> Result<()> {
         info!("Stopping X-Plane adapter");
         *self.running.write().unwrap() = false;
+        *self.state.write().unwrap() = AdapterState::Disconnected;
         Ok(())
     }
 
@@ -239,11 +281,45 @@ impl XPlaneAdapter {
             }
             Ok(Err(e)) => {
                 error!("Failed to connect to X-Plane: {}", e);
-                Err(XPlaneError::NotRunning.into())
+                Err(XPlaneError::Adapter(AdapterError::NotConnected).into())
             }
             Err(_) => {
                 error!("Connection to X-Plane timed out");
-                Err(XPlaneError::Timeout.into())
+                Err(XPlaneError::Adapter(AdapterError::Timeout(
+                    "Connection to X-Plane timed out".to_string(),
+                ))
+                .into())
+            }
+        }
+    }
+
+    async fn test_connection_with_retries(&self) -> Result<()> {
+        let strategy = ReconnectionStrategy::new(
+            self.config.max_retries.max(1),
+            Duration::from_millis(200),
+            self.connection_timeout,
+        );
+        let mut attempt = 1;
+
+        loop {
+            match self.test_connection().await {
+                Ok(()) => return Ok(()),
+                Err(err) => {
+                    self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+
+                    if !strategy.should_retry(attempt) {
+                        return Err(err);
+                    }
+
+                    let backoff = strategy.next_backoff(attempt);
+                    warn!(
+                        "X-Plane connection attempt {} failed; retrying in {:.2}s",
+                        attempt,
+                        backoff.as_secs_f32()
+                    );
+                    tokio::time::sleep(backoff).await;
+                    attempt += 1;
+                }
             }
         }
     }
@@ -256,6 +332,9 @@ impl XPlaneAdapter {
         let dataref_manager = self.dataref_manager.clone();
         let latency_tracker = self.latency_tracker.clone();
         let _bus_publisher = self.bus_publisher.clone();
+        let state = self.state.clone();
+        let metrics = self.metrics.clone();
+        let metrics_registry = self.metrics_registry.clone();
         let current_aircraft = self.current_aircraft.clone();
         let running = self.running.clone();
         let last_packet_time = self.last_packet_time.clone();
@@ -285,9 +364,18 @@ impl XPlaneAdapter {
                         "X-Plane connection timeout: no packets received for {} seconds",
                         connection_timeout.as_secs()
                     );
+                    metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                    *state.write().unwrap() = AdapterState::Disconnected;
                     // TODO: Mark BusSnapshot as invalid and transition to disconnected state
                     // This would be implemented when integrating with the full state machine
                     continue;
+                }
+
+                if let Some(last_packet) = *last_packet_time.read().unwrap() {
+                    metrics_registry.set_gauge(
+                        ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+                        last_packet.elapsed().as_secs_f64() * 1000.0,
+                    );
                 }
 
                 // Get current aircraft
@@ -321,6 +409,11 @@ impl XPlaneAdapter {
                                     let latency = start_time.elapsed();
                                     latency_tracker.record_measurement(latency);
 
+                                    metrics_registry.observe(
+                                        ADAPTER_UPDATE_LATENCY_MS,
+                                        latency.as_secs_f64() * 1000.0,
+                                    );
+
                                     // Check latency budget
                                     if latency.as_millis() as u64 > config.latency_budget_ms {
                                         warn!(
@@ -330,6 +423,15 @@ impl XPlaneAdapter {
                                         );
                                     }
 
+                                    metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
+                                    {
+                                        let mut metrics_guard = metrics.write().unwrap();
+                                        metrics_guard.record_update();
+                                        metrics_guard
+                                            .record_aircraft_change(aircraft.title.clone());
+                                    }
+                                    *state.write().unwrap() = AdapterState::Active;
+
                                     // Publish to bus
                                     // Note: In a real implementation, we would need to handle the mutable reference properly
                                     // For now, we'll skip the actual publishing in this simplified version
@@ -337,15 +439,18 @@ impl XPlaneAdapter {
                                 }
                                 Err(e) => {
                                     error!("Failed to convert raw data to snapshot: {}", e);
+                                    metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                                 }
                             }
                         }
                         Err(e) => {
                             error!("Failed to collect telemetry data: {}", e);
+                            metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                         }
                     }
                 } else {
                     debug!("No aircraft detected, skipping telemetry collection");
+                    *state.write().unwrap() = AdapterState::Connected;
                 }
             }
         });
@@ -360,6 +465,9 @@ impl XPlaneAdapter {
         let aircraft_detector = self.aircraft_detector.clone();
         let current_aircraft = self.current_aircraft.clone();
         let running = self.running.clone();
+        let state = self.state.clone();
+        let metrics = self.metrics.clone();
+        let metrics_registry = self.metrics_registry.clone();
 
         let handle = tokio::spawn(async move {
             let mut interval = interval(Duration::from_secs(
@@ -379,12 +487,21 @@ impl XPlaneAdapter {
 
                         if changed {
                             info!("Aircraft changed to: {}", detected.icao);
+                            {
+                                let mut metrics_guard = metrics.write().unwrap();
+                                metrics_guard.record_aircraft_change(detected.title.clone());
+                            }
                             *aircraft_guard = Some(detected);
                         }
+                        *state.write().unwrap() = AdapterState::Active;
                     }
                     Err(e) => {
                         debug!("Aircraft detection failed: {}", e);
+                        metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                         // Don't clear current aircraft on detection failure
+                        if current_aircraft.read().unwrap().is_none() {
+                            *state.write().unwrap() = AdapterState::Connected;
+                        }
                     }
                 }
             }
@@ -755,6 +872,21 @@ impl XPlaneAdapter {
         self.latency_tracker.get_stats()
     }
 
+    /// Get current adapter state
+    pub fn state(&self) -> AdapterState {
+        *self.state.read().unwrap()
+    }
+
+    /// Get adapter metrics snapshot
+    pub fn metrics(&self) -> AdapterMetrics {
+        self.metrics.read().unwrap().clone()
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
+    }
+
     /// Get current aircraft information
     pub fn get_current_aircraft(&self) -> Option<DetectedAircraft> {
         self.current_aircraft.read().unwrap().clone()
@@ -778,6 +910,7 @@ impl XPlaneAdapter {
     }
 
     /// Update last packet time (called when telemetry is successfully received)
+    #[cfg(test)]
     fn update_last_packet_time(&self) {
         let mut last_packet = self.last_packet_time.write().unwrap();
         *last_packet = Some(Instant::now());

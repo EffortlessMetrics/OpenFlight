@@ -14,6 +14,8 @@ repository.workspace = true
 [dependencies]
 flight-core = { path = "../flight-core" }
 flight-bus = { path = "../flight-bus" }
+flight-adapter-common = { path = "../flight-adapter-common" }
+flight-metrics = { path = "../flight-metrics" }
 tokio = { workspace = true, features = ["net", "time", "sync", "rt"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

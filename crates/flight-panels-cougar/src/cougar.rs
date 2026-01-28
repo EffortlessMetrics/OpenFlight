@@ -12,7 +12,12 @@
 use crate::led::{LatencyStats, LedState, LedTarget};
 use flight_core::{FlightError, Result};
 use flight_hid::{HidAdapter, HidDeviceInfo, HidOperationResult};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{DeviceMetricNames, PANEL_DEVICE_METRICS},
+};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
@@ -190,6 +195,10 @@ pub struct MfdLedState {
 pub struct CougarMfdWriter {
     /// HID adapter for device communication
     hid_adapter: HidAdapter,
+    /// Shared metrics registry
+    metrics_registry: Arc<MetricsRegistry>,
+    /// Device metric names
+    device_metrics: DeviceMetricNames,
     /// Connected MFDs by device path
     mfds: HashMap<String, MfdInfo>,
     /// LED states by MFD and LED name
@@ -258,6 +267,8 @@ impl CougarMfdWriter {
     pub fn new(hid_adapter: HidAdapter) -> Self {
         Self {
             hid_adapter,
+            metrics_registry: Arc::new(MetricsRegistry::new()),
+            device_metrics: PANEL_DEVICE_METRICS,
             mfds: HashMap::new(),
             led_states: HashMap::new(),
             latency_samples: Vec::new(),
@@ -265,6 +276,48 @@ impl CougarMfdWriter {
             min_write_interval: Duration::from_millis(8), // ≥8ms per requirements
             verify_state: None,
         }
+    }
+
+    /// Create new Cougar MFD writer with shared metrics registry
+    pub fn new_with_metrics(
+        hid_adapter: HidAdapter,
+        metrics_registry: Arc<MetricsRegistry>,
+    ) -> Self {
+        Self {
+            hid_adapter,
+            metrics_registry,
+            device_metrics: PANEL_DEVICE_METRICS,
+            mfds: HashMap::new(),
+            led_states: HashMap::new(),
+            latency_samples: Vec::new(),
+            max_latency_samples: 1000,
+            min_write_interval: Duration::from_millis(8),
+            verify_state: None,
+        }
+    }
+
+    /// Create new Cougar MFD writer with shared metrics registry and custom metric names
+    pub fn new_with_metrics_and_device_metrics(
+        hid_adapter: HidAdapter,
+        metrics_registry: Arc<MetricsRegistry>,
+        device_metrics: DeviceMetricNames,
+    ) -> Self {
+        Self {
+            hid_adapter,
+            metrics_registry,
+            device_metrics,
+            mfds: HashMap::new(),
+            led_states: HashMap::new(),
+            latency_samples: Vec::new(),
+            max_latency_samples: 1000,
+            min_write_interval: Duration::from_millis(8),
+            verify_state: None,
+        }
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
     }
 
     /// Start the MFD writer and enumerate devices
@@ -432,15 +485,34 @@ impl CougarMfdWriter {
         led_state: &MfdLedState,
     ) -> Result<()> {
         let write_start = Instant::now();
+        self.metrics_registry
+            .inc_counter(self.device_metrics.operations_total, 1);
 
         // Build HID report for this MFD type
-        let report = self.build_led_report(mfd_path, led_name, led_state)?;
+        let report = match self.build_led_report(mfd_path, led_name, led_state) {
+            Ok(report) => report,
+            Err(err) => {
+                let write_latency = write_start.elapsed();
+                self.metrics_registry.observe(
+                    self.device_metrics.operation_latency_ms,
+                    write_latency.as_secs_f64() * 1000.0,
+                );
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
+                return Err(err);
+            }
+        };
 
         // Write to HID device
-        match self.hid_adapter.write_output(mfd_path, &report)? {
-            HidOperationResult::Success { bytes_transferred } => {
-                let write_latency = write_start.elapsed();
+        let write_result = self.hid_adapter.write_output(mfd_path, &report);
+        let write_latency = write_start.elapsed();
+        self.metrics_registry.observe(
+            self.device_metrics.operation_latency_ms,
+            write_latency.as_secs_f64() * 1000.0,
+        );
 
+        match write_result {
+            Ok(HidOperationResult::Success { bytes_transferred }) => {
                 // Track latency
                 self.latency_samples.push(write_latency);
                 if self.latency_samples.len() > self.max_latency_samples {
@@ -461,24 +533,30 @@ impl CougarMfdWriter {
                 );
                 Ok(())
             }
-            HidOperationResult::Stall => {
+            Ok(HidOperationResult::Stall) => {
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!("HID stall writing LED {} on {}", led_name, mfd_path);
                 Err(FlightError::Hardware(format!(
                     "HID stall writing to {}",
                     mfd_path
                 )))
             }
-            HidOperationResult::Timeout => {
+            Ok(HidOperationResult::Timeout) => {
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!("HID timeout writing LED {} on {}", led_name, mfd_path);
                 Err(FlightError::Hardware(format!(
                     "HID timeout writing to {}",
                     mfd_path
                 )))
             }
-            HidOperationResult::Error {
+            Ok(HidOperationResult::Error {
                 error_code,
                 description,
-            } => {
+            }) => {
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
                 error!(
                     "HID error writing LED {} on {}: {} - {}",
                     led_name, mfd_path, error_code, description
@@ -487,6 +565,11 @@ impl CougarMfdWriter {
                     "HID error {}: {}",
                     error_code, description
                 )))
+            }
+            Err(err) => {
+                self.metrics_registry
+                    .inc_counter(self.device_metrics.errors_total, 1);
+                Err(err)
             }
         }
     }

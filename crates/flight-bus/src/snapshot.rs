@@ -7,7 +7,6 @@ use crate::types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearState, Mach, Percentage, SimId,
     ValidatedAngle, ValidatedSpeed,
 };
-use std::time;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

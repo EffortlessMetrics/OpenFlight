@@ -56,12 +56,11 @@
 //! use flight_axis::{PipelineCompiler, PipelineBuilder};
 //! use flight_axis::nodes::{DeadzoneNode, CurveNode};
 //!
-//! let mut builder = PipelineBuilder::new();
-//! builder.add_deadzone(0.03);
-//! builder.add_curve(vec![(0.0, 0.0), (0.5, 0.3), (1.0, 1.0)]);
-//!
-//! let compiler = PipelineCompiler::new();
-//! let pipeline = compiler.compile(builder).expect("Compilation should succeed");
+//! let pipeline = PipelineBuilder::new()
+//!     .deadzone(0.03)
+//!     .curve(0.3).unwrap()
+//!     .compile()
+//!     .expect("Compilation should succeed");
 //! ```
 //!
 //! # Performance Guarantees
@@ -90,7 +89,7 @@ pub use counters::{AllocationGuard, RuntimeCounters};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
-pub use frame::AxisFrame;
+pub use frame::{AxisFrame, FrameError};
 pub use nodes::{
     CurveNode, DeadzoneNode, DetentEvent, DetentNode, DetentRole, DetentState, DetentZone,
     MixerConfig, MixerInput, MixerNode, MixerState, Node, NodeId, SlewNode, SlewState,

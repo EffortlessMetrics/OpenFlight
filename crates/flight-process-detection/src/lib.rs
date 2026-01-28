@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
+use thiserror::Error;
 use tokio::sync::{RwLock, mpsc};
 use tracing::warn;
-use thiserror::Error;
 
 /// Error type for process detection
 #[derive(Debug, Error)]
@@ -223,7 +223,9 @@ impl ProcessDetector {
     pub async fn stop(&self) -> Result<()> {
         self.detection_tx
             .send(DetectionEvent::Shutdown)
-            .map_err(|e| ProcessDetectionError::System(format!("Failed to send shutdown: {}", e)))?;
+            .map_err(|e| {
+                ProcessDetectionError::System(format!("Failed to send shutdown: {}", e))
+            })?;
         Ok(())
     }
 
@@ -661,7 +663,7 @@ mod tests {
             other_fragment in "[a-zA-Z0-9]+"
         ) {
             let rt = tokio::runtime::Runtime::new().unwrap();
-            
+
             rt.block_on(async {
                 let definition = ProcessDefinition {
                     process_names: vec![format!("{}.exe", name_fragment)],
@@ -708,7 +710,7 @@ mod tests {
 
                     prop_assert!(detected.is_none());
                 }
-                
+
                 Ok(())
             }).unwrap();
         }

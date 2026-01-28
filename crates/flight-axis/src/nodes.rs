@@ -832,9 +832,9 @@ mod prop_tests {
             let mut node = DeadzoneNode::new(threshold);
             let mut frame = AxisFrame::new(input_val, 1000);
             frame.out = input_val; // Initialize out same as in
-            
+
             node.step(&mut frame);
-            
+
             if input_val.abs() < threshold {
                 prop_assert_eq!(frame.out, 0.0);
             } else {
@@ -875,7 +875,7 @@ mod prop_tests {
         ) {
             let config = MixerConfig::new(output_name)
                 .add_input_with_gain("test_input", scale, gain);
-                
+
             prop_assert!(config.validate().is_ok());
         }
 
@@ -888,16 +888,16 @@ mod prop_tests {
         ) {
             let config = MixerConfig::new("test")
                 .add_input_with_gain("in1", scale, gain);
-            
+
             let mixer = MixerNode::new(config).unwrap();
             let inputs = vec![input_val];
             let mut output = 0.0;
-            
+
             mixer.process_inputs(&inputs, &mut output);
-            
+
             let expected_raw = input_val * scale * gain;
             let expected_clamped = expected_raw.clamp(-1.0, 1.0);
-            
+
             prop_assert!((output - expected_clamped).abs() < 1e-5);
         }
     }

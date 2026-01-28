@@ -18,6 +18,7 @@ pub mod web_api;
 pub use adapter::{XPlaneAdapter, XPlaneAdapterConfig, XPlaneError};
 pub use aircraft::{AircraftDetector, DetectedAircraft, XPlaneAircraftInfo};
 pub use dataref::{DataRef, DataRefManager, DataRefRequest, DataRefValue};
+pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use latency::{LatencyBudget, LatencyMeasurement, LatencyTracker};
 pub use plugin::{PluginInterface, PluginMessage, PluginResponse};
 pub use udp::{UdpClient, UdpConfig, UdpError};

@@ -32,6 +32,11 @@ pub enum DeviceAction {
         /// Device ID to show information for
         device_id: String,
     },
+    /// Dump HID descriptor discovery data for a device
+    Dump {
+        /// Device ID to dump discovery data for
+        device_id: String,
+    },
 }
 
 #[derive(Subcommand)]

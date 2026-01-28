@@ -132,7 +132,7 @@ mod tests {
         evaluator.set_min_eval_interval(std::time::Duration::from_millis(0));
 
         // Capture initial hysteresis state capacity
-        let initial_hyst_len = evaluator.hysteresis_state().len();
+        let initial_hyst_len = evaluator.hysteresis_state_len();
 
         let mut telemetry = HashMap::new();
 
@@ -148,7 +148,7 @@ mod tests {
         }
 
         // Verify hysteresis state hasn't grown
-        assert_eq!(evaluator.hysteresis_state().len(), initial_hyst_len);
+        assert_eq!(evaluator.hysteresis_state_len(), initial_hyst_len);
     }
 
     #[test]
@@ -191,7 +191,7 @@ mod tests {
         let initial_stack_cap = evaluator.stack().capacity();
         let initial_actions_cap = evaluator.actions_buffer().capacity();
         let initial_vars_cap = evaluator.variable_cache().capacity();
-        let initial_hyst_len = evaluator.hysteresis_state().len();
+        let initial_hyst_len = evaluator.hysteresis_state_len();
 
         let mut telemetry = HashMap::new();
 
@@ -214,7 +214,7 @@ mod tests {
         assert_eq!(evaluator.stack().capacity(), initial_stack_cap);
         assert_eq!(evaluator.actions_buffer().capacity(), initial_actions_cap);
         assert_eq!(evaluator.variable_cache().capacity(), initial_vars_cap);
-        assert_eq!(evaluator.hysteresis_state().len(), initial_hyst_len);
+        assert_eq!(evaluator.hysteresis_state_len(), initial_hyst_len);
     }
 
     #[test]

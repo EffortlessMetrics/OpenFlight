@@ -71,6 +71,7 @@ mod tests {
             device_path: "/dev/test".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         let endpoint_id = EndpointId {

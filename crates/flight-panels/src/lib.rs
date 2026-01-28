@@ -18,11 +18,11 @@ use flight_core::Result;
 use flight_core::rules::{CompiledRules, RulesSchema};
 use std::collections::HashMap;
 
-pub mod cougar;
-pub mod evaluator;
-pub mod led;
-pub mod saitek;
-pub mod verify_matrix;
+pub use flight_panels_cougar as cougar;
+pub use flight_panels_core::evaluator;
+pub use flight_panels_core::led;
+pub use flight_panels_saitek as saitek;
+pub use flight_panels_saitek::verify_matrix;
 
 #[cfg(test)]
 mod allocation_test;
@@ -30,13 +30,15 @@ mod allocation_test;
 #[cfg(test)]
 mod integration_test;
 
-pub use cougar::{
+pub use flight_panels_cougar::{
     CougarMfdHealthStatus, CougarMfdType, CougarMfdWriter, CougarVerifyTestResult, MfdLedState,
 };
-pub use evaluator::RulesEvaluator;
-pub use led::{LedController, LedTarget};
-pub use saitek::{PanelHealthStatus, PanelType, SaitekPanelWriter, VerifyTestResult};
-pub use verify_matrix::{DriftAction, DriftAnalysis, MatrixTestResult, VerifyMatrix};
+pub use flight_panels_core::RulesEvaluator;
+pub use flight_panels_core::led::{LedController, LedTarget};
+pub use flight_panels_saitek::{PanelHealthStatus, PanelType, SaitekPanelWriter, VerifyTestResult};
+pub use flight_panels_saitek::verify_matrix::{
+    DriftAction, DriftAnalysis, MatrixTestResult, VerifyMatrix,
+};
 
 /// Panel manager for LED control and rules evaluation
 pub struct PanelManager {

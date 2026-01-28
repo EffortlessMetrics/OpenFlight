@@ -32,6 +32,9 @@ pub async fn execute(
         DeviceAction::Info { device_id } => {
             device_info(device_id, output_format, verbose, client_manager).await
         }
+        DeviceAction::Dump { device_id } => {
+            device_dump(device_id, output_format, verbose, client_manager).await
+        }
     }
 }
 
@@ -94,6 +97,22 @@ async fn list_devices(
                 "type": device_type_to_string(device.r#type()),
                 "status": device_status_to_string(device.status()),
             });
+
+            let warnings: Vec<String> = device
+                .metadata
+                .iter()
+                .filter_map(|(key, value)| {
+                    if key.starts_with("warning.") {
+                        Some(value.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            if !warnings.is_empty() {
+                device_json["warnings"] = json!(warnings);
+            }
 
             if verbose {
                 if let Some(ref capabilities) = device.capabilities {
@@ -158,6 +177,22 @@ async fn device_info(
         "status": device_status_to_string(device.status()),
     });
 
+    let warnings: Vec<String> = device
+        .metadata
+        .iter()
+        .filter_map(|(key, value)| {
+            if key.starts_with("warning.") {
+                Some(value.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if !warnings.is_empty() {
+        device_json["warnings"] = json!(warnings);
+    }
+
     // Always include detailed info for device info command
     if let Some(ref capabilities) = device.capabilities {
         device_json["capabilities"] = json!({
@@ -186,6 +221,60 @@ async fn device_info(
 
     let output = output_format.success(device_json);
     Ok(Some(output))
+}
+
+async fn device_dump(
+    device_id: &str,
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    let mut client = client_manager.get_client().await?;
+
+    let request = ListDevicesRequest {
+        include_disconnected: true,
+        filter_types: vec![],
+    };
+
+    let response = client.list_devices(request).await?;
+
+    let device = response
+        .devices
+        .iter()
+        .find(|d| d.id == device_id)
+        .ok_or_else(|| anyhow::anyhow!("Device '{}' not found", device_id))?;
+
+    let mut device_json = json!({
+        "id": device.id,
+        "name": device.name,
+        "type": device_type_to_string(device.r#type()),
+        "status": device_status_to_string(device.status()),
+    });
+
+    if let Some(discovery) = metadata_json(device, "descriptor_discovery")? {
+        device_json["descriptor_discovery"] = discovery;
+    }
+
+    if let Some(control_map) = metadata_json(device, "control_map")? {
+        device_json["control_map"] = control_map;
+    }
+
+    if verbose && !device.metadata.is_empty() {
+        device_json["metadata"] = json!(device.metadata);
+    }
+
+    let output = output_format.success(device_json);
+    Ok(Some(output))
+}
+
+fn metadata_json(device: &flight_ipc::Device, key: &str) -> anyhow::Result<Option<Value>> {
+    let raw = match device.metadata.get(key) {
+        Some(value) => value,
+        None => return Ok(None),
+    };
+
+    let parsed: Value = serde_json::from_str(raw).unwrap_or_else(|_| json!(raw));
+    Ok(Some(parsed))
 }
 
 fn device_type_to_string(device_type: DeviceType) -> &'static str {

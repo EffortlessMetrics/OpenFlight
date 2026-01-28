@@ -162,8 +162,15 @@ impl RulesEvaluator {
 
     /// Test-only accessor for the hysteresis state
     #[cfg(any(test, feature = "test-helpers"))]
+    #[allow(dead_code)]
     pub(crate) fn hysteresis_state(&self) -> &Vec<HysteresisState> {
         &self.hysteresis_state
+    }
+
+    /// Test-only accessor for hysteresis state length (avoids exposing internals across crates)
+    #[cfg(any(test, feature = "test-helpers"))]
+    pub fn hysteresis_state_len(&self) -> usize {
+        self.hysteresis_state.len()
     }
 }
 

@@ -11,9 +11,17 @@ use crate::aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
+use flight_adapter_common::{AdapterMetrics, AdapterState};
 use flight_bus::adapters::SimAdapter;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, BusTypeError, SimId};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{
+        ADAPTER_ERRORS_TOTAL, ADAPTER_TIME_SINCE_LAST_PACKET_MS, ADAPTER_UPDATE_LATENCY_MS,
+        ADAPTER_UPDATES_TOTAL,
+    },
+};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -77,106 +85,6 @@ pub enum MsfsAdapterError {
     Timeout(String),
 }
 
-/// MSFS adapter state
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AdapterState {
-    /// Disconnected from MSFS
-    Disconnected,
-    /// Connecting to MSFS
-    Connecting,
-    /// Connected but no aircraft detected
-    Connected,
-    /// Aircraft detected, setting up data definitions
-    DetectingAircraft,
-    /// Fully operational
-    Active,
-    /// Error state
-    Error,
-}
-
-/// Adapter metrics for monitoring update rate and jitter
-#[derive(Debug, Clone, Default)]
-pub struct AdapterMetrics {
-    /// Total number of telemetry updates received
-    pub total_updates: u64,
-    /// Last update timestamp
-    pub last_update_time: Option<Instant>,
-    /// Update intervals (for jitter calculation)
-    pub update_intervals: Vec<Duration>,
-    /// Maximum interval buffer size
-    pub max_interval_samples: usize,
-    /// Actual update rate (Hz) - calculated from recent intervals
-    pub actual_update_rate: f32,
-    /// Update jitter (p99 in milliseconds)
-    pub update_jitter_p99_ms: f32,
-    /// Last aircraft title (for change detection)
-    pub last_aircraft_title: Option<String>,
-    /// Aircraft change count
-    pub aircraft_changes: u64,
-}
-
-impl AdapterMetrics {
-    /// Create new metrics with default buffer size
-    pub fn new() -> Self {
-        Self {
-            max_interval_samples: 100, // Keep last 100 samples for jitter calculation
-            ..Default::default()
-        }
-    }
-
-    /// Record a telemetry update
-    pub fn record_update(&mut self) {
-        self.total_updates += 1;
-        let now = Instant::now();
-
-        if let Some(last_time) = self.last_update_time {
-            let interval = now.duration_since(last_time);
-            self.update_intervals.push(interval);
-
-            // Keep only recent samples
-            if self.update_intervals.len() > self.max_interval_samples {
-                self.update_intervals.remove(0);
-            }
-
-            // Calculate actual update rate from recent intervals
-            if !self.update_intervals.is_empty() {
-                let avg_interval: Duration = self.update_intervals.iter().sum::<Duration>()
-                    / self.update_intervals.len() as u32;
-                self.actual_update_rate = 1.0 / avg_interval.as_secs_f32();
-
-                // Calculate p99 jitter
-                let mut sorted_intervals = self.update_intervals.clone();
-                sorted_intervals.sort();
-                let p99_index = (sorted_intervals.len() as f32 * 0.99) as usize;
-                if p99_index < sorted_intervals.len() {
-                    self.update_jitter_p99_ms = sorted_intervals[p99_index].as_secs_f32() * 1000.0;
-                }
-            }
-        }
-
-        self.last_update_time = Some(now);
-    }
-
-    /// Record aircraft change
-    pub fn record_aircraft_change(&mut self, title: String) {
-        if self.last_aircraft_title.as_ref() != Some(&title) {
-            self.aircraft_changes += 1;
-            self.last_aircraft_title = Some(title);
-        }
-    }
-
-    /// Get metrics summary for logging/monitoring
-    pub fn summary(&self) -> String {
-        format!(
-            "Updates: {}, Rate: {:.1} Hz, Jitter p99: {:.2} ms, Aircraft changes: {}",
-            self.total_updates,
-            self.actual_update_rate,
-            self.update_jitter_p99_ms,
-            self.aircraft_changes
-        )
-    }
-}
-
 /// Main MSFS SimConnect adapter
 pub struct MsfsAdapter {
     /// Adapter configuration
@@ -209,6 +117,8 @@ pub struct MsfsAdapter {
     current_backoff_delay: f64,
     /// Adapter metrics
     metrics: Arc<RwLock<AdapterMetrics>>,
+    /// Shared metrics registry
+    metrics_registry: Arc<MetricsRegistry>,
 }
 
 impl MsfsAdapter {
@@ -232,6 +142,7 @@ impl MsfsAdapter {
             last_connection_attempt: None,
             current_backoff_delay: 1.0, // Start with 1 second
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
+            metrics_registry: Arc::new(MetricsRegistry::new()),
         })
     }
 
@@ -421,6 +332,7 @@ impl MsfsAdapter {
                         && let Err(e) = self.attempt_reconnect().await
                     {
                         error!("Reconnection attempt failed: {}", e);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                         self.connection_attempts += 1;
                     }
                 }
@@ -428,6 +340,7 @@ impl MsfsAdapter {
                     // Try to detect aircraft
                     if let Err(e) = self.detect_aircraft().await {
                         warn!("Aircraft detection failed: {}", e);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::DetectingAircraft => {
@@ -437,6 +350,7 @@ impl MsfsAdapter {
                     // Update telemetry
                     if let Err(e) = self.update_telemetry().await {
                         warn!("Telemetry update failed: {}", e);
+                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     }
                 }
                 AdapterState::Error => {
@@ -590,11 +504,16 @@ impl MsfsAdapter {
     async fn update_telemetry(&mut self) -> Result<(), MsfsAdapterError> {
         // Rate limiting
         let now = Instant::now();
+        self.metrics_registry.set_gauge(
+            ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+            now.duration_since(self.last_update).as_secs_f64() * 1000.0,
+        );
         let min_interval = Duration::from_secs_f32(1.0 / self.config.publish_rate);
         if now.duration_since(self.last_update) < min_interval {
             return Ok(());
         }
         self.last_update = now;
+        let update_start = Instant::now();
 
         // Create or update bus snapshot
         let aircraft_info = self.current_aircraft.read().await;
@@ -609,6 +528,7 @@ impl MsfsAdapter {
             // Validate and publish snapshot
             if let Err(e) = snapshot.validate() {
                 warn!("Snapshot validation failed: {}", e);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                 return Ok(());
             }
 
@@ -618,11 +538,17 @@ impl MsfsAdapter {
                 metrics.record_update();
                 metrics.record_aircraft_change(aircraft.title.clone());
             }
+            self.metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
+            self.metrics_registry.observe(
+                ADAPTER_UPDATE_LATENCY_MS,
+                update_start.elapsed().as_secs_f64() * 1000.0,
+            );
 
             *self.current_snapshot.write().await = Some(snapshot.clone());
 
             if let Err(e) = self.snapshot_sender.send(snapshot) {
                 warn!("Failed to publish snapshot: {}", e);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
         }
 
@@ -662,6 +588,11 @@ impl MsfsAdapter {
     /// Get adapter metrics
     pub async fn metrics(&self) -> AdapterMetrics {
         self.metrics.read().await.clone()
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
     }
 
     /// Get metrics summary string

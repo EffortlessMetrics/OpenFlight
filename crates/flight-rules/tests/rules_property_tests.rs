@@ -28,7 +28,7 @@ proptest! {
             }],
             defaults: None,
         };
-        
+
         // Only attempt compile if validate passes, or just ensure compile also handles garbage gracefully
         // Compile likely calls parsing logic which might panic on invalid input if not careful
         let _ = schema.compile();

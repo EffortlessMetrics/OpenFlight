@@ -1,7 +1,7 @@
 //! Standalone test for DSL compiler and evaluator
 
-use flight_core::rules::{Action, Rule, RuleDefaults, RulesSchema};
-use flight_panels::{PanelManager, RulesEvaluator};
+use flight_core::rules::{Action, Rule, RulesSchema};
+use flight_panels::RulesEvaluator;
 use std::collections::HashMap;
 use std::time::Duration;
 

@@ -453,9 +453,8 @@ impl SecurityManager {
 
             if now > *valid_until {
                 return Err(SecurityError::SignatureVerificationFailed {
-                        reason: "Certificate has expired".to_string(),
-                    }
-                );
+                    reason: "Certificate has expired".to_string(),
+                });
             }
         }
 

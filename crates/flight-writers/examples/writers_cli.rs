@@ -1,7 +1,8 @@
 //! Example CLI for the Writers system
 
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
-use flight_writers::*;
+use flight_writers::{RollbackManager, SimulatorType, WriterConfig, Writers};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -62,7 +63,7 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
@@ -328,15 +329,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn parse_simulator_type(sim: &str) -> Result<SimulatorType, Box<dyn std::error::Error>> {
+fn parse_simulator_type(sim: &str) -> Result<SimulatorType> {
     match sim.to_lowercase().as_str() {
         "msfs" => Ok(SimulatorType::MSFS),
         "xplane" => Ok(SimulatorType::XPlane),
         "dcs" => Ok(SimulatorType::DCS),
-        _ => Err(format!(
+        _ => bail!(
             "Unknown simulator type: {}. Use 'msfs', 'xplane', or 'dcs'",
             sim
-        )
-        .into()),
+        ),
     }
 }

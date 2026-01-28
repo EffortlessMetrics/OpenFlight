@@ -226,17 +226,21 @@ impl AircraftAutoSwitchService {
         // Subscribe to bus for telemetry updates
         let subscriber = bus_publisher
             .subscribe(SubscriptionConfig::default())
-            .map_err(|e| FlightError::Session(SessionError::AutoSwitch(format!("Failed to subscribe to bus: {}", e))))?;
+            .map_err(|e| {
+                FlightError::Session(SessionError::AutoSwitch(format!(
+                    "Failed to subscribe to bus: {}",
+                    e
+                )))
+            })?;
 
         *self.bus_subscriber.write().await = Some(subscriber);
 
         // Start service event loop
-        let mut rx = self
-            .service_rx
-            .write()
-            .await
-            .take()
-            .ok_or_else(|| FlightError::Session(SessionError::AutoSwitch("Service already started".to_string())))?;
+        let mut rx = self.service_rx.write().await.take().ok_or_else(|| {
+            FlightError::Session(SessionError::AutoSwitch(
+                "Service already started".to_string(),
+            ))
+        })?;
 
         let auto_switch = Arc::clone(&self.auto_switch);
         let _process_detector = Arc::clone(&self.process_detector);
@@ -313,9 +317,12 @@ impl AircraftAutoSwitchService {
         adapters.stop_all().await?;
 
         // Send shutdown event
-        self.service_tx
-            .send(ServiceEvent::Shutdown)
-            .map_err(|e| FlightError::Session(SessionError::AutoSwitch(format!("Failed to send shutdown: {}", e))))?;
+        self.service_tx.send(ServiceEvent::Shutdown).map_err(|e| {
+            FlightError::Session(SessionError::AutoSwitch(format!(
+                "Failed to send shutdown: {}",
+                e
+            )))
+        })?;
 
         Ok(())
     }

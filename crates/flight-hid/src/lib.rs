@@ -6,12 +6,17 @@
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
 
+pub use flight_hid_support::HidDeviceInfo;
+pub use flight_hid_support::device_support;
 #[cfg(test)]
 mod fd_safety_tests;
+pub use flight_hid_support::hid_descriptor;
 pub mod ofp1;
 
-use flight_core::{
-    ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent,
+use flight_core::{ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent};
+use flight_metrics::{
+    MetricsRegistry,
+    common::{DeviceMetricNames, HID_DEVICE_METRICS},
 };
 use flight_watchdog::WatchdogSystem;
 use std::collections::HashMap;
@@ -32,19 +37,6 @@ pub enum EndpointType {
     Input,
     Output,
     Feature,
-}
-
-/// HID device information
-#[derive(Debug, Clone)]
-pub struct HidDeviceInfo {
-    pub vendor_id: u16,
-    pub product_id: u16,
-    pub serial_number: Option<String>,
-    pub manufacturer: Option<String>,
-    pub product_name: Option<String>,
-    pub device_path: String,
-    pub usage_page: u16,
-    pub usage: u16,
 }
 
 /// HID endpoint state tracking
@@ -82,6 +74,10 @@ pub enum HidOperationResult {
 pub struct HidAdapter {
     /// Watchdog system for monitoring
     watchdog: Arc<Mutex<WatchdogSystem>>,
+    /// Shared metrics registry
+    metrics_registry: Arc<MetricsRegistry>,
+    /// Device metric names
+    device_metrics: DeviceMetricNames,
     /// Connected devices
     devices: HashMap<String, HidDeviceInfo>,
     /// Endpoint states
@@ -95,10 +91,48 @@ impl HidAdapter {
     pub fn new(watchdog: Arc<Mutex<WatchdogSystem>>) -> Self {
         Self {
             watchdog,
+            metrics_registry: Arc::new(MetricsRegistry::new()),
+            device_metrics: HID_DEVICE_METRICS,
             devices: HashMap::new(),
             endpoint_states: HashMap::new(),
             is_running: false,
         }
+    }
+
+    /// Create new HID adapter with shared metrics registry
+    pub fn new_with_metrics(
+        watchdog: Arc<Mutex<WatchdogSystem>>,
+        metrics_registry: Arc<MetricsRegistry>,
+    ) -> Self {
+        Self {
+            watchdog,
+            metrics_registry,
+            device_metrics: HID_DEVICE_METRICS,
+            devices: HashMap::new(),
+            endpoint_states: HashMap::new(),
+            is_running: false,
+        }
+    }
+
+    /// Create new HID adapter with shared metrics registry and custom metric names.
+    pub fn new_with_metrics_and_device_metrics(
+        watchdog: Arc<Mutex<WatchdogSystem>>,
+        metrics_registry: Arc<MetricsRegistry>,
+        device_metrics: DeviceMetricNames,
+    ) -> Self {
+        Self {
+            watchdog,
+            metrics_registry,
+            device_metrics,
+            devices: HashMap::new(),
+            endpoint_states: HashMap::new(),
+            is_running: false,
+        }
+    }
+
+    /// Get shared metrics registry
+    pub fn metrics_registry(&self) -> Arc<MetricsRegistry> {
+        self.metrics_registry.clone()
     }
 
     /// Start the HID adapter
@@ -154,6 +188,7 @@ impl HidAdapter {
             device_path: "/dev/hidraw0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         self.register_device(device_info)?;
@@ -338,10 +373,15 @@ impl HidAdapter {
             endpoint_id.device_path, endpoint_id.endpoint_type
         ));
 
+        self.metrics_registry
+            .inc_counter(self.device_metrics.operations_total, 1);
+
         // Check if component is quarantined
         if let Ok(watchdog) = self.watchdog.lock()
             && watchdog.is_quarantined(&component)
         {
+            self.metrics_registry
+                .inc_counter(self.device_metrics.errors_total, 1);
             return Err(FlightError::Configuration(format!(
                 "USB endpoint {} is quarantined",
                 endpoint_id.device_path
@@ -351,6 +391,12 @@ impl HidAdapter {
         let start_time = Instant::now();
         let result = operation(endpoint_id);
         let operation_time = start_time.elapsed();
+
+        self.metrics_registry.observe(
+            self.device_metrics.operation_latency_ms,
+            operation_time.as_secs_f64() * 1000.0,
+        );
+        let had_error = !matches!(result, HidOperationResult::Success { .. });
 
         // Update endpoint state and notify watchdog
         if let Some(state) = self.endpoint_states.get_mut(endpoint_id) {
@@ -416,6 +462,11 @@ impl HidAdapter {
                     error!("USB endpoint error: {} - {}", error_code, description);
                 }
             }
+        }
+
+        if had_error {
+            self.metrics_registry
+                .inc_counter(self.device_metrics.errors_total, 1);
         }
 
         Ok(result)
@@ -788,6 +839,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         assert!(adapter.register_device(device_info.clone()).is_ok());
@@ -808,6 +860,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         adapter.register_device(device_info.clone()).unwrap();
@@ -829,6 +882,7 @@ mod tests {
             device_path: "/dev/test0".to_string(),
             usage_page: 0x01,
             usage: 0x04,
+            report_descriptor: None,
         };
 
         adapter.register_device(device_info.clone()).unwrap();

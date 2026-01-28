@@ -1,0 +1,22 @@
+[package]
+name = "flight-panels-saitek"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+flight-hid = { path = "../flight-hid" }
+flight-metrics = { path = "../flight-metrics" }
+flight-panels-core = { path = "../flight-panels-core" }
+tracing.workspace = true
+
+[dev-dependencies]
+flight-watchdog = { path = "../flight-watchdog" }

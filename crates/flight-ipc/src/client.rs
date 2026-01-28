@@ -7,12 +7,11 @@ use crate::{
     ClientConfig, IpcError, NegotiationResult,
     negotiation::{Version, validate_required_features},
     proto::{
-        NegotiateFeaturesRequest, ListDevicesRequest, ListDevicesResponse,
-        OneClickResolveRequest, OneClickResolveResponse,
-        SetCapabilityModeRequest, SetCapabilityModeResponse,
-        DetectCurveConflictsRequest, DetectCurveConflictsResponse,
-        ResolveCurveConflictRequest, ResolveCurveConflictResponse,
-        ApplyProfileRequest, ApplyProfileResponse,
+        ApplyProfileRequest, ApplyProfileResponse, DetectCurveConflictsRequest,
+        DetectCurveConflictsResponse, ListDevicesRequest, ListDevicesResponse,
+        NegotiateFeaturesRequest, OneClickResolveRequest, OneClickResolveResponse,
+        ResolveCurveConflictRequest, ResolveCurveConflictResponse, SetCapabilityModeRequest,
+        SetCapabilityModeResponse,
     },
 };
 use anyhow::Result;

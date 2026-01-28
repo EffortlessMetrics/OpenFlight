@@ -56,6 +56,16 @@ curl -f http://localhost:8080/health
 
 You should receive a 200 OK response.
 
+## Quick Start with Nix (Linux/macOS)
+
+If you use Nix, a dev shell is provided:
+
+```bash
+nix develop
+```
+
+This shell includes Rust 1.89.0, `protoc`, `pkg-config`, libusb, and the optional cargo tools used by `cargo xtask validate`.
+
 ## Manual Setup (Without Docker)
 
 If you prefer to run directly on your host machine:

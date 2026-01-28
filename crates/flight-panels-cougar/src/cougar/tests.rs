@@ -4,8 +4,8 @@
 //! Tests for Cougar MFD writer
 
 use super::*;
-use flight_watchdog::WatchdogSystem;
 use flight_hid::{HidAdapter, HidDeviceInfo};
+use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -30,6 +30,7 @@ impl MockHidAdapter {
                     product_name: Some("Cougar MFD Left".to_string()),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
                 // Mock Cougar MFD Right
                 HidDeviceInfo {
@@ -41,6 +42,7 @@ impl MockHidAdapter {
                     product_name: Some("Cougar MFD Right".to_string()),
                     usage_page: 0x01,
                     usage: 0x04,
+                    report_descriptor: None,
                 },
             ],
             write_latency: Duration::from_micros(500), // 0.5ms default

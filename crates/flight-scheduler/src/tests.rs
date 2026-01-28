@@ -200,13 +200,16 @@ fn test_overload_behavior() {
 
 #[test]
 fn test_timing_validator() {
-    let mut validator = TimingValidator::new(100, Duration::from_millis(200));
+    // We need enough ticks to bypass WARMUP_TICKS (1250)
+    // At 100Hz (10ms), 1500 ticks = 15s
+    let target_duration = Duration::from_secs(15);
+    let mut validator = TimingValidator::new(100, target_duration);
     let start = Instant::now();
 
-    let mut tick_count = 0;
+    let mut tick_count: u64 = 0;
     while validator.record_and_check(start + Duration::from_millis(tick_count * 10)) {
         tick_count += 1;
-        if tick_count > 100 {
+        if tick_count > 2000 {
             break;
         } // Safety limit
     }
@@ -214,7 +217,7 @@ fn test_timing_validator() {
     let result = validator.finalize();
 
     // Should have run for at least the target duration
-    assert!(result.duration >= Duration::from_millis(200));
+    assert!(result.duration >= target_duration);
 
     // Should have collected samples
     assert!(result.jitter_stats.sample_count > 0);

@@ -4,7 +4,11 @@ use std::process::Command;
 
 fn run_cli_command(args: &[&str]) -> std::process::Output {
     let mut cmd = Command::new("cargo");
-    cmd.arg("run").arg("--quiet").arg("-p").arg("flight-cli").arg("--");
+    cmd.arg("run")
+        .arg("--quiet")
+        .arg("-p")
+        .arg("flight-cli")
+        .arg("--");
 
     for arg in args {
         cmd.arg(arg);
@@ -39,6 +43,7 @@ fn test_devices_help() {
     assert!(stdout.contains("Device management commands"));
     assert!(stdout.contains("list"));
     assert!(stdout.contains("info"));
+    assert!(stdout.contains("dump"));
 }
 
 #[test]
@@ -153,10 +158,14 @@ fn test_human_output_format() {
     assert_eq!(output.status.code(), Some(1));
 
     let stderr = String::from_utf8(output.stderr).unwrap();
-    
+
     // Find the error line
     let error_line_exists = stderr.lines().any(|l| l.starts_with("Error:"));
-    assert!(error_line_exists, "Stderr should contain 'Error:': {}", stderr);
+    assert!(
+        error_line_exists,
+        "Stderr should contain 'Error:': {}",
+        stderr
+    );
 }
 
 #[test]
@@ -184,7 +193,7 @@ fn test_timeout_option() {
     // Should still fail with connection error but should accept the timeout option
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr).unwrap();
-    
+
     let json_line = stderr
         .lines()
         .find(|l| l.trim().starts_with('{'))

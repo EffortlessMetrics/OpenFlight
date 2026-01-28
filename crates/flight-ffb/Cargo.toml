@@ -17,6 +17,7 @@ flight-bus = { path = "../flight-bus" }
 flight-panels = { path = "../flight-panels" }
 flight-hid = { path = "../flight-hid" }
 flight-virtual = { path = "../flight-virtual" }
+flight-metrics = { path = "../flight-metrics" }
 thiserror = "2.0.18"
 tracing = "0.1.44"
 crossbeam.workspace = true
