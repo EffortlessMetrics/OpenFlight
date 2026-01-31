@@ -12,13 +12,20 @@ Unified control plane for flight controls, panels, and force feedback devices ac
 - Auto-profile switching based on aircraft detection
 - Panel and StreamDeck integration with rule-based LED control
 - Blackbox recording for diagnostics
+- Plugin system (WASM sandboxed, native isolated)
 
 ## Performance Requirements
 - Axis processing latency ≤ 5ms p99
 - Jitter ≤ 0.5ms p99 at 250Hz
-- Zero allocations on real-time hot paths
+- Zero allocations on real-time hot paths (ADR-004)
 - CPU usage < 3% of one core during normal operation
 
 ## Applications
 - `flightd` - Main service daemon (flight-service crate)
 - `flightctl` - Command-line interface (flight-cli crate)
+
+## Security Model
+- Local-only operation (no network listeners by default)
+- IPC via local pipes/sockets only
+- Supply chain security via cargo-deny
+- WASM plugins sandboxed, native plugins process-isolated

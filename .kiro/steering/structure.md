@@ -14,9 +14,10 @@
 - `flight-hid-types` - Shared HID types
 - `flight-ffb` - Force feedback synthesis
 - `flight-panels` - Generic panel driver
-- `flight-panels-core/saitek/cougar` - Panel implementations
+- `flight-panels-core` / `flight-panels-saitek` / `flight-panels-cougar` - Panel implementations
 - `flight-streamdeck` - StreamDeck integration
 - `flight-tactile` - Haptic feedback
+- `flight-virtual` - Virtual device support
 
 ### Simulator Adapters
 - `flight-simconnect` / `flight-simconnect-sys` - MSFS SimConnect
@@ -38,7 +39,6 @@
 - `flight-watchdog` - Process monitoring
 - `flight-session` - Session management
 - `flight-units` - Unit conversions
-- `flight-virtual` - Virtual device support
 - `flight-process-detection` - Sim process detection
 
 ### Applications
@@ -53,8 +53,9 @@
 - `specs/` - Gherkin feature specs and cucumber tests
 - `xtask/` - Build automation tasks
 - `scripts/` - CI and validation scripts
-- `schemas/` - JSON schemas
+- `schemas/` - JSON schemas (front_matter, invariants, spec_ledger)
 - `infra/` - Infrastructure configs
+- `spdx/` - SPDX license files per crate
 
 ## Architecture (ADR-001: RT Spine)
 ```
@@ -63,3 +64,10 @@ Non-RT Systems (Sim Adapters, Panels, Diagnostics)
 RT Spine (250Hz): Axis Engine │ FFB Engine │ Scheduler
 ```
 Configuration changes compiled off-thread, swapped atomically at tick boundaries.
+
+## Key ADRs
+- ADR-001: Real-Time Spine Architecture
+- ADR-002: Writers as Data Pattern
+- ADR-003: Plugin Classification System
+- ADR-004: Zero-Allocation Constraint
+- ADR-005: PLL Timing Discipline
