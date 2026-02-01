@@ -14,9 +14,6 @@
         "editor.formatOnSave": true
     },
 
-    // Disable unwanted extensions for this workspace
-    "gitlens.enabled": false,
-    "gitkraken.enabled": false,
 
     // Dependi (dependency management)
     "dependi.rust.enabled": true,
