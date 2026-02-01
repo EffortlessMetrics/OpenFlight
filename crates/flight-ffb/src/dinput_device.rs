@@ -21,13 +21,13 @@
 
 #[cfg(windows)]
 use crate::dinput_com::{
-    create_direct_input8, guid_to_string, is_dinput8_available, is_disconnect_error,
-    string_to_guid, DIDEVCAPS, DIDEVICEINSTANCEW, DIEFFECT, DI8DEVCLASS_GAMECTRL,
-    DIDC_FORCEFEEDBACK, DIEDFL_ATTACHEDONLY, DIEDFL_FORCEFEEDBACK, DIEFF_CARTESIAN,
-    DIEFF_OBJECTOFFSETS, DIEP_NORESTART, DIEP_TYPESPECIFICPARAMS, DIENUM_CONTINUE,
-    DI_FFNOMINALMAX, DISCL_BACKGROUND, DISCL_EXCLUSIVE, GUID_ConstantForce, GUID_Damper,
-    GUID_Sine, GUID_Spring, IDirectInput8W, IDirectInputDevice8W, IDirectInputEffect, INFINITE,
-    DIEB_NOTRIGGER, DISFFC_RESET, DISFFC_STOPALL,
+    DI_FFNOMINALMAX, DI8DEVCLASS_GAMECTRL, DIDC_FORCEFEEDBACK, DIDEVCAPS, DIDEVICEINSTANCEW,
+    DIEB_NOTRIGGER, DIEDFL_ATTACHEDONLY, DIEDFL_FORCEFEEDBACK, DIEFF_CARTESIAN,
+    DIEFF_OBJECTOFFSETS, DIEFFECT, DIENUM_CONTINUE, DIEP_NORESTART, DIEP_TYPESPECIFICPARAMS,
+    DISCL_BACKGROUND, DISCL_EXCLUSIVE, DISFFC_RESET, DISFFC_STOPALL, GUID_ConstantForce,
+    GUID_Damper, GUID_Sine, GUID_Spring, IDirectInput8W, IDirectInputDevice8W, IDirectInputEffect,
+    INFINITE, create_direct_input8, guid_to_string, is_dinput8_available, is_disconnect_error,
+    string_to_guid,
 };
 #[cfg(windows)]
 use crate::dinput_com::{DICONDITION, DICONSTANTFORCE, DIPERIODIC};
@@ -42,13 +42,13 @@ use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[cfg(windows)]
-use windows::core::{GUID, PCWSTR};
-#[cfg(windows)]
 use windows::Win32::Foundation::HWND;
 #[cfg(windows)]
-use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_MULTITHREADED};
+use windows::Win32::System::Com::{COINIT_MULTITHREADED, CoInitializeEx, CoUninitialize};
 #[cfg(windows)]
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
+#[cfg(windows)]
+use windows::core::{GUID, PCWSTR};
 
 use flight_metrics::{
     MetricsRegistry,
@@ -60,9 +60,7 @@ use thiserror::Error;
 
 // Re-export constants from dinput_com for backwards compatibility
 #[cfg(windows)]
-pub use crate::dinput_com::{
-    DIJOFS_X, DIJOFS_Y, DIJOFS_Z, DIJOFS_RX, DIJOFS_RY, DIJOFS_RZ,
-};
+pub use crate::dinput_com::{DIJOFS_RX, DIJOFS_RY, DIJOFS_RZ, DIJOFS_X, DIJOFS_Y, DIJOFS_Z};
 
 // Define for non-windows platforms
 #[cfg(not(windows))]
@@ -975,10 +973,7 @@ impl DirectInputFfbDevice {
                 device_ctx.effects.push(effect_handle);
                 let handle_index = device_ctx.effects.len() - 1;
 
-                tracing::info!(
-                    "Created spring condition effect (handle: {})",
-                    handle_index
-                );
+                tracing::info!("Created spring condition effect (handle: {})", handle_index);
 
                 Ok(handle_index)
             })
@@ -1072,10 +1067,7 @@ impl DirectInputFfbDevice {
                 device_ctx.effects.push(effect_handle);
                 let handle_index = device_ctx.effects.len() - 1;
 
-                tracing::info!(
-                    "Created damper condition effect (handle: {})",
-                    handle_index
-                );
+                tracing::info!("Created damper condition effect (handle: {})", handle_index);
 
                 Ok(handle_index)
             })
@@ -1762,7 +1754,9 @@ mod tests {
     #[cfg(windows)]
     fn test_device_initialization() {
         // This test requires DirectInput to be available
-        let mut device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+        let mut device =
+            DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                .unwrap();
 
         // Initialize will fail with invalid GUID or no device, but shouldn't panic
         let result = device.initialize();

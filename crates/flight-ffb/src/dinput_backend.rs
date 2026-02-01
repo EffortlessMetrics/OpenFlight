@@ -255,10 +255,12 @@ impl DirectInputBackend {
 
             // Apply envelope (clamps and validates)
             // Second parameter is safe_for_ffb - true since we're actively sending FFB
-            envelope.apply(torque_nm, true).map_err(|_| BackendError::SafetyRejected {
-                value: torque_nm,
-                limit: max_torque,
-            })?
+            envelope
+                .apply(torque_nm, true)
+                .map_err(|_| BackendError::SafetyRejected {
+                    value: torque_nm,
+                    limit: max_torque,
+                })?
         } else {
             torque_nm
         };
@@ -441,7 +443,9 @@ mod tests {
     fn test_backend_creation() {
         #[cfg(windows)]
         {
-            let device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+            let device =
+                DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                    .unwrap();
             let backend = DirectInputBackend::new(device);
 
             assert!(!backend.is_initialized());
@@ -453,7 +457,9 @@ mod tests {
     fn test_update_rate_clamping() {
         #[cfg(windows)]
         {
-            let device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+            let device =
+                DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                    .unwrap();
             let mut backend = DirectInputBackend::new(device);
 
             // Test clamping to minimum
@@ -483,7 +489,9 @@ mod tests {
     fn test_statistics() {
         #[cfg(windows)]
         {
-            let device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+            let device =
+                DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                    .unwrap();
             let backend = DirectInputBackend::new(device);
 
             let stats = backend.statistics();
@@ -498,7 +506,9 @@ mod tests {
     fn test_not_initialized_error() {
         #[cfg(windows)]
         {
-            let device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+            let device =
+                DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                    .unwrap();
             let mut backend = DirectInputBackend::new(device);
 
             let result = backend.set_axis_torque(0, 5.0);
@@ -512,7 +522,9 @@ mod tests {
         {
             // We can't fully initialize without a real device, so this test
             // verifies the error handling for invalid axis indices
-            let device = DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string()).unwrap();
+            let device =
+                DirectInputFfbDevice::new("{00000000-0000-0000-0000-000000000000}".to_string())
+                    .unwrap();
             let mut backend = DirectInputBackend::new(device);
             backend.initialized = true; // Force initialized for test
 

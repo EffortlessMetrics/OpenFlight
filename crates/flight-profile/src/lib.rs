@@ -278,6 +278,14 @@ impl Profile {
                     point.output = (point.output * 1_000_000.0).round() / 1_000_000.0;
                 }
             }
+
+            // Normalize filter parameters
+            if let Some(filter) = &mut config.filter {
+                filter.alpha = (filter.alpha * 1_000_000.0).round() / 1_000_000.0;
+                if let Some(threshold) = &mut filter.spike_threshold {
+                    *threshold = (*threshold * 1_000_000.0).round() / 1_000_000.0;
+                }
+            }
         }
 
         // Serialize with sorted keys
@@ -373,6 +381,11 @@ impl Profile {
             self.validate_detent(axis_name, i, detent)?;
         }
 
+        // Validate filter configuration
+        if let Some(filter) = &config.filter {
+            self.validate_filter_config(axis_name, filter)?;
+        }
+
         Ok(())
     }
 
@@ -408,6 +421,38 @@ impl Profile {
             return Err(ProfileError::Validation(format!(
                 "axes.{}.detents[{}].width: Detent width must be between 0.0 and 0.5",
                 axis_name, index
+            )));
+        }
+
+        Ok(())
+    }
+
+    fn validate_filter_config(&self, axis_name: &str, filter: &FilterConfig) -> Result<()> {
+        // Validate alpha is in [0.0, 1.0]
+        if !(0.0..=1.0).contains(&filter.alpha) {
+            return Err(ProfileError::Validation(format!(
+                "axes.{}.filter.alpha: Alpha must be between 0.0 and 1.0",
+                axis_name
+            )));
+        }
+
+        // Validate spike_threshold is positive if set
+        if let Some(threshold) = filter.spike_threshold
+            && (threshold <= 0.0 || threshold > 1.0)
+        {
+            return Err(ProfileError::Validation(format!(
+                "axes.{}.filter.spike_threshold: Spike threshold must be between 0.0 and 1.0",
+                axis_name
+            )));
+        }
+
+        // Validate max_spike_count is reasonable if set
+        if let Some(count) = filter.max_spike_count
+            && (count == 0 || count > 10)
+        {
+            return Err(ProfileError::Validation(format!(
+                "axes.{}.filter.max_spike_count: Max spike count must be between 1 and 10",
+                axis_name
             )));
         }
 

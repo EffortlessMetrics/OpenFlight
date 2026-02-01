@@ -30,10 +30,9 @@ pub mod input;
 pub mod presets;
 
 pub use flight_hid_support::device_support::{
-    is_hotas4_legacy_pid, is_tflight_device, tflight_model, AxisMode, TFlightModel,
-    TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, TFLIGHT_HOTAS_ONE_PID,
-    THRUSTMASTER_VENDOR_ID,
+    AxisMode, TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, TFLIGHT_HOTAS_ONE_PID, TFlightModel,
+    THRUSTMASTER_VENDOR_ID, is_hotas4_legacy_pid, is_tflight_device, tflight_model,
 };
 pub use health::{TFlightHealthMonitor, TFlightHealthStatus};
 pub use input::{TFlightAxes, TFlightButtons, TFlightInputHandler, TFlightInputState};
-pub use presets::{recommended_axis_config, RecommendedAxisConfig};
+pub use presets::{RecommendedAxisConfig, recommended_axis_config};

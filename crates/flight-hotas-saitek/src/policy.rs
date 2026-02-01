@@ -22,11 +22,23 @@
 //! OPENFLIGHT_ALLOW_DEVICE_IO=1 flightd
 //! ```
 
+use std::ffi::OsString;
 use std::sync::atomic::{AtomicBool, Ordering};
+
+/// Environment variable name for device I/O policy
+const DEVICE_IO_ENV_VAR: &str = "OPENFLIGHT_ALLOW_DEVICE_IO";
 
 /// Cached result of environment check to avoid repeated lookups.
 static DEVICE_IO_ALLOWED: AtomicBool = AtomicBool::new(false);
 static DEVICE_IO_CHECKED: AtomicBool = AtomicBool::new(false);
+
+/// Pure policy decision function - testable without environment mutation.
+///
+/// Returns `true` if the environment variable value is `Some(_)`.
+#[inline]
+fn allow_device_io_from_env(env_value: Option<OsString>) -> bool {
+    env_value.is_some()
+}
 
 /// Check if device output I/O is permitted.
 ///
@@ -39,7 +51,7 @@ pub fn allow_device_io() -> bool {
     }
 
     // Slow path: check environment and cache
-    let allowed = std::env::var_os("OPENFLIGHT_ALLOW_DEVICE_IO").is_some();
+    let allowed = allow_device_io_from_env(std::env::var_os(DEVICE_IO_ENV_VAR));
     DEVICE_IO_ALLOWED.store(allowed, Ordering::Relaxed);
     DEVICE_IO_CHECKED.store(true, Ordering::Release);
 
@@ -65,17 +77,30 @@ pub fn reset_policy_cache() {
 mod tests {
     use super::*;
 
+    // Test the pure policy decision logic without environment mutation
     #[test]
-    fn test_default_denies_io() {
+    fn test_policy_denies_when_env_not_set() {
+        // Pure function test - no env mutation needed
+        assert!(!allow_device_io_from_env(None));
+    }
+
+    #[test]
+    fn test_policy_allows_when_env_set() {
+        // Pure function test - any value enables I/O
+        assert!(allow_device_io_from_env(Some("1".into())));
+        assert!(allow_device_io_from_env(Some("".into())));
+        assert!(allow_device_io_from_env(Some("true".into())));
+    }
+
+    #[test]
+    fn test_cache_reset() {
+        // Verify cache reset works without env mutation
+        DEVICE_IO_ALLOWED.store(true, Ordering::Relaxed);
+        DEVICE_IO_CHECKED.store(true, Ordering::Relaxed);
+
         reset_policy_cache();
-        // Without env var set, should return false
-        // Note: This test may fail if OPENFLIGHT_ALLOW_DEVICE_IO is set in test env
-        // SAFETY: Single-threaded test environment. remove_var is unsafe in Rust 2024
-        // due to potential data races, but test isolation makes this safe here.
-        unsafe {
-            std::env::remove_var("OPENFLIGHT_ALLOW_DEVICE_IO");
-        }
-        reset_policy_cache();
-        assert!(!allow_device_io());
+
+        assert!(!DEVICE_IO_CHECKED.load(Ordering::Relaxed));
+        assert!(!DEVICE_IO_ALLOWED.load(Ordering::Relaxed));
     }
 }

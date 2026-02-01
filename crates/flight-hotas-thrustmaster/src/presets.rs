@@ -105,8 +105,16 @@ mod tests {
         let configs = recommended_axis_config();
 
         for config in &configs {
-            assert!(config.deadzone >= 0.0, "{} deadzone should be non-negative", config.name);
-            assert!(config.deadzone <= 0.2, "{} deadzone should not be too large", config.name);
+            assert!(
+                config.deadzone >= 0.0,
+                "{} deadzone should be non-negative",
+                config.name
+            );
+            assert!(
+                config.deadzone <= 0.2,
+                "{} deadzone should not be too large",
+                config.name
+            );
         }
     }
 
@@ -116,8 +124,11 @@ mod tests {
 
         for config in &configs {
             if let Some(alpha) = config.filter_alpha {
-                assert!(alpha > 0.0 && alpha <= 1.0,
-                    "{} filter alpha should be in (0, 1]", config.name);
+                assert!(
+                    alpha > 0.0 && alpha <= 1.0,
+                    "{} filter alpha should be in (0, 1]",
+                    config.name
+                );
             }
         }
     }

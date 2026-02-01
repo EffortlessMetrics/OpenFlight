@@ -7,8 +7,8 @@
 //! Supports both Merged and Separate axis modes.
 
 use flight_hid_support::device_support::{AxisMode, TFlightModel};
-use flight_hid_support::ghost_filter::presets;
 use flight_hid_support::ghost_filter::GhostInputFilter;
+use flight_hid_support::ghost_filter::presets;
 
 /// Axis values normalized to -1.0..1.0 range.
 #[derive(Debug, Clone, Default)]
@@ -144,7 +144,10 @@ impl TFlightInputHandler {
         let mut state = TFlightInputState::default();
 
         if report.len() < 9 {
-            tracing::warn!("T.Flight Separate mode report too short: {} bytes", report.len());
+            tracing::warn!(
+                "T.Flight Separate mode report too short: {} bytes",
+                report.len()
+            );
             return state;
         }
 
@@ -180,7 +183,10 @@ impl TFlightInputHandler {
         let mut state = TFlightInputState::default();
 
         if report.len() < 8 {
-            tracing::warn!("T.Flight Merged mode report too short: {} bytes", report.len());
+            tracing::warn!(
+                "T.Flight Merged mode report too short: {} bytes",
+                report.len()
+            );
             return state;
         }
 
@@ -233,11 +239,7 @@ fn normalize_axis_8bit_centered(raw: u8) -> f32 {
 /// Normalize an 8-bit throttle value to 0.0..1.0 range.
 fn normalize_throttle_8bit(raw: u8, invert: bool) -> f32 {
     let normalized = raw as f32 / 255.0;
-    if invert {
-        1.0 - normalized
-    } else {
-        normalized
-    }
+    if invert { 1.0 - normalized } else { normalized }
 }
 
 #[cfg(test)]

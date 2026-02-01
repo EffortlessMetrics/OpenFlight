@@ -29,17 +29,16 @@ use std::ptr;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 #[cfg(windows)]
-use windows::core::{Error, PCWSTR};
-#[cfg(windows)]
 use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
 #[cfg(windows)]
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 #[cfg(windows)]
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassExW, UnregisterClassW,
-    CS_HREDRAW, CS_VREDRAW, HWND_MESSAGE, WINDOW_EX_STYLE, WNDCLASSEXW,
-    WS_OVERLAPPED,
+    CS_HREDRAW, CS_VREDRAW, CreateWindowExW, DefWindowProcW, DestroyWindow, HWND_MESSAGE,
+    RegisterClassExW, UnregisterClassW, WINDOW_EX_STYLE, WNDCLASSEXW, WS_OVERLAPPED,
 };
+#[cfg(windows)]
+use windows::core::{Error, PCWSTR};
 
 /// Error type for window operations
 #[derive(Debug, thiserror::Error)]
@@ -144,14 +143,14 @@ impl MessageOnlyWindow {
             let hwnd = CreateWindowExW(
                 WINDOW_EX_STYLE(0),
                 PCWSTR::from_raw(class_name.as_ptr()),
-                PCWSTR::null(),      // No window title
-                WS_OVERLAPPED,       // Minimal style
-                0,                   // x
-                0,                   // y
-                0,                   // width
-                0,                   // height
-                Some(HWND_MESSAGE),  // Message-only window
-                None,                // No menu
+                PCWSTR::null(),     // No window title
+                WS_OVERLAPPED,      // Minimal style
+                0,                  // x
+                0,                  // y
+                0,                  // width
+                0,                  // height
+                Some(HWND_MESSAGE), // Message-only window
+                None,               // No menu
                 Some(hinstance),
                 Some(ptr::null()),
             )
@@ -211,9 +210,10 @@ impl Drop for MessageOnlyWindow {
 
             // Unregister the window class
             if self.class_atom != 0 {
-                if let Err(e) =
-                    UnregisterClassW(PCWSTR::from_raw(self.class_name.as_ptr()), Some(self.hinstance))
-                {
+                if let Err(e) = UnregisterClassW(
+                    PCWSTR::from_raw(self.class_name.as_ptr()),
+                    Some(self.hinstance),
+                ) {
                     tracing::warn!("UnregisterClassW failed: {}", e);
                 }
             }
@@ -286,10 +286,7 @@ mod tests {
 
         let window = window.unwrap();
         assert!(window.is_valid(), "Window should be valid after creation");
-        assert!(
-            window.hwnd_raw() != 0,
-            "Window handle should be non-zero"
-        );
+        assert!(window.hwnd_raw() != 0, "Window handle should be non-zero");
     }
 
     #[test]

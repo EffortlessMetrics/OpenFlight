@@ -31,11 +31,11 @@ use std::ptr;
 use std::sync::OnceLock;
 
 #[cfg(windows)]
-use windows::core::{Error, GUID, HRESULT, PCWSTR};
-#[cfg(windows)]
 use windows::Win32::Foundation::{HMODULE, HWND};
 #[cfg(windows)]
 use windows::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
+#[cfg(windows)]
+use windows::core::{Error, GUID, HRESULT, PCWSTR};
 
 // ============================================================================
 // DirectInput Version and Constants
@@ -500,12 +500,8 @@ pub struct IDirectInputEffectVtbl {
     pub Release: unsafe extern "system" fn(*mut IDirectInputEffect) -> u32,
 
     // IDirectInputEffect methods
-    pub Initialize: unsafe extern "system" fn(
-        *mut IDirectInputEffect,
-        HMODULE,
-        u32,
-        *const GUID,
-    ) -> i32,
+    pub Initialize:
+        unsafe extern "system" fn(*mut IDirectInputEffect, HMODULE, u32, *const GUID) -> i32,
     pub GetEffectGuid: unsafe extern "system" fn(*mut IDirectInputEffect, *mut GUID) -> i32,
     pub GetParameters:
         unsafe extern "system" fn(*mut IDirectInputEffect, *mut DIEFFECT, u32) -> i32,
@@ -608,11 +604,8 @@ impl IDirectInputEffect {
 #[repr(C)]
 pub struct IDirectInputDevice8WVtbl {
     // IUnknown methods
-    pub QueryInterface: unsafe extern "system" fn(
-        *mut IDirectInputDevice8W,
-        *const GUID,
-        *mut *mut c_void,
-    ) -> i32,
+    pub QueryInterface:
+        unsafe extern "system" fn(*mut IDirectInputDevice8W, *const GUID, *mut *mut c_void) -> i32,
     pub AddRef: unsafe extern "system" fn(*mut IDirectInputDevice8W) -> u32,
     pub Release: unsafe extern "system" fn(*mut IDirectInputDevice8W) -> u32,
 
@@ -631,7 +624,8 @@ pub struct IDirectInputDevice8WVtbl {
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *const GUID, *const c_void) -> i32,
     pub Acquire: unsafe extern "system" fn(*mut IDirectInputDevice8W) -> i32,
     pub Unacquire: unsafe extern "system" fn(*mut IDirectInputDevice8W) -> i32,
-    pub GetDeviceState: unsafe extern "system" fn(*mut IDirectInputDevice8W, u32, *mut c_void) -> i32,
+    pub GetDeviceState:
+        unsafe extern "system" fn(*mut IDirectInputDevice8W, u32, *mut c_void) -> i32,
     pub GetDeviceData: unsafe extern "system" fn(
         *mut IDirectInputDevice8W,
         u32,
@@ -639,18 +633,15 @@ pub struct IDirectInputDevice8WVtbl {
         *mut u32,
         u32,
     ) -> i32,
-    pub SetDataFormat:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, *const c_void) -> i32,
+    pub SetDataFormat: unsafe extern "system" fn(*mut IDirectInputDevice8W, *const c_void) -> i32,
     pub SetEventNotification:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *const c_void) -> i32,
-    pub SetCooperativeLevel:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, HWND, u32) -> i32,
+    pub SetCooperativeLevel: unsafe extern "system" fn(*mut IDirectInputDevice8W, HWND, u32) -> i32,
     pub GetObjectInfo:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut c_void, u32, u32) -> i32,
     pub GetDeviceInfo:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut DIDEVICEINSTANCEW) -> i32,
-    pub RunControlPanel:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, HWND, u32) -> i32,
+    pub RunControlPanel: unsafe extern "system" fn(*mut IDirectInputDevice8W, HWND, u32) -> i32,
     pub Initialize:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, HMODULE, u32, *const GUID) -> i32,
     pub CreateEffect: unsafe extern "system" fn(
@@ -666,12 +657,14 @@ pub struct IDirectInputDevice8WVtbl {
         *mut c_void,
         u32,
     ) -> i32,
-    pub GetEffectInfo:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut DIEFFECTINFOW, *const GUID) -> i32,
+    pub GetEffectInfo: unsafe extern "system" fn(
+        *mut IDirectInputDevice8W,
+        *mut DIEFFECTINFOW,
+        *const GUID,
+    ) -> i32,
     pub GetForceFeedbackState:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut u32) -> i32,
-    pub SendForceFeedbackCommand:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, u32) -> i32,
+    pub SendForceFeedbackCommand: unsafe extern "system" fn(*mut IDirectInputDevice8W, u32) -> i32,
     pub EnumCreatedEffectObjects: unsafe extern "system" fn(
         *mut IDirectInputDevice8W,
         *const c_void,
@@ -701,16 +694,11 @@ pub struct IDirectInputDevice8WVtbl {
         *const c_void,
         u32,
     ) -> i32,
-    pub BuildActionMap: unsafe extern "system" fn(
-        *mut IDirectInputDevice8W,
-        *mut c_void,
-        PCWSTR,
-        u32,
-    ) -> i32,
+    pub BuildActionMap:
+        unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut c_void, PCWSTR, u32) -> i32,
     pub SetActionMap:
         unsafe extern "system" fn(*mut IDirectInputDevice8W, *const c_void, PCWSTR, u32) -> i32,
-    pub GetImageInfo:
-        unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut c_void) -> i32,
+    pub GetImageInfo: unsafe extern "system" fn(*mut IDirectInputDevice8W, *mut c_void) -> i32,
 }
 
 /// IDirectInputDevice8W interface
@@ -1025,9 +1013,8 @@ fn load_dinput8() -> Option<(HMODULE, DirectInput8CreateFn)> {
 /// Caller must ensure COM has been initialized.
 #[cfg(windows)]
 pub unsafe fn create_direct_input8(hinst: HMODULE) -> Result<*mut IDirectInput8W, Error> {
-    let (_, create_fn) = load_dinput8().ok_or_else(|| {
-        Error::from_hresult(HRESULT(DIERR_NOTINITIALIZED))
-    })?;
+    let (_, create_fn) =
+        load_dinput8().ok_or_else(|| Error::from_hresult(HRESULT(DIERR_NOTINITIALIZED)))?;
 
     let mut dinput: *mut c_void = ptr::null_mut();
     let hr = create_fn(

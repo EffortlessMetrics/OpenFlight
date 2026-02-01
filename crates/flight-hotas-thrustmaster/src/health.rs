@@ -204,8 +204,7 @@ mod tests {
 
     #[test]
     fn test_legacy_pid_tracking() {
-        let monitor = TFlightHealthMonitor::new(TFlightModel::Hotas4)
-            .with_legacy_pid(true);
+        let monitor = TFlightHealthMonitor::new(TFlightModel::Hotas4).with_legacy_pid(true);
 
         let status = monitor.status(true, 0.0, GhostFilterStats::default());
         assert!(status.is_legacy_pid);
