@@ -267,6 +267,176 @@ impl Node for SlewNode {
     }
 }
 
+/// State for filter node (16 bytes aligned)
+#[repr(C, align(16))]
+#[derive(Debug, Clone, Copy)]
+pub struct FilterState {
+    /// Previous filtered output
+    pub prev_output: f32,
+    /// Last raw input (for spike detection)
+    pub last_raw: f32,
+    /// Consecutive spike count
+    pub spike_count: u8,
+    /// Whether filter has been initialized
+    pub initialized: bool,
+    /// Padding for alignment
+    pub _pad: [u8; 6],
+}
+
+/// EMA filter node with optional spike rejection.
+///
+/// Implements exponential moving average filtering for potentiometer noise reduction,
+/// with optional spike rejection for handling transient noise spikes.
+///
+/// Formula: S_t = alpha * Y_t + (1 - alpha) * S_{t-1}
+///
+/// Lower alpha values provide more smoothing but increase latency.
+/// Spike rejection helps with B104 potentiometers that exhibit occasional large jumps.
+///
+/// # Examples
+///
+/// ```
+/// use flight_axis::FilterNode;
+///
+/// // Basic EMA filter with 15% responsiveness
+/// let filter = FilterNode::new(0.15);
+///
+/// // B104 potentiometer preset for T.Flight HOTAS 4
+/// let b104_filter = FilterNode::b104_preset();
+/// ```
+#[derive(Debug, Clone)]
+pub struct FilterNode {
+    /// Smoothing factor [0.0, 1.0] - lower = more smoothing
+    pub alpha: f32,
+    /// Spike rejection threshold (optional, normalized units)
+    pub spike_threshold: Option<f32>,
+    /// Maximum consecutive spikes before accepting as real change
+    pub max_spike_count: u8,
+}
+
+impl FilterNode {
+    /// Create a new EMA filter with the specified alpha.
+    ///
+    /// # Arguments
+    /// * `alpha` - Smoothing factor in [0.0, 1.0]. Lower values = more smoothing.
+    ///   0.1 = heavy smoothing, 0.5 = moderate, 1.0 = no filtering.
+    pub fn new(alpha: f32) -> Self {
+        Self {
+            alpha: alpha.clamp(0.0, 1.0),
+            spike_threshold: None,
+            max_spike_count: 3,
+        }
+    }
+
+    /// Create an EMA filter with spike rejection.
+    ///
+    /// # Arguments
+    /// * `alpha` - Smoothing factor in [0.0, 1.0]
+    /// * `threshold` - Spike rejection threshold in normalized units.
+    ///   Changes larger than this are considered spikes.
+    pub fn with_spike_rejection(alpha: f32, threshold: f32) -> Self {
+        Self {
+            alpha: alpha.clamp(0.0, 1.0),
+            spike_threshold: Some(threshold.max(0.0)),
+            max_spike_count: 3,
+        }
+    }
+
+    /// Preset tuned for B104 linear potentiometers (T.Flight HOTAS 4).
+    ///
+    /// The B104 (100kΩ linear) potentiometers used in T.Flight HOTAS 4 are
+    /// known for jitter/noise. This preset provides:
+    /// - Alpha 0.15: Moderate smoothing with acceptable latency
+    /// - Spike threshold 0.4: Rejects large transient jumps
+    /// - Max spike count 5: Allows sustained changes to pass through
+    pub fn b104_preset() -> Self {
+        Self {
+            alpha: 0.15,
+            spike_threshold: Some(0.4),
+            max_spike_count: 5,
+        }
+    }
+}
+
+impl Node for FilterNode {
+    #[inline(always)]
+    fn step(&mut self, _frame: &mut AxisFrame) {
+        // This implementation is for compatibility only
+        // Real RT path uses step_soa with SoA state layout
+        unimplemented!("FilterNode requires SoA state layout - use step_soa()");
+    }
+
+    fn state_size(&self) -> usize {
+        std::mem::size_of::<FilterState>()
+    }
+
+    #[allow(unsafe_op_in_unsafe_fn)]
+    unsafe fn init_state(&self, state_ptr: *mut u8) {
+        let state = state_ptr as *mut FilterState;
+        *state = FilterState {
+            prev_output: 0.0,
+            last_raw: 0.0,
+            spike_count: 0,
+            initialized: false,
+            _pad: [0; 6],
+        };
+    }
+
+    #[allow(unsafe_op_in_unsafe_fn)]
+    unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
+        let state = &mut *(state_ptr as *mut FilterState);
+        let input = frame.out;
+
+        // Initialize on first sample
+        if !state.initialized {
+            state.prev_output = input;
+            state.last_raw = input;
+            state.initialized = true;
+            return;
+        }
+
+        // Check for spikes if threshold is configured
+        let accept_input = if let Some(threshold) = self.spike_threshold {
+            let delta = (input - state.last_raw).abs();
+
+            if delta > threshold {
+                // Potential spike detected
+                state.spike_count = state.spike_count.saturating_add(1);
+
+                if state.spike_count >= self.max_spike_count {
+                    // Too many consecutive "spikes" - accept as real change
+                    state.spike_count = 0;
+                    true
+                } else {
+                    // Reject spike, keep previous output
+                    false
+                }
+            } else {
+                // Normal change, reset spike count
+                state.spike_count = 0;
+                true
+            }
+        } else {
+            // No spike rejection configured
+            true
+        };
+
+        if accept_input {
+            // Apply EMA: S_t = alpha * Y_t + (1 - alpha) * S_{t-1}
+            frame.out = self.alpha * input + (1.0 - self.alpha) * state.prev_output;
+            state.prev_output = frame.out;
+            state.last_raw = input;
+        } else {
+            // Spike rejected, output previous filtered value
+            frame.out = state.prev_output;
+        }
+    }
+
+    fn node_type(&self) -> &'static str {
+        "filter"
+    }
+}
+
 /// Semantic role for detent zones
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DetentRole {

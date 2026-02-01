@@ -9,6 +9,17 @@
         dead_code
     )
 )]
+// Allow clippy warnings for placeholder implementations and FFI naming conventions
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::clone_on_copy)]
+#![allow(clippy::assign_op_pattern)]
+#![allow(clippy::vec_init_then_push)]
+#![allow(clippy::redundant_pattern_matching)]
+#![allow(clippy::single_char_add_str)]
+#![allow(dead_code)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -23,7 +34,12 @@ use std::time::{Duration, Instant};
 pub mod audio;
 pub mod blackbox;
 pub mod device_health;
+pub mod dinput_backend;
+#[cfg(windows)]
+pub mod dinput_com;
 pub mod dinput_device;
+#[cfg(windows)]
+pub mod dinput_window;
 pub mod fault;
 pub mod ffb_pipeline;
 #[cfg(test)]
@@ -57,6 +73,7 @@ mod tests;
 pub use audio::*;
 pub use blackbox::*;
 pub use device_health::*;
+pub use dinput_backend::*;
 pub use dinput_device::*;
 pub use fault::*;
 pub use ffb_pipeline::*;

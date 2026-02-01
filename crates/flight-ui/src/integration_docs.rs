@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Manages integration documentation for simulators
 pub struct IntegrationDocsManager {
@@ -92,11 +92,11 @@ impl IntegrationDocsManager {
             let entry = entry?;
             let path = entry.path();
 
-            if let Some(file_name) = path.file_stem().and_then(|s| s.to_str()) {
-                if file_name != "README" && path.extension().and_then(|s| s.to_str()) == Some("md")
-                {
-                    simulators.push(file_name.to_string());
-                }
+            if let Some(file_name) = path.file_stem().and_then(|s| s.to_str())
+                && file_name != "README"
+                && path.extension().and_then(|s| s.to_str()) == Some("md")
+            {
+                simulators.push(file_name.to_string());
             }
         }
 
@@ -201,13 +201,13 @@ impl IntegrationDocsManager {
         };
 
         // Parse overview section
-        if let Some(overview_start) = content.find("## Overview") {
-            if let Some(next_section) = content[overview_start..].find("\n## ") {
-                let overview_end = overview_start + next_section;
-                doc.overview = content[overview_start + 12..overview_end]
-                    .trim()
-                    .to_string();
-            }
+        if let Some(overview_start) = content.find("## Overview")
+            && let Some(next_section) = content[overview_start..].find("\n## ")
+        {
+            let overview_end = overview_start + next_section;
+            doc.overview = content[overview_start + 12..overview_end]
+                .trim()
+                .to_string();
         }
 
         // Parse files modified section
@@ -234,15 +234,15 @@ impl IntegrationDocsManager {
 
         // Look for file paths and purposes in the section
         for line in section.lines() {
-            if line.starts_with("**Location**:") {
-                if let Some(path) = line.split(':').nth(1) {
-                    files.push(FileModification {
-                        path: path.trim().to_string(),
-                        purpose: "Configuration modification".to_string(),
-                        changes: vec!["See documentation for details".to_string()],
-                        backup_created: true,
-                    });
-                }
+            if line.starts_with("**Location**:")
+                && let Some(path) = line.split(':').nth(1)
+            {
+                files.push(FileModification {
+                    path: path.trim().to_string(),
+                    purpose: "Configuration modification".to_string(),
+                    changes: vec!["See documentation for details".to_string()],
+                    backup_created: true,
+                });
             }
         }
 
@@ -254,18 +254,17 @@ impl IntegrationDocsManager {
 
         // Look for port information
         for line in section.lines() {
-            if line.contains("Port") && line.contains(":") {
-                // Extract port number if present
-                if let Some(port_str) = line.split(':').nth(1) {
-                    if let Ok(port) = port_str.trim().parse::<u16>() {
-                        connections.push(NetworkConnection {
-                            port: Some(port),
-                            protocol: "TCP/UDP".to_string(),
-                            purpose: "Simulator communication".to_string(),
-                            direction: "Bidirectional".to_string(),
-                        });
-                    }
-                }
+            if line.contains("Port")
+                && line.contains(":")
+                && let Some(port_str) = line.split(':').nth(1)
+                && let Ok(port) = port_str.trim().parse::<u16>()
+            {
+                connections.push(NetworkConnection {
+                    port: Some(port),
+                    protocol: "TCP/UDP".to_string(),
+                    purpose: "Simulator communication".to_string(),
+                    direction: "Bidirectional".to_string(),
+                });
             }
         }
 
@@ -333,7 +332,7 @@ impl Default for IntegrationDocsManager {
 }
 
 /// Validation result for integration documentation
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ValidationResult {
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
@@ -341,10 +340,7 @@ pub struct ValidationResult {
 
 impl ValidationResult {
     pub fn new() -> Self {
-        Self {
-            errors: Vec::new(),
-            warnings: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn add_error(&mut self, error: String) {
@@ -361,7 +357,7 @@ impl ValidationResult {
 }
 
 /// Summary information for installer
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct InstallerSummary {
     pub total_files_modified: usize,
     pub network_ports_used: Vec<u16>,
@@ -371,12 +367,7 @@ pub struct InstallerSummary {
 
 impl InstallerSummary {
     pub fn new() -> Self {
-        Self {
-            total_files_modified: 0,
-            network_ports_used: Vec::new(),
-            simulators_supported: Vec::new(),
-            requires_admin: false,
-        }
+        Self::default()
     }
 
     pub fn add_simulator(
@@ -389,10 +380,10 @@ impl InstallerSummary {
         self.total_files_modified += files.len();
 
         for conn in connections {
-            if let Some(port) = conn.port {
-                if !self.network_ports_used.contains(&port) {
-                    self.network_ports_used.push(port);
-                }
+            if let Some(port) = conn.port
+                && !self.network_ports_used.contains(&port)
+            {
+                self.network_ports_used.push(port);
             }
         }
     }

@@ -579,6 +579,7 @@ fn create_deterministic_profile() -> flight_core::profile::Profile {
             slew_rate: None,
             detents: vec![],
             curve: None, // Linear response
+            filter: None,
         },
     );
 

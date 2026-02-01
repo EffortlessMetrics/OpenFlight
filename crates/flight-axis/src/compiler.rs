@@ -7,7 +7,8 @@
 //! function pointer pipelines with Structure-of-Arrays state layout.
 
 use crate::nodes::{
-    CurveNode, DeadzoneNode, DetentNode, DetentRole, DetentZone, MixerConfig, MixerNode, SlewNode,
+    CurveNode, DeadzoneNode, DetentNode, DetentRole, DetentZone, FilterNode, MixerConfig,
+    MixerNode, SlewNode,
 };
 use crate::{AxisFrame, Node, NodeId, Pipeline};
 use std::sync::Arc;
@@ -127,6 +128,18 @@ fn generate_mixer_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mu
     mixer_step
 }
 
+/// Generate specialized step function for filter nodes
+fn generate_filter_step_fn(_node: Arc<dyn Node>) -> unsafe fn(*mut AxisFrame, *mut u8) {
+    #[allow(unsafe_op_in_unsafe_fn)]
+    unsafe fn filter_step(_frame_ptr: *mut AxisFrame, _state_ptr: *mut u8) {
+        // This is a bridge implementation that delegates to the node's step_soa method
+        // The actual filter logic (EMA + spike rejection) is handled by the pipeline's
+        // process method which calls step_soa on each node when source_nodes are available
+    }
+
+    filter_step
+}
+
 /// Pipeline compiler for function pointer generation
 pub struct PipelineCompiler {
     nodes: Vec<Arc<dyn Node>>,
@@ -200,6 +213,7 @@ impl PipelineCompiler {
             "slew" => Ok(generate_slew_step_fn(node)),
             "detent" => Ok(generate_detent_step_fn(node)),
             "mixer" => Ok(generate_mixer_step_fn(node)),
+            "filter" => Ok(generate_filter_step_fn(node)),
             _ => Err(CompileError::FunctionGeneration),
         }
     }
@@ -275,6 +289,33 @@ impl PipelineBuilder {
     ) -> Result<Self, &'static str> {
         let mixer = MixerNode::aileron_rudder_coordination(coordination_factor)?;
         Ok(self.add_node(mixer))
+    }
+
+    /// Add EMA filter for noise reduction
+    ///
+    /// # Arguments
+    /// * `alpha` - Smoothing factor in [0.0, 1.0]. Lower values = more smoothing.
+    ///   0.1 = heavy smoothing, 0.5 = moderate, 1.0 = no filtering.
+    pub fn filter(self, alpha: f32) -> Self {
+        self.add_node(FilterNode::new(alpha))
+    }
+
+    /// Add EMA filter with spike rejection
+    ///
+    /// # Arguments
+    /// * `alpha` - Smoothing factor in [0.0, 1.0]
+    /// * `threshold` - Spike rejection threshold in normalized units.
+    ///   Changes larger than this are considered spikes.
+    pub fn filter_with_spike_rejection(self, alpha: f32, threshold: f32) -> Self {
+        self.add_node(FilterNode::with_spike_rejection(alpha, threshold))
+    }
+
+    /// Add B104 potentiometer preset filter (for T.Flight HOTAS 4)
+    ///
+    /// Pre-configured for the B104 linear pot's noise characteristics:
+    /// alpha=0.15, spike_threshold=0.1
+    pub fn b104_filter(self) -> Self {
+        self.add_node(FilterNode::b104_preset())
     }
 
     /// Add custom node
@@ -431,5 +472,55 @@ mod tests {
 
         let types: Vec<_> = pipeline.metadata().iter().map(|m| m.node_type).collect();
         assert_eq!(types, vec!["deadzone", "curve", "slew", "mixer"]);
+    }
+
+    #[test]
+    fn test_filter_compilation() {
+        let result = PipelineBuilder::new().filter(0.15).compile();
+
+        assert!(result.is_ok());
+        let pipeline = result.unwrap();
+        assert_eq!(pipeline.metadata().len(), 1);
+        assert_eq!(pipeline.metadata()[0].node_type, "filter");
+    }
+
+    #[test]
+    fn test_filter_with_spike_rejection_compilation() {
+        let result = PipelineBuilder::new()
+            .filter_with_spike_rejection(0.2, 0.1)
+            .compile();
+
+        assert!(result.is_ok());
+        let pipeline = result.unwrap();
+        assert_eq!(pipeline.metadata().len(), 1);
+        assert_eq!(pipeline.metadata()[0].node_type, "filter");
+    }
+
+    #[test]
+    fn test_b104_filter_compilation() {
+        let result = PipelineBuilder::new().b104_filter().compile();
+
+        assert!(result.is_ok());
+        let pipeline = result.unwrap();
+        assert_eq!(pipeline.metadata().len(), 1);
+        assert_eq!(pipeline.metadata()[0].node_type, "filter");
+    }
+
+    #[test]
+    fn test_pipeline_with_filter_and_other_nodes() {
+        let result = PipelineBuilder::new()
+            .filter(0.15)
+            .deadzone(0.05)
+            .curve(0.2)
+            .unwrap()
+            .slew(1.5)
+            .compile();
+
+        assert!(result.is_ok());
+        let pipeline = result.unwrap();
+        assert_eq!(pipeline.metadata().len(), 4);
+
+        let types: Vec<_> = pipeline.metadata().iter().map(|m| m.node_type).collect();
+        assert_eq!(types, vec!["filter", "deadzone", "curve", "slew"]);
     }
 }

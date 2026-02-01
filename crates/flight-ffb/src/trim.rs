@@ -258,7 +258,7 @@ impl TrimController {
     }
 
     /// Update spring trim with freeze/ramp logic
-    fn update_spring(&mut self, dt: f32) -> TrimOutput {
+    fn update_spring(&mut self, _dt: f32) -> TrimOutput {
         // Handle spring ramp if active
         if let Some(ramp_start) = self.spring_ramp_start {
             let ramp_elapsed = ramp_start.elapsed();

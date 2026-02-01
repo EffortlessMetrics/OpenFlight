@@ -233,7 +233,7 @@ impl DcsInstaller {
                 fs::metadata(p)
                     .and_then(|m| m.modified())
                     .ok()
-                    .map(|t| std::cmp::Reverse(t))
+                    .map(std::cmp::Reverse)
             });
 
             if let Some(most_recent) = backups.first() {

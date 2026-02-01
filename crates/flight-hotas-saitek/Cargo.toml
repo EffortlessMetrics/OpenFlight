@@ -1,0 +1,29 @@
+[package]
+name = "flight-hotas-saitek"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Saitek/Logitech HOTAS driver for OpenFlight"
+
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+# Enable experimental MFD support (unverified protocol)
+x52-mfd-experimental = []
+# Enable experimental LED support (unverified protocol)
+x52-led-experimental = []
+# Enable experimental X56 RGB support (unverified protocol)
+x56-rgb-experimental = []
+
+[dependencies]
+flight-hid-support = { path = "../flight-hid-support" }
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]

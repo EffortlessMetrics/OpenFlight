@@ -5,5 +5,9 @@
 
 pub use flight_hid_types::HidDeviceInfo;
 
-pub mod hid_descriptor;
 pub mod device_support;
+pub mod ghost_filter;
+pub mod hid_descriptor;
+pub mod saitek_hotas;
+
+pub use saitek_hotas::{SaitekHotasFamily, SaitekHotasType, is_saitek_hotas};

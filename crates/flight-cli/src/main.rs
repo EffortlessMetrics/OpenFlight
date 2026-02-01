@@ -4,6 +4,9 @@
 //! Flight Hub CLI - Command line interface with full parity to UI functionality
 
 #![allow(unused)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::ptr_arg)]
+#![allow(clippy::field_reassign_with_default)]
 
 #[cfg(feature = "cli")]
 use clap::{Parser, Subcommand};

@@ -217,10 +217,10 @@ fn device_name(device_info: &flight_hid::HidDeviceInfo) -> String {
     }
 
     if let Some(model) = device_support::vkb_gladiator_variant(device_info) {
-        if let Some(product_name) = device_info.product_name.as_deref() {
-            if product_name.to_lowercase().contains("omni") {
-                return product_name.to_string();
-            }
+        if let Some(product_name) = device_info.product_name.as_deref()
+            && product_name.to_lowercase().contains("omni")
+        {
+            return product_name.to_string();
         }
 
         return model.name().to_string();
@@ -253,10 +253,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
         metadata.insert("product_name".to_string(), product_name.clone());
     }
 
-    if let Some(discovery) = device_support::descriptor_discovery_from_device_info(device_info) {
-        if let Ok(json) = serde_json::to_string(&discovery) {
-            metadata.insert("descriptor_discovery".to_string(), json);
-        }
+    if let Some(discovery) = device_support::descriptor_discovery_from_device_info(device_info)
+        && let Ok(json) = serde_json::to_string(&discovery)
+    {
+        metadata.insert("descriptor_discovery".to_string(), json);
     }
 
     if let Some(model) = device_support::tflight_model(device_info) {
@@ -299,10 +299,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
             "vkb-gladiator-nxt-evo".to_string(),
         );
         metadata.insert("model".to_string(), model.name().to_string());
-        if let Some(product_name) = device_info.product_name.as_deref() {
-            if product_name.to_lowercase().contains("omni") {
-                metadata.insert("variant.omni".to_string(), "true".to_string());
-            }
+        if let Some(product_name) = device_info.product_name.as_deref()
+            && product_name.to_lowercase().contains("omni")
+        {
+            metadata.insert("variant.omni".to_string(), "true".to_string());
         }
     }
 

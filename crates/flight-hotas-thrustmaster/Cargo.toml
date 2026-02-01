@@ -1,0 +1,23 @@
+[package]
+name = "flight-hotas-thrustmaster"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Thrustmaster T.Flight HOTAS driver for OpenFlight"
+
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+flight-hid-support = { path = "../flight-hid-support" }
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]

@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::vec_init_then_push)]
+#![allow(clippy::ptr_arg)]
+#![allow(clippy::useless_format)]
+#![allow(clippy::needless_lifetimes)]
+#![allow(clippy::single_char_add_str)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::for_kv_map)]
+#![allow(clippy::useless_conversion)]
+#![allow(dead_code)]
+
 //! Flight Hub Update System
 //!
 //! Provides secure, reliable updates with channels, rollback, and delta compression.

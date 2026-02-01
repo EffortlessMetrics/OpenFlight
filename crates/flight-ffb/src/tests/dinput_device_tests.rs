@@ -17,10 +17,18 @@
 //! - FFB-HID-01.2: Effect creation (constant force, periodic, spring, damper)
 //! - FFB-HID-01.3: Effect parameter updates
 //! - FFB-HID-01.4: Effect lifecycle management (start, stop)
+//!
+//! # Note
+//! Most tests in this module require real DirectInput FFB hardware to be connected.
+//! Tests that don't require hardware use a valid but non-existent GUID format.
+//! The dummy GUID used is: {00000000-0000-0000-0000-000000000000}
 
 #[cfg(test)]
 mod tests {
     use crate::dinput_device::*;
+
+    /// A valid GUID format that doesn't correspond to any real device
+    const TEST_GUID: &str = "{00000000-0000-0000-0000-000000000000}";
 
     // ========================================================================
     // Mock/Fake DirectInput Tests (cfg(test) only)
@@ -29,7 +37,7 @@ mod tests {
     /// Test device creation on supported and unsupported platforms
     #[test]
     fn test_device_creation_platform_support() {
-        let device = DirectInputFfbDevice::new("test-guid-12345".to_string());
+        let device = DirectInputFfbDevice::new(TEST_GUID.to_string());
 
         #[cfg(windows)]
         {
@@ -60,7 +68,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_device_initialization_stub() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
 
         // Initialize should succeed with stub implementation
         let result = device.initialize();
@@ -94,7 +102,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_capability_query_defaults() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
 
         let caps = device.query_capabilities().unwrap();
@@ -126,7 +134,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_device_acquisition_lifecycle() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
 
         // Initially not acquired
@@ -165,7 +173,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_operations_require_acquisition() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
 
         // Try to create effect without acquiring
@@ -200,7 +208,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_constant_force_effect_creation() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -230,7 +238,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_constant_force_invalid_axis() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -253,7 +261,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_periodic_effect_creation() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -268,7 +276,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_spring_effect_creation() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -283,7 +291,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_damper_effect_creation() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -298,7 +306,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_multiple_effect_types() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -326,7 +334,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_constant_force_magnitude_updates() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.query_capabilities().unwrap(); // Sets max_torque_nm = 15.0
         device.acquire(0).unwrap();
@@ -367,7 +375,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_constant_force_wrong_effect_type() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -387,7 +395,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_periodic_effect_parameters() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -436,7 +444,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_periodic_parameters_wrong_effect_type() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -456,7 +464,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_spring_effect_parameters() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -494,7 +502,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_spring_parameters_wrong_effect_type() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -514,7 +522,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_damper_effect_parameters() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -541,7 +549,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_damper_parameters_wrong_effect_type() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -561,7 +569,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_parameter_updates_invalid_handles() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -605,7 +613,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_effect_start_stop() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -651,7 +659,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_effect_start_stop_invalid_handles() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 
@@ -685,7 +693,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_effect_start_stop_without_acquisition() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
 
         // Try to start/stop without acquiring device
@@ -710,7 +718,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_independent_pitch_roll_control() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.query_capabilities().unwrap();
         device.acquire(0).unwrap();
@@ -745,7 +753,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_multiple_constant_force_effects() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.query_capabilities().unwrap();
         device.acquire(0).unwrap();
@@ -834,7 +842,7 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn test_error_recovery() {
-        let mut device = DirectInputFfbDevice::new("test-guid".to_string()).unwrap();
+        let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
         device.acquire(0).unwrap();
 

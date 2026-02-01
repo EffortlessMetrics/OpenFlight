@@ -13,10 +13,10 @@ use std::thread;
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
-use crate::{DeviceCapabilities, FfbEngine, FfbError, FfbMode, Result};
+use crate::{DeviceCapabilities, FfbEngine, FfbError, Result};
 use flight_hid::ofp1::{
-    CommandFlags, HealthStatusReport, Ofp1Device, Ofp1Error, Ofp1HealthMonitor,
-    Ofp1NegotiationResult, Ofp1Negotiator, StatusFlags, TorqueCommandReport, report_ids, utils,
+    HealthStatusReport, Ofp1Device, Ofp1Error, Ofp1HealthMonitor, Ofp1NegotiationResult,
+    Ofp1Negotiator, StatusFlags, report_ids, utils,
 };
 
 /// OFP-1 FFB integration manager
@@ -304,7 +304,7 @@ impl Ofp1FfbIntegration {
 
     /// Main integration loop (runs in separate thread)
     fn integration_loop(
-        ffb_engine: Arc<Mutex<FfbEngine>>,
+        _ffb_engine: Arc<Mutex<FfbEngine>>,
         command_receiver: Receiver<TorqueCommand>,
         health_sender: Sender<HealthUpdate>,
         device_path: String,

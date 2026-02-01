@@ -9,6 +9,18 @@
         dead_code
     )
 )]
+// Allow unused code in this WIP crate
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(unused_parens)]
+#![allow(unused_assignments)]
+#![allow(dead_code)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::manual_abs_diff)]
+#![allow(clippy::derivable_impls)]
+#![allow(clippy::manual_map)]
+#![allow(clippy::let_and_return)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

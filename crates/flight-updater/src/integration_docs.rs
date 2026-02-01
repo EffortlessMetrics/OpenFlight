@@ -387,7 +387,7 @@ impl IntegrationDocsManager {
         summary.push_str("| Simulator | Files Modified | Network Ports | Multiplayer Safe |\n");
         summary.push_str("|-----------|----------------|---------------|------------------|\n");
 
-        for (sim_name, docs) in &self.docs {
+        for docs in self.docs.values() {
             let file_count = docs.files.len();
             let port_count = docs.network_ports.len();
             let mp_safe = docs

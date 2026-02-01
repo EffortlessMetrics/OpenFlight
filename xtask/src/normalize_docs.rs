@@ -71,24 +71,22 @@ pub fn verify_doc_id_uniqueness(docs: &[(PathBuf, FrontMatter)]) -> Result<()> {
 /// Returns the title string if found, or "Untitled" if no H1 heading exists.
 fn extract_title(content: &str) -> String {
     // Skip front matter if present
-    let content_start = if content.starts_with("---") {
+    let content_after_front_matter = if let Some(stripped) = content.strip_prefix("---") {
         // Find the end of front matter
-        if let Some(end_pos) = content[3..].find("\n---") {
-            end_pos + 7 // Skip past the closing "---\n"
+        if let Some(end_pos) = stripped.find("\n---") {
+            &stripped[end_pos + 4..] // Skip past the closing "---\n"
         } else {
-            0
+            content
         }
     } else {
-        0
+        content
     };
-
-    let content_after_front_matter = &content[content_start..];
 
     // Look for first H1 heading
     for line in content_after_front_matter.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("# ") {
-            return trimmed[2..].trim().to_string();
+        if let Some(title) = trimmed.strip_prefix("# ") {
+            return title.trim().to_string();
         }
     }
 

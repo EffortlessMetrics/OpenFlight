@@ -57,6 +57,7 @@ fn demo_basic_profile_creation() -> Result<(), Box<dyn std::error::Error>> {
                     output: 1.0,
                 },
             ]),
+            filter: None,
         },
     );
 
@@ -202,6 +203,7 @@ fn create_test_profile() -> Profile {
                     output: 1.0,
                 },
             ]),
+            filter: None,
         },
     );
 
@@ -213,6 +215,7 @@ fn create_test_profile() -> Profile {
             slew_rate: None,
             detents: vec![],
             curve: None,
+            filter: None,
         },
     );
 

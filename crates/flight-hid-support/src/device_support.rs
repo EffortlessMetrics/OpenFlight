@@ -10,9 +10,40 @@ use std::fmt;
 
 pub const THRUSTMASTER_VENDOR_ID: u16 = 0x044F;
 pub const VKB_VENDOR_ID: u16 = 0x231D;
+pub const SAITEK_VENDOR_ID: u16 = 0x06A3;
+pub const MAD_CATZ_VENDOR_ID: u16 = 0x0738;
+pub const LOGITECH_VENDOR_ID: u16 = 0x046D;
 
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
-pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67A;
+/// Primary PID for T.Flight HOTAS 4 - verified via USBView artifact.
+pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
+/// Legacy PID for T.Flight HOTAS 4 - may appear on older firmware versions.
+pub const TFLIGHT_HOTAS_4_PID_LEGACY: u16 = 0xB67A;
+
+// Saitek/Logitech HOTAS PIDs
+// See docs/reference/hotas-claims.md for verification status
+//
+// X52 family (unified USB) - confidence: KNOWN
+pub const X52_PID: u16 = 0x075C;
+pub const X52_PRO_PID: u16 = 0x0762;
+
+// X55 family (split USB, Saitek VID 0x06A3) - confidence: LIKELY
+// Note: Some X55 units may use Mad Catz VID (0x0738) with same PIDs
+pub const X55_STICK_PID: u16 = 0x2215;
+pub const X55_THROTTLE_PID: u16 = 0xA215;
+
+// X56 family - Mad Catz era (split USB, VID 0x0738) - confidence: LIKELY
+// These are the "blue" X56 units from the Mad Catz acquisition period
+pub const X56_MADCATZ_STICK_PID: u16 = 0x2221;
+pub const X56_MADCATZ_THROTTLE_PID: u16 = 0xA221;
+
+// X56 family - Logitech branded (split USB, VID 0x046D) - confidence: LIKELY/SUSPECT
+// Stick PID 0xC229 is likely correct
+// WARNING: Throttle PID 0xC22A may conflict with Logitech G110 keyboard!
+// See docs/reference/hotas-claims.md - requires lsusb verification from real hardware
+pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
+// SUSPECT: This PID needs verification - do NOT match unknown Logitech PIDs
+// pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
 
 pub const VKB_STECS_LEFT_SPACE_MINI_PID: u16 = 0x0136;
 pub const VKB_STECS_RIGHT_SPACE_MINI_PID: u16 = 0x013A;
@@ -200,9 +231,18 @@ pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
 
     match device_info.product_id {
         TFLIGHT_HOTAS_ONE_PID => Some(TFlightModel::HotasOne),
-        TFLIGHT_HOTAS_4_PID => Some(TFlightModel::Hotas4),
+        TFLIGHT_HOTAS_4_PID | TFLIGHT_HOTAS_4_PID_LEGACY => Some(TFlightModel::Hotas4),
         _ => None,
     }
+}
+
+/// Returns true if the HOTAS 4 was detected via the legacy PID.
+///
+/// This allows diagnostics/UI to note that the device may be running
+/// older firmware. The legacy PID is still fully supported.
+pub fn is_hotas4_legacy_pid(device_info: &HidDeviceInfo) -> bool {
+    device_info.vendor_id == THRUSTMASTER_VENDOR_ID
+        && device_info.product_id == TFLIGHT_HOTAS_4_PID_LEGACY
 }
 
 pub fn is_tflight_device(device_info: &HidDeviceInfo) -> bool {

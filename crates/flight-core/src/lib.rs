@@ -31,6 +31,7 @@
 //!     slew_rate: Some(1.2),
 //!     detents: vec![],
 //!     curve: None,
+//!     filter: None,
 //! });
 //!
 //! let profile = Profile {

@@ -8,7 +8,6 @@
 //! Includes pre-fault capture system for diagnostics and stable error codes.
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Types of faults that can be detected

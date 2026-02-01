@@ -65,6 +65,7 @@ proptest! {
             slew_rate: Some(slew),
             detents: vec![],
             curve: None,
+            filter: None,
         });
 
         let profile = Profile {

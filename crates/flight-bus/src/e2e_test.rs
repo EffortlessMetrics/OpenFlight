@@ -240,23 +240,23 @@ impl MockFfbEngine {
         let dt = self.config.timestep_s;
 
         // Handle fault ramp-down
-        if self.in_fault_ramp {
-            if let Some(start) = self.fault_ramp_start {
-                let elapsed = start.elapsed();
-                let ramp_time = Duration::from_millis(50);
+        if self.in_fault_ramp
+            && let Some(start) = self.fault_ramp_start
+        {
+            let elapsed = start.elapsed();
+            let ramp_time = Duration::from_millis(50);
 
-                if elapsed >= ramp_time {
-                    // Ramp complete
-                    self.last_torque_nm = 0.0;
-                    self.last_slew_rate_nm_per_s = 0.0;
-                    return Ok(0.0);
-                } else {
-                    // Linear ramp to zero
-                    let progress = elapsed.as_secs_f32() / ramp_time.as_secs_f32();
-                    let torque = self.fault_initial_torque_nm * (1.0 - progress);
-                    self.last_torque_nm = torque;
-                    return Ok(torque);
-                }
+            if elapsed >= ramp_time {
+                // Ramp complete
+                self.last_torque_nm = 0.0;
+                self.last_slew_rate_nm_per_s = 0.0;
+                return Ok(0.0);
+            } else {
+                // Linear ramp to zero
+                let progress = elapsed.as_secs_f32() / ramp_time.as_secs_f32();
+                let torque = self.fault_initial_torque_nm * (1.0 - progress);
+                self.last_torque_nm = torque;
+                return Ok(torque);
             }
         }
 

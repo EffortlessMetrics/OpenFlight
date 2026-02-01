@@ -20,6 +20,8 @@ members = [
     "crates/flight-panels",
     "crates/flight-panels-core",
     "crates/flight-panels-saitek",
+    "crates/flight-hotas-saitek",
+    "crates/flight-hotas-thrustmaster",
     "crates/flight-panels-cougar",
     "crates/flight-streamdeck",
     "crates/flight-tactile",

@@ -304,10 +304,10 @@ impl TactileBridge {
                             channel_router.update_mapping(new_config.channel_mapping.clone());
 
                             // Update SimShaker bridge if needed
-                            if let Some(ref mut bridge) = simshaker_bridge {
-                                if let Err(e) = bridge.update_config(new_config.simshaker.clone()) {
-                                    warn!("Failed to update SimShaker config: {}", e);
-                                }
+                            if let Some(ref mut bridge) = simshaker_bridge
+                                && let Err(e) = bridge.update_config(new_config.simshaker.clone())
+                            {
+                                warn!("Failed to update SimShaker config: {}", e);
                             }
                         }
                         BridgeCommand::TestEffect(effect_type, intensity) => {
@@ -407,10 +407,10 @@ impl TactileBridge {
         let outputs = channel_router.process_events(events.clone());
 
         // Send to SimShaker bridge
-        if let Some(bridge) = simshaker_bridge {
-            if let Err(e) = bridge.update(&outputs) {
-                warn!("Failed to update SimShaker bridge: {}", e);
-            }
+        if let Some(bridge) = simshaker_bridge
+            && let Err(e) = bridge.update(&outputs)
+        {
+            warn!("Failed to update SimShaker bridge: {}", e);
         }
 
         // Update statistics
@@ -438,12 +438,11 @@ impl TactileBridge {
         channel_router: &mut ChannelRouter,
         simshaker_bridge: &mut Option<SimShakerBridge>,
     ) {
-        if let Ok(outputs) = channel_router.test_effect(effect_type, intensity) {
-            if let Some(bridge) = simshaker_bridge {
-                if let Err(e) = bridge.update(&outputs) {
-                    warn!("Failed to send test effect to SimShaker: {}", e);
-                }
-            }
+        if let Ok(outputs) = channel_router.test_effect(effect_type, intensity)
+            && let Some(bridge) = simshaker_bridge
+            && let Err(e) = bridge.update(&outputs)
+        {
+            warn!("Failed to send test effect to SimShaker: {}", e);
         }
     }
 }

@@ -59,7 +59,7 @@ make verify-patterns   # Check for known problematic patterns
 
 | Gate | What it checks |
 |------|---------------|
-| QG-SANITY-GATE | Compilation, formatting |
+| QG-SANITY-GATE | Sanity telemetry tests (NaN/Inf injection, implausible jumps) |
 | QG-FFB-SAFETY | Force feedback safety systems |
 | QG-RT-JITTER | Timer jitter p99 ≤ 0.5ms (hardware runners) |
 | QG-HID-LATENCY | HID write latency p99 ≤ 300μs (hardware runners) |

@@ -121,10 +121,10 @@ pub fn emit_event(event: TraceEvent) -> Result<(), TraceError> {
 
     // Emit to platform provider
     let provider = TRACE_PROVIDER.read();
-    if let Some(ref p) = provider.as_ref() {
-        if p.is_enabled() {
-            p.emit_event(&event)?;
-        }
+    if let Some(p) = provider.as_ref()
+        && p.is_enabled()
+    {
+        p.emit_event(&event)?;
     }
 
     Ok(())
@@ -143,7 +143,7 @@ pub fn reset_counters() {
 /// Check if tracing is enabled
 pub fn is_enabled() -> bool {
     let provider = TRACE_PROVIDER.read();
-    provider.as_ref().map_or(false, |p| p.is_enabled())
+    provider.as_ref().is_some_and(|p| p.is_enabled())
 }
 
 /// High-level tracing macros for common events

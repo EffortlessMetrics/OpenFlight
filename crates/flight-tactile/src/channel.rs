@@ -189,15 +189,15 @@ impl ChannelRouter {
 
         // Accumulate intensities for each channel
         for (effect_type, event) in &self.active_effects {
-            if let Some(channel_id) = self.mapping.get_channel(*effect_type) {
-                if self.mapping.is_channel_enabled(channel_id) {
-                    let gain = self.mapping.get_channel_gain(channel_id);
-                    let intensity = event.intensity.value() * gain;
+            if let Some(channel_id) = self.mapping.get_channel(*effect_type)
+                && self.mapping.is_channel_enabled(channel_id)
+            {
+                let gain = self.mapping.get_channel_gain(channel_id);
+                let intensity = event.intensity.value() * gain;
 
-                    // Accumulate intensities (max of all effects on this channel)
-                    let current = channel_intensities.get(&channel_id).copied().unwrap_or(0.0);
-                    channel_intensities.insert(channel_id, current.max(intensity));
-                }
+                // Accumulate intensities (max of all effects on this channel)
+                let current = channel_intensities.get(&channel_id).copied().unwrap_or(0.0);
+                channel_intensities.insert(channel_id, current.max(intensity));
             }
         }
 

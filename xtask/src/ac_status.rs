@@ -164,7 +164,7 @@ pub fn generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario
 /// Returns the short commit hash (7 characters) or an error if git is not available.
 fn get_git_commit() -> Result<String> {
     let output = Command::new("git")
-        .args(&["rev-parse", "--short", "HEAD"])
+        .args(["rev-parse", "--short", "HEAD"])
         .output()
         .context("Failed to execute git command")?;
 

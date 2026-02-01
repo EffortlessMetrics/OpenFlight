@@ -305,22 +305,22 @@ impl RegressionDetector {
             .as_secs();
 
         // Check absolute thresholds (quality gates)
-        if current.jitter.sample_count >= self.min_samples {
-            if current.jitter.p99_ns.abs() > self.thresholds.jitter_p99_ns.absolute_max as i64 {
-                alerts.push(Alert {
-                    severity: AlertSeverity::Fatal,
-                    metric: "jitter_p99".to_string(),
-                    description: format!(
-                        "Jitter p99 exceeds quality gate: {:.1}μs > {:.1}μs",
-                        current.jitter.p99_ns as f64 / 1_000.0,
-                        self.thresholds.jitter_p99_ns.absolute_max / 1_000.0
-                    ),
-                    current_value: current.jitter.p99_ns as f64,
-                    baseline_value: baseline.map(|b| b.jitter.p99_ns as f64),
-                    threshold: self.thresholds.jitter_p99_ns.absolute_max,
-                    timestamp,
-                });
-            }
+        if current.jitter.sample_count >= self.min_samples
+            && current.jitter.p99_ns.abs() > self.thresholds.jitter_p99_ns.absolute_max as i64
+        {
+            alerts.push(Alert {
+                severity: AlertSeverity::Fatal,
+                metric: "jitter_p99".to_string(),
+                description: format!(
+                    "Jitter p99 exceeds quality gate: {:.1}μs > {:.1}μs",
+                    current.jitter.p99_ns as f64 / 1_000.0,
+                    self.thresholds.jitter_p99_ns.absolute_max / 1_000.0
+                ),
+                current_value: current.jitter.p99_ns as f64,
+                baseline_value: baseline.map(|b| b.jitter.p99_ns as f64),
+                threshold: self.thresholds.jitter_p99_ns.absolute_max,
+                timestamp,
+            });
         }
 
         if current.hid.avg_time_ns > self.thresholds.hid_avg_ns.absolute_max as u64 {

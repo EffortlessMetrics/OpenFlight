@@ -1,4 +1,42 @@
 {
+    // Rust-analyzer
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.check.extraArgs": ["--", "-D", "warnings"],
+    "rust-analyzer.procMacro.enable": true,
+    "rust-analyzer.inlayHints.parameterHints.enable": true,
+    "rust-analyzer.inlayHints.typeHints.enable": true,
+    "rust-analyzer.inlayHints.chainingHints.enable": true,
+
+    // Format on save with cargo fmt
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.formatOnSave": true
+    },
+
+    // Dependi (dependency management)
+    "dependi.rust.enabled": true,
+    "dependi.rust.indexServerURL": "https://index.crates.io/",
+
+    // Editor settings for Rust
+    "editor.rulers": [100],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // File associations
+    "files.associations": {
+        "*.toml": "toml"
+    },
+
+    // Exclude build artifacts from search/explorer
+    "files.exclude": {
+        "**/target": true
+    },
+    "search.exclude": {
+        "**/target": true
+    },
+
+    // Previous settings
     "kiroAgent.configureMCP": "Disabled",
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": []

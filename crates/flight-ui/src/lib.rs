@@ -3,8 +3,6 @@
 
 //! Flight Hub UI implementation with integration documentation support
 
-use std::path::PathBuf;
-
 pub mod integration_docs;
 pub mod settings;
 

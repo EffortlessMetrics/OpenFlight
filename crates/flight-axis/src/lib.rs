@@ -92,6 +92,7 @@ pub use engine::{
 pub use frame::{AxisFrame, FrameError};
 pub use nodes::{
     CurveNode, DeadzoneNode, DetentEvent, DetentNode, DetentRole, DetentState, DetentZone,
-    MixerConfig, MixerInput, MixerNode, MixerState, Node, NodeId, SlewNode, SlewState,
+    FilterNode, FilterState, MixerConfig, MixerInput, MixerNode, MixerState, Node, NodeId,
+    SlewNode, SlewState,
 };
 pub use pipeline::{Pipeline, PipelineState};

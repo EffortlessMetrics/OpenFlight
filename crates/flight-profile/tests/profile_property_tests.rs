@@ -33,7 +33,7 @@ prop_compose! {
         detents in prop::collection::vec(arb_detent_zone(), 0..3),
         curve in prop::option::of(prop::collection::vec(arb_curve_point(), 2..5))
     ) -> AxisConfig {
-        AxisConfig { deadzone, expo, slew_rate, detents, curve }
+        AxisConfig { deadzone, expo, slew_rate, detents, curve, filter: None }
     }
 }
 
