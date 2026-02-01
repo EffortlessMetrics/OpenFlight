@@ -1,0 +1,23 @@
+# Flight Hub udev rules
+# Requirement 11.2: Allow input group access to hidraw devices
+#
+# These rules allow users in the 'input' group to access HID devices
+# without requiring root privileges.
+
+# Allow input group access to hidraw devices
+SUBSYSTEM=="hidraw", MODE="0660", GROUP="input"
+
+# Allow input group access to USB HID devices
+SUBSYSTEM=="usb", ATTR{bInterfaceClass}=="03", MODE="0660", GROUP="input"
+
+# Specific rules for common flight sim hardware vendors
+# Thrustmaster
+SUBSYSTEM=="usb", ATTR{idVendor}=="044f", MODE="0660", GROUP="input"
+# Logitech
+SUBSYSTEM=="usb", ATTR{idVendor}=="046d", MODE="0660", GROUP="input"
+# VKB
+SUBSYSTEM=="usb", ATTR{idVendor}=="231d", MODE="0660", GROUP="input"
+# Virpil
+SUBSYSTEM=="usb", ATTR{idVendor}=="3344", MODE="0660", GROUP="input"
+# Winwing
+SUBSYSTEM=="usb", ATTR{idVendor}=="4098", MODE="0660", GROUP="input"

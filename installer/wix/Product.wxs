@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Flight Hub Windows Installer - Main WiX Source
+  
+  This installer creates an MSI package for Flight Hub with the following features:
+  - Core: Required Flight Hub binaries and configuration (per-user install)
+  - MSFS: Optional Microsoft Flight Simulator integration
+  - XPlane: Optional X-Plane integration
+  - DCS: Optional DCS World integration
+  
+  Requirements: 9.1, 9.2, 9.3
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  
+  <Package Name="Flight Hub"
+           Manufacturer="OpenFlight Project"
+           Version="!(bind.FileVersion.flightd.exe)"
+           UpgradeCode="8A7B6C5D-4E3F-2A1B-9C8D-7E6F5A4B3C2D"
+           Scope="perUser"
+           InstallerVersion="500"
+           Compressed="yes">
+    
+    <!-- Package metadata -->
+    <SummaryInformation Description="Flight Hub - Flight Simulation Input Management"
+                        Manufacturer="OpenFlight Project" />
+    
+    <!-- Upgrade handling - prevents downgrades -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Flight Hub is already installed. Please uninstall it first."
+                  Schedule="afterInstallInitialize" />
+    
+    <!-- Embed cabinet for single-file MSI -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    
+    <!-- License and UI -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+    
+    <!-- Use WixUI_FeatureTree for feature selection -->
+    <ui:WixUI Id="WixUI_FeatureTree" />
+    
+    <!-- ========================================
+         FEATURES
+         ======================================== -->
+    
+    <!-- Core Feature - Required, cannot be deselected -->
+    <!-- Requirement 9.2: core (required) -->
+    <!-- Requirement 9.3: per-user install scope for core -->
+    <Feature Id="Core" 
+             Title="Flight Hub Core" 
+             Description="Core Flight Hub binaries and configuration. This feature is required."
+             Level="1" 
+             Absent="disallow"
+             AllowAdvertise="no"
+             Display="expand">
+      <ComponentGroupRef Id="CoreComponents" />
+      <ComponentGroupRef Id="CoreConfigComponents" />
+      <ComponentGroupRef Id="CoreDocComponents" />
+    </Feature>
+    
+    <!-- MSFS Integration Feature - Optional, opt-in -->
+    <!-- Requirement 9.2: MSFS integration (optional) -->
+    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
+    <Feature Id="MSFS" 
+             Title="MSFS Integration" 
+             Description="Microsoft Flight Simulator integration. Enables telemetry streaming and control mapping for MSFS 2020/2024."
+             Level="2"
+             AllowAdvertise="no">
+      <ComponentGroupRef Id="MSFSComponents" />
+    </Feature>
+    
+    <!-- X-Plane Integration Feature - Optional, opt-in -->
+    <!-- Requirement 9.2: X-Plane integration (optional) -->
+    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
+    <Feature Id="XPlane" 
+             Title="X-Plane Integration" 
+             Description="X-Plane integration. Enables telemetry streaming and control mapping for X-Plane 11/12."
+             Level="2"
+             AllowAdvertise="no">
+      <ComponentGroupRef Id="XPlaneComponents" />
+    </Feature>
+    
+    <!-- DCS Integration Feature - Optional, opt-in -->
+    <!-- Requirement 9.2: DCS integration (optional) -->
+    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
+    <Feature Id="DCS" 
+             Title="DCS World Integration" 
+             Description="DCS World integration. Enables telemetry streaming via Export.lua. Will backup existing Export.lua before modification."
+             Level="2"
+             AllowAdvertise="no">
+      <ComponentGroupRef Id="DCSComponents" />
+    </Feature>
+    
+    <!-- ========================================
+         CUSTOM ACTIONS
+         ======================================== -->
+    
+    <!-- Show product posture during install -->
+    <!-- Requirement 9.4: display product posture summary -->
+    <CustomAction Id="ShowPosture"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe --show-posture"
+                  Execute="immediate"
+                  Return="ignore" />
+    
+    <!-- Backup Export.lua before DCS installation -->
+    <!-- Requirement 9.6: backup Export.lua -->
+    <CustomAction Id="BackupExportLua"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs backup-export"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="check" />
+    
+    <!-- Restore Export.lua on DCS uninstallation -->
+    <!-- Requirement 9.6: restore backed-up Export.lua -->
+    <CustomAction Id="RestoreExportLua"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs restore-export"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
+    
+    <!-- Install DCS integration files -->
+    <CustomAction Id="InstallDcsIntegration"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs install"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="check" />
+    
+    <!-- Uninstall DCS integration files -->
+    <CustomAction Id="UninstallDcsIntegration"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs uninstall"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
+    
+    <!-- Install X-Plane plugin -->
+    <CustomAction Id="InstallXPlanePlugin"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe xplane install-plugin"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="check" />
+    
+    <!-- Uninstall X-Plane plugin -->
+    <!-- Requirement 9.6: remove X-Plane plugins -->
+    <CustomAction Id="UninstallXPlanePlugin"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[INSTALLFOLDER]flightctl.exe xplane uninstall-plugin"
+                  Execute="deferred"
+                  Impersonate="yes"
+                  Return="ignore" />
+    
+    <!-- ========================================
+         INSTALL SEQUENCE
+         ======================================== -->
+    
+    <InstallExecuteSequence>
+      <!-- Backup Export.lua before installing DCS feature -->
+      <!-- Condition: DCS feature is being installed (action state = 3) -->
+      <Custom Action="BackupExportLua" Before="InstallFiles">
+        <![CDATA[&DCS=3]]>
+      </Custom>
+      
+      <!-- Install DCS integration after files are installed -->
+      <Custom Action="InstallDcsIntegration" After="InstallFiles">
+        <![CDATA[&DCS=3]]>
+      </Custom>
+      
+      <!-- Install X-Plane plugin after files are installed -->
+      <Custom Action="InstallXPlanePlugin" After="InstallFiles">
+        <![CDATA[&XPlane=3]]>
+      </Custom>
+      
+      <!-- Uninstall X-Plane plugin before removing files -->
+      <!-- Condition: X-Plane feature is being removed (action state = 2) and full uninstall -->
+      <Custom Action="UninstallXPlanePlugin" Before="RemoveFiles">
+        <![CDATA[REMOVE="ALL" AND &XPlane=2]]>
+      </Custom>
+      
+      <!-- Uninstall DCS integration before removing files -->
+      <Custom Action="UninstallDcsIntegration" Before="RemoveFiles">
+        <![CDATA[REMOVE="ALL" AND &DCS=2]]>
+      </Custom>
+      
+      <!-- Restore Export.lua after removing DCS files -->
+      <Custom Action="RestoreExportLua" After="RemoveFiles">
+        <![CDATA[REMOVE="ALL" AND &DCS=2]]>
+      </Custom>
+    </InstallExecuteSequence>
+    
+    <!-- ========================================
+         UI SEQUENCE
+         ======================================== -->
+    
+    <InstallUISequence>
+      <!-- Show product posture early in UI sequence -->
+      <Custom Action="ShowPosture" After="CostFinalize">
+        <![CDATA[NOT Installed]]>
+      </Custom>
+    </InstallUISequence>
+    
+  </Package>
+</Wix>

@@ -14,7 +14,7 @@ repository.workspace = true
 [features]
 default = []
 # Development-only features (not for production use)
-ofp1-tests = []  # Enable Clone/Copy derives for external integration tests
+ofp1-tests = [] # Enable Clone/Copy derives for external integration tests
 
 [dependencies]
 flight-core = { path = "../flight-core" }
@@ -26,5 +26,15 @@ rand = "0.9.2"
 serde.workspace = true
 thiserror.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Performance",
+] }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
+proptest.workspace = true

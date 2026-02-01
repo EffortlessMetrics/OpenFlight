@@ -24,9 +24,9 @@
 //! - Platform-specific high-precision timing
 
 #[cfg(unix)]
-mod unix;
+pub mod unix;
 #[cfg(windows)]
-mod windows;
+pub mod windows;
 
 pub mod metrics;
 pub mod pll;
@@ -38,6 +38,16 @@ use std::time::{Duration, Instant};
 pub use metrics::{JitterMetrics, TimingStats};
 pub use pll::Pll;
 pub use ring::{RingStats, SpscRing};
+
+// Re-export Windows-specific types when on Windows
+#[cfg(windows)]
+pub use windows::{
+    PowerError, PowerManager, RtError, TimerError, WindowsRtThread, WindowsTimerLoop,
+};
+
+// Re-export Unix-specific types when on Unix
+#[cfg(unix)]
+pub use unix::{LinuxRtMetrics, LinuxRtThread, RlimitStatus, RtError as UnixRtError};
 
 #[cfg(test)]
 mod tests;

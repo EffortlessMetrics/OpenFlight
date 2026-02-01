@@ -79,11 +79,11 @@ prost = "0.14.3"
 # tonic configured with built-in transport features based on usage in flight-ipc
 # Uses tonic::transport::Server and tonic::transport::Channel for IPC communication
 # Features: transport (includes client/server), codegen (for proto compilation)
-tonic = { version = "0.14.2", features = ["transport", "codegen"] }
-tonic-build = "0.14.2"
+tonic = { version = "0.14.3", features = ["transport", "codegen"] }
+tonic-build = "0.14.3"
 prost-build = "0.14.3"
 prost-types = "0.14.3"
-protobuf-codegen = "4.33.4-release"
+protobuf-codegen = "4.33.5-release"
 
 # HTTP client
 reqwest = { version = "0.13.1", default-features = false, features = [
@@ -112,7 +112,7 @@ nix = "0.31.1"
 criterion = "0.8.1"
 proptest = "1.9.0"
 tempfile = "3.24.0"
-clap = { version = "4.5.54", default-features = false, features = [
+clap = { version = "4.5.56", default-features = false, features = [
     "std",
     "derive",
     "help",
@@ -126,7 +126,7 @@ futures-core = "0.3.31"
 tokio-stream = "0.1.18"
 tokio-util = "0.7.18"
 
-cc = "1.2.54"
+cc = "1.2.55"
 
 
 [profile.release]

@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d0499c8afd87244e2fbb7b4e0d6e64e7a21c95ca7d79a21833ee61e8b5f32eeb # shrinks to warmup_seconds = 1, post_warmup_ticks = 100

@@ -83,10 +83,23 @@ enum Commands {
         #[command(subcommand)]
         action: DiagAction,
     },
+    /// DCS World integration commands
+    Dcs {
+        #[command(subcommand)]
+        action: DcsAction,
+    },
+    /// X-Plane integration commands
+    Xplane {
+        #[command(subcommand)]
+        action: XPlaneAction,
+    },
     /// Show system status and health
     Status,
     /// Show service information
     Info,
+    /// Show product posture summary
+    #[command(name = "--show-posture", hide = true)]
+    ShowPosture,
 }
 
 #[cfg(feature = "cli")]
@@ -158,10 +171,19 @@ async fn execute_command(
         Commands::Diag { action } => {
             commands::diag::execute(action, cli.output, cli.verbose, client_manager).await
         }
+        Commands::Dcs { action } => {
+            commands::dcs::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Xplane { action } => {
+            commands::xplane::execute(action, cli.output, cli.verbose, client_manager).await
+        }
         Commands::Status => {
             commands::status::execute(cli.output, cli.verbose, client_manager).await
         }
         Commands::Info => commands::info::execute(cli.output, cli.verbose, client_manager).await,
+        Commands::ShowPosture => {
+            commands::posture::execute(cli.output, cli.verbose, client_manager).await
+        }
     }
 }
 

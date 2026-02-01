@@ -1,0 +1,43 @@
+#!/bin/bash
+# Flight Hub post-installation script
+# Requirement 11.3: Add user to input group, reload udev rules
+set -e
+
+# Add user to input group for HID access
+if [ -n "$SUDO_USER" ]; then
+    usermod -a -G input "$SUDO_USER" || true
+    echo "Added $SUDO_USER to input group"
+fi
+
+# Install udev rules
+if [ -f /usr/share/flight-hub/99-flight-hub.rules ]; then
+    cp /usr/share/flight-hub/99-flight-hub.rules /etc/udev/rules.d/
+fi
+
+# Reload udev rules
+udevadm control --reload-rules || true
+udevadm trigger || true
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║                    Flight Hub Installation Complete              ║"
+echo "╠══════════════════════════════════════════════════════════════════╣"
+echo "║                                                                  ║"
+echo "║  IMPORTANT: Please log out and back in for group changes to     ║"
+echo "║  take effect. This is required for HID device access.           ║"
+echo "║                                                                  ║"
+echo "║  To start Flight Hub:                                           ║"
+echo "║    systemctl --user start flightd                               ║"
+echo "║                                                                  ║"
+echo "║  To enable auto-start:                                          ║"
+echo "║    systemctl --user enable flightd                              ║"
+echo "║                                                                  ║"
+echo "║  For real-time scheduling (recommended):                        ║"
+echo "║    sudo /usr/share/flight-hub/setup-linux-rt.sh                 ║"
+echo "║                                                                  ║"
+echo "╚══════════════════════════════════════════════════════════════════╝"
+echo ""
+
+#DEBHELPER#
+
+exit 0

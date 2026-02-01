@@ -3,17 +3,23 @@
 
 //! CLI command implementations
 
+pub mod dcs;
 pub mod devices;
 pub mod diag;
 pub mod info;
 pub mod panels;
+pub mod posture;
 pub mod profile;
 pub mod sim;
 pub mod status;
 pub mod torque;
+pub mod xplane;
 
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
+
+pub use dcs::DcsAction;
+pub use xplane::XPlaneAction;
 
 #[derive(Subcommand)]
 pub enum DeviceAction {
