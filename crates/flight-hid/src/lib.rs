@@ -5,12 +5,18 @@
 //!
 //! Provides USB HID device monitoring, endpoint management, and integration
 //! with the watchdog system for fault detection and quarantine.
+//!
+//! # Modules
+//!
+//! - [`hid_writer`] - Optimized HID writer using overlapped I/O (Windows only)
+//! - [`ofp1`] - OFP-1 protocol support
 
 pub use flight_hid_support::HidDeviceInfo;
 pub use flight_hid_support::device_support;
 #[cfg(test)]
 mod fd_safety_tests;
 pub use flight_hid_support::hid_descriptor;
+pub mod hid_writer;
 pub mod ofp1;
 
 use flight_core::{ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent};

@@ -1,0 +1,18 @@
+Package: flight-hub
+Version: 1.0.0
+Section: games
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>= 2.31), libdbus-1-3
+Recommends: rtkit
+Maintainer: OpenFlight Project <contact@openflight.dev>
+Description: Flight simulation input management system
+ Flight Hub provides unified control for flight controls, panels,
+ and force feedback devices across MSFS, X-Plane, and DCS simulators.
+ .
+ Features:
+  - Real-time 250Hz axis processing with deterministic performance
+  - Multi-simulator support (MSFS, X-Plane, DCS)
+  - Force feedback safety systems with proper interlocks
+  - Auto-profile switching based on aircraft detection
+  - Panel and StreamDeck integration with rule-based LED control

@@ -4,6 +4,12 @@
 
 A comprehensive PC flight simulation input management system that provides a unified control plane for flight controls, panels, and force feedback devices across multiple simulators.
 
+## Product Posture
+
+**Flight Hub is an accessory/input manager that requires MSFS, X-Plane, or DCS; it does not emulate or replace any simulator.**
+
+For details on simulator integration, export control considerations, and EULA compliance, see the [Product Posture](docs/product-posture.md) document.
+
 ## Features
 
 - **Real-time 250Hz axis processing** with deterministic performance

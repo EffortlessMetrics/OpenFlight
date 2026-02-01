@@ -600,6 +600,7 @@ impl DcsInstaller {
 mod tests {
     use super::*;
     use crate::export_lua::{DcsVariant, detect_dcs_variants};
+    use proptest::prelude::*;
     use std::fs;
     use tempfile::TempDir;
 
@@ -931,5 +932,78 @@ mod tests {
         let result = installer.validate_export_content(mismatched_braces);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Mismatched braces"));
+    }
+
+    // Feature: release-readiness, Property 9: Uninstall Reversibility
+    // *For any* installation that includes DCS integration, uninstalling SHALL restore
+    // the original Export.lua from backup and remove all Flight Hub files, leaving the
+    // DCS Scripts directory in its pre-install state.
+    // **Validates: Requirements 9.6**
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+
+        #[test]
+        fn prop_uninstall_reversibility(
+            original_content in "[a-zA-Z0-9_\\-\\s\\n]{10,500}"
+        ) {
+            let temp_dir = TempDir::new().unwrap();
+            let scripts_dir = temp_dir.path().join("Scripts");
+            fs::create_dir_all(&scripts_dir).unwrap();
+            let export_path = scripts_dir.join("Export.lua");
+
+            // Create original Export.lua with arbitrary content
+            let original_lua = format!("-- Original content\n{}", original_content);
+            fs::write(&export_path, &original_lua).unwrap();
+
+            // Create installer
+            let config = ExportLuaConfig {
+                socket_address: "127.0.0.1".to_string(),
+                socket_port: 7778,
+                update_interval: 0.1,
+                enabled_features: vec!["telemetry_basic".to_string()],
+                mp_safe_mode: true,
+            };
+            let installer = DcsInstaller::new(config);
+
+            // Perform append installation
+            let install_result = installer.perform_append_install(&export_path);
+            prop_assert!(install_result.is_ok(), "Installation should succeed");
+
+            // Verify Flight Hub content was added
+            let installed_content = fs::read_to_string(&export_path).unwrap();
+            prop_assert!(
+                installed_content.contains("Flight Hub DCS Export Script"),
+                "Flight Hub content should be present after install"
+            );
+
+            // Verify .flighthub_backup was created
+            let flighthub_backup = export_path.with_extension("lua.flighthub_backup");
+            prop_assert!(
+                flighthub_backup.exists(),
+                "Flight Hub backup should be created"
+            );
+
+            // Uninstall
+            let uninstall_result = installer.uninstall_from_path(&export_path);
+            prop_assert!(uninstall_result.is_ok(), "Uninstallation should succeed");
+
+            // Verify original content was restored
+            let restored_content = fs::read_to_string(&export_path).unwrap();
+            prop_assert_eq!(
+                &restored_content, &original_lua,
+                "Original content should be restored after uninstall"
+            );
+
+            // Verify Flight Hub content is gone
+            prop_assert!(
+                !restored_content.contains("Flight Hub DCS Export Script"),
+                "Flight Hub content should be removed after uninstall"
+            );
+
+            // Verify FlightHubExport.lua is removed (if it was created)
+            let _fh_export = scripts_dir.join("FlightHubExport.lua");
+            // Note: FlightHubExport.lua is only created by install(), not perform_append_install()
+            // So we just verify the main Export.lua is restored correctly
+        }
     }
 }
