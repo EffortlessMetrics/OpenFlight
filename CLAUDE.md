@@ -11,12 +11,17 @@ OpenFlight (Flight Hub) is a PC flight simulation input management system writte
 - Zero allocations on RT hot paths (see ADR-004)
 - Rust 2024 edition, MSRV 1.89.0
 
+**Prerequisites:**
+- Windows: Windows SDK for HID support
+- Linux: libudev development headers (`libudev-dev` on Debian/Ubuntu)
+
 ## Build Commands
 
 ```bash
 # Build
 cargo build --workspace
 cargo build --release --workspace
+cargo build --profile rt --workspace   # RT-optimized with debug symbols
 
 # Test
 cargo test --workspace                    # All tests
@@ -50,6 +55,21 @@ make feature-powerset  # Test all feature combinations
 make verify-patterns   # Check for known problematic patterns
 ```
 
+## Quality Gates
+
+| Gate | What it checks |
+|------|---------------|
+| QG-SANITY-GATE | Compilation, formatting |
+| QG-FFB-SAFETY | Force feedback safety systems |
+| QG-RT-JITTER | Timer jitter p99 ≤ 0.5ms (hardware runners) |
+| QG-HID-LATENCY | HID write latency p99 ≤ 300μs (hardware runners) |
+
+Run FFB safety tests before modifying force feedback code:
+```bash
+cargo test -p flight-ffb safety
+cargo test -p flight-ffb envelope
+```
+
 ## Architecture
 
 ### Real-Time Spine (ADR-001)
@@ -63,6 +83,16 @@ RT Spine (250Hz): Axis Engine │ FFB Engine │ Scheduler
 ```
 
 Configuration changes are compiled off-thread and swapped atomically at tick boundaries.
+
+### Zero-Allocation Constraint (ADR-004)
+
+**Forbidden in RT code** (`flight-axis`, `flight-scheduler`, `flight-ffb` hot paths):
+- `Box::new()`, `Vec::push()` past capacity, `String` operations that allocate
+- `HashMap::insert()` that triggers rehashing
+- `Arc::new()`, `Rc::new()`
+- Any blocking syscalls or locks
+
+**Allowed:** Stack allocation, pre-allocated containers, atomic operations, static data.
 
 ### Crate Organization
 
@@ -104,6 +134,14 @@ The Makefile enforces these patterns via `make verify-patterns`:
 These crates must pass `cargo clippy -p <crate> -- -D warnings`:
 - flight-core, flight-axis, flight-bus, flight-hid
 - flight-ipc, flight-service, flight-simconnect, flight-panels
+
+## Architecture Decision Records
+
+Located in `docs/explanation/adr/`:
+- **ADR-001**: RT Spine - Protected 250Hz core with atomic state swaps
+- **ADR-004**: Zero-allocation constraint for RT hot paths
+- **ADR-005**: PLL timing discipline for jitter control
+- **ADR-009**: Safety interlock design for FFB
 
 ## Documentation
 
