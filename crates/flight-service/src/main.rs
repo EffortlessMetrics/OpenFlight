@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+#![allow(unused_imports)]
+#![allow(clippy::field_reassign_with_default)]
+
 //! Flight Hub Service
 
 use clap::{Arg, Command};

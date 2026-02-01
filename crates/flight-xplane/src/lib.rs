@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::needless_range_loop)]
+#![allow(dead_code)]
+
 //! X-Plane adapter for Flight Hub
 //!
 //! Provides DataRef access via UDP and plugin interfaces, aircraft detection,

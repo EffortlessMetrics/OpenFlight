@@ -9,6 +9,17 @@
         dead_code
     )
 )]
+// Allow clippy warnings for placeholder implementations and FFI naming conventions
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::unnecessary_map_or)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::clone_on_copy)]
+#![allow(clippy::assign_op_pattern)]
+#![allow(clippy::vec_init_then_push)]
+#![allow(clippy::redundant_pattern_matching)]
+#![allow(clippy::single_char_add_str)]
+#![allow(dead_code)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

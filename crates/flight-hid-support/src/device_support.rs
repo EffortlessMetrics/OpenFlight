@@ -10,9 +10,29 @@ use std::fmt;
 
 pub const THRUSTMASTER_VENDOR_ID: u16 = 0x044F;
 pub const VKB_VENDOR_ID: u16 = 0x231D;
+pub const SAITEK_VENDOR_ID: u16 = 0x06A3;
+pub const MAD_CATZ_VENDOR_ID: u16 = 0x0738;
+pub const LOGITECH_VENDOR_ID: u16 = 0x046D;
 
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67A;
+
+// Saitek/Logitech HOTAS PIDs
+// X52 family (unified USB) - confidence: KNOWN
+pub const X52_PID: u16 = 0x075C;
+pub const X52_PRO_PID: u16 = 0x0762;
+
+// X55 family (split USB) - confidence: LIKELY
+pub const X55_STICK_PID: u16 = 0x2215;
+pub const X55_THROTTLE_PID: u16 = 0xA215;
+
+// X56 family - Saitek branded (split USB) - confidence: LIKELY
+pub const X56_SAITEK_STICK_PID: u16 = 0x0764;
+pub const X56_SAITEK_THROTTLE_PID: u16 = 0x0765;
+
+// X56 family - Logitech branded (split USB) - confidence: LIKELY
+pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
+pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
 
 pub const VKB_STECS_LEFT_SPACE_MINI_PID: u16 = 0x0136;
 pub const VKB_STECS_RIGHT_SPACE_MINI_PID: u16 = 0x013A;

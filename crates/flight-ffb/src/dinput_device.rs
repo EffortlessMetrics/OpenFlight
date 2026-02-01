@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+// This module contains stub implementations and constants for future DirectInput support.
+// Many items are intentionally unused in the current placeholder implementation.
+// Names follow Windows DirectInput API conventions (e.g., DICONSTANTFORCE, DIPERIODIC).
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_mut)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::transmute_ptr_to_ref)]
+#![allow(clippy::should_implement_trait)]
+#![allow(clippy::clone_on_copy)]
+
 //! DirectInput FFB device abstraction for Windows
 //!
 //! This module provides a safe abstraction over Windows DirectInput 8 for force feedback
@@ -12,14 +26,13 @@
 //! - FFB-HID-01.9: Device capability querying (supports_pid, max_torque_nm, min_period_us)
 
 #[cfg(windows)]
-use windows::{
-    Win32::Devices::HumanInterfaceDevice::*, Win32::Foundation::*, Win32::System::Com::*,
-    core::GUID,
-};
+use windows::{Win32::System::Com::*, core::GUID};
 
 // DirectInput constants
 // Note: DirectInput8 is a legacy API. Full bindings may require additional work
 // or use of the `windows-sys` crate with custom bindings.
+// Allow dead_code as these constants are defined for future full DirectInput implementation.
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIRECTINPUT_VERSION: u32 = 0x0800;
 #[cfg(windows)]
@@ -32,20 +45,28 @@ const DIEB_NOTRIGGER: u32 = 0xFFFFFFFF;
 const DIEFF_CARTESIAN: u32 = 0x00000001;
 #[cfg(windows)]
 const DIEFF_OBJECTOFFSETS: u32 = 0x00000002;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIEP_TYPESPECIFICPARAMS: u32 = 0x00000020;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIEP_START: u32 = 0x20000000;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DISCL_EXCLUSIVE: u32 = 0x00000001;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DISCL_BACKGROUND: u32 = 0x00000008;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DI8DEVCLASS_GAMECTRL: u32 = 4;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIEDFL_ATTACHEDONLY: u32 = 0x00000001;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIEDFL_FORCEFEEDBACK: u32 = 0x00000100;
+#[allow(dead_code)]
 #[cfg(windows)]
 const DIDC_FORCEFEEDBACK: u32 = 0x00000001;
 
@@ -56,12 +77,16 @@ const DIJOFS_X: u32 = 0;
 const DIJOFS_Y: u32 = 4;
 
 // DirectInput GUIDs (these would normally come from dinput.h)
+#[allow(dead_code)]
 #[cfg(windows)]
 const GUID_ConstantForce: GUID = GUID::from_u128(0x13541C20_8E33_11D0_9AD0_00A0C9A06E35);
+#[allow(dead_code)]
 #[cfg(windows)]
 const GUID_Sine: GUID = GUID::from_u128(0x13541C23_8E33_11D0_9AD0_00A0C9A06E35);
+#[allow(dead_code)]
 #[cfg(windows)]
 const GUID_Spring: GUID = GUID::from_u128(0x13541C26_8E33_11D0_9AD0_00A0C9A06E35);
+#[allow(dead_code)]
 #[cfg(windows)]
 const GUID_Damper: GUID = GUID::from_u128(0x13541C27_8E33_11D0_9AD0_00A0C9A06E35);
 
@@ -670,7 +695,7 @@ impl DirectInputFfbDevice {
                 };
 
                 // Create effect parameters
-                let mut effect_params = DIEFFECT {
+                let effect_params = DIEFFECT {
                     dwSize: std::mem::size_of::<DIEFFECT>() as u32,
                     dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
                     dwDuration: INFINITE,
@@ -692,7 +717,7 @@ impl DirectInputFfbDevice {
                 // 1. Call device->CreateEffect(&GUID_ConstantForce, &effect_params, &effect, NULL)
                 // 2. Store the IDirectInputEffect interface pointer
 
-                let _effect_params = effect_params; // Suppress unused warning
+                let _ = effect_params; // Suppress unused warning
 
                 let effect_handle = EffectHandle {
                     effect_type: EffectType::ConstantForce,
@@ -750,7 +775,7 @@ impl DirectInputFfbDevice {
                 };
 
                 // Create effect parameters
-                let mut effect_params = DIEFFECT {
+                let effect_params = DIEFFECT {
                     dwSize: std::mem::size_of::<DIEFFECT>() as u32,
                     dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
                     dwDuration: INFINITE,
@@ -834,7 +859,7 @@ impl DirectInputFfbDevice {
                 ];
 
                 // Create effect parameters
-                let mut effect_params = DIEFFECT {
+                let effect_params = DIEFFECT {
                     dwSize: std::mem::size_of::<DIEFFECT>() as u32,
                     dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
                     dwDuration: INFINITE,
@@ -852,7 +877,7 @@ impl DirectInputFfbDevice {
                 };
 
                 // TODO: Full implementation requires DirectInput8 COM bindings
-                let _effect_params = effect_params; // Suppress unused warning
+                let _ = effect_params; // Suppress unused warning
 
                 let effect_handle = EffectHandle {
                     effect_type: EffectType::Spring,
@@ -918,7 +943,7 @@ impl DirectInputFfbDevice {
                 ];
 
                 // Create effect parameters
-                let mut effect_params = DIEFFECT {
+                let effect_params = DIEFFECT {
                     dwSize: std::mem::size_of::<DIEFFECT>() as u32,
                     dwFlags: DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS,
                     dwDuration: INFINITE,
@@ -936,7 +961,7 @@ impl DirectInputFfbDevice {
                 };
 
                 // TODO: Full implementation requires DirectInput8 COM bindings
-                let _effect_params = effect_params; // Suppress unused warning
+                let _ = effect_params; // Suppress unused warning
 
                 let effect_handle = EffectHandle {
                     effect_type: EffectType::Damper,

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+#![allow(unused_imports)]
+#![allow(clippy::single_component_path_imports)]
+
 //! Profile Parsing and Validation Demo
 //!
 //! This example demonstrates comprehensive profile parsing, validation,

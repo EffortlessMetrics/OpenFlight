@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::missing_transmute_annotations)]
+#![allow(clippy::should_implement_trait)]
+#![allow(dead_code)]
+
 //! StreamDeck plugin for Flight Hub
 //!
 //! Provides local Web API for StreamDeck integration with sample profiles

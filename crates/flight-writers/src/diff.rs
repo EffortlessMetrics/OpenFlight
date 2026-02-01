@@ -296,10 +296,10 @@ impl WriterApplier {
         }
 
         // Set the final value
-        if let Some(key) = parts.last() {
-            if let Some(obj) = current.as_object_mut() {
-                obj.insert(key.to_string(), value);
-            }
+        if let Some(key) = parts.last()
+            && let Some(obj) = current.as_object_mut()
+        {
+            obj.insert(key.to_string(), value);
         }
 
         Ok(())
@@ -337,10 +337,10 @@ impl WriterApplier {
         }
 
         // Remove the final key
-        if let Some(key) = parts.last() {
-            if let Some(obj) = current.as_object_mut() {
-                obj.remove(*key);
-            }
+        if let Some(key) = parts.last()
+            && let Some(obj) = current.as_object_mut()
+        {
+            obj.remove(*key);
         }
 
         Ok(())

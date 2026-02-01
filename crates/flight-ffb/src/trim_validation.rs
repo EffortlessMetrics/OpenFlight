@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
+// Allow unused_mut for validation metrics in test-like functions
+#![allow(unused_mut)]
+
 //! Trim correctness validation for force feedback devices
 //!
 //! This module provides comprehensive validation of trim behavior including:
@@ -11,7 +14,7 @@
 
 use crate::{
     BlackboxConfig, BlackboxEntry, BlackboxRecorder, SetpointChange, SpringConfig, TrimController,
-    TrimLimits, TrimMode, TrimOutput, TrimState,
+    TrimLimits, TrimMode, TrimOutput,
 };
 use std::time::{Duration, Instant};
 

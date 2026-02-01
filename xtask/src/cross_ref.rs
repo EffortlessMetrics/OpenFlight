@@ -363,7 +363,7 @@ fn search_for_test_function(crate_path: &str, test_fn: &str) -> Result<bool> {
 
     // Try to use ripgrep
     let output = Command::new("rg")
-        .args(&[
+        .args([
             "-l", // List files with matches
             "--type", "rust", // Only search Rust files
             &pattern, crate_path,
@@ -382,7 +382,7 @@ fn search_for_test_function(crate_path: &str, test_fn: &str) -> Result<bool> {
         Err(_) => {
             // ripgrep not available, try grep as fallback
             let output = Command::new("grep")
-                .args(&[
+                .args([
                     "-r",
                     "-l",
                     &format!("fn {}", test_fn),
@@ -429,7 +429,7 @@ fn load_workspace_members() -> Result<HashSet<String>> {
             let member_path = cap.get(1).unwrap().as_str();
 
             // Extract crate name from path (e.g., "crates/flight-core" -> "flight-core")
-            if let Some(crate_name) = member_path.split('/').last() {
+            if let Some(crate_name) = member_path.split('/').next_back() {
                 members.insert(crate_name.to_string());
             }
         }

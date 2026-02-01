@@ -674,11 +674,11 @@ fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[Stri
         } else {
             "❌ Fail"
         };
-        let details = result.details.as_ref().map(|d| d.as_str()).unwrap_or("-");
+        let details = result.details.as_deref().unwrap_or("-");
         report.push_str(&format!("| {} | {} | {} |\n", result.name, status, details));
     }
 
-    report.push_str("\n");
+    report.push('\n');
 
     // Cross-reference details section
     if !cross_ref_details.is_empty() {

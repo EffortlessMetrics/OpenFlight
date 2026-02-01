@@ -181,10 +181,13 @@ impl DcsAdapter {
         }
 
         // Process messages
-        let messages = self.socket_bridge.process_messages().await.map_err(|err| {
-            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-            err
-        })?;
+        let messages = self
+            .socket_bridge
+            .process_messages()
+            .await
+            .inspect_err(|_| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            })?;
         for (addr, message) in messages {
             if let Err(err) = self.handle_message(addr, message).await {
                 self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
@@ -196,9 +199,8 @@ impl DcsAdapter {
         self.socket_bridge
             .maintain_connections()
             .await
-            .map_err(|err| {
+            .inspect_err(|_| {
                 self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-                err
             })?;
 
         // Check connection health

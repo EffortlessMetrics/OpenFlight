@@ -53,16 +53,16 @@ impl GoldenFileTester {
                 let test_case = self.run_test_case(sim, &test_name, &entry.path()).await?;
 
                 // Extract version and area information
-                if let Some(version) = self.extract_version_from_test_name(&test_name) {
-                    if !all_versions.contains(&version) {
-                        all_versions.push(version);
-                    }
+                if let Some(version) = self.extract_version_from_test_name(&test_name)
+                    && !all_versions.contains(&version)
+                {
+                    all_versions.push(version);
                 }
 
-                if let Some(area) = self.extract_area_from_test_name(&test_name) {
-                    if !all_areas.contains(&area) {
-                        all_areas.push(area);
-                    }
+                if let Some(area) = self.extract_area_from_test_name(&test_name)
+                    && !all_areas.contains(&area)
+                {
+                    all_areas.push(area);
                 }
 
                 test_cases.push(test_case);
@@ -193,12 +193,11 @@ impl GoldenFileTester {
     /// Collect all files in a directory recursively
     fn collect_files_recursive(&self, dir: &Path) -> Result<HashMap<PathBuf, PathBuf>> {
         let mut files = HashMap::new();
-        self.collect_files_recursive_impl(dir, dir, &mut files)?;
+        Self::collect_files_recursive_impl(dir, dir, &mut files)?;
         Ok(files)
     }
 
     fn collect_files_recursive_impl(
-        &self,
         base_dir: &Path,
         current_dir: &Path,
         files: &mut HashMap<PathBuf, PathBuf>,
@@ -211,7 +210,7 @@ impl GoldenFileTester {
                 let rel_path = path.strip_prefix(base_dir)?;
                 files.insert(rel_path.to_path_buf(), path);
             } else if path.is_dir() {
-                self.collect_files_recursive_impl(base_dir, &path, files)?;
+                Self::collect_files_recursive_impl(base_dir, &path, files)?;
             }
         }
         Ok(())
@@ -238,14 +237,14 @@ impl GoldenFileTester {
         let actual_files = self.collect_files_recursive(actual)?;
 
         // Files only in expected
-        for (rel_path, _) in &expected_files {
+        for rel_path in expected_files.keys() {
             if !actual_files.contains_key(rel_path) {
                 diff_lines.push(format!("- Missing file: {}", rel_path.display()));
             }
         }
 
         // Files only in actual
-        for (rel_path, _) in &actual_files {
+        for rel_path in actual_files.keys() {
             if !expected_files.contains_key(rel_path) {
                 diff_lines.push(format!("+ Extra file: {}", rel_path.display()));
             }
@@ -253,23 +252,23 @@ impl GoldenFileTester {
 
         // Files with different content
         for (rel_path, expected_path) in &expected_files {
-            if let Some(actual_path) = actual_files.get(rel_path) {
-                if !self.compare_files(expected_path, actual_path).await? {
-                    diff_lines.push(format!("~ Modified file: {}", rel_path.display()));
+            if let Some(actual_path) = actual_files.get(rel_path)
+                && !self.compare_files(expected_path, actual_path).await?
+            {
+                diff_lines.push(format!("~ Modified file: {}", rel_path.display()));
 
-                    // Add a simple content diff
-                    let expected_content = fs::read_to_string(expected_path)?;
-                    let actual_content = fs::read_to_string(actual_path)?;
+                // Add a simple content diff
+                let expected_content = fs::read_to_string(expected_path)?;
+                let actual_content = fs::read_to_string(actual_path)?;
 
-                    diff_lines.push("  Expected:".to_string());
-                    for line in expected_content.lines().take(5) {
-                        diff_lines.push(format!("    {}", line));
-                    }
+                diff_lines.push("  Expected:".to_string());
+                for line in expected_content.lines().take(5) {
+                    diff_lines.push(format!("    {}", line));
+                }
 
-                    diff_lines.push("  Actual:".to_string());
-                    for line in actual_content.lines().take(5) {
-                        diff_lines.push(format!("    {}", line));
-                    }
+                diff_lines.push("  Actual:".to_string());
+                for line in actual_content.lines().take(5) {
+                    diff_lines.push(format!("    {}", line));
                 }
             }
         }
@@ -291,7 +290,7 @@ impl GoldenFileTester {
             // Look for numeric version patterns
             let parts: Vec<&str> = test_name.split('_').collect();
             for part in parts {
-                if part.chars().next().map_or(false, |c| c.is_ascii_digit()) {
+                if part.chars().next().is_some_and(|c| c.is_ascii_digit()) {
                     return Some(part.to_string());
                 }
             }

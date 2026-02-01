@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 /// Delta patch operation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,9 +109,9 @@ impl DeltaPatch {
         // Size of file deltas (operations)
         for file_delta in self.files.values() {
             for op in &file_delta.operations {
-                match op {
-                    DeltaOperation::Insert { data } => size += data.len() as u64,
-                    _ => {} // Copy and Delete don't add to patch size
+                // Copy and Delete don't add to patch size
+                if let DeltaOperation::Insert { data } = op {
+                    size += data.len() as u64;
                 }
             }
         }
@@ -130,6 +129,7 @@ impl DeltaPatch {
 #[derive(Debug)]
 pub struct DeltaApplier {
     /// Working directory for patch application
+    #[allow(dead_code)]
     work_dir: PathBuf,
     /// Temporary directory for intermediate files
     temp_dir: PathBuf,
@@ -164,7 +164,7 @@ impl DeltaApplier {
         self.verify_source_files(patch, source_dir).await?;
 
         // Apply file deltas
-        for (_target_path, file_delta) in &patch.files {
+        for file_delta in patch.files.values() {
             self.apply_file_delta(file_delta, source_dir, target_dir)
                 .await?;
         }

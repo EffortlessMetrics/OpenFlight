@@ -15,6 +15,7 @@ mod config;
 mod cross_ref;
 mod front_matter;
 mod gherkin;
+mod hotas;
 mod normalize_docs;
 mod quality_gates;
 mod schema;
@@ -52,6 +53,12 @@ enum Commands {
         yaml_path: String,
         /// Path to the JSON schema file
         schema_path: String,
+    },
+
+    /// HOTAS device verification tools
+    Hotas {
+        #[command(subcommand)]
+        command: hotas::HotasCommand,
     },
 }
 
@@ -92,6 +99,7 @@ fn main() -> Result<()> {
                 }
             }
         }
+        Commands::Hotas { command } => hotas::run(command),
     }
 }
 

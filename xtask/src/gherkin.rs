@@ -21,6 +21,7 @@ pub struct GherkinScenario {
     /// Line number where the scenario starts
     pub line_number: usize,
     /// Name of the scenario
+    #[allow(dead_code)]
     pub name: String,
     /// Tags from both Feature and Scenario lines (merged)
     pub tags: Vec<String>,

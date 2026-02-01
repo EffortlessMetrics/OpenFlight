@@ -42,8 +42,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::{RwLock, mpsc};
 use tracing::{debug, error, info, warn};
 
-/// Simulator identifier
-// Removed SimId definition here, now using crate::process_detection::SimId
+// Simulator identifier is `flight_process_detection::SimId`.
 
 /// Aircraft identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

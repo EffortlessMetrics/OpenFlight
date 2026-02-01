@@ -46,7 +46,7 @@ pub struct TrimState {
 }
 
 /// Validity flags for telemetry data
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Default)]
 pub struct ValidityFlags {
     /// Safe for force feedback output
     pub safe_for_ffb: bool,
@@ -299,15 +299,15 @@ impl BusSnapshot {
         }
 
         // Validate helicopter data consistency
-        if let Some(helo) = &self.helo {
-            if helo.pedals < -100.0 || helo.pedals > 100.0 {
-                return Err(BusTypeError::OutOfRange {
-                    field: "helo.pedals".to_string(),
-                    value: helo.pedals,
-                    min: -100.0,
-                    max: 100.0,
-                });
-            }
+        if let Some(helo) = &self.helo
+            && (helo.pedals < -100.0 || helo.pedals > 100.0)
+        {
+            return Err(BusTypeError::OutOfRange {
+                field: "helo.pedals".to_string(),
+                value: helo.pedals,
+                min: -100.0,
+                max: 100.0,
+            });
         }
 
         // Validate control inputs are in valid ranges
@@ -514,20 +514,6 @@ impl Default for TrimState {
             elevator: 0.0,
             aileron: 0.0,
             rudder: 0.0,
-        }
-    }
-}
-
-impl Default for ValidityFlags {
-    fn default() -> Self {
-        Self {
-            safe_for_ffb: false,
-            attitude_valid: false,
-            angular_rates_valid: false,
-            velocities_valid: false,
-            kinematics_valid: false,
-            aero_valid: false,
-            position_valid: false,
         }
     }
 }

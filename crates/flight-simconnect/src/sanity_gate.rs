@@ -183,12 +183,12 @@ impl SanityGate {
         }
 
         // Check for physically implausible jumps
-        if let Some(ref prev) = self.previous_state {
-            if self.has_implausible_jump(snapshot, prev) {
-                self.record_violation("Physically implausible telemetry jump detected");
-                self.mark_invalid(snapshot);
-                return;
-            }
+        if let Some(ref prev) = self.previous_state
+            && self.has_implausible_jump(snapshot, prev)
+        {
+            self.record_violation("Physically implausible telemetry jump detected");
+            self.mark_invalid(snapshot);
+            return;
         }
 
         // Update state machine

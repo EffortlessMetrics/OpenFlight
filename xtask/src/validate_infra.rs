@@ -49,6 +49,7 @@ impl InfraError {
 
 /// Invariants structure matching the schema.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Invariants {
     environment: String,
     rust_version: String,
@@ -63,6 +64,7 @@ struct Invariants {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct EnvVarSpec {
     required: bool,
     #[serde(default)]
@@ -71,6 +73,7 @@ struct EnvVarSpec {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Resources {
     #[serde(default)]
     cpu_limit: Option<String>,
@@ -517,20 +520,20 @@ fn extract_compose_ports(compose_content: &str) -> HashMap<String, u16> {
         }
 
         // Look for port mappings (e.g., "- \"8080:8080\"" or "- 8080:8080")
-        if let Some(ref service) = current_service {
-            if trimmed.starts_with("- \"") || trimmed.starts_with("- ") {
-                // Extract port mapping
-                let port_str = trimmed
-                    .trim_start_matches("- \"")
-                    .trim_start_matches("- ")
-                    .trim_end_matches('"');
+        if let Some(ref service) = current_service
+            && (trimmed.starts_with("- \"") || trimmed.starts_with("- "))
+        {
+            // Extract port mapping
+            let port_str = trimmed
+                .trim_start_matches("- \"")
+                .trim_start_matches("- ")
+                .trim_end_matches('"');
 
-                // Parse "host:container" format
-                if let Some(colon_pos) = port_str.find(':') {
-                    let host_port = &port_str[..colon_pos];
-                    if let Ok(port) = host_port.parse::<u16>() {
-                        ports.insert(service.clone(), port);
-                    }
+            // Parse "host:container" format
+            if let Some(colon_pos) = port_str.find(':') {
+                let host_port = &port_str[..colon_pos];
+                if let Ok(port) = host_port.parse::<u16>() {
+                    ports.insert(service.clone(), port);
                 }
             }
         }
