@@ -643,11 +643,7 @@ impl DirectInputFfbDevice {
 
                 // Use provided hwnd or internal message-only window
                 let hwnd = if hwnd == 0 {
-                    device
-                        .window
-                        .as_ref()
-                        .map(|w| w.hwnd())
-                        .unwrap_or(HWND::default())
+                    device.window.as_ref().map(|w| w.hwnd()).unwrap_or_default()
                 } else {
                     HWND(hwnd as *mut _)
                 };
@@ -1165,7 +1161,7 @@ impl DirectInputFfbDevice {
                     if let Err(e) = &result {
                         // Check for disconnect errors
                         if let Some(code) = e.code().0.checked_neg() {
-                            if is_disconnect_error(-(code as i32)) {
+                            if is_disconnect_error(-code) {
                                 return Err(DInputError::DeviceDisconnected);
                             }
                         }
