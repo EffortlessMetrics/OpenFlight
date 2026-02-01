@@ -31,6 +31,7 @@ pub mod windows;
 pub mod metrics;
 pub mod pll;
 pub mod ring;
+pub mod soak;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -38,6 +39,10 @@ use std::time::{Duration, Instant};
 pub use metrics::{JitterMetrics, TimingStats};
 pub use pll::Pll;
 pub use ring::{RingStats, SpscRing};
+pub use soak::{
+    SoakDiagnostics, SoakFailureReason, SoakMetrics, SoakTest, SoakTestConfig, SoakTestResult,
+    SyntheticTelemetryGenerator, TelemetrySnapshot, get_rss_bytes,
+};
 
 // Re-export Windows-specific types when on Windows
 #[cfg(windows)]

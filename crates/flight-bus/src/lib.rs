@@ -17,14 +17,29 @@
 //! Provides a comprehensive telemetry bus system with type-safe units,
 //! rate-limited publishing, and consistent test fixtures for flight simulation data.
 
+pub mod adapter_fixtures;
 pub mod adapters;
+pub mod e2e_test;
 pub mod fixtures;
+pub mod integration_test;
 pub mod publisher;
 pub mod snapshot;
 pub mod types;
 
 // Re-export main types for convenience
+pub use adapter_fixtures::{
+    AdapterFixture, BuiltinFixtures, DcsFixture, FixtureConverter, FixtureError, FixtureLoader,
+    MsfsFixture, XPlaneFixture,
+};
+pub use e2e_test::{
+    E2EDiagnostics, E2ETestConfig, E2ETestError, E2ETestResult, EndToEndTest, FfbStateSnapshot,
+    FrameHistoryEntry, MockFfbEngine, MockTelemetryBus, SafetyViolationDetail, SafetyViolationType,
+    SnapshotStateInfo,
+};
 pub use fixtures::{ScenarioType, SnapshotFixture, SnapshotValidator, ValidationTolerance};
+pub use integration_test::{
+    AdapterIntegrationTest, AdapterType, IntegrationTestResult, MockAdapter, PhaseResult, TestError,
+};
 pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, SubscriptionConfig};
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,

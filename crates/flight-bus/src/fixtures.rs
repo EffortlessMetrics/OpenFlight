@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 /// Fixture generator for creating consistent test snapshots
+#[derive(Debug)]
 pub struct SnapshotFixture {
     sim: SimId,
     aircraft: AircraftId,

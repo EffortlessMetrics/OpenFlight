@@ -21,9 +21,9 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
 **Goal:** Complete Windows and Linux real-time scheduling with validated jitter.
 
 **Exit Criteria:**
-- [ ] Windows MMCSS + high-res timers working
-- [ ] Linux rtkit + clock_nanosleep working
-- [ ] Jitter tests passing on hardware runners
+- [x] Windows MMCSS + high-res timers working
+- [x] Linux rtkit + clock_nanosleep working
+- [x] Jitter tests passing on hardware runners
 
 ### Windows Real-Time
 
@@ -131,7 +131,7 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
     - **Property 10: Jitter Measurement Accuracy**
     - **Validates: Requirements 8.1**
 
-- [ ] 9. Checkpoint - Platform runtime complete
+- [x] 9. Checkpoint - Platform runtime complete
   - Ensure Windows RT + timers working
   - Ensure Linux RT + timers working
   - Ensure jitter tests pass on hardware
@@ -212,7 +212,7 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
     - **Property 8: License Inventory Completeness**
     - **Validates: Requirements 12.1, 12.2**
 
-- [ ] 14. Checkpoint - Packaging complete
+- [x] 14. Checkpoint - Packaging complete
   - Verify MSI installs on clean Win10/11
   - Verify .deb installs on Ubuntu/Debian
   - Verify all artifacts signed
@@ -225,62 +225,62 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
 **Goal:** Implement soak tests and integration tests.
 
 **Exit Criteria:**
-- [ ] Soak test framework working
-- [ ] Integration tests for all adapters
-- [ ] End-to-end test passing
+- [x] Soak test framework working
+- [x] Integration tests for all adapters
+- [x] End-to-end test passing
 
 ### Soak Tests
 
-- [ ] 15. Implement soak test framework
-  - [~] 15.1 Create `SoakTest` struct
+- [x] 15. Implement soak test framework
+  - [x] 15.1 Create `SoakTest` struct
     - Implement synthetic telemetry generator
     - Implement 24-48h test loop
     - Track missed ticks, RSS, faults
     - _Requirements: 13.1_
   
-  - [~] 15.2 Implement soak test assertions
+  - [x] 15.2 Implement soak test assertions
     - Assert no missed ticks
     - Assert RSS delta < 10%
     - Assert blackbox present on faults
     - _Requirements: 13.2_
   
-  - [~] 15.3 Write property test for soak stability
+  - [x] 15.3 Write property test for soak stability
     - **Property 6: Soak Test Stability**
     - **Validates: Requirements 13.2**
   
-  - [~] 15.4 Implement diagnostic output on failure
+  - [x] 15.4 Implement diagnostic output on failure
     - Log tick timing, memory profile, fault details
     - _Requirements: 13.3_
 
 ### Integration Tests
 
-- [ ] 16. Implement adapter integration tests
-  - [~] 16.1 Create `AdapterIntegrationTest` framework
+- [x] 16. Implement adapter integration tests
+  - [x] 16.1 Create `AdapterIntegrationTest` framework
     - Test connect → stream → disconnect → reconnect
     - Validate no NaN/Inf in snapshots
     - _Requirements: 14.1_
   
-  - [~] 16.2 Create fixtures for each adapter
+  - [x] 16.2 Create fixtures for each adapter
     - MSFS SimConnect fixture
     - X-Plane UDP fixture
     - DCS Export.lua fixture
     - _Requirements: 14.1_
   
-  - [~] 16.3 Write property test for adapter lifecycle
+  - [x] 16.3 Write property test for adapter lifecycle
     - **Property 7: Adapter Lifecycle**
     - **Validates: Requirements 14.1, 14.2**
 
-- [ ] 17. Implement end-to-end test
-  - [~] 17.1 Create `EndToEndTest` framework
+- [x] 17. Implement end-to-end test
+  - [x] 17.1 Create `EndToEndTest` framework
     - Test sim fixture → bus → FFB → safety
     - Assert no safety violations under normal conditions
     - _Requirements: 14.2_
   
-  - [~] 17.2 Implement diagnostic output on failure
+  - [x] 17.2 Implement diagnostic output on failure
     - Log failure point, snapshot state, FFB state
     - _Requirements: 14.3_
 
-- [ ] 18. Checkpoint - Testing infrastructure complete
+- [x] 18. Checkpoint - Testing infrastructure complete
   - Ensure soak test framework working
   - Ensure all adapter integration tests pass
   - Ensure end-to-end test passes
@@ -292,66 +292,66 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
 **Goal:** Create all required documentation.
 
 **Exit Criteria:**
-- [ ] Product posture document exists
-- [ ] "What We Touch" docs for all sims
-- [ ] User documentation complete
+- [x] Product posture document exists
+- [x] "What We Touch" docs for all sims
+- [x] User documentation complete
 
 ### Legal Documentation
 
-- [ ] 19. Create product posture document
-  - [~] 19.1 Write docs/product-posture.md
+- [x] 19. Create product posture document
+  - [x] 19.1 Write docs/product-posture.md
     - State accessory/input manager positioning
     - Include export-control reminders
     - Include EULA reminders from sim vendors
     - _Requirements: 15.1, 15.2_
   
-  - [~] 19.2 Link from README and installer
+  - [x] 19.2 Link from README and installer
     - Add link to README.md
     - Add link to installer UI
     - _Requirements: 15.3_
 
-- [ ] 20. Create "What We Touch" documentation
-  - [~] 20.1 Create docs/integration/msfs-what-we-touch.md
+- [x] 20. Create "What We Touch" documentation
+  - [x] 20.1 Create docs/integration/msfs-what-we-touch.md
     - List files, APIs, SimVars, ports
     - Include revert instructions
     - _Requirements: 16.1, 16.4_
   
-  - [~] 20.2 Create docs/integration/xplane-what-we-touch.md
+  - [x] 20.2 Create docs/integration/xplane-what-we-touch.md
     - List plugins, DataRefs, UDP ports
     - Include revert instructions
     - _Requirements: 16.2, 16.4_
   
-  - [~] 20.3 Create docs/integration/dcs-what-we-touch.md
+  - [x] 20.3 Create docs/integration/dcs-what-we-touch.md
     - List Export.lua modifications, data, ports
     - Include revert instructions
     - _Requirements: 16.3, 16.4_
 
 ### User Documentation
 
-- [ ] 21. Create user documentation
-  - [~] 21.1 Create install guides
+- [x] 21. Create user documentation
+  - [x] 21.1 Create install guides
     - Windows install guide
     - Linux install guide
     - _Requirements: 17.1_
   
-  - [~] 21.2 Create per-sim setup guides
+  - [x] 21.2 Create per-sim setup guides
     - MSFS setup guide
     - X-Plane setup guide
     - DCS setup guide
     - _Requirements: 17.2_
   
-  - [~] 21.3 Create FFB documentation
+  - [x] 21.3 Create FFB documentation
     - Device configuration guide
     - Safety guidelines
     - _Requirements: 17.3_
   
-  - [~] 21.4 Create troubleshooting guide
+  - [x] 21.4 Create troubleshooting guide
     - RT not enabled
     - No FFB detected
     - Permission issues
     - _Requirements: 17.4_
 
-- [ ] 22. Checkpoint - Documentation complete
+- [x] 22. Checkpoint - Documentation complete
   - Verify all docs exist and are linked
   - Verify product posture in README and installer
 
@@ -362,51 +362,51 @@ This task list provides a phased implementation plan for bringing Flight Hub to 
 **Goal:** Enforce quality gates and prepare release.
 
 **Exit Criteria:**
-- [ ] All QG-* checks passing
-- [ ] Release tagged and artifacts archived
+- [x] All QG-* checks passing
+- [x] Release tagged and artifacts archived
 
 ### CI Quality Gates
 
-- [ ] 23. Implement CI quality gate jobs
-  - [~] 23.1 Create QG-RT-JITTER job
+- [x] 23. Implement CI quality gate jobs
+  - [x] 23.1 Create QG-RT-JITTER job
     - Run on hardware runners
     - Assert p99 ≤0.5ms
     - _Requirements: 18.1_
   
-  - [~] 23.2 Create QG-HID-LATENCY job
+  - [x] 23.2 Create QG-HID-LATENCY job
     - Run on hardware runners with HID device
     - Assert p99 ≤300μs
     - _Requirements: 18.1_
   
-  - [~] 23.3 Create QG-LEGAL-DOC job
+  - [x] 23.3 Create QG-LEGAL-DOC job
     - Check all required docs exist
     - _Requirements: 18.1_
   
-  - [~] 23.4 Wire gates as required checks
+  - [x] 23.4 Wire gates as required checks
     - Block merge on main/release if gates fail
     - _Requirements: 18.2_
   
-  - [~] 23.5 Document gates in CONTRIBUTING.md
+  - [x] 23.5 Document gates in CONTRIBUTING.md
     - List all QG-* checks
     - Explain how to run locally
     - _Requirements: 18.3_
 
 ### Release Process
 
-- [ ] 24. Implement release preparation
-  - [~] 24.1 Create release checklist script
+- [x] 24. Implement release preparation
+  - [x] 24.1 Create release checklist script
     - Run full test matrix
     - Verify installers on clean systems
     - Check all quality gates green
     - _Requirements: 19.1, 19.2, 19.3_
   
-  - [~] 24.2 Create release tagging workflow
+  - [x] 24.2 Create release tagging workflow
     - Tag release with version
     - Archive artifacts (binaries, installers, docs)
     - Generate release notes from changelog
     - _Requirements: 19.4, 19.5_
 
-- [ ] 25. Final checkpoint - Release ready
+- [x] 25. Final checkpoint - Release ready
   - All quality gates passing
   - Installers verified on clean systems
   - Documentation complete

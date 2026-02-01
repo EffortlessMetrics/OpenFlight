@@ -43,6 +43,108 @@ This guide helps resolve common issues with Flight Hub installation, configurati
 2. Check user has access to required directories
 3. Verify udev rules are installed correctly
 
+## Permission Issues
+
+### HID Device Access (Linux)
+
+**Symptoms**:
+- Error: "Permission denied accessing /dev/hidraw0"
+- Devices not detected despite being plugged in
+- Works as root but not as regular user
+
+**Solutions**:
+
+1. **Add user to input group**
+   ```bash
+   sudo usermod -a -G input $USER
+   ```
+   **Important**: Log out and log back in for this to take effect.
+
+2. **Verify group membership**
+   ```bash
+   groups
+   ```
+   You should see `input` in the list.
+
+3. **Check udev rules are installed**
+   ```bash
+   ls -la /etc/udev/rules.d/99-flight-hub.rules
+   ```
+   If missing, install them:
+   ```bash
+   sudo cp /usr/share/flight-hub/99-flight-hub.rules /etc/udev/rules.d/
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger
+   ```
+
+4. **Check device permissions**
+   ```bash
+   ls -la /dev/hidraw*
+   ```
+   Should show group `input` with `rw` permissions:
+   ```
+   crw-rw---- 1 root input 239, 0 Jan  1 12:00 /dev/hidraw0
+   ```
+
+5. **Manual permission fix (temporary)**
+   ```bash
+   sudo chmod 666 /dev/hidraw0
+   ```
+   Note: This resets on reboot. Use udev rules for permanent fix.
+
+### Configuration Directory Access
+
+**Symptoms**:
+- Error: "Cannot write to configuration directory"
+- Settings not saved
+- Profiles not loading
+
+**Solutions**:
+
+1. **Check directory ownership**
+   ```bash
+   # Linux
+   ls -la ~/.config/flight-hub
+   
+   # Windows (PowerShell)
+   Get-Acl "$env:APPDATA\FlightHub"
+   ```
+
+2. **Fix ownership (Linux)**
+   ```bash
+   sudo chown -R $USER:$USER ~/.config/flight-hub
+   ```
+
+3. **Fix permissions (Linux)**
+   ```bash
+   chmod -R 755 ~/.config/flight-hub
+   ```
+
+4. **Reset configuration directory**
+   ```bash
+   # Backup first
+   mv ~/.config/flight-hub ~/.config/flight-hub.backup
+   
+   # Restart Flight Hub to recreate
+   flightctl service restart
+   ```
+
+### Simulator Integration Permissions
+
+**MSFS (Windows)**:
+- Flight Hub needs write access to `%APPDATA%\Microsoft Flight Simulator\`
+- This is normally available to all users
+- If denied, check folder permissions in Properties → Security
+
+**X-Plane**:
+- Flight Hub needs write access to X-Plane preferences folder
+- Check `X-Plane 12/Output/preferences/` permissions
+
+**DCS**:
+- Export.lua requires write access to `Saved Games\DCS\Scripts\`
+- This folder is user-owned and should be accessible
+- If using Wine/Proton, check Wine prefix permissions
+
 ## Simulator Integration Issues
 
 ### Microsoft Flight Simulator (MSFS)
@@ -113,6 +215,252 @@ This guide helps resolve common issues with Flight Hub installation, configurati
 2. Disable unnecessary telemetry features
 3. Check for other Export.lua conflicts
 4. Monitor DCS frame rate and adjust accordingly
+
+## Real-Time Scheduling Issues
+
+### RT Not Enabled (Windows)
+
+**Symptoms**: 
+- `flightctl status` shows "RT Scheduling: Disabled" or "MMCSS: Not registered"
+- Higher than expected input latency or jitter
+- Warning: "MMCSS registration failed"
+
+**Solutions**:
+
+1. **Check Windows Audio Service**
+   ```cmd
+   sc query audiosrv
+   ```
+   MMCSS depends on the Windows Audio service. Ensure it's running:
+   ```cmd
+   net start audiosrv
+   ```
+
+2. **Check for MMCSS conflicts**
+   - Some audio applications (DAWs, audio interfaces) may have exclusive MMCSS access
+   - Close other audio-intensive applications
+   - Check if any application is using "Pro Audio" MMCSS task
+
+3. **Verify MMCSS is enabled**
+   - Open Registry Editor (`regedit`)
+   - Navigate to `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile`
+   - Ensure `SystemResponsiveness` is set to a low value (0-20)
+
+4. **Check thread priority elevation**
+   - Flight Hub falls back to `SetThreadPriority` if MMCSS fails
+   - This still provides good performance but slightly higher jitter
+   - Check logs for: "Elevated thread priority via SetThreadPriority"
+
+5. **Run as administrator (temporary test)**
+   - If RT works as admin but not as user, there may be a policy restriction
+   - Check Group Policy for thread priority restrictions
+
+### RT Not Enabled (Linux)
+
+**Symptoms**:
+- `flightctl status` shows "RT Scheduling: Disabled"
+- Warning: "rtkit failed" or "sched_setscheduler failed"
+- Higher than expected input latency or jitter
+
+**Solutions**:
+
+1. **Install and enable rtkit**
+   ```bash
+   # Debian/Ubuntu
+   sudo apt install rtkit
+   sudo systemctl enable rtkit-daemon
+   sudo systemctl start rtkit-daemon
+   
+   # Fedora
+   sudo dnf install rtkit
+   sudo systemctl enable rtkit-daemon
+   sudo systemctl start rtkit-daemon
+   ```
+
+2. **Check rtkit status**
+   ```bash
+   systemctl status rtkit-daemon
+   ```
+
+3. **Configure limits.conf**
+   If rtkit is unavailable, configure RT limits manually:
+   ```bash
+   sudo nano /etc/security/limits.conf
+   ```
+   Add these lines (replace `yourusername`):
+   ```
+   yourusername    soft    rtprio    99
+   yourusername    hard    rtprio    99
+   yourusername    soft    memlock   unlimited
+   yourusername    hard    memlock   unlimited
+   ```
+   **Log out and log back in** for changes to take effect.
+
+4. **Verify limits are applied**
+   ```bash
+   ulimit -r    # Should show 99
+   ulimit -l    # Should show unlimited
+   ```
+
+5. **Check for kernel restrictions**
+   Some hardened kernels restrict RT scheduling. Check:
+   ```bash
+   cat /proc/sys/kernel/sched_rt_runtime_us
+   ```
+   If this is -1, RT is unrestricted. If it's a positive number, RT processes are limited.
+
+6. **Use the setup script**
+   ```bash
+   sudo scripts/setup-linux-rt.sh
+   ```
+
+### Verifying RT is Working
+
+After applying fixes, verify RT scheduling:
+
+```bash
+flightctl status --verbose
+```
+
+**Windows expected output**:
+```
+RT Scheduling:
+  MMCSS: Registered (task: Games)
+  Thread Priority: TIME_CRITICAL
+  High-Res Timer: Enabled
+```
+
+**Linux expected output**:
+```
+RT Scheduling:
+  Method: rtkit (or sched_setscheduler)
+  Policy: SCHED_FIFO
+  Priority: 10
+  mlockall: Success
+```
+
+## Force Feedback Issues
+
+### No FFB Detected
+
+**Symptoms**:
+- `flightctl devices` shows device without `[FFB]` indicator
+- FFB device works in other applications but not Flight Hub
+- Error: "No FFB-capable device found"
+
+**Solutions**:
+
+1. **Verify device supports DirectInput FFB**
+   - Open Windows Game Controllers (`joy.cpl`)
+   - Select your device → Properties → Settings
+   - Look for "Force Feedback" or "Effects" tab
+   - If no FFB tab exists, the device may not support DirectInput FFB
+
+2. **Check device drivers**
+   - Ensure manufacturer drivers are installed (not just Windows generic)
+   - Update to latest driver version
+   - Some devices require specific driver versions for FFB
+
+3. **Test FFB in Windows**
+   - In Game Controllers → Properties → Test
+   - Click "Test Force Feedback" or similar
+   - If this doesn't work, the issue is with the device/driver, not Flight Hub
+
+4. **Check USB connection**
+   - FFB devices often require more USB power
+   - Try a powered USB hub or direct motherboard port
+   - Avoid USB extension cables
+
+5. **Verify DirectInput is available**
+   - Some devices use proprietary FFB protocols
+   - Check if manufacturer provides DirectInput compatibility mode
+
+6. **Check Flight Hub FFB status**
+   ```cmd
+   flightctl ffb status
+   ```
+   Look for device detection and capability information.
+
+### FFB Device Detected but No Output
+
+**Symptoms**:
+- Device shows `[FFB]` in device list
+- No forces felt during operation
+- `flightctl ffb status` shows "State: Disabled" or "State: Faulted"
+
+**Solutions**:
+
+1. **Enable FFB**
+   ```cmd
+   flightctl ffb enable
+   ```
+
+2. **Check safety state**
+   ```cmd
+   flightctl ffb status
+   ```
+   If state is "Faulted", check for fault reasons and clear:
+   ```cmd
+   flightctl ffb clear
+   ```
+
+3. **Verify simulator connection**
+   - FFB requires active simulator telemetry
+   - Check `safe_for_ffb` flag is true
+   - Ensure simulator is running and connected
+
+4. **Check strength settings**
+   ```cmd
+   flightctl ffb strength 100
+   ```
+
+5. **Review blackbox for faults**
+   ```cmd
+   flightctl blackbox show --filter ffb --last 5m
+   ```
+
+6. **Test with manual effect**
+   ```cmd
+   flightctl ffb test
+   ```
+   This sends a test effect to verify basic FFB communication.
+
+### FFB Cuts Out or Faults Frequently
+
+**Symptoms**:
+- FFB works then suddenly stops
+- Frequent "USB stall" or "write failure" messages
+- State frequently changes to "Faulted"
+
+**Solutions**:
+
+1. **Check USB connection quality**
+   - Use a high-quality USB cable
+   - Connect directly to motherboard USB port
+   - Avoid USB hubs (especially unpowered ones)
+
+2. **Check for USB power issues**
+   - FFB devices draw significant power
+   - Try a powered USB hub
+   - Check if other USB devices cause issues
+
+3. **Update device firmware**
+   - Check manufacturer website for firmware updates
+   - Some FFB issues are fixed in firmware
+
+4. **Review fault log**
+   ```cmd
+   flightctl ffb faults
+   ```
+   Look for patterns (specific times, conditions, etc.)
+
+5. **Reduce FFB update rate**
+   - High update rates can overwhelm some devices
+   - Try reducing in settings
+
+6. **Check for driver conflicts**
+   - Disable other input management software
+   - Check for conflicting DirectInput hooks
 
 ## Performance Issues
 
