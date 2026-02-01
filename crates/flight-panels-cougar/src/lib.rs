@@ -8,6 +8,6 @@ pub use flight_panels_core::led;
 pub mod cougar;
 
 pub use cougar::{
-    CougarMfdHealthStatus, CougarMfdType, CougarMfdWriter, CougarVerifyStep, CougarVerifyStepResult,
-    CougarVerifyTestResult, MfdInfo, MfdLedState,
+    CougarMfdHealthStatus, CougarMfdType, CougarMfdWriter, CougarVerifyStep,
+    CougarVerifyStepResult, CougarVerifyTestResult, MfdInfo, MfdLedState,
 };

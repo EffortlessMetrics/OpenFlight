@@ -5,5 +5,5 @@
 
 pub use flight_hid_types::HidDeviceInfo;
 
-pub mod hid_descriptor;
 pub mod device_support;
+pub mod hid_descriptor;

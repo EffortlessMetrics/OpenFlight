@@ -3,9 +3,9 @@
 //! These tests verify the complete integration of the Cougar MFD writer
 //! with fixture-based testing for hardware compatibility validation.
 
-use flight_watchdog::WatchdogSystem;
 use flight_hid::{HidAdapter, HidDeviceInfo};
 use flight_panels::cougar::{CougarMfdType, CougarMfdWriter};
+use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
