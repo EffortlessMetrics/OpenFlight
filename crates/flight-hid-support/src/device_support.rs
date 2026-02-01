@@ -18,21 +18,29 @@ pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67A;
 
 // Saitek/Logitech HOTAS PIDs
+// See docs/reference/hotas-claims.md for verification status
+//
 // X52 family (unified USB) - confidence: KNOWN
 pub const X52_PID: u16 = 0x075C;
 pub const X52_PRO_PID: u16 = 0x0762;
 
-// X55 family (split USB) - confidence: LIKELY
+// X55 family (split USB, Saitek VID 0x06A3) - confidence: LIKELY
+// Note: Some X55 units may use Mad Catz VID (0x0738) with same PIDs
 pub const X55_STICK_PID: u16 = 0x2215;
 pub const X55_THROTTLE_PID: u16 = 0xA215;
 
-// X56 family - Saitek branded (split USB) - confidence: LIKELY
-pub const X56_SAITEK_STICK_PID: u16 = 0x0764;
-pub const X56_SAITEK_THROTTLE_PID: u16 = 0x0765;
+// X56 family - Mad Catz era (split USB, VID 0x0738) - confidence: LIKELY
+// These are the "blue" X56 units from the Mad Catz acquisition period
+pub const X56_MADCATZ_STICK_PID: u16 = 0x2221;
+pub const X56_MADCATZ_THROTTLE_PID: u16 = 0xA221;
 
-// X56 family - Logitech branded (split USB) - confidence: LIKELY
+// X56 family - Logitech branded (split USB, VID 0x046D) - confidence: LIKELY/SUSPECT
+// Stick PID 0xC229 is likely correct
+// WARNING: Throttle PID 0xC22A may conflict with Logitech G110 keyboard!
+// See docs/reference/hotas-claims.md - requires lsusb verification from real hardware
 pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
-pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
+// SUSPECT: This PID needs verification - do NOT match unknown Logitech PIDs
+// pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
 
 pub const VKB_STECS_LEFT_SPACE_MINI_PID: u16 = 0x0136;
 pub const VKB_STECS_RIGHT_SPACE_MINI_PID: u16 = 0x013A;

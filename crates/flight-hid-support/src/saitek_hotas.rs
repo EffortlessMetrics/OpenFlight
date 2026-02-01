@@ -8,8 +8,7 @@
 
 use crate::device_support::{
     LOGITECH_VENDOR_ID, MAD_CATZ_VENDOR_ID, SAITEK_VENDOR_ID, X52_PID, X52_PRO_PID, X55_STICK_PID,
-    X55_THROTTLE_PID, X56_LOGITECH_STICK_PID, X56_LOGITECH_THROTTLE_PID, X56_SAITEK_STICK_PID,
-    X56_SAITEK_THROTTLE_PID,
+    X55_THROTTLE_PID, X56_LOGITECH_STICK_PID, X56_MADCATZ_STICK_PID, X56_MADCATZ_THROTTLE_PID,
 };
 
 /// Saitek/Logitech HOTAS device types.
@@ -33,30 +32,46 @@ impl SaitekHotasType {
     /// Identify device type from USB VID/PID.
     ///
     /// Returns `None` if the VID/PID combination is not a known Saitek HOTAS.
+    ///
+    /// # Note
+    /// Logitech X56 Throttle PID is intentionally NOT matched until verified.
+    /// See `docs/reference/hotas-claims.md` for the PID collision warning.
     pub fn from_vid_pid(vid: u16, pid: u16) -> Option<Self> {
-        // Check Logitech VID first (X56 only)
+        // Check Logitech VID (X56 stick only - throttle PID is suspect)
         if vid == LOGITECH_VENDOR_ID {
             return match pid {
                 X56_LOGITECH_STICK_PID => Some(Self::X56Stick),
-                X56_LOGITECH_THROTTLE_PID => Some(Self::X56Throttle),
+                // NOTE: We intentionally do NOT match Logitech throttle PID (0xC22A)
+                // because it may conflict with Logitech G110 keyboard.
+                // Requires lsusb verification from real hardware.
                 _ => None,
             };
         }
 
-        // Check Saitek/Mad Catz VIDs
-        if vid != SAITEK_VENDOR_ID && vid != MAD_CATZ_VENDOR_ID {
-            return None;
+        // Check Mad Catz VID (X55/X56 era)
+        if vid == MAD_CATZ_VENDOR_ID {
+            return match pid {
+                X55_STICK_PID => Some(Self::X55Stick),
+                X55_THROTTLE_PID => Some(Self::X55Throttle),
+                X56_MADCATZ_STICK_PID => Some(Self::X56Stick),
+                X56_MADCATZ_THROTTLE_PID => Some(Self::X56Throttle),
+                _ => None,
+            };
         }
 
-        match pid {
-            X52_PID => Some(Self::X52),
-            X52_PRO_PID => Some(Self::X52Pro),
-            X55_STICK_PID => Some(Self::X55Stick),
-            X55_THROTTLE_PID => Some(Self::X55Throttle),
-            X56_SAITEK_STICK_PID => Some(Self::X56Stick),
-            X56_SAITEK_THROTTLE_PID => Some(Self::X56Throttle),
-            _ => None,
+        // Check Saitek VID (original devices)
+        if vid == SAITEK_VENDOR_ID {
+            return match pid {
+                X52_PID => Some(Self::X52),
+                X52_PRO_PID => Some(Self::X52Pro),
+                // X55 may also appear under Saitek VID on some units
+                X55_STICK_PID => Some(Self::X55Stick),
+                X55_THROTTLE_PID => Some(Self::X55Throttle),
+                _ => None,
+            };
         }
+
+        None
     }
 
     /// Returns `true` if this device uses unified USB topology (stick + throttle on one cable).
@@ -189,6 +204,7 @@ mod tests {
 
     #[test]
     fn test_x55_split_topology() {
+        // X55 under Saitek VID
         assert_eq!(
             SaitekHotasType::from_vid_pid(SAITEK_VENDOR_ID, X55_STICK_PID),
             Some(SaitekHotasType::X55Stick)
@@ -197,31 +213,44 @@ mod tests {
             SaitekHotasType::from_vid_pid(SAITEK_VENDOR_ID, X55_THROTTLE_PID),
             Some(SaitekHotasType::X55Throttle)
         );
+        // X55 under Mad Catz VID (some units were shipped this way)
+        assert_eq!(
+            SaitekHotasType::from_vid_pid(MAD_CATZ_VENDOR_ID, X55_STICK_PID),
+            Some(SaitekHotasType::X55Stick)
+        );
+        assert_eq!(
+            SaitekHotasType::from_vid_pid(MAD_CATZ_VENDOR_ID, X55_THROTTLE_PID),
+            Some(SaitekHotasType::X55Throttle)
+        );
         assert!(SaitekHotasType::X55Stick.is_split_topology());
         assert!(SaitekHotasType::X55Throttle.is_split_topology());
     }
 
     #[test]
     fn test_x56_logitech_detection() {
+        // Logitech stick is matched
         assert_eq!(
             SaitekHotasType::from_vid_pid(LOGITECH_VENDOR_ID, X56_LOGITECH_STICK_PID),
             Some(SaitekHotasType::X56Stick)
         );
+        // Logitech throttle is intentionally NOT matched due to PID collision risk
+        // See docs/reference/hotas-claims.md
         assert_eq!(
-            SaitekHotasType::from_vid_pid(LOGITECH_VENDOR_ID, X56_LOGITECH_THROTTLE_PID),
-            Some(SaitekHotasType::X56Throttle)
+            SaitekHotasType::from_vid_pid(LOGITECH_VENDOR_ID, 0xC22A),
+            None
         );
         assert!(SaitekHotasType::X56Stick.has_rgb());
     }
 
     #[test]
-    fn test_x56_saitek_detection() {
+    fn test_x56_madcatz_detection() {
+        // Mad Catz X56 uses VID 0x0738 with PIDs 0x2221/0xA221
         assert_eq!(
-            SaitekHotasType::from_vid_pid(SAITEK_VENDOR_ID, X56_SAITEK_STICK_PID),
+            SaitekHotasType::from_vid_pid(MAD_CATZ_VENDOR_ID, X56_MADCATZ_STICK_PID),
             Some(SaitekHotasType::X56Stick)
         );
         assert_eq!(
-            SaitekHotasType::from_vid_pid(SAITEK_VENDOR_ID, X56_SAITEK_THROTTLE_PID),
+            SaitekHotasType::from_vid_pid(MAD_CATZ_VENDOR_ID, X56_MADCATZ_THROTTLE_PID),
             Some(SaitekHotasType::X56Throttle)
         );
     }
