@@ -31,6 +31,7 @@
 //!     slew_rate: Some(1.2),
 //!     detents: vec![],
 //!     curve: None,
+//!     filter: None,
 //! });
 //!
 //! let profile = Profile {
@@ -132,6 +133,24 @@ pub struct AxisConfig {
 
     /// Custom response curve points
     pub curve: Option<Vec<CurvePoint>>,
+
+    /// EMA filter configuration for potentiometer noise reduction
+    pub filter: Option<FilterConfig>,
+}
+
+/// EMA filter configuration for axis noise reduction.
+///
+/// Used primarily for noisy potentiometers like the B104 in T.Flight HOTAS 4.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FilterConfig {
+    /// Smoothing factor [0.0, 1.0] - lower = more smoothing
+    pub alpha: f32,
+
+    /// Spike rejection threshold in normalized units (optional)
+    pub spike_threshold: Option<f32>,
+
+    /// Maximum consecutive spikes before accepting as real change
+    pub max_spike_count: Option<u8>,
 }
 
 /// Detent zone definition
@@ -461,6 +480,10 @@ pub fn merge_axis_configs(base: &AxisConfig, override_config: &AxisConfig) -> Ax
             override_config.detents.clone()
         },
         curve: override_config.curve.clone().or_else(|| base.curve.clone()),
+        filter: override_config
+            .filter
+            .clone()
+            .or_else(|| base.filter.clone()),
     }
 }
 
@@ -521,6 +544,7 @@ mod tests {
                 slew_rate: Some(1.2),
                 detents: vec![],
                 curve: None,
+                filter: None,
             },
         );
 
@@ -545,6 +569,7 @@ mod tests {
                 slew_rate: None, // Keep base value
                 detents: vec![],
                 curve: None,
+                filter: None,
             },
         );
 
@@ -576,6 +601,7 @@ mod tests {
                     slew_rate: Some(slew_rate),
                     detents: vec![],
                     curve: None,
+                    filter: None,
                 },
             );
 
@@ -615,6 +641,7 @@ mod tests {
                     slew_rate: None,
                     detents: vec![],
                     curve: None,
+                    filter: None,
                 },
             );
 

@@ -364,6 +364,7 @@ fn create_test_profile() -> Profile {
                     output: 1.0,
                 },
             ]),
+            filter: None,
         },
     );
 

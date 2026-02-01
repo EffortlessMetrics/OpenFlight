@@ -75,6 +75,7 @@ fn demonstrate_profile_validation() -> Result<(), Box<dyn std::error::Error>> {
                     output: 1.0,
                 },
             ]), // Custom curve
+            filter: None,
         },
     );
 

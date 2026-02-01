@@ -206,6 +206,7 @@ fn demo_profile_merging() -> Result<(), Box<dyn std::error::Error>> {
             slew_rate: Some(2.0), // Override
             detents: vec![],      // Keep base value (empty means no override)
             curve: None,          // Keep base value
+            filter: None,
         },
     );
     override_axes.insert(
@@ -216,6 +217,7 @@ fn demo_profile_merging() -> Result<(), Box<dyn std::error::Error>> {
             slew_rate: None,
             detents: vec![],
             curve: None,
+            filter: None,
         },
     );
 
@@ -282,6 +284,7 @@ fn demo_pof_overrides() -> Result<(), Box<dyn std::error::Error>> {
             slew_rate: Some(0.8), // Slower slew for stability
             detents: vec![],
             curve: None,
+            filter: None,
         },
     );
 
@@ -403,6 +406,7 @@ fn create_test_profile() -> Profile {
                     output: 1.0,
                 },
             ]),
+            filter: None,
         },
     );
 
@@ -414,6 +418,7 @@ fn create_test_profile() -> Profile {
             slew_rate: None,
             detents: vec![],
             curve: None,
+            filter: None,
         },
     );
 

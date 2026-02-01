@@ -35,6 +35,7 @@ mod tests {
                         output: 1.0,
                     },
                 ]), // Custom curve - should be rejected in kid mode
+                filter: None,
             },
         );
 

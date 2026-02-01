@@ -254,6 +254,21 @@ pub mod presets {
             impossible_masks: Vec::new(),
         }
     }
+
+    /// Ghost filter configured for T.Flight HOTAS 4 HAT switch.
+    ///
+    /// The T.Flight HOTAS 4 HAT switch can occasionally report impossible
+    /// opposite directions simultaneously. This preset filters those states.
+    pub fn tflight_hotas4() -> GhostFilterConfig {
+        GhostFilterConfig {
+            debounce_threshold: Duration::from_millis(30),
+            // HAT switch cannot physically press opposite directions
+            impossible_masks: vec![
+                0b0101, // Up + Down impossible
+                0b1010, // Left + Right impossible
+            ],
+        }
+    }
 }
 
 #[cfg(test)]
