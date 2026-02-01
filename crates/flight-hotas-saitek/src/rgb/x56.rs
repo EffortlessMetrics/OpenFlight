@@ -7,6 +7,7 @@
 //! The X56 RGB protocol is largely unknown. This implementation provides
 //! a placeholder for future community verification.
 
+use crate::policy::allow_device_io;
 use crate::traits::{HotasError, HotasResult, RgbColor, RgbProtocol, RgbZone};
 
 /// X56 RGB lighting controller.
@@ -36,6 +37,11 @@ impl X56Rgb {
 
 impl RgbProtocol for X56Rgb {
     fn set_color(&mut self, zone: RgbZone, color: RgbColor) -> HotasResult<()> {
+        // Policy gate: block all output I/O unless explicitly enabled
+        if !allow_device_io() {
+            return Err(HotasError::UnverifiedProtocol("x56_rgb"));
+        }
+
         tracing::info!(
             target: "hotas::rgb",
             zone = ?zone,
@@ -50,6 +56,11 @@ impl RgbProtocol for X56Rgb {
     }
 
     fn set_all(&mut self, color: RgbColor) -> HotasResult<()> {
+        // Policy gate: block all output I/O unless explicitly enabled
+        if !allow_device_io() {
+            return Err(HotasError::UnverifiedProtocol("x56_rgb"));
+        }
+
         tracing::info!(
             target: "hotas::rgb",
             r = color.r,

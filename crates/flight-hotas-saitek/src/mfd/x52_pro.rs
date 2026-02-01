@@ -4,6 +4,7 @@
 //!
 //! **UNVERIFIED PROTOCOL** - See `docs/reference/hotas-claims.md`
 
+use crate::policy::allow_device_io;
 use crate::traits::{HotasError, HotasResult, MfdProtocol};
 
 /// Hypothesized USB control transfer request type for MFD.
@@ -70,6 +71,11 @@ impl X52ProMfd {
         index: u16,
         data: &[u8],
     ) -> HotasResult<()> {
+        // Policy gate: block all output I/O unless explicitly enabled
+        if !allow_device_io() {
+            return Err(HotasError::UnverifiedProtocol("x52_pro_mfd"));
+        }
+
         tracing::debug!(
             target: "hotas::mfd",
             device = %self.device_path,

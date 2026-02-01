@@ -4,6 +4,7 @@
 //!
 //! **UNVERIFIED PROTOCOL** - See `docs/reference/hotas-claims.md`
 
+use crate::policy::allow_device_io;
 use crate::traits::{HotasError, HotasResult, LedId, LedProtocol, LedState};
 
 /// Hypothesized bRequest value for LED control.
@@ -73,6 +74,11 @@ impl X52ProLed {
         value: u16,
         index: u16,
     ) -> HotasResult<()> {
+        // Policy gate: block all output I/O unless explicitly enabled
+        if !allow_device_io() {
+            return Err(HotasError::UnverifiedProtocol("x52_pro_led"));
+        }
+
         tracing::debug!(
             target: "hotas::led",
             device = %self.device_path,

@@ -4,9 +4,11 @@
 //!
 //! These commands help verify protocol claims for Saitek/Logitech HOTAS devices.
 
+#[cfg(feature = "hidapi")]
+use anyhow::Context;
 use anyhow::Result;
 use clap::Subcommand;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Subcommand)]
 pub enum HotasCommand {
@@ -184,7 +186,7 @@ fn descriptor(device: &str, output: Option<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn replay(capture: &PathBuf, device: Option<&str>) -> Result<()> {
+fn replay(capture: &Path, device: Option<&str>) -> Result<()> {
     println!("Control Transfer Replay");
     println!("=======================");
     println!();

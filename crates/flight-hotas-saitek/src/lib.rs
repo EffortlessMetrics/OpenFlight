@@ -22,6 +22,7 @@
 
 pub mod health;
 pub mod input;
+pub mod policy;
 pub mod traits;
 
 #[cfg(feature = "x52-mfd-experimental")]
@@ -36,4 +37,5 @@ pub mod rgb;
 pub use flight_hid_support::saitek_hotas::{SaitekHotasFamily, SaitekHotasType, is_saitek_hotas};
 pub use health::HotasHealthMonitor;
 pub use input::HotasInputHandler;
+pub use policy::allow_device_io;
 pub use traits::{HotasError, HotasResult};
