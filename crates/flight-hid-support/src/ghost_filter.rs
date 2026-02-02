@@ -16,8 +16,8 @@ use std::time::{Duration, Instant};
 /// Default debounce threshold for button inputs.
 pub const DEFAULT_DEBOUNCE_MS: u64 = 20;
 
-/// Maximum buttons tracked by the filter (matches u32 bitmask width).
-pub const MAX_TRACKED_BUTTONS: usize = 32;
+/// Maximum buttons tracked by the filter (derived from u32 bitmask width).
+pub const MAX_TRACKED_BUTTONS: usize = u32::BITS as usize;
 
 /// Ghost input filter combining debouncing and impossible state detection.
 #[derive(Debug)]
