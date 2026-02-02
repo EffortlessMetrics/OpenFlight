@@ -313,7 +313,7 @@ impl PipelineBuilder {
     /// Add B104 potentiometer preset filter (for T.Flight HOTAS 4)
     ///
     /// Pre-configured for the B104 linear pot's noise characteristics:
-    /// alpha=0.15, spike_threshold=0.1
+    /// alpha=0.15, spike_threshold=0.4, max_spike_count=5
     pub fn b104_filter(self) -> Self {
         self.add_node(FilterNode::b104_preset())
     }
