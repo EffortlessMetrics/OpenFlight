@@ -24,7 +24,7 @@ use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::time::interval;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 /// DCS adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
