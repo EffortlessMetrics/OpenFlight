@@ -6,8 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Thrustmaster T.Flight HOTAS driver for OpenFlight"
-
+description = "Thrustmaster T.Flight HOTAS driver support for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "hotas", "thrustmaster"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team

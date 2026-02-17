@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Tracing backends and performance counter infrastructure."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "tracing", "metrics"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team

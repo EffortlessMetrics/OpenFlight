@@ -2,144 +2,71 @@
 
 [![Repo](https://img.shields.io/badge/repo-EffortlessMetrics%2FOpenFlight-blue?logo=github&style=flat-square)](https://github.com/EffortlessMetrics/OpenFlight)
 
-A comprehensive PC flight simulation input management system that provides a unified control plane for flight controls, panels, and force feedback devices across multiple simulators.
+Flight Hub is a PC flight simulation input management system written in Rust. It provides a unified control plane for flight controls, panels, force feedback devices, and simulator adapters.
 
 ## Product Posture
 
-**Flight Hub is an accessory/input manager that requires MSFS, X-Plane, or DCS; it does not emulate or replace any simulator.**
+Flight Hub is an accessory/input manager that requires a simulator such as MSFS, X-Plane, or DCS. It does not emulate or replace any simulator.
 
-For details on simulator integration, export control considerations, and EULA compliance, see the [Product Posture](docs/product-posture.md) document.
+For simulator integration boundaries and compliance notes, see `docs/product-posture.md`.
 
-## Features
+## Workspace Crates
 
-- **Real-time 250Hz axis processing** with deterministic performance
-- **Multi-simulator support** for MSFS, X-Plane, and DCS
-- **Force feedback safety systems** with proper interlocks
-- **Auto-profile switching** based on aircraft detection
-- **Panel and StreamDeck integration** with rule-based LED control
-- **Comprehensive diagnostics** and blackbox recording
+- Real-time spine: `flight-axis`, `flight-scheduler`, `flight-bus`
+- Service surface: `flight-service`, `flight-cli`, `flight-ipc`, `flight-ui`
+- Core domain: `flight-core`, `flight-profile`, `flight-rules`, `flight-units`, `flight-session`
+- Simulator adapters: `flight-simconnect`, `flight-simconnect-sys`, `flight-xplane`, `flight-dcs-export`, `flight-adapter-common`
+- Device and hardware: `flight-hid`, `flight-hid-support`, `flight-hid-types`, `flight-virtual`
+- Panel and control hardware: `flight-panels`, `flight-panels-core`, `flight-panels-saitek`, `flight-panels-cougar`, `flight-hotas-saitek`, `flight-hotas-thrustmaster`, `flight-streamdeck`
+- Safety, diagnostics, and observability: `flight-ffb`, `flight-watchdog`, `flight-blackbox`, `flight-tracing`, `flight-metrics`, `flight-tactile`
+- Persistence and platform integration: `flight-writers`, `flight-updater`, `flight-security`, `flight-process-detection`, `flight-replay`
 
-## Architecture
+Each crate now documents its scope in `crates/<crate>/README.md`.
 
-Flight Hub is built as a modular Rust workspace with the following components:
+## Architecture Decisions
 
-- `flight-core` - Core data structures and profile management
-- `flight-axis` - Real-time 250Hz axis processing engine
-- `flight-scheduler` - Platform-specific real-time scheduling
-- `flight-ipc` - Protobuf-based inter-process communication
-- `flight-service` - Main service daemon (`flightd`)
-- `flight-cli` - Command-line interface (`flightctl`)
+Architecture Decision Records are under `docs/explanation/adr/`.
 
-### Architecture Decisions
+- `001-rt-spine-architecture.md`
+- `002-writers-as-data.md`
+- `003-plugin-classes.md`
+- `004-zero-allocation-constraint.md`
+- `005-pll-timing-discipline.md`
+- `006-driver-light-approach.md`
+- `007-pipeline-ownership-model.md`
+- `008-ffb-mode-selection.md`
+- `009-safety-interlock-design.md`
+- `010-schema-versioning-strategy.md`
+- `011-observability-architecture.md`
 
-Key architectural decisions are documented in [Architecture Decision Records (ADRs)](docs/adr/):
-
-- **[ADR-001: Real-Time Spine Architecture](docs/adr/001-rt-spine-architecture.md)** - Protected RT core with atomic state swaps
-- **[ADR-002: Writers as Data Pattern](docs/adr/002-writers-as-data.md)** - Table-driven configuration management
-- **[ADR-003: Plugin Classification System](docs/adr/003-plugin-classes.md)** - WASM and native plugin isolation
-- **[ADR-004: Zero-Allocation Constraint](docs/adr/004-zero-allocation-constraint.md)** - Strict no-allocation policy for RT code
-- **[ADR-005: PLL Timing Discipline](docs/adr/005-pll-timing-discipline.md)** - Phase-locked loop for timing stability
-
-## Building
-
-### Prerequisites
-
-- **Rust 1.89.0 or later** (MSRV enforced by CI)
-- On Windows: Windows SDK for HID support
-- On Linux: libudev development headers
-
-### Minimum Supported Rust Version (MSRV)
-
-Flight Hub requires Rust 1.89.0 or later and uses Rust Edition 2024. This is enforced by CI and ensures compatibility with required language features and dependencies.
-
-### Build Commands
+## Build And Validate
 
 ```bash
-# Build all components
 cargo build --workspace
-
-# Run tests
 cargo test --workspace
-
-# Build release version
-cargo build --release --workspace
-
-# Run linting
-cargo fmt --check
+cargo fmt --all -- --check
 cargo clippy --workspace -- -D warnings
-
-# Security audit
-cargo audit --deny warnings
-cargo deny check
 ```
 
-## Development
-
-### Code Style
-
-This project uses `rustfmt` and `clippy` for code formatting and linting. Configuration is provided in `rustfmt.toml` and `clippy.toml`.
-
-### Regression Prevention
-
-Flight Hub implements comprehensive regression prevention measures to maintain code quality:
+Workspace helpers:
 
 ```bash
-# Quick check before committing
+cargo xtask check
+cargo xtask validate
 make quick
-
-# Full regression prevention suite
 make all
-
-# Simulate CI locally
-make ci-simulation
 ```
 
-Key measures include:
-- **Workspace dependency alignment** - Centralized version management
-- **Feature powerset testing** - Test all feature combinations
-- **Strict clippy enforcement** - Core crates must pass `-D warnings`
-- **Critical pattern verification** - Automated checks for known issues
+## Performance Constraints
 
-See [Regression Prevention Guide](docs/regression-prevention.md) for details.
-
-### CI/CD
-
-GitHub Actions workflows provide:
-- Cross-platform testing (Windows + Linux)
-- Security auditing with `cargo-audit` and `cargo-deny`
-- Performance regression detection
-- Feature powerset testing
-- Automated releases
-
-### Performance Requirements
-
-The system maintains strict performance requirements:
-- Axis processing latency ≤ 5ms p99
-- Jitter ≤ 0.5ms p99 at 250Hz
-- Zero allocations on real-time hot paths
-- CPU usage < 3% of one core during normal operation
-
-### Security
-
-Flight Hub follows security best practices:
-
-- **Supply Chain Security**: `cargo-deny` enforces approved licenses and bans vulnerable crates - SLSA and shift-left being added
-- **Security Auditing**: `cargo-audit` checks for known vulnerabilities in dependencies
-- **Local-Only Operation**: No network listeners by default, IPC uses local pipes/sockets only
-- **Signed Binaries**: All distributed binaries are code-signed (production builds)
-- **Plugin Sandboxing**: WASM plugins run in sandbox, native plugins in isolated processes
-
-Security configuration is managed in [`deny.toml`](deny.toml) and enforced by CI.
+- 250Hz real-time processing loop
+- Axis processing latency target: <=5ms p99
+- Jitter target: <=0.5ms p99
+- Zero allocations on RT hot paths
 
 ## License
 
-Licensed under either of
+Licensed under either:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines and ensure all tests pass before submitting a pull request.
+- Apache-2.0 (`LICENSE-APACHE`)
+- MIT (`LICENSE-MIT`)

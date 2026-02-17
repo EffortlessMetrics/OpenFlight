@@ -1,67 +1,86 @@
 <#
 .SYNOPSIS
-    Build script for Flight Hub Windows MSI installer.
+    Build script for Flight Hub Windows MSI installer using WiX 3.x.
 
 .DESCRIPTION
-    This script builds the Flight Hub MSI installer using WiX Toolset v4.
-    It compiles the WiX source files and links them into a signed MSI package.
+    This script builds the Flight Hub MSI installer using WiX Toolset 3.x.
+    It compiles the WiX source files using candle.exe and links them using
+    light.exe into a signed MSI package.
 
 .PARAMETER Configuration
     Build configuration: Debug or Release. Default is Release.
 
 .PARAMETER Version
-    Version string for the installer. If not specified, reads from Cargo.toml.
+    Version string for the installer (e.g., "1.0.0").
+    If not specified, reads from Cargo.toml workspace package version.
+
+.PARAMETER OutputPath
+    Output directory for the MSI file. Default is .\output.
 
 .PARAMETER Sign
-    Whether to sign the MSI with a code signing certificate. Default is $true for Release.
+    Whether to sign the MSI with a code signing certificate.
+    Default is $true for Release configuration.
 
 .PARAMETER CertificatePath
     Path to the code signing certificate (.pfx file).
 
 .PARAMETER CertificatePassword
-    Password for the code signing certificate.
+    Password for the code signing certificate (SecureString).
 
-.PARAMETER OutputDir
-    Output directory for the MSI. Default is .\output.
-
-.EXAMPLE
-    .\build.ps1 -Configuration Release -Sign $true
+.PARAMETER SkipBuild
+    Skip building Rust binaries (use existing binaries from target directory).
 
 .EXAMPLE
-    .\build.ps1 -Version "1.0.0" -OutputDir "C:\builds"
+    .\build.ps1
+    Build with defaults (Release, version from Cargo.toml)
+
+.EXAMPLE
+    .\build.ps1 -Version "1.2.3" -Configuration Release
+    Build version 1.2.3 in Release mode
+
+.EXAMPLE
+    .\build.ps1 -Sign $true -CertificatePath ".\cert.pfx"
+    Build and sign with the specified certificate
+
+.EXAMPLE
+    .\build.ps1 -Configuration Debug -SkipBuild
+    Debug build using existing binaries
 
 .NOTES
     Requirements:
-    - WiX Toolset v4 (wix.exe in PATH or WIX_PATH environment variable)
+    - WiX Toolset 3.x (candle.exe and light.exe in PATH or WIX environment variable)
     - Rust toolchain for building binaries
-    - Code signing certificate for signed builds (Requirement 10.1)
+    - Windows SDK for signtool.exe if signing
 #>
 
 [CmdletBinding()]
 param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
-    
+
     [string]$Version = "",
-    
+
+    [Alias("OutputDir")]
+    [string]$OutputPath = ".\output",
+
     [bool]$Sign = ($Configuration -eq "Release"),
-    
+
     [string]$CertificatePath = "",
-    
+
     [SecureString]$CertificatePassword = $null,
-    
-    [string]$OutputDir = ".\output"
+
+    [switch]$SkipBuild
 )
 
 # Strict mode for better error handling
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Script constants
+# Script paths
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RootDir = Resolve-Path (Join-Path $ScriptDir "..\..") 
+$RootDir = Resolve-Path (Join-Path $ScriptDir "..\..")
 $WixSourceDir = $ScriptDir
-$TempDir = Join-Path $ScriptDir "temp"
+$StagingDir = Join-Path $ScriptDir "staging"
 
 # WiX source files
 $WixSources = @(
@@ -93,35 +112,38 @@ function Write-Error {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
-function Get-WixPath {
-    # Check for WiX in PATH
-    $wixExe = Get-Command "wix" -ErrorAction SilentlyContinue
-    if ($wixExe) {
-        return $wixExe.Source
-    }
-    
-    # Check WIX_PATH environment variable
-    if ($env:WIX_PATH) {
-        $wixExe = Join-Path $env:WIX_PATH "wix.exe"
-        if (Test-Path $wixExe) {
-            return $wixExe
+function Get-WixToolPath {
+    param([string]$ToolName)
+
+    # Check WIX environment variable (standard WiX 3.x installation)
+    if ($env:WIX) {
+        $toolPath = Join-Path $env:WIX "bin\$ToolName.exe"
+        if (Test-Path $toolPath) {
+            return $toolPath
         }
     }
-    
+
+    # Check PATH
+    $tool = Get-Command $ToolName -ErrorAction SilentlyContinue
+    if ($tool) {
+        return $tool.Source
+    }
+
     # Check common installation paths
     $commonPaths = @(
-        "${env:ProgramFiles}\WiX Toolset v4\bin\wix.exe",
-        "${env:ProgramFiles(x86)}\WiX Toolset v4\bin\wix.exe",
-        "${env:USERPROFILE}\.dotnet\tools\wix.exe"
+        "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin\$ToolName.exe",
+        "${env:ProgramFiles(x86)}\WiX Toolset v3.14\bin\$ToolName.exe",
+        "${env:ProgramFiles}\WiX Toolset v3.11\bin\$ToolName.exe",
+        "${env:ProgramFiles}\WiX Toolset v3.14\bin\$ToolName.exe"
     )
-    
+
     foreach ($path in $commonPaths) {
         if (Test-Path $path) {
             return $path
         }
     }
-    
-    throw "WiX Toolset v4 not found. Please install it or set WIX_PATH environment variable."
+
+    throw "$ToolName.exe not found. Please install WiX Toolset 3.x or set the WIX environment variable."
 }
 
 function Get-VersionFromCargo {
@@ -129,25 +151,25 @@ function Get-VersionFromCargo {
     if (-not (Test-Path $cargoToml)) {
         throw "Cargo.toml not found at $cargoToml"
     }
-    
+
     $content = Get-Content $cargoToml -Raw
     if ($content -match 'version\s*=\s*"([^"]+)"') {
         return $matches[1]
     }
-    
+
     throw "Could not extract version from Cargo.toml"
 }
 
 function Build-RustBinaries {
     param([string]$Config)
-    
+
     Write-Step "Building Rust binaries ($Config)"
-    
-    $cargoArgs = @("build", "--workspace")
+
+    $cargoArgs = @("build", "--workspace", "-p", "flight-service", "-p", "flight-cli")
     if ($Config -eq "Release") {
         $cargoArgs += "--release"
     }
-    
+
     Push-Location $RootDir
     try {
         & cargo @cargoArgs
@@ -163,7 +185,7 @@ function Build-RustBinaries {
 
 function Get-BinaryDir {
     param([string]$Config)
-    
+
     $targetDir = Join-Path $RootDir "target"
     if ($Config -eq "Release") {
         return Join-Path $targetDir "release"
@@ -171,57 +193,67 @@ function Get-BinaryDir {
     return Join-Path $targetDir "debug"
 }
 
-function Prepare-StagingDir {
+function Prepare-StagingDirectory {
     Write-Step "Preparing staging directory"
-    
-    # Clean and create temp directory
-    if (Test-Path $TempDir) {
-        Remove-Item $TempDir -Recurse -Force
+
+    # Clean and create staging directory
+    if (Test-Path $StagingDir) {
+        Remove-Item $StagingDir -Recurse -Force
     }
-    New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
-    
+    New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
+
     # Create subdirectories
-    $dirs = @("bin", "config", "docs", "lua")
+    $dirs = @("bin", "config")
     foreach ($dir in $dirs) {
-        New-Item -ItemType Directory -Path (Join-Path $TempDir $dir) -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $StagingDir $dir) -Force | Out-Null
     }
-    
-    Write-Success "Staging directory prepared at $TempDir"
+
+    Write-Success "Staging directory prepared at $StagingDir"
 }
 
 function Stage-Files {
     param([string]$BinDir)
-    
+
     Write-Step "Staging files for installer"
-    
+
     # Stage binaries
-    $binaries = @("flightd.exe", "flightctl.exe")
+    $binaries = @(
+        @{ Name = "flightd.exe"; Source = "flight-service.exe" },
+        @{ Name = "flightctl.exe"; Source = "flight-cli.exe" }
+    )
+
     foreach ($binary in $binaries) {
-        $src = Join-Path $BinDir $binary
-        $dst = Join-Path $TempDir "bin\$binary"
+        # Try the actual binary name first, then the crate name
+        $src = Join-Path $BinDir $binary.Name
+        if (-not (Test-Path $src)) {
+            $src = Join-Path $BinDir $binary.Source
+        }
+
+        $dst = Join-Path $StagingDir "bin\$($binary.Name)"
+
         if (Test-Path $src) {
-            Copy-Item $src $dst
-            Write-Success "Staged $binary"
+            Copy-Item $src $dst -Force
+            Write-Success "Staged $($binary.Name)"
         }
         else {
-            Write-Warning "Binary not found: $src"
+            throw "Binary not found: $($binary.Name) or $($binary.Source) in $BinDir"
         }
     }
-    
-    # Stage configuration files (create defaults if not present)
-    $configDir = Join-Path $TempDir "config"
-    
+
+    # Stage configuration files
+    $configDir = Join-Path $StagingDir "config"
+
     # Create default config.toml
     $defaultConfig = @"
 # Flight Hub Configuration
-# See documentation for all available options
+# See documentation at https://flight-hub.dev/docs for all options
 
 [general]
 # Log level: trace, debug, info, warn, error
 log_level = "info"
 
 [scheduler]
-# Target frequency in Hz
+# Target processing frequency in Hz (default: 250)
 frequency = 250
 
 [ffb]
@@ -230,234 +262,134 @@ enabled = true
 # Safety envelope enabled
 safety_enabled = true
 "@
-    Set-Content -Path (Join-Path $configDir "config.toml") -Value $defaultConfig
-    
+    Set-Content -Path (Join-Path $configDir "config.toml") -Value $defaultConfig -Encoding UTF8
+    Write-Success "Created config.toml"
+
     # Create default profile
     $defaultProfile = @"
 # Default Flight Hub Profile
-# This is a template profile - customize for your setup
+# Customize this profile for your flight control setup
 
 [profile]
 name = "Default"
 description = "Default Flight Hub profile"
 
 [axes]
-# Axis mappings go here
+# Axis mappings - add your device axes here
+# Example:
+# [axes.pitch]
+# device = "joystick"
+# axis = 1
+# curve = "linear"
 
 [buttons]
-# Button mappings go here
+# Button mappings - add your device buttons here
 "@
-    Set-Content -Path (Join-Path $configDir "default.profile.toml") -Value $defaultProfile
-    
-    # Create integration config directories
-    $integrationConfigDir = Join-Path $configDir "integration"
-    New-Item -ItemType Directory -Path $integrationConfigDir -Force | Out-Null
-    
-    # MSFS config
-    $msfsConfig = @"
-# MSFS Integration Configuration
-[simconnect]
-app_name = "Flight Hub"
-"@
-    Set-Content -Path (Join-Path $integrationConfigDir "msfs.config.toml") -Value $msfsConfig
-    
-    # X-Plane config
-    $xplaneConfig = @"
-# X-Plane Integration Configuration
-[udp]
-port = 49000
-"@
-    Set-Content -Path (Join-Path $integrationConfigDir "xplane.config.toml") -Value $xplaneConfig
-    
-    # DCS config
-    $dcsConfig = @"
-# DCS Integration Configuration
-[export]
-port = 7778
-"@
-    Set-Content -Path (Join-Path $integrationConfigDir "dcs.config.toml") -Value $dcsConfig
-    
-    # Stage documentation
-    $docsDir = Join-Path $TempDir "docs"
-    $integrationDocsDir = Join-Path $docsDir "integration"
-    New-Item -ItemType Directory -Path $integrationDocsDir -Force | Out-Null
-    
-    # Copy docs if they exist
-    $docFiles = @{
-        "docs\product-posture.md" = "docs\product-posture.md"
-        "docs\integration\msfs-what-we-touch.md" = "docs\integration\msfs-what-we-touch.md"
-        "docs\integration\xplane-what-we-touch.md" = "docs\integration\xplane-what-we-touch.md"
-        "docs\integration\dcs-what-we-touch.md" = "docs\integration\dcs-what-we-touch.md"
-    }
-    
-    foreach ($entry in $docFiles.GetEnumerator()) {
-        $src = Join-Path $RootDir $entry.Key
-        $dst = Join-Path $TempDir $entry.Value
-        if (Test-Path $src) {
-            $dstDir = Split-Path -Parent $dst
-            if (-not (Test-Path $dstDir)) {
-                New-Item -ItemType Directory -Path $dstDir -Force | Out-Null
-            }
-            Copy-Item $src $dst
-            Write-Success "Staged $($entry.Key)"
-        }
-        else {
-            # Create placeholder
-            $dstDir = Split-Path -Parent $dst
-            if (-not (Test-Path $dstDir)) {
-                New-Item -ItemType Directory -Path $dstDir -Force | Out-Null
-            }
-            Set-Content -Path $dst -Value "# Placeholder - documentation to be added"
-            Write-Warning "Created placeholder for $($entry.Key)"
-        }
-    }
-    
-    # Stage Lua files
-    $luaDir = Join-Path $TempDir "lua"
-    $flightHubExportLua = @"
--- FlightHubExport.lua
--- Flight Hub DCS World Integration
--- 
--- This file is installed by Flight Hub and provides telemetry export
--- to the Flight Hub service.
+    Set-Content -Path (Join-Path $configDir "default.profile.toml") -Value $defaultProfile -Encoding UTF8
+    Write-Success "Created default.profile.toml"
 
-local FlightHub = {}
-
-FlightHub.host = "127.0.0.1"
-FlightHub.port = 7778
-
-local socket = require("socket")
-local udp = socket.udp()
-
-function FlightHub.Start()
-    udp:setpeername(FlightHub.host, FlightHub.port)
-end
-
-function FlightHub.Send(data)
-    if udp then
-        udp:send(data)
-    end
-end
-
-function FlightHub.Stop()
-    if udp then
-        udp:close()
-    end
-end
-
--- Hook into DCS export functions
-local _prevLuaExportStart = LuaExportStart
-local _prevLuaExportStop = LuaExportStop
-local _prevLuaExportAfterNextFrame = LuaExportAfterNextFrame
-
-LuaExportStart = function()
-    FlightHub.Start()
-    if _prevLuaExportStart then
-        _prevLuaExportStart()
-    end
-end
-
-LuaExportStop = function()
-    FlightHub.Stop()
-    if _prevLuaExportStop then
-        _prevLuaExportStop()
-    end
-end
-
-LuaExportAfterNextFrame = function()
-    -- Export telemetry data
-    local data = LoGetSelfData()
-    if data then
-        FlightHub.Send(net.lua2json(data))
-    end
-    
-    if _prevLuaExportAfterNextFrame then
-        _prevLuaExportAfterNextFrame()
-    end
-end
-
-return FlightHub
-"@
-    Set-Content -Path (Join-Path $luaDir "FlightHubExport.lua") -Value $flightHubExportLua
-    Write-Success "Created FlightHubExport.lua"
-    
     Write-Success "File staging complete"
 }
 
-function Build-Msi {
+function Invoke-Candle {
     param(
-        [string]$WixExe,
+        [string]$CandlePath,
         [string]$Version,
         [string]$BinDir
     )
-    
-    Write-Step "Building MSI package"
-    
-    # Ensure output directory exists
-    if (-not (Test-Path $OutputDir)) {
-        New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-    }
-    
-    $msiName = "FlightHub-$Version.msi"
-    $msiPath = Join-Path $OutputDir $msiName
-    
-    # Build WiX variables
+
+    Write-Step "Compiling WiX sources (candle.exe)"
+
+    $objDir = Join-Path $StagingDir "obj"
+    New-Item -ItemType Directory -Path $objDir -Force | Out-Null
+
     $wixVars = @(
-        "-d", "BinDir=$TempDir\bin",
-        "-d", "ConfigDir=$TempDir\config",
-        "-d", "DocsDir=$TempDir\docs",
-        "-d", "LuaDir=$TempDir\lua",
-        "-d", "RootDir=$RootDir",
-        "-d", "Version=$Version"
+        "-dBinDir=$StagingDir\bin",
+        "-dConfigDir=$StagingDir\config",
+        "-dVersion=$Version"
     )
-    
-    # Compile and link in one step with WiX v4
-    $wixArgs = @("build") + $wixVars
-    
+
+    $objFiles = @()
+
     foreach ($source in $WixSources) {
-        $wixArgs += (Join-Path $WixSourceDir $source)
+        $sourcePath = Join-Path $WixSourceDir $source
+        $objFile = Join-Path $objDir ([System.IO.Path]::GetFileNameWithoutExtension($source) + ".wixobj")
+        $objFiles += $objFile
+
+        $candleArgs = @("-nologo") + $wixVars + @("-out", $objFile, $sourcePath)
+
+        Write-Host "  Compiling: $source"
+        & $CandlePath @candleArgs
+        if ($LASTEXITCODE -ne 0) {
+            throw "candle.exe failed for $source with exit code $LASTEXITCODE"
+        }
     }
-    
-    $wixArgs += @("-o", $msiPath)
-    
-    Write-Host "Running: wix $($wixArgs -join ' ')"
-    
-    & $WixExe @wixArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "WiX build failed with exit code $LASTEXITCODE"
-    }
-    
-    Write-Success "MSI built: $msiPath"
-    return $msiPath
+
+    Write-Success "WiX compilation complete"
+    return $objFiles
 }
 
-function Sign-Msi {
+function Invoke-Light {
+    param(
+        [string]$LightPath,
+        [string[]]$ObjectFiles,
+        [string]$OutputFile
+    )
+
+    Write-Step "Linking MSI package (light.exe)"
+
+    # WiX UI and Util extensions
+    $extensions = @(
+        "-ext", "WixUIExtension",
+        "-ext", "WixUtilExtension"
+    )
+
+    $lightArgs = @("-nologo") + $extensions + @(
+        "-cultures:en-us",
+        "-out", $OutputFile
+    ) + $ObjectFiles
+
+    Write-Host "  Output: $OutputFile"
+    & $LightPath @lightArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "light.exe failed with exit code $LASTEXITCODE"
+    }
+
+    Write-Success "MSI package created"
+    return $OutputFile
+}
+
+function Sign-MsiPackage {
     param(
         [string]$MsiPath,
         [string]$CertPath,
         [SecureString]$CertPassword
     )
-    
+
     Write-Step "Signing MSI package"
-    
+
     if (-not $CertPath) {
         Write-Warning "No certificate path provided, skipping signing"
         return
     }
-    
+
     if (-not (Test-Path $CertPath)) {
         throw "Certificate not found: $CertPath"
     }
-    
+
     # Find signtool
-    $signtool = Get-Command "signtool" -ErrorAction SilentlyContinue
-    if (-not $signtool) {
-        # Check Windows SDK paths
+    $signtool = $null
+    $signtoolCmd = Get-Command "signtool" -ErrorAction SilentlyContinue
+    if ($signtoolCmd) {
+        $signtool = $signtoolCmd.Source
+    }
+    else {
+        # Search Windows SDK paths
         $sdkPaths = @(
             "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe",
             "${env:ProgramFiles}\Windows Kits\10\bin\*\x64\signtool.exe"
         )
-        
+
         foreach ($pattern in $sdkPaths) {
             $found = Get-ChildItem $pattern -ErrorAction SilentlyContinue | Sort-Object -Descending | Select-Object -First 1
             if ($found) {
@@ -466,14 +398,11 @@ function Sign-Msi {
             }
         }
     }
-    else {
-        $signtool = $signtool.Source
-    }
-    
+
     if (-not $signtool) {
         throw "signtool.exe not found. Please install Windows SDK."
     }
-    
+
     # Build signtool arguments
     $signArgs = @(
         "sign",
@@ -482,31 +411,48 @@ function Sign-Msi {
         "/tr", "http://timestamp.digicert.com",
         "/td", "SHA256",
         "/d", "Flight Hub",
-        "/du", "https://github.com/openflight/flight-hub"
+        "/du", "https://github.com/EffortlessMetrics/OpenFlight"
     )
-    
+
     if ($CertPassword) {
         $plainPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
             [Runtime.InteropServices.Marshal]::SecureStringToBSTR($CertPassword)
         )
         $signArgs += @("/p", $plainPassword)
     }
-    
+
     $signArgs += $MsiPath
-    
+
     & $signtool @signArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Code signing failed with exit code $LASTEXITCODE"
     }
-    
+
     Write-Success "MSI signed successfully"
 }
 
-function Cleanup {
+function New-ChecksumFile {
+    param(
+        [string]$MsiPath
+    )
+
+    Write-Step "Generating checksum file"
+
+    $checksumFile = "$MsiPath.sha256"
+    $hash = Get-FileHash -Path $MsiPath -Algorithm SHA256
+
+    $checksumContent = "$($hash.Hash.ToLower())  $(Split-Path -Leaf $MsiPath)"
+    Set-Content -Path $checksumFile -Value $checksumContent -Encoding ASCII
+
+    Write-Success "Checksum file created: $checksumFile"
+    return $checksumFile
+}
+
+function Remove-StagingDirectory {
     Write-Step "Cleaning up"
-    
-    if (Test-Path $TempDir) {
-        Remove-Item $TempDir -Recurse -Force
+
+    if (Test-Path $StagingDir) {
+        Remove-Item $StagingDir -Recurse -Force
         Write-Success "Removed staging directory"
     }
 }
@@ -518,55 +464,94 @@ function Cleanup {
 try {
     Write-Host @"
 
-╔═══════════════════════════════════════════════════════════════╗
-║           Flight Hub Windows Installer Build Script           ║
-╚═══════════════════════════════════════════════════════════════╝
+================================================================================
+              Flight Hub Windows Installer Build Script (WiX 3.x)
+================================================================================
 
 "@ -ForegroundColor Magenta
 
     # Validate WiX installation
-    $wixExe = Get-WixPath
-    Write-Success "Found WiX at: $wixExe"
-    
+    $candlePath = Get-WixToolPath "candle"
+    $lightPath = Get-WixToolPath "light"
+    Write-Success "Found WiX Toolset:"
+    Write-Host "  candle.exe: $candlePath"
+    Write-Host "  light.exe:  $lightPath"
+
     # Get version
     if (-not $Version) {
         $Version = Get-VersionFromCargo
     }
-    Write-Host "Building version: $Version" -ForegroundColor White
-    
-    # Build Rust binaries
-    Build-RustBinaries -Config $Configuration
-    
+    Write-Host "`nBuild Configuration:" -ForegroundColor White
+    Write-Host "  Version:       $Version"
+    Write-Host "  Configuration: $Configuration"
+    Write-Host "  Sign MSI:      $Sign"
+
+    # Build Rust binaries (unless skipped)
+    if (-not $SkipBuild) {
+        Build-RustBinaries -Config $Configuration
+    }
+    else {
+        Write-Warning "Skipping Rust build (using existing binaries)"
+    }
+
     # Get binary directory
     $binDir = Get-BinaryDir -Config $Configuration
-    Write-Host "Binary directory: $binDir" -ForegroundColor White
-    
+    Write-Host "  Binary Dir:    $binDir"
+
+    # Ensure output directory exists
+    if (-not (Test-Path $OutputPath)) {
+        New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
+    }
+    $OutputPath = Resolve-Path $OutputPath
+
     # Prepare staging
-    Prepare-StagingDir
-    
+    Prepare-StagingDirectory
+
     # Stage files
     Stage-Files -BinDir $binDir
-    
-    # Build MSI
-    $msiPath = Build-Msi -WixExe $wixExe -Version $Version -BinDir $binDir
-    
+
+    # Compile WiX sources
+    $objFiles = Invoke-Candle -CandlePath $candlePath -Version $Version -BinDir $binDir
+
+    # Link MSI
+    $msiName = "FlightHub-$Version.msi"
+    $msiPath = Join-Path $OutputPath $msiName
+    Invoke-Light -LightPath $lightPath -ObjectFiles $objFiles -OutputFile $msiPath
+
     # Sign if requested
-    if ($Sign) {
-        Sign-Msi -MsiPath $msiPath -CertPath $CertificatePath -CertPassword $CertificatePassword
+    if ($Sign -and $CertificatePath) {
+        Sign-MsiPackage -MsiPath $msiPath -CertPath $CertificatePath -CertPassword $CertificatePassword
     }
-    
+    elseif ($Sign) {
+        Write-Warning "Signing requested but no certificate provided. MSI is unsigned."
+    }
+
+    # Generate checksum
+    $checksumFile = New-ChecksumFile -MsiPath $msiPath
+
     # Cleanup
-    Cleanup
-    
+    Remove-StagingDirectory
+
+    # Summary
+    $msiSize = (Get-Item $msiPath).Length / 1MB
+
     Write-Host @"
 
-╔═══════════════════════════════════════════════════════════════╗
-║                    Build Complete!                            ║
-╚═══════════════════════════════════════════════════════════════╝
+================================================================================
+                            Build Complete!
+================================================================================
 
-MSI Location: $msiPath
-Version: $Version
-Signed: $Sign
+MSI Package:  $msiPath
+Size:         $([math]::Round($msiSize, 2)) MB
+Version:      $Version
+Signed:       $(if ($Sign -and $CertificatePath) { "Yes" } else { "No" })
+Checksum:     $checksumFile
+
+To install:
+  msiexec /i "$msiPath" /l*v install.log
+
+To install silently:
+  msiexec /i "$msiPath" /qn /l*v install.log
 
 "@ -ForegroundColor Green
 

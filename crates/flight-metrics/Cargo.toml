@@ -6,5 +6,7 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Metrics registry, collector, and common metric types."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "metrics", "observability"]
 [dependencies]

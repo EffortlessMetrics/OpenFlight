@@ -50,7 +50,97 @@ sudo apt-get install -f
 | `/etc/udev/rules.d/99-flight-hub.rules` | HID device access rules |
 | `/usr/share/flight-hub/` | Documentation and resources |
 
-### Method 2: Build from Source
+### Method 2: Fedora/RHEL (.rpm package)
+
+#### Download and Install
+
+```bash
+# Download the latest .rpm package
+wget https://github.com/EffortlessMetrics/OpenFlight/releases/latest/download/flight-hub-1.0.0-1.x86_64.rpm
+
+# Install the package
+sudo dnf install ./flight-hub-1.0.0-1.x86_64.rpm
+```
+
+Or using `rpm` directly:
+```bash
+sudo rpm -ivh flight-hub-1.0.0-1.x86_64.rpm
+```
+
+#### What the Package Installs
+
+| Path | Description |
+|------|-------------|
+| `/usr/bin/flightd` | Flight Hub service daemon |
+| `/usr/bin/flightctl` | Command-line interface |
+| `/etc/udev/rules.d/99-flight-hub.rules` | HID device access rules |
+| `/usr/share/flight-hub/` | Documentation and resources |
+
+### Method 3: Manual Installation from Tarball
+
+For distributions without .deb or .rpm support, or if you prefer manual installation:
+
+#### Download and Extract
+
+```bash
+# Download the latest tarball
+wget https://github.com/EffortlessMetrics/OpenFlight/releases/latest/download/flight-hub-1.0.0-linux-x86_64.tar.gz
+
+# Extract to a temporary directory
+tar -xzf flight-hub-1.0.0-linux-x86_64.tar.gz
+cd flight-hub-1.0.0-linux-x86_64
+```
+
+#### Install Binaries
+
+```bash
+# Install to /usr/local/bin (requires sudo)
+sudo install -m 755 flightd /usr/local/bin/
+sudo install -m 755 flightctl /usr/local/bin/
+
+# Or install to ~/.local/bin for user-only installation
+mkdir -p ~/.local/bin
+install -m 755 flightd ~/.local/bin/
+install -m 755 flightctl ~/.local/bin/
+
+# Ensure ~/.local/bin is in your PATH
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### Install udev Rules
+
+```bash
+# Install udev rules for HID device access
+sudo install -m 644 99-flight-hub.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+#### Create Configuration Directory
+
+```bash
+mkdir -p ~/.config/flight-hub
+```
+
+### Method 4: Build from Source
+
+Building from source is recommended for developers or if you need the latest unreleased features.
+
+#### Prerequisites
+
+```bash
+# Debian/Ubuntu
+sudo apt install build-essential pkg-config libudev-dev
+
+# Fedora/RHEL
+sudo dnf install gcc pkg-config systemd-devel
+
+# Arch Linux
+sudo pacman -S base-devel pkgconf systemd
+```
+
+#### Build and Install
 
 ```bash
 # Install Rust (if not already installed)
@@ -72,6 +162,16 @@ sudo cp target/release/flightctl /usr/local/bin/
 sudo cp infra/linux/99-flight-hub.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 sudo udevadm trigger
+```
+
+#### Build with RT-Optimized Profile
+
+For maximum real-time performance with debug symbols:
+
+```bash
+cargo build --profile rt --workspace
+sudo cp target/rt/flightd /usr/local/bin/
+sudo cp target/rt/flightctl /usr/local/bin/
 ```
 
 ## Post-Installation Setup
@@ -186,23 +286,44 @@ See [Troubleshooting: RT Not Enabled](../how-to/troubleshoot-common-issues.md#re
 
 ## Running as a Service
 
-### Systemd User Service
+### If Installed via .deb Package
 
-Create a user service for automatic startup:
+The .deb package includes a systemd user service. Enable and start it:
+
+```bash
+# Reload systemd to pick up the service file
+systemctl --user daemon-reload
+
+# Enable the service to start on login
+systemctl --user enable flightd.service
+
+# Start the service now
+systemctl --user start flightd.service
+```
+
+Or combine enable and start:
+
+```bash
+systemctl --user enable --now flightd.service
+```
+
+### If Building from Source / Manual Install
+
+Create a user service manually:
 
 ```bash
 # Create service directory
 mkdir -p ~/.config/systemd/user
 
 # Create service file
-cat > ~/.config/systemd/user/flight-hub.service << 'EOF'
+cat > ~/.config/systemd/user/flightd.service << 'EOF'
 [Unit]
-Description=Flight Hub Service
-After=graphical-session.target
+Description=Flight Hub daemon
+Documentation=https://github.com/EffortlessMetrics/OpenFlight
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/flightd
+ExecStart=/usr/local/bin/flightd
 Restart=on-failure
 RestartSec=5
 
@@ -212,20 +333,21 @@ EOF
 
 # Enable and start the service
 systemctl --user daemon-reload
-systemctl --user enable flight-hub
-systemctl --user start flight-hub
+systemctl --user enable --now flightd.service
 ```
+
+Note: The ExecStart path is `/usr/local/bin/flightd` for source builds vs `/usr/bin/flightd` for the .deb package.
 
 ### Check Service Status
 
 ```bash
-systemctl --user status flight-hub
+systemctl --user status flightd.service
 ```
 
 ### View Logs
 
 ```bash
-journalctl --user -u flight-hub -f
+journalctl --user -u flightd.service -f
 ```
 
 ## Simulator Integration
@@ -252,13 +374,19 @@ MSFS via Proton is experimental. SimConnect communication may require additional
 
 ## Uninstallation
 
-### Remove .deb Package
+### Remove .deb Package (Debian/Ubuntu)
 
 ```bash
 sudo apt remove flight-hub
 ```
 
-### Remove from Source Install
+### Remove .rpm Package (Fedora/RHEL)
+
+```bash
+sudo dnf remove flight-hub
+```
+
+### Remove Tarball or Source Install
 
 ```bash
 sudo rm /usr/local/bin/flightd
@@ -276,10 +404,17 @@ rm -rf ~/.local/share/flight-hub
 
 ### Remove User Service
 
+If installed via .deb (service file is in /usr/lib/systemd/user/):
 ```bash
-systemctl --user stop flight-hub
-systemctl --user disable flight-hub
-rm ~/.config/systemd/user/flight-hub.service
+systemctl --user stop flightd.service
+systemctl --user disable flightd.service
+```
+
+If manually created (service file is in ~/.config/systemd/user/):
+```bash
+systemctl --user stop flightd.service
+systemctl --user disable flightd.service
+rm ~/.config/systemd/user/flightd.service
 systemctl --user daemon-reload
 ```
 
@@ -314,10 +449,10 @@ stat /dev/hidraw0
 
 ```bash
 # Check service status
-systemctl --user status flight-hub
+systemctl --user status flightd
 
 # Check logs for errors
-journalctl --user -u flight-hub --no-pager -n 50
+journalctl --user -u flightd --no-pager -n 50
 ```
 
 For more issues, see the [Troubleshooting Guide](../how-to/troubleshoot-common-issues.md).

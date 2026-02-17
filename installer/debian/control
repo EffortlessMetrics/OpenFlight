@@ -1,18 +1,21 @@
 Package: flight-hub
-Version: 1.0.0
+Version: {{VERSION}}
 Section: games
 Priority: optional
 Architecture: amd64
-Depends: libc6 (>= 2.31), libdbus-1-3
+Depends: libc6 (>= 2.31), libdbus-1-3, libudev1
 Recommends: rtkit
-Maintainer: OpenFlight Project <contact@openflight.dev>
-Description: Flight simulation input management system
+Maintainer: OpenFlight Team <contact@openflight.dev>
+Homepage: https://github.com/EffortlessMetrics/OpenFlight
+Description: Flight Hub daemon for flight simulation input management
  Flight Hub provides unified control for flight controls, panels,
- and force feedback devices across MSFS, X-Plane, and DCS simulators.
+ and force feedback devices across MSFS, X-Plane, and DCS simulators
+ with real-time 250Hz axis processing.
  .
  Features:
-  - Real-time 250Hz axis processing with deterministic performance
+  - Real-time 250Hz axis processing with <5ms p99 latency
   - Multi-simulator support (MSFS, X-Plane, DCS)
+  - Support for Saitek/Logitech, Thrustmaster, VKB, Virpil, and Winwing devices
   - Force feedback safety systems with proper interlocks
   - Auto-profile switching based on aircraft detection
   - Panel and StreamDeck integration with rule-based LED control

@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Security controls for capabilities, signatures, and telemetry policy."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "security", "signing"]
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true

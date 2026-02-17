@@ -1,42 +1,73 @@
-#!/bin/bash
-# Flight Hub post-installation script
-# Requirement 11.3: Add user to input group, reload udev rules
+#!/bin/sh
+# postinst script for flight-hub
+#
+# See: https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html
+
 set -e
 
-# Add user to input group for HID access
-if [ -n "$SUDO_USER" ]; then
-    usermod -a -G input "$SUDO_USER" || true
-    echo "Added $SUDO_USER to input group"
-fi
+UDEV_RULES_SRC="/usr/share/flight-hub/99-flight-hub.rules"
+UDEV_RULES_DST="/etc/udev/rules.d/99-flight-hub.rules"
 
-# Install udev rules
-if [ -f /usr/share/flight-hub/99-flight-hub.rules ]; then
-    cp /usr/share/flight-hub/99-flight-hub.rules /etc/udev/rules.d/
-fi
+case "$1" in
+    configure)
+        # Copy udev rules to system directory
+        if [ -f "$UDEV_RULES_SRC" ]; then
+            cp "$UDEV_RULES_SRC" "$UDEV_RULES_DST"
+            chmod 644 "$UDEV_RULES_DST"
+        fi
 
-# Reload udev rules
-udevadm control --reload-rules || true
-udevadm trigger || true
+        # Reload udev rules
+        if command -v udevadm >/dev/null 2>&1; then
+            udevadm control --reload-rules || true
+            udevadm trigger || true
+        fi
 
-echo ""
-echo "╔══════════════════════════════════════════════════════════════════╗"
-echo "║                    Flight Hub Installation Complete              ║"
-echo "╠══════════════════════════════════════════════════════════════════╣"
-echo "║                                                                  ║"
-echo "║  IMPORTANT: Please log out and back in for group changes to     ║"
-echo "║  take effect. This is required for HID device access.           ║"
-echo "║                                                                  ║"
-echo "║  To start Flight Hub:                                           ║"
-echo "║    systemctl --user start flightd                               ║"
-echo "║                                                                  ║"
-echo "║  To enable auto-start:                                          ║"
-echo "║    systemctl --user enable flightd                              ║"
-echo "║                                                                  ║"
-echo "║  For real-time scheduling (recommended):                        ║"
-echo "║    sudo /usr/share/flight-hub/setup-linux-rt.sh                 ║"
-echo "║                                                                  ║"
-echo "╚══════════════════════════════════════════════════════════════════╝"
-echo ""
+        # Add the installing user to the input group if SUDO_USER is set
+        if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+            if getent group input >/dev/null 2>&1; then
+                if ! id -nG "$SUDO_USER" 2>/dev/null | grep -qw "input"; then
+                    usermod -aG input "$SUDO_USER" || true
+                    echo "Added $SUDO_USER to input group"
+                fi
+            fi
+        fi
+
+        # Print post-installation instructions
+        echo ""
+        echo "=============================================="
+        echo "  Flight Hub installation complete!"
+        echo "=============================================="
+        echo ""
+        echo "IMPORTANT: Log out and back in for group changes to take effect."
+        echo ""
+        echo "To complete setup:"
+        echo ""
+        echo "1. Enable and start the user service:"
+        echo "   systemctl --user daemon-reload"
+        echo "   systemctl --user enable --now flightd.service"
+        echo ""
+        echo "2. Check service status:"
+        echo "   systemctl --user status flightd.service"
+        echo ""
+        echo "3. View logs:"
+        echo "   journalctl --user -u flightd.service -f"
+        echo ""
+        echo "4. For real-time scheduling (recommended):"
+        echo "   sudo /usr/share/flight-hub/setup-linux-rt.sh"
+        echo ""
+        echo "Configuration: ~/.config/flight-hub/"
+        echo "Data:          ~/.local/share/flight-hub/"
+        echo ""
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
 
 #DEBHELPER#
 

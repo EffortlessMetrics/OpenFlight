@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "DCS Export.lua adapter and installer integration for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "dcs", "adapter"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
@@ -22,9 +24,9 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-dirs = "6.0.0"
-chrono = { version = "0.4.43", features = ["serde"] }
+dirs.workspace = true
+chrono = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
-tempfile = "3.24.0"
+tempfile.workspace = true
 proptest = { workspace = true }

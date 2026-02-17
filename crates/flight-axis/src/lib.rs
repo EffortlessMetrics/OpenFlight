@@ -91,8 +91,8 @@ pub use engine::{
 };
 pub use frame::{AxisFrame, FrameError};
 pub use nodes::{
-    CurveNode, DeadzoneNode, DetentEvent, DetentNode, DetentRole, DetentState, DetentZone,
-    FilterNode, FilterState, MixerConfig, MixerInput, MixerNode, MixerState, Node, NodeId,
-    SlewNode, SlewState,
+    CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
+    DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
+    MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
 pub use pipeline::{Pipeline, PipelineState};

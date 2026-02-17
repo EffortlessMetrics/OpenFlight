@@ -24,12 +24,45 @@ Thumbs.db
 *.dll
 *.so
 *.dylib
+*.pdb
 
 # Flight Hub specific
 *.fbb
 flight-hub.log
 
+# Mutation testing
 mutants.out
 mutants.out.old
 
+# Fuzz testing
 */*/fuzz/
+
+# CI/automation runs
+.runs/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Coverage
+coverage/
+*.profraw
+*.profdata
+tarpaulin-report.*
+lcov.info
+
+# WiX installer intermediates
+*.wixobj
+*.wixpdb
+
+# Backup/merge files
+*.orig
+*.bak

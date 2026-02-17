@@ -428,6 +428,9 @@ impl ProcessDetector {
 
         let mut processes = Vec::new();
 
+        // First, collect all window titles by process ID
+        let window_titles = Self::get_windows_window_titles();
+
         unsafe {
             let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).map_err(|e| {
                 ProcessDetectionError::System(format!("Failed to create process snapshot: {}", e))
@@ -468,8 +471,8 @@ impl ProcessDetector {
                         PathBuf::new()
                     };
 
-                    // TODO: Get window title if needed
-                    let window_title = None;
+                    // Get window title for this process (use the first non-empty title found)
+                    let window_title = window_titles.get(&entry.th32ProcessID).cloned();
 
                     processes.push(SystemProcess {
                         pid: entry.th32ProcessID,
@@ -490,11 +493,84 @@ impl ProcessDetector {
         Ok(processes)
     }
 
+    /// Get window titles for all processes on Windows.
+    /// Returns a HashMap mapping process ID to the window title of its main window.
+    #[cfg(target_os = "windows")]
+    fn get_windows_window_titles() -> HashMap<u32, String> {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+        use std::sync::Mutex;
+        use windows::Win32::Foundation::{HWND, LPARAM};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            EnumWindows, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
+            IsWindowVisible,
+        };
+        use windows::core::BOOL;
+
+        // Thread-local storage for collecting window titles during enumeration
+        static WINDOW_TITLES: Mutex<Option<HashMap<u32, String>>> = Mutex::new(None);
+
+        // Initialize the collection
+        {
+            let mut titles = WINDOW_TITLES.lock().unwrap();
+            *titles = Some(HashMap::new());
+        }
+
+        // Callback function for EnumWindows
+        unsafe extern "system" fn enum_windows_callback(hwnd: HWND, _lparam: LPARAM) -> BOOL {
+            // Only process visible windows with non-empty titles
+            if unsafe { IsWindowVisible(hwnd).as_bool() } {
+                let title_len = unsafe { GetWindowTextLengthW(hwnd) };
+                if title_len > 0 {
+                    // Get the process ID for this window
+                    let mut process_id: u32 = 0;
+                    unsafe { GetWindowThreadProcessId(hwnd, Some(&mut process_id)) };
+
+                    if process_id != 0 {
+                        // Get the window title
+                        let mut title_buffer = vec![0u16; (title_len + 1) as usize];
+                        let actual_len = unsafe { GetWindowTextW(hwnd, &mut title_buffer) };
+
+                        if actual_len > 0 {
+                            let title = OsString::from_wide(&title_buffer[..actual_len as usize])
+                                .to_string_lossy()
+                                .to_string();
+
+                            // Skip empty titles and system windows with generic names
+                            if !title.is_empty()
+                                && !title.starts_with("MSCTFIME")
+                                && !title.starts_with("Default IME")
+                                && let Ok(mut titles) = WINDOW_TITLES.lock()
+                                && let Some(map) = titles.as_mut()
+                            {
+                                // Only store the first (typically main) window title
+                                map.entry(process_id).or_insert(title);
+                            }
+                        }
+                    }
+                }
+            }
+            BOOL(1) // Continue enumeration (TRUE)
+        }
+
+        // Enumerate all top-level windows
+        unsafe {
+            let _ = EnumWindows(Some(enum_windows_callback), LPARAM(0));
+        }
+
+        // Extract and return the collected titles
+        let mut titles = WINDOW_TITLES.lock().unwrap();
+        titles.take().unwrap_or_default()
+    }
+
     #[cfg(target_os = "linux")]
     async fn get_linux_processes() -> Result<Vec<SystemProcess>> {
         use std::fs;
 
         let mut processes = Vec::new();
+
+        // Get window titles from X11 (if available)
+        let window_titles = Self::get_linux_window_titles();
 
         // Read /proc directory
         let proc_dir = fs::read_dir("/proc")
@@ -520,8 +596,8 @@ impl ProcessDetector {
                 let exe_path = format!("/proc/{}/exe", pid);
                 let process_path = fs::read_link(&exe_path).unwrap_or_else(|_| PathBuf::new());
 
-                // TODO: Get window title if needed (requires X11/Wayland integration)
-                let window_title = None;
+                // Get window title for this process from X11 data
+                let window_title = window_titles.get(&pid).cloned();
 
                 processes.push(SystemProcess {
                     pid,
@@ -533,6 +609,182 @@ impl ProcessDetector {
         }
 
         Ok(processes)
+    }
+
+    /// Get window titles for all processes on Linux via X11.
+    /// Returns a HashMap mapping process ID to window title.
+    ///
+    /// Note: This only works for X11 sessions. On Wayland, window title
+    /// detection is not possible without compositor-specific protocols,
+    /// as Wayland intentionally restricts cross-client window inspection
+    /// for security reasons.
+    #[cfg(target_os = "linux")]
+    fn get_linux_window_titles() -> HashMap<u32, String> {
+        use x11rb::connection::Connection;
+        use x11rb::protocol::xproto::{Atom, AtomEnum, ConnectionExt as XprotoConnectionExt};
+
+        let mut window_titles = HashMap::new();
+
+        // Try to connect to X11 display
+        let Ok((conn, screen_num)) = x11rb::connect(None) else {
+            // X11 not available (possibly running on Wayland without XWayland)
+            tracing::debug!("X11 connection failed, window titles unavailable");
+            return window_titles;
+        };
+
+        let screen = &conn.setup().roots[screen_num];
+        let root = screen.root;
+
+        // Get atoms we need
+        let Ok(net_wm_pid_cookie) = conn.intern_atom(false, b"_NET_WM_PID") else {
+            return window_titles;
+        };
+        let Ok(net_wm_name_cookie) = conn.intern_atom(false, b"_NET_WM_NAME") else {
+            return window_titles;
+        };
+        let Ok(utf8_string_cookie) = conn.intern_atom(false, b"UTF8_STRING") else {
+            return window_titles;
+        };
+        let Ok(net_client_list_cookie) = conn.intern_atom(false, b"_NET_CLIENT_LIST") else {
+            return window_titles;
+        };
+
+        let Ok(net_wm_pid_reply) = net_wm_pid_cookie.reply() else {
+            return window_titles;
+        };
+        let Ok(net_wm_name_reply) = net_wm_name_cookie.reply() else {
+            return window_titles;
+        };
+        let Ok(utf8_string_reply) = utf8_string_cookie.reply() else {
+            return window_titles;
+        };
+        let Ok(net_client_list_reply) = net_client_list_cookie.reply() else {
+            return window_titles;
+        };
+
+        let net_wm_pid = net_wm_pid_reply.atom;
+        let net_wm_name = net_wm_name_reply.atom;
+        let utf8_string = utf8_string_reply.atom;
+        let net_client_list = net_client_list_reply.atom;
+
+        // Get list of all client windows from the root window
+        let Ok(client_list_cookie) =
+            conn.get_property(false, root, net_client_list, AtomEnum::WINDOW, 0, u32::MAX)
+        else {
+            return window_titles;
+        };
+
+        let Ok(client_list_reply) = client_list_cookie.reply() else {
+            return window_titles;
+        };
+
+        // Parse window IDs from the property value (array of 32-bit window IDs)
+        let window_ids: Vec<u32> = client_list_reply
+            .value
+            .chunks_exact(4)
+            .map(|chunk| u32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
+            .collect();
+
+        // For each window, get its PID and title
+        for window_id in window_ids {
+            // Get the window's PID
+            let pid = Self::get_x11_window_pid(&conn, window_id, net_wm_pid);
+            let Some(pid) = pid else {
+                continue;
+            };
+
+            // Get the window's title (try _NET_WM_NAME first, fall back to WM_NAME)
+            let title = Self::get_x11_window_title(&conn, window_id, net_wm_name, utf8_string);
+
+            if let Some(title) = title {
+                // Only store the first window title for each PID
+                window_titles.entry(pid).or_insert(title);
+            }
+        }
+
+        window_titles
+    }
+
+    /// Get the PID associated with an X11 window via _NET_WM_PID property.
+    #[cfg(target_os = "linux")]
+    fn get_x11_window_pid(
+        conn: &impl x11rb::connection::Connection,
+        window: u32,
+        net_wm_pid: x11rb::protocol::xproto::Atom,
+    ) -> Option<u32> {
+        use x11rb::protocol::xproto::{AtomEnum, ConnectionExt as XprotoConnectionExt};
+
+        let pid_cookie = conn
+            .get_property(false, window, net_wm_pid, AtomEnum::CARDINAL, 0, 1)
+            .ok()?;
+        let pid_reply = pid_cookie.reply().ok()?;
+
+        if pid_reply.value.len() >= 4 {
+            Some(u32::from_ne_bytes([
+                pid_reply.value[0],
+                pid_reply.value[1],
+                pid_reply.value[2],
+                pid_reply.value[3],
+            ]))
+        } else {
+            None
+        }
+    }
+
+    /// Get the title of an X11 window via _NET_WM_NAME or WM_NAME property.
+    #[cfg(target_os = "linux")]
+    fn get_x11_window_title(
+        conn: &impl x11rb::connection::Connection,
+        window: u32,
+        net_wm_name: x11rb::protocol::xproto::Atom,
+        utf8_string: x11rb::protocol::xproto::Atom,
+    ) -> Option<String> {
+        use x11rb::protocol::xproto::{AtomEnum, ConnectionExt as XprotoConnectionExt};
+
+        // Try _NET_WM_NAME first (UTF-8 encoded)
+        let name_cookie = conn
+            .get_property(false, window, net_wm_name, utf8_string, 0, u32::MAX)
+            .ok()?;
+
+        if let Ok(name_reply) = name_cookie.reply() {
+            if !name_reply.value.is_empty() {
+                if let Ok(title) = String::from_utf8(name_reply.value.clone()) {
+                    if !title.is_empty() {
+                        return Some(title);
+                    }
+                }
+            }
+        }
+
+        // Fall back to WM_NAME (may be Latin-1 encoded)
+        let wm_name_cookie = conn
+            .get_property(
+                false,
+                window,
+                AtomEnum::WM_NAME,
+                AtomEnum::STRING,
+                0,
+                u32::MAX,
+            )
+            .ok()?;
+
+        if let Ok(wm_name_reply) = wm_name_cookie.reply() {
+            if !wm_name_reply.value.is_empty() {
+                // WM_NAME is typically Latin-1, but we try UTF-8 first
+                if let Ok(title) = String::from_utf8(wm_name_reply.value.clone()) {
+                    if !title.is_empty() {
+                        return Some(title);
+                    }
+                }
+                // Fall back to lossy conversion for Latin-1
+                let title = String::from_utf8_lossy(&wm_name_reply.value).to_string();
+                if !title.is_empty() {
+                    return Some(title);
+                }
+            }
+        }
+
+        None
     }
 }
 

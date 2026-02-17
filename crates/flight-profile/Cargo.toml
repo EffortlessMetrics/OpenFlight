@@ -6,12 +6,14 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Profile schema, validation, canonicalization, and merge logic."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "profiles", "schema"]
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-sha2 = "0.10.9"
+sha2.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

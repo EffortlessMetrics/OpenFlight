@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+description = "BDD specification tests for OpenFlight requirements."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "bdd", "testing"]
 
 [dependencies]
 cucumber = "0.22.1"

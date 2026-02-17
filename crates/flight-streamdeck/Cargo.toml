@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "StreamDeck integration with local Web API and profiles."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "streamdeck", "api"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
@@ -19,10 +21,10 @@ flight-panels = { path = "../flight-panels" }
 
 # Web API dependencies
 tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
-axum = "0.8.8"
-tower = "0.5.3"
-tower-http = { version = "0.6.8", features = ["cors", "trace"] }
-hyper = "1.8.1"
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+hyper.workspace = true
 
 # Serialization
 serde = { workspace = true }
@@ -34,21 +36,21 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 # Version handling
-semver = "1.0.27"
+semver.workspace = true
 
 # Async utilities
 futures = { workspace = true }
 tokio-util = { workspace = true }
 
 # UUID generation
-uuid = { version = "1.19.0", features = ["v4", "serde"] }
+uuid.workspace = true
 
 # Random number generation
-fastrand = "2.3.0"
+fastrand.workspace = true
 
 [dev-dependencies]
 tempfile = { workspace = true }
 criterion = { workspace = true }
 proptest = { workspace = true }
-tokio-test = "0.4.5"
-axum-test = "18.7.0"
+tokio-test.workspace = true
+axum-test.workspace = true

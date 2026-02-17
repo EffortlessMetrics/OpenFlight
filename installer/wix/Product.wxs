@@ -1,208 +1,192 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Flight Hub Windows Installer - Main WiX Source
-  
+  Flight Hub Windows Installer - Main WiX Source (WiX 3.x)
+
   This installer creates an MSI package for Flight Hub with the following features:
-  - Core: Required Flight Hub binaries and configuration (per-user install)
-  - MSFS: Optional Microsoft Flight Simulator integration
-  - XPlane: Optional X-Plane integration
-  - DCS: Optional DCS World integration
-  
-  Requirements: 9.1, 9.2, 9.3
+  - Core: Required Flight Hub daemon and configuration (Level 1 - required)
+  - CLI: Flight Hub command-line tools (Level 2 - optional, default selected)
+  - PathEnv: Add to user PATH (Level 2 - optional, default selected)
+  - MSFS: Microsoft Flight Simulator integration (Level 1000 - optional, not default)
+  - XPlane: X-Plane plugin integration (Level 1000 - optional, not default)
+  - DCS: DCS World Export.lua integration (Level 1000 - optional, not default)
+
+  Install location: %LOCALAPPDATA%\FlightHub\ (per-user, no admin required)
+
+  Requirements:
+  - WiX Toolset 3.x
+  - Windows SDK for signing
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  
-  <Package Name="Flight Hub"
-           Manufacturer="OpenFlight Project"
-           Version="!(bind.FileVersion.flightd.exe)"
-           UpgradeCode="8A7B6C5D-4E3F-2A1B-9C8D-7E6F5A4B3C2D"
-           Scope="perUser"
-           InstallerVersion="500"
-           Compressed="yes">
-    
-    <!-- Package metadata -->
-    <SummaryInformation Description="Flight Hub - Flight Simulation Input Management"
-                        Manufacturer="OpenFlight Project" />
-    
-    <!-- Upgrade handling - prevents downgrades -->
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Flight Hub is already installed. Please uninstall it first."
-                  Schedule="afterInstallInitialize" />
-    
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <?define ProductName = "Flight Hub" ?>
+  <?define Manufacturer = "OpenFlight" ?>
+  <!-- Version passed via candle -dVersion=x.y.z -->
+  <?define ProductVersion = "$(var.Version)" ?>
+  <!-- Stable UpgradeCode - DO NOT CHANGE for upgrade compatibility -->
+  <?define UpgradeCode = "8A7B6C5D-4E3F-2A1B-9C8D-7E6F5A4B3C2D" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.Manufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <!-- Per-user installation: no admin rights required -->
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perUser"
+             Description="$(var.ProductName) - Flight Simulation Input Management"
+             Manufacturer="$(var.Manufacturer)"
+             Comments="Flight Hub provides unified control for flight controls, panels, and force feedback devices." />
+
     <!-- Embed cabinet for single-file MSI -->
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    
-    <!-- License and UI -->
+
+    <!-- ========================================
+         UPGRADE HANDLING
+         ======================================== -->
+
+    <!-- Major upgrade - removes previous versions -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed. Please uninstall it first."
+                  Schedule="afterInstallInitialize" />
+
+    <!-- ========================================
+         PROPERTIES
+         ======================================== -->
+
+    <!-- Default installation directory -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- Add/Remove Programs metadata -->
+    <Property Id="ARPPRODUCTICON" Value="FlightHubIcon.exe" />
+    <Property Id="ARPURLINFOABOUT" Value="https://flight-hub.dev" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/EffortlessMetrics/OpenFlight/releases" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/EffortlessMetrics/OpenFlight/discussions" />
+
+    <!-- ========================================
+         CONDITIONS
+         ======================================== -->
+
+    <!-- Require Windows 10 or later -->
+    <Condition Message="$(var.ProductName) requires Windows 10 or later.">
+      <![CDATA[Installed OR VersionNT >= 603]]>
+    </Condition>
+
+    <!-- ========================================
+         UI CONFIGURATION
+         ======================================== -->
+
+    <!-- License and UI images -->
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
     <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
-    
-    <!-- Use WixUI_FeatureTree for feature selection -->
-    <ui:WixUI Id="WixUI_FeatureTree" />
-    
+
+    <!-- Use WixUI_InstallDir for simple directory selection -->
+    <UIRef Id="WixUI_InstallDir" />
+
+    <!-- Custom error/warning messages -->
+    <UI>
+      <ProgressText Action="InstallServices">Registering Flight Hub service...</ProgressText>
+      <ProgressText Action="StartServices">Starting Flight Hub service...</ProgressText>
+    </UI>
+
+    <!-- ========================================
+         ICON
+         ======================================== -->
+
+    <Icon Id="FlightHubIcon.exe" SourceFile="$(var.BinDir)\flightd.exe" />
+
+    <!-- ========================================
+         DIRECTORY STRUCTURE
+         ======================================== -->
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Flight Hub">
+          <Directory Id="BinFolder" Name="bin" />
+          <Directory Id="ConfigFolder" Name="config" />
+          <Directory Id="LogsFolder" Name="logs" />
+        </Directory>
+      </Directory>
+
+      <!-- Start Menu shortcuts -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="FlightHubMenuFolder" Name="Flight Hub" />
+      </Directory>
+    </Directory>
+
     <!-- ========================================
          FEATURES
          ======================================== -->
-    
-    <!-- Core Feature - Required, cannot be deselected -->
-    <!-- Requirement 9.2: core (required) -->
-    <!-- Requirement 9.3: per-user install scope for core -->
-    <Feature Id="Core" 
-             Title="Flight Hub Core" 
-             Description="Core Flight Hub binaries and configuration. This feature is required."
-             Level="1" 
+
+    <!-- Core Feature - Required, cannot be deselected (Level 1) -->
+    <Feature Id="Core"
+             Title="Flight Hub Core"
+             Description="Core Flight Hub daemon (flightd) and configuration files. This feature is required."
+             Level="1"
              Absent="disallow"
              AllowAdvertise="no"
-             Display="expand">
-      <ComponentGroupRef Id="CoreComponents" />
-      <ComponentGroupRef Id="CoreConfigComponents" />
-      <ComponentGroupRef Id="CoreDocComponents" />
+             Display="expand"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="CoreBinaries" />
+      <ComponentGroupRef Id="CoreConfig" />
+      <ComponentGroupRef Id="CoreRegistry" />
+      <ComponentRef Id="FlightHubMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
     </Feature>
-    
-    <!-- MSFS Integration Feature - Optional, opt-in -->
-    <!-- Requirement 9.2: MSFS integration (optional) -->
-    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
-    <Feature Id="MSFS" 
-             Title="MSFS Integration" 
-             Description="Microsoft Flight Simulator integration. Enables telemetry streaming and control mapping for MSFS 2020/2024."
+
+    <!-- CLI Tools Feature - Optional, default selected (Level 2) -->
+    <Feature Id="CLI"
+             Title="Command Line Tools"
+             Description="Flight Hub command-line interface (flightctl). Provides CLI access for configuration, diagnostics, and automation."
              Level="2"
              AllowAdvertise="no">
-      <ComponentGroupRef Id="MSFSComponents" />
+      <ComponentGroupRef Id="CLIBinaries" />
+      <ComponentRef Id="CLIMenuShortcut" />
     </Feature>
-    
-    <!-- X-Plane Integration Feature - Optional, opt-in -->
-    <!-- Requirement 9.2: X-Plane integration (optional) -->
-    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
-    <Feature Id="XPlane" 
-             Title="X-Plane Integration" 
-             Description="X-Plane integration. Enables telemetry streaming and control mapping for X-Plane 11/12."
+
+    <!-- PATH Environment Variable - Optional feature -->
+    <Feature Id="PathEnv"
+             Title="Add to PATH"
+             Description="Add Flight Hub bin directory to the system PATH environment variable for easy command-line access."
              Level="2"
              AllowAdvertise="no">
-      <ComponentGroupRef Id="XPlaneComponents" />
+      <ComponentRef Id="PathEnvVar" />
     </Feature>
-    
-    <!-- DCS Integration Feature - Optional, opt-in -->
-    <!-- Requirement 9.2: DCS integration (optional) -->
-    <!-- Requirement 9.5: sim integrations are opt-in toggles -->
-    <Feature Id="DCS" 
-             Title="DCS World Integration" 
-             Description="DCS World integration. Enables telemetry streaming via Export.lua. Will backup existing Export.lua before modification."
-             Level="2"
-             AllowAdvertise="no">
-      <ComponentGroupRef Id="DCSComponents" />
-    </Feature>
-    
+
     <!-- ========================================
-         CUSTOM ACTIONS
+         SERVICE INSTALLATION
          ======================================== -->
-    
-    <!-- Show product posture during install -->
-    <!-- Requirement 9.4: display product posture summary -->
-    <CustomAction Id="ShowPosture"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe --show-posture"
-                  Execute="immediate"
-                  Return="ignore" />
-    
-    <!-- Backup Export.lua before DCS installation -->
-    <!-- Requirement 9.6: backup Export.lua -->
-    <CustomAction Id="BackupExportLua"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs backup-export"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="check" />
-    
-    <!-- Restore Export.lua on DCS uninstallation -->
-    <!-- Requirement 9.6: restore backed-up Export.lua -->
-    <CustomAction Id="RestoreExportLua"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs restore-export"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="ignore" />
-    
-    <!-- Install DCS integration files -->
-    <CustomAction Id="InstallDcsIntegration"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs install"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="check" />
-    
-    <!-- Uninstall DCS integration files -->
-    <CustomAction Id="UninstallDcsIntegration"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe dcs uninstall"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="ignore" />
-    
-    <!-- Install X-Plane plugin -->
-    <CustomAction Id="InstallXPlanePlugin"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe xplane install-plugin"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="check" />
-    
-    <!-- Uninstall X-Plane plugin -->
-    <!-- Requirement 9.6: remove X-Plane plugins -->
-    <CustomAction Id="UninstallXPlanePlugin"
-                  Directory="INSTALLFOLDER"
-                  ExeCommand="[INSTALLFOLDER]flightctl.exe xplane uninstall-plugin"
-                  Execute="deferred"
-                  Impersonate="yes"
-                  Return="ignore" />
-    
-    <!-- ========================================
-         INSTALL SEQUENCE
-         ======================================== -->
-    
-    <InstallExecuteSequence>
-      <!-- Backup Export.lua before installing DCS feature -->
-      <!-- Condition: DCS feature is being installed (action state = 3) -->
-      <Custom Action="BackupExportLua" Before="InstallFiles">
-        <![CDATA[&DCS=3]]>
-      </Custom>
-      
-      <!-- Install DCS integration after files are installed -->
-      <Custom Action="InstallDcsIntegration" After="InstallFiles">
-        <![CDATA[&DCS=3]]>
-      </Custom>
-      
-      <!-- Install X-Plane plugin after files are installed -->
-      <Custom Action="InstallXPlanePlugin" After="InstallFiles">
-        <![CDATA[&XPlane=3]]>
-      </Custom>
-      
-      <!-- Uninstall X-Plane plugin before removing files -->
-      <!-- Condition: X-Plane feature is being removed (action state = 2) and full uninstall -->
-      <Custom Action="UninstallXPlanePlugin" Before="RemoveFiles">
-        <![CDATA[REMOVE="ALL" AND &XPlane=2]]>
-      </Custom>
-      
-      <!-- Uninstall DCS integration before removing files -->
-      <Custom Action="UninstallDcsIntegration" Before="RemoveFiles">
-        <![CDATA[REMOVE="ALL" AND &DCS=2]]>
-      </Custom>
-      
-      <!-- Restore Export.lua after removing DCS files -->
-      <Custom Action="RestoreExportLua" After="RemoveFiles">
-        <![CDATA[REMOVE="ALL" AND &DCS=2]]>
-      </Custom>
-    </InstallExecuteSequence>
-    
-    <!-- ========================================
-         UI SEQUENCE
-         ======================================== -->
-    
-    <InstallUISequence>
-      <!-- Show product posture early in UI sequence -->
-      <Custom Action="ShowPosture" After="CostFinalize">
-        <![CDATA[NOT Installed]]>
-      </Custom>
-    </InstallUISequence>
-    
-  </Package>
+
+    <!-- Windows Service for flightd -->
+    <ComponentGroup Id="ServiceComponents">
+      <Component Id="FlightdService" Guid="1A2B3C4D-5E6F-7890-ABCD-EF1234567890" Directory="BinFolder">
+        <File Id="flightd_exe_svc" Source="$(var.BinDir)\flightd.exe" KeyPath="yes" />
+        <ServiceInstall Id="FlightdServiceInstall"
+                        Type="ownProcess"
+                        Name="FlightHub"
+                        DisplayName="Flight Hub Service"
+                        Description="Flight Hub input management service for flight simulation"
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal">
+          <!-- Service recovery options -->
+          <util:ServiceConfig FirstFailureActionType="restart"
+                              SecondFailureActionType="restart"
+                              ThirdFailureActionType="none"
+                              RestartServiceDelayInSeconds="60"
+                              ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <ServiceControl Id="FlightdServiceControl"
+                        Name="FlightHub"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+      </Component>
+    </ComponentGroup>
+
+  </Product>
 </Wix>

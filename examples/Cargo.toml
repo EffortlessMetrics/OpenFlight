@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+description = "Feature-gated OpenFlight example binaries and integration demos."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "examples", "demos"]
 publish = false
 
 # SPDX License Identifier

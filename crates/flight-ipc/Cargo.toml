@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Cross-platform gRPC IPC layer for OpenFlight components."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "ipc", "grpc"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
@@ -56,10 +58,10 @@ tonic-build.workspace = true
 prost-build.workspace = true
 
 [dev-dependencies]
-tokio-test = "0.4.5"
+tokio-test.workspace = true
 tempfile.workspace = true
 criterion.workspace = true
-chrono = "0.4.43"
+chrono.workspace = true
 tokio-stream = { workspace = true, features = ["sync"] }
 tracing-subscriber.workspace = true
 proptest.workspace = true
