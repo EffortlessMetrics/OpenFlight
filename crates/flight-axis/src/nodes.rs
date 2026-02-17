@@ -73,6 +73,16 @@ impl DeadzoneNode {
     }
 }
 
+/// Compiled state for deadzone nodes (config embedded in state buffer)
+#[repr(C, align(8))]
+#[derive(Debug, Clone, Copy)]
+pub struct DeadzoneCompiledState {
+    /// Positive threshold [0.0, 1.0]
+    pub threshold: f32,
+    /// Negative threshold (same as threshold if symmetric)
+    pub threshold_neg: f32,
+}
+
 impl Node for DeadzoneNode {
     #[inline(always)]
     fn step(&mut self, frame: &mut AxisFrame) {
@@ -92,15 +102,21 @@ impl Node for DeadzoneNode {
     }
 
     fn state_size(&self) -> usize {
-        0 // Stateless node
+        std::mem::size_of::<DeadzoneCompiledState>()
     }
 
-    unsafe fn init_state(&self, _state_ptr: *mut u8) {
-        // No state to initialize
+    #[allow(unsafe_op_in_unsafe_fn)]
+    unsafe fn init_state(&self, state_ptr: *mut u8) {
+        // Write config to state buffer for function pointer path
+        let state = state_ptr as *mut DeadzoneCompiledState;
+        *state = DeadzoneCompiledState {
+            threshold: self.threshold,
+            threshold_neg: self.threshold_neg.unwrap_or(self.threshold),
+        };
     }
 
     unsafe fn step_soa(&self, frame: &mut AxisFrame, _state_ptr: *mut u8) {
-        // Delegate to regular step for stateless nodes
+        // Use self directly - config is already available
         let mut node = self.clone();
         node.step(frame);
     }
@@ -108,6 +124,16 @@ impl Node for DeadzoneNode {
     fn node_type(&self) -> &'static str {
         "deadzone"
     }
+}
+
+/// Compiled state for curve nodes (config embedded in state buffer)
+#[repr(C, align(8))]
+#[derive(Debug, Clone, Copy)]
+pub struct CurveCompiledState {
+    /// Exponential factor [-1.0, 1.0]
+    pub expo: f32,
+    /// Precomputed exponent: 1.0 + expo
+    pub exponent: f32,
 }
 
 /// Exponential curve node with monotonicity guarantee
@@ -156,14 +182,21 @@ impl Node for CurveNode {
     }
 
     fn state_size(&self) -> usize {
-        0 // Stateless node
+        std::mem::size_of::<CurveCompiledState>()
     }
 
-    unsafe fn init_state(&self, _state_ptr: *mut u8) {
-        // No state to initialize
+    #[allow(unsafe_op_in_unsafe_fn)]
+    unsafe fn init_state(&self, state_ptr: *mut u8) {
+        // Write config to state buffer for function pointer path
+        let state = state_ptr as *mut CurveCompiledState;
+        *state = CurveCompiledState {
+            expo: self.expo,
+            exponent: 1.0 + self.expo,
+        };
     }
 
     unsafe fn step_soa(&self, frame: &mut AxisFrame, _state_ptr: *mut u8) {
+        // Use self directly - config is already available
         let mut node = self.clone();
         node.step(frame);
     }
@@ -182,11 +215,29 @@ pub struct SlewNode {
     pub attack_rate: Option<f32>,
 }
 
-/// State for slew rate limiter (8 bytes aligned)
+/// Legacy state for slew rate limiter (retained for API compatibility)
 #[repr(C, align(8))]
 #[derive(Debug, Clone, Copy)]
 pub struct SlewState {
     pub last_output: f32,
+    pub last_time_ns: u64,
+}
+
+/// Compiled state for slew nodes (config + runtime state in one buffer)
+#[repr(C, align(8))]
+#[derive(Debug, Clone, Copy)]
+pub struct SlewCompiledState {
+    // Config (immutable after compilation)
+    /// Rate limit for decay (moving toward zero)
+    pub rate_limit: f32,
+    /// Rate limit for attack (moving away from zero), same as rate_limit if symmetric
+    pub attack_rate: f32,
+    // Runtime state
+    /// Last output value
+    pub last_output: f32,
+    /// Padding for alignment before u64
+    pub _pad: u32,
+    /// Last timestamp in nanoseconds
     pub last_time_ns: u64,
 }
 
@@ -217,21 +268,25 @@ impl Node for SlewNode {
     }
 
     fn state_size(&self) -> usize {
-        std::mem::size_of::<SlewState>()
+        std::mem::size_of::<SlewCompiledState>()
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn init_state(&self, state_ptr: *mut u8) {
-        let state = state_ptr as *mut SlewState;
-        *state = SlewState {
+        // Write config and initial runtime state to buffer
+        let state = state_ptr as *mut SlewCompiledState;
+        *state = SlewCompiledState {
+            rate_limit: self.rate_limit,
+            attack_rate: self.attack_rate.unwrap_or(self.rate_limit),
             last_output: 0.0,
+            _pad: 0,
             last_time_ns: 0,
         };
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
-        let state = &mut *(state_ptr as *mut SlewState);
+        let state = &mut *(state_ptr as *mut SlewCompiledState);
 
         if state.last_time_ns == 0 {
             state.last_output = frame.out;
@@ -246,10 +301,11 @@ impl Node for SlewNode {
         };
         let desired_change = frame.out - state.last_output;
 
-        let rate = if desired_change > 0.0 {
-            self.attack_rate.unwrap_or(self.rate_limit)
+        // Select rate based on direction of change
+        let rate = if desired_change.signum() == frame.out.signum() {
+            state.attack_rate
         } else {
-            self.rate_limit
+            state.rate_limit
         };
 
         let max_change = rate * dt_s;
@@ -267,7 +323,7 @@ impl Node for SlewNode {
     }
 }
 
-/// State for filter node (16 bytes aligned)
+/// Legacy state for filter node (retained for API compatibility)
 #[repr(C, align(16))]
 #[derive(Debug, Clone, Copy)]
 pub struct FilterState {
@@ -281,6 +337,30 @@ pub struct FilterState {
     pub initialized: bool,
     /// Padding for alignment
     pub _pad: [u8; 6],
+}
+
+/// Compiled state for filter nodes (config + runtime state in one buffer)
+#[repr(C, align(16))]
+#[derive(Debug, Clone, Copy)]
+pub struct FilterCompiledState {
+    // Config (immutable after compilation)
+    /// EMA smoothing factor [0.0, 1.0]
+    pub alpha: f32,
+    /// Spike rejection threshold (0.0 = disabled)
+    pub spike_threshold: f32,
+    /// Maximum consecutive spikes before accepting
+    pub max_spike_count: u8,
+    pub _config_pad: [u8; 3],
+    // Runtime state
+    /// Previous filtered output
+    pub prev_output: f32,
+    /// Last raw input
+    pub last_raw: f32,
+    /// Consecutive spike count
+    pub spike_count: u8,
+    /// Whether filter has been initialized
+    pub initialized: bool,
+    pub _state_pad: [u8; 6],
 }
 
 /// EMA filter node with optional spike rejection.
@@ -367,24 +447,31 @@ impl Node for FilterNode {
     }
 
     fn state_size(&self) -> usize {
-        std::mem::size_of::<FilterState>()
+        std::mem::size_of::<FilterCompiledState>()
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn init_state(&self, state_ptr: *mut u8) {
-        let state = state_ptr as *mut FilterState;
-        *state = FilterState {
+        // Write config and initial runtime state to buffer
+        let state = state_ptr as *mut FilterCompiledState;
+        *state = FilterCompiledState {
+            // Config
+            alpha: self.alpha,
+            spike_threshold: self.spike_threshold.unwrap_or(0.0),
+            max_spike_count: self.max_spike_count,
+            _config_pad: [0; 3],
+            // Runtime state
             prev_output: 0.0,
             last_raw: 0.0,
             spike_count: 0,
             initialized: false,
-            _pad: [0; 6],
+            _state_pad: [0; 6],
         };
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn step_soa(&self, frame: &mut AxisFrame, state_ptr: *mut u8) {
-        let state = &mut *(state_ptr as *mut FilterState);
+        let state = &mut *(state_ptr as *mut FilterCompiledState);
         let input = frame.out;
 
         // Initialize on first sample
@@ -395,15 +482,15 @@ impl Node for FilterNode {
             return;
         }
 
-        // Check for spikes if threshold is configured
-        let accept_input = if let Some(threshold) = self.spike_threshold {
+        // Check for spikes if threshold is configured (non-zero)
+        let accept_input = if state.spike_threshold > 0.0 {
             let delta = (input - state.last_raw).abs();
 
-            if delta > threshold {
+            if delta > state.spike_threshold {
                 // Potential spike detected
                 state.spike_count = state.spike_count.saturating_add(1);
 
-                if state.spike_count >= self.max_spike_count {
+                if state.spike_count >= state.max_spike_count {
                     // Too many consecutive "spikes" - accept as real change
                     state.spike_count = 0;
                     true
@@ -423,7 +510,7 @@ impl Node for FilterNode {
 
         if accept_input {
             // Apply EMA: S_t = alpha * Y_t + (1 - alpha) * S_{t-1}
-            frame.out = self.alpha * input + (1.0 - self.alpha) * state.prev_output;
+            frame.out = state.alpha * input + (1.0 - state.alpha) * state.prev_output;
             state.prev_output = frame.out;
             state.last_raw = input;
         } else {

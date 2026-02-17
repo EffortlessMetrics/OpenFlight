@@ -9,6 +9,7 @@
 
 use flight_profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -288,10 +289,89 @@ struct CachedProfile {
     #[allow(dead_code)]
     pub base_profile: Profile,
     pub compiled: CompiledProfile,
+    /// Source of this profile (file path or in-memory)
     #[allow(dead_code)]
-    pub file_path: PathBuf,
+    pub source: ProfileSource,
     #[allow(dead_code)]
     pub last_modified: Instant,
+}
+
+/// Source of a profile - either from a file or created in-memory.
+///
+/// This enum tracks where a profile originated, enabling "save" vs "save as"
+/// functionality and recent files tracking.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ProfileSource {
+    /// Profile was loaded from a file at the given path.
+    /// The path is canonicalized to an absolute path when possible.
+    File(PathBuf),
+    /// Profile was created in-memory and has not been saved to disk.
+    InMemory,
+    /// Profile was merged from multiple files (hierarchical loading).
+    /// Contains the paths of all source files in load order.
+    Merged(Vec<PathBuf>),
+}
+
+impl ProfileSource {
+    /// Returns the primary file path if this profile has one.
+    ///
+    /// For `File`, returns the single source path.
+    /// For `Merged`, returns the most specific (last) file path.
+    /// For `InMemory`, returns `None`.
+    pub fn primary_path(&self) -> Option<&Path> {
+        match self {
+            ProfileSource::File(p) => Some(p.as_path()),
+            ProfileSource::Merged(paths) => paths.last().map(|p| p.as_path()),
+            ProfileSource::InMemory => None,
+        }
+    }
+
+    /// Returns all file paths associated with this profile source.
+    pub fn all_paths(&self) -> Cow<'_, [PathBuf]> {
+        match self {
+            ProfileSource::File(p) => Cow::Owned(vec![p.clone()]),
+            ProfileSource::Merged(paths) => Cow::Borrowed(paths.as_slice()),
+            ProfileSource::InMemory => Cow::Owned(vec![]),
+        }
+    }
+
+    /// Returns true if this profile has an associated file path.
+    pub fn has_file(&self) -> bool {
+        match self {
+            ProfileSource::File(_) | ProfileSource::Merged(_) => true,
+            ProfileSource::InMemory => false,
+        }
+    }
+
+    /// Returns true if this profile was created in-memory.
+    pub fn is_in_memory(&self) -> bool {
+        matches!(self, ProfileSource::InMemory)
+    }
+
+    /// Creates a new `ProfileSource::File` with canonicalized path.
+    ///
+    /// Attempts to canonicalize the path to an absolute path. If canonicalization
+    /// fails (e.g., file doesn't exist), uses the original path.
+    pub fn from_path(path: impl AsRef<Path>) -> Self {
+        let path = path.as_ref();
+        // Try to canonicalize, fall back to absolute path if that fails
+        let canonical = std::fs::canonicalize(path)
+            .or_else(|_| {
+                // If file doesn't exist yet, try to make it absolute
+                if path.is_absolute() {
+                    Ok(path.to_path_buf())
+                } else {
+                    std::env::current_dir().map(|cwd| cwd.join(path))
+                }
+            })
+            .unwrap_or_else(|_| path.to_path_buf());
+        ProfileSource::File(canonical)
+    }
+
+    /// Updates the file path (for save-as operations).
+    pub fn update_path(&mut self, new_path: impl AsRef<Path>) {
+        *self = ProfileSource::from_path(new_path);
+    }
 }
 
 /// Phase of Flight enumeration
@@ -771,9 +851,10 @@ impl AircraftAutoSwitch {
         // Load profile hierarchy: Global → Sim → Aircraft
         let profiles = Self::load_profile_hierarchy(aircraft_id, sim, config).await?;
 
-        // Merge profiles with deterministic hierarchy
-        let mut merged_profile = profiles[0].clone();
-        for profile in profiles.iter().skip(1) {
+        // Merge profiles with deterministic hierarchy and track sources.
+        let source_paths: Vec<PathBuf> = profiles.iter().map(|(_, path)| path.clone()).collect();
+        let mut merged_profile = profiles[0].0.clone();
+        for (profile, _) in profiles.iter().skip(1) {
             merged_profile = merged_profile.merge_with(profile)?;
         }
 
@@ -791,7 +872,7 @@ impl AircraftAutoSwitch {
                 CachedProfile {
                     base_profile: compiled.profile.clone(),
                     compiled: compiled.clone(),
-                    file_path: PathBuf::new(), // TODO: Track actual file path
+                    source: ProfileSource::Merged(source_paths),
                     last_modified: Instant::now(),
                 },
             );
@@ -803,19 +884,21 @@ impl AircraftAutoSwitch {
         Ok(compiled)
     }
 
-    /// Load profile hierarchy for aircraft
+    /// Load profile hierarchy for aircraft.
+    ///
+    /// Returns profiles along with their source paths for file tracking.
     async fn load_profile_hierarchy(
         aircraft_id: &AircraftId,
         sim: SimId,
         config: &AutoSwitchConfig,
-    ) -> Result<Vec<Profile>> {
+    ) -> Result<Vec<(Profile, PathBuf)>> {
         let mut profiles = Vec::new();
 
         // Load global profile
-        if let Ok(global_profile) =
+        if let Ok(result) =
             Self::load_profile_from_path(&config.profile_paths[0], "global.json").await
         {
-            profiles.push(global_profile);
+            profiles.push(result);
         }
 
         // Load sim-specific profile
@@ -826,19 +909,19 @@ impl AircraftAutoSwitch {
             SimId::Unknown => "unknown",
         };
 
-        if let Ok(sim_profile) =
+        if let Ok(result) =
             Self::load_profile_from_path(&config.profile_paths[1], &format!("{}.json", sim_name))
                 .await
         {
-            profiles.push(sim_profile);
+            profiles.push(result);
         }
 
         // Load aircraft-specific profile
         let aircraft_filename = format!("{}.json", aircraft_id.icao);
-        if let Ok(aircraft_profile) =
+        if let Ok(result) =
             Self::load_profile_from_path(&config.profile_paths[2], &aircraft_filename).await
         {
-            profiles.push(aircraft_profile);
+            profiles.push(result);
         }
 
         if profiles.is_empty() {
@@ -851,8 +934,13 @@ impl AircraftAutoSwitch {
         Ok(profiles)
     }
 
-    /// Load profile from file path
-    async fn load_profile_from_path(base_path: &Path, filename: &str) -> Result<Profile> {
+    /// Load profile from file path.
+    ///
+    /// Returns the loaded profile along with its source path.
+    async fn load_profile_from_path(
+        base_path: &Path,
+        filename: &str,
+    ) -> Result<(Profile, PathBuf)> {
         let profile_path = base_path.join(filename);
 
         let content = tokio::fs::read_to_string(&profile_path)
@@ -875,7 +963,12 @@ impl AircraftAutoSwitch {
 
         profile.validate()?;
 
-        Ok(profile)
+        // Canonicalize the path for consistent tracking
+        let canonical_path = tokio::fs::canonicalize(&profile_path)
+            .await
+            .unwrap_or(profile_path);
+
+        Ok((profile, canonical_path))
     }
 
     /// Compile profile for axis engine
@@ -1349,8 +1442,9 @@ async fn test_profile_hierarchy_loading() {
     // Should load at least the aircraft profile
     assert!(!profiles.is_empty());
 
-    // Test that the profile has expected axes
-    let aircraft_profile = &profiles[0];
+    // Profiles are returned in load order (Global -> Sim -> Aircraft),
+    // so the most specific profile is the last entry.
+    let (aircraft_profile, _) = profiles.last().unwrap();
     assert!(aircraft_profile.axes.contains_key("pitch"));
 
     // Verify the profile has pof_overrides

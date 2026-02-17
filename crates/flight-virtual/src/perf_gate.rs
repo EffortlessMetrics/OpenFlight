@@ -151,7 +151,7 @@ impl PerfGate {
             }
 
             // Progress reporting every 10 seconds
-            if tick_count % (self.config.frequency_hz as u64 * 10) == 0 {
+            if tick_count.is_multiple_of(self.config.frequency_hz as u64 * 10) {
                 let elapsed = start.elapsed().as_secs();
                 let target = self.config.duration.as_secs();
                 println!("  Progress: {}s / {}s", elapsed, target);

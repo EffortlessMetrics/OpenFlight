@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Real-time 250Hz axis processing engine for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "real-time", "controls"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team

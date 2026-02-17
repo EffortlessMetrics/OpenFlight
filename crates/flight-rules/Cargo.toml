@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Rules DSL and evaluator types for panel logic."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "rules", "dsl"]
 [dependencies]
 serde.workspace = true
 thiserror.workspace = true

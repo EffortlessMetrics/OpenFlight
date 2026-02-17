@@ -2,6 +2,9 @@
 name = "xtask"
 version = "0.1.0"
 edition = "2024"
+description = "Workspace automation and validation tasks for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "xtask", "tooling"]
 publish = false
 
 [dependencies]

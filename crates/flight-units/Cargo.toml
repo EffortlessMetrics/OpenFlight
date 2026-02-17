@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Unit definitions and conversion helpers for flight telemetry."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "units", "conversion"]
 [dependencies]
 serde.workspace = true
 

@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Watchdog monitoring and component quarantine support."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "watchdog", "health"]
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
@@ -17,4 +19,4 @@ crossbeam.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
-tokio-test = "0.4.5"
+tokio-test.workspace = true

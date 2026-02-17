@@ -1,279 +1,198 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Flight Hub Windows Installer - Component Definitions
-  
+  Flight Hub Windows Installer - Component Definitions (WiX 3.x)
+
   This file defines all components for the Flight Hub installer:
-  - CoreComponents: Main binaries (flightd.exe, flightctl.exe)
-  - CoreConfigComponents: Default configuration files
-  - CoreDocComponents: Documentation and license files
-  - MSFSComponents: MSFS integration files
-  - XPlaneComponents: X-Plane integration files
-  - DCSComponents: DCS integration files
-  
-  Requirements: 9.1, 9.2, 9.3
+  - CoreBinaries: Main daemon binary (flightd.exe)
+  - CLIBinaries: CLI tool (flightctl.exe)
+  - CoreConfig: Configuration directory structure
+  - CoreRegistry: Windows service registration and registry entries
+  - Shortcuts: Start Menu and Desktop shortcuts
+  - PathEnvVar: Optional PATH environment variable addition
+
+  Requirements:
+  - WiX Toolset 3.x
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
   <!-- ========================================
-       DIRECTORY STRUCTURE
+       CORE BINARIES
+       Main Flight Hub daemon executable
        ======================================== -->
-  
+
   <Fragment>
-    <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="INSTALLFOLDER" Name="FlightHub">
-        <Directory Id="BinFolder" Name="bin" />
-        <Directory Id="ConfigFolder" Name="config" />
-        <Directory Id="DocsFolder" Name="docs" />
-        <Directory Id="IntegrationFolder" Name="integration">
-          <Directory Id="MSFSIntegrationFolder" Name="msfs" />
-          <Directory Id="XPlaneIntegrationFolder" Name="xplane" />
-          <Directory Id="DCSIntegrationFolder" Name="dcs" />
-        </Directory>
-        <Directory Id="LicensesFolder" Name="licenses" />
-      </Directory>
-    </StandardDirectory>
-    
-    <!-- Start Menu shortcuts -->
-    <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="FlightHubMenuFolder" Name="Flight Hub" />
-    </StandardDirectory>
-  </Fragment>
-  
-  <!-- ========================================
-       CORE COMPONENTS
-       Main binaries required for Flight Hub operation
-       ======================================== -->
-  
-  <Fragment>
-    <ComponentGroup Id="CoreComponents" Directory="BinFolder">
-      
+    <ComponentGroup Id="CoreBinaries" Directory="BinFolder">
+
       <!-- Flight Hub Service Daemon -->
-      <Component Id="flightd.exe" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
-        <File Id="flightd.exe" 
-              Name="flightd.exe" 
+      <Component Id="flightd_exe" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
+        <File Id="flightd_exe"
+              Name="flightd.exe"
               Source="$(var.BinDir)\flightd.exe"
-              KeyPath="yes">
-          <!-- File association for .flighthub profile files -->
-          <Shortcut Id="FlightdShortcut"
-                    Directory="FlightHubMenuFolder"
-                    Name="Flight Hub Service"
-                    Description="Flight Hub background service"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Advertise="no" />
-        </File>
+              KeyPath="yes"
+              Vital="yes" />
       </Component>
-      
-      <!-- Flight Hub CLI Tool -->
-      <Component Id="flightctl.exe" Guid="B2C3D4E5-F6A7-8901-BCDE-F23456789012">
-        <File Id="flightctl.exe" 
-              Name="flightctl.exe" 
-              Source="$(var.BinDir)\flightctl.exe"
-              KeyPath="yes">
-          <Shortcut Id="FlightctlShortcut"
-                    Directory="FlightHubMenuFolder"
-                    Name="Flight Hub CLI"
-                    Description="Flight Hub command-line interface"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Advertise="no" />
-        </File>
-      </Component>
-      
-      <!-- PATH environment variable for CLI access -->
-      <Component Id="PathEnvVar" Guid="C3D4E5F6-A7B8-9012-CDEF-345678901234">
-        <Environment Id="PATH" 
-                     Name="PATH" 
-                     Value="[BinFolder]" 
-                     Permanent="no" 
-                     Part="last" 
-                     Action="set" 
-                     System="no" />
-      </Component>
-      
+
     </ComponentGroup>
   </Fragment>
-  
+
   <!-- ========================================
-       CORE CONFIGURATION COMPONENTS
-       Default configuration files
+       CLI BINARIES
+       Command-line interface executable
        ======================================== -->
-  
+
   <Fragment>
-    <ComponentGroup Id="CoreConfigComponents" Directory="ConfigFolder">
-      
+    <ComponentGroup Id="CLIBinaries" Directory="BinFolder">
+
+      <!-- Flight Hub CLI Tool -->
+      <Component Id="flightctl_exe" Guid="B2C3D4E5-F6A7-8901-BCDE-F23456789012">
+        <File Id="flightctl_exe"
+              Name="flightctl.exe"
+              Source="$(var.BinDir)\flightctl.exe"
+              KeyPath="yes"
+              Vital="yes" />
+      </Component>
+
+    </ComponentGroup>
+  </Fragment>
+
+  <!-- ========================================
+       CORE CONFIGURATION
+       Configuration directory and default files
+       ======================================== -->
+
+  <Fragment>
+    <ComponentGroup Id="CoreConfig" Directory="ConfigFolder">
+
       <!-- Default configuration file -->
       <Component Id="DefaultConfig" Guid="D4E5F6A7-B8C9-0123-DEF0-456789012345">
-        <File Id="config.toml" 
-              Name="config.toml" 
+        <File Id="config_toml"
+              Name="config.toml"
               Source="$(var.ConfigDir)\config.toml"
               KeyPath="yes" />
       </Component>
-      
+
       <!-- Default profile template -->
       <Component Id="DefaultProfile" Guid="E5F6A7B8-C9D0-1234-EF01-567890123456">
-        <File Id="default_profile.toml" 
-              Name="default.profile.toml" 
+        <File Id="default_profile_toml"
+              Name="default.profile.toml"
               Source="$(var.ConfigDir)\default.profile.toml"
               KeyPath="yes" />
       </Component>
-      
+
+      <!-- Create empty logs directory -->
+      <Component Id="LogsDirectory" Guid="F6A7B8C9-D0E1-2345-F012-678901234567" Directory="LogsFolder">
+        <CreateFolder />
+      </Component>
+
     </ComponentGroup>
   </Fragment>
-  
+
   <!-- ========================================
-       CORE DOCUMENTATION COMPONENTS
-       Documentation and license files
+       CORE REGISTRY
+       Windows service registration and app registry entries
        ======================================== -->
-  
+
   <Fragment>
-    <ComponentGroup Id="CoreDocComponents" Directory="DocsFolder">
-      
-      <!-- Product posture document -->
-      <!-- Requirement 9.4: display product posture summary -->
-      <Component Id="ProductPosture" Guid="F6A7B8C9-D0E1-2345-F012-678901234567">
-        <File Id="product_posture.md" 
-              Name="product-posture.md" 
-              Source="$(var.DocsDir)\product-posture.md"
-              KeyPath="yes" />
+    <ComponentGroup Id="CoreRegistry" Directory="INSTALLFOLDER">
+
+      <!-- Application registry entries -->
+      <Component Id="AppRegistryEntries" Guid="C3D4E5F6-A7B8-9012-CDEF-345678901234">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\OpenFlight\Flight Hub">
+          <RegistryValue Type="string" Name="InstallPath" Value="[INSTALLFOLDER]" KeyPath="yes" />
+          <RegistryValue Type="string" Name="Version" Value="[ProductVersion]" />
+          <RegistryValue Type="string" Name="BinPath" Value="[BinFolder]" />
+          <RegistryValue Type="string" Name="ConfigPath" Value="[ConfigFolder]" />
+        </RegistryKey>
       </Component>
-      
-      <!-- README -->
-      <Component Id="Readme" Guid="A7B8C9D0-E1F2-3456-0123-789012345678">
-        <File Id="README.md" 
-              Name="README.md" 
-              Source="$(var.RootDir)\README.md"
-              KeyPath="yes" />
+
+      <!-- Windows Service registration via registry -->
+      <!-- Note: ServiceInstall in Product.wxs handles primary service registration -->
+      <!-- These entries provide additional configuration -->
+      <Component Id="ServiceRegistryEntries" Guid="2B3C4D5E-6F7A-8901-CDEF-456789012345">
+        <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\FlightHub">
+          <RegistryValue Type="expandString" Name="ImagePath" Value="&quot;[BinFolder]flightd.exe&quot; --service" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\FlightHub\Parameters">
+          <RegistryValue Type="string" Name="ConfigPath" Value="[ConfigFolder]config.toml" />
+          <RegistryValue Type="string" Name="LogPath" Value="[LogsFolder]" />
+        </RegistryKey>
       </Component>
-      
-      <!-- License files -->
-      <Component Id="LicenseApache" Guid="B8C9D0E1-F2A3-4567-1234-890123456789" Directory="LicensesFolder">
-        <File Id="LICENSE_APACHE" 
-              Name="LICENSE-APACHE" 
-              Source="$(var.RootDir)\LICENSE-APACHE"
-              KeyPath="yes" />
+
+      <!-- Event Log registration for flightd service -->
+      <Component Id="EventLogRegistration" Guid="3C4D5E6F-7A8B-9012-DEF0-567890123456">
+        <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\FlightHub">
+          <RegistryValue Type="expandString" Name="EventMessageFile" Value="[BinFolder]flightd.exe" KeyPath="yes" />
+          <RegistryValue Type="integer" Name="TypesSupported" Value="7" />
+        </RegistryKey>
       </Component>
-      
-      <Component Id="LicenseMIT" Guid="C9D0E1F2-A3B4-5678-2345-901234567890" Directory="LicensesFolder">
-        <File Id="LICENSE_MIT" 
-              Name="LICENSE-MIT" 
-              Source="$(var.RootDir)\LICENSE-MIT"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- Third-party components inventory -->
-      <!-- Requirement 12.3: installer links to third-party components inventory -->
-      <Component Id="ThirdPartyInventory" Guid="D0E1F2A3-B4C5-6789-3456-012345678901" Directory="LicensesFolder">
-        <File Id="third_party_components.toml" 
-              Name="third-party-components.toml" 
-              Source="$(var.RootDir)\third-party-components.toml"
-              KeyPath="yes" />
-      </Component>
-      
+
     </ComponentGroup>
   </Fragment>
-  
+
   <!-- ========================================
-       MSFS INTEGRATION COMPONENTS
-       Microsoft Flight Simulator integration files
+       PATH ENVIRONMENT VARIABLE
+       Optional addition to system PATH
        ======================================== -->
-  
+
   <Fragment>
-    <ComponentGroup Id="MSFSComponents" Directory="MSFSIntegrationFolder">
-      
-      <!-- MSFS integration documentation -->
-      <Component Id="MSFSWhatWeTouch" Guid="E1F2A3B4-C5D6-7890-4567-123456789012">
-        <File Id="msfs_what_we_touch.md" 
-              Name="msfs-what-we-touch.md" 
-              Source="$(var.DocsDir)\integration\msfs-what-we-touch.md"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- MSFS SimConnect configuration -->
-      <Component Id="MSFSConfig" Guid="F2A3B4C5-D6E7-8901-5678-234567890123">
-        <File Id="msfs_config.toml" 
-              Name="msfs.config.toml" 
-              Source="$(var.ConfigDir)\integration\msfs.config.toml"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- MSFS SimConnect DLL (if bundled) -->
-      <Component Id="SimConnectDll" Guid="A3B4C5D6-E7F8-9012-6789-345678901234">
-        <File Id="SimConnect.dll" 
-              Name="SimConnect.dll" 
-              Source="$(var.BinDir)\SimConnect.dll"
-              KeyPath="yes" />
-      </Component>
-      
-    </ComponentGroup>
+    <Component Id="PathEnvVar" Guid="4D5E6F7A-8B9C-0123-EF01-678901234567" Directory="INSTALLFOLDER">
+      <Environment Id="PATH"
+                   Name="PATH"
+                   Value="[BinFolder]"
+                   Permanent="no"
+                   Part="last"
+                   Action="set"
+                   System="yes" />
+      <CreateFolder />
+    </Component>
   </Fragment>
-  
+
   <!-- ========================================
-       X-PLANE INTEGRATION COMPONENTS
-       X-Plane integration files
+       START MENU SHORTCUTS
        ======================================== -->
-  
+
   <Fragment>
-    <ComponentGroup Id="XPlaneComponents" Directory="XPlaneIntegrationFolder">
-      
-      <!-- X-Plane integration documentation -->
-      <Component Id="XPlaneWhatWeTouch" Guid="B4C5D6E7-F8A9-0123-7890-456789012345">
-        <File Id="xplane_what_we_touch.md" 
-              Name="xplane-what-we-touch.md" 
-              Source="$(var.DocsDir)\integration\xplane-what-we-touch.md"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- X-Plane configuration -->
-      <Component Id="XPlaneConfig" Guid="C5D6E7F8-A9B0-1234-8901-567890123456">
-        <File Id="xplane_config.toml" 
-              Name="xplane.config.toml" 
-              Source="$(var.ConfigDir)\integration\xplane.config.toml"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- X-Plane plugin files (staged for installation by custom action) -->
-      <Component Id="XPlanePlugin" Guid="D6E7F8A9-B0C1-2345-9012-678901234567">
-        <File Id="FlightHubPlugin.xpl" 
-              Name="FlightHubPlugin.xpl" 
-              Source="$(var.BinDir)\xplane\FlightHubPlugin.xpl"
-              KeyPath="yes" />
-      </Component>
-      
-    </ComponentGroup>
+    <!-- Main Flight Hub shortcut (for Core feature) -->
+    <Component Id="FlightHubMenuShortcut" Guid="5E6F7A8B-9C0D-1234-F012-789012345678" Directory="FlightHubMenuFolder">
+      <Shortcut Id="FlightHubStartMenuShortcut"
+                Name="Flight Hub"
+                Description="Flight Hub - Flight Simulation Input Management"
+                Target="[BinFolder]flightd.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="FlightHubIcon.exe" />
+      <RemoveFolder Id="RemoveFlightHubMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\OpenFlight\Flight Hub" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- CLI shortcut (for CLI feature) -->
+    <Component Id="CLIMenuShortcut" Guid="6F7A8B9C-0D1E-2345-0123-890123456789" Directory="FlightHubMenuFolder">
+      <Shortcut Id="FlightctlStartMenuShortcut"
+                Name="Flight Hub CLI"
+                Description="Flight Hub Command Line Interface"
+                Target="[BinFolder]flightctl.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RegistryValue Root="HKCU" Key="Software\OpenFlight\Flight Hub" Name="CLIShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
   </Fragment>
-  
+
   <!-- ========================================
-       DCS INTEGRATION COMPONENTS
-       DCS World integration files
+       DESKTOP SHORTCUT
        ======================================== -->
-  
+
   <Fragment>
-    <ComponentGroup Id="DCSComponents" Directory="DCSIntegrationFolder">
-      
-      <!-- DCS integration documentation -->
-      <Component Id="DCSWhatWeTouch" Guid="E7F8A9B0-C1D2-3456-0123-789012345678">
-        <File Id="dcs_what_we_touch.md" 
-              Name="dcs-what-we-touch.md" 
-              Source="$(var.DocsDir)\integration\dcs-what-we-touch.md"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- DCS configuration -->
-      <Component Id="DCSConfig" Guid="F8A9B0C1-D2E3-4567-1234-890123456789">
-        <File Id="dcs_config.toml" 
-              Name="dcs.config.toml" 
-              Source="$(var.ConfigDir)\integration\dcs.config.toml"
-              KeyPath="yes" />
-      </Component>
-      
-      <!-- FlightHubExport.lua - staged for installation by custom action -->
-      <Component Id="FlightHubExportLua" Guid="A9B0C1D2-E3F4-5678-2345-901234567890">
-        <File Id="FlightHubExport.lua" 
-              Name="FlightHubExport.lua" 
-              Source="$(var.LuaDir)\FlightHubExport.lua"
-              KeyPath="yes" />
-      </Component>
-      
-    </ComponentGroup>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </DirectoryRef>
+
+    <Component Id="DesktopShortcut" Guid="7A8B9C0D-1E2F-3456-1234-901234567890" Directory="DesktopFolder">
+      <Shortcut Id="FlightHubDesktopShortcut"
+                Name="Flight Hub"
+                Description="Flight Hub - Flight Simulation Input Management"
+                Target="[BinFolder]flightd.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="FlightHubIcon.exe" />
+      <RegistryValue Root="HKCU" Key="Software\OpenFlight\Flight Hub" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
   </Fragment>
-  
+
 </Wix>

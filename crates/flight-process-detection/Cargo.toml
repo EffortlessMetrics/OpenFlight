@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Cross-platform simulator process detection for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "process", "detection"]
 [dependencies]
 serde.workspace = true
 tokio.workspace = true
@@ -17,9 +19,13 @@ thiserror.workspace = true
 windows = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_System_Diagnostics_ToolHelp",
-    "Win32_System_ProcessStatus", 
-    "Win32_System_Threading"
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging"
 ] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = { workspace = true, features = ["allow-unsafe-code"] }
 
 [dev-dependencies]
 proptest.workspace = true

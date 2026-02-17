@@ -11,7 +11,7 @@ use flight_axis::AxisEngine;
 use flight_core::{Result, profile::Profile};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 /// Safe mode configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -254,16 +254,294 @@ impl SafeModeManager {
 
     #[cfg(target_os = "windows")]
     async fn check_windows_rt_privileges(&self) -> bool {
-        // Stub implementation - would check actual Windows capabilities
-        // In real implementation, would try to set MMCSS class and check result
-        true
+        use std::ffi::c_void;
+
+        // FFI bindings for MMCSS (avrt.dll)
+        #[link(name = "avrt")]
+        unsafe extern "system" {
+            fn AvSetMmThreadCharacteristicsW(task_name: *const u16, task_index: *mut u32) -> isize;
+            fn AvRevertMmThreadCharacteristics(avrt_handle: isize) -> i32;
+        }
+
+        // FFI bindings for thread priority (kernel32.dll)
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn GetCurrentThread() -> *mut c_void;
+            fn GetThreadPriority(thread: *mut c_void) -> i32;
+            fn SetThreadPriority(thread: *mut c_void, priority: i32) -> i32;
+        }
+
+        const THREAD_PRIORITY_TIME_CRITICAL: i32 = 15;
+        const THREAD_PRIORITY_HIGHEST: i32 = 2;
+
+        let mut mmcss_available = false;
+        let mut high_priority_available = false;
+
+        // Test 1: Try to acquire MMCSS "Games" class
+        let task_name = "Games";
+        let task_name_wide: Vec<u16> = task_name.encode_utf16().chain(std::iter::once(0)).collect();
+        let mut task_index: u32 = 0;
+
+        // SAFETY: We're passing a valid null-terminated wide string and a valid pointer
+        let mmcss_handle =
+            unsafe { AvSetMmThreadCharacteristicsW(task_name_wide.as_ptr(), &mut task_index) };
+
+        if mmcss_handle != 0 {
+            mmcss_available = true;
+            debug!(
+                "MMCSS 'Games' class acquisition test: SUCCESS (handle: {})",
+                mmcss_handle
+            );
+
+            // Release the MMCSS registration immediately after testing
+            // SAFETY: We have a valid MMCSS handle
+            let revert_result = unsafe { AvRevertMmThreadCharacteristics(mmcss_handle) };
+            if revert_result == 0 {
+                warn!("Failed to release test MMCSS registration");
+            }
+        } else {
+            let err = std::io::Error::last_os_error();
+            debug!(
+                "MMCSS 'Games' class acquisition test: FAILED (error: {}, code: {:?})",
+                err,
+                err.raw_os_error()
+            );
+        }
+
+        // Test 2: Try to elevate thread priority to TIME_CRITICAL
+        // SAFETY: GetCurrentThread returns a pseudo-handle that's always valid
+        let current_thread = unsafe { GetCurrentThread() };
+        let original_priority = unsafe { GetThreadPriority(current_thread) };
+
+        // Try to set TIME_CRITICAL priority
+        // SAFETY: We have a valid thread handle
+        let priority_result =
+            unsafe { SetThreadPriority(current_thread, THREAD_PRIORITY_TIME_CRITICAL) };
+
+        if priority_result != 0 {
+            high_priority_available = true;
+            debug!("Thread priority elevation to TIME_CRITICAL: SUCCESS");
+
+            // Restore original priority
+            // SAFETY: We have a valid thread handle
+            let restore_result = unsafe { SetThreadPriority(current_thread, original_priority) };
+            if restore_result == 0 {
+                warn!("Failed to restore original thread priority after test");
+            }
+        } else {
+            // Try HIGHEST priority as a fallback test
+            let highest_result =
+                unsafe { SetThreadPriority(current_thread, THREAD_PRIORITY_HIGHEST) };
+            if highest_result != 0 {
+                high_priority_available = true;
+                debug!("Thread priority elevation to HIGHEST: SUCCESS (TIME_CRITICAL unavailable)");
+
+                // Restore original priority
+                let restore_result =
+                    unsafe { SetThreadPriority(current_thread, original_priority) };
+                if restore_result == 0 {
+                    warn!("Failed to restore original thread priority after test");
+                }
+            } else {
+                let err = std::io::Error::last_os_error();
+                debug!(
+                    "Thread priority elevation test: FAILED (error: {}, code: {:?})",
+                    err,
+                    err.raw_os_error()
+                );
+            }
+        }
+
+        // RT privileges are considered available if either MMCSS or high priority works
+        // MMCSS alone provides significant RT benefit even without TIME_CRITICAL priority
+        let rt_available = mmcss_available || high_priority_available;
+
+        if !rt_available {
+            warn!(
+                "Windows RT privileges are limited. MMCSS: {}, High priority: {}. \
+                 Performance may be affected. Consider running as administrator or \
+                 ensuring the Windows Multimedia Class Scheduler service is running.",
+                if mmcss_available {
+                    "available"
+                } else {
+                    "unavailable"
+                },
+                if high_priority_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+        } else {
+            info!(
+                "Windows RT privileges detected. MMCSS: {}, High priority: {}",
+                if mmcss_available {
+                    "available"
+                } else {
+                    "unavailable"
+                },
+                if high_priority_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+        }
+
+        rt_available
     }
 
     #[cfg(target_os = "linux")]
     async fn check_linux_rt_privileges(&self) -> bool {
-        // Stub implementation - would check rtkit availability and limits
-        // In real implementation, would try to acquire SCHED_FIFO via rtkit
-        true
+        use tracing::warn;
+
+        let mut rtkit_available = false;
+        let mut rlimit_sufficient = false;
+        let mut direct_sched_available = false;
+
+        // Test 1: Check if rtkit service is available via D-Bus
+        // We query rtkit's MaxRealtimePriority property to see if it's running
+        let rtkit_output = std::process::Command::new("dbus-send")
+            .args([
+                "--system",
+                "--print-reply",
+                "--dest=org.freedesktop.RealtimeKit1",
+                "/org/freedesktop/RealtimeKit1",
+                "org.freedesktop.DBus.Properties.Get",
+                "string:org.freedesktop.RealtimeKit1",
+                "string:MaxRealtimePriority",
+            ])
+            .output();
+
+        match rtkit_output {
+            Ok(result) => {
+                if result.status.success() {
+                    rtkit_available = true;
+                    let stdout = String::from_utf8_lossy(&result.stdout);
+                    debug!("rtkit service available: {}", stdout.trim());
+                } else {
+                    let stderr = String::from_utf8_lossy(&result.stderr);
+                    debug!("rtkit service query failed: {}", stderr.trim());
+                }
+            }
+            Err(e) => {
+                debug!("Failed to query rtkit (dbus-send not available?): {}", e);
+            }
+        }
+
+        // Test 2: Validate RLIMIT_RTPRIO limits
+        // RLIMIT_RTPRIO of 0 means no RT scheduling allowed without CAP_SYS_NICE
+        // A value >= 1 means we can potentially use RT priorities up to that value
+        unsafe {
+            let mut rlimit = libc::rlimit {
+                rlim_cur: 0,
+                rlim_max: 0,
+            };
+
+            if libc::getrlimit(libc::RLIMIT_RTPRIO, &mut rlimit) == 0 {
+                // Check if we have any RT priority allowance
+                if rlimit.rlim_cur == libc::RLIM_INFINITY || rlimit.rlim_cur >= 1 {
+                    rlimit_sufficient = true;
+                    debug!(
+                        "RLIMIT_RTPRIO sufficient: soft={}, hard={}",
+                        if rlimit.rlim_cur == libc::RLIM_INFINITY {
+                            "unlimited".to_string()
+                        } else {
+                            rlimit.rlim_cur.to_string()
+                        },
+                        if rlimit.rlim_max == libc::RLIM_INFINITY {
+                            "unlimited".to_string()
+                        } else {
+                            rlimit.rlim_max.to_string()
+                        }
+                    );
+                } else {
+                    debug!(
+                        "RLIMIT_RTPRIO is 0 - RT scheduling not available without CAP_SYS_NICE or rtkit"
+                    );
+                }
+            } else {
+                let err = std::io::Error::last_os_error();
+                debug!("Failed to query RLIMIT_RTPRIO: {}", err);
+            }
+        }
+
+        // Test 3: Check if we can use sched_setscheduler directly (requires CAP_SYS_NICE or root)
+        // We test with a low priority (1) to minimize impact
+        unsafe {
+            let param = libc::sched_param { sched_priority: 1 };
+            let result = libc::sched_setscheduler(0, libc::SCHED_FIFO, &param);
+
+            if result == 0 {
+                direct_sched_available = true;
+                debug!("Direct sched_setscheduler test: SUCCESS");
+
+                // Restore to SCHED_OTHER
+                let restore_param = libc::sched_param { sched_priority: 0 };
+                libc::sched_setscheduler(0, libc::SCHED_OTHER, &restore_param);
+            } else {
+                let err = std::io::Error::last_os_error();
+                debug!(
+                    "Direct sched_setscheduler test: FAILED (error: {}, code: {:?})",
+                    err,
+                    err.raw_os_error()
+                );
+            }
+        }
+
+        // RT privileges are considered available if:
+        // 1. rtkit is available (can acquire RT via D-Bus without root), OR
+        // 2. RLIMIT_RTPRIO is sufficient AND direct scheduling works, OR
+        // 3. Direct scheduling works (CAP_SYS_NICE or root)
+        let rt_available = rtkit_available
+            || direct_sched_available
+            || (rlimit_sufficient && direct_sched_available);
+
+        if !rt_available {
+            warn!(
+                "Linux RT privileges are limited. rtkit: {}, RLIMIT_RTPRIO: {}, direct sched: {}. \
+                 Performance may be affected. Consider:\n\
+                 - Installing the rtkit package\n\
+                 - Adding user to the 'audio' group\n\
+                 - Configuring /etc/security/limits.conf with: @audio - rtprio 99",
+                if rtkit_available {
+                    "available"
+                } else {
+                    "unavailable"
+                },
+                if rlimit_sufficient {
+                    "sufficient"
+                } else {
+                    "insufficient"
+                },
+                if direct_sched_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+        } else {
+            info!(
+                "Linux RT privileges detected. rtkit: {}, RLIMIT_RTPRIO: {}, direct sched: {}",
+                if rtkit_available {
+                    "available"
+                } else {
+                    "unavailable"
+                },
+                if rlimit_sufficient {
+                    "sufficient"
+                } else {
+                    "insufficient"
+                },
+                if direct_sched_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+        }
+
+        rt_available
     }
 
     /// Initialize basic axis engine for safe mode

@@ -228,7 +228,7 @@ impl DataRefManager {
 
     /// Initialize aircraft-specific DataRef sets
     fn initialize_aircraft_specific_datarefs(&mut self) {
-        // General aviation aircraft
+        // General aviation aircraft - comprehensive engine telemetry
         let ga_datarefs = vec![
             // Engine data for piston engines
             DataRef::new("sim/flightmodel/engine/ENGN_running[0]".to_string())
@@ -246,6 +246,16 @@ impl DataRefManager {
             DataRef::new("sim/flightmodel/engine/ENGN_CHT[0]".to_string())
                 .with_description("Engine 1 CHT".to_string())
                 .with_units("degrees C".to_string()),
+            // Additional engine telemetry
+            DataRef::new("sim/flightmodel/engine/ENGN_FF_[0]".to_string())
+                .with_description("Engine 1 fuel flow".to_string())
+                .with_units("kg/s".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_oilp[0]".to_string())
+                .with_description("Engine 1 oil pressure".to_string())
+                .with_units("PSI".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_oilt[0]".to_string())
+                .with_description("Engine 1 oil temperature".to_string())
+                .with_units("degrees C".to_string()),
         ];
 
         for dataref in ga_datarefs {
@@ -253,7 +263,7 @@ impl DataRefManager {
             self.datarefs.insert(name.clone(), dataref);
         }
 
-        // Add GA aircraft types
+        // Add GA aircraft types with comprehensive engine telemetry
         let ga_aircraft = vec!["C172", "C182", "C208", "PA28", "SR22"];
         for aircraft in ga_aircraft {
             let mut datarefs = self.default_datarefs.clone();
@@ -262,6 +272,9 @@ impl DataRefManager {
             datarefs.insert("sim/flightmodel/engine/ENGN_MPR[0]".to_string());
             datarefs.insert("sim/flightmodel/engine/ENGN_EGT[0]".to_string());
             datarefs.insert("sim/flightmodel/engine/ENGN_CHT[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_oilp[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_oilt[0]".to_string());
             self.aircraft_datarefs
                 .insert(aircraft.to_string(), datarefs);
         }

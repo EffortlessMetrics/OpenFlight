@@ -655,7 +655,7 @@ pub struct EmulatorStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     #[test]
     fn test_emulator_creation() {
@@ -697,11 +697,18 @@ mod tests {
 
         assert!(emulator.send_torque_command(command).is_ok());
 
-        // Give simulation time to process
-        thread::sleep(Duration::from_millis(10));
-
-        let stats = emulator.get_statistics();
-        assert_eq!(stats.current_torque_protocol, 16384);
+        // Wait for simulation to apply the command to avoid timing flakiness.
+        let deadline = Instant::now() + Duration::from_millis(200);
+        let mut observed = 0i16;
+        while Instant::now() < deadline {
+            let stats = emulator.get_statistics();
+            observed = stats.current_torque_protocol;
+            if observed == 16384 {
+                break;
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(observed, 16384);
 
         emulator.stop();
     }

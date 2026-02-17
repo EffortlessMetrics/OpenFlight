@@ -1,17 +1,43 @@
+# =============================================================================
 # Flight Hub Release Workflow
+# =============================================================================
 #
-# This workflow builds, signs, and publishes release artifacts.
+# This workflow automates the complete release process for Flight Hub,
+# including validation, building, signing, and publishing release artifacts.
 #
-# Requirements validated:
-# - 10.1, 10.2: Code signing for Windows artifacts
+# TRIGGER CONDITIONS:
+# ------------------
+# 1. Manual dispatch (workflow_dispatch):
+#    - Allows specifying version, channel (stable/beta/canary), and options
+#    - Used for controlled releases with custom parameters
+#
+# 2. Tag push (on push tags: v*.*.*):
+#    - Automatically triggers on semantic version tags (e.g., v1.0.0)
+#    - Creates stable release by default
+#
+# BUILD MATRIX:
+# ------------
+# - Windows (windows-latest): Builds flightd.exe, flightctl.exe, and MSI installer
+# - Linux (ubuntu-latest): Builds flightd, flightctl, and .deb package
+#
+# ARTIFACT PIPELINE:
+# -----------------
+# 1. Pre-Release Validation -> Runs tests, clippy, fmt, security audit
+# 2. Build Binaries (parallel) -> Windows + Linux release builds
+# 3. Sign Windows Artifacts -> Code signing with certificate (if enabled)
+# 4. Build Installers (parallel) -> MSI (Windows) + DEB (Linux)
+# 5. Verify Signatures -> Ensures all Windows artifacts are signed
+# 6. Create Release -> GitHub release with notes and asset upload
+#
+# REQUIREMENTS VALIDATED:
+# ----------------------
+# - 10.1, 10.2: Code signing for Windows artifacts (EXE, DLL, MSI)
 # - 19.1: Run full test matrix before release
 # - 19.3: Check all quality gates green
 # - 19.4: Tag release with version
 # - 19.5: Generate release notes from changelog
 #
-# Triggers:
-# - Manual dispatch with version input
-# - Tag push matching v*.*.*
+# =============================================================================
 
 name: Release
 
@@ -129,21 +155,29 @@ jobs:
           echo "Version: ${{ github.event.inputs.version || github.ref_name }}"
           echo "Channel: ${{ github.event.inputs.channel || 'stable' }}"
 
-  # Build Windows artifacts
+  # ============================================================================
+  # Build Windows Artifacts
+  # ============================================================================
+  # Compiles Rust binaries for Windows in release mode.
+  # Produces: flightd.exe (daemon), flightctl.exe (CLI)
+  #
+  # Note: Binaries are uploaded unsigned; signing occurs in the sign-windows job
+  # to support environments where signing certificate isn't available.
+  # ============================================================================
   build-windows:
     name: Build Windows
     runs-on: windows-latest
     needs: [pre-release-validation]
+    # Run if validation passed OR was skipped (skip_validation=true)
     if: ${{ always() && (needs.pre-release-validation.result == 'success' || needs.pre-release-validation.result == 'skipped') }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: 1.89.0
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@1.89.0
 
-      - name: Cache cargo
+      - name: Cache Cargo registry and build artifacts
         uses: actions/cache@v4
         with:
           path: |
@@ -154,6 +188,22 @@ jobs:
 
       - name: Build release binaries
         run: cargo build --release --workspace
+
+      # Verify binaries exist before uploading
+      - name: Verify build outputs
+        shell: pwsh
+        run: |
+          $requiredFiles = @(
+            "target/release/flightd.exe",
+            "target/release/flightctl.exe"
+          )
+          foreach ($file in $requiredFiles) {
+            if (-not (Test-Path $file)) {
+              Write-Error "Required file not found: $file"
+              exit 1
+            }
+            Write-Host "Found: $file ($(Get-Item $file | Select-Object -ExpandProperty Length) bytes)"
+          }
 
       - name: Upload unsigned binaries
         uses: actions/upload-artifact@v4
@@ -309,9 +359,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: 1.89.0
+        uses: dtolnay/rust-toolchain@1.89.0
 
       - name: Install dependencies
         run: |
@@ -367,66 +415,34 @@ jobs:
 
           mkdir -p "$PKG_DIR/DEBIAN"
           mkdir -p "$PKG_DIR/usr/bin"
-          mkdir -p "$PKG_DIR/etc/udev/rules.d"
           mkdir -p "$PKG_DIR/usr/share/flight-hub"
-          mkdir -p "$PKG_DIR/usr/share/doc/flight-hub"
+          mkdir -p "$PKG_DIR/usr/lib/systemd/user"
 
           # Copy binaries
           cp binaries/flightd "$PKG_DIR/usr/bin/"
           cp binaries/flightctl "$PKG_DIR/usr/bin/"
           chmod +x "$PKG_DIR/usr/bin/"*
 
-          # Create control file
-          cat > "$PKG_DIR/DEBIAN/control" << EOF
-          Package: flight-hub
-          Version: $VERSION
-          Section: games
-          Priority: optional
-          Architecture: amd64
-          Depends: libc6 (>= 2.31), libdbus-1-3
-          Recommends: rtkit
-          Maintainer: OpenFlight Project <contact@openflight.dev>
-          Description: Flight simulation input management system
-           Flight Hub provides unified control for flight controls, panels,
-           and force feedback devices across MSFS, X-Plane, and DCS simulators.
-          EOF
+          # Copy debian files from committed sources
+          cp installer/debian/control "$PKG_DIR/DEBIAN/"
+          cp installer/debian/postinst "$PKG_DIR/DEBIAN/"
+          cp installer/debian/postrm "$PKG_DIR/DEBIAN/"
+          chmod +x "$PKG_DIR/DEBIAN/postinst" "$PKG_DIR/DEBIAN/postrm"
 
-          # Create udev rules
-          cat > "$PKG_DIR/etc/udev/rules.d/99-flight-hub.rules" << 'EOF'
-          # Flight Hub udev rules
-          # Allow users in 'input' group to access HID devices
-          SUBSYSTEM=="hidraw", MODE="0660", GROUP="input"
-          EOF
+          # Update version dynamically
+          sed -i "s/^Version: .*/Version: $VERSION/" "$PKG_DIR/DEBIAN/control"
 
-          # Create postinst script
-          cat > "$PKG_DIR/DEBIAN/postinst" << 'EOF'
-          #!/bin/bash
-          set -e
+          # Copy udev rules to share directory (postinst installs to /etc)
+          install -m 0644 installer/debian/99-flight-hub.rules "$PKG_DIR/usr/share/flight-hub/"
 
-          # Add user to input group for HID access
-          if [ -n "$SUDO_USER" ]; then
-              usermod -a -G input "$SUDO_USER" || true
+          # Copy systemd service file with explicit permissions
+          install -m 0644 installer/debian/flightd.service "$PKG_DIR/usr/lib/systemd/user/"
+
+          # Copy RT setup script if exists
+          if [ -f scripts/setup-linux-rt.sh ]; then
+            cp scripts/setup-linux-rt.sh "$PKG_DIR/usr/share/flight-hub/"
+            chmod +x "$PKG_DIR/usr/share/flight-hub/setup-linux-rt.sh"
           fi
-
-          # Reload udev rules
-          udevadm control --reload-rules || true
-          udevadm trigger || true
-
-          echo "Flight Hub installed. Please log out and back in for group changes to take effect."
-          EOF
-          chmod +x "$PKG_DIR/DEBIAN/postinst"
-
-          # Create postrm script
-          cat > "$PKG_DIR/DEBIAN/postrm" << 'EOF'
-          #!/bin/bash
-          set -e
-
-          if [ "$1" = "purge" ]; then
-              rm -f /etc/udev/rules.d/99-flight-hub.rules
-              udevadm control --reload-rules || true
-          fi
-          EOF
-          chmod +x "$PKG_DIR/DEBIAN/postrm"
 
           # Build package
           dpkg-deb --build "$PKG_DIR"
@@ -443,7 +459,8 @@ jobs:
     name: Create Release
     needs: [build-msi, build-deb, verify-signatures]
     runs-on: ubuntu-latest
-    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && needs.build-msi.result == 'success' && needs.build-deb.result == 'success' }}
+    # Run if builds succeeded and verify-signatures either succeeded or was skipped (when signing disabled)
+    if: ${{ always() && (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && needs.build-msi.result == 'success' && needs.build-deb.result == 'success' && (needs.verify-signatures.result == 'success' || needs.verify-signatures.result == 'skipped') }}
     permissions:
       contents: write
     outputs:

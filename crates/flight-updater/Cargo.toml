@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Signed update system with channels, deltas, and rollback."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "updater", "rollback"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
@@ -31,24 +33,24 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 # Crypto and signatures
-ed25519-dalek = { version = "2.2.0", features = ["rand_core"] }
-rand_core = { version = "0.6.4", features = ["getrandom"] }
-sha2 = "0.10.9"
-hex = "0.4.3"
+ed25519-dalek.workspace = true
+rand_core.workspace = true
+sha2.workspace = true
+hex.workspace = true
 
 # HTTP client for updates
 reqwest = { workspace = true }
 
 # File system operations
 tempfile = { workspace = true }
-dirs = "6.0.0"
+dirs.workspace = true
 
 # Compression for delta updates
-flate2 = "1.1.8"
-tar = "0.4.44"
+flate2.workspace = true
+tar.workspace = true
 
 # CLI for docs-validator binary (optional)
-clap = { version = "4.5.54", features = ["derive"], optional = true }
+clap = { workspace = true, optional = true }
 
 # Platform-specific dependencies
 [target.'cfg(windows)'.dependencies]

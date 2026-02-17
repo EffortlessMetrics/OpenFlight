@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Force feedback engine with safety interlocks and mode negotiation."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "ffb", "safety"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
@@ -18,15 +20,15 @@ flight-panels = { path = "../flight-panels" }
 flight-hid = { path = "../flight-hid" }
 flight-virtual = { path = "../flight-virtual" }
 flight-metrics = { path = "../flight-metrics" }
-thiserror = "2.0.18"
-tracing = "0.1.44"
+thiserror.workspace = true
+tracing.workspace = true
 crossbeam.workspace = true
-serde = { version = "1.0.228", features = ["derive"] }
+serde.workspace = true
 # Compression for blackbox fault capture exports (FFB-BLACKBOX-01)
-flate2 = "1.1.8"
+flate2.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62.2", features = [
+windows = { workspace = true, features = [
     "Win32_Devices_HumanInterfaceDevice",
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
@@ -43,4 +45,4 @@ examples-optin = []
 
 [dev-dependencies]
 tempfile.workspace = true
-filetime = "0.2.27"
+filetime.workspace = true

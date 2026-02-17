@@ -6,7 +6,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-
+description = "Aircraft and session auto-switch logic for profile selection."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "session", "profiles"]
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true

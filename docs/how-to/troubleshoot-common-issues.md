@@ -33,9 +33,9 @@ This guide helps resolve common issues with Flight Hub installation, configurati
 
 **Issue**: Systemd service fails to start
 **Solution**:
-1. Check service status: `systemctl --user status flight-hub`
-2. Verify executable permissions: `ls -la /usr/local/bin/flight-hub`
-3. Check logs: `journalctl --user -u flight-hub`
+1. Check service status: `systemctl --user status flightd`
+2. Verify executable permissions: `ls -la /usr/bin/flightd`
+3. Check logs: `journalctl --user -u flightd`
 
 **Issue**: Permission denied errors
 **Solution**:
