@@ -28,6 +28,8 @@ flight-bus = { path = "../flight-bus" }
 flight-simconnect = { path = "../flight-simconnect" }
 flight-xplane = { path = "../flight-xplane" }
 flight-dcs-export = { path = "../flight-dcs-export" }
+flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
+flight-hid-support = { path = "../flight-hid-support" }
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

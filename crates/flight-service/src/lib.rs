@@ -22,6 +22,7 @@ pub mod capability_service;
 pub mod curve_conflict_service;
 pub mod error_taxonomy;
 pub mod health;
+pub mod input_runtime;
 pub mod one_click_resolver;
 pub mod power;
 pub mod safe_mode;
@@ -48,6 +49,10 @@ pub use capability_service::{
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy, StableError};
 pub use health::{ComponentHealth, HealthEvent, HealthStatus, HealthStream};
+pub use input_runtime::{
+    SimulatedTFlightReportSource, TFlightInputRuntime, TFlightReportSource, TFlightRuntimeConfig,
+    TFlightSnapshot,
+};
 pub use one_click_resolver::{
     OneClickResolver, OneClickResolverConfig, OneClickResult, ResolutionMetrics,
     VerificationOutcome,
@@ -56,4 +61,4 @@ pub use power::{PowerCheck, PowerCheckStatus, PowerChecker, PowerStatus, Remedia
 pub use safe_mode::{
     RtPrivilegeStatus, SafeModeConfig, SafeModeManager, SafeModeStatus, ValidationResult,
 };
-pub use service::{FlightService, FlightServiceConfig, ServiceState};
+pub use service::{FlightService, FlightServiceConfig, ServiceState, TFlightYawPolicyConfig};

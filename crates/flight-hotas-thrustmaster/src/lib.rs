@@ -34,5 +34,8 @@ pub use flight_hid_support::device_support::{
     THRUSTMASTER_VENDOR_ID, is_hotas4_legacy_pid, is_tflight_device, tflight_model,
 };
 pub use health::{TFlightHealthMonitor, TFlightHealthStatus};
-pub use input::{TFlightAxes, TFlightButtons, TFlightInputHandler, TFlightInputState};
+pub use input::{
+    TFlightAxes, TFlightButtons, TFlightInputHandler, TFlightInputState, TFlightParseError,
+    TFlightYawPolicy, TFlightYawResolution, TFlightYawSource,
+};
 pub use presets::{RecommendedAxisConfig, recommended_axis_config};

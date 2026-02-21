@@ -7,8 +7,7 @@
 //! Supports both Merged and Separate axis modes.
 
 use flight_hid_support::device_support::{AxisMode, TFlightModel};
-use flight_hid_support::ghost_filter::GhostInputFilter;
-use flight_hid_support::ghost_filter::presets;
+use flight_hid_support::ghost_filter::{GhostFilterStats, GhostInputFilter, presets};
 
 /// Axis values normalized to -1.0..1.0 range.
 #[derive(Debug, Clone, Default)]
@@ -21,7 +20,7 @@ pub struct TFlightAxes {
     pub throttle: f32,
     /// Twist axis (Rz) - stick twist for yaw
     pub twist: f32,
-    /// Rocker axis - only present in Separate mode
+    /// Auxiliary yaw axis (rocker/pedals channel) - Separate mode only
     pub rocker: Option<f32>,
 }
 
@@ -34,22 +33,116 @@ pub struct TFlightButtons {
     pub hat: u8,
 }
 
+/// Yaw source selection policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TFlightYawPolicy {
+    /// In Separate mode prefer auxiliary yaw (rocker/pedals) then fall back to twist.
+    /// In Merged mode always use combined yaw.
+    #[default]
+    Auto,
+    /// Always prefer twist yaw when available.
+    Twist,
+    /// Always prefer auxiliary yaw (rocker/pedals) when available.
+    Aux,
+}
+
+/// Effective yaw source used to resolve logical yaw.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TFlightYawSource {
+    /// Combined yaw source from merged mode.
+    Combined,
+    /// Twist yaw source.
+    Twist,
+    /// Auxiliary yaw source (rocker/pedals channel).
+    Aux,
+}
+
+/// Resolved logical yaw value.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TFlightYawResolution {
+    pub value: f32,
+    pub source: TFlightYawSource,
+}
+
+/// Errors returned by checked report parsing.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum TFlightParseError {
+    /// Report did not contain enough bytes for the selected/effective mode.
+    #[error(
+        "T.Flight report too short for {mode:?} mode: expected at least {expected} bytes, got {actual}"
+    )]
+    ReportTooShort {
+        mode: AxisMode,
+        expected: usize,
+        actual: usize,
+    },
+}
+
 /// Parsed input state from a T.Flight HOTAS device.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct TFlightInputState {
     pub axes: TFlightAxes,
     pub buttons: TFlightButtons,
+    /// Effective mode used to parse this report.
+    pub axis_mode: AxisMode,
+}
+
+impl Default for TFlightInputState {
+    fn default() -> Self {
+        Self {
+            axes: TFlightAxes::default(),
+            buttons: TFlightButtons::default(),
+            axis_mode: AxisMode::Unknown,
+        }
+    }
+}
+
+impl TFlightInputState {
+    /// Resolve logical yaw from parsed channels using the given policy.
+    pub fn resolve_yaw(&self, policy: TFlightYawPolicy) -> TFlightYawResolution {
+        if self.axis_mode == AxisMode::Merged {
+            return TFlightYawResolution {
+                value: self.axes.twist,
+                source: TFlightYawSource::Combined,
+            };
+        }
+
+        match policy {
+            TFlightYawPolicy::Twist => TFlightYawResolution {
+                value: self.axes.twist,
+                source: TFlightYawSource::Twist,
+            },
+            TFlightYawPolicy::Aux | TFlightYawPolicy::Auto => {
+                if let Some(aux) = self.axes.rocker {
+                    TFlightYawResolution {
+                        value: aux,
+                        source: TFlightYawSource::Aux,
+                    }
+                } else {
+                    TFlightYawResolution {
+                        value: self.axes.twist,
+                        source: TFlightYawSource::Twist,
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// Input handler for Thrustmaster T.Flight HOTAS devices.
 #[derive(Debug)]
 pub struct TFlightInputHandler {
     device_type: TFlightModel,
+    /// Explicit mode selection. `Unknown` means auto-detect every report.
     axis_mode: AxisMode,
+    /// Last effective mode observed while parsing.
+    detected_axis_mode: AxisMode,
     ghost_filter: GhostInputFilter,
     last_state: TFlightInputState,
     /// Whether throttle should be inverted (some units report 0 = full)
     invert_throttle: bool,
+    /// Yaw resolution policy.
+    yaw_policy: TFlightYawPolicy,
 }
 
 impl TFlightInputHandler {
@@ -66,9 +159,11 @@ impl TFlightInputHandler {
         Self {
             device_type,
             axis_mode,
+            detected_axis_mode: axis_mode,
             ghost_filter,
             last_state: TFlightInputState::default(),
             invert_throttle: false,
+            yaw_policy: TFlightYawPolicy::Auto,
         }
     }
 
@@ -78,40 +173,67 @@ impl TFlightInputHandler {
         self
     }
 
-    /// Update the axis mode (can change at runtime via PS/Guide button).
+    /// Configure yaw source policy.
+    pub fn with_yaw_policy(mut self, policy: TFlightYawPolicy) -> Self {
+        self.yaw_policy = policy;
+        self
+    }
+
+    /// Update yaw source policy.
+    pub fn set_yaw_policy(&mut self, policy: TFlightYawPolicy) {
+        self.yaw_policy = policy;
+    }
+
+    /// Resolve logical yaw for a parsed state using current policy.
+    pub fn resolve_yaw(&self, state: &TFlightInputState) -> TFlightYawResolution {
+        state.resolve_yaw(self.yaw_policy)
+    }
+
+    /// Get current yaw source policy.
+    pub fn yaw_policy(&self) -> TFlightYawPolicy {
+        self.yaw_policy
+    }
+
+    /// Update the axis mode.
+    ///
+    /// Use `AxisMode::Unknown` to enable per-report auto-detection.
     pub fn set_axis_mode(&mut self, mode: AxisMode) {
         self.axis_mode = mode;
+        if mode != AxisMode::Unknown {
+            self.detected_axis_mode = mode;
+        }
     }
 
     /// Parse a raw HID report into axis and button state.
     ///
-    /// # Arguments
-    ///
-    /// * `report` - Raw HID input report bytes
-    ///
-    /// # Returns
-    ///
-    /// Parsed input state with normalized axes and filtered buttons.
+    /// This compatibility method logs parse errors and returns a default state.
     pub fn parse_report(&mut self, report: &[u8]) -> TFlightInputState {
-        // Auto-detect axis mode from report size if unknown
-        let effective_mode = match self.axis_mode {
-            AxisMode::Unknown => {
-                if report.len() >= 9 {
-                    AxisMode::Separate
-                } else {
-                    AxisMode::Merged
-                }
+        match self.try_parse_report(report) {
+            Ok(state) => state,
+            Err(error) => {
+                tracing::warn!("T.Flight report parse failed: {}", error);
+                TFlightInputState::default()
             }
-            mode => mode,
-        };
+        }
+    }
 
+    /// Parse a raw HID report into axis and button state.
+    ///
+    /// Returns a structured error when report bytes are invalid for the
+    /// selected/effective axis mode.
+    pub fn try_parse_report(
+        &mut self,
+        report: &[u8],
+    ) -> Result<TFlightInputState, TFlightParseError> {
+        let effective_mode = self.determine_effective_mode(report)?;
         let state = match effective_mode {
-            AxisMode::Separate => self.parse_separate_report(report),
-            AxisMode::Merged | AxisMode::Unknown => self.parse_merged_report(report),
+            AxisMode::Separate => self.parse_separate_report(report)?,
+            AxisMode::Merged | AxisMode::Unknown => self.parse_merged_report(report)?,
         };
 
+        self.detected_axis_mode = effective_mode;
         self.last_state = state.clone();
-        state
+        Ok(state)
     }
 
     /// Get the current ghost input detection rate.
@@ -119,14 +241,69 @@ impl TFlightInputHandler {
         self.ghost_filter.ghost_rate()
     }
 
+    /// Get detailed ghost filter stats for diagnostics.
+    pub fn ghost_stats(&self) -> GhostFilterStats {
+        self.ghost_filter.stats().clone()
+    }
+
     /// Get the device type this handler is configured for.
     pub fn device_type(&self) -> TFlightModel {
         self.device_type
     }
 
-    /// Get the current axis mode.
+    /// Get configured axis mode.
+    ///
+    /// Returns `AxisMode::Unknown` when auto-detect mode is enabled.
     pub fn axis_mode(&self) -> AxisMode {
         self.axis_mode
+    }
+
+    /// Get currently effective axis mode.
+    pub fn current_axis_mode(&self) -> AxisMode {
+        match self.axis_mode {
+            AxisMode::Unknown => self.detected_axis_mode,
+            explicit => explicit,
+        }
+    }
+
+    fn determine_effective_mode(&self, report: &[u8]) -> Result<AxisMode, TFlightParseError> {
+        match self.axis_mode {
+            AxisMode::Unknown => {
+                if report.len() >= 9 {
+                    Ok(AxisMode::Separate)
+                } else if report.len() >= 8 {
+                    Ok(AxisMode::Merged)
+                } else {
+                    Err(TFlightParseError::ReportTooShort {
+                        mode: AxisMode::Unknown,
+                        expected: 8,
+                        actual: report.len(),
+                    })
+                }
+            }
+            AxisMode::Separate => {
+                if report.len() < 9 {
+                    Err(TFlightParseError::ReportTooShort {
+                        mode: AxisMode::Separate,
+                        expected: 9,
+                        actual: report.len(),
+                    })
+                } else {
+                    Ok(AxisMode::Separate)
+                }
+            }
+            AxisMode::Merged => {
+                if report.len() < 8 {
+                    Err(TFlightParseError::ReportTooShort {
+                        mode: AxisMode::Merged,
+                        expected: 8,
+                        actual: report.len(),
+                    })
+                } else {
+                    Ok(AxisMode::Merged)
+                }
+            }
+        }
     }
 
     /// Parse report in Separate axis mode (9+ bytes).
@@ -140,16 +317,22 @@ impl TFlightInputHandler {
     /// | 5       | Twist Rz (8-bit) | Yaw                      |
     /// | 6       | Rocker (8-bit)   | Separate mode only       |
     /// | 7-8     | Buttons + HAT    | Button mask and HAT      |
-    fn parse_separate_report(&mut self, report: &[u8]) -> TFlightInputState {
-        let mut state = TFlightInputState::default();
-
+    fn parse_separate_report(
+        &mut self,
+        report: &[u8],
+    ) -> Result<TFlightInputState, TFlightParseError> {
         if report.len() < 9 {
-            tracing::warn!(
-                "T.Flight Separate mode report too short: {} bytes",
-                report.len()
-            );
-            return state;
+            return Err(TFlightParseError::ReportTooShort {
+                mode: AxisMode::Separate,
+                expected: 9,
+                actual: report.len(),
+            });
         }
+
+        let mut state = TFlightInputState {
+            axis_mode: AxisMode::Separate,
+            ..TFlightInputState::default()
+        };
 
         // Parse 16-bit stick axes
         let x_raw = u16::from_le_bytes([report[0], report[1]]);
@@ -166,7 +349,7 @@ impl TFlightInputHandler {
         // Parse buttons and HAT
         self.parse_buttons_and_hat(&mut state, &report[7..]);
 
-        state
+        Ok(state)
     }
 
     /// Parse report in Merged axis mode (8 bytes).
@@ -179,16 +362,22 @@ impl TFlightInputHandler {
     /// | 4       | Throttle (8-bit) | May be inverted          |
     /// | 5       | Rz combined      | Twist+Rocker combined    |
     /// | 6-7     | Buttons + HAT    | Button mask and HAT      |
-    fn parse_merged_report(&mut self, report: &[u8]) -> TFlightInputState {
-        let mut state = TFlightInputState::default();
-
+    fn parse_merged_report(
+        &mut self,
+        report: &[u8],
+    ) -> Result<TFlightInputState, TFlightParseError> {
         if report.len() < 8 {
-            tracing::warn!(
-                "T.Flight Merged mode report too short: {} bytes",
-                report.len()
-            );
-            return state;
+            return Err(TFlightParseError::ReportTooShort {
+                mode: AxisMode::Merged,
+                expected: 8,
+                actual: report.len(),
+            });
         }
+
+        let mut state = TFlightInputState {
+            axis_mode: AxisMode::Merged,
+            ..TFlightInputState::default()
+        };
 
         // Parse 16-bit stick axes
         let x_raw = u16::from_le_bytes([report[0], report[1]]);
@@ -200,12 +389,12 @@ impl TFlightInputHandler {
         // Parse 8-bit axes
         state.axes.throttle = normalize_throttle_8bit(report[4], self.invert_throttle);
         state.axes.twist = normalize_axis_8bit_centered(report[5]);
-        state.axes.rocker = None; // Not available in Merged mode
+        state.axes.rocker = None; // Not available in merged mode
 
         // Parse buttons and HAT
         self.parse_buttons_and_hat(&mut state, &report[6..]);
 
-        state
+        Ok(state)
     }
 
     /// Parse button mask and HAT switch from report bytes.
@@ -244,6 +433,8 @@ fn normalize_throttle_8bit(raw: u8, invert: bool) -> f32 {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
 
     #[test]
@@ -276,21 +467,130 @@ mod tests {
         let handler = TFlightInputHandler::new(TFlightModel::Hotas4);
         assert_eq!(handler.device_type(), TFlightModel::Hotas4);
         assert_eq!(handler.axis_mode(), AxisMode::Unknown);
+        assert_eq!(handler.current_axis_mode(), AxisMode::Unknown);
+        assert_eq!(handler.yaw_policy(), TFlightYawPolicy::Auto);
         assert_eq!(handler.ghost_rate(), 0.0);
     }
 
     #[test]
-    fn test_axis_mode_detection() {
+    fn test_axis_mode_detection_and_runtime_switch() {
         let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
 
-        // 8-byte report should be parsed as Merged
+        // 8-byte report should be parsed as merged
         let merged_report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
-        let state = handler.parse_report(&merged_report);
+        let state = handler.try_parse_report(&merged_report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Merged);
         assert!(state.axes.rocker.is_none());
+        assert_eq!(handler.current_axis_mode(), AxisMode::Merged);
 
-        // 9-byte report should be parsed as Separate
-        let separate_report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
-        let state = handler.parse_report(&separate_report);
+        // 9-byte report should be parsed as separate
+        let separate_report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0xFF, 0x00, 0x00];
+        let state = handler.try_parse_report(&separate_report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Separate);
         assert!(state.axes.rocker.is_some());
+        assert_eq!(handler.current_axis_mode(), AxisMode::Separate);
+    }
+
+    #[test]
+    fn test_manual_axis_mode_enforcement() {
+        let mut handler =
+            TFlightInputHandler::with_axis_mode(TFlightModel::Hotas4, AxisMode::Separate);
+        let merged_report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let error = handler.try_parse_report(&merged_report).unwrap_err();
+        assert!(matches!(
+            error,
+            TFlightParseError::ReportTooShort {
+                mode: AxisMode::Separate,
+                expected: 9,
+                actual: 8
+            }
+        ));
+    }
+
+    #[test]
+    fn test_try_parse_short_report_error() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let error = handler.try_parse_report(&[0x00, 0x80, 0x00]).unwrap_err();
+        assert!(matches!(
+            error,
+            TFlightParseError::ReportTooShort {
+                mode: AxisMode::Unknown,
+                expected: 8,
+                actual: 3
+            }
+        ));
+    }
+
+    #[test]
+    fn test_parse_report_compatibility_returns_default_on_error() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let state = handler.parse_report(&[0x00, 0x80]);
+        assert_eq!(state.axis_mode, AxisMode::Unknown);
+        assert_eq!(state.axes.roll, 0.0);
+        assert_eq!(state.buttons.buttons, 0);
+    }
+
+    #[test]
+    fn test_button_and_hat_parsing() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x06, 0x71];
+
+        // Prime debounce
+        let _ = handler.parse_report(&report);
+        std::thread::sleep(Duration::from_millis(35));
+
+        let state = handler.parse_report(&report);
+        assert_eq!(state.buttons.buttons, 0x0106);
+        assert_eq!(state.buttons.hat, 0x07);
+    }
+
+    #[test]
+    fn test_throttle_inversion_via_parser() {
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_throttle_inversion(true);
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00];
+        let state = handler.parse_report(&report);
+        assert!((state.axes.throttle - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_yaw_resolution_policies_separate_mode() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];
+        let state = handler.try_parse_report(&report).unwrap();
+
+        handler.set_yaw_policy(TFlightYawPolicy::Auto);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Aux);
+        assert!((yaw.value - 1.0).abs() < 0.01);
+
+        handler.set_yaw_policy(TFlightYawPolicy::Twist);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Twist);
+        assert!((yaw.value - (-1.0)).abs() < 0.01);
+
+        handler.set_yaw_policy(TFlightYawPolicy::Aux);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Aux);
+        assert!((yaw.value - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_yaw_resolution_merged_mode_combined_source() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0xFF, 0x00, 0x00];
+        let state = handler.try_parse_report(&report).unwrap();
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Combined);
+        assert!((yaw.value - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_ghost_stats_exposed() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x05, 0x00];
+        let _ = handler.parse_report(&report);
+        let stats = handler.ghost_stats();
+        assert!(stats.total_samples >= 1);
     }
 }

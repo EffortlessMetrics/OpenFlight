@@ -25,7 +25,8 @@ for reliable OpenFlight support.
 - Vendor ID: 0x044F (Thrustmaster)
 - Known PIDs observed in the wild:
   - 0xB68B: T.Flight HOTAS One (Bulk)
-  - 0xB67A: T.Flight HOTAS 4 (Bulk)
+  - 0xB67B: T.Flight HOTAS 4 (Primary)
+  - 0xB67A: T.Flight HOTAS 4 (Legacy firmware)
 
 Notes:
 - Treat the PID list as a fingerprint set, not a single constant.
@@ -36,7 +37,8 @@ Notes:
 Use these for matching when collecting field data:
 
 - HOTAS One: `USB\\VID_044F&PID_B68B`
-- HOTAS 4: `USB\\VID_044F&PID_B67A`
+- HOTAS 4 (primary): `USB\\VID_044F&PID_B67B`
+- HOTAS 4 (legacy): `USB\\VID_044F&PID_B67A`
 
 ## Axis mode semantics (critical)
 
@@ -112,6 +114,11 @@ Practical rule set (auto policy):
 3. Else use stick twist as Yaw.
 4. Expose a profile override: `yaw_source = pedals|rocker|twist|auto`.
 
+Current implementation note:
+- HOTAS 4 report parsing currently exposes one auxiliary yaw channel in separate mode.
+- User-facing `pedals` and `rocker` overrides map to this same auxiliary channel (`aux`).
+- Merged mode always resolves yaw from the combined RZ stream.
+
 ### Treat axis mode as runtime capability change
 
 Implementation shape:
@@ -176,6 +183,18 @@ Recommended troubleshooting note:
 - Install the Thrustmaster driver package and confirm the device is in full-axis
   mode (HOTAS 4: 5-axis, HOTAS One: 5/8 axes).
 
+## Linux descriptor reality
+
+Generic HID on Linux can expose incomplete axis layouts for some T.Flight devices.
+If throttle/aux yaw axes appear missing, use a corrected descriptor workflow
+(for example `hid-tflight4`) and re-check axis mode detection.
+
+## Runtime backend status
+
+Current service runtime uses a deterministic simulated report-source backend by default.
+Real hidapi/hidraw ingestion is planned as a follow-up cycle; keep parser and mapping
+validation fixture-driven until that backend lands.
+
 ## Minimum registry facts
 
 Store the following as stable device support facts:
@@ -183,7 +202,8 @@ Store the following as stable device support facts:
 - Vendor: 0x044F (Thrustmaster)
 - Known PIDs:
   - 0xB68B: T.Flight HOTAS One (Bulk)
-  - 0xB67A: T.Flight HOTAS 4 (Bulk)
+  - 0xB67B: T.Flight HOTAS 4 (Primary)
+  - 0xB67A: T.Flight HOTAS 4 (Legacy)
 - Quirk: axis_mode
   - Merged mode couples multiple yaw sources into RZ.
   - Full-axis mode exposes additional Slider/Dial usages.
