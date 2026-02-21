@@ -158,14 +158,17 @@ impl BddTraceabilityMetrics {
         I: IntoIterator<Item = S>,
         S: Into<String>,
     {
+        let workspace_crates: BTreeSet<String> =
+            workspace_crates.into_iter().map(Into::into).collect();
+
         let mut rows: BTreeMap<String, BddTraceabilityRow> = self
             .crate_coverage
             .into_iter()
+            .filter(|row| row.is_unmapped() || workspace_crates.contains(&row.crate_name))
             .map(|row| (row.crate_name.clone(), row))
             .collect();
 
         for crate_name in workspace_crates {
-            let crate_name = crate_name.into();
             rows.entry(crate_name.clone())
                 .or_insert_with(|| BddTraceabilityRow::new(crate_name));
         }
@@ -180,23 +183,25 @@ impl BddTraceabilityMetrics {
         self.microcrate_with_tests = self
             .crate_coverage
             .iter()
-            .filter(BddTraceabilityRow::is_fully_tested)
+            .filter(|row| row.is_fully_tested())
             .count();
         self.microcrate_with_gherkin = self
             .crate_coverage
             .iter()
-            .filter(BddTraceabilityRow::is_fully_gherkin_covered)
+            .filter(|row| row.is_fully_gherkin_covered())
             .count();
         self.microcrate_with_tests_and_gherkin = self
             .crate_coverage
             .iter()
-            .filter(BddTraceabilityRow::is_fully_both_covered)
+            .filter(|row| row.is_fully_both_covered())
             .count();
     }
 
     /// Whether the synthetic unmapped microcrate exists in the matrix.
     pub fn has_unmapped_microcrate(&self) -> bool {
-        self.crate_coverage.iter().any(BddTraceabilityRow::is_unmapped)
+        self.crate_coverage
+            .iter()
+            .any(BddTraceabilityRow::is_unmapped)
     }
 
     /// Find a single microcrate coverage row by name.
@@ -218,7 +223,10 @@ impl BddTraceabilityMetrics {
 
     /// Microcrate coverage percentage for microcrates fully covered by both.
     pub fn microcrate_full_coverage_percent(&self) -> f64 {
-        coverage_percent(self.microcrate_with_tests_and_gherkin, self.microcrate_total)
+        coverage_percent(
+            self.microcrate_with_tests_and_gherkin,
+            self.microcrate_total,
+        )
     }
 
     /// Render the metrics into a markdown block for report output.
@@ -230,7 +238,10 @@ impl BddTraceabilityMetrics {
         output.push_str("|--------|-------|\n");
         output.push_str(&format!("| Total AC | {} |\n", self.total_ac));
         output.push_str(&format!("| ACs with tests | {} |\n", self.ac_with_tests));
-        output.push_str(&format!("| ACs with Gherkin | {} |\n", self.ac_with_gherkin));
+        output.push_str(&format!(
+            "| ACs with Gherkin | {} |\n",
+            self.ac_with_gherkin
+        ));
         output.push_str(&format!(
             "| ACs with both tests + Gherkin | {} |\n",
             self.ac_with_tests_and_gherkin
@@ -439,8 +450,8 @@ pub fn collect_gherkin_scenarios(path: impl AsRef<Path>) -> Result<Vec<BddScenar
             continue;
         }
 
-        let content =
-            fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("failed to read {}", path.display()))?;
 
         let mut feature_tags = Vec::new();
         let mut local_tags = Vec::new();
@@ -574,7 +585,10 @@ pub fn describe_microcrate_gaps(rows: &[&BddTraceabilityRow]) -> String {
     for row in rows {
         let _ = std::fmt::Write::write_fmt(
             &mut details,
-            format_args!("{}: {}/{} AC covered by Gherkin\n", row.crate_name, row.ac_with_gherkin, row.total_ac),
+            format_args!(
+                "{}: {}/{} AC covered by Gherkin\n",
+                row.crate_name, row.ac_with_gherkin, row.total_ac
+            ),
         );
     }
 
@@ -652,10 +666,10 @@ pub fn extract_crates_from_command(command: &str) -> BTreeSet<String> {
         }
 
         if token == "--manifest-path" {
-            if let Some(path) = tokens.next() {
-                if let Some(crate_name) = extract_crate_from_manifest_path(path) {
-                    crates.insert(crate_name);
-                }
+            if let Some(path) = tokens.next()
+                && let Some(crate_name) = extract_crate_from_manifest_path(path)
+            {
+                crates.insert(crate_name);
             }
             continue;
         }
@@ -684,13 +698,15 @@ pub fn collect_crate_names_for_tests(test_references: &[serde_yaml::Value]) -> V
         .iter()
         .fold(BTreeSet::new(), |mut crates, test_ref| {
             match test_ref {
-                serde_yaml::Value::String(text) => crates.extend(extract_crates_from_reference(text)),
+                serde_yaml::Value::String(text) => {
+                    crates.extend(extract_crates_from_reference(text))
+                }
                 serde_yaml::Value::Mapping(mapping) => {
                     for (key, value) in mapping {
-                        if is_test_reference_key(key.as_str()) {
-                            if let Some(reference) = value.as_str() {
-                                crates.extend(extract_crates_from_reference(reference));
-                            }
+                        if is_test_reference_key(key.as_str())
+                            && let Some(reference) = value.as_str()
+                        {
+                            crates.extend(extract_crates_from_reference(reference));
                         }
                     }
                 }
@@ -708,14 +724,15 @@ fn is_test_reference_key(value: Option<&str>) -> bool {
 
 fn extract_crate_from_manifest_path(path: &str) -> Option<String> {
     let manifest_path = Path::new(
-        path.trim_matches(&['\'', '"', '`'][..]).trim_end_matches("\\"),
+        path.trim_matches(&['\'', '"', '`'][..])
+            .trim_end_matches("\\"),
     );
-    let manifest_dir = if manifest_path.file_name().and_then(|value| value.to_str()) == Some("Cargo.toml")
-    {
-        manifest_path.parent().unwrap_or(manifest_path)
-    } else {
-        manifest_path
-    };
+    let manifest_dir =
+        if manifest_path.file_name().and_then(|value| value.to_str()) == Some("Cargo.toml") {
+            manifest_path.parent().unwrap_or(manifest_path)
+        } else {
+            manifest_path
+        };
 
     let crate_name = manifest_dir.file_name().and_then(|value| value.to_str())?;
     let normalized = normalize_crate_name(crate_name);
@@ -740,11 +757,93 @@ pub fn is_crate_name_candidate(crate_name: &str) -> bool {
         return false;
     }
 
-    if !crate_name.chars().next().unwrap_or('_').is_ascii_alphabetic() {
+    if !crate_name
+        .chars()
+        .next()
+        .unwrap_or('_')
+        .is_ascii_alphabetic()
+    {
         return false;
     }
 
     crate_name
         .chars()
         .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_row(
+        crate_name: &str,
+        total_ac: usize,
+        ac_with_tests: usize,
+        ac_with_gherkin: usize,
+        ac_with_tests_and_gherkin: usize,
+    ) -> BddTraceabilityRow {
+        BddTraceabilityRow {
+            crate_name: crate_name.to_string(),
+            total_ac,
+            ac_with_tests,
+            ac_with_gherkin,
+            ac_with_tests_and_gherkin,
+            complete: 0,
+            needs_gherkin: 0,
+            needs_tests: 0,
+            draft: 0,
+            incomplete: 0,
+        }
+    }
+
+    #[test]
+    fn with_workspace_crates_filters_non_workspace_rows() {
+        let metrics = BddTraceabilityMetrics {
+            crate_coverage: vec![
+                sample_row("flight-core", 2, 2, 1, 1),
+                sample_row("xtask", 5, 5, 5, 5),
+                sample_row("specs", 1, 1, 1, 1),
+            ],
+            ..Default::default()
+        };
+
+        let metrics = metrics.with_workspace_crates(["flight-core", "flight-ipc"]);
+
+        let names: Vec<&str> = metrics
+            .crate_coverage
+            .iter()
+            .map(|row| row.crate_name.as_str())
+            .collect();
+        assert_eq!(names, vec!["flight-core", "flight-ipc"]);
+        assert_eq!(metrics.microcrate_total, 2);
+        assert_eq!(metrics.microcrate_with_tests, 1);
+        assert_eq!(metrics.microcrate_with_gherkin, 0);
+        assert_eq!(metrics.microcrate_with_tests_and_gherkin, 0);
+    }
+
+    #[test]
+    fn with_workspace_crates_preserves_unmapped_row() {
+        let metrics = BddTraceabilityMetrics {
+            crate_coverage: vec![
+                sample_row(UNMAPPED_MICROCRATE, 3, 1, 1, 1),
+                sample_row("xtask", 2, 2, 2, 2),
+            ],
+            ..Default::default()
+        };
+
+        let metrics = metrics.with_workspace_crates(["flight-core"]);
+
+        let names: Vec<&str> = metrics
+            .crate_coverage
+            .iter()
+            .map(|row| row.crate_name.as_str())
+            .collect();
+        assert_eq!(names, vec!["flight-core", UNMAPPED_MICROCRATE]);
+        assert!(metrics.has_unmapped_microcrate());
+        let unmapped = metrics
+            .crate_coverage_for(UNMAPPED_MICROCRATE)
+            .expect("Expected unmapped row");
+        assert_eq!(unmapped.total_ac, 3);
+        assert_eq!(metrics.microcrate_total, 2);
+    }
 }

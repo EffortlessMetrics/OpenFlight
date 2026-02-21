@@ -8,7 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "DCS Export.lua adapter and installer integration for OpenFlight."
-readme = "README.md"
+readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "dcs", "adapter"]
 # SPDX License Identifier

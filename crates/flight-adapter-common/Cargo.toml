@@ -8,7 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Shared adapter primitives for simulator integrations in OpenFlight."
-readme = "README.md"
+readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "adapter", "telemetry"]
 [dependencies]

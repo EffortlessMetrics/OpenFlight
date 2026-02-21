@@ -8,7 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Virtual HID devices and performance gates for CI testing."
-readme = "README.md"
+readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "virtual", "ci"]
 # SPDX License Identifier
@@ -19,6 +19,7 @@ keywords = ["flight-sim", "openflight", "virtual", "ci"]
 flight-core = { path = "../flight-core" }
 flight-scheduler = { path = "../flight-scheduler" }
 flight-hid = { path = "../flight-hid", features = ["ofp1-tests"] }
+flight-device-common = { workspace = true }
 tracing.workspace = true
 serde.workspace = true
 crossbeam.workspace = true
@@ -26,6 +27,7 @@ parking_lot.workspace = true
 
 [dev-dependencies]
 flight-hid = { path = "../flight-hid", features = ["ofp1-tests"] }
+flight-test-helpers = { workspace = true }
 criterion.workspace = true
 
 [features]

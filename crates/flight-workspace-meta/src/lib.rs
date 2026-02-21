@@ -236,13 +236,12 @@ pub fn validate_workspace_crates_io_metadata(
         } else if let Some(readme_path) = crate_metadata
             .metadata
             .readme_path(&crate_metadata.manifest_path)
+            && !readme_path.exists()
         {
-            if !readme_path.exists() {
-                issue.invalid_fields.push(format!(
-                    "readme file does not exist ({})",
-                    readme_path.display()
-                ));
-            }
+            issue.invalid_fields.push(format!(
+                "readme file does not exist ({})",
+                readme_path.display()
+            ));
         }
 
         if crate_metadata.metadata.keywords.is_empty() {

@@ -8,21 +8,15 @@
 use anyhow::{Context, Result};
 use chrono::Utc;
 use flight_bdd_metrics::{
+    AcceptanceCriteria as BddAcceptanceCriteria, BddScenario as BddTraceabilityScenario,
+    BddTraceabilityMetrics, CoverageStatus, RequirementStatus as BddRequirementStatus,
+    SpecLedger as BddSpecLedger, SpecRequirement as BddRequirement,
     collect_bdd_traceability_metrics as collect_bdd_traceability_metrics_from_crate,
-    extract_crates_from_command as extract_crates_from_command_impl,
-    extract_crates_from_reference,
-    CoverageStatus,
-    BddTraceabilityMetrics,
-    BddScenario as BddTraceabilityScenario,
-    AcceptanceCriteria as BddAcceptanceCriteria,
-    SpecRequirement as BddRequirement,
-    RequirementStatus as BddRequirementStatus,
-    SpecLedger as BddSpecLedger,
-    UNMAPPED_MICROCRATE,
+    extract_crates_from_command as extract_crates_from_command_impl, extract_crates_from_reference,
 };
 use flight_workspace_meta::load_workspace_microcrate_names;
 use serde_yaml::{Mapping, Value};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
 use std::process::Command;
 
@@ -53,7 +47,10 @@ pub(crate) fn compute_bdd_metrics_with_workspace_crates(
     );
 
     if include_workspace_crates {
-        if let Ok(members) = load_workspace_microcrate_names(".") {
+        let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or_else(|| Path::new("."));
+        if let Ok(members) = load_workspace_microcrate_names(workspace_root) {
             metrics = metrics.with_workspace_crates(members);
         }
     }
@@ -130,7 +127,10 @@ fn convert_test_reference_to_yaml_value(reference: &TestReference) -> Value {
         } => {
             let mut mapping = Mapping::new();
             if let Some(test) = test {
-                mapping.insert(Value::String("test".to_owned()), Value::String(test.clone()));
+                mapping.insert(
+                    Value::String("test".to_owned()),
+                    Value::String(test.clone()),
+                );
             }
             if let Some(feature) = feature {
                 mapping.insert(
@@ -246,15 +246,17 @@ fn generate_feature_status_with_metrics(
 }
 
 fn collect_crate_names_for_tests(tests: &[TestReference]) -> Vec<String> {
-    tests.iter().fold(BTreeSet::new(), |mut crates, test_ref| {
-        let extracted = crate_names_from_reference(test_ref);
-        for crate_name in extracted {
-            crates.insert(crate_name);
-        }
-        crates
-    })
-    .into_iter()
-    .collect()
+    tests
+        .iter()
+        .fold(BTreeSet::new(), |mut crates, test_ref| {
+            let extracted = crate_names_from_reference(test_ref);
+            for crate_name in extracted {
+                crates.insert(crate_name);
+            }
+            crates
+        })
+        .into_iter()
+        .collect()
 }
 
 fn crate_names_from_reference(test_ref: &TestReference) -> Vec<String> {
@@ -289,11 +291,15 @@ fn crate_names_from_reference(test_ref: &TestReference) -> Vec<String> {
 }
 
 fn extract_crate_names(reference: &str) -> Vec<String> {
-    extract_crates_from_reference(reference).into_iter().collect()
+    extract_crates_from_reference(reference)
+        .into_iter()
+        .collect()
 }
 
 fn extract_crates_from_command(command: &str) -> Vec<String> {
-    extract_crates_from_command_impl(command).into_iter().collect()
+    extract_crates_from_command_impl(command)
+        .into_iter()
+        .collect()
 }
 
 /// Get the current git commit hash.
@@ -397,11 +403,8 @@ pub fn run_ac_status() -> Result<()> {
     full_report.push_str(&report);
 
     std::fs::write(output_path, &full_report).context("Failed to write feature status report")?;
-    std::fs::write(
-        reference_output_path,
-        &full_report,
-    )
-    .context("Failed to write reference feature status report")?;
+    std::fs::write(reference_output_path, &full_report)
+        .context("Failed to write reference feature status report")?;
     std::fs::write(
         metrics_path,
         serde_json::to_string_pretty(&metrics).context("Failed to serialize BDD metrics")?,
@@ -426,6 +429,7 @@ pub fn run_ac_status() -> Result<()> {
 mod tests {
     use super::*;
     use crate::cross_ref::{AcceptanceCriteria, Requirement, TestReference};
+    use flight_bdd_metrics::UNMAPPED_MICROCRATE;
     use std::path::PathBuf;
 
     #[test]
@@ -744,7 +748,9 @@ mod tests {
             TestReference::Simple("cmd:cargo test -p flight-axis".to_string()),
             TestReference::Simple("cmd:cargo xtask validate".to_string()),
             TestReference::Simple("cmd:cargo test --manifest-path specs/Cargo.toml".to_string()),
-            TestReference::Simple("cmd:cargo test --manifest-path=crates/flight-ffb/Cargo.toml".to_string()),
+            TestReference::Simple(
+                "cmd:cargo test --manifest-path=crates/flight-ffb/Cargo.toml".to_string(),
+            ),
             TestReference::Detailed {
                 test: Some("flight-core::tests::integration".to_string()),
                 feature: None,
@@ -825,8 +831,8 @@ mod tests {
         assert_eq!(metrics.crate_coverage[0].ac_with_tests_and_gherkin, 1);
         assert_eq!(metrics.microcrate_total, 1);
         assert_eq!(metrics.microcrate_with_tests, 1);
-        assert_eq!(metrics.microcrate_with_gherkin, 1);
-        assert_eq!(metrics.microcrate_with_tests_and_gherkin, 1);
+        assert_eq!(metrics.microcrate_with_gherkin, 0);
+        assert_eq!(metrics.microcrate_with_tests_and_gherkin, 0);
     }
 
     #[test]

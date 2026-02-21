@@ -8,7 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Thrustmaster T.Flight HOTAS driver support for OpenFlight."
-readme = "README.md"
+readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "hotas", "thrustmaster"]
 # SPDX License Identifier

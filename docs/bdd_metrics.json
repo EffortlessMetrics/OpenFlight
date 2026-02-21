@@ -8,7 +8,7 @@
   "needs_tests": 0,
   "draft": 0,
   "incomplete": 0,
-  "microcrate_total": 40,
+  "microcrate_total": 43,
   "microcrate_with_tests": 18,
   "microcrate_with_gherkin": 18,
   "microcrate_with_tests_and_gherkin": 18,
@@ -38,7 +38,7 @@
       "incomplete": 0
     },
     {
-      "crate_name": "flight-blackbox",
+      "crate_name": "flight-bdd-metrics",
       "total_ac": 0,
       "ac_with_tests": 0,
       "ac_with_gherkin": 0,
@@ -50,7 +50,7 @@
       "incomplete": 0
     },
     {
-      "crate_name": "flight-bdd-metrics",
+      "crate_name": "flight-blackbox",
       "total_ac": 0,
       "ac_with_tests": 0,
       "ac_with_gherkin": 0,
@@ -104,6 +104,18 @@
       "ac_with_gherkin": 1,
       "ac_with_tests_and_gherkin": 1,
       "complete": 1,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-device-common",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
@@ -398,6 +410,18 @@
       "incomplete": 0
     },
     {
+      "crate_name": "flight-test-helpers",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
       "crate_name": "flight-tracing",
       "total_ac": 2,
       "ac_with_tests": 2,
@@ -459,6 +483,18 @@
     },
     {
       "crate_name": "flight-watchdog",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-workspace-meta",
       "total_ac": 0,
       "ac_with_tests": 0,
       "ac_with_gherkin": 0,
