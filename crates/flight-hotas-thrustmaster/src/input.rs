@@ -593,4 +593,91 @@ mod tests {
         let stats = handler.ghost_stats();
         assert!(stats.total_samples >= 1);
     }
+
+    // -----------------------------------------------------------------------
+    // REQ-15 acceptance-criteria tests (canonical names referenced by spec ledger)
+    // -----------------------------------------------------------------------
+
+    /// AC-15.2 — merged-mode axes/buttons/hat decode correctly.
+    #[test]
+    fn test_parse_merged_report() {
+        // Centered stick (0x8000 LE = ~0), half throttle (0x80), centered twist
+        // (0x80), no buttons, no hat.
+        let report: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let state = handler.try_parse_report(report).unwrap();
+
+        assert_eq!(state.axis_mode, AxisMode::Merged);
+        assert!(state.axes.rocker.is_none(), "merged mode should have no rocker");
+        assert_eq!(state.buttons.buttons, 0, "no buttons pressed");
+        assert_eq!(state.buttons.hat, 0, "hat centered");
+        // Roll and pitch should be approximately zero at 0x8000.
+        assert!(state.axes.roll.abs() < 0.01);
+        assert!(state.axes.pitch.abs() < 0.01);
+    }
+
+    /// AC-15.3 — separate-mode rocker is present; axes/buttons/hat decode correctly.
+    #[test]
+    fn test_parse_separate_report() {
+        // Centered stick, half throttle, centered twist, centered rocker, no buttons, no hat.
+        let report: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let state = handler.try_parse_report(report).unwrap();
+
+        assert_eq!(state.axis_mode, AxisMode::Separate);
+        assert!(state.axes.rocker.is_some(), "separate mode must expose rocker");
+        assert_eq!(state.buttons.buttons, 0);
+        assert_eq!(state.buttons.hat, 0);
+        assert!(state.axes.roll.abs() < 0.01);
+        assert!(state.axes.pitch.abs() < 0.01);
+    }
+
+    /// AC-15.4 — axis mode updates without restart when report layout changes mid-session.
+    #[test]
+    fn test_runtime_mode_switch() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+
+        let merged: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let separate: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+
+        let s1 = handler.try_parse_report(merged).unwrap();
+        assert_eq!(s1.axis_mode, AxisMode::Merged);
+        assert_eq!(handler.current_axis_mode(), AxisMode::Merged);
+
+        let s2 = handler.try_parse_report(separate).unwrap();
+        assert_eq!(s2.axis_mode, AxisMode::Separate);
+        assert_eq!(handler.current_axis_mode(), AxisMode::Separate);
+
+        let s3 = handler.try_parse_report(merged).unwrap();
+        assert_eq!(s3.axis_mode, AxisMode::Merged);
+        assert_eq!(handler.current_axis_mode(), AxisMode::Merged);
+    }
+
+    /// AC-15.5 — logical yaw resolves to expected source for each policy.
+    ///
+    /// Separate-mode report: twist byte = 0x00 (full left), rocker byte = 0xFF (full right).
+    #[test]
+    fn test_yaw_policy_resolution() {
+        let report: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let state = handler.try_parse_report(report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Separate);
+
+        // Auto: prefers aux (rocker) when present.
+        handler.set_yaw_policy(TFlightYawPolicy::Auto);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Aux);
+        assert!((yaw.value - 1.0).abs() < 0.01, "aux should be ~+1.0");
+
+        // Twist: forces twist channel.
+        handler.set_yaw_policy(TFlightYawPolicy::Twist);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Twist);
+        assert!((yaw.value - (-1.0)).abs() < 0.01, "twist should be ~-1.0");
+
+        // Aux: forces aux channel.
+        handler.set_yaw_policy(TFlightYawPolicy::Aux);
+        let yaw = handler.resolve_yaw(&state);
+        assert_eq!(yaw.source, TFlightYawSource::Aux);
+    }
 }

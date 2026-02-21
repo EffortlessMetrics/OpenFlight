@@ -24,7 +24,13 @@ pub struct FlightWorld {
     pub validation_errors: Vec<String>,
     pub doc_ids: Vec<String>,
     pub front_matter: Option<FrontMatter>,
-    pub bdd_traceability: Option<crate::steps::coverage::BddTraceabilityMetrics>,
+    pub bdd_traceability: Option<flight_bdd_metrics::BddTraceabilityMetrics>,
+
+    // HOTAS 4 BDD state (REQ-15)
+    pub hotas4_handler: Option<flight_hotas_thrustmaster::TFlightInputHandler>,
+    pub hotas4_report: Option<Vec<u8>>,
+    pub hotas4_parsed_state: Option<flight_hotas_thrustmaster::TFlightInputState>,
+    pub hotas4_yaw_resolution: Option<flight_hotas_thrustmaster::TFlightYawResolution>,
 }
 
 #[derive(Debug)]
