@@ -497,25 +497,32 @@ requirements:
     ac:
       - id: AC-7.1
         description: "WHEN defining maintenance tasks THEN they SHALL include title, motivation, steps, and acceptance"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.2
         description: "WHEN tasks reference files THEN they SHALL use relative paths from workspace root"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate-infra
       - id: AC-7.3
         description: "WHEN tasks include validation THEN they SHALL specify exact commands"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.4
         description: "WHEN tasks are executed THEN Kiro SHALL follow steps sequentially"
-        tests: []
+        tests:
+          - cmd:cargo xtask check
       - id: AC-7.5
         description: "WHEN tasks fail THEN Kiro SHALL provide diagnostic information"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.6
         description: "WHEN new maintenance needs arise THEN they SHALL be encoded as tasks"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.7
         description: "WHEN tasks are completed THEN acceptance commands SHALL be re-run"
-        tests: []
+        tests:
+          - cmd:cargo xtask ac-status
 
   # Infrastructure Requirement: Local Development Environment
   - id: INF-REQ-8

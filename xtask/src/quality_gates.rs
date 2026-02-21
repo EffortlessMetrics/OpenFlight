@@ -12,8 +12,17 @@
 //! - QG-LEGAL-DOC: Verify legal documentation (future)
 
 use anyhow::{Context, Result};
+use flight_bdd_metrics::{
+    BddTraceabilityMetrics,
+    UNMAPPED_MICROCRATE,
+};
+use flight_workspace_meta::{
+    validate_workspace_crates_io_metadata,
+    load_workspace_microcrate_names,
+};
 use std::env;
 use std::fs;
+use std::collections::HashSet;
 use std::path::Path;
 
 /// Result of a quality gate check.
@@ -509,7 +518,8 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
 /// - Global test coverage threshold
 /// - Global Gherkin coverage threshold
 /// - Global combined coverage threshold (tests + Gherkin)
-/// - Microcrate Gherkin coverage threshold for microcrates above a minimum AC count
+/// - Microcrate test, Gherkin, and combined coverage thresholds for microcrates
+///   above a minimum AC count
 ///
 /// Thresholds are optional and loaded from environment variables with the
 /// following defaults:
@@ -517,7 +527,10 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
 /// - `BDD_MIN_GHERKIN_COVERAGE_PCT` (default 0.0)
 /// - `BDD_MIN_BOTH_COVERAGE_PCT` (default 0.0)
 /// - `BDD_MIN_CRATE_AC_FOR_EVAL` (default 1)
+/// - `BDD_MIN_CRATE_TEST_PCT` (default 0.0)
 /// - `BDD_MIN_CRATE_GHERKIN_PCT` (default 0.0)
+/// - `BDD_MIN_CRATE_BOTH_PCT` (default 0.0)
+/// - `BDD_EXCLUDE_UNMAPPED_MICROCRATE` (default false)
 pub fn check_bdd_coverage() -> Result<QualityGateResult> {
     let metrics = match load_bdd_metrics(Path::new("docs/bdd_metrics.json")) {
         Ok(metrics) => metrics,
@@ -534,7 +547,11 @@ pub fn check_bdd_coverage() -> Result<QualityGateResult> {
     let min_gherkin_coverage = read_float_threshold("BDD_MIN_GHERKIN_COVERAGE_PCT", 0.0)?;
     let min_both_coverage = read_float_threshold("BDD_MIN_BOTH_COVERAGE_PCT", 0.0)?;
     let min_crate_ac_for_eval = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)?;
+    let min_crate_test_coverage = read_float_threshold("BDD_MIN_CRATE_TEST_PCT", 0.0)?;
     let min_crate_gherkin_coverage = read_float_threshold("BDD_MIN_CRATE_GHERKIN_PCT", 0.0)?;
+    let min_crate_both_coverage = read_float_threshold("BDD_MIN_CRATE_BOTH_PCT", 0.0)?;
+    let exclude_unmapped_microcrate =
+        read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", false)?;
 
     if metrics.total_ac == 0 {
         return Ok(QualityGateResult::with_details(
@@ -544,11 +561,9 @@ pub fn check_bdd_coverage() -> Result<QualityGateResult> {
         ));
     }
 
-    let test_coverage = crate::ac_status::coverage_percent(metrics.ac_with_tests, metrics.total_ac);
-    let gherkin_coverage =
-        crate::ac_status::coverage_percent(metrics.ac_with_gherkin, metrics.total_ac);
-    let both_coverage =
-        crate::ac_status::coverage_percent(metrics.ac_with_tests_and_gherkin, metrics.total_ac);
+    let test_coverage = metrics.test_coverage_percent();
+    let gherkin_coverage = metrics.gherkin_coverage_percent();
+    let both_coverage = metrics.both_coverage_percent();
 
     let mut failures = Vec::new();
 
@@ -580,24 +595,52 @@ pub fn check_bdd_coverage() -> Result<QualityGateResult> {
         if microcrate.total_ac < min_crate_ac_for_eval {
             continue;
         }
+        if exclude_unmapped_microcrate && microcrate.is_unmapped() {
+            continue;
+        }
 
         evaluated_microcrates += 1;
 
-        let microcrate_gherkin_coverage =
-            crate::ac_status::coverage_percent(microcrate.ac_with_gherkin, microcrate.total_ac);
+        let microcrate_test_coverage = microcrate.test_coverage_percent();
+        let microcrate_gherkin_coverage = microcrate.gherkin_coverage_percent();
+        let microcrate_both_coverage = microcrate.combined_coverage_percent();
+
+        let mut crate_failures = Vec::new();
+        if microcrate_test_coverage < min_crate_test_coverage {
+            crate_failures.push(format!(
+                "test {:.1}% < {:.1}% (threshold)",
+                microcrate_test_coverage,
+                min_crate_test_coverage
+            ));
+        }
         if microcrate_gherkin_coverage < min_crate_gherkin_coverage {
+            crate_failures.push(format!(
+                "gherkin {:.1}% < {:.1}% (threshold)",
+                microcrate_gherkin_coverage,
+                min_crate_gherkin_coverage
+            ));
+        }
+        if microcrate_both_coverage < min_crate_both_coverage {
+            crate_failures.push(format!(
+                "combined {:.1}% < {:.1}% (threshold)",
+                microcrate_both_coverage,
+                min_crate_both_coverage
+            ));
+        }
+
+        if !crate_failures.is_empty() {
             failing_microcrates.push(format!(
-                "{} ({:.1}% of {} AC)",
-                microcrate.crate_name, microcrate_gherkin_coverage, microcrate.total_ac
+                "{}: {}",
+                microcrate.crate_name,
+                crate_failures.join(", ")
             ));
         }
     }
 
     if !failing_microcrates.is_empty() {
         failures.push(format!(
-            "{} microcrate(s) below Gherkin threshold {:.1}% with min AC >= {}: {}",
+            "{} microcrate(s) below per-microcrate thresholds with min AC >= {}: {}",
             failing_microcrates.len(),
-            min_crate_gherkin_coverage,
             min_crate_ac_for_eval,
             failing_microcrates.join(", ")
         ));
@@ -608,13 +651,20 @@ pub fn check_bdd_coverage() -> Result<QualityGateResult> {
             "QG-BDD-COVERAGE",
             true,
             format!(
-                "Coverage checks passed (test {:.1}%, gherkin {:.1}%, combined {:.1}%). {} microcrate(s) evaluated with min AC {} and crate Gherkin threshold {:.1}%.",
+                "Coverage checks passed (test {:.1}%, gherkin {:.1}%, combined {:.1}%). {} microcrate(s) evaluated with min AC {} and crate thresholds (tests {:.1}%, gherkin {:.1}%, combined {:.1}%{}).",
                 test_coverage,
                 gherkin_coverage,
                 both_coverage,
                 evaluated_microcrates,
                 min_crate_ac_for_eval,
-                min_crate_gherkin_coverage
+                min_crate_test_coverage,
+                min_crate_gherkin_coverage,
+                min_crate_both_coverage,
+                if exclude_unmapped_microcrate {
+                    ", unmapped excluded"
+                } else {
+                    ""
+                }
             ),
         ))
     } else {
@@ -626,7 +676,145 @@ pub fn check_bdd_coverage() -> Result<QualityGateResult> {
     }
 }
 
-fn load_bdd_metrics(path: &Path) -> Result<crate::ac_status::BddCoverageMetrics> {
+/// QG-BDD-MATRIX-COMPLETE: Ensure the BDD metrics artifact includes all workspace
+/// microcrates discovered from cargo workspace members.
+///
+/// This prevents drift where microcrates exist in workspace membership but are
+/// missing from `docs/bdd_metrics.json`, which can happen if generation commands
+/// are run with a stale checkout or without the workspace flag enabled.
+pub fn check_bdd_matrix_complete() -> Result<QualityGateResult> {
+    let metrics = match load_bdd_metrics(Path::new("docs/bdd_metrics.json")) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-MATRIX-COMPLETE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let workspace_crates: HashSet<String> = load_workspace_microcrate_names(".")
+        .context("Failed to load workspace microcrates")?
+        .into_iter()
+        .collect();
+    let mapped_crates: HashSet<String> = metrics
+        .crate_coverage
+        .into_iter()
+        .map(|entry| entry.crate_name)
+        .filter(|name| !name.is_empty() && name != UNMAPPED_MICROCRATE)
+        .collect();
+
+    let mut missing_crates: Vec<String> = workspace_crates
+        .difference(&mapped_crates)
+        .cloned()
+        .collect();
+    missing_crates.sort();
+
+    let mut extra_crates: Vec<String> = mapped_crates
+        .difference(&workspace_crates)
+        .cloned()
+        .filter(|name| name != UNMAPPED_MICROCRATE)
+        .collect();
+    extra_crates.sort();
+
+    if missing_crates.is_empty() && extra_crates.is_empty() {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-MATRIX-COMPLETE",
+            true,
+            format!(
+                "BDD metrics matrix contains all {} workspace microcrates",
+                workspace_crates.len()
+            ),
+        ))
+    } else {
+        let mut details = Vec::new();
+        if !missing_crates.is_empty() {
+            details.push(format!(
+                "Missing from docs/bdd_metrics.json: {}",
+                missing_crates.join(", ")
+            ));
+        }
+
+        if !extra_crates.is_empty() {
+            details.push(format!(
+                "Present in docs/bdd_metrics.json but no longer workspace member: {}",
+                extra_crates.join(", ")
+            ));
+        }
+
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-MATRIX-COMPLETE",
+            false,
+            format!(
+                "BDD matrix completeness check failed:\n- {}",
+                details.join("\n- ")
+            ),
+        ))
+    }
+}
+
+/// QG-CRATE-METADATA: Verify workspace microcrates have crates.io compatible metadata.
+///
+/// This quality gate validates that each crate under `crates/` has the metadata required for a
+/// stable `crates.io` publishable layout, including workspace-inherited values where applicable.
+///
+/// Required metadata keys:
+/// - name
+/// - version
+/// - edition
+/// - rust-version
+/// - license
+/// - repository
+/// - homepage
+/// - description
+/// - readme
+    /// - keywords
+    /// - categories
+///
+/// The gate validates that `readme` resolves to an existing file and that required fields are
+/// present either in the crate manifest or `[workspace.package]`.
+pub fn check_crate_metadata_compatibility() -> Result<QualityGateResult> {
+    let report = validate_workspace_crates_io_metadata(".")
+        .context("Failed to validate workspace crates.io metadata")?;
+
+    if report.checked == 0 {
+        return Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            false,
+            "No crate manifests found under crates/ in workspace members".to_string(),
+        ));
+    }
+
+    if report.is_success() {
+        Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            true,
+            format!(
+                "{} crate manifests validated for crates.io metadata compatibility",
+                report.checked
+            ),
+        ))
+    } else {
+        let details = format!(
+            "{} crate(s) failed metadata compatibility:\n- {}",
+            report.issues.len(),
+            report
+                .issues
+                .iter()
+                .map(|issue| issue.summary())
+                .collect::<Vec<_>>()
+                .join("\n- ")
+        );
+        Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            false,
+            details,
+        ))
+    }
+}
+
+fn load_bdd_metrics(path: &Path) -> Result<BddTraceabilityMetrics> {
     let content = fs::read_to_string(path).with_context(|| {
         format!(
             "Failed to read BDD metrics artifact at {}",
@@ -670,6 +858,64 @@ fn read_usize_threshold(name: &str, default: usize) -> Result<usize> {
         }
         Err(_) => Ok(default),
     }
+}
+
+fn read_bool_flag(name: &str, default: bool) -> Result<bool> {
+    match env::var(name) {
+        Ok(raw) => match raw.to_lowercase().as_str() {
+            "1" | "true" | "t" | "yes" | "on" => Ok(true),
+            "0" | "false" | "f" | "no" | "off" => Ok(false),
+            _ => anyhow::bail!(
+                "Invalid value for {}={}. Expected a boolean flag (true/false/1/0/yes/no/on/off).",
+                name,
+                raw
+            ),
+        },
+        Err(_) => Ok(default),
+    }
+}
+
+/// QG-BDD-UNMAPPED-MICROCRATE: Ensure no acceptance-criteria are assigned to
+/// the synthetic `unmapped` microcrate.
+///
+/// This gate enforces that all acceptance criteria can be mapped to a concrete
+/// workspace microcrate in test references. It fails when the synthetic `unmapped`
+/// row in `docs/bdd_metrics.json` has any acceptance criteria.
+///
+/// Failure Condition:
+/// - `unmapped` row exists with `total_ac > 0`.
+pub fn check_no_unmapped_microcrate_requirements() -> Result<QualityGateResult> {
+    let metrics = match load_bdd_metrics(Path::new("docs/bdd_metrics.json")) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-UNMAPPED-MICROCRATE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let unmapped = metrics.crate_coverage_for(UNMAPPED_MICROCRATE);
+
+    if let Some(unmapped) = unmapped {
+        if unmapped.total_ac > 0 {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-UNMAPPED-MICROCRATE",
+                false,
+                format!(
+                    "BDD metrics row `{}` has {} acceptance criteria with {} tests and {} Gherkin mapping(s)",
+                    UNMAPPED_MICROCRATE,
+                    unmapped.total_ac, unmapped.ac_with_tests, unmapped.ac_with_gherkin
+                ),
+            ));
+        }
+    }
+
+    Ok(QualityGateResult::new(
+        "QG-BDD-UNMAPPED-MICROCRATE",
+        true,
+    ))
 }
 
 #[cfg(test)]
@@ -799,12 +1045,35 @@ mod tests {
             .expect("Expected threshold parsing to succeed");
         assert!((parsed_float - expected_float).abs() < 0.0001);
 
+        env::set_var("BDD_MIN_CRATE_TEST_PCT", "72.5");
+        let parsed_float = read_float_threshold("BDD_MIN_CRATE_TEST_PCT", 0.0)
+            .expect("Expected microcrate test threshold parsing to succeed");
+        assert!((parsed_float - 72.5).abs() < 0.0001);
+
+        env::set_var("BDD_MIN_CRATE_BOTH_PCT", "91.2");
+        let parsed_float = read_float_threshold("BDD_MIN_CRATE_BOTH_PCT", 0.0)
+            .expect("Expected microcrate both threshold parsing to succeed");
+        assert!((parsed_float - 91.2).abs() < 0.0001);
+
         env::set_var("BDD_MIN_CRATE_AC_FOR_EVAL", "5");
         let parsed_usize = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)
             .expect("Expected microcrate threshold parsing to succeed");
         assert_eq!(parsed_usize, 5);
 
+        env::set_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE", "true");
+        let parsed_bool = read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", false)
+            .expect("Expected boolean parsing to succeed");
+        assert!(parsed_bool);
+
+        env::set_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE", "0");
+        let parsed_bool = read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", true)
+            .expect("Expected boolean parsing to succeed");
+        assert!(!parsed_bool);
+
         env::remove_var("BDD_MIN_TEST_COVERAGE_PCT");
+        env::remove_var("BDD_MIN_CRATE_TEST_PCT");
+        env::remove_var("BDD_MIN_CRATE_BOTH_PCT");
         env::remove_var("BDD_MIN_CRATE_AC_FOR_EVAL");
+        env::remove_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE");
     }
 }

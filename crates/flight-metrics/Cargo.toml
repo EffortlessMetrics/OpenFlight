@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-metrics"
 version = "0.1.0"
 edition = "2024"
@@ -7,6 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Metrics registry, collector, and common metric types."
-readme = "README.md"
+readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "metrics", "observability"]
 [dependencies]

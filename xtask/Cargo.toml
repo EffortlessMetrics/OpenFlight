@@ -9,14 +9,16 @@ publish = false
 
 [dependencies]
 clap = { version = "4.5.56", features = ["derive"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
-serde_json = "1.0.149"
+serde = { workspace = true, features = ["derive"] }
+serde_yaml = { workspace = true }
+serde_json = { workspace = true }
 jsonschema = "0.40.2"
-walkdir = "2.5.0"
-regex = "1.12.2"
+walkdir = { workspace = true }
+regex = { workspace = true }
 anyhow = "1.0.100"
 chrono = "0.4.43"
+flight-bdd-metrics = { workspace = true }
+flight-workspace-meta = { workspace = true }
 
 [features]
 hidapi = ["dep:hidapi"]

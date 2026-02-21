@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-xplane"
 version.workspace = true
 edition.workspace = true
@@ -7,7 +8,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "X-Plane adapter with DataRef, UDP, and plugin integration."
-readme = "README.md"
+readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "x-plane", "adapter"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

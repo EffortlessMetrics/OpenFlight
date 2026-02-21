@@ -523,8 +523,28 @@ This phase addresses the gap between implementation and validation by aligning s
   - For INF-REQ-6 (Cross-Reference Checking):
     - All ACs: `tests: [cmd:cargo xtask validate]`
   - For INF-REQ-7 (Task-Driven Maintenance):
-    - Document that this is a process requirement, not directly testable via commands
-    - Consider marking ACs with appropriate test references or noting as process-only
+    - AC-7.1 defines a task template format that requires explicit sections:
+      - Title: required task title field
+      - Motivation: rationale before implementation work starts
+      - Steps: numbered work items with expected results
+      - Acceptance: explicit command list used to verify completion
+    - AC-7.2 requires workspace-relative file references in task text, not absolute paths:
+      - `tasks.md`, `.kiro/specs/project-infrastructure/requirements.md`, `specs/spec_ledger.yaml`
+    - AC-7.3 requires exact validation commands in the task acceptance checklist:
+      - `cargo xtask validate`
+      - `cargo xtask validate-infra`
+    - AC-7.4 requires sequential execution and result tracking:
+      - 1. Read each task line in order
+      - 2. Perform the listed steps
+      - 3. Capture outputs and mark pass/fail
+    - AC-7.5 requires failure diagnostics and corrective guidance:
+      - Add diagnostic output
+      - Include suggested corrective action before retry
+    - AC-7.6 requires all new maintenance needs to be encoded as tasks:
+      - Add new maintenance needs directly in `tasks.md` with references
+    - AC-7.7 requires acceptance steps to be re-runnable and idempotent:
+      - Re-run acceptance commands to verify reproducibility
+      - Log the rerun and final outcome in task summary
   - For INF-REQ-8 (Local Dev Environment):
     - All ACs: `tests: [cmd:cargo xtask validate-infra]`
   - For INF-REQ-9 (CI Configuration):

@@ -275,17 +275,24 @@ fn summarize_bdd_status() -> Result<String> {
     let scenarios = gherkin::parse_feature_files(Path::new("specs/features"))
         .context("Failed to parse Gherkin feature files")?;
 
-    let metrics = crate::ac_status::compute_bdd_metrics(&ledger, &scenarios);
+    let metrics = crate::ac_status::compute_bdd_metrics_with_workspace_crates(
+        &ledger,
+        &scenarios,
+        true,
+    );
+    let fully_covered_microcrates = metrics.microcrate_with_tests_and_gherkin;
+    let microcrate_total = metrics.microcrate_total;
 
     Ok(format!(
-        "AC total: {}, tests: {} ({:.1}%), gherkin: {} ({:.1}%), microcrates: {} ({}), complete: {}, needs_gherkin: {}, needs_tests: {}, draft: {}, incomplete: {}",
+        "AC total: {}, tests: {} ({:.1}%), gherkin: {} ({:.1}%), microcrates fully covered: {} / {} ({:.1}%), complete: {}, needs_gherkin: {}, needs_tests: {}, draft: {}, incomplete: {}",
         metrics.total_ac,
         metrics.ac_with_tests,
-        crate::ac_status::coverage_percent(metrics.ac_with_tests, metrics.total_ac),
+        metrics.test_coverage_percent(),
         metrics.ac_with_gherkin,
-        crate::ac_status::coverage_percent(metrics.ac_with_gherkin, metrics.total_ac),
-        metrics.crate_coverage.len(),
-        crate::ac_status::coverage_percent(metrics.crate_coverage.len(), metrics.total_ac),
+        metrics.gherkin_coverage_percent(),
+        fully_covered_microcrates,
+        microcrate_total,
+        metrics.microcrate_full_coverage_percent(),
         metrics.complete,
         metrics.needs_gherkin,
         metrics.needs_tests,
@@ -551,6 +558,24 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
     let bdd_coverage_result = crate::quality_gates::check_bdd_coverage()
         .context("Failed to check BDD coverage gate")?;
     results.push(bdd_coverage_result);
+
+    // QG-BDD-UNMAPPED-MICROCRATE: Ensure all AC rows are mapped to concrete microcrates
+    println!("  Checking QG-BDD-UNMAPPED-MICROCRATE (mapped AC to microcrates)...");
+    let bdd_unmapped_result = crate::quality_gates::check_no_unmapped_microcrate_requirements()
+        .context("Failed to check BDD unmapped microcrate gate")?;
+    results.push(bdd_unmapped_result);
+
+    // QG-BDD-MATRIX-COMPLETE: Ensure BDD matrix includes all workspace microcrates
+    println!("  Checking QG-BDD-MATRIX-COMPLETE (BDD matrix includes workspace crates)...");
+    let bdd_matrix_complete_result = crate::quality_gates::check_bdd_matrix_complete()
+        .context("Failed to check BDD matrix completeness")?;
+    results.push(bdd_matrix_complete_result);
+
+    // QG-CRATE-METADATA: Check crate metadata for crates.io compatibility
+    println!("  Checking QG-CRATE-METADATA (crates.io metadata compatibility)...");
+    let crate_metadata_result = crate::quality_gates::check_crate_metadata_compatibility()
+        .context("Failed to check crate metadata compatibility")?;
+    results.push(crate_metadata_result);
 
     // Future quality gates will be added here:
     // - QG-RT-JITTER: Real-time jitter tests

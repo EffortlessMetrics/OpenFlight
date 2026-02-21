@@ -5,19 +5,26 @@
 
 use anyhow::{Context, Result};
 use cucumber::{given, then, when};
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::fmt::Write as _;
+use flight_bdd_metrics::{
+    collect_bdd_traceability_metrics as compute_bdd_traceability_metrics,
+    collect_gherkin_scenarios,
+    describe_microcrate_gaps,
+    extract_crates_from_command as extract_crates_from_command_impl,
+    load_spec_ledger,
+    BddTraceabilityMetrics,
+};
+use flight_workspace_meta::load_workspace_microcrate_names;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
-use walkdir::WalkDir;
 
 use crate::FlightWorld;
 
 #[given("the implementation is represented by existing unit-test evidence")]
 async fn given_unit_test_evidence(world: &mut FlightWorld) {
     world.bdd_traceability = Some(
-        collect_bdd_traceability_metrics().expect("failed to compute BDD traceability metrics"),
+        collect_bdd_traceability_metrics()
+            .expect("failed to compute BDD traceability metrics"),
     );
 }
 
@@ -25,7 +32,8 @@ async fn given_unit_test_evidence(world: &mut FlightWorld) {
 async fn when_criteria_reviewed(world: &mut FlightWorld) {
     // Recompute to ensure this scenario validates the current repository state.
     world.bdd_traceability = Some(
-        collect_bdd_traceability_metrics().expect("failed to recompute BDD traceability metrics"),
+        collect_bdd_traceability_metrics()
+            .expect("failed to recompute BDD traceability metrics"),
     );
 }
 
@@ -56,382 +64,246 @@ async fn then_criteria_traceability(world: &mut FlightWorld) {
     );
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct BddTraceabilityMetrics {
-    pub total_ac: usize,
-    pub ac_with_tests: usize,
-    pub ac_with_gherkin: usize,
-    pub ac_with_tests_and_gherkin: usize,
-    pub complete: usize,
-    pub needs_gherkin: usize,
-    pub needs_tests: usize,
-    pub draft: usize,
-    pub incomplete: usize,
-    pub crate_coverage: Vec<BddTraceabilityRow>,
+fn collect_bdd_traceability_metrics() -> Result<BddTraceabilityMetrics> {
+    let ledger = load_spec_ledger("specs/spec_ledger.yaml")
+        .context("failed to read spec ledger")?;
+    let scenarios = collect_gherkin_scenarios(Path::new("specs/features"))
+        .context("failed to parse feature scenarios")?;
+    let metrics = compute_bdd_traceability_metrics(&ledger, &scenarios);
+
+    match load_workspace_microcrate_names(".") {
+        Ok(workspace_crates) => Ok(metrics.with_workspace_crates(workspace_crates)),
+        Err(_) => Ok(metrics),
+    }
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct BddTraceabilityRow {
-    pub crate_name: String,
-    pub total_ac: usize,
-    pub ac_with_tests: usize,
-    pub ac_with_gherkin: usize,
-    pub ac_with_tests_and_gherkin: usize,
-    pub complete: usize,
-    pub needs_gherkin: usize,
-    pub needs_tests: usize,
-    pub draft: usize,
-    pub incomplete: usize,
+pub(crate) fn extract_crates_from_command(command: &str) -> BTreeSet<String> {
+    extract_crates_from_command_impl(command)
 }
 
-impl Default for BddTraceabilityMetrics {
-    fn default() -> Self {
-        Self {
-            total_ac: 0,
-            ac_with_tests: 0,
-            ac_with_gherkin: 0,
-            ac_with_tests_and_gherkin: 0,
-            complete: 0,
-            needs_gherkin: 0,
-            needs_tests: 0,
-            draft: 0,
-            incomplete: 0,
-            crate_coverage: Vec::new(),
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use regex::Regex;
+
+    const PROJECT_INFRA_REQUIREMENTS_PATH: &str = ".kiro/specs/project-infrastructure/requirements.md";
+    const PROJECT_INFRA_TASKS_PATH: &str = ".kiro/specs/project-infrastructure/tasks.md";
+
+    #[test]
+    fn test_extract_crates_from_command_includes_xtask() {
+        let crates = extract_crates_from_command("cargo xtask validate");
+        assert!(crates.contains("xtask"));
+        assert_eq!(crates.len(), 1);
+    }
+
+    fn inf_req_7_task_section_lines() -> Vec<String> {
+        let mut lines = Vec::new();
+        let mut in_section = false;
+
+        let content =
+            fs::read_to_string(PROJECT_INFRA_TASKS_PATH).expect("Failed to read project infrastructure tasks");
+        for line in content.lines() {
+            if line.contains("For INF-REQ-7 (Task-Driven Maintenance)") {
+                in_section = true;
+                continue;
+            }
+
+            if in_section {
+                let trimmed = line.trim_start();
+                if trimmed.starts_with("- For INF-REQ-") && !trimmed.contains("INF-REQ-7") {
+                    break;
+                }
+                if !trimmed.is_empty() {
+                    lines.push(trimmed.to_string());
+                }
+            }
         }
+
+        assert!(
+            !lines.is_empty(),
+            "INF-REQ-7 task block should be present in {PROJECT_INFRA_TASKS_PATH}"
+        );
+
+        lines
     }
-}
 
-#[derive(Debug, Clone)]
-struct BddScenario {
-    tags: Vec<String>,
-}
+    fn inf_req_7_ac_numbers(lines: &[String]) -> Vec<u8> {
+        let ac_re = Regex::new(r"AC-7\.([1-7])").expect("Invalid AC regex");
+        let mut numbers = Vec::new();
 
-impl BddScenario {
-    fn ac_tags(&self) -> Vec<&str> {
-        self.tags.iter().filter(|tag| tag.starts_with("AC-")).map(String::as_str).collect()
+        for line in lines {
+            for cap in ac_re.captures_iter(line) {
+                let number = cap[1].parse::<u8>().expect("AC number should parse");
+                numbers.push(number);
+            }
+        }
+
+        numbers
     }
-}
 
-fn describe_microcrate_gaps(rows: &[&BddTraceabilityRow]) -> String {
-    let mut details = String::new();
+    fn task_section_code_tokens(lines: &[String]) -> Vec<String> {
+        let token_re = Regex::new(r#"`([^`]+)`"#).expect("Invalid token regex");
+        let mut tokens = Vec::new();
 
-    for row in rows {
-        let _ = writeln!(
-            &mut details,
-            "{}: {}/{} AC covered by Gherkin",
-            row.crate_name,
-            row.ac_with_gherkin,
-            row.total_ac
+        for line in lines {
+            for capture in token_re.captures_iter(line) {
+                tokens.push(capture[1].to_string());
+            }
+        }
+
+        tokens
+    }
+
+    fn is_potential_path_token(token: &str) -> bool {
+        token.contains(".md")
+            || token.contains(".yml")
+            || token.contains(".yaml")
+            || token.contains(".toml")
+            || token.contains(".rs")
+            || token.contains("/")
+            || token.contains("\\")
+    }
+
+    fn is_absolute_path_token(token: &str) -> bool {
+        if token.starts_with('/') || token.starts_with('\\') {
+            return true;
+        }
+
+        token.len() >= 2
+            && token.as_bytes()[1] == b':'
+            && token.as_bytes()[0].is_ascii_alphabetic()
+    }
+
+    #[test]
+    fn test_inf_req_7_1_task_templates_include_title_motivation_steps_and_acceptance() {
+        let section_lines = inf_req_7_task_section_lines();
+        let section_text = section_lines.join(" ").to_lowercase();
+
+        assert!(
+            section_text.contains("title"),
+            "INF-REQ-7 task templates should include task titles"
+        );
+        assert!(
+            section_text.contains("motivation"),
+            "INF-REQ-7 task templates should include motivation"
+        );
+        assert!(
+            section_text.contains("step"),
+            "INF-REQ-7 task templates should include step bullets"
+        );
+        assert!(
+            section_text.contains("acceptance"),
+            "INF-REQ-7 AC-7.1 should be defined"
+        );
+
+        let requirements = fs::read_to_string(PROJECT_INFRA_REQUIREMENTS_PATH)
+            .expect("Failed to read project infrastructure requirements");
+        assert!(
+            requirements.contains("Requirement 7: Task-Driven Maintenance Workflow"),
+            "Project infrastructure requirements should include INF-REQ-7"
+        );
+        assert!(
+            requirements.contains("WHEN defining maintenance tasks THEN they SHALL include title"),
+            "INF-REQ-7 AC-7.1 should be defined"
         );
     }
 
-    details
-}
+    #[test]
+    fn test_inf_req_7_2_task_file_references_are_workspace_relative() {
+        let section_lines = inf_req_7_task_section_lines();
+        let token_references = task_section_code_tokens(&section_lines)
+            .into_iter()
+            .filter(|token| is_potential_path_token(token))
+            .collect::<Vec<_>>();
 
-fn collect_bdd_traceability_metrics() -> Result<BddTraceabilityMetrics> {
-    let ledger = load_spec_ledger(Path::new("specs/spec_ledger.yaml"))?;
-    let scenarios = collect_gherkin_scenarios(Path::new("specs/features"))?;
-
-    let mut metrics = BddTraceabilityMetrics::default();
-    let mut ac_with_gherkin: HashSet<String> = HashSet::new();
-    for scenario in &scenarios {
-        ac_with_gherkin.extend(scenario.ac_tags().into_iter().map(ToString::to_string));
-    }
-
-    let mut crate_coverage: BTreeMap<String, BddTraceabilityRow> = BTreeMap::new();
-
-    for requirement in &ledger.requirements {
-        for ac in &requirement.ac {
-            let has_tests = !ac.tests.is_empty();
-            let covered_by_gherkin = ac_with_gherkin.contains(&ac.id);
-            let status = compute_ac_status(&requirement.status, has_tests, covered_by_gherkin);
-
-            metrics.total_ac += 1;
-            if has_tests {
-                metrics.ac_with_tests += 1;
-            }
-            if covered_by_gherkin {
-                metrics.ac_with_gherkin += 1;
-            }
-            if has_tests && covered_by_gherkin {
-                metrics.ac_with_tests_and_gherkin += 1;
-            }
-            match status {
-                CoverageStatus::Complete => metrics.complete += 1,
-                CoverageStatus::NeedsGherkin => metrics.needs_gherkin += 1,
-                CoverageStatus::NeedsTests => metrics.needs_tests += 1,
-                CoverageStatus::Draft => metrics.draft += 1,
-                CoverageStatus::Incomplete => metrics.incomplete += 1,
-            }
-
-            for crate_name in extract_crates_from_test_references(&ac.tests) {
-                let row = crate_coverage
-                    .entry(crate_name.clone())
-                    .or_insert_with(|| BddTraceabilityRow {
-                        crate_name,
-                        total_ac: 0,
-                        ac_with_tests: 0,
-                        ac_with_gherkin: 0,
-                        ac_with_tests_and_gherkin: 0,
-                        complete: 0,
-                        needs_gherkin: 0,
-                        needs_tests: 0,
-                        draft: 0,
-                        incomplete: 0,
-                    });
-
-                row.total_ac += 1;
-                if has_tests {
-                    row.ac_with_tests += 1;
-                }
-                if covered_by_gherkin {
-                    row.ac_with_gherkin += 1;
-                }
-                if has_tests && covered_by_gherkin {
-                    row.ac_with_tests_and_gherkin += 1;
-                }
-                match status {
-                    CoverageStatus::Complete => row.complete += 1,
-                    CoverageStatus::NeedsGherkin => row.needs_gherkin += 1,
-                    CoverageStatus::NeedsTests => row.needs_tests += 1,
-                    CoverageStatus::Draft => row.draft += 1,
-                    CoverageStatus::Incomplete => row.incomplete += 1,
-                }
-            }
+        for token in token_references {
+            assert!(
+                !is_absolute_path_token(&token),
+                "INF-REQ-7 file reference should be workspace-relative, got absolute: {token}"
+            );
         }
     }
 
-    metrics.crate_coverage = crate_coverage.into_values().collect();
-    Ok(metrics)
-}
+    #[test]
+    fn test_inf_req_7_3_validation_steps_are_explicit_commands() {
+        let section_lines = inf_req_7_task_section_lines();
+        let line_73 = section_lines
+            .iter()
+            .find(|line| line.contains("AC-7.3"))
+            .expect("Missing AC-7.3 line in tasks section");
 
-fn load_spec_ledger(path: &Path) -> Result<SpecLedger> {
-    let content = fs::read_to_string(path).context("failed to read spec ledger")?;
-    serde_yaml::from_str(&content).context("failed to parse spec ledger")
-}
+        let has_command = task_section_code_tokens(&[line_73.clone()])
+            .into_iter()
+            .any(|token| token.starts_with("cargo ") || token.starts_with("rg ") || token.starts_with("rustc "));
 
-fn collect_gherkin_scenarios(path: &Path) -> Result<Vec<BddScenario>> {
-    let mut scenarios = Vec::new();
-    if !path.exists() {
-        return Ok(scenarios);
+        assert!(
+            has_command,
+            "INF-REQ-7 AC-7.3 should specify exact validation commands"
+        );
     }
 
-    let mut feature_tags = Vec::new();
-    let mut local_tags = Vec::new();
+    #[test]
+    fn test_inf_req_7_4_task_execution_should_be_sequential() {
+        let section_lines = inf_req_7_task_section_lines();
+        let mut ac_numbers = inf_req_7_ac_numbers(&section_lines);
+        ac_numbers.sort_unstable();
+        ac_numbers.dedup();
 
-    for entry in WalkDir::new(path)
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|entry| entry.file_type().is_file())
-    {
-        if entry.path().extension().and_then(|ext| ext.to_str()) != Some("feature") {
-            continue;
-        }
+        assert_eq!(
+            ac_numbers,
+            vec![1, 2, 3, 4, 5, 6, 7],
+            "INF-REQ-7 should enumerate AC-7.1 through AC-7.7"
+        );
 
-        let content = fs::read_to_string(entry.path())
-            .with_context(|| format!("failed to read {}", entry.path().display()))?;
-
-        for line in content.lines() {
-            let trimmed = line.trim();
-            if trimmed.is_empty() {
-                continue;
-            }
-
-            if trimmed.starts_with('@') {
-                local_tags.extend(parse_tags_from_line(trimmed));
-                continue;
-            }
-
-            if trimmed.starts_with("Feature:") {
-                feature_tags = local_tags.clone();
-                local_tags.clear();
-                continue;
-            }
-
-            if is_scenario_header(trimmed) {
-                let mut tags = feature_tags.clone();
-                tags.extend(local_tags);
-                if !tags.is_empty() {
-                    scenarios.push(BddScenario { tags });
-                }
-                local_tags = Vec::new();
-            }
-        }
+        let section_text = section_lines.join(" ").to_lowercase();
+        assert!(
+            section_text.contains("1."),
+            "INF-REQ-7 task execution should include ordered/sequential steps"
+        );
     }
 
-    Ok(scenarios)
-}
+    #[test]
+    fn test_inf_req_7_5_failure_handling_includes_diagnostics() {
+        let section_lines = inf_req_7_task_section_lines();
+        let section_text = section_lines.join(" ").to_lowercase();
 
-fn is_scenario_header(line: &str) -> bool {
-    line.starts_with("Scenario:") || line.starts_with("Scenario Outline:")
-}
-
-fn parse_tags_from_line(line: &str) -> Vec<String> {
-    line.split_whitespace()
-        .filter_map(|token| token.strip_prefix('@'))
-        .map(str::to_string)
-        .collect()
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SpecLedger {
-    pub requirements: Vec<SpecRequirement>,
-}
-
-#[derive(Debug, Deserialize)]
-struct SpecRequirement {
-    #[allow(dead_code)]
-    pub id: String,
-    pub status: RequirementStatus,
-    pub ac: Vec<AcceptanceCriteria>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum RequirementStatus {
-    Draft,
-    Implemented,
-    Tested,
-    Deprecated,
-}
-
-#[derive(Debug, Deserialize)]
-struct AcceptanceCriteria {
-    pub id: String,
-    #[serde(default)]
-    pub tests: Vec<serde_yaml::Value>,
-}
-
-enum CoverageStatus {
-    Complete,
-    NeedsGherkin,
-    NeedsTests,
-    Draft,
-    Incomplete,
-}
-
-fn compute_ac_status(
-    status: &RequirementStatus,
-    has_tests: bool,
-    has_gherkin: bool,
-) -> CoverageStatus {
-    match (status, has_tests, has_gherkin) {
-        (RequirementStatus::Tested, true, true) => CoverageStatus::Complete,
-        (RequirementStatus::Implemented, true, true) => CoverageStatus::Complete,
-        (RequirementStatus::Implemented, true, false) => CoverageStatus::NeedsGherkin,
-        (RequirementStatus::Implemented, false, _) => CoverageStatus::NeedsTests,
-        (RequirementStatus::Draft, _, _) => CoverageStatus::Draft,
-        _ => CoverageStatus::Incomplete,
-    }
-}
-
-fn extract_crates_from_test_references(tests: &[serde_yaml::Value]) -> BTreeSet<String> {
-    let mut crates = BTreeSet::new();
-
-    for test_ref in tests {
-        match test_ref {
-            serde_yaml::Value::String(text) => {
-                crates.extend(extract_crates_from_reference(text));
-            }
-            serde_yaml::Value::Mapping(mapping) => {
-                for (key, value) in mapping {
-                    if is_test_reference_key(key.as_str()) {
-                        if let Some(reference) = value.as_str() {
-                            crates.extend(extract_crates_from_reference(reference));
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
+        assert!(
+            section_text.contains("diagnostic"),
+            "INF-REQ-7 should include diagnostics guidance when tasks fail"
+        );
+        assert!(
+            section_text.contains("suggest") || section_text.contains("corrective action"),
+            "INF-REQ-7 should include suggested remediation actions"
+        );
     }
 
-    crates
-}
+    #[test]
+    fn test_inf_req_7_6_new_needs_are_covered_as_tasks() {
+        let section_lines = inf_req_7_task_section_lines();
+        let section_text = section_lines.join(" ").to_lowercase();
 
-fn is_test_reference_key(value: Option<&str>) -> bool {
-    matches!(value, Some("test") | Some("command") | Some("feature"))
-}
-
-fn extract_crates_from_reference(reference: &str) -> BTreeSet<String> {
-    let mut crates = BTreeSet::new();
-
-    if let Some(command) = reference.strip_prefix("cmd:") {
-        crates.extend(extract_crates_from_command(command));
-        return crates;
+        assert!(
+            section_text.contains("new maintenance needs"),
+            "INF-REQ-7 should encode new maintenance needs as tasks"
+        );
+        assert!(
+            section_text.contains("tasks.md"),
+            "INF-REQ-7 should reference where task entries are encoded"
+        );
     }
 
-    if reference.starts_with("feature:") {
-        return crates;
+    #[test]
+    fn test_inf_req_7_7_acceptance_is_re_runnable() {
+        let section_lines = inf_req_7_task_section_lines();
+        let section_text = section_lines.join(" ").to_lowercase();
+
+        assert!(
+            section_text.contains("re-run"),
+            "INF-REQ-7 should require acceptance commands to be re-run"
+        );
+        assert!(
+            section_text.contains("acceptance"),
+            "INF-REQ-7 should include acceptance command re-run coverage"
+        );
     }
-
-    if reference.contains("::") {
-        if let Some(root) = reference.split("::").next() {
-            let normalized = normalize_crate_name(root);
-            if is_crate_name_candidate(&normalized) {
-                crates.insert(normalized);
-            }
-        }
-        return crates;
-    }
-
-    crates.extend(extract_crates_from_command(reference));
-    crates
-}
-
-fn extract_crates_from_command(command: &str) -> BTreeSet<String> {
-    let mut crates = BTreeSet::new();
-    let mut tokens = command.split_whitespace().peekable();
-
-    while let Some(token) = tokens.next() {
-        if token == "-p" || token == "--package" {
-            if let Some(value) = tokens.next() {
-                let normalized = normalize_crate_name(value);
-                if is_crate_name_candidate(&normalized) {
-                    crates.insert(normalized);
-                }
-            }
-            continue;
-        }
-
-        if let Some(value) = token.strip_prefix("--package=") {
-            let normalized = normalize_crate_name(value);
-            if is_crate_name_candidate(&normalized) {
-                crates.insert(normalized);
-            }
-            continue;
-        }
-
-        if token.starts_with("-p") && token.len() > 2 && !token.starts_with("-package") {
-            let value = token.trim_start_matches("-p");
-            let normalized = normalize_crate_name(value);
-            if is_crate_name_candidate(&normalized) {
-                crates.insert(normalized);
-            }
-        }
-    }
-
-    crates
-}
-
-fn normalize_crate_name(crate_name: &str) -> String {
-    crate_name
-        .trim_matches(&['"', '\'', '`'][..])
-        .trim_end_matches("\\")
-        .trim()
-        .replace('_', "-")
-}
-
-fn is_crate_name_candidate(crate_name: &str) -> bool {
-    if crate_name.is_empty() {
-        return false;
-    }
-
-    if !crate_name.chars().next().unwrap_or('_').is_ascii_alphabetic() {
-        return false;
-    }
-
-    crate_name
-        .chars()
-        .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_')
 }

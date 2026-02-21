@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-profile"
 version = "0.1.0"
 edition = "2024"
@@ -7,7 +8,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Profile schema, validation, canonicalization, and merge logic."
-readme = "README.md"
+readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "profiles", "schema"]
 [dependencies]
 serde.workspace = true
