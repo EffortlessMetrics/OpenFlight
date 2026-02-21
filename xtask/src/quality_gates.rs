@@ -11,7 +11,8 @@
 //! - QG-HID-LATENCY: Verify HID latency tests (future)
 //! - QG-LEGAL-DOC: Verify legal documentation (future)
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use std::env;
 use std::fs;
 use std::path::Path;
 
@@ -502,6 +503,175 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
     }
 }
 
+/// QG-BDD-COVERAGE: Verify BDD coverage metrics against configured thresholds.
+///
+/// This quality gate checks:
+/// - Global test coverage threshold
+/// - Global Gherkin coverage threshold
+/// - Global combined coverage threshold (tests + Gherkin)
+/// - Microcrate Gherkin coverage threshold for microcrates above a minimum AC count
+///
+/// Thresholds are optional and loaded from environment variables with the
+/// following defaults:
+/// - `BDD_MIN_TEST_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_GHERKIN_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_BOTH_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_CRATE_AC_FOR_EVAL` (default 1)
+/// - `BDD_MIN_CRATE_GHERKIN_PCT` (default 0.0)
+pub fn check_bdd_coverage() -> Result<QualityGateResult> {
+    let metrics = match load_bdd_metrics(Path::new("docs/bdd_metrics.json")) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-COVERAGE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let min_test_coverage = read_float_threshold("BDD_MIN_TEST_COVERAGE_PCT", 0.0)?;
+    let min_gherkin_coverage = read_float_threshold("BDD_MIN_GHERKIN_COVERAGE_PCT", 0.0)?;
+    let min_both_coverage = read_float_threshold("BDD_MIN_BOTH_COVERAGE_PCT", 0.0)?;
+    let min_crate_ac_for_eval = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)?;
+    let min_crate_gherkin_coverage = read_float_threshold("BDD_MIN_CRATE_GHERKIN_PCT", 0.0)?;
+
+    if metrics.total_ac == 0 {
+        return Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            false,
+            "No acceptance criteria were loaded from BDD metrics artifact".to_string(),
+        ));
+    }
+
+    let test_coverage = crate::ac_status::coverage_percent(metrics.ac_with_tests, metrics.total_ac);
+    let gherkin_coverage =
+        crate::ac_status::coverage_percent(metrics.ac_with_gherkin, metrics.total_ac);
+    let both_coverage =
+        crate::ac_status::coverage_percent(metrics.ac_with_tests_and_gherkin, metrics.total_ac);
+
+    let mut failures = Vec::new();
+
+    if test_coverage < min_test_coverage {
+        failures.push(format!(
+            "overall test coverage {:.1}% < {:.1}% (threshold)",
+            test_coverage, min_test_coverage
+        ));
+    }
+
+    if gherkin_coverage < min_gherkin_coverage {
+        failures.push(format!(
+            "overall Gherkin coverage {:.1}% < {:.1}% (threshold)",
+            gherkin_coverage, min_gherkin_coverage
+        ));
+    }
+
+    if both_coverage < min_both_coverage {
+        failures.push(format!(
+            "overall combined coverage {:.1}% < {:.1}% (threshold)",
+            both_coverage, min_both_coverage
+        ));
+    }
+
+    let mut evaluated_microcrates = 0usize;
+    let mut failing_microcrates = Vec::new();
+
+    for microcrate in &metrics.crate_coverage {
+        if microcrate.total_ac < min_crate_ac_for_eval {
+            continue;
+        }
+
+        evaluated_microcrates += 1;
+
+        let microcrate_gherkin_coverage =
+            crate::ac_status::coverage_percent(microcrate.ac_with_gherkin, microcrate.total_ac);
+        if microcrate_gherkin_coverage < min_crate_gherkin_coverage {
+            failing_microcrates.push(format!(
+                "{} ({:.1}% of {} AC)",
+                microcrate.crate_name, microcrate_gherkin_coverage, microcrate.total_ac
+            ));
+        }
+    }
+
+    if !failing_microcrates.is_empty() {
+        failures.push(format!(
+            "{} microcrate(s) below Gherkin threshold {:.1}% with min AC >= {}: {}",
+            failing_microcrates.len(),
+            min_crate_gherkin_coverage,
+            min_crate_ac_for_eval,
+            failing_microcrates.join(", ")
+        ));
+    }
+
+    if failures.is_empty() {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            true,
+            format!(
+                "Coverage checks passed (test {:.1}%, gherkin {:.1}%, combined {:.1}%). {} microcrate(s) evaluated with min AC {} and crate Gherkin threshold {:.1}%.",
+                test_coverage,
+                gherkin_coverage,
+                both_coverage,
+                evaluated_microcrates,
+                min_crate_ac_for_eval,
+                min_crate_gherkin_coverage
+            ),
+        ))
+    } else {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            false,
+            format!("BDD coverage checks failed:\n- {}", failures.join("\n- ")),
+        ))
+    }
+}
+
+fn load_bdd_metrics(path: &Path) -> Result<crate::ac_status::BddCoverageMetrics> {
+    let content = fs::read_to_string(path).with_context(|| {
+        format!(
+            "Failed to read BDD metrics artifact at {}",
+            path.display()
+        )
+    })?;
+
+    serde_json::from_str(&content).with_context(|| {
+        format!(
+            "Failed to parse BDD metrics JSON at {}",
+            path.display()
+        )
+    })
+}
+
+fn read_float_threshold(name: &str, default: f64) -> Result<f64> {
+    match env::var(name) {
+        Ok(raw) => {
+            let value = raw.parse::<f64>().with_context(|| {
+                format!(
+                    "Invalid value for {}={}. Expected a floating point threshold.",
+                    name, raw
+                )
+            })?;
+            Ok(value)
+        }
+        Err(_) => Ok(default),
+    }
+}
+
+fn read_usize_threshold(name: &str, default: usize) -> Result<usize> {
+    match env::var(name) {
+        Ok(raw) => {
+            let value = raw.parse::<usize>().with_context(|| {
+                format!(
+                    "Invalid value for {}={}. Expected a non-negative integer threshold.",
+                    name, raw
+                )
+            })?;
+            Ok(value)
+        }
+        Err(_) => Ok(default),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -619,5 +789,22 @@ mod tests {
                     .unwrap_or_else(|| "Unknown error".to_string())
             );
         }
+    }
+
+    #[test]
+    fn test_bdd_coverage_threshold_parsing() {
+        let expected_float = 83.3;
+        env::set_var("BDD_MIN_TEST_COVERAGE_PCT", "83.3");
+        let parsed_float = read_float_threshold("BDD_MIN_TEST_COVERAGE_PCT", 0.0)
+            .expect("Expected threshold parsing to succeed");
+        assert!((parsed_float - expected_float).abs() < 0.0001);
+
+        env::set_var("BDD_MIN_CRATE_AC_FOR_EVAL", "5");
+        let parsed_usize = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)
+            .expect("Expected microcrate threshold parsing to succeed");
+        assert_eq!(parsed_usize, 5);
+
+        env::remove_var("BDD_MIN_TEST_COVERAGE_PCT");
+        env::remove_var("BDD_MIN_CRATE_AC_FOR_EVAL");
     }
 }

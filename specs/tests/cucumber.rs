@@ -24,6 +24,7 @@ pub struct FlightWorld {
     pub validation_errors: Vec<String>,
     pub doc_ids: Vec<String>,
     pub front_matter: Option<FrontMatter>,
+    pub bdd_traceability: Option<crate::steps::coverage::BddTraceabilityMetrics>,
 }
 
 #[derive(Debug)]

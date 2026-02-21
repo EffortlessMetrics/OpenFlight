@@ -74,6 +74,7 @@ pub use flight_process_detection as process_detection;
 pub use flight_profile as profile;
 pub use flight_rules as rules;
 pub use flight_security as security;
+pub use flight_metrics as metrics;
 pub use flight_session as aircraft_switch;
 pub use flight_units as units;
 pub use flight_watchdog as watchdog;

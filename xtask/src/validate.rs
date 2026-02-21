@@ -74,6 +74,33 @@ pub fn run_validate() -> Result<()> {
     let mut all_passed = true;
     let mut cross_ref_details = Vec::new();
 
+    // Step 0: BDD Feature Status Report
+    println!("🧾 Step 0: BDD Feature Status");
+    println!("─────────────────────────────");
+    let bdd_status_result = crate::ac_status::run_ac_status();
+    match &bdd_status_result {
+        Ok(()) => {
+            println!("✅ BDD feature status report generated\n");
+            let detail = summarize_bdd_status().unwrap_or_else(|e| {
+                format!("Generated docs/feature_status.md (coverage summary unavailable: {})", e)
+            });
+            results.push(CheckResult::with_details(
+                "BDD Feature Status",
+                true,
+                detail,
+            ));
+        }
+        Err(e) => {
+            eprintln!("❌ BDD feature status report failed: {}\n", e);
+            results.push(CheckResult::with_details(
+                "BDD Feature Status",
+                false,
+                e.to_string(),
+            ));
+            all_passed = false;
+        }
+    }
+
     // Step 1: Schema Validation
     println!("📋 Step 1: Schema Validation");
     println!("─────────────────────────────");
@@ -232,6 +259,39 @@ pub fn run_validate() -> Result<()> {
     } else {
         anyhow::bail!("Some validation checks failed. See docs/validation_report.md for details.");
     }
+}
+
+fn summarize_bdd_status() -> Result<String> {
+    let spec_ledger_path = Path::new("specs/spec_ledger.yaml");
+    if !spec_ledger_path.exists() {
+        anyhow::bail!("spec ledger not found at {}", spec_ledger_path.display());
+    }
+
+    let ledger_content =
+        std::fs::read_to_string(spec_ledger_path).context("Failed to read spec ledger")?;
+    let ledger: cross_ref::SpecLedger =
+        serde_yaml::from_str(&ledger_content).context("Failed to parse spec ledger YAML")?;
+
+    let scenarios = gherkin::parse_feature_files(Path::new("specs/features"))
+        .context("Failed to parse Gherkin feature files")?;
+
+    let metrics = crate::ac_status::compute_bdd_metrics(&ledger, &scenarios);
+
+    Ok(format!(
+        "AC total: {}, tests: {} ({:.1}%), gherkin: {} ({:.1}%), microcrates: {} ({}), complete: {}, needs_gherkin: {}, needs_tests: {}, draft: {}, incomplete: {}",
+        metrics.total_ac,
+        metrics.ac_with_tests,
+        crate::ac_status::coverage_percent(metrics.ac_with_tests, metrics.total_ac),
+        metrics.ac_with_gherkin,
+        crate::ac_status::coverage_percent(metrics.ac_with_gherkin, metrics.total_ac),
+        metrics.crate_coverage.len(),
+        crate::ac_status::coverage_percent(metrics.crate_coverage.len(), metrics.total_ac),
+        metrics.complete,
+        metrics.needs_gherkin,
+        metrics.needs_tests,
+        metrics.draft,
+        metrics.incomplete
+    ))
 }
 
 /// Validate all schemas (spec ledger and documentation front matter).
@@ -485,6 +545,12 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
     let ffb_safety_result = crate::quality_gates::check_ffb_safety_tests()
         .context("Failed to check FFB safety tests")?;
     results.push(ffb_safety_result);
+
+    // QG-BDD-COVERAGE: Check BDD coverage thresholds and microcrate matrix coverage
+    println!("  Checking QG-BDD-COVERAGE (BDD and microcrate coverage)...");
+    let bdd_coverage_result = crate::quality_gates::check_bdd_coverage()
+        .context("Failed to check BDD coverage gate")?;
+    results.push(bdd_coverage_result);
 
     // Future quality gates will be added here:
     // - QG-RT-JITTER: Real-time jitter tests

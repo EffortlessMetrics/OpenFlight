@@ -7,12 +7,170 @@
 
 use anyhow::{Context, Result};
 use chrono::Utc;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 use std::process::Command;
 
-use crate::cross_ref::{RequirementStatus, SpecLedger};
+use crate::cross_ref::{RequirementStatus, SpecLedger, TestReference};
 use crate::gherkin::{GherkinScenario, parse_feature_files};
+
+/// BDD coverage metrics aggregated from the spec ledger and Gherkin scenarios.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BddCoverageMetrics {
+    /// Total number of acceptance criteria in the ledger.
+    pub total_ac: usize,
+    /// ACs that have at least one linked test path.
+    pub ac_with_tests: usize,
+    /// ACs that are covered by at least one Gherkin scenario.
+    pub ac_with_gherkin: usize,
+    /// ACs that have both tests and Gherkin coverage.
+    pub ac_with_tests_and_gherkin: usize,
+    /// ACs with `✅ Complete`.
+    pub complete: usize,
+    /// ACs with `🟡 Needs Gherkin`.
+    pub needs_gherkin: usize,
+    /// ACs with `🟡 Needs Tests`.
+    pub needs_tests: usize,
+    /// ACs with `⚪ Draft`.
+    pub draft: usize,
+    /// ACs with `❌ Incomplete`.
+    pub incomplete: usize,
+    /// Microcrate/test-mapping coverage matrix.
+    pub crate_coverage: Vec<MicrocrateBddCoverageMetrics>,
+}
+
+/// BDD coverage metrics for an individual crate/microcrate.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MicrocrateBddCoverageMetrics {
+    /// Crate or test target name.
+    pub crate_name: String,
+    /// Total number of ACs that reference this crate in test definitions.
+    pub total_ac: usize,
+    /// ACs that have at least one linked test path.
+    pub ac_with_tests: usize,
+    /// ACs covered by at least one Gherkin scenario.
+    pub ac_with_gherkin: usize,
+    /// ACs that have both tests and Gherkin coverage.
+    pub ac_with_tests_and_gherkin: usize,
+    /// ACs with `✅ Complete`.
+    pub complete: usize,
+    /// ACs with `🟡 Needs Gherkin`.
+    pub needs_gherkin: usize,
+    /// ACs with `🟡 Needs Tests`.
+    pub needs_tests: usize,
+    /// ACs with `⚪ Draft`.
+    pub draft: usize,
+    /// ACs with `❌ Incomplete`.
+    pub incomplete: usize,
+}
+
+impl MicrocrateBddCoverageMetrics {
+    fn new(crate_name: impl Into<String>) -> Self {
+        Self {
+            crate_name: crate_name.into(),
+            total_ac: 0,
+            ac_with_tests: 0,
+            ac_with_gherkin: 0,
+            ac_with_tests_and_gherkin: 0,
+            complete: 0,
+            needs_gherkin: 0,
+            needs_tests: 0,
+            draft: 0,
+            incomplete: 0,
+        }
+    }
+
+    fn coverage_markdown(&self) -> String {
+        format!(
+            "| {} | {} | {} | {} | {} | {} | {:.1}% | {:.1}% | {:.1}% |\n",
+            self.crate_name,
+            self.total_ac,
+            self.ac_with_tests,
+            self.ac_with_gherkin,
+            self.ac_with_tests_and_gherkin,
+            self.complete,
+            coverage_percent(self.ac_with_tests, self.total_ac),
+            coverage_percent(self.ac_with_gherkin, self.total_ac),
+            coverage_percent(self.ac_with_tests_and_gherkin, self.total_ac)
+        )
+    }
+}
+
+impl BddCoverageMetrics {
+    fn with_totals() -> Self {
+        Self {
+            total_ac: 0,
+            ac_with_tests: 0,
+            ac_with_gherkin: 0,
+            ac_with_tests_and_gherkin: 0,
+            complete: 0,
+            needs_gherkin: 0,
+            needs_tests: 0,
+            draft: 0,
+            incomplete: 0,
+            crate_coverage: Vec::new(),
+        }
+    }
+
+    /// Render the metrics into a markdown block for report output.
+    fn to_markdown(&self) -> String {
+        let mut output = String::new();
+
+        output.push_str("## BDD Coverage Metrics\n\n");
+        output.push_str("| Metric | Value |\n");
+        output.push_str("|--------|-------|\n");
+        output.push_str(&format!("| Total AC | {} |\n", self.total_ac));
+        output.push_str(&format!("| ACs with tests | {} |\n", self.ac_with_tests));
+        output.push_str(&format!("| ACs with Gherkin | {} |\n", self.ac_with_gherkin));
+        output.push_str(&format!(
+            "| ACs with both tests + Gherkin | {} |\n",
+            self.ac_with_tests_and_gherkin
+        ));
+        output.push_str(&format!("| Complete | {} |\n", self.complete));
+        output.push_str(&format!("| Needs Gherkin | {} |\n", self.needs_gherkin));
+        output.push_str(&format!("| Needs Tests | {} |\n", self.needs_tests));
+        output.push_str(&format!("| Draft | {} |\n", self.draft));
+        output.push_str(&format!("| Incomplete | {} |\n", self.incomplete));
+        output.push_str(&format!(
+            "| Test coverage | {:.1}% |\n",
+            coverage_percent(self.ac_with_tests, self.total_ac)
+        ));
+        output.push_str(&format!(
+            "| Gherkin coverage | {:.1}% |\n",
+            coverage_percent(self.ac_with_gherkin, self.total_ac)
+        ));
+        output.push_str(&format!(
+            "| Test + Gherkin coverage | {:.1}% |\n\n",
+            coverage_percent(self.ac_with_tests_and_gherkin, self.total_ac)
+        ));
+
+        output.push_str("## BDD Microcrate Matrix\n\n");
+        if self.crate_coverage.is_empty() {
+            output.push_str("No microcrate test mappings discovered yet.\n\n");
+            return output;
+        }
+
+        output.push_str("| Microcrate | Total AC | ACs with tests | ACs with Gherkin | ACs with both | Complete | Test coverage | Gherkin coverage | Test+Gherkin coverage |\n");
+        output.push_str("|-----------|----------|----------------|------------------|---------------|----------|--------------|------------------|------------------------|\n");
+
+        for metrics in &self.crate_coverage {
+            output.push_str(&metrics.coverage_markdown());
+        }
+
+        output.push('\n');
+
+        output
+    }
+}
+
+pub(crate) fn coverage_percent(numerator: usize, denominator: usize) -> f64 {
+    if denominator == 0 {
+        return 0.0;
+    }
+
+    (numerator as f64 / denominator as f64) * 100.0
+}
 
 /// Status of an acceptance criteria based on Property 8 logic.
 #[derive(Debug, PartialEq)]
@@ -52,16 +210,17 @@ impl AcStatus {
         }
     }
 
-    /// Compute the status based on Property 8 logic.
-    ///
-    /// Property 8 logic:
-    /// - ✅ Complete: status=tested, has tests, has Gherkin
-    /// - 🟡 Needs Gherkin: status=implemented, has tests, no Gherkin
-    /// - 🟡 Needs Tests: status=implemented, no tests
-    /// - ⚪ Draft: status=draft
-    /// - ❌ Incomplete: other cases
-    fn compute(req_status: &RequirementStatus, has_tests: bool, has_gherkin: bool) -> Self {
-        match (req_status, has_tests, has_gherkin) {
+/// Compute the status based on Property 8 logic.
+///
+/// Property 8 logic:
+/// - ✅ Complete: status=tested or implemented, has tests, has Gherkin
+/// - 🟡 Needs Gherkin: status=implemented, has tests, no Gherkin
+/// - 🟡 Needs Tests: status=implemented, no tests
+/// - ⚪ Draft: status=draft
+/// - ❌ Incomplete: other cases
+fn compute(req_status: &RequirementStatus, has_tests: bool, has_gherkin: bool) -> Self {
+    match (req_status, has_tests, has_gherkin) {
+            (RequirementStatus::Implemented, true, true) => AcStatus::Complete,
             (RequirementStatus::Tested, true, true) => AcStatus::Complete,
             (RequirementStatus::Implemented, true, false) => AcStatus::NeedsGherkin,
             (RequirementStatus::Implemented, false, _) => AcStatus::NeedsTests,
@@ -69,6 +228,82 @@ impl AcStatus {
             _ => AcStatus::Incomplete,
         }
     }
+}
+
+/// Generate BDD coverage metrics from a ledger and parsed scenarios.
+pub fn compute_bdd_metrics(
+    ledger: &SpecLedger,
+    scenarios: &[GherkinScenario],
+) -> BddCoverageMetrics {
+    // Build a map of AC ID -> whether it has at least one Gherkin scenario.
+    let mut ac_to_scenarios: HashMap<String, bool> = HashMap::new();
+    for scenario in scenarios {
+        for ac_tag in scenario.ac_tags() {
+            ac_to_scenarios.insert(ac_tag, true);
+        }
+    }
+
+    let mut metrics = BddCoverageMetrics::with_totals();
+    let mut crate_matrix: BTreeMap<String, MicrocrateBddCoverageMetrics> = BTreeMap::new();
+
+    for req in &ledger.requirements {
+        for ac in &req.ac {
+            let has_tests = !ac.tests.is_empty();
+            let has_gherkin = ac_to_scenarios.get(&ac.id).copied().unwrap_or(false);
+
+            metrics.total_ac += 1;
+            if has_tests {
+                metrics.ac_with_tests += 1;
+            }
+            if has_gherkin {
+                metrics.ac_with_gherkin += 1;
+            }
+            if has_tests && has_gherkin {
+                metrics.ac_with_tests_and_gherkin += 1;
+            }
+
+            let status = AcStatus::compute(&req.status, has_tests, has_gherkin);
+            match status {
+                AcStatus::Complete => metrics.complete += 1,
+                AcStatus::NeedsGherkin => metrics.needs_gherkin += 1,
+                AcStatus::NeedsTests => metrics.needs_tests += 1,
+                AcStatus::Draft => metrics.draft += 1,
+                AcStatus::Incomplete => metrics.incomplete += 1,
+            }
+
+            let crate_names = collect_crate_names_for_tests(&ac.tests);
+            for crate_name in crate_names {
+                let crate_metrics =
+                    crate_matrix
+                        .entry(crate_name.clone())
+                        .or_insert_with(|| {
+                            MicrocrateBddCoverageMetrics::new(crate_name.clone())
+                        });
+                crate_metrics.total_ac += 1;
+                if has_tests {
+                    crate_metrics.ac_with_tests += 1;
+                }
+                if has_gherkin {
+                    crate_metrics.ac_with_gherkin += 1;
+                }
+                if has_tests && has_gherkin {
+                    crate_metrics.ac_with_tests_and_gherkin += 1;
+                }
+
+                match status {
+                    AcStatus::Complete => crate_metrics.complete += 1,
+                    AcStatus::NeedsGherkin => crate_metrics.needs_gherkin += 1,
+                    AcStatus::NeedsTests => crate_metrics.needs_tests += 1,
+                    AcStatus::Draft => crate_metrics.draft += 1,
+                    AcStatus::Incomplete => crate_metrics.incomplete += 1,
+                }
+            }
+        }
+    }
+
+    metrics.crate_coverage = crate_matrix.into_values().collect();
+
+    metrics
 }
 
 /// Generate feature status report from spec ledger and Gherkin scenarios.
@@ -82,6 +317,15 @@ impl AcStatus {
 ///
 /// Returns a markdown string containing the feature status report.
 pub fn generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario]) -> String {
+    let metrics = compute_bdd_metrics(ledger, scenarios);
+    generate_feature_status_with_metrics(ledger, scenarios, &metrics)
+}
+
+fn generate_feature_status_with_metrics(
+    ledger: &SpecLedger,
+    scenarios: &[GherkinScenario],
+    metrics: &BddCoverageMetrics,
+) -> String {
     let mut output = String::new();
 
     // Build a map of AC ID -> list of Gherkin scenario locations
@@ -106,6 +350,7 @@ pub fn generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario
         Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
     ));
     output.push_str(&format!("**Git Commit:** {}\n\n", commit_hash));
+    output.push_str(&metrics.to_markdown());
 
     // Generate table
     output.push_str(
@@ -157,6 +402,127 @@ pub fn generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario
     output
 }
 
+fn collect_crate_names_for_tests(tests: &[TestReference]) -> Vec<String> {
+    tests.iter().fold(BTreeSet::new(), |mut crates, test_ref| {
+        let extracted = crate_names_from_reference(test_ref);
+        for crate_name in extracted {
+            crates.insert(crate_name);
+        }
+        crates
+    })
+    .into_iter()
+    .collect()
+}
+
+fn crate_names_from_reference(test_ref: &TestReference) -> Vec<String> {
+    match test_ref {
+        TestReference::Simple(value) => extract_crate_names(value),
+        TestReference::Detailed {
+            test,
+            feature: _,
+            command,
+            ..
+        } => {
+            let mut crate_names = Vec::new();
+            if let Some(path) = test {
+                crate_names.extend(extract_crate_names(path));
+            }
+            if let Some(command) = command {
+                crate_names.extend(extract_crate_names(command));
+                if command.starts_with("cmd:") {
+                    crate_names.extend(extract_crates_from_command(
+                        command.trim_start_matches("cmd:"),
+                    ));
+                } else {
+                    crate_names.extend(extract_crates_from_command(command));
+                }
+            }
+            crate_names
+        }
+    }
+}
+
+fn extract_crate_names(reference: &str) -> Vec<String> {
+    let mut candidates = Vec::new();
+
+    if let Some(command) = reference.strip_prefix("cmd:") {
+        candidates.extend(extract_crates_from_command(command));
+        return candidates;
+    }
+
+    if reference.starts_with("feature:") {
+        return candidates;
+    }
+
+    if reference.contains("::") {
+        let first_segment = reference.split("::").next();
+        if let Some(crate_name) = first_segment {
+            let normalized = normalize_crate_name(crate_name);
+            if is_crate_name_candidate(&normalized) {
+                candidates.push(normalized);
+            }
+        }
+    }
+
+    candidates
+}
+
+fn extract_crates_from_command(command: &str) -> Vec<String> {
+    let mut crates = BTreeSet::new();
+    let mut tokens = command.split_whitespace().peekable();
+
+    while let Some(token) = tokens.next() {
+        if token == "-p" || token == "--package" {
+            if let Some(value) = tokens.next() {
+                let normalized = normalize_crate_name(value);
+                if is_crate_name_candidate(&normalized) {
+                    crates.insert(normalized);
+                }
+            }
+            continue;
+        }
+
+        if let Some(value) = token.strip_prefix("--package=") {
+            let normalized = normalize_crate_name(value);
+            if is_crate_name_candidate(&normalized) {
+                crates.insert(normalized);
+            }
+            continue;
+        }
+
+        if token.starts_with("-p") && token.len() > 2 && !token.starts_with("-package") {
+            let value = token.trim_start_matches("-p");
+            let normalized = normalize_crate_name(value);
+            if is_crate_name_candidate(&normalized) {
+                crates.insert(normalized);
+            }
+        }
+    }
+
+    crates.into_iter().collect()
+}
+
+fn normalize_crate_name(crate_name: &str) -> String {
+    crate_name
+        .trim_matches(&['"', '\'', '`'][..])
+        .trim_end_matches("\\")
+        .trim()
+        .replace('_', "-")
+}
+
+fn is_crate_name_candidate(crate_name: &str) -> bool {
+    if crate_name.is_empty() {
+        return false;
+    }
+
+    let first = crate_name.chars().next().unwrap_or('_');
+    if !first.is_ascii_alphabetic() {
+        return false;
+    }
+
+    crate_name.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_')
+}
+
 /// Get the current git commit hash.
 ///
 /// # Returns
@@ -185,8 +551,10 @@ fn get_git_commit() -> Result<String> {
 /// This function:
 /// 1. Loads the spec ledger from specs/spec_ledger.yaml
 /// 2. Parses Gherkin features from specs/features/
-/// 3. Generates the feature status report
-/// 4. Writes the report to docs/feature_status.md
+/// 3. Computes BDD and microcrate coverage metrics
+/// 4. Generates the feature status report
+/// 5. Writes the report to docs/feature_status.md
+/// 6. Writes machine-readable metrics to docs/bdd_metrics.json
 ///
 /// # Returns
 ///
@@ -220,15 +588,22 @@ pub fn run_ac_status() -> Result<()> {
 
     println!("  ✓ Parsed {} Gherkin scenarios", scenarios.len());
 
+    let metrics = compute_bdd_metrics(&ledger, &scenarios);
+
     // Generate feature status report
-    let report = generate_feature_status(&ledger, &scenarios);
+    let report = generate_feature_status_with_metrics(&ledger, &scenarios, &metrics);
 
     // Write report to docs/feature_status.md
     let output_path = Path::new("docs/feature_status.md");
+    let reference_output_path = Path::new("docs/reference/feature-status.md");
+    let metrics_path = Path::new("docs/bdd_metrics.json");
 
     // Ensure docs directory exists
     if let Some(parent) = output_path.parent() {
         std::fs::create_dir_all(parent).context("Failed to create docs directory")?;
+    }
+    if let Some(parent) = reference_output_path.parent() {
+        std::fs::create_dir_all(parent).context("Failed to create docs/reference directory")?;
     }
 
     // Add auto-generated header
@@ -248,12 +623,27 @@ pub fn run_ac_status() -> Result<()> {
     full_report.push_str("-->\n\n");
     full_report.push_str(&report);
 
-    std::fs::write(output_path, full_report).context("Failed to write feature status report")?;
+    std::fs::write(output_path, &full_report).context("Failed to write feature status report")?;
+    std::fs::write(
+        reference_output_path,
+        &full_report,
+    )
+    .context("Failed to write reference feature status report")?;
+    std::fs::write(
+        metrics_path,
+        serde_json::to_string_pretty(&metrics).context("Failed to serialize BDD metrics")?,
+    )
+    .context("Failed to write BDD metrics JSON")?;
 
     println!(
         "  ✓ Generated feature status report at {}",
         output_path.display()
     );
+    println!(
+        "  ✓ Generated reference feature status report at {}",
+        reference_output_path.display()
+    );
+    println!("  ✓ Wrote BDD metrics to {}", metrics_path.display());
     println!("\n✅ Feature status report generated successfully");
 
     Ok(())
@@ -268,6 +658,14 @@ mod tests {
     #[test]
     fn test_ac_status_compute_complete() {
         let status = AcStatus::compute(&RequirementStatus::Tested, true, true);
+        assert_eq!(status, AcStatus::Complete);
+        assert_eq!(status.icon(), "✅");
+        assert_eq!(status.text(), "Complete");
+    }
+
+    #[test]
+    fn test_ac_status_compute_implemented_complete() {
+        let status = AcStatus::compute(&RequirementStatus::Implemented, true, true);
         assert_eq!(status, AcStatus::Complete);
         assert_eq!(status.icon(), "✅");
         assert_eq!(status.text(), "Complete");
@@ -336,6 +734,7 @@ mod tests {
 
         // Check that report contains expected elements
         assert!(report.contains("# Feature Status Report"));
+        assert!(report.contains("## BDD Coverage Metrics"));
         assert!(report.contains("REQ-1"));
         assert!(report.contains("AC-1.1"));
         assert!(report.contains("First acceptance criteria"));
@@ -477,5 +876,117 @@ mod tests {
 
         // Check that pipe is escaped
         assert!(report.contains("Test with \\| pipe character"));
+    }
+
+    #[test]
+    fn test_compute_bdd_metrics() {
+        let ledger = SpecLedger {
+            requirements: vec![Requirement {
+                id: "REQ-1".to_string(),
+                name: "Test Requirement".to_string(),
+                status: RequirementStatus::Tested,
+                ac: vec![
+                    AcceptanceCriteria {
+                        id: "AC-1.1".to_string(),
+                        description: "First AC".to_string(),
+                        tests: vec![TestReference::Simple("test::path".to_string())],
+                    },
+                    AcceptanceCriteria {
+                        id: "AC-1.2".to_string(),
+                        description: "Second AC".to_string(),
+                        tests: vec![],
+                    },
+                ],
+            }],
+        };
+
+        let scenarios = vec![GherkinScenario {
+            file_path: PathBuf::from("specs/features/test.feature"),
+            line_number: 10,
+            name: "Test scenario".to_string(),
+            tags: vec!["AC-1.1".to_string()],
+        }];
+
+        let metrics = compute_bdd_metrics(&ledger, &scenarios);
+
+        assert_eq!(metrics.total_ac, 2);
+        assert_eq!(metrics.ac_with_tests, 1);
+        assert_eq!(metrics.ac_with_gherkin, 1);
+        assert_eq!(metrics.ac_with_tests_and_gherkin, 1);
+        assert_eq!(metrics.complete, 1);
+        assert_eq!(metrics.incomplete, 1);
+        assert_eq!(metrics.draft, 0);
+        assert_eq!(metrics.needs_gherkin, 0);
+        assert_eq!(metrics.needs_tests, 0);
+    }
+
+    #[test]
+    fn test_collect_crate_names_from_test_references() {
+        let tests = vec![
+            TestReference::Simple("flight_core::tests::test_alpha".to_string()),
+            TestReference::Simple("cmd:cargo test -p flight-axis".to_string()),
+            TestReference::Simple("cmd:cargo test --manifest-path specs/Cargo.toml".to_string()),
+            TestReference::Detailed {
+                test: Some("flight-core::tests::integration".to_string()),
+                feature: None,
+                command: Some("cargo test -p flight-ipc".to_string()),
+            },
+            TestReference::Simple("feature:specs/features/some.feature:Scenario: X".to_string()),
+            TestReference::Detailed {
+                test: None,
+                feature: Some("specs/features/some.feature".to_string()),
+                command: None,
+            },
+        ];
+
+        let crates = collect_crate_names_for_tests(&tests);
+
+        assert_eq!(crates.len(), 3);
+        assert!(crates.contains(&"flight-axis".to_string()));
+        assert!(crates.contains(&"flight-core".to_string()));
+        assert!(crates.contains(&"flight-ipc".to_string()));
+    }
+
+    #[test]
+    fn test_microcrate_bdd_metrics_includes_crate_breakdown() {
+        let ledger = SpecLedger {
+            requirements: vec![Requirement {
+                id: "REQ-1".to_string(),
+                name: "Test Requirement".to_string(),
+                status: RequirementStatus::Tested,
+                ac: vec![
+                    AcceptanceCriteria {
+                        id: "AC-1.1".to_string(),
+                        description: "First AC".to_string(),
+                        tests: vec![TestReference::Simple(
+                            "flight-core::tests::test_alpha".to_string(),
+                        )],
+                    },
+                    AcceptanceCriteria {
+                        id: "AC-1.2".to_string(),
+                        description: "Second AC".to_string(),
+                        tests: vec![TestReference::Simple(
+                            "cmd:cargo test -p flight-core".to_string(),
+                        )],
+                    },
+                ],
+            }],
+        };
+
+        let scenarios = vec![GherkinScenario {
+            file_path: PathBuf::from("specs/features/test.feature"),
+            line_number: 10,
+            name: "Test scenario".to_string(),
+            tags: vec!["AC-1.1".to_string()],
+        }];
+
+        let metrics = compute_bdd_metrics(&ledger, &scenarios);
+
+        assert_eq!(metrics.crate_coverage.len(), 1);
+        assert_eq!(metrics.crate_coverage[0].crate_name, "flight-core");
+        assert_eq!(metrics.crate_coverage[0].total_ac, 2);
+        assert_eq!(metrics.crate_coverage[0].ac_with_tests, 2);
+        assert_eq!(metrics.crate_coverage[0].ac_with_gherkin, 1);
+        assert_eq!(metrics.crate_coverage[0].ac_with_tests_and_gherkin, 1);
     }
 }

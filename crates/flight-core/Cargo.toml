@@ -26,6 +26,7 @@ flight-security = { path = "../flight-security" }
 flight-blackbox = { path = "../flight-blackbox" }
 flight-watchdog = { path = "../flight-watchdog" }
 flight-session = { path = "../flight-session" }
+flight-metrics = { path = "../flight-metrics" }
 
 [dev-dependencies]
 proptest.workspace = true
