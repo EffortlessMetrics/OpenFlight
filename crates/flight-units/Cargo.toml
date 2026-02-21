@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-units"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Unit definitions and conversion helpers for flight telemetry."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "units", "conversion"]
 [dependencies]
 serde.workspace = true

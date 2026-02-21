@@ -17,15 +17,21 @@ anyhow = { workspace = true }
 
 # Dependencies for axis processing tests
 flight-core = { path = "../crates/flight-core" }
+flight-bdd-metrics = { workspace = true }
+flight-workspace-meta = { workspace = true }
 flight-axis = { path = "../crates/flight-axis" }
 flight-scheduler = { path = "../crates/flight-scheduler" }
 flight-bus = { path = "../crates/flight-bus" }
 
+# Dependencies for HOTAS 4 BDD tests
+flight-hotas-thrustmaster = { path = "../crates/flight-hotas-thrustmaster" }
+flight-hid-support = { path = "../crates/flight-hid-support" }
+
 # Dependencies for documentation validation tests
 serde = { workspace = true }
-serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
-walkdir = "2.5.0"
-regex = "1.12.2"
+serde_yaml = { workspace = true }
+walkdir = { workspace = true }
+regex = { workspace = true }
 
 [[test]]
 name = "cucumber"

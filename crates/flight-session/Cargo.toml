@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-session"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Aircraft and session auto-switch logic for profile selection."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "session", "profiles"]
 [dependencies]
 serde.workspace = true

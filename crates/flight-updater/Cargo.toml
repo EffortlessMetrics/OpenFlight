@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-updater"
 version.workspace = true
 edition.workspace = true
@@ -8,11 +9,11 @@ license.workspace = true
 repository.workspace = true
 description = "Signed update system with channels, deltas, and rollback."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "updater", "rollback"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
-homepage.workspace = true
 
 [features]
 default = []

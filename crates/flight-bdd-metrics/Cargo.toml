@@ -1,0 +1,22 @@
+[package]
+homepage.workspace = true
+name = "flight-bdd-metrics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "BDD traceability and microcrate coverage metric primitives."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "bdd", "coverage", "metrics"]
+categories = ["development-tools", "development-tools::testing"]
+
+[dependencies]
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+walkdir.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }

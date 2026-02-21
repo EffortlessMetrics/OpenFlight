@@ -272,6 +272,42 @@ requirements:
         tests:
           - cmd:cargo test -p flight-cli
 
+  # Product Requirement: Thrustmaster T.Flight HOTAS 4 Support
+  - id: REQ-15
+    name: Thrustmaster T.Flight HOTAS 4 Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-15.1
+        description: "WHEN enumerating HID devices THEN HOTAS 4 SHALL be identified by VID 0x044F and PID 0xB67B (primary) or 0xB67A (legacy), with legacy flag set only for B67A"
+        tests:
+          - flight-hid-support::device_support::tests::test_hotas4_primary_and_legacy_pid_detection
+
+      - id: AC-15.2
+        description: "WHEN parsing merged-mode (8-byte) reports THEN axes/buttons/hat SHALL be decoded and rocker SHALL be absent"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_parse_merged_report
+
+      - id: AC-15.3
+        description: "WHEN parsing separate-mode (9-byte) reports THEN rocker SHALL be present and axes/buttons/hat SHALL be decoded"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_parse_separate_report
+
+      - id: AC-15.4
+        description: "WHEN report layout changes mid-session THEN effective axis mode SHALL update without restart"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_runtime_mode_switch
+
+      - id: AC-15.5
+        description: "WHEN yaw policy is Auto/Twist/Aux THEN logical yaw SHALL resolve to the expected source"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_yaw_policy_resolution
+
+      - id: AC-15.6
+        description: "WHEN documentation references HOTAS 4 THEN it SHALL include primary and legacy PIDs, mode semantics, and REQ-15 link"
+        tests:
+          - cmd:cargo xtask validate
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================
@@ -497,25 +533,32 @@ requirements:
     ac:
       - id: AC-7.1
         description: "WHEN defining maintenance tasks THEN they SHALL include title, motivation, steps, and acceptance"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.2
         description: "WHEN tasks reference files THEN they SHALL use relative paths from workspace root"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate-infra
       - id: AC-7.3
         description: "WHEN tasks include validation THEN they SHALL specify exact commands"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.4
         description: "WHEN tasks are executed THEN Kiro SHALL follow steps sequentially"
-        tests: []
+        tests:
+          - cmd:cargo xtask check
       - id: AC-7.5
         description: "WHEN tasks fail THEN Kiro SHALL provide diagnostic information"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.6
         description: "WHEN new maintenance needs arise THEN they SHALL be encoded as tasks"
-        tests: []
+        tests:
+          - cmd:cargo xtask validate
       - id: AC-7.7
         description: "WHEN tasks are completed THEN acceptance commands SHALL be re-run"
-        tests: []
+        tests:
+          - cmd:cargo xtask ac-status
 
   # Infrastructure Requirement: Local Development Environment
   - id: INF-REQ-8

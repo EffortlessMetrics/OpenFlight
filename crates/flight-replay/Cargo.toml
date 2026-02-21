@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-replay"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Offline replay harness for recorded OpenFlight runs."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "replay", "testing"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

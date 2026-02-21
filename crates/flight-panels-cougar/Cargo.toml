@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-panels-cougar"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Thrustmaster Cougar MFD panel driver implementation."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "panels", "cougar"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

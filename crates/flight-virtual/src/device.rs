@@ -5,6 +5,7 @@
 //!
 //! Simulates flight control devices for testing without hardware
 
+use flight_device_common::{DeviceId, IdentifiedDevice};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -122,6 +123,16 @@ impl VirtualDevice {
     /// Get device configuration
     pub fn config(&self) -> &VirtualDeviceConfig {
         &self.config
+    }
+
+    /// Get stable device identifier for shared manager interfaces.
+    pub fn device_id(&self) -> DeviceId {
+        DeviceId::new(
+            self.config.vid,
+            self.config.pid,
+            Some(self.config.serial.clone()),
+            format!("virtual://{}", self.config.serial),
+        )
     }
 
     /// Check if device is connected
@@ -271,6 +282,12 @@ impl VirtualDevice {
             current_ma: 150.0 + (rand::random_f32() - 0.5) * 50.0,
             uptime_ms: self.state.lock().last_update.elapsed().as_millis() as u64,
         }
+    }
+}
+
+impl IdentifiedDevice for VirtualDevice {
+    fn device_id(&self) -> DeviceId {
+        VirtualDevice::device_id(self)
     }
 }
 

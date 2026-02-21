@@ -8,43 +8,19 @@
 
 use crate::loopback::{HidReport, LoopbackHid};
 use crate::perf_gate::{PerfGate, PerfGateConfig};
-use crate::{DeviceType, VirtualDeviceConfig, VirtualDeviceManager};
+use crate::{
+    DeviceType, VirtualDevice, VirtualDeviceConfig, VirtualDeviceManager, VirtualDeviceManagerError,
+};
+use flight_device_common::DeviceManager;
 use flight_scheduler::{Scheduler, SchedulerConfig, SpscRing};
+use flight_test_helpers::{setup_test_logger, wait_for_condition};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-/// Reusable test helper for timing-dependent tests
-///
-/// Polls a condition function until it returns true or timeout is reached.
-/// This replaces fixed sleep() calls with proper synchronization.
-///
-/// # Arguments
-/// * `timeout` - Maximum duration to wait
-/// * `poll` - Function that returns true when condition is met
-///
-/// # Returns
-/// * `true` if condition was met within timeout
-/// * `false` if timeout was reached
-fn wait_until<F>(timeout: Duration, mut poll: F) -> bool
-where
-    F: FnMut() -> bool,
-{
-    let start = Instant::now();
-    let poll_interval = Duration::from_millis(10);
-
-    while start.elapsed() < timeout {
-        if poll() {
-            return true;
-        }
-        thread::sleep(poll_interval);
-    }
-
-    false
-}
-
 #[test]
 fn test_scheduler_virtual_device_integration() {
+    setup_test_logger();
     let mut manager = VirtualDeviceManager::new();
 
     // Create virtual joystick
@@ -94,8 +70,13 @@ fn test_scheduler_virtual_device_integration() {
 
     let stats = scheduler.get_stats();
     let device_stats = device.get_stats();
+    let reports_settled =
+        wait_for_condition(Duration::from_millis(100), Duration::from_millis(5), || {
+            device.get_stats().input_reports > 40
+        });
 
     // Verify integration worked
+    assert!(reports_settled);
     assert!(stats.total_ticks > 40); // Should have run ~50 ticks at 100Hz for 500ms
     assert!(device_stats.input_reports > 40);
     assert_eq!(stats.missed_ticks, 0); // Should not miss ticks under light load
@@ -104,6 +85,51 @@ fn test_scheduler_virtual_device_integration() {
     println!("  Scheduler ticks: {}", stats.total_ticks);
     println!("  Device reports: {}", device_stats.input_reports);
     println!("  Miss rate: {:.6}%", stats.miss_rate * 100.0);
+}
+
+#[test]
+fn test_shared_device_manager_registration_flow() {
+    let mut manager = VirtualDeviceManager::new();
+    let device = Arc::new(VirtualDevice::new(VirtualDeviceConfig::default()));
+    let device_id = device.device_id();
+
+    manager
+        .register_device(device.clone())
+        .expect("expected first register to succeed");
+    let registered = manager
+        .enumerate_devices()
+        .expect("enumeration should succeed");
+    assert_eq!(registered.len(), 1);
+    assert_eq!(registered[0].device_id(), device_id);
+
+    let health = manager
+        .get_device_health(&device_id)
+        .expect("device health should be available");
+    assert!(health.is_operational());
+
+    manager
+        .unregister_device(&device_id)
+        .expect("unregister should succeed");
+    let remaining = manager
+        .enumerate_devices()
+        .expect("enumeration should succeed");
+    assert!(remaining.is_empty());
+}
+
+#[test]
+fn test_shared_device_manager_rejects_duplicates() {
+    let mut manager = VirtualDeviceManager::new();
+    let device = Arc::new(VirtualDevice::new(VirtualDeviceConfig::default()));
+    let device_id = device.device_id();
+
+    manager
+        .register_device(device.clone())
+        .expect("first register should succeed");
+    let duplicate = manager.register_device(device);
+    assert!(matches!(
+        duplicate,
+        Err(VirtualDeviceManagerError::DuplicateDevice(id)) if id == device_id
+    ));
 }
 
 #[test]

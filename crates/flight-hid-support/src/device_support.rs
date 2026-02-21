@@ -71,8 +71,7 @@ pub const USAGE_HAT_SWITCH: u16 = 0x39;
 
 pub const AXIS_MODE_WARNING: &str =
     "Rudder sources are merged. Switch to full-axis mode for separate yaw inputs.";
-pub const DRIVER_NOTE: &str =
-    "Missing axes or buttons? Install the Thrustmaster driver and confirm full-axis mode.";
+pub const DRIVER_NOTE: &str = "Missing axes or buttons? Install the Thrustmaster driver and confirm full-axis mode. On Linux, use a corrected HID descriptor setup (for example hid-tflight4) when generic HID exposes limited axes.";
 pub const DEFAULT_MAPPING_NOTE_UNKNOWN: &str =
     "Default mapping assumes full-axis mode; verify axis mode before applying.";
 
@@ -1966,6 +1965,20 @@ mod tests {
         }
     }
 
+    fn tflight_device(product_id: u16) -> HidDeviceInfo {
+        HidDeviceInfo {
+            vendor_id: THRUSTMASTER_VENDOR_ID,
+            product_id,
+            serial_number: None,
+            manufacturer: None,
+            product_name: None,
+            device_path: "/dev/test-tflight".to_string(),
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_JOYSTICK,
+            report_descriptor: None,
+        }
+    }
+
     #[test]
     fn test_axis_mode_from_usages() {
         let usages = vec![
@@ -2070,19 +2083,19 @@ mod tests {
 
     #[test]
     fn test_tflight_model_detection() {
-        let device_info = HidDeviceInfo {
-            vendor_id: THRUSTMASTER_VENDOR_ID,
-            product_id: TFLIGHT_HOTAS_ONE_PID,
-            serial_number: None,
-            manufacturer: None,
-            product_name: None,
-            device_path: "/dev/test".to_string(),
-            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
-            usage: USAGE_JOYSTICK,
-            report_descriptor: None,
-        };
-
+        let device_info = tflight_device(TFLIGHT_HOTAS_ONE_PID);
         assert_eq!(tflight_model(&device_info), Some(TFlightModel::HotasOne));
+    }
+
+    #[test]
+    fn test_hotas4_primary_and_legacy_pid_detection() {
+        let primary = tflight_device(TFLIGHT_HOTAS_4_PID);
+        let legacy = tflight_device(TFLIGHT_HOTAS_4_PID_LEGACY);
+
+        assert_eq!(tflight_model(&primary), Some(TFlightModel::Hotas4));
+        assert_eq!(tflight_model(&legacy), Some(TFlightModel::Hotas4));
+        assert!(!is_hotas4_legacy_pid(&primary));
+        assert!(is_hotas4_legacy_pid(&legacy));
     }
 
     #[test]

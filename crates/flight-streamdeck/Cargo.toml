@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-streamdeck"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "StreamDeck integration with local Web API and profiles."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "streamdeck", "api"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

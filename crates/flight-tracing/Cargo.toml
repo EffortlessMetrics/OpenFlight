@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-tracing"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Tracing backends and performance counter infrastructure."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "tracing", "metrics"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

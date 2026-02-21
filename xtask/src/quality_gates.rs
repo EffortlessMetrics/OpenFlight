@@ -11,9 +11,15 @@
 //! - QG-HID-LATENCY: Verify HID latency tests (future)
 //! - QG-LEGAL-DOC: Verify legal documentation (future)
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use flight_bdd_metrics::{BddTraceabilityMetrics, UNMAPPED_MICROCRATE};
+use flight_workspace_meta::{
+    load_workspace_microcrate_names, validate_workspace_crates_io_metadata,
+};
+use std::collections::HashSet;
+use std::env;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Result of a quality gate check.
 #[derive(Debug, Clone)]
@@ -45,6 +51,17 @@ impl QualityGateResult {
     }
 }
 
+fn workspace_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf()
+}
+
+fn workspace_path(relative_path: &str) -> PathBuf {
+    workspace_root().join(relative_path)
+}
+
 /// QG-SIM-MAPPING: Verify that all simulator adapters have complete mapping documentation.
 ///
 /// This quality gate checks for the presence of:
@@ -74,7 +91,7 @@ pub fn check_sim_mapping_docs() -> Result<QualityGateResult> {
     let mut missing_files = Vec::new();
 
     for file_path in &required_files {
-        let path = Path::new(file_path);
+        let path = workspace_path(file_path);
         if !path.exists() {
             missing_files.push(file_path.to_string());
         }
@@ -130,9 +147,10 @@ pub fn check_sim_mapping_docs() -> Result<QualityGateResult> {
 /// - `passed = false` with details about missing tests if any are missing
 pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
     let test_file_path = "crates/flight-bus/src/snapshot.rs";
+    let path = workspace_path(test_file_path);
 
     // Check if the test file exists
-    if !Path::new(test_file_path).exists() {
+    if !path.exists() {
         return Ok(QualityGateResult::with_details(
             "QG-UNIT-CONV",
             false,
@@ -141,7 +159,7 @@ pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
     }
 
     // Read the test file
-    let test_content = fs::read_to_string(test_file_path)?;
+    let test_content = fs::read_to_string(path)?;
 
     // Required unit conversion tests
     // These correspond to the core unit conversions needed for BusSnapshot fields
@@ -234,9 +252,10 @@ pub fn check_unit_conversion_coverage() -> Result<QualityGateResult> {
 /// - `passed = false` with details about missing tests if any are missing
 pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
     let test_file_path = "crates/flight-simconnect/tests/sanity_gate_tests.rs";
+    let path = workspace_path(test_file_path);
 
     // Check if the test file exists
-    if !Path::new(test_file_path).exists() {
+    if !path.exists() {
         return Ok(QualityGateResult::with_details(
             "QG-SANITY-GATE",
             false,
@@ -245,7 +264,7 @@ pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
     }
 
     // Read the test file
-    let test_content = fs::read_to_string(test_file_path)?;
+    let test_content = fs::read_to_string(path)?;
 
     // Required test categories with patterns to search for
     let required_test_categories = vec![
@@ -338,8 +357,9 @@ pub fn check_sanity_gate_tests() -> Result<QualityGateResult> {
 pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
     // Check for safety envelope tests
     let safety_envelope_test_file = "crates/flight-ffb/src/safety_envelope_tests.rs";
+    let safety_envelope_path = workspace_path(safety_envelope_test_file);
 
-    if !Path::new(safety_envelope_test_file).exists() {
+    if !safety_envelope_path.exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
             false,
@@ -350,12 +370,13 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
         ));
     }
 
-    let safety_envelope_content = fs::read_to_string(safety_envelope_test_file)?;
+    let safety_envelope_content = fs::read_to_string(safety_envelope_path)?;
 
     // Check for fault.rs tests
     let fault_test_file = "crates/flight-ffb/src/fault.rs";
+    let fault_test_path = workspace_path(fault_test_file);
 
-    if !Path::new(fault_test_file).exists() {
+    if !fault_test_path.exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
             false,
@@ -363,12 +384,13 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
         ));
     }
 
-    let fault_content = fs::read_to_string(fault_test_file)?;
+    let fault_content = fs::read_to_string(fault_test_path)?;
 
     // Check for soft_stop.rs tests
     let soft_stop_test_file = "crates/flight-ffb/src/soft_stop.rs";
+    let soft_stop_test_path = workspace_path(soft_stop_test_file);
 
-    if !Path::new(soft_stop_test_file).exists() {
+    if !soft_stop_test_path.exists() {
         return Ok(QualityGateResult::with_details(
             "QG-FFB-SAFETY",
             false,
@@ -379,7 +401,7 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
         ));
     }
 
-    let soft_stop_content = fs::read_to_string(soft_stop_test_file)?;
+    let soft_stop_content = fs::read_to_string(soft_stop_test_path)?;
 
     // Required test categories
     let mut missing_tests: Vec<String> = Vec::new();
@@ -502,6 +524,402 @@ pub fn check_ffb_safety_tests() -> Result<QualityGateResult> {
     }
 }
 
+/// QG-BDD-COVERAGE: Verify BDD coverage metrics against configured thresholds.
+///
+/// This quality gate checks:
+/// - Global test coverage threshold
+/// - Global Gherkin coverage threshold
+/// - Global combined coverage threshold (tests + Gherkin)
+/// - Microcrate test, Gherkin, and combined coverage thresholds for microcrates
+///   above a minimum AC count
+///
+/// Thresholds are optional and loaded from environment variables with the
+/// following defaults:
+/// - `BDD_MIN_TEST_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_GHERKIN_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_BOTH_COVERAGE_PCT` (default 0.0)
+/// - `BDD_MIN_CRATE_AC_FOR_EVAL` (default 1)
+/// - `BDD_MIN_CRATE_TEST_PCT` (default 0.0)
+/// - `BDD_MIN_CRATE_GHERKIN_PCT` (default 0.0)
+/// - `BDD_MIN_CRATE_BOTH_PCT` (default 0.0)
+/// - `BDD_EXCLUDE_UNMAPPED_MICROCRATE` (default false)
+pub fn check_bdd_coverage() -> Result<QualityGateResult> {
+    let metrics_path = workspace_path("docs/bdd_metrics.json");
+    let metrics = match load_bdd_metrics(&metrics_path) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-COVERAGE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let min_test_coverage = read_float_threshold("BDD_MIN_TEST_COVERAGE_PCT", 0.0)?;
+    let min_gherkin_coverage = read_float_threshold("BDD_MIN_GHERKIN_COVERAGE_PCT", 0.0)?;
+    let min_both_coverage = read_float_threshold("BDD_MIN_BOTH_COVERAGE_PCT", 0.0)?;
+    let min_crate_ac_for_eval = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)?;
+    let min_crate_test_coverage = read_float_threshold("BDD_MIN_CRATE_TEST_PCT", 0.0)?;
+    let min_crate_gherkin_coverage = read_float_threshold("BDD_MIN_CRATE_GHERKIN_PCT", 0.0)?;
+    let min_crate_both_coverage = read_float_threshold("BDD_MIN_CRATE_BOTH_PCT", 0.0)?;
+    let exclude_unmapped_microcrate = read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", false)?;
+
+    if metrics.total_ac == 0 {
+        return Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            false,
+            "No acceptance criteria were loaded from BDD metrics artifact".to_string(),
+        ));
+    }
+
+    let test_coverage = metrics.test_coverage_percent();
+    let gherkin_coverage = metrics.gherkin_coverage_percent();
+    let both_coverage = metrics.both_coverage_percent();
+
+    let mut failures = Vec::new();
+
+    if test_coverage < min_test_coverage {
+        failures.push(format!(
+            "overall test coverage {:.1}% < {:.1}% (threshold)",
+            test_coverage, min_test_coverage
+        ));
+    }
+
+    if gherkin_coverage < min_gherkin_coverage {
+        failures.push(format!(
+            "overall Gherkin coverage {:.1}% < {:.1}% (threshold)",
+            gherkin_coverage, min_gherkin_coverage
+        ));
+    }
+
+    if both_coverage < min_both_coverage {
+        failures.push(format!(
+            "overall combined coverage {:.1}% < {:.1}% (threshold)",
+            both_coverage, min_both_coverage
+        ));
+    }
+
+    let mut evaluated_microcrates = 0usize;
+    let mut failing_microcrates = Vec::new();
+
+    for microcrate in &metrics.crate_coverage {
+        if microcrate.total_ac < min_crate_ac_for_eval {
+            continue;
+        }
+        if exclude_unmapped_microcrate && microcrate.is_unmapped() {
+            continue;
+        }
+
+        evaluated_microcrates += 1;
+
+        let microcrate_test_coverage = microcrate.test_coverage_percent();
+        let microcrate_gherkin_coverage = microcrate.gherkin_coverage_percent();
+        let microcrate_both_coverage = microcrate.combined_coverage_percent();
+
+        let mut crate_failures = Vec::new();
+        if microcrate_test_coverage < min_crate_test_coverage {
+            crate_failures.push(format!(
+                "test {:.1}% < {:.1}% (threshold)",
+                microcrate_test_coverage, min_crate_test_coverage
+            ));
+        }
+        if microcrate_gherkin_coverage < min_crate_gherkin_coverage {
+            crate_failures.push(format!(
+                "gherkin {:.1}% < {:.1}% (threshold)",
+                microcrate_gherkin_coverage, min_crate_gherkin_coverage
+            ));
+        }
+        if microcrate_both_coverage < min_crate_both_coverage {
+            crate_failures.push(format!(
+                "combined {:.1}% < {:.1}% (threshold)",
+                microcrate_both_coverage, min_crate_both_coverage
+            ));
+        }
+
+        if !crate_failures.is_empty() {
+            failing_microcrates.push(format!(
+                "{}: {}",
+                microcrate.crate_name,
+                crate_failures.join(", ")
+            ));
+        }
+    }
+
+    if !failing_microcrates.is_empty() {
+        failures.push(format!(
+            "{} microcrate(s) below per-microcrate thresholds with min AC >= {}: {}",
+            failing_microcrates.len(),
+            min_crate_ac_for_eval,
+            failing_microcrates.join(", ")
+        ));
+    }
+
+    if failures.is_empty() {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            true,
+            format!(
+                "Coverage checks passed (test {:.1}%, gherkin {:.1}%, combined {:.1}%). {} microcrate(s) evaluated with min AC {} and crate thresholds (tests {:.1}%, gherkin {:.1}%, combined {:.1}%{}).",
+                test_coverage,
+                gherkin_coverage,
+                both_coverage,
+                evaluated_microcrates,
+                min_crate_ac_for_eval,
+                min_crate_test_coverage,
+                min_crate_gherkin_coverage,
+                min_crate_both_coverage,
+                if exclude_unmapped_microcrate {
+                    ", unmapped excluded"
+                } else {
+                    ""
+                }
+            ),
+        ))
+    } else {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-COVERAGE",
+            false,
+            format!("BDD coverage checks failed:\n- {}", failures.join("\n- ")),
+        ))
+    }
+}
+
+/// QG-BDD-MATRIX-COMPLETE: Ensure the BDD metrics artifact includes all workspace
+/// microcrates discovered from cargo workspace members.
+///
+/// This prevents drift where microcrates exist in workspace membership but are
+/// missing from `docs/bdd_metrics.json`, which can happen if generation commands
+/// are run with a stale checkout or without the workspace flag enabled.
+pub fn check_bdd_matrix_complete() -> Result<QualityGateResult> {
+    let metrics_path = workspace_path("docs/bdd_metrics.json");
+    let metrics = match load_bdd_metrics(&metrics_path) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-MATRIX-COMPLETE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let workspace_crates: HashSet<String> = load_workspace_microcrate_names(workspace_root())
+        .context("Failed to load workspace microcrates")?
+        .into_iter()
+        .collect();
+    let mapped_crates: HashSet<String> = metrics
+        .crate_coverage
+        .into_iter()
+        .map(|entry| entry.crate_name)
+        .filter(|name| !name.is_empty() && name != UNMAPPED_MICROCRATE)
+        .collect();
+
+    let mut missing_crates: Vec<String> = workspace_crates
+        .difference(&mapped_crates)
+        .cloned()
+        .collect();
+    missing_crates.sort();
+
+    let mut extra_crates: Vec<String> = mapped_crates
+        .difference(&workspace_crates)
+        .filter(|name| name.as_str() != UNMAPPED_MICROCRATE)
+        .cloned()
+        .collect();
+    extra_crates.sort();
+
+    if missing_crates.is_empty() && extra_crates.is_empty() {
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-MATRIX-COMPLETE",
+            true,
+            format!(
+                "BDD metrics matrix contains all {} workspace microcrates",
+                workspace_crates.len()
+            ),
+        ))
+    } else {
+        let mut details = Vec::new();
+        if !missing_crates.is_empty() {
+            details.push(format!(
+                "Missing from docs/bdd_metrics.json: {}",
+                missing_crates.join(", ")
+            ));
+        }
+
+        if !extra_crates.is_empty() {
+            details.push(format!(
+                "Present in docs/bdd_metrics.json but no longer workspace member: {}",
+                extra_crates.join(", ")
+            ));
+        }
+
+        Ok(QualityGateResult::with_details(
+            "QG-BDD-MATRIX-COMPLETE",
+            false,
+            format!(
+                "BDD matrix completeness check failed:\n- {}",
+                details.join("\n- ")
+            ),
+        ))
+    }
+}
+
+/// QG-CRATE-METADATA: Verify workspace microcrates have crates.io compatible metadata.
+///
+/// This quality gate validates that each crate under `crates/` has the metadata required for a
+/// stable `crates.io` publishable layout, including workspace-inherited values where applicable.
+///
+/// Required metadata keys:
+/// - name
+/// - version
+/// - edition
+/// - rust-version
+/// - license
+/// - repository
+/// - homepage
+/// - description
+/// - readme
+/// - keywords
+/// - categories
+///
+/// The gate validates that `readme` resolves to an existing file and that required fields are
+/// present either in the crate manifest or `[workspace.package]`.
+pub fn check_crate_metadata_compatibility() -> Result<QualityGateResult> {
+    let report = validate_workspace_crates_io_metadata(workspace_root())
+        .context("Failed to validate workspace crates.io metadata")?;
+
+    if report.checked == 0 {
+        return Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            false,
+            "No crate manifests found under crates/ in workspace members".to_string(),
+        ));
+    }
+
+    if report.is_success() {
+        Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            true,
+            format!(
+                "{} crate manifests validated for crates.io metadata compatibility",
+                report.checked
+            ),
+        ))
+    } else {
+        let details = format!(
+            "{} crate(s) failed metadata compatibility:\n- {}",
+            report.issues.len(),
+            report
+                .issues
+                .iter()
+                .map(|issue| issue.summary())
+                .collect::<Vec<_>>()
+                .join("\n- ")
+        );
+        Ok(QualityGateResult::with_details(
+            "QG-CRATE-METADATA",
+            false,
+            details,
+        ))
+    }
+}
+
+fn load_bdd_metrics(path: &Path) -> Result<BddTraceabilityMetrics> {
+    let content = fs::read_to_string(path)
+        .with_context(|| format!("Failed to read BDD metrics artifact at {}", path.display()))?;
+
+    serde_json::from_str(&content)
+        .with_context(|| format!("Failed to parse BDD metrics JSON at {}", path.display()))
+}
+
+fn read_float_threshold(name: &str, default: f64) -> Result<f64> {
+    match env::var(name) {
+        Ok(raw) => {
+            let value = raw.parse::<f64>().with_context(|| {
+                format!(
+                    "Invalid value for {}={}. Expected a floating point threshold.",
+                    name, raw
+                )
+            })?;
+            Ok(value)
+        }
+        Err(_) => Ok(default),
+    }
+}
+
+fn read_usize_threshold(name: &str, default: usize) -> Result<usize> {
+    match env::var(name) {
+        Ok(raw) => {
+            let value = raw.parse::<usize>().with_context(|| {
+                format!(
+                    "Invalid value for {}={}. Expected a non-negative integer threshold.",
+                    name, raw
+                )
+            })?;
+            Ok(value)
+        }
+        Err(_) => Ok(default),
+    }
+}
+
+fn read_bool_flag(name: &str, default: bool) -> Result<bool> {
+    match env::var(name) {
+        Ok(raw) => match raw.to_lowercase().as_str() {
+            "1" | "true" | "t" | "yes" | "on" => Ok(true),
+            "0" | "false" | "f" | "no" | "off" => Ok(false),
+            _ => anyhow::bail!(
+                "Invalid value for {}={}. Expected a boolean flag (true/false/1/0/yes/no/on/off).",
+                name,
+                raw
+            ),
+        },
+        Err(_) => Ok(default),
+    }
+}
+
+/// QG-BDD-UNMAPPED-MICROCRATE: Ensure no acceptance-criteria are assigned to
+/// the synthetic `unmapped` microcrate.
+///
+/// This gate enforces that all acceptance criteria can be mapped to a concrete
+/// workspace microcrate in test references. It fails when the synthetic `unmapped`
+/// row in `docs/bdd_metrics.json` has any acceptance criteria.
+///
+/// Failure Condition:
+/// - `unmapped` row exists with `total_ac > 0`.
+pub fn check_no_unmapped_microcrate_requirements() -> Result<QualityGateResult> {
+    let metrics_path = workspace_path("docs/bdd_metrics.json");
+    let metrics = match load_bdd_metrics(&metrics_path) {
+        Ok(metrics) => metrics,
+        Err(e) => {
+            return Ok(QualityGateResult::with_details(
+                "QG-BDD-UNMAPPED-MICROCRATE",
+                false,
+                format!("Unable to load BDD metrics artifact: {}", e),
+            ));
+        }
+    };
+
+    let unmapped = metrics.crate_coverage_for(UNMAPPED_MICROCRATE);
+
+    if let Some(unmapped) = unmapped
+        && unmapped.total_ac > 0
+    {
+        return Ok(QualityGateResult::with_details(
+            "QG-BDD-UNMAPPED-MICROCRATE",
+            false,
+            format!(
+                "BDD metrics row `{}` has {} acceptance criteria with {} tests and {} Gherkin mapping(s)",
+                UNMAPPED_MICROCRATE,
+                unmapped.total_ac,
+                unmapped.ac_with_tests,
+                unmapped.ac_with_gherkin
+            ),
+        ));
+    }
+
+    Ok(QualityGateResult::new("QG-BDD-UNMAPPED-MICROCRATE", true))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -509,23 +927,9 @@ mod tests {
 
     #[test]
     fn test_sim_mapping_docs_exist() {
-        // Ensure we're running from workspace root
-        // Tests run from the crate directory, so we need to navigate up
-        let original_dir = env::current_dir().expect("Failed to get current directory");
-
-        // Navigate to workspace root (parent of xtask)
-        let workspace_root = original_dir
-            .parent()
-            .expect("Failed to get parent directory");
-
-        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
-
         // This test verifies that the mapping documentation files exist
         // It will fail if any required files are missing
         let result = check_sim_mapping_docs().expect("QG-SIM-MAPPING check failed");
-
-        // Restore original directory
-        env::set_current_dir(original_dir).expect("Failed to restore original directory");
 
         if !result.passed {
             panic!(
@@ -539,21 +943,8 @@ mod tests {
 
     #[test]
     fn test_unit_conversion_coverage() {
-        // Ensure we're running from workspace root
-        let original_dir = env::current_dir().expect("Failed to get current directory");
-
-        // Navigate to workspace root (parent of xtask)
-        let workspace_root = original_dir
-            .parent()
-            .expect("Failed to get parent directory");
-
-        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
-
         // This test verifies that all required unit conversion tests exist
         let result = check_unit_conversion_coverage().expect("QG-UNIT-CONV check failed");
-
-        // Restore original directory
-        env::set_current_dir(original_dir).expect("Failed to restore original directory");
 
         if !result.passed {
             panic!(
@@ -567,21 +958,8 @@ mod tests {
 
     #[test]
     fn test_sanity_gate_tests_exist() {
-        // Ensure we're running from workspace root
-        let original_dir = env::current_dir().expect("Failed to get current directory");
-
-        // Navigate to workspace root (parent of xtask)
-        let workspace_root = original_dir
-            .parent()
-            .expect("Failed to get parent directory");
-
-        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
-
         // This test verifies that all required sanity gate tests exist
         let result = check_sanity_gate_tests().expect("QG-SANITY-GATE check failed");
-
-        // Restore original directory
-        env::set_current_dir(original_dir).expect("Failed to restore original directory");
 
         if !result.passed {
             panic!(
@@ -595,21 +973,8 @@ mod tests {
 
     #[test]
     fn test_ffb_safety_tests_exist() {
-        // Ensure we're running from workspace root
-        let original_dir = env::current_dir().expect("Failed to get current directory");
-
-        // Navigate to workspace root (parent of xtask)
-        let workspace_root = original_dir
-            .parent()
-            .expect("Failed to get parent directory");
-
-        env::set_current_dir(workspace_root).expect("Failed to change to workspace root");
-
         // This test verifies that all required FFB safety tests exist
         let result = check_ffb_safety_tests().expect("QG-FFB-SAFETY check failed");
-
-        // Restore original directory
-        env::set_current_dir(original_dir).expect("Failed to restore original directory");
 
         if !result.passed {
             panic!(
@@ -618,6 +983,61 @@ mod tests {
                     .details
                     .unwrap_or_else(|| "Unknown error".to_string())
             );
+        }
+    }
+
+    #[test]
+    fn test_bdd_coverage_threshold_parsing() {
+        let expected_float = 83.3;
+        // SAFETY: test-only process-wide env mutation; this test reads/removes the same keys.
+        unsafe {
+            env::set_var("BDD_MIN_TEST_COVERAGE_PCT", "83.3");
+        }
+        let parsed_float = read_float_threshold("BDD_MIN_TEST_COVERAGE_PCT", 0.0)
+            .expect("Expected threshold parsing to succeed");
+        assert!((parsed_float - expected_float).abs() < 0.0001);
+
+        unsafe {
+            env::set_var("BDD_MIN_CRATE_TEST_PCT", "72.5");
+        }
+        let parsed_float = read_float_threshold("BDD_MIN_CRATE_TEST_PCT", 0.0)
+            .expect("Expected microcrate test threshold parsing to succeed");
+        assert!((parsed_float - 72.5).abs() < 0.0001);
+
+        unsafe {
+            env::set_var("BDD_MIN_CRATE_BOTH_PCT", "91.2");
+        }
+        let parsed_float = read_float_threshold("BDD_MIN_CRATE_BOTH_PCT", 0.0)
+            .expect("Expected microcrate both threshold parsing to succeed");
+        assert!((parsed_float - 91.2).abs() < 0.0001);
+
+        unsafe {
+            env::set_var("BDD_MIN_CRATE_AC_FOR_EVAL", "5");
+        }
+        let parsed_usize = read_usize_threshold("BDD_MIN_CRATE_AC_FOR_EVAL", 1)
+            .expect("Expected microcrate threshold parsing to succeed");
+        assert_eq!(parsed_usize, 5);
+
+        unsafe {
+            env::set_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE", "true");
+        }
+        let parsed_bool = read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", false)
+            .expect("Expected boolean parsing to succeed");
+        assert!(parsed_bool);
+
+        unsafe {
+            env::set_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE", "0");
+        }
+        let parsed_bool = read_bool_flag("BDD_EXCLUDE_UNMAPPED_MICROCRATE", true)
+            .expect("Expected boolean parsing to succeed");
+        assert!(!parsed_bool);
+
+        unsafe {
+            env::remove_var("BDD_MIN_TEST_COVERAGE_PCT");
+            env::remove_var("BDD_MIN_CRATE_TEST_PCT");
+            env::remove_var("BDD_MIN_CRATE_BOTH_PCT");
+            env::remove_var("BDD_MIN_CRATE_AC_FOR_EVAL");
+            env::remove_var("BDD_EXCLUDE_UNMAPPED_MICROCRATE");
         }
     }
 }

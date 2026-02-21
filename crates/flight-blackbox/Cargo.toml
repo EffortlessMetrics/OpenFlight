@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-blackbox"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Flight Black Box (.fbb) recording and replay data format support."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "recording", "telemetry"]
 [dependencies]
 serde.workspace = true

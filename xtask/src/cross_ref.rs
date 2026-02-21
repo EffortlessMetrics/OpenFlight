@@ -16,6 +16,12 @@ use std::process::Command;
 
 use crate::front_matter::FrontMatter;
 
+#[derive(Debug, Clone)]
+pub struct WorkspaceMember {
+    pub name: String,
+    pub manifest_path: PathBuf,
+}
+
 /// Spec ledger data structure.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SpecLedger {
@@ -407,13 +413,45 @@ fn search_for_test_function(crate_path: &str, test_fn: &str) -> Result<bool> {
 /// # Returns
 ///
 /// Returns a set of workspace member crate names (in kebab-case).
-fn load_workspace_members() -> Result<HashSet<String>> {
+pub(crate) fn load_workspace_members() -> Result<HashSet<String>> {
+    Ok(load_workspace_members_with_manifests()?
+        .into_iter()
+        .map(|member| member.name)
+        .collect())
+}
+
+/// Load workspace members that are microcrates under `crates/` with manifest paths.
+///
+/// This intentionally excludes `xtask`, `specs`, and other non-crate workspace members
+/// (such as examples) from microcrate-level checks and metrics.
+pub(crate) fn load_workspace_crate_members_with_manifests() -> Result<Vec<WorkspaceMember>> {
+    Ok(load_workspace_members_with_manifests()?
+        .into_iter()
+        .filter(|member| is_crate_manifest_path(&member.manifest_path))
+        .collect())
+}
+
+/// Load microcrate names from the workspace members under `crates/`.
+pub(crate) fn load_workspace_crate_members() -> Result<HashSet<String>> {
+    Ok(load_workspace_crate_members_with_manifests()?
+        .into_iter()
+        .map(|member| member.name)
+        .collect())
+}
+
+/// Load workspace members with manifest paths from Cargo.toml.
+///
+/// This is used by quality gates to validate workspace crate metadata using
+/// manifest-specific checks.
+pub(crate) fn load_workspace_members_with_manifests() -> Result<Vec<WorkspaceMember>> {
     // Find the workspace root Cargo.toml
     let cargo_toml_path = find_workspace_cargo_toml()?;
     let content =
         std::fs::read_to_string(&cargo_toml_path).context("Failed to read workspace Cargo.toml")?;
+    let workspace_root = cargo_toml_path.parent().unwrap_or(Path::new("."));
 
-    let mut members = HashSet::new();
+    let mut members = Vec::new();
+    let mut seen = HashSet::new();
 
     // Parse the workspace members using a simple regex
     // Format: members = ["crates/flight-core", "crates/flight-ipc", ...]
@@ -428,14 +466,56 @@ fn load_workspace_members() -> Result<HashSet<String>> {
         for cap in member_re.captures_iter(members_str) {
             let member_path = cap.get(1).unwrap().as_str();
 
-            // Extract crate name from path (e.g., "crates/flight-core" -> "flight-core")
-            if let Some(crate_name) = member_path.split('/').next_back() {
-                members.insert(crate_name.to_string());
+            // Extract crate name from path or manifest name (e.g., "crates/flight-core" -> "flight-core").
+            let manifest_path = workspace_root.join(member_path).join("Cargo.toml");
+            if !manifest_path.exists() {
+                continue;
+            }
+
+            let manifest_name = Path::new(member_path)
+                .file_name()
+                .and_then(|value| value.to_str())
+                .map(ToString::to_string)
+                .unwrap_or_else(|| member_path.to_string());
+
+            let crate_name = extract_workspace_member_crate_name(workspace_root, member_path)
+                .unwrap_or(manifest_name);
+
+            if seen.insert(crate_name.clone()) {
+                members.push(WorkspaceMember {
+                    name: crate_name,
+                    manifest_path,
+                });
             }
         }
     }
 
     Ok(members)
+}
+
+pub(crate) fn is_crate_manifest_path(manifest_path: &Path) -> bool {
+    manifest_path
+        .parent()
+        .and_then(|crate_dir| crate_dir.parent())
+        .and_then(|parent| parent.file_name())
+        .is_some_and(|name| name == "crates")
+}
+
+fn extract_workspace_member_crate_name(workspace_root: &Path, member_path: &str) -> Option<String> {
+    let manifest_path = workspace_root.join(member_path).join("Cargo.toml");
+    if manifest_path.exists() {
+        if let Ok(manifest_content) = std::fs::read_to_string(&manifest_path) {
+            let package_name_re = Regex::new(r#"(?m)^\s*name\s*=\s*\"([^\"]+)\""#).unwrap();
+            if let Some(capture) = package_name_re.captures(&manifest_content) {
+                return Some(capture[1].to_string());
+            }
+        }
+    }
+
+    Path::new(member_path)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .map(|value| value.to_string())
 }
 
 /// Find the workspace root Cargo.toml.

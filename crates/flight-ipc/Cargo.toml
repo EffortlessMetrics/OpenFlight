@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-ipc"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Cross-platform gRPC IPC layer for OpenFlight components."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "ipc", "grpc"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

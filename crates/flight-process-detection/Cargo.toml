@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-process-detection"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Cross-platform simulator process detection for OpenFlight."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "process", "detection"]
 [dependencies]
 serde.workspace = true

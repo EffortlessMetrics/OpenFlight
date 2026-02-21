@@ -118,6 +118,7 @@ pub const MAX_TRACKED_BUTTONS: usize = u32::BITS as usize;
 /// use flight_hid_support::ghost_filter::GhostInputFilter;
 ///
 /// let mut filter = GhostInputFilter::new();
+/// let raw_button_state: u32 = 0b0001;
 ///
 /// // Process button states from HID reports
 /// let filtered_state = filter.filter(raw_button_state);

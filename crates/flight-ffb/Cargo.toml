@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-ffb"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Force feedback engine with safety interlocks and mode negotiation."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "ffb", "safety"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

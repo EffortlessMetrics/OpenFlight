@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-simconnect"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "MSFS SimConnect adapter for telemetry and aircraft detection."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "simconnect", "msfs"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

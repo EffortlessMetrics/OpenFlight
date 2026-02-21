@@ -1,0 +1,18 @@
+[package]
+homepage.workspace = true
+name = "flight-workspace-meta"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Workspace microcrate discovery and crates.io metadata validation primitives."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "workspace", "metadata"]
+
+[dependencies]
+anyhow.workspace = true
+serde = { workspace = true, features = ["derive"] }
+toml.workspace = true

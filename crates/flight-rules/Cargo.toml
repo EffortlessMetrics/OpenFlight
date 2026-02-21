@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-rules"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Rules DSL and evaluator types for panel logic."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "rules", "dsl"]
 [dependencies]
 serde.workspace = true

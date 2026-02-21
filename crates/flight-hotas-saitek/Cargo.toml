@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-hotas-saitek"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Saitek and Logitech HOTAS driver support for OpenFlight."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "hotas", "saitek"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

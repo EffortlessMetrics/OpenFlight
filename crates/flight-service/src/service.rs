@@ -7,7 +7,9 @@
 //! including axis processing, safety systems, auto-profiles, and health monitoring.
 
 use anyhow::Result;
+use flight_hotas_thrustmaster::TFlightYawPolicy;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, info, warn};
@@ -25,6 +27,9 @@ use crate::{
     curve_conflict_service::CurveConflictService,
     error_taxonomy::ErrorTaxonomy,
     health::HealthStream,
+    input_runtime::{
+        SimulatedTFlightReportSource, TFlightInputRuntime, TFlightRuntimeConfig, TFlightSnapshot,
+    },
     power::{PowerChecker, PowerStatus},
     safe_mode::{SafeModeConfig, SafeModeManager, SafeModeStatus},
 };
@@ -47,6 +52,12 @@ pub struct FlightServiceConfig {
     pub enable_health_monitoring: bool,
     /// Enable power optimization checks
     pub enable_power_checks: bool,
+    /// Enable T.Flight HOTAS ingest runtime.
+    pub enable_tflight_runtime: bool,
+    /// Polling rate for T.Flight ingest runtime.
+    pub tflight_poll_hz: u16,
+    /// Yaw source policy for T.Flight parsing.
+    pub tflight_yaw_policy: TFlightYawPolicyConfig,
 }
 
 /// Axis engine configuration subset
@@ -61,6 +72,30 @@ pub struct AxisEngineConfig {
     /// Enable curve conflict detection
     pub enable_conflict_detection: bool,
     // Note: conflict_detector_config omitted from service config for simplicity
+}
+
+/// Serializable service-level yaw policy config for T.Flight devices.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum TFlightYawPolicyConfig {
+    Auto,
+    Twist,
+    Aux,
+}
+
+impl Default for TFlightYawPolicyConfig {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
+impl From<TFlightYawPolicyConfig> for TFlightYawPolicy {
+    fn from(value: TFlightYawPolicyConfig) -> Self {
+        match value {
+            TFlightYawPolicyConfig::Auto => TFlightYawPolicy::Auto,
+            TFlightYawPolicyConfig::Twist => TFlightYawPolicy::Twist,
+            TFlightYawPolicyConfig::Aux => TFlightYawPolicy::Aux,
+        }
+    }
 }
 
 impl Default for FlightServiceConfig {
@@ -78,6 +113,9 @@ impl Default for FlightServiceConfig {
             watchdog_config: WatchdogConfig::default(),
             enable_health_monitoring: true,
             enable_power_checks: true,
+            enable_tflight_runtime: true,
+            tflight_poll_hz: 250,
+            tflight_yaw_policy: TFlightYawPolicyConfig::Auto,
         }
     }
 }
@@ -123,6 +161,8 @@ pub struct FlightService {
     capability_service: Option<CapabilityService>,
     /// Watchdog system
     watchdog: Option<WatchdogSystem>,
+    /// T.Flight HOTAS runtime
+    tflight_runtime: Option<TFlightInputRuntime>,
     /// Power status
     power_status: Arc<RwLock<Option<PowerStatus>>>,
     /// Service shutdown signal
@@ -148,6 +188,7 @@ impl FlightService {
             curve_conflict: None,
             capability_service: None,
             watchdog: None,
+            tflight_runtime: None,
             power_status: Arc::new(RwLock::new(None)),
             shutdown_tx: None,
         }
@@ -180,6 +221,9 @@ impl FlightService {
         self.health.register_component("axis_engine").await;
         self.health.register_component("auto_switch").await;
         self.health.register_component("safety").await;
+        if self.config.enable_tflight_runtime {
+            self.health.register_component("input_hotas_tflight").await;
+        }
 
         self.health
             .info("service", "Flight Hub service starting")
@@ -208,6 +252,10 @@ impl FlightService {
             self.start_safe_mode().await?;
         } else {
             self.start_full_mode().await?;
+        }
+
+        if self.config.enable_tflight_runtime {
+            self.initialize_tflight_runtime().await?;
         }
 
         // Create shutdown channel
@@ -355,6 +403,29 @@ impl FlightService {
         Ok(())
     }
 
+    /// Initialize T.Flight HOTAS ingest runtime.
+    async fn initialize_tflight_runtime(&mut self) -> Result<()> {
+        info!("Initializing T.Flight HOTAS runtime");
+
+        let config = TFlightRuntimeConfig {
+            poll_hz: self.config.tflight_poll_hz,
+            yaw_policy: self.config.tflight_yaw_policy.into(),
+        };
+
+        // This cycle uses the deterministic simulated backend by default.
+        let source = Box::new(SimulatedTFlightReportSource::default());
+        let runtime = TFlightInputRuntime::start(source, Arc::clone(&self.health), config);
+
+        self.tflight_runtime = Some(runtime);
+        self.health
+            .info(
+                "input_hotas_tflight",
+                "T.Flight HOTAS runtime initialized (simulated report source)",
+            )
+            .await;
+        Ok(())
+    }
+
     /// Check power configuration
     async fn check_power_configuration(&self) -> Result<PowerStatus> {
         info!("Checking power configuration");
@@ -431,6 +502,24 @@ impl FlightService {
             .map(|safe_mode| safe_mode.get_status())
     }
 
+    /// Get latest T.Flight HOTAS snapshots.
+    pub async fn get_tflight_snapshots(&self) -> HashMap<String, TFlightSnapshot> {
+        if let Some(runtime) = &self.tflight_runtime {
+            runtime.snapshots().await
+        } else {
+            HashMap::new()
+        }
+    }
+
+    /// Get latest snapshot for one T.Flight HOTAS device.
+    pub async fn get_tflight_snapshot(&self, device_id: &str) -> Option<TFlightSnapshot> {
+        if let Some(runtime) = &self.tflight_runtime {
+            runtime.snapshot(device_id).await
+        } else {
+            None
+        }
+    }
+
     /// Subscribe to health events
     pub fn subscribe_health(&self) -> broadcast::Receiver<crate::health::HealthEvent> {
         self.health.subscribe()
@@ -458,6 +547,11 @@ impl FlightService {
         // Send shutdown signal
         if let Some(tx) = &self.shutdown_tx {
             let _ = tx.send(());
+        }
+
+        if let Some(mut runtime) = self.tflight_runtime.take() {
+            runtime.shutdown().await;
+            debug!("T.Flight HOTAS runtime stopped");
         }
 
         // Shutdown components in reverse order (drop handles cleanup)

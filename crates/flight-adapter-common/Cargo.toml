@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-adapter-common"
 version = "0.1.0"
 edition = "2024"
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Shared adapter primitives for simulator integrations in OpenFlight."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "adapter", "telemetry"]
 [dependencies]
 thiserror.workspace = true

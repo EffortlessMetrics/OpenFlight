@@ -1,0 +1,16 @@
+[package]
+homepage.workspace = true
+name = "flight-device-common"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Shared device identification, health, and manager primitives for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "device", "hardware"]
+
+[dependencies]
+flight-metrics = { workspace = true }

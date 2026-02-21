@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-scheduler"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Real-time scheduler and timing primitives for the 250Hz loop."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "scheduler", "timing"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

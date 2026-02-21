@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-core"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "Core facade crate that re-exports OpenFlight domain modules."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "core", "facade"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0
@@ -26,6 +28,7 @@ flight-security = { path = "../flight-security" }
 flight-blackbox = { path = "../flight-blackbox" }
 flight-watchdog = { path = "../flight-watchdog" }
 flight-session = { path = "../flight-session" }
+flight-metrics = { path = "../flight-metrics" }
 
 [dev-dependencies]
 proptest.workspace = true

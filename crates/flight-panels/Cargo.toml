@@ -1,4 +1,5 @@
 [package]
+homepage.workspace = true
 name = "flight-panels"
 version.workspace = true
 edition.workspace = true
@@ -8,6 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "High-level panel integration and LED control orchestration."
 readme = "README.md"
+categories.workspace = true
 keywords = ["flight-sim", "openflight", "panels", "led"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

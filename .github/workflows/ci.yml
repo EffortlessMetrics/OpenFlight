@@ -49,7 +49,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: feature-status
-          path: docs/feature_status.md
+          path: |
+            docs/feature_status.md
+            docs/bdd_metrics.json
 
   bdd-tests:
     name: BDD Specification Tests
