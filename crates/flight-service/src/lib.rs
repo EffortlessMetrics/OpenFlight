@@ -28,6 +28,9 @@ pub mod power;
 pub mod safe_mode;
 pub mod service;
 
+#[cfg(feature = "tflight-hidapi")]
+pub mod hidapi_source;
+
 #[cfg(test)]
 mod acceptance_tests;
 #[cfg(test)]

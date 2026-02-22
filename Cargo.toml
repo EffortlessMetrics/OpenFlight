@@ -172,6 +172,7 @@ hyper = "1.8.1"
 axum-test = "18.7.0"
 filetime = "0.2.27"
 x11rb = { version = "0.13", features = ["allow-unsafe-code"] }
+hidapi = { version = "2.6.3", default-features = false, features = ["linux-static-hidraw", "windows-native"] }
 
 
 [profile.release]

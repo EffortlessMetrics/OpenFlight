@@ -99,6 +99,9 @@ pub struct TFlightRuntimeConfig {
     /// Apply throttle axis inversion. Disabled by default; enable per profile
     /// only after hardware receipts confirm the inversion is needed.
     pub throttle_inversion: bool,
+    /// Strip leading Report ID byte from raw reports. Disabled by default.
+    /// Enable when the OS/driver stack prepends a Report ID before the payload.
+    pub strip_report_id: bool,
 }
 
 impl Default for TFlightRuntimeConfig {
@@ -107,6 +110,7 @@ impl Default for TFlightRuntimeConfig {
             poll_hz: 250,
             yaw_policy: TFlightYawPolicy::Auto,
             throttle_inversion: false,
+            strip_report_id: false,
         }
     }
 }
@@ -251,7 +255,8 @@ async fn poll_once(
         // the descriptor hint is advisory only (see fix for runtime AxisMode pinning).
         let handler = TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown)
             .with_yaw_policy(config.yaw_policy)
-            .with_throttle_inversion(config.throttle_inversion);
+            .with_throttle_inversion(config.throttle_inversion)
+            .with_report_id(config.strip_report_id);
         let monitor = TFlightHealthMonitor::new(model).with_legacy_pid(is_legacy);
 
         states.insert(
@@ -479,6 +484,7 @@ mod tests {
                 poll_hz: 100,
                 yaw_policy: TFlightYawPolicy::Auto,
                 throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -520,6 +526,7 @@ mod tests {
                 poll_hz: 120,
                 yaw_policy: TFlightYawPolicy::Auto,
                 throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -560,6 +567,7 @@ mod tests {
                 poll_hz: 80,
                 yaw_policy: TFlightYawPolicy::Auto,
                 throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -603,6 +611,7 @@ mod tests {
                 poll_hz: 100,
                 yaw_policy: TFlightYawPolicy::Auto,
                 throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -679,6 +688,7 @@ mod tests {
                     poll_hz: 100,
                     yaw_policy: TFlightYawPolicy::Auto,
                     throttle_inversion: inversion,
+                    strip_report_id: false,
                 },
             );
             let snapshots = wait_for_snapshot_count(&runtime, 1).await;

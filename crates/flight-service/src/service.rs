@@ -28,7 +28,7 @@ use crate::{
     error_taxonomy::ErrorTaxonomy,
     health::HealthStream,
     input_runtime::{
-        SimulatedTFlightReportSource, TFlightInputRuntime, TFlightRuntimeConfig, TFlightSnapshot,
+        SimulatedTFlightReportSource, TFlightInputRuntime, TFlightReportSource, TFlightRuntimeConfig, TFlightSnapshot,
     },
     power::{PowerChecker, PowerStatus},
     safe_mode::{SafeModeConfig, SafeModeManager, SafeModeStatus},
@@ -61,6 +61,10 @@ pub struct FlightServiceConfig {
     /// Invert T.Flight throttle axis. Off by default; enable only after
     /// hardware receipts confirm inversion is needed for your device/driver.
     pub tflight_throttle_inversion: bool,
+    /// Strip leading Report ID byte from T.Flight HID reports. Off by default.
+    /// Enable if your OS/driver stack prepends a Report ID (typically 0x01)
+    /// before the payload. Confirm with `receipts/hid/thrustmaster/tflight-hotas4/`.
+    pub tflight_strip_report_id: bool,
 }
 
 /// Axis engine configuration subset
@@ -120,6 +124,7 @@ impl Default for FlightServiceConfig {
             tflight_poll_hz: 250,
             tflight_yaw_policy: TFlightYawPolicyConfig::Auto,
             tflight_throttle_inversion: false,
+            tflight_strip_report_id: false,
         }
     }
 }
@@ -415,17 +420,33 @@ impl FlightService {
             poll_hz: self.config.tflight_poll_hz,
             yaw_policy: self.config.tflight_yaw_policy.into(),
             throttle_inversion: self.config.tflight_throttle_inversion,
+            strip_report_id: self.config.tflight_strip_report_id,
         };
 
-        // This cycle uses the deterministic simulated backend by default.
-        let source = Box::new(SimulatedTFlightReportSource::default());
+        // Use the real HID-backed source when the feature is enabled;
+        // fall back to the deterministic simulated source otherwise.
+        #[cfg(feature = "tflight-hidapi")]
+        let (source, source_label): (Box<dyn crate::input_runtime::TFlightReportSource>, &str) = {
+            match crate::hidapi_source::HidApiTFlightReportSource::new() {
+                Ok(real) => (Box::new(real), "hidapi"),
+                Err(e) => {
+                    warn!("hidapi source unavailable ({}), falling back to simulated", e);
+                    (Box::new(SimulatedTFlightReportSource::default()), "simulated (hidapi unavailable)")
+                }
+            }
+        };
+
+        #[cfg(not(feature = "tflight-hidapi"))]
+        let (source, source_label): (Box<dyn crate::input_runtime::TFlightReportSource>, &str) =
+            (Box::new(SimulatedTFlightReportSource::default()), "simulated");
+
         let runtime = TFlightInputRuntime::start(source, Arc::clone(&self.health), config);
 
         self.tflight_runtime = Some(runtime);
         self.health
             .info(
                 "input_hotas_tflight",
-                "T.Flight HOTAS runtime initialized (simulated report source)",
+                &format!("T.Flight HOTAS runtime initialized ({source_label} report source)"),
             )
             .await;
         Ok(())

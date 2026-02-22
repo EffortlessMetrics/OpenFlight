@@ -16,9 +16,22 @@ use flight_bdd_metrics::{
 use flight_workspace_meta::load_workspace_microcrate_names;
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::FlightWorld;
+
+/// Absolute path to the `specs/` crate root (resolved at compile time).
+fn specs_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+/// Absolute path to the workspace root (parent of `specs/`).
+fn workspace_root() -> PathBuf {
+    specs_root()
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
 
 #[given("the implementation is represented by existing unit-test evidence")]
 async fn given_unit_test_evidence(world: &mut FlightWorld) {
@@ -65,13 +78,13 @@ async fn then_criteria_traceability(world: &mut FlightWorld) {
 }
 
 fn collect_bdd_traceability_metrics() -> Result<BddTraceabilityMetrics> {
-    let ledger = load_spec_ledger("specs/spec_ledger.yaml")
+    let ledger = load_spec_ledger(specs_root().join("spec_ledger.yaml"))
         .context("failed to read spec ledger")?;
-    let scenarios = collect_gherkin_scenarios(Path::new("specs/features"))
+    let scenarios = collect_gherkin_scenarios(specs_root().join("features"))
         .context("failed to parse feature scenarios")?;
     let metrics = compute_bdd_traceability_metrics(&ledger, &scenarios);
 
-    match load_workspace_microcrate_names(".") {
+    match load_workspace_microcrate_names(workspace_root()) {
         Ok(workspace_crates) => Ok(metrics.with_workspace_crates(workspace_crates)),
         Err(_) => Ok(metrics),
     }

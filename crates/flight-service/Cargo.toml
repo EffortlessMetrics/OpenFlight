@@ -19,6 +19,13 @@ keywords = ["flight-sim", "openflight", "service", "daemon"]
 name = "flightd"
 path = "src/main.rs"
 
+[features]
+default = []
+# Enables a real HID-backed T.Flight report source.
+# Requires a connected T.Flight HOTAS 4 (or compatible) device.
+# CI builds should NOT enable this feature — use the default simulated source.
+tflight-hidapi = ["dep:hidapi"]
+
 [dependencies]
 flight-core = { path = "../flight-core" }
 flight-ipc = { path = "../flight-ipc" }
@@ -30,6 +37,7 @@ flight-xplane = { path = "../flight-xplane" }
 flight-dcs-export = { path = "../flight-dcs-export" }
 flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
 flight-hid-support = { path = "../flight-hid-support" }
+hidapi = { workspace = true, optional = true }
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
