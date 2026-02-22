@@ -2,7 +2,7 @@
 //! MSRV and Edition Enforcement Validator
 //!
 //! This script validates that all workspace crates use consistent edition and rust-version
-//! settings as required by NFR-B. It ensures edition = "2024" and rust-version = "1.89.0"
+//! settings as required by NFR-B. It ensures edition = "2024" and rust-version = "1.92.0"
 //! across all workspace packages.
 
 use std::fs;
@@ -10,7 +10,7 @@ use std::path::Path;
 use std::process::exit;
 
 const REQUIRED_EDITION: &str = "2024";
-const REQUIRED_RUST_VERSION: &str = "1.89.0";
+const REQUIRED_RUST_VERSION: &str = "1.92.0";
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -281,8 +281,8 @@ mod tests {
             Some("2024".to_string())
         );
         assert_eq!(
-            extract_toml_string_value("rust-version = \"1.89.0\"", "rust-version"),
-            Some("1.89.0".to_string())
+            extract_toml_string_value("rust-version = \"1.92.0\"", "rust-version"),
+            Some("1.92.0".to_string())
         );
         assert_eq!(
             extract_toml_string_value("edition.workspace = true", "edition"),

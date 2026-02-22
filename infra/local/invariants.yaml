@@ -1,5 +1,5 @@
 environment: local-development
-rust_version: "1.89.0"
+rust_version: "1.92.0"
 rust_edition: "2024"
 
 ports:

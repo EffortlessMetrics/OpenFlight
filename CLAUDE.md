@@ -9,7 +9,7 @@ OpenFlight (Flight Hub) is a PC flight simulation input management system writte
 **Key constraints:**
 - Real-time 250Hz processing with <5ms p99 latency and <0.5ms p99 jitter
 - Zero allocations on RT hot paths (see ADR-004)
-- Rust 2024 edition, MSRV 1.89.0
+- Rust 2024 edition, MSRV 1.92.0
 
 **Prerequisites:**
 - Windows: Windows SDK for HID support

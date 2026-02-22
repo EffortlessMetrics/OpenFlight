@@ -17,7 +17,7 @@ This guide walks you through setting up a local development environment for Flig
 
 ### Required Tools
 
-- **Rust**: Version 1.89.0 or later
+- **Rust**: Version 1.92.0 or later
 - **Docker**: For containerized development (recommended)
 - **Git**: For version control
 
@@ -41,7 +41,7 @@ docker compose -f infra/local/docker-compose.yml up
 ```
 
 This will:
-- Build the Flight Hub service with Rust 1.89.0
+- Build the Flight Hub service with Rust 1.92.0
 - Mount your local source code for live editing
 - Expose the service on port 8080
 - Set up proper environment variables
@@ -64,7 +64,7 @@ If you use Nix, a dev shell is provided:
 nix develop
 ```
 
-This shell includes Rust 1.89.0, `protoc`, `pkg-config`, libusb, and the optional cargo tools used by `cargo xtask validate`.
+This shell includes Rust 1.92.0, `protoc`, `pkg-config`, libusb, and the optional cargo tools used by `cargo xtask validate`.
 
 ## Manual Setup (Without Docker)
 
@@ -77,8 +77,8 @@ If you prefer to run directly on your host machine:
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Install the required toolchain
-rustup install 1.89.0
-rustup default 1.89.0
+rustup install 1.92.0
+rustup default 1.92.0
 ```
 
 ### 2. Install System Dependencies

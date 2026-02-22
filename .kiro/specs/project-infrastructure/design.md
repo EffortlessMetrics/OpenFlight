@@ -339,7 +339,7 @@ Feature: Real-Time Axis Processing
 **Example** (infra/local/invariants.yaml):
 ```yaml
 environment: local-development
-rust_version: "1.89.0"
+rust_version: "1.92.0"
 rust_edition: "2024"
 
 ports:
@@ -912,7 +912,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.89.0
+      - uses: dtolnay/rust-toolchain@1.92.0
       - name: Run validation
         run: cargo xtask validate
       - name: Upload validation report

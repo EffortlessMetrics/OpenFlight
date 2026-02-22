@@ -2,7 +2,7 @@
 
 PC flight simulation input management system in Rust. Provides unified axis/panel/FFB control for MSFS, X-Plane, and DCS with a hard real-time 250Hz processing spine.
 
-**Rust 2024 edition · MSRV 1.89.0 · Workspace monorepo**
+**Rust 2024 edition · MSRV 1.92.0 · Workspace monorepo**
 
 ---
 

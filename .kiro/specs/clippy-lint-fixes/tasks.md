@@ -10,9 +10,9 @@
 
 
 
-  - Choose workspace Cargo.toml `rust-version = "1.89.0"` as single source of truth
-  - Update clippy.toml: set `msrv = "1.89.0"` or remove the msrv line entirely to inherit from Cargo.toml
-  - Verify toolchain will be pinned to `dtolnay/rust-toolchain@1.89.0` in all CI lint jobs
+  - Choose workspace Cargo.toml `rust-version = "1.92.0"` as single source of truth
+  - Update clippy.toml: set `msrv = "1.92.0"` or remove the msrv line entirely to inherit from Cargo.toml
+  - Verify toolchain will be pinned to `dtolnay/rust-toolchain@1.92.0` in all CI lint jobs
   - Run `cargo clippy -p flight-core -- -Dwarnings 2>&1 | tee clippy-before.log` to capture all current warnings
   - Run `cargo public-api -p flight-core > baseline-api.txt` to capture current public API
   - _Requirements: 1.4, 5.1_

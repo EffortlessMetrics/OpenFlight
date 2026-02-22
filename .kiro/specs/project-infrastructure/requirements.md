@@ -162,7 +162,7 @@ Formatting checks, linting, unit tests, public API verification, cross-reference
 #### Acceptance Criteria
 
 1. WHEN setting up locally THEN the canonical local environment SHALL be defined using one of: Docker Compose, devcontainer, or Nix; additional options MAY be provided but only one SHALL be documented as primary in infra/local/README.md
-2. WHEN the local environment starts THEN it SHALL build with Rust 1.89.0 and edition 2024
+2. WHEN the local environment starts THEN it SHALL build with Rust 1.92.0 and edition 2024
 3. WHEN services are exposed THEN they SHALL use documented standard ports defined in infra/local/invariants.yaml
 4. WHEN the local environment is started THEN application source code SHALL be bind-mounted into containers to allow code changes without rebuilding base images
 5. WHEN validating the environment THEN health check endpoints SHALL return 200 status

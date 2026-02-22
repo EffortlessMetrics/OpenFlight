@@ -89,13 +89,13 @@ flowchart TD
 
 ### MSRV Synchronization
 
-**Issue**: Discrepancy between clippy.toml (1.75.0) and workspace Cargo.toml (1.89.0)
+**Issue**: Discrepancy between clippy.toml (1.75.0) and workspace Cargo.toml (1.92.0)
 
-**Resolution**: Updated clippy.toml to `msrv = "1.89.0"` to match workspace MSRV
+**Resolution**: Updated clippy.toml to `msrv = "1.92.0"` to match workspace MSRV
 
 **Rationale**: Workspace Cargo.toml is the single source of truth for MSRV. Clippy should use the same version to ensure consistent lint behavior across local development and CI.
 
-**CI Impact**: All lint jobs now pin to `dtolnay/rust-toolchain@1.89.0` to prevent drift from automatic toolchain updates.
+**CI Impact**: All lint jobs now pin to `dtolnay/rust-toolchain@1.92.0` to prevent drift from automatic toolchain updates.
 
 ## Clippy Lint Rules Addressed
 
@@ -732,7 +732,7 @@ pub async fn load_profile(base_path: &Path, filename: &str) -> Result<Profile> {
 1. **clippy-core**: Dedicated job for flight-core lint validation
    - Runs on ubuntu-latest and windows-latest
    - Path filters: `crates/flight-core/**`, `Cargo.toml`, `clippy.toml`
-   - Pinned toolchain: `dtolnay/rust-toolchain@1.89.0`
+    - Pinned toolchain: `dtolnay/rust-toolchain@1.92.0`
 
 2. **clippy-ipc-benches**: IPC benchmark lint validation with two modes
    - Strict mode (default): Validates with workspace dependencies

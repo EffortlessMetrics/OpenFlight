@@ -1,6 +1,6 @@
 # Port names must match pattern ^[a-z][a-z0-9-]*$
 environment: local-development
-rust_version: "1.89.0"
+rust_version: "1.92.0"
 
 ports:
   FlightService: 8080

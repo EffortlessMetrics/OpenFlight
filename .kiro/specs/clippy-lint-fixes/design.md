@@ -1,13 +1,15 @@
 # Design Document
 
 ## Overview
-
 This design addresses Clippy lint warnings in flight-core through mechanical, behavior-neutral refactors. The approach prioritizes CI determinism, public API stability, and decoupled lint checking to prevent future IPC workflow blockages. All changes are local transformations that improve code idioms without altering runtime behavior.
 
 ## Architecture
+- **MSRV Alignment**: Resolve discrepancy between clippy.toml (1.75.0) and Cargo.toml (1.92.0)
+    - **Decision**: Use workspace Cargo.toml `rust-version = "1.92.0"` as single source of truth
+    - **Rationale**: Workspace MSRV is authoritative; clippy.toml should match or be removed
+    - **Action**: Update clippy.toml to `msrv = "1.92.0"` or remove the line to inherit from Cargo.toml
 
-### Decoupled Lint Strategy
-
+- Pin to `1.92.0` in all CI jobs: `uses: dtolnay/rust-toolchain@1.92.0`
 The solution implements a two-lane CI approach:
 
 1. **Strict Lane (Default)**: Runs Clippy with workspace dependencies to ensure shared crates remain lint-clean

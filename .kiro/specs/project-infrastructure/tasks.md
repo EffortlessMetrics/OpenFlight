@@ -164,12 +164,12 @@ Per INF-REQ-12, `cargo xtask validate` MUST perform checks in this order:
     - Health check: `curl -f http://localhost:8080/health` (should return 200)
   - Create `infra/local/invariants.yaml` with:
     - environment: "local-development"
-    - rust_version: "1.89.0"
+    - rust_version: "1.92.0"
     - rust_edition: "2024" (required field)
     - ports: {flight-service: 8080} (logical service names, not raw numbers)
     - env_vars: {RUST_LOG: {required: false, default: "info", description: "..."}}
   - Create `infra/local/docker-compose.yml` with:
-    - Service: flight-service using rust:1.89.0
+    - Service: flight-service using rust:1.92.0
     - Bind mount: `.:/workspace` for rapid iteration
     - Port mapping: 8080:8080
     - Health check endpoint (stub if needed)

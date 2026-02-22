@@ -2,7 +2,7 @@
 
 ## Language & Toolchain
 - Rust 2024 edition
-- MSRV: 1.89.0
+- MSRV: 1.92.0
 - Workspace-based monorepo
 
 ## Key Dependencies
