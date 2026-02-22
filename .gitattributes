@@ -9,7 +9,7 @@
 *.md   text eol=lf
 *.json text eol=lf
 
-# If you have Windows batch files and want them CRLF (optional)
+# Optional: keep Windows scripts CRLF
 *.bat  text eol=crlf
 *.cmd  text eol=crlf
 
