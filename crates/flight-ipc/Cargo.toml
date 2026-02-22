@@ -58,6 +58,9 @@ libc.workspace = true
 [build-dependencies]
 tonic-build.workspace = true
 prost-build.workspace = true
+# Vendored protoc: eliminates `protoc` install requirement on fresh machines.
+# Prefers an explicit PROTOC env-var; falls back to the vendored binary.
+protoc-bin-vendored = "3"
 
 [dev-dependencies]
 tokio-test.workspace = true

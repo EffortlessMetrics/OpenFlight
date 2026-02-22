@@ -28,7 +28,7 @@ use crate::{
     error_taxonomy::ErrorTaxonomy,
     health::HealthStream,
     input_runtime::{
-        SimulatedTFlightReportSource, TFlightInputRuntime, TFlightReportSource, TFlightRuntimeConfig, TFlightSnapshot,
+        SimulatedTFlightReportSource, TFlightInputRuntime, TFlightRuntimeConfig, TFlightSnapshot,
     },
     power::{PowerChecker, PowerStatus},
     safe_mode::{SafeModeConfig, SafeModeManager, SafeModeStatus},
