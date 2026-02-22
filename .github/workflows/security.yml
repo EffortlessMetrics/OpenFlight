@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install MSRV Rust
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: 1.92.0  # Flight Hub MSRV
-    
+
     - name: Cache cargo registry
       uses: actions/cache@v3
       with:
@@ -32,7 +32,7 @@ jobs:
           ~/.cargo/git
           target
         key: msrv-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    
+
     - name: Check MSRV compilation
       run: |
         echo "🦀 Testing compilation with Rust 1.92.0 (MSRV)"
@@ -44,22 +44,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Install cargo-audit
       run: cargo install cargo-audit
-    
+
     - name: Install cargo-deny
       run: cargo install cargo-deny
-    
+
     - name: Run security audit
       run: |
         echo "🔒 Running security audit"
         cargo audit --deny warnings
         echo "✅ Security audit passed"
-    
+
     - name: Run cargo-deny
       run: |
         echo "🚫 Running cargo-deny checks"
@@ -71,28 +71,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Install cargo-deny
       run: cargo install cargo-deny
-    
+
     - name: Check licenses
       run: |
         echo "📄 Checking license compliance"
         cargo deny check licenses
         echo "✅ License check passed"
-    
+
     - name: Generate license report
       run: |
         echo "📋 Generating license report"
         cargo deny list --format json > licenses.json
-        
+
         echo "## 📄 License Report" >> $GITHUB_STEP_SUMMARY
         echo "| Crate | License | Version |" >> $GITHUB_STEP_SUMMARY
         echo "|-------|---------|---------|" >> $GITHUB_STEP_SUMMARY
-        
+
         # Parse JSON and create markdown table (simplified)
         echo "License report generated in licenses.json"
 
@@ -101,22 +101,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Install audit tools
       run: |
         echo "🛠️ Installing supply chain audit tools"
         cargo install cargo-audit cargo-deny cargo-license
         echo "✅ Audit tools installed"
-    
+
     - name: Run comprehensive supply chain audit
       run: |
         echo "🔍 Running comprehensive supply chain audit"
         cargo +nightly -Zscript scripts/supply_chain_audit.rs
         echo "✅ Supply chain audit completed"
-    
+
     - name: Upload audit artifacts
       uses: actions/upload-artifact@v3
       if: always()
@@ -127,19 +127,19 @@ jobs:
           THIRD_PARTY_LICENSES.md
           spdx/
         retention-days: 30
-    
+
     - name: Check for banned crates
       run: |
         echo "🔍 Checking for banned/vulnerable crates"
         cargo deny check bans
         echo "✅ Supply chain check passed"
-    
+
     - name: Check for duplicate dependencies
       run: |
         echo "🔍 Checking for duplicate dependencies"
         cargo tree --duplicates
         echo "ℹ️ Duplicate dependency check completed"
-    
+
     - name: Validate SPDX documents
       run: |
         echo "📋 Validating SPDX documents"
@@ -169,13 +169,13 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Need full history for semver check
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Install cargo-semver-checks
       run: cargo install cargo-semver-checks
-    
+
     - name: Check semantic versioning
       run: |
         echo "📦 Checking semantic versioning compliance"
@@ -203,25 +203,25 @@ jobs:
     needs: [security-audit, license-check, supply-chain]
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy
-    
+
     - name: Install nightly for scripts
       uses: dtolnay/rust-toolchain@nightly
-    
+
     - name: Install audit tools
       run: |
         cargo install cargo-audit cargo-deny cargo-license
-    
+
     - name: Run CI Supply Chain Security Gate
       run: |
         echo "🚪 Running CI Supply Chain Security Gate"
         cargo +nightly -Zscript scripts/ci_supply_chain_gate.rs
         echo "✅ All supply chain security gates passed"
-    
+
     - name: Upload gate results
       uses: actions/upload-artifact@v3
       if: always()

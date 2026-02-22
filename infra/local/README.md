@@ -34,7 +34,7 @@ The local development environment uses Docker Compose to provide a consistent, r
    ```bash
    curl -f http://localhost:8080/health
    ```
-   
+
    Expected response: HTTP 200 status code
 
 ## Running the Environment

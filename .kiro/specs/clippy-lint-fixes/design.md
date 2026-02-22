@@ -75,7 +75,7 @@ for entry in entries.flatten() {
 }
 ```
 
-**Verification**: 
+**Verification**:
 - Compiler guarantees identical iteration behavior; no runtime changes
 - Note: `.flatten()` silently drops `Err` values, same as `if let Ok(entry)`
 - If future error reporting is needed, use `.filter_map(Result::ok)` with logging
@@ -149,12 +149,12 @@ pub(crate) async fn load_profile_from_path_impl(base_path: &Path, filename: &str
 }
 ```
 
-**Call Site Updates**: 
+**Call Site Updates**:
 - Internal callers should use the `&Path` version directly
 - Rust's deref coercion handles `&PathBuf` → `&Path` automatically in most cases
 - Explicit `.as_path()` only needed if type inference fails
 
-**Verification**: 
+**Verification**:
 - Check visibility with `cargo public-api -p flight-core` before changes
 - If public: wrapper pattern preserves API; `cargo public-api --diff` shows no changes
 - If private: direct change is safe; no external impact
@@ -287,8 +287,8 @@ if self.acl_config.current_user_only {
 }
 
 // After
-if self.acl_config.current_user_only 
-    && client_info.user_id != get_current_user_id()? 
+if self.acl_config.current_user_only
+    && client_info.user_id != get_current_user_id()?
 {
     return Err(/* ... */);
 }
@@ -307,7 +307,7 @@ if let SignatureStatus::Signed { valid_until, .. } = &manifest.signature {
 }
 ```
 
-**Verification**: 
+**Verification**:
 - Truth table equivalence for boolean logic
 - Identical execution paths (no new branches)
 - Same error propagation with `?` operator
@@ -491,7 +491,7 @@ Optional checks (informational):
    - Fix private interface visibility issues
 5. **Parameter Type Fix**:
    - Aircraft_switch.rs: Check visibility, apply wrapper pattern if public
-6. **Validation**: 
+6. **Validation**:
    - Run `cargo clippy -p flight-core -- -Dwarnings` on both platforms
    - Run full test suite
    - Run `cargo public-api -p flight-core --diff-git origin/main..HEAD`

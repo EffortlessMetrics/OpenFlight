@@ -49,7 +49,7 @@ trend_significance_threshold = 5.0  # percent
 slack_enabled = true
 slack_channel = "#devsecops"
 
-# Email integration  
+# Email integration
 email_enabled = false
 email_smtp_server = ""
 email_from = "devsecops@company.com"

@@ -92,9 +92,9 @@ Sim variable configurations are JSON diff tables, not code. Each sim version has
 
 ### Plugin tiers (ADR-003)
 
-1. **WASM** — sandboxed, capability-declared, 20–120 Hz  
-2. **Native fast-path** — isolated helper process, shared-memory SPSC, per-tick budget  
-3. **Service** — managed thread, event-driven, full access with user consent  
+1. **WASM** — sandboxed, capability-declared, 20–120 Hz
+2. **Native fast-path** — isolated helper process, shared-memory SPSC, per-tick budget
+3. **Service** — managed thread, event-driven, full access with user consent
 
 ---
 

@@ -22,15 +22,15 @@ flowchart TD
     B -->|core files| C[clippy-core job]
     B -->|ipc files| D[clippy-ipc-benches job]
     B -->|workflow edits| E[public-api-check job]
-    
+
     C --> F{cargo clippy -D warnings}
     F -->|pass| G[cargo fmt --check]
     F -->|fail| H[Fix lints • commit]
-    
+
     G --> I[Public API diff core]
     I -->|pass| J[Ready to merge]
     I -->|fail| K[Review/justify API delta]
-    
+
     D --> L{Strict benches: clippy with deps}
     L -->|pass| J
     L -->|fail| M{Label present? bench-unblock}
@@ -45,7 +45,7 @@ graph LR
     PF[path-filter] --> CORE[clippy-core linux+windows • feature-matrix]
     PF --> IPC[clippy-ipc-benches linux+windows • 2 feature sets]
     PF --> API[public-api-check core]
-    
+
     CORE -->|fmt check| CORE
     CORE --> API
 ```
@@ -57,11 +57,11 @@ flowchart TD
     Q[Clippy ptr_arg: &PathBuf param] --> A{Is function public?}
     A -- No --> B[Change to &Path or P: AsRef Path]
     B --> R[Update callsites • done]
-    
+
     A -- Yes --> C{OK to change API?}
     C -- Yes --> D[Add new fn with &Path; deprecate &PathBuf; delegate to impl]
     D --> R
-    
+
     C -- No --> E[Keep public &PathBuf; add internal &Path impl; delegate]
     E --> R
 ```
@@ -76,7 +76,7 @@ flowchart TD
     V -- Yes --> W[pub -> pub crate/pub super]
     V -- No --> X{Is it truly needed but unused today?}
     X --> Y[#[expect dead_code, reason="…"] item-scoped only]
-    
+
     S --> P{Public API exposes private type?}
     P -- Yes --> Z[Wrap in public newtype OR lower method visibility OR return view]
 ```
@@ -378,8 +378,8 @@ if self.acl_config.current_user_only {
 
 **After**:
 ```rust
-if self.acl_config.current_user_only 
-    && client_info.user_id != get_current_user_id()? 
+if self.acl_config.current_user_only
+    && client_info.user_id != get_current_user_id()?
 {
     return Err(SecurityError::AccessDenied {
         reason: "Only current user allowed".to_string(),
@@ -408,8 +408,8 @@ if !self.acl_config.allowed_users.is_empty() {
 
 **After**:
 ```rust
-if !self.acl_config.allowed_users.is_empty() 
-    && !self.acl_config.allowed_users.contains(&client_info.user_id) 
+if !self.acl_config.allowed_users.is_empty()
+    && !self.acl_config.allowed_users.contains(&client_info.user_id)
 {
     return Err(SecurityError::AccessDenied {
         reason: "User not in allowed list".to_string(),

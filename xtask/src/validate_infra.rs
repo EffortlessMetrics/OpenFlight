@@ -556,7 +556,7 @@ services:
             - "8080:8080"
         environment:
             - RUST_LOG=info
-  
+
     metrics:
         image: prom/prometheus
         ports:

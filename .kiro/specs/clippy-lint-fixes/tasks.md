@@ -106,7 +106,7 @@
 
   - Check if `load_profile_from_path` is public using `cargo public-api -p flight-core | grep load_profile_from_path`
   - If private/pub(crate): change parameter from `&PathBuf` to `&Path` directly
-  - If public: 
+  - If public:
     - Keep existing signature with `&PathBuf` parameter
     - Add `#[deprecated(since = "0.1.0", note = "Use internal implementation with &Path")]` to existing function
     - Create `load_profile_from_path_impl(base_path: &Path, filename: &str)` as `pub(crate)` helper

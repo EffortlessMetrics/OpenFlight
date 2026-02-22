@@ -25,25 +25,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.92.0
         with:
           components: rustfmt, clippy
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run validation pipeline
         run: cargo xtask validate
-      
+
       - name: Upload validation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: validation-report
           path: docs/validation_report.md
-      
+
       - name: Upload feature status
         if: always()
         uses: actions/upload-artifact@v4
@@ -60,16 +60,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.92.0
-      
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-      
+
       - name: Run BDD tests
         run: cargo test -p specs
-      
+
       - name: Upload BDD test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -86,34 +86,34 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         rust: [stable, 1.92.0]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       id: rust-toolchain
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
         components: rustfmt, clippy
-    
+
     - name: Get toolchain hash
       id: toolchain-hash
       shell: bash
       run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-        
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
       with:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Check formatting
       run: cargo fmt --all -- --check
-      
+
     - name: Run clippy (general - warnings allowed for dev ergonomics)
       run: cargo clippy --all-targets --all-features
-      
+
     - name: Run clippy with strict warnings for core crates
       run: |
         echo "🔍 Running strict clippy checks for core crates..."
@@ -126,7 +126,7 @@ jobs:
         cargo clippy -p flight-service --lib --tests -- -D warnings
         cargo clippy -p flight-simconnect --lib --tests -- -D warnings
         cargo clippy -p flight-panels --lib --tests -- -D warnings
-        
+
     - name: Run file descriptor safety tests for public API crates
       run: |
         echo "🔍 Running file descriptor safety tests for public API crates..."
@@ -134,43 +134,43 @@ jobs:
         cargo test -p flight-hid fd_safety_tests
         cargo test -p flight-ipc fd_safety_tests
         cargo test -p flight-service fd_safety_tests
-      
+
     - name: Verify critical patterns are fixed
       run: |
         echo "🔍 Verifying critical patterns are fixed..."
-        
+
         # Check Profile::merge is replaced with Profile::merge_with
         if git grep -n "Profile::merge(" | grep -v "Profile::merge_with"; then
           echo "❌ Found Profile::merge( calls - should be Profile::merge_with"
           exit 1
         fi
-        
+
         # Check BlackboxWriter::new doesn't have ? operator inappropriately
         if git grep -n "BlackboxWriter::new.*?"; then
           echo "❌ Found BlackboxWriter::new with ? operator"
           exit 1
         fi
-        
+
         # Check Engine::new has correct signature (2 arguments)
         if git grep -n "Engine::new(" | grep -v ","; then
           echo "❌ Found Engine::new with incorrect signature"
           exit 1
         fi
-        
+
         # Check for criterion::black_box usage
         if git grep -n "criterion::black_box"; then
           echo "❌ Found criterion::black_box - should be std::hint::black_box"
           exit 1
         fi
-        
+
         echo "✅ All critical patterns verified"
-        
+
     - name: Run tests
       run: cargo test --all-features --workspace
-      
+
     - name: Run doc tests
       run: cargo test --doc --workspace
-      
+
     - name: Validate ADR links
       run: |
         echo "🔍 Validating ADR files exist..."
@@ -191,26 +191,26 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust 1.92.0
       id: rust-toolchain
       uses: dtolnay/rust-toolchain@1.92.0
       with:
         components: clippy
-    
+
     - name: Get toolchain hash
       id: toolchain-hash
       shell: bash
       run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-        
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
       with:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
-        
+
     - name: Build with MSRV
       run: cargo build --all --all-features
-      
+
     - name: Run clippy with MSRV
       run: cargo clippy --workspace -- -Dwarnings
 
@@ -225,7 +225,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Filter paths
       uses: dorny/paths-filter@v3
       id: filter
@@ -256,18 +256,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       id: rust-toolchain
       uses: dtolnay/rust-toolchain@1.89.0
       with:
         components: rustfmt, clippy
-    
+
     - name: Get toolchain hash
       id: toolchain-hash
       shell: bash
       run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-      
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
@@ -275,7 +275,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
-      
+
     - name: Cache cargo index
       uses: actions/cache@v4
       with:
@@ -283,7 +283,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-index-
-      
+
     - name: Cache target directory
       uses: actions/cache@v4
       with:
@@ -291,10 +291,10 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-target-clippy-core-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-target-clippy-core-
-      
+
     - name: Check formatting
       run: cargo fmt --all -- --check
-      
+
     - name: Run clippy on flight-core
       run: cargo clippy -p flight-core -- -Dwarnings
 
@@ -322,7 +322,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Check if unblock mode should run
       if: matrix.mode == 'unblock'
       id: check-label
@@ -334,24 +334,24 @@ jobs:
           echo "Skipping unblock mode - label 'clippy-unblock' not present"
         fi
       shell: bash
-      
+
     - name: Exit early if unblock mode not needed
       if: matrix.mode == 'unblock' && steps.check-label.outputs.run != 'true'
       run: exit 0
-      
+
     - name: Install Rust toolchain
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       id: rust-toolchain
       uses: dtolnay/rust-toolchain@1.89.0
       with:
         components: clippy
-    
+
     - name: Get toolchain hash
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       id: toolchain-hash
       shell: bash
       run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-      
+
     - name: Cache cargo registry
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       uses: actions/cache@v4
@@ -360,7 +360,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
-      
+
     - name: Cache cargo index
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       uses: actions/cache@v4
@@ -369,7 +369,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-index-
-      
+
     - name: Cache target directory
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       uses: actions/cache@v4
@@ -378,13 +378,13 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-target-clippy-ipc-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-target-clippy-ipc-
-      
+
     - name: Clippy IPC benches (strict - with deps)
       if: matrix.mode == 'strict'
       run: |
         cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings
         cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings
-      
+
     - name: Clippy IPC benches (unblock - no deps)
       if: matrix.mode == 'unblock' && steps.check-label.outputs.run == 'true'
       run: |
@@ -402,16 +402,16 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-      
+
     - name: Install Rust toolchain
       id: rust-toolchain
       uses: dtolnay/rust-toolchain@stable
-    
+
     - name: Get toolchain hash
       id: toolchain-hash
       shell: bash
       run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-      
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
@@ -419,7 +419,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-registry-
-      
+
     - name: Cache cargo index
       uses: actions/cache@v4
       with:
@@ -427,7 +427,7 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-index-
-      
+
     - name: Cache target directory
       uses: actions/cache@v4
       with:
@@ -435,13 +435,13 @@ jobs:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-target-public-api-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-target-public-api-
-      
+
     - name: Cache cargo-public-api binary
       uses: actions/cache@v4
       with:
         path: ~/.cargo/bin/cargo-public-api
         key: cargo-public-api-${{ runner.os }}-0.38.0
-      
+
     - name: Install cargo-public-api
       run: |
         if ! command -v cargo-public-api &> /dev/null; then
@@ -449,39 +449,39 @@ jobs:
         else
           echo "cargo-public-api already installed"
         fi
-      
+
     - name: Check flight-core public API
       if: needs.path-filter.outputs.core == 'true'
       id: check-core-api
       continue-on-error: true
       run: cargo public-api -p flight-core --diff-git origin/main..HEAD
-      
+
     - name: Retry flight-core API check with nightly (if needed)
       if: needs.path-filter.outputs.core == 'true' && steps.check-core-api.outcome == 'failure'
       run: |
         echo "Retrying with nightly toolchain..."
         rustup toolchain install nightly
         cargo +nightly public-api -p flight-core --diff-git origin/main..HEAD
-      
+
     - name: Check flight-ipc public API
       if: needs.path-filter.outputs.ipc == 'true'
       id: check-ipc-api
       continue-on-error: true
       run: cargo public-api -p flight-ipc --diff-git origin/main..HEAD
-      
+
     - name: Retry flight-ipc API check with nightly (if needed)
       if: needs.path-filter.outputs.ipc == 'true' && steps.check-ipc-api.outcome == 'failure'
       run: |
         echo "Retrying with nightly toolchain..."
         rustup toolchain install nightly
         cargo +nightly public-api -p flight-ipc --diff-git origin/main..HEAD
-      
+
     - name: Check flight-hid public API
       if: needs.path-filter.outputs.hid == 'true'
       id: check-hid-api
       continue-on-error: true
       run: cargo public-api -p flight-hid --diff-git origin/main..HEAD
-      
+
     - name: Retry flight-hid API check with nightly (if needed)
       if: needs.path-filter.outputs.hid == 'true' && steps.check-hid-api.outcome == 'failure'
       run: |
@@ -503,22 +503,22 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
-      
+
     - name: Smoke test IPC benchmarks
       run: cargo bench --no-run -p flight-ipc --features ipc-bench
-      
+
     - name: Smoke test IPC benchmarks with serde
       run: cargo bench --no-run -p flight-ipc --features "ipc-bench,ipc-bench-serde"
-      
+
     - name: Clippy on IPC benchmarks
       run: cargo clippy -p flight-ipc --benches --features ipc-bench -- -Dwarnings
-      
+
     - name: Clippy on IPC benchmarks with serde
       run: cargo clippy -p flight-ipc --benches --features "ipc-bench,ipc-bench-serde" -- -Dwarnings
 
@@ -536,16 +536,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
-      
+
     - name: Smoke test HID with ofp1-tests
       run: cargo test --no-run -p flight-hid --features ofp1-tests
-      
+
     - name: Clippy on HID tests
       run: cargo clippy -p flight-hid --tests -- -Dwarnings
 
@@ -561,23 +561,23 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt, clippy
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
       with:
         key: cross-platform-${{ matrix.os }}
-      
+
     - name: Check workspace
       run: cargo check --workspace
-      
+
     - name: Clippy workspace (strict)
       run: cargo clippy --workspace --all-targets -- -Dwarnings
-      
+
     - name: Check formatting
       run: cargo fmt --all -- --check
 
@@ -588,37 +588,37 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
-      
+
     - name: Install cargo-audit
       run: cargo install cargo-audit
-      
+
     - name: Install cargo-deny
       run: cargo install cargo-deny
-      
+
     - name: Run security audit
       run: cargo audit --deny warnings
-      
+
     - name: Run cargo-deny
       run: cargo deny check --hide-inclusion-graph
-      
+
     - name: Validate HTTP stack unification
       run: |
         echo "🔍 Validating HTTP stack unification..."
-        
+
         # Function to check if a package exists in the dependency tree
         check_banned_package() {
           local package=$1
           echo "Checking for $package dependencies..."
-          
+
           # Run cargo tree and capture both stdout and stderr
           output=$(cargo tree -i "$package" 2>&1 || true)
-          
+
           # If output contains actual dependency info (not error message), fail
           if echo "$output" | grep -q "^$package v" || echo "$output" | grep -q "├──\|└──"; then
             echo "❌ Found $package dependencies:"
@@ -629,22 +629,22 @@ jobs:
             return 0
           fi
         }
-        
+
         # Check banned packages
         check_banned_package "native-tls"
-        check_banned_package "hyper-tls" 
+        check_banned_package "hyper-tls"
         check_banned_package "openssl"
-        
+
         # Verify only hyper v1.x versions present
         echo "Checking hyper versions..."
         hyper_output=$(cargo tree -i hyper 2>&1 || true)
-        
+
         if echo "$hyper_output" | grep -q "did not match any packages"; then
           echo "✅ No hyper dependencies found"
         elif echo "$hyper_output" | grep -q "^hyper v"; then
           hyper_versions=$(echo "$hyper_output" | grep "^hyper v" | awk '{print $2}' | sort -u)
           echo "Found hyper versions: $hyper_versions"
-          
+
           # Check if any version is not v1.x
           if echo "$hyper_versions" | grep -v '^v1\.'; then
             echo "❌ Found non-v1.x hyper versions"
@@ -657,7 +657,7 @@ jobs:
           echo "$hyper_output"
           exit 1
         fi
-        
+
         echo "✅ HTTP stack unification validation passed"
 
   build:
@@ -668,22 +668,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
       with:
         key: release-${{ matrix.os }}
-        
+
     - name: Build release
       run: cargo build --release --workspace
-      
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -699,45 +699,45 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
-      
+
     - name: Install cargo-hack
       run: cargo install cargo-hack
-      
+
     - name: Run feature powerset testing
       run: |
         echo "🔍 Running feature powerset testing with depth 2..."
         cargo hack check --workspace --feature-powerset --depth 2
-        
+
     - name: Verify workspace dependency alignment
       run: |
         echo "🔍 Verifying workspace dependency alignment..."
-        
+
         # Check that all crates use workspace dependencies for common crates
         echo "Checking tokio dependencies..."
         if grep -r "tokio.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"; then
           echo "❌ Found non-workspace tokio dependencies"
           exit 1
         fi
-        
+
         echo "Checking futures dependencies..."
         if grep -r "futures.*=" crates/*/Cargo.toml | grep -v "workspace = true" | grep -v "features\|optional"; then
           echo "❌ Found non-workspace futures dependencies"
           exit 1
         fi
-        
+
         echo "Checking tonic/tonic-build version alignment..."
         tonic_versions=$(grep -r "tonic.*=" Cargo.toml crates/*/Cargo.toml | grep version | awk -F'"' '{print $2}' | sort -u)
         if [ $(echo "$tonic_versions" | wc -l) -gt 1 ]; then
           echo "❌ Found misaligned tonic versions: $tonic_versions"
           exit 1
         fi
-        
+
         echo "✅ Workspace dependency alignment verified"
 
   performance:
@@ -747,16 +747,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
-      
+
     - name: Run benchmarks
       run: cargo bench --workspace
-      
+
     - name: Performance regression check
       run: |
         # TODO: Implement performance regression detection

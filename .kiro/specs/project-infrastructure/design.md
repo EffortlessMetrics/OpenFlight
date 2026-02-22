@@ -134,7 +134,7 @@ The spec ledger supports two primary test reference formats:
 
 2. **Command-Based Test References** (for infrastructure and system-level validation):
    - Format: `"cmd:<shell command>"`
-   - Examples: 
+   - Examples:
      - `"cmd:cargo xtask validate"`
      - `"cmd:cargo test -p specs"`
      - `"cmd:cargo xtask ac-status"`
@@ -197,7 +197,7 @@ requirements:
     },
     "area": {
       "type": "string",
-      "enum": ["flight-core", "flight-virtual", "flight-hid", "flight-ipc", 
+      "enum": ["flight-core", "flight-virtual", "flight-hid", "flight-ipc",
                "flight-scheduler", "flight-ffb", "flight-panels", "infra", "ci"]
     },
     "status": {
@@ -975,19 +975,19 @@ fn validate_cross_references(
     features: &[GherkinScenario],
 ) -> Vec<CrossRefError> {
     let mut errors = Vec::new();
-    
+
     // Build requirement ID index
     let req_ids: HashSet<String> = spec_ledger.requirements
         .iter()
         .map(|r| r.id.clone())
         .collect();
-    
+
     // Build AC ID index
     let ac_ids: HashSet<String> = spec_ledger.requirements
         .iter()
         .flat_map(|r| r.ac.iter().map(|ac| ac.id.clone()))
         .collect();
-    
+
     // Check doc → spec ledger links
     for doc in docs {
         for req_id in &doc.front_matter.links.requirements {
@@ -999,7 +999,7 @@ fn validate_cross_references(
             }
         }
     }
-    
+
     // Check Gherkin → spec ledger links
     for scenario in features {
         for req_tag in scenario.req_tags() {
@@ -1021,7 +1021,7 @@ fn validate_cross_references(
             }
         }
     }
-    
+
     // Check spec ledger → codebase test references
     for req in &spec_ledger.requirements {
         for ac in &req.ac {
@@ -1038,7 +1038,7 @@ fn validate_cross_references(
             }
         }
     }
-    
+
     errors
 }
 
@@ -1046,30 +1046,30 @@ fn test_exists(test_path: &str) -> bool {
     // Format: "crate::module::tests::test_name"
     // Strategy 1: Use `cargo test -p <crate> -- --list` and parse output
     // Strategy 2: Use ripgrep to search for "fn test_name" in crates/<crate>
-    
+
     // If test references a crate not in Cargo.toml workspace members,
     // record a warning instead of an error (may be external/feature-gated)
-    
+
     let parts: Vec<&str> = test_path.split("::").collect();
     if parts.is_empty() {
         return false;
     }
-    
+
     let crate_name = parts[0];
     let test_fn = parts.last().unwrap();
-    
+
     // Check if crate exists in workspace
     if !is_workspace_member(crate_name) {
         eprintln!("[WARN] Test references non-workspace crate: {}", crate_name);
         return true; // Don't fail on external crates
     }
-    
+
     // Use ripgrep to find test function
     let output = std::process::Command::new("rg")
         .args(&["-l", &format!("fn {}", test_fn), &format!("crates/{}", crate_name)])
         .output()
         .ok()?;
-    
+
     !output.stdout.is_empty()
 }
 ```
@@ -1085,10 +1085,10 @@ fn generate_feature_status(
     output.push_str("# Feature Status Report\n\n");
     output.push_str(&format!("Generated: {}\n", chrono::Utc::now()));
     output.push_str(&format!("Commit: {}\n\n", get_git_commit()));
-    
+
     output.push_str("| REQ ID | AC ID | Description | Gherkin | Tests | Status |\n");
     output.push_str("|--------|-------|-------------|---------|-------|--------|\n");
-    
+
     for req in &spec_ledger.requirements {
         for ac in &req.ac {
             let gherkin_scenarios = features.iter()
@@ -1096,7 +1096,7 @@ fn generate_feature_status(
                 .map(|s| format!("{}:{}", s.file_path.display(), s.line_number))
                 .collect::<Vec<_>>()
                 .join("<br>");
-            
+
             let test_count = ac.tests.len();
             let status = match (req.status, test_count > 0, !gherkin_scenarios.is_empty()) {
                 (RequirementStatus::Tested, true, true) => "✅ Complete",
@@ -1105,7 +1105,7 @@ fn generate_feature_status(
                 (RequirementStatus::Draft, _, _) => "⚪ Draft",
                 _ => "❌ Incomplete",
             };
-            
+
             output.push_str(&format!(
                 "| {} | {} | {} | {} | {} | {} |\n",
                 req.id,
@@ -1117,7 +1117,7 @@ fn generate_feature_status(
             ));
         }
     }
-    
+
     output
 }
 ```
