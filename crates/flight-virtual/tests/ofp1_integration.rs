@@ -13,7 +13,7 @@
 use flight_hid::ofp1::*;
 use flight_virtual::ofp1_emulator::{EmulatorFaultType, Ofp1Emulator, Ofp1EmulatorConfig};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// Test complete OFP-1 handshake and capability negotiation
 #[test]
@@ -189,19 +189,33 @@ fn test_emergency_stop() {
 
     emulator.send_torque_command(command).unwrap();
 
-    thread::sleep(Duration::from_millis(20));
-
-    // Verify torque is applied
-    let stats = emulator.get_statistics();
-    assert_eq!(stats.current_torque_protocol, 16384);
+    // Verify torque is applied (bounded wait to avoid timing flakes under load)
+    let deadline = Instant::now() + Duration::from_millis(250);
+    let mut applied_torque = 0i16;
+    while Instant::now() < deadline {
+        applied_torque = emulator.get_statistics().current_torque_protocol;
+        if applied_torque == 16384 {
+            break;
+        }
+        thread::sleep(Duration::from_millis(1));
+    }
+    assert_eq!(applied_torque, 16384);
 
     // Trigger emergency stop
     emulator.trigger_emergency_stop();
 
-    thread::sleep(Duration::from_millis(50)); // Wait longer for simulation thread
+    // Verify emergency stop (bounded wait for async simulation thread)
+    let deadline = Instant::now() + Duration::from_millis(250);
+    let mut stats = emulator.get_statistics();
+    while Instant::now() < deadline {
+        stats = emulator.get_statistics();
+        if stats.emergency_stop_active && stats.current_torque_protocol == 0 {
+            break;
+        }
+        thread::sleep(Duration::from_millis(1));
+    }
 
     // Verify emergency stop
-    let stats = emulator.get_statistics();
     assert!(stats.emergency_stop_active);
     assert_eq!(stats.current_torque_protocol, 0);
 
@@ -249,10 +263,17 @@ fn test_interlock_functionality() {
 
     emulator.send_torque_command(command).unwrap();
 
-    thread::sleep(Duration::from_millis(20));
-
-    let stats = emulator.get_statistics();
-    assert!(stats.high_torque_enabled);
+    // Wait until command is consumed by simulation thread
+    let deadline = Instant::now() + Duration::from_millis(250);
+    let mut high_torque_enabled = false;
+    while Instant::now() < deadline {
+        high_torque_enabled = emulator.get_statistics().high_torque_enabled;
+        if high_torque_enabled {
+            break;
+        }
+        thread::sleep(Duration::from_millis(1));
+    }
+    assert!(high_torque_enabled);
 
     emulator.stop();
 }
@@ -460,8 +481,20 @@ fn test_complete_integration_scenario() {
         // Send command
         emulator.send_torque_command(command).unwrap();
 
-        // Wait for processing
-        thread::sleep(Duration::from_millis(10));
+        // Wait for processing (bounded wait to avoid timing flakes under load)
+        let deadline = Instant::now() + Duration::from_millis(250);
+        let mut observed_torque = emulator.get_statistics().current_torque_protocol;
+        while Instant::now() < deadline {
+            observed_torque = emulator.get_statistics().current_torque_protocol;
+            if observed_torque == torque_protocol {
+                break;
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+        assert_eq!(
+            observed_torque, torque_protocol,
+            "command was not applied before timeout"
+        );
 
         // Read and validate health
         if let Some(health) = emulator.read_health_status().unwrap() {
@@ -505,7 +538,17 @@ fn test_complete_integration_scenario() {
 
     // Step 5: Test emergency stop
     emulator.trigger_emergency_stop();
-    thread::sleep(Duration::from_millis(20));
+    let deadline = Instant::now() + Duration::from_millis(250);
+    let mut stopped = false;
+    while Instant::now() < deadline {
+        let stats = emulator.get_statistics();
+        if stats.emergency_stop_active && stats.current_torque_protocol == 0 {
+            stopped = true;
+            break;
+        }
+        thread::sleep(Duration::from_millis(1));
+    }
+    assert!(stopped, "emergency stop state did not apply before timeout");
 
     let health = emulator.read_health_status().unwrap().unwrap();
     let status_flags = health.status_flags;
