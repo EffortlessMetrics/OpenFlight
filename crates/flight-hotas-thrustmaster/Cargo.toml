@@ -24,3 +24,7 @@ thiserror.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+hidapi.workspace = true
+
+[[example]]
+name = "tflight_dump"
