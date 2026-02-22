@@ -600,7 +600,7 @@ requirements:
         tests:
           - cmd:cargo xtask validate-infra
       - id: AC-8.2
-        description: "WHEN local environment starts THEN it SHALL build with Rust 1.89.0 and edition 2024"
+        description: "WHEN local environment starts THEN it SHALL build with Rust 1.92.0 and edition 2024"
         tests:
           - cmd:cargo xtask validate-infra
       - id: AC-8.3

@@ -2,7 +2,7 @@
 doc_id: DOC-REF-TFLIGHT-HOTAS
 kind: reference
 area: flight-hid
-status: implemented
+status: active
 links:
   requirements: [REQ-15]
   tasks: []

@@ -1,0 +1,30 @@
+# Default: keep working tree LF everywhere (prevents rustfmt newline_style=Unix failures)
+* text=auto eol=lf
+
+# Explicitly text (avoid heuristic weirdness)
+*.rs   text eol=lf
+*.toml text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+
+# If you have Windows batch files and want them CRLF (optional)
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.tgz  binary
+*.tar  binary
+*.wasm binary
+*.dll  binary
+*.exe  binary
+*.pdb  binary

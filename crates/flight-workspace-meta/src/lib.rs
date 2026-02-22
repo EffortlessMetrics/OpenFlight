@@ -4,8 +4,8 @@
 //! Workspace microcrate discovery and crates.io metadata validation.
 
 use anyhow::{Context, Result};
-use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
@@ -91,18 +91,22 @@ impl CrateMetadataIssue {
     }
 }
 
-pub fn load_workspace_microcrate_names(workspace_root: impl AsRef<Path>) -> Result<BTreeSet<String>> {
+pub fn load_workspace_microcrate_names(
+    workspace_root: impl AsRef<Path>,
+) -> Result<BTreeSet<String>> {
     Ok(load_workspace_microcrates(workspace_root)?
         .into_iter()
         .map(|crate_metadata| crate_metadata.name)
         .collect())
 }
 
-pub fn load_workspace_microcrates(workspace_root: impl AsRef<Path>) -> Result<Vec<WorkspaceCrateMetadata>> {
+pub fn load_workspace_microcrates(
+    workspace_root: impl AsRef<Path>,
+) -> Result<Vec<WorkspaceCrateMetadata>> {
     let workspace_root = find_workspace_root(workspace_root.as_ref())?;
     let workspace_manifest_path = workspace_root.join("Cargo.toml");
-    let workspace_manifest: WorkspaceManifest =
-        parse_toml_file(&workspace_manifest_path).with_context(|| {
+    let workspace_manifest: WorkspaceManifest = parse_toml_file(&workspace_manifest_path)
+        .with_context(|| {
             format!(
                 "failed to parse workspace manifest at {}",
                 workspace_manifest_path.display()
@@ -126,7 +130,10 @@ pub fn load_workspace_microcrates(workspace_root: impl AsRef<Path>) -> Result<Ve
         }
 
         let manifest: CrateManifest = parse_toml_file(&manifest_path).with_context(|| {
-            format!("failed to parse crate manifest at {}", manifest_path.display())
+            format!(
+                "failed to parse crate manifest at {}",
+                manifest_path.display()
+            )
         })?;
         let package = manifest
             .package
@@ -231,7 +238,12 @@ pub fn validate_workspace_crates_io_metadata(
             &mut issue.missing_fields,
         );
 
-        if crate_metadata.metadata.readme.as_deref().is_none_or(str::is_empty) {
+        if crate_metadata
+            .metadata
+            .readme
+            .as_deref()
+            .is_none_or(str::is_empty)
+        {
             issue.missing_fields.push("readme".to_string());
         } else if let Some(readme_path) = crate_metadata
             .metadata
@@ -259,7 +271,11 @@ pub fn validate_workspace_crates_io_metadata(
     Ok(report)
 }
 
-fn ensure_non_empty_string_field(field_name: &str, value: Option<&str>, missing_fields: &mut Vec<String>) {
+fn ensure_non_empty_string_field(
+    field_name: &str,
+    value: Option<&str>,
+    missing_fields: &mut Vec<String>,
+) {
     if value.is_none_or(str::is_empty) {
         missing_fields.push(field_name.to_string());
     }
@@ -271,7 +287,9 @@ fn resolve_string_field(
 ) -> Option<String> {
     match field {
         Some(WorkspaceStringField::Value(value)) => Some(value.trim().to_string()),
-        Some(WorkspaceStringField::Inherit(inherit)) if inherit.workspace => workspace_default.cloned(),
+        Some(WorkspaceStringField::Inherit(inherit)) if inherit.workspace => {
+            workspace_default.cloned()
+        }
         _ => None,
     }
 }
@@ -308,9 +326,8 @@ fn find_workspace_root(start: &Path) -> Result<PathBuf> {
     loop {
         let workspace_manifest = current.join("Cargo.toml");
         if workspace_manifest.exists() {
-            let content = fs::read_to_string(&workspace_manifest).with_context(|| {
-                format!("failed to read {}", workspace_manifest.display())
-            })?;
+            let content = fs::read_to_string(&workspace_manifest)
+                .with_context(|| format!("failed to read {}", workspace_manifest.display()))?;
             if content.contains("[workspace]") {
                 return Ok(current);
             }

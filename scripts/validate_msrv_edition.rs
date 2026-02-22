@@ -271,7 +271,7 @@ fn validate_crate_settings(cargo_toml_path: &str, crate_name: &str) -> Result<Cr
 }
 
 fn extract_toml_string_value(line: &str, _key: &str) -> Option<String> {
-    // Handle formats like: edition = "2024" or rust-version = "1.89.0"
+    // Handle formats like: edition = "2024" or rust-version = "1.92.0"
     if let Some(equals_pos) = line.find('=') {
         let value_part = line[equals_pos + 1..].trim();
         if let Some(value) = value_part

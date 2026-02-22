@@ -633,7 +633,10 @@ mod tests {
         let state = handler.try_parse_report(report).unwrap();
 
         assert_eq!(state.axis_mode, AxisMode::Merged);
-        assert!(state.axes.rocker.is_none(), "merged mode should have no rocker");
+        assert!(
+            state.axes.rocker.is_none(),
+            "merged mode should have no rocker"
+        );
         assert_eq!(state.buttons.buttons, 0, "no buttons pressed");
         assert_eq!(state.buttons.hat, 0, "hat centered");
         // Roll and pitch should be approximately zero at 0x8000.
@@ -650,7 +653,10 @@ mod tests {
         let state = handler.try_parse_report(report).unwrap();
 
         assert_eq!(state.axis_mode, AxisMode::Separate);
-        assert!(state.axes.rocker.is_some(), "separate mode must expose rocker");
+        assert!(
+            state.axes.rocker.is_some(),
+            "separate mode must expose rocker"
+        );
         assert_eq!(state.buttons.buttons, 0);
         assert_eq!(state.buttons.hat, 0);
         assert!(state.axes.roll.abs() < 0.01);
@@ -718,8 +724,7 @@ mod tests {
     fn test_report_id_stripped_merged() {
         // 0x01 = Report ID, followed by an 8-byte merged-mode payload.
         let report: &[u8] = &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
-        let mut handler =
-            TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
         let state = handler.try_parse_report(report).unwrap();
         assert_eq!(state.axis_mode, AxisMode::Merged);
         assert!(state.axes.rocker.is_none(), "merged mode has no rocker");
@@ -730,13 +735,14 @@ mod tests {
     #[test]
     fn test_report_id_stripped_separate() {
         // 0x01 = Report ID, followed by a 9-byte separate-mode payload.
-        let report: &[u8] =
-            &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
-        let mut handler =
-            TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
+        let report: &[u8] = &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
         let state = handler.try_parse_report(report).unwrap();
         assert_eq!(state.axis_mode, AxisMode::Separate);
-        assert!(state.axes.rocker.is_some(), "separate mode must expose rocker");
+        assert!(
+            state.axes.rocker.is_some(),
+            "separate mode must expose rocker"
+        );
         assert!(state.axes.roll.abs() < 0.01, "roll should be near zero");
     }
 

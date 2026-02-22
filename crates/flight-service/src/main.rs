@@ -7,7 +7,9 @@
 //! Flight Hub daemon entrypoint.
 
 use clap::{Arg, ArgAction, Command};
-use flight_service::{FlightService, FlightServiceConfig, safe_mode::SafeModeConfig, service::TFlightYawPolicyConfig};
+use flight_service::{
+    FlightService, FlightServiceConfig, safe_mode::SafeModeConfig, service::TFlightYawPolicyConfig,
+};
 use tracing::{error, info};
 
 #[tokio::main]
@@ -96,8 +98,8 @@ async fn main() -> anyhow::Result<()> {
     if let Some(policy) = matches.get_one::<String>("tflight-yaw-policy") {
         config.tflight_yaw_policy = match policy.as_str() {
             "twist" => TFlightYawPolicyConfig::Twist,
-            "aux"   => TFlightYawPolicyConfig::Aux,
-            _       => TFlightYawPolicyConfig::Auto,
+            "aux" => TFlightYawPolicyConfig::Aux,
+            _ => TFlightYawPolicyConfig::Auto,
         };
     }
     if matches.get_flag("tflight-throttle-inversion") {

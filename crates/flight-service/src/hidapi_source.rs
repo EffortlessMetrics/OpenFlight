@@ -14,8 +14,8 @@
 
 use flight_hid_support::HidDeviceInfo;
 use flight_hid_support::device_support::{
-    TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, THRUSTMASTER_VENDOR_ID,
-    USAGE_PAGE_GENERIC_DESKTOP, USAGE_JOYSTICK,
+    TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, THRUSTMASTER_VENDOR_ID, USAGE_JOYSTICK,
+    USAGE_PAGE_GENERIC_DESKTOP,
 };
 use hidapi::{HidApi, HidDevice};
 use std::collections::HashMap;
@@ -64,11 +64,7 @@ impl HidApiTFlightReportSource {
             serial_number: info.serial_number().map(str::to_owned),
             manufacturer: info.manufacturer_string().map(str::to_owned),
             product_name: info.product_string().map(str::to_owned),
-            device_path: info
-                .path()
-                .to_str()
-                .unwrap_or("<non-utf8>")
-                .to_owned(),
+            device_path: info.path().to_str().unwrap_or("<non-utf8>").to_owned(),
             usage_page: info.usage_page(),
             usage: info.usage(),
             // Descriptor capture is deferred; update via receipts.
@@ -161,7 +157,11 @@ mod tests {
     #[ignore = "requires HID subsystem; run manually with --features tflight-hidapi"]
     fn test_hidapi_source_constructs() {
         let source = HidApiTFlightReportSource::new();
-        assert!(source.is_ok(), "HidApiTFlightReportSource::new failed: {:?}", source.err());
+        assert!(
+            source.is_ok(),
+            "HidApiTFlightReportSource::new failed: {:?}",
+            source.err()
+        );
     }
 
     /// Verify list_devices returns only T.Flight devices (no device attached → empty).
@@ -171,6 +171,10 @@ mod tests {
         let mut source = HidApiTFlightReportSource::new().expect("hidapi init");
         let devices = source.list_devices();
         // Without hardware this is expected to be empty.
-        println!("Found {} T.Flight device(s): {:?}", devices.len(), devices.iter().map(|d| &d.device_path).collect::<Vec<_>>());
+        println!(
+            "Found {} T.Flight device(s): {:?}",
+            devices.len(),
+            devices.iter().map(|d| &d.device_path).collect::<Vec<_>>()
+        );
     }
 }

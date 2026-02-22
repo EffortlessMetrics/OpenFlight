@@ -6,12 +6,9 @@
 use anyhow::{Context, Result};
 use cucumber::{given, then, when};
 use flight_bdd_metrics::{
-    collect_bdd_traceability_metrics as compute_bdd_traceability_metrics,
-    collect_gherkin_scenarios,
-    describe_microcrate_gaps,
-    extract_crates_from_command as extract_crates_from_command_impl,
-    load_spec_ledger,
-    BddTraceabilityMetrics,
+    BddTraceabilityMetrics, collect_bdd_traceability_metrics as compute_bdd_traceability_metrics,
+    collect_gherkin_scenarios, describe_microcrate_gaps,
+    extract_crates_from_command as extract_crates_from_command_impl, load_spec_ledger,
 };
 use flight_workspace_meta::load_workspace_microcrate_names;
 use std::collections::BTreeSet;
@@ -36,8 +33,7 @@ fn workspace_root() -> PathBuf {
 #[given("the implementation is represented by existing unit-test evidence")]
 async fn given_unit_test_evidence(world: &mut FlightWorld) {
     world.bdd_traceability = Some(
-        collect_bdd_traceability_metrics()
-            .expect("failed to compute BDD traceability metrics"),
+        collect_bdd_traceability_metrics().expect("failed to compute BDD traceability metrics"),
     );
 }
 
@@ -45,8 +41,7 @@ async fn given_unit_test_evidence(world: &mut FlightWorld) {
 async fn when_criteria_reviewed(world: &mut FlightWorld) {
     // Recompute to ensure this scenario validates the current repository state.
     world.bdd_traceability = Some(
-        collect_bdd_traceability_metrics()
-            .expect("failed to recompute BDD traceability metrics"),
+        collect_bdd_traceability_metrics().expect("failed to recompute BDD traceability metrics"),
     );
 }
 
@@ -57,10 +52,12 @@ async fn then_criteria_traceability(world: &mut FlightWorld) {
         .as_ref()
         .expect("BDD traceability metrics were not computed");
 
-    assert!(metrics.total_ac > 0, "No acceptance criteria found in spec ledger");
+    assert!(
+        metrics.total_ac > 0,
+        "No acceptance criteria found in spec ledger"
+    );
     assert_eq!(
-        metrics.ac_with_gherkin,
-        metrics.total_ac,
+        metrics.ac_with_gherkin, metrics.total_ac,
         "Not all acceptance criteria are covered by Gherkin"
     );
 
@@ -99,7 +96,8 @@ mod tests {
     use super::*;
     use regex::Regex;
 
-    const PROJECT_INFRA_REQUIREMENTS_PATH: &str = ".kiro/specs/project-infrastructure/requirements.md";
+    const PROJECT_INFRA_REQUIREMENTS_PATH: &str =
+        ".kiro/specs/project-infrastructure/requirements.md";
     const PROJECT_INFRA_TASKS_PATH: &str = ".kiro/specs/project-infrastructure/tasks.md";
 
     #[test]
@@ -113,8 +111,8 @@ mod tests {
         let mut lines = Vec::new();
         let mut in_section = false;
 
-        let content =
-            fs::read_to_string(PROJECT_INFRA_TASKS_PATH).expect("Failed to read project infrastructure tasks");
+        let content = fs::read_to_string(PROJECT_INFRA_TASKS_PATH)
+            .expect("Failed to read project infrastructure tasks");
         for line in content.lines() {
             if line.contains("For INF-REQ-7 (Task-Driven Maintenance)") {
                 in_section = true;
@@ -182,9 +180,7 @@ mod tests {
             return true;
         }
 
-        token.len() >= 2
-            && token.as_bytes()[1] == b':'
-            && token.as_bytes()[0].is_ascii_alphabetic()
+        token.len() >= 2 && token.as_bytes()[1] == b':' && token.as_bytes()[0].is_ascii_alphabetic()
     }
 
     #[test]
@@ -247,7 +243,11 @@ mod tests {
 
         let has_command = task_section_code_tokens(&[line_73.clone()])
             .into_iter()
-            .any(|token| token.starts_with("cargo ") || token.starts_with("rg ") || token.starts_with("rustc "));
+            .any(|token| {
+                token.starts_with("cargo ")
+                    || token.starts_with("rg ")
+                    || token.starts_with("rustc ")
+            });
 
         assert!(
             has_command,

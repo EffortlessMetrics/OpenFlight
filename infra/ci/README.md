@@ -174,7 +174,7 @@ The CI pipeline provides the following guarantees:
 1. **All checks must pass for merge**: No code can be merged if any CI job fails
 2. **Consistent validation**: CI uses the same `cargo xtask` commands as local development
 3. **Platform compatibility**: Code is tested on Ubuntu and Windows
-4. **MSRV compliance**: Code builds with Rust 1.89.0
+4. **MSRV compliance**: Code builds with Rust 1.92.0
 5. **Security**: No known vulnerabilities or banned dependencies
 6. **API stability**: Public API changes are detected and reviewed
 7. **Test coverage**: All tests pass on all supported platforms

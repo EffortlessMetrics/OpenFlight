@@ -62,7 +62,7 @@ fn test_scheduler_virtual_device_integration() {
         // Generate HID report
         if let Some(report_data) = device.generate_input_report() {
             // Simulate processing the report
-            assert!(report_data.len() > 0);
+            assert!(!report_data.is_empty());
         }
 
         tick_count += 1;

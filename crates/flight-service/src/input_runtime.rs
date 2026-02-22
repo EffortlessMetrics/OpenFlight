@@ -704,7 +704,13 @@ mod tests {
         let no_inv = throttle_for_config(false).await;
         let with_inv = throttle_for_config(true).await;
         // Throttle byte 0x00 → 0.0 without inversion, 1.0 with inversion (1 - value).
-        assert!((no_inv - 0.0).abs() < 0.05, "raw throttle min should be ~0.0");
-        assert!((with_inv - 1.0).abs() < 0.05, "inverted throttle min should be ~1.0");
+        assert!(
+            (no_inv - 0.0).abs() < 0.05,
+            "raw throttle min should be ~0.0"
+        );
+        assert!(
+            (with_inv - 1.0).abs() < 0.05,
+            "inverted throttle min should be ~1.0"
+        );
     }
 }

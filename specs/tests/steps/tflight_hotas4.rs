@@ -20,7 +20,8 @@ const FIXTURE_MERGED_CENTERED: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x0
 const FIXTURE_SEPARATE_CENTERED: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
 
 /// Separate-mode report where aux (rocker) is at maximum (+1.0) and twist is at minimum (-1.0).
-const FIXTURE_SEPARATE_AUX_DOMINANT: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];
+const FIXTURE_SEPARATE_AUX_DOMINANT: &[u8] =
+    &[0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];
 
 /// Report-ID prefixed merged payload: 0x01 + merged_centered.
 /// Scaffold — replace first byte with actual Report ID from hardware receipt.
@@ -72,23 +73,20 @@ async fn given_hotas4_handler_with_policy(world: &mut FlightWorld, policy: Strin
         "Aux" => TFlightYawPolicy::Aux,
         other => panic!("unknown yaw policy: {other}"),
     };
-    world.hotas4_handler = Some(
-        TFlightInputHandler::new(TFlightModel::Hotas4).with_yaw_policy(yaw_policy),
-    );
+    world.hotas4_handler =
+        Some(TFlightInputHandler::new(TFlightModel::Hotas4).with_yaw_policy(yaw_policy));
 }
 
 #[given("a HOTAS 4 input handler with report ID enabled")]
 async fn given_hotas4_handler_with_report_id(world: &mut FlightWorld) {
-    world.hotas4_handler = Some(
-        TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true),
-    );
+    world.hotas4_handler =
+        Some(TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true));
 }
 
 #[given("a HOTAS 4 input handler with throttle inversion enabled")]
 async fn given_hotas4_handler_with_throttle_inversion(world: &mut FlightWorld) {
-    world.hotas4_handler = Some(
-        TFlightInputHandler::new(TFlightModel::Hotas4).with_throttle_inversion(true),
-    );
+    world.hotas4_handler =
+        Some(TFlightInputHandler::new(TFlightModel::Hotas4).with_throttle_inversion(true));
 }
 
 #[given(expr = "a merged-mode report fixture {string}")]
@@ -157,19 +155,13 @@ async fn then_rocker_present(world: &mut FlightWorld) {
 #[then(expr = "hat SHALL equal {int}")]
 async fn then_hat_equals(world: &mut FlightWorld, expected: u8) {
     let state = world.hotas4_parsed_state.as_ref().expect("state not set");
-    assert_eq!(
-        state.buttons.hat, expected,
-        "hat value mismatch"
-    );
+    assert_eq!(state.buttons.hat, expected, "hat value mismatch");
 }
 
 #[then(expr = "button mask SHALL equal {int}")]
 async fn then_button_mask_equals(world: &mut FlightWorld, expected: u16) {
     let state = world.hotas4_parsed_state.as_ref().expect("state not set");
-    assert_eq!(
-        state.buttons.buttons, expected,
-        "button mask mismatch"
-    );
+    assert_eq!(state.buttons.buttons, expected, "button mask mismatch");
 }
 
 #[then(expr = "resolved yaw source SHALL equal {string}")]

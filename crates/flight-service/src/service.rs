@@ -426,19 +426,33 @@ impl FlightService {
         // Use the real HID-backed source when the feature is enabled;
         // fall back to the deterministic simulated source otherwise.
         #[cfg(feature = "tflight-hidapi")]
-        let (source, source_label): (Box<dyn crate::input_runtime::TFlightReportSource>, &str) = {
+        let (source, source_label): (
+            Box<dyn crate::input_runtime::TFlightReportSource>,
+            &str,
+        ) = {
             match crate::hidapi_source::HidApiTFlightReportSource::new() {
                 Ok(real) => (Box::new(real), "hidapi"),
                 Err(e) => {
-                    warn!("hidapi source unavailable ({}), falling back to simulated", e);
-                    (Box::new(SimulatedTFlightReportSource::default()), "simulated (hidapi unavailable)")
+                    warn!(
+                        "hidapi source unavailable ({}), falling back to simulated",
+                        e
+                    );
+                    (
+                        Box::new(SimulatedTFlightReportSource::default()),
+                        "simulated (hidapi unavailable)",
+                    )
                 }
             }
         };
 
         #[cfg(not(feature = "tflight-hidapi"))]
-        let (source, source_label): (Box<dyn crate::input_runtime::TFlightReportSource>, &str) =
-            (Box::new(SimulatedTFlightReportSource::default()), "simulated");
+        let (source, source_label): (
+            Box<dyn crate::input_runtime::TFlightReportSource>,
+            &str,
+        ) = (
+            Box::new(SimulatedTFlightReportSource::default()),
+            "simulated",
+        );
 
         let runtime = TFlightInputRuntime::start(source, Arc::clone(&self.health), config);
 

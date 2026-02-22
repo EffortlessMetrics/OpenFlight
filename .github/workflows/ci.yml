@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -259,7 +259,7 @@ jobs:
 
     - name: Install Rust toolchain
       id: rust-toolchain
-      uses: dtolnay/rust-toolchain@1.89.0
+      uses: dtolnay/rust-toolchain@1.92.0
       with:
         components: rustfmt, clippy
 
@@ -342,7 +342,7 @@ jobs:
     - name: Install Rust toolchain
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       id: rust-toolchain
-      uses: dtolnay/rust-toolchain@1.89.0
+      uses: dtolnay/rust-toolchain@1.92.0
       with:
         components: clippy
 

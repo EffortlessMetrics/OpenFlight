@@ -38,33 +38,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
 
     if args.iter().any(|a| a == "--help" || a == "-h") {
-        eprintln!("{}", include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/tflight_dump.rs"))
+        eprintln!(
+            "{}",
+            include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/examples/tflight_dump.rs"
+            ))
             .lines()
             .take(30)
             .filter(|l| l.starts_with("//!"))
             .map(|l| l.trim_start_matches("//! ").trim_start_matches("//!"))
             .collect::<Vec<_>>()
-            .join("\n"));
+            .join("\n")
+        );
         return Ok(());
     }
 
     let strip_report_id = args.iter().any(|a| a == "--strip-report-id");
-    let invert_throttle  = args.iter().any(|a| a == "--invert-throttle");
-    let yaw_policy = args.iter()
+    let invert_throttle = args.iter().any(|a| a == "--invert-throttle");
+    let yaw_policy = args
+        .iter()
         .find(|a| a.starts_with("--yaw="))
         .map(|a| a.trim_start_matches("--yaw="))
         .unwrap_or("auto");
     let yaw_policy = match yaw_policy {
         "twist" => TFlightYawPolicy::Twist,
-        "aux"   => TFlightYawPolicy::Aux,
-        _       => TFlightYawPolicy::Auto,
+        "aux" => TFlightYawPolicy::Aux,
+        _ => TFlightYawPolicy::Auto,
     };
-    let run_for: Option<Duration> = args.iter()
+    let run_for: Option<Duration> = args
+        .iter()
         .find(|a| a.starts_with("--duration="))
         .and_then(|a| a.trim_start_matches("--duration=").parse::<u64>().ok())
         .map(Duration::from_secs);
 
-    eprintln!("tflight_dump: strip_report_id={strip_report_id} invert_throttle={invert_throttle} yaw_policy={yaw_policy:?}");
+    eprintln!(
+        "tflight_dump: strip_report_id={strip_report_id} invert_throttle={invert_throttle} yaw_policy={yaw_policy:?}"
+    );
 
     let api = HidApi::new()?;
 
@@ -77,12 +87,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     if candidates.is_empty() {
-        eprintln!("No T.Flight HOTAS 4 devices found (VID=0x{THRUSTMASTER_VID:04X} PID=0x{HOTAS4_PID:04X}/0x{HOTAS4_LEGACY_PID:04X}).");
-        eprintln!("Tip: on Windows ensure the Thrustmaster driver is installed; on Linux try `sudo` or set up udev rules.");
+        eprintln!(
+            "No T.Flight HOTAS 4 devices found (VID=0x{THRUSTMASTER_VID:04X} PID=0x{HOTAS4_PID:04X}/0x{HOTAS4_LEGACY_PID:04X})."
+        );
+        eprintln!(
+            "Tip: on Windows ensure the Thrustmaster driver is installed; on Linux try `sudo` or set up udev rules."
+        );
         return Ok(());
     }
 
-    eprintln!("Found {} device(s). Reading — press Ctrl-C to stop.", candidates.len());
+    eprintln!(
+        "Found {} device(s). Reading — press Ctrl-C to stop.",
+        candidates.len()
+    );
 
     // Open the first candidate (add a loop over candidates for multi-device setups).
     let dev_info = &candidates[0];
@@ -138,7 +155,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match handler.try_parse_report(report) {
             Ok(state) => {
                 let yaw = handler.resolve_yaw(&state);
-                let rocker = state.axes.rocker
+                let rocker = state
+                    .axes
+                    .rocker
                     .map(|v| format!("{v:.4}"))
                     .unwrap_or_else(|| "n/a".to_string());
                 println!(
