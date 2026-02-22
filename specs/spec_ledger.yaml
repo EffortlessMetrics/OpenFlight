@@ -308,6 +308,24 @@ requirements:
         tests:
           - cmd:cargo xtask validate
 
+  # Product Requirement: T.Flight HOTAS 4 Runtime Auto-Mode and Report-ID Handling
+  - id: REQ-16
+    name: T.Flight HOTAS 4 Runtime Auto-Mode and Report-ID Handling
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-16.1
+        description: "WHEN the T.Flight runtime registers a new device THEN the input handler SHALL be initialised with AxisMode::Unknown so each report is auto-detected independently"
+        tests:
+          - flight-service::input_runtime::tests::test_runtime_auto_detects_axis_mode_merged
+          - flight-service::input_runtime::tests::test_mode_change_emits_health_event
+
+      - id: AC-16.2
+        description: "WHEN a T.Flight report is prepended with a Report ID byte THEN the handler SHALL strip the prefix and parse the remaining payload correctly for both merged and separate modes"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_report_id_stripped_merged
+          - flight-hotas-thrustmaster::input::tests::test_report_id_stripped_separate
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

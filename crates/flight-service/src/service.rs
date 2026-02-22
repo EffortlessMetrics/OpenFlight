@@ -113,7 +113,7 @@ impl Default for FlightServiceConfig {
             watchdog_config: WatchdogConfig::default(),
             enable_health_monitoring: true,
             enable_power_checks: true,
-            enable_tflight_runtime: true,
+            enable_tflight_runtime: false,
             tflight_poll_hz: 250,
             tflight_yaw_policy: TFlightYawPolicyConfig::Auto,
         }

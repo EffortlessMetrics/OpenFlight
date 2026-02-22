@@ -237,14 +237,16 @@ async fn poll_once(
             continue;
         }
 
-        let axis_mode = flight_hid_support::device_support::axis_mode_from_device_info(&info);
+        let _axis_mode_hint = flight_hid_support::device_support::axis_mode_from_device_info(&info);
         let is_legacy = is_hotas4_legacy_pid(&info);
         let snapshot_key = info
             .serial_number
             .clone()
             .unwrap_or_else(|| info.device_path.clone());
+        // Always start in Unknown so the handler auto-detects every report;
+        // the descriptor hint is advisory only (see fix for runtime AxisMode pinning).
         let handler =
-            TFlightInputHandler::with_axis_mode(model, axis_mode).with_yaw_policy(yaw_policy);
+            TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown).with_yaw_policy(yaw_policy);
         let monitor = TFlightHealthMonitor::new(model).with_legacy_pid(is_legacy);
 
         states.insert(
@@ -254,7 +256,7 @@ async fn poll_once(
                 snapshot_key: snapshot_key.clone(),
                 handler,
                 monitor,
-                last_mode: axis_mode,
+                last_mode: AxisMode::Unknown,
                 ghost_warning_active: false,
                 is_legacy_pid: is_legacy,
             },
@@ -552,6 +554,41 @@ mod tests {
         }
 
         assert!(saw_ghost_warning);
+        runtime.shutdown().await;
+    }
+
+    /// AC-16.1 — runtime handler always starts Unknown so reports are auto-detected.
+    ///
+    /// Feeds an 8-byte merged report; the snapshot must reflect `Merged`.
+    /// Before the AxisMode-pinning fix this test would fail if a descriptor
+    /// indicated `Separate` (handler would reject the shorter report).
+    #[tokio::test]
+    async fn test_runtime_auto_detects_axis_mode_merged() {
+        let health = Arc::new(HealthStream::new());
+        let mut source = SimulatedTFlightReportSource::default();
+
+        source.add_device(
+            hotas4_device_info(
+                flight_hid_support::device_support::TFLIGHT_HOTAS_4_PID,
+                "/dev/hotas4-merged-auto",
+            ),
+            vec![vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00]], // 8-byte merged
+        );
+
+        let mut runtime = TFlightInputRuntime::start(
+            Box::new(source),
+            health,
+            TFlightRuntimeConfig {
+                poll_hz: 100,
+                yaw_policy: TFlightYawPolicy::Auto,
+            },
+        );
+
+        let snapshots = wait_for_snapshot_count(&runtime, 1).await;
+        assert_eq!(snapshots.len(), 1);
+        let snapshot = snapshots.values().next().unwrap();
+        assert_eq!(snapshot.axis_mode, AxisMode::Merged);
+
         runtime.shutdown().await;
     }
 

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2025 Flight Hub Team
 
-//! Step definitions for REQ-15: Thrustmaster T.Flight HOTAS 4 Support
+//! Step definitions for REQ-15 and REQ-16: Thrustmaster T.Flight HOTAS 4 Support
 
 use crate::FlightWorld;
 use cucumber::{given, then, when};
 use flight_hotas_thrustmaster::{
-    TFlightInputHandler, TFlightYawPolicy, TFlightYawSource,
-    TFlightModel,
+    AxisMode, TFlightInputHandler, TFlightModel, TFlightYawPolicy, TFlightYawSource,
 };
 
 // ---------------------------------------------------------------------------
@@ -23,11 +22,23 @@ const FIXTURE_SEPARATE_CENTERED: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0
 /// Separate-mode report where aux (rocker) is at maximum (+1.0) and twist is at minimum (-1.0).
 const FIXTURE_SEPARATE_AUX_DOMINANT: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];
 
+/// Report-ID prefixed merged payload: 0x01 + merged_centered.
+/// Scaffold — replace first byte with actual Report ID from hardware receipt.
+const FIXTURE_REPORT_ID_MERGED_CENTERED: &[u8] =
+    &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+
+/// Report-ID prefixed separate payload: 0x01 + separate_centered.
+/// Scaffold — replace first byte with actual Report ID from hardware receipt.
+const FIXTURE_REPORT_ID_SEPARATE_CENTERED: &[u8] =
+    &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+
 fn fixture_bytes(name: &str) -> Vec<u8> {
     match name {
         "merged_centered" => FIXTURE_MERGED_CENTERED.to_vec(),
         "separate_centered" => FIXTURE_SEPARATE_CENTERED.to_vec(),
         "separate_aux_dominant" => FIXTURE_SEPARATE_AUX_DOMINANT.to_vec(),
+        "report_id_merged_centered" => FIXTURE_REPORT_ID_MERGED_CENTERED.to_vec(),
+        "report_id_separate_centered" => FIXTURE_REPORT_ID_SEPARATE_CENTERED.to_vec(),
         other => panic!("unknown HOTAS 4 fixture: {other}"),
     }
 }
@@ -51,6 +62,13 @@ async fn given_hotas4_handler_with_policy(world: &mut FlightWorld, policy: Strin
     };
     world.hotas4_handler = Some(
         TFlightInputHandler::new(TFlightModel::Hotas4).with_yaw_policy(yaw_policy),
+    );
+}
+
+#[given("a HOTAS 4 input handler with report ID enabled")]
+async fn given_hotas4_handler_with_report_id(world: &mut FlightWorld) {
+    world.hotas4_handler = Some(
+        TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true),
     );
 }
 
@@ -85,6 +103,14 @@ async fn when_parse_report(world: &mut FlightWorld) {
 
     world.hotas4_yaw_resolution = Some(handler.resolve_yaw(&state));
     world.hotas4_parsed_state = Some(state);
+}
+
+/// Parse a named fixture in-place — sets `hotas4_report` and parses it.
+/// Enables AC-15.4 mode-switch scenario and REQ-16 auto-detection scenarios.
+#[when(expr = "I parse fixture {string}")]
+async fn when_parse_fixture(world: &mut FlightWorld, name: String) {
+    world.hotas4_report = Some(fixture_bytes(&name));
+    when_parse_report(world).await;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,5 +169,21 @@ async fn then_yaw_source_equals(world: &mut FlightWorld, expected: String) {
         resolution.source, expected_source,
         "yaw source mismatch: expected {expected_source:?}, got {:?}",
         resolution.source
+    );
+}
+
+#[then(expr = "axis mode SHALL equal {string}")]
+async fn then_axis_mode_equals(world: &mut FlightWorld, expected: String) {
+    let state = world.hotas4_parsed_state.as_ref().expect("state not set");
+    let expected_mode = match expected.as_str() {
+        "Merged" => AxisMode::Merged,
+        "Separate" => AxisMode::Separate,
+        "Unknown" => AxisMode::Unknown,
+        other => panic!("unknown axis mode: {other}"),
+    };
+    assert_eq!(
+        state.axis_mode, expected_mode,
+        "axis mode mismatch: expected {expected_mode:?}, got {:?}",
+        state.axis_mode
     );
 }

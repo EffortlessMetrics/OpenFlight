@@ -143,6 +143,11 @@ pub struct TFlightInputHandler {
     invert_throttle: bool,
     /// Yaw resolution policy.
     yaw_policy: TFlightYawPolicy,
+    /// Strip a leading Report ID byte before parsing.
+    ///
+    /// Some HID stacks prepend a 1-byte report ID. Set this when the
+    /// captured descriptor or receipt confirms the device uses Report IDs.
+    has_report_id: bool,
 }
 
 impl TFlightInputHandler {
@@ -164,6 +169,7 @@ impl TFlightInputHandler {
             last_state: TFlightInputState::default(),
             invert_throttle: false,
             yaw_policy: TFlightYawPolicy::Auto,
+            has_report_id: false,
         }
     }
 
@@ -176,6 +182,16 @@ impl TFlightInputHandler {
     /// Configure yaw source policy.
     pub fn with_yaw_policy(mut self, policy: TFlightYawPolicy) -> Self {
         self.yaw_policy = policy;
+        self
+    }
+
+    /// Enable Report ID stripping.
+    ///
+    /// Set this when the HID stack prepends a 1-byte report ID to every
+    /// input report. The first byte is discarded and the remainder is
+    /// parsed as the normal payload.
+    pub fn with_report_id(mut self, enabled: bool) -> Self {
+        self.has_report_id = enabled;
         self
     }
 
@@ -225,10 +241,16 @@ impl TFlightInputHandler {
         &mut self,
         report: &[u8],
     ) -> Result<TFlightInputState, TFlightParseError> {
-        let effective_mode = self.determine_effective_mode(report)?;
+        // Strip leading Report ID byte if the device uses them.
+        let payload = if self.has_report_id {
+            report.get(1..).unwrap_or(&[])
+        } else {
+            report
+        };
+        let effective_mode = self.determine_effective_mode(payload)?;
         let state = match effective_mode {
-            AxisMode::Separate => self.parse_separate_report(report)?,
-            AxisMode::Merged | AxisMode::Unknown => self.parse_merged_report(report)?,
+            AxisMode::Separate => self.parse_separate_report(payload)?,
+            AxisMode::Merged | AxisMode::Unknown => self.parse_merged_report(payload)?,
         };
 
         self.detected_axis_mode = effective_mode;
@@ -679,5 +701,39 @@ mod tests {
         handler.set_yaw_policy(TFlightYawPolicy::Aux);
         let yaw = handler.resolve_yaw(&state);
         assert_eq!(yaw.source, TFlightYawSource::Aux);
+    }
+
+    // -----------------------------------------------------------------------
+    // REQ-16 acceptance-criteria tests — Report ID scaffolding
+    // -----------------------------------------------------------------------
+    // These tests use a synthetic 0x01 Report ID prefix to validate that the
+    // parser correctly strips the ID byte and decodes the payload.
+    // Replace the fixture bytes with captured hardware receipts once available.
+
+    /// AC-16.2 — Report ID prefix (0x01) is stripped before parsing a merged report.
+    #[test]
+    fn test_report_id_stripped_merged() {
+        // 0x01 = Report ID, followed by an 8-byte merged-mode payload.
+        let report: &[u8] = &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
+        let state = handler.try_parse_report(report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Merged);
+        assert!(state.axes.rocker.is_none(), "merged mode has no rocker");
+        assert!(state.axes.roll.abs() < 0.01, "roll should be near zero");
+    }
+
+    /// AC-16.2 — Report ID prefix (0x01) is stripped before parsing a separate report.
+    #[test]
+    fn test_report_id_stripped_separate() {
+        // 0x01 = Report ID, followed by a 9-byte separate-mode payload.
+        let report: &[u8] =
+            &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true);
+        let state = handler.try_parse_report(report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Separate);
+        assert!(state.axes.rocker.is_some(), "separate mode must expose rocker");
+        assert!(state.axes.roll.abs() < 0.01, "roll should be near zero");
     }
 }
