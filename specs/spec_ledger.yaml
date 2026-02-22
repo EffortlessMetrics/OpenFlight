@@ -326,6 +326,17 @@ requirements:
           - flight-hotas-thrustmaster::input::tests::test_report_id_stripped_merged
           - flight-hotas-thrustmaster::input::tests::test_report_id_stripped_separate
 
+      - id: AC-16.3
+        description: "WHEN a T.Flight HAT switch reports a value outside the valid range 0..=8 THEN the runtime SHALL clamp it to 0 (center) to prevent phantom hat events"
+        tests:
+          - flight-hotas-thrustmaster::input::tests::test_hat_out_of_range_clamped_to_center
+          - flight-hotas-thrustmaster::input::tests::test_hat_max_valid_value_preserved
+
+      - id: AC-16.4
+        description: "WHEN `TFlightRuntimeConfig::throttle_inversion` is true THEN the runtime SHALL invert the throttle axis (1.0 − value) and the service config field `tflight_throttle_inversion` SHALL wire through to the runtime"
+        tests:
+          - flight-service::input_runtime::tests::test_runtime_throttle_inversion_applied
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

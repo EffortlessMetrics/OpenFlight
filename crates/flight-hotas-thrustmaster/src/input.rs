@@ -432,8 +432,11 @@ impl TFlightInputHandler {
         let filtered = self.ghost_filter.filter(raw_buttons as u32);
         state.buttons.buttons = filtered as u16;
 
-        // HAT is typically in the upper nibble of the second byte
-        state.buttons.hat = (bytes[1] >> 4) & 0x0F;
+        // HAT is in the upper nibble of the second byte.
+        // Valid range is 0 (center) through 8 (8 directions); clamp anything
+        // outside that range back to 0 to avoid phantom hat events.
+        let raw_hat = (bytes[1] >> 4) & 0x0F;
+        state.buttons.hat = if raw_hat <= 8 { raw_hat } else { 0 };
     }
 }
 
@@ -735,5 +738,25 @@ mod tests {
         assert_eq!(state.axis_mode, AxisMode::Separate);
         assert!(state.axes.rocker.is_some(), "separate mode must expose rocker");
         assert!(state.axes.roll.abs() < 0.01, "roll should be near zero");
+    }
+
+    /// AC-16.3 — HAT values outside 0..=8 are treated as centered (0).
+    #[test]
+    fn test_hat_out_of_range_clamped_to_center() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        // Upper nibble 0xA = 10 (>8) → should clamp to 0.
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0xA0_u8];
+        let state = handler.parse_report(&report);
+        assert_eq!(state.buttons.hat, 0, "out-of-range HAT must clamp to 0");
+    }
+
+    /// AC-16.3 — HAT value 8 (last valid direction) is preserved.
+    #[test]
+    fn test_hat_max_valid_value_preserved() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        // Upper nibble 0x8 = 8 (exactly valid).
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x80_u8];
+        let state = handler.parse_report(&report);
+        assert_eq!(state.buttons.hat, 8, "HAT value 8 should be preserved");
     }
 }

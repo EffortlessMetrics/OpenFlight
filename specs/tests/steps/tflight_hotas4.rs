@@ -32,6 +32,15 @@ const FIXTURE_REPORT_ID_MERGED_CENTERED: &[u8] =
 const FIXTURE_REPORT_ID_SEPARATE_CENTERED: &[u8] =
     &[0x01, 0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
 
+/// Merged report with HAT nibble = 0xA (10 — out of range), should clamp to 0.
+const FIXTURE_HAT_OUT_OF_RANGE: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0xA0];
+
+/// Merged report with HAT nibble = 0x8 (8 — last valid direction).
+const FIXTURE_HAT_MAX_VALID: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x80];
+
+/// Merged report with throttle byte = 0x00 (raw minimum).
+const FIXTURE_THROTTLE_MIN: &[u8] = &[0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00];
+
 fn fixture_bytes(name: &str) -> Vec<u8> {
     match name {
         "merged_centered" => FIXTURE_MERGED_CENTERED.to_vec(),
@@ -39,6 +48,9 @@ fn fixture_bytes(name: &str) -> Vec<u8> {
         "separate_aux_dominant" => FIXTURE_SEPARATE_AUX_DOMINANT.to_vec(),
         "report_id_merged_centered" => FIXTURE_REPORT_ID_MERGED_CENTERED.to_vec(),
         "report_id_separate_centered" => FIXTURE_REPORT_ID_SEPARATE_CENTERED.to_vec(),
+        "hat_out_of_range" => FIXTURE_HAT_OUT_OF_RANGE.to_vec(),
+        "hat_max_valid" => FIXTURE_HAT_MAX_VALID.to_vec(),
+        "throttle_min" => FIXTURE_THROTTLE_MIN.to_vec(),
         other => panic!("unknown HOTAS 4 fixture: {other}"),
     }
 }
@@ -69,6 +81,13 @@ async fn given_hotas4_handler_with_policy(world: &mut FlightWorld, policy: Strin
 async fn given_hotas4_handler_with_report_id(world: &mut FlightWorld) {
     world.hotas4_handler = Some(
         TFlightInputHandler::new(TFlightModel::Hotas4).with_report_id(true),
+    );
+}
+
+#[given("a HOTAS 4 input handler with throttle inversion enabled")]
+async fn given_hotas4_handler_with_throttle_inversion(world: &mut FlightWorld) {
+    world.hotas4_handler = Some(
+        TFlightInputHandler::new(TFlightModel::Hotas4).with_throttle_inversion(true),
     );
 }
 
@@ -185,5 +204,21 @@ async fn then_axis_mode_equals(world: &mut FlightWorld, expected: String) {
         state.axis_mode, expected_mode,
         "axis mode mismatch: expected {expected_mode:?}, got {:?}",
         state.axis_mode
+    );
+}
+
+#[then(expr = "HAT SHALL equal {int}")]
+async fn then_hat_value_equals(world: &mut FlightWorld, expected: u8) {
+    let state = world.hotas4_parsed_state.as_ref().expect("state not set");
+    assert_eq!(state.buttons.hat, expected, "HAT value mismatch");
+}
+
+#[then(expr = "throttle SHALL be approximately {float}")]
+async fn then_throttle_approximately(world: &mut FlightWorld, expected: f32) {
+    let state = world.hotas4_parsed_state.as_ref().expect("state not set");
+    assert!(
+        (state.axes.throttle - expected).abs() < 0.05,
+        "throttle mismatch: expected ~{expected}, got {}",
+        state.axes.throttle
     );
 }

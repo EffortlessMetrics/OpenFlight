@@ -58,6 +58,9 @@ pub struct FlightServiceConfig {
     pub tflight_poll_hz: u16,
     /// Yaw source policy for T.Flight parsing.
     pub tflight_yaw_policy: TFlightYawPolicyConfig,
+    /// Invert T.Flight throttle axis. Off by default; enable only after
+    /// hardware receipts confirm inversion is needed for your device/driver.
+    pub tflight_throttle_inversion: bool,
 }
 
 /// Axis engine configuration subset
@@ -116,6 +119,7 @@ impl Default for FlightServiceConfig {
             enable_tflight_runtime: false,
             tflight_poll_hz: 250,
             tflight_yaw_policy: TFlightYawPolicyConfig::Auto,
+            tflight_throttle_inversion: false,
         }
     }
 }
@@ -410,6 +414,7 @@ impl FlightService {
         let config = TFlightRuntimeConfig {
             poll_hz: self.config.tflight_poll_hz,
             yaw_policy: self.config.tflight_yaw_policy.into(),
+            throttle_inversion: self.config.tflight_throttle_inversion,
         };
 
         // This cycle uses the deterministic simulated backend by default.
