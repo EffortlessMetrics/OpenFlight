@@ -579,6 +579,20 @@ mod tests {
     }
 
     #[test]
+    fn test_flat_twist_axis_does_not_fail_parsing() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        // Separate mode report with twist fixed at center (e.g. twist lock engaged).
+        let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00];
+
+        let first = handler.try_parse_report(&report).unwrap();
+        let second = handler.try_parse_report(&report).unwrap();
+
+        assert_eq!(first.axis_mode, AxisMode::Separate);
+        assert_eq!(second.axis_mode, AxisMode::Separate);
+        assert!((first.axes.twist - second.axes.twist).abs() < 0.0001);
+    }
+
+    #[test]
     fn test_yaw_resolution_policies_separate_mode() {
         let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
         let report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x00, 0xFF, 0x00, 0x00];

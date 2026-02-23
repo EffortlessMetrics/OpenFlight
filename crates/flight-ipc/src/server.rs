@@ -262,6 +262,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
     if let Some(model) = device_support::tflight_model(device_info) {
         metadata.insert("device_family".to_string(), "tflight-hotas".to_string());
         metadata.insert("model".to_string(), model.name().to_string());
+        metadata.insert(
+            "is_legacy_pid".to_string(),
+            device_support::is_hotas4_legacy_pid(device_info).to_string(),
+        );
 
         let axis_mode = device_support::axis_mode_from_device_info(device_info);
         metadata.insert("axis_mode".to_string(), axis_mode.as_str().to_string());
@@ -273,6 +277,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
         metadata.insert(
             "note.driver".to_string(),
             device_support::driver_note().to_string(),
+        );
+        metadata.insert(
+            "note.pc_mode".to_string(),
+            device_support::pc_mode_note(model).to_string(),
         );
 
         let mapping = device_support::tflight_default_mapping(axis_mode);
@@ -602,5 +610,61 @@ mod tests {
 
         assert_eq!(response.version, crate::PROTOCOL_VERSION);
         assert_eq!(response.status(), ServiceStatus::Running);
+    }
+
+    #[test]
+    fn test_tflight_legacy_metadata_includes_guidance() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::THRUSTMASTER_VENDOR_ID,
+            product_id: device_support::TFLIGHT_HOTAS_4_PID_LEGACY,
+            serial_number: Some("legacy-1".to_string()),
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: Some("T.Flight HOTAS 4".to_string()),
+            device_path: "/dev/test-legacy".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("device_family").map(String::as_str),
+            Some("tflight-hotas")
+        );
+        assert_eq!(
+            metadata.get("is_legacy_pid").map(String::as_str),
+            Some("true")
+        );
+        assert!(
+            metadata
+                .get("note.pc_mode")
+                .is_some_and(|note| note.contains("Share+Option+PS"))
+        );
+    }
+
+    #[test]
+    fn test_tflight_hotas_one_metadata_is_not_legacy() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::THRUSTMASTER_VENDOR_ID,
+            product_id: device_support::TFLIGHT_HOTAS_ONE_PID,
+            serial_number: Some("one-1".to_string()),
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: Some("T.Flight HOTAS One".to_string()),
+            device_path: "/dev/test-one".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("is_legacy_pid").map(String::as_str),
+            Some("false")
+        );
+        assert!(
+            metadata
+                .get("note.pc_mode")
+                .is_some_and(|note| note.contains("Guide"))
+        );
     }
 }

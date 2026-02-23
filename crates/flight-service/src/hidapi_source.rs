@@ -12,8 +12,8 @@
 
 use flight_hid_support::HidDeviceInfo;
 use flight_hid_support::device_support::{
-    TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, THRUSTMASTER_VENDOR_ID, USAGE_JOYSTICK,
-    USAGE_PAGE_GENERIC_DESKTOP,
+    TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, TFLIGHT_HOTAS_ONE_PID, THRUSTMASTER_VENDOR_ID,
+    USAGE_JOYSTICK, USAGE_PAGE_GENERIC_DESKTOP,
 };
 use hidapi::{HidApi, HidDevice};
 use std::collections::{HashMap, HashSet};
@@ -32,9 +32,9 @@ const MAX_REPORT_SIZE: usize = 16;
 
 /// Real `TFlightReportSource` backed by `hidapi`.
 ///
-/// Enumerates all T.Flight HOTAS 4 (VID `0x044F`, PID `0xB67A`/`0xB67B`) devices
-/// attached to the system. Opens devices lazily and keeps handles alive between
-/// polls for zero-allocation hot-path reads.
+/// Enumerates all known T.Flight HOTAS 4/One devices (VID `0x044F`, PID
+/// `0xB67A`/`0xB67B`/`0xB68B`) attached to the system. Opens devices lazily and
+/// keeps handles alive between polls for zero-allocation hot-path reads.
 ///
 /// # Thread safety
 /// This source is `Send` but **not** `Sync`. Use it exclusively from the runtime
@@ -87,10 +87,16 @@ impl HidApiTFlightReportSource {
         }
     }
 
+    fn is_tflight_pid(product_id: u16) -> bool {
+        matches!(
+            product_id,
+            TFLIGHT_HOTAS_4_PID | TFLIGHT_HOTAS_4_PID_LEGACY | TFLIGHT_HOTAS_ONE_PID
+        )
+    }
+
     fn is_tflight(info: &hidapi::DeviceInfo) -> bool {
         info.vendor_id() == THRUSTMASTER_VENDOR_ID
-            && (info.product_id() == TFLIGHT_HOTAS_4_PID
-                || info.product_id() == TFLIGHT_HOTAS_4_PID_LEGACY)
+            && Self::is_tflight_pid(info.product_id())
             && info.usage_page() == USAGE_PAGE_GENERIC_DESKTOP
             && info.usage() == USAGE_JOYSTICK
     }
@@ -161,6 +167,20 @@ impl TFlightReportSource for HidApiTFlightReportSource {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_is_tflight_pid_matches_known_variants() {
+        assert!(HidApiTFlightReportSource::is_tflight_pid(
+            TFLIGHT_HOTAS_4_PID
+        ));
+        assert!(HidApiTFlightReportSource::is_tflight_pid(
+            TFLIGHT_HOTAS_4_PID_LEGACY
+        ));
+        assert!(HidApiTFlightReportSource::is_tflight_pid(
+            TFLIGHT_HOTAS_ONE_PID
+        ));
+        assert!(!HidApiTFlightReportSource::is_tflight_pid(0x0001));
+    }
 
     /// Verify construction succeeds (requires HID subsystem — skipped in CI).
     /// Run with: `cargo test -p flight-service --features tflight-hidapi`

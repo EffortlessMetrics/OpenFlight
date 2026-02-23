@@ -71,7 +71,9 @@ pub const USAGE_HAT_SWITCH: u16 = 0x39;
 
 pub const AXIS_MODE_WARNING: &str =
     "Rudder sources are merged. Switch to full-axis mode for separate yaw inputs.";
-pub const DRIVER_NOTE: &str = "Missing axes or buttons? Install the Thrustmaster driver and confirm full-axis mode. On Linux, use a corrected HID descriptor setup (for example hid-tflight4) when generic HID exposes limited axes.";
+pub const DRIVER_NOTE: &str = "Missing axes or buttons? Install the Thrustmaster driver, confirm PC full-axis mode, and on Linux use a corrected HID descriptor setup (for example hid-tflight4) when generic HID exposes limited axes.";
+pub const PC_MODE_NOTE_HOTAS_4: &str = "If full-axis inputs are missing, switch HOTAS 4 to PC HID mode (hardware switch or hold Share+Option+PS while plugging in).";
+pub const PC_MODE_NOTE_HOTAS_ONE: &str = "If full-axis inputs are missing, switch HOTAS One to PC mode (Xbox/PC selector and Guide button procedure) before plugging in.";
 pub const DEFAULT_MAPPING_NOTE_UNKNOWN: &str =
     "Default mapping assumes full-axis mode; verify axis mode before applying.";
 
@@ -258,6 +260,13 @@ pub fn axis_mode_warning(axis_mode: AxisMode) -> Option<&'static str> {
 
 pub fn driver_note() -> &'static str {
     DRIVER_NOTE
+}
+
+pub fn pc_mode_note(model: TFlightModel) -> &'static str {
+    match model {
+        TFlightModel::Hotas4 => PC_MODE_NOTE_HOTAS_4,
+        TFlightModel::HotasOne => PC_MODE_NOTE_HOTAS_ONE,
+    }
 }
 
 pub fn default_mapping_note(axis_mode: AxisMode) -> Option<&'static str> {
@@ -2187,6 +2196,8 @@ mod tests {
         assert_eq!(axis_mode_warning(AxisMode::Merged), Some(AXIS_MODE_WARNING));
         assert!(axis_mode_warning(AxisMode::Separate).is_none());
         assert!(driver_note().contains("Thrustmaster"));
+        assert!(pc_mode_note(TFlightModel::Hotas4).contains("Share+Option+PS"));
+        assert!(pc_mode_note(TFlightModel::HotasOne).contains("Guide"));
         assert_eq!(
             default_mapping_note(AxisMode::Unknown),
             Some(DEFAULT_MAPPING_NOTE_UNKNOWN)
