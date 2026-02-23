@@ -49,10 +49,10 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
 
     - name: Install cargo-audit
-      run: cargo install cargo-audit
+      run: cargo +stable install --locked cargo-audit
 
     - name: Install cargo-deny
-      run: cargo install cargo-deny
+      run: cargo +stable install --locked cargo-deny
 
     - name: Run security audit
       run: |
@@ -76,7 +76,7 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
 
     - name: Install cargo-deny
-      run: cargo install cargo-deny
+      run: cargo +stable install --locked cargo-deny
 
     - name: Check licenses
       run: |
@@ -105,13 +105,13 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Install nightly for scripts
-      uses: dtolnay/rust-toolchain@nightly
+    - name: Install nightly for scripts (no default switch)
+      run: rustup toolchain install nightly --profile minimal --no-self-update
 
     - name: Install audit tools
       run: |
         echo "🛠️ Installing supply chain audit tools"
-        cargo install cargo-audit cargo-deny cargo-license
+        cargo +stable install --locked cargo-audit cargo-deny cargo-license
         echo "✅ Audit tools installed"
 
     - name: Run comprehensive supply chain audit
@@ -177,7 +177,7 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
 
     - name: Install cargo-semver-checks
-      run: cargo install cargo-semver-checks
+      run: cargo +stable install --locked cargo-semver-checks
 
     - name: Check semantic versioning
       run: |
@@ -218,12 +218,12 @@ jobs:
       with:
         components: clippy
 
-    - name: Install nightly for scripts
-      uses: dtolnay/rust-toolchain@nightly
+    - name: Install nightly for scripts (no default switch)
+      run: rustup toolchain install nightly --profile minimal --no-self-update
 
     - name: Install audit tools
       run: |
-        cargo install cargo-audit cargo-deny cargo-license
+        cargo +stable install --locked cargo-audit cargo-deny cargo-license
 
     - name: Run CI Supply Chain Security Gate
       run: |

@@ -40,8 +40,8 @@ jobs:
           
     - name: Install security audit tools
       run: |
-        cargo install cargo-audit
-        cargo install cargo-deny
+        cargo +stable install --locked cargo-audit
+        cargo +stable install --locked cargo-deny
         
     - name: Run security audit
       run: cargo audit
@@ -59,8 +59,8 @@ jobs:
         cargo test -p flight-core security
         cargo test -p flight-ipc
 
-    - name: Install nightly for scripts
-      uses: dtolnay/rust-toolchain@nightly
+    - name: Install nightly for scripts (no default switch)
+      run: rustup toolchain install nightly --profile minimal --no-self-update
         
     - name: Run custom security verification
       run: |

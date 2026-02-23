@@ -102,6 +102,10 @@ fn status_for_requirement_status(
     AcStatus::compute(&convert_requirement_status(status), has_tests, has_gherkin)
 }
 
+fn display_path_portable(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 fn convert_gherkin_scenarios_for_bdd_metrics(
     scenarios: &[GherkinScenario],
 ) -> Vec<BddTraceabilityScenario> {
@@ -177,7 +181,7 @@ fn generate_feature_status_with_metrics(
         for ac_tag in scenario.ac_tags() {
             ac_to_scenarios.entry(ac_tag).or_default().push(format!(
                 "{}:{}",
-                scenario.file_path.display(),
+                display_path_portable(&scenario.file_path),
                 scenario.line_number
             ));
         }
@@ -518,6 +522,12 @@ mod tests {
         assert!(report.contains("specs/features/test.feature:10"));
         assert!(report.contains("1")); // test count
         assert!(report.contains("✅")); // Complete status
+    }
+
+    #[test]
+    fn test_display_path_portable_normalizes_backslashes() {
+        let path = PathBuf::from(r"specs\features\test.feature");
+        assert_eq!(display_path_portable(&path), "specs/features/test.feature");
     }
 
     #[test]
