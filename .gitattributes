@@ -1,7 +1,7 @@
-# Default: keep working tree LF everywhere (prevents rustfmt newline_style=Unix failures)
+# Default: keep working tree LF everywhere
 * text=auto eol=lf
 
-# Explicitly text (avoid heuristic weirdness)
+# Explicitly text (avoid heuristics)
 *.rs   text eol=lf
 *.toml text eol=lf
 *.yml  text eol=lf
