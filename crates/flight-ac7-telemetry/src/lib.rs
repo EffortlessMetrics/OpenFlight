@@ -392,4 +392,99 @@ mod tests {
         assert_eq!(adapter.state(), AdapterState::Active);
         assert!(adapter.source_addr().is_some());
     }
+
+    #[test]
+    fn adapter_initial_state_is_disconnected() {
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        assert_eq!(adapter.state(), AdapterState::Disconnected);
+        assert!(adapter.source_addr().is_none());
+        assert!(adapter.local_addr().is_none());
+        assert!(adapter.is_connection_timeout()); // no packets = timed out
+    }
+
+    #[test]
+    fn snapshot_has_correct_sim_id() {
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        let snapshot = adapter.convert_packet_to_snapshot(&test_packet()).unwrap();
+        assert_eq!(snapshot.sim, SimId::AceCombat7);
+    }
+
+    #[test]
+    fn snapshot_validity_flags_set_from_full_packet() {
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        let snapshot = adapter.convert_packet_to_snapshot(&test_packet()).unwrap();
+        assert!(snapshot.validity.attitude_valid);
+        assert!(snapshot.validity.velocities_valid);
+        assert!(snapshot.validity.position_valid);
+        assert!(snapshot.validity.safe_for_ffb);
+    }
+
+    #[test]
+    fn snapshot_validity_partial_packet() {
+        use flight_ac7_protocol::{Ac7State, Ac7TelemetryPacket};
+        let packet = Ac7TelemetryPacket {
+            state: Ac7State {
+                altitude_m: Some(1000.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        let snapshot = adapter.convert_packet_to_snapshot(&packet).unwrap();
+        assert!(snapshot.validity.position_valid);
+        assert!(!snapshot.validity.attitude_valid);
+        assert!(!snapshot.validity.safe_for_ffb);
+    }
+
+    #[test]
+    fn snapshot_control_inputs_mapped() {
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        let snapshot = adapter.convert_packet_to_snapshot(&test_packet()).unwrap();
+        assert_eq!(snapshot.control_inputs.pitch, 0.1);
+        assert_eq!(snapshot.control_inputs.roll, -0.2);
+        assert_eq!(snapshot.control_inputs.throttle, vec![0.8]);
+    }
+
+    #[test]
+    fn metrics_registry_tracks_config() {
+        let adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig::default());
+        // Verify we can access the registry without panicking
+        let _registry = adapter.metrics_registry();
+        let _metrics = adapter.metrics();
+    }
+
+    #[tokio::test]
+    async fn start_stop_cycle() {
+        let mut adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig {
+            listen_addr: "127.0.0.1:0".parse().unwrap(),
+            ..Default::default()
+        });
+        adapter.start().await.unwrap();
+        assert_eq!(adapter.state(), AdapterState::Connected);
+        assert!(adapter.local_addr().is_some());
+        adapter.stop();
+        assert_eq!(adapter.state(), AdapterState::Disconnected);
+        assert!(adapter.local_addr().is_none());
+    }
+
+    #[tokio::test]
+    async fn poll_updates_source_addr() {
+        let mut adapter = Ac7TelemetryAdapter::new(Ac7TelemetryConfig {
+            listen_addr: "127.0.0.1:0".parse().unwrap(),
+            connection_timeout: std::time::Duration::from_secs(5),
+            ..Default::default()
+        });
+        adapter.start().await.unwrap();
+        let target = adapter.local_addr().unwrap();
+
+        let sender = tokio::net::UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let payload = test_packet().to_json_vec().unwrap();
+        sender.send_to(&payload, target).await.unwrap();
+
+        let snapshot = adapter.poll_once().await.unwrap().unwrap();
+        assert!(adapter.source_addr().is_some());
+        assert!(adapter.time_since_last_packet().is_some());
+        assert!(!adapter.is_connection_timeout());
+        let _ = snapshot; // verified in other tests
+    }
 }

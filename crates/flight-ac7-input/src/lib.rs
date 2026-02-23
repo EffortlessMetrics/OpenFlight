@@ -376,6 +376,7 @@ const fn bool_to_ini(value: bool) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
     use tempfile::tempdir;
 
     #[test]
@@ -413,5 +414,100 @@ mod tests {
         let updated = fs::read_to_string(&path).unwrap();
         assert!(updated.contains(MANAGED_BLOCK_BEGIN));
         assert!(updated.contains("EnableJoystick=True"));
+    }
+
+    #[test]
+    fn validates_empty_profile_name() {
+        let mut profile = Ac7InputProfile::default();
+        profile.name = String::new();
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn validates_out_of_range_scale() {
+        let mut profile = Ac7InputProfile::default();
+        profile.axis_bindings[0].scale = 5.0; // > 2.0
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn validates_out_of_range_deadzone() {
+        let mut profile = Ac7InputProfile::default();
+        profile.axis_bindings[0].dead_zone = 1.5; // > 1.0
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn validates_out_of_range_exponent() {
+        let mut profile = Ac7InputProfile::default();
+        profile.axis_bindings[0].exponent = 0.01; // < 0.1
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn rc_mode_index_values() {
+        assert_eq!(RcMode::Mode1.as_index(), 1);
+        assert_eq!(RcMode::Mode2.as_index(), 2);
+        assert_eq!(RcMode::Mode3.as_index(), 3);
+        assert_eq!(RcMode::Mode4.as_index(), 4);
+    }
+
+    #[test]
+    fn managed_block_is_idempotent() {
+        let profile = Ac7InputProfile::default();
+        let first = apply_profile_to_existing("", &profile).unwrap();
+        let second = apply_profile_to_existing(&first, &profile).unwrap();
+        // Should have exactly one managed block in the final result
+        assert_eq!(second.matches(MANAGED_BLOCK_BEGIN).count(), 1);
+        assert_eq!(second.matches(MANAGED_BLOCK_END).count(), 1);
+    }
+
+    #[test]
+    fn renders_all_rc_modes() {
+        for mode in [RcMode::Mode1, RcMode::Mode2, RcMode::Mode3, RcMode::Mode4] {
+            let mut profile = Ac7InputProfile::default();
+            profile.rc_mode = mode;
+            let block = render_managed_block(&profile).unwrap();
+            assert!(block.contains(&format!("RCMode={}", mode.as_index())));
+        }
+    }
+
+    #[test]
+    fn install_creates_dir_and_file() {
+        let dir = tempdir().unwrap();
+        let subdir = dir.path().join("config").join("input");
+        let path = subdir.join("Input.ini");
+        let result = install_profile(&path, &Ac7InputProfile::default(), false).unwrap();
+        assert!(result.input_ini_path.exists());
+        assert!(result.backup_path.is_none());
+        assert!(result.bytes_written > 0);
+    }
+
+    #[test]
+    fn steam_input_hint_is_nonempty() {
+        assert!(!steam_input_hint().is_empty());
+    }
+
+    proptest! {
+        #[test]
+        fn property_valid_scale_range_accepted(scale in -2.0f32..=2.0f32) {
+            let mut profile = Ac7InputProfile::default();
+            profile.axis_bindings[0].scale = scale;
+            prop_assert!(profile.validate().is_ok());
+        }
+
+        #[test]
+        fn property_valid_deadzone_range_accepted(dz in 0.0f32..=1.0f32) {
+            let mut profile = Ac7InputProfile::default();
+            profile.axis_bindings[0].dead_zone = dz;
+            prop_assert!(profile.validate().is_ok());
+        }
+
+        #[test]
+        fn property_valid_exponent_range_accepted(exp in 0.1f32..=5.0f32) {
+            let mut profile = Ac7InputProfile::default();
+            profile.axis_bindings[0].exponent = exp;
+            prop_assert!(profile.validate().is_ok());
+        }
     }
 }

@@ -361,6 +361,113 @@ requirements:
           - flight-ac7-input::tests::installs_with_backup
           - flight-ac7-input::tests::applies_profile_replaces_existing_managed_block
 
+      - id: AC-17.4
+        description: "WHEN AC7 telemetry JSON contains an unsupported schema or malformed JSON THEN the protocol SHALL return a typed error"
+        tests:
+          - flight-ac7-protocol::tests::rejects_wrong_schema
+          - flight-ac7-protocol::tests::rejects_invalid_json
+          - flight-ac7-protocol::tests::rejects_out_of_range_altitude
+          - flight-ac7-protocol::tests::rejects_negative_speed
+
+      - id: AC-17.5
+        description: "WHEN a complete AC7 telemetry packet is serialized and deserialized THEN all fields SHALL be preserved (JSON round-trip)"
+        tests:
+          - flight-ac7-protocol::tests::json_round_trip
+          - flight-ac7-protocol::tests::aircraft_label_trims_whitespace
+          - flight-ac7-protocol::tests::defaults_schema_and_label
+
+      - id: AC-17.6
+        description: "WHEN AC7 control fields are within valid ranges THEN property-based validation SHALL accept all bounded values"
+        tests:
+          - flight-ac7-protocol::tests::property_all_bounded_controls_valid
+          - flight-ac7-protocol::tests::property_bounded_altitude_valid
+          - flight-ac7-protocol::tests::property_pitch_control_is_bounded
+
+      - id: AC-17.7
+        description: "WHEN AC7 telemetry adapter starts and stops THEN state transitions SHALL follow Connected to Active to Disconnected lifecycle"
+        tests:
+          - flight-ac7-telemetry::tests::start_stop_cycle
+          - flight-ac7-telemetry::tests::adapter_initial_state_is_disconnected
+          - flight-ac7-telemetry::tests::poll_updates_source_addr
+
+      - id: AC-17.8
+        description: "WHEN converting packets to BusSnapshot THEN validity flags SHALL be set correctly based on available fields"
+        tests:
+          - flight-ac7-telemetry::tests::snapshot_validity_flags_set_from_full_packet
+          - flight-ac7-telemetry::tests::snapshot_validity_partial_packet
+          - flight-ac7-telemetry::tests::snapshot_has_correct_sim_id
+          - flight-ac7-telemetry::tests::snapshot_control_inputs_mapped
+
+      - id: AC-17.9
+        description: "WHEN an AC7 input profile has invalid fields THEN validation SHALL reject out-of-range scale, deadzone, and exponent values"
+        tests:
+          - flight-ac7-input::tests::validates_empty_profile_name
+          - flight-ac7-input::tests::validates_out_of_range_scale
+          - flight-ac7-input::tests::validates_out_of_range_deadzone
+          - flight-ac7-input::tests::validates_out_of_range_exponent
+
+      - id: AC-17.10
+        description: "WHEN rendering AC7 input blocks THEN all RC modes SHALL be rendered and managed blocks SHALL be idempotent"
+        tests:
+          - flight-ac7-input::tests::renders_all_rc_modes
+          - flight-ac7-input::tests::managed_block_is_idempotent
+          - flight-ac7-input::tests::rc_mode_index_values
+          - flight-ac7-input::tests::install_creates_dir_and_file
+
+      - id: AC-17.11
+        description: "WHEN AC7 input profile fields are within valid ranges THEN property-based validation SHALL accept all valid values"
+        tests:
+          - flight-ac7-input::tests::property_valid_scale_range_accepted
+          - flight-ac7-input::tests::property_valid_deadzone_range_accepted
+          - flight-ac7-input::tests::property_valid_exponent_range_accepted
+
+  - id: REQ-35
+    name: Blackbox Recording System
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-35.1
+        description: "WHEN blackbox config is created THEN default values SHALL be applied and queue capacity SHALL clamp to defined min/max bounds"
+        tests:
+          - flight-blackbox::tests::blackbox_config_defaults
+          - flight-blackbox::tests::record_queue_capacity_clamps_to_min
+          - flight-blackbox::tests::record_queue_capacity_clamps_to_max
+
+      - id: AC-35.2
+        description: "WHEN a BlackboxWriter is created THEN it SHALL start in a non-running state and starting it twice SHALL return an error"
+        tests:
+          - flight-blackbox::tests::blackbox_writer_starts_not_running
+          - flight-blackbox::tests::double_start_returns_error
+
+      - id: AC-35.3
+        description: "WHEN records are written to blackbox THEN they SHALL be read back in the correct order (round-trip)"
+        tests:
+          - flight-blackbox::tests::blackbox_write_read_roundtrip
+
+      - id: AC-35.4
+        description: "WHEN blackbox stream types are indexed THEN stream_type_to_index SHALL return a stable monotonic value"
+        tests:
+          - flight-blackbox::tests::stream_type_to_index
+
+      - id: AC-35.5
+        description: "WHEN blackbox header and footer structures are serialized THEN property-based round-trips SHALL preserve all fields"
+        tests:
+          - flight-blackbox::tests::prop_blackbox_header_roundtrip
+          - flight-blackbox::tests::prop_blackbox_footer_roundtrip
+          - flight-blackbox::tests::prop_index_entry_roundtrip
+
+  - id: REQ-36
+    name: HID Device Info Types
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-36.1
+        description: "WHEN HidDeviceInfo is constructed THEN required fields SHALL be set and optional fields SHALL default to None"
+        tests:
+          - flight-hid-types::tests::hid_device_info_clone
+          - flight-hid-types::tests::hid_device_info_optional_fields
+          - flight-hid-types::tests::hid_device_info_with_descriptor
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

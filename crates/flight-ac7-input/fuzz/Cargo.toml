@@ -1,0 +1,26 @@
+[package]
+name = "flight-ac7-input-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+flight-ac7-input = { path = ".." }
+
+[[bin]]
+name = "fuzz_render_block"
+path = "fuzz_targets/fuzz_render_block.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_apply_profile"
+path = "fuzz_targets/fuzz_apply_profile.rs"
+test = false
+doc = false

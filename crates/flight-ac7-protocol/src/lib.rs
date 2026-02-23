@@ -262,4 +262,117 @@ mod tests {
             prop_assert!(packet.validate().is_ok());
         }
     }
+
+    #[test]
+    fn rejects_wrong_schema() {
+        let payload = r#"{"schema":"flight.ac7.telemetry/0","aircraft":"F-15C"}"#;
+        let err = Ac7TelemetryPacket::from_json_str(payload).unwrap_err();
+        assert!(matches!(err, Ac7ProtocolError::UnsupportedSchema { .. }));
+    }
+
+    #[test]
+    fn rejects_invalid_json() {
+        let err = Ac7TelemetryPacket::from_json_str("{not json}").unwrap_err();
+        assert!(matches!(err, Ac7ProtocolError::InvalidJson(_)));
+    }
+
+    #[test]
+    fn rejects_out_of_range_altitude() {
+        let payload = r#"{"schema":"flight.ac7.telemetry/1","state":{"altitude_m":999999.0}}"#;
+        let err = Ac7TelemetryPacket::from_json_str(payload).unwrap_err();
+        assert!(matches!(err, Ac7ProtocolError::OutOfRange { field: "state.altitude_m", .. }));
+    }
+
+    #[test]
+    fn rejects_negative_speed() {
+        let payload = r#"{"schema":"flight.ac7.telemetry/1","state":{"speed_mps":-1.0}}"#;
+        let err = Ac7TelemetryPacket::from_json_str(payload).unwrap_err();
+        assert!(matches!(err, Ac7ProtocolError::OutOfRange { field: "state.speed_mps", .. }));
+    }
+
+    #[test]
+    fn aircraft_label_trims_whitespace() {
+        let packet = Ac7TelemetryPacket {
+            aircraft: "  Su-33  ".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(packet.aircraft_label(), "Su-33");
+    }
+
+    #[test]
+    fn json_round_trip() {
+        let original = Ac7TelemetryPacket {
+            schema: AC7_TELEMETRY_SCHEMA_V1.to_string(),
+            timestamp_ms: 9876,
+            aircraft: "XFA-27".to_string(),
+            mission: Some("Mission01".to_string()),
+            state: Ac7State {
+                altitude_m: Some(5000.0),
+                speed_mps: Some(300.0),
+                heading_deg: Some(180.0),
+                pitch_deg: Some(10.0),
+                roll_deg: Some(-5.0),
+                g_force: Some(2.5),
+                health_norm: Some(0.9),
+                ..Default::default()
+            },
+            controls: Ac7Controls {
+                pitch: Some(-0.3),
+                roll: Some(0.5),
+                throttle: Some(0.75),
+                ..Default::default()
+            },
+        };
+        let bytes = original.to_json_vec().unwrap();
+        let restored = Ac7TelemetryPacket::from_json_slice(&bytes).unwrap();
+        assert_eq!(restored, original);
+    }
+
+    proptest! {
+        #[test]
+        fn property_all_bounded_controls_valid(
+            pitch in -1.0f32..=1.0f32,
+            roll in -1.0f32..=1.0f32,
+            yaw in -1.0f32..=1.0f32,
+            throttle in 0.0f32..=1.0f32,
+            brake in 0.0f32..=1.0f32,
+        ) {
+            let packet = Ac7TelemetryPacket {
+                controls: Ac7Controls {
+                    pitch: Some(pitch),
+                    roll: Some(roll),
+                    yaw: Some(yaw),
+                    throttle: Some(throttle),
+                    brake: Some(brake),
+                },
+                ..Default::default()
+            };
+            prop_assert!(packet.validate().is_ok());
+        }
+
+        #[test]
+        fn property_bounded_altitude_valid(alt_m in -2000.0f32..=100_000.0f32) {
+            let packet = Ac7TelemetryPacket {
+                state: Ac7State { altitude_m: Some(alt_m), ..Default::default() },
+                ..Default::default()
+            };
+            prop_assert!(packet.validate().is_ok());
+        }
+
+        #[test]
+        fn property_out_of_bounds_throttle_rejected(v in proptest::num::f32::NORMAL) {
+            // Only test values strictly outside [0.0, 1.0]
+            let outside = if v > 1.0 || v < 0.0 { v } else { v * 10.0 + 2.0 };
+            if !(0.0..=1.0).contains(&outside) {
+                let packet = Ac7TelemetryPacket {
+                    controls: Ac7Controls {
+                        throttle: Some(outside),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                };
+                prop_assert!(packet.validate().is_err());
+            }
+        }
+    }
 }

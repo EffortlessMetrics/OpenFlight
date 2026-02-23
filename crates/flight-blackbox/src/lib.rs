@@ -552,4 +552,115 @@ mod tests {
             prop_assert_eq!(entry.stream_counts, deserialized.stream_counts);
         }
     }
+
+    #[test]
+    fn stream_type_to_index() {
+        assert_eq!(StreamType::AxisFrames.to_index(), 0);
+        assert_eq!(StreamType::BusSnapshots.to_index(), 1);
+        assert_eq!(StreamType::Events.to_index(), 2);
+    }
+
+    #[test]
+    fn blackbox_config_defaults() {
+        let cfg = BlackboxConfig::default();
+        assert!(cfg.max_file_size_mb > 0);
+        assert!(!cfg.enable_compression);
+        assert!(cfg.buffer_size > 0);
+        assert!(cfg.max_recording_duration.as_secs() > 0);
+    }
+
+    #[test]
+    fn record_queue_capacity_clamps_to_min() {
+        // With 0 buffer_size it should clamp to 1
+        assert_eq!(record_queue_capacity(0), 1);
+    }
+
+    #[test]
+    fn record_queue_capacity_clamps_to_max() {
+        // With a very large buffer_size it should cap at RECORD_QUEUE_MAX
+        assert_eq!(record_queue_capacity(usize::MAX / 2), RECORD_QUEUE_MAX);
+    }
+
+    #[test]
+    fn blackbox_writer_starts_not_running() {
+        let writer = BlackboxWriter::new(BlackboxConfig::default());
+        // Before start(), running should be false
+        assert!(!writer.running.load(std::sync::atomic::Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn blackbox_write_read_roundtrip() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let mut config = BlackboxConfig::default();
+        config.output_dir = dir.path().to_path_buf();
+
+        let mut writer = BlackboxWriter::new(config);
+        let path = writer
+            .start_recording("MSFS".into(), "C172".into(), "test_v1".into())
+            .await
+            .unwrap();
+
+        writer
+            .record_axis_frame(1000, &[0xDE, 0xAD, 0xBE, 0xEF])
+            .unwrap();
+        writer
+            .record_bus_snapshot(2000, &[0x01, 0x02])
+            .unwrap();
+        writer
+            .record_event(3000, &[0xFF])
+            .unwrap();
+
+        // Yield to the writer task so it can drain the channel before we set
+        // running=false (single-threaded tokio runtime requires explicit yields).
+        for _ in 0..16 {
+            tokio::task::yield_now().await;
+        }
+
+        writer.stop_recording().await.unwrap();
+
+        // Read back
+        let mut reader = BlackboxReader::open(&path).unwrap();
+        reader.validate().unwrap();
+        let header = reader.header();
+        assert_eq!(header.magic, *FBB_MAGIC);
+        assert_eq!(header.sim_id, "MSFS");
+        assert_eq!(header.aircraft_id, "C172");
+
+        // Read records
+        let rec1 = reader.next_record().unwrap().unwrap();
+        assert_eq!(rec1.stream_type, StreamType::AxisFrames);
+        assert_eq!(rec1.data, &[0xDE, 0xAD, 0xBE, 0xEF]);
+        assert_eq!(rec1.timestamp_ns, 1000);
+
+        let rec2 = reader.next_record().unwrap().unwrap();
+        assert_eq!(rec2.stream_type, StreamType::BusSnapshots);
+        assert_eq!(rec2.timestamp_ns, 2000);
+
+        let rec3 = reader.next_record().unwrap().unwrap();
+        assert_eq!(rec3.stream_type, StreamType::Events);
+        assert_eq!(rec3.timestamp_ns, 3000);
+
+        // No more records
+        assert!(reader.next_record().unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn double_start_returns_error() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let mut config = BlackboxConfig::default();
+        config.output_dir = dir.path().to_path_buf();
+
+        let mut writer = BlackboxWriter::new(config);
+        writer
+            .start("v1".into(), "MSFS".into(), "C172".into(), "test".into())
+            .await
+            .unwrap();
+        let result = writer
+            .start("v1".into(), "MSFS".into(), "C172".into(), "test".into())
+            .await;
+        assert!(result.is_err());
+        writer.stop().await.unwrap();
+    }
 }
