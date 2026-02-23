@@ -337,6 +337,30 @@ requirements:
         tests:
           - flight-service::input_runtime::tests::test_runtime_throttle_inversion_applied
 
+  # Product Requirement: Ace Combat 7 Experimental Bridge Integration
+  - id: REQ-17
+    name: Ace Combat 7 Experimental Bridge Integration
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-17.1
+        description: "WHEN AC7 bridge telemetry JSON is received THEN the protocol layer SHALL validate schema and numeric bounds"
+        tests:
+          - flight-ac7-protocol::tests::parses_valid_packet
+          - flight-ac7-protocol::tests::rejects_out_of_range_control_value
+
+      - id: AC-17.2
+        description: "WHEN AC7 UDP packets arrive THEN telemetry adapter SHALL convert them into BusSnapshot with SimId::AceCombat7"
+        tests:
+          - flight-ac7-telemetry::tests::udp_poll_receives_packet
+          - flight-ac7-telemetry::tests::converts_packet_to_snapshot
+
+      - id: AC-17.3
+        description: "WHEN installing AC7 mappings THEN the input crate SHALL patch Input.ini using a managed block and optional backup"
+        tests:
+          - flight-ac7-input::tests::installs_with_backup
+          - flight-ac7-input::tests::applies_profile_replaces_existing_managed_block
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

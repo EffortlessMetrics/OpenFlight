@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 135 |
-| ACs with tests | 135 |
-| ACs with Gherkin | 135 |
-| ACs with both tests + Gherkin | 135 |
-| Complete | 135 |
+| Total AC | 138 |
+| ACs with tests | 138 |
+| ACs with Gherkin | 138 |
+| ACs with both tests + Gherkin | 138 |
+| Complete | 138 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 46 |
-| Microcrates with tests | 20 (43.5%) |
-| Microcrates with Gherkin | 20 (43.5%) |
-| Microcrates fully covered | 20 (43.5%) |
+| Microcrates with tests | 23 (50.0%) |
+| Microcrates with Gherkin | 23 (50.0%) |
+| Microcrates fully covered | 23 (50.0%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -37,9 +37,9 @@
 
 | Microcrate | Total AC | ACs with tests | ACs with Gherkin | ACs with both | Complete | Test coverage | Gherkin coverage | Test+Gherkin coverage |
 |-----------|----------|----------------|------------------|---------------|----------|--------------|------------------|------------------------|
-| flight-ac7-input | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-ac7-protocol | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-ac7-telemetry | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-ac7-input | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-ac7-protocol | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-ac7-telemetry | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-adapter-common | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -137,6 +137,9 @@
 | REQ-16 | AC-16.2 | WHEN a T.Flight report is prepended with a Report ID byte THEN the handler SHALL strip the prefix and parse the remaining payload correctly for both merged and separate modes | specs/features/req_16_report_handling.feature:17<br>specs/features/req_16_report_handling.feature:24<br>specs/features/req_product_2_to_14_gherkin_rollup.feature:89 | 2 | ✅ Complete |
 | REQ-16 | AC-16.3 | WHEN a T.Flight HAT switch reports a value outside the valid range 0..=8 THEN the runtime SHALL clamp it to 0 (center) to prevent phantom hat events | specs/features/req_16_report_handling.feature:31<br>specs/features/req_16_report_handling.feature:37<br>specs/features/req_product_2_to_14_gherkin_rollup.feature:89 | 2 | ✅ Complete |
 | REQ-16 | AC-16.4 | WHEN `TFlightRuntimeConfig::throttle_inversion` is true THEN the runtime SHALL invert the throttle axis (1.0 − value) and the service config field `tflight_throttle_inversion` SHALL wire through to the runtime | specs/features/req_16_report_handling.feature:43<br>specs/features/req_product_2_to_14_gherkin_rollup.feature:89 | 1 | ✅ Complete |
+| REQ-17 | AC-17.1 | WHEN AC7 bridge telemetry JSON is received THEN the protocol layer SHALL validate schema and numeric bounds | specs/features/req_17_ac7_integration.feature:5 | 2 | ✅ Complete |
+| REQ-17 | AC-17.2 | WHEN AC7 UDP packets arrive THEN telemetry adapter SHALL convert them into BusSnapshot with SimId::AceCombat7 | specs/features/req_17_ac7_integration.feature:12 | 2 | ✅ Complete |
+| REQ-17 | AC-17.3 | WHEN installing AC7 mappings THEN the input crate SHALL patch Input.ini using a managed block and optional backup | specs/features/req_17_ac7_integration.feature:19 | 2 | ✅ Complete |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |

@@ -23,13 +23,14 @@ use flight_xplane::{
     AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft,
 };
 // Avoid type-name collision with local stub
-use flight_ac7_telemetry::Ac7TelemetryAdapter as Ac7AdapterApi;
+use flight_ac7_telemetry::{Ac7TelemetryAdapter as Ac7AdapterApi, Ac7TelemetryConfig};
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{RwLock, mpsc, watch};
+use tokio::task::JoinHandle;
 use tracing::{debug, error, info, warn};
 
 // ============================================================================
@@ -154,10 +155,15 @@ struct DcsAdapter {
 
 /// Ace Combat 7 adapter wrapper
 struct Ac7Adapter {
-    #[allow(dead_code)]
-    adapter: Ac7AdapterApi,
-    #[allow(dead_code)]
-    current_aircraft: Option<BusAircraftId>,
+    shutdown_tx: watch::Sender<bool>,
+    join_handle: JoinHandle<()>,
+}
+
+impl Ac7Adapter {
+    async fn stop(self) {
+        let _ = self.shutdown_tx.send(true);
+        let _ = self.join_handle.await;
+    }
 }
 
 /// Service event for internal processing
@@ -260,6 +266,7 @@ impl AircraftAutoSwitchService {
         let _process_detector = Arc::clone(&self.process_detector);
         let adapters = Arc::clone(&self.adapters);
         let config = self.config.clone();
+        let service_tx = self.service_tx.clone();
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -268,7 +275,8 @@ impl AircraftAutoSwitchService {
                 match event {
                     ServiceEvent::ProcessDetected(process) => {
                         if let Err(e) =
-                            Self::handle_process_detected(process, &adapters, &config).await
+                            Self::handle_process_detected(process, &adapters, &config, &service_tx)
+                                .await
                         {
                             error!("Failed to handle process detection: {}", e);
                         }
@@ -380,19 +388,35 @@ impl AircraftAutoSwitchService {
     async fn start_process_monitoring(&self) -> Result<()> {
         let process_detector = Arc::clone(&self.process_detector);
         let service_tx = self.service_tx.clone();
+        let scan_interval = self.config.process_detection.detection_interval;
 
         tokio::spawn(async move {
             let mut last_processes = HashMap::new();
+            let mut interval = tokio::time::interval(scan_interval);
 
-            loop {
-                tokio::time::sleep(Duration::from_secs(1)).await;
+            'monitor: loop {
+                interval.tick().await;
+
+                if service_tx.is_closed() {
+                    break;
+                }
+
+                if let Err(err) = process_detector.scan_once().await {
+                    warn!("Process detector scan failed: {}", err);
+                    continue;
+                }
 
                 let current_processes = process_detector.get_detected_processes().await;
 
                 // Check for new processes
                 for (sim, process) in &current_processes {
                     if !last_processes.contains_key(sim) {
-                        let _ = service_tx.send(ServiceEvent::ProcessDetected(process.clone()));
+                        if service_tx
+                            .send(ServiceEvent::ProcessDetected(process.clone()))
+                            .is_err()
+                        {
+                            break 'monitor;
+                        }
                     }
                 }
 
@@ -407,12 +431,16 @@ impl AircraftAutoSwitchService {
                             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
                             CoreSimId::Unknown => BusSimId::Unknown,
                         };
-                        let _ = service_tx.send(ServiceEvent::ProcessLost(bus_sim));
+                        if service_tx.send(ServiceEvent::ProcessLost(bus_sim)).is_err() {
+                            break 'monitor;
+                        }
                     }
                 }
 
                 last_processes = current_processes;
             }
+
+            debug!("Process monitor loop stopped");
         });
 
         Ok(())
@@ -420,8 +448,9 @@ impl AircraftAutoSwitchService {
 
     /// Start monitoring bus updates
     async fn start_bus_monitoring(&self) -> Result<()> {
-        let _service_tx = self.service_tx.clone();
-        let telemetry_rate = self.config.bus_subscription.telemetry_rate;
+        let service_tx = self.service_tx.clone();
+        let telemetry_rate = self.config.bus_subscription.telemetry_rate.max(1.0);
+        let bus_subscriber = Arc::clone(&self.bus_subscriber);
 
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs_f32(1.0 / telemetry_rate));
@@ -429,10 +458,40 @@ impl AircraftAutoSwitchService {
             loop {
                 interval.tick().await;
 
-                // TODO: Get latest bus snapshot and send telemetry update
-                // This would require integration with the actual bus subscriber
-                // For now, we'll skip this implementation detail
+                if service_tx.is_closed() {
+                    break;
+                }
+
+                let latest_snapshot = {
+                    let mut guard = bus_subscriber.write().await;
+                    let mut latest = None;
+                    if let Some(subscriber) = guard.as_mut() {
+                        loop {
+                            match subscriber.try_recv() {
+                                Ok(Some(snapshot)) => {
+                                    latest = Some(snapshot);
+                                }
+                                Ok(None) => break,
+                                Err(err) => {
+                                    warn!("Bus subscriber error while polling telemetry: {}", err);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    latest
+                };
+
+                if let Some(snapshot) = latest_snapshot
+                    && service_tx
+                        .send(ServiceEvent::TelemetryUpdate(snapshot))
+                        .is_err()
+                {
+                    break;
+                }
             }
+
+            debug!("Bus monitor loop stopped");
         });
 
         Ok(())
@@ -443,6 +502,7 @@ impl AircraftAutoSwitchService {
         process: DetectedProcess,
         adapters: &Arc<RwLock<SimAdapters>>,
         config: &AircraftAutoSwitchServiceConfig,
+        service_tx: &mpsc::UnboundedSender<ServiceEvent>,
     ) -> Result<()> {
         info!(
             "Starting adapter for detected process: {} ({})",
@@ -493,12 +553,11 @@ impl AircraftAutoSwitchService {
             }
             BusSimId::AceCombat7 if config.adapters.enable_ac7 => {
                 if adapters_guard.ac7.is_none() {
-                    let adapter = Ac7AdapterApi::new(Default::default());
-                    // TODO: setup telemetry receive loop integration with service bus.
-                    adapters_guard.ac7 = Some(Ac7Adapter {
-                        adapter,
-                        current_aircraft: None,
-                    });
+                    let adapter = Self::spawn_ac7_adapter_task(
+                        Ac7TelemetryConfig::default(),
+                        service_tx.clone(),
+                    );
+                    adapters_guard.ac7 = Some(adapter);
                 }
             }
             _ => {
@@ -509,11 +568,74 @@ impl AircraftAutoSwitchService {
         Ok(())
     }
 
+    fn spawn_ac7_adapter_task(
+        adapter_config: Ac7TelemetryConfig,
+        service_tx: mpsc::UnboundedSender<ServiceEvent>,
+    ) -> Ac7Adapter {
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+        let join_handle = tokio::spawn(async move {
+            let mut adapter = Ac7AdapterApi::new(adapter_config);
+            if let Err(err) = adapter.start().await {
+                let _ = service_tx.send(ServiceEvent::AdapterError(
+                    BusSimId::AceCombat7,
+                    format!("failed to start AC7 adapter: {}", err),
+                ));
+                return;
+            }
+
+            let mut last_aircraft: Option<BusAircraftId> = None;
+            loop {
+                tokio::select! {
+                    changed = shutdown_rx.changed() => {
+                        if changed.is_err() || *shutdown_rx.borrow() {
+                            break;
+                        }
+                    }
+                    packet = adapter.poll_once() => {
+                        match packet {
+                            Ok(Some(snapshot)) => {
+                                let aircraft = snapshot.aircraft.clone();
+
+                                if service_tx.send(ServiceEvent::TelemetryUpdate(snapshot)).is_err() {
+                                    break;
+                                }
+
+                                if last_aircraft.as_ref() != Some(&aircraft) {
+                                    last_aircraft = Some(aircraft.clone());
+                                    if service_tx.send(ServiceEvent::AircraftDetected(BusSimId::AceCombat7, aircraft)).is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                            Ok(None) => {}
+                            Err(err) => {
+                                if service_tx
+                                    .send(ServiceEvent::AdapterError(BusSimId::AceCombat7, err.to_string()))
+                                    .is_err()
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            adapter.stop();
+        });
+
+        Ac7Adapter {
+            shutdown_tx,
+            join_handle,
+        }
+    }
+
     /// Handle process lost event
     async fn handle_process_lost(sim: BusSimId, adapters: &Arc<RwLock<SimAdapters>>) -> Result<()> {
         info!("Stopping adapter for lost process: {}", sim);
 
         let mut adapters_guard = adapters.write().await;
+        let mut ac7_to_stop = None;
 
         match sim {
             BusSimId::Msfs => {
@@ -526,9 +648,15 @@ impl AircraftAutoSwitchService {
                 adapters_guard.dcs = None;
             }
             BusSimId::AceCombat7 => {
-                adapters_guard.ac7 = None;
+                ac7_to_stop = adapters_guard.ac7.take();
             }
             _ => {}
+        }
+
+        drop(adapters_guard);
+
+        if let Some(adapter) = ac7_to_stop {
+            adapter.stop().await;
         }
 
         Ok(())
@@ -550,7 +678,9 @@ impl SimAdapters {
         self.msfs = None;
         self.xplane = None;
         self.dcs = None;
-        self.ac7 = None;
+        if let Some(adapter) = self.ac7.take() {
+            adapter.stop().await;
+        }
         Ok(())
     }
 }

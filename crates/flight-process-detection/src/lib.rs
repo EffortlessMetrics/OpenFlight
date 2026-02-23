@@ -235,6 +235,11 @@ impl ProcessDetector {
         Ok(())
     }
 
+    /// Perform one process scan cycle immediately and update detector state.
+    pub async fn scan_once(&self) -> Result<()> {
+        Self::scan_processes(&self.state, &self.config).await
+    }
+
     /// Stop the process detection system
     pub async fn stop(&self) -> Result<()> {
         self.detection_tx
@@ -334,6 +339,15 @@ impl ProcessDetector {
 
         let mut state_guard = state.write().await;
         state_guard.last_scan = Some(scan_start);
+        state_guard.metrics.total_scans += 1;
+        state_guard.metrics.max_scan_time = state_guard.metrics.max_scan_time.max(scan_time);
+
+        let scan_count = state_guard.metrics.total_scans as f64;
+        let previous_count = (state_guard.metrics.total_scans - 1) as f64;
+        let previous_avg = state_guard.metrics.average_scan_time.as_secs_f64();
+        let new_avg =
+            ((previous_avg * previous_count) + scan_time.as_secs_f64()) / scan_count.max(1.0);
+        state_guard.metrics.average_scan_time = Duration::from_secs_f64(new_avg);
 
         Ok(())
     }
@@ -973,10 +987,12 @@ mod tests {
                 }
 
                 // Non-match case
-                if name_fragment != other_fragment {
+                let expected_name = format!("{}.exe", name_fragment).to_lowercase();
+                let candidate_name = format!("{}.exe", other_fragment).to_lowercase();
+                if name_fragment != other_fragment && !candidate_name.contains(&expected_name) {
                     let processes = vec![SystemProcess {
                         pid: 123,
-                        name: format!("{}.exe", other_fragment),
+                        name: candidate_name,
                         path: PathBuf::from("C:\\test\\path"),
                         window_title: None,
                     }];
