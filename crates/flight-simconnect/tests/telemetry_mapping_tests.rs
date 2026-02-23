@@ -259,7 +259,10 @@ fn test_aero_angle_mapping() {
     // Test sideslip angle (beta)
     let beta_deg = 0.2_f32;
     let beta = MsfsConverter::convert_angle_degrees(beta_deg as f64).unwrap();
-    assert_eq!(beta.to_degrees(), beta_deg, "Sideslip degrees should match");
+    assert!(
+        (beta.to_degrees() - beta_deg).abs() < 0.001,
+        "Sideslip degrees should match"
+    );
 
     let expected_rad = beta_deg * PI / 180.0;
     assert!(
@@ -358,7 +361,7 @@ fn test_msfs_fixture_c172_cruise() {
 
     // Test sideslip conversion
     let beta = MsfsConverter::convert_angle_degrees(beta_deg).unwrap();
-    assert_eq!(beta.to_degrees(), beta_deg as f32);
+    assert!((beta.to_degrees() - beta_deg as f32).abs() < 0.001);
 
     // Test bank conversion
     let bank = MsfsConverter::convert_angle_degrees(bank_deg).unwrap();

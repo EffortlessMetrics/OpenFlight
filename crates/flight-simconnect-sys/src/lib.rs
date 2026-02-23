@@ -371,18 +371,18 @@ impl SimConnectApi {
     fn load_dynamic() -> Result<Self, SimConnectError> {
         use windows::Win32::System::LibraryLoader::LoadLibraryA;
 
-        let library_name = CString::new("SimConnect.dll").unwrap();
-        let library = unsafe { LoadLibraryA(PCSTR(library_name.as_ptr() as *const u8)) };
-
-        let library = match library {
-            Ok(lib) => {
-                if lib.is_invalid() {
-                    return Err(SimConnectError::LibraryNotFound);
+        // MSFS 2020/2024 external addons should load SimConnect.dll, but some
+        // environments expose only the internal naming.
+        let library = ["SimConnect.dll", "SimConnect_internal.dll"]
+            .iter()
+            .find_map(|name| {
+                let library_name = CString::new(*name).expect("static DLL name is valid");
+                match unsafe { LoadLibraryA(PCSTR(library_name.as_ptr() as *const u8)) } {
+                    Ok(lib) if !lib.is_invalid() => Some(lib),
+                    _ => None,
                 }
-                lib
-            }
-            Err(_) => return Err(SimConnectError::LibraryNotFound),
-        };
+            })
+            .ok_or(SimConnectError::LibraryNotFound)?;
 
         // Load function pointers
         let open = unsafe {

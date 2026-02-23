@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::{RwLock, mpsc, mpsc::error::TryRecvError};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
@@ -115,6 +115,8 @@ pub struct MsfsAdapter {
     last_connection_attempt: Option<Instant>,
     /// Current backoff delay in seconds
     current_backoff_delay: f64,
+    /// Aircraft detection start time while waiting for one-shot identification payload.
+    detection_started_at: Option<Instant>,
     /// Adapter metrics
     metrics: Arc<RwLock<AdapterMetrics>>,
     /// Shared metrics registry
@@ -141,6 +143,7 @@ impl MsfsAdapter {
             connection_attempts: 0,
             last_connection_attempt: None,
             current_backoff_delay: 1.0, // Start with 1 second
+            detection_started_at: None,
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
             metrics_registry: Arc::new(MetricsRegistry::new()),
         })
@@ -238,91 +241,38 @@ impl MsfsAdapter {
         *self.state.write().await = AdapterState::Connected;
         self.connection_attempts = 0;
         self.current_backoff_delay = 1.0; // Reset backoff on successful connection
+        self.detection_started_at = None;
 
         info!("Connected to MSFS successfully");
         Ok(())
     }
 
     async fn start_update_loop(&mut self) {
-        let state = self.state.clone();
-        let _current_aircraft = self.current_aircraft.clone();
-        let _current_snapshot = self.current_snapshot.clone();
-        let _snapshot_sender = self.snapshot_sender.clone();
-
-        // Clone necessary data for the async task
-        let publish_interval = Duration::from_secs_f32(1.0 / self.config.publish_rate);
-
-        tokio::spawn(async move {
-            let mut interval = interval(publish_interval);
-
-            loop {
-                interval.tick().await;
-
-                // Check if we should continue running
-                let current_state = *state.read().await;
-                if matches!(
-                    current_state,
-                    AdapterState::Disconnected | AdapterState::Error
-                ) {
-                    break;
-                }
-
-                // Update telemetry would happen here
-                // This is a simplified version - the actual implementation would
-                // process SimConnect messages and update the bus snapshot
-            }
-        });
-
-        // Start session event processing
-        if let Some(session) = &mut self.session {
-            let event_receiver = session.event_receiver();
-            let state_clone = self.state.clone();
-            let _aircraft_clone = self.current_aircraft.clone();
-
-            tokio::spawn(async move {
-                // Take receiver ownership before spawning to avoid holding MutexGuard across await
-                let mut guard = event_receiver.lock().await;
-                let mut rx = guard
-                    .take()
-                    .expect("receiver should be initialized before spawn");
-                drop(guard); // Explicitly drop guard before spawn
-
-                while let Some(event) = rx.recv().await {
-                    match event {
-                        SessionEvent::Connected { .. } => {
-                            info!("SimConnect connection established");
-                        }
-                        SessionEvent::Disconnected => {
-                            warn!("SimConnect connection lost - will trigger reconnection");
-                            *state_clone.write().await = AdapterState::Disconnected;
-                        }
-                        SessionEvent::Exception { exception, .. } => {
-                            warn!("SimConnect exception: {}", exception);
-                        }
-                        SessionEvent::DataReceived {
-                            request_id, data, ..
-                        } => {
-                            debug!(
-                                "Received data for request {}: {} bytes",
-                                request_id,
-                                data.len()
-                            );
-                            // Process data here
-                        }
-                        SessionEvent::EventReceived { event_id, data, .. } => {
-                            debug!("Received event {}: {}", event_id, data);
-                            // Process event here
-                        }
-                    }
-                }
-            });
-        }
-
         // Start main update loop
         let mut update_interval = interval(Duration::from_millis(16)); // ~60Hz
 
         loop {
             update_interval.tick().await;
+
+            // Poll the SimConnect pipe first and convert pending packets into session events.
+            if let Some(session) = &mut self.session {
+                match session.poll().await {
+                    Ok(()) => {}
+                    Err(SessionError::ConnectionLost) => {
+                        self.handle_connection_loss().await;
+                    }
+                    Err(e) => {
+                        error!("Session polling error: {}", e);
+                        *self.state.write().await = AdapterState::Error;
+                    }
+                }
+            }
+
+            // Drain queued session events and apply state/data updates.
+            if let Err(e) = self.drain_session_events().await {
+                warn!("Session event processing failed: {}", e);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            }
 
             let current_state = self.state().await;
             match current_state {
@@ -344,7 +294,13 @@ impl MsfsAdapter {
                     }
                 }
                 AdapterState::DetectingAircraft => {
-                    // Wait for aircraft detection to complete
+                    if let Some(started_at) = self.detection_started_at
+                        && started_at.elapsed() > self.config.aircraft_detection_timeout
+                    {
+                        warn!("Aircraft detection timed out");
+                        self.detection_started_at = None;
+                        *self.state.write().await = AdapterState::Connected;
+                    }
                 }
                 AdapterState::Active => {
                     // Update telemetry
@@ -360,14 +316,6 @@ impl MsfsAdapter {
                     }
                 }
                 _ => {}
-            }
-
-            // Poll session for messages
-            if let Some(session) = &mut self.session
-                && let Err(e) = session.poll().await
-            {
-                error!("Session polling error: {}", e);
-                *self.state.write().await = AdapterState::Error;
             }
         }
     }
@@ -415,68 +363,191 @@ impl MsfsAdapter {
     }
 
     async fn detect_aircraft(&mut self) -> Result<(), MsfsAdapterError> {
+        if self.detection_started_at.is_some() {
+            return Ok(());
+        }
+
+        let session = self
+            .session
+            .as_ref()
+            .ok_or(MsfsAdapterError::NotConnected)?;
+        let handle = session.handle().ok_or(MsfsAdapterError::NotConnected)?;
+
+        self.aircraft_detector
+            .start_detection(session.api(), handle)?;
+        self.detection_started_at = Some(Instant::now());
         *self.state.write().await = AdapterState::DetectingAircraft;
 
-        if let Some(session) = &self.session {
-            if let Some(handle) = session.handle() {
-                self.aircraft_detector
-                    .start_detection(session.api(), handle)?;
-
-                // Wait for aircraft detection with timeout
-                let timeout = tokio::time::timeout(
-                    self.config.aircraft_detection_timeout,
-                    self.wait_for_aircraft_detection(),
-                )
-                .await;
-
-                match timeout {
-                    Ok(Ok(aircraft_info)) => {
-                        info!("Aircraft detected: {}", aircraft_info.title);
-                        *self.current_aircraft.write().await = Some(aircraft_info.clone());
-
-                        // Setup variable mapping for this aircraft
-                        self.setup_variable_mapping(&aircraft_info).await?;
-
-                        *self.state.write().await = AdapterState::Active;
-                        Ok(())
-                    }
-                    Ok(Err(e)) => {
-                        error!("Aircraft detection failed: {}", e);
-                        *self.state.write().await = AdapterState::Error;
-                        Err(e)
-                    }
-                    Err(_) => {
-                        warn!("Aircraft detection timed out");
-                        *self.state.write().await = AdapterState::Connected;
-                        Err(MsfsAdapterError::Timeout(
-                            "Aircraft detection timed out".to_string(),
-                        ))
-                    }
-                }
-            } else {
-                Err(MsfsAdapterError::NotConnected)
-            }
-        } else {
-            Err(MsfsAdapterError::NotConnected)
-        }
+        Ok(())
     }
 
-    async fn wait_for_aircraft_detection(&mut self) -> Result<AircraftInfo, MsfsAdapterError> {
-        // This would typically wait for aircraft detection events
-        // For now, we'll simulate a successful detection
-        tokio::time::sleep(Duration::from_millis(100)).await;
+    async fn drain_session_events(&mut self) -> Result<(), MsfsAdapterError> {
+        let mut pending_events = Vec::new();
 
-        // Return a mock aircraft for testing
-        Ok(AircraftInfo {
-            title: "Cessna 172 Skyhawk".to_string(),
-            atc_model: "C172".to_string(),
-            atc_type: "CESSNA".to_string(),
-            atc_airline: None,
-            atc_flight_number: None,
-            category: crate::aircraft::AircraftCategory::Airplane,
-            engine_type: crate::aircraft::EngineType::Piston,
-            engine_count: 1,
-        })
+        if let Some(session) = &self.session {
+            let event_receiver = session.event_receiver();
+            let mut guard = event_receiver.lock().await;
+            if let Some(receiver) = guard.as_mut() {
+                loop {
+                    match receiver.try_recv() {
+                        Ok(event) => pending_events.push(event),
+                        Err(TryRecvError::Empty) => break,
+                        Err(TryRecvError::Disconnected) => {
+                            pending_events.push(SessionEvent::Disconnected);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for event in pending_events {
+            self.handle_session_event(event).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn handle_session_event(&mut self, event: SessionEvent) -> Result<(), MsfsAdapterError> {
+        match event {
+            SessionEvent::Connected {
+                app_name,
+                app_version,
+                simconnect_version,
+            } => {
+                info!(
+                    "SimConnect connected: {} app={}.{}.{}.{}, simconnect={}.{}.{}.{}",
+                    app_name,
+                    app_version.0,
+                    app_version.1,
+                    app_version.2,
+                    app_version.3,
+                    simconnect_version.0,
+                    simconnect_version.1,
+                    simconnect_version.2,
+                    simconnect_version.3
+                );
+            }
+            SessionEvent::Disconnected => {
+                self.handle_connection_loss().await;
+            }
+            SessionEvent::Exception {
+                exception,
+                send_id,
+                index,
+            } => {
+                warn!(
+                    "SimConnect exception: code={}, send_id={}, index={}",
+                    exception, send_id, index
+                );
+            }
+            SessionEvent::DataReceived {
+                request_id,
+                object_id: _,
+                define_id: _,
+                data,
+            } => {
+                self.handle_data_received_event(request_id, &data).await?;
+            }
+            SessionEvent::EventReceived {
+                group_id: _,
+                event_id,
+                data,
+            } => {
+                self.handle_sim_event(event_id, data).await;
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn handle_data_received_event(
+        &mut self,
+        request_id: u32,
+        data: &[u8],
+    ) -> Result<(), MsfsAdapterError> {
+        if request_id == self.aircraft_detector.request_id() {
+            if let Some(aircraft) = self.aircraft_detector.process_aircraft_data(data)? {
+                self.handle_aircraft_detected(aircraft).await?;
+            }
+            return Ok(());
+        }
+
+        let aircraft = self.current_aircraft.read().await.clone();
+        let Some(aircraft) = aircraft else {
+            return Ok(());
+        };
+
+        let aircraft_id = AircraftId::new(&aircraft.atc_model);
+        let mut snapshot = self
+            .current_snapshot
+            .read()
+            .await
+            .clone()
+            .unwrap_or_else(|| BusSnapshot::new(SimId::Msfs, aircraft_id));
+
+        if let Some(mapping) = self.variable_mapping.as_ref() {
+            match mapping.convert_to_snapshot(request_id, data, &mut snapshot) {
+                Ok(()) => {}
+                Err(MappingError::VariableNotFound(_)) => {
+                    debug!("Ignoring unmapped request id {}", request_id);
+                    return Ok(());
+                }
+                Err(e) => return Err(e.into()),
+            }
+        } else {
+            return Ok(());
+        }
+
+        snapshot.timestamp = monotonic_timestamp_ns();
+        *self.current_snapshot.write().await = Some(snapshot);
+
+        Ok(())
+    }
+
+    async fn handle_aircraft_detected(
+        &mut self,
+        aircraft_info: AircraftInfo,
+    ) -> Result<(), MsfsAdapterError> {
+        info!("Aircraft detected: {}", aircraft_info.title);
+        self.detection_started_at = None;
+        *self.current_aircraft.write().await = Some(aircraft_info.clone());
+
+        self.setup_variable_mapping(&aircraft_info).await?;
+
+        let aircraft_id = AircraftId::new(&aircraft_info.atc_model);
+        *self.current_snapshot.write().await = Some(BusSnapshot::new(SimId::Msfs, aircraft_id));
+        *self.state.write().await = AdapterState::Active;
+        Ok(())
+    }
+
+    async fn handle_sim_event(&mut self, event_id: u32, data: u32) {
+        let event_name = self
+            .event_manager
+            .get_event_name(event_id)
+            .map(str::to_string);
+        if let Some(name) = event_name.as_deref() {
+            debug!(
+                "Received SimConnect event {} ({}) data={}",
+                event_id, name, data
+            );
+        } else {
+            debug!("Received SimConnect event {} data={}", event_id, data);
+        }
+
+        match event_name.as_deref() {
+            Some("AircraftLoaded") | Some("FlightLoaded") => {
+                self.variable_mapping = None;
+                self.detection_started_at = None;
+                *self.current_aircraft.write().await = None;
+                *self.current_snapshot.write().await = None;
+                *self.state.write().await = AdapterState::Connected;
+            }
+            Some("SimStop") => {
+                *self.state.write().await = AdapterState::Connected;
+            }
+            _ => {}
+        }
     }
 
     async fn setup_variable_mapping(
@@ -515,38 +586,33 @@ impl MsfsAdapter {
         self.last_update = now;
         let update_start = Instant::now();
 
-        // Create or update bus snapshot
-        let aircraft_info = self.current_aircraft.read().await;
-        if let Some(ref aircraft) = *aircraft_info {
-            let aircraft_id = AircraftId::new(&aircraft.atc_model);
-            let snapshot = BusSnapshot::new(SimId::Msfs, aircraft_id);
+        let aircraft = self.current_aircraft.read().await.clone();
+        let mut snapshot = self.current_snapshot.read().await.clone();
 
-            // Update snapshot with current data
-            // This would typically process received SimConnect data
-            // For now, we'll create a basic snapshot
-
-            // Validate and publish snapshot
-            if let Err(e) = snapshot.validate() {
+        if let Some(snapshot_ref) = snapshot.as_mut() {
+            snapshot_ref.timestamp = monotonic_timestamp_ns();
+            if let Err(e) = snapshot_ref.validate() {
                 warn!("Snapshot validation failed: {}", e);
                 self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                 return Ok(());
             }
 
-            // Record metrics
-            {
+            if let Some(aircraft) = aircraft {
                 let mut metrics = self.metrics.write().await;
                 metrics.record_update();
-                metrics.record_aircraft_change(aircraft.title.clone());
+                metrics.record_aircraft_change(aircraft.title);
             }
+
+            let snapshot_to_publish = snapshot_ref.clone();
+            *self.current_snapshot.write().await = Some(snapshot_to_publish.clone());
+
             self.metrics_registry.inc_counter(ADAPTER_UPDATES_TOTAL, 1);
             self.metrics_registry.observe(
                 ADAPTER_UPDATE_LATENCY_MS,
                 update_start.elapsed().as_secs_f64() * 1000.0,
             );
 
-            *self.current_snapshot.write().await = Some(snapshot.clone());
-
-            if let Err(e) = self.snapshot_sender.send(snapshot) {
+            if let Err(e) = self.snapshot_sender.send(snapshot_to_publish) {
                 warn!("Failed to publish snapshot: {}", e);
                 self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
@@ -568,6 +634,7 @@ impl MsfsAdapter {
         *self.current_aircraft.write().await = None;
         *self.current_snapshot.write().await = None;
         self.variable_mapping = None;
+        self.detection_started_at = None;
 
         // Transition to disconnected
         *self.state.write().await = AdapterState::Disconnected;
@@ -599,6 +666,12 @@ impl MsfsAdapter {
     pub async fn metrics_summary(&self) -> String {
         self.metrics.read().await.summary()
     }
+}
+
+fn monotonic_timestamp_ns() -> u64 {
+    static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+    let start = START.get_or_init(Instant::now);
+    Instant::now().duration_since(*start).as_nanos() as u64
 }
 
 impl SimAdapter for MsfsAdapter {
