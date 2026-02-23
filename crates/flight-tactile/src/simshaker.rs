@@ -10,7 +10,7 @@ use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tracing::{debug, error, warn};
+use tracing::{debug, warn};
 
 /// Configuration for SimShaker bridge
 #[derive(Debug, Clone, Serialize, Deserialize)]

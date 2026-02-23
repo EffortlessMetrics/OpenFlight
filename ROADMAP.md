@@ -70,5 +70,5 @@ This roadmap outlines the development path for the OpenFlight ecosystem, organiz
 *   ✅ **Spec Ledger**: Traceability from Requirements (REQ/INF-REQ) to Tests and Docs.
 *   ✅ **BDD Integration**: Gherkin feature files linked to implementation coverage.
 *   ✅ **Local Dev Environment**: Docker-based infra setup.
-*   ✅ **Repo Health**: Rust 2024 edition, MSRV 1.89.0 enforcement, CI hardening.
+*   ✅ **Repo Health**: Rust 2024 edition, MSRV 1.92.0 enforcement, CI hardening.
 *   ✅ **Cross-Reference Checking**: Automated link validation between Specs, Docs, and Code.

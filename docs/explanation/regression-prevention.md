@@ -327,7 +327,7 @@ The CI workflow includes a dedicated step for pattern verification:
 
 Tests run on:
 - **OS**: Ubuntu Latest, Windows Latest
-- **Rust**: Stable, MSRV (1.89.0)
+- **Rust**: Stable, MSRV (1.92.0)
 
 This ensures cross-platform compatibility and MSRV compliance.
 

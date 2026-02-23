@@ -15,7 +15,7 @@ This tutorial will guide you through setting up the OpenFlight development envir
 
 ## Prerequisites
 
-*   **Rust**: Version 1.89.0 or later (2024 edition).
+*   **Rust**: Version 1.92.0 or later (2024 edition).
 *   **Docker**: For running infrastructure services.
 *   **Simulator**: MSFS 2020/2024, X-Plane 11/12, or DCS World (optional, but recommended).
 

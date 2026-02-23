@@ -5,13 +5,14 @@
 
 use flight_ipc::{
     PROTOCOL_VERSION,
-    negotiation::{Version, detect_breaking_changes, negotiate_features},
+    negotiation::negotiate_features,
     proto::{
         Device, DeviceCapabilities, DeviceHealth, DeviceStatus, DeviceType,
         NegotiateFeaturesRequest, TransportType,
     },
     server::{DeviceManager, MockDeviceManager, MockProfileManager, ProfileManager},
 };
+use prost::Message;
 use std::time::SystemTime;
 
 fn create_test_device() -> Device {
@@ -132,9 +133,10 @@ fn test_profile_manager_unit() {
 fn test_device_serialization() {
     let device = create_test_device();
 
-    // Test that device can be serialized and deserialized
-    let json = serde_json::to_string(&device).unwrap();
-    let deserialized: Device = serde_json::from_str(&json).unwrap();
+    // Generated protobuf types are validated via protobuf round-trip.
+    let mut bytes = Vec::new();
+    device.encode(&mut bytes).unwrap();
+    let deserialized = Device::decode(bytes.as_slice()).unwrap();
 
     assert_eq!(device.id, deserialized.id);
     assert_eq!(device.name, deserialized.name);

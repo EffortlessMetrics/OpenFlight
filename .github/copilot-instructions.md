@@ -2,7 +2,7 @@
 
 PC flight simulation input management system in Rust. Provides unified axis/panel/FFB control for MSFS, X-Plane, and DCS with a hard real-time 250Hz processing spine.
 
-**Rust 2024 edition · MSRV 1.89.0 · Workspace monorepo**
+**Rust 2024 edition · MSRV 1.92.0 · Workspace monorepo**
 
 ---
 
@@ -92,9 +92,9 @@ Sim variable configurations are JSON diff tables, not code. Each sim version has
 
 ### Plugin tiers (ADR-003)
 
-1. **WASM** — sandboxed, capability-declared, 20–120 Hz  
-2. **Native fast-path** — isolated helper process, shared-memory SPSC, per-tick budget  
-3. **Service** — managed thread, event-driven, full access with user consent  
+1. **WASM** — sandboxed, capability-declared, 20–120 Hz
+2. **Native fast-path** — isolated helper process, shared-memory SPSC, per-tick budget
+3. **Service** — managed thread, event-driven, full access with user consent
 
 ---
 

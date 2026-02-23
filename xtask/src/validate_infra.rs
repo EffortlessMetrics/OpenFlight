@@ -550,17 +550,17 @@ mod tests {
     fn test_extract_compose_ports() {
         let compose_content = r#"
 services:
-  flight-service:
-    image: rust:1.89.0
-    ports:
-      - "8080:8080"
-    environment:
-      - RUST_LOG=info
-  
-  metrics:
-    image: prom/prometheus
-    ports:
-      - "9090:9090"
+    flight-service:
+        image: rust:1.92.0
+        ports:
+            - "8080:8080"
+        environment:
+            - RUST_LOG=info
+
+    metrics:
+        image: prom/prometheus
+        ports:
+            - "9090:9090"
 "#;
 
         let ports = extract_compose_ports(compose_content);

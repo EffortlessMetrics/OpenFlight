@@ -4,7 +4,7 @@ This directory contains the local development environment configuration for Flig
 
 ## Overview
 
-The local development environment uses Docker Compose to provide a consistent, reproducible development setup with Rust 1.89.0 and edition 2024.
+The local development environment uses Docker Compose to provide a consistent, reproducible development setup with Rust 1.92.0 and edition 2024.
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ The local development environment uses Docker Compose to provide a consistent, r
    ```
 
    This will:
-   - Build the flight-service container using Rust 1.89.0
+      - Build the flight-service container using Rust 1.92.0
    - Mount your local workspace into the container at `/workspace`
    - Expose the service on port 8080
    - Start the service with health checks enabled
@@ -34,7 +34,7 @@ The local development environment uses Docker Compose to provide a consistent, r
    ```bash
    curl -f http://localhost:8080/health
    ```
-   
+
    Expected response: HTTP 200 status code
 
 ## Running the Environment

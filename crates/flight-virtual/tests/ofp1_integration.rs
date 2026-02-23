@@ -11,17 +11,22 @@
 //! between flight-hid and flight-virtual.
 
 use flight_hid::ofp1::*;
+use flight_test_helpers::wait_for_condition;
 use flight_virtual::ofp1_emulator::{EmulatorFaultType, Ofp1Emulator, Ofp1EmulatorConfig};
-use std::thread;
 use std::time::Duration;
+
+const STATE_TIMEOUT: Duration = Duration::from_millis(250);
+const STATE_POLL_INTERVAL: Duration = Duration::from_millis(1);
 
 /// Test complete OFP-1 handshake and capability negotiation
 #[test]
 fn test_complete_ofp1_handshake() {
     // Create emulator with high-end capabilities
-    let mut config = Ofp1EmulatorConfig::default();
-    config.max_torque_mnm = 20000; // 20 Nm
-    config.min_period_us = 500; // 2 kHz
+    let config = Ofp1EmulatorConfig {
+        max_torque_mnm: 20000, // 20 Nm
+        min_period_us: 500,    // 2 kHz
+        ..Ofp1EmulatorConfig::default()
+    };
 
     let mut emulator = Ofp1Emulator::with_config("/dev/ofp1_test".to_string(), config);
     emulator.start().unwrap();
@@ -91,26 +96,44 @@ fn test_torque_commands_and_health_monitoring() {
         // Send command
         emulator.send_torque_command(command).unwrap();
 
-        // Wait for processing
-        thread::sleep(Duration::from_millis(20));
+        // Wait for a matching health report instead of relying on fixed sleeps
+        let mut health = None;
+        let sequence_observed = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+            health = emulator.read_health_status().unwrap();
+            matches!(health, Some(report) if {
+                let health_sequence = report.sequence;
+                if health_sequence != sequence {
+                    return false;
+                }
 
-        // Read health status
-        if let Some(health) = emulator.read_health_status().unwrap() {
-            // Copy sequence to avoid packed field reference
-            let health_sequence = health.sequence;
-            assert_eq!(health_sequence, sequence);
+                let status_flags = report.status_flags;
+                if torque_nm != 0.0 {
+                    status_flags.has_flag(StatusFlags::TORQUE_ENABLED)
+                } else {
+                    true
+                }
+            })
+        });
+        assert!(
+            sequence_observed,
+            "health report for sequence {sequence} was not observed before timeout"
+        );
+        let health = health.expect("health report should exist after wait_for_condition success");
 
-            // Copy status_flags to avoid packed field reference
-            let status_flags = health.status_flags;
-            assert!(status_flags.has_flag(StatusFlags::READY));
+        // Copy sequence to avoid packed field reference
+        let health_sequence = health.sequence;
+        assert_eq!(health_sequence, sequence);
 
-            if torque_nm != 0.0 {
-                assert!(status_flags.has_flag(StatusFlags::TORQUE_ENABLED));
-            }
+        // Copy status_flags to avoid packed field reference
+        let status_flags = health.status_flags;
+        assert!(status_flags.has_flag(StatusFlags::READY));
 
-            // Update health monitor
-            health_monitor.update_health(health).unwrap();
+        if torque_nm != 0.0 {
+            assert!(status_flags.has_flag(StatusFlags::TORQUE_ENABLED));
         }
+
+        // Update health monitor
+        health_monitor.update_health(health).unwrap();
 
         sequence += 1;
     }
@@ -138,11 +161,23 @@ fn test_fault_injection_and_recovery() {
     // Inject temperature fault
     emulator.inject_fault(EmulatorFaultType::TemperatureFault);
 
-    // Wait for fault to propagate
-    thread::sleep(Duration::from_millis(50));
+    // Wait for fault state to be observable
+    let mut faulted_health = None;
+    let fault_observed = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        faulted_health = emulator.read_health_status().unwrap();
+        matches!(faulted_health, Some(report) if {
+            let status_flags = report.status_flags;
+            status_flags.has_fault() && status_flags.has_flag(StatusFlags::TEMP_FAULT)
+        })
+    });
+    assert!(
+        fault_observed,
+        "temperature fault did not propagate before timeout"
+    );
+    let health = faulted_health
+        .expect("faulted health report should exist after wait_for_condition success");
 
     // Read health with fault
-    let health = emulator.read_health_status().unwrap().unwrap();
     let status_flags = health.status_flags;
     assert!(status_flags.has_fault());
     assert!(status_flags.has_flag(StatusFlags::TEMP_FAULT));
@@ -154,11 +189,23 @@ fn test_fault_injection_and_recovery() {
     // Clear faults
     emulator.clear_faults();
 
-    // Wait for recovery
-    thread::sleep(Duration::from_millis(50));
+    // Wait for recovery state to be observable
+    let mut recovered_health = None;
+    let recovery_observed = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        recovered_health = emulator.read_health_status().unwrap();
+        matches!(recovered_health, Some(report) if {
+            let status_flags = report.status_flags;
+            !status_flags.has_fault()
+        })
+    });
+    assert!(
+        recovery_observed,
+        "fault recovery state was not observed before timeout"
+    );
+    let health = recovered_health
+        .expect("recovered health report should exist after wait_for_condition success");
 
     // Verify recovery
-    let health = emulator.read_health_status().unwrap().unwrap();
     let status_flags = health.status_flags;
     assert!(!status_flags.has_fault());
     health_monitor.update_health(health).unwrap();
@@ -189,19 +236,30 @@ fn test_emergency_stop() {
 
     emulator.send_torque_command(command).unwrap();
 
-    thread::sleep(Duration::from_millis(20));
-
     // Verify torque is applied
-    let stats = emulator.get_statistics();
-    assert_eq!(stats.current_torque_protocol, 16384);
+    let torque_applied = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        emulator.get_statistics().current_torque_protocol == 16384
+    });
+    assert!(
+        torque_applied,
+        "torque command was not applied before timeout"
+    );
 
     // Trigger emergency stop
     emulator.trigger_emergency_stop();
 
-    thread::sleep(Duration::from_millis(50)); // Wait longer for simulation thread
+    // Verify emergency stop (bounded wait for async simulation thread)
+    let emergency_stop_applied = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        let stats = emulator.get_statistics();
+        stats.emergency_stop_active && stats.current_torque_protocol == 0
+    });
+    assert!(
+        emergency_stop_applied,
+        "emergency stop state was not observed before timeout"
+    );
+    let stats = emulator.get_statistics();
 
     // Verify emergency stop
-    let stats = emulator.get_statistics();
     assert!(stats.emergency_stop_active);
     assert_eq!(stats.current_torque_protocol, 0);
 
@@ -249,10 +307,14 @@ fn test_interlock_functionality() {
 
     emulator.send_torque_command(command).unwrap();
 
-    thread::sleep(Duration::from_millis(20));
-
-    let stats = emulator.get_statistics();
-    assert!(stats.high_torque_enabled);
+    // Wait until command is consumed by simulation thread
+    let high_torque_enabled = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        emulator.get_statistics().high_torque_enabled
+    });
+    assert!(
+        high_torque_enabled,
+        "high-torque state was not observed before timeout"
+    );
 
     emulator.stop();
 }
@@ -278,8 +340,15 @@ fn test_health_stream_timeout() {
     health_monitor.update_health(health).unwrap();
     assert!(health_monitor.is_health_current());
 
-    // Wait for timeout
-    thread::sleep(Duration::from_millis(100));
+    // Wait for timeout without relying on a fixed sleep
+    let timeout_observed =
+        wait_for_condition(Duration::from_millis(250), Duration::from_millis(5), || {
+            !health_monitor.is_health_current()
+        });
+    assert!(
+        timeout_observed,
+        "health timeout was not observed before deadline"
+    );
 
     // Check timeout
     assert!(!health_monitor.is_health_current());
@@ -460,8 +529,11 @@ fn test_complete_integration_scenario() {
         // Send command
         emulator.send_torque_command(command).unwrap();
 
-        // Wait for processing
-        thread::sleep(Duration::from_millis(10));
+        // Wait for processing (bounded wait to avoid timing flakes under load)
+        let command_applied = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+            emulator.get_statistics().current_torque_protocol == torque_protocol
+        });
+        assert!(command_applied, "command was not applied before timeout");
 
         // Read and validate health
         if let Some(health) = emulator.read_health_status().unwrap() {
@@ -505,7 +577,11 @@ fn test_complete_integration_scenario() {
 
     // Step 5: Test emergency stop
     emulator.trigger_emergency_stop();
-    thread::sleep(Duration::from_millis(20));
+    let stopped = wait_for_condition(STATE_TIMEOUT, STATE_POLL_INTERVAL, || {
+        let stats = emulator.get_statistics();
+        stats.emergency_stop_active && stats.current_torque_protocol == 0
+    });
+    assert!(stopped, "emergency stop state did not apply before timeout");
 
     let health = emulator.read_health_status().unwrap().unwrap();
     let status_flags = health.status_flags;

@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rustc-check-cfg=cfg(simconnect_static_available)");
 
     // Only build on Windows
     if env::var("CARGO_CFG_TARGET_OS").unwrap() != "windows" {
@@ -14,11 +15,13 @@ fn main() {
     #[cfg(feature = "static")]
     {
         // Try to find SimConnect SDK
-        let sdk_paths = [
-            r"C:\MSFS SDK\SimConnect SDK\lib",
-            r"C:\Program Files (x86)\Microsoft Games\Microsoft Flight Simulator X SDK\SDK\Core Utilities Kit\SimConnect SDK\lib",
-            env::var("SIMCONNECT_SDK_PATH").unwrap_or_default(),
+        let mut sdk_paths = vec![
+            String::from(r"C:\MSFS SDK\SimConnect SDK\lib"),
+            String::from(
+                r"C:\Program Files (x86)\Microsoft Games\Microsoft Flight Simulator X SDK\SDK\Core Utilities Kit\SimConnect SDK\lib",
+            ),
         ];
+        sdk_paths.push(env::var("SIMCONNECT_SDK_PATH").unwrap_or_default());
 
         let mut found_lib = false;
         for path in &sdk_paths {
@@ -27,6 +30,7 @@ fn main() {
                 if lib_path.join("SimConnect.lib").exists() {
                     println!("cargo:rustc-link-search=native={}", path);
                     println!("cargo:rustc-link-lib=static=SimConnect");
+                    println!("cargo:rustc-cfg=simconnect_static_available");
                     found_lib = true;
                     break;
                 }

@@ -7,8 +7,6 @@
 //! and system event subscription for MSFS integration.
 
 use flight_simconnect_sys::{HSIMCONNECT, SIMCONNECT_EVENTID, SimConnectApi, constants::*};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
 use tracing::{debug, warn};

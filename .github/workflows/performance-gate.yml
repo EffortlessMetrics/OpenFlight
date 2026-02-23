@@ -27,7 +27,7 @@ jobs:
         components: clippy, rustfmt
         
     - name: Cache Cargo dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
@@ -90,7 +90,7 @@ jobs:
         
     - name: Upload performance artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-metrics-${{ matrix.os }}
         path: |
@@ -99,7 +99,7 @@ jobs:
           
     - name: Upload performance dashboard
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-dashboard-${{ matrix.os }}
         path: target/perf-metrics/index.html
@@ -189,7 +189,7 @@ ${metricsTable}
         
     - name: Upload new baseline
       if: github.ref == 'refs/heads/main' && steps.analysis.outputs.performance_passed == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-baseline-${{ matrix.os }}
         path: target/perf-baseline/baseline.json
@@ -203,8 +203,8 @@ ${metricsTable}
     
     steps:
     - name: Download all performance artifacts
-      uses: actions/download-artifact@v3
-      
+      uses: actions/download-artifact@v4
+
     - name: Generate cross-platform summary
       run: |
         echo "# Performance Test Summary" > performance-summary.md
@@ -246,7 +246,7 @@ ${metricsTable}
         fi
         
     - name: Upload summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: performance-summary
         path: performance-summary.md

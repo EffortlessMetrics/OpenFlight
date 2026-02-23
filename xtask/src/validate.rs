@@ -82,7 +82,10 @@ pub fn run_validate() -> Result<()> {
         Ok(()) => {
             println!("✅ BDD feature status report generated\n");
             let detail = summarize_bdd_status().unwrap_or_else(|e| {
-                format!("Generated docs/feature_status.md (coverage summary unavailable: {})", e)
+                format!(
+                    "Generated docs/feature_status.md (coverage summary unavailable: {})",
+                    e
+                )
             });
             results.push(CheckResult::with_details(
                 "BDD Feature Status",
@@ -275,11 +278,8 @@ fn summarize_bdd_status() -> Result<String> {
     let scenarios = gherkin::parse_feature_files(Path::new("specs/features"))
         .context("Failed to parse Gherkin feature files")?;
 
-    let metrics = crate::ac_status::compute_bdd_metrics_with_workspace_crates(
-        &ledger,
-        &scenarios,
-        true,
-    );
+    let metrics =
+        crate::ac_status::compute_bdd_metrics_with_workspace_crates(&ledger, &scenarios, true);
     let fully_covered_microcrates = metrics.microcrate_with_tests_and_gherkin;
     let microcrate_total = metrics.microcrate_total;
 
@@ -555,8 +555,8 @@ fn run_quality_gates() -> Result<Vec<crate::quality_gates::QualityGateResult>> {
 
     // QG-BDD-COVERAGE: Check BDD coverage thresholds and microcrate matrix coverage
     println!("  Checking QG-BDD-COVERAGE (BDD and microcrate coverage)...");
-    let bdd_coverage_result = crate::quality_gates::check_bdd_coverage()
-        .context("Failed to check BDD coverage gate")?;
+    let bdd_coverage_result =
+        crate::quality_gates::check_bdd_coverage().context("Failed to check BDD coverage gate")?;
     results.push(bdd_coverage_result);
 
     // QG-BDD-UNMAPPED-MICROCRATE: Ensure all AC rows are mapped to concrete microcrates
@@ -725,8 +725,8 @@ fn validate_cross_references() -> Result<Vec<String>> {
 /// * `results` - Vector of check results to include in the report
 /// * `cross_ref_details` - Vector of cross-reference error messages
 fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[String]) -> Result<()> {
-    let timestamp = chrono::Utc::now().to_rfc3339();
-    let commit_hash = get_git_commit_hash().unwrap_or_else(|_| "unknown".to_string());
+    let timestamp = "deterministic (timestamp omitted)";
+    let commit_hash = "deterministic (commit omitted)";
 
     let mut report = String::new();
 
@@ -836,25 +836,4 @@ fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[Stri
     std::fs::write(report_path, report).context("Failed to write validation report")?;
 
     Ok(())
-}
-
-/// Get the current git commit hash.
-///
-/// Returns the short commit hash (7 characters) if available, or an error
-/// if git is not available or the repository is not initialized.
-fn get_git_commit_hash() -> Result<String> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--short", "HEAD"])
-        .output()
-        .context("Failed to execute git command")?;
-
-    if output.status.success() {
-        let hash = String::from_utf8(output.stdout)
-            .context("Git output is not valid UTF-8")?
-            .trim()
-            .to_string();
-        Ok(hash)
-    } else {
-        anyhow::bail!("Git command failed")
-    }
 }

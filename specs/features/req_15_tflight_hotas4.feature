@@ -19,6 +19,16 @@ Feature: Thrustmaster T.Flight HOTAS 4 parsing and yaw semantics
     And hat SHALL equal 0
     And button mask SHALL equal 0
 
+  @AC-15.4
+  Scenario: Axis mode switches mid-session without restart
+    Given a HOTAS 4 input handler
+    When I parse fixture "merged_centered"
+    Then axis mode SHALL equal "Merged"
+    When I parse fixture "separate_centered"
+    Then axis mode SHALL equal "Separate"
+    When I parse fixture "merged_centered"
+    Then axis mode SHALL equal "Merged"
+
   @AC-15.5
   Scenario: Resolve yaw source under Auto policy
     Given a HOTAS 4 input handler with yaw policy "Auto"

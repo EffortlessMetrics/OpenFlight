@@ -28,9 +28,9 @@ The following checks must pass before a PR can be merged:
 
 ### Test Checks
 - `test / Test Suite (ubuntu-latest, stable)`
-- `test / Test Suite (ubuntu-latest, 1.89.0)`
+-- `test / Test Suite (ubuntu-latest, 1.92.0)`
 - `test / Test Suite (windows-latest, stable)`
-- `test / Test Suite (windows-latest, 1.89.0)`
+-- `test / Test Suite (windows-latest, 1.92.0)`
 
 ## Configuration Steps
 
@@ -58,5 +58,5 @@ The following checks are informational and not required for merge:
 - The `clippy-ipc-benches` job has two modes:
   - **strict**: Runs with workspace dependencies (default, required)
   - **unblock**: Runs with `--no-deps` flag (label-gated, optional)
-- All clippy jobs use pinned toolchain `1.89.0` for deterministic builds
+-- All clippy jobs use pinned toolchain `1.92.0` for deterministic builds
 - The `public-api-check` job automatically retries with nightly toolchain if rustdoc-json fails

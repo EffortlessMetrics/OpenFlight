@@ -5,21 +5,21 @@
 ### 1. MSRV Alignment ✓
 
 **Workspace Cargo.toml:**
-- `rust-version = "1.89.0"` (single source of truth)
+- `rust-version = "1.92.0"` (single source of truth)
 
 **clippy.toml:**
-- `msrv = "1.89.0"` (already aligned)
+- `msrv = "1.92.0"` (already aligned)
 
-**Status:** Both files are already aligned to MSRV 1.89.0. No changes needed.
+**Status:** Both files are already aligned to MSRV 1.92.0. No changes needed.
 
 ### 2. CI Toolchain Configuration
 
 **Current State:**
-- Main test job (`.github/workflows/ci.yml` line 30): Uses `dtolnay/rust-toolchain@master` with matrix `[stable, 1.89.0]`
+- Main test job (`.github/workflows/ci.yml` line 30): Uses `dtolnay/rust-toolchain@master` with matrix `[stable, 1.92.0]`
 - IPC bench job (line 177): Uses `dtolnay/rust-toolchain@stable`
 - Other jobs: Mix of `@stable` and `@nightly`
 
-**Note:** Task 12 will update CI workflows to pin toolchain to `dtolnay/rust-toolchain@1.89.0` for all lint jobs.
+**Note:** Task 12 will update CI workflows to pin toolchain to `dtolnay/rust-toolchain@1.92.0` for all lint jobs.
 
 ### 3. Baseline Captures ✓
 

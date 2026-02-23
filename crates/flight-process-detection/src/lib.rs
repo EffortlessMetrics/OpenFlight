@@ -621,7 +621,7 @@ impl ProcessDetector {
     #[cfg(target_os = "linux")]
     fn get_linux_window_titles() -> HashMap<u32, String> {
         use x11rb::connection::Connection;
-        use x11rb::protocol::xproto::{Atom, AtomEnum, ConnectionExt as XprotoConnectionExt};
+        use x11rb::protocol::xproto::{AtomEnum, ConnectionExt as XprotoConnectionExt};
 
         let mut window_titles = HashMap::new();
 
@@ -746,14 +746,12 @@ impl ProcessDetector {
             .get_property(false, window, net_wm_name, utf8_string, 0, u32::MAX)
             .ok()?;
 
-        if let Ok(name_reply) = name_cookie.reply() {
-            if !name_reply.value.is_empty() {
-                if let Ok(title) = String::from_utf8(name_reply.value.clone()) {
-                    if !title.is_empty() {
-                        return Some(title);
-                    }
-                }
-            }
+        if let Ok(name_reply) = name_cookie.reply()
+            && !name_reply.value.is_empty()
+            && let Ok(title) = String::from_utf8(name_reply.value.clone())
+            && !title.is_empty()
+        {
+            return Some(title);
         }
 
         // Fall back to WM_NAME (may be Latin-1 encoded)
@@ -768,19 +766,19 @@ impl ProcessDetector {
             )
             .ok()?;
 
-        if let Ok(wm_name_reply) = wm_name_cookie.reply() {
-            if !wm_name_reply.value.is_empty() {
-                // WM_NAME is typically Latin-1, but we try UTF-8 first
-                if let Ok(title) = String::from_utf8(wm_name_reply.value.clone()) {
-                    if !title.is_empty() {
-                        return Some(title);
-                    }
-                }
-                // Fall back to lossy conversion for Latin-1
-                let title = String::from_utf8_lossy(&wm_name_reply.value).to_string();
-                if !title.is_empty() {
-                    return Some(title);
-                }
+        if let Ok(wm_name_reply) = wm_name_cookie.reply()
+            && !wm_name_reply.value.is_empty()
+        {
+            // WM_NAME is typically Latin-1, but we try UTF-8 first
+            if let Ok(title) = String::from_utf8(wm_name_reply.value.clone())
+                && !title.is_empty()
+            {
+                return Some(title);
+            }
+            // Fall back to lossy conversion for Latin-1
+            let title = String::from_utf8_lossy(&wm_name_reply.value).to_string();
+            if !title.is_empty() {
+                return Some(title);
             }
         }
 

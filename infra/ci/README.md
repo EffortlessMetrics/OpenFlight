@@ -37,11 +37,11 @@ The CI pipeline enforces quality gates and ensures all code changes meet project
 - ADR link validation
 
 **Platforms**: Ubuntu, Windows
-**Rust versions**: stable, 1.89.0
+**Rust versions**: stable, 1.92.0
 **Timeout**: 10 minutes (Ubuntu), 20 minutes (Windows)
 
 ### 3. MSRV Check (`msrv-check`)
-**Purpose**: Ensures code builds with Minimum Supported Rust Version (1.89.0)
+**Purpose**: Ensures code builds with Minimum Supported Rust Version (1.92.0)
 
 **What it does**:
 - Builds all crates with MSRV
@@ -147,7 +147,7 @@ All checks must pass before code can be merged. The following quality gates are 
 - ✅ **Formatting**: All code must be formatted with `rustfmt`
 - ✅ **Linting**: Core crates must pass clippy with `-D warnings`
 - ✅ **Tests**: All unit tests and doc tests must pass
-- ✅ **MSRV**: Code must build with Rust 1.89.0
+- ✅ **MSRV**: Code must build with Rust 1.92.0
 
 ### Documentation
 - ✅ **Schema Validation**: All YAML/JSON must conform to schemas
@@ -174,7 +174,7 @@ The CI pipeline provides the following guarantees:
 1. **All checks must pass for merge**: No code can be merged if any CI job fails
 2. **Consistent validation**: CI uses the same `cargo xtask` commands as local development
 3. **Platform compatibility**: Code is tested on Ubuntu and Windows
-4. **MSRV compliance**: Code builds with Rust 1.89.0
+4. **MSRV compliance**: Code builds with Rust 1.92.0
 5. **Security**: No known vulnerabilities or banned dependencies
 6. **API stability**: Public API changes are detected and reviewed
 7. **Test coverage**: All tests pass on all supported platforms

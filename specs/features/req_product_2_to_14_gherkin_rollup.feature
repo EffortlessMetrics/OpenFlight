@@ -77,6 +77,20 @@ Feature: Product Requirement Coverage (REQ-2 to REQ-14)
     When the acceptance criteria are reviewed end-to-end
     Then the requirement SHALL be traceable through tests and BDD scenarios
 
+  @REQ-15
+  @AC-15.1 @AC-15.2 @AC-15.3 @AC-15.4 @AC-15.5 @AC-15.6
+  Scenario: T.Flight HOTAS 4 support coverage is traced
+    Given the implementation is represented by existing unit-test evidence
+    When the acceptance criteria are reviewed end-to-end
+    Then the requirement SHALL be traceable through tests and BDD scenarios
+
+  @REQ-16
+  @AC-16.1 @AC-16.2 @AC-16.3 @AC-16.4
+  Scenario: T.Flight HOTAS 4 runtime auto-mode and report-ID handling coverage is traced
+    Given the implementation is represented by existing unit-test evidence
+    When the acceptance criteria are reviewed end-to-end
+    Then the requirement SHALL be traceable through tests and BDD scenarios
+
   @REQ-13
   @AC-13.1 @AC-13.2 @AC-13.3
   Scenario: Replay coverage is traced

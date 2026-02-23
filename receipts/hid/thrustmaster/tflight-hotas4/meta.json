@@ -1,0 +1,36 @@
+{
+  "device": {
+    "vendor_id": "0x044F",
+    "vendor_name": "Thrustmaster",
+    "product_id_primary": "0xB67B",
+    "product_id_legacy": "0xB67A",
+    "product_name": "T.Flight HOTAS 4"
+  },
+  "captures": {
+    "windows_driver": {
+      "status": "pending",
+      "os": null,
+      "driver": "Thrustmaster official",
+      "firmware_version": null,
+      "capture_tool": null,
+      "notes": "Capture using USBPcap + Wireshark in PC mode (green LED)"
+    },
+    "linux_generic": {
+      "status": "pending",
+      "os": null,
+      "driver": "Linux generic HID",
+      "firmware_version": null,
+      "capture_tool": null,
+      "notes": "Capture via hidraw; descriptor via sysfs report_descriptor"
+    },
+    "linux_hid_tflight4": {
+      "status": "pending",
+      "os": null,
+      "driver": "hid-tflight4 kernel module",
+      "firmware_version": null,
+      "capture_tool": null,
+      "notes": "Load hid-tflight4 module first; verify full axis set in descriptor"
+    }
+  },
+  "schema_version": "1.0.0"
+}

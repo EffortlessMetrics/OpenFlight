@@ -1,6 +1,6 @@
 # Environment variable names must match pattern ^[A-Z][A-Z0-9_]*$
 environment: local-development
-rust_version: "1.89.0"
+rust_version: "1.92.0"
 
 env_vars:
   rust_log:

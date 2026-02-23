@@ -10,9 +10,9 @@
 
 
 
-  - Choose workspace Cargo.toml `rust-version = "1.89.0"` as single source of truth
-  - Update clippy.toml: set `msrv = "1.89.0"` or remove the msrv line entirely to inherit from Cargo.toml
-  - Verify toolchain will be pinned to `dtolnay/rust-toolchain@1.89.0` in all CI lint jobs
+  - Choose workspace Cargo.toml `rust-version = "1.92.0"` as single source of truth
+  - Update clippy.toml: set `msrv = "1.92.0"` or remove the msrv line entirely to inherit from Cargo.toml
+  - Verify toolchain will be pinned to `dtolnay/rust-toolchain@1.92.0` in all CI lint jobs
   - Run `cargo clippy -p flight-core -- -Dwarnings 2>&1 | tee clippy-before.log` to capture all current warnings
   - Run `cargo public-api -p flight-core > baseline-api.txt` to capture current public API
   - _Requirements: 1.4, 5.1_
@@ -106,7 +106,7 @@
 
   - Check if `load_profile_from_path` is public using `cargo public-api -p flight-core | grep load_profile_from_path`
   - If private/pub(crate): change parameter from `&PathBuf` to `&Path` directly
-  - If public: 
+  - If public:
     - Keep existing signature with `&PathBuf` parameter
     - Add `#[deprecated(since = "0.1.0", note = "Use internal implementation with &Path")]` to existing function
     - Create `load_profile_from_path_impl(base_path: &Path, filename: &str)` as `pub(crate)` helper

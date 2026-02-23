@@ -110,6 +110,6 @@ This feature addresses critical supply chain security issues and dependency mana
 
 **NFR-A (Determinism):** The supply-chain outputs (SBOM/SPDX/3P licenses) SHALL be reproducible given the same Cargo.lock.
 
-**NFR-B (MSRV/Edition discipline):** CI SHALL enforce edition = "2024" and rust-version = "1.89.0" across workspace packages.
+**NFR-B (MSRV/Edition discipline):** CI SHALL enforce edition = "2024" and rust-version = "1.92.0" across workspace packages.
 
 **NFR-C (Security posture):** Registry sources SHALL be limited to crates.io (no git sources) unless a task-specific exception exists in deny.toml.

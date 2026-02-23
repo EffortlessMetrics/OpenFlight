@@ -96,6 +96,12 @@ impl TFlightReportSource for SimulatedTFlightReportSource {
 pub struct TFlightRuntimeConfig {
     pub poll_hz: u16,
     pub yaw_policy: TFlightYawPolicy,
+    /// Apply throttle axis inversion. Disabled by default; enable per profile
+    /// only after hardware receipts confirm the inversion is needed.
+    pub throttle_inversion: bool,
+    /// Strip leading Report ID byte from raw reports. Disabled by default.
+    /// Enable when the OS/driver stack prepends a Report ID before the payload.
+    pub strip_report_id: bool,
 }
 
 impl Default for TFlightRuntimeConfig {
@@ -103,6 +109,8 @@ impl Default for TFlightRuntimeConfig {
         Self {
             poll_hz: 250,
             yaw_policy: TFlightYawPolicy::Auto,
+            throttle_inversion: false,
+            strip_report_id: false,
         }
     }
 }
@@ -170,7 +178,7 @@ impl TFlightInputRuntime {
                             &health,
                             &snapshots_worker,
                             &mut device_states,
-                            config.yaw_policy,
+                            config,
                         ).await;
                     }
                 }
@@ -219,7 +227,7 @@ async fn poll_once(
     health: &HealthStream,
     snapshots: &Arc<RwLock<HashMap<String, TFlightSnapshot>>>,
     states: &mut HashMap<String, DeviceRuntimeState>,
-    yaw_policy: TFlightYawPolicy,
+    config: TFlightRuntimeConfig,
 ) {
     let mut active_paths = HashSet::new();
 
@@ -233,18 +241,22 @@ async fn poll_once(
 
         if let Some(existing) = states.get_mut(&path) {
             existing.info = info;
-            existing.handler.set_yaw_policy(yaw_policy);
+            existing.handler.set_yaw_policy(config.yaw_policy);
             continue;
         }
 
-        let axis_mode = flight_hid_support::device_support::axis_mode_from_device_info(&info);
+        let _axis_mode_hint = flight_hid_support::device_support::axis_mode_from_device_info(&info);
         let is_legacy = is_hotas4_legacy_pid(&info);
         let snapshot_key = info
             .serial_number
             .clone()
             .unwrap_or_else(|| info.device_path.clone());
-        let handler =
-            TFlightInputHandler::with_axis_mode(model, axis_mode).with_yaw_policy(yaw_policy);
+        // Always start in Unknown so the handler auto-detects every report;
+        // the descriptor hint is advisory only (see fix for runtime AxisMode pinning).
+        let handler = TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown)
+            .with_yaw_policy(config.yaw_policy)
+            .with_throttle_inversion(config.throttle_inversion)
+            .with_report_id(config.strip_report_id);
         let monitor = TFlightHealthMonitor::new(model).with_legacy_pid(is_legacy);
 
         states.insert(
@@ -254,7 +266,7 @@ async fn poll_once(
                 snapshot_key: snapshot_key.clone(),
                 handler,
                 monitor,
-                last_mode: axis_mode,
+                last_mode: AxisMode::Unknown,
                 ghost_warning_active: false,
                 is_legacy_pid: is_legacy,
             },
@@ -265,6 +277,19 @@ async fn poll_once(
                 .info(
                     COMPONENT_NAME,
                     &format!("{} detected via HOTAS 4 legacy PID", snapshot_key),
+                )
+                .await;
+        }
+
+        if _axis_mode_hint != AxisMode::Unknown {
+            health
+                .info(
+                    COMPONENT_NAME,
+                    &format!(
+                        "{} descriptor advertises {} axis layout (auto-detection still active)",
+                        snapshot_key,
+                        _axis_mode_hint.as_str()
+                    ),
                 )
                 .await;
         }
@@ -458,6 +483,8 @@ mod tests {
             TFlightRuntimeConfig {
                 poll_hz: 100,
                 yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -498,6 +525,8 @@ mod tests {
             TFlightRuntimeConfig {
                 poll_hz: 120,
                 yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -537,6 +566,8 @@ mod tests {
             TFlightRuntimeConfig {
                 poll_hz: 80,
                 yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
             },
         );
 
@@ -552,6 +583,43 @@ mod tests {
         }
 
         assert!(saw_ghost_warning);
+        runtime.shutdown().await;
+    }
+
+    /// AC-16.1 — runtime handler always starts Unknown so reports are auto-detected.
+    ///
+    /// Feeds an 8-byte merged report; the snapshot must reflect `Merged`.
+    /// Before the AxisMode-pinning fix this test would fail if a descriptor
+    /// indicated `Separate` (handler would reject the shorter report).
+    #[tokio::test]
+    async fn test_runtime_auto_detects_axis_mode_merged() {
+        let health = Arc::new(HealthStream::new());
+        let mut source = SimulatedTFlightReportSource::default();
+
+        source.add_device(
+            hotas4_device_info(
+                flight_hid_support::device_support::TFLIGHT_HOTAS_4_PID,
+                "/dev/hotas4-merged-auto",
+            ),
+            vec![vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00]], // 8-byte merged
+        );
+
+        let mut runtime = TFlightInputRuntime::start(
+            Box::new(source),
+            health,
+            TFlightRuntimeConfig {
+                poll_hz: 100,
+                yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
+            },
+        );
+
+        let snapshots = wait_for_snapshot_count(&runtime, 1).await;
+        assert_eq!(snapshots.len(), 1);
+        let snapshot = snapshots.values().next().unwrap();
+        assert_eq!(snapshot.axis_mode, AxisMode::Merged);
+
         runtime.shutdown().await;
     }
 
@@ -581,5 +649,68 @@ mod tests {
         assert!(snapshot.health.is_legacy_pid);
 
         runtime.shutdown().await;
+    }
+
+    /// AC-16.4 — throttle inversion is applied when `TFlightRuntimeConfig::throttle_inversion` is true.
+    ///
+    /// Uses a merged report with throttle byte = 0x00 (raw "fully pushed away").
+    /// Without inversion this maps to approximately -1.0 (min).
+    /// With inversion it should map to approximately +1.0 (max).
+    #[tokio::test]
+    async fn test_runtime_throttle_inversion_applied() {
+        async fn throttle_for_config(inversion: bool) -> f32 {
+            let health = Arc::new(HealthStream::new());
+            let mut source = SimulatedTFlightReportSource::default();
+            let path = if inversion {
+                "/dev/hotas4-inv-on"
+            } else {
+                "/dev/hotas4-inv-off"
+            };
+            // 8-byte merged report; throttle byte (index 4) = 0x00
+            source.add_device(
+                HidDeviceInfo {
+                    vendor_id: flight_hid_support::device_support::THRUSTMASTER_VENDOR_ID,
+                    product_id: flight_hid_support::device_support::TFLIGHT_HOTAS_4_PID,
+                    serial_number: None,
+                    manufacturer: None,
+                    product_name: None,
+                    device_path: path.to_string(),
+                    usage_page: flight_hid_support::device_support::USAGE_PAGE_GENERIC_DESKTOP,
+                    usage: flight_hid_support::device_support::USAGE_JOYSTICK,
+                    report_descriptor: None,
+                },
+                vec![vec![0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00]],
+            );
+            let mut runtime = TFlightInputRuntime::start(
+                Box::new(source),
+                health,
+                TFlightRuntimeConfig {
+                    poll_hz: 100,
+                    yaw_policy: TFlightYawPolicy::Auto,
+                    throttle_inversion: inversion,
+                    strip_report_id: false,
+                },
+            );
+            let snapshots = wait_for_snapshot_count(&runtime, 1).await;
+            let throttle = snapshots
+                .values()
+                .next()
+                .map(|s| s.state.axes.throttle)
+                .unwrap_or(0.0);
+            runtime.shutdown().await;
+            throttle
+        }
+
+        let no_inv = throttle_for_config(false).await;
+        let with_inv = throttle_for_config(true).await;
+        // Throttle byte 0x00 → 0.0 without inversion, 1.0 with inversion (1 - value).
+        assert!(
+            (no_inv - 0.0).abs() < 0.05,
+            "raw throttle min should be ~0.0"
+        );
+        assert!(
+            (with_inv - 1.0).abs() < 0.05,
+            "inverted throttle min should be ~1.0"
+        );
     }
 }

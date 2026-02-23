@@ -10,6 +10,8 @@ repository.workspace = true
 description = "BDD traceability and microcrate coverage metric primitives."
 readme = "README.md"
 keywords = ["flight-sim", "openflight", "bdd", "coverage", "metrics"]
+# Intentionally not `categories.workspace = true`: workspace targets simulation/api-bindings,
+# but this crate is a dev-tool and should be discoverable under development-tools.
 categories = ["development-tools", "development-tools::testing"]
 
 [dependencies]

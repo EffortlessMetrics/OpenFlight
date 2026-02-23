@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Unified time bases and unit conversions across telemetry systems.
 - **Repository Health**:
     - Migrated to Rust 2024 Edition.
-    - Pinned MSRV to 1.89.0.
+    - Pinned MSRV to 1.92.0.
     - Hardened CI workflows with concurrency control and strict timeouts.
     - Standardized error code families (`INF-SCHEMA`, `INF-XREF`, etc.).
 - **Flight Core**:

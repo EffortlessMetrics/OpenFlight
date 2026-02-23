@@ -324,13 +324,46 @@ unsafe impl Sync for SimConnectApi {}
 impl SimConnectApi {
     /// Load SimConnect API (dynamic or static linking)
     pub fn new() -> Result<Self, SimConnectError> {
-        #[cfg(feature = "dynamic")]
+        #[cfg(all(feature = "dynamic", feature = "static", simconnect_static_available))]
+        {
+            Self::load_dynamic().or_else(|_| Self::load_static())
+        }
+
+        #[cfg(all(
+            feature = "dynamic",
+            feature = "static",
+            not(simconnect_static_available)
+        ))]
         {
             Self::load_dynamic()
         }
-        #[cfg(feature = "static")]
+
+        #[cfg(all(feature = "dynamic", not(feature = "static")))]
+        {
+            Self::load_dynamic()
+        }
+
+        #[cfg(all(
+            feature = "static",
+            not(feature = "dynamic"),
+            simconnect_static_available
+        ))]
         {
             Self::load_static()
+        }
+
+        #[cfg(all(
+            feature = "static",
+            not(feature = "dynamic"),
+            not(simconnect_static_available)
+        ))]
+        {
+            Err(SimConnectError::LibraryNotFound)
+        }
+
+        #[cfg(not(any(feature = "dynamic", feature = "static")))]
+        {
+            Err(SimConnectError::LibraryNotFound)
         }
     }
 
@@ -456,10 +489,10 @@ impl SimConnectApi {
         })
     }
 
-    #[cfg(feature = "static")]
+    #[cfg(all(feature = "static", simconnect_static_available))]
     fn load_static() -> Result<Self, SimConnectError> {
         // For static linking, function pointers are resolved at link time
-        extern "system" {
+        unsafe extern "system" {
             fn SimConnect_Open(
                 phSimConnect: *mut HSIMCONNECT,
                 szName: PCSTR,
@@ -520,6 +553,8 @@ impl SimConnectApi {
         }
 
         Ok(Self {
+            #[cfg(feature = "dynamic")]
+            _library: Default::default(),
             open: SimConnect_Open,
             close: SimConnect_Close,
             call_dispatch: SimConnect_CallDispatch,

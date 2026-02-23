@@ -1,6 +1,6 @@
 services:
   flight-service:
-    image: rust:1.89.0
+    image: rust:1.92.0
     container_name: flight-service-local
     working_dir: /workspace
     volumes:

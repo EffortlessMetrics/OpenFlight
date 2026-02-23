@@ -49,7 +49,7 @@ trend_significance_threshold = 5.0  # percent
 slack_enabled = true
 slack_channel = "#devsecops"
 
-# Email integration  
+# Email integration
 email_enabled = false
 email_smtp_server = ""
 email_from = "devsecops@company.com"
@@ -116,4 +116,4 @@ allow_git_dependencies = false
 # MSRV and edition enforcement
 validate_msrv_edition = true
 required_edition = "2024"
-required_rust_version = "1.89.0"
+required_rust_version = "1.92.0"

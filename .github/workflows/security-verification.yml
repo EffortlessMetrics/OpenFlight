@@ -25,9 +25,9 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy, rustfmt
-        
+
     - name: Cache Cargo dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
@@ -40,8 +40,8 @@ jobs:
           
     - name: Install security audit tools
       run: |
-        cargo install cargo-audit
-        cargo install cargo-deny
+        cargo +stable install --locked cargo-audit
+        cargo +stable install --locked cargo-deny
         
     - name: Run security audit
       run: cargo audit
@@ -58,6 +58,9 @@ jobs:
       run: |
         cargo test -p flight-core security
         cargo test -p flight-ipc
+
+    - name: Install nightly for scripts (no default switch)
+      run: rustup toolchain install nightly --profile minimal --no-self-update
         
     - name: Run custom security verification
       run: |
@@ -66,9 +69,12 @@ jobs:
         
     - name: Check for hardcoded secrets
       run: |
-        # Check for potential secrets in code
-        if grep -r -i "password\|secret\|key\|token" --include="*.rs" crates/ | grep -v "// " | grep -v "test"; then
-          echo "❌ Potential hardcoded secrets found"
+        echo "🔍 Scanning for likely hardcoded secrets..."
+        # Match likely credential assignments, not generic identifiers like map keys/tokens.
+        SECRET_PATTERN='(?i)(password|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*["'"'"'][^"'"'"']{8,}["'"'"']'
+        if rg -n --pcre2 --glob "*.rs" "$SECRET_PATTERN" crates/ \
+          | rg -v "test|example|development|mock|dummy|placeholder"; then
+          echo "❌ Potential hardcoded credential literals found"
           exit 1
         else
           echo "✅ No hardcoded secrets detected"
@@ -76,9 +82,11 @@ jobs:
         
     - name: Verify no network bindings in production code
       run: |
-        # Check for network bindings outside of development/test code
-        if grep -r "0\.0\.0\.0\|TcpListener\|bind.*:" --include="*.rs" crates/ | grep -v "test\|example\|development"; then
-          echo "❌ Network bindings found in production code"
+        echo "🔍 Checking for unexpected wildcard/network listeners..."
+        # Allow known network-facing adapters; fail on unexpected listeners elsewhere.
+        if rg -n --glob "*.rs" "0\\.0\\.0\\.0|TcpListener::bind\\(" crates/ \
+          | rg -v "test|example|development|crates/flight-dcs-export|crates/flight-xplane|crates/flight-streamdeck|crates/flight-tactile"; then
+          echo "❌ Unexpected network listeners found in non-network crates"
           exit 1
         else
           echo "✅ No unauthorized network bindings found"
@@ -119,7 +127,7 @@ jobs:
         echo "See deny-results.json for detailed dependency information" >> security-report.md
         
     - name: Upload security artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-verification-results

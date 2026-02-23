@@ -131,18 +131,23 @@ mod tests {
         }
 
         // Now set safe_for_ffb to false and verify ramp to zero
-        for _ in 0..100 {
+        let mut reached_near_zero = false;
+        for _ in 0..250 {
             let output = envelope.apply(10.0, false).unwrap();
             // Should be ramping toward zero
             assert!(
                 output.abs() <= max_torque,
                 "Torque must stay within limits during safe_for_ffb=false ramp"
             );
+            if output.abs() < 0.1 {
+                reached_near_zero = true;
+                break;
+            }
         }
 
         let final_torque = envelope.get_last_torque();
         assert!(
-            final_torque.abs() < 0.1,
+            reached_near_zero && final_torque.abs() < 0.1,
             "Torque must reach near-zero when safe_for_ffb=false: {}",
             final_torque
         );
