@@ -45,6 +45,7 @@ async fn main() -> anyhow::Result<()> {
             Arg::new("tflight-poll-hz")
                 .long("tflight-poll-hz")
                 .value_name("HZ")
+                .value_parser(clap::value_parser!(u16))
                 .help("T.Flight poll frequency in Hz [default: 250]"),
         )
         .arg(
@@ -92,8 +93,8 @@ async fn main() -> anyhow::Result<()> {
     if matches.get_flag("tflight-runtime") {
         config.enable_tflight_runtime = true;
     }
-    if let Some(hz) = matches.get_one::<String>("tflight-poll-hz") {
-        config.tflight_poll_hz = hz.parse::<u16>().unwrap_or(250);
+    if let Some(hz) = matches.get_one::<u16>("tflight-poll-hz") {
+        config.tflight_poll_hz = *hz;
     }
     if let Some(policy) = matches.get_one::<String>("tflight-yaw-policy") {
         config.tflight_yaw_policy = match policy.as_str() {

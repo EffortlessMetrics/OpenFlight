@@ -25,9 +25,12 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy, rustfmt
-        
+
+    - name: Install nightly for scripts
+      uses: dtolnay/rust-toolchain@nightly
+
     - name: Cache Cargo dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
@@ -119,7 +122,7 @@ jobs:
         echo "See deny-results.json for detailed dependency information" >> security-report.md
         
     - name: Upload security artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-verification-results

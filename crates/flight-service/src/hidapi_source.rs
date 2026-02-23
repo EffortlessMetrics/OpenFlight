@@ -18,7 +18,8 @@ use flight_hid_support::device_support::{
     USAGE_PAGE_GENERIC_DESKTOP,
 };
 use hidapi::{HidApi, HidDevice};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::ffi::CStr;
 use tracing::{debug, warn};
 
 use crate::input_runtime::TFlightReportSource;
@@ -57,6 +58,22 @@ impl HidApiTFlightReportSource {
         })
     }
 
+    fn path_key(path: &CStr) -> String {
+        match path.to_str() {
+            Ok(path) => path.to_owned(),
+            Err(_) => {
+                // Preserve uniqueness for non-UTF8 paths.
+                let bytes = path.to_bytes();
+                let mut hex = String::with_capacity(bytes.len() * 2);
+                for &byte in bytes {
+                    use std::fmt::Write;
+                    let _ = write!(&mut hex, "{byte:02x}");
+                }
+                format!("hidpath:{hex}")
+            }
+        }
+    }
+
     fn build_info(info: &hidapi::DeviceInfo) -> HidDeviceInfo {
         HidDeviceInfo {
             vendor_id: info.vendor_id(),
@@ -64,7 +81,7 @@ impl HidApiTFlightReportSource {
             serial_number: info.serial_number().map(str::to_owned),
             manufacturer: info.manufacturer_string().map(str::to_owned),
             product_name: info.product_string().map(str::to_owned),
-            device_path: info.path().to_str().unwrap_or("<non-utf8>").to_owned(),
+            device_path: Self::path_key(info.path()),
             usage_page: info.usage_page(),
             usage: info.usage(),
             // Descriptor capture is deferred; update via receipts.
@@ -89,28 +106,19 @@ impl TFlightReportSource for HidApiTFlightReportSource {
             return Vec::new();
         }
 
-        let found: Vec<HidDeviceInfo> = self
-            .api
-            .device_list()
-            .filter(|d| Self::is_tflight(d))
-            .map(Self::build_info)
-            .collect();
-
-        // Remove handles for devices that are no longer present.
-        self.open_devices
-            .retain(|path, _| found.iter().any(|d| &d.device_path == path));
+        let mut found = Vec::new();
+        let mut present_paths = HashSet::new();
 
         // Open handles for newly discovered devices.
-        for device_info in &found {
+        for info in self.api.device_list().filter(|d| Self::is_tflight(d)) {
+            let device_info = Self::build_info(info);
+            present_paths.insert(device_info.device_path.clone());
+
             if self.open_devices.contains_key(&device_info.device_path) {
+                found.push(device_info);
                 continue;
             }
-            match self.api.open_path(
-                std::ffi::CStr::from_bytes_with_nul(
-                    (device_info.device_path.clone() + "\0").as_bytes(),
-                )
-                .unwrap_or_default(),
-            ) {
+            match self.api.open_path(info.path()) {
                 Ok(handle) => {
                     debug!(
                         target: "input_hotas_tflight",
@@ -128,7 +136,12 @@ impl TFlightReportSource for HidApiTFlightReportSource {
                     );
                 }
             }
+            found.push(device_info);
         }
+
+        // Remove handles for devices that are no longer present.
+        self.open_devices
+            .retain(|path, _| present_paths.contains(path));
 
         found
     }

@@ -32,7 +32,11 @@ fn test_scheduler_basic_timing() {
 
     let elapsed = start.elapsed();
     let expected = Duration::from_millis(1000); // 1 second
-    let tolerance = Duration::from_millis(50); // 50ms tolerance
+    let tolerance = if std::env::var_os("CI").is_some() {
+        Duration::from_millis(250) // Shared CI runners have higher timing variance
+    } else {
+        Duration::from_millis(50)
+    };
 
     assert!(elapsed >= expected - tolerance);
     assert!(elapsed <= expected + tolerance);

@@ -104,6 +104,7 @@ pub enum DInputError {
     #[error("DirectInput not available")]
     DirectInputNotAvailable,
 
+    #[cfg(windows)]
     #[error("Windows API error: {0:?}")]
     WindowsError(#[from] windows::core::Error),
 }
