@@ -7,7 +7,7 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "VKB STECS HOTAS driver support for OpenFlight."
+description = "VKB family input driver support for OpenFlight."
 readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "hotas", "vkb"]
@@ -21,4 +21,3 @@ default = []
 [dependencies]
 flight-hid-support = { path = "../flight-hid-support" }
 thiserror.workspace = true
-

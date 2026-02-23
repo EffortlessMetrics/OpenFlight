@@ -660,7 +660,15 @@ const TFLIGHT_MAPPING_MERGED: [ControlBinding; 4] = [
     },
 ];
 
+const VKB_GLADIATOR_CONTROL_MAP_SCHEMA: &str = "flight.device-map/1";
 const VKB_STECS_CONTROL_MAP_SCHEMA: &str = "flight.device-map/1";
+const VKB_GLADIATOR_NOTES: [&str; 5] = [
+    "SCG map is descriptor-first; axis labels are semantic hints, not fixed firmware contracts.",
+    "The mini-stick can toggle between POV mode and analog X/Y axes via center push.",
+    "A1 hat mode behavior (8-way vs alternate 4-way) is profile-dependent in VKBDevCfg.",
+    "Firmware may expose extra axes through additional HID interfaces/devices to stay within legacy DirectInput limits.",
+    "Gladiator NXT EVO hardware has no force-feedback motor output channel.",
+];
 const VKB_STECS_NOTES: [&str; 3] = [
     "Button/axis labels are derived from Elite Dangerous buttonMap files.",
     "VKBDevCfg profiles can remap buttons, encoders, and virtual buttons.",
@@ -1892,6 +1900,95 @@ const VKB_STECS_RIGHT_STANDARD_CONTROL_MAP: DeviceControlMap = DeviceControlMap 
     notes: &VKB_STECS_NOTES,
 };
 
+const VKB_GLADIATOR_RIGHT_SCG_AXES: [AxisControl; 8] = [
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "RSCG Stick X (Roll)",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "RSCG Stick Y (Pitch)",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "RSCG Twist (Yaw)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider0,
+        name: "RSCG Base Throttle Wheel",
+    },
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "RSCG Mini-stick X (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "RSCG Mini-stick Y (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Rz,
+        name: "RSCG Analog Trigger 1 (Profile)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider1,
+        name: "RSCG Analog Trigger 2 (Profile)",
+    },
+];
+
+const VKB_GLADIATOR_LEFT_SCG_AXES: [AxisControl; 8] = [
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "LSCG Stick X (Roll)",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "LSCG Stick Y (Pitch)",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "LSCG Twist (Yaw)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider0,
+        name: "LSCG Base Throttle Wheel",
+    },
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "LSCG Mini-stick X (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "LSCG Mini-stick Y (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Rz,
+        name: "LSCG Analog Trigger 1 (Profile)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider1,
+        name: "LSCG Analog Trigger 2 (Profile)",
+    },
+];
+
+const VKB_GLADIATOR_BUTTONS: [ButtonControl; 0] = [];
+const VKB_GLADIATOR_ENCODERS: [EncoderControl; 0] = [];
+
+const VKB_GLADIATOR_RIGHT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_GLADIATOR_CONTROL_MAP_SCHEMA,
+    axes: &VKB_GLADIATOR_RIGHT_SCG_AXES,
+    buttons: &VKB_GLADIATOR_BUTTONS,
+    encoders: &VKB_GLADIATOR_ENCODERS,
+    notes: &VKB_GLADIATOR_NOTES,
+};
+
+const VKB_GLADIATOR_LEFT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_GLADIATOR_CONTROL_MAP_SCHEMA,
+    axes: &VKB_GLADIATOR_LEFT_SCG_AXES,
+    buttons: &VKB_GLADIATOR_BUTTONS,
+    encoders: &VKB_GLADIATOR_ENCODERS,
+    notes: &VKB_GLADIATOR_NOTES,
+};
+
 pub fn tflight_default_mapping(axis_mode: AxisMode) -> DefaultMapping {
     match axis_mode {
         AxisMode::Merged => DefaultMapping {
@@ -1919,6 +2016,13 @@ pub fn is_vkb_gladiator_device(device_info: &HidDeviceInfo) -> bool {
     vkb_gladiator_variant(device_info).is_some()
 }
 
+pub fn vkb_gladiator_control_map(variant: VkbGladiatorVariant) -> &'static DeviceControlMap {
+    match variant {
+        VkbGladiatorVariant::NxtEvoRight => &VKB_GLADIATOR_RIGHT_CONTROL_MAP,
+        VkbGladiatorVariant::NxtEvoLeft => &VKB_GLADIATOR_LEFT_CONTROL_MAP,
+    }
+}
+
 pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant> {
     if device_info.vendor_id != VKB_VENDOR_ID {
         return None;
@@ -1941,6 +2045,19 @@ pub fn is_vkb_stecs_device(device_info: &HidDeviceInfo) -> bool {
     vkb_stecs_variant(device_info).is_some()
 }
 
+/// Per-interface metadata for VKB Gladiator multi-interface layouts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct VkbGladiatorInterfaceMetadata {
+    /// HID path for this interface.
+    pub device_path: String,
+    /// Stable physical device identifier (serial when available).
+    pub physical_id: String,
+    /// Zero-based interface index in sorted path order.
+    pub interface_index: u8,
+    /// Number of HID interfaces discovered for the physical device.
+    pub interface_count: u8,
+}
+
 /// Per-interface metadata for VKB STECS virtual-controller layouts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct VkbStecsInterfaceMetadata {
@@ -1954,11 +2071,87 @@ pub struct VkbStecsInterfaceMetadata {
     pub interface_count: u8,
 }
 
-fn stecs_path_group_key(device_path: &str) -> String {
-    if let Some((base, _)) = device_path.split_once("#if") {
-        return base.to_ascii_lowercase();
+fn vkb_path_group_key(device_path: &str) -> String {
+    let mut normalized = if let Some((base, _)) = device_path.split_once("#if") {
+        base.to_ascii_lowercase()
+    } else {
+        device_path.to_ascii_lowercase()
+    };
+
+    if let Some(mi_pos) = normalized.find("&mi_")
+        && normalized
+            .get(mi_pos + 4..mi_pos + 6)
+            .is_some_and(|suffix| suffix.chars().all(|ch| ch.is_ascii_hexdigit()))
+    {
+        normalized.replace_range(mi_pos..mi_pos + 6, "");
     }
-    device_path.to_ascii_lowercase()
+
+    normalized
+}
+
+/// Build a stable physical-device id for Gladiator interfaces.
+///
+/// Serial number is preferred because it survives re-enumeration across ports.
+/// If serial is unavailable, a normalized HID path stem is used.
+pub fn vkb_gladiator_physical_id(device_info: &HidDeviceInfo) -> Option<String> {
+    if !is_vkb_gladiator_device(device_info) {
+        return None;
+    }
+
+    if let Some(serial) = device_info
+        .serial_number
+        .as_deref()
+        .map(str::trim)
+        .filter(|serial| !serial.is_empty())
+    {
+        return Some(format!(
+            "vkb-gladiator:{:04x}:{:04x}:{}",
+            device_info.vendor_id,
+            device_info.product_id,
+            serial.to_ascii_lowercase()
+        ));
+    }
+
+    Some(format!(
+        "vkb-gladiator:path:{}",
+        vkb_path_group_key(&device_info.device_path)
+    ))
+}
+
+/// Compute Gladiator interface ordering metadata for a device set.
+///
+/// Interfaces are grouped by physical id and sorted by HID path to provide
+/// deterministic indexing (`IF0`, `IF1`, ...).
+pub fn vkb_gladiator_interface_metadata<'a, I>(devices: I) -> Vec<VkbGladiatorInterfaceMetadata>
+where
+    I: IntoIterator<Item = &'a HidDeviceInfo>,
+{
+    let mut groups: BTreeMap<String, Vec<&HidDeviceInfo>> = BTreeMap::new();
+
+    for device in devices {
+        let Some(physical_id) = vkb_gladiator_physical_id(device) else {
+            continue;
+        };
+        groups.entry(physical_id).or_default().push(device);
+    }
+
+    let mut metadata = Vec::new();
+    for (physical_id, mut interfaces) in groups {
+        interfaces.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+        let interface_count = u8::try_from(interfaces.len()).unwrap_or(u8::MAX);
+
+        for (index, interface) in interfaces.iter().enumerate() {
+            metadata.push(VkbGladiatorInterfaceMetadata {
+                device_path: interface.device_path.clone(),
+                physical_id: physical_id.clone(),
+                interface_index: u8::try_from(index).unwrap_or(u8::MAX),
+                interface_count,
+            });
+        }
+    }
+
+    metadata.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+    metadata
 }
 
 /// Build a stable physical-device id for STECS interfaces.
@@ -1986,7 +2179,7 @@ pub fn vkb_stecs_physical_id(device_info: &HidDeviceInfo) -> Option<String> {
 
     Some(format!(
         "vkb-stecs:path:{}",
-        stecs_path_group_key(&device_info.device_path)
+        vkb_path_group_key(&device_info.device_path)
     ))
 }
 
@@ -2285,6 +2478,40 @@ mod tests {
     }
 
     #[test]
+    fn test_vkb_gladiator_control_map_contents() {
+        let control_map = vkb_gladiator_control_map(VkbGladiatorVariant::NxtEvoRight);
+        assert_eq!(control_map.schema, "flight.device-map/1");
+        assert_eq!(control_map.axes.len(), 8);
+        assert!(
+            control_map
+                .axes
+                .iter()
+                .any(|axis| axis.usage == AxisUsage::Rx && axis.name.contains("Mini-stick X"))
+        );
+        assert!(
+            control_map.axes.iter().any(
+                |axis| axis.usage == AxisUsage::Slider0 && axis.name.contains("Throttle Wheel")
+            )
+        );
+        assert!(control_map.buttons.is_empty());
+        assert!(control_map.encoders.is_empty());
+        assert!(
+            control_map
+                .notes
+                .iter()
+                .any(|note| note.contains("descriptor-first"))
+        );
+
+        let left_map = vkb_gladiator_control_map(VkbGladiatorVariant::NxtEvoLeft);
+        assert!(
+            left_map
+                .axes
+                .iter()
+                .any(|axis| axis.name.starts_with("LSCG"))
+        );
+    }
+
+    #[test]
     fn test_vkb_stecs_control_map_contents() {
         let control_map = vkb_stecs_control_map(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus);
         assert_eq!(control_map.schema, "flight.device-map/1");
@@ -2333,6 +2560,26 @@ mod tests {
     }
 
     #[test]
+    fn test_vkb_gladiator_interface_metadata_groups_by_serial() {
+        let mut if0 = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        if0.serial_number = Some("SCG-ABC123".to_string());
+        if0.device_path = r"\\?\hid#vid_231d&pid_0200&mi_00#7".to_string();
+
+        let mut if1 = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        if1.serial_number = Some("SCG-ABC123".to_string());
+        if1.device_path = r"\\?\hid#vid_231d&pid_0200&mi_01#7".to_string();
+
+        let metadata = vkb_gladiator_interface_metadata([&if1, &if0]);
+        assert_eq!(metadata.len(), 2);
+
+        assert_eq!(metadata[0].interface_index, 0);
+        assert_eq!(metadata[1].interface_index, 1);
+        assert_eq!(metadata[0].interface_count, 2);
+        assert_eq!(metadata[1].interface_count, 2);
+        assert_eq!(metadata[0].physical_id, metadata[1].physical_id);
+    }
+
+    #[test]
     fn test_vkb_stecs_physical_id_falls_back_to_path_stem() {
         let mut device = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PLUS_PID);
         device.serial_number = None;
@@ -2341,6 +2588,18 @@ mod tests {
         assert_eq!(
             vkb_stecs_physical_id(&device),
             Some("vkb-stecs:path:/dev/hidraw3".to_string())
+        );
+    }
+
+    #[test]
+    fn test_vkb_gladiator_physical_id_falls_back_to_path_stem() {
+        let mut device = vkb_device(VKB_GLADIATOR_NXT_EVO_LEFT_PID);
+        device.serial_number = None;
+        device.device_path = r"\\?\hid#vid_231d&pid_0201&mi_01#7".to_string();
+
+        assert_eq!(
+            vkb_gladiator_physical_id(&device),
+            Some(r"vkb-gladiator:path:\\?\hid#vid_231d&pid_0201#7".to_string())
         );
     }
 

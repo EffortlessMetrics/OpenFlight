@@ -148,6 +148,7 @@ impl DeviceManager for HidDeviceManager {
 
         let device_infos = adapter.get_all_devices();
         let stecs_metadata_overlays = stecs_metadata_overlays(&device_infos);
+        let gladiator_metadata_overlays = gladiator_metadata_overlays(&device_infos);
 
         let mut devices = Vec::new();
         for device_info in device_infos {
@@ -161,6 +162,11 @@ impl DeviceManager for HidDeviceManager {
             let mut metadata = build_device_metadata(device_info);
             if let Some(stecs_overlay) = stecs_metadata_overlays.get(&device_info.device_path) {
                 metadata.extend(stecs_overlay.clone());
+            }
+            if let Some(gladiator_overlay) =
+                gladiator_metadata_overlays.get(&device_info.device_path)
+            {
+                metadata.extend(gladiator_overlay.clone());
             }
 
             let device = Device {
@@ -234,6 +240,46 @@ fn stecs_metadata_overlays(
         overlays.insert(
             metadata.device_path.clone(),
             stecs_metadata_overlay(&metadata),
+        );
+    }
+    overlays
+}
+
+fn gladiator_metadata_overlay(
+    metadata: &device_support::VkbGladiatorInterfaceMetadata,
+) -> HashMap<String, String> {
+    let mut overlay = HashMap::new();
+    overlay.insert(
+        "gladiator.physical_id".to_string(),
+        metadata.physical_id.clone(),
+    );
+    overlay.insert(
+        "gladiator.interface_index".to_string(),
+        metadata.interface_index.to_string(),
+    );
+    overlay.insert(
+        "gladiator.interface".to_string(),
+        format!("IF{}", metadata.interface_index),
+    );
+    overlay.insert(
+        "gladiator.interface_count".to_string(),
+        metadata.interface_count.to_string(),
+    );
+    overlay.insert(
+        "gladiator.multi_interface".to_string(),
+        (metadata.interface_count > 1).to_string(),
+    );
+    overlay
+}
+
+fn gladiator_metadata_overlays(
+    devices: &[&flight_hid::HidDeviceInfo],
+) -> HashMap<String, HashMap<String, String>> {
+    let mut overlays = HashMap::new();
+    for metadata in device_support::vkb_gladiator_interface_metadata(devices.iter().copied()) {
+        overlays.insert(
+            metadata.device_path.clone(),
+            gladiator_metadata_overlay(&metadata),
         );
     }
     overlays
@@ -361,6 +407,12 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
             "vkb-gladiator-nxt-evo".to_string(),
         );
         metadata.insert("model".to_string(), model.name().to_string());
+
+        let control_map = device_support::vkb_gladiator_control_map(model);
+        if let Ok(json) = serde_json::to_string(control_map) {
+            metadata.insert("control_map".to_string(), json);
+        }
+
         if let Some(product_name) = device_info.product_name.as_deref()
             && product_name.to_lowercase().contains("omni")
         {
@@ -768,6 +820,87 @@ mod tests {
         assert_eq!(
             first.get("stecs.interface_count").map(String::as_str),
             Some("2")
+        );
+    }
+
+    #[test]
+    fn test_gladiator_metadata_includes_control_map() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+            serial_number: Some("SCG-RIGHT-1".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB Gladiator NXT EVO Right".to_string()),
+            device_path: "/dev/test-gladiator-right".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("device_family").map(String::as_str),
+            Some("vkb-gladiator-nxt-evo")
+        );
+
+        let control_map = metadata
+            .get("control_map")
+            .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok())
+            .expect("control_map metadata should be valid JSON");
+
+        assert_eq!(
+            control_map
+                .get("schema")
+                .and_then(serde_json::Value::as_str),
+            Some("flight.device-map/1")
+        );
+        assert_eq!(
+            control_map
+                .get("axes")
+                .and_then(serde_json::Value::as_array)
+                .map(Vec::len),
+            Some(8)
+        );
+    }
+
+    #[test]
+    fn test_gladiator_metadata_overlays_include_interface_details() {
+        let if0 = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+            serial_number: Some("SCG-SERIAL".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB Gladiator NXT EVO Left".to_string()),
+            device_path: r"\\?\hid#vid_231d&pid_0201&mi_00#7".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let mut if1 = if0.clone();
+        if1.device_path = r"\\?\hid#vid_231d&pid_0201&mi_01#7".to_string();
+
+        let overlays = gladiator_metadata_overlays(&[&if0, &if1]);
+        assert_eq!(overlays.len(), 2);
+
+        let first = overlays.get(&if0.device_path).expect("if0 overlay");
+        let second = overlays.get(&if1.device_path).expect("if1 overlay");
+
+        assert_eq!(
+            first.get("gladiator.interface_index").map(String::as_str),
+            Some("0")
+        );
+        assert_eq!(
+            second.get("gladiator.interface_index").map(String::as_str),
+            Some("1")
+        );
+        assert_eq!(
+            first.get("gladiator.interface_count").map(String::as_str),
+            Some("2")
+        );
+        assert_eq!(
+            first.get("gladiator.multi_interface").map(String::as_str),
+            Some("true")
         );
     }
 }
