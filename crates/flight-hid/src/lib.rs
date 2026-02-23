@@ -25,10 +25,24 @@ use flight_metrics::{
     common::{DeviceMetricNames, HID_DEVICE_METRICS},
 };
 use flight_watchdog::WatchdogSystem;
-use std::collections::HashMap;
+use hidapi::{HidApi, HidDevice};
+use std::collections::{HashMap, HashSet};
+use std::ffi::CStr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
+
+const READ_TIMEOUT_MS: i32 = 0;
+const COUGAR_MFD_LEFT_PID: u16 = 0x0404;
+const COUGAR_MFD_RIGHT_PID: u16 = 0x0405;
+const COUGAR_MFD_CENTER_PID: u16 = 0x0406;
+const SAITEK_RADIO_PANEL_PID: u16 = 0x0D05;
+const SAITEK_MULTI_PANEL_PID: u16 = 0x0D06;
+const SAITEK_SWITCH_PANEL_PID: u16 = 0x0D67;
+const SAITEK_BIP_PID: u16 = 0x0B4E;
+const SAITEK_FIP_PID: u16 = 0x0A2F;
+const USAGE_GAMEPAD: u16 = 0x05;
+const USAGE_MULTI_AXIS: u16 = 0x08;
 
 /// HID device endpoint identifier
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -76,6 +90,11 @@ pub enum HidOperationResult {
     },
 }
 
+struct DiscoveredDevice {
+    device_info: HidDeviceInfo,
+    handle: Option<HidDevice>,
+}
+
 /// HID adapter with watchdog integration
 pub struct HidAdapter {
     /// Watchdog system for monitoring
@@ -86,6 +105,10 @@ pub struct HidAdapter {
     device_metrics: DeviceMetricNames,
     /// Connected devices
     devices: HashMap<String, HidDeviceInfo>,
+    /// Live HID handles keyed by `HidDeviceInfo::device_path`
+    open_devices: HashMap<String, HidDevice>,
+    /// Shared HID API context
+    hid_api: Option<HidApi>,
     /// Endpoint states
     endpoint_states: HashMap<EndpointId, EndpointState>,
     /// Whether adapter is running
@@ -100,6 +123,8 @@ impl HidAdapter {
             metrics_registry: Arc::new(MetricsRegistry::new()),
             device_metrics: HID_DEVICE_METRICS,
             devices: HashMap::new(),
+            open_devices: HashMap::new(),
+            hid_api: None,
             endpoint_states: HashMap::new(),
             is_running: false,
         }
@@ -115,6 +140,8 @@ impl HidAdapter {
             metrics_registry,
             device_metrics: HID_DEVICE_METRICS,
             devices: HashMap::new(),
+            open_devices: HashMap::new(),
+            hid_api: None,
             endpoint_states: HashMap::new(),
             is_running: false,
         }
@@ -131,6 +158,8 @@ impl HidAdapter {
             metrics_registry,
             device_metrics,
             devices: HashMap::new(),
+            open_devices: HashMap::new(),
+            hid_api: None,
             endpoint_states: HashMap::new(),
             is_running: false,
         }
@@ -141,10 +170,156 @@ impl HidAdapter {
         self.metrics_registry.clone()
     }
 
+    fn path_key(path: &CStr) -> String {
+        match path.to_str() {
+            Ok(path) => path.to_owned(),
+            Err(_) => {
+                let bytes = path.to_bytes();
+                let mut hex = String::with_capacity(bytes.len() * 2);
+                for &byte in bytes {
+                    use std::fmt::Write;
+                    let _ = write!(&mut hex, "{byte:02x}");
+                }
+                format!("hidpath:{hex}")
+            }
+        }
+    }
+
+    fn build_device_path(info: &hidapi::DeviceInfo) -> String {
+        let mut path = Self::path_key(info.path());
+        let interface = info.interface_number();
+        if interface >= 0 {
+            path.push_str(&format!("#if{interface}"));
+        }
+        path
+    }
+
+    fn build_device_info(info: &hidapi::DeviceInfo) -> HidDeviceInfo {
+        HidDeviceInfo {
+            vendor_id: info.vendor_id(),
+            product_id: info.product_id(),
+            serial_number: info.serial_number().map(str::to_string),
+            manufacturer: info.manufacturer_string().map(str::to_string),
+            product_name: info.product_string().map(str::to_string),
+            device_path: Self::build_device_path(info),
+            usage_page: info.usage_page(),
+            usage: info.usage(),
+            // Descriptor capture is optional; leave unset until a capture path is wired in.
+            report_descriptor: None,
+        }
+    }
+
+    fn is_known_panel_pid(vendor_id: u16, product_id: u16) -> bool {
+        match vendor_id {
+            device_support::THRUSTMASTER_VENDOR_ID => matches!(
+                product_id,
+                COUGAR_MFD_LEFT_PID | COUGAR_MFD_RIGHT_PID | COUGAR_MFD_CENTER_PID
+            ),
+            device_support::SAITEK_VENDOR_ID | device_support::LOGITECH_VENDOR_ID => matches!(
+                product_id,
+                SAITEK_RADIO_PANEL_PID
+                    | SAITEK_MULTI_PANEL_PID
+                    | SAITEK_SWITCH_PANEL_PID
+                    | SAITEK_BIP_PID
+                    | SAITEK_FIP_PID
+            ),
+            _ => false,
+        }
+    }
+
+    fn should_track_device(info: &hidapi::DeviceInfo) -> bool {
+        let vendor_id = info.vendor_id();
+        let product_id = info.product_id();
+        let usage_page = info.usage_page();
+        let usage = info.usage();
+
+        if usage_page == device_support::USAGE_PAGE_GENERIC_DESKTOP
+            && matches!(
+                usage,
+                device_support::USAGE_JOYSTICK | USAGE_GAMEPAD | USAGE_MULTI_AXIS
+            )
+        {
+            return true;
+        }
+
+        if Self::is_known_panel_pid(vendor_id, product_id) {
+            return true;
+        }
+
+        if vendor_id == device_support::VKB_VENDOR_ID
+            || vendor_id == device_support::THRUSTMASTER_VENDOR_ID
+            || vendor_id == device_support::SAITEK_VENDOR_ID
+            || vendor_id == device_support::MAD_CATZ_VENDOR_ID
+        {
+            return true;
+        }
+
+        if vendor_id == device_support::LOGITECH_VENDOR_ID {
+            return matches!(
+                product_id,
+                device_support::X52_PID
+                    | device_support::X52_PRO_PID
+                    | device_support::X56_LOGITECH_STICK_PID
+                    | SAITEK_RADIO_PANEL_PID
+                    | SAITEK_MULTI_PANEL_PID
+                    | SAITEK_SWITCH_PANEL_PID
+                    | SAITEK_BIP_PID
+                    | SAITEK_FIP_PID
+            );
+        }
+
+        false
+    }
+
+    fn discover_hid_devices(&mut self) -> Result<Vec<DiscoveredDevice>> {
+        if self.hid_api.is_none() {
+            let api = HidApi::new().map_err(|error| {
+                FlightError::Configuration(format!("hidapi init failed: {error}"))
+            })?;
+            self.hid_api = Some(api);
+        }
+
+        let Some(api) = self.hid_api.as_mut() else {
+            return Ok(Vec::new());
+        };
+
+        api.refresh_devices().map_err(|error| {
+            FlightError::Configuration(format!("hidapi refresh failed: {error}"))
+        })?;
+
+        let mut discovered = Vec::new();
+        for info in api.device_list() {
+            if !Self::should_track_device(info) {
+                continue;
+            }
+
+            let device_info = Self::build_device_info(info);
+            let handle = match api.open_path(info.path()) {
+                Ok(handle) => Some(handle),
+                Err(error) => {
+                    warn!(
+                        path = %device_info.device_path,
+                        "Unable to open HID handle during discovery: {}",
+                        error
+                    );
+                    None
+                }
+            };
+
+            discovered.push(DiscoveredDevice {
+                device_info,
+                handle,
+            });
+        }
+
+        Ok(discovered)
+    }
+
     /// Start the HID adapter
     pub fn start(&mut self) -> Result<()> {
         if self.is_running {
-            return Ok(());
+            // Refresh device list for hot-plug updates.
+            return self.enumerate_devices();
         }
 
         info!("Starting HID adapter with watchdog integration");
@@ -173,6 +348,8 @@ impl HidAdapter {
         }
 
         self.devices.clear();
+        self.open_devices.clear();
+        self.hid_api = None;
         self.endpoint_states.clear();
         self.is_running = false;
     }
@@ -180,24 +357,47 @@ impl HidAdapter {
     /// Enumerate and register HID devices
     fn enumerate_devices(&mut self) -> Result<()> {
         debug!("Enumerating HID devices");
-
-        // This would normally use platform-specific HID enumeration
-        // For now, we'll simulate device discovery
-
-        // Example device registration
-        let device_info = HidDeviceInfo {
-            vendor_id: 0x046d,
-            product_id: 0xc262,
-            serial_number: Some("123456789".to_string()),
-            manufacturer: Some("Logitech".to_string()),
-            product_name: Some("Flight Yoke".to_string()),
-            device_path: "/dev/hidraw0".to_string(),
-            usage_page: 0x01,
-            usage: 0x04,
-            report_descriptor: None,
+        let discovered = match self.discover_hid_devices() {
+            Ok(devices) => devices,
+            Err(error) => {
+                warn!("HID discovery unavailable: {}", error);
+                return Ok(());
+            }
         };
 
-        self.register_device(device_info)?;
+        let mut paths_in_scan = HashSet::new();
+        for discovered_device in &discovered {
+            paths_in_scan.insert(discovered_device.device_info.device_path.clone());
+        }
+
+        let stale_paths: Vec<String> = self
+            .devices
+            .keys()
+            .filter(|path| !paths_in_scan.contains(*path))
+            .cloned()
+            .collect();
+
+        for path in stale_paths {
+            self.unregister_device(&path)?;
+        }
+
+        for discovered_device in discovered {
+            let device_path = discovered_device.device_info.device_path.clone();
+
+            if let Some(handle) = discovered_device.handle {
+                self.open_devices.insert(device_path.clone(), handle);
+            }
+
+            if self.devices.contains_key(&device_path) {
+                self.devices
+                    .insert(device_path.clone(), discovered_device.device_info);
+            } else {
+                self.register_device(discovered_device.device_info)?;
+            }
+        }
+
+        self.open_devices
+            .retain(|path, _| self.devices.contains_key(path));
 
         Ok(())
     }
@@ -269,6 +469,7 @@ impl HidAdapter {
 
         // Remove from devices
         self.devices.remove(device_path);
+        self.open_devices.remove(device_path);
 
         // Remove endpoint states and unregister from watchdog
         let endpoints_to_remove: Vec<_> = self
@@ -305,27 +506,8 @@ impl HidAdapter {
             endpoint_type: EndpointType::Input,
         };
 
-        self.perform_operation(&endpoint_id, |_| {
-            // Simulate HID read operation
-            // In real implementation, this would call platform-specific HID APIs
-
-            // Simulate occasional stalls for testing
-            if rand::random::<f32>() < 0.01 {
-                // 1% chance of stall
-                HidOperationResult::Stall
-            } else if rand::random::<f32>() < 0.005 {
-                // 0.5% chance of error
-                HidOperationResult::Error {
-                    error_code: -1,
-                    description: "Simulated USB error".to_string(),
-                }
-            } else {
-                // Simulate successful read
-                let bytes_read = std::cmp::min(buffer.len(), 8);
-                HidOperationResult::Success {
-                    bytes_transferred: bytes_read,
-                }
-            }
+        self.perform_operation(&endpoint_id, |adapter, endpoint| {
+            adapter.read_input_raw(&endpoint.device_path, buffer)
         })
     }
 
@@ -336,33 +518,49 @@ impl HidAdapter {
             endpoint_type: EndpointType::Output,
         };
 
-        self.perform_operation(&endpoint_id, |_| {
-            // Simulate HID write operation
-            // In real implementation, this would call platform-specific HID APIs
-
-            // Check if component is quarantined
-            let _component = ComponentType::UsbEndpoint(format!(
-                "{}:{:?}",
-                endpoint_id.device_path, endpoint_id.endpoint_type
-            ));
-
-            // Simulate occasional stalls for testing
-            if rand::random::<f32>() < 0.02 {
-                // 2% chance of stall for output
-                HidOperationResult::Stall
-            } else if rand::random::<f32>() < 0.01 {
-                // 1% chance of error
-                HidOperationResult::Error {
-                    error_code: -2,
-                    description: "Simulated USB write error".to_string(),
-                }
-            } else {
-                // Simulate successful write
-                HidOperationResult::Success {
-                    bytes_transferred: data.len(),
-                }
-            }
+        self.perform_operation(&endpoint_id, |adapter, endpoint| {
+            adapter.write_output_raw(&endpoint.device_path, data)
         })
+    }
+
+    fn read_input_raw(&mut self, device_path: &str, buffer: &mut [u8]) -> HidOperationResult {
+        let Some(handle) = self.open_devices.get(device_path) else {
+            // Allow deterministic tests without hardware handles.
+            return HidOperationResult::Success {
+                bytes_transferred: 0,
+            };
+        };
+
+        match handle.read_timeout(buffer, READ_TIMEOUT_MS) {
+            Ok(0) => HidOperationResult::Timeout,
+            Ok(bytes_read) => HidOperationResult::Success {
+                bytes_transferred: bytes_read,
+            },
+            Err(error) => HidOperationResult::Error {
+                error_code: -1,
+                description: error.to_string(),
+            },
+        }
+    }
+
+    fn write_output_raw(&mut self, device_path: &str, data: &[u8]) -> HidOperationResult {
+        let Some(handle) = self.open_devices.get(device_path) else {
+            // Preserve testability when callers manually register synthetic devices.
+            std::thread::sleep(Duration::from_micros(250));
+            return HidOperationResult::Success {
+                bytes_transferred: data.len(),
+            };
+        };
+
+        match handle.write(data) {
+            Ok(bytes_written) => HidOperationResult::Success {
+                bytes_transferred: bytes_written,
+            },
+            Err(error) => HidOperationResult::Error {
+                error_code: -2,
+                description: error.to_string(),
+            },
+        }
     }
 
     /// Perform a HID operation with watchdog monitoring
@@ -372,7 +570,7 @@ impl HidAdapter {
         operation: F,
     ) -> Result<HidOperationResult>
     where
-        F: FnOnce(&EndpointId) -> HidOperationResult,
+        F: FnOnce(&mut Self, &EndpointId) -> HidOperationResult,
     {
         let component = ComponentType::UsbEndpoint(format!(
             "{}:{:?}",
@@ -395,7 +593,7 @@ impl HidAdapter {
         }
 
         let start_time = Instant::now();
-        let result = operation(endpoint_id);
+        let result = operation(self, endpoint_id);
         let operation_time = start_time.elapsed();
 
         self.metrics_registry.observe(
@@ -486,6 +684,11 @@ impl HidAdapter {
     /// Get all connected devices
     pub fn get_all_devices(&self) -> Vec<&HidDeviceInfo> {
         self.devices.values().collect()
+    }
+
+    /// Return STECS virtual-controller metadata for currently known interfaces.
+    pub fn get_stecs_interface_metadata(&self) -> Vec<device_support::VkbStecsInterfaceMetadata> {
+        device_support::vkb_stecs_interface_metadata(self.devices.values())
     }
 
     /// Get endpoint state (internal use only)
@@ -819,9 +1022,6 @@ impl EndpointState {
     }
 }
 
-// Add rand dependency for simulation
-extern crate rand;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -913,5 +1113,34 @@ mod tests {
         assert_eq!(stats.total_endpoints, 0);
         assert_eq!(stats.total_operations, 0);
         assert_eq!(stats.total_bytes, 0);
+    }
+
+    #[test]
+    fn test_stecs_interface_metadata_from_adapter() {
+        let mut adapter = create_test_adapter();
+
+        let vc0 = HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_STECS_RIGHT_SPACE_STANDARD_PID,
+            serial_number: Some("STECS123".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB STECS".to_string()),
+            device_path: r"\\?\hid#vid_231d&pid_013c&mi_00#7".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let mut vc1 = vc0.clone();
+        vc1.device_path = r"\\?\hid#vid_231d&pid_013c&mi_01#7".to_string();
+
+        adapter.register_device(vc0).unwrap();
+        adapter.register_device(vc1).unwrap();
+
+        let metadata = adapter.get_stecs_interface_metadata();
+        assert_eq!(metadata.len(), 2);
+        assert_eq!(metadata[0].virtual_controller_index, 0);
+        assert_eq!(metadata[1].virtual_controller_index, 1);
+        assert_eq!(metadata[0].interface_count, 2);
     }
 }

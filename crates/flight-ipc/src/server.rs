@@ -146,13 +146,21 @@ impl DeviceManager for HidDeviceManager {
             .start()
             .map_err(|e| Status::internal(format!("HID adapter start failed: {}", e)))?;
 
+        let device_infos = adapter.get_all_devices();
+        let stecs_metadata_overlays = stecs_metadata_overlays(&device_infos);
+
         let mut devices = Vec::new();
-        for device_info in adapter.get_all_devices() {
+        for device_info in device_infos {
             let device_type = classify_device_type(device_info);
             if !request.filter_types.is_empty()
                 && !request.filter_types.contains(&(device_type as i32))
             {
                 continue;
+            }
+
+            let mut metadata = build_device_metadata(device_info);
+            if let Some(stecs_overlay) = stecs_metadata_overlays.get(&device_info.device_path) {
+                metadata.extend(stecs_overlay.clone());
             }
 
             let device = Device {
@@ -172,7 +180,7 @@ impl DeviceManager for HidDeviceManager {
                     supported_protocols: vec!["hid".to_string()],
                 }),
                 health: None,
-                metadata: build_device_metadata(device_info),
+                metadata,
             };
 
             devices.push(device);
@@ -183,6 +191,52 @@ impl DeviceManager for HidDeviceManager {
             devices,
         })
     }
+}
+
+fn stecs_metadata_overlay(
+    metadata: &device_support::VkbStecsInterfaceMetadata,
+) -> HashMap<String, String> {
+    let mut overlay = HashMap::new();
+    overlay.insert(
+        "stecs.physical_id".to_string(),
+        metadata.physical_id.clone(),
+    );
+    overlay.insert(
+        "stecs.virtual_controller_index".to_string(),
+        metadata.virtual_controller_index.to_string(),
+    );
+    overlay.insert(
+        "stecs.virtual_controller".to_string(),
+        format!("VC{}", metadata.virtual_controller_index),
+    );
+    overlay.insert(
+        "stecs.interface_count".to_string(),
+        metadata.interface_count.to_string(),
+    );
+    overlay.insert(
+        "stecs.multi_interface".to_string(),
+        (metadata.interface_count > 1).to_string(),
+    );
+    let start_button = usize::from(metadata.virtual_controller_index) * 32 + 1;
+    let end_button = start_button + 31;
+    overlay.insert(
+        "stecs.virtual_button_range".to_string(),
+        format!("{}-{}", start_button, end_button),
+    );
+    overlay
+}
+
+fn stecs_metadata_overlays(
+    devices: &[&flight_hid::HidDeviceInfo],
+) -> HashMap<String, HashMap<String, String>> {
+    let mut overlays = HashMap::new();
+    for metadata in device_support::vkb_stecs_interface_metadata(devices.iter().copied()) {
+        overlays.insert(
+            metadata.device_path.clone(),
+            stecs_metadata_overlay(&metadata),
+        );
+    }
+    overlays
 }
 
 fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
@@ -665,6 +719,55 @@ mod tests {
             metadata
                 .get("note.pc_mode")
                 .is_some_and(|note| note.contains("Guide"))
+        );
+    }
+
+    #[test]
+    fn test_stecs_metadata_overlays_include_virtual_controller_details() {
+        let vc0 = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_STECS_RIGHT_SPACE_STANDARD_PID,
+            serial_number: Some("STECS-SERIAL".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB STECS".to_string()),
+            device_path: r"\\?\hid#vid_231d&pid_013c&mi_00#7".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let mut vc1 = vc0.clone();
+        vc1.device_path = r"\\?\hid#vid_231d&pid_013c&mi_01#7".to_string();
+
+        let overlays = stecs_metadata_overlays(&[&vc0, &vc1]);
+        assert_eq!(overlays.len(), 2);
+
+        let first = overlays.get(&vc0.device_path).expect("vc0 overlay");
+        let second = overlays.get(&vc1.device_path).expect("vc1 overlay");
+
+        assert_eq!(
+            first
+                .get("stecs.virtual_controller_index")
+                .map(String::as_str),
+            Some("0")
+        );
+        assert_eq!(
+            second
+                .get("stecs.virtual_controller_index")
+                .map(String::as_str),
+            Some("1")
+        );
+        assert_eq!(
+            first.get("stecs.virtual_button_range").map(String::as_str),
+            Some("1-32")
+        );
+        assert_eq!(
+            second.get("stecs.virtual_button_range").map(String::as_str),
+            Some("33-64")
+        );
+        assert_eq!(
+            first.get("stecs.interface_count").map(String::as_str),
+            Some("2")
         );
     }
 }

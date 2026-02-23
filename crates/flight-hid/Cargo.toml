@@ -26,9 +26,9 @@ flight-watchdog = { path = "../flight-watchdog" }
 flight-metrics = { path = "../flight-metrics" }
 flight-hid-support = { path = "../flight-hid-support" }
 tracing.workspace = true
-rand.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+hidapi.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 windows = { workspace = true, features = [

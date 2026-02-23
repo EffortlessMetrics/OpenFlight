@@ -6,6 +6,7 @@
 use crate::HidDeviceInfo;
 use crate::hid_descriptor::{HidUsage, extract_usages};
 use serde::Serialize;
+use std::collections::BTreeMap;
 use std::fmt;
 
 pub const THRUSTMASTER_VENDOR_ID: u16 = 0x044F;
@@ -663,7 +664,7 @@ const VKB_STECS_CONTROL_MAP_SCHEMA: &str = "flight.device-map/1";
 const VKB_STECS_NOTES: [&str; 3] = [
     "Button/axis labels are derived from Elite Dangerous buttonMap files.",
     "VKBDevCfg profiles can remap buttons, encoders, and virtual buttons.",
-    "Treat this map as a baseline; prefer HID usage/descriptor for authority.",
+    "Virtual controller interfaces are exposed separately by firmware (VC0..VC2); host software should group by serial/physical path.",
 ];
 
 const VKB_STECS_RIGHT_MINI_AXES: [AxisControl; 5] = [
@@ -1940,6 +1941,91 @@ pub fn is_vkb_stecs_device(device_info: &HidDeviceInfo) -> bool {
     vkb_stecs_variant(device_info).is_some()
 }
 
+/// Per-interface metadata for VKB STECS virtual-controller layouts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct VkbStecsInterfaceMetadata {
+    /// HID path for this interface.
+    pub device_path: String,
+    /// Stable physical device identifier (serial when available).
+    pub physical_id: String,
+    /// Zero-based virtual-controller index inside the physical group.
+    pub virtual_controller_index: u8,
+    /// Number of HID interfaces discovered for the physical device.
+    pub interface_count: u8,
+}
+
+fn stecs_path_group_key(device_path: &str) -> String {
+    if let Some((base, _)) = device_path.split_once("#if") {
+        return base.to_ascii_lowercase();
+    }
+    device_path.to_ascii_lowercase()
+}
+
+/// Build a stable physical-device id for STECS interfaces.
+///
+/// Serial number is preferred because it survives re-enumeration across ports.
+/// If serial is unavailable, a normalized HID path stem is used.
+pub fn vkb_stecs_physical_id(device_info: &HidDeviceInfo) -> Option<String> {
+    if !is_vkb_stecs_device(device_info) {
+        return None;
+    }
+
+    if let Some(serial) = device_info
+        .serial_number
+        .as_deref()
+        .map(str::trim)
+        .filter(|serial| !serial.is_empty())
+    {
+        return Some(format!(
+            "vkb-stecs:{:04x}:{:04x}:{}",
+            device_info.vendor_id,
+            device_info.product_id,
+            serial.to_ascii_lowercase()
+        ));
+    }
+
+    Some(format!(
+        "vkb-stecs:path:{}",
+        stecs_path_group_key(&device_info.device_path)
+    ))
+}
+
+/// Compute STECS virtual-controller ordering metadata for a device set.
+///
+/// Interfaces are grouped by physical id and sorted by HID path to provide
+/// deterministic indexing (`VC0`, `VC1`, ...).
+pub fn vkb_stecs_interface_metadata<'a, I>(devices: I) -> Vec<VkbStecsInterfaceMetadata>
+where
+    I: IntoIterator<Item = &'a HidDeviceInfo>,
+{
+    let mut groups: BTreeMap<String, Vec<&HidDeviceInfo>> = BTreeMap::new();
+
+    for device in devices {
+        let Some(physical_id) = vkb_stecs_physical_id(device) else {
+            continue;
+        };
+        groups.entry(physical_id).or_default().push(device);
+    }
+
+    let mut metadata = Vec::new();
+    for (physical_id, mut interfaces) in groups {
+        interfaces.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+        let interface_count = u8::try_from(interfaces.len()).unwrap_or(u8::MAX);
+
+        for (index, interface) in interfaces.iter().enumerate() {
+            metadata.push(VkbStecsInterfaceMetadata {
+                device_path: interface.device_path.clone(),
+                physical_id: physical_id.clone(),
+                virtual_controller_index: u8::try_from(index).unwrap_or(u8::MAX),
+                interface_count,
+            });
+        }
+    }
+
+    metadata.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+    metadata
+}
+
 pub fn vkb_stecs_control_map(variant: VkbStecsVariant) -> &'static DeviceControlMap {
     match variant {
         VkbStecsVariant::RightSpaceThrottleGripMini => &VKB_STECS_RIGHT_MINI_CONTROL_MAP,
@@ -2224,6 +2310,38 @@ mod tests {
         assert_eq!(control_map.encoders[0].cw_button, 47);
         assert_eq!(control_map.encoders[0].ccw_button, 46);
         assert_eq!(control_map.encoders[0].press_button, Some(50));
+    }
+
+    #[test]
+    fn test_vkb_stecs_interface_metadata_groups_by_serial() {
+        let mut vc0 = vkb_device(VKB_STECS_RIGHT_SPACE_STANDARD_PID);
+        vc0.serial_number = Some("ABC123".to_string());
+        vc0.device_path = r"\\?\hid#vid_231d&pid_013c&mi_00#7".to_string();
+
+        let mut vc1 = vkb_device(VKB_STECS_RIGHT_SPACE_STANDARD_PID);
+        vc1.serial_number = Some("ABC123".to_string());
+        vc1.device_path = r"\\?\hid#vid_231d&pid_013c&mi_01#7".to_string();
+
+        let metadata = vkb_stecs_interface_metadata([&vc1, &vc0]);
+        assert_eq!(metadata.len(), 2);
+
+        assert_eq!(metadata[0].virtual_controller_index, 0);
+        assert_eq!(metadata[1].virtual_controller_index, 1);
+        assert_eq!(metadata[0].interface_count, 2);
+        assert_eq!(metadata[1].interface_count, 2);
+        assert_eq!(metadata[0].physical_id, metadata[1].physical_id);
+    }
+
+    #[test]
+    fn test_vkb_stecs_physical_id_falls_back_to_path_stem() {
+        let mut device = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PLUS_PID);
+        device.serial_number = None;
+        device.device_path = "/dev/hidraw3#if1".to_string();
+
+        assert_eq!(
+            vkb_stecs_physical_id(&device),
+            Some("vkb-stecs:path:/dev/hidraw3".to_string())
+        );
     }
 
     #[test]
