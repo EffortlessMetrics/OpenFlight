@@ -173,15 +173,27 @@ fn generate_feature_status_with_metrics(
 ) -> String {
     let mut output = String::new();
 
-    // Build a map of AC ID -> list of Gherkin scenario locations
-    let mut ac_to_scenarios: HashMap<String, Vec<String>> = HashMap::new();
+    // Build a map of (REQ ID, AC ID) -> list of Gherkin scenario locations
+    let mut ac_to_scenarios: HashMap<(String, String), Vec<String>> = HashMap::new();
     for scenario in scenarios {
-        for ac_tag in scenario.ac_tags() {
-            ac_to_scenarios.entry(ac_tag).or_default().push(format!(
-                "{}:{}",
-                display_path_portable(&scenario.file_path),
-                scenario.line_number
-            ));
+        let req_tags = scenario.req_tags();
+        if req_tags.is_empty() {
+            continue;
+        }
+
+        let location = format!(
+            "{}:{}",
+            display_path_portable(&scenario.file_path),
+            scenario.line_number
+        );
+
+        for req_tag in req_tags {
+            for ac_tag in scenario.ac_tags() {
+                ac_to_scenarios
+                    .entry((req_tag.clone(), ac_tag))
+                    .or_default()
+                    .push(location.clone());
+            }
         }
     }
 
@@ -202,7 +214,7 @@ fn generate_feature_status_with_metrics(
     for req in &ledger.requirements {
         for ac in &req.ac {
             // Get Gherkin scenarios for this AC
-            let gherkin_locations = ac_to_scenarios.get(&ac.id);
+            let gherkin_locations = ac_to_scenarios.get(&(req.id.clone(), ac.id.clone()));
             let gherkin_display = if let Some(locations) = gherkin_locations {
                 if locations.is_empty() {
                     "-".to_string()
@@ -529,6 +541,59 @@ mod tests {
         assert!(report.contains("specs/features/test1.feature:10"));
         assert!(report.contains("specs/features/test2.feature:20"));
         assert!(report.contains("<br>")); // Multiple scenarios separated by <br>
+    }
+
+    #[test]
+    fn test_generate_feature_status_scopes_ac_coverage_by_requirement() {
+        let ledger = SpecLedger {
+            requirements: vec![
+                Requirement {
+                    id: "REQ-1".to_string(),
+                    name: "Primary Requirement".to_string(),
+                    status: RequirementStatus::Tested,
+                    ac: vec![AcceptanceCriteria {
+                        id: "AC-1.1".to_string(),
+                        description: "Primary AC".to_string(),
+                        tests: vec![TestReference::Simple("test::req".to_string())],
+                    }],
+                },
+                Requirement {
+                    id: "INF-REQ-1".to_string(),
+                    name: "Infra Requirement".to_string(),
+                    status: RequirementStatus::Tested,
+                    ac: vec![AcceptanceCriteria {
+                        id: "AC-1.1".to_string(),
+                        description: "Infra AC".to_string(),
+                        tests: vec![TestReference::Simple("test::inf".to_string())],
+                    }],
+                },
+            ],
+        };
+
+        let scenarios = vec![
+            GherkinScenario {
+                file_path: PathBuf::from(r"specs\features\req.feature"),
+                line_number: 10,
+                name: "REQ scenario".to_string(),
+                tags: vec!["REQ-1".to_string(), "AC-1.1".to_string()],
+            },
+            GherkinScenario {
+                file_path: PathBuf::from(r"specs\features\inf.feature"),
+                line_number: 20,
+                name: "INF scenario".to_string(),
+                tags: vec!["INF-REQ-1".to_string(), "AC-1.1".to_string()],
+            },
+        ];
+
+        let report = generate_feature_status(&ledger, &scenarios);
+
+        assert!(report.contains(
+            "| REQ-1 | AC-1.1 | Primary AC | specs/features/req.feature:10 | 1 | ✅ Complete |"
+        ));
+        assert!(report.contains(
+            "| INF-REQ-1 | AC-1.1 | Infra AC | specs/features/inf.feature:20 | 1 | ✅ Complete |"
+        ));
+        assert!(!report.contains("specs/features/req.feature:10<br>specs/features/inf.feature:20"));
     }
 
     #[test]
