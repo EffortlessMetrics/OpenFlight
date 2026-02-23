@@ -225,6 +225,17 @@ pub fn axis_mode_from_device_info(device_info: &HidDeviceInfo) -> AxisMode {
     }
 }
 
+fn tflight_model_from_product_name(product_name: Option<&str>) -> Option<TFlightModel> {
+    let name = product_name?.to_ascii_lowercase();
+    if name.contains("hotas one") || name.contains("hotasone") {
+        Some(TFlightModel::HotasOne)
+    } else if name.contains("hotas 4") || name.contains("hotas4") {
+        Some(TFlightModel::Hotas4)
+    } else {
+        None
+    }
+}
+
 pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
     if device_info.vendor_id != THRUSTMASTER_VENDOR_ID {
         return None;
@@ -233,7 +244,7 @@ pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
     match device_info.product_id {
         TFLIGHT_HOTAS_ONE_PID => Some(TFlightModel::HotasOne),
         TFLIGHT_HOTAS_4_PID | TFLIGHT_HOTAS_4_PID_LEGACY => Some(TFlightModel::Hotas4),
-        _ => None,
+        _ => tflight_model_from_product_name(device_info.product_name.as_deref()),
     }
 }
 
@@ -1988,6 +1999,12 @@ mod tests {
         }
     }
 
+    fn tflight_device_with_name(product_id: u16, product_name: Option<&str>) -> HidDeviceInfo {
+        let mut info = tflight_device(product_id);
+        info.product_name = product_name.map(str::to_string);
+        info
+    }
+
     #[test]
     fn test_axis_mode_from_usages() {
         let usages = vec![
@@ -2094,6 +2111,24 @@ mod tests {
     fn test_tflight_model_detection() {
         let device_info = tflight_device(TFLIGHT_HOTAS_ONE_PID);
         assert_eq!(tflight_model(&device_info), Some(TFlightModel::HotasOne));
+    }
+
+    #[test]
+    fn test_tflight_model_fallback_from_product_name() {
+        let hotas4 = tflight_device_with_name(0xFFFF, Some("T.Flight HOTAS 4"));
+        let hotas_one = tflight_device_with_name(0xABCD, Some("T.Flight HOTAS One"));
+        let unknown = tflight_device_with_name(0xABCD, Some("Thrustmaster Warthog"));
+
+        assert_eq!(tflight_model(&hotas4), Some(TFlightModel::Hotas4));
+        assert_eq!(tflight_model(&hotas_one), Some(TFlightModel::HotasOne));
+        assert_eq!(tflight_model(&unknown), None);
+    }
+
+    #[test]
+    fn test_tflight_model_fallback_requires_thrustmaster_vendor() {
+        let mut info = tflight_device_with_name(0xABCD, Some("T.Flight HOTAS 4"));
+        info.vendor_id = LOGITECH_VENDOR_ID;
+        assert_eq!(tflight_model(&info), None);
     }
 
     #[test]

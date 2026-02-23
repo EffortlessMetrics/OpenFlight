@@ -201,6 +201,8 @@ Runtime source is selected at build/runtime configuration time:
 Runtime behavior notes:
 
 - Axis mode is still auto-detected per report (`AxisMode::Unknown` handler start).
+- Descriptor-derived axis mode is used as an advisory hint for ambiguous/padded
+  report lengths; it does not pin mode during 8-byte/9-byte runtime switches.
 - If a device remains in merged mode for a sustained stream, runtime emits a
   health warning with PC-mode/Linux descriptor guidance.
 

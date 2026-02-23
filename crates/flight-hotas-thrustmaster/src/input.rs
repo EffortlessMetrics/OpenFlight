@@ -135,6 +135,8 @@ pub struct TFlightInputHandler {
     device_type: TFlightModel,
     /// Explicit mode selection. `Unknown` means auto-detect every report.
     axis_mode: AxisMode,
+    /// Descriptor-derived advisory mode for ambiguous report lengths.
+    axis_mode_hint: AxisMode,
     /// Last effective mode observed while parsing.
     detected_axis_mode: AxisMode,
     ghost_filter: GhostInputFilter,
@@ -164,6 +166,7 @@ impl TFlightInputHandler {
         Self {
             device_type,
             axis_mode,
+            axis_mode_hint: AxisMode::Unknown,
             detected_axis_mode: axis_mode,
             ghost_filter,
             last_state: TFlightInputState::default(),
@@ -195,6 +198,15 @@ impl TFlightInputHandler {
         self
     }
 
+    /// Configure descriptor-derived axis mode hint.
+    ///
+    /// This hint is only used for ambiguous/padded report lengths while
+    /// auto-detection is active. It does not pin runtime mode switching.
+    pub fn with_axis_mode_hint(mut self, hint: AxisMode) -> Self {
+        self.axis_mode_hint = hint;
+        self
+    }
+
     /// Update yaw source policy.
     pub fn set_yaw_policy(&mut self, policy: TFlightYawPolicy) {
         self.yaw_policy = policy;
@@ -218,6 +230,11 @@ impl TFlightInputHandler {
         if mode != AxisMode::Unknown {
             self.detected_axis_mode = mode;
         }
+    }
+
+    /// Update descriptor-derived axis mode hint.
+    pub fn set_axis_mode_hint(&mut self, hint: AxisMode) {
+        self.axis_mode_hint = hint;
     }
 
     /// Parse a raw HID report into axis and button state.
@@ -280,6 +297,11 @@ impl TFlightInputHandler {
         self.axis_mode
     }
 
+    /// Get descriptor-derived mode hint used for ambiguous lengths.
+    pub fn axis_mode_hint(&self) -> AxisMode {
+        self.axis_mode_hint
+    }
+
     /// Get currently effective axis mode.
     pub fn current_axis_mode(&self) -> AxisMode {
         match self.axis_mode {
@@ -291,17 +313,31 @@ impl TFlightInputHandler {
     fn determine_effective_mode(&self, report: &[u8]) -> Result<AxisMode, TFlightParseError> {
         match self.axis_mode {
             AxisMode::Unknown => {
-                if report.len() >= 9 {
-                    Ok(AxisMode::Separate)
-                } else if report.len() >= 8 {
-                    Ok(AxisMode::Merged)
-                } else {
-                    Err(TFlightParseError::ReportTooShort {
+                if report.len() < 8 {
+                    return Err(TFlightParseError::ReportTooShort {
                         mode: AxisMode::Unknown,
                         expected: 8,
                         actual: report.len(),
-                    })
+                    });
                 }
+
+                if report.len() == 8 {
+                    return Ok(AxisMode::Merged);
+                }
+
+                if report.len() == 9 {
+                    return Ok(AxisMode::Separate);
+                }
+
+                if self.detected_axis_mode != AxisMode::Unknown {
+                    return Ok(self.detected_axis_mode);
+                }
+
+                if self.axis_mode_hint != AxisMode::Unknown {
+                    return Ok(self.axis_mode_hint);
+                }
+
+                Ok(AxisMode::Separate)
             }
             AxisMode::Separate => {
                 if report.len() < 9 {
@@ -492,6 +528,7 @@ mod tests {
         let handler = TFlightInputHandler::new(TFlightModel::Hotas4);
         assert_eq!(handler.device_type(), TFlightModel::Hotas4);
         assert_eq!(handler.axis_mode(), AxisMode::Unknown);
+        assert_eq!(handler.axis_mode_hint(), AxisMode::Unknown);
         assert_eq!(handler.current_axis_mode(), AxisMode::Unknown);
         assert_eq!(handler.yaw_policy(), TFlightYawPolicy::Auto);
         assert_eq!(handler.ghost_rate(), 0.0);
@@ -530,6 +567,62 @@ mod tests {
                 actual: 8
             }
         ));
+    }
+
+    #[test]
+    fn test_axis_mode_hint_is_advisory_not_pinning() {
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_axis_mode_hint(AxisMode::Merged);
+        let separate_report = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0xFF, 0x00, 0x00];
+        let state = handler.try_parse_report(&separate_report).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Separate);
+    }
+
+    #[test]
+    fn test_axis_mode_hint_used_for_padded_report() {
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_axis_mode_hint(AxisMode::Merged);
+        let padded_merged = vec![
+            0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00, // merged payload
+            0x00, 0x00, 0x00, 0x00, // trailing transport padding
+        ];
+        let state = handler.try_parse_report(&padded_merged).unwrap();
+        assert_eq!(state.axis_mode, AxisMode::Merged);
+        assert!(state.axes.rocker.is_none());
+    }
+
+    #[test]
+    fn test_detected_mode_overrides_stale_hint_for_padded_reports() {
+        let mut handler =
+            TFlightInputHandler::new(TFlightModel::Hotas4).with_axis_mode_hint(AxisMode::Merged);
+        let separate = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0xFF, 0x00, 0x00];
+        let padded_separate = vec![
+            0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0xFF, 0x00, 0x00, // separate payload
+            0x00, 0x00, 0x00, 0x00, // trailing transport padding
+        ];
+
+        let first = handler.try_parse_report(&separate).unwrap();
+        assert_eq!(first.axis_mode, AxisMode::Separate);
+
+        let second = handler.try_parse_report(&padded_separate).unwrap();
+        assert_eq!(second.axis_mode, AxisMode::Separate);
+        assert!(second.axes.rocker.is_some());
+    }
+
+    #[test]
+    fn test_detected_mode_used_for_padded_report_without_hint() {
+        let mut handler = TFlightInputHandler::new(TFlightModel::Hotas4);
+        let merged = vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00];
+        let padded = vec![
+            0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00, // same merged payload
+            0x00, 0x00, 0x00, 0x00, // trailing transport padding
+        ];
+
+        let first = handler.try_parse_report(&merged).unwrap();
+        assert_eq!(first.axis_mode, AxisMode::Merged);
+
+        let second = handler.try_parse_report(&padded).unwrap();
+        assert_eq!(second.axis_mode, AxisMode::Merged);
     }
 
     #[test]
