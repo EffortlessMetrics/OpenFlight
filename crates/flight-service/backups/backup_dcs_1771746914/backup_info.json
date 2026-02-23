@@ -1,9 +1,0 @@
-{
-  "timestamp": 1771746914,
-  "description": "Disable DCS control curves via options.lua",
-  "affected_files": [
-    "DCS World/Config/options.lua"
-  ],
-  "backup_dir": "backups\\backup_dcs_1771746914",
-  "writer_config": "dcs_2.9"
-}
