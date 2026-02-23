@@ -324,11 +324,7 @@ unsafe impl Sync for SimConnectApi {}
 impl SimConnectApi {
     /// Load SimConnect API (dynamic or static linking)
     pub fn new() -> Result<Self, SimConnectError> {
-        #[cfg(all(
-            feature = "dynamic",
-            feature = "static",
-            simconnect_static_available
-        ))]
+        #[cfg(all(feature = "dynamic", feature = "static", simconnect_static_available))]
         {
             Self::load_dynamic().or_else(|_| Self::load_static())
         }

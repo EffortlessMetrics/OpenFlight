@@ -32,7 +32,7 @@ mod tests {
         let _ = (
             example_ipc_function_with_owned_fd,
             example_ipc_function_with_borrowed_fd,
-            example_ipc_function_with_as_fd,
+            example_ipc_function_with_as_fd::<OwnedFd>,
         );
     }
 
@@ -43,7 +43,7 @@ mod tests {
         // in public IPC APIs. The test will fail to compile if RawFd is used incorrectly.
 
         // Check that our public IPC API types don't contain RawFd
-        use crate::{TransportError, TransportType};
+        use crate::{TransportType, transport::TransportError};
 
         // These assertions will fail to compile if RawFd is used in these types
         fn _assert_no_raw_fd_in_transport_type(_: &TransportType) {}
@@ -56,7 +56,7 @@ mod tests {
     /// Runtime test to verify no RawFd usage in IPC error messages or debug output
     #[test]
     fn test_no_raw_fd_in_ipc_debug_output() {
-        use crate::{TransportError, TransportType};
+        use crate::{TransportType, transport::TransportError};
 
         // Create test instances and check their debug output doesn't contain "RawFd"
         let transport_type = TransportType::UnixSockets;

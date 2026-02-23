@@ -470,40 +470,40 @@ jobs:
       if: needs.path-filter.outputs.core == 'true'
       id: check-core-api
       continue-on-error: true
-      run: cargo public-api -p flight-core --diff-git origin/main..HEAD
+      run: cargo public-api -p flight-core diff origin/main..HEAD
 
     - name: Retry flight-core API check with nightly (if needed)
       if: needs.path-filter.outputs.core == 'true' && steps.check-core-api.outcome == 'failure'
       run: |
         echo "Retrying with nightly toolchain..."
         rustup toolchain install nightly
-        cargo +nightly public-api -p flight-core --diff-git origin/main..HEAD
+        cargo +nightly public-api -p flight-core diff origin/main..HEAD
 
     - name: Check flight-ipc public API
       if: needs.path-filter.outputs.ipc == 'true'
       id: check-ipc-api
       continue-on-error: true
-      run: cargo public-api -p flight-ipc --diff-git origin/main..HEAD
+      run: cargo public-api -p flight-ipc diff origin/main..HEAD
 
     - name: Retry flight-ipc API check with nightly (if needed)
       if: needs.path-filter.outputs.ipc == 'true' && steps.check-ipc-api.outcome == 'failure'
       run: |
         echo "Retrying with nightly toolchain..."
         rustup toolchain install nightly
-        cargo +nightly public-api -p flight-ipc --diff-git origin/main..HEAD
+        cargo +nightly public-api -p flight-ipc diff origin/main..HEAD
 
     - name: Check flight-hid public API
       if: needs.path-filter.outputs.hid == 'true'
       id: check-hid-api
       continue-on-error: true
-      run: cargo public-api -p flight-hid --diff-git origin/main..HEAD
+      run: cargo public-api -p flight-hid diff origin/main..HEAD
 
     - name: Retry flight-hid API check with nightly (if needed)
       if: needs.path-filter.outputs.hid == 'true' && steps.check-hid-api.outcome == 'failure'
       run: |
         echo "Retrying with nightly toolchain..."
         rustup toolchain install nightly
-        cargo +nightly public-api -p flight-hid --diff-git origin/main..HEAD
+        cargo +nightly public-api -p flight-hid diff origin/main..HEAD
 
   gated-ipc-smoke:
     name: Gated IPC Smoke Tests

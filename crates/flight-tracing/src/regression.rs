@@ -218,13 +218,10 @@ impl RegressionDetector {
         let target_duration = current.session_duration_ms;
         let tolerance = target_duration / 2;
 
-        let similar_baseline = self
-            .baselines
-            .iter()
-            .rfind(|b| {
-                let duration_diff = b.session_duration_ms.abs_diff(target_duration);
-                duration_diff <= tolerance && b.jitter.sample_count >= self.min_samples
-            }); // Use most recent similar baseline
+        let similar_baseline = self.baselines.iter().rfind(|b| {
+            let duration_diff = b.session_duration_ms.abs_diff(target_duration);
+            duration_diff <= tolerance && b.jitter.sample_count >= self.min_samples
+        }); // Use most recent similar baseline
 
         // Fall back to most recent baseline if no similar one found
         similar_baseline
