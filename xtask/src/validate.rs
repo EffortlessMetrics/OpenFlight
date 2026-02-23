@@ -11,7 +11,6 @@
 //! docs/validation_report.md with timestamps, commit hashes, and check results.
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
 use std::path::Path;
 use std::process::Command;
 
@@ -726,8 +725,8 @@ fn validate_cross_references() -> Result<Vec<String>> {
 /// * `results` - Vector of check results to include in the report
 /// * `cross_ref_details` - Vector of cross-reference error messages
 fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[String]) -> Result<()> {
-    let timestamp = get_git_commit_timestamp_rfc3339().unwrap_or_else(|_| Utc::now().to_rfc3339());
-    let commit_hash = get_git_commit_hash().unwrap_or_else(|_| "unknown".to_string());
+    let timestamp = "deterministic (timestamp omitted)";
+    let commit_hash = "deterministic (commit omitted)";
 
     let mut report = String::new();
 
@@ -837,47 +836,4 @@ fn generate_validation_report(results: &[CheckResult], cross_ref_details: &[Stri
     std::fs::write(report_path, report).context("Failed to write validation report")?;
 
     Ok(())
-}
-
-/// Get the current git commit hash.
-///
-/// Returns the short commit hash (7 characters) if available, or an error
-/// if git is not available or the repository is not initialized.
-fn get_git_commit_hash() -> Result<String> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--short", "HEAD"])
-        .output()
-        .context("Failed to execute git command")?;
-
-    if output.status.success() {
-        let hash = String::from_utf8(output.stdout)
-            .context("Git output is not valid UTF-8")?
-            .trim()
-            .to_string();
-        Ok(hash)
-    } else {
-        anyhow::bail!("Git command failed")
-    }
-}
-
-/// Get the current git commit timestamp as RFC3339.
-///
-/// Returns a stable timestamp derived from `HEAD` commit time.
-fn get_git_commit_timestamp_rfc3339() -> Result<String> {
-    let output = Command::new("git")
-        .args(["show", "-s", "--format=%cI", "HEAD"])
-        .output()
-        .context("Failed to execute git command")?;
-
-    if !output.status.success() {
-        anyhow::bail!("Git command failed");
-    }
-
-    let raw = String::from_utf8(output.stdout)
-        .context("Git output is not valid UTF-8")?
-        .trim()
-        .to_string();
-    let parsed =
-        DateTime::parse_from_rfc3339(&raw).context("Git timestamp is not valid RFC3339")?;
-    Ok(parsed.with_timezone(&Utc).to_rfc3339())
 }
