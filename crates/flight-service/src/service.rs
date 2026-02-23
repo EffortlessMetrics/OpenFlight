@@ -492,6 +492,7 @@ impl FlightService {
         let config = VkbStecsRuntimeConfig {
             poll_hz: self.config.stecs_poll_hz,
             strip_report_id: self.config.stecs_strip_report_id,
+            discovery_interval_ticks: self.config.stecs_poll_hz.max(1) as u32,
         };
 
         #[cfg(feature = "stecs-hidapi")]

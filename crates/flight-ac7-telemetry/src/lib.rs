@@ -103,11 +103,14 @@ pub struct Ac7TelemetryAdapter {
     started_at: Instant,
     last_packet: Option<Instant>,
     source_addr: Option<SocketAddr>,
+    /// Pre-allocated receive buffer to avoid per-poll allocations.
+    recv_buf: Vec<u8>,
 }
 
 impl Ac7TelemetryAdapter {
     /// Create a new adapter.
     pub fn new(config: Ac7TelemetryConfig) -> Self {
+        let recv_buf = vec![0u8; config.max_packet_size];
         Self {
             bus_publisher: BusPublisher::new(config.bus_max_rate_hz),
             config,
@@ -118,6 +121,7 @@ impl Ac7TelemetryAdapter {
             started_at: Instant::now(),
             last_packet: None,
             source_addr: None,
+            recv_buf,
         }
     }
 
@@ -144,16 +148,15 @@ impl Ac7TelemetryAdapter {
             return Err(Ac7TelemetryError::NotStarted);
         };
 
-        let mut buffer = vec![0u8; self.config.max_packet_size];
         let (size, addr) = timeout(
             self.config.connection_timeout,
-            socket.recv_from(&mut buffer),
+            socket.recv_from(&mut self.recv_buf),
         )
         .await
         .map_err(|_| AdapterError::Timeout("AC7 packet timeout".into()))??;
 
         let update_start = Instant::now();
-        let packet = Ac7TelemetryPacket::from_json_slice(&buffer[..size]).map_err(|e| {
+        let packet = Ac7TelemetryPacket::from_json_slice(&self.recv_buf[..size]).map_err(|e| {
             self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             e
         })?;
@@ -164,6 +167,13 @@ impl Ac7TelemetryAdapter {
         })?;
 
         self.state = AdapterState::Active;
+        // Measure gap from previous packet before overwriting last_packet.
+        if let Some(last) = self.last_packet {
+            self.metrics_registry.set_gauge(
+                ADAPTER_TIME_SINCE_LAST_PACKET_MS,
+                Instant::now().duration_since(last).as_secs_f64() * 1000.0,
+            );
+        }
         self.last_packet = Some(Instant::now());
         self.source_addr = Some(addr);
         self.metrics.record_update();
@@ -174,13 +184,6 @@ impl Ac7TelemetryAdapter {
             ADAPTER_UPDATE_LATENCY_MS,
             update_start.elapsed().as_secs_f64() * 1000.0,
         );
-
-        if let Some(last) = self.last_packet {
-            self.metrics_registry.set_gauge(
-                ADAPTER_TIME_SINCE_LAST_PACKET_MS,
-                Instant::now().duration_since(last).as_secs_f64() * 1000.0,
-            );
-        }
 
         debug!("AC7 telemetry packet processed from {}", addr);
         Ok(Some(snapshot))

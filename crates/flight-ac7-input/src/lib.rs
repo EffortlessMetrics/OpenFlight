@@ -147,16 +147,20 @@ pub enum Ac7InputError {
 impl Ac7InputProfile {
     /// Validate profile fields.
     pub fn validate(&self) -> Result<(), Ac7InputError> {
-        if self.name.trim().is_empty() {
+        if self.name.trim().is_empty() || self.name.contains('"') {
             return Err(Ac7InputError::InvalidProfile(
-                "profile name cannot be empty".to_string(),
+                "profile name cannot be empty or contain double quotes".to_string(),
             ));
         }
 
         for axis in &self.axis_bindings {
-            if axis.axis_name.trim().is_empty() || axis.key.trim().is_empty() {
+            if axis.axis_name.trim().is_empty()
+                || axis.key.trim().is_empty()
+                || axis.axis_name.contains('"')
+                || axis.key.contains('"')
+            {
                 return Err(Ac7InputError::InvalidProfile(format!(
-                    "axis binding has empty axis/key: {:?}",
+                    "axis binding has empty or invalid axis/key: {:?}",
                     axis
                 )));
             }
@@ -181,9 +185,13 @@ impl Ac7InputProfile {
         }
 
         for action in &self.action_bindings {
-            if action.action_name.trim().is_empty() || action.key.trim().is_empty() {
+            if action.action_name.trim().is_empty()
+                || action.key.trim().is_empty()
+                || action.action_name.contains('"')
+                || action.key.contains('"')
+            {
                 return Err(Ac7InputError::InvalidProfile(format!(
-                    "action binding has empty action/key: {:?}",
+                    "action binding has empty or invalid action/key: {:?}",
                     action
                 )));
             }
@@ -346,15 +354,27 @@ fn strip_managed_block(content: &str) -> String {
 fn upsert_enable_joystick_flag(content: &str) -> String {
     let mut output = String::new();
     let mut found_enable = false;
+    let mut in_joystick_section = false;
 
     for line in content.lines() {
         let trimmed = line.trim_start();
+        if trimmed.starts_with('[') {
+            // Track whether we are inside [Joystick] section.
+            in_joystick_section = trimmed.trim_end() == "[Joystick]";
+        }
         if trimmed.starts_with("EnableJoystick=") {
             output.push_str("EnableJoystick=True\n");
             found_enable = true;
         } else {
             output.push_str(line);
             output.push('\n');
+            // If we just entered [Joystick] and haven't seen the key yet,
+            // insert it immediately after the section header.
+            if in_joystick_section && !found_enable && trimmed.trim_end() == "[Joystick]" {
+                output.push_str("EnableJoystick=True\n");
+                found_enable = true;
+                in_joystick_section = false;
+            }
         }
     }
 

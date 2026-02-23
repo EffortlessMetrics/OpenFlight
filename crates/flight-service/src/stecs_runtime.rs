@@ -97,6 +97,9 @@ pub struct VkbStecsRuntimeConfig {
     pub poll_hz: u16,
     /// Strip leading Report ID byte from raw reports.
     pub strip_report_id: bool,
+    /// How often to re-enumerate HID devices (in poll ticks).
+    /// At 250 Hz a value of 250 means once per second.
+    pub discovery_interval_ticks: u32,
 }
 
 impl Default for VkbStecsRuntimeConfig {
@@ -104,6 +107,8 @@ impl Default for VkbStecsRuntimeConfig {
         Self {
             poll_hz: 250,
             strip_report_id: false,
+            // Re-enumerate once per second by default.
+            discovery_interval_ticks: 250,
         }
     }
 }
@@ -156,6 +161,10 @@ impl VkbStecsInputRuntime {
         let worker = tokio::spawn(async move {
             let mut interval = tokio::time::interval(poll_interval);
             let mut states: HashMap<String, DeviceRuntimeState> = HashMap::new();
+            // Device list cache — refreshed every discovery_interval_ticks ticks.
+            let discovery_interval = config.discovery_interval_ticks.max(1) as u64;
+            let mut tick_count: u64 = 0;
+            let mut cached_devices: Vec<HidDeviceInfo> = Vec::new();
 
             loop {
                 tokio::select! {
@@ -163,8 +172,15 @@ impl VkbStecsInputRuntime {
                         break;
                     }
                     _ = interval.tick() => {
+                        // Re-enumerate devices only at the configured cadence.
+                        if tick_count % discovery_interval == 0 {
+                            cached_devices = source.list_devices();
+                        }
+                        tick_count = tick_count.wrapping_add(1);
+
                         poll_once(
                             source.as_mut(),
+                            &cached_devices,
                             &health,
                             &snapshots_worker,
                             &mut states,
@@ -214,15 +230,16 @@ impl Drop for VkbStecsInputRuntime {
 
 async fn poll_once(
     source: &mut dyn VkbStecsReportSource,
+    cached_devices: &[HidDeviceInfo],
     health: &HealthStream,
     snapshots: &Arc<RwLock<HashMap<String, VkbStecsSnapshot>>>,
     states: &mut HashMap<String, DeviceRuntimeState>,
     config: VkbStecsRuntimeConfig,
 ) {
-    let listed = source.list_devices();
-    let stecs_infos: Vec<HidDeviceInfo> = listed
-        .into_iter()
+    let stecs_infos: Vec<HidDeviceInfo> = cached_devices
+        .iter()
         .filter(|info| vkb_stecs_variant(info).is_some())
+        .cloned()
         .collect();
 
     let info_by_path: HashMap<String, HidDeviceInfo> = stecs_infos
@@ -466,6 +483,7 @@ mod tests {
             VkbStecsRuntimeConfig {
                 poll_hz: 120,
                 strip_report_id: false,
+                discovery_interval_ticks: 1,
             },
         );
 
@@ -509,6 +527,7 @@ mod tests {
             VkbStecsRuntimeConfig {
                 poll_hz: 80,
                 strip_report_id: false,
+                discovery_interval_ticks: 1,
             },
         );
 

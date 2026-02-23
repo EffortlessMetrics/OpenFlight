@@ -525,9 +525,9 @@ impl HidAdapter {
 
     fn read_input_raw(&mut self, device_path: &str, buffer: &mut [u8]) -> HidOperationResult {
         let Some(handle) = self.open_devices.get(device_path) else {
-            // Allow deterministic tests without hardware handles.
-            return HidOperationResult::Success {
-                bytes_transferred: 0,
+            return HidOperationResult::Error {
+                error_code: -1,
+                description: format!("no open handle for device path: {device_path}"),
             };
         };
 
@@ -545,10 +545,9 @@ impl HidAdapter {
 
     fn write_output_raw(&mut self, device_path: &str, data: &[u8]) -> HidOperationResult {
         let Some(handle) = self.open_devices.get(device_path) else {
-            // Preserve testability when callers manually register synthetic devices.
-            std::thread::sleep(Duration::from_micros(250));
-            return HidOperationResult::Success {
-                bytes_transferred: data.len(),
+            return HidOperationResult::Error {
+                error_code: -2,
+                description: format!("no open handle for device path: {device_path}"),
             };
         };
 
