@@ -26,9 +26,6 @@ jobs:
       with:
         components: clippy, rustfmt
 
-    - name: Install nightly for scripts
-      uses: dtolnay/rust-toolchain@nightly
-
     - name: Cache Cargo dependencies
       uses: actions/cache@v4
       with:
@@ -61,6 +58,9 @@ jobs:
       run: |
         cargo test -p flight-core security
         cargo test -p flight-ipc
+
+    - name: Install nightly for scripts
+      uses: dtolnay/rust-toolchain@nightly
         
     - name: Run custom security verification
       run: |
