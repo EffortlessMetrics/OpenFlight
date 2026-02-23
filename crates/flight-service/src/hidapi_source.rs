@@ -10,8 +10,6 @@
 //!
 //! CI builds should NOT enable this feature; they use `SimulatedTFlightReportSource`.
 
-#![cfg(feature = "tflight-hidapi")]
-
 use flight_hid_support::HidDeviceInfo;
 use flight_hid_support::device_support::{
     TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, THRUSTMASTER_VENDOR_ID, USAGE_JOYSTICK,

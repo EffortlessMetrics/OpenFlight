@@ -221,11 +221,10 @@ impl RegressionDetector {
         let similar_baseline = self
             .baselines
             .iter()
-            .filter(|b| {
+            .rfind(|b| {
                 let duration_diff = b.session_duration_ms.abs_diff(target_duration);
                 duration_diff <= tolerance && b.jitter.sample_count >= self.min_samples
-            })
-            .next_back(); // Use most recent similar baseline
+            }); // Use most recent similar baseline
 
         // Fall back to most recent baseline if no similar one found
         similar_baseline

@@ -82,17 +82,12 @@ pub struct AxisEngineConfig {
 }
 
 /// Serializable service-level yaw policy config for T.Flight devices.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum TFlightYawPolicyConfig {
+    #[default]
     Auto,
     Twist,
     Aux,
-}
-
-impl Default for TFlightYawPolicyConfig {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 impl From<TFlightYawPolicyConfig> for TFlightYawPolicy {

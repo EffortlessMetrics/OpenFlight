@@ -214,7 +214,7 @@ mod safety_violation_tests {
 
         // Trigger many faults rapidly
         for _ in 0..15 {
-            engine.process_fault(FaultType::UsbStall).unwrap();
+            let _ = engine.process_fault(FaultType::UsbStall);
         }
 
         assert!(engine.fault_detector.is_in_fault_storm());

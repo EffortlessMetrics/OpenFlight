@@ -69,9 +69,12 @@ jobs:
         
     - name: Check for hardcoded secrets
       run: |
-        # Check for potential secrets in code
-        if grep -r -i "password\|secret\|key\|token" --include="*.rs" crates/ | grep -v "// " | grep -v "test"; then
-          echo "❌ Potential hardcoded secrets found"
+        echo "🔍 Scanning for likely hardcoded secrets..."
+        # Match likely credential assignments, not generic identifiers like map keys/tokens.
+        SECRET_PATTERN='(?i)(password|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*["'"'"'][^"'"'"']{8,}["'"'"']'
+        if rg -n --pcre2 --glob "*.rs" "$SECRET_PATTERN" crates/ \
+          | rg -v "test|example|development|mock|dummy|placeholder"; then
+          echo "❌ Potential hardcoded credential literals found"
           exit 1
         else
           echo "✅ No hardcoded secrets detected"
@@ -79,9 +82,11 @@ jobs:
         
     - name: Verify no network bindings in production code
       run: |
-        # Check for network bindings outside of development/test code
-        if grep -r "0\.0\.0\.0\|TcpListener\|bind.*:" --include="*.rs" crates/ | grep -v "test\|example\|development"; then
-          echo "❌ Network bindings found in production code"
+        echo "🔍 Checking for unexpected wildcard/network listeners..."
+        # Allow known network-facing adapters; fail on unexpected listeners elsewhere.
+        if rg -n --glob "*.rs" "0\\.0\\.0\\.0|TcpListener::bind\\(" crates/ \
+          | rg -v "test|example|development|crates/flight-dcs-export|crates/flight-xplane|crates/flight-streamdeck|crates/flight-tactile"; then
+          echo "❌ Unexpected network listeners found in non-network crates"
           exit 1
         else
           echo "✅ No unauthorized network bindings found"
