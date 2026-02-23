@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 138 |
-| ACs with tests | 138 |
-| ACs with Gherkin | 138 |
-| ACs with both tests + Gherkin | 138 |
-| Complete | 138 |
+| Total AC | 195 |
+| ACs with tests | 195 |
+| ACs with Gherkin | 195 |
+| ACs with both tests + Gherkin | 195 |
+| Complete | 195 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 46 |
-| Microcrates with tests | 23 (50.0%) |
-| Microcrates with Gherkin | 23 (50.0%) |
-| Microcrates fully covered | 23 (50.0%) |
+| Microcrates | 47 |
+| Microcrates with tests | 41 (87.2%) |
+| Microcrates with Gherkin | 41 (87.2%) |
+| Microcrates fully covered | 41 (87.2%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -40,46 +40,47 @@
 | flight-ac7-input | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-ac7-protocol | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-ac7-telemetry | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
-| flight-adapter-common | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-adapter-common | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-blackbox | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-bus | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-bus | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
-| flight-device-common | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-device-common | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-hotas-saitek | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-vkb | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-ipc | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
-| flight-panels-core | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-panels-cougar | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-panels-saitek | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-process-detection | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-profile | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-panels-core | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-process-detection | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
+| flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-rules | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-rules | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-scheduler | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-security | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-service | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-session | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-session | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect-sys | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-streamdeck | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
-| flight-tactile | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-test-helpers | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-tactile | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-test-helpers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-tracing | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-ui | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-units | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-watchdog | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-workspace-meta | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
@@ -224,3 +225,60 @@
 | INF-REQ-12 | AC-12.5 | WHEN schemas are updated THEN the system SHALL provide migration guidance | specs/features/req_inf_2_to_12_gherkin_rollup.feature:75 | 1 | ✅ Complete |
 | INF-REQ-12 | AC-12.6 | WHEN adding new metadata fields THEN they SHALL be documented in schema | specs/features/req_inf_2_to_12_gherkin_rollup.feature:75 | 1 | ✅ Complete |
 | INF-REQ-12 | AC-12.7 | WHEN running cargo xtask validate THEN schema checks SHALL be performed first | specs/features/req_inf_2_to_12_gherkin_rollup.feature:75 | 1 | ✅ Complete |
+| REQ-18 | AC-18.1 | WHEN parsing STECS HID interface reports THEN axes and buttons SHALL be decoded correctly from raw bytes | specs/features/req_18_vkb_hotas.feature:5<br>specs/features/req_18_vkb_hotas.feature:13<br>specs/features/req_18_vkb_hotas.feature:21 | 3 | ✅ Complete |
+| REQ-18 | AC-18.2 | WHEN merging reports from multiple virtual controllers THEN button indices SHALL map to the 1-96 global range and lowest-indexed VC axes SHALL take precedence | specs/features/req_18_vkb_hotas.feature:28<br>specs/features/req_18_vkb_hotas.feature:34 | 2 | ✅ Complete |
+| REQ-18 | AC-18.3 | WHEN invalid or malformed reports are presented THEN the parser SHALL return structured errors rather than panicking | specs/features/req_18_vkb_hotas.feature:40<br>specs/features/req_18_vkb_hotas.feature:46 | 2 | ✅ Complete |
+| REQ-18 | AC-18.4 | WHEN recording read successes and failures THEN the health monitor SHALL track thresholds and report device health status | specs/features/req_18_vkb_hotas.feature:52<br>specs/features/req_18_vkb_hotas.feature:59 | 2 | ✅ Complete |
+| REQ-19 | AC-19.1 | WHEN parsing Saitek HOTAS HID reports THEN axis normalization SHALL produce values in -1.0..1.0 | specs/features/req_19_saitek_hotas.feature:5<br>specs/features/req_19_saitek_hotas.feature:13 | 2 | ✅ Complete |
+| REQ-19 | AC-19.2 | WHEN creating a Saitek HOTAS input handler THEN the correct device type SHALL be reflected and ghost filter SHALL be initialized | specs/features/req_19_saitek_hotas.feature:21 | 1 | ✅ Complete |
+| REQ-19 | AC-19.3 | WHEN recording Saitek device failures THEN health monitor SHALL track consecutive failures and ghost input detection rates | specs/features/req_19_saitek_hotas.feature:28<br>specs/features/req_19_saitek_hotas.feature:34<br>specs/features/req_19_saitek_hotas.feature:40<br>specs/features/req_19_saitek_hotas.feature:46 | 5 | ✅ Complete |
+| REQ-20 | AC-20.1 | WHEN normalizing angles THEN output SHALL be constrained to the expected range (signed -180..180, unsigned 0..360) | specs/features/req_20_unit_conversions.feature:5<br>specs/features/req_20_unit_conversions.feature:13 | 2 | ✅ Complete |
+| REQ-20 | AC-20.2 | WHEN converting between speed units THEN round-trip conversions SHALL preserve values within 0.1% tolerance | specs/features/req_20_unit_conversions.feature:21<br>specs/features/req_20_unit_conversions.feature:28<br>specs/features/req_20_unit_conversions.feature:34 | 3 | ✅ Complete |
+| REQ-20 | AC-20.3 | WHEN converting between altitude units THEN round-trip conversions SHALL preserve values within 0.1% tolerance | specs/features/req_20_unit_conversions.feature:40 | 1 | ✅ Complete |
+| REQ-21 | AC-21.1 | WHEN constructing BusSnapshots THEN core fields SHALL be accessible and validation SHALL accept finite in-range values | specs/features/req_21_telemetry_bus.feature:5<br>specs/features/req_21_telemetry_bus.feature:12 | 2 | ✅ Complete |
+| REQ-21 | AC-21.2 | WHEN using type-safe telemetry wrappers THEN out-of-range construction SHALL fail and valid values SHALL succeed | specs/features/req_21_telemetry_bus.feature:18<br>specs/features/req_21_telemetry_bus.feature:24 | 3 | ✅ Complete |
+| REQ-21 | AC-21.3 | WHEN publishing telemetry snapshots THEN subscribers SHALL receive messages with rate limiting enforced | specs/features/req_21_telemetry_bus.feature:30<br>specs/features/req_21_telemetry_bus.feature:36 | 2 | ✅ Complete |
+| REQ-21 | AC-21.4 | WHEN running end-to-end flight scenarios THEN telemetry data SHALL match expected simulator patterns for MSFS, X-Plane, and DCS | specs/features/req_21_telemetry_bus.feature:42<br>specs/features/req_21_telemetry_bus.feature:48<br>specs/features/req_21_telemetry_bus.feature:54 | 3 | ✅ Complete |
+| REQ-22 | AC-22.1 | WHEN an adapter fails to connect THEN reconnection backoff SHALL increase exponentially up to the configured maximum delay | specs/features/req_22_adapter_resilience.feature:5<br>specs/features/req_22_adapter_resilience.feature:12 | 2 | ✅ Complete |
+| REQ-22 | AC-22.2 | WHEN recording adapter telemetry metrics THEN update rate and aircraft change events SHALL be tracked correctly | specs/features/req_22_adapter_resilience.feature:19<br>specs/features/req_22_adapter_resilience.feature:25 | 2 | ✅ Complete |
+| REQ-23 | AC-23.1 | WHEN validating a profile THEN invalid configurations SHALL be rejected and valid ones SHALL be accepted | specs/features/req_23_profile_management.feature:5<br>specs/features/req_23_profile_management.feature:11 | 1 | ✅ Complete |
+| REQ-23 | AC-23.2 | WHEN capability enforcement is applied THEN profiles SHALL respect device capability constraints | specs/features/req_23_profile_management.feature:17 | 1 | ✅ Complete |
+| REQ-23 | AC-23.3 | WHEN canonicalizing profiles THEN equivalent configurations SHALL produce identical canonical forms | specs/features/req_23_profile_management.feature:23 | 1 | ✅ Complete |
+| REQ-23 | AC-23.4 | WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one | specs/features/req_23_profile_management.feature:29 | 1 | ✅ Complete |
+| REQ-24 | AC-24.1 | WHEN validating a rules schema THEN invalid schema versions SHALL be rejected and valid ones SHALL be accepted | specs/features/req_24_led_rules.feature:5<br>specs/features/req_24_led_rules.feature:11 | 2 | ✅ Complete |
+| REQ-24 | AC-24.2 | WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types | specs/features/req_24_led_rules.feature:17 | 1 | ✅ Complete |
+| REQ-24 | AC-24.3 | WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized | specs/features/req_24_led_rules.feature:24<br>specs/features/req_24_led_rules.feature:30 | 2 | ✅ Complete |
+| REQ-25 | AC-25.1 | WHEN creating a process detector THEN it SHALL initialize with expected process definitions for supported simulators | specs/features/req_25_process_detection.feature:5<br>specs/features/req_25_process_detection.feature:12 | 2 | ✅ Complete |
+| REQ-25 | AC-25.2 | WHEN the process detection lifecycle runs THEN simulator processes SHALL be detected and state transitions SHALL be recorded | specs/features/req_25_process_detection.feature:19<br>specs/features/req_25_process_detection.feature:25 | 2 | ✅ Complete |
+| REQ-26 | AC-26.1 | WHEN USB stall thresholds are exceeded THEN the watchdog SHALL detect the stall and reset counters on recovery | specs/features/req_26_watchdog.feature:5<br>specs/features/req_26_watchdog.feature:11 | 2 | ✅ Complete |
+| REQ-26 | AC-26.2 | WHEN plugin overrun is detected THEN the watchdog SHALL quarantine the component after the threshold is exceeded | specs/features/req_26_watchdog.feature:17<br>specs/features/req_26_watchdog.feature:23 | 2 | ✅ Complete |
+| REQ-26 | AC-26.3 | WHEN NaN or Inf values are injected THEN the NaN guard SHALL detect and respond appropriately to protect downstream components | specs/features/req_26_watchdog.feature:29<br>specs/features/req_26_watchdog.feature:35<br>specs/features/req_26_watchdog.feature:41 | 3 | ✅ Complete |
+| REQ-26 | AC-26.4 | WHEN a quarantined component recovers THEN the watchdog SHALL allow recovery after the quarantine threshold | specs/features/req_26_watchdog.feature:47<br>specs/features/req_26_watchdog.feature:53 | 2 | ✅ Complete |
+| REQ-27 | AC-27.1 | WHEN counters and gauges are updated THEN a snapshot SHALL reflect current values | specs/features/req_27_metrics_registry.feature:5 | 1 | ✅ Complete |
+| REQ-27 | AC-27.2 | WHEN histogram data is recorded THEN the summary SHALL include p50 and p99 percentiles | specs/features/req_27_metrics_registry.feature:11 | 1 | ✅ Complete |
+| REQ-27 | AC-27.3 | WHEN the metrics registry is reset THEN all recorded values SHALL be cleared | specs/features/req_27_metrics_registry.feature:17 | 1 | ✅ Complete |
+| REQ-28 | AC-28.1 | WHEN an aircraft ID is created THEN it SHALL support equality, display, and basic operations | specs/features/req_28_session_management.feature:5 | 1 | ✅ Complete |
+| REQ-28 | AC-28.2 | WHEN flight telemetry is analyzed THEN the phase-of-flight SHALL be determined correctly for common phases | specs/features/req_28_session_management.feature:11 | 2 | ✅ Complete |
+| REQ-28 | AC-28.3 | WHEN phase transitions occur rapidly THEN hysteresis logic SHALL prevent oscillation between phases | specs/features/req_28_session_management.feature:18<br>specs/features/req_28_session_management.feature:24 | 4 | ✅ Complete |
+| REQ-28 | AC-28.4 | WHEN the profile hierarchy is loaded THEN simulator, aircraft, and phase profiles SHALL be merged in precedence order | specs/features/req_28_session_management.feature:30 | 1 | ✅ Complete |
+| REQ-29 | AC-29.1 | WHEN a plugin is validated THEN its declared capabilities SHALL be checked against permitted scopes | specs/features/req_29_security.feature:5 | 2 | ✅ Complete |
+| REQ-29 | AC-29.2 | WHEN telemetry access is requested THEN authorization SHALL be enforced based on plugin trust level | specs/features/req_29_security.feature:12 | 1 | ✅ Complete |
+| REQ-29 | AC-29.3 | WHEN audit logging is active THEN security events SHALL be recorded and old entries trimmed | specs/features/req_29_security.feature:19<br>specs/features/req_29_security.feature:25 | 2 | ✅ Complete |
+| REQ-30 | AC-30.1 | WHEN LED state is set THEN on, off, and blink modes SHALL be applied correctly | specs/features/req_30_panel_led.feature:5<br>specs/features/req_30_panel_led.feature:11<br>specs/features/req_30_panel_led.feature:17 | 3 | ✅ Complete |
+| REQ-30 | AC-30.2 | WHEN LED updates are rate limited THEN updates SHALL not be sent more frequently than the minimum interval | specs/features/req_30_panel_led.feature:23 | 2 | ✅ Complete |
+| REQ-30 | AC-30.3 | WHEN bytecode rules are evaluated THEN LED state SHALL be updated according to the rule's logic | specs/features/req_30_panel_led.feature:29<br>specs/features/req_30_panel_led.feature:35 | 3 | ✅ Complete |
+| REQ-31 | AC-31.1 | WHEN tactile effects are triggered THEN intensity SHALL be validated and expired effects SHALL be discarded | specs/features/req_31_tactile_feedback.feature:5<br>specs/features/req_31_tactile_feedback.feature:11 | 2 | ✅ Complete |
+| REQ-31 | AC-31.2 | WHEN flight events are detected THEN touchdown, stall buffet, and ground roll effects SHALL fire | specs/features/req_31_tactile_feedback.feature:17<br>specs/features/req_31_tactile_feedback.feature:23<br>specs/features/req_31_tactile_feedback.feature:29 | 3 | ✅ Complete |
+| REQ-31 | AC-31.3 | WHEN the SimShaker bridge is configured THEN packets SHALL be created and sent with correct channel values | specs/features/req_31_tactile_feedback.feature:35<br>specs/features/req_31_tactile_feedback.feature:41 | 3 | ✅ Complete |
+| REQ-32 | AC-32.1 | WHEN formatting a device VID/PID THEN the string representation SHALL use the expected hex format | specs/features/req_32_device_common.feature:5<br>specs/features/req_32_device_common.feature:11 | 2 | ✅ Complete |
+| REQ-32 | AC-32.2 | WHEN transitioning device operational states THEN valid transitions SHALL succeed and invalid ones SHALL be rejected | specs/features/req_32_device_common.feature:17 | 1 | ✅ Complete |
+| REQ-32 | AC-32.3 | WHEN recording device operations THEN per-operation totals and registry metrics SHALL be updated | specs/features/req_32_device_common.feature:24<br>specs/features/req_32_device_common.feature:30 | 2 | ✅ Complete |
+| REQ-33 | AC-33.1 | WHEN detecting Cougar MFD type from product ID THEN the correct variant SHALL be returned with the correct name | specs/features/req_33_cougar_panel.feature:5<br>specs/features/req_33_cougar_panel.feature:11 | 3 | ✅ Complete |
+| REQ-33 | AC-33.2 | WHEN building MFD HID reports THEN the report bytes SHALL encode the LED state correctly | specs/features/req_33_cougar_panel.feature:17<br>specs/features/req_33_cougar_panel.feature:23 | 2 | ✅ Complete |
+| REQ-33 | AC-33.3 | WHEN running hardware verification THEN latency requirements SHALL be validated and drift SHALL be detected | specs/features/req_33_cougar_panel.feature:29<br>specs/features/req_33_cougar_panel.feature:35 | 3 | ✅ Complete |
+| REQ-34 | AC-34.1 | WHEN detecting Saitek panel type THEN the correct variant SHALL be identified and LED mappings SHALL be correct | specs/features/req_34_saitek_panel.feature:5<br>specs/features/req_34_saitek_panel.feature:11 | 3 | ✅ Complete |
+| REQ-34 | AC-34.2 | WHEN registering and managing Saitek panels THEN panel creation, LED state management, and rate limiting SHALL work correctly | specs/features/req_34_saitek_panel.feature:17<br>specs/features/req_34_saitek_panel.feature:23<br>specs/features/req_34_saitek_panel.feature:29 | 4 | ✅ Complete |
+| REQ-34 | AC-34.3 | WHEN running Saitek panel hardware verification THEN latency requirements SHALL be enforced and drift SHALL be detected | specs/features/req_34_saitek_panel.feature:35<br>specs/features/req_34_saitek_panel.feature:41<br>specs/features/req_34_saitek_panel.feature:47 | 3 | ✅ Complete |
+| INF-REQ-13 | AC-13.1 | WHEN building test configurations THEN the config builder SHALL produce sensible defaults | specs/features/req_inf_13_test_helpers.feature:5<br>specs/features/req_inf_13_test_helpers.feature:11 | 2 | ✅ Complete |
+| INF-REQ-13 | AC-13.2 | WHEN running harness-based integration tests THEN timeouts SHALL be enforced | specs/features/req_inf_13_test_helpers.feature:17 | 1 | ✅ Complete |
+| INF-REQ-13 | AC-13.3 | WHEN using test utilities THEN temp dir creation and condition waiting SHALL work reliably | specs/features/req_inf_13_test_helpers.feature:23<br>specs/features/req_inf_13_test_helpers.feature:29 | 2 | ✅ Complete |

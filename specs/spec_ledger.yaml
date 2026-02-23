@@ -791,3 +791,419 @@ requirements:
         description: "WHEN running cargo xtask validate THEN schema checks SHALL be performed first"
         tests:
           - cmd:cargo xtask validate
+
+  # Product Requirement: VKB HOTAS Input Parsing
+  - id: REQ-18
+    name: VKB HOTAS Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-18.1
+        description: "WHEN parsing STECS HID interface reports THEN axes and buttons SHALL be decoded correctly from raw bytes"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_buttons_only
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_report_id
+      - id: AC-18.2
+        description: "WHEN merging reports from multiple virtual controllers THEN button indices SHALL map to the 1-96 global range and lowest-indexed VC axes SHALL take precedence"
+        tests:
+          - flight-hotas-vkb::input::tests::test_merge_interface_report_maps_virtual_button_ranges
+          - flight-hotas-vkb::input::tests::test_merge_interface_state_prefers_lowest_vc_axes
+      - id: AC-18.3
+        description: "WHEN invalid or malformed reports are presented THEN the parser SHALL return structured errors rather than panicking"
+        tests:
+          - flight-hotas-vkb::input::tests::test_virtual_controller_out_of_range
+          - flight-hotas-vkb::input::tests::test_report_too_short
+      - id: AC-18.4
+        description: "WHEN recording read successes and failures THEN the health monitor SHALL track thresholds and report device health status"
+        tests:
+          - flight-hotas-vkb::health::tests::test_health_monitor_success_and_failure_threshold
+          - flight-hotas-vkb::health::tests::test_health_status_is_healthy
+
+  # Product Requirement: Saitek HOTAS Input Parsing
+  - id: REQ-19
+    name: Saitek HOTAS Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-19.1
+        description: "WHEN parsing Saitek HOTAS HID reports THEN axis normalization SHALL produce values in -1.0..1.0"
+        tests:
+          - flight-hotas-saitek::input::tests::test_normalize_8bit
+          - flight-hotas-saitek::input::tests::test_normalize_16bit
+      - id: AC-19.2
+        description: "WHEN creating a Saitek HOTAS input handler THEN the correct device type SHALL be reflected and ghost filter SHALL be initialized"
+        tests:
+          - flight-hotas-saitek::input::tests::test_input_handler_creation
+      - id: AC-19.3
+        description: "WHEN recording Saitek device failures THEN health monitor SHALL track consecutive failures and ghost input detection rates"
+        tests:
+          - flight-hotas-saitek::health::tests::test_health_monitor_success
+          - flight-hotas-saitek::health::tests::test_health_monitor_failure_threshold
+          - flight-hotas-saitek::health::tests::test_health_monitor_reset_on_success
+          - flight-hotas-saitek::health::tests::test_health_status_healthy
+          - flight-hotas-saitek::health::tests::test_health_status_ghost_issues
+
+  # Product Requirement: Unit Conversions and Angle Normalization
+  - id: REQ-20
+    name: Unit Conversions and Angle Normalization
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-20.1
+        description: "WHEN normalizing angles THEN output SHALL be constrained to the expected range (signed -180..180, unsigned 0..360)"
+        tests:
+          - flight-units::tests::test_normalize_degrees_signed
+          - flight-units::tests::test_normalize_degrees_unsigned
+      - id: AC-20.2
+        description: "WHEN converting between speed units THEN round-trip conversions SHALL preserve values within 0.1% tolerance"
+        tests:
+          - flight-units::tests::test_kph_conversions
+          - flight-units::tests::prop_knots_mps_roundtrip
+          - flight-units::tests::prop_kph_mps_roundtrip
+      - id: AC-20.3
+        description: "WHEN converting between altitude units THEN round-trip conversions SHALL preserve values within 0.1% tolerance"
+        tests:
+          - flight-units::tests::prop_feet_meters_roundtrip
+
+  # Product Requirement: Telemetry Bus and BusSnapshot
+  - id: REQ-21
+    name: Telemetry Bus and BusSnapshot
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-21.1
+        description: "WHEN constructing BusSnapshots THEN core fields SHALL be accessible and validation SHALL accept finite in-range values"
+        tests:
+          - flight-bus::snapshot::tests::test_bus_snapshot_creation
+          - flight-bus::snapshot::tests::test_snapshot_validation
+      - id: AC-21.2
+        description: "WHEN using type-safe telemetry wrappers THEN out-of-range construction SHALL fail and valid values SHALL succeed"
+        tests:
+          - flight-bus::types::tests::test_percentage_validation
+          - flight-bus::types::tests::test_g_force_validation
+          - flight-bus::types::tests::test_mach_validation
+      - id: AC-21.3
+        description: "WHEN publishing telemetry snapshots THEN subscribers SHALL receive messages with rate limiting enforced"
+        tests:
+          - flight-bus::publisher::tests::test_subscriber_id_uniqueness
+          - flight-bus::publisher::tests::test_rate_limiter
+      - id: AC-21.4
+        description: "WHEN running end-to-end flight scenarios THEN telemetry data SHALL match expected simulator patterns for MSFS, X-Plane, and DCS"
+        tests:
+          - flight-bus::e2e_test::tests::test_e2e_msfs_cruise
+          - flight-bus::e2e_test::tests::test_e2e_xplane_cruise
+          - flight-bus::e2e_test::tests::test_e2e_dcs_cruise
+
+  # Product Requirement: Adapter Connection Resilience
+  - id: REQ-22
+    name: Adapter Connection Resilience
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-22.1
+        description: "WHEN an adapter fails to connect THEN reconnection backoff SHALL increase exponentially up to the configured maximum delay"
+        tests:
+          - flight-adapter-common::reconnection::tests::test_backoff_progression
+          - flight-adapter-common::reconnection::tests::test_should_retry
+      - id: AC-22.2
+        description: "WHEN recording adapter telemetry metrics THEN update rate and aircraft change events SHALL be tracked correctly"
+        tests:
+          - flight-adapter-common::metrics::tests::test_record_update_tracks_samples
+          - flight-adapter-common::metrics::tests::test_record_aircraft_change
+
+  # Product Requirement: Profile Management and Merging
+  - id: REQ-23
+    name: Profile Management and Merging
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-23.1
+        description: "WHEN validating a profile THEN invalid configurations SHALL be rejected and valid ones SHALL be accepted"
+        tests:
+          - flight-profile::tests::test_profile_validation
+      - id: AC-23.2
+        description: "WHEN capability enforcement is applied THEN profiles SHALL respect device capability constraints"
+        tests:
+          - flight-profile::tests::test_capability_enforcement
+      - id: AC-23.3
+        description: "WHEN canonicalizing profiles THEN equivalent configurations SHALL produce identical canonical forms"
+        tests:
+          - flight-profile::tests::test_profile_canonicalization
+      - id: AC-23.4
+        description: "WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one"
+        tests:
+          - flight-profile::tests::test_profile_merging
+
+  # Product Requirement: LED Rules Engine
+  - id: REQ-24
+    name: LED Rules Engine
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-24.1
+        description: "WHEN validating a rules schema THEN invalid schema versions SHALL be rejected and valid ones SHALL be accepted"
+        tests:
+          - flight-rules::tests::test_rules_schema_validation
+          - flight-rules::tests::test_invalid_schema_version
+      - id: AC-24.2
+        description: "WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types"
+        tests:
+          - flight-rules::tests::test_rule_compilation
+      - id: AC-24.3
+        description: "WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized"
+        tests:
+          - flight-rules::tests::test_condition_parsing
+          - flight-rules::tests::test_action_parsing
+
+  # Product Requirement: Simulator Process Detection
+  - id: REQ-25
+    name: Simulator Process Detection
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-25.1
+        description: "WHEN creating a process detector THEN it SHALL initialize with expected process definitions for supported simulators"
+        tests:
+          - flight-process-detection::tests::test_process_detector_creation
+          - flight-process-detection::tests::test_process_definition_defaults
+      - id: AC-25.2
+        description: "WHEN the process detection lifecycle runs THEN simulator processes SHALL be detected and state transitions SHALL be recorded"
+        tests:
+          - flight-process-detection::tests::test_process_detection_lifecycle
+          - flight-process-detection::tests::test_sim_detection_check
+
+  # Product Requirement: System Watchdog and Quarantine
+  - id: REQ-26
+    name: System Watchdog and Quarantine
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-26.1
+        description: "WHEN USB stall thresholds are exceeded THEN the watchdog SHALL detect the stall and reset counters on recovery"
+        tests:
+          - flight-watchdog::tests::test_usb_stall_threshold_detection
+          - flight-watchdog::tests::test_usb_stall_counter_reset
+      - id: AC-26.2
+        description: "WHEN plugin overrun is detected THEN the watchdog SHALL quarantine the component after the threshold is exceeded"
+        tests:
+          - flight-watchdog::tests::test_plugin_overrun_detection
+          - flight-watchdog::tests::test_plugin_overrun_quarantine_threshold
+      - id: AC-26.3
+        description: "WHEN NaN or Inf values are injected THEN the NaN guard SHALL detect and respond appropriately to protect downstream components"
+        tests:
+          - flight-watchdog::tests::test_nan_detection
+          - flight-watchdog::tests::test_nan_guard_disabled
+          - flight-watchdog::tests::test_critical_component_nan_response
+      - id: AC-26.4
+        description: "WHEN a quarantined component recovers THEN the watchdog SHALL allow recovery after the quarantine threshold"
+        tests:
+          - flight-watchdog::tests::test_component_quarantine_isolation
+          - flight-watchdog::tests::test_quarantine_recovery_mechanism
+
+  # Product Requirement: Metrics Registry
+  - id: REQ-27
+    name: Metrics Registry
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-27.1
+        description: "WHEN counters and gauges are updated THEN a snapshot SHALL reflect current values"
+        tests:
+          - flight-metrics::registry::tests::test_counter_and_gauge_snapshot
+      - id: AC-27.2
+        description: "WHEN histogram data is recorded THEN the summary SHALL include p50 and p99 percentiles"
+        tests:
+          - flight-metrics::registry::tests::test_histogram_summary
+      - id: AC-27.3
+        description: "WHEN the metrics registry is reset THEN all recorded values SHALL be cleared"
+        tests:
+          - flight-metrics::registry::tests::test_reset_clears_metrics
+
+  # Product Requirement: Session and Phase-of-Flight Management
+  - id: REQ-28
+    name: Session and Phase-of-Flight Management
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-28.1
+        description: "WHEN an aircraft ID is created THEN it SHALL support equality, display, and basic operations"
+        tests:
+          - flight-session::tests::test_aircraft_id_basics
+      - id: AC-28.2
+        description: "WHEN flight telemetry is analyzed THEN the phase-of-flight SHALL be determined correctly for common phases"
+        tests:
+          - flight-session::tests::test_phase_of_flight_determination
+          - flight-session::tests::test_phase_of_flight_string_conversion
+      - id: AC-28.3
+        description: "WHEN phase transitions occur rapidly THEN hysteresis logic SHALL prevent oscillation between phases"
+        tests:
+          - flight-session::tests::test_hysteresis_logic
+          - flight-session::tests::test_hysteresis_band_configuration
+          - flight-session::tests::test_consecutive_frames_hysteresis
+          - flight-session::tests::test_phase_flip_flop_prevention
+      - id: AC-28.4
+        description: "WHEN the profile hierarchy is loaded THEN simulator, aircraft, and phase profiles SHALL be merged in precedence order"
+        tests:
+          - flight-session::tests::test_profile_hierarchy_loading
+
+  # Product Requirement: Plugin Security and Authorization
+  - id: REQ-29
+    name: Plugin Security and Authorization
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-29.1
+        description: "WHEN a plugin is validated THEN its declared capabilities SHALL be checked against permitted scopes"
+        tests:
+          - flight-security::tests::test_plugin_validation
+          - flight-security::tests::test_capability_validation
+      - id: AC-29.2
+        description: "WHEN telemetry access is requested THEN authorization SHALL be enforced based on plugin trust level"
+        tests:
+          - flight-security::tests::test_telemetry_authorization
+      - id: AC-29.3
+        description: "WHEN audit logging is active THEN security events SHALL be recorded and old entries trimmed"
+        tests:
+          - flight-security::verification::tests::test_audit_logging
+          - flight-security::verification::tests::test_audit_log_trimming
+
+  # Product Requirement: Panel LED Control
+  - id: REQ-30
+    name: Panel LED Control
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-30.1
+        description: "WHEN LED state is set THEN on, off, and blink modes SHALL be applied correctly"
+        tests:
+          - flight-panels-core::led::tests::test_led_on_off
+          - flight-panels-core::led::tests::test_led_blink
+          - flight-panels-core::led::tests::test_led_brightness
+      - id: AC-30.2
+        description: "WHEN LED updates are rate limited THEN updates SHALL not be sent more frequently than the minimum interval"
+        tests:
+          - flight-panels-core::led::tests::test_rate_limiting
+          - flight-panels-core::led::tests::test_min_interval_enforcement
+      - id: AC-30.3
+        description: "WHEN bytecode rules are evaluated THEN LED state SHALL be updated according to the rule's logic"
+        tests:
+          - flight-panels-core::evaluator::tests::test_bytecode_evaluation
+          - flight-panels-core::evaluator::tests::test_hysteresis_bytecode
+          - flight-panels-core::evaluator::tests::test_zero_allocation_constraint
+
+  # Product Requirement: Tactile Feedback
+  - id: REQ-31
+    name: Tactile Feedback Effects
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-31.1
+        description: "WHEN tactile effects are triggered THEN intensity SHALL be validated and expired effects SHALL be discarded"
+        tests:
+          - flight-tactile::effects::tests::test_effect_intensity_validation
+          - flight-tactile::effects::tests::test_effect_event_expiration
+      - id: AC-31.2
+        description: "WHEN flight events are detected THEN touchdown, stall buffet, and ground roll effects SHALL fire"
+        tests:
+          - flight-tactile::effects::tests::test_touchdown_detection
+          - flight-tactile::effects::tests::test_stall_buffet_detection
+          - flight-tactile::effects::tests::test_ground_roll_detection
+      - id: AC-31.3
+        description: "WHEN the SimShaker bridge is configured THEN packets SHALL be created and sent with correct channel values"
+        tests:
+          - flight-tactile::simshaker::tests::test_simshaker_config_validation
+          - flight-tactile::simshaker::tests::test_simshaker_packet_creation
+          - flight-tactile::simshaker::tests::test_channel_value_conversion
+
+  # Product Requirement: Device Common Types and Health
+  - id: REQ-32
+    name: Device Common Types and Health
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-32.1
+        description: "WHEN formatting a device VID/PID THEN the string representation SHALL use the expected hex format"
+        tests:
+          - flight-device-common::device::tests::test_vid_pid_format
+          - flight-device-common::device::tests::test_virtual_device_builder
+      - id: AC-32.2
+        description: "WHEN transitioning device operational states THEN valid transitions SHALL succeed and invalid ones SHALL be rejected"
+        tests:
+          - flight-device-common::health::tests::test_operational_states
+      - id: AC-32.3
+        description: "WHEN recording device operations THEN per-operation totals and registry metrics SHALL be updated"
+        tests:
+          - flight-device-common::metrics::tests::test_record_operation_updates_totals
+          - flight-device-common::metrics::tests::test_record_operation_with_registry
+
+  # Product Requirement: Cougar MFD Panel Support
+  - id: REQ-33
+    name: Cougar MFD Panel Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-33.1
+        description: "WHEN detecting Cougar MFD type from product ID THEN the correct variant SHALL be returned with the correct name"
+        tests:
+          - flight-panels-cougar::cougar::tests::test_cougar_mfd_type_from_product_id
+          - flight-panels-cougar::cougar::tests::test_cougar_mfd_type_names
+          - flight-panels-cougar::cougar::tests::test_cougar_mfd_led_mapping
+      - id: AC-33.2
+        description: "WHEN building MFD HID reports THEN the report bytes SHALL encode the LED state correctly"
+        tests:
+          - flight-panels-cougar::cougar::tests::test_build_mfd_reports
+          - flight-panels-cougar::cougar::tests::test_led_state_brightness_clamping
+      - id: AC-33.3
+        description: "WHEN running hardware verification THEN latency requirements SHALL be validated and drift SHALL be detected"
+        tests:
+          - flight-panels-cougar::cougar::tests::test_verify_test_result_latency_analysis
+          - flight-panels-cougar::cougar::tests::test_rate_limiting_enforcement
+          - flight-panels-cougar::cougar::tests::test_drift_detection_and_repair
+
+  # Product Requirement: Saitek Panel Support
+  - id: REQ-34
+    name: Saitek Panel Support
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-34.1
+        description: "WHEN detecting Saitek panel type THEN the correct variant SHALL be identified and LED mappings SHALL be correct"
+        tests:
+          - flight-panels-saitek::saitek::tests::test_panel_type_detection
+          - flight-panels-saitek::saitek::tests::test_panel_type_names
+          - flight-panels-saitek::saitek::tests::test_panel_led_mappings
+      - id: AC-34.2
+        description: "WHEN registering and managing Saitek panels THEN panel creation, LED state management, and rate limiting SHALL work correctly"
+        tests:
+          - flight-panels-saitek::saitek::tests::test_saitek_writer_creation
+          - flight-panels-saitek::saitek::tests::test_panel_registration
+          - flight-panels-saitek::saitek::tests::test_led_state_management
+          - flight-panels-saitek::saitek::tests::test_rate_limiting
+      - id: AC-34.3
+        description: "WHEN running Saitek panel hardware verification THEN latency requirements SHALL be enforced and drift SHALL be detected"
+        tests:
+          - flight-panels-saitek::verify_matrix::tests::test_verify_matrix_creation
+          - flight-panels-saitek::verify_matrix::tests::test_latency_stats_calculation
+          - flight-panels-saitek::verify_matrix::tests::test_drift_thresholds
+
+  # Infrastructure Requirement: Test Helpers
+  - id: INF-REQ-13
+    name: Test Helper Utilities
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-13.1
+        description: "WHEN building test configurations THEN the config builder SHALL produce sensible defaults"
+        tests:
+          - flight-test-helpers::fixtures::tests::test_config_builder_defaults
+          - flight-test-helpers::fixtures::tests::test_device_builder_customization
+      - id: AC-13.2
+        description: "WHEN running harness-based integration tests THEN timeouts SHALL be enforced"
+        tests:
+          - flight-test-helpers::integration::tests::test_harness_timeout
+      - id: AC-13.3
+        description: "WHEN using test utilities THEN temp dir creation and condition waiting SHALL work reliably"
+        tests:
+          - flight-test-helpers::utils::tests::test_create_temp_dir
+          - flight-test-helpers::utils::tests::test_wait_for_condition
