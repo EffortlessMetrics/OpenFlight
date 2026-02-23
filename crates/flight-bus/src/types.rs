@@ -252,6 +252,7 @@ pub enum SimId {
     Msfs,
     XPlane,
     Dcs,
+    AceCombat7,
     Unknown,
 }
 
@@ -261,6 +262,7 @@ impl fmt::Display for SimId {
             SimId::Msfs => write!(f, "MSFS"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
+            SimId::AceCombat7 => write!(f, "Ace Combat 7"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }

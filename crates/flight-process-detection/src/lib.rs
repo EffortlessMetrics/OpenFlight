@@ -31,6 +31,7 @@ pub enum SimId {
     Msfs,
     XPlane,
     Dcs,
+    AceCombat7,
     Unknown,
 }
 
@@ -40,6 +41,7 @@ impl std::fmt::Display for SimId {
             SimId::Msfs => write!(f, "MSFS"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
+            SimId::AceCombat7 => write!(f, "Ace Combat 7"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -186,6 +188,20 @@ impl Default for ProcessDetectionConfig {
                 process_paths: vec![
                     PathBuf::from("DCS World"),
                     PathBuf::from("Eagle Dynamics/DCS World"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Ace Combat 7 process definition
+        process_definitions.insert(
+            SimId::AceCombat7,
+            ProcessDefinition {
+                process_names: vec!["acecombat7.exe".to_string(), "ACE7Game.exe".to_string()],
+                window_titles: vec!["ACE COMBAT 7".to_string(), "SKIES UNKNOWN".to_string()],
+                process_paths: vec![
+                    PathBuf::from("ACE COMBAT 7"),
+                    PathBuf::from("steamapps/common/ACE COMBAT 7"),
                 ],
                 min_confidence: 0.8,
             },
@@ -846,6 +862,12 @@ mod tests {
                 .process_definitions
                 .contains_key(&SimId::Dcs)
         );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::AceCombat7)
+        );
     }
 
     #[test]
@@ -874,6 +896,13 @@ mod tests {
 
         let dcs_def = config.process_definitions.get(&SimId::Dcs).unwrap();
         assert!(dcs_def.process_names.contains(&"DCS.exe".to_string()));
+
+        let ac7_def = config.process_definitions.get(&SimId::AceCombat7).unwrap();
+        assert!(
+            ac7_def
+                .process_names
+                .contains(&"acecombat7.exe".to_string())
+        );
     }
 
     #[tokio::test]
@@ -901,6 +930,7 @@ mod tests {
         assert!(!detector.is_sim_detected(SimId::Msfs).await);
         assert!(!detector.is_sim_detected(SimId::XPlane).await);
         assert!(!detector.is_sim_detected(SimId::Dcs).await);
+        assert!(!detector.is_sim_detected(SimId::AceCombat7).await);
     }
 
     use proptest::prelude::*;

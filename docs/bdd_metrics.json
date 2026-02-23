@@ -8,11 +8,47 @@
   "needs_tests": 0,
   "draft": 0,
   "incomplete": 0,
-  "microcrate_total": 43,
+  "microcrate_total": 46,
   "microcrate_with_tests": 20,
   "microcrate_with_gherkin": 20,
   "microcrate_with_tests_and_gherkin": 20,
   "crate_coverage": [
+    {
+      "crate_name": "flight-ac7-input",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-ac7-protocol",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-ac7-telemetry",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
     {
       "crate_name": "flight-adapter-common",
       "total_ac": 0,

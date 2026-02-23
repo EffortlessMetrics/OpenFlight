@@ -35,6 +35,7 @@ flight-bus = { path = "../flight-bus" }
 flight-simconnect = { path = "../flight-simconnect" }
 flight-xplane = { path = "../flight-xplane" }
 flight-dcs-export = { path = "../flight-dcs-export" }
+flight-ac7-telemetry = { path = "../flight-ac7-telemetry" }
 flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
 flight-hid-support = { path = "../flight-hid-support" }
 hidapi = { workspace = true, optional = true }

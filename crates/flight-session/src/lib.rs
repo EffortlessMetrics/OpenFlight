@@ -906,6 +906,7 @@ impl AircraftAutoSwitch {
             SimId::Msfs => "msfs",
             SimId::XPlane => "xplane",
             SimId::Dcs => "dcs",
+            SimId::AceCombat7 => "ac7",
             SimId::Unknown => "unknown",
         };
 

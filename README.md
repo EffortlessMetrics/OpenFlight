@@ -6,7 +6,7 @@ Flight Hub is a PC flight simulation input management system written in Rust. It
 
 ## Product Posture
 
-Flight Hub is an accessory/input manager that requires a simulator such as MSFS, X-Plane, or DCS. It does not emulate or replace any simulator.
+Flight Hub is an accessory/input manager that requires a simulator such as MSFS, X-Plane, or DCS. Experimental AC7 support is available via user-provided telemetry bridges. It does not emulate or replace any simulator.
 
 For simulator integration boundaries and compliance notes, see `docs/product-posture.md`.
 
@@ -15,7 +15,7 @@ For simulator integration boundaries and compliance notes, see `docs/product-pos
 - Real-time spine: `flight-axis`, `flight-scheduler`, `flight-bus`
 - Service surface: `flight-service`, `flight-cli`, `flight-ipc`, `flight-ui`
 - Core domain: `flight-core`, `flight-profile`, `flight-rules`, `flight-units`, `flight-session`
-- Simulator adapters: `flight-simconnect`, `flight-simconnect-sys`, `flight-xplane`, `flight-dcs-export`, `flight-adapter-common`
+- Simulator adapters: `flight-simconnect`, `flight-simconnect-sys`, `flight-xplane`, `flight-dcs-export`, `flight-ac7-protocol`, `flight-ac7-telemetry`, `flight-ac7-input`, `flight-adapter-common`
 - Device and hardware: `flight-hid`, `flight-hid-support`, `flight-hid-types`, `flight-virtual`
 - Panel and control hardware: `flight-panels`, `flight-panels-core`, `flight-panels-saitek`, `flight-panels-cougar`, `flight-hotas-saitek`, `flight-hotas-thrustmaster`, `flight-streamdeck`
 - Safety, diagnostics, and observability: `flight-ffb`, `flight-watchdog`, `flight-blackbox`, `flight-tracing`, `flight-metrics`, `flight-tactile`

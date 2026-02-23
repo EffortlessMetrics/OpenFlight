@@ -23,6 +23,7 @@ use flight_xplane::{
     AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft,
 };
 // Avoid type-name collision with local stub
+use flight_ac7_telemetry::Ac7TelemetryAdapter as Ac7AdapterApi;
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -43,6 +44,7 @@ fn map_sim_id(sim: BusSimId) -> CoreSimId {
         BusSimId::Msfs => CoreSimId::Msfs,
         BusSimId::XPlane => CoreSimId::XPlane,
         BusSimId::Dcs => CoreSimId::Dcs,
+        BusSimId::AceCombat7 => CoreSimId::AceCombat7,
         BusSimId::Unknown => CoreSimId::Unknown,
     }
 }
@@ -103,6 +105,8 @@ pub struct AdapterConfigs {
     pub enable_xplane: bool,
     /// Enable DCS adapter
     pub enable_dcs: bool,
+    /// Enable Ace Combat 7 adapter
+    pub enable_ac7: bool,
 }
 
 /// Aircraft auto-switch service
@@ -121,6 +125,7 @@ struct SimAdapters {
     msfs: Option<MsfsAdapter>,
     xplane: Option<XPlaneAdapter>,
     dcs: Option<DcsAdapter>,
+    ac7: Option<Ac7Adapter>,
 }
 
 /// MSFS adapter wrapper
@@ -143,6 +148,14 @@ struct XPlaneAdapter {
 struct DcsAdapter {
     #[allow(dead_code)]
     adapter: DcsAdapterApi,
+    #[allow(dead_code)]
+    current_aircraft: Option<BusAircraftId>,
+}
+
+/// Ace Combat 7 adapter wrapper
+struct Ac7Adapter {
+    #[allow(dead_code)]
+    adapter: Ac7AdapterApi,
     #[allow(dead_code)]
     current_aircraft: Option<BusAircraftId>,
 }
@@ -192,6 +205,7 @@ impl Default for AircraftAutoSwitchServiceConfig {
                 enable_msfs: true,
                 enable_xplane: true,
                 enable_dcs: true,
+                enable_ac7: true,
             },
         }
     }
@@ -390,6 +404,7 @@ impl AircraftAutoSwitchService {
                             CoreSimId::Msfs => BusSimId::Msfs,
                             CoreSimId::XPlane => BusSimId::XPlane,
                             CoreSimId::Dcs => BusSimId::Dcs,
+                            CoreSimId::AceCombat7 => BusSimId::AceCombat7,
                             CoreSimId::Unknown => BusSimId::Unknown,
                         };
                         let _ = service_tx.send(ServiceEvent::ProcessLost(bus_sim));
@@ -441,6 +456,7 @@ impl AircraftAutoSwitchService {
             CoreSimId::Msfs => BusSimId::Msfs,
             CoreSimId::XPlane => BusSimId::XPlane,
             CoreSimId::Dcs => BusSimId::Dcs,
+            CoreSimId::AceCombat7 => BusSimId::AceCombat7,
             CoreSimId::Unknown => BusSimId::Unknown,
         };
 
@@ -475,6 +491,16 @@ impl AircraftAutoSwitchService {
                     });
                 }
             }
+            BusSimId::AceCombat7 if config.adapters.enable_ac7 => {
+                if adapters_guard.ac7.is_none() {
+                    let adapter = Ac7AdapterApi::new(Default::default());
+                    // TODO: setup telemetry receive loop integration with service bus.
+                    adapters_guard.ac7 = Some(Ac7Adapter {
+                        adapter,
+                        current_aircraft: None,
+                    });
+                }
+            }
             _ => {
                 debug!("Adapter not enabled or supported for sim: {}", process.sim);
             }
@@ -499,6 +525,9 @@ impl AircraftAutoSwitchService {
             BusSimId::Dcs => {
                 adapters_guard.dcs = None;
             }
+            BusSimId::AceCombat7 => {
+                adapters_guard.ac7 = None;
+            }
             _ => {}
         }
 
@@ -512,6 +541,7 @@ impl SimAdapters {
             msfs: None,
             xplane: None,
             dcs: None,
+            ac7: None,
         }
     }
 
@@ -520,6 +550,7 @@ impl SimAdapters {
         self.msfs = None;
         self.xplane = None;
         self.dcs = None;
+        self.ac7 = None;
         Ok(())
     }
 }
@@ -556,11 +587,13 @@ mod tests {
         config.adapters.enable_msfs = false;
         config.adapters.enable_xplane = true;
         config.adapters.enable_dcs = false;
+        config.adapters.enable_ac7 = true;
 
         let service = AircraftAutoSwitchService::new(config);
         assert!(!service.config.adapters.enable_msfs);
         assert!(service.config.adapters.enable_xplane);
         assert!(!service.config.adapters.enable_dcs);
+        assert!(service.config.adapters.enable_ac7);
     }
 
     #[tokio::test]

@@ -3,6 +3,7 @@
 
 //! CLI command implementations
 
+pub mod ac7;
 pub mod dcs;
 pub mod devices;
 pub mod diag;
@@ -18,6 +19,7 @@ pub mod xplane;
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
+pub use ac7::Ac7Action;
 pub use dcs::DcsAction;
 pub use xplane::XPlaneAction;
 
@@ -72,7 +74,7 @@ pub enum ProfileAction {
 pub enum SimAction {
     /// Configure simulator integration
     Configure {
-        /// Simulator type (msfs, xplane, dcs)
+        /// Simulator type (msfs, xplane, dcs, ac7)
         sim_type: String,
 
         /// Configuration action

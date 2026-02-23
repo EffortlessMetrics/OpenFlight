@@ -1,0 +1,30 @@
+[package]
+homepage.workspace = true
+name = "flight-ac7-telemetry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Ace Combat 7 telemetry UDP adapter for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "ace-combat-7", "adapter"]
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[dependencies]
+flight-ac7-protocol = { workspace = true }
+flight-adapter-common = { path = "../flight-adapter-common" }
+flight-bus = { path = "../flight-bus" }
+flight-core = { path = "../flight-core" }
+flight-metrics = { path = "../flight-metrics" }
+tokio = { workspace = true, features = ["net", "time", "macros", "rt"] }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

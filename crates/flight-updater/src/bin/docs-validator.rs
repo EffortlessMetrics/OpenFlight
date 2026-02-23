@@ -33,7 +33,7 @@ async fn main() {
                 .short('s')
                 .long("simulator")
                 .value_name("SIM")
-                .help("Generate docs for specific simulator (msfs, xplane, dcs)"),
+                .help("Generate docs for specific simulator (msfs, xplane, dcs, ac7)"),
         )
         .arg(
             Arg::new("validate-only")
@@ -124,7 +124,7 @@ async fn main() {
             }
         } else {
             // Generate docs for all simulators
-            let simulators = ["msfs", "xplane", "dcs"];
+            let simulators = ["msfs", "xplane", "dcs", "ac7"];
 
             for sim in &simulators {
                 if let Some(docs) = manager.generate_user_docs(sim) {

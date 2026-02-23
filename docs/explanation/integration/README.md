@@ -18,6 +18,7 @@ This directory contains comprehensive documentation about what Flight Hub touche
 - [Microsoft Flight Simulator (MSFS)](./msfs.md) - SimConnect integration and configuration changes
 - [X-Plane](./xplane.md) - DataRef integration and preference modifications  
 - [DCS World](./dcs.md) - Export.lua integration and multiplayer considerations
+- [Ace Combat 7 (Experimental)](./ac7.md) - User-provided telemetry bridge and Input.ini mapping
 
 ## Force Feedback Integration
 
@@ -34,6 +35,7 @@ This directory contains comprehensive documentation about what Flight Hub touche
 | MSFS | `UserCfg.opt` | Disable built-in curves | [MSFS Revert](./msfs.md) |
 | X-Plane | `X-Plane Joystick Settings.prf` | Linear curve settings | [X-Plane Revert](./xplane.md) |
 | DCS | `options.lua` (user-installed) | Control curve settings | [DCS Revert](./dcs.md) |
+| AC7 (Experimental) | `Input.ini` managed block | HOTAS mapping + joystick enablement | [AC7 Revert](./ac7.md) |
 
 ### Network Ports Used
 
@@ -42,6 +44,7 @@ This directory contains comprehensive documentation about what Flight Hub touche
 | Dynamic | TCP | SimConnect | MSFS |
 | 49000 | UDP | DataRef communication | X-Plane |
 | 12080 | TCP | Export.lua socket | DCS |
+| 7779 | UDP | User bridge telemetry ingest | AC7 (Experimental) |
 
 ### Installation Requirements
 

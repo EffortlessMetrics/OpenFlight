@@ -25,10 +25,10 @@
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 43 |
-| Microcrates with tests | 20 (46.5%) |
-| Microcrates with Gherkin | 20 (46.5%) |
-| Microcrates fully covered | 20 (46.5%) |
+| Microcrates | 46 |
+| Microcrates with tests | 20 (43.5%) |
+| Microcrates with Gherkin | 20 (43.5%) |
+| Microcrates fully covered | 20 (43.5%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -37,6 +37,9 @@
 
 | Microcrate | Total AC | ACs with tests | ACs with Gherkin | ACs with both | Complete | Test coverage | Gherkin coverage | Test+Gherkin coverage |
 |-----------|----------|----------------|------------------|---------------|----------|--------------|------------------|------------------------|
+| flight-ac7-input | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-ac7-protocol | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-ac7-telemetry | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-adapter-common | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |

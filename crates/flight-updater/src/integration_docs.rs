@@ -270,6 +270,9 @@ impl IntegrationDocsManager {
         // Load DCS documentation
         self.load_dcs_docs().await?;
 
+        // Load Ace Combat 7 documentation
+        self.load_ac7_docs().await?;
+
         Ok(())
     }
 
@@ -847,6 +850,127 @@ impl IntegrationDocsManager {
         self.docs.insert("dcs".to_string(), docs);
         Ok(())
     }
+
+    /// Load Ace Combat 7 integration documentation
+    async fn load_ac7_docs(&mut self) -> crate::Result<()> {
+        let docs = SimIntegrationDocs {
+            simulator: SimulatorInfo {
+                name: "Ace Combat 7: Skies Unknown".to_string(),
+                supported_versions: vec!["PC (Steam)".to_string()],
+                integration_method: "User-provided telemetry bridge (UE4SS/Lua) + Input.ini managed block".to_string(),
+                last_updated: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            },
+            files: vec![
+                FileIntegration {
+                    path: "%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\Config\\WindowsNoEditor\\Input.ini".to_string(),
+                    action: FileAction::Modify {
+                        sections_modified: vec![
+                            "Flight Hub managed block".to_string(),
+                            "EnableJoystick".to_string(),
+                        ],
+                        modification_type: "append_or_replace_managed_block".to_string(),
+                    },
+                    purpose: "Install HOTAS/joystick mappings managed by Flight Hub".to_string(),
+                    affects_multiplayer: false,
+                    backup_location: Some("%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\Config\\WindowsNoEditor\\Input.ini.flight-hub.bak".to_string()),
+                },
+                FileIntegration {
+                    path: "ACE COMBAT 7\\Game\\Binaries\\Win64\\ue4ss\\*".to_string(),
+                    action: FileAction::Read {
+                        data_read: "Telemetry bridge presence and status files".to_string(),
+                    },
+                    purpose: "Detect whether user-provided bridge is installed".to_string(),
+                    affects_multiplayer: true,
+                    backup_location: None,
+                },
+                FileIntegration {
+                    path: "%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\SaveGames".to_string(),
+                    action: FileAction::Read {
+                        data_read: "Save-game location for support diagnostics only".to_string(),
+                    },
+                    purpose: "Assist user with backup/restore instructions; no save mutation".to_string(),
+                    affects_multiplayer: false,
+                    backup_location: None,
+                },
+            ],
+            registry_keys: vec![],
+            network_ports: vec![
+                PortIntegration {
+                    port: 7779,
+                    protocol: "UDP".to_string(),
+                    direction: "inbound".to_string(),
+                    purpose: "Receive telemetry from user bridge plugin".to_string(),
+                    optional: false,
+                },
+            ],
+            environment_vars: vec![],
+            processes: vec![
+                ProcessIntegration {
+                    process_name: "acecombat7.exe".to_string(),
+                    action: ProcessAction::Monitor,
+                    purpose: "Detect AC7 runtime for adapter activation".to_string(),
+                    affects_multiplayer: false,
+                },
+                ProcessIntegration {
+                    process_name: "flight-hub-ac7-bridge".to_string(),
+                    action: ProcessAction::Communicate {
+                        method: "localhost UDP telemetry socket".to_string(),
+                    },
+                    purpose: "Receive bridge telemetry without process injection".to_string(),
+                    affects_multiplayer: true,
+                },
+            ],
+            revert_instructions: RevertInstructions {
+                automatic_steps: vec![
+                    RevertStep {
+                        description: "Restore Input.ini from backup".to_string(),
+                        action: RevertAction::RestoreFile {
+                            path: "%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\Config\\WindowsNoEditor\\Input.ini".to_string(),
+                            backup_path: "%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\Config\\WindowsNoEditor\\Input.ini.flight-hub.bak".to_string(),
+                        },
+                        order: 1,
+                    },
+                ],
+                manual_steps: vec![
+                    ManualRevertStep {
+                        step_number: 1,
+                        description: "Remove Flight Hub managed block from Input.ini".to_string(),
+                        instructions: "Delete lines between the FLIGHT HUB AC7 managed block markers in Input.ini, or restore from the .flight-hub.bak backup.".to_string(),
+                        help_url: None,
+                    },
+                    ManualRevertStep {
+                        step_number: 2,
+                        description: "Disable/remove telemetry bridge plugin".to_string(),
+                        instructions: "Remove user-installed bridge files from AC7 game directory if you no longer want telemetry export.".to_string(),
+                        help_url: None,
+                    },
+                ],
+                cleanup_files: vec![
+                    "%LOCALAPPDATA%\\BANDAI NAMCO Entertainment\\ACE COMBAT 7\\Config\\WindowsNoEditor\\Input.ini.flight-hub.bak".to_string(),
+                ],
+                cleanup_registry: vec![],
+            },
+            multiplayer_notes: Some(MultiplayerNotes {
+                multiplayer_safe: false,
+                blocked_features: vec![
+                    "Any runtime code injection by third-party bridge plugins".to_string(),
+                    "Undocumented memory introspection not owned by Flight Hub".to_string(),
+                ],
+                safe_features: vec![
+                    "Input.ini managed mappings".to_string(),
+                    "Local UDP telemetry receive in Flight Hub".to_string(),
+                ],
+                anticheat_notes: Some("Flight Hub does not inject into AC7. Telemetry bridge plugins are user-supplied and may affect multiplayer or violate EULA terms.".to_string()),
+                server_notes: Some("Use bridge plugins only with full awareness of publisher EULA and server policies.".to_string()),
+            }),
+        };
+
+        self.docs.insert("ac7".to_string(), docs);
+        Ok(())
+    }
 }
 
 /// Validation report for documentation
@@ -923,6 +1047,7 @@ mod tests {
         assert!(manager.get_docs("msfs").is_some());
         assert!(manager.get_docs("xplane").is_some());
         assert!(manager.get_docs("dcs").is_some());
+        assert!(manager.get_docs("ac7").is_some());
 
         // Test validation
         let report = manager.validate_docs().await.unwrap();
@@ -936,6 +1061,10 @@ mod tests {
         let dcs_docs = manager.generate_user_docs("dcs").unwrap();
         assert!(dcs_docs.contains("DCS World"));
         assert!(dcs_docs.contains("Export.lua"));
+
+        let ac7_docs = manager.generate_user_docs("ac7").unwrap();
+        assert!(ac7_docs.contains("Ace Combat 7"));
+        assert!(ac7_docs.contains("Input.ini"));
     }
 
     #[test]
