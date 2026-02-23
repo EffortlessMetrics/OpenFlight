@@ -25,6 +25,10 @@ default = []
 # Requires a connected T.Flight HOTAS 4 (or compatible) device.
 # CI builds should NOT enable this feature — use the default simulated source.
 tflight-hidapi = ["dep:hidapi"]
+# Enables a real HID-backed VKB STECS report source.
+# Requires a connected VKB STECS device.
+# CI builds should NOT enable this feature — use the default simulated source.
+stecs-hidapi = ["dep:hidapi"]
 
 [dependencies]
 flight-core = { path = "../flight-core" }
@@ -37,6 +41,7 @@ flight-xplane = { path = "../flight-xplane" }
 flight-dcs-export = { path = "../flight-dcs-export" }
 flight-ac7-telemetry = { path = "../flight-ac7-telemetry" }
 flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
+flight-hotas-vkb = { path = "../flight-hotas-vkb" }
 flight-hid-support = { path = "../flight-hid-support" }
 hidapi = { workspace = true, optional = true }
 tokio.workspace = true

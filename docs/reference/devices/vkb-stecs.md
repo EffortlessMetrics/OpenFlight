@@ -131,6 +131,23 @@ OpenFlight now exposes per-interface STECS metadata in IPC device `metadata`:
 
 This lets clients correlate separate HID interfaces before applying bindings.
 
+### Service runtime status
+
+OpenFlight now ships a service-owned STECS ingest runtime:
+
+- Runtime module: `flight-service::stecs_runtime`
+- Driver microcrate: `flight-hotas-vkb`
+- CLI switch: `flightd --stecs-runtime`
+- Optional real HID source: build `flight-service` with `--features stecs-hidapi`
+
+Additional runtime CLI knobs:
+
+- `--stecs-poll-hz <HZ>` (default `250`)
+- `--stecs-strip-report-id`
+
+When `stecs-hidapi` is not enabled, the runtime uses a deterministic simulated
+source for CI and local non-hardware runs.
+
 ### Linux multi-interface quirk guidance
 
 Some Linux setups expose only the first 32-button interface unless a

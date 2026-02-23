@@ -27,9 +27,12 @@ pub mod one_click_resolver;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
+pub mod stecs_runtime;
 
 #[cfg(feature = "tflight-hidapi")]
 pub mod hidapi_source;
+#[cfg(feature = "stecs-hidapi")]
+pub mod stecs_hidapi_source;
 
 #[cfg(test)]
 mod acceptance_tests;
@@ -65,3 +68,7 @@ pub use safe_mode::{
     RtPrivilegeStatus, SafeModeConfig, SafeModeManager, SafeModeStatus, ValidationResult,
 };
 pub use service::{FlightService, FlightServiceConfig, ServiceState, TFlightYawPolicyConfig};
+pub use stecs_runtime::{
+    SimulatedVkbStecsReportSource, VkbStecsInputRuntime, VkbStecsReportSource,
+    VkbStecsRuntimeConfig, VkbStecsSnapshot,
+};

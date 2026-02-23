@@ -67,6 +67,26 @@ async fn main() -> anyhow::Result<()> {
                 .help("Strip leading HID Report ID byte from each report. Enable if OS prepends an ID byte.")
                 .action(ArgAction::SetTrue),
         )
+        // ── VKB STECS trial knobs ───────────────────────────────────────────
+        .arg(
+            Arg::new("stecs-runtime")
+                .long("stecs-runtime")
+                .help("Enable VKB STECS ingest runtime (requires --features stecs-hidapi for real hardware)")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("stecs-poll-hz")
+                .long("stecs-poll-hz")
+                .value_name("HZ")
+                .value_parser(clap::value_parser!(u16))
+                .help("VKB STECS poll frequency in Hz [default: 250]"),
+        )
+        .arg(
+            Arg::new("stecs-strip-report-id")
+                .long("stecs-strip-report-id")
+                .help("Strip leading HID Report ID byte from each STECS report.")
+                .action(ArgAction::SetTrue),
+        )
         .get_matches();
 
     let safe_mode = matches.get_flag("safe");
@@ -109,6 +129,15 @@ async fn main() -> anyhow::Result<()> {
     if matches.get_flag("tflight-strip-report-id") {
         config.tflight_strip_report_id = true;
     }
+    if matches.get_flag("stecs-runtime") {
+        config.enable_stecs_runtime = true;
+    }
+    if let Some(hz) = matches.get_one::<u16>("stecs-poll-hz") {
+        config.stecs_poll_hz = *hz;
+    }
+    if matches.get_flag("stecs-strip-report-id") {
+        config.stecs_strip_report_id = true;
+    }
 
     // Log active T.Flight config so operators know what's running
     if config.enable_tflight_runtime {
@@ -118,6 +147,13 @@ async fn main() -> anyhow::Result<()> {
             throttle_inversion = config.tflight_throttle_inversion,
             strip_report_id = config.tflight_strip_report_id,
             "T.Flight HOTAS runtime enabled"
+        );
+    }
+    if config.enable_stecs_runtime {
+        info!(
+            poll_hz = config.stecs_poll_hz,
+            strip_report_id = config.stecs_strip_report_id,
+            "VKB STECS runtime enabled"
         );
     }
 
