@@ -156,15 +156,16 @@ impl Ac7TelemetryAdapter {
         .map_err(|_| AdapterError::Timeout("AC7 packet timeout".into()))??;
 
         let update_start = Instant::now();
-        let packet = Ac7TelemetryPacket::from_json_slice(&self.recv_buf[..size]).map_err(|e| {
-            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-            e
-        })?;
+        let packet =
+            Ac7TelemetryPacket::from_json_slice(&self.recv_buf[..size]).inspect_err(|_e| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            })?;
         let snapshot = self.convert_packet_to_snapshot(&packet)?;
-        self.bus_publisher.publish(snapshot.clone()).map_err(|e| {
-            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-            e
-        })?;
+        self.bus_publisher
+            .publish(snapshot.clone())
+            .inspect_err(|_e| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            })?;
 
         self.state = AdapterState::Active;
         // Measure gap from previous packet before overwriting last_packet.

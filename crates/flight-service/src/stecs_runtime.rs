@@ -173,7 +173,7 @@ impl VkbStecsInputRuntime {
                     }
                     _ = interval.tick() => {
                         // Re-enumerate devices only at the configured cadence.
-                        if tick_count % discovery_interval == 0 {
+                        if tick_count.is_multiple_of(discovery_interval) {
                             cached_devices = source.list_devices();
                         }
                         tick_count = tick_count.wrapping_add(1);

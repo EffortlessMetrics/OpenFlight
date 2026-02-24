@@ -410,13 +410,12 @@ impl AircraftAutoSwitchService {
 
                 // Check for new processes
                 for (sim, process) in &current_processes {
-                    if !last_processes.contains_key(sim) {
-                        if service_tx
+                    if !last_processes.contains_key(sim)
+                        && service_tx
                             .send(ServiceEvent::ProcessDetected(process.clone()))
                             .is_err()
-                        {
-                            break 'monitor;
-                        }
+                    {
+                        break 'monitor;
                     }
                 }
 
