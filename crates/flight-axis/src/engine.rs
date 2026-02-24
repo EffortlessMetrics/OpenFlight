@@ -373,6 +373,9 @@ impl AxisEngine {
             if frame.out.abs() > max_output {
                 frame.out = frame.out.signum() * max_output;
 
+                // Record the clamp event in counters (used by capability_service reporting)
+                self.counters.increment_capability_clamps();
+
                 // Log clamping event for audit trail if enabled
                 if context.audit_enabled {
                     // Try to annotate without blocking RT thread

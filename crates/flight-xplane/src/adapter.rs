@@ -37,7 +37,7 @@ use flight_metrics::{
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
     time::{Duration, Instant},
 };
 use thiserror::Error;
@@ -144,7 +144,7 @@ pub struct XPlaneAdapter {
     dataref_manager: DataRefManager,
     aircraft_detector: AircraftDetector,
     latency_tracker: LatencyTracker,
-    bus_publisher: Arc<BusPublisher>,
+    bus_publisher: Arc<Mutex<BusPublisher>>,
     state: Arc<RwLock<AdapterState>>,
     metrics: Arc<RwLock<AdapterMetrics>>,
     metrics_registry: Arc<MetricsRegistry>,
@@ -157,7 +157,7 @@ pub struct XPlaneAdapter {
 
 impl XPlaneAdapter {
     /// Create a new X-Plane adapter
-    pub fn new(config: XPlaneAdapterConfig, bus_publisher: Arc<BusPublisher>) -> Result<Self> {
+    pub fn new(config: XPlaneAdapterConfig, bus_publisher: Arc<Mutex<BusPublisher>>) -> Result<Self> {
         let udp_client = UdpClient::new(config.udp.clone())
             .map_err(|e| FlightError::Configuration(format!("UDP client error: {}", e)))?;
 
@@ -333,7 +333,7 @@ impl XPlaneAdapter {
         let web_api_client = self.web_api_client.clone();
         let dataref_manager = self.dataref_manager.clone();
         let latency_tracker = self.latency_tracker.clone();
-        let _bus_publisher = self.bus_publisher.clone();
+        let bus_publisher = self.bus_publisher.clone();
         let state = self.state.clone();
         let metrics = self.metrics.clone();
         let metrics_registry = self.metrics_registry.clone();
@@ -368,8 +368,14 @@ impl XPlaneAdapter {
                     );
                     metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     *state.write().unwrap() = AdapterState::Disconnected;
-                    // TODO: Mark BusSnapshot as invalid and transition to disconnected state
-                    // This would be implemented when integrating with the full state machine
+                    // Publish a stale/invalid snapshot so subscribers know data is no longer valid.
+                    // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
+                    let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
+                    if let Ok(mut publisher) = bus_publisher.lock() {
+                        if let Err(e) = publisher.publish(stale) {
+                            warn!("Failed to publish stale snapshot on timeout: {}", e);
+                        }
+                    }
                     continue;
                 }
 
@@ -434,10 +440,13 @@ impl XPlaneAdapter {
                                     }
                                     *state.write().unwrap() = AdapterState::Active;
 
-                                    // Publish to bus
-                                    // Note: In a real implementation, we would need to handle the mutable reference properly
-                                    // For now, we'll skip the actual publishing in this simplified version
-                                    debug!("Would publish snapshot: {:?}", snapshot.sim);
+                                    // Publish snapshot to bus subscribers
+                                    if let Ok(mut publisher) = bus_publisher.lock() {
+                                        if let Err(e) = publisher.publish(snapshot) {
+                                            warn!("Failed to publish X-Plane snapshot: {}", e);
+                                            metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                                        }
+                                    }
                                 }
                                 Err(e) => {
                                     error!("Failed to convert raw data to snapshot: {}", e);
@@ -1130,12 +1139,12 @@ impl SimAdapter for XPlaneAdapter {
 mod tests {
     use super::*;
     use flight_bus::BusPublisher;
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     #[tokio::test]
     async fn test_adapter_creation() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
 
         let adapter = XPlaneAdapter::new(config, bus_publisher);
         assert!(adapter.is_ok());
@@ -1300,7 +1309,7 @@ mod tests {
     #[tokio::test]
     async fn test_connection_timeout_detection() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
         let adapter = XPlaneAdapter::new(config, bus_publisher).unwrap();
 
         // Initially, no packets received, so should be considered timeout
@@ -1447,7 +1456,7 @@ mod tests {
     #[tokio::test]
     async fn test_raw_data_validation() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
         let adapter = XPlaneAdapter::new(config, bus_publisher).unwrap();
 
         // Empty data should fail

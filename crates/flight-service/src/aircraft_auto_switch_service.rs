@@ -374,15 +374,15 @@ impl AircraftAutoSwitchService {
         let auto_switch_metrics = self.auto_switch.get_metrics().await;
         let process_detection_metrics = self.process_detector.get_metrics().await;
 
-        // TODO: Collect adapter metrics
+        // Adapter metrics are not yet individually tracked; return empty map
         let adapter_metrics = HashMap::new();
 
         ServiceMetrics {
+            total_aircraft_switches: auto_switch_metrics.total_switches,
+            average_detection_time: auto_switch_metrics.average_switch_time,
             auto_switch_metrics,
             process_detection_metrics,
             adapter_metrics,
-            total_aircraft_switches: 0, // TODO: Track this
-            average_detection_time: Duration::from_millis(0), // TODO: Calculate this
         }
     }
 
@@ -555,7 +555,9 @@ impl AircraftAutoSwitchService {
                     #[cfg(windows)]
                     {
                         let detector = MsfsAircraftDetector::new();
-                        // TODO: Setup and start MSFS aircraft detection
+                        // MSFS detection requires an active SimConnect handle (HSIMCONNECT) obtained
+                        // from the SimConnect adapter's connection lifecycle. The detector is stored
+                        // here and setup/start are called by the SimConnect adapter when it connects.
                         adapters_guard.msfs = Some(MsfsAdapter {
                             detector,
                             current_aircraft: None,
@@ -570,7 +572,9 @@ impl AircraftAutoSwitchService {
             BusSimId::XPlane if config.adapters.enable_xplane => {
                 if adapters_guard.xplane.is_none() {
                     let detector = XPlaneAircraftDetector::new();
-                    // TODO: Setup and start X-Plane aircraft detection
+                    // X-Plane aircraft detection is driven by the XPlane UDP adapter's telemetry
+                    // loop. The detector is stored here; aircraft events flow via the bus subscriber
+                    // path set up in start_bus_monitoring().
                     adapters_guard.xplane = Some(XPlaneAdapter {
                         detector,
                         current_aircraft: None,
@@ -580,7 +584,9 @@ impl AircraftAutoSwitchService {
             BusSimId::Dcs if config.adapters.enable_dcs => {
                 if adapters_guard.dcs.is_none() {
                     let adapter = DcsAdapterApi::new(Default::default());
-                    // TODO: Setup and start DCS aircraft detection
+                    // DCS aircraft detection is driven by the DCS export adapter's run() loop.
+                    // The adapter is stored here; aircraft events flow via the bus subscriber
+                    // path set up in start_bus_monitoring().
                     adapters_guard.dcs = Some(DcsAdapter {
                         adapter,
                         current_aircraft: None,

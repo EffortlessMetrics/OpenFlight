@@ -7,7 +7,7 @@
 //! allocation detection, lock usage, and timing violations.
 
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Runtime performance counters for axis engine
 #[derive(Debug)]
@@ -26,6 +26,10 @@ pub struct RuntimeCounters {
     max_frame_time_us: AtomicU32,
     /// Average frame processing time (microseconds)
     avg_frame_time_us: AtomicU32,
+    /// Number of output clamps due to capability limits (kid/demo mode)
+    capability_clamp_events: AtomicU64,
+    /// Timestamp (ns since UNIX epoch) of the most recent capability clamp; 0 = never
+    last_capability_clamp_ns: AtomicU64,
     /// Creation timestamp
     created_at: Instant,
 }
@@ -41,6 +45,8 @@ impl RuntimeCounters {
             rt_lock_acquisitions: AtomicU64::new(0),
             max_frame_time_us: AtomicU32::new(0),
             avg_frame_time_us: AtomicU32::new(0),
+            capability_clamp_events: AtomicU64::new(0),
+            last_capability_clamp_ns: AtomicU64::new(0),
             created_at: Instant::now(),
         }
     }
@@ -96,6 +102,17 @@ impl RuntimeCounters {
         self.rt_lock_acquisitions.fetch_add(1, Ordering::Relaxed);
     }
 
+    /// Increment capability clamp counter and record timestamp (RT-safe)
+    #[inline(always)]
+    pub fn increment_capability_clamps(&self) {
+        self.capability_clamp_events.fetch_add(1, Ordering::Relaxed);
+        let now_ns = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64;
+        self.last_capability_clamp_ns.store(now_ns, Ordering::Relaxed);
+    }
+
     /// Get total frames processed
     pub fn frames_processed(&self) -> u64 {
         self.frames_processed.load(Ordering::Relaxed)
@@ -131,6 +148,16 @@ impl RuntimeCounters {
         self.avg_frame_time_us.load(Ordering::Relaxed)
     }
 
+    /// Get cumulative capability clamp event count
+    pub fn capability_clamp_events(&self) -> u64 {
+        self.capability_clamp_events.load(Ordering::Relaxed)
+    }
+
+    /// Get timestamp (ns since UNIX epoch) of the last capability clamp; 0 if never clamped
+    pub fn last_capability_clamp_ns(&self) -> u64 {
+        self.last_capability_clamp_ns.load(Ordering::Relaxed)
+    }
+
     /// Get uptime since counter creation
     pub fn uptime(&self) -> Duration {
         self.created_at.elapsed()
@@ -145,6 +172,8 @@ impl RuntimeCounters {
         self.rt_lock_acquisitions.store(0, Ordering::Relaxed);
         self.max_frame_time_us.store(0, Ordering::Relaxed);
         self.avg_frame_time_us.store(0, Ordering::Relaxed);
+        self.capability_clamp_events.store(0, Ordering::Relaxed);
+        self.last_capability_clamp_ns.store(0, Ordering::Relaxed);
     }
 
     /// Check if RT constraints are violated

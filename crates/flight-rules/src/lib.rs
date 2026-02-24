@@ -164,7 +164,6 @@ impl RulesSchema {
     }
 
     fn validate_rule(&self, rule: &Rule) -> std::result::Result<(), String> {
-        // Basic syntax validation (stub implementation)
         if rule.when.is_empty() {
             return Err("Rule condition cannot be empty".to_string());
         }
@@ -173,8 +172,14 @@ impl RulesSchema {
             return Err("Rule action cannot be empty".to_string());
         }
 
-        // TODO: Parse and validate condition syntax
-        // TODO: Parse and validate action syntax
+        // Validate condition and action syntax using the same parser paths used at runtime
+        let compiler = RulesCompiler::new(Default::default());
+        compiler
+            .parse_condition(&rule.when)
+            .map_err(|e| format!("Invalid condition syntax: {}", e))?;
+        compiler
+            .parse_action(&rule.action)
+            .map_err(|e| format!("Invalid action syntax: {}", e))?;
 
         Ok(())
     }
@@ -308,27 +313,38 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" != ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
-            return Ok(Condition::Compare {
-                variable,
-                operator: CompareOp::NotEqual,
-                value,
-            });
+            if let Ok(value) = value_str.parse::<f32>() {
+                return Ok(Condition::Compare {
+                    variable,
+                    operator: CompareOp::NotEqual,
+                    value,
+                });
+            } else {
+                // String/enum state negation: "gear != DOWN" → negated boolean "gear_DOWN"
+                return Ok(Condition::Boolean {
+                    variable: format!("{}_{}", variable, value_str),
+                    negate: true,
+                });
+            }
         }
 
         if let Some(pos) = condition_str.find(" == ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
-            return Ok(Condition::Compare {
-                variable,
-                operator: CompareOp::Equal,
-                value,
-            });
+            if let Ok(value) = value_str.parse::<f32>() {
+                return Ok(Condition::Compare {
+                    variable,
+                    operator: CompareOp::Equal,
+                    value,
+                });
+            } else {
+                // String/enum state comparison: "gear == DOWN" → boolean "gear_DOWN"
+                // Maps to a named discrete state variable (e.g. provided by the sim adapter).
+                return Ok(Condition::Boolean {
+                    variable: format!("{}_{}", variable, value_str),
+                    negate: false,
+                });
+            }
         }
 
         // Single-character operators

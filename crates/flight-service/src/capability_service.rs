@@ -228,8 +228,11 @@ impl CapabilityService {
                     mode,
                     limits: context.limits,
                     audit_enabled: context.audit_enabled,
-                    clamp_events_count: 0, // TODO: Track this in engine counters
-                    last_clamp_timestamp: None, // TODO: Track this in engine counters
+                    clamp_events_count: engine.counters().capability_clamp_events(),
+                    last_clamp_timestamp: {
+                        let ns = engine.counters().last_capability_clamp_ns();
+                        if ns == 0 { None } else { Some(ns as i64) }
+                    },
                 });
             }
         }

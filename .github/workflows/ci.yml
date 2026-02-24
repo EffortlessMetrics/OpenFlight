@@ -6,7 +6,9 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 3 * * *'  # 3 AM UTC daily
+    - cron: '0 3 * * *'   # 3 AM UTC daily (all regular jobs)
+    - cron: '0 2 * * 0'   # 2 AM UTC Sunday (nightly fuzz)
+    - cron: '0 4 * * 1'   # 4 AM UTC Monday (mutation testing)
   workflow_dispatch:
 
 concurrency:
@@ -837,3 +839,96 @@ jobs:
       run: |
         # TODO: Implement performance regression detection
         echo "Performance tests passed"
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
+  # ──────────────────────────────────────────────────────────────────────────────
+  nightly-fuzz:
+    name: Nightly Fuzz Targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install nightly Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Fuzz flight-rules DSL parser (60s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_rules_parser -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-profile JSON parser (60s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_parse -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-dcs-export message parser (60s)
+        run: |
+          cd crates/flight-dcs-export
+          cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
+  # ──────────────────────────────────────────────────────────────────────────────
+  mutation-testing:
+    name: Mutation Testing (Core Crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.92.0
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants
+
+      - name: Run mutation testing on core crates
+        run: |
+          cargo mutants \
+            -p flight-core \
+            -p flight-axis \
+            -p flight-rules \
+            --timeout 60 \
+            --output mutation-report.txt || true
+        continue-on-error: true
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report.txt

@@ -34,8 +34,9 @@ flight-hub.log
 mutants.out
 mutants.out.old
 
-# Fuzz testing
-*/*/fuzz/
+# Fuzz testing (build artifacts and corpus only; fuzz source is committed)
+*/*/fuzz/target/
+*/*/fuzz/corpus/
 
 # CI/automation runs
 .runs/

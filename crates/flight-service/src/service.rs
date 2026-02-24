@@ -576,9 +576,13 @@ impl FlightService {
     pub async fn apply_profile(&self, profile: &Profile) -> Result<()> {
         info!("Applying profile: {:?}", profile);
 
+        // Validate profile structure first; surface any schema/bounds errors early
+        profile.validate().map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
+
         if let Some(_engine) = &self.axis_engine {
-            // TODO: Replace with new profile ingestion API when ready
-            // For now, safe mode bring-up still works without compile_profile
+            // Profile is validated. Full axis-engine pipeline update requires the
+            // profile ingestion API from flight-session (not yet wired here).
+            // The validated profile is accepted and health is updated accordingly.
             self.health
                 .info("service", "Profile applied successfully")
                 .await;
