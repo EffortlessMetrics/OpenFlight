@@ -604,12 +604,8 @@ mod tests {
         writer
             .record_axis_frame(1000, &[0xDE, 0xAD, 0xBE, 0xEF])
             .unwrap();
-        writer
-            .record_bus_snapshot(2000, &[0x01, 0x02])
-            .unwrap();
-        writer
-            .record_event(3000, &[0xFF])
-            .unwrap();
+        writer.record_bus_snapshot(2000, &[0x01, 0x02]).unwrap();
+        writer.record_event(3000, &[0xFF]).unwrap();
 
         // Yield to the writer task so it can drain the channel before we set
         // running=false (single-threaded tokio runtime requires explicit yields).

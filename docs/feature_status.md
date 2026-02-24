@@ -18,28 +18,28 @@
 |--------|-------|
 | Total AC | 209 |
 | ACs with tests | 209 |
-| ACs with Gherkin | 201 |
-| ACs with both tests + Gherkin | 201 |
-| Complete | 201 |
-| Needs Gherkin | 8 |
+| ACs with Gherkin | 209 |
+| ACs with both tests + Gherkin | 209 |
+| Complete | 209 |
+| Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 47 |
 | Microcrates with tests | 43 (91.5%) |
-| Microcrates with Gherkin | 40 (85.1%) |
-| Microcrates fully covered | 40 (85.1%) |
+| Microcrates with Gherkin | 43 (91.5%) |
+| Microcrates fully covered | 43 (91.5%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 96.2% |
-| Test + Gherkin coverage | 96.2% |
+| Gherkin coverage | 100.0% |
+| Test + Gherkin coverage | 100.0% |
 
 ## BDD Microcrate Matrix
 
 | Microcrate | Total AC | ACs with tests | ACs with Gherkin | ACs with both | Complete | Test coverage | Gherkin coverage | Test+Gherkin coverage |
 |-----------|----------|----------------|------------------|---------------|----------|--------------|------------------|------------------------|
-| flight-ac7-input | 4 | 4 | 1 | 1 | 1 | 100.0% | 25.0% | 25.0% |
-| flight-ac7-protocol | 4 | 4 | 1 | 1 | 1 | 100.0% | 25.0% | 25.0% |
-| flight-ac7-telemetry | 3 | 3 | 1 | 1 | 1 | 100.0% | 33.3% | 33.3% |
+| flight-ac7-input | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-ac7-protocol | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-ac7-telemetry | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-adapter-common | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -141,14 +141,14 @@
 | REQ-17 | AC-17.1 | WHEN AC7 bridge telemetry JSON is received THEN the protocol layer SHALL validate schema and numeric bounds | specs/features/req_17_ac7_integration.feature:5 | 2 | ✅ Complete |
 | REQ-17 | AC-17.2 | WHEN AC7 UDP packets arrive THEN telemetry adapter SHALL convert them into BusSnapshot with SimId::AceCombat7 | specs/features/req_17_ac7_integration.feature:12 | 2 | ✅ Complete |
 | REQ-17 | AC-17.3 | WHEN installing AC7 mappings THEN the input crate SHALL patch Input.ini using a managed block and optional backup | specs/features/req_17_ac7_integration.feature:19 | 2 | ✅ Complete |
-| REQ-17 | AC-17.4 | WHEN AC7 telemetry JSON contains an unsupported schema or malformed JSON THEN the protocol SHALL return a typed error | - | 4 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.5 | WHEN a complete AC7 telemetry packet is serialized and deserialized THEN all fields SHALL be preserved (JSON round-trip) | - | 3 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.6 | WHEN AC7 control fields are within valid ranges THEN property-based validation SHALL accept all bounded values | - | 3 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.7 | WHEN AC7 telemetry adapter starts and stops THEN state transitions SHALL follow Connected to Active to Disconnected lifecycle | - | 3 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.8 | WHEN converting packets to BusSnapshot THEN validity flags SHALL be set correctly based on available fields | - | 4 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.9 | WHEN an AC7 input profile has invalid fields THEN validation SHALL reject out-of-range scale, deadzone, and exponent values | - | 4 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.10 | WHEN rendering AC7 input blocks THEN all RC modes SHALL be rendered and managed blocks SHALL be idempotent | - | 4 | 🟡 Needs Gherkin |
-| REQ-17 | AC-17.11 | WHEN AC7 input profile fields are within valid ranges THEN property-based validation SHALL accept all valid values | - | 3 | 🟡 Needs Gherkin |
+| REQ-17 | AC-17.4 | WHEN AC7 telemetry JSON contains an unsupported schema or malformed JSON THEN the protocol SHALL return a typed error | specs/features/req_17_ac7_integration.feature:27 | 4 | ✅ Complete |
+| REQ-17 | AC-17.5 | WHEN a complete AC7 telemetry packet is serialized and deserialized THEN all fields SHALL be preserved (JSON round-trip) | specs/features/req_17_ac7_integration.feature:33 | 3 | ✅ Complete |
+| REQ-17 | AC-17.6 | WHEN AC7 control fields are within valid ranges THEN property-based validation SHALL accept all bounded values | specs/features/req_17_ac7_integration.feature:39 | 3 | ✅ Complete |
+| REQ-17 | AC-17.7 | WHEN AC7 telemetry adapter starts and stops THEN state transitions SHALL follow Connected to Active to Disconnected lifecycle | specs/features/req_17_ac7_integration.feature:44 | 3 | ✅ Complete |
+| REQ-17 | AC-17.8 | WHEN converting packets to BusSnapshot THEN validity flags SHALL be set correctly based on available fields | specs/features/req_17_ac7_integration.feature:49 | 4 | ✅ Complete |
+| REQ-17 | AC-17.9 | WHEN an AC7 input profile has invalid fields THEN validation SHALL reject out-of-range scale, deadzone, and exponent values | specs/features/req_17_ac7_integration.feature:54 | 4 | ✅ Complete |
+| REQ-17 | AC-17.10 | WHEN rendering AC7 input blocks THEN all RC modes SHALL be rendered and managed blocks SHALL be idempotent | specs/features/req_17_ac7_integration.feature:59 | 4 | ✅ Complete |
+| REQ-17 | AC-17.11 | WHEN AC7 input profile fields are within valid ranges THEN property-based validation SHALL accept all valid values | specs/features/req_17_ac7_integration.feature:64 | 3 | ✅ Complete |
 | REQ-35 | AC-35.1 | WHEN blackbox config is created THEN default values SHALL be applied and queue capacity SHALL clamp to defined min/max bounds | specs/features/req_35_blackbox.feature:8 | 3 | ✅ Complete |
 | REQ-35 | AC-35.2 | WHEN a BlackboxWriter is created THEN it SHALL start in a non-running state and starting it twice SHALL return an error | specs/features/req_35_blackbox.feature:15 | 2 | ✅ Complete |
 | REQ-35 | AC-35.3 | WHEN records are written to blackbox THEN they SHALL be read back in the correct order (round-trip) | specs/features/req_35_blackbox.feature:22 | 1 | ✅ Complete |

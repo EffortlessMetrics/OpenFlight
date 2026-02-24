@@ -22,7 +22,7 @@
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 195, tests: 195 (100.0%), gherkin: 195 (100.0%), microcrates fully covered: 41 / 47 (87.2%), complete: 195, needs_gherkin: 0, needs_tests: 0, draft: 0, incomplete: 0 |
+| BDD Feature Status | ✅ Pass | AC total: 209, tests: 209 (100.0%), gherkin: 209 (100.0%), microcrates fully covered: 43 / 47 (91.5%), complete: 209, needs_gherkin: 0, needs_tests: 0, draft: 0, incomplete: 0 |
 | Schema Validation | ✅ Pass | - |
 | Cross-Reference Validation | ✅ Pass | - |
 | Formatting | ✅ Pass | - |

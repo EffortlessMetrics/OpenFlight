@@ -35,6 +35,11 @@ jobs:
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
 
+      - name: Install Linux HID build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
       - name: Run validation pipeline
         run: cargo xtask validate
 
@@ -110,6 +115,12 @@ jobs:
       uses: Swatinem/rust-cache@v2
       with:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Linux HID build deps
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Check formatting
       run: cargo fmt --all -- --check
@@ -212,6 +223,11 @@ jobs:
       uses: Swatinem/rust-cache@v2
       with:
         key: ${{ runner.os }}-${{ steps.toolchain-hash.outputs.cachekey }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Build with MSRV
       run: cargo build --workspace --all-features --exclude flight-hub-examples
@@ -452,6 +468,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-target-public-api-
 
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
     - name: Cache cargo-public-api binary
       uses: actions/cache@v4
       with:
@@ -559,6 +580,11 @@ jobs:
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
 
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
     - name: Smoke test HID with ofp1-tests
       run: cargo test --no-run -p flight-hid --features ofp1-tests
 
@@ -587,6 +613,12 @@ jobs:
       uses: Swatinem/rust-cache@v2
       with:
         key: cross-platform-${{ matrix.os }}
+
+    - name: Install Linux HID build deps
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Check workspace
       run: cargo check --workspace
@@ -697,6 +729,12 @@ jobs:
       with:
         key: release-${{ matrix.os }}
 
+    - name: Install Linux HID build deps
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
     - name: Build release
       run: cargo build --release --workspace
 
@@ -721,6 +759,11 @@ jobs:
 
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
+
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Install cargo-hack
       run: cargo install cargo-hack
@@ -769,6 +812,11 @@ jobs:
 
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
+
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Run benchmarks
       run: cargo bench --workspace --exclude flight-hub-examples --no-run

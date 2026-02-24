@@ -280,14 +280,26 @@ mod tests {
     fn rejects_out_of_range_altitude() {
         let payload = r#"{"schema":"flight.ac7.telemetry/1","state":{"altitude_m":999999.0}}"#;
         let err = Ac7TelemetryPacket::from_json_str(payload).unwrap_err();
-        assert!(matches!(err, Ac7ProtocolError::OutOfRange { field: "state.altitude_m", .. }));
+        assert!(matches!(
+            err,
+            Ac7ProtocolError::OutOfRange {
+                field: "state.altitude_m",
+                ..
+            }
+        ));
     }
 
     #[test]
     fn rejects_negative_speed() {
         let payload = r#"{"schema":"flight.ac7.telemetry/1","state":{"speed_mps":-1.0}}"#;
         let err = Ac7TelemetryPacket::from_json_str(payload).unwrap_err();
-        assert!(matches!(err, Ac7ProtocolError::OutOfRange { field: "state.speed_mps", .. }));
+        assert!(matches!(
+            err,
+            Ac7ProtocolError::OutOfRange {
+                field: "state.speed_mps",
+                ..
+            }
+        ));
     }
 
     #[test]
