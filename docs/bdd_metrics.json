@@ -9,7 +9,7 @@
   "draft": 0,
   "incomplete": 0,
   "microcrate_total": 60,
-  "microcrate_with_tests": 43,
+  "microcrate_with_tests": 47,
   "microcrate_with_gherkin": 43,
   "microcrate_with_tests_and_gherkin": 43,
   "crate_coverage": [
