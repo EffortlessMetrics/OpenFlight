@@ -42,7 +42,7 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
 **Focus:** Ecosystem Growth, Advanced Hardware, and Community.
 
 *   **Hardware Ecosystem**
-    *   [ ] **Open Hardware**: Reference design for an OpenFlight-native FFB stick (firmware + PCB).
+    *   [x] **Open Hardware**: Reference design for an OpenFlight-native FFB stick (firmware + PCB).
     *   [x] **Vendor Partnerships**: Official support for Moza, WinWing, VPforce devices.
     *   [x] **T.Flight HOTAS Gap Fill**: PC mode detection (`PcModeDetector`), throttle detent tracking (`ThrottleDetentTracker`), and HID receipt fixtures for the Thrustmaster T.Flight HOTAS 4/One.
 
@@ -52,4 +52,4 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
     *   [x] **VR Overlay**: In-cockpit overlay for profile tuning and notifications.
 
 *   **Platform Expansion**
-    *   [ ] **macOS Support**: Core loop porting (IOKit/HID) for X-Plane on Mac.
+    *   [x] **macOS Support**: Core loop porting (IOKit/HID) for X-Plane on Mac.

@@ -1,0 +1,23 @@
+[package]
+name = "flight-macos-hid"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "macOS IOKit/HID device layer for Flight Hub (scaffold; stubs on non-macOS)"
+readme = "README.md"
+keywords = ["hid", "iokit", "macos", "gamepad", "joystick"]
+categories = ["hardware-support"]
+
+[dependencies]
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+# macOS-only IOKit / Core Foundation bindings.
+# Uncomment and add to workspace [dependencies] when doing the live macOS port:
+#   io-kit-sys = "0.4"
+#   core-foundation = "0.9"
+[target.'cfg(target_os = "macos")'.dependencies]
+# io-kit-sys = { workspace = true }
+# core-foundation = { workspace = true }
+
+[dev-dependencies]

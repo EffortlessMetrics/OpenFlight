@@ -36,7 +36,7 @@ impl Default for TrimLimits {
 }
 
 impl TrimLimits {
-    /// Validate that limits are reasonable
+    /// Validate that limits are reasonable and within safety bounds.
     pub fn validate_trim_limits(&self) -> Result<(), String> {
         if self.max_rate_nm_per_s <= 0.0 {
             return Err("max_rate_nm_per_s must be positive".to_string());
@@ -46,10 +46,25 @@ impl TrimLimits {
             return Err("max_jerk_nm_per_s2 must be positive".to_string());
         }
 
-        // Sanity check: jerk should be reasonable relative to rate
-        if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s {
+        // Safety cap: 50 Nm/s is the physical ceiling for consumer FFB hardware.
+        if self.max_rate_nm_per_s > 50.0 {
+            return Err(format!(
+                "max_rate_nm_per_s {:.1} exceeds safety limit of 50.0 Nm/s",
+                self.max_rate_nm_per_s
+            ));
+        }
+
+        if self.max_jerk_nm_per_s2 > 200.0 {
+            return Err(format!(
+                "max_jerk_nm_per_s2 {:.1} exceeds safety limit of 200.0 Nm/s\u{00b2}",
+                self.max_jerk_nm_per_s2
+            ));
+        }
+
+        // Jerk must be at least 2× rate for smooth, controllable response.
+        if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s * 2.0 {
             return Err(
-                "max_jerk_nm_per_s2 should be >= max_rate_nm_per_s for reasonable behavior"
+                "max_jerk_nm_per_s2 must be at least 2\u{00d7} max_rate_nm_per_s for proper response"
                     .to_string(),
             );
         }

@@ -59,6 +59,8 @@ members = [
     "crates/flight-ffb-vpforce",
     "crates/flight-hotas-winwing",
     "crates/flight-ffb-moza",
+    "crates/flight-macos-hid",
+    "crates/flight-open-hardware",
     "examples",
     "xtask",
     "specs",

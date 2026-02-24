@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **macOS HID Layer** (REQ-50):
+    - `flight-macos-hid`: platform-guarded IOKit/HID scaffold — `HidManager` (device enumeration with usage/VID-PID matching criteria), `HidDevice` (report I/O), `MacosClock` (mach_absolute_time wrapper, std::time::Instant fallback on non-macOS); all IOKit paths behind `#[cfg(target_os = "macos")]` so the crate compiles on Windows and Linux without IOKit libraries.
+- **Open Hardware Reference Protocol** (REQ-51):
+    - `flight-open-hardware`: `#![no_std]` protocol crate defining the HID wire format for the OpenFlight Reference FFB Stick (VID `0x1209`, PID `0xF170`); covers `InputReport` (16-byte, axes + buttons + FFB fault), `FfbOutputReport` (8-byte, force + mode + gain), `LedReport` (4-byte, LED flags + brightness), `FirmwareVersionReport` (8-byte, semver + git hash); all reports have `parse()` / `to_bytes()` with roundtrip tests.
+    - BDD specs `req_50_macos_hid.feature` (11 scenarios) and `req_51_open_hardware.feature` (15 scenarios); REQ-50 and REQ-51 with 8+9 ACs in `specs/spec_ledger.yaml`.
 - **Vendor Partnerships** (REQ-49):
     - `flight-ffb-vpforce`: VPforce Rhino V2/V3 FFB base driver — 20-byte HID report parsing, Spring/Damper/Sine/ConstantForce/StopAll effect serialisation, health monitor, Hall-effect presets.
     - `flight-hotas-winwing`: WinWing HOTAS driver — Orion2 Throttle (24-byte), Orion2 Stick (12-byte), TFRP Rudder (8-byte) parsers, health monitor, recommended presets.

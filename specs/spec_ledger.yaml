@@ -982,6 +982,90 @@ requirements:
         - flight-ffb-moza::effects::tests::test_torque_clamping
         - flight-ffb-moza::health::tests::test_torque_fault_makes_unhealthy
 
+- id: REQ-50
+  name: macOS IOKit/HID Device Layer
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-50.1
+      description: "WHEN HidManager::new() is called on non-macOS THEN it SHALL succeed and return an empty device list"
+      tests:
+        - flight-macos-hid::manager::tests::test_new_manager_ok_on_non_macos
+    - id: AC-50.2
+      description: "WHEN HidManager::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform"
+      tests:
+        - flight-macos-hid::manager::tests::test_open_unsupported_on_non_macos
+    - id: AC-50.3
+      description: "WHEN HidDevice::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform"
+      tests:
+        - flight-macos-hid::device::tests::test_open_unsupported_on_non_macos
+    - id: AC-50.4
+      description: "WHEN set_device_matching(usagePage, usage) is called THEN criteria() SHALL reflect those values"
+      tests:
+        - flight-macos-hid::manager::tests::test_criteria_stored
+        - flight-macos-hid::manager::tests::test_vendor_product_stored
+    - id: AC-50.5
+      description: "WHEN MacosClock::elapsed() is called after a delay THEN it SHALL return a duration >= that delay on non-macOS"
+      tests:
+        - flight-macos-hid::timing::tests::test_elapsed_non_zero
+        - flight-macos-hid::timing::tests::test_now_ns_increases
+    - id: AC-50.6
+      description: "WHEN HidError::UnsupportedPlatform is formatted THEN the message SHALL contain 'not supported'"
+      tests:
+        - flight-macos-hid::error::tests::test_error_display
+    - id: AC-50.7
+      description: "WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = \"macos\")'.dependencies] in Cargo.toml"
+      tests: []
+    - id: AC-50.8
+      description: "WHEN the crate is compiled on Windows or Linux THEN it SHALL compile without requiring IOKit system libraries"
+      tests:
+        - cmd:cargo build -p flight-macos-hid
+
+- id: REQ-51
+  name: Open Hardware Reference FFB Stick Protocol
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-51.1
+      description: "WHEN a centred InputReport buffer is parsed THEN all axes SHALL be zero and ffb_fault SHALL be false"
+      tests:
+        - flight-open-hardware::input_report::tests::test_parse_zero_report
+    - id: AC-51.2
+      description: "WHEN an InputReport is serialised then parsed THEN the result SHALL equal the original"
+      tests:
+        - flight-open-hardware::input_report::tests::test_roundtrip
+    - id: AC-51.3
+      description: "WHEN a wrong report ID is parsed THEN parse() SHALL return None"
+      tests:
+        - flight-open-hardware::input_report::tests::test_wrong_report_id_returns_none
+        - flight-open-hardware::output_report::tests::test_wrong_id_returns_none
+        - flight-open-hardware::firmware_version::tests::test_wrong_id_returns_none
+    - id: AC-51.4
+      description: "WHEN axes are at full deflection THEN normalise functions SHALL return approximately ±1.0 or 1.0"
+      tests:
+        - flight-open-hardware::input_report::tests::test_normalise_full_deflection
+    - id: AC-51.5
+      description: "WHEN FfbOutputReport::stop() is called THEN force bytes SHALL be zero and mode SHALL be Off(0)"
+      tests:
+        - flight-open-hardware::output_report::tests::test_stop_report
+    - id: AC-51.6
+      description: "WHEN an FfbOutputReport is serialised then parsed THEN the result SHALL equal the original"
+      tests:
+        - flight-open-hardware::output_report::tests::test_roundtrip
+    - id: AC-51.7
+      description: "WHEN LedReport::all_off() is called THEN leds byte SHALL be 0 with report ID 0x20"
+      tests:
+        - flight-open-hardware::led_report::tests::test_all_off
+        - flight-open-hardware::led_report::tests::test_roundtrip
+    - id: AC-51.8
+      description: "WHEN a FirmwareVersionReport is serialised then parsed THEN version() SHALL return the correct (major, minor, patch)"
+      tests:
+        - flight-open-hardware::firmware_version::tests::test_roundtrip
+    - id: AC-51.9
+      description: "WHEN the crate is compiled THEN VENDOR_ID SHALL be 0x1209 and PRODUCT_ID SHALL be 0xF170; the crate SHALL compile as no_std"
+      tests:
+        - cmd:cargo build -p flight-open-hardware
+
   # ============================================================================
   # ============================================================================
 

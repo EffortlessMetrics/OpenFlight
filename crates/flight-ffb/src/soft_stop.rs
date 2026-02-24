@@ -134,19 +134,10 @@ impl SoftStopController {
         let now = Instant::now();
         let elapsed = now.duration_since(state.start_time);
 
-        // Check for timeout
-        if elapsed > state.config.max_ramp_time {
-            state.active = false;
-            state.current_torque_nm = 0.0;
-            return Err(SoftStopError::RampTimeout {
-                elapsed,
-                max: state.config.max_ramp_time,
-            });
-        }
-
         // Calculate progress (0.0 to 1.0)
-        let progress = elapsed.as_secs_f32() / state.config.max_ramp_time.as_secs_f32();
-        let progress = progress.clamp(0.0, 1.0);
+        let progress = (elapsed.as_secs_f32()
+            / state.config.max_ramp_time.as_secs_f32())
+        .clamp(0.0, 1.0);
 
         // Apply ramp profile
         let ramp_factor = match state.config.profile {
@@ -161,6 +152,23 @@ impl SoftStopController {
 
         // Calculate current torque
         state.current_torque_nm = state.initial_torque_nm * ramp_factor;
+
+        // Elapsed-past-deadline check: if we're beyond max_ramp_time and the ramp
+        // would have reached zero (ramp_factor≈0 at progress=1.0), complete
+        // gracefully.  Only error if torque is still dangerously above threshold.
+        if elapsed > state.config.max_ramp_time {
+            if state.current_torque_nm.abs() <= state.config.zero_threshold_nm {
+                state.current_torque_nm = 0.0;
+                state.active = false;
+                return Ok(None);
+            }
+            state.active = false;
+            state.current_torque_nm = 0.0;
+            return Err(SoftStopError::RampTimeout {
+                elapsed,
+                max: state.config.max_ramp_time,
+            });
+        }
 
         // Check if we've reached zero threshold
         if state.current_torque_nm.abs() <= state.config.zero_threshold_nm {
@@ -323,8 +331,12 @@ mod tests {
 
     #[test]
     fn test_ramp_timeout() {
+        // Exponential ramp: at progress=1.0, ramp_factor = exp(-3) ≈ 0.0498.
+        // With initial=10.0 Nm and default threshold=0.01 Nm:
+        // torque at deadline ≈ 10.0 * 0.0498 = 0.498 Nm >> threshold → RampTimeout.
         let config = SoftStopConfig {
             max_ramp_time: Duration::from_millis(10),
+            profile: RampProfile::Exponential,
             ..Default::default()
         };
 
