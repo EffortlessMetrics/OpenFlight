@@ -75,3 +75,36 @@ Feature: Elite: Dangerous Status.json file-watcher adapter
     Then adapter state SHALL be Connected
     When stop is called
     Then adapter state SHALL be Disconnected
+
+  @AC-39.7
+  Scenario: JournalReader finds and tails the latest journal file
+    Given a journal directory containing a Journal.*.log file with a LoadGame event
+    When read_new_events is called
+    Then the reader SHALL return the LoadGame event
+    And a second call with no new data SHALL return an empty list
+
+  @AC-39.7
+  Scenario: JournalReader tails only new events since last call
+    Given a JournalReader that has already consumed one event
+    When a new FsdJump event is appended to the journal file
+    Then read_new_events SHALL return only the FsdJump event
+
+  @AC-39.8
+  Scenario: FsdJump event updates current star system
+    Given an EliteAdapter
+    When a FsdJump event for "Colonia" is applied
+    Then current_system SHALL equal "Colonia"
+    And docked_station SHALL be None
+
+  @AC-39.8
+  Scenario: Docked event sets station and system
+    Given an EliteAdapter
+    When a Docked event for "Jameson Memorial" in "Shinrarta Dezhra" is applied
+    Then docked_station SHALL equal "Jameson Memorial"
+    And current_system SHALL equal "Shinrarta Dezhra"
+
+  @AC-39.8
+  Scenario: Current system appears in BusSnapshot navigation waypoint
+    Given an EliteAdapter that has processed a FsdJump to "Sagittarius A*"
+    When convert_status is called
+    Then navigation.active_waypoint SHALL equal "Sagittarius A*"

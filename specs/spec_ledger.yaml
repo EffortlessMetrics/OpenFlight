@@ -554,6 +554,21 @@ requirements:
         description: "WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected"
         tests:
           - flight-elite::tests::sim_id_is_elite_dangerous
+      - id: AC-39.7
+        description: "WHEN journal directory is present THEN JournalReader SHALL find the latest log file and tail new events"
+        tests:
+          - flight-elite::journal::tests::find_latest_journal_returns_most_recent
+          - flight-elite::journal::tests::reads_new_events_from_journal
+          - flight-elite::journal::tests::second_call_returns_only_new_events
+          - flight-elite::journal::tests::empty_dir_returns_empty_vec
+      - id: AC-39.8
+        description: "WHEN journal events are applied THEN adapter state (current_system, docked_station, current_ship) SHALL reflect the events"
+        tests:
+          - flight-elite::tests::apply_fsd_jump_updates_current_system
+          - flight-elite::tests::apply_location_updates_current_system
+          - flight-elite::tests::apply_docked_sets_station_and_system
+          - flight-elite::tests::apply_undocked_clears_station
+          - flight-elite::tests::current_system_appears_in_snapshot_waypoint
 
   - id: REQ-40
     name: MSFS 2024 SimConnect Adapter

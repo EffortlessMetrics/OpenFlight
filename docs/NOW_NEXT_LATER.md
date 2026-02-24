@@ -36,6 +36,7 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
 *   **Sim Integration Polish**
     *   [ ] **DCS**: Finalize MP-safe enforcement and "blocked feature" UI warnings.
     *   [x] **X-Plane**: Add more comprehensive data refs for complex aircraft.
+    *   [x] **Elite: Dangerous**: Journal/Status file-watcher adapter (`flight-elite`) with gear, lights, fuel, star-system tracking.
 
 ## 🔴 Later (Long-Term Vision & Ideas)
 **Focus:** Ecosystem Growth, Advanced Hardware, and Community.

@@ -108,6 +108,14 @@ pub enum JournalEvent {
         #[serde(rename = "Commander")]
         commander: Option<String>,
     },
+    /// Player is in a star system (spawned / initial location event).
+    Location {
+        #[serde(rename = "StarSystem")]
+        star_system: String,
+        /// 3D galactic coordinates [x, y, z] in light-years.
+        #[serde(rename = "StarPos", default)]
+        star_pos: Option<[f64; 3]>,
+    },
     /// Docked at a station or surface port.
     Docked {
         #[serde(rename = "StationName")]
@@ -124,6 +132,9 @@ pub enum JournalEvent {
     FsdJump {
         #[serde(rename = "StarSystem")]
         star_system: String,
+        /// 3D galactic coordinates [x, y, z] in light-years.
+        #[serde(rename = "StarPos", default)]
+        star_pos: Option<[f64; 3]>,
     },
     /// Landing on a planetary body.
     Touchdown {
@@ -138,6 +149,12 @@ pub enum JournalEvent {
         latitude: Option<f64>,
         #[serde(rename = "Longitude")]
         longitude: Option<f64>,
+    },
+    /// Refuelled at a station.
+    RefuelAll {
+        /// Fuel amount purchased (tonnes).
+        #[serde(rename = "Amount")]
+        amount: Option<f32>,
     },
 }
 
@@ -182,6 +199,42 @@ mod tests {
         let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"LoadGame","Commander":"CMDR Test","Ship":"SideWinder"}"#;
         match parse_journal_line(line) {
             Some(JournalEvent::LoadGame { ship, .. }) => assert_eq!(ship, "SideWinder"),
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_location_event_with_star_pos() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Location","StarSystem":"Sol","StarPos":[0.0,0.0,0.0]}"#;
+        match parse_journal_line(line) {
+            Some(JournalEvent::Location { star_system, star_pos }) => {
+                assert_eq!(star_system, "Sol");
+                assert_eq!(star_pos, Some([0.0, 0.0, 0.0]));
+            }
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_fsd_jump_event_with_star_pos() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"FsdJump","StarSystem":"HIP 78085","StarPos":[10.5,-20.3,5.0]}"#;
+        match parse_journal_line(line) {
+            Some(JournalEvent::FsdJump { star_system, star_pos }) => {
+                assert_eq!(star_system, "HIP 78085");
+                let pos = star_pos.unwrap();
+                assert!((pos[0] - 10.5).abs() < 0.01);
+            }
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_refuel_all_event() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"RefuelAll","Amount":12.5,"Cost":1250}"#;
+        match parse_journal_line(line) {
+            Some(JournalEvent::RefuelAll { amount }) => {
+                assert!((amount.unwrap() - 12.5).abs() < 0.01);
+            }
             other => panic!("unexpected: {other:?}"),
         }
     }

@@ -39,6 +39,7 @@
 //! | 16  | SRV (surface vehicle) |
 //! | 28  | FSD jump |
 
+pub mod journal;
 pub mod protocol;
 
 use flight_adapter_common::{AdapterConfig, AdapterError, AdapterMetrics, AdapterState};
@@ -50,7 +51,8 @@ use flight_metrics::{
     MetricsRegistry,
     common::{ADAPTER_ERRORS_TOTAL, ADAPTER_UPDATE_LATENCY_MS, ADAPTER_UPDATES_TOTAL},
 };
-use protocol::{EliteFlags, StatusJson};
+use journal::JournalReader;
+use protocol::{EliteFlags, JournalEvent, StatusJson};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -149,13 +151,20 @@ pub struct EliteAdapter {
     last_poll: Option<Instant>,
     /// Aircraft / commander name from the last journal LoadGame event.
     current_ship: String,
+    /// Current star system name (from Location or FsdJump journal events).
+    current_system: String,
+    /// Station the commander is currently docked at, if any.
+    docked_station: Option<String>,
     /// Cached last-known status flags for change detection.
     last_flags: Option<u64>,
+    /// Journal file reader.
+    pub journal_reader: JournalReader,
 }
 
 impl EliteAdapter {
     /// Create a new adapter (not yet started).
     pub fn new(config: EliteConfig) -> Self {
+        let journal_reader = JournalReader::new(config.journal_dir.clone());
         Self {
             bus_publisher: BusPublisher::new(config.bus_max_rate_hz),
             config,
@@ -166,7 +175,10 @@ impl EliteAdapter {
             started_at: Instant::now(),
             last_poll: None,
             current_ship: "Unknown".to_string(),
+            current_system: String::new(),
+            docked_station: None,
             last_flags: None,
+            journal_reader,
         }
     }
 
@@ -305,13 +317,61 @@ impl EliteAdapter {
         snapshot.validity.position_valid = in_flight;
         snapshot.validity.safe_for_ffb = false; // ED provides no attitude data in Status.json
 
+        // Current star system → navigation active waypoint
+        if !self.current_system.is_empty() {
+            snapshot.navigation.active_waypoint = Some(self.current_system.clone());
+        }
+
         snapshot
+    }
+
+    /// Apply a parsed journal event to update adapter state.
+    ///
+    /// Call this after reading new events from [`JournalReader`] to keep the
+    /// adapter's understanding of the game state up-to-date.
+    pub fn apply_journal_event(&mut self, event: &JournalEvent) {
+        match event {
+            JournalEvent::LoadGame { ship, .. } => {
+                self.set_ship(ship.clone());
+                self.docked_station = None;
+            }
+            JournalEvent::Location { star_system, .. }
+            | JournalEvent::FsdJump { star_system, .. } => {
+                if self.current_system != *star_system {
+                    info!("Elite: entered system {star_system}");
+                    self.current_system = star_system.clone();
+                }
+                self.docked_station = None;
+            }
+            JournalEvent::Docked { station_name, star_system } => {
+                self.docked_station = Some(station_name.clone());
+                if self.current_system != *star_system {
+                    self.current_system = star_system.clone();
+                }
+            }
+            JournalEvent::Undocked { .. } => {
+                self.docked_station = None;
+            }
+            JournalEvent::RefuelAll { .. }
+            | JournalEvent::Touchdown { .. }
+            | JournalEvent::Liftoff { .. } => {}
+        }
     }
 
     /// Update the current ship name (called when journal LoadGame event is seen).
     pub fn set_ship(&mut self, ship: impl Into<String>) {
         self.current_ship = ship.into();
         self.metrics.record_aircraft_change(self.current_ship.clone());
+    }
+
+    /// Return the current star system name (from the most recent Location/FsdJump event).
+    pub fn current_system(&self) -> &str {
+        &self.current_system
+    }
+
+    /// Return the station the commander is currently docked at, if any.
+    pub fn docked_station(&self) -> Option<&str> {
+        self.docked_station.as_deref()
     }
 
     /// Return current adapter state.
@@ -453,5 +513,70 @@ mod tests {
         adapter.start().unwrap();
         let result = adapter.poll_once().await.unwrap();
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn apply_fsd_jump_updates_current_system() {
+        let mut adapter = EliteAdapter::new(EliteConfig::default());
+        let event = protocol::JournalEvent::FsdJump {
+            star_system: "Colonia".to_string(),
+            star_pos: Some([0.0, 0.0, 0.0]),
+        };
+        adapter.apply_journal_event(&event);
+        assert_eq!(adapter.current_system(), "Colonia");
+        assert!(adapter.docked_station().is_none());
+    }
+
+    #[test]
+    fn apply_location_updates_current_system() {
+        let mut adapter = EliteAdapter::new(EliteConfig::default());
+        let event = protocol::JournalEvent::Location {
+            star_system: "Sol".to_string(),
+            star_pos: None,
+        };
+        adapter.apply_journal_event(&event);
+        assert_eq!(adapter.current_system(), "Sol");
+    }
+
+    #[test]
+    fn apply_docked_sets_station_and_system() {
+        let mut adapter = EliteAdapter::new(EliteConfig::default());
+        let event = protocol::JournalEvent::Docked {
+            station_name: "Jameson Memorial".to_string(),
+            star_system: "Shinrarta Dezhra".to_string(),
+        };
+        adapter.apply_journal_event(&event);
+        assert_eq!(adapter.current_system(), "Shinrarta Dezhra");
+        assert_eq!(adapter.docked_station(), Some("Jameson Memorial"));
+    }
+
+    #[test]
+    fn apply_undocked_clears_station() {
+        let mut adapter = EliteAdapter::new(EliteConfig::default());
+        // First dock…
+        adapter.apply_journal_event(&protocol::JournalEvent::Docked {
+            station_name: "Jameson Memorial".to_string(),
+            star_system: "Shinrarta Dezhra".to_string(),
+        });
+        assert!(adapter.docked_station().is_some());
+        // …then undock.
+        adapter.apply_journal_event(&protocol::JournalEvent::Undocked {
+            station_name: "Jameson Memorial".to_string(),
+        });
+        assert!(adapter.docked_station().is_none());
+    }
+
+    #[test]
+    fn current_system_appears_in_snapshot_waypoint() {
+        let mut adapter = EliteAdapter::new(EliteConfig::default());
+        adapter.apply_journal_event(&protocol::JournalEvent::FsdJump {
+            star_system: "Sagittarius A*".to_string(),
+            star_pos: None,
+        });
+        let snap = adapter.convert_status(&StatusJson::default());
+        assert_eq!(
+            snap.navigation.active_waypoint.as_deref(),
+            Some("Sagittarius A*")
+        );
     }
 }
