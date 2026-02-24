@@ -20,6 +20,7 @@ members = [
     "crates/flight-simconnect-sys",
     "crates/flight-simconnect",
     "crates/flight-xplane",
+    "crates/flight-xplane-plugin",
     "crates/flight-dcs-export",
     "crates/flight-ac7-protocol",
     "crates/flight-ac7-telemetry",

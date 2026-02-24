@@ -20,7 +20,7 @@ use flight_adapter_common::{
 use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
-    snapshot::{BusSnapshot, EngineData, Environment, Kinematics, Navigation},
+    snapshot::{AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation},
     types::{AircraftId, Percentage, SimId},
 };
 use flight_core::units::conversions;
@@ -603,6 +603,9 @@ impl XPlaneAdapter {
         // Convert kinematics data
         snapshot.kinematics = Self::convert_kinematics(&raw_data.dataref_values)?;
 
+        // Convert angular rates (P/Q/R deg/s → rad/s)
+        snapshot.angular_rates = Self::convert_angular_rates(&raw_data.dataref_values);
+
         // Convert aircraft configuration
         snapshot.config = Self::convert_aircraft_config(&raw_data.dataref_values)?;
 
@@ -722,7 +725,26 @@ impl XPlaneAdapter {
         Ok(kinematics)
     }
 
-    /// Convert aircraft configuration from X-Plane DataRefs
+    /// Convert angular rates from X-Plane DataRefs
+    ///
+    /// X-Plane provides body-axis rates P (roll), Q (pitch), R (yaw) in deg/s.
+    /// BusSnapshot expects rad/s.
+    fn convert_angular_rates(datarefs: &HashMap<String, DataRefValue>) -> AngularRates {
+        let mut rates = AngularRates::default();
+        let deg_to_rad = std::f32::consts::PI / 180.0;
+
+        if let Some(DataRefValue::Float(p)) = datarefs.get("sim/flightmodel/position/P") {
+            rates.p = p * deg_to_rad;
+        }
+        if let Some(DataRefValue::Float(q)) = datarefs.get("sim/flightmodel/position/Q") {
+            rates.q = q * deg_to_rad;
+        }
+        if let Some(DataRefValue::Float(r)) = datarefs.get("sim/flightmodel/position/R") {
+            rates.r = r * deg_to_rad;
+        }
+
+        rates
+    }
     fn convert_aircraft_config(
         datarefs: &HashMap<String, DataRefValue>,
     ) -> Result<flight_bus::snapshot::AircraftConfig> {
@@ -790,12 +812,25 @@ impl XPlaneAdapter {
                             FlightError::Configuration(format!("Default RPM error: {}", e))
                         })?
                     },
-                    manifold_pressure: None, // TODO: Add if available
-                    egt: None,               // TODO: Add if available
-                    cht: None,               // TODO: Add if available
-                    fuel_flow: None,         // TODO: Add if available
-                    oil_pressure: None,      // TODO: Add if available
-                    oil_temperature: None,   // TODO: Add if available
+                    manifold_pressure: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_MPR[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                    egt: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_EGT[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                    cht: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_CHT[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                    // X-Plane provides fuel flow in kg/s; convert to gal/hr (Jet-A ~3.04 kg/gal)
+                    fuel_flow: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_FF_[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(x * 3600.0 / 3.04) } else { None }),
+                    oil_pressure: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_oilp[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                    oil_temperature: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_oilt[{}]", i))
+                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
                 };
                 engines.push(engine);
             }
@@ -812,6 +847,13 @@ impl XPlaneAdapter {
         if let Some(DataRefValue::Float(alt_m)) = datarefs.get("sim/flightmodel/position/elevation")
         {
             environment.altitude = XPlaneConverter::convert_altitude_m_to_ft(*alt_m);
+        }
+
+        // Pressure altitude (feet, directly from barometric altimeter)
+        if let Some(DataRefValue::Float(palt_ft)) =
+            datarefs.get("sim/cockpit2/gauges/indicators/altitude_ft_pilot")
+        {
+            environment.pressure_altitude = *palt_ft;
         }
 
         // Temperature

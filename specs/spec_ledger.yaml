@@ -613,8 +613,36 @@ requirements:
         tests:
           - flight-process-detection::tests::ksp_definition_present
 
+  - id: REQ-42
+    name: X-Plane 11/12 Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-42.1
+        description: "IAS/TAS/ground speed SHALL be converted from m/s to knots; attitude angles SHALL be converted from degrees to radians; psi > 180 SHALL be normalized to the range (-180, +180]"
+        tests:
+          - flight-xplane::adapter::tests::test_speed_conversion
+          - flight-xplane::adapter::tests::test_angle_conversion
+          - flight-xplane::adapter::tests::test_kinematics_conversion
+      - id: AC-42.2
+        description: "Angular rates P, Q, R (deg/s) SHALL be converted to rad/s and written to BusSnapshot.angular_rates"
+        tests:
+          - flight-xplane::adapter::tests::test_rate_conversion
+      - id: AC-42.3
+        description: "Engine EGT, fuel_flow (kg/s→gal/hr), oil_pressure, oil_temperature, manifold_pressure, and CHT SHALL be populated from per-engine DataRefs when present"
+        tests:
+          - flight-xplane::adapter::tests::test_complete_telemetry_mapping
+      - id: AC-42.4
+        description: "BusSnapshot.environment.pressure_altitude SHALL be populated from sim/cockpit2/gauges/indicators/altitude_ft_pilot (feet, no conversion)"
+        tests:
+          - flight-xplane::adapter::tests::test_complete_telemetry_mapping
+      - id: AC-42.5
+        description: "PluginInterface SHALL perform a newline-delimited JSON handshake over TCP port 52000 and SHALL use actual async I/O for send_message and read_message"
+        tests:
+          - flight-xplane::plugin::tests::test_plugin_interface_creation
+          - flight-xplane::plugin::tests::test_plugin_message_serialization
+
   # ============================================================================
-  # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================
 
   # Infrastructure Requirement: Structured Documentation

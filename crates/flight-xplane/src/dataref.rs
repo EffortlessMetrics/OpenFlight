@@ -217,6 +217,34 @@ impl DataRefManager {
             DataRef::new("sim/version/xplane_internal_version".to_string())
                 .with_description("X-Plane version".to_string())
                 .with_type(DataRefType::Int),
+            // Angular rates (deg/s) — converted to rad/s in adapter
+            DataRef::new("sim/flightmodel/position/P".to_string())
+                .with_description("Roll rate".to_string())
+                .with_units("deg/s".to_string()),
+            DataRef::new("sim/flightmodel/position/Q".to_string())
+                .with_description("Pitch rate".to_string())
+                .with_units("deg/s".to_string()),
+            DataRef::new("sim/flightmodel/position/R".to_string())
+                .with_description("Yaw rate".to_string())
+                .with_units("deg/s".to_string()),
+            // Mach number
+            DataRef::new("sim/flightmodel/misc/machno".to_string())
+                .with_description("Mach number".to_string()),
+            // Pressure altitude (feet)
+            DataRef::new("sim/cockpit2/gauges/indicators/altitude_ft_pilot".to_string())
+                .with_description("Pressure altitude".to_string())
+                .with_units("feet".to_string()),
+            // Total fuel weight
+            DataRef::new("sim/flightmodel/weight/m_fuel_total".to_string())
+                .with_description("Total fuel weight".to_string())
+                .with_units("kg".to_string()),
+            // Engine 0 — always requested for any aircraft
+            DataRef::new("sim/flightmodel/engine/ENGN_running[0]".to_string())
+                .with_description("Engine 1 running".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/flightmodel/engine/ENGN_N1_[0]".to_string())
+                .with_description("Engine 1 N1".to_string())
+                .with_units("percent".to_string()),
         ];
 
         for dataref in default_datarefs {

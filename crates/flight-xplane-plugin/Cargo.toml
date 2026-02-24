@@ -1,0 +1,24 @@
+[package]
+homepage.workspace = true
+name = "flight-xplane-plugin"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "X-Plane plugin (.xpl) that bridges X-Plane to the Flight Hub plugin interface."
+keywords = ["flight-sim", "openflight", "xplane", "plugin", "xplm"]
+
+# cdylib produces the shared library that X-Plane loads as a .xpl plugin.
+# Rename the output to FlightHub.xpl (or win.xpl / lin.xpl / mac.xpl) before install.
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
