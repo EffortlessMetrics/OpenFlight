@@ -584,6 +584,35 @@ requirements:
         tests:
           - flight-process-detection::tests::msfs2024_definition_present
 
+  - id: REQ-41
+    name: Kerbal Space Program kRPC Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-41.1
+        description: "KspAdapter::sim_id() SHALL return SimId::Ksp and initial state SHALL be Disconnected"
+        tests:
+          - flight-ksp::adapter::tests::test_adapter_creation
+          - flight-ksp::adapter::tests::test_adapter_stop_without_start
+      - id: AC-41.2
+        description: "WHEN heading_deg > 180 THEN normalized heading SHALL be heading_deg - 360; otherwise heading SHALL be unchanged"
+        tests:
+          - flight-ksp::mapping::tests::test_heading_normalization
+          - flight-ksp::mapping::tests::test_pitch_mapping
+      - id: AC-41.3
+        description: "altitude_m SHALL be multiplied by 3.28084 to yield feet; speed_mps SHALL be multiplied by 1.94384 to yield knots"
+        tests:
+          - flight-ksp::mapping::tests::test_altitude_conversion
+          - flight-ksp::mapping::tests::test_speed_conversion
+      - id: AC-41.4
+        description: "validity.safe_for_ffb SHALL be true only when situation == FLYING (3)"
+        tests:
+          - flight-ksp::mapping::tests::test_safe_for_ffb_only_when_flying
+      - id: AC-41.5
+        description: "ProcessDetectionConfig SHALL contain a Ksp definition with processes KSP_x64.exe, KSP.x86_64, and window title Kerbal Space Program"
+        tests:
+          - flight-process-detection::tests::ksp_definition_present
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

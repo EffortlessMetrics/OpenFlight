@@ -1,0 +1,30 @@
+[package]
+homepage.workspace = true
+name = "flight-ksp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Kerbal Space Program kRPC adapter for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "ksp", "krpc", "adapter"]
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
+flight-adapter-common = { path = "../flight-adapter-common" }
+flight-metrics = { path = "../flight-metrics" }
+tokio = { workspace = true, features = ["net", "io-util", "time", "macros"] }
+prost = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

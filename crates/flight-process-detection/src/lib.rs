@@ -35,6 +35,7 @@ pub enum SimId {
     AceCombat7,
     WarThunder,
     EliteDangerous,
+    Ksp,
     Unknown,
 }
 
@@ -48,6 +49,7 @@ impl std::fmt::Display for SimId {
             SimId::AceCombat7 => write!(f, "Ace Combat 7"),
             SimId::WarThunder => write!(f, "War Thunder"),
             SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
+            SimId::Ksp => write!(f, "Kerbal Space Program"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -259,6 +261,29 @@ impl Default for ProcessDetectionConfig {
                     PathBuf::from("Elite Dangerous"),
                     PathBuf::from("steamapps/common/Elite Dangerous"),
                     PathBuf::from("Frontier Developments/Elite Dangerous"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Kerbal Space Program process definition
+        process_definitions.insert(
+            SimId::Ksp,
+            ProcessDefinition {
+                process_names: vec![
+                    "KSP_x64.exe".to_string(),   // Windows
+                    "KSP.x86_64".to_string(),    // Linux
+                    "KSP.app".to_string(),       // macOS
+                    "KSP2_x64.exe".to_string(),  // KSP 2 (future-proofing)
+                ],
+                window_titles: vec![
+                    "Kerbal Space Program".to_string(),
+                    "Kerbal Space Program 2".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("Kerbal Space Program"),
+                    PathBuf::from("steamapps/common/Kerbal Space Program"),
+                    PathBuf::from("steamapps/common/Kerbal Space Program 2"),
                 ],
                 min_confidence: 0.8,
             },
@@ -945,6 +970,12 @@ mod tests {
                 .process_definitions
                 .contains_key(&SimId::AceCombat7)
         );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::Ksp)
+        );
     }
 
     #[test]
@@ -1084,7 +1115,31 @@ mod tests {
                 }
 
                 Ok(())
-            }).unwrap();
+            });
         }
     }
-}
+
+    #[test]
+    fn ksp_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let ksp_def = config.process_definitions.get(&SimId::Ksp).unwrap();
+        assert!(
+            ksp_def
+                .process_names
+                .contains(&"KSP_x64.exe".to_string()),
+            "Should contain Windows KSP executable"
+        );
+        assert!(
+            ksp_def
+                .process_names
+                .contains(&"KSP.x86_64".to_string()),
+            "Should contain Linux KSP executable"
+        );
+        assert!(
+            ksp_def
+                .window_titles
+                .contains(&"Kerbal Space Program".to_string())
+        );
+        assert_eq!(ksp_def.min_confidence, 0.8);
+    }
+}  // end mod tests

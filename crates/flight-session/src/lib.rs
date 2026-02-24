@@ -910,6 +910,7 @@ impl AircraftAutoSwitch {
             SimId::AceCombat7 => "ac7",
             SimId::WarThunder => "warthunder",
             SimId::EliteDangerous => "elite",
+            SimId::Ksp => "ksp",
             SimId::Unknown => "unknown",
         };
 

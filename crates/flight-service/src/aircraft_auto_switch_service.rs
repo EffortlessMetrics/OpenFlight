@@ -49,6 +49,7 @@ fn map_sim_id(sim: BusSimId) -> CoreSimId {
         BusSimId::AceCombat7 => CoreSimId::AceCombat7,
         BusSimId::WarThunder => CoreSimId::WarThunder,
         BusSimId::EliteDangerous => CoreSimId::EliteDangerous,
+        BusSimId::Ksp => CoreSimId::Ksp,
         BusSimId::Unknown => CoreSimId::Unknown,
     }
 }
@@ -434,9 +435,13 @@ impl AircraftAutoSwitchService {
                             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
                             CoreSimId::WarThunder => BusSimId::WarThunder,
                             CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
-                            CoreSimId::Unknown => BusSimId::Unknown,
+                            CoreSimId::Ksp => BusSimId::Ksp,
+                            CoreSimId::Unknown => continue,
                         };
-                        if service_tx.send(ServiceEvent::ProcessLost(bus_sim)).is_err() {
+                        if service_tx
+                            .send(ServiceEvent::ProcessLost(bus_sim))
+                            .is_err()
+                        {
                             break 'monitor;
                         }
                     }
@@ -525,6 +530,7 @@ impl AircraftAutoSwitchService {
             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
             CoreSimId::WarThunder => BusSimId::WarThunder,
             CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
+            CoreSimId::Ksp => BusSimId::Ksp,
             CoreSimId::Unknown => BusSimId::Unknown,
         };
 
