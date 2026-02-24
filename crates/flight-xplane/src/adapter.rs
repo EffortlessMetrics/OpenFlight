@@ -20,7 +20,9 @@ use flight_adapter_common::{
 use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
-    snapshot::{AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation, TrimState},
+    snapshot::{
+        AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation, TrimState,
+    },
     types::{AircraftId, AutopilotState, Percentage, SimId},
 };
 use flight_core::units::conversions;
@@ -755,19 +757,13 @@ impl XPlaneAdapter {
     fn convert_trim_state(datarefs: &HashMap<String, DataRefValue>) -> TrimState {
         let mut trim = TrimState::default();
 
-        if let Some(DataRefValue::Float(elv)) =
-            datarefs.get("sim/flightmodel/controls/elv_trim")
-        {
+        if let Some(DataRefValue::Float(elv)) = datarefs.get("sim/flightmodel/controls/elv_trim") {
             trim.elevator = elv.clamp(-1.0, 1.0);
         }
-        if let Some(DataRefValue::Float(ail)) =
-            datarefs.get("sim/flightmodel/controls/ail_trim")
-        {
+        if let Some(DataRefValue::Float(ail)) = datarefs.get("sim/flightmodel/controls/ail_trim") {
             trim.aileron = ail.clamp(-1.0, 1.0);
         }
-        if let Some(DataRefValue::Float(rud)) =
-            datarefs.get("sim/flightmodel/controls/rud_trim")
-        {
+        if let Some(DataRefValue::Float(rud)) = datarefs.get("sim/flightmodel/controls/rud_trim") {
             trim.rudder = rud.clamp(-1.0, 1.0);
         }
 
@@ -842,8 +838,7 @@ impl XPlaneAdapter {
         }
 
         // Lights
-        if let Some(DataRefValue::Int(nav)) = datarefs.get("sim/cockpit/electrical/nav_lights_on")
-        {
+        if let Some(DataRefValue::Int(nav)) = datarefs.get("sim/cockpit/electrical/nav_lights_on") {
             config.lights.nav = *nav != 0;
         }
         if let Some(DataRefValue::Int(beacon)) =
@@ -897,23 +892,59 @@ impl XPlaneAdapter {
                     },
                     manifold_pressure: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_MPR[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                     egt: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_EGT[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                     cht: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_CHT[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                     // X-Plane provides fuel flow in kg/s; convert to gal/hr (Jet-A ~3.04 kg/gal)
                     fuel_flow: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_FF_[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(x * 3600.0 / 3.04) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(x * 3600.0 / 3.04)
+                            } else {
+                                None
+                            }
+                        }),
                     oil_pressure: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_oilp[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                     oil_temperature: datarefs
                         .get(&format!("sim/flightmodel/engine/ENGN_oilt[{}]", i))
-                        .and_then(|v| if let DataRefValue::Float(x) = v { Some(*x) } else { None }),
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                 };
                 engines.push(engine);
             }

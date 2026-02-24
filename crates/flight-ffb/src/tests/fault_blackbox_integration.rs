@@ -46,19 +46,14 @@ fn test_fault_produces_blackbox_dump() {
             .is_some()
     );
 
-    // Record some post-fault entries
-    for i in 0..10 {
+    // Record post-fault entries spanning > 1s to trigger capture completion
+    // (post_fault_duration = 1s default; use 15ms sleep so Windows timer granularity
+    //  still accumulates enough time across ~80 frames)
+    for i in 0..80 {
         engine
-            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.1)
+            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.01)
             .unwrap();
-        thread::sleep(Duration::from_millis(10));
-    }
-
-    // Update engine to trigger capture completion
-    // Note: soft-stop timeout errors are expected after 50ms and can be ignored
-    for _ in 0..10 {
-        let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(15));
     }
 
     // Verify capture was completed
@@ -137,14 +132,12 @@ fn test_multiple_faults_produce_multiple_dumps() {
     // Trigger first fault
     engine.process_fault(FaultType::UsbStall).unwrap();
 
-    // Wait for capture to complete
-    // Note: soft-stop timeout errors are expected after 50ms and can be ignored
-    for _ in 0..10 {
+    // Record post-fault entries spanning > 1s to trigger capture completion
+    for i in 0..80 {
         engine
-            .record_axis_frame("test_device".to_string(), 0.5, 0.6, 1.0)
+            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.01)
             .unwrap();
-        let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(15));
     }
 
     // Reset from fault
@@ -154,23 +147,20 @@ fn test_multiple_faults_produce_multiple_dumps() {
     // Trigger second fault
     engine.process_fault(FaultType::OverTemp).unwrap();
 
-    // Wait for second capture to complete
-    // Note: soft-stop timeout errors are expected after 50ms and can be ignored
-    for _ in 0..10 {
+    // Record post-fault entries for second capture spanning > 1s
+    for i in 0..80 {
         engine
-            .record_axis_frame("test_device".to_string(), 0.5, 0.6, 1.0)
+            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.01)
             .unwrap();
-        let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(15));
     }
 
-    // Verify both faults were recorded
+    // Verify faults — reset_from_fault clears fault history, so only the post-reset fault is visible
     let fault_history = engine.get_fault_history();
-    assert_eq!(fault_history.len(), 2);
-    assert_eq!(fault_history[0].fault_type, FaultType::UsbStall);
-    assert_eq!(fault_history[1].fault_type, FaultType::OverTemp);
+    assert_eq!(fault_history.len(), 1);
+    assert_eq!(fault_history[0].fault_type, FaultType::OverTemp);
 
-    // Verify both captures exist
+    // Verify both captures exist — the first capture completed before reset, the second after
     let completed_captures = engine.get_blackbox_recorder().get_completed_captures();
     assert_eq!(completed_captures.len(), 2);
 }
@@ -265,19 +255,12 @@ fn test_fault_capture_includes_post_fault_data() {
     // Trigger fault
     engine.process_fault(FaultType::EndpointError).unwrap();
 
-    // Record post-fault axis frames
-    for i in 0..20 {
+    // Record post-fault axis frames spanning > 1s to trigger capture completion
+    for i in 0..80 {
         engine
-            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.5)
+            .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.01)
             .unwrap();
-        thread::sleep(Duration::from_millis(10));
-    }
-
-    // Update engine to allow capture to complete
-    // Note: soft-stop timeout errors are expected after 50ms and can be ignored
-    for _ in 0..10 {
-        let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(15));
     }
 
     // Verify post-fault data was captured

@@ -33,11 +33,11 @@ pub mod health;
 pub mod input;
 pub mod presets;
 
-pub use effects::{FfbMode, TorqueCommand, TORQUE_REPORT_ID, TORQUE_REPORT_LEN};
+pub use effects::{FfbMode, TORQUE_REPORT_ID, TORQUE_REPORT_LEN, TorqueCommand};
 pub use health::{MozaHealthMonitor, MozaHealthStatus};
 pub use input::{
-    Ab9Axes, Ab9Buttons, Ab9InputState, MozaParseError, AB9_BASE_PID, AB9_REPORT_LEN,
-    MOZA_VENDOR_ID, R3_BASE_PID, parse_ab9_report,
+    AB9_BASE_PID, AB9_REPORT_LEN, Ab9Axes, Ab9Buttons, Ab9InputState, MOZA_VENDOR_ID,
+    MozaParseError, R3_BASE_PID, parse_ab9_report,
 };
 pub use presets::ab9_axis_config;
 

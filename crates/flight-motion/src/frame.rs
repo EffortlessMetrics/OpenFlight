@@ -99,7 +99,9 @@ impl MotionFrame {
 
     /// Returns an array of channel values in [surge, sway, heave, roll, pitch, yaw] order.
     pub fn to_array(&self) -> [f32; 6] {
-        [self.surge, self.sway, self.heave, self.roll, self.pitch, self.yaw]
+        [
+            self.surge, self.sway, self.heave, self.roll, self.pitch, self.yaw,
+        ]
     }
 }
 

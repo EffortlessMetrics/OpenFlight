@@ -668,6 +668,12 @@ impl BlackboxRecorder {
 
         let fault_time = fault_entry.timestamp();
 
+        // Also add fault entry to circular buffer so get_recent_entries() can find it
+        if self.circular_buffer.len() >= self.config.max_entries {
+            self.circular_buffer.pop_front();
+        }
+        self.circular_buffer.push_back(fault_entry.clone());
+
         // Extract pre-fault entries from circular buffer (2s pre-fault per FFB-SAFETY-01.12)
         let cutoff_time = fault_time - self.config.pre_fault_duration;
         let pre_fault_entries: Vec<BlackboxEntry> = self

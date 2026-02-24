@@ -193,10 +193,7 @@ impl EliteAdapter {
         }
         self.started = true;
         self.state = AdapterState::Connected;
-        info!(
-            "Elite adapter ready — watching {}",
-            status_path.display()
-        );
+        info!("Elite adapter ready — watching {}", status_path.display());
         Ok(())
     }
 
@@ -343,7 +340,10 @@ impl EliteAdapter {
                 }
                 self.docked_station = None;
             }
-            JournalEvent::Docked { station_name, star_system } => {
+            JournalEvent::Docked {
+                station_name,
+                star_system,
+            } => {
                 self.docked_station = Some(station_name.clone());
                 if self.current_system != *star_system {
                     self.current_system = star_system.clone();
@@ -361,7 +361,8 @@ impl EliteAdapter {
     /// Update the current ship name (called when journal LoadGame event is seen).
     pub fn set_ship(&mut self, ship: impl Into<String>) {
         self.current_ship = ship.into();
-        self.metrics.record_aircraft_change(self.current_ship.clone());
+        self.metrics
+            .record_aircraft_change(self.current_ship.clone());
     }
 
     /// Return the current star system name (from the most recent Location/FsdJump event).
@@ -421,7 +422,10 @@ mod tests {
     #[test]
     fn converts_gear_up_flag() {
         let adapter = EliteAdapter::new(EliteConfig::default());
-        let status = StatusJson { flags: 0, ..Default::default() };
+        let status = StatusJson {
+            flags: 0,
+            ..Default::default()
+        };
         let snap = adapter.convert_status(&status);
         assert!(snap.config.gear.all_up());
     }
@@ -492,7 +496,10 @@ mod tests {
     #[tokio::test]
     async fn poll_returns_none_when_no_change() {
         let dir = TempDir::new().unwrap();
-        let status = StatusJson { flags: 0, ..Default::default() };
+        let status = StatusJson {
+            flags: 0,
+            ..Default::default()
+        };
         write_status(&dir, &status);
 
         let mut adapter = EliteAdapter::new(config_with_dir(&dir));

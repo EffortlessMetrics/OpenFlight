@@ -21,7 +21,12 @@ pub struct AxisStatus {
 impl AxisStatus {
     /// Construct a new axis status entry.
     pub fn new(name: impl Into<String>, raw: f32, processed: f32, in_deadzone: bool) -> Self {
-        Self { name: name.into(), raw, processed, in_deadzone }
+        Self {
+            name: name.into(),
+            raw,
+            processed,
+            in_deadzone,
+        }
     }
 }
 
@@ -197,7 +202,10 @@ mod tests {
 
     #[test]
     fn test_sim_connection_display() {
-        assert_eq!(SimConnectionStatus::Disconnected.to_string(), "Disconnected");
+        assert_eq!(
+            SimConnectionStatus::Disconnected.to_string(),
+            "Disconnected"
+        );
         assert_eq!(SimConnectionStatus::Connected.to_string(), "Connected");
         assert_eq!(SimConnectionStatus::Paused.to_string(), "Paused");
     }

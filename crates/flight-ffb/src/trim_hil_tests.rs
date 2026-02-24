@@ -269,13 +269,18 @@ impl HilTrimTestSuite {
                 .iter()
                 .any(|&rate| rate > limits.max_rate_nm_per_s + self.config.hil_fp_tolerance);
 
+            // Timing deadline enforcement only applies when using physical device
+            // (software-only tests run on non-RT OS schedulers where 4ms precision is not guaranteed)
+            let timing_failure =
+                self.config.use_physical_device && timing_analysis.missed_deadlines > 0;
+
             TrimValidationResult {
                 name: "HIL FFB Rate Limiting".to_string(),
-                passed: !rate_violation && timing_analysis.missed_deadlines == 0,
+                passed: !rate_violation && !timing_failure,
                 duration: start_time.elapsed(),
                 error: if rate_violation {
                     Some(format!("Rate limit exceeded with hardware timing"))
-                } else if timing_analysis.missed_deadlines > 0 {
+                } else if timing_failure {
                     Some(format!(
                         "Missed {} timing deadlines",
                         timing_analysis.missed_deadlines

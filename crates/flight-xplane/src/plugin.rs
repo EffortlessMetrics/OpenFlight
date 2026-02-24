@@ -341,7 +341,11 @@ impl PluginInterface {
         let json = serde_json::to_string(&message)?;
         let line = format!("{}\n", json);
         debug!("Sending plugin message: {}", json);
-        conn.write_half.lock().await.write_all(line.as_bytes()).await?;
+        conn.write_half
+            .lock()
+            .await
+            .write_all(line.as_bytes())
+            .await?;
         Ok(())
     }
 
@@ -626,7 +630,10 @@ impl PluginInterface {
                 .clone()
         };
 
-        if !conn.capabilities.contains(&PluginCapability::ExecuteCommands) {
+        if !conn
+            .capabilities
+            .contains(&PluginCapability::ExecuteCommands)
+        {
             return Err(PluginError::UnsupportedCapability {
                 capability: "execute_commands".to_string(),
             });

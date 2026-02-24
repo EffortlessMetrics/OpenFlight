@@ -126,6 +126,8 @@ pub struct TrimController {
     spring_ramp_start: Option<Instant>,
     /// Spring ramp duration
     spring_ramp_duration: Duration,
+    /// When the spring freeze started (for hold-then-ramp timing)
+    spring_freeze_start: Option<Instant>,
     /// Last update timestamp
     last_update: Instant,
     /// Active setpoint change
@@ -146,6 +148,7 @@ impl TrimController {
             spring_frozen: false,
             spring_ramp_start: None,
             spring_ramp_duration: Duration::from_millis(150),
+            spring_freeze_start: None,
             last_update: Instant::now(),
             active_change: None,
         }
@@ -161,6 +164,7 @@ impl TrimController {
         self.current_rate_nm_per_s = 0.0;
         self.spring_frozen = false;
         self.spring_ramp_start = None;
+        self.spring_freeze_start = None;
         self.active_change = None;
     }
 
@@ -301,9 +305,14 @@ impl TrimController {
         } else if self.spring_frozen {
             // Check if we should start ramping spring back
             if let Some(_change) = &self.active_change {
-                // Start ramping after a brief hold period
-                if self.last_update.elapsed() > Duration::from_millis(100) {
+                // Start ramping after a brief hold period (measured from when freeze began)
+                let freeze_elapsed = self
+                    .spring_freeze_start
+                    .map(|t| t.elapsed())
+                    .unwrap_or(Duration::from_millis(200));
+                if freeze_elapsed > Duration::from_millis(100) {
                     self.spring_ramp_start = Some(Instant::now());
+                    self.spring_freeze_start = None;
                 }
             }
         }
@@ -318,6 +327,7 @@ impl TrimController {
     pub fn freeze_spring(&mut self) {
         if self.mode == TrimMode::SpringCentered {
             self.spring_frozen = true;
+            self.spring_freeze_start = Some(Instant::now());
         }
     }
 
@@ -365,8 +375,14 @@ impl TrimController {
     pub fn estimated_completion_time(&self) -> Option<Duration> {
         if let Some(_change) = &self.active_change {
             let remaining = (self.target_setpoint_nm - self.current_setpoint_nm).abs();
-            if self.current_rate_nm_per_s.abs() > 0.001 {
-                let time_s = remaining / self.current_rate_nm_per_s.abs();
+            // Use current rate if moving, otherwise use max_rate as upper-bound estimate
+            let effective_rate = if self.current_rate_nm_per_s.abs() > 0.001 {
+                self.current_rate_nm_per_s.abs()
+            } else {
+                self.limits.max_rate_nm_per_s
+            };
+            if effective_rate > 0.001 {
+                let time_s = remaining / effective_rate;
                 Some(Duration::from_secs_f32(time_s))
             } else {
                 None

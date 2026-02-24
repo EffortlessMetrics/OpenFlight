@@ -1,8 +1,12 @@
 [package]
+homepage.workspace = true
 name = "flight-open-hardware"
-version = "0.1.0"
-edition = "2021"
-license = "MIT OR Apache-2.0"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "OpenFlight reference hardware protocol — HID report definitions for the open-design FFB stick"
 readme = "README.md"
 keywords = ["hid", "ffb", "joystick", "embedded", "no-std"]

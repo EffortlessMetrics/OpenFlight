@@ -317,9 +317,11 @@ impl GladiatorInputState {
         self.buttons
             .iter()
             .enumerate()
-            .filter_map(|(i, &pressed)| {
-                if pressed { Some((i + 1) as u16) } else { None }
-            })
+            .filter_map(
+                |(i, &pressed)| {
+                    if pressed { Some((i + 1) as u16) } else { None }
+                },
+            )
             .collect()
     }
 }
@@ -358,7 +360,10 @@ pub struct GladiatorInputHandler {
 impl GladiatorInputHandler {
     /// Create a parser for the given Gladiator variant.
     pub fn new(variant: VkbGladiatorVariant) -> Self {
-        Self { variant, has_report_id: false }
+        Self {
+            variant,
+            has_report_id: false,
+        }
     }
 
     /// Enable stripping a 1-byte HID report ID prefix before parsing.
@@ -373,10 +378,7 @@ impl GladiatorInputHandler {
     }
 
     /// Parse one Gladiator HID report.
-    pub fn parse_report(
-        &self,
-        report: &[u8],
-    ) -> Result<GladiatorInputState, GladiatorParseError> {
+    pub fn parse_report(&self, report: &[u8]) -> Result<GladiatorInputState, GladiatorParseError> {
         let payload = if self.has_report_id {
             report.get(1..).unwrap_or(&[])
         } else {
@@ -428,7 +430,11 @@ impl GladiatorInputHandler {
 /// Decode a 4-bit HID hat-switch nibble.
 /// Values 0–7 map to N/NE/E/SE/S/SW/W/NW; 0xF (15) means centred.
 fn decode_hat_nibble(nibble: u8) -> Option<HatDirection> {
-    if nibble <= 7 { Some(HatDirection(nibble)) } else { None }
+    if nibble <= 7 {
+        Some(HatDirection(nibble))
+    } else {
+        None
+    }
 }
 
 /// Normalise a raw u16 axis value to `−1.0..=1.0` (bidirectional).

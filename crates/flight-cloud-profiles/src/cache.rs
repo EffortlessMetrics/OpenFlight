@@ -261,7 +261,9 @@ mod tests {
             profile: Profile {
                 schema: "flight.profile/1".to_string(),
                 sim: Some("msfs".to_string()),
-                aircraft: Some(AircraftId { icao: "C172".to_string() }),
+                aircraft: Some(AircraftId {
+                    icao: "C172".to_string(),
+                }),
                 axes: HashMap::new(),
                 pof_overrides: None,
             },

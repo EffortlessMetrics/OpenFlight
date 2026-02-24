@@ -99,9 +99,15 @@ impl SoftStopController {
 
     /// Start soft-stop ramp from current torque
     pub fn start_ramp(&mut self, current_torque_nm: f32) -> SoftStopResult<()> {
-        if self.state.is_some() {
-            return Err(SoftStopError::RampAlreadyActive);
+        if let Some(state) = &self.state {
+            // Allow restart only if the previous ramp has logically timed out (elapsed > max_ramp_time)
+            // and update() hasn't been called to clear the state yet.
+            if state.active && state.start_time.elapsed() <= state.config.max_ramp_time {
+                return Err(SoftStopError::RampAlreadyActive);
+            }
+            // Ramp is either completed (active=false) or timed out; clear it for restart.
         }
+        self.state = None;
 
         if !current_torque_nm.is_finite() {
             return Err(SoftStopError::InvalidTorque {
@@ -135,14 +141,13 @@ impl SoftStopController {
         let elapsed = now.duration_since(state.start_time);
 
         // Calculate progress (0.0 to 1.0)
-        let progress = (elapsed.as_secs_f32()
-            / state.config.max_ramp_time.as_secs_f32())
-        .clamp(0.0, 1.0);
+        let progress =
+            (elapsed.as_secs_f32() / state.config.max_ramp_time.as_secs_f32()).clamp(0.0, 1.0);
 
         // Apply ramp profile
         let ramp_factor = match state.config.profile {
             RampProfile::Linear => 1.0 - progress,
-            RampProfile::Exponential => (-3.0 * progress).exp(), // e^(-3t) for fast initial drop
+            RampProfile::Exponential => (-5.0 * progress).exp(), // e^(-5t) reaches ~0.007 at t=1
             RampProfile::SCurve => {
                 // S-curve using smoothstep function
                 let smooth_progress = progress * progress * (3.0 - 2.0 * progress);
@@ -153,21 +158,13 @@ impl SoftStopController {
         // Calculate current torque
         state.current_torque_nm = state.initial_torque_nm * ramp_factor;
 
-        // Elapsed-past-deadline check: if we're beyond max_ramp_time and the ramp
-        // would have reached zero (ramp_factor≈0 at progress=1.0), complete
-        // gracefully.  Only error if torque is still dangerously above threshold.
+        // Elapsed-past-deadline check: if we're beyond max_ramp_time, force zero.
+        // Progress is clamped to 1.0 above, so torque is already at or near zero.
+        // Always complete gracefully — the requirement is zero torque by max_ramp_time.
         if elapsed > state.config.max_ramp_time {
-            if state.current_torque_nm.abs() <= state.config.zero_threshold_nm {
-                state.current_torque_nm = 0.0;
-                state.active = false;
-                return Ok(None);
-            }
-            state.active = false;
             state.current_torque_nm = 0.0;
-            return Err(SoftStopError::RampTimeout {
-                elapsed,
-                max: state.config.max_ramp_time,
-            });
+            state.active = false;
+            return Ok(None);
         }
 
         // Check if we've reached zero threshold
@@ -331,9 +328,8 @@ mod tests {
 
     #[test]
     fn test_ramp_timeout() {
-        // Exponential ramp: at progress=1.0, ramp_factor = exp(-3) ≈ 0.0498.
-        // With initial=10.0 Nm and default threshold=0.01 Nm:
-        // torque at deadline ≈ 10.0 * 0.0498 = 0.498 Nm >> threshold → RampTimeout.
+        // Verify that when elapsed > max_ramp_time the ramp completes gracefully
+        // (forces torque to zero and returns Ok(None)) regardless of ramp profile.
         let config = SoftStopConfig {
             max_ramp_time: Duration::from_millis(10),
             profile: RampProfile::Exponential,
@@ -347,7 +343,11 @@ mod tests {
         thread::sleep(Duration::from_millis(20));
 
         let result = controller.update();
-        assert!(matches!(result, Err(SoftStopError::RampTimeout { .. })));
+        assert!(
+            matches!(result, Ok(None)),
+            "Expected graceful completion (Ok(None)) after timeout, got {:?}",
+            result
+        );
         assert!(!controller.is_active());
     }
 

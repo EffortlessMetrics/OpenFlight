@@ -106,8 +106,17 @@ pub fn parse_report(data: &[u8]) -> Result<RhinoInputState, RhinoParseError> {
     let hat = data[17];
 
     Ok(RhinoInputState {
-        axes: RhinoAxes { roll, pitch, throttle, twist, rocker },
-        buttons: RhinoButtons { mask: button_mask, hat },
+        axes: RhinoAxes {
+            roll,
+            pitch,
+            throttle,
+            twist,
+            rocker,
+        },
+        buttons: RhinoButtons {
+            mask: button_mask,
+            hat,
+        },
     })
 }
 
@@ -163,7 +172,10 @@ mod tests {
     fn test_parse_wrong_report_id_returns_error() {
         let mut r = [0u8; RHINO_REPORT_LEN];
         r[0] = 0x02;
-        assert!(matches!(parse_report(&r), Err(RhinoParseError::UnknownReportId { .. })));
+        assert!(matches!(
+            parse_report(&r),
+            Err(RhinoParseError::UnknownReportId { .. })
+        ));
     }
 
     #[test]

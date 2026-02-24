@@ -86,52 +86,36 @@ impl MetricsDashboard {
 
         for metric in metrics {
             match metric {
-                Metric::Counter { name, value } => {
-                    match name.as_str() {
-                        common::SIM_FRAMES_TOTAL => snap.sim.frames_total = *value,
-                        common::SIM_ERRORS_TOTAL => snap.sim.errors_total = *value,
-                        common::SIM_PROFILE_SWITCHES_TOTAL => {
-                            snap.sim.profile_switches_total = *value
-                        }
-                        common::FFB_EFFECTS_APPLIED_TOTAL => {
-                            snap.ffb.effects_applied_total = *value
-                        }
-                        common::FFB_FAULT_COUNT_TOTAL => snap.ffb.fault_count_total = *value,
-                        common::FFB_ENVELOPE_CLAMP_TOTAL => {
-                            snap.ffb.envelope_clamp_total = *value
-                        }
-                        common::FFB_EMERGENCY_STOP_TOTAL => {
-                            snap.ffb.emergency_stop_total = *value
-                        }
-                        common::RT_TICKS_TOTAL => snap.rt.ticks_total = *value,
-                        common::RT_MISSED_DEADLINES_TOTAL => {
-                            snap.rt.missed_deadlines_total = *value
-                        }
-                        _ => {}
+                Metric::Counter { name, value } => match name.as_str() {
+                    common::SIM_FRAMES_TOTAL => snap.sim.frames_total = *value,
+                    common::SIM_ERRORS_TOTAL => snap.sim.errors_total = *value,
+                    common::SIM_PROFILE_SWITCHES_TOTAL => snap.sim.profile_switches_total = *value,
+                    common::FFB_EFFECTS_APPLIED_TOTAL => snap.ffb.effects_applied_total = *value,
+                    common::FFB_FAULT_COUNT_TOTAL => snap.ffb.fault_count_total = *value,
+                    common::FFB_ENVELOPE_CLAMP_TOTAL => snap.ffb.envelope_clamp_total = *value,
+                    common::FFB_EMERGENCY_STOP_TOTAL => snap.ffb.emergency_stop_total = *value,
+                    common::RT_TICKS_TOTAL => snap.rt.ticks_total = *value,
+                    common::RT_MISSED_DEADLINES_TOTAL => snap.rt.missed_deadlines_total = *value,
+                    _ => {}
+                },
+                Metric::Gauge { name, value } => match name.as_str() {
+                    common::SIM_CONNECTION_STATE => snap.sim.connected = *value >= 0.5,
+                    common::SIM_DATA_RATE_HZ => snap.sim.data_rate_hz = *value,
+                    common::SIM_LAST_PACKET_AGE_MS => snap.sim.last_packet_age_ms = *value,
+                    common::FFB_MAX_TORQUE_NM => snap.ffb.max_torque_nm = *value,
+                    common::FFB_CURRENT_TORQUE_NM => snap.ffb.current_torque_nm = *value,
+                    _ => {}
+                },
+                Metric::Histogram { name, summary } => match name.as_str() {
+                    common::SIM_FRAME_LATENCY_MS => {
+                        snap.sim.frame_latency_ms = Some(summary.clone())
                     }
-                }
-                Metric::Gauge { name, value } => {
-                    match name.as_str() {
-                        common::SIM_CONNECTION_STATE => snap.sim.connected = *value >= 0.5,
-                        common::SIM_DATA_RATE_HZ => snap.sim.data_rate_hz = *value,
-                        common::SIM_LAST_PACKET_AGE_MS => snap.sim.last_packet_age_ms = *value,
-                        common::FFB_MAX_TORQUE_NM => snap.ffb.max_torque_nm = *value,
-                        common::FFB_CURRENT_TORQUE_NM => snap.ffb.current_torque_nm = *value,
-                        _ => {}
+                    common::FFB_EFFECT_LATENCY_MS => {
+                        snap.ffb.effect_latency_ms = Some(summary.clone())
                     }
-                }
-                Metric::Histogram { name, summary } => {
-                    match name.as_str() {
-                        common::SIM_FRAME_LATENCY_MS => {
-                            snap.sim.frame_latency_ms = Some(summary.clone())
-                        }
-                        common::FFB_EFFECT_LATENCY_MS => {
-                            snap.ffb.effect_latency_ms = Some(summary.clone())
-                        }
-                        common::RT_JITTER_US => snap.rt.jitter_us = Some(summary.clone()),
-                        _ => {}
-                    }
-                }
+                    common::RT_JITTER_US => snap.rt.jitter_us = Some(summary.clone()),
+                    _ => {}
+                },
             }
         }
 

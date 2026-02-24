@@ -450,10 +450,7 @@ impl AircraftAutoSwitchService {
                             CoreSimId::Wingman => BusSimId::Wingman,
                             CoreSimId::Unknown => continue,
                         };
-                        if service_tx
-                            .send(ServiceEvent::ProcessLost(bus_sim))
-                            .is_err()
-                        {
+                        if service_tx.send(ServiceEvent::ProcessLost(bus_sim)).is_err() {
                             break 'monitor;
                         }
                     }

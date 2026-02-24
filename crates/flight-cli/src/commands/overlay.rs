@@ -56,35 +56,31 @@ pub async fn execute(
                 OutputFormat::Json => Ok(Some(serde_json::to_string_pretty(&status)?)),
                 OutputFormat::Human => Ok(Some(format!(
                     "Overlay status:\n  Backend:       {}\n  Visible:       {}\n  Notifications: {}\n",
-                    "null (headless)",
-                    true,
-                    0
+                    "null (headless)", true, 0
                 ))),
             }
         }
 
-        OverlayAction::Show => {
-            Ok(Some(match output {
-                OutputFormat::Json => json!({"action":"show","queued":true}).to_string(),
-                OutputFormat::Human => "Overlay show command queued.\n".to_string(),
-            }))
-        }
+        OverlayAction::Show => Ok(Some(match output {
+            OutputFormat::Json => json!({"action":"show","queued":true}).to_string(),
+            OutputFormat::Human => "Overlay show command queued.\n".to_string(),
+        })),
 
-        OverlayAction::Hide => {
-            Ok(Some(match output {
-                OutputFormat::Json => json!({"action":"hide","queued":true}).to_string(),
-                OutputFormat::Human => "Overlay hide command queued.\n".to_string(),
-            }))
-        }
+        OverlayAction::Hide => Ok(Some(match output {
+            OutputFormat::Json => json!({"action":"hide","queued":true}).to_string(),
+            OutputFormat::Human => "Overlay hide command queued.\n".to_string(),
+        })),
 
-        OverlayAction::Toggle => {
-            Ok(Some(match output {
-                OutputFormat::Json => json!({"action":"toggle","queued":true}).to_string(),
-                OutputFormat::Human => "Overlay toggle command queued.\n".to_string(),
-            }))
-        }
+        OverlayAction::Toggle => Ok(Some(match output {
+            OutputFormat::Json => json!({"action":"toggle","queued":true}).to_string(),
+            OutputFormat::Human => "Overlay toggle command queued.\n".to_string(),
+        })),
 
-        OverlayAction::Notify { message, severity, ttl } => {
+        OverlayAction::Notify {
+            message,
+            severity,
+            ttl,
+        } => {
             let sev = severity.as_str();
             let valid_severity = matches!(sev, "info" | "warning" | "alert" | "critical");
             if !valid_severity {
@@ -121,7 +117,9 @@ pub async fn execute(
                 OutputFormat::Human => {
                     let mut out = "Available overlay backends:\n".to_string();
                     out.push_str("  [✓] null     — Headless / no-op (testing)\n");
-                    out.push_str("  [ ] openxr   — OpenXR compositor layer (requires openxr feature)\n");
+                    out.push_str(
+                        "  [ ] openxr   — OpenXR compositor layer (requires openxr feature)\n",
+                    );
                     out.push_str("  [ ] steamvr  — SteamVR IVROverlay / Windows (requires steamvr feature)\n");
                     Ok(Some(out))
                 }

@@ -31,10 +31,10 @@ pub mod presets;
 
 pub use health::{WinWingDevice, WinWingHealthMonitor, WinWingHealthStatus};
 pub use input::{
-    RudderAxes, StickAxes, StickButtons, StickInputState, ThrottleAxes, ThrottleButtons,
-    ThrottleInputState, WinWingParseError, ORION2_F18_STICK_PID, ORION2_THROTTLE_PID,
-    RUDDER_REPORT_LEN, STICK_REPORT_LEN, TFRP_RUDDER_PID, THROTTLE_REPORT_LEN, WINWING_VENDOR_ID,
-    parse_rudder_report, parse_stick_report, parse_throttle_report,
+    ORION2_F18_STICK_PID, ORION2_THROTTLE_PID, RUDDER_REPORT_LEN, RudderAxes, STICK_REPORT_LEN,
+    StickAxes, StickButtons, StickInputState, TFRP_RUDDER_PID, THROTTLE_REPORT_LEN, ThrottleAxes,
+    ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
+    parse_stick_report, parse_throttle_report,
 };
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
 

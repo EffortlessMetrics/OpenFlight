@@ -36,7 +36,7 @@
 //! assert_eq!(sanitized.sim.as_deref(), Some("msfs"));
 //! ```
 
-use flight_profile::{AxisConfig, Profile, PROFILE_SCHEMA_VERSION};
+use flight_profile::{AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 
 /// Return a sanitized copy of `profile` suitable for community upload.
 ///
@@ -87,7 +87,10 @@ pub fn validate_for_publish(profile: &Profile, title: &str) -> Result<(), String
         }
         if let Some(expo) = cfg.expo {
             if !(0.0..=1.0).contains(&expo) {
-                return Err(format!("axis '{}': expo {expo} out of range [0.0, 1.0]", name));
+                return Err(format!(
+                    "axis '{}': expo {expo} out of range [0.0, 1.0]",
+                    name
+                ));
             }
         }
     }
@@ -104,7 +107,9 @@ mod tests {
         Profile {
             schema: "flight.profile/1".to_string(),
             sim: sim.map(|s| s.to_string()),
-            aircraft: Some(AircraftId { icao: "C172".to_string() }),
+            aircraft: Some(AircraftId {
+                icao: "C172".to_string(),
+            }),
             axes,
             pof_overrides: None,
         }
@@ -152,7 +157,10 @@ mod tests {
     fn test_sanitize_preserves_aircraft() {
         let profile = make_profile(Some("msfs"), HashMap::new());
         let sanitized = sanitize_for_upload(&profile);
-        assert_eq!(sanitized.aircraft.as_ref().map(|a| &a.icao).unwrap(), "C172");
+        assert_eq!(
+            sanitized.aircraft.as_ref().map(|a| &a.icao).unwrap(),
+            "C172"
+        );
     }
 
     #[test]

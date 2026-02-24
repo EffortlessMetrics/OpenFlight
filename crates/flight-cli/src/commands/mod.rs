@@ -6,11 +6,11 @@
 pub mod ac7;
 pub mod cloud_profiles;
 pub mod dcs;
-pub mod overlay;
 pub mod devices;
 pub mod diag;
 pub mod info;
 pub mod metrics;
+pub mod overlay;
 pub mod panels;
 pub mod posture;
 pub mod profile;

@@ -3,12 +3,12 @@
 
 //! Async HTTP client for the community cloud profile repository.
 
-use crate::{
-    CloudProfile, CloudProfileError, ListFilter, ProfileListing, PublishMeta, Result,
-    VoteDirection, VoteResult, DEFAULT_API_BASE_URL, DEFAULT_PAGE_SIZE, DEFAULT_TIMEOUT_SECS,
-};
 use crate::cache::ProfileCache;
 use crate::models::Page;
+use crate::{
+    CloudProfile, CloudProfileError, DEFAULT_API_BASE_URL, DEFAULT_PAGE_SIZE, DEFAULT_TIMEOUT_SECS,
+    ListFilter, ProfileListing, PublishMeta, Result, VoteDirection, VoteResult,
+};
 use flight_profile::Profile;
 use serde_json::json;
 use std::time::Duration;
@@ -66,15 +66,17 @@ impl CloudProfileClient {
     /// Returns an error if the underlying HTTP client cannot be constructed
     /// (e.g. if TLS is unavailable).
     pub fn new(config: ClientConfig) -> Result<Self> {
-        let http = reqwest::Client::builder()
-            .timeout(config.timeout)
-            .build()?;
+        let http = reqwest::Client::builder().timeout(config.timeout).build()?;
         let cache = if config.use_cache {
             ProfileCache::default_dir().ok()
         } else {
             None
         };
-        Ok(Self { config, http, cache })
+        Ok(Self {
+            config,
+            http,
+            cache,
+        })
     }
 
     // ── Read operations ──────────────────────────────────────────────────────
@@ -112,7 +114,11 @@ impl CloudProfileClient {
         let mut all = vec![];
         let mut page = 1u32;
         loop {
-            let f = ListFilter { page, per_page: DEFAULT_PAGE_SIZE, ..filter.clone() };
+            let f = ListFilter {
+                page,
+                per_page: DEFAULT_PAGE_SIZE,
+                ..filter.clone()
+            };
             let result = self.list_page(f).await?;
             let has_next = result.has_next_page();
             all.extend(result.items);
@@ -195,9 +201,7 @@ impl CloudProfileClient {
 }
 
 /// Deserialize a successful response or map an error status to an API error.
-async fn handle_response<T: serde::de::DeserializeOwned>(
-    resp: reqwest::Response,
-) -> Result<T> {
+async fn handle_response<T: serde::de::DeserializeOwned>(resp: reqwest::Response) -> Result<T> {
     if resp.status().is_success() {
         Ok(resp.json::<T>().await?)
     } else {
@@ -217,7 +221,10 @@ fn urlenc(s: &str) -> String {
             other => {
                 let mut buf = [0u8; 4];
                 let bytes = other.encode_utf8(&mut buf).as_bytes().to_vec();
-                bytes.iter().flat_map(|b| format!("%{b:02X}").chars().collect::<Vec<_>>()).collect()
+                bytes
+                    .iter()
+                    .flat_map(|b| format!("%{b:02X}").chars().collect::<Vec<_>>())
+                    .collect()
             }
         })
         .collect()
@@ -256,7 +263,10 @@ mod tests {
 
     #[test]
     fn test_client_constructs_without_error() {
-        let cfg = ClientConfig { use_cache: false, ..ClientConfig::default() };
+        let cfg = ClientConfig {
+            use_cache: false,
+            ..ClientConfig::default()
+        };
         let result = CloudProfileClient::new(cfg);
         assert!(result.is_ok());
     }
@@ -266,7 +276,11 @@ mod tests {
     #[ignore = "requires live cloud API (set FLIGHT_CLOUD_API_URL)"]
     async fn test_list_profiles_live() {
         let url = std::env::var("FLIGHT_CLOUD_API_URL").unwrap();
-        let cfg = ClientConfig { base_url: url, use_cache: false, ..ClientConfig::default() };
+        let cfg = ClientConfig {
+            base_url: url,
+            use_cache: false,
+            ..ClientConfig::default()
+        };
         let client = CloudProfileClient::new(cfg).unwrap();
         let page = client.list_page(ListFilter::default()).await.unwrap();
         println!("Total profiles: {}", page.total);

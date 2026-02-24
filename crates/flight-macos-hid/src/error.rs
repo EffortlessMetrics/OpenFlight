@@ -46,7 +46,9 @@ mod tests {
 
     #[test]
     fn test_open_failed_display() {
-        let e = HidError::OpenFailed { code: 0xe00002c5u32 as i32 };
+        let e = HidError::OpenFailed {
+            code: 0xe00002c5u32 as i32,
+        };
         assert!(e.to_string().contains("0xe00002c5"));
     }
 }

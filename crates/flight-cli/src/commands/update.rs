@@ -90,8 +90,7 @@ pub async fn execute(
 
 async fn check_for_updates(output: OutputFormat) -> anyhow::Result<Option<String>> {
     let prefs = load_prefs();
-    let channel = Channel::from_str(&prefs.channel)
-        .unwrap_or(Channel::Stable);
+    let channel = Channel::from_str(&prefs.channel).unwrap_or(Channel::Stable);
 
     let channel_url = match channel {
         Channel::Stable => "https://updates.flight-hub.dev/stable",
@@ -162,9 +161,7 @@ fn set_channel(channel_str: &str, output: OutputFormat) -> anyhow::Result<Option
             })
             .to_string(),
         )),
-        OutputFormat::Human => Ok(Some(format!(
-            "Update channel changed: {old} → {channel}"
-        ))),
+        OutputFormat::Human => Ok(Some(format!("Update channel changed: {old} → {channel}"))),
     }
 }
 
@@ -173,9 +170,24 @@ fn show_channels(output: OutputFormat) -> anyhow::Result<Option<String>> {
     let current = prefs.channel.clone();
 
     let channels = vec![
-        (Channel::Stable, "Stable", "Thoroughly tested. Recommended for all users.", 24u64),
-        (Channel::Beta, "Beta", "Feature-complete; undergoing final testing.", 12),
-        (Channel::Canary, "Canary", "Latest features; may be unstable.", 6),
+        (
+            Channel::Stable,
+            "Stable",
+            "Thoroughly tested. Recommended for all users.",
+            24u64,
+        ),
+        (
+            Channel::Beta,
+            "Beta",
+            "Feature-complete; undergoing final testing.",
+            12,
+        ),
+        (
+            Channel::Canary,
+            "Canary",
+            "Latest features; may be unstable.",
+            6,
+        ),
     ];
 
     match output {
@@ -192,19 +204,27 @@ fn show_channels(output: OutputFormat) -> anyhow::Result<Option<String>> {
                     })
                 })
                 .collect();
-            Ok(Some(json!({ "success": true, "channels": list }).to_string()))
+            Ok(Some(
+                json!({ "success": true, "channels": list }).to_string(),
+            ))
         }
         OutputFormat::Human => {
             let mut lines = vec!["Available update channels:".to_string(), String::new()];
             for (ch, name, desc, freq) in &channels {
-                let marker = if ch.to_string() == current { " ●" } else { "  " };
+                let marker = if ch.to_string() == current {
+                    " ●"
+                } else {
+                    "  "
+                };
                 lines.push(format!(
                     "{marker} {name:<8} ({ch}) — {desc} (checks every {freq}h)"
                 ));
             }
             lines.push(String::new());
             lines.push(format!("Active channel: {current}"));
-            lines.push("Switch channel: flightctl update channel set <stable|beta|canary>".to_string());
+            lines.push(
+                "Switch channel: flightctl update channel set <stable|beta|canary>".to_string(),
+            );
             Ok(Some(lines.join("\n")))
         }
     }

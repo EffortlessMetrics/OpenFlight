@@ -580,11 +580,13 @@ fn stream_name(st: StreamType) -> &'static str {
 }
 
 fn to_hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
-        use std::fmt::Write;
-        let _ = write!(s, "{b:02x}");
-        s
-    })
+    bytes
+        .iter()
+        .fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+            use std::fmt::Write;
+            let _ = write!(s, "{b:02x}");
+            s
+        })
 }
 
 fn read_header(reader: &mut BufReader<File>) -> Result<BlackboxHeader> {

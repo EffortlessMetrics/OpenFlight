@@ -216,8 +216,7 @@ async fn execute_command(
             commands::update::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::CloudProfiles { action } => {
-            commands::cloud_profiles::execute(action, cli.output, cli.verbose, client_manager)
-                .await
+            commands::cloud_profiles::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::Overlay { action } => {
             commands::overlay::execute(action, cli.output, cli.verbose, client_manager).await

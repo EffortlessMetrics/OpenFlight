@@ -186,7 +186,10 @@ mod tests {
             output = lp.process(input);
         }
         // Should be heavily attenuated
-        assert!(output.abs() < 0.1, "LP filter did not attenuate HF: {output}");
+        assert!(
+            output.abs() < 0.1,
+            "LP filter did not attenuate HF: {output}"
+        );
     }
 
     #[test]

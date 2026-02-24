@@ -433,7 +433,11 @@ impl MsfsAdapter {
                     simconnect_version.1,
                     simconnect_version.2,
                     simconnect_version.3,
-                    if self.is_msfs2024 { "MSFS 2024" } else { "MSFS 2020" }
+                    if self.is_msfs2024 {
+                        "MSFS 2024"
+                    } else {
+                        "MSFS 2020"
+                    }
                 );
             }
             SessionEvent::Disconnected => {
@@ -525,8 +529,7 @@ impl MsfsAdapter {
         self.setup_variable_mapping(&aircraft_info).await?;
 
         let aircraft_id = AircraftId::new(&aircraft_info.atc_model);
-        *self.current_snapshot.write().await =
-            Some(BusSnapshot::new(self.sim_id(), aircraft_id));
+        *self.current_snapshot.write().await = Some(BusSnapshot::new(self.sim_id(), aircraft_id));
         *self.state.write().await = AdapterState::Active;
         Ok(())
     }
@@ -763,10 +766,7 @@ mod tests {
         match MsfsAdapter::new(config) {
             Ok(adapter) => {
                 // sim_id() returns Msfs or Msfs2024 depending on detected version.
-                assert!(matches!(
-                    adapter.sim_id(),
-                    SimId::Msfs | SimId::Msfs2024
-                ));
+                assert!(matches!(adapter.sim_id(), SimId::Msfs | SimId::Msfs2024));
 
                 // Test validation
                 let raw_data = vec![1, 2, 3, 4];

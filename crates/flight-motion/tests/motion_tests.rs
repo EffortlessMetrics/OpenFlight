@@ -110,7 +110,10 @@ fn test_hp_filter_onset_then_washout() {
     for _ in 0..600 {
         last = hp.process(1.0);
     }
-    assert!(last.abs() < 0.02, "Should wash out after sustained input: {last}");
+    assert!(
+        last.abs() < 0.02,
+        "Should wash out after sustained input: {last}"
+    );
 }
 
 #[test]

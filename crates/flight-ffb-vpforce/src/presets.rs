@@ -78,7 +78,10 @@ mod tests {
     #[test]
     fn test_roll_has_minimal_deadzone() {
         let cfg = recommended_axis_config();
-        assert!(cfg[0].deadzone < 0.02, "Hall-effect roll should have small deadzone");
+        assert!(
+            cfg[0].deadzone < 0.02,
+            "Hall-effect roll should have small deadzone"
+        );
     }
 
     #[test]

@@ -259,9 +259,7 @@ pub async fn execute(
                     out.push_str(
                         "\nNote: Blocked features are omitted from telemetry in MP sessions\n",
                     );
-                    out.push_str(
-                        "      to comply with DCS multiplayer integrity requirements.\n",
-                    );
+                    out.push_str("      to comply with DCS multiplayer integrity requirements.\n");
                     out
                 }
             };

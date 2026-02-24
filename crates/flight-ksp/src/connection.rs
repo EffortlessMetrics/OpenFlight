@@ -6,8 +6,8 @@ use tokio::net::TcpStream;
 
 use crate::error::KspError;
 use crate::protocol::{
-    connection_request, connection_response, Argument, ConnectionRequest, ConnectionResponse,
-    ProcedureCall, Request, Response,
+    Argument, ConnectionRequest, ConnectionResponse, ProcedureCall, Request, Response,
+    connection_request, connection_response,
 };
 
 /// A connected kRPC RPC channel.
@@ -43,9 +43,7 @@ impl KrpcConnection {
         procedure: &str,
         args: Vec<Argument>,
     ) -> Result<Vec<u8>, KspError> {
-        let results = self
-            .call_batch(vec![(service, procedure, args)])
-            .await?;
+        let results = self.call_batch(vec![(service, procedure, args)]).await?;
         results
             .into_iter()
             .next()
@@ -96,16 +94,13 @@ impl KrpcConnection {
         let bytes = msg.encode_to_vec();
         // Write length as protobuf varint
         let mut len_buf = Vec::new();
-        prost::encode_length_delimiter(bytes.len(), &mut len_buf)
-            .map_err(KspError::Encode)?;
+        prost::encode_length_delimiter(bytes.len(), &mut len_buf).map_err(KspError::Encode)?;
         stream.write_all(&len_buf).await?;
         stream.write_all(&bytes).await?;
         Ok(())
     }
 
-    async fn read_message_raw<M: Message + Default>(
-        stream: &mut TcpStream,
-    ) -> Result<M, KspError> {
+    async fn read_message_raw<M: Message + Default>(stream: &mut TcpStream) -> Result<M, KspError> {
         let len = read_varint(stream).await?;
         let mut buf = vec![0u8; len];
         stream.read_exact(&mut buf).await?;

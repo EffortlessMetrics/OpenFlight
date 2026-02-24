@@ -118,7 +118,13 @@ mod tests {
 
     #[test]
     fn test_device_display() {
-        assert_eq!(WinWingDevice::Orion2Throttle.to_string(), "WinWing Orion 2 Throttle");
-        assert_eq!(WinWingDevice::TfrpRudder.to_string(), "WinWing TFRP Rudder Pedals");
+        assert_eq!(
+            WinWingDevice::Orion2Throttle.to_string(),
+            "WinWing Orion 2 Throttle"
+        );
+        assert_eq!(
+            WinWingDevice::TfrpRudder.to_string(),
+            "WinWing TFRP Rudder Pedals"
+        );
     }
 }

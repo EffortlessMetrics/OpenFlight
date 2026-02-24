@@ -17,11 +17,7 @@
 //! Translational channels are normalized by `max_g` (configurable).
 //! Angular channels are normalized by `max_angle_deg` or `max_yaw_rate_deg_s`.
 
-use crate::{
-    config::MotionConfig,
-    frame::MotionFrame,
-    washout::WashoutFilter,
-};
+use crate::{config::MotionConfig, frame::MotionFrame, washout::WashoutFilter};
 use flight_bus::BusSnapshot;
 
 /// Maps BusSnapshot kinematics to a 6DOF motion frame with washout filtering.
@@ -157,9 +153,21 @@ mod tests {
             mapper.process(&neutral_snapshot());
         }
         let frame = mapper.process(&neutral_snapshot());
-        assert!(frame.surge.abs() < 0.01, "Surge should wash out: {}", frame.surge);
-        assert!(frame.sway.abs() < 0.01, "Sway should wash out: {}", frame.sway);
-        assert!(frame.roll.abs() < 0.01, "Roll should wash out: {}", frame.roll);
+        assert!(
+            frame.surge.abs() < 0.01,
+            "Surge should wash out: {}",
+            frame.surge
+        );
+        assert!(
+            frame.sway.abs() < 0.01,
+            "Sway should wash out: {}",
+            frame.sway
+        );
+        assert!(
+            frame.roll.abs() < 0.01,
+            "Roll should wash out: {}",
+            frame.roll
+        );
     }
 
     #[test]

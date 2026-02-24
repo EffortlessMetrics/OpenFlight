@@ -242,17 +242,22 @@ async fn export_recording(
                 return Err(anyhow::anyhow!(
                     "Unknown stream '{}'. Valid values: axis, bus, events",
                     other
-                ))
+                ));
             }
         };
         doc.records.retain(|r| r.stream == target);
         doc.summary.total_records = doc.records.len() as u64;
-        doc.summary.axis_frames =
-            doc.records.iter().filter(|r| r.stream == "axis_frames").count() as u64;
-        doc.summary.bus_snapshots =
-            doc.records.iter().filter(|r| r.stream == "bus_snapshots").count() as u64;
-        doc.summary.events =
-            doc.records.iter().filter(|r| r.stream == "events").count() as u64;
+        doc.summary.axis_frames = doc
+            .records
+            .iter()
+            .filter(|r| r.stream == "axis_frames")
+            .count() as u64;
+        doc.summary.bus_snapshots = doc
+            .records
+            .iter()
+            .filter(|r| r.stream == "bus_snapshots")
+            .count() as u64;
+        doc.summary.events = doc.records.iter().filter(|r| r.stream == "events").count() as u64;
     }
 
     let json_bytes = serde_json::to_vec_pretty(&doc)?;

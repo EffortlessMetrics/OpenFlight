@@ -207,7 +207,10 @@ mod tests {
     fn parses_location_event_with_star_pos() {
         let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Location","StarSystem":"Sol","StarPos":[0.0,0.0,0.0]}"#;
         match parse_journal_line(line) {
-            Some(JournalEvent::Location { star_system, star_pos }) => {
+            Some(JournalEvent::Location {
+                star_system,
+                star_pos,
+            }) => {
                 assert_eq!(star_system, "Sol");
                 assert_eq!(star_pos, Some([0.0, 0.0, 0.0]));
             }
@@ -219,7 +222,10 @@ mod tests {
     fn parses_fsd_jump_event_with_star_pos() {
         let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"FsdJump","StarSystem":"HIP 78085","StarPos":[10.5,-20.3,5.0]}"#;
         match parse_journal_line(line) {
-            Some(JournalEvent::FsdJump { star_system, star_pos }) => {
+            Some(JournalEvent::FsdJump {
+                star_system,
+                star_pos,
+            }) => {
                 assert_eq!(star_system, "HIP 78085");
                 let pos = star_pos.unwrap();
                 assert!((pos[0] - 10.5).abs() < 0.01);
@@ -230,7 +236,8 @@ mod tests {
 
     #[test]
     fn parses_refuel_all_event() {
-        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"RefuelAll","Amount":12.5,"Cost":1250}"#;
+        let line =
+            r#"{"timestamp":"2025-01-01T00:00:00Z","event":"RefuelAll","Amount":12.5,"Cost":1250}"#;
         match parse_journal_line(line) {
             Some(JournalEvent::RefuelAll { amount }) => {
                 assert!((amount.unwrap() - 12.5).abs() < 0.01);
@@ -241,7 +248,8 @@ mod tests {
 
     #[test]
     fn unknown_event_returns_none() {
-        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Music","MusicTrack":"MainMenu"}"#;
+        let line =
+            r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Music","MusicTrack":"MainMenu"}"#;
         assert!(parse_journal_line(line).is_none());
     }
 }

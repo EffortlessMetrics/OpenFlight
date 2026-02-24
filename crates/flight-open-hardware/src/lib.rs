@@ -40,10 +40,10 @@ pub mod input_report;
 pub mod led_report;
 pub mod output_report;
 
-pub use firmware_version::{FirmwareVersionReport, FIRMWARE_REPORT_ID};
-pub use input_report::{InputReport, INPUT_REPORT_ID, INPUT_REPORT_LEN};
-pub use led_report::{LedReport, LED_REPORT_ID, LED_REPORT_LEN};
-pub use output_report::{FfbOutputReport, FFB_REPORT_ID, FFB_REPORT_LEN};
+pub use firmware_version::{FIRMWARE_REPORT_ID, FirmwareVersionReport};
+pub use input_report::{INPUT_REPORT_ID, INPUT_REPORT_LEN, InputReport};
+pub use led_report::{LED_REPORT_ID, LED_REPORT_LEN, LedReport};
+pub use output_report::{FFB_REPORT_ID, FFB_REPORT_LEN, FfbOutputReport};
 
 /// USB Vendor ID (pid.codes open allocation).
 pub const VENDOR_ID: u16 = 0x1209;

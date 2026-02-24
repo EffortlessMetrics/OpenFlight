@@ -36,8 +36,8 @@ pub mod presets;
 pub use effects::{FfbEffect, serialize_effect};
 pub use health::{RhinoHealthMonitor, RhinoHealthStatus};
 pub use input::{
-    parse_report, RhinoAxes, RhinoButtons, RhinoInputState, RHINO_PID_V2, RHINO_PID_V3,
-    RHINO_REPORT_LEN, VPFORCE_VENDOR_ID,
+    RHINO_PID_V2, RHINO_PID_V3, RHINO_REPORT_LEN, RhinoAxes, RhinoButtons, RhinoInputState,
+    VPFORCE_VENDOR_ID, parse_report,
 };
 pub use presets::recommended_axis_config;
 

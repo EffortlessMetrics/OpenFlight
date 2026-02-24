@@ -134,8 +134,7 @@ impl WingmanAdapter {
         }
 
         let mut snapshot = BusSnapshot::new(SimId::Wingman, AircraftId::new("WINGMAN"));
-        snapshot.timestamp =
-            Instant::now().duration_since(self.started_at).as_nanos() as u64;
+        snapshot.timestamp = Instant::now().duration_since(self.started_at).as_nanos() as u64;
 
         self.bus_publisher
             .publish(snapshot.clone())

@@ -77,10 +77,7 @@ impl JournalReader {
 
         // Switch to the new file if the session has changed.
         if self.current_file.as_deref() != Some(&*latest) {
-            debug!(
-                "JournalReader: switching to {}",
-                latest.display()
-            );
+            debug!("JournalReader: switching to {}", latest.display());
             self.current_file = Some(latest.clone());
             self.byte_offset = 0;
         }
@@ -203,7 +200,10 @@ mod tests {
 
         // Append a new event.
         {
-            let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
+            let mut f = std::fs::OpenOptions::new()
+                .append(true)
+                .open(&path)
+                .unwrap();
             writeln!(
                 f,
                 r#"{{"timestamp":"2025-01-01T00:01:00Z","event":"FsdJump","StarSystem":"Sol","StarPos":[0.0,0.0,0.0]}}"#

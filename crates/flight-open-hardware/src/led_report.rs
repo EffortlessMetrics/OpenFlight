@@ -52,12 +52,18 @@ impl LedReport {
         if buf.len() < LED_REPORT_LEN || buf[0] != LED_REPORT_ID {
             return None;
         }
-        Some(Self { leds: buf[1], brightness: buf[2] })
+        Some(Self {
+            leds: buf[1],
+            brightness: buf[2],
+        })
     }
 
     /// Return a report with all LEDs off.
     pub fn all_off() -> Self {
-        Self { leds: 0, brightness: 0 }
+        Self {
+            leds: 0,
+            brightness: 0,
+        }
     }
 }
 
@@ -74,7 +80,10 @@ mod tests {
 
     #[test]
     fn test_roundtrip() {
-        let cmd = LedReport { leds: led_flags::POWER | led_flags::PC_MODE, brightness: 200 };
+        let cmd = LedReport {
+            leds: led_flags::POWER | led_flags::PC_MODE,
+            brightness: 200,
+        };
         let bytes = cmd.to_bytes();
         let parsed = LedReport::parse(&bytes).unwrap();
         assert_eq!(cmd, parsed);

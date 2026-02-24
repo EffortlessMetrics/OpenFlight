@@ -38,7 +38,10 @@ pub mod protocol;
 use flight_adapter_common::{AdapterConfig, AdapterError, AdapterMetrics, AdapterState};
 use flight_bus::{
     BusPublisher, BusSnapshot, PublisherError,
-    types::{AircraftId, GForce, GearPosition, GearState, Percentage, SimId, ValidatedAngle, ValidatedSpeed},
+    types::{
+        AircraftId, GForce, GearPosition, GearState, Percentage, SimId, ValidatedAngle,
+        ValidatedSpeed,
+    },
 };
 use flight_core::units::{angles, conversions};
 use flight_metrics::{
@@ -204,9 +207,11 @@ impl WarThunderAdapter {
         }
 
         let snapshot = self.convert_indicators(&indicators)?;
-        self.bus_publisher.publish(snapshot.clone()).inspect_err(|_| {
-            self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-        })?;
+        self.bus_publisher
+            .publish(snapshot.clone())
+            .inspect_err(|_| {
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            })?;
 
         self.metrics.record_update();
         if let Some(ref name) = indicators.airframe {
@@ -223,15 +228,9 @@ impl WarThunderAdapter {
     }
 
     /// Convert a [`WtIndicators`] struct into a [`BusSnapshot`].
-    pub fn convert_indicators(
-        &self,
-        ind: &WtIndicators,
-    ) -> Result<BusSnapshot, WarThunderError> {
+    pub fn convert_indicators(&self, ind: &WtIndicators) -> Result<BusSnapshot, WarThunderError> {
         let aircraft_name = ind.airframe.clone().unwrap_or_default();
-        let mut snapshot = BusSnapshot::new(
-            SimId::WarThunder,
-            AircraftId::new(aircraft_name),
-        );
+        let mut snapshot = BusSnapshot::new(SimId::WarThunder, AircraftId::new(aircraft_name));
         snapshot.timestamp = Instant::now().duration_since(self.started_at).as_nanos() as u64;
 
         // IAS — km/h → m/s
@@ -260,16 +259,14 @@ impl WarThunderAdapter {
 
         // Pitch
         if let Some(pitch) = ind.pitch {
-            snapshot.kinematics.pitch =
-                ValidatedAngle::new_degrees(pitch)
-                    .map_err(|_| WarThunderError::InvalidField { field: "pitch" })?;
+            snapshot.kinematics.pitch = ValidatedAngle::new_degrees(pitch)
+                .map_err(|_| WarThunderError::InvalidField { field: "pitch" })?;
         }
 
         // Roll / bank
         if let Some(roll) = ind.roll {
-            snapshot.kinematics.bank =
-                ValidatedAngle::new_degrees(roll)
-                    .map_err(|_| WarThunderError::InvalidField { field: "roll" })?;
+            snapshot.kinematics.bank = ValidatedAngle::new_degrees(roll)
+                .map_err(|_| WarThunderError::InvalidField { field: "roll" })?;
         }
 
         // G-force
@@ -285,8 +282,16 @@ impl WarThunderAdapter {
 
         // Gear (0.0 = retracted, ≥0.5 = deployed/down)
         if let Some(gear) = ind.gear {
-            let pos = if gear >= 0.5 { GearPosition::Down } else { GearPosition::Up };
-            snapshot.config.gear = GearState { nose: pos, left: pos, right: pos };
+            let pos = if gear >= 0.5 {
+                GearPosition::Down
+            } else {
+                GearPosition::Up
+            };
+            snapshot.config.gear = GearState {
+                nose: pos,
+                left: pos,
+                right: pos,
+            };
         }
         // Flaps (0..=1 ratio → Percentage 0..=100)
         if let Some(flaps) = ind.flaps {
@@ -326,7 +331,8 @@ impl WarThunderAdapter {
 
     /// Return time since the last successful poll.
     pub fn time_since_last_packet(&self) -> Option<Duration> {
-        self.last_packet.map(|last| Instant::now().duration_since(last))
+        self.last_packet
+            .map(|last| Instant::now().duration_since(last))
     }
 
     /// Return true if last-packet age exceeds `request_timeout`.

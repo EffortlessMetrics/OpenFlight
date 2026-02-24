@@ -63,7 +63,10 @@ pub enum FfbEffect {
 pub fn serialize_effect(effect: FfbEffect) -> [u8; FFB_REPORT_LEN] {
     let mut buf = [0u8; FFB_REPORT_LEN];
     match effect {
-        FfbEffect::ConstantForce { direction_deg, magnitude } => {
+        FfbEffect::ConstantForce {
+            direction_deg,
+            magnitude,
+        } => {
             let m = magnitude.clamp(0.0, 1.0);
             let angle = (direction_deg % 360.0 + 360.0) % 360.0;
             let angle_raw = (angle / 360.0 * 65535.0) as u16;
@@ -86,7 +89,10 @@ pub fn serialize_effect(effect: FfbEffect) -> [u8; FFB_REPORT_LEN] {
             buf[1] = 0x02; // damper mode
             buf[2..4].copy_from_slice(&raw.to_le_bytes());
         }
-        FfbEffect::Sine { frequency_hz, magnitude } => {
+        FfbEffect::Sine {
+            frequency_hz,
+            magnitude,
+        } => {
             let freq = frequency_hz.clamp(1.0, 200.0) as u16;
             let m = (magnitude.clamp(0.0, 1.0) * 10000.0) as u16;
             buf[0] = REPORT_PERIODIC;
@@ -117,7 +123,10 @@ mod tests {
 
     #[test]
     fn test_constant_force_clamps_magnitude() {
-        let b = serialize_effect(FfbEffect::ConstantForce { direction_deg: 0.0, magnitude: 2.0 });
+        let b = serialize_effect(FfbEffect::ConstantForce {
+            direction_deg: 0.0,
+            magnitude: 2.0,
+        });
         // mag_raw = clamp(2.0, 0,1) * 10000 = 10000 = 0x2710
         let mag = u16::from_le_bytes([b[3], b[4]]);
         assert_eq!(mag, 10000);
@@ -125,7 +134,10 @@ mod tests {
 
     #[test]
     fn test_constant_force_zero_magnitude() {
-        let b = serialize_effect(FfbEffect::ConstantForce { direction_deg: 90.0, magnitude: 0.0 });
+        let b = serialize_effect(FfbEffect::ConstantForce {
+            direction_deg: 90.0,
+            magnitude: 0.0,
+        });
         let mag = u16::from_le_bytes([b[3], b[4]]);
         assert_eq!(mag, 0);
     }
@@ -148,14 +160,20 @@ mod tests {
 
     #[test]
     fn test_sine_frequency_clamped() {
-        let b = serialize_effect(FfbEffect::Sine { frequency_hz: 999.0, magnitude: 0.5 });
+        let b = serialize_effect(FfbEffect::Sine {
+            frequency_hz: 999.0,
+            magnitude: 0.5,
+        });
         let freq = u16::from_le_bytes([b[1], b[2]]);
         assert_eq!(freq, 200);
     }
 
     #[test]
     fn test_sine_minimum_frequency() {
-        let b = serialize_effect(FfbEffect::Sine { frequency_hz: 0.0, magnitude: 1.0 });
+        let b = serialize_effect(FfbEffect::Sine {
+            frequency_hz: 0.0,
+            magnitude: 1.0,
+        });
         let freq = u16::from_le_bytes([b[1], b[2]]);
         assert_eq!(freq, 1);
     }

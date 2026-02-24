@@ -106,10 +106,7 @@ impl OverlayConfig {
             return Err(format!("scale must be > 0.0, got {}", self.scale));
         }
         if self.depth_m < 0.1 {
-            return Err(format!(
-                "depth_m must be >= 0.1 m, got {}",
-                self.depth_m
-            ));
+            return Err(format!("depth_m must be >= 0.1 m, got {}", self.depth_m));
         }
         if self.max_notifications == 0 {
             return Err("max_notifications must be >= 1".to_string());

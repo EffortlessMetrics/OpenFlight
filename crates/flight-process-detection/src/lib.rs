@@ -258,7 +258,10 @@ impl Default for ProcessDetectionConfig {
                     "EliteDangerous.exe".to_string(),
                     "EliteDangerous_4_0_0_0".to_string(),
                 ],
-                window_titles: vec!["Elite - Dangerous".to_string(), "Elite Dangerous".to_string()],
+                window_titles: vec![
+                    "Elite - Dangerous".to_string(),
+                    "Elite Dangerous".to_string(),
+                ],
                 process_paths: vec![
                     PathBuf::from("Elite Dangerous"),
                     PathBuf::from("steamapps/common/Elite Dangerous"),
@@ -273,10 +276,10 @@ impl Default for ProcessDetectionConfig {
             SimId::Ksp,
             ProcessDefinition {
                 process_names: vec![
-                    "KSP_x64.exe".to_string(),   // Windows
-                    "KSP.x86_64".to_string(),    // Linux
-                    "KSP.app".to_string(),       // macOS
-                    "KSP2_x64.exe".to_string(),  // KSP 2 (future-proofing)
+                    "KSP_x64.exe".to_string(),  // Windows
+                    "KSP.x86_64".to_string(),   // Linux
+                    "KSP.app".to_string(),      // macOS
+                    "KSP2_x64.exe".to_string(), // KSP 2 (future-proofing)
                 ],
                 window_titles: vec![
                     "Kerbal Space Program".to_string(),
@@ -1140,15 +1143,11 @@ mod tests {
         let config = ProcessDetectionConfig::default();
         let ksp_def = config.process_definitions.get(&SimId::Ksp).unwrap();
         assert!(
-            ksp_def
-                .process_names
-                .contains(&"KSP_x64.exe".to_string()),
+            ksp_def.process_names.contains(&"KSP_x64.exe".to_string()),
             "Should contain Windows KSP executable"
         );
         assert!(
-            ksp_def
-                .process_names
-                .contains(&"KSP.x86_64".to_string()),
+            ksp_def.process_names.contains(&"KSP.x86_64".to_string()),
             "Should contain Linux KSP executable"
         );
         assert!(
@@ -1168,10 +1167,7 @@ mod tests {
                 .contains(&"ProjectWingman.exe".to_string()),
             "Should contain Wingman Windows executable"
         );
-        assert!(
-            def.window_titles
-                .contains(&"Project Wingman".to_string())
-        );
+        assert!(def.window_titles.contains(&"Project Wingman".to_string()));
         assert_eq!(def.min_confidence, 0.7);
     }
-}  // end mod tests
+} // end mod tests

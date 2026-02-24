@@ -11,8 +11,8 @@ use std::{
     io::{BufRead, BufReader, Write},
     net::TcpStream,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     thread,
     time::Duration,
@@ -79,7 +79,10 @@ fn run_bridge_loop(running: Arc<AtomicBool>) {
                 eprintln!("[FlightHub] Bridge disconnected normally");
             }
             Err(e) => {
-                eprintln!("[FlightHub] Bridge error: {}; retrying in {:?}", e, RECONNECT_DELAY);
+                eprintln!(
+                    "[FlightHub] Bridge error: {}; retrying in {:?}",
+                    e, RECONNECT_DELAY
+                );
             }
         }
 
@@ -92,10 +95,7 @@ fn run_bridge_loop(running: Arc<AtomicBool>) {
 /// Establish one TCP connection and drive the message loop until disconnected.
 fn connect_and_run(running: &AtomicBool) -> Result<(), BridgeError> {
     eprintln!("[FlightHub] Connecting to {}", FLIGHT_HUB_ADDR);
-    let stream = TcpStream::connect_timeout(
-        &FLIGHT_HUB_ADDR.parse().unwrap(),
-        HANDSHAKE_TIMEOUT,
-    )?;
+    let stream = TcpStream::connect_timeout(&FLIGHT_HUB_ADDR.parse().unwrap(), HANDSHAKE_TIMEOUT)?;
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     let mut write_stream = stream.try_clone()?;
 
@@ -105,7 +105,10 @@ fn connect_and_run(running: &AtomicBool) -> Result<(), BridgeError> {
     // Read Flight Hub's handshake offer
     let handshake_req = read_message(&mut reader)?;
     match handshake_req {
-        PluginMessage::Handshake { version, capabilities } => {
+        PluginMessage::Handshake {
+            version,
+            capabilities,
+        } => {
             eprintln!(
                 "[FlightHub] Handshake received: version={}, caps={:?}",
                 version, capabilities

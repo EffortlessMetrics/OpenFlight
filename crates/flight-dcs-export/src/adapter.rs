@@ -379,7 +379,8 @@ impl DcsAdapter {
                     if let Some(msg) = self.mp_detector.blocked_feature_message(feature) {
                         warn!("[MP Integrity] {}", msg);
                     }
-                    self.blocked_features_notified.insert(field.to_string(), now);
+                    self.blocked_features_notified
+                        .insert(field.to_string(), now);
                 }
                 data.remove(field);
                 blocked.push(field.to_string());
@@ -491,12 +492,11 @@ impl DcsAdapter {
 
         // Parse angle of attack
         if let Some(aoa) = data.get("aoa").and_then(|v| v.as_f64()) {
-            snapshot.kinematics.aoa =
-                ValidatedAngle::new_degrees(aoa as f32).map_err(|_| {
-                    DcsAdapterError::TelemetryParsing {
-                        field: "aoa".to_string(),
-                    }
-                })?;
+            snapshot.kinematics.aoa = ValidatedAngle::new_degrees(aoa as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "aoa".to_string(),
+                }
+            })?;
         }
 
         // Parse angular rates (rad/s, body frame)

@@ -193,7 +193,11 @@ pub fn parse_rudder_report(data: &[u8]) -> Result<RudderAxes, WinWingParseError>
     let brake_left = read_u16(data, 3) as f32 / 65535.0;
     let brake_right = read_u16(data, 5) as f32 / 65535.0;
 
-    Ok(RudderAxes { rudder, brake_left, brake_right })
+    Ok(RudderAxes {
+        rudder,
+        brake_left,
+        brake_right,
+    })
 }
 
 // ─── Error type ──────────────────────────────────────────────────────────────

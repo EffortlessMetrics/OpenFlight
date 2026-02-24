@@ -382,7 +382,9 @@ impl DataRefManager {
         }
 
         // Add airliner aircraft types
-        let airliner_aircraft = vec!["A318", "A319", "A320", "A321", "B737", "B738", "B777", "B787"];
+        let airliner_aircraft = vec![
+            "A318", "A319", "A320", "A321", "B737", "B738", "B777", "B787",
+        ];
         for aircraft in airliner_aircraft {
             let mut datarefs = self.default_datarefs.clone();
             datarefs.insert("sim/flightmodel/engine/ENGN_running[0]".to_string());
@@ -641,10 +643,20 @@ impl DataRefManager {
             name if name.contains("autothrottle_on") => RequestPriority::Normal,
 
             // Lights (low-frequency state changes)
-            name if name.contains("_lights_on") || name.contains("taxi_light") || name.contains("logo_lights") => RequestPriority::Low,
+            name if name.contains("_lights_on")
+                || name.contains("taxi_light")
+                || name.contains("logo_lights") =>
+            {
+                RequestPriority::Low
+            }
 
             // Trim state
-            name if name.contains("elv_trim") || name.contains("ail_trim") || name.contains("rud_trim") => RequestPriority::Low,
+            name if name.contains("elv_trim")
+                || name.contains("ail_trim")
+                || name.contains("rud_trim") =>
+            {
+                RequestPriority::Low
+            }
 
             // Environmental data
             name if name.contains("weather/") => RequestPriority::Low,

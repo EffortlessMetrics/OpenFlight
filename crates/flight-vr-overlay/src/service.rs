@@ -48,7 +48,10 @@ pub struct OverlayHandle {
 impl OverlayHandle {
     /// Send a command to the overlay service (non-blocking).
     pub async fn send(&self, cmd: OverlayCommand) -> Result<(), OverlayError> {
-        self.tx.send(cmd).await.map_err(|_| OverlayError::ServiceShutdown)
+        self.tx
+            .send(cmd)
+            .await
+            .map_err(|_| OverlayError::ServiceShutdown)
     }
 
     /// Read the latest overlay state snapshot.
@@ -122,7 +125,10 @@ impl<R: OverlayRenderer> OverlayService<R> {
 
         tokio::spawn(svc.run());
 
-        OverlayHandle { tx: cmd_tx, state_rx }
+        OverlayHandle {
+            tx: cmd_tx,
+            state_rx,
+        }
     }
 
     async fn run(mut self) {
@@ -171,10 +177,12 @@ impl<R: OverlayRenderer> OverlayService<R> {
                     let _ = r.hide();
                 }
             }
-            OverlayCommand::Notify { message, severity, ttl_secs } => {
-                let ttl = ttl_secs
-                    .unwrap_or(self.config.notification_ttl_secs)
-                    .max(1);
+            OverlayCommand::Notify {
+                message,
+                severity,
+                ttl_secs,
+            } => {
+                let ttl = ttl_secs.unwrap_or(self.config.notification_ttl_secs).max(1);
                 let n = OverlayNotification::new(message, severity, Duration::from_secs(ttl));
                 self.queue.push(n);
             }
@@ -193,7 +201,7 @@ impl<R: OverlayRenderer> OverlayService<R> {
 mod tests {
     use super::*;
     use crate::renderer::NullRenderer;
-    use tokio::time::{sleep, Duration};
+    use tokio::time::{Duration, sleep};
 
     #[tokio::test]
     async fn test_spawn_and_shutdown() {
@@ -225,7 +233,10 @@ mod tests {
     #[tokio::test]
     async fn test_notify_sends_command() {
         let handle = OverlayService::spawn(OverlayConfig::minimal(), NullRenderer::new());
-        handle.notify("Test notification", Severity::Info, 2).await.unwrap();
+        handle
+            .notify("Test notification", Severity::Info, 2)
+            .await
+            .unwrap();
         sleep(Duration::from_millis(50)).await;
         handle.shutdown().await.unwrap();
     }

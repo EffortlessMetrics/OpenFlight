@@ -128,7 +128,11 @@ mod tests {
     #[test]
     fn test_hall_effect_axes_have_small_deadzone() {
         for cfg in &orion2_throttle_config()[..2] {
-            assert!(cfg.deadzone < 0.02, "{} should have small deadzone", cfg.name);
+            assert!(
+                cfg.deadzone < 0.02,
+                "{} should have small deadzone",
+                cfg.name
+            );
         }
     }
 }

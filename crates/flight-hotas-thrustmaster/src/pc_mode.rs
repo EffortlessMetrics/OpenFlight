@@ -291,7 +291,10 @@ mod tests {
     #[test]
     fn test_display_formatting() {
         assert_eq!(PcModeStatus::PcMode.to_string(), "PC mode (Green LED)");
-        assert_eq!(PcModeStatus::ConsoleMode.to_string(), "Console mode (Red LED)");
+        assert_eq!(
+            PcModeStatus::ConsoleMode.to_string(),
+            "Console mode (Red LED)"
+        );
         assert_eq!(PcModeStatus::Unknown.to_string(), "Unknown");
     }
 }

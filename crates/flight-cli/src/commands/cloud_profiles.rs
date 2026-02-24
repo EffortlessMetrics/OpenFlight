@@ -77,7 +77,13 @@ pub async fn execute(
     let api = CloudProfileClient::new(config)?;
 
     match action {
-        CloudProfilesAction::List { sim, aircraft, query, sort, page } => {
+        CloudProfilesAction::List {
+            sim,
+            aircraft,
+            query,
+            sort,
+            page,
+        } => {
             let sort_order = parse_sort_order(sort);
             let filter = ListFilter {
                 sim: sim.clone(),
@@ -89,9 +95,7 @@ pub async fn execute(
             };
             let page_result = api.list_page(filter).await?;
             match output {
-                OutputFormat::Json => {
-                    Ok(Some(serde_json::to_string_pretty(&page_result)?))
-                }
+                OutputFormat::Json => Ok(Some(serde_json::to_string_pretty(&page_result)?)),
                 OutputFormat::Human => {
                     if page_result.items.is_empty() {
                         return Ok(Some("No profiles found.".to_string()));
@@ -123,9 +127,7 @@ pub async fn execute(
         CloudProfilesAction::Get { id } => {
             let profile = api.get(id).await?;
             match output {
-                OutputFormat::Json => {
-                    Ok(Some(serde_json::to_string_pretty(&profile)?))
-                }
+                OutputFormat::Json => Ok(Some(serde_json::to_string_pretty(&profile)?)),
                 OutputFormat::Human => {
                     let mut out = format!("ID:           {}\n", profile.id);
                     out.push_str(&format!("Title:        {}\n", profile.title));
@@ -162,7 +164,12 @@ pub async fn execute(
             }
         }
 
-        CloudProfilesAction::Publish { profile_path, title, description, no_sanitize } => {
+        CloudProfilesAction::Publish {
+            profile_path,
+            title,
+            description,
+            no_sanitize,
+        } => {
             let raw = std::fs::read_to_string(profile_path)?;
             let mut profile: flight_cloud_profiles::Profile = serde_json::from_str(&raw)?;
             if !no_sanitize {
@@ -228,7 +235,9 @@ fn parse_vote_direction(s: &str) -> anyhow::Result<VoteDirection> {
     match s.to_ascii_lowercase().as_str() {
         "up" | "+" | "1" => Ok(VoteDirection::Up),
         "down" | "-" | "-1" => Ok(VoteDirection::Down),
-        other => Err(anyhow::anyhow!("unknown vote direction '{other}'; use 'up' or 'down'")),
+        other => Err(anyhow::anyhow!(
+            "unknown vote direction '{other}'; use 'up' or 'down'"
+        )),
     }
 }
 

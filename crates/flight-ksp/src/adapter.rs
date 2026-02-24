@@ -12,18 +12,21 @@
 use crate::{
     connection::KrpcConnection,
     error::KspError,
-    mapping::{apply_telemetry, situation, KspRawTelemetry},
-    protocol::{decode_double, decode_float, decode_int32, decode_object, decode_string, encode_object, Argument},
+    mapping::{KspRawTelemetry, apply_telemetry, situation},
+    protocol::{
+        Argument, decode_double, decode_float, decode_int32, decode_object, decode_string,
+        encode_object,
+    },
 };
 use flight_adapter_common::{AdapterMetrics, AdapterState};
 use flight_bus::{snapshot::BusSnapshot, types::AircraftId, types::SimId};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::sync::RwLock;
 use tokio::time::{sleep, timeout};
 use tracing::{debug, info, warn};
-use std::sync::Arc;
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -188,7 +191,10 @@ async fn run_connection_loop(
                 let mut next = current;
                 apply_telemetry(&mut next, &raw);
                 *snapshot.write().await = Some(next);
-                debug!("KSP poll ok: sit={} pitch={:.1}", raw.situation, raw.pitch_deg);
+                debug!(
+                    "KSP poll ok: sit={} pitch={:.1}",
+                    raw.situation, raw.pitch_deg
+                );
             }
             Err(KspError::NoActiveVessel) => {
                 *state.write().await = AdapterState::Connected;
@@ -220,12 +226,32 @@ async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<KspRawTelemetry, Ks
     // 2. Batch: get surface reference frame + vessel name + situation + lat/lon + altitude
     let step2 = conn
         .call_batch(vec![
-            ("SpaceCenter", "Vessel_get_SurfaceReferenceFrame", vec![vessel_arg.clone()]),
+            (
+                "SpaceCenter",
+                "Vessel_get_SurfaceReferenceFrame",
+                vec![vessel_arg.clone()],
+            ),
             ("SpaceCenter", "Vessel_get_Name", vec![vessel_arg.clone()]),
-            ("SpaceCenter", "Vessel_get_Situation", vec![vessel_arg.clone()]),
-            ("SpaceCenter", "Vessel_get_Latitude", vec![vessel_arg.clone()]),
-            ("SpaceCenter", "Vessel_get_Longitude", vec![vessel_arg.clone()]),
-            ("SpaceCenter", "Vessel_get_MeanAltitude", vec![vessel_arg.clone()]),
+            (
+                "SpaceCenter",
+                "Vessel_get_Situation",
+                vec![vessel_arg.clone()],
+            ),
+            (
+                "SpaceCenter",
+                "Vessel_get_Latitude",
+                vec![vessel_arg.clone()],
+            ),
+            (
+                "SpaceCenter",
+                "Vessel_get_Longitude",
+                vec![vessel_arg.clone()],
+            ),
+            (
+                "SpaceCenter",
+                "Vessel_get_MeanAltitude",
+                vec![vessel_arg.clone()],
+            ),
         ])
         .await?;
 
@@ -259,10 +285,22 @@ async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<KspRawTelemetry, Ks
         .call_batch(vec![
             ("SpaceCenter", "Flight_get_Pitch", vec![flight_arg.clone()]),
             ("SpaceCenter", "Flight_get_Roll", vec![flight_arg.clone()]),
-            ("SpaceCenter", "Flight_get_Heading", vec![flight_arg.clone()]),
+            (
+                "SpaceCenter",
+                "Flight_get_Heading",
+                vec![flight_arg.clone()],
+            ),
             ("SpaceCenter", "Flight_get_Speed", vec![flight_arg.clone()]),
-            ("SpaceCenter", "Flight_get_EquivalentAirSpeed", vec![flight_arg.clone()]),
-            ("SpaceCenter", "Flight_get_VerticalSpeed", vec![flight_arg.clone()]),
+            (
+                "SpaceCenter",
+                "Flight_get_EquivalentAirSpeed",
+                vec![flight_arg.clone()],
+            ),
+            (
+                "SpaceCenter",
+                "Flight_get_VerticalSpeed",
+                vec![flight_arg.clone()],
+            ),
             ("SpaceCenter", "Flight_get_GForce", vec![flight_arg.clone()]),
         ])
         .await?;

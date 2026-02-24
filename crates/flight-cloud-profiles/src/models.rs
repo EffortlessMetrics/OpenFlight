@@ -288,7 +288,10 @@ mod tests {
     fn test_sort_order_display() {
         assert_eq!(ProfileSortOrder::TopRated.to_string(), "top_rated");
         assert_eq!(ProfileSortOrder::Newest.to_string(), "newest");
-        assert_eq!(ProfileSortOrder::MostDownloaded.to_string(), "most_downloaded");
+        assert_eq!(
+            ProfileSortOrder::MostDownloaded.to_string(),
+            "most_downloaded"
+        );
     }
 
     #[test]
@@ -301,20 +304,34 @@ mod tests {
 
     #[test]
     fn test_vote_result_score() {
-        let r = VoteResult { upvotes: 10, downvotes: 3, recorded: VoteDirection::Up };
+        let r = VoteResult {
+            upvotes: 10,
+            downvotes: 3,
+            recorded: VoteDirection::Up,
+        };
         assert_eq!(r.score(), 7);
     }
 
     #[test]
     fn test_page_total_pages() {
-        let p: Page<()> = Page { items: vec![], page: 1, per_page: 25, total: 60 };
+        let p: Page<()> = Page {
+            items: vec![],
+            page: 1,
+            per_page: 25,
+            total: 60,
+        };
         assert_eq!(p.total_pages(), 3);
         assert!(p.has_next_page());
     }
 
     #[test]
     fn test_page_last_page_no_next() {
-        let p: Page<()> = Page { items: vec![], page: 3, per_page: 25, total: 60 };
+        let p: Page<()> = Page {
+            items: vec![],
+            page: 3,
+            per_page: 25,
+            total: 60,
+        };
         assert!(!p.has_next_page());
     }
 

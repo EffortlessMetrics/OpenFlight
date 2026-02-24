@@ -95,7 +95,12 @@ pub fn parse_ab9_report(data: &[u8]) -> Result<Ab9InputState, MozaParseError> {
     let hat = data[11];
 
     Ok(Ab9InputState {
-        axes: Ab9Axes { roll, pitch, throttle, twist },
+        axes: Ab9Axes {
+            roll,
+            pitch,
+            throttle,
+            twist,
+        },
         buttons: Ab9Buttons { mask, hat },
     })
 }
@@ -140,7 +145,10 @@ mod tests {
     fn test_wrong_report_id() {
         let mut r = centred();
         r[0] = 0x05;
-        assert!(matches!(parse_ab9_report(&r), Err(MozaParseError::UnknownReportId { .. })));
+        assert!(matches!(
+            parse_ab9_report(&r),
+            Err(MozaParseError::UnknownReportId { .. })
+        ));
     }
 
     #[test]

@@ -7,7 +7,7 @@
 //! requiring a live X-Plane instance or plugin connection.
 
 use flight_xplane::control::{
-    ControlOutput, ControlOutputError, CMD_GEAR_DOWN, CMD_GEAR_UP, DATAREF_FLAPS,
+    CMD_GEAR_DOWN, CMD_GEAR_UP, ControlOutput, ControlOutputError, DATAREF_FLAPS,
     DATAREF_GEAR_HANDLE, DATAREF_PITCH, DATAREF_ROLL, DATAREF_SPEEDBRAKE, DATAREF_YAW,
 };
 
@@ -18,7 +18,10 @@ fn control_dataref_paths_match_xplane_sdk() {
     assert_eq!(DATAREF_ROLL, "sim/joystick/yoke_roll_ratio");
     assert_eq!(DATAREF_YAW, "sim/joystick/yoke_heading_ratio");
     assert_eq!(DATAREF_FLAPS, "sim/flightmodel/controls/flaprqst");
-    assert_eq!(DATAREF_SPEEDBRAKE, "sim/flightmodel/controls/speedbrk_ratio");
+    assert_eq!(
+        DATAREF_SPEEDBRAKE,
+        "sim/flightmodel/controls/speedbrk_ratio"
+    );
     assert_eq!(
         DATAREF_GEAR_HANDLE,
         "sim/flightmodel/controls/gear_handle_down"

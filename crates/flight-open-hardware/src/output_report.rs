@@ -89,7 +89,12 @@ impl FfbOutputReport {
 
     /// Return a zero-force, off-mode report.
     pub fn stop() -> Self {
-        Self { force_x: 0, force_y: 0, mode: FfbMode::Off, gain: 0 }
+        Self {
+            force_x: 0,
+            force_y: 0,
+            mode: FfbMode::Off,
+            gain: 0,
+        }
     }
 }
 
@@ -106,7 +111,12 @@ mod tests {
 
     #[test]
     fn test_roundtrip() {
-        let cmd = FfbOutputReport { force_x: -16000, force_y: 16000, mode: FfbMode::Spring, gain: 200 };
+        let cmd = FfbOutputReport {
+            force_x: -16000,
+            force_y: 16000,
+            mode: FfbMode::Spring,
+            gain: 200,
+        };
         let bytes = cmd.to_bytes();
         let parsed = FfbOutputReport::parse(&bytes).unwrap();
         assert_eq!(cmd, parsed);

@@ -264,7 +264,13 @@ mod tests {
         // Move into zone
         let events = t.update(0.05);
         assert_eq!(events.len(), 1);
-        assert!(matches!(events[0], DetentEvent::Entered { detent_index: 0, .. }));
+        assert!(matches!(
+            events[0],
+            DetentEvent::Entered {
+                detent_index: 0,
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -273,7 +279,13 @@ mod tests {
         t.update(0.05); // enter
         let events = t.update(0.00); // exit low side
         assert_eq!(events.len(), 1);
-        assert!(matches!(events[0], DetentEvent::Exited { detent_index: 0, .. }));
+        assert!(matches!(
+            events[0],
+            DetentEvent::Exited {
+                detent_index: 0,
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -337,7 +349,12 @@ mod tests {
     #[test]
     fn test_multiple_detents_independent() {
         let configs = vec![
-            ThrottleDetentConfig { name: "idle", index: 0, position: 0.05, half_width: 0.02 },
+            ThrottleDetentConfig {
+                name: "idle",
+                index: 0,
+                position: 0.05,
+                half_width: 0.02,
+            },
             ThrottleDetentConfig {
                 name: "mil",
                 index: 1,
@@ -349,7 +366,13 @@ mod tests {
 
         let e1 = t.update(0.05); // enter detent 0
         assert_eq!(e1.len(), 1);
-        assert!(matches!(e1[0], DetentEvent::Entered { detent_index: 0, .. }));
+        assert!(matches!(
+            e1[0],
+            DetentEvent::Entered {
+                detent_index: 0,
+                ..
+            }
+        ));
 
         let e2 = t.update(0.85); // exit 0, enter 1
         // Exit from detent 0, Enter detent 1
