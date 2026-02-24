@@ -378,6 +378,12 @@ jobs:
         toolchain: 1.92.0
         components: clippy
 
+    - name: Install Linux HID build deps
+      if: (matrix.mode == 'strict' || steps.check-label.outputs.run == 'true') && runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
     - name: Get toolchain hash
       if: matrix.mode == 'strict' || steps.check-label.outputs.run == 'true'
       id: toolchain-hash
@@ -546,6 +552,12 @@ jobs:
 
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
+
+    - name: Install Linux HID build deps
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
 
     - name: Smoke test IPC benchmarks
       run: cargo bench --no-run -p flight-ipc --features ipc-bench
