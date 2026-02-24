@@ -641,6 +641,78 @@ requirements:
         tests:
           - flight-xplane::plugin::tests::test_plugin_interface_creation
           - flight-xplane::plugin::tests::test_plugin_message_serialization
+      - id: AC-42.6
+        description: "ControlOutput SHALL map pitch/roll/yaw to sim/joystick/yoke_*_ratio DataRefs (range −1..+1), throttle to sim/flightmodel/engine/ENGN_thro[n] (range 0..1), and SHALL reject NaN/Inf with InvalidValue before attempting any write"
+        tests:
+          - flight-xplane::control::tests::dataref_name_constants_are_correct
+          - flight-xplane::control::tests::sanitize_rejects_nan_and_inf
+          - flight-xplane::control::tests::write_pitch_returns_no_write_path_without_connections
+          - flight-xplane::control::tests::write_pitch_rejects_nan_before_checking_write_path
+          - control_output_integration::control_dataref_paths_match_xplane_sdk
+          - control_output_integration::nan_inf_rejected_before_write_path_is_checked
+          - control_output_integration::all_axis_writes_fail_with_no_write_path
+
+  - id: REQ-43
+    name: Project Wingman Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-43.1
+        description: "ProcessDetectionConfig SHALL contain a Wingman definition with process ProjectWingman.exe and window title Project Wingman"
+        tests:
+          - flight-process-detection::tests::wingman_definition_present
+      - id: AC-43.2
+        description: "WingmanAdapter::state() SHALL return AdapterState::Disconnected before start() and AdapterState::Connected after start()"
+        tests:
+          - flight-wingman::tests::adapter_initial_state_is_disconnected
+          - flight-wingman::tests::start_transitions_to_connected_stop_disconnects
+      - id: AC-43.3
+        description: "poll_once() SHALL return a BusSnapshot with SimId::Wingman"
+        tests:
+          - flight-wingman::tests::poll_returns_snapshot_with_correct_sim_id
+      - id: AC-43.4
+        description: "All BusSnapshot validity flags SHALL be false because Project Wingman exposes no telemetry API"
+        tests:
+          - flight-wingman::tests::poll_snapshot_has_no_valid_telemetry
+      - id: AC-43.5
+        description: "StubVirtualController SHALL clamp axis values to [-1.0, 1.0] and return AxisOutOfRange for index >= 8"
+        tests:
+          - flight-wingman::virtual_controller::tests::stub_axis_clamps_and_stores_value
+          - flight-wingman::virtual_controller::tests::stub_axis_out_of_range_errors
+
+  # Product Requirement: DCS World Integration with MP-Safe Enforcement
+  - id: REQ-44
+    name: DCS World Integration with MP-Safe Enforcement
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-44.1
+        description: "WHEN a DCS session update is received THEN the MP detector SHALL identify SinglePlayer, Multiplayer, or Unknown from explicit session_type markers or inferred fields (server_name, player_count, coalition)"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_single_player
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_multiplayer
+          - flight-dcs-export::src::mp_detection::tests::test_mp_detector_explicit_session_type
+          - flight-dcs-export::src::mp_detection::tests::test_mp_detector_fallback_detection
+      - id: AC-44.2
+        description: "WHEN enforce_mp_integrity is true AND the session is Multiplayer THEN filter_restricted_fields SHALL remove weapons, countermeasures, and rwr_contacts from the telemetry data map before bus publication"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_restricted_fields_filtered_in_mp
+          - flight-dcs-export::tests::adapter_tests::test_restricted_fields_allowed_in_sp
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_no_invalidation_of_self_aircraft_data
+      - id: AC-44.3
+        description: "WHEN a feature is blocked in an MP session THEN check_feature_blocked SHALL return a user-friendly message containing 'multiplayer integrity'"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_multiplayer
+          - flight-dcs-export::src::mp_detection::tests::test_blocked_feature_message
+      - id: AC-44.4
+        description: "WHEN in an MP session THEN mp_session_info SHALL return a banner containing the server name and 'Multiplayer'; WHEN in SP THEN it SHALL return None"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_banner_message
+          - flight-dcs-export::src::mp_detection::tests::test_mp_banner_message
+      - id: AC-44.5
+        description: "WHEN in an MP session THEN self-aircraft kinematic data (ias, tas, altitude, heading, pitch, bank, g_force) SHALL be published without restriction"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_no_invalidation_of_self_aircraft_data
 
   # ============================================================================
   # ============================================================================

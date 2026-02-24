@@ -26,6 +26,7 @@ members = [
     "crates/flight-ac7-telemetry",
     "crates/flight-ac7-input",
     "crates/flight-warthunder",
+    "crates/flight-wingman",
     "crates/flight-elite",
     "crates/flight-ksp",
     "crates/flight-panels",

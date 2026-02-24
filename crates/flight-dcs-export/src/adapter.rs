@@ -305,10 +305,13 @@ impl DcsAdapter {
                 .unwrap_or(SessionType::Unknown);
         }
 
-        // Check feature restrictions
-        if self.config.enforce_mp_integrity {
-            self.check_feature_restrictions(&data).await?;
-        }
+        // Filter restricted fields for MP integrity enforcement
+        let data = if self.config.enforce_mp_integrity {
+            let (filtered, _) = self.filter_restricted_fields(data);
+            filtered
+        } else {
+            data
+        };
 
         // Convert to bus snapshot and publish
         let snapshot = self.convert_to_bus_snapshot(timestamp, &aircraft_name, &data)?;
@@ -346,40 +349,44 @@ impl DcsAdapter {
         Ok(())
     }
 
-    /// Check feature restrictions for MP integrity
-    async fn check_feature_restrictions(
+    /// Filter restricted telemetry fields for MP integrity enforcement.
+    ///
+    /// Removes any fields that are blocked in the current session and emits a
+    /// rate-limited user-friendly warning via `warn!` for each blocked field.
+    /// Returns the filtered data map and the names of removed fields.
+    pub fn filter_restricted_fields(
         &mut self,
-        data: &HashMap<String, serde_json::Value>,
-    ) -> Result<(), DcsAdapterError> {
-        // Check for restricted data in MP sessions
-        let restricted_fields = ["weapons", "countermeasures", "rwr_contacts"];
+        mut data: HashMap<String, serde_json::Value>,
+    ) -> (HashMap<String, serde_json::Value>, Vec<String>) {
+        // Maps data field key → MP feature name (must match MP_BLOCKED_FEATURES)
+        const RESTRICTED: &[(&str, &str)] = &[
+            ("weapons", "telemetry_weapons"),
+            ("countermeasures", "telemetry_countermeasures"),
+            ("rwr_contacts", "telemetry_rwr"),
+        ];
+        let mut blocked = Vec::new();
 
-        for field in &restricted_fields {
-            if data.contains_key(*field)
-                && let Err(e) = self
-                    .mp_detector
-                    .validate_feature(&format!("telemetry_{}", field))
-            {
-                // Log blocked feature (rate limited)
+        for &(field, feature) in RESTRICTED {
+            if data.contains_key(field) && self.mp_detector.validate_feature(feature).is_err() {
+                // Emit user-friendly warning (rate-limited to once per 30 s per field)
                 let now = Instant::now();
-                let last_notified = self
+                let last = self
                     .blocked_features_notified
-                    .get(*field)
+                    .get(field)
                     .copied()
-                    .unwrap_or(Instant::now() - Duration::from_secs(60));
-
-                if now.duration_since(last_notified) > Duration::from_secs(30) {
-                    warn!(
-                        "Blocked restricted feature '{}' in MP session: {}",
-                        field, e
-                    );
-                    self.blocked_features_notified
-                        .insert(field.to_string(), now);
+                    .unwrap_or_else(|| now - Duration::from_secs(60));
+                if now.duration_since(last) > Duration::from_secs(30) {
+                    if let Some(msg) = self.mp_detector.blocked_feature_message(feature) {
+                        warn!("[MP Integrity] {}", msg);
+                    }
+                    self.blocked_features_notified.insert(field.to_string(), now);
                 }
+                data.remove(field);
+                blocked.push(field.to_string());
             }
         }
 
-        Ok(())
+        (data, blocked)
     }
 
     /// Convert DCS telemetry to bus snapshot

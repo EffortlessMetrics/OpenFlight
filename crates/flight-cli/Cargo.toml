@@ -26,6 +26,8 @@ required-features = ["cli"]
 
 [dependencies]
 anyhow.workspace = true
+flight-blackbox = { path = "../flight-blackbox" }
+flight-metrics = { path = "../flight-metrics" }
 flight-core = { path = "../flight-core" }
 flight-ipc = { path = "../flight-ipc" }
 flight-dcs-export = { path = "../flight-dcs-export" }

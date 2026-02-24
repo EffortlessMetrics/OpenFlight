@@ -551,3 +551,53 @@ fn test_fixture_ka50_hover() {
     // Verify helicopter has multiple engines
     assert_eq!(snapshot.engines.len(), 2);
 }
+
+#[test]
+fn test_restricted_fields_filtered_in_mp() {
+    let mut adapter = create_test_adapter();
+
+    let session_data = json!({"session_type": "MP", "server_name": "Test Server"});
+    adapter
+        .update_mp_session(&session_data)
+        .expect("Should update session");
+
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), json!(350.0));
+    data.insert("weapons".to_string(), json!({"missile": "AIM-120C"}));
+    data.insert("countermeasures".to_string(), json!({"chaff": 30}));
+    data.insert("rwr_contacts".to_string(), json!([]));
+
+    let (filtered, blocked) = adapter.filter_restricted_fields(data);
+
+    // Restricted fields must be stripped
+    assert!(!filtered.contains_key("weapons"));
+    assert!(!filtered.contains_key("countermeasures"));
+    assert!(!filtered.contains_key("rwr_contacts"));
+    // Safe field preserved
+    assert!(filtered.contains_key("ias"));
+    // All three restricted fields reported as blocked
+    assert!(blocked.contains(&"weapons".to_string()));
+    assert!(blocked.contains(&"countermeasures".to_string()));
+    assert!(blocked.contains(&"rwr_contacts".to_string()));
+}
+
+#[test]
+fn test_restricted_fields_allowed_in_sp() {
+    let mut adapter = create_test_adapter();
+
+    let session_data = json!({"session_type": "SP"});
+    adapter
+        .update_mp_session(&session_data)
+        .expect("Should update session");
+
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), json!(350.0));
+    data.insert("weapons".to_string(), json!({"missile": "AIM-120C"}));
+
+    let (filtered, blocked) = adapter.filter_restricted_fields(data);
+
+    // All fields preserved in SP
+    assert!(filtered.contains_key("weapons"));
+    assert!(filtered.contains_key("ias"));
+    assert!(blocked.is_empty());
+}

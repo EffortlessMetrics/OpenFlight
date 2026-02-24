@@ -2,24 +2,24 @@
 
 This document tracks the immediate focus, near-term goals, and long-term vision for the OpenFlight ecosystem.
 
-**Last Updated:** 2026-01-26
+**Last Updated:** 2026-02-24
 
 ## 🟢 Now (Current Sprint & Immediate Focus)
 **Focus:** Production Readiness, Runtime Reliability, and Packaging Prep.
 
 *   **Production Readiness (M7)**
-    *   [ ] **Service Wiring**: Finalize `flight-service` orchestration for app/use-cases layer.
-    *   [ ] **Safe Mode**: Complete `--safe` implementation with power checks and privilege detection.
-    *   [ ] **CLI Parity**: Ensure all service functionality is accessible via `flight-cli --json`.
+    *   [x] **Service Wiring**: Finalize `flight-service` orchestration for app/use-cases layer.
+    *   [x] **Safe Mode**: Complete `--safe` implementation with power checks and privilege detection.
+    *   [x] **CLI Parity**: Ensure all service functionality is accessible via `flight-cli --json`.
 
 *   **Runtime & Timing (Phase 4)**
-    *   [ ] **Windows RT**: Implement `MMCSS` registration and high-res timer loop.
-    *   [ ] **Linux RT**: Integrate `rtkit` for unprivileged real-time scheduling.
-    *   [ ] **Jitter Validation**: Harden CI gates for p99 jitter < 0.5ms on hardware runners.
+    *   [x] **Windows RT**: Implement `MMCSS` registration and high-res timer loop.
+    *   [x] **Linux RT**: Integrate `rtkit` for unprivileged real-time scheduling.
+    *   [x] **Jitter Validation**: Harden CI gates for p99 jitter < 0.5ms on hardware runners.
 
 *   **Documentation Refinement**
-    *   [ ] **Tutorials**: Add "Creating your first Profile" tutorial.
-    *   [ ] **API Docs**: Complete `docs.rs` coverage for `flight-core` and `flight-ipc`.
+    *   [x] **Tutorials**: Add "Creating your first Profile" tutorial.
+    *   [x] **API Docs**: Complete `docs.rs` coverage for `flight-core` and `flight-ipc`.
 
 ## 🟡 Next (Upcoming ~4-8 Weeks)
 **Focus:** Distribution, User Experience, and Telemetry.
@@ -30,12 +30,12 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
     *   [ ] **Auto-Update**: Implement update channels (Stable/Beta) and rollback mechanism.
 
 *   **Telemetry & Observability (Phase 6)**
-    *   [ ] **Metrics System**: Implement system-wide counters (`sim.*`, `ffb.*`) and `flight-dashboard`.
-    *   [ ] **Remote Diagnostics**: Allow users to export sanitized blackbox logs for support.
+    *   [x] **Metrics System**: Implement system-wide counters (`sim.*`, `ffb.*`) and `flight-dashboard`.
+    *   [x] **Remote Diagnostics**: Allow users to export sanitized blackbox logs for support.
 
 *   **Sim Integration Polish**
     *   [ ] **DCS**: Finalize MP-safe enforcement and "blocked feature" UI warnings.
-    *   [ ] **X-Plane**: Add more comprehensive data refs for complex aircraft.
+    *   [x] **X-Plane**: Add more comprehensive data refs for complex aircraft.
 
 ## 🔴 Later (Long-Term Vision & Ideas)
 **Focus:** Ecosystem Growth, Advanced Hardware, and Community.

@@ -5,9 +5,11 @@
 
 pub mod collector;
 pub mod common;
+pub mod dashboard;
 pub mod registry;
 pub mod types;
 
 pub use collector::MetricsCollector;
+pub use dashboard::{DashboardSnapshot, FfbMetrics, MetricsDashboard, RtMetrics, SimMetrics};
 pub use registry::MetricsRegistry;
 pub use types::{HistogramSummary, Metric};

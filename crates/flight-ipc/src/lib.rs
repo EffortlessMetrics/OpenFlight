@@ -57,7 +57,9 @@
 
 use thiserror::Error;
 
+/// Auto-generated gRPC types from `flight.v1` protobuf definitions
 pub mod proto {
+    #![allow(missing_docs)] // generated code
     tonic::include_proto!("flight.v1");
 }
 
@@ -82,23 +84,41 @@ pub const SUPPORTED_FEATURES: &[&str] = &[
     "real-time-telemetry",
 ];
 
+/// IPC-level errors for connection, protocol negotiation, and serialization failures
 #[derive(Debug, Error)]
 pub enum IpcError {
+    /// Underlying transport I/O failure
     #[error("Transport error: {0}")]
     Transport(#[from] transport::TransportError),
 
+    /// Client and server advertise incompatible protocol versions
     #[error("Protocol version mismatch: client={client}, server={server}")]
-    VersionMismatch { client: String, server: String },
+    VersionMismatch {
+        /// The version the client presented
+        client: String,
+        /// The version the server requires
+        server: String,
+    },
 
+    /// A required feature is not supported by this endpoint
     #[error("Feature not supported: {feature}")]
-    UnsupportedFeature { feature: String },
+    UnsupportedFeature {
+        /// The feature identifier that was requested
+        feature: String,
+    },
 
+    /// Could not establish a connection to the daemon
     #[error("Connection failed: {reason}")]
-    ConnectionFailed { reason: String },
+    ConnectionFailed {
+        /// Human-readable description of the failure cause
+        reason: String,
+    },
 
+    /// JSON serialization/deserialization error
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
+    /// gRPC status error from tonic
     #[error("gRPC error: {0}")]
     Grpc(#[from] tonic::Status),
 }
@@ -106,17 +126,24 @@ pub enum IpcError {
 /// Feature negotiation result
 #[derive(Debug, Clone)]
 pub struct NegotiationResult {
+    /// Protocol version advertised by the server
     pub server_version: String,
+    /// Feature flags that are active for this connection
     pub enabled_features: Vec<String>,
+    /// Transport mechanism selected for the connection
     pub transport_type: TransportType,
 }
 
 /// Client configuration
 #[derive(Debug, Clone)]
 pub struct ClientConfig {
+    /// Protocol version this client implements
     pub client_version: String,
+    /// Feature flags the client is willing to use
     pub supported_features: Vec<String>,
+    /// Preferred transport for this client
     pub preferred_transport: TransportType,
+    /// Connection attempt timeout in milliseconds
     pub connection_timeout_ms: u64,
 }
 
@@ -134,9 +161,13 @@ impl Default for ClientConfig {
 /// Server configuration  
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
+    /// Protocol version this server implements
     pub server_version: String,
+    /// Feature flags enabled on this server
     pub enabled_features: Vec<String>,
+    /// Address the gRPC server binds to (e.g. `127.0.0.1:50051`)
     pub bind_address: String,
+    /// Maximum simultaneous client connections
     pub max_connections: usize,
 }
 

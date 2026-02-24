@@ -36,6 +36,7 @@ pub enum SimId {
     WarThunder,
     EliteDangerous,
     Ksp,
+    Wingman,
     Unknown,
 }
 
@@ -50,6 +51,7 @@ impl std::fmt::Display for SimId {
             SimId::WarThunder => write!(f, "War Thunder"),
             SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
             SimId::Ksp => write!(f, "Kerbal Space Program"),
+            SimId::Wingman => write!(f, "Project Wingman"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -286,6 +288,20 @@ impl Default for ProcessDetectionConfig {
                     PathBuf::from("steamapps/common/Kerbal Space Program 2"),
                 ],
                 min_confidence: 0.8,
+            },
+        );
+
+        // Project Wingman process definition
+        process_definitions.insert(
+            SimId::Wingman,
+            ProcessDefinition {
+                process_names: vec!["ProjectWingman.exe".to_string()],
+                window_titles: vec!["Project Wingman".to_string()],
+                process_paths: vec![
+                    PathBuf::from("Project Wingman"),
+                    PathBuf::from("steamapps/common/Project Wingman"),
+                ],
+                min_confidence: 0.7,
             },
         );
 
@@ -1141,5 +1157,21 @@ mod tests {
                 .contains(&"Kerbal Space Program".to_string())
         );
         assert_eq!(ksp_def.min_confidence, 0.8);
+    }
+
+    #[test]
+    fn wingman_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let def = config.process_definitions.get(&SimId::Wingman).unwrap();
+        assert!(
+            def.process_names
+                .contains(&"ProjectWingman.exe".to_string()),
+            "Should contain Wingman Windows executable"
+        );
+        assert!(
+            def.window_titles
+                .contains(&"Project Wingman".to_string())
+        );
+        assert_eq!(def.min_confidence, 0.7);
     }
 }  // end mod tests

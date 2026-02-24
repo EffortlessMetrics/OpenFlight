@@ -257,6 +257,7 @@ pub enum SimId {
     WarThunder,
     EliteDangerous,
     Ksp,
+    Wingman,
     Unknown,
 }
 
@@ -271,6 +272,7 @@ impl fmt::Display for SimId {
             SimId::WarThunder => write!(f, "War Thunder"),
             SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
             SimId::Ksp => write!(f, "Kerbal Space Program"),
+            SimId::Wingman => write!(f, "Project Wingman"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }

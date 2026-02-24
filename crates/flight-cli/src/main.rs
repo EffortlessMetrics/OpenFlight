@@ -86,6 +86,11 @@ enum Commands {
         #[command(subcommand)]
         action: DiagAction,
     },
+    /// System-wide metrics
+    Metrics {
+        #[command(subcommand)]
+        action: MetricsAction,
+    },
     /// DCS World integration commands
     Dcs {
         #[command(subcommand)]
@@ -178,6 +183,9 @@ async fn execute_command(
         }
         Commands::Diag { action } => {
             commands::diag::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Metrics { action } => {
+            commands::metrics::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::Dcs { action } => {
             commands::dcs::execute(action, cli.output, cli.verbose, client_manager).await

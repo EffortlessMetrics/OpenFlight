@@ -50,6 +50,7 @@ fn map_sim_id(sim: BusSimId) -> CoreSimId {
         BusSimId::WarThunder => CoreSimId::WarThunder,
         BusSimId::EliteDangerous => CoreSimId::EliteDangerous,
         BusSimId::Ksp => CoreSimId::Ksp,
+        BusSimId::Wingman => CoreSimId::Wingman,
         BusSimId::Unknown => CoreSimId::Unknown,
     }
 }
@@ -112,6 +113,8 @@ pub struct AdapterConfigs {
     pub enable_dcs: bool,
     /// Enable Ace Combat 7 adapter
     pub enable_ac7: bool,
+    /// Enable Project Wingman adapter
+    pub enable_wingman: bool,
 }
 
 /// Aircraft auto-switch service
@@ -131,6 +134,7 @@ struct SimAdapters {
     xplane: Option<XPlaneAdapter>,
     dcs: Option<DcsAdapter>,
     ac7: Option<Ac7Adapter>,
+    wingman: Option<WingmanWrapper>,
 }
 
 /// MSFS adapter wrapper
@@ -168,6 +172,12 @@ impl Ac7Adapter {
         let _ = self.shutdown_tx.send(true);
         let _ = self.join_handle.await;
     }
+}
+
+/// Project Wingman adapter wrapper (no telemetry API; tracks process detection only).
+struct WingmanWrapper {
+    #[allow(dead_code)]
+    process_name: String,
 }
 
 /// Service event for internal processing
@@ -216,6 +226,7 @@ impl Default for AircraftAutoSwitchServiceConfig {
                 enable_xplane: true,
                 enable_dcs: true,
                 enable_ac7: true,
+                enable_wingman: true,
             },
         }
     }
@@ -436,6 +447,7 @@ impl AircraftAutoSwitchService {
                             CoreSimId::WarThunder => BusSimId::WarThunder,
                             CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
                             CoreSimId::Ksp => BusSimId::Ksp,
+                            CoreSimId::Wingman => BusSimId::Wingman,
                             CoreSimId::Unknown => continue,
                         };
                         if service_tx
@@ -531,6 +543,7 @@ impl AircraftAutoSwitchService {
             CoreSimId::WarThunder => BusSimId::WarThunder,
             CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
             CoreSimId::Ksp => BusSimId::Ksp,
+            CoreSimId::Wingman => BusSimId::Wingman,
             CoreSimId::Unknown => BusSimId::Unknown,
         };
 
@@ -572,6 +585,13 @@ impl AircraftAutoSwitchService {
                         service_tx.clone(),
                     );
                     adapters_guard.ac7 = Some(adapter);
+                }
+            }
+            BusSimId::Wingman if config.adapters.enable_wingman => {
+                if adapters_guard.wingman.is_none() {
+                    adapters_guard.wingman = Some(WingmanWrapper {
+                        process_name: process.process_name.clone(),
+                    });
                 }
             }
             _ => {
@@ -664,6 +684,9 @@ impl AircraftAutoSwitchService {
             BusSimId::AceCombat7 => {
                 ac7_to_stop = adapters_guard.ac7.take();
             }
+            BusSimId::Wingman => {
+                adapters_guard.wingman = None;
+            }
             _ => {}
         }
 
@@ -684,6 +707,7 @@ impl SimAdapters {
             xplane: None,
             dcs: None,
             ac7: None,
+            wingman: None,
         }
     }
 
@@ -695,6 +719,7 @@ impl SimAdapters {
         if let Some(adapter) = self.ac7.take() {
             adapter.stop().await;
         }
+        self.wingman = None;
         Ok(())
     }
 }

@@ -6,7 +6,9 @@
 use crate::client_manager::ClientManager;
 use crate::commands::DiagAction;
 use crate::output::OutputFormat;
+use flight_blackbox::BlackboxReader;
 use serde_json::{Value, json};
+use std::io::Write;
 use std::path::Path;
 
 pub async fn execute(
@@ -50,6 +52,22 @@ pub async fn execute(
         }
         DiagAction::Status => recording_status(output_format, verbose, client_manager).await,
         DiagAction::Stop => stop_recording(output_format, verbose, client_manager).await,
+        DiagAction::Export {
+            input,
+            output,
+            sanitize,
+            stream,
+        } => {
+            export_recording(
+                input,
+                output.as_deref(),
+                *sanitize,
+                stream.as_deref(),
+                output_format,
+                verbose,
+            )
+            .await
+        }
     }
 }
 
@@ -187,8 +205,87 @@ async fn replay_recording(
         });
     }
 
-    let output = output_format.success(result);
-    Ok(Some(output))
+    let stop_output = output_format.success(result);
+    Ok(Some(stop_output))
+}
+
+async fn export_recording(
+    input_path: &Path,
+    output_path: Option<&Path>,
+    sanitize: bool,
+    stream_filter: Option<&str>,
+    output_format: OutputFormat,
+    verbose: bool,
+) -> anyhow::Result<Option<String>> {
+    if !input_path.exists() {
+        return Err(anyhow::anyhow!(
+            "Recording file '{}' does not exist",
+            input_path.display()
+        ));
+    }
+    if input_path.extension().and_then(|s| s.to_str()) != Some("fbb") {
+        return Err(anyhow::anyhow!("Input file must have .fbb extension"));
+    }
+
+    let mut reader = BlackboxReader::open(input_path)?;
+    reader.validate()?;
+
+    let mut doc = reader.export(sanitize)?;
+
+    // Apply optional stream filter
+    if let Some(filter) = stream_filter {
+        let target = match filter {
+            "axis" | "axis_frames" => "axis_frames",
+            "bus" | "bus_snapshots" => "bus_snapshots",
+            "events" => "events",
+            other => {
+                return Err(anyhow::anyhow!(
+                    "Unknown stream '{}'. Valid values: axis, bus, events",
+                    other
+                ))
+            }
+        };
+        doc.records.retain(|r| r.stream == target);
+        doc.summary.total_records = doc.records.len() as u64;
+        doc.summary.axis_frames =
+            doc.records.iter().filter(|r| r.stream == "axis_frames").count() as u64;
+        doc.summary.bus_snapshots =
+            doc.records.iter().filter(|r| r.stream == "bus_snapshots").count() as u64;
+        doc.summary.events =
+            doc.records.iter().filter(|r| r.stream == "events").count() as u64;
+    }
+
+    let json_bytes = serde_json::to_vec_pretty(&doc)?;
+
+    if let Some(out_path) = output_path {
+        let mut file = std::fs::File::create(out_path)?;
+        file.write_all(&json_bytes)?;
+
+        let result = json!({
+            "exported": true,
+            "output_file": out_path.display().to_string(),
+            "total_records": doc.summary.total_records,
+            "axis_frames": doc.summary.axis_frames,
+            "bus_snapshots": doc.summary.bus_snapshots,
+            "events": doc.summary.events,
+            "sanitized": sanitize,
+        });
+        return Ok(Some(output_format.success(result)));
+    }
+
+    // No output path: emit the document to stdout directly
+    let json_str = String::from_utf8(json_bytes)?;
+    if verbose {
+        let result = json!({
+            "exported": true,
+            "sanitized": sanitize,
+            "total_records": doc.summary.total_records,
+            "document": serde_json::from_str::<Value>(&json_str)?
+        });
+        Ok(Some(output_format.success(result)))
+    } else {
+        Ok(Some(json_str))
+    }
 }
 
 async fn recording_status(

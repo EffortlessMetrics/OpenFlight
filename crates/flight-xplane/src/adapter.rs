@@ -20,8 +20,8 @@ use flight_adapter_common::{
 use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
-    snapshot::{AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation},
-    types::{AircraftId, Percentage, SimId},
+    snapshot::{AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation, TrimState},
+    types::{AircraftId, AutopilotState, Percentage, SimId},
 };
 use flight_core::units::conversions;
 use flight_core::{FlightError, Result};
@@ -618,6 +618,9 @@ impl XPlaneAdapter {
         // Convert navigation data
         snapshot.navigation = Self::convert_navigation(&raw_data.dataref_values)?;
 
+        // Convert trim state (elevator/aileron/rudder)
+        snapshot.trim_state = Self::convert_trim_state(&raw_data.dataref_values);
+
         // Validate the snapshot
         snapshot
             .validate()
@@ -745,6 +748,31 @@ impl XPlaneAdapter {
 
         rates
     }
+
+    /// Convert trim state from X-Plane DataRefs
+    ///
+    /// X-Plane provides trim ratios in the range -1.0 to +1.0.
+    fn convert_trim_state(datarefs: &HashMap<String, DataRefValue>) -> TrimState {
+        let mut trim = TrimState::default();
+
+        if let Some(DataRefValue::Float(elv)) =
+            datarefs.get("sim/flightmodel/controls/elv_trim")
+        {
+            trim.elevator = elv.clamp(-1.0, 1.0);
+        }
+        if let Some(DataRefValue::Float(ail)) =
+            datarefs.get("sim/flightmodel/controls/ail_trim")
+        {
+            trim.aileron = ail.clamp(-1.0, 1.0);
+        }
+        if let Some(DataRefValue::Float(rud)) =
+            datarefs.get("sim/flightmodel/controls/rud_trim")
+        {
+            trim.rudder = rud.clamp(-1.0, 1.0);
+        }
+
+        trim
+    }
     fn convert_aircraft_config(
         datarefs: &HashMap<String, DataRefValue>,
     ) -> Result<flight_bus::snapshot::AircraftConfig> {
@@ -785,6 +813,61 @@ impl XPlaneAdapter {
             config.spoilers = Percentage::from_normalized(*speedbrake_ratio).map_err(|e| {
                 FlightError::Configuration(format!("Spoilers conversion error: {}", e))
             })?;
+        }
+
+        // Autopilot state
+        if let Some(DataRefValue::Int(ap_mode)) =
+            datarefs.get("sim/cockpit/autopilot/autopilot_mode")
+        {
+            config.ap_state = match *ap_mode {
+                0 => AutopilotState::Off,
+                1 => AutopilotState::Armed,
+                _ => AutopilotState::Engaged,
+            };
+        }
+
+        // Autopilot altitude target (feet)
+        if let Some(DataRefValue::Float(ap_alt)) = datarefs.get("sim/cockpit/autopilot/altitude") {
+            config.ap_altitude = Some(*ap_alt);
+        }
+
+        // Autopilot heading target (degrees → ValidatedAngle)
+        if let Some(DataRefValue::Float(ap_hdg)) = datarefs.get("sim/cockpit/autopilot/heading") {
+            config.ap_heading = XPlaneConverter::convert_angle_degrees(*ap_hdg).ok();
+        }
+
+        // Autopilot speed target (knots → ValidatedSpeed)
+        if let Some(DataRefValue::Float(ap_spd)) = datarefs.get("sim/cockpit/autopilot/airspeed") {
+            config.ap_speed = XPlaneConverter::convert_airspeed_knots(*ap_spd).ok();
+        }
+
+        // Lights
+        if let Some(DataRefValue::Int(nav)) = datarefs.get("sim/cockpit/electrical/nav_lights_on")
+        {
+            config.lights.nav = *nav != 0;
+        }
+        if let Some(DataRefValue::Int(beacon)) =
+            datarefs.get("sim/cockpit/electrical/beacon_lights_on")
+        {
+            config.lights.beacon = *beacon != 0;
+        }
+        if let Some(DataRefValue::Int(strobe)) =
+            datarefs.get("sim/cockpit/electrical/strobe_lights_on")
+        {
+            config.lights.strobe = *strobe != 0;
+        }
+        if let Some(DataRefValue::Int(landing)) =
+            datarefs.get("sim/cockpit/electrical/landing_lights_on")
+        {
+            config.lights.landing = *landing != 0;
+        }
+        if let Some(DataRefValue::Int(taxi)) = datarefs.get("sim/cockpit/electrical/taxi_light_on")
+        {
+            config.lights.taxi = *taxi != 0;
+        }
+        if let Some(DataRefValue::Int(logo)) = datarefs.get("sim/cockpit2/switches/logo_lights_on")
+        {
+            config.lights.logo = *logo != 0;
         }
 
         Ok(config)
@@ -1373,5 +1456,123 @@ mod tests {
             dataref_values: datarefs,
         };
         assert!(adapter.validate_raw_data(&valid_raw).is_ok());
+    }
+
+    #[test]
+    fn test_aircraft_config_autopilot() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/autopilot/autopilot_mode".to_string(),
+            DataRefValue::Int(2), // Engaged
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/altitude".to_string(),
+            DataRefValue::Float(15000.0),
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/heading".to_string(),
+            DataRefValue::Float(90.0),
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/airspeed".to_string(),
+            DataRefValue::Float(250.0),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert_eq!(config.ap_state, AutopilotState::Engaged);
+        assert_eq!(config.ap_altitude, Some(15000.0));
+        assert!(config.ap_heading.is_some());
+        assert!((config.ap_heading.unwrap().to_degrees() - 90.0).abs() < 0.1);
+        assert!(config.ap_speed.is_some());
+        assert!((config.ap_speed.unwrap().to_knots() - 250.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_aircraft_config_autopilot_off() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/autopilot/autopilot_mode".to_string(),
+            DataRefValue::Int(0),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert_eq!(config.ap_state, AutopilotState::Off);
+        assert!(config.ap_altitude.is_none());
+    }
+
+    #[test]
+    fn test_aircraft_config_lights() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/electrical/nav_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/beacon_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/strobe_lights_on".to_string(),
+            DataRefValue::Int(0),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/landing_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/taxi_light_on".to_string(),
+            DataRefValue::Int(0),
+        );
+        datarefs.insert(
+            "sim/cockpit2/switches/logo_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert!(config.lights.nav);
+        assert!(config.lights.beacon);
+        assert!(!config.lights.strobe);
+        assert!(config.lights.landing);
+        assert!(!config.lights.taxi);
+        assert!(config.lights.logo);
+    }
+
+    #[test]
+    fn test_trim_state_conversion() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/controls/elv_trim".to_string(),
+            DataRefValue::Float(0.15),
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/ail_trim".to_string(),
+            DataRefValue::Float(-0.05),
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/rud_trim".to_string(),
+            DataRefValue::Float(0.10),
+        );
+
+        let trim = XPlaneAdapter::convert_trim_state(&datarefs);
+        assert!((trim.elevator - 0.15).abs() < 0.001);
+        assert!((trim.aileron - (-0.05)).abs() < 0.001);
+        assert!((trim.rudder - 0.10).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_trim_state_clamps_out_of_range() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/controls/elv_trim".to_string(),
+            DataRefValue::Float(1.5), // over max
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/ail_trim".to_string(),
+            DataRefValue::Float(-1.5), // below min
+        );
+
+        let trim = XPlaneAdapter::convert_trim_state(&datarefs);
+        assert_eq!(trim.elevator, 1.0);
+        assert_eq!(trim.aileron, -1.0);
     }
 }

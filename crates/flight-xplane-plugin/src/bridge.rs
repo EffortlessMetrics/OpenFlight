@@ -124,6 +124,8 @@ fn connect_and_run(running: &AtomicBool) -> Result<(), BridgeError> {
         version: env!("CARGO_PKG_VERSION").to_string(),
         capabilities: vec![
             "read_datarefs".to_string(),
+            "write_datarefs".to_string(),
+            "execute_commands".to_string(),
             "aircraft_info".to_string(),
         ],
         status: "ready".to_string(),
@@ -166,8 +168,36 @@ fn handle_message(msg: PluginMessage) -> Option<PluginResponse> {
             })
         }
         PluginMessage::Ping { id, timestamp } => Some(PluginResponse::Pong { id, timestamp }),
+        PluginMessage::GetDataRef { id, name } => {
+            // Stub: XPLM DataRef reads will be wired here once the SDK is linked.
+            eprintln!("[FlightHub] GetDataRef: {} (XPLM stub, returning 0)", name);
+            Some(PluginResponse::DataRefValue {
+                id,
+                name,
+                value: serde_json::json!(0.0),
+                timestamp: 0,
+            })
+        }
+        PluginMessage::SetDataRef { id, name, value } => {
+            // Stub: XPLM DataRef writes will be wired here once the SDK is linked.
+            eprintln!("[FlightHub] SetDataRef: {} = {} (XPLM stub)", name, value);
+            Some(PluginResponse::CommandResult {
+                id,
+                success: true,
+                message: None,
+            })
+        }
+        PluginMessage::Command { id, name } => {
+            // Stub: XPLMCommandRef execution will be wired here once the SDK is linked.
+            eprintln!("[FlightHub] Command: {} (XPLM stub)", name);
+            Some(PluginResponse::CommandResult {
+                id,
+                success: true,
+                message: None,
+            })
+        }
         _ => {
-            // Other request types will be handled once XPLM DataRef APIs are available
+            // Handshake, Subscribe, Unsubscribe — no response needed here
             None
         }
     }

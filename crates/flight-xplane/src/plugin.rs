@@ -616,6 +616,61 @@ impl PluginInterface {
         }
     }
 
+    /// Execute a command via plugin
+    pub async fn execute_command(&self, name: &str) -> Result<(), PluginError> {
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
+        };
+
+        if !conn.capabilities.contains(&PluginCapability::ExecuteCommands) {
+            return Err(PluginError::UnsupportedCapability {
+                capability: "execute_commands".to_string(),
+            });
+        }
+
+        let request_id = self.get_next_request_id();
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+
+        {
+            let mut pending = self.pending_requests.write().unwrap();
+            pending.insert(request_id, sender);
+        }
+
+        let message = PluginMessage::Command {
+            id: request_id,
+            name: name.to_string(),
+        };
+        Self::send_message(&conn, message).await?;
+
+        match timeout(Duration::from_secs(1), receiver).await {
+            Ok(Ok(PluginResponse::CommandResult { success: true, .. })) => Ok(()),
+            Ok(Ok(PluginResponse::CommandResult {
+                success: false,
+                message,
+                ..
+            })) => Err(PluginError::Protocol {
+                message: message.unwrap_or_else(|| "Command failed".to_string()),
+            }),
+            Ok(Ok(PluginResponse::Error { error, .. })) => {
+                Err(PluginError::Protocol { message: error })
+            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected response: {:?}", response),
+            }),
+            Ok(Err(_)) => Err(PluginError::Protocol {
+                message: "Response channel closed".to_string(),
+            }),
+            Err(_) => {
+                self.pending_requests.write().unwrap().remove(&request_id);
+                Err(PluginError::Timeout)
+            }
+        }
+    }
+
     /// Process incoming messages (for use in main loop)
     pub async fn process_messages(&self) -> Result<(), PluginError> {
         // Message reading is handled by the background task spawned in `start()`.

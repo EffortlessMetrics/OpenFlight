@@ -83,3 +83,42 @@ Feature: X-Plane 11/12 adapter
     Given a connected PluginInterface
     When the plugin writes {"type":"DataRefValue","id":1,"name":"sim/test","value":{"Float":42.0},"timestamp":0}\n
     Then the pending request for id=1 SHALL resolve with DataRefValue::Float(42.0)
+
+  # ── AC-42.6: Control output DataRef mapping ──────────────────────────────────
+
+  Scenario: ControlOutput maps flight axes to the correct X-Plane DataRef paths
+    Given the ControlOutput control DataRef constants
+    Then DATAREF_PITCH SHALL be "sim/joystick/yoke_pitch_ratio"
+    And DATAREF_ROLL SHALL be "sim/joystick/yoke_roll_ratio"
+    And DATAREF_YAW SHALL be "sim/joystick/yoke_heading_ratio"
+    And DATAREF_FLAPS SHALL be "sim/flightmodel/controls/flaprqst"
+    And DATAREF_SPEEDBRAKE SHALL be "sim/flightmodel/controls/speedbrk_ratio"
+    And DATAREF_GEAR_HANDLE SHALL be "sim/flightmodel/controls/gear_handle_down"
+
+  Scenario: ControlOutput throttle DataRef name includes the engine index
+    Given the ControlOutput control DataRef constants
+    When the throttle DataRef name is computed for engine index 0
+    Then the DataRef name SHALL be "sim/flightmodel/engine/ENGN_thro[0]"
+    When the throttle DataRef name is computed for engine index 3
+    Then the DataRef name SHALL be "sim/flightmodel/engine/ENGN_thro[3]"
+
+  Scenario: ControlOutput returns NoWritePath when no plugin or web API is configured
+    Given a ControlOutput with no plugin or web API configured
+    When write_pitch is called with value 0.5
+    Then the result SHALL be Err(NoWritePath)
+
+  Scenario: ControlOutput rejects NaN before attempting any write
+    Given a ControlOutput with no plugin or web API configured
+    When write_pitch is called with value NaN
+    Then the result SHALL be Err(InvalidValue) not Err(NoWritePath)
+
+  Scenario: ControlOutput clamps out-of-range pitch and attempts write
+    Given a ControlOutput with no plugin or web API configured
+    When write_pitch is called with value 2.0
+    Then the call SHALL attempt a write with the clamped value 1.0
+    And the result SHALL be Err(NoWritePath) because no write path is configured
+
+  Scenario: execute_command returns NoWritePath when no write path is configured
+    Given a ControlOutput with no plugin or web API configured
+    When execute_command is called with "sim/flight_controls/landing_gear_down"
+    Then the result SHALL be Err(NoWritePath)
