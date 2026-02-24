@@ -555,6 +555,35 @@ requirements:
         tests:
           - flight-elite::tests::sim_id_is_elite_dangerous
 
+  - id: REQ-40
+    name: MSFS 2024 SimConnect Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-40.1
+        description: "WHEN connected event carries dwApplicationVersionMajor < 13 THEN sim_id SHALL be Msfs"
+        tests:
+          - flight-simconnect::tests::sim_id_defaults_to_msfs
+      - id: AC-40.2
+        description: "WHEN connected event carries dwApplicationVersionMajor >= 13 THEN sim_id SHALL be Msfs2024"
+        tests:
+          - flight-simconnect::tests::sim_id_is_msfs2024_after_connected_v13
+      - id: AC-40.3
+        description: "Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *)"
+        tests:
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_pitch_degrees
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_bank_degrees
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_heading_degrees_magnetic
+      - id: AC-40.4
+        description: "ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units"
+        tests:
+          - flight-simconnect::mapping::tests::lateral_g_converted_from_acceleration_body_x
+          - flight-simconnect::mapping::tests::longitudinal_g_converted_from_acceleration_body_z
+      - id: AC-40.5
+        description: "ProcessDetectionConfig SHALL contain a Msfs2024 definition with process FlightSimulator2024.exe"
+        tests:
+          - flight-process-detection::tests::msfs2024_definition_present
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

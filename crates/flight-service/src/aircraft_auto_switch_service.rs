@@ -43,6 +43,7 @@ use tracing::{debug, error, info, warn};
 fn map_sim_id(sim: BusSimId) -> CoreSimId {
     match sim {
         BusSimId::Msfs => CoreSimId::Msfs,
+        BusSimId::Msfs2024 => CoreSimId::Msfs2024,
         BusSimId::XPlane => CoreSimId::XPlane,
         BusSimId::Dcs => CoreSimId::Dcs,
         BusSimId::AceCombat7 => CoreSimId::AceCombat7,
@@ -427,6 +428,7 @@ impl AircraftAutoSwitchService {
                         // Convert CoreSimId to BusSimId for event
                         let bus_sim = match sim {
                             CoreSimId::Msfs => BusSimId::Msfs,
+                            CoreSimId::Msfs2024 => BusSimId::Msfs2024,
                             CoreSimId::XPlane => BusSimId::XPlane,
                             CoreSimId::Dcs => BusSimId::Dcs,
                             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
@@ -517,6 +519,7 @@ impl AircraftAutoSwitchService {
         // Convert core SimId to bus SimId for matching
         let bus_sim = match process.sim {
             CoreSimId::Msfs => BusSimId::Msfs,
+            CoreSimId::Msfs2024 => BusSimId::Msfs2024,
             CoreSimId::XPlane => BusSimId::XPlane,
             CoreSimId::Dcs => BusSimId::Dcs,
             CoreSimId::AceCombat7 => BusSimId::AceCombat7,

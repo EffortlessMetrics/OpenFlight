@@ -904,6 +904,7 @@ impl AircraftAutoSwitch {
         // Load sim-specific profile
         let sim_name = match sim {
             SimId::Msfs => "msfs",
+            SimId::Msfs2024 => "msfs2024",
             SimId::XPlane => "xplane",
             SimId::Dcs => "dcs",
             SimId::AceCombat7 => "ac7",

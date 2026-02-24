@@ -29,6 +29,7 @@ pub type Result<T> = std::result::Result<T, ProcessDetectionError>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SimId {
     Msfs,
+    Msfs2024,
     XPlane,
     Dcs,
     AceCombat7,
@@ -41,6 +42,7 @@ impl std::fmt::Display for SimId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SimId::Msfs => write!(f, "MSFS"),
+            SimId::Msfs2024 => write!(f, "MSFS 2024"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
             SimId::AceCombat7 => write!(f, "Ace Combat 7"),
@@ -136,7 +138,7 @@ impl Default for ProcessDetectionConfig {
     fn default() -> Self {
         let mut process_definitions = HashMap::new();
 
-        // MSFS process definition
+        // MSFS process definition (covers MSFS 2020 / FSX by window title)
         process_definitions.insert(
             SimId::Msfs,
             ProcessDefinition {
@@ -152,6 +154,20 @@ impl Default for ProcessDetectionConfig {
                     PathBuf::from("Microsoft Flight Simulator"),
                     PathBuf::from("Microsoft Games/Microsoft Flight Simulator X"),
                 ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // MSFS 2024 process definition (same exe, distinguished by window title)
+        process_definitions.insert(
+            SimId::Msfs2024,
+            ProcessDefinition {
+                process_names: vec![
+                    "FlightSimulator2024.exe".to_string(),
+                    "FlightSimulator.exe".to_string(),
+                ],
+                window_titles: vec!["Microsoft Flight Simulator 2024".to_string()],
+                process_paths: vec![PathBuf::from("Microsoft Flight Simulator 2024")],
                 min_confidence: 0.8,
             },
         );
@@ -909,6 +925,12 @@ mod tests {
             detector
                 .config
                 .process_definitions
+                .contains_key(&SimId::Msfs2024)
+        );
+        assert!(
+            detector
+                .config
+                .process_definitions
                 .contains_key(&SimId::XPlane)
         );
         assert!(
@@ -941,6 +963,19 @@ mod tests {
                 .contains(&"Microsoft Flight Simulator".to_string())
         );
         assert_eq!(msfs_def.min_confidence, 0.8);
+
+        let msfs2024_def = config.process_definitions.get(&SimId::Msfs2024).unwrap();
+        assert!(
+            msfs2024_def
+                .process_names
+                .contains(&"FlightSimulator2024.exe".to_string())
+        );
+        assert!(
+            msfs2024_def
+                .window_titles
+                .contains(&"Microsoft Flight Simulator 2024".to_string())
+        );
+        assert_eq!(msfs2024_def.min_confidence, 0.8);
 
         let xplane_def = config.process_definitions.get(&SimId::XPlane).unwrap();
         assert!(
