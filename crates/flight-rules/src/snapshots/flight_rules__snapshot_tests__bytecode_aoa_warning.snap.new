@@ -1,0 +1,40 @@
+---
+source: crates/flight-rules/src/lib.rs
+assertion_line: 979
+expression: compiled.bytecode
+---
+BytecodeProgram {
+    instructions: [
+        LoadVar(
+            0,
+        ),
+        LoadConst(
+            14.5,
+        ),
+        Hysteresis(
+            0,
+        ),
+        JumpFalse(
+            5,
+        ),
+        Action(
+            0,
+        ),
+    ],
+    variable_map: {
+        "aoa": 0,
+    },
+    hysteresis_map: {
+        "aoa": 0,
+    },
+    hysteresis_bands: [
+        0.5,
+    ],
+    actions: [
+        LedBlink {
+            target: "indexer",
+            rate_hz: 6.0,
+        },
+    ],
+    stack_size: 8,
+}

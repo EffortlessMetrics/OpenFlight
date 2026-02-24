@@ -1,0 +1,35 @@
+---
+source: crates/flight-rules/src/lib.rs
+assertion_line: 996
+expression: compiled.bytecode
+---
+BytecodeProgram {
+    instructions: [
+        LoadVar(
+            0,
+        ),
+        LoadConst(
+            0.0,
+        ),
+        Compare(
+            NotEqual,
+        ),
+        JumpFalse(
+            5,
+        ),
+        Action(
+            0,
+        ),
+    ],
+    variable_map: {
+        "gear_down && flaps_extended": 0,
+    },
+    hysteresis_map: {},
+    hysteresis_bands: [],
+    actions: [
+        LedOn {
+            target: "LAND",
+        },
+    ],
+    stack_size: 8,
+}

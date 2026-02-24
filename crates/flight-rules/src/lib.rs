@@ -933,3 +933,66 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod snapshot_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// Snapshot the bytecode output for a gear-down panel rule.
+    /// Fails if bytecode shape regresses across refactors.
+    #[test]
+    fn snapshot_bytecode_gear_down_panel() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear == DOWN".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("gear-down rule should compile");
+        insta::assert_debug_snapshot!("bytecode_gear_down_panel", compiled.bytecode);
+    }
+
+    /// Snapshot the bytecode output for an AoA numeric-compare rule.
+    #[test]
+    fn snapshot_bytecode_aoa_warning() {
+        let mut hysteresis = HashMap::new();
+        hysteresis.insert("aoa".to_string(), 0.5_f32);
+
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "aoa > 14.5".to_string(),
+                do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                action: "led.indexer.blink(rate_hz=6)".to_string(),
+            }],
+            defaults: Some(RuleDefaults {
+                hysteresis: Some(hysteresis),
+            }),
+        };
+
+        let compiled = rules.compile().expect("aoa rule should compile");
+        insta::assert_debug_snapshot!("bytecode_aoa_warning", compiled.bytecode);
+    }
+
+    /// Snapshot a compound AND condition.
+    #[test]
+    fn snapshot_bytecode_compound_and() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down && flaps_extended".to_string(),
+                do_action: "led.panel('LAND').on()".to_string(),
+                action: "led.panel('LAND').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("AND rule should compile");
+        insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
+    }
+}
