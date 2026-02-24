@@ -261,7 +261,7 @@ impl AircraftAutoSwitchService {
         self.auto_switch.start().await?;
 
         // Start process detector
-        self.process_detector.start().await?;
+        Arc::clone(&self.process_detector).start().await?;
 
         // Subscribe to bus for telemetry updates
         let subscriber = bus_publisher

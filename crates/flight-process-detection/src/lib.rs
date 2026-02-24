@@ -9,10 +9,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::{RwLock, mpsc};
-use tracing::warn;
+use tracing::{info, warn};
 
 /// Error type for process detection
 #[derive(Debug, Error)]
@@ -60,11 +61,9 @@ impl std::fmt::Display for SimId {
 /// Process detection system for flight simulators
 #[derive(Debug)]
 pub struct ProcessDetector {
-    #[allow(dead_code)]
     config: ProcessDetectionConfig,
     state: RwLock<DetectionState>,
     detection_tx: mpsc::UnboundedSender<DetectionEvent>,
-    #[allow(dead_code)]
     detection_rx: RwLock<Option<mpsc::UnboundedReceiver<DetectionEvent>>>,
 }
 
@@ -330,9 +329,44 @@ impl ProcessDetector {
         }
     }
 
-    /// Start the process detection loop
-    pub async fn start(&self) -> Result<()> {
-        // TODO: Fix lifetime issues - temporarily disabled for DSL implementation
+    /// Start the process detection loop.
+    ///
+    /// Takes `Arc<Self>` so the spawned task can share ownership of the detector's
+    /// state and config without lifetime restrictions.
+    pub async fn start(self: Arc<Self>) -> Result<()> {
+        // Take the receiver out of the Option — ensures start() is called at most once.
+        let rx = {
+            let mut rx_guard = self.detection_rx.write().await;
+            rx_guard.take().ok_or_else(|| {
+                ProcessDetectionError::System("ProcessDetector already started".to_string())
+            })?
+        };
+
+        let detector = Arc::clone(&self);
+        let interval_duration = self.config.detection_interval;
+
+        tokio::spawn(async move {
+            let mut rx = rx;
+            let mut ticker = tokio::time::interval(interval_duration);
+
+            loop {
+                tokio::select! {
+                    _ = ticker.tick() => {
+                        if let Err(e) = Self::scan_processes(&detector.state, &detector.config).await {
+                            warn!("Process scan error: {e}");
+                        }
+                    }
+                    Some(event) = rx.recv() => {
+                        if let DetectionEvent::Shutdown = event {
+                            info!("Process detector shutting down");
+                            break;
+                        }
+                    }
+                    else => break,
+                }
+            }
+        });
+
         Ok(())
     }
 
@@ -381,7 +415,6 @@ impl ProcessDetector {
     }
 
     /// Scan for processes (internal)
-    #[allow(dead_code)]
     async fn scan_processes(
         state: &RwLock<DetectionState>,
         config: &ProcessDetectionConfig,
@@ -454,7 +487,6 @@ impl ProcessDetector {
     }
 
     /// Get system processes (platform-specific)
-    #[allow(dead_code)]
     async fn get_system_processes() -> Result<Vec<SystemProcess>> {
         #[cfg(target_os = "windows")]
         {
@@ -473,7 +505,6 @@ impl ProcessDetector {
     }
 
     /// Check if simulator processes are running
-    #[allow(dead_code)]
     async fn check_simulator_processes(
         sim_id: SimId,
         definition: &ProcessDefinition,
@@ -1048,10 +1079,10 @@ mod tests {
     #[tokio::test]
     async fn test_process_detection_lifecycle() {
         let config = ProcessDetectionConfig::default();
-        let detector = ProcessDetector::new(config);
+        let detector = Arc::new(ProcessDetector::new(config));
 
         // Should start successfully
-        assert!(detector.start().await.is_ok());
+        assert!(Arc::clone(&detector).start().await.is_ok());
 
         // Should have no detected processes initially
         let processes = detector.get_detected_processes().await;
