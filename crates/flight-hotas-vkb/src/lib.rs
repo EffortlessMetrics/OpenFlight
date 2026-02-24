@@ -22,7 +22,8 @@ pub use flight_hid_support::device_support::{
 
 pub use health::{StecsHealthMonitor, StecsHealthStatus};
 pub use input::{
-    STECS_BUTTONS_PER_VIRTUAL_CONTROLLER, STECS_MAX_BUTTONS, STECS_MAX_VIRTUAL_CONTROLLERS,
-    StecsAxes, StecsInputAggregator, StecsInputHandler, StecsInputState, StecsInterfaceState,
-    StecsParseError,
+    GLADIATOR_MAX_BUTTONS, GLADIATOR_MAX_HATS, GladiatorAxes, GladiatorInputHandler,
+    GladiatorInputState, GladiatorParseError, HatDirection, STECS_BUTTONS_PER_VIRTUAL_CONTROLLER,
+    STECS_MAX_BUTTONS, STECS_MAX_VIRTUAL_CONTROLLERS, StecsAxes, StecsInputAggregator,
+    StecsInputHandler, StecsInputState, StecsInterfaceState, StecsParseError,
 };

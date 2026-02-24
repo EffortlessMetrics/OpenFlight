@@ -468,6 +468,93 @@ requirements:
           - flight-hid-types::tests::hid_device_info_optional_fields
           - flight-hid-types::tests::hid_device_info_with_descriptor
 
+  - id: REQ-37
+    name: VKB Gladiator NXT EVO Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-37.1
+        description: "WHEN a Gladiator HID report is parsed THEN all six axes SHALL decode to normalized values and button bitmask SHALL be applied"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_report_id
+      - id: AC-37.2
+        description: "WHEN bidirectional axis raw value is 0x0000 THEN normalized value SHALL be -1.0; 0x8000 SHALL be 0.0; 0xFFFF SHALL be +1.0"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+      - id: AC-37.3
+        description: "WHEN a report shorter than 12 bytes is presented THEN a ReportTooShort error SHALL be returned"
+        tests:
+          - flight-hotas-vkb::input::tests::test_report_too_short
+      - id: AC-37.4
+        description: "WHEN bit 32 is set in the second button word THEN button index 33 SHALL be reported as pressed"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+      - id: AC-37.5
+        description: "WHEN pressed_buttons is called THEN it SHALL return 1-based indices of all active buttons"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+
+  - id: REQ-38
+    name: War Thunder HTTP Telemetry Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-38.1
+        description: "WHEN /indicators returns valid JSON THEN the adapter SHALL emit a BusSnapshot with sim WarThunder and converted unit values"
+        tests:
+          - flight-warthunder::tests::converts_indicators_to_snapshot
+      - id: AC-38.2
+        description: "WHEN optional fields are absent THEN the adapter SHALL set partial validity flags without panicking"
+        tests:
+          - flight-warthunder::tests::missing_fields_produce_invalid_flags
+      - id: AC-38.3
+        description: "WHEN WtIndicators is deserialised THEN renamed JSON fields SHALL map to struct fields correctly"
+        tests:
+          - flight-warthunder::protocol::tests::deserialises_from_json
+          - flight-warthunder::protocol::tests::handles_missing_optional_fields
+      - id: AC-38.4
+        description: "WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected"
+        tests:
+          - flight-warthunder::tests::start_transitions_to_connected
+          - flight-warthunder::tests::adapter_initial_state_is_disconnected
+
+  - id: REQ-39
+    name: Elite Dangerous Status File Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-39.1
+        description: "WHEN Status.json exists with GEAR_DOWN set THEN adapter SHALL emit BusSnapshot with config.gear all-down"
+        tests:
+          - flight-elite::tests::poll_reads_status_file
+          - flight-elite::tests::converts_gear_down_flag
+          - flight-elite::tests::converts_gear_up_flag
+      - id: AC-39.2
+        description: "WHEN Status.json flags are unchanged between polls THEN poll_once SHALL return None (change detection)"
+        tests:
+          - flight-elite::tests::poll_returns_none_when_no_change
+          - flight-elite::tests::poll_returns_none_when_file_absent
+      - id: AC-39.3
+        description: "WHEN LIGHTS_ON flag is set THEN nav and landing lights SHALL be true; fuel quantities SHALL populate config.fuel"
+        tests:
+          - flight-elite::tests::converts_lights_on
+          - flight-elite::tests::converts_fuel
+      - id: AC-39.4
+        description: "WHEN DOCKED flag is set THEN validity.position_valid SHALL be false and safe_for_ffb SHALL be false"
+        tests:
+          - flight-elite::tests::docked_ship_not_valid_for_ffb
+      - id: AC-39.5
+        description: "WHEN Status.json is parsed THEN flags bitmask and fuel fields SHALL be populated correctly"
+        tests:
+          - flight-elite::protocol::tests::parses_status_json
+          - flight-elite::protocol::tests::elite_flags_gear_down
+          - flight-elite::protocol::tests::parses_load_game_event
+      - id: AC-39.6
+        description: "WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected"
+        tests:
+          - flight-elite::tests::sim_id_is_elite_dangerous
+
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
   # ============================================================================

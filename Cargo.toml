@@ -24,6 +24,8 @@ members = [
     "crates/flight-ac7-protocol",
     "crates/flight-ac7-telemetry",
     "crates/flight-ac7-input",
+    "crates/flight-warthunder",
+    "crates/flight-elite",
     "crates/flight-panels",
     "crates/flight-panels-core",
     "crates/flight-panels-saitek",
@@ -107,6 +109,8 @@ flight-workspace-meta = { path = "crates/flight-workspace-meta" }
 flight-ac7-protocol = { path = "crates/flight-ac7-protocol" }
 flight-ac7-telemetry = { path = "crates/flight-ac7-telemetry" }
 flight-ac7-input = { path = "crates/flight-ac7-input" }
+flight-warthunder = { path = "crates/flight-warthunder" }
+flight-elite = { path = "crates/flight-elite" }
 
 # HTTP client
 reqwest = { version = "0.13.1", default-features = false, features = [

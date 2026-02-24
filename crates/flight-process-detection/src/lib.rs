@@ -32,6 +32,8 @@ pub enum SimId {
     XPlane,
     Dcs,
     AceCombat7,
+    WarThunder,
+    EliteDangerous,
     Unknown,
 }
 
@@ -42,6 +44,8 @@ impl std::fmt::Display for SimId {
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
             SimId::AceCombat7 => write!(f, "Ace Combat 7"),
+            SimId::WarThunder => write!(f, "War Thunder"),
+            SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -202,6 +206,43 @@ impl Default for ProcessDetectionConfig {
                 process_paths: vec![
                     PathBuf::from("ACE COMBAT 7"),
                     PathBuf::from("steamapps/common/ACE COMBAT 7"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // War Thunder process definition
+        process_definitions.insert(
+            SimId::WarThunder,
+            ProcessDefinition {
+                process_names: vec![
+                    "aces.exe".to_string(),
+                    "WarThunder.exe".to_string(),
+                    "WarThunder".to_string(),
+                ],
+                window_titles: vec!["War Thunder".to_string()],
+                process_paths: vec![
+                    PathBuf::from("War Thunder"),
+                    PathBuf::from("steamapps/common/War Thunder"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Elite: Dangerous process definition
+        process_definitions.insert(
+            SimId::EliteDangerous,
+            ProcessDefinition {
+                process_names: vec![
+                    "EliteDangerous64.exe".to_string(),
+                    "EliteDangerous.exe".to_string(),
+                    "EliteDangerous_4_0_0_0".to_string(),
+                ],
+                window_titles: vec!["Elite - Dangerous".to_string(), "Elite Dangerous".to_string()],
+                process_paths: vec![
+                    PathBuf::from("Elite Dangerous"),
+                    PathBuf::from("steamapps/common/Elite Dangerous"),
+                    PathBuf::from("Frontier Developments/Elite Dangerous"),
                 ],
                 min_confidence: 0.8,
             },
