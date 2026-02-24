@@ -38,6 +38,9 @@ mutants.out.old
 */*/fuzz/target/
 */*/fuzz/corpus/
 
+# Insta snapshot review files (intermediates; only .snap files are committed)
+*.snap.new
+
 # CI/automation runs
 .runs/
 
