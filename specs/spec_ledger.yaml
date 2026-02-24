@@ -1638,6 +1638,12 @@ requirements:
         description: "WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one"
         tests:
           - flight-profile::tests::test_profile_merging
+      - id: AC-23.5
+        description: "WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft"
+        tests: []
+      - id: AC-23.6
+        description: "WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events"
+        tests: []
 
   # Product Requirement: LED Rules Engine
   - id: REQ-24
@@ -1654,6 +1660,9 @@ requirements:
         description: "WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types"
         tests:
           - flight-rules::tests::test_rule_compilation
+          - flight-rules::snapshot_tests::snapshot_bytecode_gear_down_panel
+          - flight-rules::snapshot_tests::snapshot_bytecode_aoa_warning
+          - flight-rules::snapshot_tests::snapshot_bytecode_compound_and
       - id: AC-24.3
         description: "WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized"
         tests:
