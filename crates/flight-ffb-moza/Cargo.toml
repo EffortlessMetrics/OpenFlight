@@ -10,7 +10,7 @@ repository.workspace = true
 description = "Moza flight peripheral driver for Flight Hub — AB9 FFB base, joystick and throttle input parsing."
 readme = "README.md"
 keywords = ["flight-sim", "openflight", "moza", "ffb", "joystick"]
-# SPDX-License-Identifier: MIT OR Apache-2.0
+categories = ["hardware-support"]
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [features]

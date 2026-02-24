@@ -10,7 +10,7 @@ repository.workspace = true
 description = "Community profile repository client — browse, publish, and vote on shared Flight Hub profiles."
 readme = "README.md"
 keywords = ["flight-sim", "openflight", "profiles", "cloud", "community"]
-# SPDX License Identifier
+categories.workspace = true
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

@@ -8,6 +8,7 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Project Wingman process-detection adapter for OpenFlight."
+readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "project-wingman", "adapter"]
 # SPDX License Identifier
