@@ -489,6 +489,64 @@ impl DcsAdapter {
             snapshot.navigation.longitude = lon;
         }
 
+        // Parse angle of attack
+        if let Some(aoa) = data.get("aoa").and_then(|v| v.as_f64()) {
+            snapshot.kinematics.aoa =
+                ValidatedAngle::new_degrees(aoa as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "aoa".to_string(),
+                    }
+                })?;
+        }
+
+        // Parse angular rates (rad/s, body frame)
+        if let Some(p) = data.get("angular_velocity_x").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.p = p as f32;
+        }
+        if let Some(q) = data.get("angular_velocity_y").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.q = q as f32;
+        }
+        if let Some(r) = data.get("angular_velocity_z").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.r = r as f32;
+        }
+
+        // Parse navigation: ground track and distance to destination
+        if let Some(course) = data.get("course").and_then(|v| v.as_f64()) {
+            snapshot.navigation.ground_track =
+                ValidatedAngle::new_degrees(course as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "course".to_string(),
+                    }
+                })?;
+        }
+        if let Some(dist) = data.get("waypoint_distance").and_then(|v| v.as_f64()) {
+            snapshot.navigation.distance_to_dest = Some(dist as f32);
+        }
+
+        // Parse aircraft configuration (gear, flaps)
+        if let Some(gear_down) = data.get("gear_down").and_then(|v| v.as_f64()) {
+            let pos = if gear_down > 0.9 {
+                GearPosition::Down
+            } else if gear_down < 0.1 {
+                GearPosition::Up
+            } else {
+                GearPosition::Transitioning
+            };
+            snapshot.config.gear = GearState {
+                nose: pos,
+                left: pos,
+                right: pos,
+            };
+        }
+        if let Some(flaps) = data.get("flaps").and_then(|v| v.as_f64()) {
+            snapshot.config.flaps =
+                Percentage::new(flaps.clamp(0.0, 100.0) as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "flaps".to_string(),
+                    }
+                })?;
+        }
+
         // Parse engines (if available and allowed)
         if let Some(engines_data) = data.get("engines").and_then(|v| v.as_object()) {
             for (idx_str, engine_data) in engines_data {

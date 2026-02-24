@@ -1,0 +1,22 @@
+[package]
+homepage.workspace = true
+name = "flight-ffb-vpforce"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "VPforce Rhino FFB joystick driver for Flight Hub — HID parsing, FFB effect output, and health monitoring."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "vpforce", "rhino", "ffb"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

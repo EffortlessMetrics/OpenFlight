@@ -53,6 +53,12 @@ members = [
     "crates/flight-blackbox",
     "crates/flight-watchdog",
     "crates/flight-session",
+    "crates/flight-motion",
+    "crates/flight-cloud-profiles",
+    "crates/flight-vr-overlay",
+    "crates/flight-ffb-vpforce",
+    "crates/flight-hotas-winwing",
+    "crates/flight-ffb-moza",
     "examples",
     "xtask",
     "specs",
@@ -159,7 +165,7 @@ cc = "1.2.55"
 
 # Testing and benchmarking utilities
 tokio-test = "0.4.5"
-chrono = "0.4.43"
+chrono = { version = "0.4.43", features = ["serde"] }
 
 # Additional common dependencies
 sha2 = "0.10.9"
@@ -183,6 +189,7 @@ axum-test = "18.7.0"
 filetime = "0.2.27"
 x11rb = "0.13"
 hidapi = { version = "2.6.3", default-features = false, features = ["linux-static-hidraw", "windows-native"] }
+approx = "0.5"
 
 
 [profile.release]

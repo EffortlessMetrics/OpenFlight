@@ -728,6 +728,259 @@ requirements:
         description: "WHEN in an MP session THEN self-aircraft kinematic data (ias, tas, altitude, heading, pitch, bank, g_force) SHALL be published without restriction"
         tests:
           - flight-dcs-export::tests::adapter_tests::test_mp_status_no_invalidation_of_self_aircraft_data
+      - id: AC-44.6
+        description: "WHEN gear_down or flaps fields are present in telemetry THEN convert_to_bus_snapshot SHALL map gear_down to config.gear (Down/Transitioning/Up) and flaps to config.flaps percentage"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_down
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_up
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_transitioning
+          - flight-dcs-export::tests::adapter_tests::test_flaps_mapping
+          - flight-dcs-export::tests::adapter_tests::test_flaps_clamped_at_bounds
+      - id: AC-44.7
+        description: "WHEN Export.lua is generated THEN IAS/TAS SHALL be converted m/s→knots, altitude ASL/AGL m→ft, vertical speed m/s→ft/min, AoA rad→deg, and waypoint distance m→NM before transmission"
+        tests:
+          - flight-dcs-export::src::export_lua::tests::test_requirements_compliance
+          - flight-dcs-export::tests::adapter_tests::test_aoa_mapping
+          - flight-dcs-export::tests::adapter_tests::test_navigation_ground_track_and_distance
+          - flight-dcs-export::tests::adapter_tests::test_angular_rates_mapping
+
+- id: REQ-45
+  name: Motion Platform 6DOF Support
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-45.1
+      description: "WHEN a MotionFrame value exceeds -1.0..1.0 THEN clamped() SHALL clamp it to that range for all six channels"
+      tests:
+        - flight-motion::frame::tests::test_frame_clamped
+    - id: AC-45.2
+      description: "WHEN to_simtools_string() is called THEN it SHALL produce 'A{i}B{i}C{i}D{i}E{i}F{i}\\n' with values rounded to integer percent"
+      tests:
+        - flight-motion::frame::tests::test_simtools_string_format
+        - flight-motion::frame::tests::test_simtools_string_neutral
+    - id: AC-45.3
+      description: "WHEN a high-pass filter receives a step input THEN it SHALL pass the onset (output > 0.9 on first tick); WHEN input is sustained THEN output SHALL wash out to near zero"
+      tests:
+        - flight-motion::washout::tests::test_highpass_step_response
+        - flight-motion::washout::tests::test_highpass_washout
+    - id: AC-45.4
+      description: "WHEN a low-pass filter receives sustained constant input THEN it SHALL converge to within 0.01 of that input"
+      tests:
+        - flight-motion::washout::tests::test_lowpass_convergence
+    - id: AC-45.5
+      description: "WHEN a neutral BusSnapshot is processed for 2000 ticks THEN all MotionFrame channels SHALL be within 0.01 of zero"
+      tests:
+        - flight-motion::tests::motion_tests::test_neutral_snapshot_washes_out
+    - id: AC-45.6
+      description: "WHEN intensity is set to 0.0 THEN the mapper SHALL output a neutral frame regardless of input"
+      tests:
+        - flight-motion::tests::motion_tests::test_zero_intensity_output
+    - id: AC-45.7
+      description: "WHEN a channel is disabled in configuration THEN the mapper SHALL output exactly 0.0 for that channel"
+      tests:
+        - flight-motion::tests::motion_tests::test_disabled_channel_outputs_zero
+    - id: AC-45.8
+      description: "WHEN SimToolsUdpOutput sends a frame THEN the receiver SHALL get the correctly formatted SimTools datagram"
+      tests:
+        - flight-motion::tests::motion_tests::test_simtools_udp_send_receive
+    - id: AC-45.9
+      description: "WHEN default MotionConfig is created THEN intensity SHALL be 0.8, max_g SHALL be 3.0, max_angle_deg SHALL be 30.0, and all channels SHALL be enabled with gain 1.0"
+      tests:
+        - flight-motion::config::tests::test_default_config
+
+- id: REQ-46
+  name: T.Flight HOTAS PC Mode Detection and Throttle Detent Tracking
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-46.1
+      description: "WHEN a HID report of ≥ 8 bytes is received THEN PcModeDetector SHALL classify it as PcMode; WHEN < 8 bytes THEN ConsoleMode"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_pc_mode_8_bytes
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_pc_mode_9_bytes
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_console_mode_5_bytes
+    - id: AC-46.2
+      description: "WHEN confirm_count consecutive same-type reports are seen THEN the committed status SHALL be updated; fewer reports SHALL leave status Unknown"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_commits_after_confirm_count
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_resets_run_on_type_change
+    - id: AC-46.3
+      description: "WHEN device is in ConsoleMode THEN console_mode_guidance SHALL return a non-empty string containing handshake instructions; WHEN in PcMode THEN None"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_console_mode_guidance_present_when_console
+        - flight-hotas-thrustmaster::pc_mode::tests::test_console_mode_guidance_absent_when_pc
+    - id: AC-46.4
+      description: "WHEN PcModeDetector is reset THEN committed status SHALL revert to Unknown"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_reset_clears_state
+    - id: AC-46.5
+      description: "WHEN throttle value enters a configured detent zone THEN ThrottleDetentTracker SHALL emit Entered; WHEN it exits THEN Exited"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_entered_event_when_throttle_enters_zone
+        - flight-hotas-thrustmaster::detents::tests::test_exited_event_when_throttle_leaves_zone
+    - id: AC-46.6
+      description: "WHEN throttle remains inside the detent zone THEN no duplicate Entered events SHALL be emitted (hysteresis)"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_no_event_while_inside_zone
+    - id: AC-46.7
+      description: "WHEN throttle exits and re-enters the detent zone THEN Entered SHALL fire again"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_entered_fires_again_after_exit_and_reenter
+    - id: AC-46.8
+      description: "WHEN ThrottleDetentTracker is reset THEN inside state is cleared and Entered fires on next zone entry"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_reset_clears_state
+    - id: AC-46.9
+      description: "WHEN ThrottleDetentConfig::hotas4_idle() is used THEN position SHALL be 0.05 with half_width 0.02 giving zone [0.03, 0.07]"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_default_hotas4_idle_detent
+
+  # ============================================================================
+  # ============================================================================
+
+- id: REQ-47
+  name: Community Cloud Profile Repository
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-47.1
+      description: "WHEN ListFilter is constructed with defaults THEN sort SHALL be TopRated, page SHALL be 1, and per_page SHALL be 25"
+      tests:
+        - flight-cloud-profiles::models::tests::test_sort_order_defaults_to_top_rated
+    - id: AC-47.2
+      description: "WHEN list_page is called with a sim filter THEN only profiles matching that sim SHALL be returned"
+      tests:
+        - flight-cloud-profiles::models::tests::test_page_has_next_page
+        - flight-cloud-profiles::models::tests::test_page_total_pages
+    - id: AC-47.3
+      description: "WHEN get() is called and the profile is in the local cache and not expired THEN no network request SHALL be made"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_store_and_retrieve
+        - flight-cloud-profiles::cache::tests::test_cache_miss_returns_none
+    - id: AC-47.4
+      description: "WHEN a cache entry's age exceeds the TTL THEN is_expired SHALL return true and get() SHALL fetch from network"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_expired_entry_not_returned
+    - id: AC-47.5
+      description: "WHEN clear() is called on the cache THEN all stored profiles and the index SHALL be removed"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_clear_removes_all
+    - id: AC-47.6
+      description: "WHEN sanitize_for_upload is called THEN the schema version SHALL be normalised and the sim slug SHALL be lowercased"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_sanitize_lowercases_sim
+        - flight-cloud-profiles::sanitize::tests::test_sanitize_sets_schema_version
+    - id: AC-47.7
+      description: "WHEN validate_for_publish is called with a title shorter than 3 chars THEN it SHALL return an error"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_validate_title_too_short_rejected
+    - id: AC-47.8
+      description: "WHEN validate_for_publish is called with a title longer than 80 chars THEN it SHALL return an error"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_validate_title_too_long_rejected
+    - id: AC-47.9
+      description: "WHEN VoteDirection is serialised to JSON THEN it SHALL use lowercase snake_case (up / down)"
+      tests:
+        - flight-cloud-profiles::models::tests::test_vote_direction_round_trip
+
+  # ============================================================================
+  # ============================================================================
+
+- id: REQ-48
+  name: VR Overlay for In-Cockpit Notifications and Status
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-48.1
+      description: "WHEN OverlayConfig is constructed with default values THEN validate() SHALL return Ok"
+      tests:
+        - flight-vr-overlay::config::tests::test_default_config_validates
+        - flight-vr-overlay::config::tests::test_minimal_config_validates
+    - id: AC-48.2
+      description: "WHEN opacity is outside [0.0, 1.0] THEN validate() SHALL return an error"
+      tests:
+        - flight-vr-overlay::config::tests::test_opacity_out_of_range_rejected
+    - id: AC-48.3
+      description: "WHEN a notification's TTL has elapsed THEN is_expired() SHALL return true; prune_expired() SHALL remove it from the queue"
+      tests:
+        - flight-vr-overlay::notification::tests::test_expired_notification_removed_on_prune
+        - flight-vr-overlay::notification::tests::test_persistent_notification_does_not_expire
+    - id: AC-48.4
+      description: "WHEN the queue is at capacity THEN the oldest non-Critical item SHALL be evicted; if all are Critical the incoming notification SHALL be dropped"
+      tests:
+        - flight-vr-overlay::notification::tests::test_capacity_evicts_oldest_noncritical
+        - flight-vr-overlay::notification::tests::test_capacity_drops_incoming_when_all_critical
+    - id: AC-48.5
+      description: "WHEN acknowledge() is called on a notification THEN is_expired() SHALL return true for that notification"
+      tests:
+        - flight-vr-overlay::notification::tests::test_acknowledge_marks_notification
+    - id: AC-48.6
+      description: "WHEN active() is called THEN notifications SHALL be returned sorted by severity descending (Critical first)"
+      tests:
+        - flight-vr-overlay::notification::tests::test_active_sorted_by_severity_desc
+        - flight-vr-overlay::notification::tests::test_max_severity_with_items
+    - id: AC-48.7
+      description: "WHEN toggle_visible() is called THEN the overlay visible flag SHALL invert"
+      tests:
+        - flight-vr-overlay::state::tests::test_toggle_visible
+        - flight-vr-overlay::state::tests::test_axes_in_deadzone_count
+    - id: AC-48.8
+      description: "WHEN NullRenderer::render_frame() is called THEN frames_rendered SHALL increment and last_profile SHALL record the profile name"
+      tests:
+        - flight-vr-overlay::renderer::tests::test_null_renderer_counts_frames
+        - flight-vr-overlay::renderer::tests::test_null_renderer_records_last_profile
+    - id: AC-48.9
+      description: "WHEN OverlayService is spawned and SetProfile command is sent THEN handle.state().profile_name SHALL reflect the new name"
+      tests:
+        - flight-vr-overlay::service::tests::test_set_profile_reflected_in_state
+        - flight-vr-overlay::service::tests::test_shutdown_handle_error_after_stop
+
+- id: REQ-49
+  name: Vendor Partnerships — VPforce Rhino FFB, WinWing HOTAS, Moza FFB Base
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-49.1
+      description: "WHEN a 20-byte VPforce Rhino report is parsed THEN roll, pitch, and throttle SHALL normalise to [-1,1] / [0,1] without error"
+      tests:
+        - flight-ffb-vpforce::input::tests::test_parse_centred_report
+        - flight-ffb-vpforce::input::tests::test_full_deflection_x
+    - id: AC-49.2
+      description: "WHEN a Rhino FFB Spring effect is serialised THEN the output report SHALL use report ID 0x10 and encode the coefficient correctly"
+      tests:
+        - flight-ffb-vpforce::effects::tests::test_spring_effect_report_id
+        - flight-ffb-vpforce::effects::tests::test_constant_force_positive
+    - id: AC-49.3
+      description: "WHEN three consecutive Rhino report failures are recorded THEN RhinoHealthMonitor SHALL mark the device offline"
+      tests:
+        - flight-ffb-vpforce::health::tests::test_three_failures_offline
+        - flight-ffb-vpforce::health::tests::test_success_resets_failures
+    - id: AC-49.4
+      description: "WHEN a 24-byte WinWing Orion2 Throttle report is parsed THEN left and right throttle axes SHALL normalise correctly"
+      tests:
+        - flight-hotas-winwing::input::tests::test_orion2_throttle_centred
+        - flight-hotas-winwing::input::tests::test_throttle_max_position
+    - id: AC-49.5
+      description: "WHEN a 12-byte WinWing Orion2 Stick report is parsed THEN roll, pitch, twist axes SHALL normalise to 0.0 at mid-scale"
+      tests:
+        - flight-hotas-winwing::input::tests::test_stick_centred
+    - id: AC-49.6
+      description: "WHEN an 8-byte WinWing TFRP report is parsed THEN rudder and toe brakes SHALL normalise to 0.0 at neutral"
+      tests:
+        - flight-hotas-winwing::input::tests::test_tfrp_centred
+    - id: AC-49.7
+      description: "WHEN WinWingHealthMonitor records a success after failures THEN consecutive_failures SHALL reset to 0"
+      tests:
+        - flight-hotas-winwing::health::tests::test_success_resets_failures
+    - id: AC-49.8
+      description: "WHEN a 16-byte Moza AB9 report is parsed THEN roll and pitch SHALL normalise to 0.0 at mid-scale with no buttons active"
+      tests:
+        - flight-ffb-moza::input::tests::test_parse_centred_report
+    - id: AC-49.9
+      description: "WHEN a Moza TorqueCommand with out-of-range values is created THEN is_safe() SHALL return false; clamped values SHALL serialise within i16 bounds"
+      tests:
+        - flight-ffb-moza::effects::tests::test_torque_clamping
+        - flight-ffb-moza::health::tests::test_torque_fault_makes_unhealthy
 
   # ============================================================================
   # ============================================================================

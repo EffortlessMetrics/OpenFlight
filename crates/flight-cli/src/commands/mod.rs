@@ -4,7 +4,9 @@
 //! CLI command implementations
 
 pub mod ac7;
+pub mod cloud_profiles;
 pub mod dcs;
+pub mod overlay;
 pub mod devices;
 pub mod diag;
 pub mod info;
@@ -15,13 +17,17 @@ pub mod profile;
 pub mod sim;
 pub mod status;
 pub mod torque;
+pub mod update;
 pub mod xplane;
 
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
 pub use ac7::Ac7Action;
+pub use cloud_profiles::CloudProfilesAction;
 pub use dcs::DcsAction;
+pub use overlay::OverlayAction;
+pub use update::UpdateAction;
 pub use xplane::XPlaneAction;
 
 #[derive(Subcommand)]

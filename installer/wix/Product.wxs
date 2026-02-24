@@ -33,10 +33,10 @@
            Manufacturer="$(var.Manufacturer)"
            UpgradeCode="$(var.UpgradeCode)">
 
-    <!-- Per-user installation: no admin rights required -->
+    <!-- Per-machine installation: required for Windows service and MMCSS registration -->
     <Package InstallerVersion="500"
              Compressed="yes"
-             InstallScope="perUser"
+             InstallScope="perMachine"
              Description="$(var.ProductName) - Flight Simulation Input Management"
              Manufacturer="$(var.Manufacturer)"
              Comments="Flight Hub provides unified control for flight controls, panels, and force feedback devices." />
@@ -155,38 +155,6 @@
              AllowAdvertise="no">
       <ComponentRef Id="PathEnvVar" />
     </Feature>
-
-    <!-- ========================================
-         SERVICE INSTALLATION
-         ======================================== -->
-
-    <!-- Windows Service for flightd -->
-    <ComponentGroup Id="ServiceComponents">
-      <Component Id="FlightdService" Guid="1A2B3C4D-5E6F-7890-ABCD-EF1234567890" Directory="BinFolder">
-        <File Id="flightd_exe_svc" Source="$(var.BinDir)\flightd.exe" KeyPath="yes" />
-        <ServiceInstall Id="FlightdServiceInstall"
-                        Type="ownProcess"
-                        Name="FlightHub"
-                        DisplayName="Flight Hub Service"
-                        Description="Flight Hub input management service for flight simulation"
-                        Start="auto"
-                        Account="LocalSystem"
-                        ErrorControl="normal">
-          <!-- Service recovery options -->
-          <util:ServiceConfig FirstFailureActionType="restart"
-                              SecondFailureActionType="restart"
-                              ThirdFailureActionType="none"
-                              RestartServiceDelayInSeconds="60"
-                              ResetPeriodInDays="1" />
-        </ServiceInstall>
-        <ServiceControl Id="FlightdServiceControl"
-                        Name="FlightHub"
-                        Start="install"
-                        Stop="both"
-                        Remove="uninstall"
-                        Wait="yes" />
-      </Component>
-    </ComponentGroup>
 
   </Product>
 </Wix>

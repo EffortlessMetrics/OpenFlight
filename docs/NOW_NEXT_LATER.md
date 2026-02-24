@@ -2,7 +2,7 @@
 
 This document tracks the immediate focus, near-term goals, and long-term vision for the OpenFlight ecosystem.
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-25
 
 ## 🟢 Now (Current Sprint & Immediate Focus)
 **Focus:** Production Readiness, Runtime Reliability, and Packaging Prep.
@@ -25,16 +25,16 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
 **Focus:** Distribution, User Experience, and Telemetry.
 
 *   **Packaging & Distribution (Phase 5)**
-    *   [ ] **Windows Installer**: Build signed MSI with WiX, handling per-user vs per-machine scope.
-    *   [ ] **Linux Packaging**: Create `.deb` packages with correct udev rules and systemd units.
-    *   [ ] **Auto-Update**: Implement update channels (Stable/Beta) and rollback mechanism.
+    *   [x] **Windows Installer**: Build signed MSI with WiX (per-machine scope with auto-start Windows service; `installer/wix/`).
+    *   [x] **Linux Packaging**: `.deb` package with udev rules, systemd user unit, and automated `installer/debian/build.sh`.
+    *   [x] **Auto-Update**: `flightctl update check|channel|channels` with Stable/Beta/Canary channels and persisted channel preference (`flight-updater` crate).
 
 *   **Telemetry & Observability (Phase 6)**
     *   [x] **Metrics System**: Implement system-wide counters (`sim.*`, `ffb.*`) and `flight-dashboard`.
     *   [x] **Remote Diagnostics**: Allow users to export sanitized blackbox logs for support.
 
 *   **Sim Integration Polish**
-    *   [ ] **DCS**: Finalize MP-safe enforcement and "blocked feature" UI warnings.
+    *   [x] **DCS**: Finalize MP-safe enforcement, blocked feature UI warnings (`dcs mp-policy`), and full telemetry (gear/flaps/AoA/angular rates/navigation) with correct unit conversions.
     *   [x] **X-Plane**: Add more comprehensive data refs for complex aircraft.
     *   [x] **Elite: Dangerous**: Journal/Status file-watcher adapter (`flight-elite`) with gear, lights, fuel, star-system tracking.
 
@@ -43,12 +43,13 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
 
 *   **Hardware Ecosystem**
     *   [ ] **Open Hardware**: Reference design for an OpenFlight-native FFB stick (firmware + PCB).
-    *   [ ] **Vendor Partnerships**: Official support for Moza, WinWing, VPforce devices.
+    *   [x] **Vendor Partnerships**: Official support for Moza, WinWing, VPforce devices.
+    *   [x] **T.Flight HOTAS Gap Fill**: PC mode detection (`PcModeDetector`), throttle detent tracking (`ThrottleDetentTracker`), and HID receipt fixtures for the Thrustmaster T.Flight HOTAS 4/One.
 
 *   **Advanced Features**
-    *   [ ] **Cloud Profiles**: Community-shared profile repository with voting/rating.
-    *   [ ] **Motion Platform Support**: extend axis engine to 6DOF motion rigs.
-    *   [ ] **VR Overlay**: In-cockpit overlay for profile tuning and notifications.
+    *   [x] **Cloud Profiles**: Community-shared profile repository with voting/rating.
+    *   [x] **Motion Platform Support**: extend axis engine to 6DOF motion rigs.
+    *   [x] **VR Overlay**: In-cockpit overlay for profile tuning and notifications.
 
 *   **Platform Expansion**
     *   [ ] **macOS Support**: Core loop porting (IOKit/HID) for X-Plane on Mac.

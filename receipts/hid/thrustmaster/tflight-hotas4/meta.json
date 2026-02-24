@@ -6,6 +6,33 @@
     "product_id_legacy": "0xB67A",
     "product_name": "T.Flight HOTAS 4"
   },
+  "synthetic_fixtures": {
+    "merged_centered.bin": {
+      "mode": "merged",
+      "report_len": 8,
+      "description": "All axes centred, no buttons, HAT centred"
+    },
+    "separate_centered.bin": {
+      "mode": "separate",
+      "report_len": 9,
+      "description": "All axes centred including rocker"
+    },
+    "separate_aux_dominant.bin": {
+      "mode": "separate",
+      "report_len": 9,
+      "description": "Rocker at max, throttle full — used for Auto yaw-source test"
+    },
+    "merged_button1_hat_north.bin": {
+      "mode": "merged",
+      "report_len": 8,
+      "description": "Button 1 pressed, HAT position 1 (North)"
+    },
+    "console_mode.bin": {
+      "mode": "console",
+      "report_len": 5,
+      "description": "Short PS/console-mode report — triggers PC mode detection warning"
+    }
+  },
   "captures": {
     "windows_driver": {
       "status": "pending",

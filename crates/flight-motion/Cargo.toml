@@ -1,0 +1,27 @@
+[package]
+homepage.workspace = true
+name = "flight-motion"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "6DOF motion platform support: washout filtering, BusSnapshot → motion frame mapping, and SimTools-compatible UDP output."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "motion-platform", "6dof", "simtools"]
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[dependencies]
+flight-bus = { path = "../flight-bus" }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["net", "time", "macros", "rt"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+approx = { workspace = true }

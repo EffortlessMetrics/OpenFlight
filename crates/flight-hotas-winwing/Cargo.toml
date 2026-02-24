@@ -1,0 +1,22 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-winwing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "WinWing HOTAS driver for Flight Hub — Orion 2 throttle, F-18C/F-15EX sticks, TFRP rudder pedals."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "winwing", "hotas", "throttle"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

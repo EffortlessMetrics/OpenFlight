@@ -3,7 +3,7 @@
   Flight Hub Windows Installer - Component Definitions (WiX 3.x)
 
   This file defines all components for the Flight Hub installer:
-  - CoreBinaries: Main daemon binary (flightd.exe)
+  - CoreBinaries: Main daemon binary (flightd.exe) + Windows service registration
   - CLIBinaries: CLI tool (flightctl.exe)
   - CoreConfig: Configuration directory structure
   - CoreRegistry: Windows service registration and registry entries
@@ -13,23 +13,46 @@
   Requirements:
   - WiX Toolset 3.x
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <!-- ========================================
        CORE BINARIES
-       Main Flight Hub daemon executable
+       Main Flight Hub daemon executable with Windows service registration
        ======================================== -->
 
   <Fragment>
     <ComponentGroup Id="CoreBinaries" Directory="BinFolder">
 
-      <!-- Flight Hub Service Daemon -->
+      <!-- Flight Hub Service Daemon with Windows service installation -->
       <Component Id="flightd_exe" Guid="A1B2C3D4-E5F6-7890-ABCD-EF1234567890">
         <File Id="flightd_exe"
               Name="flightd.exe"
               Source="$(var.BinDir)\flightd.exe"
               KeyPath="yes"
               Vital="yes" />
+        <!-- Install flightd as an auto-start Windows service -->
+        <ServiceInstall Id="FlightdServiceInstall"
+                        Type="ownProcess"
+                        Name="FlightHub"
+                        DisplayName="Flight Hub Service"
+                        Description="Flight Hub input management service for flight simulation"
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal">
+          <!-- Service recovery: restart on first two failures, do nothing on third -->
+          <util:ServiceConfig FirstFailureActionType="restart"
+                              SecondFailureActionType="restart"
+                              ThirdFailureActionType="none"
+                              RestartServiceDelayInSeconds="60"
+                              ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <ServiceControl Id="FlightdServiceControl"
+                        Name="FlightHub"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
       </Component>
 
     </ComponentGroup>

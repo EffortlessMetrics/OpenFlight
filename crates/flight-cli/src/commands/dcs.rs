@@ -34,6 +34,8 @@ pub enum DcsAction {
     Status,
     /// Generate installation report
     Report,
+    /// Show MP feature policy (which features are available in SP vs MP)
+    MpPolicy,
 }
 
 pub async fn execute(
@@ -197,6 +199,71 @@ pub async fn execute(
                 })
                 .to_string(),
                 OutputFormat::Human => report,
+            };
+
+            Ok(Some(output))
+        }
+
+        DcsAction::MpPolicy => {
+            let mp_safe = vec![
+                ("telemetry_basic", "Position, attitude, airspeed, g-forces"),
+                ("telemetry_navigation", "Waypoints, course, ground track"),
+                ("telemetry_engines", "RPM, temperature, fuel flow"),
+                (
+                    "telemetry_config",
+                    "Landing gear, flaps (aircraft-dependent)",
+                ),
+                ("session_detection", "SP/MP session type annotation"),
+            ];
+            let mp_blocked = vec![
+                (
+                    "telemetry_weapons",
+                    "Weapons loadout and ammunition – blocked for server integrity",
+                ),
+                (
+                    "telemetry_countermeasures",
+                    "Chaff/flare counts – blocked for server integrity",
+                ),
+                (
+                    "telemetry_rwr",
+                    "Radar warning receiver contacts – blocked for server integrity",
+                ),
+            ];
+
+            let output = match output_format {
+                OutputFormat::Json => json!({
+                    "mp_safe_features": mp_safe.iter().map(|(name, desc)| json!({
+                        "feature": name,
+                        "description": desc,
+                        "available_in_mp": true
+                    })).collect::<Vec<_>>(),
+                    "mp_blocked_features": mp_blocked.iter().map(|(name, desc)| json!({
+                        "feature": name,
+                        "description": desc,
+                        "available_in_mp": false,
+                        "reason": "DCS multiplayer integrity enforcement"
+                    })).collect::<Vec<_>>()
+                })
+                .to_string(),
+                OutputFormat::Human => {
+                    let mut out = String::from("DCS Multiplayer Feature Policy\n");
+                    out.push_str("══════════════════════════════\n\n");
+                    out.push_str("✅ Available in Single-Player AND Multiplayer:\n");
+                    for (name, desc) in &mp_safe {
+                        out.push_str(&format!("   {:<30} {}\n", name, desc));
+                    }
+                    out.push_str("\n❌ Single-Player ONLY (blocked in Multiplayer):\n");
+                    for (name, desc) in &mp_blocked {
+                        out.push_str(&format!("   {:<30} {}\n", name, desc));
+                    }
+                    out.push_str(
+                        "\nNote: Blocked features are omitted from telemetry in MP sessions\n",
+                    );
+                    out.push_str(
+                        "      to comply with DCS multiplayer integrity requirements.\n",
+                    );
+                    out
+                }
             };
 
             Ok(Some(output))

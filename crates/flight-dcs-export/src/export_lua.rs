@@ -36,6 +36,7 @@ impl Default for ExportLuaConfig {
                 "telemetry_basic".to_string(),
                 "telemetry_navigation".to_string(),
                 "telemetry_engines".to_string(),
+                "telemetry_config".to_string(),
                 "session_detection".to_string(),
             ],
             mp_safe_mode: true,
@@ -213,6 +214,7 @@ FlightHubExport.config = {{
             "telemetry_basic",
             "telemetry_navigation",
             "telemetry_engines",
+            "telemetry_config",
             "telemetry_weapons",
             "telemetry_countermeasures",
             "telemetry_rwr",
@@ -434,43 +436,43 @@ function FlightHubExport.collect_telemetry()
             end
         end
         
-        -- LoGetIndicatedAirSpeed: Returns IAS in m/s (MP-safe)
+        -- LoGetIndicatedAirSpeed: Returns IAS in m/s, converted to knots (MP-safe)
         if LoGetIndicatedAirSpeed then
             local ias = LoGetIndicatedAirSpeed()
             if ias then
-                data.ias = ias
+                data.ias = ias * 1.94384  -- m/s to knots
             end
         end
         
-        -- LoGetTrueAirSpeed: Returns TAS in m/s (MP-safe)
+        -- LoGetTrueAirSpeed: Returns TAS in m/s, converted to knots (MP-safe)
         if LoGetTrueAirSpeed then
             local tas = LoGetTrueAirSpeed()
             if tas then
-                data.tas = tas
+                data.tas = tas * 1.94384  -- m/s to knots
             end
         end
         
-        -- LoGetAltitudeAboveSeaLevel: Returns altitude MSL in meters (MP-safe)
+        -- LoGetAltitudeAboveSeaLevel: Returns altitude MSL in meters, converted to feet (MP-safe)
         if LoGetAltitudeAboveSeaLevel then
             local altitude_asl = LoGetAltitudeAboveSeaLevel()
             if altitude_asl then
-                data.altitude_asl = altitude_asl
+                data.altitude_asl = altitude_asl * 3.28084  -- meters to feet
             end
         end
         
-        -- LoGetAltitudeAboveGroundLevel: Returns altitude AGL in meters (MP-safe)
+        -- LoGetAltitudeAboveGroundLevel: Returns altitude AGL in meters, converted to feet (MP-safe)
         if LoGetAltitudeAboveGroundLevel then
             local altitude_agl = LoGetAltitudeAboveGroundLevel()
             if altitude_agl then
-                data.altitude_agl = altitude_agl
+                data.altitude_agl = altitude_agl * 3.28084  -- meters to feet
             end
         end
         
-        -- LoGetVerticalVelocity: Returns vertical speed in m/s (MP-safe)
+        -- LoGetVerticalVelocity: Returns vertical speed in m/s, converted to feet/min (MP-safe)
         if LoGetVerticalVelocity then
             local vs = LoGetVerticalVelocity()
             if vs then
-                data.vertical_speed = vs
+                data.vertical_speed = vs * 196.85  -- m/s to feet per minute
             end
         end
         
@@ -485,11 +487,11 @@ function FlightHubExport.collect_telemetry()
             end
         end
         
-        -- LoGetAngleOfAttack: Returns AoA in radians (MP-safe)
+        -- LoGetAngleOfAttack: Returns AoA in radians, converted to degrees (MP-safe)
         if LoGetAngleOfAttack then
             local aoa = LoGetAngleOfAttack()
             if aoa then
-                data.aoa = aoa
+                data.aoa = math.deg(aoa)  -- radians to degrees
             end
         end
     end
@@ -499,7 +501,7 @@ function FlightHubExport.collect_telemetry()
         if LoGetRoute then
             local route = LoGetRoute()
             if route and route.goto_point then
-                data.waypoint_distance = route.goto_point.dist
+                data.waypoint_distance = route.goto_point.dist * 0.000539957  -- meters to nautical miles
                 data.waypoint_bearing = math.deg(route.goto_point.bearing)
             end
         end
@@ -510,6 +512,24 @@ function FlightHubExport.collect_telemetry()
                 data.course = nav.Course
                 data.desired_course = nav.DesiredCourse
                 data.course_deviation = nav.CourseDeviation
+            end
+        end
+    end
+    
+    -- Aircraft configuration (MP-safe: self-aircraft state only)
+    -- Draw argument values are 3D model parameters; indices are aircraft-dependent.
+    -- Argument 1 (gear) and argument 9 (flaps) are common approximations for many jets.
+    if FlightHubExport.features.telemetry_config then
+        if LoGetAircraftDrawArgumentValue then
+            -- Gear position: 0.0=fully retracted, 1.0=fully extended (transitioning: 0.1-0.9)
+            local gear_arg = LoGetAircraftDrawArgumentValue(1)
+            if gear_arg ~= nil then
+                data.gear_down = gear_arg
+            end
+            -- Flaps position: 0.0=retracted, 1.0=fully extended
+            local flaps_arg = LoGetAircraftDrawArgumentValue(9)
+            if flaps_arg ~= nil then
+                data.flaps = flaps_arg * 100.0  -- normalize to percentage (0-100)
             end
         end
     end

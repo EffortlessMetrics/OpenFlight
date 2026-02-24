@@ -24,9 +24,26 @@ linux-hid-tflight4/      Linux with hid-tflight4 corrected descriptor module
 meta.json                Device metadata (VID/PID, firmware, capture tool)
 ```
 
+## Synthetic Fixtures (Generated)
+
+The following `.bin` files at the top level are **synthetic** fixtures —
+hand-constructed byte sequences that match the known report layout.  They
+are used by unit tests and BDD steps in lieu of real hardware captures.
+
+| File | Mode | Description |
+|------|------|-------------|
+| `merged_centered.bin` | Merged (8 B) | All axes at centre/mid, no buttons, HAT centred |
+| `separate_centered.bin` | Separate (9 B) | All axes at centre/mid, rocker centred |
+| `separate_aux_dominant.bin` | Separate (9 B) | Throttle full, rocker at max for Auto yaw-source test |
+| `merged_button1_hat_north.bin` | Merged (8 B) | Button 1 pressed, HAT North |
+| `console_mode.bin` | Console (5 B) | Short report simulating PS/console-mode layout |
+
+> Replace these with real captures as soon as a physical unit is available.
+> See **Capture Procedure** below.
+
 ## Status
 
-⚠️ **Not yet captured.** Scaffold only.
+⚠️ **Real captures not yet available.** Synthetic scaffolds in place.
 
 Once a physical HOTAS 4 unit is available, use the procedure below, then drop
 the files into the appropriate subdirectory.

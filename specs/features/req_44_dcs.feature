@@ -78,3 +78,54 @@ Feature: REQ-44 DCS World Integration with MP-Safe Enforcement
     And the adapter is in a multiplayer session
     When a telemetry frame with only self-aircraft fields (ias, tas, altitude, heading, pitch, bank) is converted
     Then the bus snapshot contains valid kinematic data
+
+  # AC-44.6: Aircraft Configuration Telemetry (Gear and Flaps)
+
+  Scenario: Landing gear down maps to GearState all-down
+    Given a DCS adapter
+    When a telemetry frame with gear_down 1.0 is converted
+    Then config.gear reports all gear positions as Down
+
+  Scenario: Landing gear up maps to GearState all-up
+    Given a DCS adapter
+    When a telemetry frame with gear_down 0.0 is converted
+    Then config.gear reports all gear positions as Up
+
+  Scenario: Landing gear transitioning maps to GearState transitioning
+    Given a DCS adapter
+    When a telemetry frame with gear_down 0.5 is converted
+    Then config.gear reports transitioning state
+
+  Scenario: Flaps percentage is mapped from draw argument
+    Given a DCS adapter
+    When a telemetry frame with flaps 30.0 is converted
+    Then config.flaps value is 30.0 percent
+
+  # AC-44.7: Lua Unit Conversions
+
+  Scenario: IAS and TAS are converted from m/s to knots in generated Export.lua
+    Given the Export.lua generator
+    When the script is generated
+    Then the IAS collection code multiplies LoGetIndicatedAirSpeed() by 1.94384
+    And the TAS collection code multiplies LoGetTrueAirSpeed() by 1.94384
+
+  Scenario: Altitude values are converted from meters to feet in generated Export.lua
+    Given the Export.lua generator
+    When the script is generated
+    Then altitude_asl multiplies LoGetAltitudeAboveSeaLevel() by 3.28084
+    And altitude_agl multiplies LoGetAltitudeAboveGroundLevel() by 3.28084
+
+  Scenario: Vertical speed is converted from m/s to feet per minute in generated Export.lua
+    Given the Export.lua generator
+    When the script is generated
+    Then vertical_speed multiplies LoGetVerticalVelocity() by 196.85
+
+  Scenario: AoA is converted from radians to degrees in generated Export.lua
+    Given the Export.lua generator
+    When the script is generated
+    Then aoa uses math.deg() to convert LoGetAngleOfAttack() to degrees
+
+  Scenario: Waypoint distance is converted from meters to NM in generated Export.lua
+    Given the Export.lua generator
+    When the script is generated
+    Then waypoint_distance multiplies goto_point.dist by 0.000539957
