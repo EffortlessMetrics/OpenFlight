@@ -146,13 +146,27 @@ impl DeviceManager for HidDeviceManager {
             .start()
             .map_err(|e| Status::internal(format!("HID adapter start failed: {}", e)))?;
 
+        let device_infos = adapter.get_all_devices();
+        let stecs_metadata_overlays = stecs_metadata_overlays(&device_infos);
+        let gladiator_metadata_overlays = gladiator_metadata_overlays(&device_infos);
+
         let mut devices = Vec::new();
-        for device_info in adapter.get_all_devices() {
+        for device_info in device_infos {
             let device_type = classify_device_type(device_info);
             if !request.filter_types.is_empty()
                 && !request.filter_types.contains(&(device_type as i32))
             {
                 continue;
+            }
+
+            let mut metadata = build_device_metadata(device_info);
+            if let Some(stecs_overlay) = stecs_metadata_overlays.get(&device_info.device_path) {
+                metadata.extend(stecs_overlay.clone());
+            }
+            if let Some(gladiator_overlay) =
+                gladiator_metadata_overlays.get(&device_info.device_path)
+            {
+                metadata.extend(gladiator_overlay.clone());
             }
 
             let device = Device {
@@ -172,7 +186,7 @@ impl DeviceManager for HidDeviceManager {
                     supported_protocols: vec!["hid".to_string()],
                 }),
                 health: None,
-                metadata: build_device_metadata(device_info),
+                metadata,
             };
 
             devices.push(device);
@@ -183,6 +197,92 @@ impl DeviceManager for HidDeviceManager {
             devices,
         })
     }
+}
+
+fn stecs_metadata_overlay(
+    metadata: &device_support::VkbStecsInterfaceMetadata,
+) -> HashMap<String, String> {
+    let mut overlay = HashMap::new();
+    overlay.insert(
+        "stecs.physical_id".to_string(),
+        metadata.physical_id.clone(),
+    );
+    overlay.insert(
+        "stecs.virtual_controller_index".to_string(),
+        metadata.virtual_controller_index.to_string(),
+    );
+    overlay.insert(
+        "stecs.virtual_controller".to_string(),
+        format!("VC{}", metadata.virtual_controller_index),
+    );
+    overlay.insert(
+        "stecs.interface_count".to_string(),
+        metadata.interface_count.to_string(),
+    );
+    overlay.insert(
+        "stecs.multi_interface".to_string(),
+        (metadata.interface_count > 1).to_string(),
+    );
+    let start_button = usize::from(metadata.virtual_controller_index) * 32 + 1;
+    let end_button = start_button + 31;
+    overlay.insert(
+        "stecs.virtual_button_range".to_string(),
+        format!("{}-{}", start_button, end_button),
+    );
+    overlay
+}
+
+fn stecs_metadata_overlays(
+    devices: &[&flight_hid::HidDeviceInfo],
+) -> HashMap<String, HashMap<String, String>> {
+    let mut overlays = HashMap::new();
+    for metadata in device_support::vkb_stecs_interface_metadata(devices.iter().copied()) {
+        overlays.insert(
+            metadata.device_path.clone(),
+            stecs_metadata_overlay(&metadata),
+        );
+    }
+    overlays
+}
+
+fn gladiator_metadata_overlay(
+    metadata: &device_support::VkbGladiatorInterfaceMetadata,
+) -> HashMap<String, String> {
+    let mut overlay = HashMap::new();
+    overlay.insert(
+        "gladiator.physical_id".to_string(),
+        metadata.physical_id.clone(),
+    );
+    overlay.insert(
+        "gladiator.interface_index".to_string(),
+        metadata.interface_index.to_string(),
+    );
+    overlay.insert(
+        "gladiator.interface".to_string(),
+        format!("IF{}", metadata.interface_index),
+    );
+    overlay.insert(
+        "gladiator.interface_count".to_string(),
+        metadata.interface_count.to_string(),
+    );
+    overlay.insert(
+        "gladiator.multi_interface".to_string(),
+        (metadata.interface_count > 1).to_string(),
+    );
+    overlay
+}
+
+fn gladiator_metadata_overlays(
+    devices: &[&flight_hid::HidDeviceInfo],
+) -> HashMap<String, HashMap<String, String>> {
+    let mut overlays = HashMap::new();
+    for metadata in device_support::vkb_gladiator_interface_metadata(devices.iter().copied()) {
+        overlays.insert(
+            metadata.device_path.clone(),
+            gladiator_metadata_overlay(&metadata),
+        );
+    }
+    overlays
 }
 
 fn classify_device_type(device_info: &flight_hid::HidDeviceInfo) -> DeviceType {
@@ -262,6 +362,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
     if let Some(model) = device_support::tflight_model(device_info) {
         metadata.insert("device_family".to_string(), "tflight-hotas".to_string());
         metadata.insert("model".to_string(), model.name().to_string());
+        metadata.insert(
+            "is_legacy_pid".to_string(),
+            device_support::is_hotas4_legacy_pid(device_info).to_string(),
+        );
 
         let axis_mode = device_support::axis_mode_from_device_info(device_info);
         metadata.insert("axis_mode".to_string(), axis_mode.as_str().to_string());
@@ -273,6 +377,10 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
         metadata.insert(
             "note.driver".to_string(),
             device_support::driver_note().to_string(),
+        );
+        metadata.insert(
+            "note.pc_mode".to_string(),
+            device_support::pc_mode_note(model).to_string(),
         );
 
         let mapping = device_support::tflight_default_mapping(axis_mode);
@@ -299,6 +407,12 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
             "vkb-gladiator-nxt-evo".to_string(),
         );
         metadata.insert("model".to_string(), model.name().to_string());
+
+        let control_map = device_support::vkb_gladiator_control_map(model);
+        if let Ok(json) = serde_json::to_string(control_map) {
+            metadata.insert("control_map".to_string(), json);
+        }
+
         if let Some(product_name) = device_info.product_name.as_deref()
             && product_name.to_lowercase().contains("omni")
         {
@@ -602,5 +716,191 @@ mod tests {
 
         assert_eq!(response.version, crate::PROTOCOL_VERSION);
         assert_eq!(response.status(), ServiceStatus::Running);
+    }
+
+    #[test]
+    fn test_tflight_legacy_metadata_includes_guidance() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::THRUSTMASTER_VENDOR_ID,
+            product_id: device_support::TFLIGHT_HOTAS_4_PID_LEGACY,
+            serial_number: Some("legacy-1".to_string()),
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: Some("T.Flight HOTAS 4".to_string()),
+            device_path: "/dev/test-legacy".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("device_family").map(String::as_str),
+            Some("tflight-hotas")
+        );
+        assert_eq!(
+            metadata.get("is_legacy_pid").map(String::as_str),
+            Some("true")
+        );
+        assert!(
+            metadata
+                .get("note.pc_mode")
+                .is_some_and(|note| note.contains("Share+Option+PS"))
+        );
+    }
+
+    #[test]
+    fn test_tflight_hotas_one_metadata_is_not_legacy() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::THRUSTMASTER_VENDOR_ID,
+            product_id: device_support::TFLIGHT_HOTAS_ONE_PID,
+            serial_number: Some("one-1".to_string()),
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: Some("T.Flight HOTAS One".to_string()),
+            device_path: "/dev/test-one".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("is_legacy_pid").map(String::as_str),
+            Some("false")
+        );
+        assert!(
+            metadata
+                .get("note.pc_mode")
+                .is_some_and(|note| note.contains("Guide"))
+        );
+    }
+
+    #[test]
+    fn test_stecs_metadata_overlays_include_virtual_controller_details() {
+        let vc0 = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_STECS_RIGHT_SPACE_STANDARD_PID,
+            serial_number: Some("STECS-SERIAL".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB STECS".to_string()),
+            device_path: r"\\?\hid#vid_231d&pid_013c&mi_00#7".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let mut vc1 = vc0.clone();
+        vc1.device_path = r"\\?\hid#vid_231d&pid_013c&mi_01#7".to_string();
+
+        let overlays = stecs_metadata_overlays(&[&vc0, &vc1]);
+        assert_eq!(overlays.len(), 2);
+
+        let first = overlays.get(&vc0.device_path).expect("vc0 overlay");
+        let second = overlays.get(&vc1.device_path).expect("vc1 overlay");
+
+        assert_eq!(
+            first
+                .get("stecs.virtual_controller_index")
+                .map(String::as_str),
+            Some("0")
+        );
+        assert_eq!(
+            second
+                .get("stecs.virtual_controller_index")
+                .map(String::as_str),
+            Some("1")
+        );
+        assert_eq!(
+            first.get("stecs.virtual_button_range").map(String::as_str),
+            Some("1-32")
+        );
+        assert_eq!(
+            second.get("stecs.virtual_button_range").map(String::as_str),
+            Some("33-64")
+        );
+        assert_eq!(
+            first.get("stecs.interface_count").map(String::as_str),
+            Some("2")
+        );
+    }
+
+    #[test]
+    fn test_gladiator_metadata_includes_control_map() {
+        let device = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+            serial_number: Some("SCG-RIGHT-1".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB Gladiator NXT EVO Right".to_string()),
+            device_path: "/dev/test-gladiator-right".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let metadata = build_device_metadata(&device);
+        assert_eq!(
+            metadata.get("device_family").map(String::as_str),
+            Some("vkb-gladiator-nxt-evo")
+        );
+
+        let control_map = metadata
+            .get("control_map")
+            .and_then(|raw| serde_json::from_str::<serde_json::Value>(raw).ok())
+            .expect("control_map metadata should be valid JSON");
+
+        assert_eq!(
+            control_map
+                .get("schema")
+                .and_then(serde_json::Value::as_str),
+            Some("flight.device-map/1")
+        );
+        assert_eq!(
+            control_map
+                .get("axes")
+                .and_then(serde_json::Value::as_array)
+                .map(Vec::len),
+            Some(8)
+        );
+    }
+
+    #[test]
+    fn test_gladiator_metadata_overlays_include_interface_details() {
+        let if0 = flight_hid::HidDeviceInfo {
+            vendor_id: device_support::VKB_VENDOR_ID,
+            product_id: device_support::VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+            serial_number: Some("SCG-SERIAL".to_string()),
+            manufacturer: Some("VKB".to_string()),
+            product_name: Some("VKB Gladiator NXT EVO Left".to_string()),
+            device_path: r"\\?\hid#vid_231d&pid_0201&mi_00#7".to_string(),
+            usage_page: device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        };
+
+        let mut if1 = if0.clone();
+        if1.device_path = r"\\?\hid#vid_231d&pid_0201&mi_01#7".to_string();
+
+        let overlays = gladiator_metadata_overlays(&[&if0, &if1]);
+        assert_eq!(overlays.len(), 2);
+
+        let first = overlays.get(&if0.device_path).expect("if0 overlay");
+        let second = overlays.get(&if1.device_path).expect("if1 overlay");
+
+        assert_eq!(
+            first.get("gladiator.interface_index").map(String::as_str),
+            Some("0")
+        );
+        assert_eq!(
+            second.get("gladiator.interface_index").map(String::as_str),
+            Some("1")
+        );
+        assert_eq!(
+            first.get("gladiator.interface_count").map(String::as_str),
+            Some("2")
+        );
+        assert_eq!(
+            first.get("gladiator.multi_interface").map(String::as_str),
+            Some("true")
+        );
     }
 }

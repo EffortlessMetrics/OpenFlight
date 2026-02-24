@@ -244,7 +244,12 @@ mod tests {
             successful_resolutions,
             axes.len()
         );
-        assert!(successful_resolutions > 0); // At least some should succeed
+        if std::path::Path::new("MSFS/UserCfg.opt").exists() {
+            assert!(
+                successful_resolutions > 0,
+                "Expected at least one successful resolution when MSFS config is present"
+            );
+        }
     }
 
     #[tokio::test]

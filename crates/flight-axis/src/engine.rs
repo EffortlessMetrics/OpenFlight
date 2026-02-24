@@ -328,6 +328,11 @@ impl AxisEngine {
         }
     }
 
+    /// Enable/disable capability audit logging without changing mode limits.
+    pub fn set_capability_audit_enabled(&self, enabled: bool) {
+        self.capability_context.write().audit_enabled = enabled;
+    }
+
     /// Get current capability mode
     pub fn capability_mode(&self) -> CapabilityMode {
         self.capability_context.read().mode

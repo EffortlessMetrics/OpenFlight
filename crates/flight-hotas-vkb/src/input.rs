@@ -1,0 +1,427 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+//! Input parsing and virtual-controller aggregation for VKB STECS.
+
+use flight_hid_support::device_support::VkbStecsVariant;
+
+/// Number of buttons exposed by one STECS virtual controller (VC).
+pub const STECS_BUTTONS_PER_VIRTUAL_CONTROLLER: usize = 32;
+/// Maximum number of virtual controllers exposed by STECS firmware.
+pub const STECS_MAX_VIRTUAL_CONTROLLERS: usize = 3;
+/// Maximum merged button capacity (VC0..VC2).
+pub const STECS_MAX_BUTTONS: usize =
+    STECS_BUTTONS_PER_VIRTUAL_CONTROLLER * STECS_MAX_VIRTUAL_CONTROLLERS;
+
+/// Parsed STECS axes from one interface report.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct StecsAxes {
+    /// RX axis (SpaceBrake on baseline maps).
+    pub rx: f32,
+    /// RY axis (Laser Power on baseline maps).
+    pub ry: f32,
+    /// X axis.
+    pub x: f32,
+    /// Y axis.
+    pub y: f32,
+    /// Z axis (main throttle in most profiles).
+    pub z: f32,
+}
+
+/// Parsed state from one STECS virtual-controller interface.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StecsInterfaceState {
+    /// Byte length of the parsed payload.
+    pub report_len: usize,
+    /// Optional axes block if present in this interface report.
+    pub axes: Option<StecsAxes>,
+    /// Button bits local to this VC (`1..=32`).
+    pub buttons: u32,
+}
+
+/// Merged STECS state across VC0..VC2 for one physical throttle.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StecsInputState {
+    /// Device variant used by this merged state.
+    pub variant: VkbStecsVariant,
+    /// Selected axes block (typically from VC0 when available).
+    pub axes: Option<StecsAxes>,
+    /// Global button bitmap (`1..=96`) represented as fixed bool slots.
+    pub buttons: [bool; STECS_MAX_BUTTONS],
+    /// Virtual controllers that contributed in the current merge cycle.
+    pub active_virtual_controllers: [bool; STECS_MAX_VIRTUAL_CONTROLLERS],
+}
+
+impl StecsInputState {
+    fn new(variant: VkbStecsVariant) -> Self {
+        Self {
+            variant,
+            axes: None,
+            buttons: [false; STECS_MAX_BUTTONS],
+            active_virtual_controllers: [false; STECS_MAX_VIRTUAL_CONTROLLERS],
+        }
+    }
+
+    /// Return 1-based pressed button indices (`1..=96`).
+    pub fn pressed_buttons(&self) -> Vec<u16> {
+        self.buttons
+            .iter()
+            .enumerate()
+            .filter_map(|(index, pressed)| {
+                if *pressed {
+                    Some((index + 1) as u16)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+}
+
+/// Errors returned by STECS report parsing/aggregation.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum StecsParseError {
+    /// Report does not have enough payload bytes for the expected decode.
+    #[error("STECS report too short: expected at least {expected} bytes, got {actual}")]
+    ReportTooShort { expected: usize, actual: usize },
+    /// Virtual-controller index is outside supported range.
+    #[error("STECS virtual controller index out of range: {index}")]
+    VirtualControllerOutOfRange { index: u8 },
+}
+
+/// Best-effort parser for one STECS interface report.
+#[derive(Debug, Clone, Copy)]
+pub struct StecsInputHandler {
+    variant: VkbStecsVariant,
+    has_report_id: bool,
+}
+
+impl StecsInputHandler {
+    /// Create a parser for one STECS variant.
+    pub fn new(variant: VkbStecsVariant) -> Self {
+        Self {
+            variant,
+            has_report_id: false,
+        }
+    }
+
+    /// Enable stripping a 1-byte HID report ID prefix.
+    pub fn with_report_id(mut self, enabled: bool) -> Self {
+        self.has_report_id = enabled;
+        self
+    }
+
+    /// Return associated variant.
+    pub fn variant(&self) -> VkbStecsVariant {
+        self.variant
+    }
+
+    /// Parse one interface report.
+    ///
+    /// Layout (best effort):
+    /// - If payload is at least 14 bytes: first 10 bytes are five u16 axes
+    ///   (`rx, ry, x, y, z`), next 4 bytes are button bits.
+    /// - If payload is 4..13 bytes: first 4 bytes are button bits only.
+    pub fn parse_interface_report(
+        &self,
+        report: &[u8],
+    ) -> Result<StecsInterfaceState, StecsParseError> {
+        let payload = if self.has_report_id {
+            report.get(1..).unwrap_or(&[])
+        } else {
+            report
+        };
+
+        if payload.len() < 4 {
+            return Err(StecsParseError::ReportTooShort {
+                expected: 4,
+                actual: payload.len(),
+            });
+        }
+
+        if payload.len() >= 14 {
+            let axes = StecsAxes {
+                rx: normalize_axis_16bit(le_u16(payload, 0)),
+                ry: normalize_axis_16bit(le_u16(payload, 2)),
+                x: normalize_axis_16bit(le_u16(payload, 4)),
+                y: normalize_axis_16bit(le_u16(payload, 6)),
+                z: normalize_axis_16bit(le_u16(payload, 8)),
+            };
+            let buttons = le_u32(payload, 10);
+            return Ok(StecsInterfaceState {
+                report_len: payload.len(),
+                axes: Some(axes),
+                buttons,
+            });
+        }
+
+        let buttons = le_u32(payload, 0);
+        Ok(StecsInterfaceState {
+            report_len: payload.len(),
+            axes: None,
+            buttons,
+        })
+    }
+}
+
+/// Stateful VC aggregator for one physical STECS unit.
+#[derive(Debug, Clone)]
+pub struct StecsInputAggregator {
+    handler: StecsInputHandler,
+    state: StecsInputState,
+    axes_source_vc: Option<u8>,
+}
+
+impl StecsInputAggregator {
+    /// Create an aggregator for the given variant.
+    pub fn new(variant: VkbStecsVariant) -> Self {
+        Self {
+            handler: StecsInputHandler::new(variant),
+            state: StecsInputState::new(variant),
+            axes_source_vc: None,
+        }
+    }
+
+    /// Enable Report ID stripping in the underlying parser.
+    pub fn with_report_id(mut self, enabled: bool) -> Self {
+        self.handler = self.handler.with_report_id(enabled);
+        self
+    }
+
+    /// Variant associated with this aggregator.
+    pub fn variant(&self) -> VkbStecsVariant {
+        self.handler.variant()
+    }
+
+    /// Reset merge state for a new poll tick.
+    pub fn begin_poll(&mut self) {
+        self.state.axes = None;
+        self.state.buttons = [false; STECS_MAX_BUTTONS];
+        self.state.active_virtual_controllers = [false; STECS_MAX_VIRTUAL_CONTROLLERS];
+        self.axes_source_vc = None;
+    }
+
+    /// Parse and merge one interface report for `VC{virtual_controller_index}`.
+    pub fn merge_interface_report(
+        &mut self,
+        virtual_controller_index: u8,
+        report: &[u8],
+    ) -> Result<(), StecsParseError> {
+        let interface_state = self.handler.parse_interface_report(report)?;
+        self.merge_interface_state(virtual_controller_index, interface_state)
+    }
+
+    /// Merge one already parsed interface state for `VC{virtual_controller_index}`.
+    pub fn merge_interface_state(
+        &mut self,
+        virtual_controller_index: u8,
+        interface_state: StecsInterfaceState,
+    ) -> Result<(), StecsParseError> {
+        let vc_index = usize::from(virtual_controller_index);
+        if vc_index >= STECS_MAX_VIRTUAL_CONTROLLERS {
+            return Err(StecsParseError::VirtualControllerOutOfRange {
+                index: virtual_controller_index,
+            });
+        }
+
+        self.state.active_virtual_controllers[vc_index] = true;
+
+        if let Some(axes) = interface_state.axes {
+            let replace_axes = match self.axes_source_vc {
+                None => true,
+                Some(current_source) => virtual_controller_index < current_source,
+            };
+            if replace_axes {
+                self.state.axes = Some(axes);
+                self.axes_source_vc = Some(virtual_controller_index);
+            }
+        }
+
+        let base = vc_index * STECS_BUTTONS_PER_VIRTUAL_CONTROLLER;
+        for bit_index in 0..STECS_BUTTONS_PER_VIRTUAL_CONTROLLER {
+            if ((interface_state.buttons >> bit_index) & 1) != 0 {
+                self.state.buttons[base + bit_index] = true;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Return the current merged state snapshot.
+    pub fn snapshot(&self) -> StecsInputState {
+        self.state.clone()
+    }
+
+    /// Borrow the current merged state.
+    pub fn state(&self) -> &StecsInputState {
+        &self.state
+    }
+}
+
+fn le_u16(bytes: &[u8], offset: usize) -> u16 {
+    let low = bytes.get(offset).copied().unwrap_or(0);
+    let high = bytes.get(offset + 1).copied().unwrap_or(0);
+    u16::from_le_bytes([low, high])
+}
+
+fn le_u32(bytes: &[u8], offset: usize) -> u32 {
+    let b0 = bytes.get(offset).copied().unwrap_or(0);
+    let b1 = bytes.get(offset + 1).copied().unwrap_or(0);
+    let b2 = bytes.get(offset + 2).copied().unwrap_or(0);
+    let b3 = bytes.get(offset + 3).copied().unwrap_or(0);
+    u32::from_le_bytes([b0, b1, b2, b3])
+}
+
+fn normalize_axis_16bit(raw: u16) -> f32 {
+    raw as f32 / u16::MAX as f32
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_interface_report_with_axes_and_buttons() {
+        let handler = StecsInputHandler::new(VkbStecsVariant::RightSpaceThrottleGripStandard);
+        let report = [
+            0x00, 0x00, // rx = 0.0
+            0xFF, 0xFF, // ry = 1.0
+            0x00, 0x80, // x ~= 0.5
+            0x00, 0x40, // y ~= 0.25
+            0x00, 0xC0, // z ~= 0.75
+            0x05, 0x00, 0x00, 0x80, // buttons: 1,3,32
+        ];
+
+        let parsed = handler.parse_interface_report(&report).unwrap();
+        assert_eq!(parsed.report_len, 14);
+        assert_eq!(parsed.buttons, 0x8000_0005);
+        let axes = parsed.axes.expect("axes should be present");
+        assert!((axes.rx - 0.0).abs() < 0.0001);
+        assert!((axes.ry - 1.0).abs() < 0.0001);
+        assert!((axes.x - 0.5).abs() < 0.01);
+        assert!((axes.y - 0.25).abs() < 0.01);
+        assert!((axes.z - 0.75).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_parse_interface_report_buttons_only() {
+        let handler = StecsInputHandler::new(VkbStecsVariant::LeftSpaceThrottleGripMini);
+        let report = [0x02, 0x00, 0x00, 0x00];
+
+        let parsed = handler.parse_interface_report(&report).unwrap();
+        assert_eq!(parsed.report_len, 4);
+        assert!(parsed.axes.is_none());
+        assert_eq!(parsed.buttons, 0x0000_0002);
+    }
+
+    #[test]
+    fn test_parse_interface_report_with_report_id() {
+        let handler = StecsInputHandler::new(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus)
+            .with_report_id(true);
+        let report = [
+            0x01, // report id
+            0x00, 0x00, // rx
+            0x00, 0x00, // ry
+            0x00, 0x00, // x
+            0x00, 0x00, // y
+            0x00, 0x00, // z
+            0x01, 0x00, 0x00, 0x00, // button 1
+        ];
+
+        let parsed = handler.parse_interface_report(&report).unwrap();
+        assert_eq!(parsed.report_len, 14);
+        assert_eq!(parsed.buttons, 0x0000_0001);
+        assert!(parsed.axes.is_some());
+    }
+
+    #[test]
+    fn test_merge_interface_report_maps_virtual_button_ranges() {
+        let mut aggregator =
+            StecsInputAggregator::new(VkbStecsVariant::RightSpaceThrottleGripMiniPlus);
+        aggregator.begin_poll();
+
+        let vc0 = [0x01, 0x00, 0x00, 0x80]; // button 1 + 32
+        let vc1 = [0x01, 0x00, 0x00, 0x00]; // button 33
+        let vc2 = [0x04, 0x00, 0x00, 0x00]; // button 67
+
+        aggregator.merge_interface_report(0, &vc0).unwrap();
+        aggregator.merge_interface_report(1, &vc1).unwrap();
+        aggregator.merge_interface_report(2, &vc2).unwrap();
+
+        let snapshot = aggregator.snapshot();
+        assert!(snapshot.buttons[0]);
+        assert!(snapshot.buttons[31]);
+        assert!(snapshot.buttons[32]);
+        assert!(snapshot.buttons[66]);
+        assert_eq!(snapshot.pressed_buttons(), vec![1, 32, 33, 67]);
+    }
+
+    #[test]
+    fn test_merge_interface_state_prefers_lowest_vc_axes() {
+        let mut aggregator = StecsInputAggregator::new(VkbStecsVariant::LeftSpaceThrottleGripMini);
+        aggregator.begin_poll();
+
+        aggregator
+            .merge_interface_state(
+                1,
+                StecsInterfaceState {
+                    report_len: 14,
+                    axes: Some(StecsAxes {
+                        rx: 0.1,
+                        ry: 0.1,
+                        x: 0.1,
+                        y: 0.1,
+                        z: 0.1,
+                    }),
+                    buttons: 0,
+                },
+            )
+            .unwrap();
+
+        aggregator
+            .merge_interface_state(
+                0,
+                StecsInterfaceState {
+                    report_len: 14,
+                    axes: Some(StecsAxes {
+                        rx: 0.9,
+                        ry: 0.8,
+                        x: 0.7,
+                        y: 0.6,
+                        z: 0.5,
+                    }),
+                    buttons: 0,
+                },
+            )
+            .unwrap();
+
+        let axes = aggregator.snapshot().axes.expect("axes should be present");
+        assert!((axes.rx - 0.9).abs() < 0.0001);
+        assert!((axes.ry - 0.8).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_virtual_controller_out_of_range() {
+        let mut aggregator = StecsInputAggregator::new(VkbStecsVariant::RightSpaceThrottleGripMini);
+        aggregator.begin_poll();
+
+        let error = aggregator.merge_interface_report(3, &[0x00, 0x00, 0x00, 0x00]);
+        assert!(matches!(
+            error,
+            Err(StecsParseError::VirtualControllerOutOfRange { index: 3 })
+        ));
+    }
+
+    #[test]
+    fn test_report_too_short() {
+        let handler = StecsInputHandler::new(VkbStecsVariant::RightSpaceThrottleGripStandard);
+        let error = handler.parse_interface_report(&[0x01, 0x02, 0x03]);
+        assert!(matches!(
+            error,
+            Err(StecsParseError::ReportTooShort {
+                expected: 4,
+                actual: 3
+            })
+        ));
+    }
+}

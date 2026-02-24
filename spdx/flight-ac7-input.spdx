@@ -1,0 +1,16 @@
+SPDXVersion: SPDX-2.3
+DataLicense: CC0-1.0
+SPDXID: SPDXRef-DOCUMENT
+DocumentName: flight-ac7-input
+DocumentNamespace: https://flight-hub.dev/spdx/flight-ac7-input
+CreationInfo: Tool: flight-hub-supply-chain-audit
+Created: 1760000000 (Unix timestamp)
+
+PackageName: flight-ac7-input
+SPDXID: SPDXRef-Package-flight-ac7-input
+PackageDownloadLocation: NOASSERTION
+FilesAnalyzed: false
+PackageLicenseConcluded: MIT OR Apache-2.0
+PackageLicenseDeclared: MIT OR Apache-2.0
+PackageCopyrightText: Copyright (c) 2026 Flight Hub Team
+

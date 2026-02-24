@@ -10,7 +10,7 @@ use flight_bus::adapters::msfs::MsfsConverter;
 use flight_bus::snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, Navigation,
 };
-use flight_bus::types::Percentage;
+use flight_bus::types::{AutopilotState, GearPosition, Percentage};
 use flight_simconnect_sys::{
     HSIMCONNECT, SIMCONNECT_DATADEFID, SIMCONNECT_DATATYPE, SIMCONNECT_PERIOD,
     SIMCONNECT_REQUESTID, SimConnectApi, constants::*,
@@ -237,6 +237,7 @@ struct RequestMapping {
     definition_id: SIMCONNECT_DATADEFID,
     category: DataCategory,
     period: SIMCONNECT_PERIOD,
+    engine_index: Option<u8>,
 }
 
 /// Data category enumeration
@@ -345,18 +346,28 @@ impl VariableMapping {
         match mapping.category {
             DataCategory::Kinematics => {
                 self.convert_kinematics_data(definition, data, &mut current_snapshot.kinematics)?;
+                current_snapshot.validity.attitude_valid = true;
+                current_snapshot.validity.velocities_valid = true;
+                current_snapshot.validity.kinematics_valid = true;
+                current_snapshot.validity.aero_valid = true;
             }
             DataCategory::Config => {
                 self.convert_config_data(definition, data, &mut current_snapshot.config)?;
             }
             DataCategory::Engines => {
-                self.convert_engine_data(definition, data, &mut current_snapshot.engines)?;
+                self.convert_engine_data(
+                    definition,
+                    data,
+                    &mut current_snapshot.engines,
+                    mapping.engine_index,
+                )?;
             }
             DataCategory::Environment => {
                 self.convert_environment_data(definition, data, &mut current_snapshot.environment)?;
             }
             DataCategory::Navigation => {
                 self.convert_navigation_data(definition, data, &mut current_snapshot.navigation)?;
+                current_snapshot.validity.position_valid = true;
             }
             DataCategory::Helicopter => {
                 if current_snapshot.helo.is_none() {
@@ -462,6 +473,7 @@ impl VariableMapping {
                 definition_id: def_id,
                 category: DataCategory::Kinematics,
                 period,
+                engine_index: None,
             },
         );
 
@@ -482,9 +494,9 @@ impl VariableMapping {
 
         // Add configuration variables
         let config_vars = [
-            (&mapping.gear_nose, "bool", SIMCONNECT_DATATYPE::INT32),
-            (&mapping.gear_left, "bool", SIMCONNECT_DATATYPE::INT32),
-            (&mapping.gear_right, "bool", SIMCONNECT_DATATYPE::INT32),
+            (&mapping.gear_nose, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.gear_left, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.gear_right, "percent", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.flaps, "percent", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.spoilers, "percent", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.ap_master, "bool", SIMCONNECT_DATATYPE::INT32),
@@ -555,6 +567,30 @@ impl VariableMapping {
             offset += 4;
         }
 
+        // Add fuel quantity variables. We keep the values in the generic config fuel map.
+        for (i, tank_var) in mapping.fuel_tanks.iter().enumerate() {
+            let datum_id = config_vars.len() + lights_vars.len() + i;
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                tank_var,
+                "gallons",
+                SIMCONNECT_DATATYPE::FLOAT64,
+                0.0,
+                datum_id as u32,
+            )?;
+
+            variables.push(VariableDefinition {
+                name: tank_var.clone(),
+                units: "gallons".to_string(),
+                data_type: SIMCONNECT_DATATYPE::FLOAT64,
+                offset,
+                size: 8,
+            });
+
+            offset += 8;
+        }
+
         let definition = DataDefinition {
             id: def_id,
             variables,
@@ -575,6 +611,7 @@ impl VariableMapping {
                 definition_id: def_id,
                 category: DataCategory::Config,
                 period,
+                engine_index: None,
             },
         );
 
@@ -594,7 +631,7 @@ impl VariableMapping {
         let mut offset = 0;
         let mut datum_id = 0u32;
 
-        // Add required engine variables
+        // Required fields
         api.add_to_data_definition(
             handle,
             def_id,
@@ -633,30 +670,67 @@ impl VariableMapping {
         offset += 8;
         datum_id += 1;
 
-        // Add optional engine variables
-        if let Some(ref var) = mapping.manifold_pressure {
-            api.add_to_data_definition(
-                handle,
-                def_id,
-                var,
-                "inHg",
-                SIMCONNECT_DATATYPE::FLOAT64,
-                0.0,
-                datum_id,
-            )?;
-            variables.push(VariableDefinition {
-                name: var.clone(),
-                units: "inHg".to_string(),
-                data_type: SIMCONNECT_DATATYPE::FLOAT64,
-                offset,
-                size: 8,
-            });
-            offset += 8;
-            let _ = datum_id; // Last datum_id value not used
-        }
-
-        // Continue with other optional variables...
-        // (Implementation continues for EGT, CHT, fuel flow, oil pressure, oil temperature)
+        // Optional fields
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.manifold_pressure,
+            "inHg",
+        )?;
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.egt,
+            "fahrenheit",
+        )?;
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.cht,
+            "fahrenheit",
+        )?;
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.fuel_flow,
+            "gallons per hour",
+        )?;
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.oil_pressure,
+            "psi",
+        )?;
+        add_optional_engine_var(
+            api,
+            handle,
+            def_id,
+            &mut datum_id,
+            &mut offset,
+            &mut variables,
+            &mapping.oil_temperature,
+            "fahrenheit",
+        )?;
 
         let definition = DataDefinition {
             id: def_id,
@@ -678,6 +752,7 @@ impl VariableMapping {
                 definition_id: def_id,
                 category: DataCategory::Engines,
                 period,
+                engine_index: Some(mapping.index),
             },
         );
 
@@ -686,34 +761,265 @@ impl VariableMapping {
 
     fn setup_environment_definition(
         &mut self,
-        _api: &SimConnectApi,
-        _handle: HSIMCONNECT,
-        _mapping: &EnvironmentMapping,
+        api: &SimConnectApi,
+        handle: HSIMCONNECT,
+        mapping: &EnvironmentMapping,
     ) -> Result<(), MappingError> {
-        // Implementation similar to other setup methods
-        // This is abbreviated for brevity
+        let def_id = self.next_definition_id;
+        self.next_definition_id += 1;
+
+        let mut variables = Vec::new();
+        let mut offset = 0usize;
+
+        let environment_vars = [
+            (&mapping.altitude, "feet", SIMCONNECT_DATATYPE::FLOAT64),
+            (
+                &mapping.pressure_altitude,
+                "feet",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
+            (&mapping.oat, "celsius", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.wind_speed, "knots", SIMCONNECT_DATATYPE::FLOAT64),
+            (
+                &mapping.wind_direction,
+                "degrees",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
+            (
+                &mapping.visibility,
+                "statute miles",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
+            (
+                &mapping.cloud_coverage,
+                "percent",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
+        ];
+
+        for (i, (var_name, units, data_type)) in environment_vars.iter().enumerate() {
+            api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, i as u32)?;
+
+            let size = size_for_datatype(*data_type);
+            variables.push(VariableDefinition {
+                name: var_name.to_string(),
+                units: units.to_string(),
+                data_type: *data_type,
+                offset,
+                size,
+            });
+            offset += size;
+        }
+
+        self.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables,
+                data_size: offset,
+            },
+        );
+
+        let request_id = self.next_request_id;
+        self.next_request_id += 1;
+        let period = hz_to_period(self.config.update_rates.environment);
+
+        self.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Environment,
+                period,
+                engine_index: None,
+            },
+        );
+
         Ok(())
     }
 
     fn setup_navigation_definition(
         &mut self,
-        _api: &SimConnectApi,
-        _handle: HSIMCONNECT,
-        _mapping: &NavigationMapping,
+        api: &SimConnectApi,
+        handle: HSIMCONNECT,
+        mapping: &NavigationMapping,
     ) -> Result<(), MappingError> {
-        // Implementation similar to other setup methods
-        // This is abbreviated for brevity
+        let def_id = self.next_definition_id;
+        self.next_definition_id += 1;
+
+        let mut variables = Vec::new();
+        let mut offset = 0usize;
+        let mut datum_id = 0u32;
+
+        let core_vars = [
+            (&mapping.latitude, "degrees", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.longitude, "degrees", SIMCONNECT_DATATYPE::FLOAT64),
+            (
+                &mapping.ground_track,
+                "degrees",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
+        ];
+
+        for (var_name, units, data_type) in &core_vars {
+            api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, datum_id)?;
+            let size = size_for_datatype(*data_type);
+            variables.push(VariableDefinition {
+                name: var_name.to_string(),
+                units: units.to_string(),
+                data_type: *data_type,
+                offset,
+                size,
+            });
+            offset += size;
+            datum_id += 1;
+        }
+
+        if let Some(distance) = &mapping.distance_to_dest {
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                distance,
+                "meters",
+                SIMCONNECT_DATATYPE::FLOAT64,
+                0.0,
+                datum_id,
+            )?;
+            variables.push(VariableDefinition {
+                name: distance.clone(),
+                units: "meters".to_string(),
+                data_type: SIMCONNECT_DATATYPE::FLOAT64,
+                offset,
+                size: 8,
+            });
+            offset += 8;
+            datum_id += 1;
+        }
+
+        if let Some(time_to_dest) = &mapping.time_to_dest {
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                time_to_dest,
+                "seconds",
+                SIMCONNECT_DATATYPE::FLOAT64,
+                0.0,
+                datum_id,
+            )?;
+            variables.push(VariableDefinition {
+                name: time_to_dest.clone(),
+                units: "seconds".to_string(),
+                data_type: SIMCONNECT_DATATYPE::FLOAT64,
+                offset,
+                size: 8,
+            });
+            offset += 8;
+            datum_id += 1;
+        }
+
+        if let Some(active_waypoint) = &mapping.active_waypoint {
+            api.add_to_data_definition(
+                handle,
+                def_id,
+                active_waypoint,
+                "",
+                SIMCONNECT_DATATYPE::STRING32,
+                0.0,
+                datum_id,
+            )?;
+            variables.push(VariableDefinition {
+                name: active_waypoint.clone(),
+                units: "".to_string(),
+                data_type: SIMCONNECT_DATATYPE::STRING32,
+                offset,
+                size: size_for_datatype(SIMCONNECT_DATATYPE::STRING32),
+            });
+            offset += size_for_datatype(SIMCONNECT_DATATYPE::STRING32);
+        }
+
+        self.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables,
+                data_size: offset,
+            },
+        );
+
+        let request_id = self.next_request_id;
+        self.next_request_id += 1;
+        let period = hz_to_period(self.config.update_rates.navigation);
+
+        self.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Navigation,
+                period,
+                engine_index: None,
+            },
+        );
+
         Ok(())
     }
 
     fn setup_helicopter_definition(
         &mut self,
-        _api: &SimConnectApi,
-        _handle: HSIMCONNECT,
-        _mapping: &HeloMapping,
+        api: &SimConnectApi,
+        handle: HSIMCONNECT,
+        mapping: &HeloMapping,
     ) -> Result<(), MappingError> {
-        // Implementation similar to other setup methods
-        // This is abbreviated for brevity
+        let def_id = self.next_definition_id;
+        self.next_definition_id += 1;
+
+        let mut variables = Vec::new();
+        let mut offset = 0usize;
+
+        let helo_vars = [
+            (&mapping.nr, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.np, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.torque, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.collective, "percent", SIMCONNECT_DATATYPE::FLOAT64),
+            (&mapping.pedals, "position", SIMCONNECT_DATATYPE::FLOAT64),
+        ];
+
+        for (i, (var_name, units, data_type)) in helo_vars.iter().enumerate() {
+            api.add_to_data_definition(handle, def_id, var_name, units, *data_type, 0.0, i as u32)?;
+            let size = size_for_datatype(*data_type);
+            variables.push(VariableDefinition {
+                name: var_name.to_string(),
+                units: units.to_string(),
+                data_type: *data_type,
+                offset,
+                size,
+            });
+            offset += size;
+        }
+
+        self.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables,
+                data_size: offset,
+            },
+        );
+
+        let request_id = self.next_request_id;
+        self.next_request_id += 1;
+
+        self.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Helicopter,
+                period: hz_to_period(self.config.update_rates.config),
+                engine_index: None,
+            },
+        );
+
         Ok(())
     }
 
@@ -775,58 +1081,441 @@ impl VariableMapping {
 
     fn convert_config_data(
         &self,
-        _definition: &DataDefinition,
-        _data: &[u8],
-        _config: &mut AircraftConfig,
+        definition: &DataDefinition,
+        data: &[u8],
+        config: &mut AircraftConfig,
     ) -> Result<(), MappingError> {
-        // Implementation similar to convert_kinematics_data
-        // This is abbreviated for brevity
+        if data.len() < definition.data_size {
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
+        }
+
+        let mut ap_master = false;
+        let mut ap_altitude_hold = false;
+        let mut ap_heading_hold = false;
+        let mut ap_speed_hold = false;
+
+        for (i, var_def) in definition.variables.iter().enumerate() {
+            match i {
+                0 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        config.gear.nose = percentage_to_gear_position(value as f32);
+                    }
+                }
+                1 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        config.gear.left = percentage_to_gear_position(value as f32);
+                    }
+                }
+                2 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        config.gear.right = percentage_to_gear_position(value as f32);
+                    }
+                }
+                3 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        config.flaps = normalize_percentage_value(value as f32)?;
+                    }
+                }
+                4 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        config.spoilers = normalize_percentage_value(value as f32)?;
+                    }
+                }
+                5 => {
+                    ap_master = read_bool(data, var_def).unwrap_or(false);
+                }
+                6 => {
+                    ap_altitude_hold = read_bool(data, var_def).unwrap_or(false);
+                }
+                7 => {
+                    ap_heading_hold = read_bool(data, var_def).unwrap_or(false);
+                }
+                8 => {
+                    ap_speed_hold = read_bool(data, var_def).unwrap_or(false);
+                }
+                9 => {
+                    config.ap_altitude = read_numeric_as_f64(data, var_def).map(|v| v as f32);
+                }
+                10 => {
+                    config.ap_heading = match read_numeric_as_f64(data, var_def) {
+                        Some(value) => Some(MsfsConverter::convert_angle_degrees(value)?),
+                        None => None,
+                    };
+                }
+                11 => {
+                    config.ap_speed = match read_numeric_as_f64(data, var_def) {
+                        Some(value) => Some(MsfsConverter::convert_ias(value)?),
+                        None => None,
+                    };
+                }
+                12 => config.lights.nav = read_bool(data, var_def).unwrap_or(false),
+                13 => config.lights.beacon = read_bool(data, var_def).unwrap_or(false),
+                14 => config.lights.strobe = read_bool(data, var_def).unwrap_or(false),
+                15 => config.lights.landing = read_bool(data, var_def).unwrap_or(false),
+                16 => config.lights.taxi = read_bool(data, var_def).unwrap_or(false),
+                17 => config.lights.logo = read_bool(data, var_def).unwrap_or(false),
+                18 => config.lights.wing = read_bool(data, var_def).unwrap_or(false),
+                _ => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        let key = fuel_tank_key(&var_def.name);
+                        config
+                            .fuel
+                            .insert(key, normalize_percentage_value(value as f32)?);
+                    }
+                }
+            }
+        }
+
+        config.ap_state = if !ap_master {
+            AutopilotState::Off
+        } else if ap_altitude_hold || ap_heading_hold || ap_speed_hold {
+            AutopilotState::Engaged
+        } else {
+            AutopilotState::Armed
+        };
+
         Ok(())
     }
 
     fn convert_engine_data(
         &self,
-        _definition: &DataDefinition,
-        _data: &[u8],
-        _engines: &mut [EngineData],
+        definition: &DataDefinition,
+        data: &[u8],
+        engines: &mut Vec<EngineData>,
+        engine_index: Option<u8>,
     ) -> Result<(), MappingError> {
-        // Implementation similar to convert_kinematics_data
-        // This is abbreviated for brevity
+        if data.len() < definition.data_size {
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
+        }
+
+        let target_index = engine_index.unwrap_or(0);
+        let engine = get_or_create_engine(engines, target_index);
+
+        for var_def in &definition.variables {
+            let name = var_def.name.to_ascii_uppercase();
+
+            if name.contains("COMBUSTION") {
+                engine.running = read_bool(data, var_def).unwrap_or(false);
+                continue;
+            }
+
+            if name.contains("RPM") && !name.contains("OIL") {
+                if let Some(value) = read_numeric_as_f64(data, var_def) {
+                    engine.rpm = normalize_percentage_value(value as f32)?;
+                }
+                continue;
+            }
+
+            if name.contains("MANIFOLD") {
+                engine.manifold_pressure = read_numeric_as_f64(data, var_def).map(|v| v as f32);
+                continue;
+            }
+
+            if name.contains("EXHAUST GAS") || name.contains("EGT") {
+                engine.egt =
+                    read_numeric_as_f64(data, var_def).map(|v| fahrenheit_to_celsius(v as f32));
+                continue;
+            }
+
+            if name.contains("CYLINDER HEAD") || name.contains("CHT") {
+                engine.cht =
+                    read_numeric_as_f64(data, var_def).map(|v| fahrenheit_to_celsius(v as f32));
+                continue;
+            }
+
+            if name.contains("FUEL FLOW") {
+                engine.fuel_flow = read_numeric_as_f64(data, var_def).map(|v| v as f32);
+                continue;
+            }
+
+            if name.contains("OIL PRESSURE") {
+                engine.oil_pressure = read_numeric_as_f64(data, var_def).map(|v| v as f32);
+                continue;
+            }
+
+            if name.contains("OIL TEMPERATURE") {
+                engine.oil_temperature =
+                    read_numeric_as_f64(data, var_def).map(|v| fahrenheit_to_celsius(v as f32));
+            }
+        }
+
         Ok(())
     }
 
     fn convert_environment_data(
         &self,
-        _definition: &DataDefinition,
-        _data: &[u8],
-        _environment: &mut Environment,
+        definition: &DataDefinition,
+        data: &[u8],
+        environment: &mut Environment,
     ) -> Result<(), MappingError> {
-        // Implementation similar to convert_kinematics_data
-        // This is abbreviated for brevity
+        if data.len() < definition.data_size {
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
+        }
+
+        for (i, var_def) in definition.variables.iter().enumerate() {
+            let value = match read_numeric_as_f64(data, var_def) {
+                Some(value) => value,
+                None => continue,
+            };
+
+            match i {
+                0 => environment.altitude = value as f32,
+                1 => environment.pressure_altitude = value as f32,
+                2 => environment.oat = value as f32,
+                3 => environment.wind_speed = MsfsConverter::convert_ground_speed(value)?,
+                4 => environment.wind_direction = MsfsConverter::convert_angle_degrees(value)?,
+                5 => environment.visibility = value as f32,
+                6 => environment.cloud_coverage = normalize_percentage_value(value as f32)?,
+                _ => {}
+            }
+        }
+
         Ok(())
     }
 
     fn convert_navigation_data(
         &self,
-        _definition: &DataDefinition,
-        _data: &[u8],
-        _navigation: &mut Navigation,
+        definition: &DataDefinition,
+        data: &[u8],
+        navigation: &mut Navigation,
     ) -> Result<(), MappingError> {
-        // Implementation similar to convert_kinematics_data
-        // This is abbreviated for brevity
+        if data.len() < definition.data_size {
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
+        }
+
+        for (i, var_def) in definition.variables.iter().enumerate() {
+            match i {
+                0 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        navigation.latitude = value;
+                    }
+                }
+                1 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        navigation.longitude = value;
+                    }
+                }
+                2 => {
+                    if let Some(value) = read_numeric_as_f64(data, var_def) {
+                        navigation.ground_track = MsfsConverter::convert_angle_degrees(value)?;
+                    }
+                }
+                _ => match var_def.data_type {
+                    SIMCONNECT_DATATYPE::STRING8
+                    | SIMCONNECT_DATATYPE::STRING32
+                    | SIMCONNECT_DATATYPE::STRING64
+                    | SIMCONNECT_DATATYPE::STRING128
+                    | SIMCONNECT_DATATYPE::STRING256
+                    | SIMCONNECT_DATATYPE::STRING260 => {
+                        navigation.active_waypoint = read_string(data, var_def);
+                    }
+                    _ => {
+                        if let Some(value) = read_numeric_as_f64(data, var_def) {
+                            if navigation.distance_to_dest.is_none() {
+                                navigation.distance_to_dest = Some(value as f32);
+                            } else {
+                                navigation.time_to_dest = Some(value as f32);
+                            }
+                        }
+                    }
+                },
+            }
+        }
+
         Ok(())
     }
 
     fn convert_helicopter_data(
         &self,
-        _definition: &DataDefinition,
-        _data: &[u8],
-        _helo: &mut HeloData,
+        definition: &DataDefinition,
+        data: &[u8],
+        helo: &mut HeloData,
     ) -> Result<(), MappingError> {
-        // Implementation similar to convert_kinematics_data
-        // This is abbreviated for brevity
+        if data.len() < definition.data_size {
+            return Err(MappingError::ConversionError(
+                "Insufficient data".to_string(),
+            ));
+        }
+
+        for (i, var_def) in definition.variables.iter().enumerate() {
+            let value = match read_numeric_as_f64(data, var_def) {
+                Some(value) => value as f32,
+                None => continue,
+            };
+
+            match i {
+                0 => helo.nr = normalize_percentage_value(value)?,
+                1 => helo.np = normalize_percentage_value(value)?,
+                2 => helo.torque = normalize_percentage_value(value)?,
+                3 => helo.collective = normalize_percentage_value(value)?,
+                4 => {
+                    helo.pedals = if value.abs() <= 1.0 {
+                        value * 100.0
+                    } else {
+                        value
+                    }
+                    .clamp(-100.0, 100.0)
+                }
+                _ => {}
+            }
+        }
+
         Ok(())
     }
+}
+
+fn add_optional_engine_var(
+    api: &SimConnectApi,
+    handle: HSIMCONNECT,
+    definition_id: SIMCONNECT_DATADEFID,
+    datum_id: &mut u32,
+    offset: &mut usize,
+    variables: &mut Vec<VariableDefinition>,
+    variable_name: &Option<String>,
+    units: &str,
+) -> Result<(), MappingError> {
+    if let Some(var_name) = variable_name {
+        api.add_to_data_definition(
+            handle,
+            definition_id,
+            var_name,
+            units,
+            SIMCONNECT_DATATYPE::FLOAT64,
+            0.0,
+            *datum_id,
+        )?;
+
+        variables.push(VariableDefinition {
+            name: var_name.clone(),
+            units: units.to_string(),
+            data_type: SIMCONNECT_DATATYPE::FLOAT64,
+            offset: *offset,
+            size: 8,
+        });
+
+        *datum_id += 1;
+        *offset += 8;
+    }
+
+    Ok(())
+}
+
+fn size_for_datatype(data_type: SIMCONNECT_DATATYPE) -> usize {
+    match data_type {
+        SIMCONNECT_DATATYPE::INT32 => 4,
+        SIMCONNECT_DATATYPE::INT64 => 8,
+        SIMCONNECT_DATATYPE::FLOAT32 => 4,
+        SIMCONNECT_DATATYPE::FLOAT64 => 8,
+        SIMCONNECT_DATATYPE::STRING8 => 8,
+        SIMCONNECT_DATATYPE::STRING32 => 32,
+        SIMCONNECT_DATATYPE::STRING64 => 64,
+        SIMCONNECT_DATATYPE::STRING128 => 128,
+        SIMCONNECT_DATATYPE::STRING256 => 256,
+        SIMCONNECT_DATATYPE::STRING260 => 260,
+        _ => 0,
+    }
+}
+
+fn read_numeric_as_f64(data: &[u8], var_def: &VariableDefinition) -> Option<f64> {
+    match var_def.data_type {
+        SIMCONNECT_DATATYPE::FLOAT64 if data.len() >= var_def.offset + 8 => Some(
+            f64::from_le_bytes(data[var_def.offset..var_def.offset + 8].try_into().ok()?),
+        ),
+        SIMCONNECT_DATATYPE::FLOAT32 if data.len() >= var_def.offset + 4 => Some(
+            f32::from_le_bytes(data[var_def.offset..var_def.offset + 4].try_into().ok()?) as f64,
+        ),
+        SIMCONNECT_DATATYPE::INT32 if data.len() >= var_def.offset + 4 => Some(i32::from_le_bytes(
+            data[var_def.offset..var_def.offset + 4].try_into().ok()?,
+        ) as f64),
+        SIMCONNECT_DATATYPE::INT64 if data.len() >= var_def.offset + 8 => Some(i64::from_le_bytes(
+            data[var_def.offset..var_def.offset + 8].try_into().ok()?,
+        ) as f64),
+        _ => None,
+    }
+}
+
+fn read_bool(data: &[u8], var_def: &VariableDefinition) -> Option<bool> {
+    read_numeric_as_f64(data, var_def).map(|value| value != 0.0)
+}
+
+fn read_string(data: &[u8], var_def: &VariableDefinition) -> Option<String> {
+    let size = var_def.size;
+    if size == 0 || data.len() < var_def.offset + size {
+        return None;
+    }
+
+    let bytes = &data[var_def.offset..var_def.offset + size];
+    let null_pos = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
+    let value = String::from_utf8_lossy(&bytes[..null_pos])
+        .trim()
+        .to_string();
+
+    if value.is_empty() { None } else { Some(value) }
+}
+
+fn normalize_percentage_value(value: f32) -> Result<Percentage, MappingError> {
+    if (0.0..=1.0).contains(&value) {
+        return Ok(Percentage::from_normalized(value)?);
+    }
+
+    Percentage::new(value.clamp(0.0, 100.0)).map_err(MappingError::BusType)
+}
+
+fn percentage_to_gear_position(value: f32) -> GearPosition {
+    let normalized = if value <= 1.0 { value * 100.0 } else { value };
+    if normalized <= 5.0 {
+        GearPosition::Up
+    } else if normalized >= 95.0 {
+        GearPosition::Down
+    } else {
+        GearPosition::Transitioning
+    }
+}
+
+fn get_or_create_engine(engines: &mut Vec<EngineData>, index: u8) -> &mut EngineData {
+    if let Some(pos) = engines.iter().position(|engine| engine.index == index) {
+        return &mut engines[pos];
+    }
+
+    engines.push(EngineData {
+        index,
+        running: false,
+        rpm: Percentage::new(0.0).expect("0% RPM is valid"),
+        manifold_pressure: None,
+        egt: None,
+        cht: None,
+        fuel_flow: None,
+        oil_pressure: None,
+        oil_temperature: None,
+    });
+
+    engines
+        .last_mut()
+        .expect("engine list cannot be empty after push")
+}
+
+fn fuel_tank_key(simvar_name: &str) -> String {
+    let uppercase = simvar_name.to_ascii_uppercase();
+    let tank_name = uppercase
+        .replace("FUEL TANK ", "")
+        .replace(" QUANTITY", "")
+        .replace(" TANK", "")
+        .trim()
+        .to_ascii_lowercase();
+
+    tank_name.split_whitespace().collect::<Vec<_>>().join("_")
+}
+
+fn fahrenheit_to_celsius(value_f: f32) -> f32 {
+    (value_f - 32.0) * (5.0 / 9.0)
 }
 
 /// Convert update rate in Hz to SimConnect period
@@ -913,7 +1602,7 @@ pub fn create_default_mapping() -> MappingConfig {
         longitude: "PLANE LONGITUDE".to_string(),
         ground_track: "GPS GROUND TRUE TRACK".to_string(),
         distance_to_dest: Some("GPS WP DISTANCE".to_string()),
-        time_to_dest: Some("GPS ETE".to_string()),
+        time_to_dest: Some("GPS WP ETE".to_string()),
         active_waypoint: Some("GPS WP NEXT ID".to_string()),
     };
 

@@ -78,6 +78,14 @@ OpenFlight exposes descriptor discovery in device metadata and via:
 - `flightctl devices dump <device-id>`
 - `descriptor_discovery` metadata key (JSON summary + discovered controls)
 
+OpenFlight also publishes a baseline `control_map` metadata payload for known
+Gladiator EVO variants (`VID 0x231D`, `PID 0x0200/0x0201`). This map should be
+treated as semantic guidance only:
+
+- Axis hints include stick X/Y, twist, throttle wheel, mini-stick X/Y, and
+  optional analog trigger channels when enabled in VKBDevCfg.
+- Button/hat semantics remain descriptor-driven and profile-dependent.
+
 ### VKB family adapter (thin)
 
 - Match by VID 0x231D and product string for family detection.
@@ -88,6 +96,14 @@ OpenFlight exposes descriptor discovery in device metadata and via:
 
 When GNX modules are present, devices may enumerate as a bundle of HID collections.
 Group by (VID, serial, arrival window) and present a single logical rig.
+
+OpenFlight exposes per-interface Gladiator metadata in IPC device `metadata`:
+
+- `gladiator.physical_id` - shared id for all interfaces of one physical unit
+- `gladiator.interface_index` - zero-based interface index (`0`, `1`, ...)
+- `gladiator.interface` - display form (`IF0`, `IF1`, ...)
+- `gladiator.interface_count` - number of interfaces seen for that physical unit
+- `gladiator.multi_interface` - `true` when more than one interface is present
 
 ## Data needed for a deterministic device entry
 

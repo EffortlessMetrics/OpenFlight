@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2025 Flight Hub Team
 
-//! # T.Flight HOTAS 4 Report Dumper
+//! # T.Flight HOTAS Report Dumper
 //!
-//! Lightweight "no-daemon" capture tool: enumerates T.Flight HOTAS 4 devices,
+//! Lightweight "no-daemon" capture tool: enumerates T.Flight HOTAS devices,
 //! reads raw HID reports, parses each one with `TFlightInputHandler`, and prints
 //! the decoded state plus the raw hex on stdout.
 //!
@@ -31,6 +31,7 @@ use hidapi::HidApi;
 const THRUSTMASTER_VID: u16 = 0x044F;
 const HOTAS4_PID: u16 = 0xB67B;
 const HOTAS4_LEGACY_PID: u16 = 0xB67A;
+const HOTAS_ONE_PID: u16 = 0xB68B;
 const READ_TIMEOUT_MS: i32 = 50;
 const MAX_REPORT_BYTES: usize = 64;
 
@@ -82,13 +83,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .device_list()
         .filter(|d| {
             d.vendor_id() == THRUSTMASTER_VID
-                && (d.product_id() == HOTAS4_PID || d.product_id() == HOTAS4_LEGACY_PID)
+                && (d.product_id() == HOTAS4_PID
+                    || d.product_id() == HOTAS4_LEGACY_PID
+                    || d.product_id() == HOTAS_ONE_PID)
         })
         .collect();
 
     if candidates.is_empty() {
         eprintln!(
-            "No T.Flight HOTAS 4 devices found (VID=0x{THRUSTMASTER_VID:04X} PID=0x{HOTAS4_PID:04X}/0x{HOTAS4_LEGACY_PID:04X})."
+            "No T.Flight HOTAS devices found (VID=0x{THRUSTMASTER_VID:04X} PID=0x{HOTAS4_PID:04X}/0x{HOTAS4_LEGACY_PID:04X}/0x{HOTAS_ONE_PID:04X})."
         );
         eprintln!(
             "Tip: on Windows ensure the Thrustmaster driver is installed; on Linux try `sudo` or set up udev rules."
@@ -112,8 +115,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let device = dev_info.open_device(&api)?;
+    let model = match dev_info.product_id() {
+        HOTAS_ONE_PID => TFlightModel::HotasOne,
+        HOTAS4_PID | HOTAS4_LEGACY_PID => TFlightModel::Hotas4,
+        _ => TFlightModel::Hotas4,
+    };
+    eprintln!("  detected_model={model:?}");
 
-    let mut handler = TFlightInputHandler::with_axis_mode(TFlightModel::Hotas4, AxisMode::Unknown)
+    let mut handler = TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown)
         .with_yaw_policy(yaw_policy)
         .with_throttle_inversion(invert_throttle)
         .with_report_id(strip_report_id);
@@ -126,11 +135,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("epoch_ms,len,raw_hex,mode,roll,pitch,throttle,twist,rocker,hat,buttons,yaw,yaw_src");
 
     loop {
-        if let Some(max) = run_for {
-            if start.elapsed() >= max {
-                eprintln!("Duration limit reached after {report_count} reports.");
-                break;
-            }
+        if let Some(max) = run_for
+            && start.elapsed() >= max
+        {
+            eprintln!("Duration limit reached after {report_count} reports.");
+            break;
         }
 
         let n = match device.read_timeout(&mut buf, READ_TIMEOUT_MS) {

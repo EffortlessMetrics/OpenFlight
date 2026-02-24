@@ -95,6 +95,7 @@ See the per-simulator setup guides:
 - [MSFS Setup Guide](../explanation/integration/msfs.md)
 - [X-Plane Setup Guide](../explanation/integration/xplane.md)
 - [DCS Setup Guide](../explanation/integration/dcs.md)
+- [Ace Combat 7 (Experimental) Setup Guide](../explanation/integration/ac7.md)
 
 ## Real-Time Scheduling (MMCSS)
 

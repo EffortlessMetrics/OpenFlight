@@ -4,7 +4,7 @@
 //! Capability enforcement service for kid/demo mode management
 
 use flight_axis::AxisEngine;
-use flight_core::profile::{CapabilityLimits, CapabilityMode};
+use flight_core::profile::{CapabilityContext, CapabilityLimits, CapabilityMode};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use tracing::{info, warn};
@@ -17,6 +17,8 @@ pub struct CapabilityService {
     global_mode: Arc<RwLock<CapabilityMode>>,
     /// Per-axis capability overrides
     axis_overrides: Arc<RwLock<HashMap<String, CapabilityMode>>>,
+    /// Global capability audit logging state
+    audit_enabled: Arc<RwLock<bool>>,
 }
 
 /// Configuration for capability service
@@ -60,11 +62,7 @@ pub struct AxisCapabilityStatus {
 impl CapabilityService {
     /// Create new capability service
     pub fn new() -> Self {
-        Self {
-            engines: Arc::new(RwLock::new(HashMap::new())),
-            global_mode: Arc::new(RwLock::new(CapabilityMode::Full)),
-            axis_overrides: Arc::new(RwLock::new(HashMap::new())),
-        }
+        Self::with_config(CapabilityServiceConfig::default())
     }
 
     /// Create capability service with configuration
@@ -73,6 +71,7 @@ impl CapabilityService {
             engines: Arc::new(RwLock::new(HashMap::new())),
             global_mode: Arc::new(RwLock::new(config.default_mode)),
             axis_overrides: Arc::new(RwLock::new(HashMap::new())),
+            audit_enabled: Arc::new(RwLock::new(config.audit_enabled)),
         }
     }
 
@@ -86,6 +85,11 @@ impl CapabilityService {
         // Set the engine to the current global mode or axis-specific override
         let mode = self.get_effective_mode(&axis_name)?;
         engine.set_capability_mode(mode);
+        let audit_enabled = *self
+            .audit_enabled
+            .read()
+            .map_err(|e| format!("Lock error: {}", e))?;
+        engine.set_capability_audit_enabled(audit_enabled);
 
         engines.insert(axis_name.clone(), engine);
 
@@ -117,6 +121,15 @@ impl CapabilityService {
         axis_names: Option<Vec<String>>,
         audit_enabled: bool,
     ) -> Result<SetCapabilityResult, String> {
+        let mut context = CapabilityContext::for_mode(mode);
+        context.audit_enabled = audit_enabled;
+        let applied_limits = context.limits;
+
+        *self
+            .audit_enabled
+            .write()
+            .map_err(|e| format!("Lock error: {}", e))? = audit_enabled;
+
         let engines = self
             .engines
             .read()
@@ -134,6 +147,7 @@ impl CapabilityService {
                 for axis_name in names {
                     if let Some(engine) = engines.get(&axis_name) {
                         engine.set_capability_mode(mode);
+                        engine.set_capability_audit_enabled(audit_enabled);
                         overrides.insert(axis_name.clone(), mode);
                         affected_axes.push(axis_name.clone());
 
@@ -167,6 +181,7 @@ impl CapabilityService {
                 // Apply to all registered engines
                 for (axis_name, engine) in engines.iter() {
                     engine.set_capability_mode(mode);
+                    engine.set_capability_audit_enabled(audit_enabled);
                     affected_axes.push(axis_name.clone());
                 }
 
@@ -183,13 +198,7 @@ impl CapabilityService {
             success: true,
             error_message: None,
             affected_axes,
-            applied_limits: CapabilityLimits {
-                max_axis_output: 1.0,
-                max_ffb_torque: 10.0,
-                allow_high_torque: true,
-                max_expo: 1.0,
-                max_slew_rate: 10.0,
-            },
+            applied_limits,
         })
     }
 

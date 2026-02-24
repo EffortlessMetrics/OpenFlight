@@ -31,6 +31,7 @@ pub enum SimId {
     Msfs,
     XPlane,
     Dcs,
+    AceCombat7,
     Unknown,
 }
 
@@ -40,6 +41,7 @@ impl std::fmt::Display for SimId {
             SimId::Msfs => write!(f, "MSFS"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
+            SimId::AceCombat7 => write!(f, "Ace Combat 7"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -191,6 +193,20 @@ impl Default for ProcessDetectionConfig {
             },
         );
 
+        // Ace Combat 7 process definition
+        process_definitions.insert(
+            SimId::AceCombat7,
+            ProcessDefinition {
+                process_names: vec!["acecombat7.exe".to_string(), "ACE7Game.exe".to_string()],
+                window_titles: vec!["ACE COMBAT 7".to_string(), "SKIES UNKNOWN".to_string()],
+                process_paths: vec![
+                    PathBuf::from("ACE COMBAT 7"),
+                    PathBuf::from("steamapps/common/ACE COMBAT 7"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
         Self {
             detection_interval: Duration::from_secs(1),
             process_definitions,
@@ -217,6 +233,11 @@ impl ProcessDetector {
     pub async fn start(&self) -> Result<()> {
         // TODO: Fix lifetime issues - temporarily disabled for DSL implementation
         Ok(())
+    }
+
+    /// Perform one process scan cycle immediately and update detector state.
+    pub async fn scan_once(&self) -> Result<()> {
+        Self::scan_processes(&self.state, &self.config).await
     }
 
     /// Stop the process detection system
@@ -318,6 +339,15 @@ impl ProcessDetector {
 
         let mut state_guard = state.write().await;
         state_guard.last_scan = Some(scan_start);
+        state_guard.metrics.total_scans += 1;
+        state_guard.metrics.max_scan_time = state_guard.metrics.max_scan_time.max(scan_time);
+
+        let scan_count = state_guard.metrics.total_scans as f64;
+        let previous_count = (state_guard.metrics.total_scans - 1) as f64;
+        let previous_avg = state_guard.metrics.average_scan_time.as_secs_f64();
+        let new_avg =
+            ((previous_avg * previous_count) + scan_time.as_secs_f64()) / scan_count.max(1.0);
+        state_guard.metrics.average_scan_time = Duration::from_secs_f64(new_avg);
 
         Ok(())
     }
@@ -846,6 +876,12 @@ mod tests {
                 .process_definitions
                 .contains_key(&SimId::Dcs)
         );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::AceCombat7)
+        );
     }
 
     #[test]
@@ -874,6 +910,13 @@ mod tests {
 
         let dcs_def = config.process_definitions.get(&SimId::Dcs).unwrap();
         assert!(dcs_def.process_names.contains(&"DCS.exe".to_string()));
+
+        let ac7_def = config.process_definitions.get(&SimId::AceCombat7).unwrap();
+        assert!(
+            ac7_def
+                .process_names
+                .contains(&"acecombat7.exe".to_string())
+        );
     }
 
     #[tokio::test]
@@ -901,6 +944,7 @@ mod tests {
         assert!(!detector.is_sim_detected(SimId::Msfs).await);
         assert!(!detector.is_sim_detected(SimId::XPlane).await);
         assert!(!detector.is_sim_detected(SimId::Dcs).await);
+        assert!(!detector.is_sim_detected(SimId::AceCombat7).await);
     }
 
     use proptest::prelude::*;
@@ -943,10 +987,12 @@ mod tests {
                 }
 
                 // Non-match case
-                if name_fragment != other_fragment {
+                let expected_name = format!("{}.exe", name_fragment).to_lowercase();
+                let candidate_name = format!("{}.exe", other_fragment).to_lowercase();
+                if name_fragment != other_fragment && !candidate_name.contains(&expected_name) {
                     let processes = vec![SystemProcess {
                         pid: 123,
-                        name: format!("{}.exe", other_fragment),
+                        name: candidate_name,
                         path: PathBuf::from("C:\\test\\path"),
                         window_title: None,
                     }];

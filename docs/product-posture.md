@@ -2,7 +2,7 @@
 
 ## What Flight Hub Is
 
-**Flight Hub is an accessory/input manager that requires MSFS, X-Plane, or DCS; it does not emulate or replace any simulator.**
+**Flight Hub is an accessory/input manager that requires supported simulators (MSFS, X-Plane, DCS, plus experimental AC7 bridge support); it does not emulate or replace any simulator.**
 
 Flight Hub is a peripheral management and input processing tool designed to enhance your flight simulation experience. It provides:
 
@@ -24,13 +24,14 @@ Flight Hub requires a licensed copy of one or more supported simulators to funct
 
 ## Supported Simulators
 
-Flight Hub integrates with the following simulators through their official APIs:
+Flight Hub integrates with the following simulators through official APIs where available, plus an experimental user-bridge path for AC7:
 
 | Simulator | Integration Method | Required License |
 |-----------|-------------------|------------------|
 | Microsoft Flight Simulator (MSFS) | SimConnect API | MSFS license required |
 | X-Plane | UDP protocol / Plugin | X-Plane license required |
 | DCS World | Export.lua scripting | DCS World (free or modules) |
+| Ace Combat 7 (Experimental) | User-provided telemetry bridge + Input.ini managed block | AC7 license required |
 
 ## Export Control Notice
 
@@ -66,6 +67,13 @@ When using Flight Hub with supported simulators, you must comply with each simul
 - Users must accept the DCS World EULA
 - Flight Hub modifications to Export.lua are reversible and documented
 - See: [DCS World EULA](https://www.digitalcombatsimulator.com/en/support/eula/)
+
+### Ace Combat 7 (Experimental)
+
+- Flight Hub does not inject into AC7 and does not distribute AC7 binaries/assets
+- Telemetry requires a user-provided third-party bridge plugin/process
+- Users must own AC7 and comply with the Bandai Namco EULA and platform terms
+- Flight Hub only reads localhost bridge telemetry and edits user config (`Input.ini`) in a reversible managed block
 
 ## Data and Privacy
 

@@ -33,6 +33,11 @@ jobs:
           target
         key: msrv-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
     - name: Check MSRV compilation
       run: |
         echo "🦀 Testing compilation with Rust 1.92.0 (MSRV)"

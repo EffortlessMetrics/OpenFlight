@@ -32,6 +32,10 @@ use crate::{
     },
     power::{PowerChecker, PowerStatus},
     safe_mode::{SafeModeConfig, SafeModeManager, SafeModeStatus},
+    stecs_runtime::{
+        SimulatedVkbStecsReportSource, VkbStecsInputRuntime, VkbStecsRuntimeConfig,
+        VkbStecsSnapshot,
+    },
 };
 
 /// Flight service configuration
@@ -65,6 +69,12 @@ pub struct FlightServiceConfig {
     /// Enable if your OS/driver stack prepends a Report ID (typically 0x01)
     /// before the payload. Confirm with `receipts/hid/thrustmaster/tflight-hotas4/`.
     pub tflight_strip_report_id: bool,
+    /// Enable VKB STECS ingest runtime.
+    pub enable_stecs_runtime: bool,
+    /// Polling rate for VKB STECS ingest runtime.
+    pub stecs_poll_hz: u16,
+    /// Strip leading Report ID byte from VKB STECS HID reports.
+    pub stecs_strip_report_id: bool,
 }
 
 /// Axis engine configuration subset
@@ -120,6 +130,9 @@ impl Default for FlightServiceConfig {
             tflight_yaw_policy: TFlightYawPolicyConfig::Auto,
             tflight_throttle_inversion: false,
             tflight_strip_report_id: false,
+            enable_stecs_runtime: false,
+            stecs_poll_hz: 250,
+            stecs_strip_report_id: false,
         }
     }
 }
@@ -167,6 +180,8 @@ pub struct FlightService {
     watchdog: Option<WatchdogSystem>,
     /// T.Flight HOTAS runtime
     tflight_runtime: Option<TFlightInputRuntime>,
+    /// VKB STECS runtime
+    stecs_runtime: Option<VkbStecsInputRuntime>,
     /// Power status
     power_status: Arc<RwLock<Option<PowerStatus>>>,
     /// Service shutdown signal
@@ -193,6 +208,7 @@ impl FlightService {
             capability_service: None,
             watchdog: None,
             tflight_runtime: None,
+            stecs_runtime: None,
             power_status: Arc::new(RwLock::new(None)),
             shutdown_tx: None,
         }
@@ -228,6 +244,11 @@ impl FlightService {
         if self.config.enable_tflight_runtime {
             self.health.register_component("input_hotas_tflight").await;
         }
+        if self.config.enable_stecs_runtime {
+            self.health
+                .register_component("input_hotas_vkb_stecs")
+                .await;
+        }
 
         self.health
             .info("service", "Flight Hub service starting")
@@ -260,6 +281,9 @@ impl FlightService {
 
         if self.config.enable_tflight_runtime {
             self.initialize_tflight_runtime().await?;
+        }
+        if self.config.enable_stecs_runtime {
+            self.initialize_stecs_runtime().await?;
         }
 
         // Create shutdown channel
@@ -461,6 +485,57 @@ impl FlightService {
         Ok(())
     }
 
+    /// Initialize VKB STECS ingest runtime.
+    async fn initialize_stecs_runtime(&mut self) -> Result<()> {
+        info!("Initializing VKB STECS runtime");
+
+        let config = VkbStecsRuntimeConfig {
+            poll_hz: self.config.stecs_poll_hz,
+            strip_report_id: self.config.stecs_strip_report_id,
+            discovery_interval_ticks: self.config.stecs_poll_hz.max(1) as u32,
+        };
+
+        #[cfg(feature = "stecs-hidapi")]
+        let (source, source_label): (
+            Box<dyn crate::stecs_runtime::VkbStecsReportSource>,
+            &str,
+        ) = {
+            match crate::stecs_hidapi_source::HidApiVkbStecsReportSource::new() {
+                Ok(real) => (Box::new(real), "hidapi"),
+                Err(e) => {
+                    warn!(
+                        "stecs hidapi source unavailable ({}), falling back to simulated",
+                        e
+                    );
+                    (
+                        Box::new(SimulatedVkbStecsReportSource::default()),
+                        "simulated (hidapi unavailable)",
+                    )
+                }
+            }
+        };
+
+        #[cfg(not(feature = "stecs-hidapi"))]
+        let (source, source_label): (
+            Box<dyn crate::stecs_runtime::VkbStecsReportSource>,
+            &str,
+        ) = (
+            Box::new(SimulatedVkbStecsReportSource::default()),
+            "simulated",
+        );
+
+        let runtime = VkbStecsInputRuntime::start(source, Arc::clone(&self.health), config);
+        self.stecs_runtime = Some(runtime);
+
+        self.health
+            .info(
+                "input_hotas_vkb_stecs",
+                &format!("VKB STECS runtime initialized ({source_label} report source)"),
+            )
+            .await;
+        Ok(())
+    }
+
     /// Check power configuration
     async fn check_power_configuration(&self) -> Result<PowerStatus> {
         info!("Checking power configuration");
@@ -555,6 +630,24 @@ impl FlightService {
         }
     }
 
+    /// Get latest VKB STECS snapshots.
+    pub async fn get_stecs_snapshots(&self) -> HashMap<String, VkbStecsSnapshot> {
+        if let Some(runtime) = &self.stecs_runtime {
+            runtime.snapshots().await
+        } else {
+            HashMap::new()
+        }
+    }
+
+    /// Get latest snapshot for one VKB STECS physical device.
+    pub async fn get_stecs_snapshot(&self, device_id: &str) -> Option<VkbStecsSnapshot> {
+        if let Some(runtime) = &self.stecs_runtime {
+            runtime.snapshot(device_id).await
+        } else {
+            None
+        }
+    }
+
     /// Subscribe to health events
     pub fn subscribe_health(&self) -> broadcast::Receiver<crate::health::HealthEvent> {
         self.health.subscribe()
@@ -587,6 +680,10 @@ impl FlightService {
         if let Some(mut runtime) = self.tflight_runtime.take() {
             runtime.shutdown().await;
             debug!("T.Flight HOTAS runtime stopped");
+        }
+        if let Some(mut runtime) = self.stecs_runtime.take() {
+            runtime.shutdown().await;
+            debug!("VKB STECS runtime stopped");
         }
 
         // Shutdown components in reverse order (drop handles cleanup)

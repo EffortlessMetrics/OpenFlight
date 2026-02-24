@@ -8,6 +8,9 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use flight_hid_support::HidDeviceInfo;
+use flight_hid_support::device_support::{
+    axis_mode_from_device_info, axis_mode_warning, driver_note, pc_mode_note,
+};
 use flight_hid_support::ghost_filter::GhostFilterStats;
 use flight_hotas_thrustmaster::{
     AxisMode, TFlightHealthMonitor, TFlightHealthStatus, TFlightInputHandler, TFlightInputState,
@@ -20,6 +23,7 @@ use crate::health::HealthStream;
 
 const COMPONENT_NAME: &str = "input_hotas_tflight";
 const GHOST_WARNING_THRESHOLD: f64 = 0.05;
+const MERGED_MODE_GUIDANCE_THRESHOLD_REPORTS: u32 = 64;
 
 /// Source abstraction for raw T.Flight reports.
 pub trait TFlightReportSource: Send + 'static {
@@ -135,10 +139,13 @@ pub struct TFlightSnapshot {
 struct DeviceRuntimeState {
     info: HidDeviceInfo,
     snapshot_key: String,
+    model: TFlightModel,
     handler: TFlightInputHandler,
     monitor: TFlightHealthMonitor,
     last_mode: AxisMode,
     ghost_warning_active: bool,
+    merged_reports_streak: u32,
+    merged_mode_guidance_emitted: bool,
     is_legacy_pid: bool,
 }
 
@@ -240,12 +247,15 @@ async fn poll_once(
         active_paths.insert(path.clone());
 
         if let Some(existing) = states.get_mut(&path) {
+            let axis_mode_hint = axis_mode_from_device_info(&info);
             existing.info = info;
             existing.handler.set_yaw_policy(config.yaw_policy);
+            existing.handler.set_axis_mode_hint(axis_mode_hint);
             continue;
         }
 
-        let _axis_mode_hint = flight_hid_support::device_support::axis_mode_from_device_info(&info);
+        let axis_mode_hint = axis_mode_from_device_info(&info);
+        let has_descriptor = info.report_descriptor.is_some();
         let is_legacy = is_hotas4_legacy_pid(&info);
         let snapshot_key = info
             .serial_number
@@ -256,7 +266,8 @@ async fn poll_once(
         let handler = TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown)
             .with_yaw_policy(config.yaw_policy)
             .with_throttle_inversion(config.throttle_inversion)
-            .with_report_id(config.strip_report_id);
+            .with_report_id(config.strip_report_id)
+            .with_axis_mode_hint(axis_mode_hint);
         let monitor = TFlightHealthMonitor::new(model).with_legacy_pid(is_legacy);
 
         states.insert(
@@ -264,10 +275,13 @@ async fn poll_once(
             DeviceRuntimeState {
                 info,
                 snapshot_key: snapshot_key.clone(),
+                model,
                 handler,
                 monitor,
                 last_mode: AxisMode::Unknown,
                 ghost_warning_active: false,
+                merged_reports_streak: 0,
+                merged_mode_guidance_emitted: false,
                 is_legacy_pid: is_legacy,
             },
         );
@@ -281,14 +295,41 @@ async fn poll_once(
                 .await;
         }
 
-        if _axis_mode_hint != AxisMode::Unknown {
+        if axis_mode_hint != AxisMode::Unknown {
             health
                 .info(
                     COMPONENT_NAME,
                     &format!(
                         "{} descriptor advertises {} axis layout (auto-detection still active)",
                         snapshot_key,
-                        _axis_mode_hint.as_str()
+                        axis_mode_hint.as_str()
+                    ),
+                )
+                .await;
+        }
+
+        if let Some(mode_warning) = axis_mode_warning(axis_mode_hint) {
+            health
+                .warning(
+                    COMPONENT_NAME,
+                    &format!(
+                        "{} descriptor hint indicates merged layout. {} {} {}",
+                        snapshot_key,
+                        mode_warning,
+                        pc_mode_note(model),
+                        driver_note()
+                    ),
+                )
+                .await;
+        } else if axis_mode_hint == AxisMode::Unknown && has_descriptor {
+            health
+                .warning(
+                    COMPONENT_NAME,
+                    &format!(
+                        "{} descriptor axis layout is ambiguous; runtime will rely on report-length detection. {} {}",
+                        snapshot_key,
+                        pc_mode_note(model),
+                        driver_note()
                     ),
                 )
                 .await;
@@ -341,6 +382,32 @@ async fn poll_once(
                                 current_mode.as_str()
                             ));
                             state.last_mode = current_mode;
+                        }
+
+                        if current_mode == AxisMode::Merged {
+                            state.merged_reports_streak =
+                                state.merged_reports_streak.saturating_add(1);
+                            if !state.merged_mode_guidance_emitted
+                                && state.merged_reports_streak
+                                    >= MERGED_MODE_GUIDANCE_THRESHOLD_REPORTS
+                            {
+                                warning_messages.push(format!(
+                                    "{} is still in merged axis mode after {} reports. {}",
+                                    state.snapshot_key,
+                                    state.merged_reports_streak,
+                                    merged_mode_guidance(state.model)
+                                ));
+                                state.merged_mode_guidance_emitted = true;
+                            }
+                        } else {
+                            state.merged_reports_streak = 0;
+                            if state.merged_mode_guidance_emitted {
+                                info_messages.push(format!(
+                                    "{} full-axis mode detected; merged-mode guidance cleared",
+                                    state.snapshot_key
+                                ));
+                                state.merged_mode_guidance_emitted = false;
+                            }
                         }
 
                         let yaw = state.handler.resolve_yaw(&parsed);
@@ -420,6 +487,17 @@ async fn poll_once(
     }
 }
 
+fn merged_mode_guidance(model: TFlightModel) -> &'static str {
+    match model {
+        TFlightModel::Hotas4 => {
+            "If separate yaw/throttle axes are missing, switch HOTAS 4 to PC HID full-axis mode (hardware switch or hold Share+Option+PS while plugging in). On Linux, use a corrected descriptor setup such as hid-tflight4."
+        }
+        TFlightModel::HotasOne => {
+            "If separate yaw/throttle axes are missing, switch HOTAS One to PC full-axis mode (Xbox/PC selector and Guide button procedure) before plugging in. On Linux, use a corrected descriptor setup such as hid-tflight4."
+        }
+    }
+}
+
 fn unix_epoch_ms_now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -442,6 +520,32 @@ mod tests {
             serial_number: None,
             manufacturer: Some("Thrustmaster".to_string()),
             product_name: Some("T.Flight HOTAS 4".to_string()),
+            device_path: device_path.to_string(),
+            usage_page: flight_hid_support::device_support::USAGE_PAGE_GENERIC_DESKTOP,
+            usage: flight_hid_support::device_support::USAGE_JOYSTICK,
+            report_descriptor: None,
+        }
+    }
+
+    fn with_report_descriptor(mut info: HidDeviceInfo, descriptor: Vec<u8>) -> HidDeviceInfo {
+        info.report_descriptor = Some(descriptor);
+        info
+    }
+
+    fn merged_descriptor_fixture() -> Vec<u8> {
+        vec![
+            0x05, 0x01, 0x09, 0x04, 0xA1, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x35, 0x15, 0x81,
+            0x25, 0x7F, 0x75, 0x08, 0x95, 0x03, 0x81, 0x02, 0xC0,
+        ]
+    }
+
+    fn hotas_one_device_info(device_path: &str) -> HidDeviceInfo {
+        HidDeviceInfo {
+            vendor_id: flight_hid_support::device_support::THRUSTMASTER_VENDOR_ID,
+            product_id: flight_hid_support::device_support::TFLIGHT_HOTAS_ONE_PID,
+            serial_number: None,
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: Some("T.Flight HOTAS One".to_string()),
             device_path: device_path.to_string(),
             usage_page: flight_hid_support::device_support::USAGE_PAGE_GENERIC_DESKTOP,
             usage: flight_hid_support::device_support::USAGE_JOYSTICK,
@@ -586,6 +690,46 @@ mod tests {
         runtime.shutdown().await;
     }
 
+    #[tokio::test]
+    async fn test_merged_mode_guidance_emits_health_event() {
+        let health = Arc::new(HealthStream::new());
+        let mut events = health.subscribe();
+
+        let mut source = SimulatedTFlightReportSource::default();
+        source.add_device(
+            hotas4_device_info(
+                flight_hid_support::device_support::TFLIGHT_HOTAS_4_PID,
+                "/dev/hotas4-merged-guidance",
+            ),
+            vec![vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00]],
+        );
+
+        let mut runtime = TFlightInputRuntime::start(
+            Box::new(source),
+            Arc::clone(&health),
+            TFlightRuntimeConfig {
+                poll_hz: 250,
+                yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
+            },
+        );
+
+        let mut saw_merged_guidance = false;
+        for _ in 0..80 {
+            let event = timeout(Duration::from_millis(100), events.recv()).await;
+            if let Ok(Ok(event)) = event
+                && event.message.contains("still in merged axis mode")
+            {
+                saw_merged_guidance = true;
+                break;
+            }
+        }
+
+        assert!(saw_merged_guidance);
+        runtime.shutdown().await;
+    }
+
     /// AC-16.1 — runtime handler always starts Unknown so reports are auto-detected.
     ///
     /// Feeds an 8-byte merged report; the snapshot must reflect `Merged`.
@@ -624,6 +768,47 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_runtime_uses_descriptor_hint_for_padded_report() {
+        let health = Arc::new(HealthStream::new());
+        let mut source = SimulatedTFlightReportSource::default();
+
+        let info = with_report_descriptor(
+            hotas4_device_info(
+                flight_hid_support::device_support::TFLIGHT_HOTAS_4_PID,
+                "/dev/hotas4-padded-merged",
+            ),
+            merged_descriptor_fixture(),
+        );
+
+        source.add_device(
+            info,
+            vec![vec![
+                0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00, // merged payload
+                0x00, 0x00, 0x00, 0x00, // trailing transport padding
+            ]],
+        );
+
+        let mut runtime = TFlightInputRuntime::start(
+            Box::new(source),
+            health,
+            TFlightRuntimeConfig {
+                poll_hz: 100,
+                yaw_policy: TFlightYawPolicy::Auto,
+                throttle_inversion: false,
+                strip_report_id: false,
+            },
+        );
+
+        let snapshots = wait_for_snapshot_count(&runtime, 1).await;
+        assert_eq!(snapshots.len(), 1);
+        let snapshot = snapshots.values().next().unwrap();
+        assert_eq!(snapshot.axis_mode, AxisMode::Merged);
+        assert!(snapshot.state.axes.rocker.is_none());
+
+        runtime.shutdown().await;
+    }
+
+    #[tokio::test]
     async fn test_legacy_pid_propagates_to_snapshot() {
         let health = Arc::new(HealthStream::new());
         let mut source = SimulatedTFlightReportSource::default();
@@ -647,6 +832,31 @@ mod tests {
         let snapshot = snapshots.values().next().unwrap();
         assert!(snapshot.is_legacy_pid);
         assert!(snapshot.health.is_legacy_pid);
+
+        runtime.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_runtime_accepts_hotas_one_pid() {
+        let health = Arc::new(HealthStream::new());
+        let mut source = SimulatedTFlightReportSource::default();
+
+        source.add_device(
+            hotas_one_device_info("/dev/hotas-one-0"),
+            vec![vec![0x00, 0x80, 0x00, 0x80, 0x80, 0x80, 0x00, 0x00]],
+        );
+
+        let mut runtime = TFlightInputRuntime::start(
+            Box::new(source),
+            Arc::clone(&health),
+            TFlightRuntimeConfig::default(),
+        );
+
+        let snapshots = wait_for_snapshot_count(&runtime, 1).await;
+        assert_eq!(snapshots.len(), 1);
+        let snapshot = snapshots.values().next().unwrap();
+        assert_eq!(snapshot.model, TFlightModel::HotasOne);
+        assert_eq!(snapshot.axis_mode, AxisMode::Merged);
 
         runtime.shutdown().await;
     }

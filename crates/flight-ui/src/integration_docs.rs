@@ -115,7 +115,7 @@ impl IntegrationDocsManager {
         }
 
         // Validate each simulator doc
-        let simulators = vec!["msfs", "xplane", "dcs"];
+        let simulators = vec!["msfs", "xplane", "dcs", "ac7"];
         for sim in simulators {
             if let Err(e) = self.validate_simulator_doc(sim) {
                 result.add_error(format!("Validation failed for {}: {}", sim, e));
@@ -162,7 +162,7 @@ impl IntegrationDocsManager {
     pub fn get_installer_summary(&mut self) -> Result<InstallerSummary, IntegrationDocsError> {
         let mut summary = InstallerSummary::new();
 
-        let simulators = vec!["msfs", "xplane", "dcs"];
+        let simulators = vec!["msfs", "xplane", "dcs", "ac7"];
         for sim in simulators {
             if let Ok(doc) = self.get_simulator_doc(sim) {
                 summary.add_simulator(sim, &doc.files_modified, &doc.network_connections);

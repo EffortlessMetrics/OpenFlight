@@ -191,9 +191,20 @@ If throttle/aux yaw axes appear missing, use a corrected descriptor workflow
 
 ## Runtime backend status
 
-Current service runtime uses a deterministic simulated report-source backend by default.
-Real hidapi/hidraw ingestion is planned as a follow-up cycle; keep parser and mapping
-validation fixture-driven until that backend lands.
+Runtime source is selected at build/runtime configuration time:
+
+- Default build: deterministic simulated report source (safe for CI and local
+  parser validation without hardware).
+- `tflight-hidapi` feature enabled: real hidapi ingestion path for known
+  T.Flight PIDs (`0xB67B`, `0xB67A`, `0xB68B`).
+
+Runtime behavior notes:
+
+- Axis mode is still auto-detected per report (`AxisMode::Unknown` handler start).
+- Descriptor-derived axis mode is used as an advisory hint for ambiguous/padded
+  report lengths; it does not pin mode during 8-byte/9-byte runtime switches.
+- If a device remains in merged mode for a sustained stream, runtime emits a
+  health warning with PC-mode/Linux descriptor guidance.
 
 ## Minimum registry facts
 
@@ -231,5 +242,5 @@ When adding or validating support:
 - Verify enumeration by VID/PID fingerprint set (do not assume a single PID).
 - Parse HID descriptor and map by usage, not index.
 - Confirm axis-mode detection by swapping between modes.
-- Verify merged-mode warning triggers when Slider/Dial usages are absent.
+- Verify merged-mode warning guidance triggers when full-axis channels are missing.
 - Confirm default mapping matches expected roll/pitch/throttle/yaw behavior.

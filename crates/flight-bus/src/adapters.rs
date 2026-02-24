@@ -239,6 +239,36 @@ pub mod dcs {
     }
 }
 
+/// AC7 adapter helper functions
+pub mod ac7 {
+    use super::*;
+
+    /// Convert AC7 bridge units to normalized values.
+    pub struct Ac7Converter;
+
+    impl Ac7Converter {
+        /// Convert AC7 speed (m/s) to ValidatedSpeed.
+        pub fn convert_speed_mps(value: f32) -> Result<ValidatedSpeed, BusTypeError> {
+            ValidatedSpeed::new_mps(value)
+        }
+
+        /// Convert AC7 heading/pitch/roll (degrees) to ValidatedAngle.
+        pub fn convert_angle_degrees(value: f32) -> Result<ValidatedAngle, BusTypeError> {
+            ValidatedAngle::new_degrees(angles::normalize_degrees_signed(value))
+        }
+
+        /// Convert AC7 altitude (meters) to feet.
+        pub fn convert_altitude_m_to_ft(meters: f32) -> f32 {
+            conversions::meters_to_feet(meters)
+        }
+
+        /// Convert AC7 G-force to validated type.
+        pub fn convert_g_force(value: f32) -> Result<GForce, BusTypeError> {
+            GForce::new(value)
+        }
+    }
+}
+
 /// Generic validation helpers
 pub mod validation {
     use super::*;
@@ -481,6 +511,29 @@ mod tests {
         fn test_dcs_rotor_rpm_conversion() {
             let rotor_pct = Percentage::from_normalized(1.0).unwrap();
             assert_eq!(rotor_pct.value(), 100.0);
+        }
+    }
+
+    mod ac7_tests {
+        use super::*;
+        use crate::adapters::ac7::Ac7Converter;
+
+        #[test]
+        fn test_ac7_speed_conversion() {
+            let speed = Ac7Converter::convert_speed_mps(200.0).unwrap();
+            assert!((speed.value() - 200.0).abs() < 0.01);
+        }
+
+        #[test]
+        fn test_ac7_angle_normalization() {
+            let heading = Ac7Converter::convert_angle_degrees(270.0).unwrap();
+            assert_eq!(heading.to_degrees(), -90.0);
+        }
+
+        #[test]
+        fn test_ac7_altitude_conversion() {
+            let altitude_ft = Ac7Converter::convert_altitude_m_to_ft(1000.0);
+            assert!((altitude_ft - 3280.84).abs() < 0.2);
         }
     }
 

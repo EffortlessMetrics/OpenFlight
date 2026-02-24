@@ -6,6 +6,7 @@
 use crate::HidDeviceInfo;
 use crate::hid_descriptor::{HidUsage, extract_usages};
 use serde::Serialize;
+use std::collections::BTreeMap;
 use std::fmt;
 
 pub const THRUSTMASTER_VENDOR_ID: u16 = 0x044F;
@@ -71,7 +72,9 @@ pub const USAGE_HAT_SWITCH: u16 = 0x39;
 
 pub const AXIS_MODE_WARNING: &str =
     "Rudder sources are merged. Switch to full-axis mode for separate yaw inputs.";
-pub const DRIVER_NOTE: &str = "Missing axes or buttons? Install the Thrustmaster driver and confirm full-axis mode. On Linux, use a corrected HID descriptor setup (for example hid-tflight4) when generic HID exposes limited axes.";
+pub const DRIVER_NOTE: &str = "Missing axes or buttons? Install the Thrustmaster driver, confirm PC full-axis mode, and on Linux use a corrected HID descriptor setup (for example hid-tflight4) when generic HID exposes limited axes.";
+pub const PC_MODE_NOTE_HOTAS_4: &str = "If full-axis inputs are missing, switch HOTAS 4 to PC HID mode (hardware switch or hold Share+Option+PS while plugging in).";
+pub const PC_MODE_NOTE_HOTAS_ONE: &str = "If full-axis inputs are missing, switch HOTAS One to PC mode (Xbox/PC selector and Guide button procedure) before plugging in.";
 pub const DEFAULT_MAPPING_NOTE_UNKNOWN: &str =
     "Default mapping assumes full-axis mode; verify axis mode before applying.";
 
@@ -223,6 +226,17 @@ pub fn axis_mode_from_device_info(device_info: &HidDeviceInfo) -> AxisMode {
     }
 }
 
+fn tflight_model_from_product_name(product_name: Option<&str>) -> Option<TFlightModel> {
+    let name = product_name?.to_ascii_lowercase();
+    if name.contains("hotas one") || name.contains("hotasone") {
+        Some(TFlightModel::HotasOne)
+    } else if name.contains("hotas 4") || name.contains("hotas4") {
+        Some(TFlightModel::Hotas4)
+    } else {
+        None
+    }
+}
+
 pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
     if device_info.vendor_id != THRUSTMASTER_VENDOR_ID {
         return None;
@@ -231,7 +245,7 @@ pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
     match device_info.product_id {
         TFLIGHT_HOTAS_ONE_PID => Some(TFlightModel::HotasOne),
         TFLIGHT_HOTAS_4_PID | TFLIGHT_HOTAS_4_PID_LEGACY => Some(TFlightModel::Hotas4),
-        _ => None,
+        _ => tflight_model_from_product_name(device_info.product_name.as_deref()),
     }
 }
 
@@ -258,6 +272,13 @@ pub fn axis_mode_warning(axis_mode: AxisMode) -> Option<&'static str> {
 
 pub fn driver_note() -> &'static str {
     DRIVER_NOTE
+}
+
+pub fn pc_mode_note(model: TFlightModel) -> &'static str {
+    match model {
+        TFlightModel::Hotas4 => PC_MODE_NOTE_HOTAS_4,
+        TFlightModel::HotasOne => PC_MODE_NOTE_HOTAS_ONE,
+    }
 }
 
 pub fn default_mapping_note(axis_mode: AxisMode) -> Option<&'static str> {
@@ -639,11 +660,19 @@ const TFLIGHT_MAPPING_MERGED: [ControlBinding; 4] = [
     },
 ];
 
+const VKB_GLADIATOR_CONTROL_MAP_SCHEMA: &str = "flight.device-map/1";
 const VKB_STECS_CONTROL_MAP_SCHEMA: &str = "flight.device-map/1";
+const VKB_GLADIATOR_NOTES: [&str; 5] = [
+    "SCG map is descriptor-first; axis labels are semantic hints, not fixed firmware contracts.",
+    "The mini-stick can toggle between POV mode and analog X/Y axes via center push.",
+    "A1 hat mode behavior (8-way vs alternate 4-way) is profile-dependent in VKBDevCfg.",
+    "Firmware may expose extra axes through additional HID interfaces/devices to stay within legacy DirectInput limits.",
+    "Gladiator NXT EVO hardware has no force-feedback motor output channel.",
+];
 const VKB_STECS_NOTES: [&str; 3] = [
     "Button/axis labels are derived from Elite Dangerous buttonMap files.",
     "VKBDevCfg profiles can remap buttons, encoders, and virtual buttons.",
-    "Treat this map as a baseline; prefer HID usage/descriptor for authority.",
+    "Virtual controller interfaces are exposed separately by firmware (VC0..VC2); host software should group by serial/physical path.",
 ];
 
 const VKB_STECS_RIGHT_MINI_AXES: [AxisControl; 5] = [
@@ -1871,6 +1900,95 @@ const VKB_STECS_RIGHT_STANDARD_CONTROL_MAP: DeviceControlMap = DeviceControlMap 
     notes: &VKB_STECS_NOTES,
 };
 
+const VKB_GLADIATOR_RIGHT_SCG_AXES: [AxisControl; 8] = [
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "RSCG Stick X (Roll)",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "RSCG Stick Y (Pitch)",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "RSCG Twist (Yaw)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider0,
+        name: "RSCG Base Throttle Wheel",
+    },
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "RSCG Mini-stick X (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "RSCG Mini-stick Y (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Rz,
+        name: "RSCG Analog Trigger 1 (Profile)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider1,
+        name: "RSCG Analog Trigger 2 (Profile)",
+    },
+];
+
+const VKB_GLADIATOR_LEFT_SCG_AXES: [AxisControl; 8] = [
+    AxisControl {
+        usage: AxisUsage::X,
+        name: "LSCG Stick X (Roll)",
+    },
+    AxisControl {
+        usage: AxisUsage::Y,
+        name: "LSCG Stick Y (Pitch)",
+    },
+    AxisControl {
+        usage: AxisUsage::Z,
+        name: "LSCG Twist (Yaw)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider0,
+        name: "LSCG Base Throttle Wheel",
+    },
+    AxisControl {
+        usage: AxisUsage::Rx,
+        name: "LSCG Mini-stick X (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Ry,
+        name: "LSCG Mini-stick Y (Analog)",
+    },
+    AxisControl {
+        usage: AxisUsage::Rz,
+        name: "LSCG Analog Trigger 1 (Profile)",
+    },
+    AxisControl {
+        usage: AxisUsage::Slider1,
+        name: "LSCG Analog Trigger 2 (Profile)",
+    },
+];
+
+const VKB_GLADIATOR_BUTTONS: [ButtonControl; 0] = [];
+const VKB_GLADIATOR_ENCODERS: [EncoderControl; 0] = [];
+
+const VKB_GLADIATOR_RIGHT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_GLADIATOR_CONTROL_MAP_SCHEMA,
+    axes: &VKB_GLADIATOR_RIGHT_SCG_AXES,
+    buttons: &VKB_GLADIATOR_BUTTONS,
+    encoders: &VKB_GLADIATOR_ENCODERS,
+    notes: &VKB_GLADIATOR_NOTES,
+};
+
+const VKB_GLADIATOR_LEFT_CONTROL_MAP: DeviceControlMap = DeviceControlMap {
+    schema: VKB_GLADIATOR_CONTROL_MAP_SCHEMA,
+    axes: &VKB_GLADIATOR_LEFT_SCG_AXES,
+    buttons: &VKB_GLADIATOR_BUTTONS,
+    encoders: &VKB_GLADIATOR_ENCODERS,
+    notes: &VKB_GLADIATOR_NOTES,
+};
+
 pub fn tflight_default_mapping(axis_mode: AxisMode) -> DefaultMapping {
     match axis_mode {
         AxisMode::Merged => DefaultMapping {
@@ -1898,6 +2016,13 @@ pub fn is_vkb_gladiator_device(device_info: &HidDeviceInfo) -> bool {
     vkb_gladiator_variant(device_info).is_some()
 }
 
+pub fn vkb_gladiator_control_map(variant: VkbGladiatorVariant) -> &'static DeviceControlMap {
+    match variant {
+        VkbGladiatorVariant::NxtEvoRight => &VKB_GLADIATOR_RIGHT_CONTROL_MAP,
+        VkbGladiatorVariant::NxtEvoLeft => &VKB_GLADIATOR_LEFT_CONTROL_MAP,
+    }
+}
+
 pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant> {
     if device_info.vendor_id != VKB_VENDOR_ID {
         return None;
@@ -1918,6 +2043,180 @@ pub fn vkb_stecs_variant(device_info: &HidDeviceInfo) -> Option<VkbStecsVariant>
 
 pub fn is_vkb_stecs_device(device_info: &HidDeviceInfo) -> bool {
     vkb_stecs_variant(device_info).is_some()
+}
+
+/// Per-interface metadata for VKB Gladiator multi-interface layouts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct VkbGladiatorInterfaceMetadata {
+    /// HID path for this interface.
+    pub device_path: String,
+    /// Stable physical device identifier (serial when available).
+    pub physical_id: String,
+    /// Zero-based interface index in sorted path order.
+    pub interface_index: u8,
+    /// Number of HID interfaces discovered for the physical device.
+    pub interface_count: u8,
+}
+
+/// Per-interface metadata for VKB STECS virtual-controller layouts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct VkbStecsInterfaceMetadata {
+    /// HID path for this interface.
+    pub device_path: String,
+    /// Stable physical device identifier (serial when available).
+    pub physical_id: String,
+    /// Zero-based virtual-controller index inside the physical group.
+    pub virtual_controller_index: u8,
+    /// Number of HID interfaces discovered for the physical device.
+    pub interface_count: u8,
+}
+
+fn vkb_path_group_key(device_path: &str) -> String {
+    let mut normalized = if let Some((base, _)) = device_path.split_once("#if") {
+        base.to_ascii_lowercase()
+    } else {
+        device_path.to_ascii_lowercase()
+    };
+
+    if let Some(mi_pos) = normalized.find("&mi_")
+        && normalized
+            .get(mi_pos + 4..mi_pos + 6)
+            .is_some_and(|suffix| suffix.chars().all(|ch| ch.is_ascii_hexdigit()))
+    {
+        normalized.replace_range(mi_pos..mi_pos + 6, "");
+    }
+
+    normalized
+}
+
+/// Build a stable physical-device id for Gladiator interfaces.
+///
+/// Serial number is preferred because it survives re-enumeration across ports.
+/// If serial is unavailable, a normalized HID path stem is used.
+pub fn vkb_gladiator_physical_id(device_info: &HidDeviceInfo) -> Option<String> {
+    if !is_vkb_gladiator_device(device_info) {
+        return None;
+    }
+
+    if let Some(serial) = device_info
+        .serial_number
+        .as_deref()
+        .map(str::trim)
+        .filter(|serial| !serial.is_empty())
+    {
+        return Some(format!(
+            "vkb-gladiator:{:04x}:{:04x}:{}",
+            device_info.vendor_id,
+            device_info.product_id,
+            serial.to_ascii_lowercase()
+        ));
+    }
+
+    Some(format!(
+        "vkb-gladiator:path:{}",
+        vkb_path_group_key(&device_info.device_path)
+    ))
+}
+
+/// Compute Gladiator interface ordering metadata for a device set.
+///
+/// Interfaces are grouped by physical id and sorted by HID path to provide
+/// deterministic indexing (`IF0`, `IF1`, ...).
+pub fn vkb_gladiator_interface_metadata<'a, I>(devices: I) -> Vec<VkbGladiatorInterfaceMetadata>
+where
+    I: IntoIterator<Item = &'a HidDeviceInfo>,
+{
+    let mut groups: BTreeMap<String, Vec<&HidDeviceInfo>> = BTreeMap::new();
+
+    for device in devices {
+        let Some(physical_id) = vkb_gladiator_physical_id(device) else {
+            continue;
+        };
+        groups.entry(physical_id).or_default().push(device);
+    }
+
+    let mut metadata = Vec::new();
+    for (physical_id, mut interfaces) in groups {
+        interfaces.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+        let interface_count = u8::try_from(interfaces.len()).unwrap_or(u8::MAX);
+
+        for (index, interface) in interfaces.iter().enumerate() {
+            metadata.push(VkbGladiatorInterfaceMetadata {
+                device_path: interface.device_path.clone(),
+                physical_id: physical_id.clone(),
+                interface_index: u8::try_from(index).unwrap_or(u8::MAX),
+                interface_count,
+            });
+        }
+    }
+
+    metadata.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+    metadata
+}
+
+/// Build a stable physical-device id for STECS interfaces.
+///
+/// Serial number is preferred because it survives re-enumeration across ports.
+/// If serial is unavailable, a normalized HID path stem is used.
+pub fn vkb_stecs_physical_id(device_info: &HidDeviceInfo) -> Option<String> {
+    if !is_vkb_stecs_device(device_info) {
+        return None;
+    }
+
+    if let Some(serial) = device_info
+        .serial_number
+        .as_deref()
+        .map(str::trim)
+        .filter(|serial| !serial.is_empty())
+    {
+        return Some(format!(
+            "vkb-stecs:{:04x}:{:04x}:{}",
+            device_info.vendor_id,
+            device_info.product_id,
+            serial.to_ascii_lowercase()
+        ));
+    }
+
+    Some(format!(
+        "vkb-stecs:path:{}",
+        vkb_path_group_key(&device_info.device_path)
+    ))
+}
+
+/// Compute STECS virtual-controller ordering metadata for a device set.
+///
+/// Interfaces are grouped by physical id and sorted by HID path to provide
+/// deterministic indexing (`VC0`, `VC1`, ...).
+pub fn vkb_stecs_interface_metadata<'a, I>(devices: I) -> Vec<VkbStecsInterfaceMetadata>
+where
+    I: IntoIterator<Item = &'a HidDeviceInfo>,
+{
+    let mut groups: BTreeMap<String, Vec<&HidDeviceInfo>> = BTreeMap::new();
+
+    for device in devices {
+        let Some(physical_id) = vkb_stecs_physical_id(device) else {
+            continue;
+        };
+        groups.entry(physical_id).or_default().push(device);
+    }
+
+    let mut metadata = Vec::new();
+    for (physical_id, mut interfaces) in groups {
+        interfaces.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+        let interface_count = u8::try_from(interfaces.len()).unwrap_or(u8::MAX);
+
+        for (index, interface) in interfaces.iter().enumerate() {
+            metadata.push(VkbStecsInterfaceMetadata {
+                device_path: interface.device_path.clone(),
+                physical_id: physical_id.clone(),
+                virtual_controller_index: u8::try_from(index).unwrap_or(u8::MAX),
+                interface_count,
+            });
+        }
+    }
+
+    metadata.sort_by(|lhs, rhs| lhs.device_path.cmp(&rhs.device_path));
+    metadata
 }
 
 pub fn vkb_stecs_control_map(variant: VkbStecsVariant) -> &'static DeviceControlMap {
@@ -1977,6 +2276,12 @@ mod tests {
             usage: USAGE_JOYSTICK,
             report_descriptor: None,
         }
+    }
+
+    fn tflight_device_with_name(product_id: u16, product_name: Option<&str>) -> HidDeviceInfo {
+        let mut info = tflight_device(product_id);
+        info.product_name = product_name.map(str::to_string);
+        info
     }
 
     #[test]
@@ -2088,6 +2393,24 @@ mod tests {
     }
 
     #[test]
+    fn test_tflight_model_fallback_from_product_name() {
+        let hotas4 = tflight_device_with_name(0xFFFF, Some("T.Flight HOTAS 4"));
+        let hotas_one = tflight_device_with_name(0xABCD, Some("T.Flight HOTAS One"));
+        let unknown = tflight_device_with_name(0xABCD, Some("Thrustmaster Warthog"));
+
+        assert_eq!(tflight_model(&hotas4), Some(TFlightModel::Hotas4));
+        assert_eq!(tflight_model(&hotas_one), Some(TFlightModel::HotasOne));
+        assert_eq!(tflight_model(&unknown), None);
+    }
+
+    #[test]
+    fn test_tflight_model_fallback_requires_thrustmaster_vendor() {
+        let mut info = tflight_device_with_name(0xABCD, Some("T.Flight HOTAS 4"));
+        info.vendor_id = LOGITECH_VENDOR_ID;
+        assert_eq!(tflight_model(&info), None);
+    }
+
+    #[test]
     fn test_hotas4_primary_and_legacy_pid_detection() {
         let primary = tflight_device(TFLIGHT_HOTAS_4_PID);
         let legacy = tflight_device(TFLIGHT_HOTAS_4_PID_LEGACY);
@@ -2155,6 +2478,40 @@ mod tests {
     }
 
     #[test]
+    fn test_vkb_gladiator_control_map_contents() {
+        let control_map = vkb_gladiator_control_map(VkbGladiatorVariant::NxtEvoRight);
+        assert_eq!(control_map.schema, "flight.device-map/1");
+        assert_eq!(control_map.axes.len(), 8);
+        assert!(
+            control_map
+                .axes
+                .iter()
+                .any(|axis| axis.usage == AxisUsage::Rx && axis.name.contains("Mini-stick X"))
+        );
+        assert!(
+            control_map.axes.iter().any(
+                |axis| axis.usage == AxisUsage::Slider0 && axis.name.contains("Throttle Wheel")
+            )
+        );
+        assert!(control_map.buttons.is_empty());
+        assert!(control_map.encoders.is_empty());
+        assert!(
+            control_map
+                .notes
+                .iter()
+                .any(|note| note.contains("descriptor-first"))
+        );
+
+        let left_map = vkb_gladiator_control_map(VkbGladiatorVariant::NxtEvoLeft);
+        assert!(
+            left_map
+                .axes
+                .iter()
+                .any(|axis| axis.name.starts_with("LSCG"))
+        );
+    }
+
+    #[test]
     fn test_vkb_stecs_control_map_contents() {
         let control_map = vkb_stecs_control_map(VkbStecsVariant::LeftSpaceThrottleGripMiniPlus);
         assert_eq!(control_map.schema, "flight.device-map/1");
@@ -2183,10 +2540,76 @@ mod tests {
     }
 
     #[test]
+    fn test_vkb_stecs_interface_metadata_groups_by_serial() {
+        let mut vc0 = vkb_device(VKB_STECS_RIGHT_SPACE_STANDARD_PID);
+        vc0.serial_number = Some("ABC123".to_string());
+        vc0.device_path = r"\\?\hid#vid_231d&pid_013c&mi_00#7".to_string();
+
+        let mut vc1 = vkb_device(VKB_STECS_RIGHT_SPACE_STANDARD_PID);
+        vc1.serial_number = Some("ABC123".to_string());
+        vc1.device_path = r"\\?\hid#vid_231d&pid_013c&mi_01#7".to_string();
+
+        let metadata = vkb_stecs_interface_metadata([&vc1, &vc0]);
+        assert_eq!(metadata.len(), 2);
+
+        assert_eq!(metadata[0].virtual_controller_index, 0);
+        assert_eq!(metadata[1].virtual_controller_index, 1);
+        assert_eq!(metadata[0].interface_count, 2);
+        assert_eq!(metadata[1].interface_count, 2);
+        assert_eq!(metadata[0].physical_id, metadata[1].physical_id);
+    }
+
+    #[test]
+    fn test_vkb_gladiator_interface_metadata_groups_by_serial() {
+        let mut if0 = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        if0.serial_number = Some("SCG-ABC123".to_string());
+        if0.device_path = r"\\?\hid#vid_231d&pid_0200&mi_00#7".to_string();
+
+        let mut if1 = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        if1.serial_number = Some("SCG-ABC123".to_string());
+        if1.device_path = r"\\?\hid#vid_231d&pid_0200&mi_01#7".to_string();
+
+        let metadata = vkb_gladiator_interface_metadata([&if1, &if0]);
+        assert_eq!(metadata.len(), 2);
+
+        assert_eq!(metadata[0].interface_index, 0);
+        assert_eq!(metadata[1].interface_index, 1);
+        assert_eq!(metadata[0].interface_count, 2);
+        assert_eq!(metadata[1].interface_count, 2);
+        assert_eq!(metadata[0].physical_id, metadata[1].physical_id);
+    }
+
+    #[test]
+    fn test_vkb_stecs_physical_id_falls_back_to_path_stem() {
+        let mut device = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PLUS_PID);
+        device.serial_number = None;
+        device.device_path = "/dev/hidraw3#if1".to_string();
+
+        assert_eq!(
+            vkb_stecs_physical_id(&device),
+            Some("vkb-stecs:path:/dev/hidraw3".to_string())
+        );
+    }
+
+    #[test]
+    fn test_vkb_gladiator_physical_id_falls_back_to_path_stem() {
+        let mut device = vkb_device(VKB_GLADIATOR_NXT_EVO_LEFT_PID);
+        device.serial_number = None;
+        device.device_path = r"\\?\hid#vid_231d&pid_0201&mi_01#7".to_string();
+
+        assert_eq!(
+            vkb_gladiator_physical_id(&device),
+            Some(r"vkb-gladiator:path:\\?\hid#vid_231d&pid_0201#7".to_string())
+        );
+    }
+
+    #[test]
     fn test_warning_and_notes() {
         assert_eq!(axis_mode_warning(AxisMode::Merged), Some(AXIS_MODE_WARNING));
         assert!(axis_mode_warning(AxisMode::Separate).is_none());
         assert!(driver_note().contains("Thrustmaster"));
+        assert!(pc_mode_note(TFlightModel::Hotas4).contains("Share+Option+PS"));
+        assert!(pc_mode_note(TFlightModel::HotasOne).contains("Guide"));
         assert_eq!(
             default_mapping_note(AxisMode::Unknown),
             Some(DEFAULT_MAPPING_NOTE_UNKNOWN)

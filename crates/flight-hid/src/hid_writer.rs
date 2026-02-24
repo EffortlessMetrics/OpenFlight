@@ -787,18 +787,25 @@ mod latency_bench {
 
         #[test]
         fn test_hid_latency_stats_meets_requirement() {
-            let mut stats = HidLatencyStats::default();
-
             // p99 = 300μs should pass
-            stats.p99_us = 300;
+            let stats = HidLatencyStats {
+                p99_us: 300,
+                ..HidLatencyStats::default()
+            };
             assert!(stats.meets_requirement());
 
             // p99 = 299μs should pass
-            stats.p99_us = 299;
+            let stats = HidLatencyStats {
+                p99_us: 299,
+                ..HidLatencyStats::default()
+            };
             assert!(stats.meets_requirement());
 
             // p99 = 301μs should fail
-            stats.p99_us = 301;
+            let stats = HidLatencyStats {
+                p99_us: 301,
+                ..HidLatencyStats::default()
+            };
             assert!(!stats.meets_requirement());
         }
 

@@ -1,0 +1,26 @@
+[package]
+name = "flight-ac7-protocol-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+flight-ac7-protocol = { path = ".." }
+
+[[bin]]
+name = "fuzz_telemetry_packet"
+path = "fuzz_targets/fuzz_telemetry_packet.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_json_str"
+path = "fuzz_targets/fuzz_json_str.rs"
+test = false
+doc = false

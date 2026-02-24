@@ -110,7 +110,7 @@ impl MsiPackageBuilder {
         fs::write(docs_dir.join("INSTALLER_SUMMARY.md"), summary).await?;
 
         // Generate individual simulator summaries for installer UI
-        for sim in ["msfs", "xplane", "dcs"] {
+        for sim in ["msfs", "xplane", "dcs", "ac7"] {
             if let Some(user_docs) = docs_manager.generate_user_docs(sim) {
                 fs::write(docs_dir.join(format!("{}_summary.md", sim)), user_docs).await?;
             }

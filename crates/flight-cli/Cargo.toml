@@ -29,6 +29,7 @@ anyhow.workspace = true
 flight-core = { path = "../flight-core" }
 flight-ipc = { path = "../flight-ipc" }
 flight-dcs-export = { path = "../flight-dcs-export" }
+flight-ac7-input = { path = "../flight-ac7-input" }
 clap = { workspace = true, optional = true }
 tokio.workspace = true
 serde_json.workspace = true

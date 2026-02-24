@@ -96,6 +96,11 @@ enum Commands {
         #[command(subcommand)]
         action: XPlaneAction,
     },
+    /// Ace Combat 7 integration commands
+    Ac7 {
+        #[command(subcommand)]
+        action: Ac7Action,
+    },
     /// Show system status and health
     Status,
     /// Show service information
@@ -179,6 +184,9 @@ async fn execute_command(
         }
         Commands::Xplane { action } => {
             commands::xplane::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Ac7 { action } => {
+            commands::ac7::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::Status => {
             commands::status::execute(cli.output, cli.verbose, client_manager).await

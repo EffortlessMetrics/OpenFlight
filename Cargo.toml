@@ -21,10 +21,14 @@ members = [
     "crates/flight-simconnect",
     "crates/flight-xplane",
     "crates/flight-dcs-export",
+    "crates/flight-ac7-protocol",
+    "crates/flight-ac7-telemetry",
+    "crates/flight-ac7-input",
     "crates/flight-panels",
     "crates/flight-panels-core",
     "crates/flight-panels-saitek",
     "crates/flight-hotas-saitek",
+    "crates/flight-hotas-vkb",
     "crates/flight-hotas-thrustmaster",
     "crates/flight-panels-cougar",
     "crates/flight-streamdeck",
@@ -100,6 +104,9 @@ flight-device-common = { path = "crates/flight-device-common" }
 flight-metrics = { path = "crates/flight-metrics" }
 flight-test-helpers = { path = "crates/flight-test-helpers" }
 flight-workspace-meta = { path = "crates/flight-workspace-meta" }
+flight-ac7-protocol = { path = "crates/flight-ac7-protocol" }
+flight-ac7-telemetry = { path = "crates/flight-ac7-telemetry" }
+flight-ac7-input = { path = "crates/flight-ac7-input" }
 
 # HTTP client
 reqwest = { version = "0.13.1", default-features = false, features = [
@@ -124,6 +131,7 @@ nix = "0.31.1"
 # Additional dependencies
 criterion = "0.8.1"
 proptest = "1.9.0"
+insta = { version = "1.42.2", features = ["json", "yaml"] }
 tempfile = "3.24.0"
 clap = { version = "4.5.56", default-features = false, features = [
     "std",
