@@ -16,6 +16,7 @@ use flight_bus::{AircraftId as BusAircraftId, SimId as BusSimId};
 use flight_core::aircraft_switch::{
     AircraftId as CoreAircraftId, SimId as CoreSimId, TelemetrySnapshot,
 };
+#[cfg(windows)]
 use flight_simconnect::{
     AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo,
 };
@@ -138,12 +139,16 @@ struct SimAdapters {
 }
 
 /// MSFS adapter wrapper
+#[cfg(windows)]
 struct MsfsAdapter {
     #[allow(dead_code)]
     detector: MsfsAircraftDetector,
     #[allow(dead_code)]
     current_aircraft: Option<MsfsAircraftInfo>,
 }
+
+#[cfg(not(windows))]
+struct MsfsAdapter;
 
 /// X-Plane adapter wrapper
 struct XPlaneAdapter {
@@ -547,12 +552,19 @@ impl AircraftAutoSwitchService {
         match bus_sim {
             BusSimId::Msfs if config.adapters.enable_msfs => {
                 if adapters_guard.msfs.is_none() {
-                    let detector = MsfsAircraftDetector::new();
-                    // TODO: Setup and start MSFS aircraft detection
-                    adapters_guard.msfs = Some(MsfsAdapter {
-                        detector,
-                        current_aircraft: None,
-                    });
+                    #[cfg(windows)]
+                    {
+                        let detector = MsfsAircraftDetector::new();
+                        // TODO: Setup and start MSFS aircraft detection
+                        adapters_guard.msfs = Some(MsfsAdapter {
+                            detector,
+                            current_aircraft: None,
+                        });
+                    }
+                    #[cfg(not(windows))]
+                    {
+                        adapters_guard.msfs = Some(MsfsAdapter);
+                    }
                 }
             }
             BusSimId::XPlane if config.adapters.enable_xplane => {

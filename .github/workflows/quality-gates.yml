@@ -317,6 +317,11 @@ jobs:
         with:
           key: qg-ffb-safety
 
+      - name: Install Linux HID build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
       - name: Run FFB safety tests
         run: |
           echo "🔍 Running FFB safety validation..."
