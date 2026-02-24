@@ -1,5 +1,5 @@
 [package]
-name = "flight-dcs-export-fuzz"
+name = "flight-warthunder-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2021"
@@ -13,14 +13,14 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 serde_json = "1"
 
-[dependencies.flight-dcs-export]
+[dependencies.flight-warthunder]
 path = ".."
 
 [profile.release]
 debug = 1
 
 [[bin]]
-name = "fuzz_dcs_message"
-path = "fuzz_targets/fuzz_dcs_message.rs"
+name = "fuzz_wt_telemetry"
+path = "fuzz_targets/fuzz_wt_telemetry.rs"
 test = false
 doc = false

@@ -4,6 +4,8 @@ version = "0.0.0"
 publish = false
 edition = "2021"
 
+[workspace]
+
 [package.metadata]
 cargo-fuzz = true
 
@@ -16,3 +18,9 @@ path = ".."
 # Cargo automatically adds this profile for fuzz targets
 [profile.release]
 debug = 1
+
+[[bin]]
+name = "fuzz_rules_parser"
+path = "fuzz_targets/fuzz_rules_parser.rs"
+test = false
+doc = false
