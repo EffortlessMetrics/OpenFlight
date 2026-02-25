@@ -410,4 +410,79 @@ mod tests {
         adapter.stop();
         assert_eq!(adapter.state(), AdapterState::Disconnected);
     }
+
+    #[test]
+    fn gear_below_half_is_up() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            valid: Some(true),
+            gear: Some(0.3),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert_eq!(snapshot.config.gear.nose, GearPosition::Up);
+    }
+
+    #[test]
+    fn gear_at_half_is_down() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            valid: Some(true),
+            gear: Some(0.5),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert_eq!(snapshot.config.gear.nose, GearPosition::Down);
+    }
+
+    #[test]
+    fn flaps_clamped_to_percentage() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind_max = WtIndicators {
+            valid: Some(true),
+            flaps: Some(1.0),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind_max).unwrap();
+        assert!((snapshot.config.flaps.value() - 100.0).abs() < 0.01);
+
+        let ind_zero = WtIndicators {
+            valid: Some(true),
+            flaps: Some(0.0),
+            ..Default::default()
+        };
+        let snap2 = adapter.convert_indicators(&ind_zero).unwrap();
+        assert!(snap2.config.flaps.value() < 0.01);
+    }
+
+    #[test]
+    fn no_valid_field_treats_as_valid() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // When `valid` is absent (None), the adapter should default to treating
+        // the snapshot as valid (unwrap_or(true) behaviour).
+        let ind = WtIndicators {
+            valid: None,
+            altitude: Some(1000.0),
+            pitch: Some(0.0),
+            roll: Some(0.0),
+            ias_kmh: Some(200.0),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert!(snapshot.validity.position_valid);
+    }
+
+    #[test]
+    fn default_config_has_sensible_defaults() {
+        let cfg = WarThunderConfig::default();
+        assert_eq!(cfg.base_url, "http://localhost:8111");
+        assert!(cfg.poll_rate_hz > 0.0);
+        assert!(cfg.request_timeout.as_millis() > 0);
+    }
+
+    #[test]
+    fn time_since_last_packet_is_none_before_poll() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        assert!(adapter.time_since_last_packet().is_none());
+    }
 }
