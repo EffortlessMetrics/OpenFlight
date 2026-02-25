@@ -1,0 +1,50 @@
+# Project Wingman — Virtual Controller Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Project Wingman"
+  id: project-wingman
+  developer: "Sector D2"
+
+integration:
+  mechanism: "Virtual Controller (ViGEm/vJoy)"
+  crate: flight-wingman
+  protocol_notes: >
+    Project Wingman does not expose a telemetry or export API. OpenFlight
+    maps physical HOTAS inputs through its axis pipeline and presents
+    them as a virtual controller via ViGEm or vJoy. The virtual controller
+    is then bound in-game through standard Windows game controller setup.
+    This provides axis curve / deadzone / detent processing without
+    sim-specific telemetry.
+
+supported_versions:
+  - "Project Wingman (Steam, 1.x)"
+
+features:
+  telemetry_read: false
+  control_injection:
+    direct: false
+    virtual_controller: true  # via ViGEm/vJoy bridge
+  force_feedback_translation: false
+  aircraft_detection: false    # No telemetry available
+
+test_coverage:
+  trace_replay: false
+  fuzz_coverage: false
+  hil: false
+  property_tests: false
+
+support_tier: 3
+
+known_issues:
+  - id: VIGEM_DEPENDENCY
+    description: >
+      ViGEm Bus Driver must be installed separately on Windows.
+      The installer documents this as an optional dependency.
+  - id: NO_TELEMETRY
+    description: >
+      Without telemetry, features like safe-for-FFB and aircraft auto-switch
+      are unavailable. All axis processing is input-only.

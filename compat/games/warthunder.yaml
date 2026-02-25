@@ -1,0 +1,47 @@
+# War Thunder — Telemetry UDP Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "War Thunder"
+  id: warthunder
+  developer: "Gaijin Entertainment"
+
+integration:
+  mechanism: "HTTP/UDP Telemetry Feed"
+  crate: flight-warthunder
+  protocol_notes: >
+    War Thunder exposes live telemetry data over a local HTTP endpoint at
+    http://localhost:8111/state and http://localhost:8111/indicators.
+    OpenFlight polls this feed and parses the JSON response for flight
+    state, gear position, airspeed, and safe-for-FFB signals.
+
+supported_versions:
+  - "War Thunder 2.27+"
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false         # No public control injection API
+  force_feedback_translation: true  # safe_for_ffb derived from telemetry state
+  aircraft_detection: false         # No aircraft type in telemetry feed
+
+test_coverage:
+  trace_replay: false
+  fuzz_coverage: true    # crates/flight-warthunder/fuzz/fuzz_targets/fuzz_wt_telemetry.rs
+  hil: false
+  property_tests: true   # crates/flight-warthunder/tests/telemetry_property_tests.rs
+
+support_tier: 2
+
+known_issues:
+  - id: POLLING_RATE
+    description: >
+      Telemetry is polled rather than pushed. The default 50 Hz poll rate
+      introduces up to 20 ms additional latency vs. push-based adapters.
+  - id: NO_AIRCRAFT_TYPE
+    description: >
+      War Thunder does not expose the current aircraft type in the telemetry
+      feed, so aircraft auto-switch is not supported for this adapter.

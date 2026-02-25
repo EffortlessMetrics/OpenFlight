@@ -21,8 +21,11 @@
 | Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |
 |------|-------------|-----------|-------------------|-----|------------|
 | DCS World | Lua Export Script + UDP | ✓ | ✗ | ✗ | ✗ |
+| Elite Dangerous | Journal File (NDJSON) | ✓ | ✗ | ✗ | ✗ |
 | Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |
 | Microsoft Flight Simulator | SimConnect | ✓ | ✓ | ✓ | ✗ |
+| Project Wingman | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
+| War Thunder | HTTP/UDP Telemetry Feed | ✓ | ✗ | ✓ | ✗ |
 | X-Plane 12 | UDP DataRef + Web API | ✓ | ✓ | ✗ | ✗ |
 
 ## Support Tier Legend

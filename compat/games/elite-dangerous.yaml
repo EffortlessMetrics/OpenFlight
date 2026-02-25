@@ -1,0 +1,50 @@
+# Elite Dangerous — Journal File Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Elite Dangerous"
+  id: elite-dangerous
+  developer: "Frontier Developments"
+
+integration:
+  mechanism: "Journal File (NDJSON)"
+  crate: flight-elite
+  protocol_notes: >
+    Elite Dangerous writes a newline-delimited JSON journal file to
+    %USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\.
+    OpenFlight's JournalReader tails this file and parses structured events
+    for ship type, landing gear state, and other flight state signals.
+    Events are processed at the OS file-change notification rate.
+
+supported_versions:
+  - "Elite Dangerous 4.x (Odyssey)"
+  - "Elite Dangerous 3.x (Horizons)"
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false         # No public control injection API
+  force_feedback_translation: false
+  aircraft_detection: true   # ShipType events provide the active ship class
+
+test_coverage:
+  trace_replay: false
+  fuzz_coverage: true    # crates/flight-elite/fuzz/fuzz_targets/
+  hil: false
+
+support_tier: 2
+
+known_issues:
+  - id: JOURNAL_FILE_ROTATION
+    description: >
+      Elite Dangerous rotates the journal file on session start. The reader
+      must re-open the latest journal file on each startup and handle the
+      transition gracefully.
+  - id: EVENT_LATENCY
+    description: >
+      Journal events are written synchronously during game execution.
+      Latency between in-game state change and file write is typically
+      100-500 ms, making this unsuitable for real-time FFB triggering.

@@ -1016,6 +1016,12 @@ jobs:
           cargo +nightly fuzz run fuzz_elite_journal -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Fuzz flight-cloud-profiles JSON deserialization (60s)
+        run: |
+          cd crates/flight-cloud-profiles
+          cargo +nightly fuzz run fuzz_cloud_profiles -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
