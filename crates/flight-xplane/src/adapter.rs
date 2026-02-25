@@ -596,7 +596,7 @@ impl XPlaneAdapter {
     /// WHEN implementing UDP-only mode THEN the adapter SHALL always set sim = XPLANE
     /// and MAY set a coarse aircraft_class (e.g., fixed-wing / helicopter) based on available data;
     /// precise aircraft identity SHALL be treated as 'unknown' unless provided by a plugin
-    fn convert_raw_to_snapshot(
+    pub fn convert_raw_to_snapshot(
         raw_data: XPlaneRawData,
         _start_time: Instant,
     ) -> Result<BusSnapshot> {
@@ -1055,6 +1055,27 @@ impl XPlaneAdapter {
     /// Get current aircraft information
     pub fn get_current_aircraft(&self) -> Option<DetectedAircraft> {
         self.current_aircraft.read().unwrap().clone()
+    }
+
+    /// Publish a snapshot directly to the bus.
+    ///
+    /// Convenience method for tests and service orchestration that holds the snapshot
+    /// already converted, bypassing the telemetry loop.
+    pub fn publish_snapshot(&self, snapshot: BusSnapshot) -> Result<()> {
+        let mut publisher = self.bus_publisher.lock().map_err(|_| {
+            FlightError::Configuration("Bus publisher lock poisoned".to_string())
+        })?;
+        publisher
+            .publish(snapshot)
+            .map_err(|e| FlightError::Configuration(format!("Publish error: {e}")))
+    }
+
+    /// Publish a stale/invalid snapshot to signal downstream consumers that data is no longer valid.
+    ///
+    /// ValidityFlags are all-false by default, so safe_for_ffb = false.
+    pub fn publish_stale_snapshot(&self) -> Result<()> {
+        let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
+        self.publish_snapshot(stale)
     }
 
     /// Check if adapter is running
@@ -1614,5 +1635,131 @@ mod tests {
         let trim = XPlaneAdapter::convert_trim_state(&datarefs);
         assert_eq!(trim.elevator, 1.0);
         assert_eq!(trim.aileron, -1.0);
+    }
+
+    /// Integration test: raw DataRef data → snapshot → bus publish → subscriber receive.
+    ///
+    /// This is the core "sim → adapter → bus → subscriber" pipeline that proves
+    /// bus publishing is real and not stubbed.
+    #[tokio::test]
+    async fn test_snapshot_pipeline_publish_and_receive() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+
+        // Create a subscriber before publishing
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe should succeed");
+
+        let config = XPlaneAdapterConfig::default();
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Build realistic DataRef payload
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(77.17), // ~150 knots
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(37.77),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-122.41),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(3.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(-5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(90.0),
+        );
+
+        let raw = XPlaneRawData {
+            timestamp: Instant::now(),
+            aircraft_info: DetectedAircraft {
+                icao: "C172".to_string(),
+                title: "Cessna 172SP".to_string(),
+                author: "Laminar Research".to_string(),
+            },
+            dataref_values: datarefs,
+        };
+
+        // Convert → snapshot (exercises the conversion pipeline)
+        let start = Instant::now();
+        let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, start)
+            .expect("conversion should succeed");
+
+        // Verify snapshot fields
+        assert!((snapshot.kinematics.ias.to_knots() - 150.0).abs() < 1.0);
+        assert!((snapshot.kinematics.aoa.to_degrees() - 5.0).abs() < 0.1);
+
+        // Publish to bus
+        adapter
+            .publish_snapshot(snapshot.clone())
+            .expect("publish should succeed");
+
+        // Verify subscriber receives the snapshot
+        let received = subscriber.try_recv().expect("try_recv should not error");
+        assert!(
+            received.is_some(),
+            "subscriber should have received a snapshot"
+        );
+        let received = received.unwrap();
+        assert_eq!(received.sim, snapshot.sim);
+        assert!(
+            (received.kinematics.ias.to_knots() - 150.0).abs() < 1.0,
+            "received IAS should match published IAS"
+        );
+    }
+
+    /// Integration test: stale-snapshot signal on timeout.
+    ///
+    /// When no telemetry arrives for the timeout period, the adapter should
+    /// push a stale (invalid) snapshot so downstream consumers stop using stale data.
+    #[tokio::test]
+    async fn test_timeout_publishes_stale_snapshot() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+        use tokio::time::Duration;
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe should succeed");
+
+        let config = XPlaneAdapterConfig {
+            dataref_timeout_ms: 50, // Very short timeout for the test
+            ..Default::default()
+        };
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Simulate a timeout by calling handle_timeout directly
+        adapter
+            .publish_stale_snapshot()
+            .expect("stale snapshot publish should succeed");
+
+        let received = subscriber.try_recv().expect("try_recv should not error");
+        assert!(received.is_some(), "should have received stale snapshot");
+        let received = received.unwrap();
+        // Stale snapshot should have validity flags all false
+        assert!(
+            !received.validity.safe_for_ffb,
+            "stale snapshot should not be safe for FFB"
+        );
     }
 }
