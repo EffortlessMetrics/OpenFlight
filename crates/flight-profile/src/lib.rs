@@ -707,7 +707,202 @@ mod tests {
         }
     }
 
-    // ── snapshot tests ────────────────────────────────────────────────────────
+    // ── validation edge cases ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_deadzone_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().deadzone = Some(0.6); // > MAX_DEADZONE (0.5)
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_negative_deadzone_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().deadzone = Some(-0.01);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_negative_slew_rate_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().slew_rate = Some(-1.0);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_too_few_points_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![CurvePoint {
+            input: 0.0,
+            output: 0.0,
+        }]);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_non_monotonic_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
+            CurvePoint { input: 0.0, output: 0.0 },
+            CurvePoint { input: 0.5, output: 0.5 },
+            CurvePoint { input: 0.3, output: 0.8 }, // non-monotonic input
+        ]);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
+            CurvePoint { input: 0.0, output: 0.0 },
+            CurvePoint { input: 0.5, output: 0.4 },
+            CurvePoint { input: 1.0, output: 1.0 },
+        ]);
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_detent_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 1.5, // > 1.0
+            width: 0.1,
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_detent_zero_width_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 0.0,
+            width: 0.0, // must be > 0
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_detent_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 0.0,
+            width: 0.1,
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_filter_alpha_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().filter = Some(FilterConfig {
+            alpha: 1.5, // > 1.0
+            spike_threshold: None,
+            max_spike_count: None,
+        });
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_filter_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().filter = Some(FilterConfig {
+            alpha: 0.3,
+            spike_threshold: Some(0.05),
+            max_spike_count: Some(3),
+        });
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_effective_hash_deterministic() {
+        let profile = create_valid_profile();
+        let hash1 = profile.effective_hash();
+        let hash2 = profile.effective_hash();
+        assert_eq!(hash1, hash2, "hash must be deterministic");
+        assert_eq!(hash1.len(), 64, "SHA-256 hex string must be 64 chars");
+    }
+
+    #[test]
+    fn test_different_profiles_different_hashes() {
+        let profile1 = create_valid_profile();
+        let mut profile2 = create_valid_profile();
+        profile2.axes.get_mut("pitch").unwrap().expo = Some(0.9);
+        assert_ne!(profile1.effective_hash(), profile2.effective_hash());
+    }
+
+    #[test]
+    fn test_pof_override_merged_on_merge() {
+        let base = create_valid_profile();
+        let mut overr = create_valid_profile();
+
+        let phase_axes = {
+            let mut m = HashMap::new();
+            m.insert(
+                "pitch".to_string(),
+                AxisConfig {
+                    deadzone: Some(0.05),
+                    expo: Some(0.1),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            m
+        };
+        overr.pof_overrides = Some({
+            let mut pof = HashMap::new();
+            pof.insert(
+                "climb".to_string(),
+                PofOverrides {
+                    axes: Some(phase_axes),
+                    hysteresis: None,
+                },
+            );
+            pof
+        });
+
+        let merged = base.merge_with(&overr).unwrap();
+        assert!(
+            merged.pof_overrides.is_some(),
+            "PoF overrides should be present after merge"
+        );
+        assert!(
+            merged
+                .pof_overrides
+                .as_ref()
+                .unwrap()
+                .contains_key("climb")
+        );
+    }
+
+    #[test]
+    fn test_merge_axis_configs_direct() {
+        let base = AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.2),
+            slew_rate: Some(1.0),
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        let overr = AxisConfig {
+            deadzone: None,  // should keep base
+            expo: Some(0.5), // should override
+            slew_rate: None, // should keep base
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        let merged = merge_axis_configs(&base, &overr);
+        assert_eq!(merged.deadzone, Some(0.03), "base deadzone preserved");
+        assert_eq!(merged.expo, Some(0.5), "override expo applied");
+        assert_eq!(merged.slew_rate, Some(1.0), "base slew_rate preserved");
+    }
 
     #[test]
     fn snapshot_canonical_form() {
