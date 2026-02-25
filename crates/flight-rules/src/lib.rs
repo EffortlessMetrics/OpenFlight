@@ -46,7 +46,7 @@ pub struct CompiledRule {
     pub hysteresis_key: Option<String>,
 }
 
-/// Rule condition (stub implementation)
+/// Rule condition parsed from DSL string
 #[derive(Debug, Clone)]
 pub enum Condition {
     /// Variable comparison: var op value
@@ -74,7 +74,7 @@ pub enum CompareOp {
     LessEqual,
 }
 
-/// Rule action (stub implementation)
+/// Rule action parsed from DSL string
 #[derive(Debug, Clone)]
 pub enum Action {
     /// Turn LED on
@@ -87,7 +87,7 @@ pub enum Action {
     LedBrightness { target: String, brightness: f32 },
 }
 
-/// Rules compiler (stub implementation)
+/// Rules compiler: parses conditions and actions, produces bytecode
 pub struct RulesCompiler {
     hysteresis_defaults: HashMap<String, f32>,
 }
