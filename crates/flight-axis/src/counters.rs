@@ -364,4 +364,72 @@ mod tests {
         counters.increment_rt_allocations();
         assert!(counters.has_rt_violations());
     }
+
+    #[test]
+    fn test_increment_counters() {
+        let counters = RuntimeCounters::new();
+
+        counters.increment_pipeline_swaps();
+        counters.increment_pipeline_swaps();
+        assert_eq!(counters.pipeline_swaps(), 2);
+
+        counters.increment_deadline_misses();
+        assert_eq!(counters.deadline_misses(), 1);
+
+        counters.increment_rt_lock_acquisitions();
+        assert_eq!(counters.rt_lock_acquisitions(), 1);
+        assert!(counters.has_rt_violations());
+    }
+
+    #[test]
+    fn test_capability_clamp_tracking() {
+        let counters = RuntimeCounters::new();
+        assert_eq!(counters.capability_clamp_events(), 0);
+        assert_eq!(counters.last_capability_clamp_ns(), 0);
+
+        counters.increment_capability_clamps();
+        assert_eq!(counters.capability_clamp_events(), 1);
+        // Timestamp should now be non-zero
+        assert!(counters.last_capability_clamp_ns() > 0);
+
+        counters.increment_capability_clamps();
+        assert_eq!(counters.capability_clamp_events(), 2);
+    }
+
+    #[test]
+    fn test_uptime_increases() {
+        let counters = RuntimeCounters::new();
+        let t0 = counters.uptime();
+        std::thread::sleep(Duration::from_millis(5));
+        let t1 = counters.uptime();
+        assert!(t1 > t0, "uptime should increase over time");
+    }
+
+    #[test]
+    fn test_jitter_p99_equals_max() {
+        let counters = RuntimeCounters::new();
+        counters.record_frame_time(Duration::from_micros(300));
+        counters.record_frame_time(Duration::from_micros(100));
+        // jitter_p99 is the max frame time (conservative approximation)
+        assert_eq!(counters.jitter_p99_estimate_us(), 300);
+    }
+
+    #[test]
+    fn test_reset_clears_all() {
+        let counters = RuntimeCounters::new();
+        counters.record_frame_time(Duration::from_micros(100));
+        counters.increment_pipeline_swaps();
+        counters.increment_deadline_misses();
+        counters.increment_capability_clamps();
+
+        counters.reset();
+
+        assert_eq!(counters.frames_processed(), 0);
+        assert_eq!(counters.pipeline_swaps(), 0);
+        assert_eq!(counters.deadline_misses(), 0);
+        assert_eq!(counters.capability_clamp_events(), 0);
+        assert_eq!(counters.last_capability_clamp_ns(), 0);
+        assert_eq!(counters.max_frame_time_us(), 0);
+        assert_eq!(counters.avg_frame_time_us(), 0);
+    }
 }

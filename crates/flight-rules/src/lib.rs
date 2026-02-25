@@ -723,7 +723,7 @@ mod tests {
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![Rule {
-                when: "aoa > alpha_warn".to_string(),
+                when: "aoa > 12.5".to_string(),
                 do_action: "led.indexer.blink(rate_hz=6)".to_string(),
                 action: "led.indexer.blink(rate_hz=6)".to_string(),
             }],
@@ -732,8 +732,15 @@ mod tests {
             }),
         };
 
-        // This will fail with current stub implementation, but structure is correct
-        let _result = rules.compile();
+        // Compilation should succeed — the compiler is fully implemented
+        let result = rules.compile();
+        assert!(result.is_ok(), "compile() should succeed: {:?}", result.err());
+        let compiled = result.unwrap();
+        // Should have produced bytecode instructions
+        assert!(
+            !compiled.bytecode.instructions.is_empty(),
+            "compiled bytecode should not be empty"
+        );
     }
 
     #[test]
