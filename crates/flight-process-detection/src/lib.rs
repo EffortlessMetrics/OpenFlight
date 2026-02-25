@@ -1201,4 +1201,45 @@ mod tests {
         assert!(def.window_titles.contains(&"Project Wingman".to_string()));
         assert_eq!(def.min_confidence, 0.7);
     }
+
+    #[test]
+    fn sim_id_display_formats() {
+        assert_eq!(SimId::Msfs.to_string(), "MSFS");
+        assert_eq!(SimId::Msfs2024.to_string(), "MSFS 2024");
+        assert_eq!(SimId::XPlane.to_string(), "X-Plane");
+        assert_eq!(SimId::Dcs.to_string(), "DCS");
+        assert_eq!(SimId::AceCombat7.to_string(), "Ace Combat 7");
+        assert_eq!(SimId::WarThunder.to_string(), "War Thunder");
+        assert_eq!(SimId::EliteDangerous.to_string(), "Elite: Dangerous");
+        assert_eq!(SimId::Ksp.to_string(), "Kerbal Space Program");
+        assert_eq!(SimId::Wingman.to_string(), "Project Wingman");
+        assert_eq!(SimId::Unknown.to_string(), "Unknown");
+    }
+
+    #[test]
+    fn elite_dangerous_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let def = config.process_definitions.get(&SimId::EliteDangerous);
+        assert!(def.is_some(), "Elite Dangerous definition should be present");
+        let def = def.unwrap();
+        assert!(
+            !def.process_names.is_empty(),
+            "Should have at least one process name"
+        );
+    }
+
+    #[test]
+    fn war_thunder_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let def = config.process_definitions.get(&SimId::WarThunder);
+        assert!(def.is_some(), "War Thunder definition should be present");
+    }
+
+    #[test]
+    fn process_detection_error_display() {
+        let e = ProcessDetectionError::Platform("not supported".to_string());
+        assert!(e.to_string().contains("Platform"));
+        let e = ProcessDetectionError::System("syscall failed".to_string());
+        assert!(e.to_string().contains("System"));
+    }
 } // end mod tests
