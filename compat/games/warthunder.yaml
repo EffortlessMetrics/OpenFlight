@@ -1,4 +1,4 @@
-# War Thunder — Telemetry UDP Integration
+# War Thunder — HTTP Telemetry Integration
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -10,7 +10,7 @@ game:
   developer: "Gaijin Entertainment"
 
 integration:
-  mechanism: "HTTP/UDP Telemetry Feed"
+  mechanism: "HTTP Telemetry Feed"
   crate: flight-warthunder
   protocol_notes: >
     War Thunder exposes live telemetry data over a local HTTP endpoint at

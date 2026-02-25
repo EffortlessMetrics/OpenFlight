@@ -279,6 +279,20 @@ impl WriterApplier {
                     .as_deref()
                     .ok_or_else(|| anyhow::anyhow!("JSON patch Move/Copy requires a 'from' field"))?;
 
+                if matches!(patch.op, JsonPatchOpType::Move) {
+                    // RFC 6902 §4.4: the "from" location MUST NOT be a proper prefix of "path".
+                    if patch.path.len() > from_path.len()
+                        && patch.path.starts_with(from_path)
+                        && patch.path.as_bytes().get(from_path.len()) == Some(&b'/')
+                    {
+                        anyhow::bail!(
+                            "JSON patch Move: 'from' location ('{}') cannot be a proper prefix of 'path' ('{}')",
+                            from_path,
+                            patch.path
+                        );
+                    }
+                }
+
                 // Retrieve the value at the source path
                 let source_value = self.json_get_path(json, from_path)?;
 
@@ -453,6 +467,20 @@ mod patch_tests {
         };
         a.apply_json_patch(&mut json, &patch).unwrap();
         assert_eq!(json["dst"]["val"], "hello", "value moved to destination");
+        assert!(json.get("src").is_none() || json["src"].is_null(), "source must be removed after move");
+    }
+
+    #[test]
+    fn test_json_patch_move_to_child_errors() {
+        let a = applier();
+        let mut json = json!({ "a": { "b": 1 } });
+        let patch = JsonPatchOp {
+            op: JsonPatchOpType::Move,
+            path: "/a/b/c".to_string(),
+            value: None,
+            from: Some("/a".to_string()),
+        };
+        assert!(a.apply_json_patch(&mut json, &patch).is_err(), "RFC 6902 §4.4: move to child must error");
     }
 
     #[test]

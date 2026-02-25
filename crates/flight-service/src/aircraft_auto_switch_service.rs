@@ -359,17 +359,19 @@ impl AircraftAutoSwitchService {
                         // emit AircraftDetected events (covers XPlane/DCS/MSFS adapters
                         // that publish aircraft identity via bus snapshots rather than
                         // direct detection callbacks).
-                        let snap_aircraft = snapshot.aircraft.clone();
                         let changed = match last_aircraft_per_sim.get(&snapshot.sim) {
-                            Some(last) => last.icao != snap_aircraft.icao,
-                            None => !snap_aircraft.icao.is_empty(),
+                            Some(last) => last.icao != snapshot.aircraft.icao,
+                            None => !snapshot.aircraft.icao.is_empty(),
                         };
-                        if changed && !snap_aircraft.icao.is_empty() {
+                        if changed && !snapshot.aircraft.icao.is_empty() {
+                            let snap_aircraft = snapshot.aircraft.clone();
                             last_aircraft_per_sim.insert(snapshot.sim, snap_aircraft.clone());
-                            let _ = service_tx.send(ServiceEvent::AircraftDetected(
+                            if let Err(e) = service_tx.send(ServiceEvent::AircraftDetected(
                                 snapshot.sim,
                                 snap_aircraft,
-                            ));
+                            )) {
+                                warn!("Failed to emit AircraftDetected event: {}", e);
+                            }
                         }
                     }
                     ServiceEvent::AdapterError(sim, error) => {

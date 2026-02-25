@@ -121,6 +121,9 @@ pub struct WriteResult {
 pub struct VerificationResult {
     pub test_name: String,
     pub passed: bool,
+    /// `true` when the test type is not supported on this platform and was
+    /// intentionally skipped. A skipped result does not count as a failure.
+    pub skipped: bool,
     pub actual_result: String,
     pub error_message: Option<String>,
 }
@@ -337,10 +340,10 @@ impl CurveConflictWriter {
         if success && self.config.enable_verification {
             for test in &config.verification_tests {
                 let result = self.run_verification_test(test);
-                let passed = result.passed;
+                let failed = !result.passed && !result.skipped;
                 verification_results.push(result);
 
-                if !passed {
+                if failed {
                     success = false;
                     if error_message.is_none() {
                         error_message = Some(format!("Verification test '{}' failed", test.name));
@@ -591,6 +594,7 @@ impl CurveConflictWriter {
                 VerificationResult {
                     test_name: test.name.clone(),
                     passed: exists,
+                    skipped: false,
                     actual_result: exists.to_string(),
                     error_message: if !exists {
                         Some(format!("File does not exist: {:?}", path))
@@ -606,6 +610,7 @@ impl CurveConflictWriter {
                     return VerificationResult {
                         test_name: test.name.clone(),
                         passed: false,
+                        skipped: false,
                         actual_result: "Invalid test format".to_string(),
                         error_message: Some("Expected format: file_path:search_text".to_string()),
                     };
@@ -620,6 +625,7 @@ impl CurveConflictWriter {
                         VerificationResult {
                             test_name: test.name.clone(),
                             passed: contains,
+                            skipped: false,
                             actual_result: format!("File contains text: {}", contains),
                             error_message: if !contains {
                                 Some(format!(
@@ -634,6 +640,7 @@ impl CurveConflictWriter {
                     Err(e) => VerificationResult {
                         test_name: test.name.clone(),
                         passed: false,
+                        skipped: false,
                         actual_result: "Failed to read file".to_string(),
                         error_message: Some(format!("Failed to read file: {}", e)),
                     },
@@ -644,7 +651,8 @@ impl CurveConflictWriter {
                 // not present in CcVerificationTest schema v1. Treat as skipped/unverified.
                 VerificationResult {
                     test_name: test.name.clone(),
-                    passed: true, // Not failed — skipped (no registry schema fields yet)
+                    passed: false,
+                    skipped: true,
                     actual_result: "Registry check skipped (not yet supported on this platform)"
                         .to_string(),
                     error_message: None,
@@ -655,7 +663,8 @@ impl CurveConflictWriter {
                 // Treat as skipped/unverified.
                 VerificationResult {
                     test_name: test.name.clone(),
-                    passed: true, // Not failed — skipped (no command schema field yet)
+                    passed: false,
+                    skipped: true,
                     actual_result: "Command check skipped (not yet supported)".to_string(),
                     error_message: None,
                 }

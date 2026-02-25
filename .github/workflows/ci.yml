@@ -1094,8 +1094,9 @@ jobs:
       - name: Check mutation kill rate (≥50% survivors fail CI)
         run: |
           if [ -d mutants-out ]; then
-            missed=$(wc -l < mutants-out/missed.txt 2>/dev/null || echo 0)
-            caught=$(wc -l < mutants-out/caught.txt 2>/dev/null || echo 0)
+            missed=0; caught=0
+            [ -f mutants-out/missed.txt ] && missed=$(grep -c . mutants-out/missed.txt 2>/dev/null || echo 0)
+            [ -f mutants-out/caught.txt ] && caught=$(grep -c . mutants-out/caught.txt 2>/dev/null || echo 0)
             total=$((missed + caught))
             if [ "$total" -gt 0 ]; then
               kill_rate=$(( caught * 100 / total ))
