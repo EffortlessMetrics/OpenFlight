@@ -629,4 +629,124 @@ mod tests {
         let perf_data = &data["performance_summary"];
         assert_eq!(perf_data["avg_jitter_ms"], "[REDACTED]");
     }
+
+    #[test]
+    fn test_check_capability_registered_plugin() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        let manifest = PluginCapabilityManifest {
+            name: "cap-test".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: [PluginCapability::ReadBus, PluginCapability::EmitPanel]
+                .into_iter()
+                .collect(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            signature: SignatureStatus::Unsigned,
+        };
+
+        mgr.validate_plugin(manifest).unwrap();
+
+        assert!(mgr.check_capability("cap-test", &PluginCapability::ReadBus));
+        assert!(mgr.check_capability("cap-test", &PluginCapability::EmitPanel));
+        assert!(!mgr.check_capability("cap-test", &PluginCapability::ReadProfiles));
+    }
+
+    #[test]
+    fn test_check_capability_unregistered_plugin_returns_false() {
+        let mgr = SecurityManager::new();
+        assert!(!mgr.check_capability("ghost-plugin", &PluginCapability::ReadBus));
+    }
+
+    #[test]
+    fn test_disable_telemetry_clears_config() {
+        let mut mgr = SecurityManager::new();
+        let data_types = [TelemetryDataType::Performance].into_iter().collect();
+        mgr.enable_telemetry(data_types).unwrap();
+
+        assert!(mgr.is_telemetry_authorized(&TelemetryDataType::Performance));
+        mgr.disable_telemetry();
+        assert!(!mgr.is_telemetry_authorized(&TelemetryDataType::Performance));
+        assert!(!mgr.get_telemetry_config().enabled);
+        assert!(mgr.get_telemetry_config().consent_timestamp.is_none());
+    }
+
+    #[test]
+    fn test_expired_signature_rejected() {
+        let mut mgr = SecurityManager::new();
+        // Don't allow unsigned — enforcement is on
+        let manifest = PluginCapabilityManifest {
+            name: "signed-plugin".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: [PluginCapability::ReadBus].into_iter().collect(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            // Signature expired in year 2000
+            signature: SignatureStatus::Signed {
+                issuer: "CA".to_string(),
+                subject: "TestPlugin".to_string(),
+                valid_from: 946684800,  // 2000-01-01
+                valid_until: 946684801, // 2000-01-01 + 1s (expired)
+            },
+        };
+        assert!(mgr.validate_plugin(manifest).is_err());
+    }
+
+    #[test]
+    fn test_invalid_signature_rejected() {
+        let mut mgr = SecurityManager::new();
+        let manifest = PluginCapabilityManifest {
+            name: "bad-plugin".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: HashSet::new(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            signature: SignatureStatus::Invalid {
+                reason: "signature tampered".to_string(),
+            },
+        };
+        let err = mgr.validate_plugin(manifest).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("signature tampered"), "error should include reason: {msg}");
+    }
+
+    #[test]
+    fn test_wasm_network_access_rejected() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        let manifest = PluginCapabilityManifest {
+            name: "net-plugin".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: [PluginCapability::Network {
+                hosts: vec!["example.com".to_string()],
+            }]
+            .into_iter()
+            .collect(),
+            description: None,
+            plugin_type: PluginType::Wasm, // WASM cannot have network
+            signature: SignatureStatus::Unsigned,
+        };
+        assert!(mgr.validate_plugin(manifest).is_err());
+    }
+
+    #[test]
+    fn test_plugin_registry_getter() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        assert!(mgr.get_plugin_registry().is_empty());
+
+        let manifest = PluginCapabilityManifest {
+            name: "reg-test".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: HashSet::new(),
+            description: None,
+            plugin_type: PluginType::Native,
+            signature: SignatureStatus::Unsigned,
+        };
+        mgr.validate_plugin(manifest).unwrap();
+        assert_eq!(mgr.get_plugin_registry().len(), 1);
+    }
 }
