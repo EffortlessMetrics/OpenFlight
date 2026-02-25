@@ -42,8 +42,7 @@ proptest! {
             "roll out of range: {}", s.axes.roll);
         prop_assert!(s.axes.pitch >= -1.0 && s.axes.pitch <= 1.0,
             "pitch out of range: {}", s.axes.pitch);
-        // Allow ε for i16::MIN edge case (−32768/32767 ≈ −1.000030)
-        prop_assert!(s.axes.throttle >= -0.001 && s.axes.throttle <= 1.001,
+        prop_assert!(s.axes.throttle >= 0.0 && s.axes.throttle <= 1.0,
             "throttle out of range: {}", s.axes.throttle);
         prop_assert!(s.axes.rocker >= -1.0 && s.axes.rocker <= 1.0,
             "rocker out of range: {}", s.axes.rocker);

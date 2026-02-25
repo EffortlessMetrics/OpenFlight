@@ -106,7 +106,7 @@ pub fn parse_ab9_report(data: &[u8]) -> Result<Ab9InputState, MozaParseError> {
 }
 
 fn norm(v: i16) -> f32 {
-    v as f32 / 32767.0
+    (v as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]
