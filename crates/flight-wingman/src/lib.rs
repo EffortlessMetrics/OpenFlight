@@ -231,4 +231,47 @@ mod tests {
         let mut adapter = WingmanAdapter::new(WingmanConfig::default());
         assert!(matches!(adapter.poll_once(), Err(WingmanError::NotStarted)));
     }
+
+    #[test]
+    fn send_axis_without_start_returns_not_started() {
+        let mut adapter = WingmanAdapter::new(WingmanConfig::default());
+        assert!(matches!(
+            adapter.send_axis(0, 1.0),
+            Err(WingmanError::NotStarted)
+        ));
+    }
+
+    #[test]
+    fn send_button_without_start_returns_not_started() {
+        let mut adapter = WingmanAdapter::new(WingmanConfig::default());
+        assert!(matches!(
+            adapter.send_button(0, true),
+            Err(WingmanError::NotStarted)
+        ));
+    }
+
+    #[test]
+    fn poll_interval_matches_config_rate() {
+        let config = WingmanConfig {
+            poll_rate_hz: 20.0,
+            ..Default::default()
+        };
+        let adapter = WingmanAdapter::new(config);
+        let interval = adapter.poll_interval();
+        let expected_ms = 50u64; // 1000ms / 20hz
+        let actual_ms = interval.as_millis() as u64;
+        assert!(
+            (actual_ms as i64 - expected_ms as i64).abs() <= 2,
+            "expected ~50ms, got {}ms",
+            actual_ms
+        );
+    }
+
+    #[test]
+    fn default_config_has_sensible_values() {
+        let config = WingmanConfig::default();
+        assert_eq!(config.process_name, "ProjectWingman.exe");
+        assert!(config.poll_rate_hz > 0.0);
+        assert!(config.bus_max_rate_hz > 0.0);
+    }
 }

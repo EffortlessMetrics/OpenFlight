@@ -610,4 +610,131 @@ mod tests {
             })
         ));
     }
+
+    // ----- Gladiator NXT EVO parser tests -----
+
+    fn make_gladiator_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
+        let mut report = vec![0u8; 21];
+        for (i, &v) in axes.iter().enumerate() {
+            let bytes = v.to_le_bytes();
+            report[i * 2] = bytes[0];
+            report[i * 2 + 1] = bytes[1];
+        }
+        let lo_bytes = btn_lo.to_le_bytes();
+        report[12..16].copy_from_slice(&lo_bytes);
+        let hi_bytes = btn_hi.to_le_bytes();
+        report[16..20].copy_from_slice(&hi_bytes);
+        report[20] = hat_byte;
+        report
+    }
+
+    #[test]
+    fn gladiator_report_too_short_returns_error() {
+        let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
+        let err = handler.parse_report(&[0u8; 10]);
+        assert!(matches!(
+            err,
+            Err(GladiatorParseError::ReportTooShort { expected: 12, actual: 10 })
+        ));
+    }
+
+    #[test]
+    fn gladiator_centre_stick_axes_normalise_to_zero() {
+        let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
+        let report = make_gladiator_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000],
+            0,
+            0,
+            0xFF,
+        );
+        let state = handler.parse_report(&report).unwrap();
+        assert!(
+            state.axes.roll.abs() < 0.01,
+            "roll should be ~0.0 at centre, got {}",
+            state.axes.roll
+        );
+        assert!(
+            state.axes.pitch.abs() < 0.01,
+            "pitch should be ~0.0 at centre"
+        );
+        assert!(
+            state.axes.yaw.abs() < 0.01,
+            "yaw should be ~0.0 at centre"
+        );
+    }
+
+    #[test]
+    fn gladiator_full_throttle_wheel_normalises_to_one() {
+        let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
+        let report = make_gladiator_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF],
+            0,
+            0,
+            0xFF,
+        );
+        let state = handler.parse_report(&report).unwrap();
+        assert!(
+            (state.axes.throttle - 1.0).abs() < 0.001,
+            "expected throttle ≈ 1.0, got {}",
+            state.axes.throttle
+        );
+    }
+
+    #[test]
+    fn gladiator_buttons_parsed_correctly() {
+        let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
+        // bit 0 = button 1, bit 31 = button 32, bit 32 = button 33 (in hi word)
+        let report = make_gladiator_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0],
+            0x8000_0001u32, // buttons 1 and 32
+            0x0000_0001u32, // button 33
+            0xFF,
+        );
+        let state = handler.parse_report(&report).unwrap();
+        assert!(state.buttons[0], "button 1 should be pressed");
+        assert!(state.buttons[31], "button 32 should be pressed");
+        assert!(state.buttons[32], "button 33 should be pressed");
+        assert_eq!(state.pressed_buttons(), vec![1, 32, 33]);
+    }
+
+    #[test]
+    fn gladiator_hat_north_decoded() {
+        let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
+        // low nibble = 0 (N), high nibble = 0xF (centred)
+        let report = make_gladiator_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0],
+            0,
+            0,
+            0xF0, // hat0=N(0), hat1=centred(F)
+        );
+        let state = handler.parse_report(&report).unwrap();
+        assert_eq!(state.hats[0], Some(HatDirection(0)), "hat 0 should be N");
+        assert_eq!(state.hats[1], None, "hat 1 should be centred");
+    }
+
+    #[test]
+    fn gladiator_with_report_id_strips_prefix() {
+        let handler =
+            GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight).with_report_id(true);
+        let mut report = vec![0x01u8]; // report id
+        report.extend_from_slice(&make_gladiator_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF],
+            0,
+            0,
+            0xFF,
+        ));
+        let state = handler.parse_report(&report).unwrap();
+        assert!((state.axes.throttle - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn stecs_pressed_buttons_empty_when_none_pressed() {
+        let state = StecsInputState {
+            variant: VkbStecsVariant::RightSpaceThrottleGripMini,
+            axes: None,
+            buttons: [false; STECS_MAX_BUTTONS],
+            active_virtual_controllers: [false; STECS_MAX_VIRTUAL_CONTROLLERS],
+        };
+        assert!(state.pressed_buttons().is_empty());
+    }
 }
