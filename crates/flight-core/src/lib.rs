@@ -104,3 +104,61 @@ pub use writers::{
     BackupInfo, CurveConflictError, CurveConflictWriter, VerificationResult, WriteResult,
     WritersConfig,
 };
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flight_error_display_variants() {
+        let err = FlightError::Configuration("missing key".to_string());
+        let msg = err.to_string();
+        assert!(msg.contains("Configuration error"), "got: {msg}");
+
+        let err2 = FlightError::Hardware("device stall".to_string());
+        assert!(err2.to_string().contains("Hardware error"));
+
+        let err3 = FlightError::Writer("no output".to_string());
+        assert!(err3.to_string().contains("Writer error"));
+    }
+
+    #[test]
+    fn result_type_alias_is_flight_error() {
+        let r: Result<u32> = Ok(42);
+        assert_eq!(r.unwrap(), 42);
+
+        let e: Result<u32> = Err(FlightError::RulesValidation("bad rule".to_string()));
+        assert!(e.is_err());
+        assert!(e.unwrap_err().to_string().contains("Rules validation"));
+    }
+
+    #[test]
+    fn watchdog_config_default_has_sensible_values() {
+        let cfg = WatchdogConfig::default();
+        assert!(cfg.max_execution_time.as_micros() > 0);
+        assert!(cfg.usb_timeout.as_millis() > 0);
+    }
+
+    #[test]
+    fn component_type_display_name_contains_id() {
+        let usb = ComponentType::UsbEndpoint("mydev".to_string());
+        assert!(usb.display_name().contains("mydev"));
+
+        let plugin = ComponentType::NativePlugin("myplugin".to_string());
+        assert!(plugin.display_name().contains("myplugin"));
+    }
+
+    #[test]
+    fn phase_of_flight_variants_are_distinct() {
+        // Simply verify that the enum variants are accessible via the re-export
+        let phases = [
+            PhaseOfFlight::Taxi,
+            PhaseOfFlight::Takeoff,
+            PhaseOfFlight::Cruise,
+            PhaseOfFlight::Landing,
+        ];
+        // All distinct (they should not compare equal to each other)
+        assert_ne!(phases[0], phases[1]);
+        assert_ne!(phases[2], phases[3]);
+    }
+}
