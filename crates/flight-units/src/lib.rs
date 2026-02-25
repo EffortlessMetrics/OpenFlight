@@ -193,5 +193,50 @@ mod tests {
             let back = conversions::meters_to_feet(meters);
             prop_assert!((val - back).abs() < val * 0.001 + 0.0001);
         }
+
+        #[test]
+        fn prop_fpm_mps_roundtrip(val in -100000.0f32..100000.0) {
+            let mps = conversions::fpm_to_mps(val);
+            let back = conversions::mps_to_fpm(mps);
+            prop_assert!((val - back).abs() < val.abs() * 0.001 + 0.0001);
+        }
+
+        #[test]
+        fn prop_degrees_radians_roundtrip(val in -1000.0f32..1000.0) {
+            let rads = conversions::degrees_to_radians(val);
+            let back = conversions::radians_to_degrees(rads);
+            prop_assert!((val - back).abs() < val.abs() * 0.001 + 0.0001);
+        }
+
+        #[test]
+        fn prop_knots_kph_roundtrip(val in 0.0f32..10000.0) {
+            let kph = conversions::knots_to_kph(val);
+            let back = conversions::kph_to_knots(kph);
+            prop_assert!((val - back).abs() < val * 0.001 + 0.0001);
+        }
+    }
+
+    #[test]
+    fn test_degrees_radians_known_values() {
+        let pi = std::f32::consts::PI;
+        assert!((conversions::degrees_to_radians(180.0) - pi).abs() < 0.0001);
+        assert!((conversions::radians_to_degrees(pi) - 180.0).abs() < 0.0001);
+        assert!((conversions::degrees_to_radians(0.0)).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_fpm_mps_known_values() {
+        // 196.85 ft/min = 1 m/s (approximately)
+        let mps = conversions::fpm_to_mps(196.85);
+        assert!((mps - 1.0).abs() < 0.01, "fpm→mps: {mps}");
+        let fpm = conversions::mps_to_fpm(1.0);
+        assert!((fpm - 196.85).abs() < 0.1, "mps→fpm: {fpm}");
+    }
+
+    #[test]
+    fn test_knots_to_kph_known_value() {
+        // 1 knot ≈ 1.852 km/h
+        let kph = conversions::knots_to_kph(1.0);
+        assert!((kph - 1.852).abs() < 0.01, "1 kt should be ~1.852 kph, got {kph}");
     }
 }
