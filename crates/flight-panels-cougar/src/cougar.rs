@@ -1010,15 +1010,26 @@ impl CougarMfdWriter {
         }
     }
 
-    /// Detect MFD configuration drift
-    fn detect_mfd_drift(&mut self, _mfd_path: &str) -> Result<bool> {
-        // TODO: Implement drift detection logic
-        // 1. Read current LED states from hardware
-        // 2. Compare with expected states
-        // 3. Detect configuration drift
+    /// Detect MFD configuration drift.
+    ///
+    /// Drift is detected when any LED's last-write timestamp is older than a
+    /// threshold that suggests the device may have power-cycled and lost its
+    /// programmed state.  HID output devices cannot be read back directly, so
+    /// staleness is the best proxy available without a round-trip echo register.
+    fn detect_mfd_drift(&mut self, mfd_path: &str) -> Result<bool> {
+        const DRIFT_THRESHOLD: std::time::Duration = std::time::Duration::from_secs(30);
 
-        // For now, simulate drift detection
-        Ok(false)
+        let Some(mfd_led_states) = self.led_states.get(mfd_path) else {
+            return Ok(false);
+        };
+
+        // Any LED that is supposed to be ON but hasn't been written within the
+        // threshold window is considered drifted (device likely power-cycled).
+        let drifted = mfd_led_states
+            .values()
+            .any(|state| state.is_on && state.last_write.elapsed() > DRIFT_THRESHOLD);
+
+        Ok(drifted)
     }
 
     /// Repair MFD configuration drift

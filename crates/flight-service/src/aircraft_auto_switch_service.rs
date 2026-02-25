@@ -374,8 +374,27 @@ impl AircraftAutoSwitchService {
         let auto_switch_metrics = self.auto_switch.get_metrics().await;
         let process_detection_metrics = self.process_detector.get_metrics().await;
 
-        // Adapter metrics are not yet individually tracked; return empty map
-        let adapter_metrics = HashMap::new();
+        // Build adapter metrics from which sims are currently active in the adapters map
+        let adapter_metrics = {
+            let adapters = self.adapters.read().await;
+            let mut map = HashMap::new();
+            if adapters.msfs.is_some() {
+                map.insert(BusSimId::Msfs, AdapterMetrics::default());
+            }
+            if adapters.xplane.is_some() {
+                map.insert(BusSimId::XPlane, AdapterMetrics::default());
+            }
+            if adapters.dcs.is_some() {
+                map.insert(BusSimId::Dcs, AdapterMetrics::default());
+            }
+            if adapters.ac7.is_some() {
+                map.insert(BusSimId::AceCombat7, AdapterMetrics::default());
+            }
+            if adapters.wingman.is_some() {
+                map.insert(BusSimId::Wingman, AdapterMetrics::default());
+            }
+            map
+        };
 
         ServiceMetrics {
             total_aircraft_switches: auto_switch_metrics.total_switches,

@@ -22,7 +22,7 @@ use flight_core::{
 };
 
 use crate::{
-    aircraft_auto_switch_service::AircraftAutoSwitchService,
+    aircraft_auto_switch_service::{AircraftAutoSwitchService, AircraftAutoSwitchServiceConfig},
     capability_service::CapabilityService,
     curve_conflict_service::CurveConflictService,
     error_taxonomy::ErrorTaxonomy,
@@ -387,8 +387,10 @@ impl FlightService {
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
 
-        // Stub implementation - would use real config
-        let config = Default::default();
+        let config = AircraftAutoSwitchServiceConfig {
+            auto_switch: self.config.auto_switch_config.clone(),
+            ..Default::default()
+        };
 
         let auto_switch = AircraftAutoSwitchService::new(config);
         self.auto_switch = Some(auto_switch);

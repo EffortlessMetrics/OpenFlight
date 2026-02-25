@@ -228,7 +228,6 @@ impl RulesCompiler {
 
     #[allow(dead_code)]
     fn compile_rule(&self, rule: &Rule) -> Result<CompiledRule> {
-        // Stub implementation - parse condition and action
         let condition = self.parse_condition(&rule.when)?;
         let action = self.parse_action(&rule.action)?;
 
