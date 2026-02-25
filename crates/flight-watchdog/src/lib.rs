@@ -1320,3 +1320,60 @@ mod prop_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod unregister_tests {
+    use super::*;
+
+    #[test]
+    fn unregister_removes_component_config() {
+        let mut watchdog = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("usb0".to_string());
+        watchdog.register_component(comp.clone(), WatchdogConfig::default());
+        watchdog.unregister_component(&comp);
+        // After unregister, component should not be quarantined or have config
+        assert!(!watchdog.is_quarantined(&comp));
+        let quarantined = watchdog.get_quarantined_components();
+        assert!(!quarantined.contains(&comp));
+    }
+
+    #[test]
+    fn unregister_plugin_clears_plugin_stats() {
+        let mut watchdog = WatchdogSystem::new();
+        let plugin_id = "myplugin";
+        let comp = ComponentType::NativePlugin(plugin_id.to_string());
+        watchdog.register_component(comp.clone(), WatchdogConfig::default());
+        watchdog.record_plugin_execution(plugin_id, Duration::from_micros(100), true);
+        watchdog.unregister_component(&comp);
+        // Stats should be gone after unregister
+        assert!(watchdog.get_plugin_overrun_stats(plugin_id).is_none());
+    }
+
+    #[test]
+    fn double_unregister_is_safe() {
+        let mut watchdog = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("usb1".to_string());
+        watchdog.register_component(comp.clone(), WatchdogConfig::default());
+        watchdog.unregister_component(&comp);
+        // Should not panic on second unregister
+        watchdog.unregister_component(&comp);
+    }
+
+    #[test]
+    fn unregister_quarantined_component_clears_quarantine() {
+        let mut watchdog = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("usb2".to_string());
+        let cfg = WatchdogConfig {
+            max_consecutive_failures: 1,
+            ..WatchdogConfig::default()
+        };
+        watchdog.register_component(comp.clone(), cfg);
+        // Force the component into quarantine via USB stall detection
+        watchdog.record_usb_stall("usb2");
+        watchdog.check_usb_timeout("usb2");
+        // Unregister: quarantine status must be cleaned up
+        watchdog.unregister_component(&comp);
+        let quarantined = watchdog.get_quarantined_components();
+        assert!(!quarantined.contains(&comp));
+    }
+}
