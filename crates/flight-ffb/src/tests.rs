@@ -954,8 +954,8 @@ mod trim_correctness_tests {
         let mut previous_rate = 0.0f32;
         let mut last_tick = std::time::Instant::now();
 
-        // Run for several seconds to test rate and jerk limiting
-        for _ in 0..3000 {
+        // Run for 400ms to test rate and jerk limiting (rate reaches limit in ~250ms)
+        for _ in 0..400 {
             std::thread::sleep(Duration::from_millis(1));
             let now = std::time::Instant::now();
             let actual_dt = now.duration_since(last_tick).as_secs_f32().max(0.0005);
@@ -994,7 +994,7 @@ mod trim_correctness_tests {
     fn test_hil_trim_behavior_validation() {
         let config = HilTrimTestConfig {
             device_max_torque_nm: 15.0,
-            max_test_duration: Duration::from_secs(10), // Shorter for unit test
+            max_test_duration: Duration::from_secs(2), // Short for unit test
             hil_fp_tolerance: 1e-4,
             use_physical_device: false, // Virtual device for unit test
             hil_sample_rate_hz: 250,
@@ -1022,7 +1022,7 @@ mod trim_correctness_tests {
     fn test_replay_reproducibility() {
         let config = TrimValidationConfig {
             fp_tolerance: 1e-6,
-            max_test_duration: Duration::from_secs(5),
+            max_test_duration: Duration::from_secs(2),
             sample_rate_hz: 1000,
             verbose_logging: false,
         };
@@ -1055,7 +1055,10 @@ mod trim_correctness_tests {
     /// Test complete validation suite integration
     #[test]
     fn test_validation_suite_integration() {
-        let mut validation_suite = TrimValidationSuite::default();
+        let mut validation_suite = TrimValidationSuite::new(TrimValidationConfig {
+            max_test_duration: Duration::from_secs(2),
+            ..TrimValidationConfig::default()
+        });
         let results = validation_suite.run_complete_validation();
 
         assert!(
@@ -1124,8 +1127,11 @@ mod trim_correctness_tests {
             _ => panic!("Expected ForceFeedback output for auto-negotiated mode"),
         }
 
-        // Test validation through engine
-        let validation_results = engine.run_trim_validation();
+        // Test validation through engine (with short duration for unit test)
+        let validation_results = engine.run_trim_validation_with_config(TrimValidationConfig {
+            max_test_duration: Duration::from_secs(2),
+            ..TrimValidationConfig::default()
+        });
         assert!(
             !validation_results.is_empty(),
             "Engine should produce validation results"

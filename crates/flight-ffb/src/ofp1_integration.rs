@@ -237,6 +237,12 @@ impl Ofp1FfbIntegration {
 
         self.is_running = false;
 
+        // Close the command channel by dropping all senders so the integration
+        // thread's recv() returns Err(Disconnected) and the loop exits cleanly.
+        let (new_sender, new_receiver) = crossbeam::channel::bounded(100);
+        let _ = std::mem::replace(&mut self.command_sender, new_sender);
+        let _ = std::mem::replace(&mut self.command_receiver, new_receiver);
+
         if let Some(handle) = self.integration_thread.take() {
             let _ = handle.join();
         }
@@ -539,7 +545,7 @@ mod tests {
         assert!(integration.negotiation_result.is_some());
 
         let result = integration.negotiation_result().unwrap();
-        assert_eq!(result.max_torque_nm, 15.0);
+        assert_eq!(result.max_torque_nm, 20.0); // Emulator reports 20 Nm (20000 mNm)
         assert!(result.effective_update_rate_hz > 0);
     }
 

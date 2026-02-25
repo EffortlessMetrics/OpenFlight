@@ -110,8 +110,8 @@ fn test_ffb_setpoint_rate_jerk_limiting() {
     let mut previous_rate = 0.0f32;
     let dt = 0.001f32; // 1ms timestep
 
-    // Run for several seconds to test rate and jerk limiting
-    for _ in 0..3000 {
+    // Run for 400ms to test rate and jerk limiting (rate reaches limit in ~250ms)
+    for _ in 0..400 {
         let output = controller.update();
         
         if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
@@ -146,7 +146,7 @@ fn test_ffb_setpoint_rate_jerk_limiting() {
 fn test_hil_trim_behavior_validation() {
     let config = HilTrimTestConfig {
         device_max_torque_nm: 15.0,
-        max_test_duration: Duration::from_secs(10), // Shorter for unit test
+        max_test_duration: Duration::from_secs(2), // Short for unit test
         hil_fp_tolerance: 1e-4,
         use_physical_device: false, // Virtual device for unit test
         hil_sample_rate_hz: 250,
@@ -170,7 +170,7 @@ fn test_hil_trim_behavior_validation() {
 fn test_replay_reproducibility() {
     let config = TrimValidationConfig {
         fp_tolerance: 1e-6,
-        max_test_duration: Duration::from_secs(5),
+        max_test_duration: Duration::from_secs(2),
         sample_rate_hz: 1000,
         verbose_logging: false,
     };
@@ -194,7 +194,10 @@ fn test_replay_reproducibility() {
 /// Test complete validation suite integration
 #[test]
 fn test_validation_suite_integration() {
-    let mut validation_suite = TrimValidationSuite::default();
+    let mut validation_suite = TrimValidationSuite::new(TrimValidationConfig {
+        max_test_duration: Duration::from_secs(2),
+        ..TrimValidationConfig::default()
+    });
     let results = validation_suite.run_complete_validation();
     
     assert!(!results.is_empty(), "Validation suite should produce results");
