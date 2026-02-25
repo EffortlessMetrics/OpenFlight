@@ -280,4 +280,98 @@ mod tests {
         let metrics = registry.snapshot();
         assert!(metrics.is_empty());
     }
+
+    #[test]
+    fn test_gauge_value_missing_returns_none() {
+        let registry = MetricsRegistry::new();
+        assert!(registry.gauge_value("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_gauge_value_set_and_read() {
+        let registry = MetricsRegistry::new();
+        registry.set_gauge("my_gauge", 42.5);
+        let val = registry.gauge_value("my_gauge").expect("gauge should exist");
+        assert!((val - 42.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_counter_accumulates() {
+        let registry = MetricsRegistry::new();
+        registry.inc_counter("hits", 3);
+        registry.inc_counter("hits", 7);
+        let metrics = registry.snapshot();
+        let val = metrics.iter().find_map(|m| match m {
+            Metric::Counter { name, value } if name == "hits" => Some(*value),
+            _ => None,
+        });
+        assert_eq!(val, Some(10));
+    }
+
+    #[test]
+    fn test_histogram_non_finite_ignored() {
+        let registry = MetricsRegistry::new();
+        registry.observe("sensor", f64::NAN);
+        registry.observe("sensor", f64::INFINITY);
+        registry.observe("sensor", 1.0);
+        // Only the finite sample should appear in summary
+        let metrics = registry.snapshot();
+        let summary = metrics.iter().find_map(|m| match m {
+            Metric::Histogram { name, summary } if name == "sensor" => Some(summary.clone()),
+            _ => None,
+        });
+        let summary = summary.expect("should have a summary from the one finite sample");
+        assert_eq!(summary.count, 1);
+        assert_eq!(summary.min, 1.0);
+        assert_eq!(summary.max, 1.0);
+    }
+
+    #[test]
+    fn test_histogram_saturation_at_capacity() {
+        let capacity = 4;
+        let registry = MetricsRegistry::with_histogram_capacity(capacity);
+        for i in 0..=capacity + 5 {
+            registry.observe("lat", i as f64);
+        }
+        let metrics = registry.snapshot();
+        let summary = metrics.iter().find_map(|m| match m {
+            Metric::Histogram { name, summary } if name == "lat" => Some(summary.clone()),
+            _ => None,
+        });
+        let summary = summary.expect("summary should exist");
+        // Should never exceed capacity
+        assert_eq!(summary.count, capacity, "count should be capped at capacity");
+    }
+
+    #[test]
+    fn test_snapshot_contains_all_metric_types() {
+        let registry = MetricsRegistry::new();
+        registry.inc_counter("c1", 1);
+        registry.set_gauge("g1", 3.14);
+        registry.observe("h1", 100.0);
+
+        let metrics = registry.snapshot();
+        let has_counter = metrics
+            .iter()
+            .any(|m| matches!(m, Metric::Counter { name, .. } if name == "c1"));
+        let has_gauge = metrics
+            .iter()
+            .any(|m| matches!(m, Metric::Gauge { name, .. } if name == "g1"));
+        let has_histogram = metrics
+            .iter()
+            .any(|m| matches!(m, Metric::Histogram { name, .. } if name == "h1"));
+
+        assert!(has_counter);
+        assert!(has_gauge);
+        assert!(has_histogram);
+    }
+
+    #[test]
+    fn test_reset_is_idempotent() {
+        let registry = MetricsRegistry::new();
+        registry.inc_counter("x", 1);
+        registry.reset();
+        registry.reset(); // second reset should not panic
+        assert!(registry.snapshot().is_empty());
+    }
 }
