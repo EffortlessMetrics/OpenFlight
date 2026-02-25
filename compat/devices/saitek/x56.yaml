@@ -1,0 +1,54 @@
+# Logitech/Saitek X56 Rhino HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Logitech X56 Rhino HOTAS"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek/Logitech PLC (some units may show 0x046D / Logitech)
+    product_id: 0x0C2D      # X56 Stick (Mad Catz variant); see quirks for PID variants
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 9
+    names: [x, y, z, rx, ry, rz, slider1, slider2, throttle2]
+    resolution_bits: 12
+  buttons: 50
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_VARIANTS
+    description: >
+      The X56 was produced under Mad Catz (0x06A3/0x0C2D stick, 0x0C2E throttle)
+      and Logitech (0x046D/0xC2FF stick) branding with different PIDs.
+      OpenFlight attempts to match all known variants; see the code-level
+      `docs/reference/hotas-claims.md` for PID collision warnings.
+  - id: DUAL_THROTTLE
+    description: >
+      Left and right throttle halves appear as separate axes (Z and Rz).
+      The combined mode presents a single Z axis.
+  - id: MINISTICK_DEADZONE
+    description: >
+      Built-in mini-stick exhibits pronounced hardware deadzone (≈8%).
+      OpenFlight applies the x55_x56_ministick ghost filter preset.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID collisions across Mad Catz and Logitech branding make enumeration
+    fragile. Tier 2 pending community confirmation of PID variants.
+    Last validated: 2026-02.

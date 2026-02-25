@@ -1,0 +1,53 @@
+# Thrustmaster T.Flight HOTAS 4
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS 4"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB67B   # Current; legacy firmware: 0xB67A
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: LEGACY_PID
+    description: >
+      Older firmware may enumerate as PID 0xB67A instead of 0xB67B.
+      OpenFlight handles both product IDs transparently.
+  - id: STICK_THROTTLE_SINGLE_USB
+    description: >
+      Stick and throttle share a single USB device; both appear on the same
+      HID interface. No separate enumeration is needed.
+  - id: MERGED_OR_SEPARATE_THROTTLE
+    description: >
+      Depending on the firmware mode, the throttle halves may appear as a
+      single Z axis or two separate axes (Rz + Z). OpenFlight auto-detects
+      via report length.
+
+support:
+  tier: 2              # Parser tests, no HIL rig
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    T.Flight HOTAS 4 (PS4 edition) and T.Flight HOTAS ONE (Xbox) are
+    mechanically identical; the Xbox variant uses VID 0x044F / PID 0xB679.
+    Last validated: 2026-02.
