@@ -458,23 +458,32 @@ mod tests {
         controller.set_min_interval(min_interval);
 
         let target = "RATE_TEST";
-        let start_time = Instant::now();
 
-        // Try to execute multiple actions rapidly
-        for _ in 0..5 {
-            let action = Action::LedOn {
-                target: target.to_string(),
-            };
-            controller.execute_actions(&[action]).unwrap();
-        }
+        // First write turns LED on
+        let on_action = Action::LedOn { target: target.to_string() };
+        controller.execute_actions(&[on_action]).unwrap();
 
-        let elapsed = start_time.elapsed();
+        // Immediate second write tries to turn LED off — should be rate-limited (skipped)
+        let off_action = Action::LedOff { target: target.to_string() };
+        controller.execute_actions(&[off_action]).unwrap();
 
-        // Should have been rate limited - not all writes should have occurred immediately
-        // In a real implementation, we'd check the actual write timestamps
+        // Verify LED is still ON (the off write was rate-limited)
+        let led_target = LedTarget::Panel(target.to_string());
+        let state = controller.get_led_state(&led_target);
         assert!(
-            elapsed >= Duration::from_millis(1),
-            "Some rate limiting should have occurred"
+            state.map_or(false, |s| s.on),
+            "LED should still be ON — immediate off write should be rate-limited"
+        );
+
+        // After min_interval elapses, the off write should execute
+        std::thread::sleep(min_interval + Duration::from_millis(1));
+        let off_action2 = Action::LedOff { target: target.to_string() };
+        controller.execute_actions(&[off_action2]).unwrap();
+
+        let state = controller.get_led_state(&led_target);
+        assert!(
+            state.map_or(false, |s| !s.on),
+            "LED should be OFF after min_interval has elapsed"
         );
     }
 }

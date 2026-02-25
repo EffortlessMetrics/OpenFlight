@@ -238,19 +238,21 @@ fn test_verify_test_lifecycle() {
     // Cannot start another test while one is running
     assert!(writer.start_verify_test(&device_path).is_err());
 
-    // Update test multiple times to completion
+    // Update test in a time-bounded loop — RadioPanel has 2×100ms Delay steps
+    let test_deadline = std::time::Instant::now() + Duration::from_secs(5);
     let mut result = None;
-    for _ in 0..100 {
-        // Limit iterations to prevent infinite loop
+    loop {
         match writer.update_verify_test() {
             Ok(Some(test_result)) => {
                 result = Some(test_result);
                 break;
             }
             Ok(None) => {
-                // Test still running, add small delay to simulate time passage
-                std::thread::sleep(Duration::from_millis(1));
-                continue;
+                assert!(
+                    std::time::Instant::now() < test_deadline,
+                    "Verify test timed out after 5s"
+                );
+                std::thread::sleep(Duration::from_millis(5));
             }
             Err(e) => panic!("Verify test failed: {}", e),
         }
@@ -487,33 +489,39 @@ fn test_min_interval_enforcement() {
     let device_path = device_info.device_path.clone();
     writer.register_panel(device_info).unwrap();
 
-    let led_state = LedState {
+    let on_state = LedState {
         on: true,
         brightness: 1.0,
         blink_rate: None,
         last_update: Instant::now(),
     };
+    let off_state = LedState {
+        on: false,
+        brightness: 0.0,
+        blink_rate: None,
+        last_update: Instant::now(),
+    };
     let target = LedTarget::Panel("COM1".to_string());
 
-    let start_time = Instant::now();
+    // First write: LED on — executes because last_write was init'd min_write_interval in the past
+    writer
+        .set_led(&device_path, "COM1", &target, &on_state)
+        .unwrap();
 
-    // Multiple rapid writes should be rate limited
-    for _ in 0..5 {
-        writer
-            .set_led(&device_path, "COM1", &target, &led_state)
-            .unwrap();
-    }
+    // Immediate second write: LED off — rate-limited (50ms not yet elapsed)
+    writer
+        .set_led(&device_path, "COM1", &target, &off_state)
+        .unwrap();
 
-    let elapsed = start_time.elapsed();
-
-    // Should have been rate limited - not all writes should have occurred
-    // In a real implementation, we'd check actual write timestamps
+    // Verify LED is still ON (the off-write was rate-limited)
+    let panel_led_states = writer.led_states.get(&device_path).unwrap();
+    let com1_state = panel_led_states.get("COM1").unwrap();
     assert!(
-        elapsed >= Duration::from_millis(1),
-        "Some rate limiting should have occurred"
+        com1_state.is_on,
+        "LED should still be ON — immediate off write should be rate-limited"
     );
 
-    // Only first write should have generated latency sample due to rate limiting
+    // Only first write should have generated a latency sample
     let stats = writer.get_latency_stats().unwrap();
     assert_eq!(
         stats.sample_count, 1,
