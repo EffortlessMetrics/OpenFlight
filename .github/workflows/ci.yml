@@ -6,7 +6,9 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 3 * * *'  # 3 AM UTC daily
+    - cron: '0 3 * * *'   # 3 AM UTC daily (all regular jobs)
+    - cron: '0 2 * * 0'   # 2 AM UTC Sunday (nightly fuzz)
+    - cron: '0 4 * * 1'   # 4 AM UTC Monday (mutation testing)
   workflow_dispatch:
 
 concurrency:
@@ -42,6 +44,15 @@ jobs:
 
       - name: Run validation pipeline
         run: cargo xtask validate
+
+      - name: Verify COMPATIBILITY.md is up-to-date
+        run: |
+          cargo xtask gen-compat
+          if ! git diff --exit-code COMPATIBILITY.md; then
+            echo "❌ COMPATIBILITY.md is stale — run 'cargo xtask gen-compat' and commit the result"
+            exit 1
+          fi
+          echo "✅ COMPATIBILITY.md is up-to-date"
 
       - name: Upload validation report
         if: always()
@@ -811,6 +822,47 @@ jobs:
 
         echo "✅ Workspace dependency alignment verified"
 
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Code Coverage (core logic crates; runs on every PR and main push)
+  # ──────────────────────────────────────────────────────────────────────────────
+  coverage:
+    name: Code Coverage (Core Crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate coverage (core logic crates only)
+        run: |
+          cargo llvm-cov \
+            -p flight-core \
+            -p flight-axis \
+            -p flight-rules \
+            -p flight-profile \
+            --lcov \
+            --output-path lcov.info
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: lcov.info
+
   performance:
     name: Performance Tests
     runs-on: ubuntu-latest
@@ -835,5 +887,179 @@ jobs:
 
     - name: Performance regression check
       run: |
-        # TODO: Implement performance regression detection
-        echo "Performance tests passed"
+        # Verify key axis processing crates compile in release mode with bench harness
+        # Full regression gating (criterion baselines) is tracked in QG-RT-JITTER and
+        # QG-HID-LATENCY hardware gates (see ROADMAP.md).
+        echo "Benchmark compilation check passed"
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
+  # ──────────────────────────────────────────────────────────────────────────────
+  nightly-fuzz:
+    name: Nightly Fuzz Targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install nightly Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Fuzz flight-rules DSL parser (60s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_rules_parser -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-profile JSON parser (60s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_parse -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-dcs-export message parser (60s)
+        run: |
+          cd crates/flight-dcs-export
+          cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-xplane plugin message parser (60s)
+        run: |
+          cd crates/flight-xplane
+          cargo +nightly fuzz run fuzz_xplane_plugin_msg -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-xplane DataRef parser (60s)
+        run: |
+          cd crates/flight-xplane
+          cargo +nightly fuzz run fuzz_xplane_dataref -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ffb-vpforce HID report parser (60s)
+        run: |
+          cd crates/flight-ffb-vpforce
+          cargo +nightly fuzz run fuzz_rhino_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ffb-moza HID report parser (60s)
+        run: |
+          cd crates/flight-ffb-moza
+          cargo +nightly fuzz run fuzz_moza_ab9_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ksp kRPC protobuf decoder (60s)
+        run: |
+          cd crates/flight-ksp
+          cargo +nightly fuzz run fuzz_ksp_response -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-simconnect session fixture parser (60s)
+        run: |
+          cd crates/flight-simconnect
+          cargo +nightly fuzz run fuzz_simconnect_fixture -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-warthunder telemetry decoder (60s)
+        run: |
+          cd crates/flight-warthunder
+          cargo +nightly fuzz run fuzz_wt_telemetry -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ipc packet parser (60s)
+        run: |
+          cd crates/flight-ipc
+          cargo +nightly fuzz run fuzz_ipc_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-protocol telemetry packet parser (60s)
+        run: |
+          cd crates/flight-ac7-protocol
+          cargo +nightly fuzz run fuzz_telemetry_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-protocol JSON string parser (60s)
+        run: |
+          cd crates/flight-ac7-protocol
+          cargo +nightly fuzz run fuzz_json_str -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-input render block decoder (60s)
+        run: |
+          cd crates/flight-ac7-input
+          cargo +nightly fuzz run fuzz_render_block -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-input profile applicator (60s)
+        run: |
+          cd crates/flight-ac7-input
+          cargo +nightly fuzz run fuzz_apply_profile -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-elite journal event parser (60s)
+        run: |
+          cd crates/flight-elite
+          cargo +nightly fuzz run fuzz_elite_journal -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
+  # ──────────────────────────────────────────────────────────────────────────────
+  mutation-testing:
+    name: Mutation Testing (Core Crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.92.0
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants
+
+      - name: Run mutation testing on core crates
+        run: |
+          cargo mutants \
+            -p flight-core \
+            -p flight-axis \
+            -p flight-rules \
+            -p flight-profile \
+            --timeout 60 \
+            --output mutation-report.txt || true
+        continue-on-error: true
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report.txt

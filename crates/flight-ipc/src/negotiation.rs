@@ -13,12 +13,16 @@ use std::collections::HashSet;
 /// Semantic version parsing and comparison
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Version {
+    /// Major version component (breaking changes increment this)
     pub major: u32,
+    /// Minor version component (backward-compatible additions increment this)
     pub minor: u32,
+    /// Patch version component (backward-compatible fixes increment this)
     pub patch: u32,
 }
 
 impl Version {
+    /// Parse a `"MAJOR.MINOR.PATCH"` version string
     pub fn parse(version_str: &str) -> Result<Self, IpcError> {
         let parts: Vec<&str> = version_str.split('.').collect();
         if parts.len() != 3 {

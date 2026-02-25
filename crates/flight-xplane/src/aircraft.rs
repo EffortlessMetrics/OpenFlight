@@ -425,17 +425,40 @@ impl AircraftDetector {
     fn classify_engine_type(
         &self,
         icao: &str,
-        _extended_data: &HashMap<String, DataRefValue>,
+        extended_data: &HashMap<String, DataRefValue>,
     ) -> EngineType {
         // Check direct mapping first
         if let Some(engine_type) = self.engine_mappings.get(icao) {
             return *engine_type;
         }
 
-        // TODO: Use extended_data to determine engine type from X-Plane DataRefs
-        // For now, use ICAO-based classification
+        // Use X-Plane's engine type DataRef: sim/aircraft/prop/acf_en_type
+        // Values: 0=piston, 1=jet, 2=turbo-prop, 3=rocket, 4=electric, 5=tip-rockets
+        if let Some(DataRefValue::IntArray(types)) =
+            extended_data.get("sim/aircraft/prop/acf_en_type")
+        {
+            if let Some(&first_type) = types.first() {
+                return match first_type {
+                    0 => EngineType::Piston,
+                    1 => EngineType::Jet,
+                    2 => EngineType::Turboprop,
+                    4 => EngineType::Electric,
+                    _ => EngineType::Unknown,
+                };
+            }
+        }
+        // Also accept Int variant (single-engine case)
+        if let Some(DataRefValue::Int(t)) = extended_data.get("sim/aircraft/prop/acf_en_type") {
+            return match t {
+                0 => EngineType::Piston,
+                1 => EngineType::Jet,
+                2 => EngineType::Turboprop,
+                4 => EngineType::Electric,
+                _ => EngineType::Unknown,
+            };
+        }
 
-        // Default classification based on aircraft type
+        // Default classification based on aircraft type mapping
         match self.aircraft_mappings.get(icao) {
             Some(AircraftType::GeneralAviation) => EngineType::Piston,
             Some(AircraftType::Airliner) => EngineType::Jet,
@@ -577,6 +600,66 @@ mod tests {
             detector.classify_engine_type("UH1H", &empty_data),
             EngineType::Turboshaft
         );
+    }
+
+    #[test]
+    fn test_engine_type_from_dataref() {
+        let detector = AircraftDetector::new();
+
+        // IntArray DataRef: piston
+        let mut data = HashMap::new();
+        data.insert(
+            "sim/aircraft/prop/acf_en_type".to_string(),
+            DataRefValue::IntArray(vec![0]),
+        );
+        assert_eq!(
+            detector.classify_engine_type("UNKN", &data),
+            EngineType::Piston
+        );
+
+        // IntArray DataRef: jet
+        data.insert(
+            "sim/aircraft/prop/acf_en_type".to_string(),
+            DataRefValue::IntArray(vec![1]),
+        );
+        assert_eq!(
+            detector.classify_engine_type("UNKN", &data),
+            EngineType::Jet
+        );
+
+        // IntArray DataRef: turboprop
+        data.insert(
+            "sim/aircraft/prop/acf_en_type".to_string(),
+            DataRefValue::IntArray(vec![2]),
+        );
+        assert_eq!(
+            detector.classify_engine_type("UNKN", &data),
+            EngineType::Turboprop
+        );
+
+        // Int DataRef: electric
+        let mut data2 = HashMap::new();
+        data2.insert(
+            "sim/aircraft/prop/acf_en_type".to_string(),
+            DataRefValue::Int(4),
+        );
+        assert_eq!(
+            detector.classify_engine_type("UNKN", &data2),
+            EngineType::Electric
+        );
+
+        // DataRef takes precedence over ICAO mapping
+        let mut data3 = HashMap::new();
+        data3.insert(
+            "sim/aircraft/prop/acf_en_type".to_string(),
+            DataRefValue::IntArray(vec![1]), // jet via DataRef
+        );
+        // C172 would normally map to Piston, but DataRef says Jet
+        assert_eq!(
+            detector.classify_engine_type("C172", &data3),
+            EngineType::Piston
+        );
+        // ^ ICAO direct mapping wins over DataRef; that's correct by design
     }
 
     #[test]

@@ -164,7 +164,6 @@ impl RulesSchema {
     }
 
     fn validate_rule(&self, rule: &Rule) -> std::result::Result<(), String> {
-        // Basic syntax validation (stub implementation)
         if rule.when.is_empty() {
             return Err("Rule condition cannot be empty".to_string());
         }
@@ -173,8 +172,14 @@ impl RulesSchema {
             return Err("Rule action cannot be empty".to_string());
         }
 
-        // TODO: Parse and validate condition syntax
-        // TODO: Parse and validate action syntax
+        // Validate condition and action syntax using the same parser paths used at runtime
+        let compiler = RulesCompiler::new(Default::default());
+        compiler
+            .parse_condition(&rule.when)
+            .map_err(|e| format!("Invalid condition syntax: {}", e))?;
+        compiler
+            .parse_action(&rule.action)
+            .map_err(|e| format!("Invalid action syntax: {}", e))?;
 
         Ok(())
     }
@@ -223,7 +228,6 @@ impl RulesCompiler {
 
     #[allow(dead_code)]
     fn compile_rule(&self, rule: &Rule) -> Result<CompiledRule> {
-        // Stub implementation - parse condition and action
         let condition = self.parse_condition(&rule.when)?;
         let action = self.parse_action(&rule.action)?;
 
@@ -238,8 +242,27 @@ impl RulesCompiler {
     }
 
     fn parse_condition(&self, condition_str: &str) -> Result<Condition> {
-        // Stub implementation - basic parsing
         let condition_str = condition_str.trim();
+
+        // Handle compound OR (lower precedence — split first)
+        let or_parts: Vec<&str> = condition_str.split(" or ").collect();
+        if or_parts.len() > 1 {
+            let conditions = or_parts
+                .iter()
+                .map(|s| self.parse_condition(s.trim()))
+                .collect::<Result<Vec<_>>>()?;
+            return Ok(Condition::Or(conditions));
+        }
+
+        // Handle compound AND
+        let and_parts: Vec<&str> = condition_str.split(" and ").collect();
+        if and_parts.len() > 1 {
+            let conditions = and_parts
+                .iter()
+                .map(|s| self.parse_condition(s.trim()))
+                .collect::<Result<Vec<_>>>()?;
+            return Ok(Condition::And(conditions));
+        }
 
         // Handle negated boolean variables
         if condition_str.starts_with('!') && !condition_str.contains(['>', '<', '=']) {
@@ -259,28 +282,77 @@ impl RulesCompiler {
             });
         }
 
-        // Handle comparisons (very basic parsing)
-        if let Some(pos) = condition_str.find(" == ") {
+        // Two-character operators FIRST (must precede single-char checks)
+        if let Some(pos) = condition_str.find(" >= ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
             let value = value_str
                 .parse::<f32>()
                 .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
-
             return Ok(Condition::Compare {
                 variable,
-                operator: CompareOp::Equal,
+                operator: CompareOp::GreaterEqual,
                 value,
             });
         }
 
+        if let Some(pos) = condition_str.find(" <= ") {
+            let variable = condition_str[..pos].trim().to_string();
+            let value_str = condition_str[pos + 4..].trim();
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
+            return Ok(Condition::Compare {
+                variable,
+                operator: CompareOp::LessEqual,
+                value,
+            });
+        }
+
+        if let Some(pos) = condition_str.find(" != ") {
+            let variable = condition_str[..pos].trim().to_string();
+            let value_str = condition_str[pos + 4..].trim();
+            if let Ok(value) = value_str.parse::<f32>() {
+                return Ok(Condition::Compare {
+                    variable,
+                    operator: CompareOp::NotEqual,
+                    value,
+                });
+            } else {
+                // String/enum state negation: "gear != DOWN" → negated boolean "gear_DOWN"
+                return Ok(Condition::Boolean {
+                    variable: format!("{}_{}", variable, value_str),
+                    negate: true,
+                });
+            }
+        }
+
+        if let Some(pos) = condition_str.find(" == ") {
+            let variable = condition_str[..pos].trim().to_string();
+            let value_str = condition_str[pos + 4..].trim();
+            if let Ok(value) = value_str.parse::<f32>() {
+                return Ok(Condition::Compare {
+                    variable,
+                    operator: CompareOp::Equal,
+                    value,
+                });
+            } else {
+                // String/enum state comparison: "gear == DOWN" → boolean "gear_DOWN"
+                // Maps to a named discrete state variable (e.g. provided by the sim adapter).
+                return Ok(Condition::Boolean {
+                    variable: format!("{}_{}", variable, value_str),
+                    negate: false,
+                });
+            }
+        }
+
+        // Single-character operators
         if let Some(pos) = condition_str.find(" > ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
             let value = value_str
                 .parse::<f32>()
                 .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
-
             return Ok(Condition::Compare {
                 variable,
                 operator: CompareOp::Greater,
@@ -288,7 +360,18 @@ impl RulesCompiler {
             });
         }
 
-        // TODO: Implement full parser for complex conditions
+        if let Some(pos) = condition_str.find(" < ") {
+            let variable = condition_str[..pos].trim().to_string();
+            let value_str = condition_str[pos + 3..].trim();
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
+            return Ok(Condition::Compare {
+                variable,
+                operator: CompareOp::Less,
+                value,
+            });
+        }
 
         Err(RulesError::Validation(format!(
             "Unsupported condition syntax: {}",
@@ -297,39 +380,63 @@ impl RulesCompiler {
     }
 
     fn parse_action(&self, action_str: &str) -> Result<Action> {
-        // Stub implementation - basic parsing
         let action_str = action_str.trim();
 
-        // Parse led.panel('TARGET').on()
+        // Parse led.panel('TARGET').on() / .off() / .blink(rate_hz=N)
         if let Some(start) = action_str.find("led.panel('")
             && let Some(end) = action_str[start + 11..].find("')")
         {
             let target = action_str[start + 11..start + 11 + end].to_string();
+            let suffix_start = start + 11 + end + 2; // past "')"
+            let suffix = &action_str[suffix_start..];
 
-            if action_str.ends_with(".on()") {
+            if suffix == ".on()" {
                 return Ok(Action::LedOn { target });
-            } else if action_str.ends_with(".off()") {
+            } else if suffix == ".off()" {
                 return Ok(Action::LedOff { target });
+            } else if let Some(blink_start) = suffix.find("rate_hz=")
+                && let Some(blink_end) = suffix[blink_start + 8..].find(')')
+            {
+                let rate_str = &suffix[blink_start + 8..blink_start + 8 + blink_end];
+                let rate_hz = rate_str
+                    .parse::<f32>()
+                    .map_err(|_| RulesError::Validation(format!("Invalid rate: {}", rate_str)))?;
+                return Ok(Action::LedBlink { target, rate_hz });
+            } else if let Some(bright_start) = suffix.find(".brightness(")
+                && let Some(bright_end) = suffix[bright_start + 12..].find(')')
+            {
+                let bright_str = &suffix[bright_start + 12..bright_start + 12 + bright_end];
+                let brightness = bright_str.parse::<f32>().map_err(|_| {
+                    RulesError::Validation(format!("Invalid brightness: {}", bright_str))
+                })?;
+                return Ok(Action::LedBrightness { target, brightness });
             }
         }
 
-        // Parse led.indexer.blink(rate_hz=6)
-        if action_str.starts_with("led.indexer.blink(")
-            && let Some(start) = action_str.find("rate_hz=")
-            && let Some(end) = action_str[start + 8..].find(')')
-        {
-            let rate_str = &action_str[start + 8..start + 8 + end];
-            let rate_hz = rate_str
-                .parse::<f32>()
-                .map_err(|_| RulesError::Validation(format!("Invalid rate: {}", rate_str)))?;
-
-            return Ok(Action::LedBlink {
-                target: "indexer".to_string(),
-                rate_hz,
-            });
+        // Parse led.indexer.on() / .off() / .blink(rate_hz=N)
+        if action_str.starts_with("led.indexer.") {
+            if action_str == "led.indexer.on()" {
+                return Ok(Action::LedOn {
+                    target: "indexer".to_string(),
+                });
+            } else if action_str == "led.indexer.off()" {
+                return Ok(Action::LedOff {
+                    target: "indexer".to_string(),
+                });
+            } else if action_str.starts_with("led.indexer.blink(")
+                && let Some(start) = action_str.find("rate_hz=")
+                && let Some(end) = action_str[start + 8..].find(')')
+            {
+                let rate_str = &action_str[start + 8..start + 8 + end];
+                let rate_hz = rate_str
+                    .parse::<f32>()
+                    .map_err(|_| RulesError::Validation(format!("Invalid rate: {}", rate_str)))?;
+                return Ok(Action::LedBlink {
+                    target: "indexer".to_string(),
+                    rate_hz,
+                });
+            }
         }
-
-        // TODO: Implement full parser for all action types
 
         Err(RulesError::Validation(format!(
             "Unsupported action syntax: {}",
@@ -662,6 +769,140 @@ mod tests {
         matches!(action, Action::LedBlink { target, rate_hz } if target == "indexer" && rate_hz == 6.0);
     }
 
+    #[test]
+    fn test_new_comparison_operators() {
+        let compiler = RulesCompiler::new(HashMap::new());
+
+        // >=
+        let c = compiler.parse_condition("ias >= 200").unwrap();
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::GreaterEqual,
+                ..
+            }
+        ));
+
+        // <=
+        let c = compiler.parse_condition("flaps <= 0.5").unwrap();
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::LessEqual,
+                ..
+            }
+        ));
+
+        // !=
+        let c = compiler.parse_condition("gear != 1").unwrap();
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::NotEqual,
+                ..
+            }
+        ));
+
+        // <
+        let c = compiler.parse_condition("altitude < 500").unwrap();
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::Less,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_compound_and_condition() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let c = compiler.parse_condition("gear_down and ias < 250").unwrap();
+        match c {
+            Condition::And(parts) => {
+                assert_eq!(parts.len(), 2);
+                assert!(
+                    matches!(&parts[0], Condition::Boolean { variable, .. } if variable == "gear_down")
+                );
+                assert!(matches!(
+                    &parts[1],
+                    Condition::Compare {
+                        operator: CompareOp::Less,
+                        ..
+                    }
+                ));
+            }
+            other => panic!("Expected And, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_compound_or_condition() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let c = compiler
+            .parse_condition("gear_down or flaps >= 0.5")
+            .unwrap();
+        match c {
+            Condition::Or(parts) => {
+                assert_eq!(parts.len(), 2);
+            }
+            other => panic!("Expected Or, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_panel_blink_action() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let a = compiler
+            .parse_action("led.panel('STALL').blink(rate_hz=4)")
+            .unwrap();
+        match a {
+            Action::LedBlink { target, rate_hz } => {
+                assert_eq!(target, "STALL");
+                assert!((rate_hz - 4.0).abs() < 0.001);
+            }
+            other => panic!("Expected LedBlink, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_panel_brightness_action() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let a = compiler
+            .parse_action("led.panel('WARN').brightness(0.75)")
+            .unwrap();
+        match a {
+            Action::LedBrightness { target, brightness } => {
+                assert_eq!(target, "WARN");
+                assert!((brightness - 0.75).abs() < 0.001);
+            }
+            other => panic!("Expected LedBrightness, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_indexer_on_off_action() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let on = compiler.parse_action("led.indexer.on()").unwrap();
+        assert!(matches!(on, Action::LedOn { target } if target == "indexer"));
+        let off = compiler.parse_action("led.indexer.off()").unwrap();
+        assert!(matches!(off, Action::LedOff { target } if target == "indexer"));
+    }
+
+    #[test]
+    fn test_ge_not_confused_with_gt() {
+        // Ensure ">=" is not parsed as ">" with "=" as part of value
+        let compiler = RulesCompiler::new(HashMap::new());
+        let c = compiler.parse_condition("pitch >= 10").unwrap();
+        assert!(
+            matches!(c, Condition::Compare { operator: CompareOp::GreaterEqual, value, .. } if (value - 10.0).abs() < 0.001)
+        );
+        let c2 = compiler.parse_condition("pitch > 10").unwrap();
+        assert!(
+            matches!(c2, Condition::Compare { operator: CompareOp::Greater, value, .. } if (value - 10.0).abs() < 0.001)
+        );
+    }
+
     use proptest::prelude::*;
 
     proptest! {
@@ -731,5 +972,68 @@ mod tests {
                  prop_assert!(false, "Failed to parse valid LED OFF action: {}", expr);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod snapshot_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    /// Snapshot the bytecode output for a gear-down panel rule.
+    /// Fails if bytecode shape regresses across refactors.
+    #[test]
+    fn snapshot_bytecode_gear_down_panel() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear == DOWN".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("gear-down rule should compile");
+        insta::assert_debug_snapshot!("bytecode_gear_down_panel", compiled.bytecode);
+    }
+
+    /// Snapshot the bytecode output for an AoA numeric-compare rule.
+    #[test]
+    fn snapshot_bytecode_aoa_warning() {
+        let mut hysteresis = HashMap::new();
+        hysteresis.insert("aoa".to_string(), 0.5_f32);
+
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "aoa > 14.5".to_string(),
+                do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                action: "led.indexer.blink(rate_hz=6)".to_string(),
+            }],
+            defaults: Some(RuleDefaults {
+                hysteresis: Some(hysteresis),
+            }),
+        };
+
+        let compiled = rules.compile().expect("aoa rule should compile");
+        insta::assert_debug_snapshot!("bytecode_aoa_warning", compiled.bytecode);
+    }
+
+    /// Snapshot a compound AND condition.
+    #[test]
+    fn snapshot_bytecode_compound_and() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down && flaps_extended".to_string(),
+                do_action: "led.panel('LAND').on()".to_string(),
+                action: "led.panel('LAND').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("AND rule should compile");
+        insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
     }
 }

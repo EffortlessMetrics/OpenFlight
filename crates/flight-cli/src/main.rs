@@ -86,6 +86,11 @@ enum Commands {
         #[command(subcommand)]
         action: DiagAction,
     },
+    /// System-wide metrics
+    Metrics {
+        #[command(subcommand)]
+        action: MetricsAction,
+    },
     /// DCS World integration commands
     Dcs {
         #[command(subcommand)]
@@ -100,6 +105,22 @@ enum Commands {
     Ac7 {
         #[command(subcommand)]
         action: Ac7Action,
+    },
+    /// Update channel management and update checking
+    Update {
+        #[command(subcommand)]
+        action: UpdateAction,
+    },
+    /// Community cloud profile repository
+    #[command(name = "cloud-profiles")]
+    CloudProfiles {
+        #[command(subcommand)]
+        action: CloudProfilesAction,
+    },
+    /// VR overlay management (show/hide/notify)
+    Overlay {
+        #[command(subcommand)]
+        action: OverlayAction,
     },
     /// Show system status and health
     Status,
@@ -179,6 +200,9 @@ async fn execute_command(
         Commands::Diag { action } => {
             commands::diag::execute(action, cli.output, cli.verbose, client_manager).await
         }
+        Commands::Metrics { action } => {
+            commands::metrics::execute(action, cli.output, cli.verbose, client_manager).await
+        }
         Commands::Dcs { action } => {
             commands::dcs::execute(action, cli.output, cli.verbose, client_manager).await
         }
@@ -187,6 +211,15 @@ async fn execute_command(
         }
         Commands::Ac7 { action } => {
             commands::ac7::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Update { action } => {
+            commands::update::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::CloudProfiles { action } => {
+            commands::cloud_profiles::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Overlay { action } => {
+            commands::overlay::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::Status => {
             commands::status::execute(cli.output, cli.verbose, client_manager).await

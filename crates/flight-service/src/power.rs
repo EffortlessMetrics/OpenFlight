@@ -361,42 +361,109 @@ impl PowerChecker {
         }
     }
 
-    // Platform-specific helper methods (stubbed for now)
+    // Platform-specific helper methods
 
     #[cfg(target_os = "windows")]
     async fn is_usb_selective_suspend_enabled() -> bool {
-        // Stub implementation - would check registry
-        false
+        // Check HKLM\SYSTEM\CurrentControlSet\Services\USB\DisableSelectiveSuspend
+        use std::process::Command;
+        let out = Command::new("reg")
+            .args([
+                "query",
+                r"HKLM\SYSTEM\CurrentControlSet\Services\USB",
+                "/v",
+                "DisableSelectiveSuspend",
+            ])
+            .output();
+        match out {
+            Ok(o) if o.status.success() => {
+                // Value 1 = disabled; value absent or 0 = enabled
+                let text = String::from_utf8_lossy(&o.stdout);
+                !text.contains("0x1")
+            }
+            _ => false, // Assume enabled (pessimistic) on read failure
+        }
     }
 
     #[cfg(target_os = "windows")]
     async fn get_current_power_plan() -> String {
-        // Stub implementation - would query power management
-        "Balanced".to_string()
+        use std::process::Command;
+        let out = Command::new("powercfg").args(["/getactivescheme"]).output();
+        match out {
+            Ok(o) if o.status.success() => {
+                let text = String::from_utf8_lossy(&o.stdout);
+                if text.contains("High performance") || text.contains("8c5e7fda") {
+                    "High performance".to_string()
+                } else if text.contains("Ultimate Performance") || text.contains("e9a42b02") {
+                    "Ultimate Performance".to_string()
+                } else if text.contains("Balanced") || text.contains("381b4222") {
+                    "Balanced".to_string()
+                } else {
+                    text.trim().to_string()
+                }
+            }
+            _ => "Unknown".to_string(),
+        }
     }
 
     #[cfg(target_os = "windows")]
     async fn is_power_throttling_disabled() -> bool {
-        // Stub implementation - would check process power settings
-        false
+        // Check if EcoQoS / power throttling is disabled via process mitigation
+        // PowerThrottling is managed per-process; we check if it's available in this process.
+        // A simple heuristic: if we're running on "High performance" plan, assume not throttled.
+        let plan = Self::get_current_power_plan().await;
+        plan.contains("High performance") || plan.contains("Ultimate")
     }
 
     #[cfg(target_os = "linux")]
     async fn is_rtkit_available() -> bool {
-        // Stub implementation - would check for rtkit service
-        true
+        // Check if rtkit-daemon is active via D-Bus presence or systemctl
+        use std::process::Command;
+        // Try systemctl first
+        if let Ok(out) = Command::new("systemctl")
+            .args(["is-active", "--quiet", "rtkit-daemon"])
+            .output()
+        {
+            if out.status.success() {
+                return true;
+            }
+        }
+        // Fall back: check if the daemon binary exists
+        std::path::Path::new("/usr/lib/rtkit/rtkit-daemon").exists()
+            || std::path::Path::new("/usr/libexec/rtkit-daemon").exists()
     }
 
     #[cfg(target_os = "linux")]
     async fn get_memlock_limit() -> u64 {
-        // Stub implementation - would check ulimit
+        // Read the hard memlock limit via getrlimit(RLIMIT_MEMLOCK)
+        #[cfg(target_os = "linux")]
+        {
+            use std::mem::MaybeUninit;
+            let mut rlim = MaybeUninit::<libc::rlimit>::uninit();
+            // SAFETY: rlim is a POD struct; getrlimit fills it completely on success
+            let ret = unsafe { libc::getrlimit(libc::RLIMIT_MEMLOCK, rlim.as_mut_ptr()) };
+            if ret == 0 {
+                // SAFETY: initialised by getrlimit above
+                let r = unsafe { rlim.assume_init() };
+                if r.rlim_cur == libc::RLIM_INFINITY {
+                    return u64::MAX;
+                }
+                return r.rlim_cur as u64;
+            }
+        }
+        // Fallback: conservative default
         64 * 1024 * 1024
     }
 
     #[cfg(target_os = "linux")]
     async fn get_cpu_governor() -> String {
-        // Stub implementation - would read from sysfs
-        "ondemand".to_string()
+        // Read from sysfs: /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+        match tokio::fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+            .await
+        {
+            Ok(s) => s.trim().to_string(),
+            Err(_) => "unknown".to_string(),
+        }
     }
 }
 

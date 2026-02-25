@@ -1,0 +1,52 @@
+# Logitech/Saitek X52 Pro HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Logitech / Saitek X52 Pro HOTAS"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek/Logitech PLC
+    product_id: 0x0762      # X52 Pro (stick + throttle composite)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 10
+  buttons: 39
+  hats: 3
+  force_feedback: false
+  mfd:
+    lines: 2
+    chars_per_line: 16
+    backlight: true
+  leds:
+    count: 6
+    rgb: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: MFD_BRIGHTNESS
+    description: >
+      MFD backlight brightness is controlled via a USB control transfer
+      (report ID 0xB1), not a standard HID output report.
+  - id: LED_RGB
+    description: >
+      The X52 Pro exposes six user-programmable RGB LEDs via HID output
+      reports. Colour is expressed as 3-bit R/G/B per LED.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "X52 (non-Pro, PID 0x075C) uses the same driver path with reduced LED support."

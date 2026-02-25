@@ -26,3 +26,20 @@ Feature: Simulator process detection lifecycle
     Given a ProcessDetector in the idle state
     When a sim detection check is performed with an active simulator in the process list
     Then the detector SHALL report the simulator as active
+
+  @AC-25.3
+  Scenario: War Thunder process definition is registered
+    Given a default ProcessDetectionConfig
+    When the definitions are queried for WarThunder
+    Then a definition SHALL exist with process name "aces.exe" or "WarThunder"
+    And the window title pattern SHALL include "War Thunder"
+    And the minimum confidence threshold SHALL be 0.8
+
+  @AC-25.3
+  Scenario: Elite Dangerous process definition is registered
+    Given a default ProcessDetectionConfig
+    When the definitions are queried for EliteDangerous
+    Then a definition SHALL exist with process name "EliteDangerous64.exe"
+    And the window title pattern SHALL include "Elite - Dangerous" or "Elite Dangerous"
+    And the minimum confidence threshold SHALL be 0.8
+

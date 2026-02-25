@@ -4,23 +4,30 @@
 //! CLI command implementations
 
 pub mod ac7;
+pub mod cloud_profiles;
 pub mod dcs;
 pub mod devices;
 pub mod diag;
 pub mod info;
+pub mod metrics;
+pub mod overlay;
 pub mod panels;
 pub mod posture;
 pub mod profile;
 pub mod sim;
 pub mod status;
 pub mod torque;
+pub mod update;
 pub mod xplane;
 
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
 pub use ac7::Ac7Action;
+pub use cloud_profiles::CloudProfilesAction;
 pub use dcs::DcsAction;
+pub use overlay::OverlayAction;
+pub use update::UpdateAction;
 pub use xplane::XPlaneAction;
 
 #[derive(Subcommand)]
@@ -230,6 +237,34 @@ pub enum DiagAction {
     },
     /// Show recording status
     Status,
+    /// Export a diagnostics recording to JSON
+    Export {
+        /// Path to input .fbb recording file
+        input: PathBuf,
+
+        /// Write JSON output to this file (prints to stdout if omitted)
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+
+        /// Redact aircraft_id and other identifying fields
+        #[arg(long)]
+        sanitize: bool,
+
+        /// Only include records from this stream: axis, bus, events
+        #[arg(long)]
+        stream: Option<String>,
+    },
     /// Stop current recording
     Stop,
+}
+
+/// Metrics subcommands
+#[derive(Subcommand)]
+pub enum MetricsAction {
+    /// Print a typed snapshot of all system-wide metrics
+    Snapshot {
+        /// Reset metrics after capturing the snapshot
+        #[arg(long)]
+        reset: bool,
+    },
 }

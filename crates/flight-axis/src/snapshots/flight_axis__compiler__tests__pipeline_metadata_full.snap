@@ -1,0 +1,10 @@
+---
+source: crates/flight-axis/src/compiler.rs
+expression: meta
+---
+[
+    "id=1 type=deadzone state_offset=0 state_size=8",
+    "id=2 type=curve state_offset=64 state_size=8",
+    "id=3 type=slew state_offset=128 state_size=24",
+    "id=4 type=filter state_offset=192 state_size=32",
+]

@@ -142,8 +142,8 @@ async fn torque_status(
     };
 
     if devices.is_empty() {
-        let message = if device_id.is_some() {
-            format!("Force feedback device '{}' not found", device_id.unwrap())
+        let message = if let Some(id) = &device_id {
+            format!("Force feedback device '{id}' not found")
         } else {
             "No force feedback devices found".to_string()
         };

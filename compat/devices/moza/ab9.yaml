@@ -1,0 +1,46 @@
+# Moza AB9 Force Feedback Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Moza AB9 Force Feedback Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology)
+    product_id: 0x0005      # AB9 FFB base; R3 uses 0x0002
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 250
+    torque_limit_nm: 9.0    # AB9 rated maximum
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: TORQUE_ONLY
+    description: >
+      Moza AB9 accepts raw torque commands (report ID 0x20) rather than
+      DirectInput effect types. OpenFlight synthesises the desired effect
+      waveform and sends the result as a torque value.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "HID report format validated by property tests and fuzz target."

@@ -1,0 +1,29 @@
+[package]
+homepage.workspace = true
+name = "flight-wingman"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Project Wingman process-detection adapter for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "project-wingman", "adapter"]
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[dependencies]
+flight-adapter-common = { path = "../flight-adapter-common" }
+flight-bus = { path = "../flight-bus" }
+flight-core = { path = "../flight-core" }
+flight-metrics = { path = "../flight-metrics" }
+tokio = { workspace = true, features = ["time", "macros", "rt"] }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

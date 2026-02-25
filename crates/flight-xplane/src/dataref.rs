@@ -217,6 +217,79 @@ impl DataRefManager {
             DataRef::new("sim/version/xplane_internal_version".to_string())
                 .with_description("X-Plane version".to_string())
                 .with_type(DataRefType::Int),
+            // Angular rates (deg/s) — converted to rad/s in adapter
+            DataRef::new("sim/flightmodel/position/P".to_string())
+                .with_description("Roll rate".to_string())
+                .with_units("deg/s".to_string()),
+            DataRef::new("sim/flightmodel/position/Q".to_string())
+                .with_description("Pitch rate".to_string())
+                .with_units("deg/s".to_string()),
+            DataRef::new("sim/flightmodel/position/R".to_string())
+                .with_description("Yaw rate".to_string())
+                .with_units("deg/s".to_string()),
+            // Mach number
+            DataRef::new("sim/flightmodel/misc/machno".to_string())
+                .with_description("Mach number".to_string()),
+            // Pressure altitude (feet)
+            DataRef::new("sim/cockpit2/gauges/indicators/altitude_ft_pilot".to_string())
+                .with_description("Pressure altitude".to_string())
+                .with_units("feet".to_string()),
+            // Total fuel weight
+            DataRef::new("sim/flightmodel/weight/m_fuel_total".to_string())
+                .with_description("Total fuel weight".to_string())
+                .with_units("kg".to_string()),
+            // Engine 0 — always requested for any aircraft
+            DataRef::new("sim/flightmodel/engine/ENGN_running[0]".to_string())
+                .with_description("Engine 1 running".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/flightmodel/engine/ENGN_N1_[0]".to_string())
+                .with_description("Engine 1 N1".to_string())
+                .with_units("percent".to_string()),
+            // Autopilot — applicable to all aircraft
+            DataRef::new("sim/cockpit/autopilot/autopilot_mode".to_string())
+                .with_description("Autopilot mode".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit/autopilot/altitude".to_string())
+                .with_description("Autopilot altitude target".to_string())
+                .with_units("feet".to_string()),
+            DataRef::new("sim/cockpit/autopilot/heading".to_string())
+                .with_description("Autopilot heading target".to_string())
+                .with_units("degrees".to_string()),
+            DataRef::new("sim/cockpit/autopilot/airspeed".to_string())
+                .with_description("Autopilot airspeed target".to_string())
+                .with_units("knots".to_string()),
+            DataRef::new("sim/cockpit2/autopilot/autothrottle_on".to_string())
+                .with_description("Autothrottle engaged".to_string())
+                .with_type(DataRefType::Int),
+            // Lights — applicable to all aircraft
+            DataRef::new("sim/cockpit/electrical/nav_lights_on".to_string())
+                .with_description("Navigation lights".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit/electrical/beacon_lights_on".to_string())
+                .with_description("Beacon light".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit/electrical/strobe_lights_on".to_string())
+                .with_description("Strobe lights".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit/electrical/landing_lights_on".to_string())
+                .with_description("Landing lights".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit/electrical/taxi_light_on".to_string())
+                .with_description("Taxi light".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/cockpit2/switches/logo_lights_on".to_string())
+                .with_description("Logo lights".to_string())
+                .with_type(DataRefType::Int),
+            // Trim state — applicable to all aircraft
+            DataRef::new("sim/flightmodel/controls/elv_trim".to_string())
+                .with_description("Elevator trim ratio".to_string())
+                .with_units("ratio".to_string()),
+            DataRef::new("sim/flightmodel/controls/ail_trim".to_string())
+                .with_description("Aileron trim ratio".to_string())
+                .with_units("ratio".to_string()),
+            DataRef::new("sim/flightmodel/controls/rud_trim".to_string())
+                .with_description("Rudder trim ratio".to_string())
+                .with_units("ratio".to_string()),
         ];
 
         for dataref in default_datarefs {
@@ -288,16 +361,19 @@ impl DataRefManager {
             DataRef::new("sim/flightmodel/engine/ENGN_N1_[1]".to_string())
                 .with_description("Engine 2 N1".to_string())
                 .with_units("percent".to_string()),
-            // Autopilot
-            DataRef::new("sim/cockpit/autopilot/autopilot_mode".to_string())
-                .with_description("Autopilot mode".to_string())
-                .with_type(DataRefType::Int),
-            DataRef::new("sim/cockpit/autopilot/altitude".to_string())
-                .with_description("Autopilot altitude target".to_string())
-                .with_units("feet".to_string()),
-            DataRef::new("sim/cockpit/autopilot/heading".to_string())
-                .with_description("Autopilot heading target".to_string())
-                .with_units("degrees".to_string()),
+            // EGT and fuel flow for both engines
+            DataRef::new("sim/flightmodel/engine/ENGN_EGT[0]".to_string())
+                .with_description("Engine 1 EGT".to_string())
+                .with_units("degrees C".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_EGT[1]".to_string())
+                .with_description("Engine 2 EGT".to_string())
+                .with_units("degrees C".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_FF_[0]".to_string())
+                .with_description("Engine 1 fuel flow".to_string())
+                .with_units("kg/s".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_FF_[1]".to_string())
+                .with_description("Engine 2 fuel flow".to_string())
+                .with_units("kg/s".to_string()),
         ];
 
         for dataref in airliner_datarefs {
@@ -306,16 +382,124 @@ impl DataRefManager {
         }
 
         // Add airliner aircraft types
-        let airliner_aircraft = vec!["A320", "A321", "B737", "B738", "B777", "B787"];
+        let airliner_aircraft = vec![
+            "A318", "A319", "A320", "A321", "B737", "B738", "B777", "B787",
+        ];
         for aircraft in airliner_aircraft {
             let mut datarefs = self.default_datarefs.clone();
             datarefs.insert("sim/flightmodel/engine/ENGN_running[0]".to_string());
             datarefs.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string());
             datarefs.insert("sim/flightmodel/engine/ENGN_running[1]".to_string());
             datarefs.insert("sim/flightmodel/engine/ENGN_N1_[1]".to_string());
-            datarefs.insert("sim/cockpit/autopilot/autopilot_mode".to_string());
-            datarefs.insert("sim/cockpit/autopilot/altitude".to_string());
-            datarefs.insert("sim/cockpit/autopilot/heading".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[1]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[1]".to_string());
+            self.aircraft_datarefs
+                .insert(aircraft.to_string(), datarefs);
+        }
+
+        // 4-engine aircraft DataRefs (engines 2 and 3 in addition to 0 and 1)
+        let quad_engine_datarefs = vec![
+            DataRef::new("sim/flightmodel/engine/ENGN_running[2]".to_string())
+                .with_description("Engine 3 running".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/flightmodel/engine/ENGN_N1_[2]".to_string())
+                .with_description("Engine 3 N1".to_string())
+                .with_units("percent".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_EGT[2]".to_string())
+                .with_description("Engine 3 EGT".to_string())
+                .with_units("degrees C".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_FF_[2]".to_string())
+                .with_description("Engine 3 fuel flow".to_string())
+                .with_units("kg/s".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_running[3]".to_string())
+                .with_description("Engine 4 running".to_string())
+                .with_type(DataRefType::Int),
+            DataRef::new("sim/flightmodel/engine/ENGN_N1_[3]".to_string())
+                .with_description("Engine 4 N1".to_string())
+                .with_units("percent".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_EGT[3]".to_string())
+                .with_description("Engine 4 EGT".to_string())
+                .with_units("degrees C".to_string()),
+            DataRef::new("sim/flightmodel/engine/ENGN_FF_[3]".to_string())
+                .with_description("Engine 4 fuel flow".to_string())
+                .with_units("kg/s".to_string()),
+        ];
+
+        for dataref in quad_engine_datarefs {
+            let name = dataref.name.clone();
+            self.datarefs.insert(name.clone(), dataref);
+        }
+
+        let quad_aircraft = vec!["B744", "A346", "A388"];
+        for aircraft in quad_aircraft {
+            let mut datarefs = self.default_datarefs.clone();
+            for i in 0..4 {
+                datarefs.insert(format!("sim/flightmodel/engine/ENGN_running[{}]", i));
+                datarefs.insert(format!("sim/flightmodel/engine/ENGN_N1_[{}]", i));
+                datarefs.insert(format!("sim/flightmodel/engine/ENGN_EGT[{}]", i));
+                datarefs.insert(format!("sim/flightmodel/engine/ENGN_FF_[{}]", i));
+            }
+            self.aircraft_datarefs
+                .insert(aircraft.to_string(), datarefs);
+        }
+
+        // Regional jet DataRefs (2-engine, similar to airliners)
+        let regional_aircraft = vec!["CRJ2", "CRJ7", "E170", "E75L", "MD82", "B752", "B762"];
+        for aircraft in regional_aircraft {
+            let mut datarefs = self.default_datarefs.clone();
+            datarefs.insert("sim/flightmodel/engine/ENGN_running[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_running[1]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_N1_[1]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[1]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[1]".to_string());
+            self.aircraft_datarefs
+                .insert(aircraft.to_string(), datarefs);
+        }
+
+        // Turboprop aircraft DataRefs
+        let turboprop_datarefs = vec![
+            DataRef::new("sim/flightmodel/engine/ENGN_torq".to_string())
+                .with_description("Engine torque".to_string())
+                .with_units("percent".to_string()),
+        ];
+
+        for dataref in turboprop_datarefs {
+            let name = dataref.name.clone();
+            self.datarefs.insert(name.clone(), dataref);
+        }
+
+        let turboprop_aircraft = vec!["PC12", "TBM9", "TBM7", "ATR7", "DH8D"];
+        for aircraft in turboprop_aircraft {
+            let mut datarefs = self.default_datarefs.clone();
+            datarefs.insert("sim/flightmodel/engine/ENGN_running[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_torq".to_string());
+            self.aircraft_datarefs
+                .insert(aircraft.to_string(), datarefs);
+        }
+
+        // Military aircraft DataRefs (single or twin engine jets, EGT/FF)
+        let military_aircraft = vec!["FA18", "F16C", "F14A", "F35A", "F15C", "SU27"];
+        for aircraft in military_aircraft {
+            let mut datarefs = self.default_datarefs.clone();
+            datarefs.insert("sim/flightmodel/engine/ENGN_running[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_N1_[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_EGT[0]".to_string());
+            datarefs.insert("sim/flightmodel/engine/ENGN_FF_[0]".to_string());
+            // Twin-engine fighters also need engine 2
+            if matches!(aircraft, "FA18" | "F14A" | "F15C" | "SU27") {
+                datarefs.insert("sim/flightmodel/engine/ENGN_running[1]".to_string());
+                datarefs.insert("sim/flightmodel/engine/ENGN_N1_[1]".to_string());
+                datarefs.insert("sim/flightmodel/engine/ENGN_EGT[1]".to_string());
+                datarefs.insert("sim/flightmodel/engine/ENGN_FF_[1]".to_string());
+            }
             self.aircraft_datarefs
                 .insert(aircraft.to_string(), datarefs);
         }
@@ -444,10 +628,35 @@ impl DataRefManager {
             // Engine data
             name if name.contains("ENGN_running") => RequestPriority::High,
             name if name.contains("ENGN_N1") => RequestPriority::Normal,
+            name if name.contains("ENGN_EGT") => RequestPriority::Normal,
+            name if name.contains("ENGN_FF") => RequestPriority::Normal,
 
             // Configuration data
             name if name.contains("acf_gear_deploy") => RequestPriority::Normal,
             name if name.contains("acf_flap_deploy") => RequestPriority::Normal,
+
+            // Autopilot state
+            name if name.contains("autopilot/autopilot_mode") => RequestPriority::High,
+            name if name.contains("autopilot/altitude") => RequestPriority::Normal,
+            name if name.contains("autopilot/heading") => RequestPriority::Normal,
+            name if name.contains("autopilot/airspeed") => RequestPriority::Normal,
+            name if name.contains("autothrottle_on") => RequestPriority::Normal,
+
+            // Lights (low-frequency state changes)
+            name if name.contains("_lights_on")
+                || name.contains("taxi_light")
+                || name.contains("logo_lights") =>
+            {
+                RequestPriority::Low
+            }
+
+            // Trim state
+            name if name.contains("elv_trim")
+                || name.contains("ail_trim")
+                || name.contains("rud_trim") =>
+            {
+                RequestPriority::Low
+            }
 
             // Environmental data
             name if name.contains("weather/") => RequestPriority::Low,

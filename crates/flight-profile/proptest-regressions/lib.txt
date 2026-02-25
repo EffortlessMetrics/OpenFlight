@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc a758189d2e561675574a0739d26ccde6e2d14717ba4014b3634bda31f2eb1274 # shrinks to deadzone = 0.0, expo = 0.0, slew_rate = 8.106299, axis_name = "a"

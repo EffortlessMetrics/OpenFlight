@@ -186,6 +186,7 @@ impl Drop for TracepointProvider {
 
 /// Helper functions for ftrace integration
 pub mod ftrace {
+    use super::TraceStats;
     use crate::TraceError;
     use std::fs;
     use std::io::Write;

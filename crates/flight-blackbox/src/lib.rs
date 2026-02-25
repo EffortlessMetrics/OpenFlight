@@ -444,6 +444,149 @@ impl BlackboxReader {
         let record: BlackboxRecord = postcard::from_bytes(&payload)?;
         Ok(Some(record))
     }
+
+    /// Export all records to a structured [`ExportDoc`].
+    ///
+    /// When `sanitize` is `true` the `aircraft_id` field in the header is
+    /// replaced with `"[REDACTED]"` so the document is safe to share with
+    /// support without revealing identifying information.
+    ///
+    /// The caller must call [`BlackboxReader::open`] followed by
+    /// [`BlackboxReader::validate`] before exporting.
+    pub fn export(&mut self, sanitize: bool) -> Result<ExportDoc> {
+        let h = &self.header;
+        let header = ExportHeader {
+            app_version: h.app_version.clone(),
+            sim_id: h.sim_id.clone(),
+            aircraft_id: if sanitize {
+                "[REDACTED]".to_string()
+            } else {
+                h.aircraft_id.clone()
+            },
+            recording_mode: h.recording_mode.clone(),
+            recording_start_unix_ns: h.timebase_ns,
+            format_version: h.format_version,
+        };
+
+        let exported_at = chrono::Utc::now().to_rfc3339();
+
+        let mut records = Vec::new();
+        let mut axis_frames: u64 = 0;
+        let mut bus_snapshots: u64 = 0;
+        let mut events: u64 = 0;
+
+        while let Some(rec) = self.next_record()? {
+            match rec.stream_type {
+                StreamType::AxisFrames => axis_frames += 1,
+                StreamType::BusSnapshots => bus_snapshots += 1,
+                StreamType::Events => events += 1,
+            }
+            records.push(ExportRecord {
+                timestamp_ns: rec.timestamp_ns,
+                timestamp_s: rec.timestamp_ns as f64 / 1_000_000_000.0,
+                stream: stream_name(rec.stream_type).to_string(),
+                data_len: rec.data.len(),
+                data_hex: to_hex(&rec.data),
+            });
+        }
+
+        let total_records = axis_frames + bus_snapshots + events;
+        Ok(ExportDoc {
+            export_version: ExportDoc::VERSION,
+            exported_at,
+            header,
+            records,
+            summary: ExportSummary {
+                total_records,
+                axis_frames,
+                bus_snapshots,
+                events,
+            },
+        })
+    }
+}
+
+/// Sanitized header suitable for export or sharing with support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportHeader {
+    /// Application version that produced the recording
+    pub app_version: String,
+    /// Simulator type (e.g. `"MSFS"`, `"DCS"`, `"XPLANE"`)
+    pub sim_id: String,
+    /// Aircraft identifier — `"[REDACTED]"` when sanitized
+    pub aircraft_id: String,
+    /// Recording mode string
+    pub recording_mode: String,
+    /// Unix epoch wall-clock time in nanoseconds at recording start
+    pub recording_start_unix_ns: u64,
+    /// File format version
+    pub format_version: u32,
+}
+
+/// A single exported record, with data encoded as lowercase hex
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportRecord {
+    /// Monotonic timestamp in nanoseconds since process start
+    pub timestamp_ns: u64,
+    /// Timestamp in seconds (floating point, for convenience)
+    pub timestamp_s: f64,
+    /// Stream name: `"axis_frames"`, `"bus_snapshots"`, or `"events"`
+    pub stream: String,
+    /// Byte length of the raw payload
+    pub data_len: usize,
+    /// Raw payload bytes, encoded as a lowercase hex string
+    pub data_hex: String,
+}
+
+/// Summary counts for an exported recording
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportSummary {
+    /// Total number of records across all streams
+    pub total_records: u64,
+    /// Number of 250 Hz axis-pipeline records
+    pub axis_frames: u64,
+    /// Number of 60 Hz bus-snapshot records
+    pub bus_snapshots: u64,
+    /// Number of event records
+    pub events: u64,
+}
+
+/// Full export document produced by [`BlackboxReader::export`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportDoc {
+    /// Export format version (bumped on breaking changes to this struct)
+    pub export_version: u32,
+    /// ISO-8601 timestamp at which the export was produced
+    pub exported_at: String,
+    /// Recording metadata
+    pub header: ExportHeader,
+    /// All (or filtered) records from the file
+    pub records: Vec<ExportRecord>,
+    /// Per-stream record counts
+    pub summary: ExportSummary,
+}
+
+impl ExportDoc {
+    /// Current export format version
+    pub const VERSION: u32 = 1;
+}
+
+fn stream_name(st: StreamType) -> &'static str {
+    match st {
+        StreamType::AxisFrames => "axis_frames",
+        StreamType::BusSnapshots => "bus_snapshots",
+        StreamType::Events => "events",
+    }
+}
+
+fn to_hex(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+            use std::fmt::Write;
+            let _ = write!(s, "{b:02x}");
+            s
+        })
 }
 
 fn read_header(reader: &mut BufReader<File>) -> Result<BlackboxHeader> {
@@ -658,5 +801,78 @@ mod tests {
             .await;
         assert!(result.is_err());
         writer.stop().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn export_roundtrip_sanitized() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let mut config = BlackboxConfig::default();
+        config.output_dir = dir.path().to_path_buf();
+
+        let mut writer = BlackboxWriter::new(config);
+        let path = writer
+            .start_recording("DCS".into(), "FA18".into(), "test_v1".into())
+            .await
+            .unwrap();
+
+        writer.record_axis_frame(100, &[0x01, 0x02]).unwrap();
+        writer.record_bus_snapshot(200, &[0x03]).unwrap();
+        writer.record_event(300, &[0xAA, 0xBB]).unwrap();
+
+        for _ in 0..16 {
+            tokio::task::yield_now().await;
+        }
+        writer.stop_recording().await.unwrap();
+
+        let mut reader = BlackboxReader::open(&path).unwrap();
+        reader.validate().unwrap();
+
+        let doc = reader.export(false).unwrap();
+        assert_eq!(doc.export_version, ExportDoc::VERSION);
+        assert_eq!(doc.header.sim_id, "DCS");
+        assert_eq!(doc.header.aircraft_id, "FA18");
+        assert_eq!(doc.summary.axis_frames, 1);
+        assert_eq!(doc.summary.bus_snapshots, 1);
+        assert_eq!(doc.summary.events, 1);
+        assert_eq!(doc.summary.total_records, 3);
+        assert_eq!(doc.records[0].data_hex, "0102");
+        assert_eq!(doc.records[1].data_hex, "03");
+        assert_eq!(doc.records[2].data_hex, "aabb");
+
+        // Re-open for sanitized export
+        let mut reader2 = BlackboxReader::open(&path).unwrap();
+        reader2.validate().unwrap();
+        let doc2 = reader2.export(true).unwrap();
+        assert_eq!(doc2.header.aircraft_id, "[REDACTED]");
+        assert_eq!(doc2.summary.total_records, 3);
+    }
+
+    #[tokio::test]
+    async fn export_doc_is_json_serializable() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let mut config = BlackboxConfig::default();
+        config.output_dir = dir.path().to_path_buf();
+
+        let mut writer = BlackboxWriter::new(config);
+        let path = writer
+            .start_recording("MSFS".into(), "C172".into(), "v1".into())
+            .await
+            .unwrap();
+        writer.record_event(1, &[0xFF]).unwrap();
+        for _ in 0..16 {
+            tokio::task::yield_now().await;
+        }
+        writer.stop_recording().await.unwrap();
+
+        let mut reader = BlackboxReader::open(&path).unwrap();
+        reader.validate().unwrap();
+        let doc = reader.export(false).unwrap();
+
+        let json = serde_json::to_string(&doc).unwrap();
+        assert!(json.contains("\"export_version\""));
+        assert!(json.contains("\"summary\""));
+        assert!(json.contains("\"records\""));
     }
 }

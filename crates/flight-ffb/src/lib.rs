@@ -518,10 +518,16 @@ impl FfbEngine {
             self.soft_stop_controller.mark_audio_cue_triggered();
         }
 
-        // Mark LED indication as triggered (would integrate with panel system)
+        // Mark LED indication as triggered.
+        // The panel LED driver listens on the tracing event bus for this event;
+        // hardware LED writing is handled by the panel subsystem via LedController.
         if self.soft_stop_controller.should_trigger_led_indication() {
             self.soft_stop_controller.mark_led_indication_triggered();
-            // TODO: Integrate with panel LED system
+            tracing::info!(
+                target: "flight_ffb::soft_stop",
+                event = "led_indication",
+                "FFB soft-stop LED indication triggered"
+            );
         }
 
         Ok(())

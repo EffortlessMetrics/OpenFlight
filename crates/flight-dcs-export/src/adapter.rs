@@ -305,10 +305,13 @@ impl DcsAdapter {
                 .unwrap_or(SessionType::Unknown);
         }
 
-        // Check feature restrictions
-        if self.config.enforce_mp_integrity {
-            self.check_feature_restrictions(&data).await?;
-        }
+        // Filter restricted fields for MP integrity enforcement
+        let data = if self.config.enforce_mp_integrity {
+            let (filtered, _) = self.filter_restricted_fields(data);
+            filtered
+        } else {
+            data
+        };
 
         // Convert to bus snapshot and publish
         let snapshot = self.convert_to_bus_snapshot(timestamp, &aircraft_name, &data)?;
@@ -346,40 +349,45 @@ impl DcsAdapter {
         Ok(())
     }
 
-    /// Check feature restrictions for MP integrity
-    async fn check_feature_restrictions(
+    /// Filter restricted telemetry fields for MP integrity enforcement.
+    ///
+    /// Removes any fields that are blocked in the current session and emits a
+    /// rate-limited user-friendly warning via `warn!` for each blocked field.
+    /// Returns the filtered data map and the names of removed fields.
+    pub fn filter_restricted_fields(
         &mut self,
-        data: &HashMap<String, serde_json::Value>,
-    ) -> Result<(), DcsAdapterError> {
-        // Check for restricted data in MP sessions
-        let restricted_fields = ["weapons", "countermeasures", "rwr_contacts"];
+        mut data: HashMap<String, serde_json::Value>,
+    ) -> (HashMap<String, serde_json::Value>, Vec<String>) {
+        // Maps data field key → MP feature name (must match MP_BLOCKED_FEATURES)
+        const RESTRICTED: &[(&str, &str)] = &[
+            ("weapons", "telemetry_weapons"),
+            ("countermeasures", "telemetry_countermeasures"),
+            ("rwr_contacts", "telemetry_rwr"),
+        ];
+        let mut blocked = Vec::new();
 
-        for field in &restricted_fields {
-            if data.contains_key(*field)
-                && let Err(e) = self
-                    .mp_detector
-                    .validate_feature(&format!("telemetry_{}", field))
-            {
-                // Log blocked feature (rate limited)
+        for &(field, feature) in RESTRICTED {
+            if data.contains_key(field) && self.mp_detector.validate_feature(feature).is_err() {
+                // Emit user-friendly warning (rate-limited to once per 30 s per field)
                 let now = Instant::now();
-                let last_notified = self
+                let last = self
                     .blocked_features_notified
-                    .get(*field)
+                    .get(field)
                     .copied()
-                    .unwrap_or(Instant::now() - Duration::from_secs(60));
-
-                if now.duration_since(last_notified) > Duration::from_secs(30) {
-                    warn!(
-                        "Blocked restricted feature '{}' in MP session: {}",
-                        field, e
-                    );
+                    .unwrap_or_else(|| now - Duration::from_secs(60));
+                if now.duration_since(last) > Duration::from_secs(30) {
+                    if let Some(msg) = self.mp_detector.blocked_feature_message(feature) {
+                        warn!("[MP Integrity] {}", msg);
+                    }
                     self.blocked_features_notified
                         .insert(field.to_string(), now);
                 }
+                data.remove(field);
+                blocked.push(field.to_string());
             }
         }
 
-        Ok(())
+        (data, blocked)
     }
 
     /// Convert DCS telemetry to bus snapshot
@@ -480,6 +488,63 @@ impl DcsAdapter {
 
         if let Some(lon) = data.get("longitude").and_then(|v| v.as_f64()) {
             snapshot.navigation.longitude = lon;
+        }
+
+        // Parse angle of attack
+        if let Some(aoa) = data.get("aoa").and_then(|v| v.as_f64()) {
+            snapshot.kinematics.aoa = ValidatedAngle::new_degrees(aoa as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "aoa".to_string(),
+                }
+            })?;
+        }
+
+        // Parse angular rates (rad/s, body frame)
+        if let Some(p) = data.get("angular_velocity_x").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.p = p as f32;
+        }
+        if let Some(q) = data.get("angular_velocity_y").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.q = q as f32;
+        }
+        if let Some(r) = data.get("angular_velocity_z").and_then(|v| v.as_f64()) {
+            snapshot.angular_rates.r = r as f32;
+        }
+
+        // Parse navigation: ground track and distance to destination
+        if let Some(course) = data.get("course").and_then(|v| v.as_f64()) {
+            snapshot.navigation.ground_track =
+                ValidatedAngle::new_degrees(course as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "course".to_string(),
+                    }
+                })?;
+        }
+        if let Some(dist) = data.get("waypoint_distance").and_then(|v| v.as_f64()) {
+            snapshot.navigation.distance_to_dest = Some(dist as f32);
+        }
+
+        // Parse aircraft configuration (gear, flaps)
+        if let Some(gear_down) = data.get("gear_down").and_then(|v| v.as_f64()) {
+            let pos = if gear_down > 0.9 {
+                GearPosition::Down
+            } else if gear_down < 0.1 {
+                GearPosition::Up
+            } else {
+                GearPosition::Transitioning
+            };
+            snapshot.config.gear = GearState {
+                nose: pos,
+                left: pos,
+                right: pos,
+            };
+        }
+        if let Some(flaps) = data.get("flaps").and_then(|v| v.as_f64()) {
+            snapshot.config.flaps =
+                Percentage::new(flaps.clamp(0.0, 100.0) as f32).map_err(|_| {
+                    DcsAdapterError::TelemetryParsing {
+                        field: "flaps".to_string(),
+                    }
+                })?;
         }
 
         // Parse engines (if available and allowed)

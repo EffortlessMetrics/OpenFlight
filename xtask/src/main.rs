@@ -11,6 +11,7 @@ use std::env;
 
 mod ac_status;
 mod check;
+mod compat;
 mod config;
 mod cross_ref;
 mod front_matter;
@@ -60,6 +61,9 @@ enum Commands {
         #[command(subcommand)]
         command: hotas::HotasCommand,
     },
+
+    /// Generate COMPATIBILITY.md from compat/ manifests
+    GenCompat,
 }
 
 fn main() -> Result<()> {
@@ -100,6 +104,7 @@ fn main() -> Result<()> {
             }
         }
         Commands::Hotas { command } => hotas::run(command),
+        Commands::GenCompat => compat::run_gen_compat(),
     }
 }
 

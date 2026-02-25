@@ -1,0 +1,50 @@
+# WinWing Orion 2 F/A-18C Throttle + Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# This manifest covers the Orion 2 throttle; the matching stick is listed
+# as a separate device (winwing/orion2-stick.yaml).
+device:
+  name: "WinWing Orion 2 F/A-18C Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (all products)
+    product_id: 0xBE62      # Orion 2 Throttle
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 50
+  hats: 0
+  encoders: 5
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers are reported as separate axes.
+      OpenFlight exposes them as individual axes and provides an optional
+      "combined throttle" virtual axis that averages them.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands
+      based on the active profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Orion 2 F/A-18C Stick (PID 0xBE63) and TFRP Rudder (PID 0xBE64) are tracked separately."

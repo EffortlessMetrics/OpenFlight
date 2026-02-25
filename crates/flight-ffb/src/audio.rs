@@ -299,15 +299,16 @@ impl AudioCueSystem {
         // - On Linux: Use ALSA or PulseAudio
         // - Cross-platform: Use a crate like rodio or cpal
 
+        // Audio output is intentionally a stub. Actual output requires a platform
+        // audio library (e.g. cpal/rodio on all platforms, or Beep() on Windows).
+        // The tracing line below is sufficient for diagnostic feedback until
+        // a real audio back-end is wired in.
         tracing::info!(
             "Audio cue: {}Hz for {:?} (volume: {:.1})",
             pattern.frequency_hz,
             pattern.duration,
             self.config.volume
         );
-
-        // For now, just log the beep
-        // TODO: Implement actual audio output
 
         Ok(())
     }

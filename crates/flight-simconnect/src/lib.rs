@@ -1,3 +1,4 @@
+#![cfg(windows)]
 #![cfg_attr(
     test,
     allow(

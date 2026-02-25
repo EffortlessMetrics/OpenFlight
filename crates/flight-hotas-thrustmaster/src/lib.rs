@@ -25,10 +25,13 @@
 //! - PC mode (Green LED) required for Windows/Linux operation
 //! - "Secret handshake" (Share+Option+PS at plugin) forces PC mode
 
+pub mod detents;
 pub mod health;
 pub mod input;
+pub mod pc_mode;
 pub mod presets;
 
+pub use detents::{DetentEvent, ThrottleDetentConfig, ThrottleDetentTracker};
 pub use flight_hid_support::device_support::{
     AxisMode, TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY, TFLIGHT_HOTAS_ONE_PID, TFlightModel,
     THRUSTMASTER_VENDOR_ID, is_hotas4_legacy_pid, is_tflight_device, tflight_model,
@@ -37,5 +40,8 @@ pub use health::{TFlightHealthMonitor, TFlightHealthStatus};
 pub use input::{
     TFlightAxes, TFlightButtons, TFlightInputHandler, TFlightInputState, TFlightParseError,
     TFlightYawPolicy, TFlightYawResolution, TFlightYawSource,
+};
+pub use pc_mode::{
+    PC_MODE_HANDSHAKE_INSTRUCTIONS, PC_MODE_MIN_REPORT_LEN, PcModeDetector, PcModeStatus,
 };
 pub use presets::{RecommendedAxisConfig, recommended_axis_config};

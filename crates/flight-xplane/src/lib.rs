@@ -13,6 +13,7 @@
 
 pub mod adapter;
 pub mod aircraft;
+pub mod control;
 pub mod dataref;
 pub mod fixtures;
 pub mod latency;
@@ -22,6 +23,7 @@ pub mod web_api;
 
 pub use adapter::{XPlaneAdapter, XPlaneAdapterConfig, XPlaneError};
 pub use aircraft::{AircraftDetector, DetectedAircraft, XPlaneAircraftInfo};
+pub use control::ControlOutput;
 pub use dataref::{DataRef, DataRefManager, DataRefRequest, DataRefValue};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use latency::{LatencyBudget, LatencyMeasurement, LatencyTracker};

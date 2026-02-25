@@ -1,0 +1,25 @@
+[package]
+name = "flight-ffb-vpforce-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-ffb-vpforce]
+path = ".."
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_rhino_report"
+path = "fuzz_targets/fuzz_rhino_report.rs"
+test = false
+doc = false

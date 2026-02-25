@@ -17,30 +17,36 @@ use crate::{
 /// FlightService trait - manually defined since we're using prost-build only
 #[tonic::async_trait]
 pub trait FlightService: Send + Sync + 'static {
+    /// Stream type returned by [`health_subscribe`](FlightService::health_subscribe)
     type HealthSubscribeStream: futures_core::Stream<Item = Result<HealthEvent, tonic::Status>>
         + Send
         + 'static;
 
+    /// Negotiate protocol version and enabled feature flags with the client
     async fn negotiate_features(
         &self,
         request: tonic::Request<NegotiateFeaturesRequest>,
     ) -> Result<tonic::Response<NegotiateFeaturesResponse>, tonic::Status>;
 
+    /// Return the list of attached HID / virtual devices
     async fn list_devices(
         &self,
         request: tonic::Request<ListDevicesRequest>,
     ) -> Result<tonic::Response<ListDevicesResponse>, tonic::Status>;
 
+    /// Subscribe to a stream of health events
     async fn health_subscribe(
         &self,
         request: tonic::Request<HealthSubscribeRequest>,
     ) -> Result<tonic::Response<Self::HealthSubscribeStream>, tonic::Status>;
 
+    /// Apply a named profile and return success/failure details
     async fn apply_profile(
         &self,
         request: tonic::Request<ApplyProfileRequest>,
     ) -> Result<tonic::Response<ApplyProfileResponse>, tonic::Status>;
 
+    /// Return daemon version, uptime, and enabled features
     async fn get_service_info(
         &self,
         request: tonic::Request<GetServiceInfoRequest>,
@@ -57,6 +63,7 @@ impl<T> FlightServiceServer<T>
 where
     T: FlightService,
 {
+    /// Wrap a [`FlightService`] implementation in a server handle
     pub fn new(service: T) -> Self {
         Self { inner: service }
     }
@@ -87,11 +94,13 @@ pub struct FlightServiceImpl {
 
 /// Device manager trait (to be implemented by actual device management)
 pub trait DeviceManager: Send + Sync {
+    /// Return the full list of connected devices matching the given filter
     fn list_devices(&self, request: &ListDevicesRequest) -> Result<ListDevicesResponse, Status>;
 }
 
 /// Profile manager trait (to be implemented by actual profile management)
 pub trait ProfileManager: Send + Sync {
+    /// Apply the profile described in `request` and return the outcome
     fn apply_profile(&self, request: &ApplyProfileRequest) -> Result<ApplyProfileResponse, Status>;
 }
 
@@ -120,6 +129,7 @@ impl std::fmt::Debug for HidDeviceManager {
 }
 
 impl HidDeviceManager {
+    /// Create a new manager backed by the system HID stack
     pub fn new() -> Self {
         let watchdog = Arc::new(Mutex::new(WatchdogSystem::new()));
         let adapter = HidAdapter::new(watchdog);
@@ -423,6 +433,7 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
     metadata
 }
 
+/// Mock profile manager for testing — always succeeds
 #[derive(Debug)]
 pub struct MockProfileManager;
 

@@ -9,10 +9,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::{RwLock, mpsc};
-use tracing::warn;
+use tracing::{info, warn};
 
 /// Error type for process detection
 #[derive(Debug, Error)]
@@ -29,9 +30,14 @@ pub type Result<T> = std::result::Result<T, ProcessDetectionError>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SimId {
     Msfs,
+    Msfs2024,
     XPlane,
     Dcs,
     AceCombat7,
+    WarThunder,
+    EliteDangerous,
+    Ksp,
+    Wingman,
     Unknown,
 }
 
@@ -39,9 +45,14 @@ impl std::fmt::Display for SimId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SimId::Msfs => write!(f, "MSFS"),
+            SimId::Msfs2024 => write!(f, "MSFS 2024"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
             SimId::AceCombat7 => write!(f, "Ace Combat 7"),
+            SimId::WarThunder => write!(f, "War Thunder"),
+            SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
+            SimId::Ksp => write!(f, "Kerbal Space Program"),
+            SimId::Wingman => write!(f, "Project Wingman"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -50,11 +61,9 @@ impl std::fmt::Display for SimId {
 /// Process detection system for flight simulators
 #[derive(Debug)]
 pub struct ProcessDetector {
-    #[allow(dead_code)]
     config: ProcessDetectionConfig,
     state: RwLock<DetectionState>,
     detection_tx: mpsc::UnboundedSender<DetectionEvent>,
-    #[allow(dead_code)]
     detection_rx: RwLock<Option<mpsc::UnboundedReceiver<DetectionEvent>>>,
 }
 
@@ -132,7 +141,7 @@ impl Default for ProcessDetectionConfig {
     fn default() -> Self {
         let mut process_definitions = HashMap::new();
 
-        // MSFS process definition
+        // MSFS process definition (covers MSFS 2020 / FSX by window title)
         process_definitions.insert(
             SimId::Msfs,
             ProcessDefinition {
@@ -148,6 +157,20 @@ impl Default for ProcessDetectionConfig {
                     PathBuf::from("Microsoft Flight Simulator"),
                     PathBuf::from("Microsoft Games/Microsoft Flight Simulator X"),
                 ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // MSFS 2024 process definition (same exe, distinguished by window title)
+        process_definitions.insert(
+            SimId::Msfs2024,
+            ProcessDefinition {
+                process_names: vec![
+                    "FlightSimulator2024.exe".to_string(),
+                    "FlightSimulator.exe".to_string(),
+                ],
+                window_titles: vec!["Microsoft Flight Simulator 2024".to_string()],
+                process_paths: vec![PathBuf::from("Microsoft Flight Simulator 2024")],
                 min_confidence: 0.8,
             },
         );
@@ -207,6 +230,83 @@ impl Default for ProcessDetectionConfig {
             },
         );
 
+        // War Thunder process definition
+        process_definitions.insert(
+            SimId::WarThunder,
+            ProcessDefinition {
+                process_names: vec![
+                    "aces.exe".to_string(),
+                    "WarThunder.exe".to_string(),
+                    "WarThunder".to_string(),
+                ],
+                window_titles: vec!["War Thunder".to_string()],
+                process_paths: vec![
+                    PathBuf::from("War Thunder"),
+                    PathBuf::from("steamapps/common/War Thunder"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Elite: Dangerous process definition
+        process_definitions.insert(
+            SimId::EliteDangerous,
+            ProcessDefinition {
+                process_names: vec![
+                    "EliteDangerous64.exe".to_string(),
+                    "EliteDangerous.exe".to_string(),
+                    "EliteDangerous_4_0_0_0".to_string(),
+                ],
+                window_titles: vec![
+                    "Elite - Dangerous".to_string(),
+                    "Elite Dangerous".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("Elite Dangerous"),
+                    PathBuf::from("steamapps/common/Elite Dangerous"),
+                    PathBuf::from("Frontier Developments/Elite Dangerous"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Kerbal Space Program process definition
+        process_definitions.insert(
+            SimId::Ksp,
+            ProcessDefinition {
+                process_names: vec![
+                    "KSP_x64.exe".to_string(),  // Windows
+                    "KSP.x86_64".to_string(),   // Linux
+                    "KSP.app".to_string(),      // macOS
+                    "KSP2_x64.exe".to_string(), // KSP 2 (future-proofing)
+                ],
+                window_titles: vec![
+                    "Kerbal Space Program".to_string(),
+                    "Kerbal Space Program 2".to_string(),
+                ],
+                process_paths: vec![
+                    PathBuf::from("Kerbal Space Program"),
+                    PathBuf::from("steamapps/common/Kerbal Space Program"),
+                    PathBuf::from("steamapps/common/Kerbal Space Program 2"),
+                ],
+                min_confidence: 0.8,
+            },
+        );
+
+        // Project Wingman process definition
+        process_definitions.insert(
+            SimId::Wingman,
+            ProcessDefinition {
+                process_names: vec!["ProjectWingman.exe".to_string()],
+                window_titles: vec!["Project Wingman".to_string()],
+                process_paths: vec![
+                    PathBuf::from("Project Wingman"),
+                    PathBuf::from("steamapps/common/Project Wingman"),
+                ],
+                min_confidence: 0.7,
+            },
+        );
+
         Self {
             detection_interval: Duration::from_secs(1),
             process_definitions,
@@ -229,9 +329,44 @@ impl ProcessDetector {
         }
     }
 
-    /// Start the process detection loop
-    pub async fn start(&self) -> Result<()> {
-        // TODO: Fix lifetime issues - temporarily disabled for DSL implementation
+    /// Start the process detection loop.
+    ///
+    /// Takes `Arc<Self>` so the spawned task can share ownership of the detector's
+    /// state and config without lifetime restrictions.
+    pub async fn start(self: Arc<Self>) -> Result<()> {
+        // Take the receiver out of the Option — ensures start() is called at most once.
+        let rx = {
+            let mut rx_guard = self.detection_rx.write().await;
+            rx_guard.take().ok_or_else(|| {
+                ProcessDetectionError::System("ProcessDetector already started".to_string())
+            })?
+        };
+
+        let detector = Arc::clone(&self);
+        let interval_duration = self.config.detection_interval;
+
+        tokio::spawn(async move {
+            let mut rx = rx;
+            let mut ticker = tokio::time::interval(interval_duration);
+
+            loop {
+                tokio::select! {
+                    _ = ticker.tick() => {
+                        if let Err(e) = Self::scan_processes(&detector.state, &detector.config).await {
+                            warn!("Process scan error: {e}");
+                        }
+                    }
+                    Some(event) = rx.recv() => {
+                        if let DetectionEvent::Shutdown = event {
+                            info!("Process detector shutting down");
+                            break;
+                        }
+                    }
+                    else => break,
+                }
+            }
+        });
+
         Ok(())
     }
 
@@ -280,7 +415,6 @@ impl ProcessDetector {
     }
 
     /// Scan for processes (internal)
-    #[allow(dead_code)]
     async fn scan_processes(
         state: &RwLock<DetectionState>,
         config: &ProcessDetectionConfig,
@@ -353,7 +487,6 @@ impl ProcessDetector {
     }
 
     /// Get system processes (platform-specific)
-    #[allow(dead_code)]
     async fn get_system_processes() -> Result<Vec<SystemProcess>> {
         #[cfg(target_os = "windows")]
         {
@@ -372,7 +505,6 @@ impl ProcessDetector {
     }
 
     /// Check if simulator processes are running
-    #[allow(dead_code)]
     async fn check_simulator_processes(
         sim_id: SimId,
         definition: &ProcessDefinition,
@@ -868,6 +1000,12 @@ mod tests {
             detector
                 .config
                 .process_definitions
+                .contains_key(&SimId::Msfs2024)
+        );
+        assert!(
+            detector
+                .config
+                .process_definitions
                 .contains_key(&SimId::XPlane)
         );
         assert!(
@@ -881,6 +1019,12 @@ mod tests {
                 .config
                 .process_definitions
                 .contains_key(&SimId::AceCombat7)
+        );
+        assert!(
+            detector
+                .config
+                .process_definitions
+                .contains_key(&SimId::Ksp)
         );
     }
 
@@ -900,6 +1044,19 @@ mod tests {
                 .contains(&"Microsoft Flight Simulator".to_string())
         );
         assert_eq!(msfs_def.min_confidence, 0.8);
+
+        let msfs2024_def = config.process_definitions.get(&SimId::Msfs2024).unwrap();
+        assert!(
+            msfs2024_def
+                .process_names
+                .contains(&"FlightSimulator2024.exe".to_string())
+        );
+        assert!(
+            msfs2024_def
+                .window_titles
+                .contains(&"Microsoft Flight Simulator 2024".to_string())
+        );
+        assert_eq!(msfs2024_def.min_confidence, 0.8);
 
         let xplane_def = config.process_definitions.get(&SimId::XPlane).unwrap();
         assert!(
@@ -922,10 +1079,10 @@ mod tests {
     #[tokio::test]
     async fn test_process_detection_lifecycle() {
         let config = ProcessDetectionConfig::default();
-        let detector = ProcessDetector::new(config);
+        let detector = Arc::new(ProcessDetector::new(config));
 
         // Should start successfully
-        assert!(detector.start().await.is_ok());
+        assert!(Arc::clone(&detector).start().await.is_ok());
 
         // Should have no detected processes initially
         let processes = detector.get_detected_processes().await;
@@ -1008,7 +1165,40 @@ mod tests {
                 }
 
                 Ok(())
-            }).unwrap();
+            });
         }
     }
-}
+
+    #[test]
+    fn ksp_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let ksp_def = config.process_definitions.get(&SimId::Ksp).unwrap();
+        assert!(
+            ksp_def.process_names.contains(&"KSP_x64.exe".to_string()),
+            "Should contain Windows KSP executable"
+        );
+        assert!(
+            ksp_def.process_names.contains(&"KSP.x86_64".to_string()),
+            "Should contain Linux KSP executable"
+        );
+        assert!(
+            ksp_def
+                .window_titles
+                .contains(&"Kerbal Space Program".to_string())
+        );
+        assert_eq!(ksp_def.min_confidence, 0.8);
+    }
+
+    #[test]
+    fn wingman_definition_present() {
+        let config = ProcessDetectionConfig::default();
+        let def = config.process_definitions.get(&SimId::Wingman).unwrap();
+        assert!(
+            def.process_names
+                .contains(&"ProjectWingman.exe".to_string()),
+            "Should contain Wingman Windows executable"
+        );
+        assert!(def.window_titles.contains(&"Project Wingman".to_string()));
+        assert_eq!(def.min_confidence, 0.7);
+    }
+} // end mod tests

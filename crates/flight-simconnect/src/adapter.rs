@@ -117,6 +117,9 @@ pub struct MsfsAdapter {
     current_backoff_delay: f64,
     /// Aircraft detection start time while waiting for one-shot identification payload.
     detection_started_at: Option<Instant>,
+    /// Detected MSFS version: true = MSFS 2024, false = MSFS 2020/legacy.
+    /// Set from dwApplicationVersionMajor in SIMCONNECT_RECV_OPEN (≥ 13 → 2024).
+    is_msfs2024: bool,
     /// Adapter metrics
     metrics: Arc<RwLock<AdapterMetrics>>,
     /// Shared metrics registry
@@ -144,6 +147,7 @@ impl MsfsAdapter {
             last_connection_attempt: None,
             current_backoff_delay: 1.0, // Start with 1 second
             detection_started_at: None,
+            is_msfs2024: false,
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
             metrics_registry: Arc::new(MetricsRegistry::new()),
         })
@@ -415,8 +419,11 @@ impl MsfsAdapter {
                 app_version,
                 simconnect_version,
             } => {
+                // MSFS 2024 reports dwApplicationVersionMajor ≥ 13.
+                // MSFS 2020 (SU5 through SU15) uses versions 11–12.
+                self.is_msfs2024 = app_version.0 >= 13;
                 info!(
-                    "SimConnect connected: {} app={}.{}.{}.{}, simconnect={}.{}.{}.{}",
+                    "SimConnect connected: {} app={}.{}.{}.{}, simconnect={}.{}.{}.{} ({})",
                     app_name,
                     app_version.0,
                     app_version.1,
@@ -425,7 +432,12 @@ impl MsfsAdapter {
                     simconnect_version.0,
                     simconnect_version.1,
                     simconnect_version.2,
-                    simconnect_version.3
+                    simconnect_version.3,
+                    if self.is_msfs2024 {
+                        "MSFS 2024"
+                    } else {
+                        "MSFS 2020"
+                    }
                 );
             }
             SessionEvent::Disconnected => {
@@ -479,12 +491,13 @@ impl MsfsAdapter {
         };
 
         let aircraft_id = AircraftId::new(&aircraft.atc_model);
+        let sim_id = self.sim_id();
         let mut snapshot = self
             .current_snapshot
             .read()
             .await
             .clone()
-            .unwrap_or_else(|| BusSnapshot::new(SimId::Msfs, aircraft_id));
+            .unwrap_or_else(|| BusSnapshot::new(sim_id, aircraft_id));
 
         if let Some(mapping) = self.variable_mapping.as_ref() {
             match mapping.convert_to_snapshot(request_id, data, &mut snapshot) {
@@ -516,7 +529,7 @@ impl MsfsAdapter {
         self.setup_variable_mapping(&aircraft_info).await?;
 
         let aircraft_id = AircraftId::new(&aircraft_info.atc_model);
-        *self.current_snapshot.write().await = Some(BusSnapshot::new(SimId::Msfs, aircraft_id));
+        *self.current_snapshot.write().await = Some(BusSnapshot::new(self.sim_id(), aircraft_id));
         *self.state.write().await = AdapterState::Active;
         Ok(())
     }
@@ -689,7 +702,11 @@ impl SimAdapter for MsfsAdapter {
     }
 
     fn sim_id(&self) -> SimId {
-        SimId::Msfs
+        if self.is_msfs2024 {
+            SimId::Msfs2024
+        } else {
+            SimId::Msfs
+        }
     }
 
     fn validate_raw_data(&self, _raw: &Self::RawData) -> Result<(), Self::Error> {
@@ -748,7 +765,8 @@ mod tests {
 
         match MsfsAdapter::new(config) {
             Ok(adapter) => {
-                assert_eq!(adapter.sim_id(), SimId::Msfs);
+                // sim_id() returns Msfs or Msfs2024 depending on detected version.
+                assert!(matches!(adapter.sim_id(), SimId::Msfs | SimId::Msfs2024));
 
                 // Test validation
                 let raw_data = vec![1, 2, 3, 4];

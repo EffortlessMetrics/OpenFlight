@@ -9,7 +9,7 @@
 use flight_simconnect_sys::{HSIMCONNECT, SIMCONNECT_EVENTID, SimConnectApi, constants::*};
 use std::collections::HashMap;
 use thiserror::Error;
-use tracing::{debug, warn};
+use tracing::debug;
 
 /// SimConnect event types
 #[derive(Debug, Clone, PartialEq)]
@@ -46,6 +46,8 @@ pub enum EventError {
     EventNotFound(String),
     #[error("Invalid event data")]
     InvalidData,
+    #[error("Feature not supported by current SimConnect SDK version: {0}")]
+    NotSupported(String),
     #[error("Event mapping error: {0}")]
     MappingError(String),
 }
@@ -176,20 +178,18 @@ impl EventManager {
             .get(event_name)
             .ok_or_else(|| EventError::EventNotFound(event_name.to_string()))?;
 
-        // Input Events use a different API call (would need additional SimConnect functions)
-        // For now, we'll log the attempt
+        // SimConnect_SetInputEvent is not present in the MSFS SDK version currently
+        // vendored (flight-simconnect-sys). Input Event transmission requires a newer
+        // SDK that exposes the B-var / H-var write surface; standard TransmitClientEvent
+        // cannot be used as a substitute because the routing differs.
+        // Until the sys crate is updated, callers should fall back to standard events.
         debug!(
             "Input event transmission requested: {} (0x{:016X}) = {}",
             event_name, hash, value
         );
-
-        // TODO: Implement actual Input Event transmission when API is available
-        warn!(
-            "Input Event transmission not yet implemented: {}",
-            event_name
-        );
-
-        Ok(())
+        Err(EventError::NotSupported(format!(
+            "Input Event '{event_name}' requires SimConnect_SetInputEvent (SDK upgrade needed)"
+        )))
     }
 
     /// Get event name by ID

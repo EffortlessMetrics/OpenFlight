@@ -25,8 +25,43 @@ pub struct LedState {
     pub last_update: Instant,
 }
 
+/// Seam for the actual hardware write path.
+///
+/// The controller drives rate limiting, state tracking, and latency accounting.
+/// Implementations provide the low-level device write (HID report, USB control
+/// transfer, etc.).  The no-op default is used when no physical device is
+/// attached (tests, simulator-only mode).
+pub trait LedBackend: Send {
+    /// Write a single LED state to the device.
+    ///
+    /// The implementation should be non-blocking (or at most a few µs).
+    /// Transient errors may be logged but should not propagate here — the
+    /// controller will retry on the next [`LedController::execute_actions`]
+    /// call once the rate-limit window expires.
+    fn write(&mut self, target: &LedTarget, state: &LedState) -> Result<()>;
+}
+
+/// No-op LED backend — logs state changes without driving hardware.
+///
+/// Used as the default when no physical panel device is attached.
+pub struct NoopLedBackend;
+
+impl LedBackend for NoopLedBackend {
+    fn write(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
+        tracing::debug!(
+            "LED {:?}: on={}, brightness={:.2}, blink_rate={:?} (noop)",
+            target,
+            state.on,
+            state.brightness,
+            state.blink_rate,
+        );
+        Ok(())
+    }
+}
+
 /// LED controller with rate limiting and latency tracking
 pub struct LedController {
+    backend: Box<dyn LedBackend>,
     led_states: HashMap<LedTarget, LedState>,
     last_write: HashMap<LedTarget, Instant>,
     min_interval: Duration,
@@ -35,9 +70,15 @@ pub struct LedController {
 }
 
 impl LedController {
-    /// Create a new LED controller
+    /// Create a new LED controller backed by `NoopLedBackend`.
     pub fn new() -> Self {
+        Self::with_backend(Box::new(NoopLedBackend))
+    }
+
+    /// Create a new LED controller with a custom hardware backend.
+    pub fn with_backend(backend: Box<dyn LedBackend>) -> Self {
         Self {
+            backend,
             led_states: HashMap::new(),
             last_write: HashMap::new(),
             min_interval: Duration::from_millis(8), // ≥8ms min interval per requirements
@@ -175,17 +216,7 @@ impl LedController {
     fn write_led_state(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
         let write_start = Instant::now();
 
-        // Stub implementation - would write to actual hardware
-        tracing::debug!(
-            "LED {:?}: on={}, brightness={:.2}, blink_rate={:?}",
-            target,
-            state.on,
-            state.brightness,
-            state.blink_rate
-        );
-
-        // Simulate hardware write time (in real implementation, this would be actual HID write)
-        std::thread::sleep(Duration::from_micros(100)); // Simulate 100μs write time
+        self.backend.write(target, state)?;
 
         let write_latency = write_start.elapsed();
 
@@ -203,11 +234,6 @@ impl LedController {
                 target
             );
         }
-
-        // TODO: Implement actual hardware communication
-        // - HID writes for panel LEDs
-        // - Rate limiting enforcement
-        // - Error handling for hardware failures
 
         Ok(())
     }
@@ -458,23 +484,38 @@ mod tests {
         controller.set_min_interval(min_interval);
 
         let target = "RATE_TEST";
-        let start_time = Instant::now();
 
-        // Try to execute multiple actions rapidly
-        for _ in 0..5 {
-            let action = Action::LedOn {
-                target: target.to_string(),
-            };
-            controller.execute_actions(&[action]).unwrap();
-        }
+        // First write turns LED on
+        let on_action = Action::LedOn {
+            target: target.to_string(),
+        };
+        controller.execute_actions(&[on_action]).unwrap();
 
-        let elapsed = start_time.elapsed();
+        // Immediate second write tries to turn LED off — should be rate-limited (skipped)
+        let off_action = Action::LedOff {
+            target: target.to_string(),
+        };
+        controller.execute_actions(&[off_action]).unwrap();
 
-        // Should have been rate limited - not all writes should have occurred immediately
-        // In a real implementation, we'd check the actual write timestamps
+        // Verify LED is still ON (the off write was rate-limited)
+        let led_target = LedTarget::Panel(target.to_string());
+        let state = controller.get_led_state(&led_target);
         assert!(
-            elapsed >= Duration::from_millis(1),
-            "Some rate limiting should have occurred"
+            state.map_or(false, |s| s.on),
+            "LED should still be ON — immediate off write should be rate-limited"
+        );
+
+        // After min_interval elapses, the off write should execute
+        std::thread::sleep(min_interval + Duration::from_millis(1));
+        let off_action2 = Action::LedOff {
+            target: target.to_string(),
+        };
+        controller.execute_actions(&[off_action2]).unwrap();
+
+        let state = controller.get_led_state(&led_target);
+        assert!(
+            state.map_or(false, |s| !s.on),
+            "LED should be OFF after min_interval has elapsed"
         );
     }
 }

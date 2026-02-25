@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
 
-//! Input parsing and virtual-controller aggregation for VKB STECS.
+//! Input parsing and virtual-controller aggregation for VKB STECS and Gladiator NXT EVO.
 
-use flight_hid_support::device_support::VkbStecsVariant;
+use flight_hid_support::device_support::{VkbGladiatorVariant, VkbStecsVariant};
 
 /// Number of buttons exposed by one STECS virtual controller (VC).
 pub const STECS_BUTTONS_PER_VIRTUAL_CONTROLLER: usize = 32;
@@ -256,6 +256,192 @@ impl StecsInputAggregator {
     pub fn state(&self) -> &StecsInputState {
         &self.state
     }
+}
+
+/// Maximum number of buttons supported by the Gladiator NXT EVO grip.
+pub const GLADIATOR_MAX_BUTTONS: usize = 64;
+/// Maximum number of POV hats on the Gladiator NXT EVO.
+pub const GLADIATOR_MAX_HATS: usize = 2;
+
+/// Parsed axes from one Gladiator NXT EVO report.
+///
+/// Axes are normalised to `0.0..=1.0` for unidirectional controls
+/// (throttle wheel, mini-stick analogue) and `−1.0..=1.0` for
+/// bidirectional stick axes (roll, pitch, yaw).
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct GladiatorAxes {
+    /// Main stick roll (X axis), `−1.0..=1.0`.
+    pub roll: f32,
+    /// Main stick pitch (Y axis), `−1.0..=1.0`.
+    pub pitch: f32,
+    /// Stick twist / yaw (Z axis), `−1.0..=1.0`.
+    pub yaw: f32,
+    /// Throttle wheel on base, `0.0..=1.0`.
+    pub throttle: f32,
+    /// Mini-stick analogue X axis, `−1.0..=1.0`.
+    pub mini_x: f32,
+    /// Mini-stick analogue Y axis, `−1.0..=1.0`.
+    pub mini_y: f32,
+}
+
+/// 8-direction POV hat state (matches HID hat-switch encoding 0=N … 7=NW,
+/// `None` = centred / released).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HatDirection(pub u8);
+
+/// Parsed state from one Gladiator NXT EVO HID report.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GladiatorInputState {
+    /// Device variant.
+    pub variant: VkbGladiatorVariant,
+    /// All six analogue axes.
+    pub axes: GladiatorAxes,
+    /// Up to 64 digital buttons (`true` = pressed).
+    pub buttons: [bool; GLADIATOR_MAX_BUTTONS],
+    /// POV hat states (`None` = centred).
+    pub hats: [Option<HatDirection>; GLADIATOR_MAX_HATS],
+}
+
+impl GladiatorInputState {
+    fn new(variant: VkbGladiatorVariant) -> Self {
+        Self {
+            variant,
+            axes: GladiatorAxes::default(),
+            buttons: [false; GLADIATOR_MAX_BUTTONS],
+            hats: [None; GLADIATOR_MAX_HATS],
+        }
+    }
+
+    /// Return 1-based indices of all currently pressed buttons.
+    pub fn pressed_buttons(&self) -> Vec<u16> {
+        self.buttons
+            .iter()
+            .enumerate()
+            .filter_map(
+                |(i, &pressed)| {
+                    if pressed { Some((i + 1) as u16) } else { None }
+                },
+            )
+            .collect()
+    }
+}
+
+/// Parse errors for Gladiator reports.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum GladiatorParseError {
+    /// Report payload is shorter than the minimum required size.
+    #[error("Gladiator report too short: expected at least {expected} bytes, got {actual}")]
+    ReportTooShort { expected: usize, actual: usize },
+}
+
+/// Best-effort parser for VKB Gladiator NXT EVO HID reports.
+///
+/// ## Expected HID report layout (best effort, descriptor-first preferred)
+///
+/// | Bytes | Content |
+/// |-------|---------|
+/// | 0–1   | Roll / X axis (u16 LE, 0 … 65535 → −1..=1) |
+/// | 2–3   | Pitch / Y axis (u16 LE) |
+/// | 4–5   | Yaw / Z (twist) axis (u16 LE) |
+/// | 6–7   | Mini-stick X / Rx axis (u16 LE) |
+/// | 8–9   | Mini-stick Y / Ry axis (u16 LE) |
+/// | 10–11 | Throttle wheel / Slider (u16 LE, 0 … 65535 → 0..=1) |
+/// | 12–15 | Button bitmap (u32 LE, bits 0–31) |
+/// | 16–19 | Button bitmap (u32 LE, bits 32–63) |
+/// | 20    | Hat 0 nibble (low) + Hat 1 nibble (high), 0xF = centred |
+///
+/// Shorter reports are parsed best-effort: missing fields default to centre/zero.
+#[derive(Debug, Clone, Copy)]
+pub struct GladiatorInputHandler {
+    variant: VkbGladiatorVariant,
+    has_report_id: bool,
+}
+
+impl GladiatorInputHandler {
+    /// Create a parser for the given Gladiator variant.
+    pub fn new(variant: VkbGladiatorVariant) -> Self {
+        Self {
+            variant,
+            has_report_id: false,
+        }
+    }
+
+    /// Enable stripping a 1-byte HID report ID prefix before parsing.
+    pub fn with_report_id(mut self, enabled: bool) -> Self {
+        self.has_report_id = enabled;
+        self
+    }
+
+    /// Return the associated variant.
+    pub fn variant(&self) -> VkbGladiatorVariant {
+        self.variant
+    }
+
+    /// Parse one Gladiator HID report.
+    pub fn parse_report(&self, report: &[u8]) -> Result<GladiatorInputState, GladiatorParseError> {
+        let payload = if self.has_report_id {
+            report.get(1..).unwrap_or(&[])
+        } else {
+            report
+        };
+
+        const MIN_LEN: usize = 12; // need at least axes
+        if payload.len() < MIN_LEN {
+            return Err(GladiatorParseError::ReportTooShort {
+                expected: MIN_LEN,
+                actual: payload.len(),
+            });
+        }
+
+        let mut state = GladiatorInputState::new(self.variant);
+
+        // Axes — signed normalisation for bidirectional, unsigned for unidirectional
+        state.axes.roll = normalize_axis_signed(le_u16(payload, 0));
+        state.axes.pitch = normalize_axis_signed(le_u16(payload, 2));
+        state.axes.yaw = normalize_axis_signed(le_u16(payload, 4));
+        state.axes.mini_x = normalize_axis_signed(le_u16(payload, 6));
+        state.axes.mini_y = normalize_axis_signed(le_u16(payload, 8));
+        state.axes.throttle = normalize_axis_16bit(le_u16(payload, 10));
+
+        // Buttons (optional)
+        if payload.len() >= 16 {
+            let btn_lo = le_u32(payload, 12);
+            for bit in 0..32usize {
+                state.buttons[bit] = ((btn_lo >> bit) & 1) != 0;
+            }
+        }
+        if payload.len() >= 20 {
+            let btn_hi = le_u32(payload, 16);
+            for bit in 0..32usize {
+                state.buttons[32 + bit] = ((btn_hi >> bit) & 1) != 0;
+            }
+        }
+
+        // POV hats (optional)
+        if let Some(&hat_byte) = payload.get(20) {
+            state.hats[0] = decode_hat_nibble(hat_byte & 0x0F);
+            state.hats[1] = decode_hat_nibble((hat_byte >> 4) & 0x0F);
+        }
+
+        Ok(state)
+    }
+}
+
+/// Decode a 4-bit HID hat-switch nibble.
+/// Values 0–7 map to N/NE/E/SE/S/SW/W/NW; 0xF (15) means centred.
+fn decode_hat_nibble(nibble: u8) -> Option<HatDirection> {
+    if nibble <= 7 {
+        Some(HatDirection(nibble))
+    } else {
+        None
+    }
+}
+
+/// Normalise a raw u16 axis value to `−1.0..=1.0` (bidirectional).
+///
+/// 0x0000 → −1.0, 0x8000 → 0.0, 0xFFFF → ≈1.0
+fn normalize_axis_signed(raw: u16) -> f32 {
+    (raw as f32 / 32767.5) - 1.0
 }
 
 fn le_u16(bytes: &[u8], offset: usize) -> u16 {

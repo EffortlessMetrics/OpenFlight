@@ -1,0 +1,43 @@
+# Kerbal Space Program — kRPC Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Kerbal Space Program"
+  id: ksp
+  developer: "Squad / Private Division"
+
+integration:
+  mechanism: "kRPC mod — length-delimited protobuf over TCP"
+  crate: flight-ksp
+  protocol_version: "kRPC 0.5.x"
+
+supported_versions:
+  - "KSP 1.8 through 1.12.x (with kRPC mod 0.5.x)"
+
+requirements:
+  - "kRPC mod must be installed in KSP GameData/"
+  - "kRPC server must be running and accessible on the configured TCP address"
+
+features:
+  telemetry_read: true
+  control_injection: false    # kRPC telemetry is read-only in current implementation
+  force_feedback_translation: false
+  aircraft_detection: false   # Not applicable for rocketry (vessel class used instead)
+
+test_coverage:
+  trace_replay: false
+  integration_tests: true   # Connection + snapshot pipeline tests in adapter.rs
+  hil: false
+
+known_issues:
+  - id: CONTROL_INJECTION_NOT_IMPLEMENTED
+    description: >
+      kRPC exposes vessel control surfaces but OpenFlight currently only reads
+      telemetry. Control injection is a planned enhancement.
+  - id: KSP2_NOT_SUPPORTED
+    description: >
+      Kerbal Space Program 2 used a different modding API; it is not supported.
+      KSP2 development was discontinued by Take-Two Interactive in 2024.

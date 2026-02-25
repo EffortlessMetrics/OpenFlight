@@ -70,7 +70,7 @@ pub struct BlackboxSample {
 }
 
 /// Safety state for blackbox samples
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BlackboxSafetyState {
     /// Safe torque mode (limited envelope)
     SafeTorque,
@@ -79,13 +79,8 @@ pub enum BlackboxSafetyState {
     /// Faulted state (zero torque)
     Faulted,
     /// Unknown/not available
+    #[default]
     Unknown,
-}
-
-impl Default for BlackboxSafetyState {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl std::fmt::Display for BlackboxSafetyState {
@@ -667,6 +662,12 @@ impl BlackboxRecorder {
         }
 
         let fault_time = fault_entry.timestamp();
+
+        // Also add fault entry to circular buffer so get_recent_entries() can find it
+        if self.circular_buffer.len() >= self.config.max_entries {
+            self.circular_buffer.pop_front();
+        }
+        self.circular_buffer.push_back(fault_entry.clone());
 
         // Extract pre-fault entries from circular buffer (2s pre-fault per FFB-SAFETY-01.12)
         let cutoff_time = fault_time - self.config.pre_fault_duration;

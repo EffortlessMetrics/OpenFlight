@@ -1,0 +1,42 @@
+# VKB Gladiator NXT EVO
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0126
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15   # 15-bit precision
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's own configuration software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+
+support:
+  tier: 2              # Automated tests only (no HIL rig)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Product ID may vary by firmware; 0x0126 is the NXT EVO standard mode."

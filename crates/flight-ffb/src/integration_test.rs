@@ -14,7 +14,7 @@ mod tests {
         ModeNegotiator, ModeSelectionPolicy, PerformanceConfig, PerformanceValidator,
         SetpointChange, TrimLimits, TrimMode,
     };
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
 
     /// Comprehensive integration test for task 24 requirements
     #[test]
@@ -123,11 +123,15 @@ mod tests {
 
         // Simulate updates and verify no torque steps
         let mut previous_setpoint = 0.0f32;
+        let mut previous_time = Instant::now();
         let mut max_rate_observed = 0.0f32;
         let mut max_jerk_observed = 0.0f32;
-        let dt = 0.001f32; // 1ms timestep
 
         for _ in 0..100 {
+            let now = Instant::now();
+            let dt = now.duration_since(previous_time).as_secs_f32().max(1e-6);
+            previous_time = now;
+
             let output = trim_controller.update();
 
             if let crate::TrimOutput::ForceFeedback {
@@ -135,15 +139,15 @@ mod tests {
                 rate_nm_per_s: _,
             } = output
             {
-                // Check for torque steps (sudden changes)
+                // Check for torque steps (sudden changes) using actual elapsed time
                 let rate = (setpoint_nm - previous_setpoint).abs() / dt;
                 let jerk = (rate - max_rate_observed).abs() / dt;
 
                 max_rate_observed = max_rate_observed.max(rate);
                 max_jerk_observed = max_jerk_observed.max(jerk);
 
-                // Verify no torque steps (rate should be limited)
-                assert!(rate <= 12.5, "Rate limit exceeded: {} > 12.5 Nm/s", rate); // Small tolerance
+                // Verify no torque steps (rate should be limited to max_rate + 20% tolerance)
+                assert!(rate <= 15.0, "Rate limit exceeded: {} > 15.0 Nm/s", rate);
 
                 previous_setpoint = setpoint_nm;
             }

@@ -1,0 +1,43 @@
+# X-Plane 12 — UDP DataRef Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "X-Plane 12"
+  id: xplane
+  developer: "Laminar Research"
+
+integration:
+  mechanism: "UDP DataRef + Web API"
+  crate: flight-xplane
+  protocol_version: "XPlane11+"   # UDP Data Output (DREF) protocol
+
+supported_versions:
+  - "X-Plane 11 (11.55+)"
+  - "X-Plane 12 (all)"
+
+features:
+  telemetry_read: true
+  control_injection:
+    dataref_write: true
+    commands: true
+  force_feedback_translation: false   # No native FFB API in X-Plane
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false     # Planned
+  integration_tests: true # adapter::tests — snapshot pipeline + stale timeout
+  hil: false
+
+known_issues:
+  - id: PLUGIN_INTERFACE_OPTIONAL
+    description: >
+      The plugin interface (flight-xplane::plugin) is optional and disabled by default
+      (enable_plugin = false in XPlaneAdapterConfig). UDP-only mode is the default
+      and fully tested.
+  - id: CONNECTION_TIMEOUT_2S
+    description: >
+      If no UDP packets are received for 2 seconds, the adapter publishes a stale
+      snapshot with validity.safe_for_ffb = false and transitions to Disconnected.

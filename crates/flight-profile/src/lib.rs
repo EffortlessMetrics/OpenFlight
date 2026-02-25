@@ -74,6 +74,37 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
 
+/// Recursively normalise all JSON numbers to 6 decimal places (f64).
+///
+/// This is used by [`Profile::canonicalize`] to produce a stable hash that
+/// survives JSON roundtrips.  Working in f64 avoids the rounding instability
+/// that occurs when rounding f32 values with f32 arithmetic.
+fn normalize_json_floats(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(n) => {
+            if let Some(f) = n.as_f64() {
+                let rounded = (f * 1_000_000.0_f64).round() / 1_000_000.0_f64;
+                serde_json::Number::from_f64(rounded)
+                    .map(serde_json::Value::Number)
+                    .unwrap_or(serde_json::Value::Number(n))
+            } else {
+                serde_json::Value::Number(n)
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            serde_json::Value::Array(arr.into_iter().map(normalize_json_floats).collect())
+        }
+        serde_json::Value::Object(map) => {
+            let normalized = map
+                .into_iter()
+                .map(|(k, v)| (k, normalize_json_floats(v)))
+                .collect();
+            serde_json::Value::Object(normalized)
+        }
+        other => other,
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum ProfileError {
     #[error("Validation error: {0}")]
@@ -256,40 +287,13 @@ impl Profile {
 
     /// Canonicalize profile for deterministic hashing
     pub fn canonicalize(&self) -> String {
-        // Sort keys and normalize float precision
-        let mut canonical = self.clone();
-
-        // Normalize float values to 6 decimal places
-        for config in canonical.axes.values_mut() {
-            if let Some(deadzone) = &mut config.deadzone {
-                *deadzone = (*deadzone * 1_000_000.0).round() / 1_000_000.0;
-            }
-            if let Some(expo) = &mut config.expo {
-                *expo = (*expo * 1_000_000.0).round() / 1_000_000.0;
-            }
-            if let Some(slew_rate) = &mut config.slew_rate {
-                *slew_rate = (*slew_rate * 1_000_000.0).round() / 1_000_000.0;
-            }
-
-            // Normalize curve points
-            if let Some(curve) = &mut config.curve {
-                for point in curve {
-                    point.input = (point.input * 1_000_000.0).round() / 1_000_000.0;
-                    point.output = (point.output * 1_000_000.0).round() / 1_000_000.0;
-                }
-            }
-
-            // Normalize filter parameters
-            if let Some(filter) = &mut config.filter {
-                filter.alpha = (filter.alpha * 1_000_000.0).round() / 1_000_000.0;
-                if let Some(threshold) = &mut filter.spike_threshold {
-                    *threshold = (*threshold * 1_000_000.0).round() / 1_000_000.0;
-                }
-            }
-        }
-
-        // Serialize with sorted keys
-        serde_json::to_string(&canonical).unwrap_or_default()
+        // Serialize to a serde_json::Value first (uses f64 internally),
+        // then normalize all numeric values to 6 decimal places using f64
+        // arithmetic.  This avoids f32 rounding instability that would cause
+        // the canonical form to differ across JSON roundtrips.
+        let value = serde_json::to_value(self).unwrap_or_default();
+        let normalized = normalize_json_floats(value);
+        serde_json::to_string(&normalized).unwrap_or_default()
     }
 
     /// Compute effective profile hash
@@ -701,5 +705,29 @@ mod tests {
             let kid_context = CapabilityContext::for_mode(CapabilityMode::Kid);
             prop_assert!(profile.validate_with_capabilities(&kid_context).is_err());
         }
+    }
+
+    // ── snapshot tests ────────────────────────────────────────────────────────
+
+    #[test]
+    fn snapshot_canonical_form() {
+        let profile = create_valid_profile();
+        insta::assert_snapshot!("profile_canonical_form", profile.canonicalize());
+    }
+
+    #[test]
+    fn snapshot_merged_profile() {
+        let base = create_valid_profile();
+        let override_profile = create_override_profile();
+        let merged = base.merge_with(&override_profile).unwrap();
+        insta::assert_snapshot!("profile_merged", merged.canonicalize());
+    }
+
+    #[test]
+    fn snapshot_validation_error_bad_schema() {
+        let mut profile = create_valid_profile();
+        profile.schema = "flight.profile/99".to_string();
+        let err = profile.validate().unwrap_err();
+        insta::assert_debug_snapshot!("profile_validation_error_schema", err);
     }
 }

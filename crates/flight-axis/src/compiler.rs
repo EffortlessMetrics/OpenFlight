@@ -808,4 +808,52 @@ mod tests {
             frame.out
         );
     }
+
+    // ── snapshot tests ────────────────────────────────────────────────────────
+
+    #[test]
+    fn snapshot_pipeline_metadata_full() {
+        let pipeline = PipelineBuilder::new()
+            .deadzone(0.03)
+            .curve(0.2)
+            .unwrap()
+            .slew(1.2)
+            .filter(0.15)
+            .compile()
+            .expect("Should compile full pipeline");
+
+        // Snapshot the node-type sequence and state layout so regressions in
+        // node ordering, naming, or state sizing are immediately visible.
+        let meta: Vec<_> = pipeline
+            .metadata()
+            .iter()
+            .map(|m| {
+                format!(
+                    "id={} type={} state_offset={} state_size={}",
+                    m.node_id.0, m.node_type, m.state_offset, m.state_size
+                )
+            })
+            .collect();
+        insta::assert_debug_snapshot!("pipeline_metadata_full", meta);
+    }
+
+    #[test]
+    fn snapshot_pipeline_metadata_deadzone_only() {
+        let pipeline = PipelineBuilder::new()
+            .deadzone(0.05)
+            .compile()
+            .expect("Should compile");
+
+        let meta: Vec<_> = pipeline
+            .metadata()
+            .iter()
+            .map(|m| {
+                format!(
+                    "id={} type={} state_offset={} state_size={}",
+                    m.node_id.0, m.node_type, m.state_offset, m.state_size
+                )
+            })
+            .collect();
+        insta::assert_debug_snapshot!("pipeline_metadata_deadzone_only", meta);
+    }
 }

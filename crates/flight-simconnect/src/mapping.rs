@@ -18,6 +18,10 @@ use flight_simconnect_sys::{
 use std::collections::HashMap;
 use thiserror::Error;
 
+/// Standard acceleration due to gravity in ft/s², used to convert
+/// ACCELERATION BODY X/Z SimVars (ft/s²) to G-force values.
+const STANDARD_GRAVITY_FT_S2: f64 = 32.174;
+
 /// Variable mapping configuration
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -408,7 +412,7 @@ impl VariableMapping {
         let mut offset = 0;
 
         // Add all kinematics variables
-        let kinematics_vars = [
+        let kinematics_vars: &[(&String, &str, SIMCONNECT_DATATYPE)] = &[
             (&mapping.ias, "knots", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.tas, "knots", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.ground_speed, "knots", SIMCONNECT_DATATYPE::FLOAT64),
@@ -418,10 +422,16 @@ impl VariableMapping {
             (&mapping.pitch, "degrees", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.heading, "degrees", SIMCONNECT_DATATYPE::FLOAT64),
             (&mapping.g_force, "gforce", SIMCONNECT_DATATYPE::FLOAT64),
-            (&mapping.g_lateral, "gforce", SIMCONNECT_DATATYPE::FLOAT64),
+            // ACCELERATION BODY X/Z are returned in feet per second squared.
+            // Divide by standard gravity (32.174 ft/s²) to get G.
+            (
+                &mapping.g_lateral,
+                "feet per second squared",
+                SIMCONNECT_DATATYPE::FLOAT64,
+            ),
             (
                 &mapping.g_longitudinal,
-                "gforce",
+                "feet per second squared",
                 SIMCONNECT_DATATYPE::FLOAT64,
             ),
             (&mapping.mach, "mach", SIMCONNECT_DATATYPE::FLOAT64),
@@ -1068,8 +1078,15 @@ impl VariableMapping {
                 6 => kinematics.pitch = MsfsConverter::convert_angle_degrees(value)?,
                 7 => kinematics.heading = MsfsConverter::convert_angle_degrees(value)?,
                 8 => kinematics.g_force = MsfsConverter::convert_g_force(value)?,
-                9 => kinematics.g_lateral = MsfsConverter::convert_g_force(value)?,
-                10 => kinematics.g_longitudinal = MsfsConverter::convert_g_force(value)?,
+                // ACCELERATION BODY X/Z arrive in ft/s²; convert to G
+                9 => {
+                    kinematics.g_lateral =
+                        MsfsConverter::convert_g_force(value / STANDARD_GRAVITY_FT_S2)?
+                }
+                10 => {
+                    kinematics.g_longitudinal =
+                        MsfsConverter::convert_g_force(value / STANDARD_GRAVITY_FT_S2)?
+                }
                 11 => kinematics.mach = MsfsConverter::convert_mach(value)?,
                 12 => kinematics.vertical_speed = value as f32,
                 _ => {}
@@ -1537,12 +1554,12 @@ pub fn create_default_mapping() -> MappingConfig {
         ground_speed: "GROUND VELOCITY".to_string(),
         aoa: "INCIDENCE ALPHA".to_string(),
         sideslip: "INCIDENCE BETA".to_string(),
-        bank: "ATTITUDE BANK DEGREES".to_string(),
-        pitch: "ATTITUDE PITCH DEGREES".to_string(),
-        heading: "ATTITUDE HEADING DEGREES".to_string(),
+        bank: "PLANE BANK DEGREES".to_string(),
+        pitch: "PLANE PITCH DEGREES".to_string(),
+        heading: "PLANE HEADING DEGREES MAGNETIC".to_string(),
         g_force: "G FORCE".to_string(),
-        g_lateral: "G FORCE LATERAL".to_string(),
-        g_longitudinal: "G FORCE LONGITUDINAL".to_string(),
+        g_lateral: "ACCELERATION BODY X".to_string(),
+        g_longitudinal: "ACCELERATION BODY Z".to_string(),
         mach: "AIRSPEED MACH".to_string(),
         vertical_speed: "VERTICAL SPEED".to_string(),
     };

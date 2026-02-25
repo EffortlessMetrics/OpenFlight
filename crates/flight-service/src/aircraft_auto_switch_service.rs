@@ -16,6 +16,7 @@ use flight_bus::{AircraftId as BusAircraftId, SimId as BusSimId};
 use flight_core::aircraft_switch::{
     AircraftId as CoreAircraftId, SimId as CoreSimId, TelemetrySnapshot,
 };
+#[cfg(windows)]
 use flight_simconnect::{
     AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo,
 };
@@ -43,9 +44,14 @@ use tracing::{debug, error, info, warn};
 fn map_sim_id(sim: BusSimId) -> CoreSimId {
     match sim {
         BusSimId::Msfs => CoreSimId::Msfs,
+        BusSimId::Msfs2024 => CoreSimId::Msfs2024,
         BusSimId::XPlane => CoreSimId::XPlane,
         BusSimId::Dcs => CoreSimId::Dcs,
         BusSimId::AceCombat7 => CoreSimId::AceCombat7,
+        BusSimId::WarThunder => CoreSimId::WarThunder,
+        BusSimId::EliteDangerous => CoreSimId::EliteDangerous,
+        BusSimId::Ksp => CoreSimId::Ksp,
+        BusSimId::Wingman => CoreSimId::Wingman,
         BusSimId::Unknown => CoreSimId::Unknown,
     }
 }
@@ -108,6 +114,8 @@ pub struct AdapterConfigs {
     pub enable_dcs: bool,
     /// Enable Ace Combat 7 adapter
     pub enable_ac7: bool,
+    /// Enable Project Wingman adapter
+    pub enable_wingman: bool,
 }
 
 /// Aircraft auto-switch service
@@ -119,6 +127,8 @@ pub struct AircraftAutoSwitchService {
     bus_subscriber: Arc<RwLock<Option<BusSubscriber>>>,
     service_tx: mpsc::UnboundedSender<ServiceEvent>,
     service_rx: Arc<RwLock<Option<mpsc::UnboundedReceiver<ServiceEvent>>>>,
+    /// Per-adapter detection/error counters, updated by the event loop.
+    adapter_metrics: Arc<RwLock<HashMap<BusSimId, AdapterMetrics>>>,
 }
 
 /// Simulator adapters
@@ -127,15 +137,20 @@ struct SimAdapters {
     xplane: Option<XPlaneAdapter>,
     dcs: Option<DcsAdapter>,
     ac7: Option<Ac7Adapter>,
+    wingman: Option<WingmanWrapper>,
 }
 
 /// MSFS adapter wrapper
+#[cfg(windows)]
 struct MsfsAdapter {
     #[allow(dead_code)]
     detector: MsfsAircraftDetector,
     #[allow(dead_code)]
     current_aircraft: Option<MsfsAircraftInfo>,
 }
+
+#[cfg(not(windows))]
+struct MsfsAdapter;
 
 /// X-Plane adapter wrapper
 struct XPlaneAdapter {
@@ -164,6 +179,12 @@ impl Ac7Adapter {
         let _ = self.shutdown_tx.send(true);
         let _ = self.join_handle.await;
     }
+}
+
+/// Project Wingman adapter wrapper (no telemetry API; tracks process detection only).
+struct WingmanWrapper {
+    #[allow(dead_code)]
+    process_name: String,
 }
 
 /// Service event for internal processing
@@ -212,6 +233,7 @@ impl Default for AircraftAutoSwitchServiceConfig {
                 enable_xplane: true,
                 enable_dcs: true,
                 enable_ac7: true,
+                enable_wingman: true,
             },
         }
     }
@@ -232,6 +254,7 @@ impl AircraftAutoSwitchService {
             bus_subscriber: Arc::new(RwLock::new(None)),
             service_tx,
             service_rx: Arc::new(RwLock::new(Some(service_rx))),
+            adapter_metrics: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -241,7 +264,7 @@ impl AircraftAutoSwitchService {
         self.auto_switch.start().await?;
 
         // Start process detector
-        self.process_detector.start().await?;
+        Arc::clone(&self.process_detector).start().await?;
 
         // Subscribe to bus for telemetry updates
         let subscriber = bus_publisher
@@ -267,6 +290,7 @@ impl AircraftAutoSwitchService {
         let adapters = Arc::clone(&self.adapters);
         let config = self.config.clone();
         let service_tx = self.service_tx.clone();
+        let adapter_metrics = Arc::clone(&self.adapter_metrics);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -287,16 +311,36 @@ impl AircraftAutoSwitchService {
                         }
                     }
                     ServiceEvent::AircraftDetected(sim, aircraft_id) => {
+                        let detection_start = Instant::now();
                         let detected_aircraft = DetectedAircraft {
                             sim: map_sim_id(sim),
                             aircraft_id: map_aircraft_id(aircraft_id),
                             process_name: format!("{}_process", sim),
-                            detection_time: Instant::now(),
+                            detection_time: detection_start,
                             confidence: 0.9,
                         };
 
+
                         if let Err(e) = auto_switch.on_aircraft_detected(detected_aircraft).await {
                             error!("Failed to handle aircraft detection: {}", e);
+                            // Track detection error
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.detection_errors += 1;
+                        } else {
+                            // Track successful detection + time
+                            let elapsed = detection_start.elapsed();
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.aircraft_detections += 1;
+                            entry.last_detection = Some(Instant::now());
+                            // Exponential moving average of detection time
+                            let alpha = 0.1_f64;
+                            let new_sample = elapsed.as_secs_f64();
+                            let old_avg = entry.average_detection_time.as_secs_f64();
+                            entry.average_detection_time = Duration::from_secs_f64(
+                                alpha * new_sample + (1.0 - alpha) * old_avg,
+                            );
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
@@ -309,6 +353,8 @@ impl AircraftAutoSwitchService {
                     }
                     ServiceEvent::AdapterError(sim, error) => {
                         warn!("Adapter error for {}: {}", sim, error);
+                        let mut metrics = adapter_metrics.write().await;
+                        metrics.entry(sim).or_default().detection_errors += 1;
                     }
                     ServiceEvent::Shutdown => {
                         info!("Aircraft auto-switch service shutting down");
@@ -354,15 +400,15 @@ impl AircraftAutoSwitchService {
         let auto_switch_metrics = self.auto_switch.get_metrics().await;
         let process_detection_metrics = self.process_detector.get_metrics().await;
 
-        // TODO: Collect adapter metrics
-        let adapter_metrics = HashMap::new();
+        // Clone the real per-adapter counters tracked by the event loop
+        let adapter_metrics = self.adapter_metrics.read().await.clone();
 
         ServiceMetrics {
+            total_aircraft_switches: auto_switch_metrics.total_switches,
+            average_detection_time: auto_switch_metrics.average_switch_time,
             auto_switch_metrics,
             process_detection_metrics,
             adapter_metrics,
-            total_aircraft_switches: 0, // TODO: Track this
-            average_detection_time: Duration::from_millis(0), // TODO: Calculate this
         }
     }
 
@@ -425,10 +471,15 @@ impl AircraftAutoSwitchService {
                         // Convert CoreSimId to BusSimId for event
                         let bus_sim = match sim {
                             CoreSimId::Msfs => BusSimId::Msfs,
+                            CoreSimId::Msfs2024 => BusSimId::Msfs2024,
                             CoreSimId::XPlane => BusSimId::XPlane,
                             CoreSimId::Dcs => BusSimId::Dcs,
                             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
-                            CoreSimId::Unknown => BusSimId::Unknown,
+                            CoreSimId::WarThunder => BusSimId::WarThunder,
+                            CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
+                            CoreSimId::Ksp => BusSimId::Ksp,
+                            CoreSimId::Wingman => BusSimId::Wingman,
+                            CoreSimId::Unknown => continue,
                         };
                         if service_tx.send(ServiceEvent::ProcessLost(bus_sim)).is_err() {
                             break 'monitor;
@@ -513,27 +564,43 @@ impl AircraftAutoSwitchService {
         // Convert core SimId to bus SimId for matching
         let bus_sim = match process.sim {
             CoreSimId::Msfs => BusSimId::Msfs,
+            CoreSimId::Msfs2024 => BusSimId::Msfs2024,
             CoreSimId::XPlane => BusSimId::XPlane,
             CoreSimId::Dcs => BusSimId::Dcs,
             CoreSimId::AceCombat7 => BusSimId::AceCombat7,
+            CoreSimId::WarThunder => BusSimId::WarThunder,
+            CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
+            CoreSimId::Ksp => BusSimId::Ksp,
+            CoreSimId::Wingman => BusSimId::Wingman,
             CoreSimId::Unknown => BusSimId::Unknown,
         };
 
         match bus_sim {
             BusSimId::Msfs if config.adapters.enable_msfs => {
                 if adapters_guard.msfs.is_none() {
-                    let detector = MsfsAircraftDetector::new();
-                    // TODO: Setup and start MSFS aircraft detection
-                    adapters_guard.msfs = Some(MsfsAdapter {
-                        detector,
-                        current_aircraft: None,
-                    });
+                    #[cfg(windows)]
+                    {
+                        let detector = MsfsAircraftDetector::new();
+                        // MSFS detection requires an active SimConnect handle (HSIMCONNECT) obtained
+                        // from the SimConnect adapter's connection lifecycle. The detector is stored
+                        // here and setup/start are called by the SimConnect adapter when it connects.
+                        adapters_guard.msfs = Some(MsfsAdapter {
+                            detector,
+                            current_aircraft: None,
+                        });
+                    }
+                    #[cfg(not(windows))]
+                    {
+                        adapters_guard.msfs = Some(MsfsAdapter);
+                    }
                 }
             }
             BusSimId::XPlane if config.adapters.enable_xplane => {
                 if adapters_guard.xplane.is_none() {
                     let detector = XPlaneAircraftDetector::new();
-                    // TODO: Setup and start X-Plane aircraft detection
+                    // X-Plane aircraft detection is driven by the XPlane UDP adapter's telemetry
+                    // loop. The detector is stored here; aircraft events flow via the bus subscriber
+                    // path set up in start_bus_monitoring().
                     adapters_guard.xplane = Some(XPlaneAdapter {
                         detector,
                         current_aircraft: None,
@@ -543,7 +610,9 @@ impl AircraftAutoSwitchService {
             BusSimId::Dcs if config.adapters.enable_dcs => {
                 if adapters_guard.dcs.is_none() {
                     let adapter = DcsAdapterApi::new(Default::default());
-                    // TODO: Setup and start DCS aircraft detection
+                    // DCS aircraft detection is driven by the DCS export adapter's run() loop.
+                    // The adapter is stored here; aircraft events flow via the bus subscriber
+                    // path set up in start_bus_monitoring().
                     adapters_guard.dcs = Some(DcsAdapter {
                         adapter,
                         current_aircraft: None,
@@ -557,6 +626,13 @@ impl AircraftAutoSwitchService {
                         service_tx.clone(),
                     );
                     adapters_guard.ac7 = Some(adapter);
+                }
+            }
+            BusSimId::Wingman if config.adapters.enable_wingman => {
+                if adapters_guard.wingman.is_none() {
+                    adapters_guard.wingman = Some(WingmanWrapper {
+                        process_name: process.process_name.clone(),
+                    });
                 }
             }
             _ => {
@@ -649,6 +725,9 @@ impl AircraftAutoSwitchService {
             BusSimId::AceCombat7 => {
                 ac7_to_stop = adapters_guard.ac7.take();
             }
+            BusSimId::Wingman => {
+                adapters_guard.wingman = None;
+            }
             _ => {}
         }
 
@@ -669,6 +748,7 @@ impl SimAdapters {
             xplane: None,
             dcs: None,
             ac7: None,
+            wingman: None,
         }
     }
 
@@ -680,6 +760,7 @@ impl SimAdapters {
         if let Some(adapter) = self.ac7.take() {
             adapter.stop().await;
         }
+        self.wingman = None;
         Ok(())
     }
 }

@@ -230,7 +230,7 @@ Returns altitude above ground level in meters.
 
 | DCS Lua Return | BusSnapshot Field | Unit Conversion | Notes |
 |----------------|-------------------|-----------------|-------|
-| `altitude_agl` (m) | `environment.altitude_agl` | meters → feet | Altitude AGL |
+| `altitude_agl` (m) | *(collected, not mapped)* | meters → feet (×3.28084) | No `altitude_agl` field in BusSnapshot; data is available in raw telemetry JSON |
 
 **Example:**
 ```lua
@@ -252,12 +252,12 @@ Returns vertical speed in meters per second.
 
 | DCS Lua Return | BusSnapshot Field | Unit Conversion | Notes |
 |----------------|-------------------|-----------------|-------|
-| `vs` (m/s) | `kinematics.vertical_speed` | None (m/s) | Vertical speed |
+| `vs` (m/s) | `kinematics.vertical_speed` | m/s → ft/min (×196.85) | Vertical speed |
 
 **Example:**
 ```lua
 local vs = LoGetVerticalVelocity()  -- Returns 5.08 m/s
--- Maps to: kinematics.vertical_speed = 5.08 m/s (1000 fpm)
+-- Maps to: kinematics.vertical_speed = 1000.0 ft/min
 ```
 
 **MP Integrity:** ✅ **Allowed** - Self-aircraft vertical speed
@@ -341,8 +341,8 @@ Returns navigation route information including next waypoint.
 
 | DCS Lua Field | BusSnapshot Field | Unit Conversion | Notes |
 |---------------|-------------------|-----------------|-------|
-| `goto_point.dist` | `navigation.distance_to_dest` | meters → nm | Distance to waypoint |
-| `goto_point.bearing` | `navigation.waypoint_bearing` | radians → degrees | Bearing to waypoint |
+| `goto_point.dist` | `navigation.distance_to_dest` | meters → NM (×0.000539957) | Distance to waypoint |
+| `goto_point.bearing` | *(collected, not mapped)* | radians → degrees | Waypoint bearing (available in raw JSON) |
 
 **MP Integrity:** ✅ **Allowed** - Self-aircraft navigation data
 
@@ -370,6 +370,41 @@ Returns navigation course information.
 | `CourseDeviation` | `navigation.course_deviation` | None (degrees) | Course deviation |
 
 **MP Integrity:** ✅ **Allowed** - Self-aircraft navigation data
+
+---
+
+### Aircraft Configuration Functions (MP-Safe)
+
+These functions provide aircraft configuration state (gear, flaps) and are **available in multiplayer** as they relate to self-aircraft systems only.
+
+#### LoGetAircraftDrawArgumentValue(argument)
+
+Returns the value of a 3D model draw argument. Draw argument indices are **aircraft-specific**; the values below are common approximations for many jet aircraft.
+
+| Argument | Common Use | Range | Notes |
+|----------|-----------|-------|-------|
+| `1` | Nose/main landing gear position | 0.0 = retracted, 1.0 = extended | Aircraft-dependent |
+| `9` | Flap deflection | 0.0 = retracted, 1.0 = fully extended | Aircraft-dependent |
+
+**BusSnapshot Mapping:**
+
+| Argument | BusSnapshot Field | Unit Conversion | Threshold Logic |
+|----------|-------------------|-----------------|----------------|
+| `1` (gear) | `config.gear.{nose,left,right}` | None | < 0.1 → `Up`; > 0.9 → `Down`; else → `Transitioning` |
+| `9` (flaps) | `config.flaps` | ×100 → percentage | 0–100% |
+
+**Example:**
+```lua
+local gear_arg = LoGetAircraftDrawArgumentValue(1)  -- Returns 1.0 (gear down)
+-- Maps to: config.gear = GearState { nose: Down, left: Down, right: Down }
+
+local flaps_arg = LoGetAircraftDrawArgumentValue(9)  -- Returns 0.3 (30% flaps)
+-- Maps to: config.flaps = Percentage(30.0)
+```
+
+**MP Integrity:** ✅ **Allowed** - Self-aircraft configuration state
+
+> ⚠️ **Aircraft Dependency**: Draw argument indices vary by DCS aircraft module. The values above (1 for gear, 9 for flaps) are common for many fixed-wing jets but may differ for specific aircraft. Verify with your aircraft module documentation.
 
 ---
 

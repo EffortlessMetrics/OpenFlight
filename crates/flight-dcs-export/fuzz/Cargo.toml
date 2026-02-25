@@ -1,0 +1,26 @@
+[package]
+name = "flight-dcs-export-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1"
+
+[dependencies.flight-dcs-export]
+path = ".."
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_dcs_message"
+path = "fuzz_targets/fuzz_dcs_message.rs"
+test = false
+doc = false

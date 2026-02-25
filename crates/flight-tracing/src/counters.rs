@@ -28,6 +28,9 @@ pub struct PerfCounters {
     // Jitter tracking
     jitter_samples: Mutex<JitterTracker>,
 
+    // HID write latency percentile tracking
+    hid_write_samples: Mutex<HidWriteTracker>,
+
     // Session tracking
     session_start: Instant,
 }
@@ -72,6 +75,42 @@ impl JitterTracker {
             max_ns: *sorted.last().unwrap(),
             sample_count: len,
         }
+    }
+
+    fn reset(&mut self) {
+        self.samples.clear();
+    }
+}
+
+/// HID write latency sample tracking for percentile calculation
+struct HidWriteTracker {
+    samples: Vec<u64>,
+    max_samples: usize,
+}
+
+impl HidWriteTracker {
+    fn new(max_samples: usize) -> Self {
+        Self {
+            samples: Vec::with_capacity(max_samples),
+            max_samples,
+        }
+    }
+
+    fn add_sample(&mut self, duration_ns: u64) {
+        if self.samples.len() >= self.max_samples {
+            self.samples.remove(0);
+        }
+        self.samples.push(duration_ns);
+    }
+
+    fn p99_ns(&self) -> u64 {
+        if self.samples.is_empty() {
+            return 0;
+        }
+        let mut sorted = self.samples.clone();
+        sorted.sort_unstable();
+        let p99_idx = (sorted.len() * 99) / 100;
+        sorted[p99_idx.min(sorted.len() - 1)]
     }
 
     fn reset(&mut self) {
@@ -144,6 +183,7 @@ impl PerfCounters {
             hid_write_time_ns: AtomicU64::new(0),
             writer_drops: AtomicU64::new(0),
             jitter_samples: Mutex::new(JitterTracker::new(10000)), // ~40s at 250Hz
+            hid_write_samples: Mutex::new(HidWriteTracker::new(10000)),
             session_start: Instant::now(),
         }
     }
@@ -165,6 +205,10 @@ impl PerfCounters {
                 self.total_hid_writes.fetch_add(1, Ordering::Relaxed);
                 self.hid_write_time_ns
                     .fetch_add(*duration_ns, Ordering::Relaxed);
+                // try_lock: statistical sampling; skipping when contended is acceptable
+                if let Some(mut tracker) = self.hid_write_samples.try_lock() {
+                    tracker.add_sample(*duration_ns);
+                }
             }
 
             EventData::DeadlineMiss { .. } => {
@@ -209,7 +253,10 @@ impl PerfCounters {
             } else {
                 0
             },
-            p99_time_ns: 0, // TODO: Track HID write time percentiles
+            p99_time_ns: {
+                let tracker = self.hid_write_samples.lock();
+                tracker.p99_ns()
+            },
         };
 
         let session_duration_ms = self.session_start.elapsed().as_millis() as u64;
@@ -240,6 +287,9 @@ impl PerfCounters {
 
         let mut tracker = self.jitter_samples.lock();
         tracker.reset();
+
+        let mut hid_tracker = self.hid_write_samples.lock();
+        hid_tracker.reset();
     }
 
     /// Check if counters exceed quality gates
@@ -548,6 +598,33 @@ mod tests {
             kv_pairs
                 .iter()
                 .any(|(k, v)| k == "hid_avg_us" && v == "250.0")
+        );
+    }
+
+    #[test]
+    fn test_hid_write_percentiles() {
+        let counters = PerfCounters::new();
+
+        // 990 fast writes at 50μs, 10 slow at 500μs — p99 should be the slow ones
+        for _ in 0..990 {
+            counters.record_event(&TraceEvent::hid_write(0x1234, 64, 50_000));
+        }
+        for _ in 0..10 {
+            counters.record_event(&TraceEvent::hid_write(0x1234, 64, 500_000));
+        }
+
+        let snapshot = counters.snapshot();
+        assert_eq!(snapshot.total_hid_writes, 1000);
+        // p99 index = (1000 * 99) / 100 = 990 — should land in the 500μs bucket
+        assert!(
+            snapshot.hid.p99_time_ns >= 500_000,
+            "p99 should be ≥ 500μs, got {}ns",
+            snapshot.hid.p99_time_ns
+        );
+        // avg should be dominated by the fast writes
+        assert!(
+            snapshot.hid.avg_time_ns < 100_000,
+            "avg should be well below 100μs"
         );
     }
 }

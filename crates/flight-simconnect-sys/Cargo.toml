@@ -16,12 +16,14 @@ keywords = ["flight-sim", "openflight", "simconnect", "ffi"]
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [dependencies]
+thiserror = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
 windows = { workspace = true, features = [
     "Win32_Foundation",
     "Win32_System_LibraryLoader",
     "Win32_System_Threading",
 ] }
-thiserror = { workspace = true }
 
 [build-dependencies]
 cc.workspace = true

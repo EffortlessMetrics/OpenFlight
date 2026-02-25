@@ -7,8 +7,12 @@
 //! when full system functionality is not available or desired.
 
 use crate::power::{PowerCheckStatus, PowerChecker, PowerStatus};
+use crate::service::build_pipeline_for_axis;
 use flight_axis::AxisEngine;
-use flight_core::{Result, profile::Profile};
+use flight_core::{
+    Result,
+    profile::{AxisConfig, Profile},
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -564,10 +568,20 @@ impl SafeModeManager {
         // Validate profile structure
         basic_profile.validate()?;
 
-        // Test profile compilation (if axis engine available)
-        if let Some(_engine) = &self.axis_engine {
-            // TODO: Replace with new profile ingestion API when ready
-            debug!("Basic profile validated (compilation skipped for now)");
+        // Try to compile a pipeline for each axis so we catch any conversion
+        // errors before the engine actually starts processing inputs.
+        if let Some(engine) = &self.axis_engine {
+            for (axis_name, axis_config) in &basic_profile.axes {
+                match build_pipeline_for_axis(axis_name, axis_config) {
+                    Ok(pipeline) => {
+                        let result = engine.update_pipeline(pipeline);
+                        debug!("Safe-mode pipeline compile for '{axis_name}': {result:?}");
+                    }
+                    Err(e) => {
+                        warn!("Safe-mode pipeline compile failed for '{axis_name}': {e}");
+                    }
+                }
+            }
         }
 
         info!("Basic profile validation completed");
@@ -576,14 +590,41 @@ impl SafeModeManager {
 
     /// Create a basic, safe profile for troubleshooting
     fn create_basic_profile(&self) -> Profile {
-        // Create minimal profile with safe defaults
-        // TODO: Configure axes with safe defaults when Profile API is available
         use std::collections::HashMap;
+        let mut axes = HashMap::new();
+
+        // Standard flight axes with conservative safe defaults
+        for name in &["pitch", "roll", "yaw"] {
+            axes.insert(
+                name.to_string(),
+                AxisConfig {
+                    deadzone: Some(0.03),
+                    expo: Some(0.2),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+        }
+        // Throttle needs a smaller deadzone near zero
+        axes.insert(
+            "throttle".to_string(),
+            AxisConfig {
+                deadzone: Some(0.01),
+                expo: Some(0.1),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+
         Profile {
             schema: "flight.profile/1".to_string(),
             sim: None,
             aircraft: None,
-            axes: HashMap::new(),
+            axes,
             pof_overrides: None,
         }
     }

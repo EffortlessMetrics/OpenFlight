@@ -44,15 +44,15 @@ Different categories of data are requested at different rates to balance latency
 
 | SimVar | Units | BusSnapshot Field | Target Units | Conversion Formula |
 |--------|-------|-------------------|--------------|-------------------|
-| `ATTITUDE PITCH DEGREES` | degrees | `kinematics.pitch` | radians | `value_rad = value_deg × (π / 180)` |
-| `ATTITUDE BANK DEGREES` | degrees | `kinematics.bank` | radians | `value_rad = value_deg × (π / 180)` |
-| `ATTITUDE HEADING DEGREES` | degrees | `kinematics.heading` | radians | `value_rad = value_deg × (π / 180)` |
+| `PLANE PITCH DEGREES` | degrees | `kinematics.pitch` | radians | `value_rad = value_deg × (π / 180)` |
+| `PLANE BANK DEGREES` | degrees | `kinematics.bank` | radians | `value_rad = value_deg × (π / 180)` |
+| `PLANE HEADING DEGREES MAGNETIC` | degrees | `kinematics.heading` | radians | `value_rad = value_deg × (π / 180)` |
 
 **Notes:**
 - All attitude angles are converted from degrees to radians
 - Conversion factor: π / 180 ≈ 0.0174533
 - Uses `ValidatedAngle` type with range enforcement (-180° to +180° or -π to +π radians)
-- Heading is magnetic heading by default
+- Heading is magnetic heading (`PLANE HEADING DEGREES MAGNETIC`)
 
 ### Aerodynamics
 
@@ -72,13 +72,14 @@ Different categories of data are requested at different rates to balance latency
 | SimVar | Units | BusSnapshot Field | Target Units | Conversion Formula |
 |--------|-------|-------------------|--------------|-------------------|
 | `G FORCE` | gforce | `kinematics.g_force` | g | No conversion |
-| `G FORCE LATERAL` | gforce | `kinematics.g_lateral` | g | No conversion |
-| `G FORCE LONGITUDINAL` | gforce | `kinematics.g_longitudinal` | g | No conversion |
+| `ACCELERATION BODY X` | feet per second squared | `kinematics.g_lateral` | g | `g = value_ft_s2 / 32.174` |
+| `ACCELERATION BODY Z` | feet per second squared | `kinematics.g_longitudinal` | g | `g = value_ft_s2 / 32.174` |
 
 **Notes:**
-- G-forces are already in standard g units (1g = 9.81 m/s²)
+- `G FORCE` (vertical Nz) is returned directly in g units by SimConnect
+- `ACCELERATION BODY X` (lateral) and `ACCELERATION BODY Z` (longitudinal) are returned in ft/s²
+- Conversion: 1g = 32.174 ft/s² (standard gravity)
 - Uses `GForce` validated type with range -20g to +20g
-- Vertical g-force (nz) is the primary load factor for FFB calculations
 
 ## Aircraft Configuration Mapping
 
@@ -349,6 +350,50 @@ The adapter is tested against:
 
 SimVar names and units are validated against the official SimConnect SDK documentation for each MSFS version.
 
+## MSFS 2024 Compatibility
+
+MSFS 2024 uses a largely backward-compatible SimConnect API. The adapter automatically detects the simulator version and reports the correct `SimId` variant.
+
+### Version Detection
+
+The MSFS adapter detects whether it is connected to MSFS 2020 or MSFS 2024 from the `dwApplicationVersionMajor` field returned in the `SIMCONNECT_RECV_OPEN` response:
+
+| `dwApplicationVersionMajor` | Simulator | `SimId` variant |
+|-----------------------------|-----------|-----------------|
+| 11–12 | MSFS 2020 (SU5–SU15) | `SimId::Msfs` |
+| ≥ 13 | MSFS 2024 | `SimId::Msfs2024` |
+
+### Process Detection
+
+Both simulators are detected by process name and window title:
+
+| Simulator | Process name | Window title |
+|-----------|-------------|--------------|
+| MSFS 2020 | `FlightSimulator.exe` | `Microsoft Flight Simulator` |
+| MSFS 2024 | `FlightSimulator2024.exe` | `Microsoft Flight Simulator 2024` |
+
+### API Differences
+
+The following SimVars use slightly different names between MSFS 2020 and MSFS 2024. The mapping in this document reflects the canonical names that work with both versions.
+
+| Category | MSFS 2020 name | Canonical name (works in both) |
+|----------|---------------|-------------------------------|
+| Attitude | `ATTITUDE PITCH DEGREES` (invalid) | `PLANE PITCH DEGREES` |
+| Attitude | `ATTITUDE BANK DEGREES` (invalid) | `PLANE BANK DEGREES` |
+| Attitude | `ATTITUDE HEADING DEGREES` (invalid) | `PLANE HEADING DEGREES MAGNETIC` |
+| Lateral G | `G FORCE LATERAL` (not in MSFS) | `ACCELERATION BODY X` (ft/s²) |
+| Long. G | `G FORCE LONGITUDINAL` (not in MSFS) | `ACCELERATION BODY Z` (ft/s²) |
+
+> **Note:** `ATTITUDE *` and `G FORCE LATERAL/LONGITUDINAL` are not valid MSFS SimVar names and were corrected in the mapping.
+
+### DLL Loading
+
+The adapter loads the SimConnect DLL at runtime by trying the following names in order:
+1. `SimConnect.dll` (SDK distribution, MSFS 2020 and 2024)
+2. `SimConnect_internal.dll` (internal MSFS 2024 name, searched as fallback)
+
+No code changes are needed when switching between MSFS 2020 and MSFS 2024 SDK installations.
+
 ## Implementation Notes
 
 ### Code Comments
@@ -404,6 +449,7 @@ Fixtures are replayed through the adapter to verify end-to-end mapping.
 | Date | Version | Changes |
 |------|---------|---------|
 | 2024-01 | 1.0 | Initial mapping documentation for Flight Hub v1 |
+| 2025-01 | 1.1 | Fixed SimVar names (ATTITUDE→PLANE, G FORCE LAT/LONG→ACCELERATION BODY X/Z); added MSFS 2024 compatibility section and `SimId::Msfs2024` version detection |
 
 ---
 

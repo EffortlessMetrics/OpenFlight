@@ -11,11 +11,15 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
-    time::{Duration, Instant},
+    time::Duration,
 };
 use thiserror::Error;
 use tokio::{
-    net::{TcpListener, TcpStream},
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    net::{
+        TcpListener,
+        tcp::{OwnedReadHalf, OwnedWriteHalf},
+    },
     sync::mpsc,
     time::timeout,
 };
@@ -167,10 +171,9 @@ impl PluginCapability {
 /// Plugin connection state
 #[derive(Debug, Clone)]
 struct PluginConnection {
-    stream: Arc<RwLock<Option<TcpStream>>>,
+    write_half: Arc<tokio::sync::Mutex<OwnedWriteHalf>>,
     capabilities: Vec<PluginCapability>,
     version: String,
-    _last_ping: Instant,
     connected: bool,
 }
 
@@ -213,11 +216,11 @@ impl PluginInterface {
                     Ok((stream, addr)) => {
                         info!("Plugin connected from {}", addr);
 
+                        let (read_half, write_half) = stream.into_split();
                         let conn = PluginConnection {
-                            stream: Arc::new(RwLock::new(Some(stream))),
+                            write_half: Arc::new(tokio::sync::Mutex::new(write_half)),
                             capabilities: Vec::new(),
                             version: String::new(),
-                            _last_ping: Instant::now(),
                             connected: true,
                         };
 
@@ -229,8 +232,10 @@ impl PluginInterface {
                         let subscriptions_clone = subscriptions.clone();
 
                         tokio::spawn(async move {
+                            let reader = BufReader::new(read_half);
                             if let Err(e) = Self::handle_connection(
                                 conn,
+                                reader,
                                 connection_clone,
                                 pending_clone,
                                 subscriptions_clone,
@@ -254,17 +259,18 @@ impl PluginInterface {
     /// Handle plugin connection
     async fn handle_connection(
         mut conn: PluginConnection,
+        mut reader: BufReader<OwnedReadHalf>,
         connection: Arc<RwLock<Option<PluginConnection>>>,
         pending_requests: Arc<RwLock<HashMap<u32, tokio::sync::oneshot::Sender<PluginResponse>>>>,
         subscriptions: Arc<RwLock<HashMap<String, mpsc::UnboundedSender<DataRefValue>>>>,
     ) -> Result<(), PluginError> {
         // Perform handshake
-        Self::perform_handshake(&mut conn).await?;
+        Self::perform_handshake(&mut conn, &mut reader).await?;
 
         // Message processing loop
         loop {
             // Read message from plugin
-            match Self::read_message(&conn).await {
+            match Self::read_message(&mut reader).await {
                 Ok(response) => {
                     Self::handle_response(response, &pending_requests, &subscriptions).await?;
                 }
@@ -277,13 +283,17 @@ impl PluginInterface {
 
         // Clean up connection
         *connection.write().unwrap() = None;
+        conn.connected = false;
         info!("Plugin disconnected");
 
         Ok(())
     }
 
     /// Perform handshake with plugin
-    async fn perform_handshake(conn: &mut PluginConnection) -> Result<(), PluginError> {
+    async fn perform_handshake(
+        conn: &mut PluginConnection,
+        reader: &mut BufReader<OwnedReadHalf>,
+    ) -> Result<(), PluginError> {
         // Send handshake
         let handshake = PluginMessage::Handshake {
             version: "1.0.0".to_string(),
@@ -297,7 +307,7 @@ impl PluginInterface {
         Self::send_message(conn, handshake).await?;
 
         // Wait for handshake response
-        match timeout(Duration::from_secs(5), Self::read_message(conn)).await {
+        match timeout(Duration::from_secs(5), Self::read_message(reader)).await {
             Ok(Ok(PluginResponse::HandshakeAck {
                 version,
                 capabilities,
@@ -329,43 +339,27 @@ impl PluginInterface {
         message: PluginMessage,
     ) -> Result<(), PluginError> {
         let json = serde_json::to_string(&message)?;
-        let _data = format!("{}\n", json);
-
-        if let Some(ref _stream) = *conn.stream.read().unwrap() {
-            // In a real implementation, we would need to handle async writes properly
-            // This is a simplified version for demonstration
-            debug!("Sending plugin message: {}", json);
-            // stream.write_all(data.as_bytes()).await?;
-        } else {
-            return Err(PluginError::NotConnected);
-        }
-
+        let line = format!("{}\n", json);
+        debug!("Sending plugin message: {}", json);
+        conn.write_half
+            .lock()
+            .await
+            .write_all(line.as_bytes())
+            .await?;
         Ok(())
     }
 
     /// Read message from plugin
-    async fn read_message(conn: &PluginConnection) -> Result<PluginResponse, PluginError> {
-        let has_stream = {
-            let stream_guard = conn.stream.read().unwrap();
-            stream_guard.is_some()
-        };
-
-        if has_stream {
-            // In a real implementation, we would read from the stream
-            // This is a simplified version for demonstration
-
-            // Simulate reading a response
-            tokio::time::sleep(Duration::from_millis(10)).await;
-
-            // Return a mock response for testing
-            Ok(PluginResponse::HandshakeAck {
-                version: "1.0.0".to_string(),
-                capabilities: vec!["read_datarefs".to_string(), "aircraft_info".to_string()],
-                status: "ready".to_string(),
-            })
-        } else {
-            Err(PluginError::NotConnected)
+    async fn read_message(
+        reader: &mut BufReader<OwnedReadHalf>,
+    ) -> Result<PluginResponse, PluginError> {
+        let mut line = String::new();
+        let n = reader.read_line(&mut line).await?;
+        if n == 0 {
+            return Err(PluginError::NotConnected);
         }
+        let response: PluginResponse = serde_json::from_str(line.trim())?;
+        Ok(response)
     }
 
     /// Handle plugin response
@@ -626,11 +620,67 @@ impl PluginInterface {
         }
     }
 
+    /// Execute a command via plugin
+    pub async fn execute_command(&self, name: &str) -> Result<(), PluginError> {
+        let conn = {
+            let connection = self.connection.read().unwrap();
+            connection
+                .as_ref()
+                .ok_or(PluginError::NotConnected)?
+                .clone()
+        };
+
+        if !conn
+            .capabilities
+            .contains(&PluginCapability::ExecuteCommands)
+        {
+            return Err(PluginError::UnsupportedCapability {
+                capability: "execute_commands".to_string(),
+            });
+        }
+
+        let request_id = self.get_next_request_id();
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+
+        {
+            let mut pending = self.pending_requests.write().unwrap();
+            pending.insert(request_id, sender);
+        }
+
+        let message = PluginMessage::Command {
+            id: request_id,
+            name: name.to_string(),
+        };
+        Self::send_message(&conn, message).await?;
+
+        match timeout(Duration::from_secs(1), receiver).await {
+            Ok(Ok(PluginResponse::CommandResult { success: true, .. })) => Ok(()),
+            Ok(Ok(PluginResponse::CommandResult {
+                success: false,
+                message,
+                ..
+            })) => Err(PluginError::Protocol {
+                message: message.unwrap_or_else(|| "Command failed".to_string()),
+            }),
+            Ok(Ok(PluginResponse::Error { error, .. })) => {
+                Err(PluginError::Protocol { message: error })
+            }
+            Ok(Ok(response)) => Err(PluginError::Protocol {
+                message: format!("Unexpected response: {:?}", response),
+            }),
+            Ok(Err(_)) => Err(PluginError::Protocol {
+                message: "Response channel closed".to_string(),
+            }),
+            Err(_) => {
+                self.pending_requests.write().unwrap().remove(&request_id);
+                Err(PluginError::Timeout)
+            }
+        }
+    }
+
     /// Process incoming messages (for use in main loop)
     pub async fn process_messages(&self) -> Result<(), PluginError> {
-        // This would be called periodically to handle plugin communication
-        // In a real implementation, this would process queued messages
-        tokio::time::sleep(Duration::from_millis(10)).await;
+        // Message reading is handled by the background task spawned in `start()`.
         Ok(())
     }
 

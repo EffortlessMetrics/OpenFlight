@@ -1,0 +1,26 @@
+[package]
+name = "flight-ksp-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+prost = "0.14"
+
+[dependencies.flight-ksp]
+path = ".."
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_ksp_response"
+path = "fuzz_targets/fuzz_ksp_response.rs"
+test = false
+doc = false

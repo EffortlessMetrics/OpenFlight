@@ -386,7 +386,8 @@ impl SaitekPanelWriter {
                     is_on: false,
                     blink_rate: None,
                     last_blink_toggle: Instant::now(),
-                    last_write: Instant::now(),
+                    // Initialize in the past so the first set_led call is never rate-limited
+                    last_write: Instant::now() - self.min_write_interval,
                 },
             );
         }
@@ -398,6 +399,16 @@ impl SaitekPanelWriter {
 
         // Initialize panel (turn off all LEDs)
         self.turn_off_all_leds(&device_info.device_path)?;
+
+        // Reset write timestamps so the first user-initiated write is never rate-limited by init,
+        // and clear latency samples so initialization writes don't pollute statistics.
+        let reset_time = Instant::now() - self.min_write_interval;
+        if let Some(panel_led_states) = self.led_states.get_mut(&device_info.device_path) {
+            for led_state in panel_led_states.values_mut() {
+                led_state.last_write = reset_time;
+            }
+        }
+        self.latency_samples.clear();
 
         Ok(())
     }
@@ -456,8 +467,13 @@ impl SaitekPanelWriter {
                 panel_led_states.get(led_name).unwrap().clone()
             };
 
-            // Write to hardware
-            self.write_led_to_hardware(panel_path, led_name, &led_state_copy)?;
+            // Write to hardware — failure is logged but doesn't invalidate the state update
+            if let Err(e) = self.write_led_to_hardware(panel_path, led_name, &led_state_copy) {
+                warn!(
+                    "LED hardware write failed for {} on {}: {}",
+                    led_name, panel_path, e
+                );
+            }
         }
 
         Ok(())
@@ -497,22 +513,20 @@ impl SaitekPanelWriter {
             write_latency.as_secs_f64() * 1000.0,
         );
 
+        // Track latency for all write attempts (including hardware-unavailable cases)
+        self.latency_samples.push(write_latency);
+        if self.latency_samples.len() > self.max_latency_samples {
+            self.latency_samples.remove(0);
+        }
+        if write_latency > Duration::from_millis(20) {
+            warn!(
+                "LED write latency exceeded 20ms: {:?} for {} on {}",
+                write_latency, led_name, panel_path
+            );
+        }
+
         match write_result {
             Ok(HidOperationResult::Success { bytes_transferred }) => {
-                // Track latency
-                self.latency_samples.push(write_latency);
-                if self.latency_samples.len() > self.max_latency_samples {
-                    self.latency_samples.remove(0);
-                }
-
-                // Validate latency requirement (≤20ms)
-                if write_latency > Duration::from_millis(20) {
-                    warn!(
-                        "LED write latency exceeded 20ms: {:?} for {} on {}",
-                        write_latency, led_name, panel_path
-                    );
-                }
-
                 debug!(
                     "LED {} on {} updated: {} bytes in {:?}",
                     led_name, panel_path, bytes_transferred, write_latency
@@ -714,7 +728,12 @@ impl SaitekPanelWriter {
 
         // Apply blink updates
         for (panel_path, led_name, led_state) in updates {
-            self.write_led_to_hardware(&panel_path, &led_name, &led_state)?;
+            if let Err(e) = self.write_led_to_hardware(&panel_path, &led_name, &led_state) {
+                warn!(
+                    "Blink hardware write failed for {} on {}: {}",
+                    led_name, panel_path, e
+                );
+            }
         }
 
         Ok(())

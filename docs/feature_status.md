@@ -83,6 +83,7 @@
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-workspace-meta | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-elite | 1 | 6 | 6 | 6 | 27 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |

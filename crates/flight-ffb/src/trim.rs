@@ -36,7 +36,7 @@ impl Default for TrimLimits {
 }
 
 impl TrimLimits {
-    /// Validate that limits are reasonable
+    /// Validate that limits are reasonable and within safety bounds.
     pub fn validate_trim_limits(&self) -> Result<(), String> {
         if self.max_rate_nm_per_s <= 0.0 {
             return Err("max_rate_nm_per_s must be positive".to_string());
@@ -46,10 +46,25 @@ impl TrimLimits {
             return Err("max_jerk_nm_per_s2 must be positive".to_string());
         }
 
-        // Sanity check: jerk should be reasonable relative to rate
-        if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s {
+        // Safety cap: 50 Nm/s is the physical ceiling for consumer FFB hardware.
+        if self.max_rate_nm_per_s > 50.0 {
+            return Err(format!(
+                "max_rate_nm_per_s {:.1} exceeds safety limit of 50.0 Nm/s",
+                self.max_rate_nm_per_s
+            ));
+        }
+
+        if self.max_jerk_nm_per_s2 > 200.0 {
+            return Err(format!(
+                "max_jerk_nm_per_s2 {:.1} exceeds safety limit of 200.0 Nm/s\u{00b2}",
+                self.max_jerk_nm_per_s2
+            ));
+        }
+
+        // Jerk must be at least 2× rate for smooth, controllable response.
+        if self.max_jerk_nm_per_s2 < self.max_rate_nm_per_s * 2.0 {
             return Err(
-                "max_jerk_nm_per_s2 should be >= max_rate_nm_per_s for reasonable behavior"
+                "max_jerk_nm_per_s2 must be at least 2\u{00d7} max_rate_nm_per_s for proper response"
                     .to_string(),
             );
         }
@@ -111,6 +126,8 @@ pub struct TrimController {
     spring_ramp_start: Option<Instant>,
     /// Spring ramp duration
     spring_ramp_duration: Duration,
+    /// When the spring freeze started (for hold-then-ramp timing)
+    spring_freeze_start: Option<Instant>,
     /// Last update timestamp
     last_update: Instant,
     /// Active setpoint change
@@ -131,6 +148,7 @@ impl TrimController {
             spring_frozen: false,
             spring_ramp_start: None,
             spring_ramp_duration: Duration::from_millis(150),
+            spring_freeze_start: None,
             last_update: Instant::now(),
             active_change: None,
         }
@@ -146,6 +164,7 @@ impl TrimController {
         self.current_rate_nm_per_s = 0.0;
         self.spring_frozen = false;
         self.spring_ramp_start = None;
+        self.spring_freeze_start = None;
         self.active_change = None;
     }
 
@@ -215,6 +234,15 @@ impl TrimController {
         }
     }
 
+    /// Update with an explicit timestep (for deterministic testing).
+    #[cfg(test)]
+    fn update_with_dt(&mut self, dt_secs: f32) -> TrimOutput {
+        match self.mode {
+            TrimMode::ForceFeedback => self.update_ffb(dt_secs),
+            TrimMode::SpringCentered => self.update_spring(dt_secs),
+        }
+    }
+
     /// Update FFB trim with rate/jerk limiting
     fn update_ffb(&mut self, dt: f32) -> TrimOutput {
         if self.active_change.is_none() {
@@ -228,6 +256,7 @@ impl TrimController {
 
         // Check if we've reached the target
         if error.abs() < 0.001 {
+            self.current_setpoint_nm = self.target_setpoint_nm;
             self.current_rate_nm_per_s = 0.0;
             self.active_change = None;
             return TrimOutput::ForceFeedback {
@@ -236,11 +265,21 @@ impl TrimController {
             };
         }
 
-        // Calculate desired rate to reach target
+        // Calculate desired rate using look-ahead deceleration.
+        //
+        // A jerk-limited controller must begin braking well before the target.
+        // The stopping distance at current rate `v` with max jerk `j` is v²/(2j).
+        // Clamp the desired rate to the maximum that still allows stopping in time:
+        //   v_max_decel = sqrt(2 * j * |error|)
+        //
+        // This prevents the classic overshoot that occurs when the controller
+        // only responds to error/dt (which only kicks in at the last step).
+        let braking_limit =
+            (2.0 * self.limits.max_jerk_nm_per_s2 * error.abs()).sqrt();
         let desired_rate = if error > 0.0 {
-            self.limits.max_rate_nm_per_s.min(error / dt)
+            self.limits.max_rate_nm_per_s.min(braking_limit)
         } else {
-            (-self.limits.max_rate_nm_per_s).max(error / dt)
+            (-self.limits.max_rate_nm_per_s).max(-braking_limit)
         };
 
         // Apply jerk limiting
@@ -249,7 +288,14 @@ impl TrimController {
         let rate_change = rate_error.clamp(-max_rate_change, max_rate_change);
 
         self.current_rate_nm_per_s += rate_change;
-        self.current_setpoint_nm += self.current_rate_nm_per_s * dt;
+        // Clamp setpoint to [min(current, target), max(current, target)] to
+        // prevent floating-point creep past the target in the final step.
+        self.current_setpoint_nm = (self.current_setpoint_nm
+            + self.current_rate_nm_per_s * dt)
+            .clamp(
+                self.current_setpoint_nm.min(self.target_setpoint_nm),
+                self.current_setpoint_nm.max(self.target_setpoint_nm),
+            );
 
         TrimOutput::ForceFeedback {
             setpoint_nm: self.current_setpoint_nm,
@@ -286,9 +332,14 @@ impl TrimController {
         } else if self.spring_frozen {
             // Check if we should start ramping spring back
             if let Some(_change) = &self.active_change {
-                // Start ramping after a brief hold period
-                if self.last_update.elapsed() > Duration::from_millis(100) {
+                // Start ramping after a brief hold period (measured from when freeze began)
+                let freeze_elapsed = self
+                    .spring_freeze_start
+                    .map(|t| t.elapsed())
+                    .unwrap_or(Duration::from_millis(200));
+                if freeze_elapsed > Duration::from_millis(100) {
                     self.spring_ramp_start = Some(Instant::now());
+                    self.spring_freeze_start = None;
                 }
             }
         }
@@ -303,6 +354,7 @@ impl TrimController {
     pub fn freeze_spring(&mut self) {
         if self.mode == TrimMode::SpringCentered {
             self.spring_frozen = true;
+            self.spring_freeze_start = Some(Instant::now());
         }
     }
 
@@ -350,8 +402,14 @@ impl TrimController {
     pub fn estimated_completion_time(&self) -> Option<Duration> {
         if let Some(_change) = &self.active_change {
             let remaining = (self.target_setpoint_nm - self.current_setpoint_nm).abs();
-            if self.current_rate_nm_per_s.abs() > 0.001 {
-                let time_s = remaining / self.current_rate_nm_per_s.abs();
+            // Use current rate if moving, otherwise use max_rate as upper-bound estimate
+            let effective_rate = if self.current_rate_nm_per_s.abs() > 0.001 {
+                self.current_rate_nm_per_s.abs()
+            } else {
+                self.limits.max_rate_nm_per_s
+            };
+            if effective_rate > 0.001 {
+                let time_s = remaining / effective_rate;
                 Some(Duration::from_secs_f32(time_s))
             } else {
                 None
@@ -584,16 +642,16 @@ mod tests {
 
         controller.apply_setpoint_change(change).unwrap();
 
-        // Simulate updates until convergence
-        for _ in 0..1000 {
-            let output = controller.update();
+        // Simulate updates with a fixed 1 ms timestep (deterministic, no real sleep).
+        // With max_rate=10 Nm/s and max_jerk=100 Nm/s², the controller needs
+        // ~100 steps to reach max rate and ~100 more to cover 1 Nm → 200 steps total.
+        for _ in 0..500 {
+            let output = controller.update_with_dt(0.001);
             if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                 if (setpoint_nm - 1.0).abs() < 0.001 {
                     break;
                 }
             }
-            // Simulate time passing
-            std::thread::sleep(Duration::from_millis(1));
         }
 
         // Check final state - should be close to target

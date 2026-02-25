@@ -1,0 +1,7 @@
+---
+source: crates/flight-profile/src/lib.rs
+expression: err
+---
+Validation(
+    "Unsupported schema version: flight.profile/99",
+)

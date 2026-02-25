@@ -20,8 +20,10 @@ use flight_adapter_common::{
 use flight_bus::{
     BusPublisher,
     adapters::{SimAdapter, xplane::XPlaneConverter},
-    snapshot::{BusSnapshot, EngineData, Environment, Kinematics, Navigation},
-    types::{AircraftId, Percentage, SimId},
+    snapshot::{
+        AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation, TrimState,
+    },
+    types::{AircraftId, AutopilotState, Percentage, SimId},
 };
 use flight_core::units::conversions;
 use flight_core::{FlightError, Result};
@@ -35,7 +37,7 @@ use flight_metrics::{
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
     time::{Duration, Instant},
 };
 use thiserror::Error;
@@ -142,7 +144,7 @@ pub struct XPlaneAdapter {
     dataref_manager: DataRefManager,
     aircraft_detector: AircraftDetector,
     latency_tracker: LatencyTracker,
-    bus_publisher: Arc<BusPublisher>,
+    bus_publisher: Arc<Mutex<BusPublisher>>,
     state: Arc<RwLock<AdapterState>>,
     metrics: Arc<RwLock<AdapterMetrics>>,
     metrics_registry: Arc<MetricsRegistry>,
@@ -155,7 +157,10 @@ pub struct XPlaneAdapter {
 
 impl XPlaneAdapter {
     /// Create a new X-Plane adapter
-    pub fn new(config: XPlaneAdapterConfig, bus_publisher: Arc<BusPublisher>) -> Result<Self> {
+    pub fn new(
+        config: XPlaneAdapterConfig,
+        bus_publisher: Arc<Mutex<BusPublisher>>,
+    ) -> Result<Self> {
         let udp_client = UdpClient::new(config.udp.clone())
             .map_err(|e| FlightError::Configuration(format!("UDP client error: {}", e)))?;
 
@@ -331,7 +336,7 @@ impl XPlaneAdapter {
         let web_api_client = self.web_api_client.clone();
         let dataref_manager = self.dataref_manager.clone();
         let latency_tracker = self.latency_tracker.clone();
-        let _bus_publisher = self.bus_publisher.clone();
+        let bus_publisher = self.bus_publisher.clone();
         let state = self.state.clone();
         let metrics = self.metrics.clone();
         let metrics_registry = self.metrics_registry.clone();
@@ -366,8 +371,14 @@ impl XPlaneAdapter {
                     );
                     metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                     *state.write().unwrap() = AdapterState::Disconnected;
-                    // TODO: Mark BusSnapshot as invalid and transition to disconnected state
-                    // This would be implemented when integrating with the full state machine
+                    // Publish a stale/invalid snapshot so subscribers know data is no longer valid.
+                    // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
+                    let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
+                    if let Ok(mut publisher) = bus_publisher.lock() {
+                        if let Err(e) = publisher.publish(stale) {
+                            warn!("Failed to publish stale snapshot on timeout: {}", e);
+                        }
+                    }
                     continue;
                 }
 
@@ -432,10 +443,13 @@ impl XPlaneAdapter {
                                     }
                                     *state.write().unwrap() = AdapterState::Active;
 
-                                    // Publish to bus
-                                    // Note: In a real implementation, we would need to handle the mutable reference properly
-                                    // For now, we'll skip the actual publishing in this simplified version
-                                    debug!("Would publish snapshot: {:?}", snapshot.sim);
+                                    // Publish snapshot to bus subscribers
+                                    if let Ok(mut publisher) = bus_publisher.lock() {
+                                        if let Err(e) = publisher.publish(snapshot) {
+                                            warn!("Failed to publish X-Plane snapshot: {}", e);
+                                            metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+                                        }
+                                    }
                                 }
                                 Err(e) => {
                                     error!("Failed to convert raw data to snapshot: {}", e);
@@ -585,7 +599,7 @@ impl XPlaneAdapter {
     /// WHEN implementing UDP-only mode THEN the adapter SHALL always set sim = XPLANE
     /// and MAY set a coarse aircraft_class (e.g., fixed-wing / helicopter) based on available data;
     /// precise aircraft identity SHALL be treated as 'unknown' unless provided by a plugin
-    fn convert_raw_to_snapshot(
+    pub fn convert_raw_to_snapshot(
         raw_data: XPlaneRawData,
         _start_time: Instant,
     ) -> Result<BusSnapshot> {
@@ -603,6 +617,9 @@ impl XPlaneAdapter {
         // Convert kinematics data
         snapshot.kinematics = Self::convert_kinematics(&raw_data.dataref_values)?;
 
+        // Convert angular rates (P/Q/R deg/s → rad/s)
+        snapshot.angular_rates = Self::convert_angular_rates(&raw_data.dataref_values);
+
         // Convert aircraft configuration
         snapshot.config = Self::convert_aircraft_config(&raw_data.dataref_values)?;
 
@@ -614,6 +631,9 @@ impl XPlaneAdapter {
 
         // Convert navigation data
         snapshot.navigation = Self::convert_navigation(&raw_data.dataref_values)?;
+
+        // Convert trim state (elevator/aileron/rudder)
+        snapshot.trim_state = Self::convert_trim_state(&raw_data.dataref_values);
 
         // Validate the snapshot
         snapshot
@@ -722,7 +742,45 @@ impl XPlaneAdapter {
         Ok(kinematics)
     }
 
-    /// Convert aircraft configuration from X-Plane DataRefs
+    /// Convert angular rates from X-Plane DataRefs
+    ///
+    /// X-Plane provides body-axis rates P (roll), Q (pitch), R (yaw) in deg/s.
+    /// BusSnapshot expects rad/s.
+    fn convert_angular_rates(datarefs: &HashMap<String, DataRefValue>) -> AngularRates {
+        let mut rates = AngularRates::default();
+        let deg_to_rad = std::f32::consts::PI / 180.0;
+
+        if let Some(DataRefValue::Float(p)) = datarefs.get("sim/flightmodel/position/P") {
+            rates.p = p * deg_to_rad;
+        }
+        if let Some(DataRefValue::Float(q)) = datarefs.get("sim/flightmodel/position/Q") {
+            rates.q = q * deg_to_rad;
+        }
+        if let Some(DataRefValue::Float(r)) = datarefs.get("sim/flightmodel/position/R") {
+            rates.r = r * deg_to_rad;
+        }
+
+        rates
+    }
+
+    /// Convert trim state from X-Plane DataRefs
+    ///
+    /// X-Plane provides trim ratios in the range -1.0 to +1.0.
+    fn convert_trim_state(datarefs: &HashMap<String, DataRefValue>) -> TrimState {
+        let mut trim = TrimState::default();
+
+        if let Some(DataRefValue::Float(elv)) = datarefs.get("sim/flightmodel/controls/elv_trim") {
+            trim.elevator = elv.clamp(-1.0, 1.0);
+        }
+        if let Some(DataRefValue::Float(ail)) = datarefs.get("sim/flightmodel/controls/ail_trim") {
+            trim.aileron = ail.clamp(-1.0, 1.0);
+        }
+        if let Some(DataRefValue::Float(rud)) = datarefs.get("sim/flightmodel/controls/rud_trim") {
+            trim.rudder = rud.clamp(-1.0, 1.0);
+        }
+
+        trim
+    }
     fn convert_aircraft_config(
         datarefs: &HashMap<String, DataRefValue>,
     ) -> Result<flight_bus::snapshot::AircraftConfig> {
@@ -765,6 +823,60 @@ impl XPlaneAdapter {
             })?;
         }
 
+        // Autopilot state
+        if let Some(DataRefValue::Int(ap_mode)) =
+            datarefs.get("sim/cockpit/autopilot/autopilot_mode")
+        {
+            config.ap_state = match *ap_mode {
+                0 => AutopilotState::Off,
+                1 => AutopilotState::Armed,
+                _ => AutopilotState::Engaged,
+            };
+        }
+
+        // Autopilot altitude target (feet)
+        if let Some(DataRefValue::Float(ap_alt)) = datarefs.get("sim/cockpit/autopilot/altitude") {
+            config.ap_altitude = Some(*ap_alt);
+        }
+
+        // Autopilot heading target (degrees → ValidatedAngle)
+        if let Some(DataRefValue::Float(ap_hdg)) = datarefs.get("sim/cockpit/autopilot/heading") {
+            config.ap_heading = XPlaneConverter::convert_angle_degrees(*ap_hdg).ok();
+        }
+
+        // Autopilot speed target (knots → ValidatedSpeed)
+        if let Some(DataRefValue::Float(ap_spd)) = datarefs.get("sim/cockpit/autopilot/airspeed") {
+            config.ap_speed = XPlaneConverter::convert_airspeed_knots(*ap_spd).ok();
+        }
+
+        // Lights
+        if let Some(DataRefValue::Int(nav)) = datarefs.get("sim/cockpit/electrical/nav_lights_on") {
+            config.lights.nav = *nav != 0;
+        }
+        if let Some(DataRefValue::Int(beacon)) =
+            datarefs.get("sim/cockpit/electrical/beacon_lights_on")
+        {
+            config.lights.beacon = *beacon != 0;
+        }
+        if let Some(DataRefValue::Int(strobe)) =
+            datarefs.get("sim/cockpit/electrical/strobe_lights_on")
+        {
+            config.lights.strobe = *strobe != 0;
+        }
+        if let Some(DataRefValue::Int(landing)) =
+            datarefs.get("sim/cockpit/electrical/landing_lights_on")
+        {
+            config.lights.landing = *landing != 0;
+        }
+        if let Some(DataRefValue::Int(taxi)) = datarefs.get("sim/cockpit/electrical/taxi_light_on")
+        {
+            config.lights.taxi = *taxi != 0;
+        }
+        if let Some(DataRefValue::Int(logo)) = datarefs.get("sim/cockpit2/switches/logo_lights_on")
+        {
+            config.lights.logo = *logo != 0;
+        }
+
         Ok(config)
     }
 
@@ -790,12 +902,61 @@ impl XPlaneAdapter {
                             FlightError::Configuration(format!("Default RPM error: {}", e))
                         })?
                     },
-                    manifold_pressure: None, // TODO: Add if available
-                    egt: None,               // TODO: Add if available
-                    cht: None,               // TODO: Add if available
-                    fuel_flow: None,         // TODO: Add if available
-                    oil_pressure: None,      // TODO: Add if available
-                    oil_temperature: None,   // TODO: Add if available
+                    manifold_pressure: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_MPR[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
+                    egt: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_EGT[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
+                    cht: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_CHT[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
+                    // X-Plane provides fuel flow in kg/s; convert to gal/hr (Jet-A ~3.04 kg/gal)
+                    fuel_flow: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_FF_[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(x * 3600.0 / 3.04)
+                            } else {
+                                None
+                            }
+                        }),
+                    oil_pressure: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_oilp[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
+                    oil_temperature: datarefs
+                        .get(&format!("sim/flightmodel/engine/ENGN_oilt[{}]", i))
+                        .and_then(|v| {
+                            if let DataRefValue::Float(x) = v {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        }),
                 };
                 engines.push(engine);
             }
@@ -812,6 +973,13 @@ impl XPlaneAdapter {
         if let Some(DataRefValue::Float(alt_m)) = datarefs.get("sim/flightmodel/position/elevation")
         {
             environment.altitude = XPlaneConverter::convert_altitude_m_to_ft(*alt_m);
+        }
+
+        // Pressure altitude (feet, directly from barometric altimeter)
+        if let Some(DataRefValue::Float(palt_ft)) =
+            datarefs.get("sim/cockpit2/gauges/indicators/altitude_ft_pilot")
+        {
+            environment.pressure_altitude = *palt_ft;
         }
 
         // Temperature
@@ -890,6 +1058,28 @@ impl XPlaneAdapter {
     /// Get current aircraft information
     pub fn get_current_aircraft(&self) -> Option<DetectedAircraft> {
         self.current_aircraft.read().unwrap().clone()
+    }
+
+    /// Publish a snapshot directly to the bus.
+    ///
+    /// Convenience method for tests and service orchestration that holds the snapshot
+    /// already converted, bypassing the telemetry loop.
+    pub fn publish_snapshot(&self, snapshot: BusSnapshot) -> Result<()> {
+        let mut publisher = self
+            .bus_publisher
+            .lock()
+            .map_err(|_| FlightError::Configuration("Bus publisher lock poisoned".to_string()))?;
+        publisher
+            .publish(snapshot)
+            .map_err(|e| FlightError::Configuration(format!("Publish error: {e}")))
+    }
+
+    /// Publish a stale/invalid snapshot to signal downstream consumers that data is no longer valid.
+    ///
+    /// ValidityFlags are all-false by default, so safe_for_ffb = false.
+    pub fn publish_stale_snapshot(&self) -> Result<()> {
+        let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
+        self.publish_snapshot(stale)
     }
 
     /// Check if adapter is running
@@ -974,12 +1164,12 @@ impl SimAdapter for XPlaneAdapter {
 mod tests {
     use super::*;
     use flight_bus::BusPublisher;
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     #[tokio::test]
     async fn test_adapter_creation() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
 
         let adapter = XPlaneAdapter::new(config, bus_publisher);
         assert!(adapter.is_ok());
@@ -1144,7 +1334,7 @@ mod tests {
     #[tokio::test]
     async fn test_connection_timeout_detection() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
         let adapter = XPlaneAdapter::new(config, bus_publisher).unwrap();
 
         // Initially, no packets received, so should be considered timeout
@@ -1291,7 +1481,7 @@ mod tests {
     #[tokio::test]
     async fn test_raw_data_validation() {
         let config = XPlaneAdapterConfig::default();
-        let bus_publisher = Arc::new(BusPublisher::new(60.0));
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
         let adapter = XPlaneAdapter::new(config, bus_publisher).unwrap();
 
         // Empty data should fail
@@ -1331,5 +1521,249 @@ mod tests {
             dataref_values: datarefs,
         };
         assert!(adapter.validate_raw_data(&valid_raw).is_ok());
+    }
+
+    #[test]
+    fn test_aircraft_config_autopilot() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/autopilot/autopilot_mode".to_string(),
+            DataRefValue::Int(2), // Engaged
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/altitude".to_string(),
+            DataRefValue::Float(15000.0),
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/heading".to_string(),
+            DataRefValue::Float(90.0),
+        );
+        datarefs.insert(
+            "sim/cockpit/autopilot/airspeed".to_string(),
+            DataRefValue::Float(250.0),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert_eq!(config.ap_state, AutopilotState::Engaged);
+        assert_eq!(config.ap_altitude, Some(15000.0));
+        assert!(config.ap_heading.is_some());
+        assert!((config.ap_heading.unwrap().to_degrees() - 90.0).abs() < 0.1);
+        assert!(config.ap_speed.is_some());
+        assert!((config.ap_speed.unwrap().to_knots() - 250.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_aircraft_config_autopilot_off() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/autopilot/autopilot_mode".to_string(),
+            DataRefValue::Int(0),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert_eq!(config.ap_state, AutopilotState::Off);
+        assert!(config.ap_altitude.is_none());
+    }
+
+    #[test]
+    fn test_aircraft_config_lights() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/cockpit/electrical/nav_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/beacon_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/strobe_lights_on".to_string(),
+            DataRefValue::Int(0),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/landing_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+        datarefs.insert(
+            "sim/cockpit/electrical/taxi_light_on".to_string(),
+            DataRefValue::Int(0),
+        );
+        datarefs.insert(
+            "sim/cockpit2/switches/logo_lights_on".to_string(),
+            DataRefValue::Int(1),
+        );
+
+        let config = XPlaneAdapter::convert_aircraft_config(&datarefs).unwrap();
+        assert!(config.lights.nav);
+        assert!(config.lights.beacon);
+        assert!(!config.lights.strobe);
+        assert!(config.lights.landing);
+        assert!(!config.lights.taxi);
+        assert!(config.lights.logo);
+    }
+
+    #[test]
+    fn test_trim_state_conversion() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/controls/elv_trim".to_string(),
+            DataRefValue::Float(0.15),
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/ail_trim".to_string(),
+            DataRefValue::Float(-0.05),
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/rud_trim".to_string(),
+            DataRefValue::Float(0.10),
+        );
+
+        let trim = XPlaneAdapter::convert_trim_state(&datarefs);
+        assert!((trim.elevator - 0.15).abs() < 0.001);
+        assert!((trim.aileron - (-0.05)).abs() < 0.001);
+        assert!((trim.rudder - 0.10).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_trim_state_clamps_out_of_range() {
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/controls/elv_trim".to_string(),
+            DataRefValue::Float(1.5), // over max
+        );
+        datarefs.insert(
+            "sim/flightmodel/controls/ail_trim".to_string(),
+            DataRefValue::Float(-1.5), // below min
+        );
+
+        let trim = XPlaneAdapter::convert_trim_state(&datarefs);
+        assert_eq!(trim.elevator, 1.0);
+        assert_eq!(trim.aileron, -1.0);
+    }
+
+    /// Integration test: raw DataRef data → snapshot → bus publish → subscriber receive.
+    ///
+    /// This is the core "sim → adapter → bus → subscriber" pipeline that proves
+    /// bus publishing is real and not stubbed.
+    #[tokio::test]
+    async fn test_snapshot_pipeline_publish_and_receive() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+
+        // Create a subscriber before publishing
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe should succeed");
+
+        let config = XPlaneAdapterConfig::default();
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Build realistic DataRef payload
+        let mut datarefs = HashMap::new();
+        datarefs.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(77.17), // ~150 knots
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(37.77),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-122.41),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(3.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(-5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(90.0),
+        );
+
+        let raw = XPlaneRawData {
+            timestamp: Instant::now(),
+            aircraft_info: DetectedAircraft {
+                icao: "C172".to_string(),
+                title: "Cessna 172SP".to_string(),
+                author: "Laminar Research".to_string(),
+            },
+            dataref_values: datarefs,
+        };
+
+        // Convert → snapshot (exercises the conversion pipeline)
+        let start = Instant::now();
+        let snapshot =
+            XPlaneAdapter::convert_raw_to_snapshot(raw, start).expect("conversion should succeed");
+
+        // Verify snapshot fields
+        assert!((snapshot.kinematics.ias.to_knots() - 150.0).abs() < 1.0);
+        assert!((snapshot.kinematics.aoa.to_degrees() - 5.0).abs() < 0.1);
+
+        // Publish to bus
+        adapter
+            .publish_snapshot(snapshot.clone())
+            .expect("publish should succeed");
+
+        // Verify subscriber receives the snapshot
+        let received = subscriber.try_recv().expect("try_recv should not error");
+        assert!(
+            received.is_some(),
+            "subscriber should have received a snapshot"
+        );
+        let received = received.unwrap();
+        assert_eq!(received.sim, snapshot.sim);
+        assert!(
+            (received.kinematics.ias.to_knots() - 150.0).abs() < 1.0,
+            "received IAS should match published IAS"
+        );
+    }
+
+    /// Integration test: stale-snapshot signal on timeout.
+    ///
+    /// When no telemetry arrives for the timeout period, the adapter should
+    /// push a stale (invalid) snapshot so downstream consumers stop using stale data.
+    #[tokio::test]
+    async fn test_timeout_publishes_stale_snapshot() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+        use tokio::time::Duration;
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe should succeed");
+
+        let config = XPlaneAdapterConfig {
+            dataref_timeout_ms: 50, // Very short timeout for the test
+            ..Default::default()
+        };
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Simulate a timeout by calling handle_timeout directly
+        adapter
+            .publish_stale_snapshot()
+            .expect("stale snapshot publish should succeed");
+
+        let received = subscriber.try_recv().expect("try_recv should not error");
+        assert!(received.is_some(), "should have received stale snapshot");
+        let received = received.unwrap();
+        // Stale snapshot should have validity flags all false
+        assert!(
+            !received.validity.safe_for_ffb,
+            "stale snapshot should not be safe for FFB"
+        );
     }
 }

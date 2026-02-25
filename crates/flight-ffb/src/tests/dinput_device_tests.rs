@@ -67,6 +67,7 @@ mod tests {
     /// Requirements: FFB-HID-01.1
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_device_initialization_stub() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
 
@@ -101,6 +102,7 @@ mod tests {
     /// Requirements: FFB-HID-01.9
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_capability_query_defaults() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -133,6 +135,7 @@ mod tests {
     /// Requirements: FFB-HID-01.1
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_device_acquisition_lifecycle() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -172,6 +175,7 @@ mod tests {
     /// Requirements: FFB-HID-01.1
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_operations_require_acquisition() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -207,6 +211,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_constant_force_effect_creation() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -237,6 +242,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_constant_force_invalid_axis() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -260,6 +266,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_periodic_effect_creation() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -275,6 +282,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_spring_effect_creation() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -290,6 +298,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_damper_effect_creation() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -305,6 +314,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_multiple_effect_types() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -333,6 +343,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3, FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_constant_force_magnitude_updates() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -374,6 +385,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_constant_force_wrong_effect_type() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -394,6 +406,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3, FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_periodic_effect_parameters() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -443,6 +456,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_periodic_parameters_wrong_effect_type() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -463,6 +477,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3, FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_spring_effect_parameters() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -501,6 +516,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_spring_parameters_wrong_effect_type() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -521,6 +537,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3, FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_damper_effect_parameters() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -548,6 +565,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_damper_parameters_wrong_effect_type() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -568,6 +586,7 @@ mod tests {
     /// Requirements: FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_parameter_updates_invalid_handles() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -612,6 +631,7 @@ mod tests {
     /// Requirements: FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_effect_start_stop() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -658,6 +678,7 @@ mod tests {
     /// Requirements: FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_effect_start_stop_invalid_handles() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -692,6 +713,7 @@ mod tests {
     /// Requirements: FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_effect_start_stop_without_acquisition() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -717,6 +739,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_independent_pitch_roll_control() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -752,6 +775,7 @@ mod tests {
     /// Requirements: FFB-HID-01.2
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_multiple_constant_force_effects() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();
@@ -782,6 +806,7 @@ mod tests {
     /// Requirements: FFB-HID-01.1, FFB-HID-01.2, FFB-HID-01.3, FFB-HID-01.4
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_complete_device_lifecycle() {
         let mut device = DirectInputFfbDevice::new("test-device-guid".to_string()).unwrap();
 
@@ -841,6 +866,7 @@ mod tests {
     /// Requirements: FFB-HID-01.1, FFB-HID-01.3
     #[test]
     #[cfg(windows)]
+    #[ignore = "requires DirectInput FFB device registered in system"]
     fn test_error_recovery() {
         let mut device = DirectInputFfbDevice::new(TEST_GUID.to_string()).unwrap();
         device.initialize().unwrap();

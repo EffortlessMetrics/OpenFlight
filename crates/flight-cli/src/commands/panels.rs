@@ -63,8 +63,8 @@ async fn verify_panels(
     };
 
     if panels_to_verify.is_empty() {
-        let message = if device_id.is_some() {
-            format!("Panel device '{}' not found", device_id.unwrap())
+        let message = if let Some(id) = &device_id {
+            format!("Panel device '{id}' not found")
         } else {
             "No panel devices found".to_string()
         };
@@ -154,8 +154,8 @@ async fn panel_status(
     };
 
     if panels.is_empty() {
-        let message = if device_id.is_some() {
-            format!("Panel device '{}' not found", device_id.unwrap())
+        let message = if let Some(id) = &device_id {
+            format!("Panel device '{id}' not found")
         } else {
             "No panel devices found".to_string()
         };

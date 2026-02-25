@@ -468,8 +468,605 @@ requirements:
           - flight-hid-types::tests::hid_device_info_optional_fields
           - flight-hid-types::tests::hid_device_info_with_descriptor
 
+  - id: REQ-37
+    name: VKB Gladiator NXT EVO Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-37.1
+        description: "WHEN a Gladiator HID report is parsed THEN all six axes SHALL decode to normalized values and button bitmask SHALL be applied"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_report_id
+      - id: AC-37.2
+        description: "WHEN bidirectional axis raw value is 0x0000 THEN normalized value SHALL be -1.0; 0x8000 SHALL be 0.0; 0xFFFF SHALL be +1.0"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+      - id: AC-37.3
+        description: "WHEN a report shorter than 12 bytes is presented THEN a ReportTooShort error SHALL be returned"
+        tests:
+          - flight-hotas-vkb::input::tests::test_report_too_short
+      - id: AC-37.4
+        description: "WHEN bit 32 is set in the second button word THEN button index 33 SHALL be reported as pressed"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+      - id: AC-37.5
+        description: "WHEN pressed_buttons is called THEN it SHALL return 1-based indices of all active buttons"
+        tests:
+          - flight-hotas-vkb::input::tests::test_parse_interface_report_with_axes_and_buttons
+
+  - id: REQ-38
+    name: War Thunder HTTP Telemetry Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-38.1
+        description: "WHEN /indicators returns valid JSON THEN the adapter SHALL emit a BusSnapshot with sim WarThunder and converted unit values"
+        tests:
+          - flight-warthunder::tests::converts_indicators_to_snapshot
+      - id: AC-38.2
+        description: "WHEN optional fields are absent THEN the adapter SHALL set partial validity flags without panicking"
+        tests:
+          - flight-warthunder::tests::missing_fields_produce_invalid_flags
+      - id: AC-38.3
+        description: "WHEN WtIndicators is deserialised THEN renamed JSON fields SHALL map to struct fields correctly"
+        tests:
+          - flight-warthunder::protocol::tests::deserialises_from_json
+          - flight-warthunder::protocol::tests::handles_missing_optional_fields
+      - id: AC-38.4
+        description: "WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected"
+        tests:
+          - flight-warthunder::tests::start_transitions_to_connected
+          - flight-warthunder::tests::adapter_initial_state_is_disconnected
+
+  - id: REQ-39
+    name: Elite Dangerous Status File Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-39.1
+        description: "WHEN Status.json exists with GEAR_DOWN set THEN adapter SHALL emit BusSnapshot with config.gear all-down"
+        tests:
+          - flight-elite::tests::poll_reads_status_file
+          - flight-elite::tests::converts_gear_down_flag
+          - flight-elite::tests::converts_gear_up_flag
+      - id: AC-39.2
+        description: "WHEN Status.json flags are unchanged between polls THEN poll_once SHALL return None (change detection)"
+        tests:
+          - flight-elite::tests::poll_returns_none_when_no_change
+          - flight-elite::tests::poll_returns_none_when_file_absent
+      - id: AC-39.3
+        description: "WHEN LIGHTS_ON flag is set THEN nav and landing lights SHALL be true; fuel quantities SHALL populate config.fuel"
+        tests:
+          - flight-elite::tests::converts_lights_on
+          - flight-elite::tests::converts_fuel
+      - id: AC-39.4
+        description: "WHEN DOCKED flag is set THEN validity.position_valid SHALL be false and safe_for_ffb SHALL be false"
+        tests:
+          - flight-elite::tests::docked_ship_not_valid_for_ffb
+      - id: AC-39.5
+        description: "WHEN Status.json is parsed THEN flags bitmask and fuel fields SHALL be populated correctly"
+        tests:
+          - flight-elite::protocol::tests::parses_status_json
+          - flight-elite::protocol::tests::elite_flags_gear_down
+          - flight-elite::protocol::tests::parses_load_game_event
+      - id: AC-39.6
+        description: "WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected"
+        tests:
+          - flight-elite::tests::sim_id_is_elite_dangerous
+      - id: AC-39.7
+        description: "WHEN journal directory is present THEN JournalReader SHALL find the latest log file and tail new events"
+        tests:
+          - flight-elite::journal::tests::find_latest_journal_returns_most_recent
+          - flight-elite::journal::tests::reads_new_events_from_journal
+          - flight-elite::journal::tests::second_call_returns_only_new_events
+          - flight-elite::journal::tests::empty_dir_returns_empty_vec
+      - id: AC-39.8
+        description: "WHEN journal events are applied THEN adapter state (current_system, docked_station, current_ship) SHALL reflect the events"
+        tests:
+          - flight-elite::tests::apply_fsd_jump_updates_current_system
+          - flight-elite::tests::apply_location_updates_current_system
+          - flight-elite::tests::apply_docked_sets_station_and_system
+          - flight-elite::tests::apply_undocked_clears_station
+          - flight-elite::tests::current_system_appears_in_snapshot_waypoint
+
+  - id: REQ-40
+    name: MSFS 2024 SimConnect Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-40.1
+        description: "WHEN connected event carries dwApplicationVersionMajor < 13 THEN sim_id SHALL be Msfs"
+        tests:
+          - flight-simconnect::tests::sim_id_defaults_to_msfs
+      - id: AC-40.2
+        description: "WHEN connected event carries dwApplicationVersionMajor >= 13 THEN sim_id SHALL be Msfs2024"
+        tests:
+          - flight-simconnect::tests::sim_id_is_msfs2024_after_connected_v13
+      - id: AC-40.3
+        description: "Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *)"
+        tests:
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_pitch_degrees
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_bank_degrees
+          - flight-simconnect::mapping::tests::kinematics_uses_plane_heading_degrees_magnetic
+      - id: AC-40.4
+        description: "ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units"
+        tests:
+          - flight-simconnect::mapping::tests::lateral_g_converted_from_acceleration_body_x
+          - flight-simconnect::mapping::tests::longitudinal_g_converted_from_acceleration_body_z
+      - id: AC-40.5
+        description: "ProcessDetectionConfig SHALL contain a Msfs2024 definition with process FlightSimulator2024.exe"
+        tests:
+          - flight-process-detection::tests::msfs2024_definition_present
+
+  - id: REQ-41
+    name: Kerbal Space Program kRPC Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-41.1
+        description: "KspAdapter::sim_id() SHALL return SimId::Ksp and initial state SHALL be Disconnected"
+        tests:
+          - flight-ksp::adapter::tests::test_adapter_creation
+          - flight-ksp::adapter::tests::test_adapter_stop_without_start
+      - id: AC-41.2
+        description: "WHEN heading_deg > 180 THEN normalized heading SHALL be heading_deg - 360; otherwise heading SHALL be unchanged"
+        tests:
+          - flight-ksp::mapping::tests::test_heading_normalization
+          - flight-ksp::mapping::tests::test_pitch_mapping
+      - id: AC-41.3
+        description: "altitude_m SHALL be multiplied by 3.28084 to yield feet; speed_mps SHALL be multiplied by 1.94384 to yield knots"
+        tests:
+          - flight-ksp::mapping::tests::test_altitude_conversion
+          - flight-ksp::mapping::tests::test_speed_conversion
+      - id: AC-41.4
+        description: "validity.safe_for_ffb SHALL be true only when situation == FLYING (3)"
+        tests:
+          - flight-ksp::mapping::tests::test_safe_for_ffb_only_when_flying
+      - id: AC-41.5
+        description: "ProcessDetectionConfig SHALL contain a Ksp definition with processes KSP_x64.exe, KSP.x86_64, and window title Kerbal Space Program"
+        tests:
+          - flight-process-detection::tests::ksp_definition_present
+
+  - id: REQ-42
+    name: X-Plane 11/12 Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-42.1
+        description: "IAS/TAS/ground speed SHALL be converted from m/s to knots; attitude angles SHALL be converted from degrees to radians; psi > 180 SHALL be normalized to the range (-180, +180]"
+        tests:
+          - flight-xplane::adapter::tests::test_speed_conversion
+          - flight-xplane::adapter::tests::test_angle_conversion
+          - flight-xplane::adapter::tests::test_kinematics_conversion
+      - id: AC-42.2
+        description: "Angular rates P, Q, R (deg/s) SHALL be converted to rad/s and written to BusSnapshot.angular_rates"
+        tests:
+          - flight-xplane::adapter::tests::test_rate_conversion
+      - id: AC-42.3
+        description: "Engine EGT, fuel_flow (kg/s→gal/hr), oil_pressure, oil_temperature, manifold_pressure, and CHT SHALL be populated from per-engine DataRefs when present"
+        tests:
+          - flight-xplane::adapter::tests::test_complete_telemetry_mapping
+      - id: AC-42.4
+        description: "BusSnapshot.environment.pressure_altitude SHALL be populated from sim/cockpit2/gauges/indicators/altitude_ft_pilot (feet, no conversion)"
+        tests:
+          - flight-xplane::adapter::tests::test_complete_telemetry_mapping
+      - id: AC-42.5
+        description: "PluginInterface SHALL perform a newline-delimited JSON handshake over TCP port 52000 and SHALL use actual async I/O for send_message and read_message"
+        tests:
+          - flight-xplane::plugin::tests::test_plugin_interface_creation
+          - flight-xplane::plugin::tests::test_plugin_message_serialization
+      - id: AC-42.6
+        description: "ControlOutput SHALL map pitch/roll/yaw to sim/joystick/yoke_*_ratio DataRefs (range −1..+1), throttle to sim/flightmodel/engine/ENGN_thro[n] (range 0..1), and SHALL reject NaN/Inf with InvalidValue before attempting any write"
+        tests:
+          - flight-xplane::control::tests::dataref_name_constants_are_correct
+          - flight-xplane::control::tests::sanitize_rejects_nan_and_inf
+          - flight-xplane::control::tests::write_pitch_returns_no_write_path_without_connections
+          - flight-xplane::control::tests::write_pitch_rejects_nan_before_checking_write_path
+          - control_output_integration::control_dataref_paths_match_xplane_sdk
+          - control_output_integration::nan_inf_rejected_before_write_path_is_checked
+          - control_output_integration::all_axis_writes_fail_with_no_write_path
+
+  - id: REQ-43
+    name: Project Wingman Adapter
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-43.1
+        description: "ProcessDetectionConfig SHALL contain a Wingman definition with process ProjectWingman.exe and window title Project Wingman"
+        tests:
+          - flight-process-detection::tests::wingman_definition_present
+      - id: AC-43.2
+        description: "WingmanAdapter::state() SHALL return AdapterState::Disconnected before start() and AdapterState::Connected after start()"
+        tests:
+          - flight-wingman::tests::adapter_initial_state_is_disconnected
+          - flight-wingman::tests::start_transitions_to_connected_stop_disconnects
+      - id: AC-43.3
+        description: "poll_once() SHALL return a BusSnapshot with SimId::Wingman"
+        tests:
+          - flight-wingman::tests::poll_returns_snapshot_with_correct_sim_id
+      - id: AC-43.4
+        description: "All BusSnapshot validity flags SHALL be false because Project Wingman exposes no telemetry API"
+        tests:
+          - flight-wingman::tests::poll_snapshot_has_no_valid_telemetry
+      - id: AC-43.5
+        description: "StubVirtualController SHALL clamp axis values to [-1.0, 1.0] and return AxisOutOfRange for index >= 8"
+        tests:
+          - flight-wingman::virtual_controller::tests::stub_axis_clamps_and_stores_value
+          - flight-wingman::virtual_controller::tests::stub_axis_out_of_range_errors
+
+  # Product Requirement: DCS World Integration with MP-Safe Enforcement
+  - id: REQ-44
+    name: DCS World Integration with MP-Safe Enforcement
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-44.1
+        description: "WHEN a DCS session update is received THEN the MP detector SHALL identify SinglePlayer, Multiplayer, or Unknown from explicit session_type markers or inferred fields (server_name, player_count, coalition)"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_single_player
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_multiplayer
+          - flight-dcs-export::src::mp_detection::tests::test_mp_detector_explicit_session_type
+          - flight-dcs-export::src::mp_detection::tests::test_mp_detector_fallback_detection
+      - id: AC-44.2
+        description: "WHEN enforce_mp_integrity is true AND the session is Multiplayer THEN filter_restricted_fields SHALL remove weapons, countermeasures, and rwr_contacts from the telemetry data map before bus publication"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_restricted_fields_filtered_in_mp
+          - flight-dcs-export::tests::adapter_tests::test_restricted_fields_allowed_in_sp
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_no_invalidation_of_self_aircraft_data
+      - id: AC-44.3
+        description: "WHEN a feature is blocked in an MP session THEN check_feature_blocked SHALL return a user-friendly message containing 'multiplayer integrity'"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_annotation_multiplayer
+          - flight-dcs-export::src::mp_detection::tests::test_blocked_feature_message
+      - id: AC-44.4
+        description: "WHEN in an MP session THEN mp_session_info SHALL return a banner containing the server name and 'Multiplayer'; WHEN in SP THEN it SHALL return None"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_banner_message
+          - flight-dcs-export::src::mp_detection::tests::test_mp_banner_message
+      - id: AC-44.5
+        description: "WHEN in an MP session THEN self-aircraft kinematic data (ias, tas, altitude, heading, pitch, bank, g_force) SHALL be published without restriction"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_mp_status_no_invalidation_of_self_aircraft_data
+      - id: AC-44.6
+        description: "WHEN gear_down or flaps fields are present in telemetry THEN convert_to_bus_snapshot SHALL map gear_down to config.gear (Down/Transitioning/Up) and flaps to config.flaps percentage"
+        tests:
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_down
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_up
+          - flight-dcs-export::tests::adapter_tests::test_gear_state_transitioning
+          - flight-dcs-export::tests::adapter_tests::test_flaps_mapping
+          - flight-dcs-export::tests::adapter_tests::test_flaps_clamped_at_bounds
+      - id: AC-44.7
+        description: "WHEN Export.lua is generated THEN IAS/TAS SHALL be converted m/s→knots, altitude ASL/AGL m→ft, vertical speed m/s→ft/min, AoA rad→deg, and waypoint distance m→NM before transmission"
+        tests:
+          - flight-dcs-export::src::export_lua::tests::test_requirements_compliance
+          - flight-dcs-export::tests::adapter_tests::test_aoa_mapping
+          - flight-dcs-export::tests::adapter_tests::test_navigation_ground_track_and_distance
+          - flight-dcs-export::tests::adapter_tests::test_angular_rates_mapping
+
+- id: REQ-45
+  name: Motion Platform 6DOF Support
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-45.1
+      description: "WHEN a MotionFrame value exceeds -1.0..1.0 THEN clamped() SHALL clamp it to that range for all six channels"
+      tests:
+        - flight-motion::frame::tests::test_frame_clamped
+    - id: AC-45.2
+      description: "WHEN to_simtools_string() is called THEN it SHALL produce 'A{i}B{i}C{i}D{i}E{i}F{i}\\n' with values rounded to integer percent"
+      tests:
+        - flight-motion::frame::tests::test_simtools_string_format
+        - flight-motion::frame::tests::test_simtools_string_neutral
+    - id: AC-45.3
+      description: "WHEN a high-pass filter receives a step input THEN it SHALL pass the onset (output > 0.9 on first tick); WHEN input is sustained THEN output SHALL wash out to near zero"
+      tests:
+        - flight-motion::washout::tests::test_highpass_step_response
+        - flight-motion::washout::tests::test_highpass_washout
+    - id: AC-45.4
+      description: "WHEN a low-pass filter receives sustained constant input THEN it SHALL converge to within 0.01 of that input"
+      tests:
+        - flight-motion::washout::tests::test_lowpass_convergence
+    - id: AC-45.5
+      description: "WHEN a neutral BusSnapshot is processed for 2000 ticks THEN all MotionFrame channels SHALL be within 0.01 of zero"
+      tests:
+        - flight-motion::tests::motion_tests::test_neutral_snapshot_washes_out
+    - id: AC-45.6
+      description: "WHEN intensity is set to 0.0 THEN the mapper SHALL output a neutral frame regardless of input"
+      tests:
+        - flight-motion::tests::motion_tests::test_zero_intensity_output
+    - id: AC-45.7
+      description: "WHEN a channel is disabled in configuration THEN the mapper SHALL output exactly 0.0 for that channel"
+      tests:
+        - flight-motion::tests::motion_tests::test_disabled_channel_outputs_zero
+    - id: AC-45.8
+      description: "WHEN SimToolsUdpOutput sends a frame THEN the receiver SHALL get the correctly formatted SimTools datagram"
+      tests:
+        - flight-motion::tests::motion_tests::test_simtools_udp_send_receive
+    - id: AC-45.9
+      description: "WHEN default MotionConfig is created THEN intensity SHALL be 0.8, max_g SHALL be 3.0, max_angle_deg SHALL be 30.0, and all channels SHALL be enabled with gain 1.0"
+      tests:
+        - flight-motion::config::tests::test_default_config
+
+- id: REQ-46
+  name: T.Flight HOTAS PC Mode Detection and Throttle Detent Tracking
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-46.1
+      description: "WHEN a HID report of ≥ 8 bytes is received THEN PcModeDetector SHALL classify it as PcMode; WHEN < 8 bytes THEN ConsoleMode"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_pc_mode_8_bytes
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_pc_mode_9_bytes
+        - flight-hotas-thrustmaster::pc_mode::tests::test_classify_console_mode_5_bytes
+    - id: AC-46.2
+      description: "WHEN confirm_count consecutive same-type reports are seen THEN the committed status SHALL be updated; fewer reports SHALL leave status Unknown"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_commits_after_confirm_count
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_resets_run_on_type_change
+    - id: AC-46.3
+      description: "WHEN device is in ConsoleMode THEN console_mode_guidance SHALL return a non-empty string containing handshake instructions; WHEN in PcMode THEN None"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_console_mode_guidance_present_when_console
+        - flight-hotas-thrustmaster::pc_mode::tests::test_console_mode_guidance_absent_when_pc
+    - id: AC-46.4
+      description: "WHEN PcModeDetector is reset THEN committed status SHALL revert to Unknown"
+      tests:
+        - flight-hotas-thrustmaster::pc_mode::tests::test_detector_reset_clears_state
+    - id: AC-46.5
+      description: "WHEN throttle value enters a configured detent zone THEN ThrottleDetentTracker SHALL emit Entered; WHEN it exits THEN Exited"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_entered_event_when_throttle_enters_zone
+        - flight-hotas-thrustmaster::detents::tests::test_exited_event_when_throttle_leaves_zone
+    - id: AC-46.6
+      description: "WHEN throttle remains inside the detent zone THEN no duplicate Entered events SHALL be emitted (hysteresis)"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_no_event_while_inside_zone
+    - id: AC-46.7
+      description: "WHEN throttle exits and re-enters the detent zone THEN Entered SHALL fire again"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_entered_fires_again_after_exit_and_reenter
+    - id: AC-46.8
+      description: "WHEN ThrottleDetentTracker is reset THEN inside state is cleared and Entered fires on next zone entry"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_reset_clears_state
+    - id: AC-46.9
+      description: "WHEN ThrottleDetentConfig::hotas4_idle() is used THEN position SHALL be 0.05 with half_width 0.02 giving zone [0.03, 0.07]"
+      tests:
+        - flight-hotas-thrustmaster::detents::tests::test_default_hotas4_idle_detent
+
   # ============================================================================
-  # INFRASTRUCTURE REQUIREMENTS (INF-REQ-*)
+  # ============================================================================
+
+- id: REQ-47
+  name: Community Cloud Profile Repository
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-47.1
+      description: "WHEN ListFilter is constructed with defaults THEN sort SHALL be TopRated, page SHALL be 1, and per_page SHALL be 25"
+      tests:
+        - flight-cloud-profiles::models::tests::test_sort_order_defaults_to_top_rated
+    - id: AC-47.2
+      description: "WHEN list_page is called with a sim filter THEN only profiles matching that sim SHALL be returned"
+      tests:
+        - flight-cloud-profiles::models::tests::test_page_has_next_page
+        - flight-cloud-profiles::models::tests::test_page_total_pages
+    - id: AC-47.3
+      description: "WHEN get() is called and the profile is in the local cache and not expired THEN no network request SHALL be made"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_store_and_retrieve
+        - flight-cloud-profiles::cache::tests::test_cache_miss_returns_none
+    - id: AC-47.4
+      description: "WHEN a cache entry's age exceeds the TTL THEN is_expired SHALL return true and get() SHALL fetch from network"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_expired_entry_not_returned
+    - id: AC-47.5
+      description: "WHEN clear() is called on the cache THEN all stored profiles and the index SHALL be removed"
+      tests:
+        - flight-cloud-profiles::cache::tests::test_cache_clear_removes_all
+    - id: AC-47.6
+      description: "WHEN sanitize_for_upload is called THEN the schema version SHALL be normalised and the sim slug SHALL be lowercased"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_sanitize_lowercases_sim
+        - flight-cloud-profiles::sanitize::tests::test_sanitize_sets_schema_version
+    - id: AC-47.7
+      description: "WHEN validate_for_publish is called with a title shorter than 3 chars THEN it SHALL return an error"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_validate_title_too_short_rejected
+    - id: AC-47.8
+      description: "WHEN validate_for_publish is called with a title longer than 80 chars THEN it SHALL return an error"
+      tests:
+        - flight-cloud-profiles::sanitize::tests::test_validate_title_too_long_rejected
+    - id: AC-47.9
+      description: "WHEN VoteDirection is serialised to JSON THEN it SHALL use lowercase snake_case (up / down)"
+      tests:
+        - flight-cloud-profiles::models::tests::test_vote_direction_round_trip
+
+  # ============================================================================
+  # ============================================================================
+
+- id: REQ-48
+  name: VR Overlay for In-Cockpit Notifications and Status
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-48.1
+      description: "WHEN OverlayConfig is constructed with default values THEN validate() SHALL return Ok"
+      tests:
+        - flight-vr-overlay::config::tests::test_default_config_validates
+        - flight-vr-overlay::config::tests::test_minimal_config_validates
+    - id: AC-48.2
+      description: "WHEN opacity is outside [0.0, 1.0] THEN validate() SHALL return an error"
+      tests:
+        - flight-vr-overlay::config::tests::test_opacity_out_of_range_rejected
+    - id: AC-48.3
+      description: "WHEN a notification's TTL has elapsed THEN is_expired() SHALL return true; prune_expired() SHALL remove it from the queue"
+      tests:
+        - flight-vr-overlay::notification::tests::test_expired_notification_removed_on_prune
+        - flight-vr-overlay::notification::tests::test_persistent_notification_does_not_expire
+    - id: AC-48.4
+      description: "WHEN the queue is at capacity THEN the oldest non-Critical item SHALL be evicted; if all are Critical the incoming notification SHALL be dropped"
+      tests:
+        - flight-vr-overlay::notification::tests::test_capacity_evicts_oldest_noncritical
+        - flight-vr-overlay::notification::tests::test_capacity_drops_incoming_when_all_critical
+    - id: AC-48.5
+      description: "WHEN acknowledge() is called on a notification THEN is_expired() SHALL return true for that notification"
+      tests:
+        - flight-vr-overlay::notification::tests::test_acknowledge_marks_notification
+    - id: AC-48.6
+      description: "WHEN active() is called THEN notifications SHALL be returned sorted by severity descending (Critical first)"
+      tests:
+        - flight-vr-overlay::notification::tests::test_active_sorted_by_severity_desc
+        - flight-vr-overlay::notification::tests::test_max_severity_with_items
+    - id: AC-48.7
+      description: "WHEN toggle_visible() is called THEN the overlay visible flag SHALL invert"
+      tests:
+        - flight-vr-overlay::state::tests::test_toggle_visible
+        - flight-vr-overlay::state::tests::test_axes_in_deadzone_count
+    - id: AC-48.8
+      description: "WHEN NullRenderer::render_frame() is called THEN frames_rendered SHALL increment and last_profile SHALL record the profile name"
+      tests:
+        - flight-vr-overlay::renderer::tests::test_null_renderer_counts_frames
+        - flight-vr-overlay::renderer::tests::test_null_renderer_records_last_profile
+    - id: AC-48.9
+      description: "WHEN OverlayService is spawned and SetProfile command is sent THEN handle.state().profile_name SHALL reflect the new name"
+      tests:
+        - flight-vr-overlay::service::tests::test_set_profile_reflected_in_state
+        - flight-vr-overlay::service::tests::test_shutdown_handle_error_after_stop
+
+- id: REQ-49
+  name: Vendor Partnerships — VPforce Rhino FFB, WinWing HOTAS, Moza FFB Base
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-49.1
+      description: "WHEN a 20-byte VPforce Rhino report is parsed THEN roll, pitch, and throttle SHALL normalise to [-1,1] / [0,1] without error"
+      tests:
+        - flight-ffb-vpforce::input::tests::test_parse_centred_report
+        - flight-ffb-vpforce::input::tests::test_full_deflection_x
+    - id: AC-49.2
+      description: "WHEN a Rhino FFB Spring effect is serialised THEN the output report SHALL use report ID 0x10 and encode the coefficient correctly"
+      tests:
+        - flight-ffb-vpforce::effects::tests::test_spring_effect_report_id
+        - flight-ffb-vpforce::effects::tests::test_constant_force_positive
+    - id: AC-49.3
+      description: "WHEN three consecutive Rhino report failures are recorded THEN RhinoHealthMonitor SHALL mark the device offline"
+      tests:
+        - flight-ffb-vpforce::health::tests::test_three_failures_offline
+        - flight-ffb-vpforce::health::tests::test_success_resets_failures
+    - id: AC-49.4
+      description: "WHEN a 24-byte WinWing Orion2 Throttle report is parsed THEN left and right throttle axes SHALL normalise correctly"
+      tests:
+        - flight-hotas-winwing::input::tests::test_orion2_throttle_centred
+        - flight-hotas-winwing::input::tests::test_throttle_max_position
+    - id: AC-49.5
+      description: "WHEN a 12-byte WinWing Orion2 Stick report is parsed THEN roll, pitch, twist axes SHALL normalise to 0.0 at mid-scale"
+      tests:
+        - flight-hotas-winwing::input::tests::test_stick_centred
+    - id: AC-49.6
+      description: "WHEN an 8-byte WinWing TFRP report is parsed THEN rudder and toe brakes SHALL normalise to 0.0 at neutral"
+      tests:
+        - flight-hotas-winwing::input::tests::test_tfrp_centred
+    - id: AC-49.7
+      description: "WHEN WinWingHealthMonitor records a success after failures THEN consecutive_failures SHALL reset to 0"
+      tests:
+        - flight-hotas-winwing::health::tests::test_success_resets_failures
+    - id: AC-49.8
+      description: "WHEN a 16-byte Moza AB9 report is parsed THEN roll and pitch SHALL normalise to 0.0 at mid-scale with no buttons active"
+      tests:
+        - flight-ffb-moza::input::tests::test_parse_centred_report
+    - id: AC-49.9
+      description: "WHEN a Moza TorqueCommand with out-of-range values is created THEN is_safe() SHALL return false; clamped values SHALL serialise within i16 bounds"
+      tests:
+        - flight-ffb-moza::effects::tests::test_torque_clamping
+        - flight-ffb-moza::health::tests::test_torque_fault_makes_unhealthy
+
+- id: REQ-50
+  name: macOS IOKit/HID Device Layer
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-50.1
+      description: "WHEN HidManager::new() is called on non-macOS THEN it SHALL succeed and return an empty device list"
+      tests:
+        - flight-macos-hid::manager::tests::test_new_manager_ok_on_non_macos
+    - id: AC-50.2
+      description: "WHEN HidManager::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform"
+      tests:
+        - flight-macos-hid::manager::tests::test_open_unsupported_on_non_macos
+    - id: AC-50.3
+      description: "WHEN HidDevice::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform"
+      tests:
+        - flight-macos-hid::device::tests::test_open_unsupported_on_non_macos
+    - id: AC-50.4
+      description: "WHEN set_device_matching(usagePage, usage) is called THEN criteria() SHALL reflect those values"
+      tests:
+        - flight-macos-hid::manager::tests::test_criteria_stored
+        - flight-macos-hid::manager::tests::test_vendor_product_stored
+    - id: AC-50.5
+      description: "WHEN MacosClock::elapsed() is called after a delay THEN it SHALL return a duration >= that delay on non-macOS"
+      tests:
+        - flight-macos-hid::timing::tests::test_elapsed_non_zero
+        - flight-macos-hid::timing::tests::test_now_ns_increases
+    - id: AC-50.6
+      description: "WHEN HidError::UnsupportedPlatform is formatted THEN the message SHALL contain 'not supported'"
+      tests:
+        - flight-macos-hid::error::tests::test_error_display
+    - id: AC-50.7
+      description: "WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = \"macos\")'.dependencies] in Cargo.toml"
+      tests: []
+    - id: AC-50.8
+      description: "WHEN the crate is compiled on Windows or Linux THEN it SHALL compile without requiring IOKit system libraries"
+      tests:
+        - cmd:cargo build -p flight-macos-hid
+
+- id: REQ-51
+  name: Open Hardware Reference FFB Stick Protocol
+  kind: product
+  status: implemented
+  ac:
+    - id: AC-51.1
+      description: "WHEN a centred InputReport buffer is parsed THEN all axes SHALL be zero and ffb_fault SHALL be false"
+      tests:
+        - flight-open-hardware::input_report::tests::test_parse_zero_report
+    - id: AC-51.2
+      description: "WHEN an InputReport is serialised then parsed THEN the result SHALL equal the original"
+      tests:
+        - flight-open-hardware::input_report::tests::test_roundtrip
+    - id: AC-51.3
+      description: "WHEN a wrong report ID is parsed THEN parse() SHALL return None"
+      tests:
+        - flight-open-hardware::input_report::tests::test_wrong_report_id_returns_none
+        - flight-open-hardware::output_report::tests::test_wrong_id_returns_none
+        - flight-open-hardware::firmware_version::tests::test_wrong_id_returns_none
+    - id: AC-51.4
+      description: "WHEN axes are at full deflection THEN normalise functions SHALL return approximately ±1.0 or 1.0"
+      tests:
+        - flight-open-hardware::input_report::tests::test_normalise_full_deflection
+    - id: AC-51.5
+      description: "WHEN FfbOutputReport::stop() is called THEN force bytes SHALL be zero and mode SHALL be Off(0)"
+      tests:
+        - flight-open-hardware::output_report::tests::test_stop_report
+    - id: AC-51.6
+      description: "WHEN an FfbOutputReport is serialised then parsed THEN the result SHALL equal the original"
+      tests:
+        - flight-open-hardware::output_report::tests::test_roundtrip
+    - id: AC-51.7
+      description: "WHEN LedReport::all_off() is called THEN leds byte SHALL be 0 with report ID 0x20"
+      tests:
+        - flight-open-hardware::led_report::tests::test_all_off
+        - flight-open-hardware::led_report::tests::test_roundtrip
+    - id: AC-51.8
+      description: "WHEN a FirmwareVersionReport is serialised then parsed THEN version() SHALL return the correct (major, minor, patch)"
+      tests:
+        - flight-open-hardware::firmware_version::tests::test_roundtrip
+    - id: AC-51.9
+      description: "WHEN the crate is compiled THEN VENDOR_ID SHALL be 0x1209 and PRODUCT_ID SHALL be 0xF170; the crate SHALL compile as no_std"
+      tests:
+        - cmd:cargo build -p flight-open-hardware
+
+  # ============================================================================
   # ============================================================================
 
   # Infrastructure Requirement: Structured Documentation
@@ -1041,6 +1638,12 @@ requirements:
         description: "WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one"
         tests:
           - flight-profile::tests::test_profile_merging
+      - id: AC-23.5
+        description: "WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft"
+        tests: []
+      - id: AC-23.6
+        description: "WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events"
+        tests: []
 
   # Product Requirement: LED Rules Engine
   - id: REQ-24
@@ -1057,6 +1660,9 @@ requirements:
         description: "WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types"
         tests:
           - flight-rules::tests::test_rule_compilation
+          - flight-rules::snapshot_tests::snapshot_bytecode_gear_down_panel
+          - flight-rules::snapshot_tests::snapshot_bytecode_aoa_warning
+          - flight-rules::snapshot_tests::snapshot_bytecode_compound_and
       - id: AC-24.3
         description: "WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized"
         tests:

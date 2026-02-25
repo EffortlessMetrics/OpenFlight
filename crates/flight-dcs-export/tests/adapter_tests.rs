@@ -551,3 +551,189 @@ fn test_fixture_ka50_hover() {
     // Verify helicopter has multiple engines
     assert_eq!(snapshot.engines.len(), 2);
 }
+
+#[test]
+fn test_restricted_fields_filtered_in_mp() {
+    let mut adapter = create_test_adapter();
+
+    let session_data = json!({"session_type": "MP", "server_name": "Test Server"});
+    adapter
+        .update_mp_session(&session_data)
+        .expect("Should update session");
+
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), json!(350.0));
+    data.insert("weapons".to_string(), json!({"missile": "AIM-120C"}));
+    data.insert("countermeasures".to_string(), json!({"chaff": 30}));
+    data.insert("rwr_contacts".to_string(), json!([]));
+
+    let (filtered, blocked) = adapter.filter_restricted_fields(data);
+
+    // Restricted fields must be stripped
+    assert!(!filtered.contains_key("weapons"));
+    assert!(!filtered.contains_key("countermeasures"));
+    assert!(!filtered.contains_key("rwr_contacts"));
+    // Safe field preserved
+    assert!(filtered.contains_key("ias"));
+    // All three restricted fields reported as blocked
+    assert!(blocked.contains(&"weapons".to_string()));
+    assert!(blocked.contains(&"countermeasures".to_string()));
+    assert!(blocked.contains(&"rwr_contacts".to_string()));
+}
+
+#[test]
+fn test_restricted_fields_allowed_in_sp() {
+    let mut adapter = create_test_adapter();
+
+    let session_data = json!({"session_type": "SP"});
+    adapter
+        .update_mp_session(&session_data)
+        .expect("Should update session");
+
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), json!(350.0));
+    data.insert("weapons".to_string(), json!({"missile": "AIM-120C"}));
+
+    let (filtered, blocked) = adapter.filter_restricted_fields(data);
+
+    // All fields preserved in SP
+    assert!(filtered.contains_key("weapons"));
+    assert!(filtered.contains_key("ias"));
+    assert!(blocked.is_empty());
+}
+
+#[test]
+fn test_aoa_mapping() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 350.0,
+        "aoa": 4.5
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map AoA");
+
+    assert_eq!(snapshot.kinematics.aoa.value(), 4.5);
+}
+
+#[test]
+fn test_angular_rates_mapping() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 350.0,
+        "angular_velocity_x": 0.05,
+        "angular_velocity_y": -0.02,
+        "angular_velocity_z": 0.01
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map angular rates");
+
+    assert!((snapshot.angular_rates.p - 0.05_f32).abs() < 1e-5);
+    assert!((snapshot.angular_rates.q - (-0.02_f32)).abs() < 1e-5);
+    assert!((snapshot.angular_rates.r - 0.01_f32).abs() < 1e-5);
+}
+
+#[test]
+fn test_navigation_ground_track_and_distance() {
+    let adapter = create_test_adapter();
+
+    // Lua pre-converts distance to nautical miles; adapter passes through
+    let data = create_telemetry_data(json!({
+        "ias": 350.0,
+        "course": 95.0,
+        "waypoint_distance": 12.387  // NM (post-Lua conversion from meters)
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map navigation");
+
+    assert_eq!(snapshot.navigation.ground_track.value(), 95.0);
+    assert!((snapshot.navigation.distance_to_dest.unwrap() - 12.387_f32).abs() < 0.001);
+}
+
+#[test]
+fn test_gear_state_down() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 5.0,
+        "gear_down": 1.0
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map gear state");
+
+    assert!(snapshot.config.gear.all_down());
+}
+
+#[test]
+fn test_gear_state_up() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 350.0,
+        "gear_down": 0.0
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map gear state");
+
+    assert!(snapshot.config.gear.all_up());
+}
+
+#[test]
+fn test_gear_state_transitioning() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 180.0,
+        "gear_down": 0.5
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map gear state");
+
+    assert!(snapshot.config.gear.transitioning());
+}
+
+#[test]
+fn test_flaps_mapping() {
+    let adapter = create_test_adapter();
+
+    let data = create_telemetry_data(json!({
+        "ias": 150.0,
+        "flaps": 30.0
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Should map flaps");
+
+    assert_eq!(snapshot.config.flaps.value(), 30.0);
+}
+
+#[test]
+fn test_flaps_clamped_at_bounds() {
+    let adapter = create_test_adapter();
+
+    // Flaps values outside 0-100 should be clamped before Percentage::new
+    let data = create_telemetry_data(json!({
+        "ias": 100.0,
+        "flaps": 110.0
+    }));
+
+    let snapshot = adapter
+        .convert_to_bus_snapshot(1000, "F-16C", &data)
+        .expect("Flaps out-of-range should be clamped");
+
+    assert_eq!(snapshot.config.flaps.value(), 100.0);
+}

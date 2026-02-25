@@ -250,9 +250,14 @@ impl ValidatedAngle {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SimId {
     Msfs,
+    Msfs2024,
     XPlane,
     Dcs,
     AceCombat7,
+    WarThunder,
+    EliteDangerous,
+    Ksp,
+    Wingman,
     Unknown,
 }
 
@@ -260,9 +265,14 @@ impl fmt::Display for SimId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SimId::Msfs => write!(f, "MSFS"),
+            SimId::Msfs2024 => write!(f, "MSFS 2024"),
             SimId::XPlane => write!(f, "X-Plane"),
             SimId::Dcs => write!(f, "DCS"),
             SimId::AceCombat7 => write!(f, "Ace Combat 7"),
+            SimId::WarThunder => write!(f, "War Thunder"),
+            SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
+            SimId::Ksp => write!(f, "Kerbal Space Program"),
+            SimId::Wingman => write!(f, "Project Wingman"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }

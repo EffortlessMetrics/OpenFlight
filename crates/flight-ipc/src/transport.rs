@@ -30,19 +30,27 @@ use tokio::io::ReadBuf;
 
 // Transport abstractions - actual tonic transport integration would go here
 
+/// Errors produced by the transport layer
 #[derive(Debug, Error)]
 pub enum TransportError {
+    /// OS-level I/O failure (named pipe, Unix socket, etc.)
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
+    /// The requested transport is not available on this platform
     #[error("Transport not supported on this platform")]
     UnsupportedPlatform,
 
+    /// Connection attempt exceeded the configured timeout
     #[error("Connection timeout")]
     Timeout,
 
+    /// The supplied endpoint address could not be parsed or resolved
     #[error("Invalid address: {address}")]
-    InvalidAddress { address: String },
+    InvalidAddress {
+        /// The malformed address string
+        address: String,
+    },
 }
 
 /// Cross-platform transport abstraction

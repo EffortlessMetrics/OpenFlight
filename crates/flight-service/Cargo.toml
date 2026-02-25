@@ -36,7 +36,6 @@ flight-ipc = { path = "../flight-ipc" }
 flight-axis = { path = "../flight-axis" }
 flight-scheduler = { path = "../flight-scheduler" }
 flight-bus = { path = "../flight-bus" }
-flight-simconnect = { path = "../flight-simconnect" }
 flight-xplane = { path = "../flight-xplane" }
 flight-dcs-export = { path = "../flight-dcs-export" }
 flight-ac7-telemetry = { path = "../flight-ac7-telemetry" }
@@ -52,6 +51,12 @@ parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 clap.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+flight-simconnect = { path = "../flight-simconnect" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = { workspace = true }
 
 [dev-dependencies]
 tempfile.workspace = true

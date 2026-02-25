@@ -45,13 +45,19 @@ pub(crate) struct HysteresisState {
 impl RulesEvaluator {
     /// Create a new rules evaluator
     pub fn new() -> Self {
+        let min_eval_interval = std::time::Duration::from_millis(8);
+        // Initialize last_eval to a past time so the first evaluate() call
+        // is not rate-limited.
+        let last_eval = Instant::now()
+            .checked_sub(min_eval_interval)
+            .unwrap_or_else(Instant::now);
         Self {
             stack: Vec::new(),
             hysteresis_state: Vec::new(),
             variable_cache: Vec::new(),
             actions_buffer: Vec::new(),
-            last_eval: Instant::now(),
-            min_eval_interval: std::time::Duration::from_millis(8),
+            last_eval,
+            min_eval_interval,
         }
     }
 
@@ -137,9 +143,14 @@ impl RulesEvaluator {
         }
     }
 
-    /// Set minimum evaluation interval for rate limiting
+    /// Set minimum evaluation interval for rate limiting.
+    /// Resets last_eval so the very next evaluate() call is never throttled,
+    /// regardless of how recently a previous call occurred.
     pub fn set_min_eval_interval(&mut self, interval: std::time::Duration) {
         self.min_eval_interval = interval;
+        self.last_eval = Instant::now()
+            .checked_sub(interval)
+            .unwrap_or_else(Instant::now);
     }
 
     /// Test-only accessor for the evaluation stack
@@ -305,6 +316,8 @@ mod tests {
     #[test]
     fn test_bytecode_evaluation() {
         let mut evaluator = RulesEvaluator::new();
+        // Disable rate limiting so consecutive calls both execute (testing eval logic, not rate limiting)
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
 
         // Create a simple rule
         let rules_schema = RulesSchema {
@@ -337,6 +350,8 @@ mod tests {
     #[test]
     fn test_hysteresis_bytecode() {
         let mut evaluator = RulesEvaluator::new();
+        // Disable rate limiting so consecutive calls both execute (testing eval logic, not rate limiting)
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
 
         // Create rule with hysteresis
         let mut hysteresis = HashMap::new();
