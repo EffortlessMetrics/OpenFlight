@@ -922,6 +922,48 @@ jobs:
           cargo +nightly fuzz run fuzz_simconnect_fixture -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Fuzz flight-warthunder telemetry decoder (60s)
+        run: |
+          cd crates/flight-warthunder
+          cargo +nightly fuzz run fuzz_wt_telemetry -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ipc packet parser (60s)
+        run: |
+          cd crates/flight-ipc
+          cargo +nightly fuzz run fuzz_ipc_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-protocol telemetry packet parser (60s)
+        run: |
+          cd crates/flight-ac7-protocol
+          cargo +nightly fuzz run fuzz_telemetry_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-protocol JSON string parser (60s)
+        run: |
+          cd crates/flight-ac7-protocol
+          cargo +nightly fuzz run fuzz_json_str -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-input render block decoder (60s)
+        run: |
+          cd crates/flight-ac7-input
+          cargo +nightly fuzz run fuzz_render_block -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ac7-input profile applicator (60s)
+        run: |
+          cd crates/flight-ac7-input
+          cargo +nightly fuzz run fuzz_apply_profile -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-elite journal event parser (60s)
+        run: |
+          cd crates/flight-elite
+          cargo +nightly fuzz run fuzz_elite_journal -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
