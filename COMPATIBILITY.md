@@ -7,14 +7,21 @@
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
 | Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1901 | 2 | 36 | ✗ | 2 |
+| Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0126 | 8 | 32 | ✗ | 2 |
+| VPforce Rhino FFB Joystick | 0x0483 | 0xA1C0 | 6 | 32 | ✓ | 2 |
+| WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |
+| WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE62 | 6 | 50 | ✗ | 2 |
+| WinWing TFRP Rudder Pedals | 0x4098 | 0xBE64 | 3 | 0 | ✗ | 2 |
 
 ## Game Integrations
 
 | Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |
 |------|-------------|-----------|-------------------|-----|------------|
 | DCS World | Lua Export Script + UDP | ✓ | ✗ | ✗ | ✗ |
+| Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |
 | Microsoft Flight Simulator | SimConnect | ✓ | ✓ | ✓ | ✗ |
 | X-Plane 12 | UDP DataRef + Web API | ✓ | ✓ | ✗ | ✗ |
 

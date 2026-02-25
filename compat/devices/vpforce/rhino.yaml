@@ -1,0 +1,50 @@
+# VPforce Rhino FFB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "VPforce Rhino FFB Joystick"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (device MCU vendor)
+    product_id: 0xA1C0      # Rhino v2; v3 uses 0xA1C1
+    product_id_alt: 0xA1C1  # Rhino v3
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, sine, square, triangle, sawtooth_up, sawtooth_down, constant]
+    max_update_rate_hz: 500
+    torque_limit_nm: null   # Configured via VPforce companion app
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: DUAL_PRODUCT_ID
+    description: >
+      Rhino v2 and v3 share the same VID but differ in PID (0xA1C0 vs 0xA1C1).
+      OpenFlight enumerates both; behaviour is identical.
+  - id: STM_VID
+    description: >
+      VID 0x0483 belongs to STMicroelectronics (the MCU manufacturer).
+      This is normal for VPforce devices and does not indicate a generic device.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "HID report format validated by property tests and fuzz target."

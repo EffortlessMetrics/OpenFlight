@@ -1,0 +1,27 @@
+[package]
+name = "flight-simconnect-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1"
+
+[dependencies.flight-simconnect]
+path = ".."
+features = ["serde"]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_simconnect_fixture"
+path = "fuzz_targets/fuzz_simconnect_fixture.rs"
+test = false
+doc = false

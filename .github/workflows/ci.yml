@@ -886,6 +886,42 @@ jobs:
           cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Fuzz flight-xplane plugin message parser (60s)
+        run: |
+          cd crates/flight-xplane
+          cargo +nightly fuzz run fuzz_xplane_plugin_msg -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-xplane DataRef parser (60s)
+        run: |
+          cd crates/flight-xplane
+          cargo +nightly fuzz run fuzz_xplane_dataref -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ffb-vpforce HID report parser (60s)
+        run: |
+          cd crates/flight-ffb-vpforce
+          cargo +nightly fuzz run fuzz_rhino_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ffb-moza HID report parser (60s)
+        run: |
+          cd crates/flight-ffb-moza
+          cargo +nightly fuzz run fuzz_moza_ab9_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-ksp kRPC protobuf decoder (60s)
+        run: |
+          cd crates/flight-ksp
+          cargo +nightly fuzz run fuzz_ksp_response -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-simconnect session fixture parser (60s)
+        run: |
+          cd crates/flight-simconnect
+          cargo +nightly fuzz run fuzz_simconnect_fixture -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
