@@ -46,8 +46,12 @@ impl HidManager {
     pub fn new() -> Result<Self, HidError> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone)
-            unimplemented!("IOKit HID Manager not yet wired — see flight-macos-hid TODO")
+            // IOKit wiring is pending. Return a descriptive error rather than panicking so
+            // that macOS builds can still link and callers can handle gracefully.
+            // Implementation requires: IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone)
+            Err(HidError::ManagerCreateFailed {
+                reason: "IOKit HID Manager binding not yet wired — see flight-macos-hid".to_string(),
+            })
         }
         #[cfg(not(target_os = "macos"))]
         Ok(Self {
@@ -75,9 +79,8 @@ impl HidManager {
     pub fn open(&mut self) -> Result<(), HidError> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDManagerOpen(mgr_ref, kIOHIDOptionsTypeNone)
-            //       IOHIDManagerScheduleWithRunLoop(mgr_ref, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode)
-            unimplemented!()
+            // IOHIDManagerOpen / IOHIDManagerScheduleWithRunLoop not yet wired.
+            Err(HidError::OpenFailed { code: -1 })
         }
         #[cfg(not(target_os = "macos"))]
         Err(HidError::UnsupportedPlatform)
@@ -87,8 +90,8 @@ impl HidManager {
     pub fn devices(&self) -> Vec<HidDeviceInfo> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDManagerCopyDevices -> iterate CFSet -> IOHIDDeviceGetProperty
-            unimplemented!()
+            // IOHIDManagerCopyDevices not yet wired. Return empty list rather than panicking.
+            Vec::new()
         }
         #[cfg(not(target_os = "macos"))]
         Vec::new()

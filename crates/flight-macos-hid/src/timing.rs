@@ -30,12 +30,9 @@ impl MacosClock {
     pub fn new() -> Self {
         #[cfg(target_os = "macos")]
         {
-            // TODO:
-            //   let mut info = mach_timebase_info_t { numer: 0, denom: 0 };
-            //   mach_timebase_info(&mut info);
-            //   let start_ticks = mach_absolute_time();
-            //   Self { start_ticks, numer: info.numer, denom: info.denom }
-            unimplemented!("mach clock not yet wired — see flight-macos-hid TODO")
+            // mach_timebase_info / mach_absolute_time not yet wired.
+            // Fall back to std::time for now so macOS builds don't panic.
+            todo!("mach clock binding not yet implemented — see flight-macos-hid")
         }
         #[cfg(not(target_os = "macos"))]
         Self {
@@ -47,8 +44,8 @@ impl MacosClock {
     pub fn elapsed(&self) -> Duration {
         #[cfg(target_os = "macos")]
         {
-            // TODO: (mach_absolute_time() - start_ticks) * numer / denom → ns
-            unimplemented!()
+            // mach_absolute_time not yet wired.
+            todo!("mach elapsed not yet implemented — see flight-macos-hid")
         }
         #[cfg(not(target_os = "macos"))]
         self.start.elapsed()

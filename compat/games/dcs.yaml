@@ -1,0 +1,39 @@
+# DCS World — Export Script Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "DCS World"
+  id: dcs
+  developer: "Eagle Dynamics"
+
+integration:
+  mechanism: "Lua Export Script + UDP"
+  crate: flight-dcs-export
+  protocol_notes: >
+    DCS World exposes simulation data through a Lua export script that is
+    installed in Saved Games/DCS/Scripts/Export.lua. The script sends
+    structured UDP packets to OpenFlight on localhost.
+
+supported_versions:
+  - "DCS World 2.9+"
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false         # DCS does not expose a control injection API
+  force_feedback_translation: false
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false
+  fuzz_coverage: true    # flight-dcs-export/fuzz/fuzz_targets/fuzz_dcs_telemetry.rs
+  hil: false
+
+known_issues:
+  - id: EXPORT_SCRIPT_INSTALL
+    description: >
+      Users must manually install or the installer must place the Export.lua hook.
+      The installer reference documents the required file locations.

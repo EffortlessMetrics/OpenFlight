@@ -41,9 +41,8 @@ impl HidDevice {
     pub fn open(_info: &HidDeviceInfo) -> Result<Self, HidError> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDDeviceOpen(device_ref, kIOHIDOptionsTypeNone)
-            //       Set up async input queue (IOHIDQueueCreate / IOHIDQueueStart)
-            unimplemented!("IOKit device open not yet wired — see flight-macos-hid TODO")
+            // IOHIDDeviceOpen not yet wired.
+            Err(HidError::OpenFailed { code: -1 })
         }
         #[cfg(not(target_os = "macos"))]
         Err(HidError::UnsupportedPlatform)
@@ -55,8 +54,7 @@ impl HidDevice {
     pub fn read_report(&self, _buf: &mut [u8], _timeout_ms: u32) -> Result<usize, HidError> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDDeviceGetReport or async queue drain
-            unimplemented!()
+            Err(HidError::ReadTimeout { timeout_ms: _timeout_ms })
         }
         #[cfg(not(target_os = "macos"))]
         Err(HidError::UnsupportedPlatform)
@@ -66,8 +64,7 @@ impl HidDevice {
     pub fn write_report(&self, _buf: &[u8]) -> Result<(), HidError> {
         #[cfg(target_os = "macos")]
         {
-            // TODO: IOHIDDeviceSetReport(device_ref, kIOHIDReportTypeOutput, ...)
-            unimplemented!()
+            Err(HidError::WriteFailed { code: -1 })
         }
         #[cfg(not(target_os = "macos"))]
         Err(HidError::UnsupportedPlatform)

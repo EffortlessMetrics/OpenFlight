@@ -1,0 +1,42 @@
+# Honeycomb Alpha Flight Controls XPC Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Alpha Flight Controls XPC"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1901
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]        # Yoke roll and pitch only; throttle is separate Bravo unit
+    resolution_bits: 12
+  buttons: 36            # Includes hat switch, trim wheel, and magneto positions
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4       # USB FS device; slightly higher jitter budget
+
+quirks:
+  - id: MAGNETO_AS_BUTTONS
+    description: >
+      Magneto switch positions are reported as discrete buttons (not an axis).
+      OpenFlight rule engine should map button combos to magneto state.
+  - id: NO_RUDDER_AXIS
+    description: "Alpha yoke does not include rudder pedals. Pair with separate rudder pedal device."
+
+support:
+  tier: 2              # Automated tests only (no HIL rig)
+  test_coverage:
+    simulated: true
+    hil: false

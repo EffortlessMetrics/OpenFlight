@@ -986,7 +986,10 @@ impl CougarMfdWriter {
             is_responsive,
             drift_detected,
             last_check: now,
-            hid_events: Vec::new(), // TODO: Implement HID event tracking
+            hid_events: self
+                .hid_adapter
+                .check_endpoint_health(mfd_path)
+                .unwrap_or_default(),
         })
     }
 

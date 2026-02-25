@@ -1,0 +1,41 @@
+# Thrustmaster T.16000M FCS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.16000M FCS"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB10A
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, slider]
+    resolution_bits: 16   # 16-bit precision on main axes
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: STICK_DEADZONE_SMALL
+    description: "Hardware center deadzone is approximately ±1% — software deadzone not needed on most setups"
+  - id: THROTTLE_NOT_CENTERED
+    description: "Z axis (throttle) min is 0, not -1. Profile should map [0,1] range."
+
+support:
+  tier: 2              # Automated tests only (no HIL rig)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "VID/PID from publicly available USB HID specification."

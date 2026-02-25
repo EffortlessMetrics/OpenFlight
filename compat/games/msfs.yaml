@@ -1,0 +1,40 @@
+# Microsoft Flight Simulator (MSFS) — SimConnect Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Microsoft Flight Simulator"
+  id: msfs
+  developer: "Asobo Studio"
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+  sdk_version: ">=0.21"       # Minimum tested SimConnect SDK version
+
+supported_versions:
+  - "2020 (SU12+)"
+  - "2024 (all)"
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false        # Requires SimConnect_SetInputEvent (pending SDK upgrade)
+  force_feedback_translation: true
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: true
+  hil: false
+
+known_issues:
+  - id: INPUT_EVENTS_STUBBED
+    description: >
+      SimConnect_SetInputEvent is not available in the currently vendored sys crate.
+      flight-simconnect::EventManager::transmit_input_event() returns
+      EventError::NotSupported. Modern MSFS 2024 aircraft using B-var/H-var
+      controls require an SDK upgrade to fully support.
+    workaround: "Use standard client events (AXIS_ELEVATOR_SET etc.) for legacy aircraft."
