@@ -25,8 +25,43 @@ pub struct LedState {
     pub last_update: Instant,
 }
 
+/// Seam for the actual hardware write path.
+///
+/// The controller drives rate limiting, state tracking, and latency accounting.
+/// Implementations provide the low-level device write (HID report, USB control
+/// transfer, etc.).  The no-op default is used when no physical device is
+/// attached (tests, simulator-only mode).
+pub trait LedBackend: Send {
+    /// Write a single LED state to the device.
+    ///
+    /// The implementation should be non-blocking (or at most a few µs).
+    /// Transient errors may be logged but should not propagate here — the
+    /// controller will retry on the next [`LedController::execute_actions`]
+    /// call once the rate-limit window expires.
+    fn write(&mut self, target: &LedTarget, state: &LedState) -> Result<()>;
+}
+
+/// No-op LED backend — logs state changes without driving hardware.
+///
+/// Used as the default when no physical panel device is attached.
+pub struct NoopLedBackend;
+
+impl LedBackend for NoopLedBackend {
+    fn write(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
+        tracing::debug!(
+            "LED {:?}: on={}, brightness={:.2}, blink_rate={:?} (noop)",
+            target,
+            state.on,
+            state.brightness,
+            state.blink_rate,
+        );
+        Ok(())
+    }
+}
+
 /// LED controller with rate limiting and latency tracking
 pub struct LedController {
+    backend: Box<dyn LedBackend>,
     led_states: HashMap<LedTarget, LedState>,
     last_write: HashMap<LedTarget, Instant>,
     min_interval: Duration,
@@ -35,9 +70,15 @@ pub struct LedController {
 }
 
 impl LedController {
-    /// Create a new LED controller
+    /// Create a new LED controller backed by `NoopLedBackend`.
     pub fn new() -> Self {
+        Self::with_backend(Box::new(NoopLedBackend))
+    }
+
+    /// Create a new LED controller with a custom hardware backend.
+    pub fn with_backend(backend: Box<dyn LedBackend>) -> Self {
         Self {
+            backend,
             led_states: HashMap::new(),
             last_write: HashMap::new(),
             min_interval: Duration::from_millis(8), // ≥8ms min interval per requirements
@@ -175,17 +216,7 @@ impl LedController {
     fn write_led_state(&mut self, target: &LedTarget, state: &LedState) -> Result<()> {
         let write_start = Instant::now();
 
-        // Stub implementation - would write to actual hardware
-        tracing::debug!(
-            "LED {:?}: on={}, brightness={:.2}, blink_rate={:?}",
-            target,
-            state.on,
-            state.brightness,
-            state.blink_rate
-        );
-
-        // Simulate hardware write time (in real implementation, this would be actual HID write)
-        std::thread::sleep(Duration::from_micros(100)); // Simulate 100μs write time
+        self.backend.write(target, state)?;
 
         let write_latency = write_start.elapsed();
 
@@ -203,11 +234,6 @@ impl LedController {
                 target
             );
         }
-
-        // TODO: Implement actual hardware communication
-        // - HID writes for panel LEDs
-        // - Rate limiting enforcement
-        // - Error handling for hardware failures
 
         Ok(())
     }

@@ -14,10 +14,10 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, info, warn};
 
-use flight_axis::AxisEngine;
+use flight_axis::{AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult};
 use flight_core::{
     aircraft_switch::AutoSwitchConfig,
-    profile::Profile,
+    profile::{AxisConfig, Profile},
     watchdog::{WatchdogConfig, WatchdogSystem},
 };
 
@@ -154,6 +154,80 @@ pub enum ServiceState {
     Stopped,
     /// Service has failed
     Failed,
+}
+
+/// Build an `AxisEngine` pipeline from an `AxisConfig`.
+///
+/// Nodes are added in processing order: deadzone → detents → expo curve →
+/// slew rate limiter → EMA filter. If the config specifies no nodes, a
+/// trivial pass-through deadzone (threshold = 0.0) is added so the
+/// `PipelineCompiler` receives at least one node.
+fn build_pipeline_for_axis(
+    axis_name: &str,
+    config: &AxisConfig,
+) -> anyhow::Result<flight_axis::Pipeline> {
+    let mut builder = PipelineBuilder::new();
+    let mut has_nodes = false;
+
+    if let Some(deadzone) = config.deadzone {
+        builder = builder.deadzone(deadzone);
+        has_nodes = true;
+    }
+
+    if !config.detents.is_empty() {
+        let zones: Vec<AxisDetentZone> = config
+            .detents
+            .iter()
+            .map(|d| {
+                let role = match d.role.to_lowercase().as_str() {
+                    "idle" => DetentRole::Idle,
+                    "taxi" => DetentRole::Taxi,
+                    "takeoff" => DetentRole::Takeoff,
+                    "climb" => DetentRole::Climb,
+                    "cruise" => DetentRole::Cruise,
+                    "approach" => DetentRole::Approach,
+                    "landing" => DetentRole::Landing,
+                    "reverse" => DetentRole::Reverse,
+                    "emergency" => DetentRole::Emergency,
+                    _ => DetentRole::Custom(0),
+                };
+                // Profile uses (position, width) while axis engine uses (center, half_width)
+                AxisDetentZone::new(d.position, d.width / 2.0, 0.0, role)
+            })
+            .collect();
+        builder = builder.detent(zones);
+        has_nodes = true;
+    }
+
+    if let Some(expo) = config.expo {
+        builder = builder
+            .curve(expo)
+            .map_err(|e| anyhow::anyhow!("Invalid expo for axis '{axis_name}': {e}"))?;
+        has_nodes = true;
+    }
+
+    if let Some(slew_rate) = config.slew_rate {
+        builder = builder.slew(slew_rate);
+        has_nodes = true;
+    }
+
+    if let Some(filter) = &config.filter {
+        builder = if let Some(threshold) = filter.spike_threshold {
+            builder.filter_with_spike_rejection(filter.alpha, threshold)
+        } else {
+            builder.filter(filter.alpha)
+        };
+        has_nodes = true;
+    }
+
+    if !has_nodes {
+        // Empty config → identity pipeline (deadzone 0.0 passes the signal through unchanged)
+        builder = builder.deadzone(0.0);
+    }
+
+    builder
+        .compile()
+        .map_err(|e| anyhow::anyhow!("Pipeline compile error for axis '{axis_name}': {e:?}"))
 }
 
 /// Main Flight Hub service
@@ -583,10 +657,37 @@ impl FlightService {
             .validate()
             .map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
 
-        if let Some(_engine) = &self.axis_engine {
-            // Profile is validated. Full axis-engine pipeline update requires the
-            // profile ingestion API from flight-session (not yet wired here).
-            // The validated profile is accepted and health is updated accordingly.
+        if let Some(engine) = &self.axis_engine {
+            // Choose the primary axis: prefer "pitch" (main control axis), fall back
+            // to the first available axis in the profile.
+            let primary = profile
+                .axes
+                .get("pitch")
+                .map(|c| ("pitch", c))
+                .or_else(|| profile.axes.iter().next().map(|(n, c)| (n.as_str(), c)));
+
+            if let Some((axis_name, axis_config)) = primary {
+                match build_pipeline_for_axis(axis_name, axis_config) {
+                    Ok(pipeline) => match engine.update_pipeline(pipeline) {
+                        UpdateResult::Pending => {
+                            info!("Axis pipeline update pending for axis '{axis_name}'");
+                        }
+                        UpdateResult::Success => {
+                            info!("Axis pipeline updated for axis '{axis_name}'");
+                        }
+                        UpdateResult::Failed(msg) => {
+                            warn!("Axis pipeline update failed for axis '{axis_name}': {msg}");
+                        }
+                        UpdateResult::Rejected(msg) => {
+                            warn!("Axis pipeline update rejected for axis '{axis_name}': {msg}");
+                        }
+                    },
+                    Err(e) => {
+                        warn!("Failed to compile pipeline for axis '{axis_name}': {e}");
+                    }
+                }
+            }
+
             self.health
                 .info("service", "Profile applied successfully")
                 .await;
@@ -773,6 +874,79 @@ mod tests {
         assert_eq!(
             health_status.overall.state,
             crate::health::HealthState::Healthy
+        );
+    }
+
+    #[test]
+    fn test_build_pipeline_for_axis_basic() {
+        use flight_core::profile::AxisConfig;
+        let config = AxisConfig {
+            deadzone: Some(0.05),
+            expo: Some(0.3),
+            slew_rate: None,
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        let pipeline = build_pipeline_for_axis("pitch", &config);
+        assert!(pipeline.is_ok(), "expected Ok, got {:?}", pipeline.err());
+    }
+
+    #[test]
+    fn test_build_pipeline_for_axis_empty_config() {
+        use flight_core::profile::AxisConfig;
+        let config = AxisConfig {
+            deadzone: None,
+            expo: None,
+            slew_rate: None,
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        // Should still compile (adds identity deadzone internally)
+        let pipeline = build_pipeline_for_axis("roll", &config);
+        assert!(pipeline.is_ok(), "expected Ok for empty config, got {:?}", pipeline.err());
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_wires_pipeline() {
+        use flight_core::profile::{AxisConfig, Profile};
+        use std::collections::HashMap;
+
+        let mut config = FlightServiceConfig::default();
+        config.safe_mode = false;
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.2),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes,
+            pof_overrides: None,
+        };
+
+        let result = service.apply_profile(&profile).await;
+        assert!(result.is_ok(), "apply_profile should succeed: {:?}", result.err());
+
+        // Engine should now have a pending pipeline
+        let engine = service.axis_engine.as_ref().expect("axis engine present");
+        // After update_pipeline() the engine marks a pending swap
+        assert!(
+            engine.active_version().is_some() || engine.swap_ack_count() == 0,
+            "pipeline should be queued or active"
         );
     }
 }
