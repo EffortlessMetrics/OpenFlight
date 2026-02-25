@@ -846,4 +846,118 @@ mod tests {
         assert_eq!(unmapped.total_ac, 3);
         assert_eq!(metrics.microcrate_total, 2);
     }
+
+    #[test]
+    fn coverage_percent_zero_denominator_returns_zero() {
+        assert_eq!(coverage_percent(5, 0), 0.0);
+        assert_eq!(coverage_percent(0, 0), 0.0);
+    }
+
+    #[test]
+    fn coverage_percent_full_coverage() {
+        assert!((coverage_percent(10, 10) - 100.0).abs() < 0.01);
+        assert!((coverage_percent(1, 4) - 25.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn is_crate_name_candidate_valid_and_invalid() {
+        assert!(is_crate_name_candidate("flight-core"));
+        assert!(is_crate_name_candidate("xtask"));
+        assert!(!is_crate_name_candidate(""));
+        assert!(!is_crate_name_candidate("1invalid"));
+        assert!(!is_crate_name_candidate("-starts-with-dash"));
+    }
+
+    #[test]
+    fn normalize_crate_name_strips_quotes_and_underscores() {
+        assert_eq!(normalize_crate_name("\"flight_core\""), "flight-core");
+        assert_eq!(normalize_crate_name("flight_axis"), "flight-axis");
+        assert_eq!(normalize_crate_name("`xtask`"), "xtask");
+    }
+
+    #[test]
+    fn parse_tags_from_line_extracts_tags() {
+        let tags = parse_tags_from_line("@AC-001 @AC-002 @smoke");
+        assert_eq!(tags, vec!["AC-001", "AC-002", "smoke"]);
+
+        let no_tags = parse_tags_from_line("Scenario: something");
+        assert!(no_tags.is_empty());
+    }
+
+    #[test]
+    fn is_scenario_header_recognises_scenario_types() {
+        assert!(is_scenario_header("Scenario: do something"));
+        assert!(is_scenario_header("Scenario Outline: parameterized test"));
+        assert!(!is_scenario_header("Feature: some feature"));
+        assert!(!is_scenario_header("Given something happens"));
+    }
+
+    #[test]
+    fn extract_crates_from_command_parses_p_flag() {
+        let crates = extract_crates_from_command("cargo test -p flight-axis --lib");
+        assert!(crates.contains("flight-axis"));
+
+        let crates2 = extract_crates_from_command("cargo test --package flight-bus");
+        assert!(crates2.contains("flight-bus"));
+    }
+
+    #[test]
+    fn extract_crates_from_reference_cmd_prefix() {
+        let crates = extract_crates_from_reference("cmd:cargo test -p flight-rules --lib");
+        assert!(crates.contains("flight-rules"), "{crates:?}");
+    }
+
+    #[test]
+    fn extract_crates_from_reference_double_colon_notation() {
+        let crates = extract_crates_from_reference("flight_core::ProfileManager");
+        assert!(crates.contains("flight-core"), "{crates:?}");
+    }
+
+    #[test]
+    fn coverage_status_compute_all_branches() {
+        use RequirementStatus::*;
+        assert_eq!(
+            CoverageStatus::compute(&Tested, true, true),
+            CoverageStatus::Complete
+        );
+        assert_eq!(
+            CoverageStatus::compute(&Implemented, true, false),
+            CoverageStatus::NeedsGherkin
+        );
+        assert_eq!(
+            CoverageStatus::compute(&Implemented, false, false),
+            CoverageStatus::NeedsTests
+        );
+        assert_eq!(
+            CoverageStatus::compute(&Draft, false, false),
+            CoverageStatus::Draft
+        );
+        // Deprecated with tests but no Gherkin → Incomplete
+        assert_eq!(
+            CoverageStatus::compute(&Deprecated, false, false),
+            CoverageStatus::Incomplete
+        );
+    }
+
+    #[test]
+    fn bdd_traceability_row_coverage_methods() {
+        let row = sample_row("flight-axis", 4, 4, 2, 2);
+        assert!(row.is_fully_tested());
+        assert!(!row.is_fully_gherkin_covered());
+        assert!(!row.is_fully_both_covered());
+        assert!((row.test_coverage_percent() - 100.0).abs() < 0.01);
+        assert!((row.gherkin_coverage_percent() - 50.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn bdd_scenario_ac_tags_filters_non_ac_tags() {
+        let scenario = BddScenario {
+            file_path: std::path::PathBuf::from("test.feature"),
+            line_number: 1,
+            name: "test scenario".to_string(),
+            tags: vec!["AC-001".to_string(), "smoke".to_string(), "AC-003".to_string()],
+        };
+        let ac_tags = scenario.ac_tags();
+        assert_eq!(ac_tags, vec!["AC-001", "AC-003"]);
+    }
 }

@@ -69,4 +69,47 @@ mod tests {
         // Very high attempt should hit the max cap
         assert_eq!(s.next_backoff(20), Duration::from_millis(500));
     }
+
+    #[test]
+    fn adapter_state_all_variants_debug() {
+        let states = [
+            AdapterState::Disconnected,
+            AdapterState::Connecting,
+            AdapterState::Connected,
+            AdapterState::DetectingAircraft,
+            AdapterState::Active,
+            AdapterState::Error,
+        ];
+        for s in &states {
+            // All variants can be debug-formatted without panicking
+            let _ = format!("{:?}", s);
+        }
+        // Spot-check copy semantics
+        let a = AdapterState::Active;
+        let b = a;
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn reconnection_strategy_initial_backoff_on_first_attempt() {
+        use std::time::Duration;
+        let s = ReconnectionStrategy::new(
+            5,
+            Duration::from_millis(200),
+            Duration::from_millis(2000),
+        );
+        assert_eq!(s.next_backoff(1), Duration::from_millis(200));
+        assert_eq!(s.max_attempts(), 5);
+        assert_eq!(s.initial_backoff(), Duration::from_millis(200));
+        assert_eq!(s.max_backoff(), Duration::from_millis(2000));
+    }
+
+    #[test]
+    fn adapter_metrics_total_updates_increment() {
+        let mut m = AdapterMetrics::new();
+        for _ in 0..5 {
+            m.record_update();
+        }
+        assert_eq!(m.total_updates, 5);
+    }
 }
