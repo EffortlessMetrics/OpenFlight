@@ -70,7 +70,7 @@ pub struct BlackboxSample {
 }
 
 /// Safety state for blackbox samples
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BlackboxSafetyState {
     /// Safe torque mode (limited envelope)
     SafeTorque,
@@ -79,13 +79,8 @@ pub enum BlackboxSafetyState {
     /// Faulted state (zero torque)
     Faulted,
     /// Unknown/not available
+    #[default]
     Unknown,
-}
-
-impl Default for BlackboxSafetyState {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl std::fmt::Display for BlackboxSafetyState {

@@ -108,7 +108,7 @@ pub fn serialize_effect(effect: FfbEffect) -> [u8; FFB_REPORT_LEN] {
 
 /// Returns `true` if the effect magnitude is within a safe operating range.
 pub fn is_magnitude_safe(magnitude: f32) -> bool {
-    magnitude >= 0.0 && magnitude <= 1.0
+    (0.0f32..=1.0).contains(&magnitude)
 }
 
 #[cfg(test)]

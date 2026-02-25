@@ -129,7 +129,10 @@ proptest! {
 
 #[test]
 fn empty_indicators_gives_empty_snapshot() {
-    let ind = WtIndicators { valid: Some(true), ..Default::default() };
+    let ind = WtIndicators {
+        valid: Some(true),
+        ..Default::default()
+    };
     let snap = adapter().convert_indicators(&ind).unwrap();
     assert!(!snap.validity.safe_for_ffb);
     assert!(!snap.validity.attitude_valid);
@@ -140,7 +143,11 @@ fn empty_indicators_gives_empty_snapshot() {
 #[test]
 fn ias_unit_conversion_400kmh() {
     // 400 km/h → 111.111... m/s
-    let ind = WtIndicators { valid: Some(true), ias_kmh: Some(400.0), ..Default::default() };
+    let ind = WtIndicators {
+        valid: Some(true),
+        ias_kmh: Some(400.0),
+        ..Default::default()
+    };
     let snap = adapter().convert_indicators(&ind).unwrap();
     let ias_mps = snap.kinematics.ias.to_mps();
     assert!((ias_mps - 111.111).abs() < 0.01, "got {ias_mps}");
@@ -149,7 +156,11 @@ fn ias_unit_conversion_400kmh() {
 #[test]
 fn altitude_unit_conversion_1000m() {
     // 1000 m → 3280.84 ft
-    let ind = WtIndicators { valid: Some(true), altitude: Some(1000.0), ..Default::default() };
+    let ind = WtIndicators {
+        valid: Some(true),
+        altitude: Some(1000.0),
+        ..Default::default()
+    };
     let snap = adapter().convert_indicators(&ind).unwrap();
     let ft = snap.environment.altitude;
     assert!((ft - 3280.84).abs() < 1.0, "got {ft}");

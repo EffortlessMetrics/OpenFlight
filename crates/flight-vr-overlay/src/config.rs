@@ -6,12 +6,13 @@
 use serde::{Deserialize, Serialize};
 
 /// Position anchor for the overlay panel relative to the cockpit origin.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnchorPoint {
     /// Centred in front of the pilot at eye height.
     CentreFront,
     /// Lower-left quadrant (ideal for status readouts).
+    #[default]
     LowerLeft,
     /// Lower-right quadrant.
     LowerRight,
@@ -19,12 +20,6 @@ pub enum AnchorPoint {
     UpperLeft,
     /// Upper-right quadrant.
     UpperRight,
-}
-
-impl Default for AnchorPoint {
-    fn default() -> Self {
-        Self::LowerLeft
-    }
 }
 
 /// Configuration for the VR overlay.

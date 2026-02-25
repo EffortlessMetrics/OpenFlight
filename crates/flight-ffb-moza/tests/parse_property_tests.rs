@@ -7,7 +7,13 @@ use flight_ffb_moza::input::{AB9_REPORT_LEN, MOZA_VENDOR_ID, parse_ab9_report};
 use proptest::prelude::*;
 
 /// Build a valid AB9 report from axis values (i16 raw) + button mask.
-fn make_ab9_report(roll: i16, pitch: i16, throttle_raw: i16, twist: i16, mask: u16) -> [u8; AB9_REPORT_LEN] {
+fn make_ab9_report(
+    roll: i16,
+    pitch: i16,
+    throttle_raw: i16,
+    twist: i16,
+    mask: u16,
+) -> [u8; AB9_REPORT_LEN] {
     let mut r = [0u8; AB9_REPORT_LEN];
     r[0] = 0x01;
     r[1..3].copy_from_slice(&roll.to_le_bytes());
@@ -93,7 +99,11 @@ fn zero_report_gives_neutral_axes() {
     let s = parse_ab9_report(&r).unwrap();
     assert!(s.axes.roll.abs() < 1e-4, "roll={}", s.axes.roll);
     assert!(s.axes.pitch.abs() < 1e-4, "pitch={}", s.axes.pitch);
-    assert!((s.axes.throttle - 0.5).abs() < 1e-3, "throttle={}", s.axes.throttle);
+    assert!(
+        (s.axes.throttle - 0.5).abs() < 1e-3,
+        "throttle={}",
+        s.axes.throttle
+    );
     assert!(s.axes.twist.abs() < 1e-4, "twist={}", s.axes.twist);
     assert_eq!(s.buttons.mask, 0);
 }

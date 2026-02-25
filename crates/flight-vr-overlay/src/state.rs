@@ -31,10 +31,11 @@ impl AxisStatus {
 }
 
 /// Simulator connection state shown in the overlay header.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SimConnectionStatus {
     /// No simulator detected.
+    #[default]
     Disconnected,
     /// Connection handshake in progress.
     Connecting,
@@ -42,12 +43,6 @@ pub enum SimConnectionStatus {
     Connected,
     /// Simulator paused (no telemetry updates).
     Paused,
-}
-
-impl Default for SimConnectionStatus {
-    fn default() -> Self {
-        Self::Disconnected
-    }
 }
 
 impl std::fmt::Display for SimConnectionStatus {

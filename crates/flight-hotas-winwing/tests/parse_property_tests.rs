@@ -113,11 +113,7 @@ proptest! {
 
 // ─── Rudder Pedals ────────────────────────────────────────────────────────────
 
-fn make_rudder_report(
-    rudder: i16,
-    brake_left: u16,
-    brake_right: u16,
-) -> [u8; RUDDER_REPORT_LEN] {
+fn make_rudder_report(rudder: i16, brake_left: u16, brake_right: u16) -> [u8; RUDDER_REPORT_LEN] {
     let mut r = [0u8; RUDDER_REPORT_LEN];
     r[0] = 0x03;
     r[1..3].copy_from_slice(&rudder.to_le_bytes());

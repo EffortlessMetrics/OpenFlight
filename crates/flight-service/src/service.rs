@@ -577,7 +577,9 @@ impl FlightService {
         info!("Applying profile: {:?}", profile);
 
         // Validate profile structure first; surface any schema/bounds errors early
-        profile.validate().map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
+        profile
+            .validate()
+            .map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
 
         if let Some(_engine) = &self.axis_engine {
             // Profile is validated. Full axis-engine pipeline update requires the

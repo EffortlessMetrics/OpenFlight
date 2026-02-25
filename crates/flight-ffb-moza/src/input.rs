@@ -43,7 +43,7 @@ pub struct Ab9Buttons {
 
 impl Ab9Buttons {
     pub fn is_pressed(&self, n: u8) -> bool {
-        n >= 1 && n <= 16 && (self.mask >> (n - 1)) & 1 == 1
+        (1u8..=16).contains(&n) && (self.mask >> (n - 1)) & 1 == 1
     }
 }
 

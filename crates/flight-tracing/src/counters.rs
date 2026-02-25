@@ -616,8 +616,15 @@ mod tests {
         let snapshot = counters.snapshot();
         assert_eq!(snapshot.total_hid_writes, 1000);
         // p99 index = (1000 * 99) / 100 = 990 — should land in the 500μs bucket
-        assert!(snapshot.hid.p99_time_ns >= 500_000, "p99 should be ≥ 500μs, got {}ns", snapshot.hid.p99_time_ns);
+        assert!(
+            snapshot.hid.p99_time_ns >= 500_000,
+            "p99 should be ≥ 500μs, got {}ns",
+            snapshot.hid.p99_time_ns
+        );
         // avg should be dominated by the fast writes
-        assert!(snapshot.hid.avg_time_ns < 100_000, "avg should be well below 100μs");
+        assert!(
+            snapshot.hid.avg_time_ns < 100_000,
+            "avg should be well below 100μs"
+        );
     }
 }

@@ -460,11 +460,15 @@ mod tests {
         let target = "RATE_TEST";
 
         // First write turns LED on
-        let on_action = Action::LedOn { target: target.to_string() };
+        let on_action = Action::LedOn {
+            target: target.to_string(),
+        };
         controller.execute_actions(&[on_action]).unwrap();
 
         // Immediate second write tries to turn LED off — should be rate-limited (skipped)
-        let off_action = Action::LedOff { target: target.to_string() };
+        let off_action = Action::LedOff {
+            target: target.to_string(),
+        };
         controller.execute_actions(&[off_action]).unwrap();
 
         // Verify LED is still ON (the off write was rate-limited)
@@ -477,7 +481,9 @@ mod tests {
 
         // After min_interval elapses, the off write should execute
         std::thread::sleep(min_interval + Duration::from_millis(1));
-        let off_action2 = Action::LedOff { target: target.to_string() };
+        let off_action2 = Action::LedOff {
+            target: target.to_string(),
+        };
         controller.execute_actions(&[off_action2]).unwrap();
 
         let state = controller.get_led_state(&led_target);

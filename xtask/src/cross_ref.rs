@@ -19,6 +19,7 @@ use crate::front_matter::FrontMatter;
 #[derive(Debug, Clone)]
 pub struct WorkspaceMember {
     pub name: String,
+    #[allow(dead_code)]
     pub manifest_path: PathBuf,
 }
 
@@ -424,6 +425,7 @@ pub(crate) fn load_workspace_members() -> Result<HashSet<String>> {
 ///
 /// This intentionally excludes `xtask`, `specs`, and other non-crate workspace members
 /// (such as examples) from microcrate-level checks and metrics.
+#[allow(dead_code)]
 pub(crate) fn load_workspace_crate_members_with_manifests() -> Result<Vec<WorkspaceMember>> {
     Ok(load_workspace_members_with_manifests()?
         .into_iter()
@@ -432,6 +434,7 @@ pub(crate) fn load_workspace_crate_members_with_manifests() -> Result<Vec<Worksp
 }
 
 /// Load microcrate names from the workspace members under `crates/`.
+#[allow(dead_code)]
 pub(crate) fn load_workspace_crate_members() -> Result<HashSet<String>> {
     Ok(load_workspace_crate_members_with_manifests()?
         .into_iter()
@@ -493,6 +496,8 @@ pub(crate) fn load_workspace_members_with_manifests() -> Result<Vec<WorkspaceMem
     Ok(members)
 }
 
+/// Returns `true` if the manifest path is under a `crates/` directory.
+#[allow(dead_code)]
 pub(crate) fn is_crate_manifest_path(manifest_path: &Path) -> bool {
     manifest_path
         .parent()
@@ -503,12 +508,12 @@ pub(crate) fn is_crate_manifest_path(manifest_path: &Path) -> bool {
 
 fn extract_workspace_member_crate_name(workspace_root: &Path, member_path: &str) -> Option<String> {
     let manifest_path = workspace_root.join(member_path).join("Cargo.toml");
-    if manifest_path.exists() {
-        if let Ok(manifest_content) = std::fs::read_to_string(&manifest_path) {
-            let package_name_re = Regex::new(r#"(?m)^\s*name\s*=\s*\"([^\"]+)\""#).unwrap();
-            if let Some(capture) = package_name_re.captures(&manifest_content) {
-                return Some(capture[1].to_string());
-            }
+    if manifest_path.exists()
+        && let Ok(manifest_content) = std::fs::read_to_string(&manifest_path)
+    {
+        let package_name_re = Regex::new(r#"(?m)^\s*name\s*=\s*\"([^\"]+)\""#).unwrap();
+        if let Some(capture) = package_name_re.captures(&manifest_content) {
+            return Some(capture[1].to_string());
         }
     }
 

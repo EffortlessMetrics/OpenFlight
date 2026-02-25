@@ -77,21 +77,19 @@ pub fn validate_for_publish(profile: &Profile, title: &str) -> Result<(), String
     }
     // Validate each axis config
     for (name, cfg) in &profile.axes {
-        if let Some(dz) = cfg.deadzone {
-            if !(0.0..=0.5).contains(&dz) {
-                return Err(format!(
-                    "axis '{}': deadzone {dz} out of range [0.0, 0.5]",
-                    name
-                ));
-            }
+        if cfg.deadzone.is_some_and(|dz| !(0.0..=0.5).contains(&dz)) {
+            return Err(format!(
+                "axis '{}': deadzone {} out of range [0.0, 0.5]",
+                name,
+                cfg.deadzone.unwrap()
+            ));
         }
-        if let Some(expo) = cfg.expo {
-            if !(0.0..=1.0).contains(&expo) {
-                return Err(format!(
-                    "axis '{}': expo {expo} out of range [0.0, 1.0]",
-                    name
-                ));
-            }
+        if cfg.expo.is_some_and(|expo| !(0.0..=1.0).contains(&expo)) {
+            return Err(format!(
+                "axis '{}': expo {} out of range [0.0, 1.0]",
+                name,
+                cfg.expo.unwrap()
+            ));
         }
     }
     Ok(())

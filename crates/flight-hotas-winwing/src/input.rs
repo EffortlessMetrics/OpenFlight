@@ -55,7 +55,7 @@ pub struct ThrottleButtons {
 
 impl ThrottleButtons {
     pub fn is_pressed(&self, n: u8) -> bool {
-        n >= 1 && n <= 50 && (self.mask >> (n - 1)) & 1 == 1
+        (1u8..=50).contains(&n) && (self.mask >> (n - 1)) & 1 == 1
     }
 }
 
@@ -129,7 +129,7 @@ pub struct StickButtons {
 
 impl StickButtons {
     pub fn is_pressed(&self, n: u8) -> bool {
-        n >= 1 && n <= 20 && (self.mask >> (n - 1)) & 1 == 1
+        (1u8..=20).contains(&n) && (self.mask >> (n - 1)) & 1 == 1
     }
 }
 

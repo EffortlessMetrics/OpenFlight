@@ -50,7 +50,8 @@ impl HidManager {
             // that macOS builds can still link and callers can handle gracefully.
             // Implementation requires: IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone)
             Err(HidError::ManagerCreateFailed {
-                reason: "IOKit HID Manager binding not yet wired — see flight-macos-hid".to_string(),
+                reason: "IOKit HID Manager binding not yet wired — see flight-macos-hid"
+                    .to_string(),
             })
         }
         #[cfg(not(target_os = "macos"))]

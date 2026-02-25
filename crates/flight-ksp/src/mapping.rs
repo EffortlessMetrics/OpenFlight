@@ -85,12 +85,12 @@ pub fn apply_telemetry(snapshot: &mut BusSnapshot, raw: &KspRawTelemetry) {
     }
 
     let speed_kt = (raw.speed_mps * MPS_TO_KNOTS) as f32;
-    if let Ok(tas) = ValidatedSpeed::new_knots(speed_kt.max(0.0).min(1000.0)) {
+    if let Ok(tas) = ValidatedSpeed::new_knots(speed_kt.clamp(0.0, 1000.0)) {
         snapshot.kinematics.tas = tas;
     }
 
     let ias_kt = (raw.ias_mps * MPS_TO_KNOTS) as f32;
-    if let Ok(ias) = ValidatedSpeed::new_knots(ias_kt.max(0.0).min(1000.0)) {
+    if let Ok(ias) = ValidatedSpeed::new_knots(ias_kt.clamp(0.0, 1000.0)) {
         snapshot.kinematics.ias = ias;
     }
 

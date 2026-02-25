@@ -628,8 +628,8 @@ impl FfbPipeline {
             self.state = FfbPipelineState::Active;
         } else {
             // Check if fault ramp completed
-            if self.fault_detection_time.is_some() {
-                let elapsed = self.fault_detection_time.unwrap().elapsed();
+            if let Some(fault_time) = self.fault_detection_time {
+                let elapsed = fault_time.elapsed();
                 if elapsed >= self.config.fault_ramp_time {
                     // Ramp complete, stay in idle until cleared
                     self.state = FfbPipelineState::Idle;

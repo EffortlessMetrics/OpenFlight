@@ -77,12 +77,11 @@ pub unsafe extern "C" fn XPluginStart(
 /// Called from C with no arguments.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn XPluginStop() {
-    if let Some(cell) = BRIDGE.get() {
-        if let Ok(mut guard) = cell.lock() {
-            if let Some(bridge) = guard.take() {
-                bridge.shutdown();
-            }
-        }
+    if let Some(cell) = BRIDGE.get()
+        && let Ok(mut guard) = cell.lock()
+        && let Some(bridge) = guard.take()
+    {
+        bridge.shutdown();
     }
 }
 
@@ -92,16 +91,16 @@ pub unsafe extern "C" fn XPluginStop() {
 /// Called from C with no arguments.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn XPluginEnable() -> i32 {
-    if let Some(cell) = BRIDGE.get() {
-        if let Ok(mut guard) = cell.lock() {
-            match Bridge::start() {
-                Ok(b) => {
-                    *guard = Some(b);
-                    return 1;
-                }
-                Err(e) => {
-                    eprintln!("[FlightHub] Failed to start bridge: {}", e);
-                }
+    if let Some(cell) = BRIDGE.get()
+        && let Ok(mut guard) = cell.lock()
+    {
+        match Bridge::start() {
+            Ok(b) => {
+                *guard = Some(b);
+                return 1;
+            }
+            Err(e) => {
+                eprintln!("[FlightHub] Failed to start bridge: {}", e);
             }
         }
     }
@@ -114,12 +113,11 @@ pub unsafe extern "C" fn XPluginEnable() -> i32 {
 /// Called from C with no arguments.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn XPluginDisable() {
-    if let Some(cell) = BRIDGE.get() {
-        if let Ok(mut guard) = cell.lock() {
-            if let Some(bridge) = guard.take() {
-                bridge.shutdown();
-            }
-        }
+    if let Some(cell) = BRIDGE.get()
+        && let Ok(mut guard) = cell.lock()
+        && let Some(bridge) = guard.take()
+    {
+        bridge.shutdown();
     }
 }
 

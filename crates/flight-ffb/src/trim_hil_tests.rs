@@ -939,8 +939,7 @@ impl HilTrimTestSuite {
 
             // Verify we ran for a reasonable duration (scale requirements to max_test_duration)
             let scale = (self.config.max_test_duration.as_secs_f32() / 30.0).min(1.0);
-            let required_duration =
-                Duration::from_secs_f32((10.0_f32 * scale).max(1.0));
+            let required_duration = Duration::from_secs_f32((10.0_f32 * scale).max(1.0));
             let required_samples = ((1000.0_f32 * scale) as usize).max(10);
             let duration_ok = start_time.elapsed() >= required_duration;
             let sample_count_ok = sample_count > required_samples;

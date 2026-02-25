@@ -287,9 +287,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" >= ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
             return Ok(Condition::Compare {
                 variable,
                 operator: CompareOp::GreaterEqual,
@@ -300,9 +300,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" <= ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 4..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
             return Ok(Condition::Compare {
                 variable,
                 operator: CompareOp::LessEqual,
@@ -351,9 +351,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" > ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
             return Ok(Condition::Compare {
                 variable,
                 operator: CompareOp::Greater,
@@ -364,9 +364,9 @@ impl RulesCompiler {
         if let Some(pos) = condition_str.find(" < ") {
             let variable = condition_str[..pos].trim().to_string();
             let value_str = condition_str[pos + 3..].trim();
-            let value = value_str.parse::<f32>().map_err(|_| {
-                RulesError::Validation(format!("Invalid number: {}", value_str))
-            })?;
+            let value = value_str
+                .parse::<f32>()
+                .map_err(|_| RulesError::Validation(format!("Invalid number: {}", value_str)))?;
             return Ok(Condition::Compare {
                 variable,
                 operator: CompareOp::Less,
@@ -776,19 +776,43 @@ mod tests {
 
         // >=
         let c = compiler.parse_condition("ias >= 200").unwrap();
-        assert!(matches!(c, Condition::Compare { operator: CompareOp::GreaterEqual, .. }));
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::GreaterEqual,
+                ..
+            }
+        ));
 
         // <=
         let c = compiler.parse_condition("flaps <= 0.5").unwrap();
-        assert!(matches!(c, Condition::Compare { operator: CompareOp::LessEqual, .. }));
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::LessEqual,
+                ..
+            }
+        ));
 
         // !=
         let c = compiler.parse_condition("gear != 1").unwrap();
-        assert!(matches!(c, Condition::Compare { operator: CompareOp::NotEqual, .. }));
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::NotEqual,
+                ..
+            }
+        ));
 
         // <
         let c = compiler.parse_condition("altitude < 500").unwrap();
-        assert!(matches!(c, Condition::Compare { operator: CompareOp::Less, .. }));
+        assert!(matches!(
+            c,
+            Condition::Compare {
+                operator: CompareOp::Less,
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -798,8 +822,16 @@ mod tests {
         match c {
             Condition::And(parts) => {
                 assert_eq!(parts.len(), 2);
-                assert!(matches!(&parts[0], Condition::Boolean { variable, .. } if variable == "gear_down"));
-                assert!(matches!(&parts[1], Condition::Compare { operator: CompareOp::Less, .. }));
+                assert!(
+                    matches!(&parts[0], Condition::Boolean { variable, .. } if variable == "gear_down")
+                );
+                assert!(matches!(
+                    &parts[1],
+                    Condition::Compare {
+                        operator: CompareOp::Less,
+                        ..
+                    }
+                ));
             }
             other => panic!("Expected And, got {:?}", other),
         }
@@ -808,7 +840,9 @@ mod tests {
     #[test]
     fn test_compound_or_condition() {
         let compiler = RulesCompiler::new(HashMap::new());
-        let c = compiler.parse_condition("gear_down or flaps >= 0.5").unwrap();
+        let c = compiler
+            .parse_condition("gear_down or flaps >= 0.5")
+            .unwrap();
         match c {
             Condition::Or(parts) => {
                 assert_eq!(parts.len(), 2);
@@ -820,7 +854,9 @@ mod tests {
     #[test]
     fn test_panel_blink_action() {
         let compiler = RulesCompiler::new(HashMap::new());
-        let a = compiler.parse_action("led.panel('STALL').blink(rate_hz=4)").unwrap();
+        let a = compiler
+            .parse_action("led.panel('STALL').blink(rate_hz=4)")
+            .unwrap();
         match a {
             Action::LedBlink { target, rate_hz } => {
                 assert_eq!(target, "STALL");
@@ -833,7 +869,9 @@ mod tests {
     #[test]
     fn test_panel_brightness_action() {
         let compiler = RulesCompiler::new(HashMap::new());
-        let a = compiler.parse_action("led.panel('WARN').brightness(0.75)").unwrap();
+        let a = compiler
+            .parse_action("led.panel('WARN').brightness(0.75)")
+            .unwrap();
         match a {
             Action::LedBrightness { target, brightness } => {
                 assert_eq!(target, "WARN");
@@ -857,9 +895,13 @@ mod tests {
         // Ensure ">=" is not parsed as ">" with "=" as part of value
         let compiler = RulesCompiler::new(HashMap::new());
         let c = compiler.parse_condition("pitch >= 10").unwrap();
-        assert!(matches!(c, Condition::Compare { operator: CompareOp::GreaterEqual, value, .. } if (value - 10.0).abs() < 0.001));
+        assert!(
+            matches!(c, Condition::Compare { operator: CompareOp::GreaterEqual, value, .. } if (value - 10.0).abs() < 0.001)
+        );
         let c2 = compiler.parse_condition("pitch > 10").unwrap();
-        assert!(matches!(c2, Condition::Compare { operator: CompareOp::Greater, value, .. } if (value - 10.0).abs() < 0.001));
+        assert!(
+            matches!(c2, Condition::Compare { operator: CompareOp::Greater, value, .. } if (value - 10.0).abs() < 0.001)
+        );
     }
 
     use proptest::prelude::*;

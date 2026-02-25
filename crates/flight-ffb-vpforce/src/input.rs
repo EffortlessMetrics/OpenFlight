@@ -49,7 +49,7 @@ pub struct RhinoButtons {
 impl RhinoButtons {
     /// Returns `true` if button `n` (1-based) is pressed.
     pub fn is_pressed(&self, n: u8) -> bool {
-        n >= 1 && n <= 32 && (self.mask >> (n - 1)) & 1 == 1
+        (1u8..=32).contains(&n) && (self.mask >> (n - 1)) & 1 == 1
     }
 }
 

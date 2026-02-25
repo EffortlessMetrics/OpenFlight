@@ -54,7 +54,9 @@ impl HidDevice {
     pub fn read_report(&self, _buf: &mut [u8], _timeout_ms: u32) -> Result<usize, HidError> {
         #[cfg(target_os = "macos")]
         {
-            Err(HidError::ReadTimeout { timeout_ms: _timeout_ms })
+            Err(HidError::ReadTimeout {
+                timeout_ms: _timeout_ms,
+            })
         }
         #[cfg(not(target_os = "macos"))]
         Err(HidError::UnsupportedPlatform)

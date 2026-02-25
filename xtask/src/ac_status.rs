@@ -27,6 +27,7 @@ pub type BddCoverageMetrics = BddTraceabilityMetrics;
 type AcStatus = CoverageStatus;
 
 /// Generate BDD coverage metrics from a ledger and parsed scenarios.
+#[allow(dead_code)]
 pub fn compute_bdd_metrics(
     ledger: &SpecLedger,
     scenarios: &[GherkinScenario],
@@ -161,6 +162,7 @@ fn convert_test_reference_to_yaml_value(reference: &TestReference) -> Value {
 /// # Returns
 ///
 /// Returns a markdown string containing the feature status report.
+#[allow(dead_code)]
 pub fn generate_feature_status(ledger: &SpecLedger, scenarios: &[GherkinScenario]) -> String {
     let metrics = compute_bdd_metrics_with_workspace_crates(ledger, scenarios, true);
     generate_feature_status_with_metrics(ledger, scenarios, &metrics)
@@ -253,6 +255,7 @@ fn generate_feature_status_with_metrics(
     output
 }
 
+#[allow(dead_code)]
 fn collect_crate_names_for_tests(tests: &[TestReference]) -> Vec<String> {
     tests
         .iter()
@@ -267,6 +270,7 @@ fn collect_crate_names_for_tests(tests: &[TestReference]) -> Vec<String> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn crate_names_from_reference(test_ref: &TestReference) -> Vec<String> {
     match test_ref {
         TestReference::Simple(value) => extract_crate_names(value),
@@ -298,12 +302,14 @@ fn crate_names_from_reference(test_ref: &TestReference) -> Vec<String> {
     }
 }
 
+#[allow(dead_code)]
 fn extract_crate_names(reference: &str) -> Vec<String> {
     extract_crates_from_reference(reference)
         .into_iter()
         .collect()
 }
 
+#[allow(dead_code)]
 fn extract_crates_from_command(command: &str) -> Vec<String> {
     extract_crates_from_command_impl(command)
         .into_iter()

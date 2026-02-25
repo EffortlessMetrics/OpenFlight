@@ -110,7 +110,8 @@ impl RuntimeCounters {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_nanos() as u64;
-        self.last_capability_clamp_ns.store(now_ns, Ordering::Relaxed);
+        self.last_capability_clamp_ns
+            .store(now_ns, Ordering::Relaxed);
     }
 
     /// Get total frames processed

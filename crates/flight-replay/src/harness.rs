@@ -257,7 +257,7 @@ impl ReplayHarness {
             frames_processed += 1;
             last_timestamp = timestamp_ns;
 
-            if frames_processed % 250 == 0 {
+            if frames_processed.is_multiple_of(250) {
                 debug!("Processed {} frames", frames_processed);
             }
         }
@@ -304,7 +304,7 @@ impl ReplayHarness {
             frames_processed += 1;
 
             // Yield occasionally to prevent blocking
-            if frames_processed % 1000 == 0 {
+            if frames_processed.is_multiple_of(1000) {
                 tokio::task::yield_now().await;
                 debug!("Fast-forward processed {} frames", frames_processed);
             }

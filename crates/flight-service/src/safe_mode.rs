@@ -8,7 +8,10 @@
 
 use crate::power::{PowerCheckStatus, PowerChecker, PowerStatus};
 use flight_axis::AxisEngine;
-use flight_core::{Result, profile::{AxisConfig, Profile}};
+use flight_core::{
+    Result,
+    profile::{AxisConfig, Profile},
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{debug, info, warn};

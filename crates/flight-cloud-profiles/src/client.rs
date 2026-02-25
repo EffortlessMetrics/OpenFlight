@@ -135,11 +135,11 @@ impl CloudProfileClient {
     /// If the cache is enabled and the entry is fresh, returns from cache
     /// without a network request.
     pub async fn get(&self, id: &str) -> Result<CloudProfile> {
-        if let Some(cache) = &self.cache {
-            if let Ok(Some(cached)) = cache.get(id).await {
-                tracing::debug!(id, "cloud profile served from cache");
-                return Ok(cached);
-            }
+        if let Some(cache) = &self.cache
+            && let Ok(Some(cached)) = cache.get(id).await
+        {
+            tracing::debug!(id, "cloud profile served from cache");
+            return Ok(cached);
         }
 
         let url = format!("{}/profiles/{}", self.config.base_url, urlenc(id));
@@ -147,10 +147,10 @@ impl CloudProfileClient {
         let profile = handle_response::<CloudProfile>(resp).await?;
 
         // Store in cache for future calls
-        if let Some(cache) = &self.cache {
-            if let Err(e) = cache.store(&profile).await {
-                tracing::warn!(id, error = %e, "failed to cache cloud profile");
-            }
+        if let Some(cache) = &self.cache
+            && let Err(e) = cache.store(&profile).await
+        {
+            tracing::warn!(id, error = %e, "failed to cache cloud profile");
         }
 
         Ok(profile)

@@ -157,7 +157,10 @@ pub struct XPlaneAdapter {
 
 impl XPlaneAdapter {
     /// Create a new X-Plane adapter
-    pub fn new(config: XPlaneAdapterConfig, bus_publisher: Arc<Mutex<BusPublisher>>) -> Result<Self> {
+    pub fn new(
+        config: XPlaneAdapterConfig,
+        bus_publisher: Arc<Mutex<BusPublisher>>,
+    ) -> Result<Self> {
         let udp_client = UdpClient::new(config.udp.clone())
             .map_err(|e| FlightError::Configuration(format!("UDP client error: {}", e)))?;
 
@@ -1062,9 +1065,10 @@ impl XPlaneAdapter {
     /// Convenience method for tests and service orchestration that holds the snapshot
     /// already converted, bypassing the telemetry loop.
     pub fn publish_snapshot(&self, snapshot: BusSnapshot) -> Result<()> {
-        let mut publisher = self.bus_publisher.lock().map_err(|_| {
-            FlightError::Configuration("Bus publisher lock poisoned".to_string())
-        })?;
+        let mut publisher = self
+            .bus_publisher
+            .lock()
+            .map_err(|_| FlightError::Configuration("Bus publisher lock poisoned".to_string()))?;
         publisher
             .publish(snapshot)
             .map_err(|e| FlightError::Configuration(format!("Publish error: {e}")))
@@ -1700,8 +1704,8 @@ mod tests {
 
         // Convert → snapshot (exercises the conversion pipeline)
         let start = Instant::now();
-        let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, start)
-            .expect("conversion should succeed");
+        let snapshot =
+            XPlaneAdapter::convert_raw_to_snapshot(raw, start).expect("conversion should succeed");
 
         // Verify snapshot fields
         assert!((snapshot.kinematics.ias.to_knots() - 150.0).abs() < 1.0);
