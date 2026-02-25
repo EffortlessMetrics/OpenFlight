@@ -295,6 +295,9 @@ impl AircraftAutoSwitchService {
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
 
+            // Track last seen aircraft per sim to detect changes from bus snapshots
+            let mut last_aircraft_per_sim: HashMap<BusSimId, BusAircraftId> = HashMap::new();
+
             while let Some(event) = rx.recv().await {
                 match event {
                     ServiceEvent::ProcessDetected(process) => {
@@ -309,6 +312,8 @@ impl AircraftAutoSwitchService {
                         if let Err(e) = Self::handle_process_lost(sim, &adapters).await {
                             error!("Failed to handle process loss: {}", e);
                         }
+                        // Clear aircraft tracking for this sim so next snapshot triggers detection
+                        last_aircraft_per_sim.remove(&sim);
                     }
                     ServiceEvent::AircraftDetected(sim, aircraft_id) => {
                         let detection_start = Instant::now();
@@ -349,6 +354,22 @@ impl AircraftAutoSwitchService {
                             .await
                         {
                             error!("Failed to handle telemetry update: {}", e);
+                        }
+                        // Detect aircraft changes from snapshot aircraft field and
+                        // emit AircraftDetected events (covers XPlane/DCS/MSFS adapters
+                        // that publish aircraft identity via bus snapshots rather than
+                        // direct detection callbacks).
+                        let snap_aircraft = snapshot.aircraft.clone();
+                        let changed = match last_aircraft_per_sim.get(&snapshot.sim) {
+                            Some(last) => last.icao != snap_aircraft.icao,
+                            None => !snap_aircraft.icao.is_empty(),
+                        };
+                        if changed && !snap_aircraft.icao.is_empty() {
+                            last_aircraft_per_sim.insert(snapshot.sim, snap_aircraft.clone());
+                            let _ = service_tx.send(ServiceEvent::AircraftDetected(
+                                snapshot.sim,
+                                snap_aircraft,
+                            ));
                         }
                     }
                     ServiceEvent::AdapterError(sim, error) => {
