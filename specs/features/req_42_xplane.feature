@@ -14,6 +14,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.1: Basic telemetry ingestion ──────────────────────────────────────
 
+  @AC-42.1
   Scenario: IAS, TAS and ground speed are ingested and converted from m/s to knots
     Given X-Plane reports indicated_airspeed = 51.44 m/s
     And X-Plane reports true_airspeed = 54.0 m/s
@@ -23,6 +24,7 @@ Feature: X-Plane 11/12 adapter
     And BusSnapshot.kinematics.tas SHALL be approximately 104.9 knots
     And BusSnapshot.kinematics.ground_speed SHALL be approximately 101.1 knots
 
+  @AC-42.1
   Scenario: Attitude angles are ingested and converted from degrees to radians
     Given X-Plane reports theta = 5.0 degrees
     And X-Plane reports phi = 15.0 degrees
@@ -32,6 +34,7 @@ Feature: X-Plane 11/12 adapter
     And BusSnapshot.kinematics.bank SHALL be approximately 0.2618 radians
     And BusSnapshot.kinematics.heading SHALL be approximately -1.5708 radians
 
+  @AC-42.1
   Scenario: Heading psi > 180 is normalized to the range (-180, +180]
     Given X-Plane reports psi = 200.0 degrees
     When the adapter processes the DataRef packet
@@ -39,6 +42,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.2: Angular rate mapping ───────────────────────────────────────────
 
+  @AC-42.2
   Scenario: Angular rates P, Q, R are converted from deg/s to rad/s
     Given X-Plane reports body-axis roll rate P = 57.296 deg/s
     And X-Plane reports body-axis pitch rate Q = 28.648 deg/s
@@ -50,6 +54,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.3: Engine telemetry ────────────────────────────────────────────────
 
+  @AC-42.3
   Scenario: Engine N1, EGT, oil pressure and fuel flow are populated when DataRefs are present
     Given X-Plane reports ENGN_running[0] = 1
     And X-Plane reports ENGN_N1_[0] = 85.0 percent
@@ -65,6 +70,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.4: Pressure altitude ───────────────────────────────────────────────
 
+  @AC-42.4
   Scenario: Pressure altitude is populated from the cockpit altimeter DataRef
     Given X-Plane reports altitude_ft_pilot = 10000.0 feet
     When the adapter processes the DataRef packet
@@ -72,6 +78,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.5: Plugin interface TCP I/O ────────────────────────────────────────
 
+  @AC-42.5
   Scenario: PluginInterface sends a newline-terminated JSON handshake on connection
     Given a Flight Hub plugin interface listening on TCP port 52000
     When an X-Plane plugin connects
@@ -79,6 +86,7 @@ Feature: X-Plane 11/12 adapter
     And the plugin SHALL reply with {"type":"HandshakeAck","status":"ready",...}
     And PluginInterface.is_connected() SHALL return true
 
+  @AC-42.5
   Scenario: PluginInterface reads a DataRefValue response from the plugin
     Given a connected PluginInterface
     When the plugin writes {"type":"DataRefValue","id":1,"name":"sim/test","value":{"Float":42.0},"timestamp":0}\n
@@ -86,6 +94,7 @@ Feature: X-Plane 11/12 adapter
 
   # ── AC-42.6: Control output DataRef mapping ──────────────────────────────────
 
+  @AC-42.6
   Scenario: ControlOutput maps flight axes to the correct X-Plane DataRef paths
     Given the ControlOutput control DataRef constants
     Then DATAREF_PITCH SHALL be "sim/joystick/yoke_pitch_ratio"
@@ -95,6 +104,7 @@ Feature: X-Plane 11/12 adapter
     And DATAREF_SPEEDBRAKE SHALL be "sim/flightmodel/controls/speedbrk_ratio"
     And DATAREF_GEAR_HANDLE SHALL be "sim/flightmodel/controls/gear_handle_down"
 
+  @AC-42.6
   Scenario: ControlOutput throttle DataRef name includes the engine index
     Given the ControlOutput control DataRef constants
     When the throttle DataRef name is computed for engine index 0
@@ -102,22 +112,26 @@ Feature: X-Plane 11/12 adapter
     When the throttle DataRef name is computed for engine index 3
     Then the DataRef name SHALL be "sim/flightmodel/engine/ENGN_thro[3]"
 
+  @AC-42.6
   Scenario: ControlOutput returns NoWritePath when no plugin or web API is configured
     Given a ControlOutput with no plugin or web API configured
     When write_pitch is called with value 0.5
     Then the result SHALL be Err(NoWritePath)
 
+  @AC-42.6
   Scenario: ControlOutput rejects NaN before attempting any write
     Given a ControlOutput with no plugin or web API configured
     When write_pitch is called with value NaN
     Then the result SHALL be Err(InvalidValue) not Err(NoWritePath)
 
+  @AC-42.6
   Scenario: ControlOutput clamps out-of-range pitch and attempts write
     Given a ControlOutput with no plugin or web API configured
     When write_pitch is called with value 2.0
     Then the call SHALL attempt a write with the clamped value 1.0
     And the result SHALL be Err(NoWritePath) because no write path is configured
 
+  @AC-42.6
   Scenario: execute_command returns NoWritePath when no write path is configured
     Given a ControlOutput with no plugin or web API configured
     When execute_command is called with "sim/flight_controls/landing_gear_down"

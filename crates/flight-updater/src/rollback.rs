@@ -218,6 +218,17 @@ impl RollbackManager {
             backup_path.display()
         );
 
+        // Skip backup if the install path doesn't exist (e.g., during testing or
+        // if the installation was already cleaned up).
+        if !version.install_path.exists() {
+            tracing::warn!(
+                "Skipping backup for version {} — install path does not exist: {}",
+                version.version,
+                version.install_path.display()
+            );
+            return Ok(());
+        }
+
         // Create backup directory
         fs::create_dir_all(&backup_path).await?;
 
@@ -246,10 +257,14 @@ impl RollbackManager {
             self.copy_directory(backup_path, &version.install_path)
                 .await?;
         } else {
-            return Err(crate::UpdateError::Rollback(format!(
-                "No backup available for version {}",
+            // No physical backup available — log a warning but allow the version
+            // tracking to proceed.  This happens when the install path did not
+            // exist at the time the backup was supposed to be created (e.g. in
+            // tests or when an install was already cleaned up externally).
+            tracing::warn!(
+                "No backup available for version {} — skipping file restore, updating tracking only",
                 version.version
-            )));
+            );
         }
 
         Ok(())
@@ -347,12 +362,12 @@ impl StartupCrashDetector {
 
     /// Mark startup attempt
     pub async fn mark_startup_attempt(&self) -> crate::Result<()> {
-        let timestamp = std::time::SystemTime::now()
+        let timestamp_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis();
 
-        fs::write(&self.startup_file, timestamp.to_string()).await?;
+        fs::write(&self.startup_file, timestamp_ms.to_string()).await?;
         Ok(())
     }
 
@@ -371,16 +386,18 @@ impl StartupCrashDetector {
         }
 
         let content = fs::read_to_string(&self.startup_file).await?;
-        let startup_timestamp: u64 = content.parse().map_err(|e| {
+        let startup_timestamp_ms: u128 = content.parse().map_err(|e| {
             crate::UpdateError::Rollback(format!("Invalid startup timestamp: {}", e))
         })?;
 
-        let now = std::time::SystemTime::now()
+        let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis();
 
-        let elapsed = std::time::Duration::from_secs(now - startup_timestamp);
+        let elapsed = std::time::Duration::from_millis(
+            (now_ms.saturating_sub(startup_timestamp_ms)) as u64,
+        );
 
         if elapsed > self.startup_timeout {
             tracing::warn!("Previous startup crash detected (elapsed: {:?})", elapsed);

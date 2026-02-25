@@ -7,6 +7,7 @@
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
 | Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1901 | 2 | 36 | ✗ | 2 |
+| Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1902 | 7 | 64 | ✗ | 2 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |

@@ -30,6 +30,7 @@ pub struct DeviceMatchCriteria {
 /// mgr.open().expect("open");
 /// for d in mgr.devices() { println!("{:04x}:{:04x}", d.vendor_id, d.product_id); }
 /// ```
+#[derive(Debug)]
 pub struct HidManager {
     criteria: DeviceMatchCriteria,
     #[cfg(not(target_os = "macos"))]
