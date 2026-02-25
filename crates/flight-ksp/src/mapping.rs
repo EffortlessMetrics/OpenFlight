@@ -223,4 +223,82 @@ mod tests {
         assert!((snap.kinematics.tas.to_knots() - 194.38).abs() < 0.5);
         assert!((snap.kinematics.ias.to_knots() - 155.51).abs() < 0.5);
     }
+
+    #[test]
+    fn test_g_force_clamped_at_limits() {
+        let mut snap = default_snapshot();
+        // g_force > 20 should be clamped to 20
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                g_force: 999.0,
+                situation: situation::FLYING,
+                ..Default::default()
+            },
+        );
+        assert!((snap.kinematics.g_force.value() - 20.0).abs() < 0.01);
+
+        // g_force < -20 should be clamped to -20
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                g_force: -999.0,
+                situation: situation::FLYING,
+                ..Default::default()
+            },
+        );
+        assert!((snap.kinematics.g_force.value() - (-20.0)).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_vertical_speed_conversion() {
+        let mut snap = default_snapshot();
+        // 10 m/s = 1968.5 fpm
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                vertical_speed_mps: 10.0,
+                situation: situation::FLYING,
+                ..Default::default()
+            },
+        );
+        assert!(
+            (snap.kinematics.vertical_speed - 1968.5).abs() < 1.0,
+            "expected ~1968.5 fpm, got {}",
+            snap.kinematics.vertical_speed
+        );
+    }
+
+    #[test]
+    fn test_orbiting_validity_flags() {
+        let mut snap = default_snapshot();
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::ORBITING,
+                ..Default::default()
+            },
+        );
+        // ORBITING: in_flight = true, in_atmosphere = false
+        assert!(snap.validity.attitude_valid);
+        assert!(snap.validity.velocities_valid);
+        assert!(!snap.validity.safe_for_ffb);
+        assert!(!snap.validity.kinematics_valid);
+        assert!(snap.validity.position_valid);
+    }
+
+    #[test]
+    fn test_vessel_name_becomes_aircraft_id() {
+        let mut snap = default_snapshot();
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                vessel_name: "KerbinSpacePlane1".to_string(),
+                situation: situation::FLYING,
+                ..Default::default()
+            },
+        );
+        assert_eq!(snap.aircraft.icao, "KerbinSpacePlane1");
+        assert_eq!(snap.sim, SimId::Ksp);
+    }
 }
