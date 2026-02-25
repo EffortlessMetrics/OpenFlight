@@ -200,7 +200,7 @@ jobs:
     - name: Validate ADR links
       run: |
         echo "🔍 Validating ADR files exist..."
-        for adr in docs/adr/001-rt-spine-architecture.md docs/adr/002-writers-as-data.md docs/adr/003-plugin-classes.md docs/adr/004-zero-allocation-constraint.md docs/adr/005-pll-timing-discipline.md; do
+        for adr in docs/explanation/adr/001-rt-spine-architecture.md docs/explanation/adr/002-writers-as-data.md docs/explanation/adr/003-plugin-classes.md docs/explanation/adr/004-zero-allocation-constraint.md docs/explanation/adr/005-pll-timing-discipline.md; do
           if [ ! -f "$adr" ]; then
             echo "❌ Missing ADR: $adr"
             exit 1
