@@ -531,13 +531,13 @@ mod tests {
                 file_path: PathBuf::from("specs/features/test1.feature"),
                 line_number: 10,
                 name: "Scenario 1".to_string(),
-                tags: vec!["AC-1.1".to_string()],
+                tags: vec!["REQ-1".to_string(), "AC-1.1".to_string()],
             },
             GherkinScenario {
                 file_path: PathBuf::from("specs/features/test2.feature"),
                 line_number: 20,
                 name: "Scenario 2".to_string(),
-                tags: vec!["AC-1.1".to_string()],
+                tags: vec!["REQ-1".to_string(), "AC-1.1".to_string()],
             },
         ];
 

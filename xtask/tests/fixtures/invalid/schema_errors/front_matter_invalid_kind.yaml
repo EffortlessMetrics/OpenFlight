@@ -1,6 +1,6 @@
 # Invalid kind value (not in enum)
 doc_id: DOC-CORE-OVERVIEW
-kind: tutorial
+kind: invalid-kind
 area: flight-core
 status: draft
 links:
