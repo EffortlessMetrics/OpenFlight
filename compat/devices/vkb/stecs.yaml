@@ -1,0 +1,50 @@
+# VKB STECS (Space Throttle Evolution and Control System)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "VKB STECS Standard"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0127   # STECS Standard; variants: 0x0128 (Mini)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [rx, ry, x, y, z]   # SpaceBrake, LaserPower, X, Y, throttle-Z
+    resolution_bits: 12
+  buttons: 96               # 3 virtual controllers × 32 buttons each
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MULTI_VIRTUAL_CONTROLLER
+    description: >
+      STECS firmware exposes 3 virtual HID controllers (VC0–VC2) on separate
+      USB interfaces. OpenFlight merges button state from all active VCs and
+      uses axes from VC0. Ensure all three interfaces are enumerated.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's own configuration software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+
+support:
+  tier: 2              # Automated tests + parser tests (no HIL rig)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Product ID 0x0127 = STECS Standard; 0x0128 = STECS Mini.
+    Both variants use the same multi-virtual-controller protocol.
+    Last validated: 2026-02 against firmware 2.x.
