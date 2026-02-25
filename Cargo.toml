@@ -58,6 +58,7 @@ members = [
     "crates/flight-vr-overlay",
     "crates/flight-ffb-vpforce",
     "crates/flight-hotas-winwing",
+    "crates/flight-hotas-honeycomb",
     "crates/flight-ffb-moza",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",

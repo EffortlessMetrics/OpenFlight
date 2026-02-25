@@ -9,7 +9,7 @@ device:
   vendor: "Honeycomb Aeronautical"
   usb:
     vendor_id: 0x294B
-    product_id: 0x1902
+    product_id: 0x1901   # Confirmed: BetterBravoLights, SPAD.neXt, linux-hardware.org
   hid:
     usage_page: 0x01        # Generic Desktop
     usage: 0x04             # Joystick

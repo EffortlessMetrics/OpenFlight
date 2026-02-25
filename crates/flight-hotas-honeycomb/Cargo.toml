@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-honeycomb"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Honeycomb Aeronautical Alpha Yoke and Bravo Throttle Quadrant driver for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "honeycomb", "yoke", "throttle"]
+categories = ["hardware-support"]
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }

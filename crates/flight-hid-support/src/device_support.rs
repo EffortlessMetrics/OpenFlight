@@ -15,6 +15,23 @@ pub const SAITEK_VENDOR_ID: u16 = 0x06A3;
 pub const MAD_CATZ_VENDOR_ID: u16 = 0x0738;
 pub const LOGITECH_VENDOR_ID: u16 = 0x046D;
 
+/// USB Vendor ID for all Honeycomb Aeronautical products.
+pub const HONEYCOMB_VENDOR_ID: u16 = 0x294B;
+
+/// USB Product ID for the Honeycomb Alpha Flight Controls XPC (Yoke).
+///
+/// **Caution:** This PID is community-reported (0x0102) and has not been confirmed
+/// with hardware. Verify with `lsusb` / USBView against real hardware before
+/// relying on it for device matching.
+pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x0102;
+
+/// USB Product ID for the Honeycomb Bravo Throttle Quadrant.
+///
+/// Confirmed from multiple independent sources: BetterBravoLights (RoystonS),
+/// FwlDynamicJoystickMapper Lua scripts, SPAD.neXt profiles, and
+/// linux-hardware.org probe data.
+pub const HONEYCOMB_BRAVO_PID: u16 = 0x1901;
+
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 /// Primary PID for T.Flight HOTAS 4 - verified via USBView artifact.
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
