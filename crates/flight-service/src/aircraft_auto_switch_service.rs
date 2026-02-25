@@ -127,6 +127,8 @@ pub struct AircraftAutoSwitchService {
     bus_subscriber: Arc<RwLock<Option<BusSubscriber>>>,
     service_tx: mpsc::UnboundedSender<ServiceEvent>,
     service_rx: Arc<RwLock<Option<mpsc::UnboundedReceiver<ServiceEvent>>>>,
+    /// Per-adapter detection/error counters, updated by the event loop.
+    adapter_metrics: Arc<RwLock<HashMap<BusSimId, AdapterMetrics>>>,
 }
 
 /// Simulator adapters
@@ -252,6 +254,7 @@ impl AircraftAutoSwitchService {
             bus_subscriber: Arc::new(RwLock::new(None)),
             service_tx,
             service_rx: Arc::new(RwLock::new(Some(service_rx))),
+            adapter_metrics: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -287,6 +290,7 @@ impl AircraftAutoSwitchService {
         let adapters = Arc::clone(&self.adapters);
         let config = self.config.clone();
         let service_tx = self.service_tx.clone();
+        let adapter_metrics = Arc::clone(&self.adapter_metrics);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -307,16 +311,36 @@ impl AircraftAutoSwitchService {
                         }
                     }
                     ServiceEvent::AircraftDetected(sim, aircraft_id) => {
+                        let detection_start = Instant::now();
                         let detected_aircraft = DetectedAircraft {
                             sim: map_sim_id(sim),
                             aircraft_id: map_aircraft_id(aircraft_id),
                             process_name: format!("{}_process", sim),
-                            detection_time: Instant::now(),
+                            detection_time: detection_start,
                             confidence: 0.9,
                         };
 
+
                         if let Err(e) = auto_switch.on_aircraft_detected(detected_aircraft).await {
                             error!("Failed to handle aircraft detection: {}", e);
+                            // Track detection error
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.detection_errors += 1;
+                        } else {
+                            // Track successful detection + time
+                            let elapsed = detection_start.elapsed();
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.aircraft_detections += 1;
+                            entry.last_detection = Some(Instant::now());
+                            // Exponential moving average of detection time
+                            let alpha = 0.1_f64;
+                            let new_sample = elapsed.as_secs_f64();
+                            let old_avg = entry.average_detection_time.as_secs_f64();
+                            entry.average_detection_time = Duration::from_secs_f64(
+                                alpha * new_sample + (1.0 - alpha) * old_avg,
+                            );
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
@@ -329,6 +353,8 @@ impl AircraftAutoSwitchService {
                     }
                     ServiceEvent::AdapterError(sim, error) => {
                         warn!("Adapter error for {}: {}", sim, error);
+                        let mut metrics = adapter_metrics.write().await;
+                        metrics.entry(sim).or_default().detection_errors += 1;
                     }
                     ServiceEvent::Shutdown => {
                         info!("Aircraft auto-switch service shutting down");
@@ -374,27 +400,8 @@ impl AircraftAutoSwitchService {
         let auto_switch_metrics = self.auto_switch.get_metrics().await;
         let process_detection_metrics = self.process_detector.get_metrics().await;
 
-        // Build adapter metrics from which sims are currently active in the adapters map
-        let adapter_metrics = {
-            let adapters = self.adapters.read().await;
-            let mut map = HashMap::new();
-            if adapters.msfs.is_some() {
-                map.insert(BusSimId::Msfs, AdapterMetrics::default());
-            }
-            if adapters.xplane.is_some() {
-                map.insert(BusSimId::XPlane, AdapterMetrics::default());
-            }
-            if adapters.dcs.is_some() {
-                map.insert(BusSimId::Dcs, AdapterMetrics::default());
-            }
-            if adapters.ac7.is_some() {
-                map.insert(BusSimId::AceCombat7, AdapterMetrics::default());
-            }
-            if adapters.wingman.is_some() {
-                map.insert(BusSimId::Wingman, AdapterMetrics::default());
-            }
-            map
-        };
+        // Clone the real per-adapter counters tracked by the event loop
+        let adapter_metrics = self.adapter_metrics.read().await.clone();
 
         ServiceMetrics {
             total_aircraft_switches: auto_switch_metrics.total_switches,
