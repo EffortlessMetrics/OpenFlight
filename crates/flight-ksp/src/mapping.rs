@@ -301,4 +301,40 @@ mod tests {
         assert_eq!(snap.aircraft.icao, "KerbinSpacePlane1");
         assert_eq!(snap.sim, SimId::Ksp);
     }
+
+    // ── Property tests ────────────────────────────────────────────────────────
+
+    proptest::proptest! {
+        /// `apply_telemetry` must never panic for any combination of arbitrary
+        /// floating-point values and situation codes.
+        #[test]
+        fn prop_apply_telemetry_never_panics(
+            pitch in proptest::num::f32::NORMAL,
+            roll in proptest::num::f32::NORMAL,
+            heading in 0.0f32..360.0f32,
+            speed in 0.0f64..10_000.0f64,
+            g_force in -100.0f64..100.0f64,
+            altitude in -1000.0f64..1_000_000.0f64,
+            situation in 0i32..=7i32,
+        ) {
+            let raw = KspRawTelemetry {
+                pitch_deg: pitch,
+                roll_deg: roll,
+                heading_deg: heading,
+                speed_mps: speed,
+                ias_mps: speed * 0.8,
+                vertical_speed_mps: (speed - 5000.0) / 100.0,
+                g_force,
+                altitude_m: altitude,
+                situation,
+                vessel_name: "TestVessel".to_string(),
+                ..Default::default()
+            };
+            let mut snap = default_snapshot();
+            // Must not panic
+            apply_telemetry(&mut snap, &raw);
+            // GForce must always be valid (clamped before construction)
+            let _ = snap.kinematics.g_force.value();
+        }
+    }
 }
