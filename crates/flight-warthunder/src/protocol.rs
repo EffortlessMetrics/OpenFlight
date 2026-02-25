@@ -89,4 +89,37 @@ mod tests {
         assert_eq!(ind.valid, Some(false));
         assert!(ind.ias_kmh.is_none());
     }
+
+    #[test]
+    fn empty_json_object_deserialises_to_all_none() {
+        let ind: WtIndicators = serde_json::from_str("{}").expect("should deserialise");
+        assert!(ind.valid.is_none());
+        assert!(ind.airframe.is_none());
+        assert!(ind.ias_kmh.is_none());
+        assert!(ind.g_load.is_none());
+    }
+
+    #[test]
+    fn renamed_fields_g_load_and_ias() {
+        let raw = r#"{"gLoad": 2.5, "IAS km/h": 300.0}"#;
+        let ind: WtIndicators = serde_json::from_str(raw).expect("should deserialise");
+        assert!((ind.g_load.unwrap() - 2.5).abs() < 0.01);
+        assert!((ind.ias_kmh.unwrap() - 300.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn round_trip_serialise_deserialise() {
+        let original = WtIndicators {
+            valid: Some(true),
+            airframe: Some("FW-190".to_string()),
+            ias_kmh: Some(500.0),
+            heading: Some(90.0),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&original).expect("should serialise");
+        let back: WtIndicators = serde_json::from_str(&json).expect("should deserialise");
+        assert_eq!(back.valid, original.valid);
+        assert_eq!(back.airframe, original.airframe);
+        assert!((back.ias_kmh.unwrap() - 500.0).abs() < 0.01);
+    }
 }
