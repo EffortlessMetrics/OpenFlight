@@ -1032,6 +1032,18 @@ jobs:
           cargo +nightly fuzz run fuzz_cloud_profiles -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Fuzz flight-hotas-vkb Gladiator report parser (60s)
+        run: |
+          cd crates/flight-hotas-vkb
+          cargo +nightly fuzz run fuzz_vkb_gladiator_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-saitek input report parser (60s)
+        run: |
+          cd crates/flight-hotas-saitek
+          cargo +nightly fuzz run fuzz_saitek_input_report -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
