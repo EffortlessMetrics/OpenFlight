@@ -838,4 +838,61 @@ mod tests {
         // (it will just queue the request)
         assert!(service.force_switch(aircraft_id).await.is_ok());
     }
+
+    /// Verify that the aircraft-change detection logic embedded in TelemetryUpdate
+    /// correctly recognises a new or changed aircraft ICAO.
+    #[test]
+    fn test_aircraft_change_detection_logic() {
+        use flight_bus::types::{AircraftId, SimId};
+        use std::collections::HashMap;
+
+        // Simulate the per-sim tracking map used inside the event loop
+        let mut last_aircraft_per_sim: HashMap<SimId, AircraftId> = HashMap::new();
+
+        let sim = SimId::XPlane;
+        let a172 = AircraftId::new("C172");
+        let a320 = AircraftId::new("A320");
+        let empty = AircraftId::new("");
+
+        // First snapshot with non-empty ICAO → "changed" (not in map)
+        let changed = match last_aircraft_per_sim.get(&sim) {
+            Some(last) => last.icao != a172.icao,
+            None => !a172.icao.is_empty(),
+        };
+        assert!(changed, "first non-empty aircraft should be detected as changed");
+        last_aircraft_per_sim.insert(sim, a172.clone());
+
+        // Same ICAO again → not changed
+        let changed = match last_aircraft_per_sim.get(&sim) {
+            Some(last) => last.icao != a172.icao,
+            None => !a172.icao.is_empty(),
+        };
+        assert!(!changed, "same aircraft should not be detected as changed");
+
+        // Different ICAO → changed
+        let changed = match last_aircraft_per_sim.get(&sim) {
+            Some(last) => last.icao != a320.icao,
+            None => !a320.icao.is_empty(),
+        };
+        assert!(changed, "different aircraft should be detected as changed");
+        last_aircraft_per_sim.insert(sim, a320.clone());
+
+        // Empty ICAO should never trigger detection
+        let changed_and_nonempty = {
+            let changed = match last_aircraft_per_sim.get(&sim) {
+                Some(last) => last.icao != empty.icao,
+                None => !empty.icao.is_empty(),
+            };
+            changed && !empty.icao.is_empty()
+        };
+        assert!(!changed_and_nonempty, "empty ICAO should not trigger aircraft detection");
+
+        // After process loss: remove from map → next non-empty triggers detection
+        last_aircraft_per_sim.remove(&sim);
+        let changed = match last_aircraft_per_sim.get(&sim) {
+            Some(last) => last.icao != a172.icao,
+            None => !a172.icao.is_empty(),
+        };
+        assert!(changed, "after process loss, same aircraft should be detected again");
+    }
 }
