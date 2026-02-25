@@ -45,13 +45,19 @@ pub(crate) struct HysteresisState {
 impl RulesEvaluator {
     /// Create a new rules evaluator
     pub fn new() -> Self {
+        let min_eval_interval = std::time::Duration::from_millis(8);
+        // Initialize last_eval to a past time so the first evaluate() call
+        // is not rate-limited.
+        let last_eval = Instant::now()
+            .checked_sub(min_eval_interval)
+            .unwrap_or_else(Instant::now);
         Self {
             stack: Vec::new(),
             hysteresis_state: Vec::new(),
             variable_cache: Vec::new(),
             actions_buffer: Vec::new(),
-            last_eval: Instant::now(),
-            min_eval_interval: std::time::Duration::from_millis(8),
+            last_eval,
+            min_eval_interval,
         }
     }
 
