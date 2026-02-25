@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Install system dependencies
+      run: sudo apt-get update -q && sudo apt-get install -y libudev-dev
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -43,7 +46,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Install system dependencies
+      run: sudo apt-get update -q && sudo apt-get install -y libudev-dev
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     
