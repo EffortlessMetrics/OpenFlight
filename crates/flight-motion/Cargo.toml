@@ -25,3 +25,4 @@ tokio = { workspace = true, features = ["net", "time", "macros", "rt"] }
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 approx = { workspace = true }
+proptest = { workspace = true }
