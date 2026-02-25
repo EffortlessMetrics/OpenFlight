@@ -25,6 +25,7 @@ tracing.workspace = true
 
 [dev-dependencies]
 hidapi.workspace = true
+proptest.workspace = true
 
 [[example]]
 name = "tflight_dump"

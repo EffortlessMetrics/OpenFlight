@@ -38,6 +38,17 @@ pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
 /// Legacy PID for T.Flight HOTAS 4 - may appear on older firmware versions.
 pub const TFLIGHT_HOTAS_4_PID_LEGACY: u16 = 0xB67A;
 
+/// USB Product ID for the T.16000M FCS joystick.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB10A — from linux-hardware.org probe data.
+pub const T16000M_JOYSTICK_PID: u16 = 0xB10A;
+
+/// USB Product ID for the TWCS Throttle (sold standalone and as part of the
+/// T.16000M FCS HOTAS combo).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB687 — from linux-hardware.org probe data.
+pub const TWCS_THROTTLE_PID: u16 = 0xB687;
+
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
 //
@@ -94,6 +105,40 @@ pub const PC_MODE_NOTE_HOTAS_4: &str = "If full-axis inputs are missing, switch 
 pub const PC_MODE_NOTE_HOTAS_ONE: &str = "If full-axis inputs are missing, switch HOTAS One to PC mode (Xbox/PC selector and Guide button procedure) before plugging in.";
 pub const DEFAULT_MAPPING_NOTE_UNKNOWN: &str =
     "Default mapping assumes full-axis mode; verify axis mode before applying.";
+
+/// T.16000M FCS product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum T16000mModel {
+    /// T.16000M FCS Joystick (standalone). VID 0x044F, PID 0xB10A.
+    Joystick,
+    /// TWCS Throttle (standalone or part of T.16000M HOTAS combo).
+    /// VID 0x044F, PID 0xB687.
+    TwcsThrottle,
+}
+
+impl T16000mModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            T16000mModel::Joystick => "T.16000M FCS Joystick",
+            T16000mModel::TwcsThrottle => "T.16000M FCS TWCS Throttle",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known T.16000M device.
+pub fn is_t16000m_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID
+        && matches!(product_id, T16000M_JOYSTICK_PID | TWCS_THROTTLE_PID)
+}
+
+/// Returns the T.16000M model for a known PID, or `None` for unknown PIDs.
+pub fn t16000m_model(product_id: u16) -> Option<T16000mModel> {
+    match product_id {
+        T16000M_JOYSTICK_PID => Some(T16000mModel::Joystick),
+        TWCS_THROTTLE_PID => Some(T16000mModel::TwcsThrottle),
+        _ => None,
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TFlightModel {
