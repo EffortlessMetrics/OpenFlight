@@ -29,14 +29,29 @@ pub struct RuntimeCounters {
     /// Number of output clamps due to capability limits (kid/demo mode)
     capability_clamp_events: AtomicU64,
     /// Timestamp (ns since UNIX epoch) of the most recent capability clamp; 0 = never
+    ///
+    /// Computed RT-safely as `engine_start_epoch_ns + Instant::elapsed().as_nanos()`.
     last_capability_clamp_ns: AtomicU64,
-    /// Creation timestamp
+    /// UNIX epoch timestamp (ns) captured once at construction — used to derive
+    /// wall-clock timestamps from `Instant::elapsed()` on the RT path.
+    engine_start_epoch_ns: u64,
+    /// Creation timestamp (monotonic) — paired with `engine_start_epoch_ns`.
     created_at: Instant,
 }
 
 impl RuntimeCounters {
     /// Create new runtime counters
     pub fn new() -> Self {
+        // Capture both the wall-clock and monotonic origin at the same moment.
+        // Later, the RT path can derive a wall-clock ns by adding
+        // `created_at.elapsed().as_nanos()` to `engine_start_epoch_ns` — no
+        // further syscall required.
+        let epoch_ns = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64;
+        let created_at = Instant::now();
+
         Self {
             frames_processed: AtomicU64::new(0),
             pipeline_swaps: AtomicU64::new(0),
@@ -47,7 +62,8 @@ impl RuntimeCounters {
             avg_frame_time_us: AtomicU32::new(0),
             capability_clamp_events: AtomicU64::new(0),
             last_capability_clamp_ns: AtomicU64::new(0),
-            created_at: Instant::now(),
+            engine_start_epoch_ns: epoch_ns,
+            created_at,
         }
     }
 
@@ -102,14 +118,19 @@ impl RuntimeCounters {
         self.rt_lock_acquisitions.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Increment capability clamp counter and record timestamp (RT-safe)
+    /// Increment capability clamp counter and record timestamp (RT-safe).
+    ///
+    /// The UNIX-epoch timestamp is derived by adding `Instant::elapsed()` to
+    /// the epoch anchor captured at construction time.  This avoids calling
+    /// `SystemTime::now()` on the RT path (which would be a syscall), while
+    /// still producing a meaningful wall-clock value.
     #[inline(always)]
     pub fn increment_capability_clamps(&self) {
         self.capability_clamp_events.fetch_add(1, Ordering::Relaxed);
-        let now_ns = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos() as u64;
+        // RT-safe: Instant::elapsed() uses QueryPerformanceCounter (Windows) or
+        // VDSO clock_gettime (Linux) — no kernel trap.
+        let elapsed_ns = self.created_at.elapsed().as_nanos() as u64;
+        let now_ns = self.engine_start_epoch_ns.saturating_add(elapsed_ns);
         self.last_capability_clamp_ns
             .store(now_ns, Ordering::Relaxed);
     }
