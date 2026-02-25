@@ -162,7 +162,7 @@ pub enum ServiceState {
 /// slew rate limiter → EMA filter. If the config specifies no nodes, a
 /// trivial pass-through deadzone (threshold = 0.0) is added so the
 /// `PipelineCompiler` receives at least one node.
-fn build_pipeline_for_axis(
+pub(crate) fn build_pipeline_for_axis(
     axis_name: &str,
     config: &AxisConfig,
 ) -> anyhow::Result<flight_axis::Pipeline> {

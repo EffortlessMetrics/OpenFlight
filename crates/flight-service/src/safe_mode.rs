@@ -7,6 +7,7 @@
 //! when full system functionality is not available or desired.
 
 use crate::power::{PowerCheckStatus, PowerChecker, PowerStatus};
+use crate::service::build_pipeline_for_axis;
 use flight_axis::AxisEngine;
 use flight_core::{
     Result,
@@ -567,9 +568,20 @@ impl SafeModeManager {
         // Validate profile structure
         basic_profile.validate()?;
 
-        // Test profile compilation (if axis engine available)
-        if let Some(_engine) = &self.axis_engine {
-            debug!("Basic profile validated successfully");
+        // Try to compile a pipeline for each axis so we catch any conversion
+        // errors before the engine actually starts processing inputs.
+        if let Some(engine) = &self.axis_engine {
+            for (axis_name, axis_config) in &basic_profile.axes {
+                match build_pipeline_for_axis(axis_name, axis_config) {
+                    Ok(pipeline) => {
+                        let result = engine.update_pipeline(pipeline);
+                        debug!("Safe-mode pipeline compile for '{axis_name}': {result:?}");
+                    }
+                    Err(e) => {
+                        warn!("Safe-mode pipeline compile failed for '{axis_name}': {e}");
+                    }
+                }
+            }
         }
 
         info!("Basic profile validation completed");
