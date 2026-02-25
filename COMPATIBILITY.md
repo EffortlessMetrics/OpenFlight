@@ -30,7 +30,7 @@
 | Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |
 | Microsoft Flight Simulator | SimConnect | ✓ | ✓ | ✓ | ✗ |
 | Project Wingman | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
-| War Thunder | HTTP/UDP Telemetry Feed | ✓ | ✗ | ✓ | ✗ |
+| War Thunder | HTTP Telemetry Feed | ✓ | ✗ | ✓ | ✗ |
 | X-Plane 12 | UDP DataRef + Web API | ✓ | ✓ | ✗ | ✗ |
 
 ## Support Tier Legend
