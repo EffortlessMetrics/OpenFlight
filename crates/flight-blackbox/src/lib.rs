@@ -9,12 +9,16 @@
 //! - Zero-drop guarantee for 10-minute captures
 //! - Size target <30MB/3min
 
+mod time;
+
+pub use time::to_ns_from_ms;
+
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
@@ -207,11 +211,8 @@ impl BlackboxWriter {
         }
 
         let now = SystemTime::now();
-        let timebase_ns = now
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or(Duration::from_secs(0))
-            .as_nanos() as u64;
-        let start_monotonic = 0;
+        let timebase_ns = time::unix_base_ns();
+        let start_monotonic = time::monotonic_now_ns();
 
         let header = BlackboxHeader {
             magic: *FBB_MAGIC,
@@ -370,10 +371,7 @@ async fn run_writer(
     }
 
     // Write footer on close
-    let _now_ns = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or(Duration::from_secs(0))
-        .as_nanos() as u64;
+    let _now_ns = time::unix_now_ns();
 
     // Placeholder footer writing logic
     writer.file.flush()?;
