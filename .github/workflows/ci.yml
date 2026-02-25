@@ -857,6 +857,16 @@ jobs:
             --lcov \
             --output-path lcov.info
 
+      - name: Enforce coverage threshold (≥60% line coverage on core crates)
+        run: |
+          cargo llvm-cov \
+            -p flight-core \
+            -p flight-axis \
+            -p flight-rules \
+            -p flight-profile \
+            --summary-only \
+            --fail-under-lines 60
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
@@ -1060,12 +1070,35 @@ jobs:
             -p flight-rules \
             -p flight-profile \
             --timeout 60 \
-            --output mutation-report.txt || true
+            --output mutants-out
         continue-on-error: true
+
+      - name: Check mutation kill rate (≥50% survivors fail CI)
+        run: |
+          if [ -d mutants-out ]; then
+            missed=$(wc -l < mutants-out/missed.txt 2>/dev/null || echo 0)
+            caught=$(wc -l < mutants-out/caught.txt 2>/dev/null || echo 0)
+            total=$((missed + caught))
+            if [ "$total" -gt 0 ]; then
+              kill_rate=$(( caught * 100 / total ))
+              echo "Kill rate: ${kill_rate}% (${caught}/${total})"
+              if [ "$kill_rate" -lt 50 ]; then
+                echo "❌ Mutation kill rate ${kill_rate}% is below the 50% threshold"
+                echo "   This means tests are not catching enough logic mutations."
+                echo "   See mutants-out/missed.txt for uncaught mutations."
+                exit 1
+              fi
+              echo "✅ Mutation kill rate ${kill_rate}% passes threshold (≥50%)"
+            else
+              echo "⚠️ No mutations found to test"
+            fi
+          else
+            echo "⚠️ mutants-out directory not found — mutation testing may have failed to run"
+          fi
 
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mutation-report
-          path: mutation-report.txt
+          path: mutants-out/
