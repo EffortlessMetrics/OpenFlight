@@ -980,6 +980,73 @@ mod tests {
             }
         }
     }
+
+    // Error-path tests
+    #[test]
+    fn parse_condition_invalid_number_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let res = compiler.parse_condition("ias > notanumber");
+        assert!(res.is_err(), "expected error, got: {:?}", res);
+        let msg = res.unwrap_err().to_string();
+        assert!(msg.contains("Invalid number"), "unexpected error: {msg}");
+    }
+
+    #[test]
+    fn parse_condition_unsupported_syntax_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        // A condition with `>=` but no spaces is not valid (the parser requires spaces around ops)
+        let res = compiler.parse_condition("ias>=200");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn parse_action_unsupported_syntax_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let res = compiler.parse_action("this.is.not.valid()");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn validate_rule_empty_when_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_empty_action_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "".to_string(),
+                action: "".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_invalid_condition_syntax_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "ias > notanumber".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
 }
 
 #[cfg(test)]
