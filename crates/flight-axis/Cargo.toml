@@ -35,6 +35,7 @@ examples-optin = []
 [dev-dependencies]
 criterion.workspace = true
 proptest.workspace = true
+insta.workspace = true
 
 [[bench]]
 name = "axis_performance"

@@ -1,0 +1,7 @@
+---
+source: crates/flight-axis/src/compiler.rs
+expression: meta
+---
+[
+    "id=1 type=deadzone state_offset=0 state_size=8",
+]

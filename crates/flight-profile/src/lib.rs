@@ -706,4 +706,28 @@ mod tests {
             prop_assert!(profile.validate_with_capabilities(&kid_context).is_err());
         }
     }
+
+    // ── snapshot tests ────────────────────────────────────────────────────────
+
+    #[test]
+    fn snapshot_canonical_form() {
+        let profile = create_valid_profile();
+        insta::assert_snapshot!("profile_canonical_form", profile.canonicalize());
+    }
+
+    #[test]
+    fn snapshot_merged_profile() {
+        let base = create_valid_profile();
+        let override_profile = create_override_profile();
+        let merged = base.merge_with(&override_profile).unwrap();
+        insta::assert_snapshot!("profile_merged", merged.canonicalize());
+    }
+
+    #[test]
+    fn snapshot_validation_error_bad_schema() {
+        let mut profile = create_valid_profile();
+        profile.schema = "flight.profile/99".to_string();
+        let err = profile.validate().unwrap_err();
+        insta::assert_debug_snapshot!("profile_validation_error_schema", err);
+    }
 }

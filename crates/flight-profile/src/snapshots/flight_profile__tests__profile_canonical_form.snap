@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/src/lib.rs
+expression: profile.canonicalize()
+---
+{"aircraft":{"icao":"C172"},"axes":{"pitch":{"curve":null,"deadzone":0.03,"detents":[],"expo":0.2,"filter":null,"slew_rate":1.2}},"pof_overrides":null,"schema":"flight.profile/1","sim":"msfs"}
