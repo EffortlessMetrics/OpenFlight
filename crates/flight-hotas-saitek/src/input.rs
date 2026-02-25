@@ -245,4 +245,55 @@ mod tests {
         assert_eq!(handler.device_type(), SaitekHotasType::X52Pro);
         assert_eq!(handler.ghost_rate(), 0.0);
     }
+
+    #[test]
+    fn x52_report_too_short_returns_default() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
+        let state = handler.parse_report(&[0u8; 10]); // needs 14
+        assert_eq!(state.axes.stick_x, 0.0);
+        assert_eq!(state.axes.throttle, 0.0);
+        assert_eq!(state.buttons.primary, 0);
+    }
+
+    #[test]
+    fn x52_report_parses_max_throttle() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
+        let mut report = [0u8; 14];
+        report[6] = 255u8; // max 8-bit throttle
+        let state = handler.parse_report(&report);
+        assert!(
+            state.axes.throttle > 0.9,
+            "max throttle should be near 1.0, got {}",
+            state.axes.throttle
+        );
+    }
+
+    #[test]
+    fn x55_stick_report_too_short_returns_default() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X55Stick);
+        let state = handler.parse_report(&[0u8; 5]); // needs 8
+        assert_eq!(state.axes.stick_x, 0.0);
+    }
+
+    #[test]
+    fn x56_throttle_dual_axes_parsed() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X56Throttle);
+        let mut report = [0u8; 12];
+        // Max throttle1 = 0xFFFF, max throttle2 = 0xFFFF
+        report[0] = 0xFF;
+        report[1] = 0xFF;
+        report[2] = 0x00;
+        report[3] = 0x00; // min throttle2
+        let state = handler.parse_report(&report);
+        assert!(
+            state.axes.throttle > 0.9,
+            "throttle1 should be near 1.0, got {}",
+            state.axes.throttle
+        );
+        assert!(
+            state.axes.throttle2 < -0.9,
+            "throttle2 should be near -1.0 at 0x0000, got {}",
+            state.axes.throttle2
+        );
+    }
 }
