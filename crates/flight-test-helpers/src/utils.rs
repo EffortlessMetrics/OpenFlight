@@ -69,4 +69,21 @@ mod tests {
             });
         assert!(success);
     }
+
+    #[test]
+    fn test_wait_for_condition_timeout_when_never_ready() {
+        let result = wait_for_condition(
+            Duration::from_millis(50),
+            Duration::from_millis(5),
+            || false,
+        );
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_create_temp_dir_unique() {
+        let d1 = create_temp_dir("flight-test");
+        let d2 = create_temp_dir("flight-test");
+        assert_ne!(d1.path(), d2.path());
+    }
 }

@@ -420,3 +420,104 @@ enum WorkspaceVecField {
 struct WorkspaceInheritance {
     workspace: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn metadata_validation_report_starts_successful() {
+        let report = MetadataValidationReport::default();
+        assert!(report.is_success());
+        assert_eq!(report.checked, 0);
+    }
+
+    #[test]
+    fn metadata_validation_report_with_issues_fails() {
+        let mut report = MetadataValidationReport {
+            checked: 1,
+            issues: vec![],
+        };
+        report.issues.push(CrateMetadataIssue {
+            crate_name: "test-crate".to_string(),
+            missing_fields: vec!["version".to_string()],
+            invalid_fields: vec![],
+        });
+        assert!(!report.is_success());
+    }
+
+    #[test]
+    fn crate_metadata_issue_summary_missing_fields() {
+        let issue = CrateMetadataIssue {
+            crate_name: "my-crate".to_string(),
+            missing_fields: vec!["version".to_string(), "license".to_string()],
+            invalid_fields: vec![],
+        };
+        let summary = issue.summary();
+        assert!(summary.contains("my-crate"));
+        assert!(summary.contains("missing"));
+        assert!(summary.contains("version"));
+    }
+
+    #[test]
+    fn crate_metadata_issue_summary_invalid_fields() {
+        let issue = CrateMetadataIssue {
+            crate_name: "bad-crate".to_string(),
+            missing_fields: vec![],
+            invalid_fields: vec!["readme file does not exist".to_string()],
+        };
+        let summary = issue.summary();
+        assert!(summary.contains("invalid"));
+    }
+
+    #[test]
+    fn readme_path_absolute_returned_unchanged() {
+        let meta = CratesIoMetadata {
+            readme: Some("/absolute/README.md".to_string()),
+            ..Default::default()
+        };
+        let manifest = PathBuf::from("/some/crate/Cargo.toml");
+        let result = meta.readme_path(&manifest);
+        assert_eq!(result, Some(PathBuf::from("/absolute/README.md")));
+    }
+
+    #[test]
+    fn readme_path_relative_joined_to_manifest_dir() {
+        let meta = CratesIoMetadata {
+            readme: Some("README.md".to_string()),
+            ..Default::default()
+        };
+        let manifest = PathBuf::from("/crates/my-crate/Cargo.toml");
+        let result = meta.readme_path(&manifest);
+        assert_eq!(result, Some(PathBuf::from("/crates/my-crate/README.md")));
+    }
+
+    #[test]
+    fn readme_path_none_when_no_readme() {
+        let meta = CratesIoMetadata::default();
+        let manifest = PathBuf::from("/crates/my-crate/Cargo.toml");
+        assert!(meta.readme_path(&manifest).is_none());
+    }
+
+    #[test]
+    fn required_metadata_fields_has_expected_count() {
+        assert_eq!(REQUIRED_CRATES_IO_METADATA_FIELDS.len(), 11);
+        assert!(REQUIRED_CRATES_IO_METADATA_FIELDS.contains(&"name"));
+        assert!(REQUIRED_CRATES_IO_METADATA_FIELDS.contains(&"keywords"));
+    }
+
+    #[test]
+    fn load_workspace_microcrate_names_succeeds_from_repo_root() {
+        // Use the actual workspace root — this is a filesystem test
+        let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()  // crates/
+            .and_then(|p| p.parent())  // workspace root
+            .map(|p| p.to_path_buf())
+            .unwrap();
+        let names = load_workspace_microcrate_names(&workspace_root).unwrap();
+        // The workspace has many crates; confirm at least some known ones are present
+        assert!(names.contains("flight-core"), "expected flight-core in workspace members");
+        assert!(names.contains("flight-axis"), "expected flight-axis in workspace members");
+    }
+}

@@ -455,4 +455,86 @@ This is a test simulator integration.
         println!("Validation errors: {}", result.errors.len());
         assert!(result.errors.len() < 10); // Allow missing sections in minimal test doc
     }
+
+    #[test]
+    fn validation_result_starts_valid() {
+        let result = ValidationResult::new();
+        assert!(result.is_valid());
+        assert!(result.errors.is_empty());
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn validation_result_error_marks_invalid() {
+        let mut result = ValidationResult::new();
+        result.add_error("missing section".to_string());
+        assert!(!result.is_valid());
+        assert_eq!(result.errors.len(), 1);
+    }
+
+    #[test]
+    fn validation_result_warning_stays_valid() {
+        let mut result = ValidationResult::new();
+        result.add_warning("deprecated field".to_string());
+        assert!(result.is_valid());
+        assert_eq!(result.warnings.len(), 1);
+    }
+
+    #[test]
+    fn installer_summary_add_simulator_deduplicates_ports() {
+        let mut summary = InstallerSummary::new();
+        let files = vec![];
+        let connections = vec![
+            NetworkConnection {
+                port: Some(49000),
+                protocol: "UDP".to_string(),
+                purpose: "test".to_string(),
+                direction: "in".to_string(),
+            },
+            NetworkConnection {
+                port: Some(49000), // duplicate
+                protocol: "UDP".to_string(),
+                purpose: "test2".to_string(),
+                direction: "out".to_string(),
+            },
+        ];
+        summary.add_simulator("xplane", &files, &connections);
+        // Port 49000 should appear only once
+        assert_eq!(summary.network_ports_used.len(), 1);
+        assert_eq!(summary.simulators_supported, vec!["xplane"]);
+    }
+
+    #[test]
+    fn installer_summary_counts_files_across_simulators() {
+        let mut summary = InstallerSummary::new();
+        let files = vec![
+            FileModification {
+                path: "/cfg/a.txt".to_string(),
+                purpose: "config".to_string(),
+                changes: vec![],
+                backup_created: true,
+            },
+            FileModification {
+                path: "/cfg/b.txt".to_string(),
+                purpose: "config".to_string(),
+                changes: vec![],
+                backup_created: false,
+            },
+        ];
+        summary.add_simulator("msfs", &files, &[]);
+        summary.add_simulator("dcs", &files, &[]);
+        assert_eq!(summary.total_files_modified, 4);
+        assert_eq!(summary.simulators_supported.len(), 2);
+    }
+
+    #[test]
+    fn integration_docs_manager_not_found_returns_error() {
+        let mut manager = IntegrationDocsManager::new();
+        let result = manager.get_simulator_doc("nonexistent_sim_xyz");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("nonexistent_sim_xyz") || msg.contains("not found") || msg.contains("IO") || msg.contains("directory"),
+            "Unexpected error message: {msg}");
+    }
 }

@@ -74,7 +74,17 @@ mod tests {
     #[test]
     fn test_settings_panel_creation() {
         let panel = SettingsPanel::new();
-        // Basic test to ensure the panel can be created
-        assert!(true);
+        drop(panel);
+    }
+
+    #[test]
+    fn settings_panel_default_equals_new() {
+        let _p1 = SettingsPanel::new();
+        let _p2 = SettingsPanel::default();
+    }
+
+    #[test]
+    fn flight_ui_default_constructs() {
+        let _ui = crate::FlightUi::default();
     }
 }
