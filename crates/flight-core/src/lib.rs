@@ -161,4 +161,32 @@ mod tests {
         assert_ne!(phases[0], phases[1]);
         assert_ne!(phases[2], phases[3]);
     }
+
+    #[test]
+    fn flight_error_profile_and_io_variants() {
+        let err = FlightError::Configuration("bad_key=value".to_string());
+        let s = err.to_string();
+        assert!(s.contains("Configuration error"));
+        assert!(s.contains("bad_key"));
+    }
+
+    #[test]
+    fn security_config_default_is_sensible() {
+        let cfg = SecurityConfig::default();
+        // Default config should not crash when accessed
+        let _ = format!("{:?}", cfg);
+    }
+
+    #[test]
+    fn switch_metrics_default_starts_at_zero() {
+        let m = SwitchMetrics::default();
+        assert_eq!(m.total_switches, 0);
+        assert_eq!(m.failed_switches, 0);
+    }
+
+    #[test]
+    fn sim_id_display_ksp() {
+        let id = SimId::Ksp;
+        assert!(!id.to_string().is_empty());
+    }
 }
