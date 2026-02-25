@@ -97,4 +97,41 @@ mod tests {
         assert!(has_counter);
         assert!(has_histogram);
     }
+
+    #[test]
+    fn test_error_rate_percent_no_ops() {
+        let metrics = DeviceMetrics::default();
+        assert_eq!(metrics.error_rate_percent(), 0.0);
+    }
+
+    #[test]
+    fn test_error_rate_percent_with_failures() {
+        let mut metrics = DeviceMetrics::default();
+        metrics.record_operation(0, 1.0, true);
+        metrics.record_operation(0, 1.0, false);
+        metrics.record_operation(0, 1.0, false);
+        // 2 failures / 3 total = 66.6...%
+        let rate = metrics.error_rate_percent();
+        assert!((rate - 200.0 / 3.0).abs() < 0.01, "got: {rate}");
+    }
+
+    #[test]
+    fn test_nan_latency_ignored() {
+        let mut metrics = DeviceMetrics::default();
+        metrics.record_operation(0, f64::NAN, true);
+        assert!(
+            metrics.last_operation_latency_ms.is_none(),
+            "NaN should not be stored"
+        );
+    }
+
+    #[test]
+    fn test_negative_latency_ignored() {
+        let mut metrics = DeviceMetrics::default();
+        metrics.record_operation(0, -1.0, true);
+        assert!(
+            metrics.last_operation_latency_ms.is_none(),
+            "negative latency should not be stored"
+        );
+    }
 }
