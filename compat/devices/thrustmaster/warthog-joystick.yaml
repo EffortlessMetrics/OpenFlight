@@ -1,0 +1,56 @@
+# Thrustmaster HOTAS Warthog Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Warthog Joystick"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0402   # Confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 16
+  buttons: 19
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: WARTHOG_AXES_BIPOLAR
+    description: >
+      All three stick axes (X/Y/RZ) are bipolar 16-bit channels centered at
+      approximately 32768. The recommended normalization maps 0→-1.0 and
+      65535→+1.0 with center 32768→0.0.
+  - id: WARTHOG_HAT_ENCODING
+    description: >
+      TDC hat position is packed in the upper nibble of byte 9 of the HID
+      report. Values 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW, ≥8=center.
+      The lower nibble is typically 0xF in center position.
+  - id: WARTHOG_SOLD_SEPARATELY
+    description: >
+      Joystick and throttle are separate USB devices; each enumerates
+      independently. Pairing is logical, not hardware-enforced.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout, HIL pending)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The HOTAS Warthog is one of the most widely used flight sim HOTAS systems,
+    primarily in DCS World and MSFS. Input report layout is derived from
+    community analysis of TARGET scripting output, Linux evtest captures, and
+    the DCS HID documentation. Byte offsets have not been validated on
+    physical hardware. Last validated: 2026-02.

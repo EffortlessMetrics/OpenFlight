@@ -1,0 +1,58 @@
+# Logitech Extreme 3D Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Logitech Extreme 3D Pro"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC215   # Confirmed via linux-hardware.org (221 probes)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, twist, throttle]
+    resolution_bits: 10   # X/Y are 10-bit; twist=8-bit; throttle=7-bit
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: EXTREME3DPRO_MIXED_RESOLUTION
+    description: >
+      The four axes use different bit depths: X and Y are 10-bit (0-1023);
+      twist (Rz) is 8-bit (0-255); the throttle slider is 7-bit (0-127).
+      All are normalized to the same −1.0..=1.0 (bipolar) or 0.0..=1.0
+      (unipolar) range by the driver.
+  - id: EXTREME3DPRO_THROTTLE_DIRECTION
+    description: >
+      The side throttle lever has no spring return. The physical lever position
+      "top/forward" maps to raw value 0, and "bottom/back" maps to raw 127.
+      OpenFlight normalizes this as 0→0.0 and 127→1.0. Users who want the
+      conventional "top=full throttle" orientation should invert the axis in
+      their profile.
+  - id: EXTREME3DPRO_PACKED_REPORT
+    description: >
+      All axes, buttons, and hat are tightly packed in a 7-byte HID input
+      report (no report ID). Fields are bit-packed LSB-first.
+
+support:
+  tier: 2              # Parser tests only, community-verified byte layout
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The Logitech Extreme 3D Pro is one of the most widely used entry-level
+    flight sim sticks and has an extensively documented HID report format.
+    21 unit + property tests pass against the community-documented layout.
+    Last validated: 2026-02.

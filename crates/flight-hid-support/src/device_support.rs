@@ -15,6 +15,16 @@ pub const SAITEK_VENDOR_ID: u16 = 0x06A3;
 pub const MAD_CATZ_VENDOR_ID: u16 = 0x0738;
 pub const LOGITECH_VENDOR_ID: u16 = 0x046D;
 
+/// USB Product ID for the Logitech Extreme 3D Pro joystick.
+///
+/// Confirmed: VID 0x046D (Logitech), PID 0xC215 — from linux-hardware.org (221 probes).
+pub const EXTREME_3D_PRO_PID: u16 = 0xC215;
+
+/// Returns `true` if this VID/PID combination is a Logitech Extreme 3D Pro.
+pub fn is_extreme_3d_pro(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == LOGITECH_VENDOR_ID && product_id == EXTREME_3D_PRO_PID
+}
+
 /// USB Vendor ID for all Honeycomb Aeronautical products.
 pub const HONEYCOMB_VENDOR_ID: u16 = 0x294B;
 
@@ -48,6 +58,16 @@ pub const T16000M_JOYSTICK_PID: u16 = 0xB10A;
 ///
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0xB687 — from linux-hardware.org probe data.
 pub const TWCS_THROTTLE_PID: u16 = 0xB687;
+
+/// USB Product ID for the HOTAS Warthog Joystick.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x0402 — from linux-hardware.org probe data.
+pub const WARTHOG_JOYSTICK_PID: u16 = 0x0402;
+
+/// USB Product ID for the HOTAS Warthog Throttle.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x0404 — from linux-hardware.org probe data.
+pub const WARTHOG_THROTTLE_PID: u16 = 0x0404;
 
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
@@ -136,6 +156,39 @@ pub fn t16000m_model(product_id: u16) -> Option<T16000mModel> {
     match product_id {
         T16000M_JOYSTICK_PID => Some(T16000mModel::Joystick),
         TWCS_THROTTLE_PID => Some(T16000mModel::TwcsThrottle),
+        _ => None,
+    }
+}
+
+/// HOTAS Warthog product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WarthogModel {
+    /// HOTAS Warthog Joystick. VID 0x044F, PID 0x0402.
+    Joystick,
+    /// HOTAS Warthog Throttle. VID 0x044F, PID 0x0404.
+    Throttle,
+}
+
+impl WarthogModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            WarthogModel::Joystick => "HOTAS Warthog Joystick",
+            WarthogModel::Throttle => "HOTAS Warthog Throttle",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a HOTAS Warthog device.
+pub fn is_warthog_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID
+        && matches!(product_id, WARTHOG_JOYSTICK_PID | WARTHOG_THROTTLE_PID)
+}
+
+/// Returns the Warthog model for a known PID, or `None` for unknown PIDs.
+pub fn warthog_model(product_id: u16) -> Option<WarthogModel> {
+    match product_id {
+        WARTHOG_JOYSTICK_PID => Some(WarthogModel::Joystick),
+        WARTHOG_THROTTLE_PID => Some(WarthogModel::Throttle),
         _ => None,
     }
 }

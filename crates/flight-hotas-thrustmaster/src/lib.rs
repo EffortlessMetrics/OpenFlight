@@ -13,13 +13,15 @@ pub mod input;
 pub mod pc_mode;
 pub mod presets;
 pub mod t16000m;
+pub mod warthog;
 
 pub use detents::{DetentEvent, ThrottleDetentConfig, ThrottleDetentTracker};
 pub use flight_hid_support::device_support::{
     AxisMode, T16000M_JOYSTICK_PID, TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY,
     TFLIGHT_HOTAS_ONE_PID, T16000mModel, TFlightModel, THRUSTMASTER_VENDOR_ID,
-    TWCS_THROTTLE_PID, is_hotas4_legacy_pid, is_t16000m_device, is_tflight_device,
-    t16000m_model, tflight_model,
+    TWCS_THROTTLE_PID, WARTHOG_JOYSTICK_PID, WARTHOG_THROTTLE_PID, WarthogModel,
+    is_hotas4_legacy_pid, is_t16000m_device, is_tflight_device, is_warthog_device,
+    t16000m_model, tflight_model, warthog_model,
 };
 pub use health::{TFlightHealthMonitor, TFlightHealthStatus};
 pub use input::{
@@ -32,5 +34,11 @@ pub use pc_mode::{
 pub use t16000m::{
     T16000mAxes, T16000mButtons, T16000mInputState, T16000mParseError, TwcsAxes, TwcsButtons,
     TwcsInputState, parse_t16000m_report, parse_twcs_report,
+};
+pub use warthog::{
+    WARTHOG_STICK_MIN_REPORT_BYTES, WARTHOG_THROTTLE_MIN_REPORT_BYTES, WarthogHat,
+    WarthogParseError, WarthogStickAxes, WarthogStickButtons, WarthogStickInputState,
+    WarthogThrottleAxes, WarthogThrottleButtons, WarthogThrottleInputState, parse_warthog_stick,
+    parse_warthog_throttle,
 };
 pub use presets::{RecommendedAxisConfig, recommended_axis_config};
