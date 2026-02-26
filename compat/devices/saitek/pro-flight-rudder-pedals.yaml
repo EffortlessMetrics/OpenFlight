@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 #
-# PID unconfirmed — candidate 0x0BAD appears in community USB ID lists but has
-# not been verified from a reliable primary source (lsusb, linux-hardware.org,
-# or Linux kernel hid-ids.h). Set product_id to null until confirmed.
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0763 — linux-hardware.org ("Pro Flight Rudder Pedals").
+# Standard (non-Cessna) pedals variant. Cessna-branded variant uses PID 0x0765.
 schema_version: "1"
 
 device:
@@ -12,7 +11,7 @@ device:
   vendor: "Saitek / Logitech"
   usb:
     vendor_id: 0x06A3       # Saitek / Logitech PLC
-    product_id: ~           # PID unconfirmed — requires lsusb verification
+    product_id: 0x0763      # Confirmed via linux-hardware.org ("Pro Flight Rudder Pedals")
   hid:
     usage_page: 0x01        # Generic Desktop
     usage: 0x04             # Joystick

@@ -216,6 +216,23 @@ pub const SAITEK_PRO_FLIGHT_QUADRANT_PID: u16 = 0x0C2D;
 ///
 /// Confirmed: VID 0x06A3 (Saitek), PID 0x0BAC — linux-hardware.org (23 probes, "Pro Flight Yoke").
 pub const SAITEK_PRO_FLIGHT_YOKE_PID: u16 = 0x0BAC;
+/// USB Product ID for the Saitek Pro Flight Rudder Pedals (standard variant).
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0763 — linux-hardware.org ("Pro Flight Rudder Pedals").
+/// The Cessna-branded variant uses PID 0x0765.
+pub const SAITEK_PRO_FLIGHT_RUDDER_PEDALS_PID: u16 = 0x0763;
+/// USB Product ID for the Saitek Pro Flight Multi Panel.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0D06 — linux-hardware.org (11 probes, "Flight Pro Multi Panel").
+pub const SAITEK_PRO_FLIGHT_MULTI_PANEL_PID: u16 = 0x0D06;
+/// USB Product ID for the Saitek Pro Flight Radio Panel.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0D05 — linux-hardware.org ("Pro Flight Radio Panel").
+pub const SAITEK_PRO_FLIGHT_RADIO_PANEL_PID: u16 = 0x0D05;
+/// USB Product ID for the Saitek Pro Flight Switch Panel.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0D67 — linux-hardware.org ("Pro Flight Switch Panel").
+pub const SAITEK_PRO_FLIGHT_SWITCH_PANEL_PID: u16 = 0x0D67;
 
 /// USB Vendor ID for VIRPIL Controls UAB.
 ///
