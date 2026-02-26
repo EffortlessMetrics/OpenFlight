@@ -1066,7 +1066,163 @@ requirements:
         description: "WHEN the crate is compiled THEN VENDOR_ID SHALL be 0x1209 and PRODUCT_ID SHALL be 0xF170; the crate SHALL compile as no_std"
         tests:
           - cmd:cargo build -p flight-open-hardware
-  
+
+  - id: REQ-52
+    name: CH Products HOTAS Axis Presets and Health Monitoring
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-52.1
+        description: "WHEN recommended_preset is called for any CH Products device model THEN it SHALL return a preset whose device field matches the requested model"
+        tests:
+          - flight-hotas-ch::presets::tests::all_models_have_preset
+          - flight-hotas-ch::presets::tests::prop_deadzone_valid
+          - flight-hotas-ch::presets::tests::prop_expo_valid
+      - id: AC-52.2
+        description: "WHEN a preset is returned for any CH Products model THEN the deadzone field SHALL be within [0.0, 0.1]"
+        tests:
+          - flight-hotas-ch::presets::tests::deadzone_in_range
+          - flight-hotas-ch::presets::tests::prop_deadzone_valid
+      - id: AC-52.3
+        description: "WHEN a preset is returned for any CH Products model THEN the expo field SHALL be within [0.0, 0.5]"
+        tests:
+          - flight-hotas-ch::presets::tests::expo_in_range
+          - flight-hotas-ch::presets::tests::prop_expo_valid
+      - id: AC-52.4
+        description: "WHEN a preset is returned for a yoke model (EclipseYoke, FlightYoke) THEN invert_throttle SHALL be true; for all other models it SHALL be false"
+        tests:
+          - flight-hotas-ch::presets::tests::yokes_invert_throttle
+          - flight-hotas-ch::presets::tests::sticks_do_not_invert_throttle
+      - id: AC-52.5
+        description: "WHEN a ChHealthMonitor is created THEN initial status SHALL be Unknown; status updates SHALL be reflected immediately; the device model SHALL be preserved"
+        tests:
+          - flight-hotas-ch::health::tests::initial_status_is_unknown
+          - flight-hotas-ch::health::tests::update_to_connected
+          - flight-hotas-ch::health::tests::update_to_disconnected
+          - flight-hotas-ch::health::tests::model_is_preserved
+          - flight-hotas-ch::health::tests::all_models_can_be_monitored
+
+  - id: REQ-53
+    name: Logitech Extreme 3D Pro HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-53.1
+        description: "WHEN a HID report shorter than 7 bytes is parsed THEN parse_extreme_3d_pro SHALL return Err(TooShort)"
+        tests:
+          - flight-hotas-logitech::extreme3dpro::tests::test_too_short
+      - id: AC-53.2
+        description: "WHEN bipolar axes (X, Y, twist) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0"
+        tests:
+          - flight-hotas-logitech::extreme3dpro::tests::test_centered
+          - flight-hotas-logitech::extreme3dpro::tests::test_full_right
+          - flight-hotas-logitech::extreme3dpro::tests::test_full_left
+          - flight-hotas-logitech::extreme3dpro::tests::test_full_forward
+          - flight-hotas-logitech::extreme3dpro::tests::test_twist_full_right
+          - flight-hotas-logitech::extreme3dpro::tests::test_twist_full_left
+          - flight-hotas-logitech::extreme3dpro::tests::test_axes_roundtrip_sample_values
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::x_axis_always_in_range
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::y_axis_always_in_range
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::twist_always_in_range
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::arbitrary_bytes_all_axes_in_range
+      - id: AC-53.3
+        description: "WHEN the throttle lever is at minimum raw (0) THEN the axis SHALL be 0.0; at maximum raw (127) it SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0"
+        tests:
+          - flight-hotas-logitech::extreme3dpro::tests::test_throttle_min
+          - flight-hotas-logitech::extreme3dpro::tests::test_throttle_max
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::throttle_always_unipolar
+      - id: AC-53.4
+        description: "WHEN a hat switch nibble value is parsed THEN it SHALL map to the correct Extreme3DProHat variant (North=0, East=2, South=4, Center=8..15)"
+        tests:
+          - flight-hotas-logitech::extreme3dpro::tests::test_hat_north
+          - flight-hotas-logitech::extreme3dpro::tests::test_hat_east
+          - flight-hotas-logitech::extreme3dpro::tests::test_hat_south
+          - flight-hotas-logitech::extreme3dpro::tests::test_centered
+      - id: AC-53.5
+        description: "WHEN buttons are pressed individually or in combination THEN each of the 12 buttons SHALL be independently addressable; button numbers outside 1-12 SHALL always return false"
+        tests:
+          - flight-hotas-logitech::extreme3dpro::tests::test_buttons_individual
+          - flight-hotas-logitech::extreme3dpro::tests::test_all_buttons_pressed
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::buttons_roundtrip
+          - flight-hotas-logitech::extreme3dpro::tests::proptest_tests::out_of_range_buttons_always_false
+
+  # Product Requirement: Brunner CLS-E Force Feedback Yoke HID Input Parsing
+  - id: REQ-54
+    name: Brunner CLS-E Yoke HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-54.1
+        description: "WHEN a HID report shorter than 9 bytes is parsed THEN parse_cls_e_report SHALL return Err(TooShort) with the actual byte count"
+        tests:
+          - flight-hotas-brunner::cls_e::tests::empty_slice_returns_error
+          - flight-hotas-brunner::cls_e::tests::too_short_by_one_returns_error
+          - flight-hotas-brunner::cls_e::tests::error_message_contains_byte_count
+      - id: AC-54.2
+        description: "WHEN a valid 9-byte or longer CLS-E report is parsed THEN parse_cls_e_report SHALL succeed"
+        tests:
+          - flight-hotas-brunner::cls_e::tests::exactly_min_bytes_parses_ok
+          - flight-hotas-brunner::cls_e::tests::longer_report_does_not_error
+      - id: AC-54.3
+        description: "WHEN roll and pitch axis bytes are decoded THEN normalised values SHALL be within [-1.0, +1.0] for all i16 inputs; i16::MAX SHALL map to approximately +1.0 and i16::MIN SHALL be clamped to -1.0"
+        tests:
+          - flight-hotas-brunner::cls_e::tests::zero_axes_parse_to_zero
+          - flight-hotas-brunner::cls_e::tests::max_positive_axis_parses_to_one
+          - flight-hotas-brunner::cls_e::tests::max_negative_axis_parses_to_minus_one
+          - flight-hotas-brunner::cls_e::tests::negative_32767_parses_to_minus_one
+          - flight-hotas-brunner::cls_e::tests::axes_always_in_range
+      - id: AC-54.4
+        description: "WHEN button bytes are decoded THEN buttons 1-32 SHALL be addressable LSB-first across 4 bytes; out-of-range button numbers SHALL return false"
+        tests:
+          - flight-hotas-brunner::cls_e::tests::no_buttons_pressed_by_default
+          - flight-hotas-brunner::cls_e::tests::button_1_detected
+          - flight-hotas-brunner::cls_e::tests::button_8_detected
+          - flight-hotas-brunner::cls_e::tests::button_32_detected
+          - flight-hotas-brunner::cls_e::tests::all_buttons_pressed
+          - flight-hotas-brunner::cls_e::tests::out_of_range_button_returns_false
+      - id: AC-54.5
+        description: "WHEN parse_cls_e_report is called with arbitrary byte data of >=9 bytes THEN it SHALL never panic"
+        tests:
+          - flight-hotas-brunner::cls_e::tests::random_report_does_not_panic
+
+  # Product Requirement: VPforce Rhino FFB Joystick HID Input Parsing
+  - id: REQ-55
+    name: VPforce Rhino FFB Joystick HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-55.1
+        description: "WHEN a HID report shorter than 20 bytes or with a wrong report ID is parsed THEN parse_rhino_report SHALL return a descriptive error containing the offending byte count or ID"
+        tests:
+          - flight-hotas-vpforce::rhino::tests::too_short_returns_error
+          - flight-hotas-vpforce::rhino::tests::empty_slice_returns_error
+          - flight-hotas-vpforce::rhino::tests::wrong_report_id_returns_error
+          - flight-hotas-vpforce::rhino::tests::error_message_contains_byte_count
+      - id: AC-55.2
+        description: "WHEN signed axes (roll, pitch, rocker, twist) are decoded THEN normalised values SHALL be within [-1.0, +1.0]; i16::MAX SHALL map to approximately +1.0 and i16::MIN to approximately -1.0"
+        tests:
+          - flight-hotas-vpforce::rhino::tests::centred_report_gives_zero_axes
+          - flight-hotas-vpforce::rhino::tests::full_positive_roll_gives_one
+          - flight-hotas-vpforce::rhino::tests::full_negative_roll_gives_minus_one
+          - flight-hotas-vpforce::rhino::tests::axes_always_in_range
+      - id: AC-55.3
+        description: "WHEN the throttle slider (HID Z) is decoded THEN it SHALL be remapped to [0.0, 1.0] with i16::MIN yielding 0.0 and i16::MAX yielding 1.0"
+        tests:
+          - flight-hotas-vpforce::rhino::tests::throttle_min_gives_zero
+          - flight-hotas-vpforce::rhino::tests::throttle_max_gives_one
+      - id: AC-55.4
+        description: "WHEN the button bitmask and POV hat are decoded THEN each of buttons 1-32 SHALL be independently addressable; out-of-range button numbers SHALL return false; the hat byte SHALL be preserved"
+        tests:
+          - flight-hotas-vpforce::rhino::tests::button_1_pressed
+          - flight-hotas-vpforce::rhino::tests::button_32_pressed
+          - flight-hotas-vpforce::rhino::tests::button_0_and_33_always_false
+          - flight-hotas-vpforce::rhino::tests::hat_parsed_correctly
+      - id: AC-55.5
+        description: "WHEN parse_rhino_report is called with valid-length arbitrary byte data THEN it SHALL never panic; reports longer than 20 bytes SHALL also be accepted"
+        tests:
+          - flight-hotas-vpforce::rhino::tests::random_report_does_not_panic
+          - flight-hotas-vpforce::rhino::tests::longer_report_does_not_error
+
   # ============================================================================
   # ============================================================================
 
