@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 #
-# PID confirmed via linux-hardware.org:
-#   0xB68B — "T.Flight Hotas One Bulk" (registered in linux-hardware.org USB probe DB)
-#   0xB68C — XInput/gamepad mode variant (1 probe, Framework Laptop 13)
-# This manifest covers the primary HID mode (0xB68B).
+# PIDs confirmed via linux-hardware.org:
+#   0xB68D — primary HID interrupt mode, "T.Flight Hotas One" (17 probes) ← this manifest
+#   0xB68B — bulk-endpoint variant, "T.Flight Hotas One Bulk" (few probes)
+#   0xB68C — XInput/gamepad mode (1 probe, console-mode only)
 schema_version: "1"
 
 device:
@@ -13,7 +13,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
-    product_id: 0xB68B  # T.Flight Hotas One Bulk — confirmed via linux-hardware.org
+    product_id: 0xB68D  # T.Flight Hotas One — primary HID mode (17 linux-hardware probes)
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick
@@ -52,6 +52,7 @@ support:
     simulated: true
     hil: false
   notes: >
-    PID 0xB68B confirmed from linux-hardware.org ("T.Flight Hotas One Bulk").
+    PID 0xB68D confirmed from linux-hardware.org ("T.Flight Hotas One", 17 probes).
+    A Bulk-endpoint variant (0xB68B) and XInput variant (0xB68C) also exist; same axes/buttons.
     One of the most popular budget HOTAS units, widely used with MSFS and X-Plane.
     Last validated: 2026-02.

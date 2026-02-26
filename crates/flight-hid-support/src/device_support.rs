@@ -64,8 +64,25 @@ pub const TPR_PENDULAR_RUDDER_PID: u16 = 0xB68F;
 /// The Bulk variant uses a different USB endpoint but reports the same axes as the standard TPR.
 pub const TPR_PENDULAR_RUDDER_BULK_PID: u16 = 0xB68E;
 
-pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
-/// Primary PID for T.Flight HOTAS 4 - verified via USBView artifact.
+/// USB Product ID for the T.Flight HOTAS One (primary HID interrupt mode).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB68D — linux-hardware.org (17 probes,
+/// USB string "T.Flight Hotas One"). This is the most common PID on PC.
+pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68D;
+
+/// USB Product ID for the T.Flight HOTAS One Bulk-endpoint variant.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB68B — linux-hardware.org ("T.Flight Hotas One Bulk").
+/// Identical capabilities; uses bulk transfer instead of interrupt.
+pub const TFLIGHT_HOTAS_ONE_BULK_PID: u16 = 0xB68B;
+
+/// Primary PID for T.Flight HOTAS 4 (PS4 / "HID 4" variant).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB67C — linux-hardware.org (11 probes,
+/// USB string "T.Flight Hotas 4"). Newer firmware; see TFLIGHT_HOTAS_4_PID for older variant.
+pub const TFLIGHT_HOTAS_4_PID_V2: u16 = 0xB67C;
+
+/// Older PID for T.Flight HOTAS 4 - verified via USBView artifact.
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
 /// Legacy PID for T.Flight HOTAS 4 - may appear on older firmware versions.
 pub const TFLIGHT_HOTAS_4_PID_LEGACY: u16 = 0xB67A;

@@ -9,7 +9,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F
-    product_id: 0xB67B   # Current; legacy firmware: 0xB67A
+    product_id: 0xB67B   # Older variant; newer firmware: 0xB67C (11 probes); legacy: 0xB67A
   hid:
     usage_page: 0x01      # Generic Desktop
     usage: 0x04           # Joystick
