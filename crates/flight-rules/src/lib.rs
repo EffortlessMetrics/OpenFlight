@@ -1110,4 +1110,44 @@ mod snapshot_tests {
         let compiled = rules.compile().expect("AND rule should compile");
         insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
     }
+
+    /// Snapshot the error message for a malformed condition (invalid number).
+    #[test]
+    fn snapshot_error_malformed_condition() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let err = compiler.parse_condition("ias > notanumber").unwrap_err();
+        insta::assert_debug_snapshot!("error_malformed_condition", err);
+    }
+
+    /// Snapshot the validation error when the `when` condition is empty.
+    #[test]
+    fn snapshot_error_empty_when() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_empty_when", err);
+    }
+
+    /// Snapshot the validation error when the action is empty.
+    #[test]
+    fn snapshot_error_empty_action() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "".to_string(),
+                action: "".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_empty_action", err);
+    }
 }

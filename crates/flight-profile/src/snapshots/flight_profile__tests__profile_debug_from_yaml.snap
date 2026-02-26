@@ -1,0 +1,29 @@
+---
+source: crates/flight-profile/src/lib.rs
+assertion_line: 934
+expression: profile
+---
+Profile {
+    schema: "flight.profile/1",
+    sim: Some(
+        "msfs",
+    ),
+    aircraft: None,
+    axes: {
+        "pitch": AxisConfig {
+            deadzone: Some(
+                0.05,
+            ),
+            expo: Some(
+                0.3,
+            ),
+            slew_rate: Some(
+                2.0,
+            ),
+            detents: [],
+            curve: None,
+            filter: None,
+        },
+    },
+    pof_overrides: None,
+}
