@@ -207,4 +207,131 @@ mod tests {
         let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
         assert!(!snap.sim.connected);
     }
+
+    // ── Connection-state threshold boundary ──────────────────────────────────
+
+    #[test]
+    fn connection_state_exactly_at_threshold_is_connected() {
+        let reg = MetricsRegistry::new();
+        reg.set_gauge(SIM_CONNECTION_STATE, 0.5);
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert!(snap.sim.connected);
+    }
+
+    #[test]
+    fn connection_state_just_below_threshold_is_disconnected() {
+        let reg = MetricsRegistry::new();
+        reg.set_gauge(SIM_CONNECTION_STATE, 0.49);
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert!(!snap.sim.connected);
+    }
+
+    // ── Unknown metric names are silently ignored ─────────────────────────────
+
+    #[test]
+    fn unknown_metrics_do_not_panic_and_leave_defaults() {
+        let metrics = vec![
+            Metric::Counter {
+                name: "unknown.counter".to_string(),
+                value: 99,
+            },
+            Metric::Gauge {
+                name: "unknown.gauge".to_string(),
+                value: 3.14,
+            },
+            Metric::Histogram {
+                name: "unknown.hist".to_string(),
+                summary: HistogramSummary {
+                    count: 1,
+                    min: 1.0,
+                    max: 1.0,
+                    mean: 1.0,
+                    p50: 1.0,
+                    p95: 1.0,
+                    p99: 1.0,
+                },
+            },
+        ];
+        let snap = MetricsDashboard::from_snapshot(&metrics);
+        assert_eq!(snap.sim.frames_total, 0);
+        assert_eq!(snap.ffb.effects_applied_total, 0);
+        assert_eq!(snap.rt.ticks_total, 0);
+        assert!(snap.rt.jitter_us.is_none());
+    }
+
+    // ── Remaining sim fields ──────────────────────────────────────────────────
+
+    #[test]
+    fn sim_last_packet_age_ms_populated() {
+        let reg = MetricsRegistry::new();
+        reg.set_gauge(SIM_LAST_PACKET_AGE_MS, 42.0);
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert_eq!(snap.sim.last_packet_age_ms, 42.0);
+    }
+
+    // ── Remaining FFB fields ──────────────────────────────────────────────────
+
+    #[test]
+    fn ffb_emergency_stop_and_fault_count_populated() {
+        let reg = MetricsRegistry::new();
+        reg.inc_counter(FFB_EMERGENCY_STOP_TOTAL, 3);
+        reg.inc_counter(FFB_FAULT_COUNT_TOTAL, 1);
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert_eq!(snap.ffb.emergency_stop_total, 3);
+        assert_eq!(snap.ffb.fault_count_total, 1);
+    }
+
+    // ── Histogram statistics ──────────────────────────────────────────────────
+
+    #[test]
+    fn rt_jitter_histogram_mean_and_bounds() {
+        let reg = MetricsRegistry::new();
+        for v in [100.0_f64, 200.0, 300.0, 400.0, 500.0] {
+            reg.observe(RT_JITTER_US, v);
+        }
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        let jitter = snap.rt.jitter_us.expect("jitter histogram present");
+        assert_eq!(jitter.count, 5);
+        assert_eq!(jitter.min, 100.0);
+        assert_eq!(jitter.max, 500.0);
+        assert_eq!(jitter.mean, 300.0);
+    }
+
+    #[test]
+    fn histogram_absent_when_no_samples_observed() {
+        let reg = MetricsRegistry::new();
+        // No calls to observe for any histogram key
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert!(snap.sim.frame_latency_ms.is_none());
+        assert!(snap.ffb.effect_latency_ms.is_none());
+        assert!(snap.rt.jitter_us.is_none());
+    }
+
+    // ── Duplicate metric name in raw slice (last value wins) ─────────────────
+
+    #[test]
+    fn duplicate_counter_last_value_wins() {
+        let metrics = vec![
+            Metric::Counter {
+                name: RT_TICKS_TOTAL.to_string(),
+                value: 1,
+            },
+            Metric::Counter {
+                name: RT_TICKS_TOTAL.to_string(),
+                value: 9_999,
+            },
+        ];
+        let snap = MetricsDashboard::from_snapshot(&metrics);
+        assert_eq!(snap.rt.ticks_total, 9_999);
+    }
+
+    // ── Large / edge counter values ───────────────────────────────────────────
+
+    #[test]
+    fn large_counter_value_stored_correctly() {
+        let reg = MetricsRegistry::new();
+        reg.inc_counter(RT_TICKS_TOTAL, u64::MAX / 2);
+        let snap = MetricsDashboard::from_snapshot(&reg.snapshot());
+        assert_eq!(snap.rt.ticks_total, u64::MAX / 2);
+    }
 }
