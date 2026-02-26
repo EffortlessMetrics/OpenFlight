@@ -168,6 +168,25 @@ pub const VIRPIL_PANEL2_PID: u16 = 0x0259;
 /// (src/shark_panel.rs, `const PID: u16 = 0x825D`).
 pub const VIRPIL_SHARK_PANEL_PID: u16 = 0x825D;
 
+/// USB Product ID for the VIRPIL VPC Constellation Alpha (left grip on CM3 base).
+///
+/// Confirmed: VID 0x3344, PID 0x838F — linux-hardware.org probe data
+/// ("L-VPC Stick MT-50CM3", 1 probe). Also confirmed via community mapping script
+/// FwlDynamicJoystickMapper/virpil_cm3_aprime_l.lua.
+pub const VIRPIL_CONSTELLATION_ALPHA_LEFT_PID: u16 = 0x838F;
+
+/// USB Product ID for the VIRPIL VPC Constellation Alpha Prime (left grip, standalone HOSAS).
+///
+/// Source: VPCLedHandle open-source Python library (VPC_LEDs_server.py,
+/// `vendor_id=0x3344, product_id=0x138`).
+pub const VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID: u16 = 0x0138;
+
+/// USB Product ID for the VIRPIL VPC Constellation Alpha Prime (right grip, standalone HOSAS).
+///
+/// Source: VPCLedHandle open-source Python library (VPC_LEDs_server.py,
+/// `vendor_id=0x3344, product_id=0x4139`).
+pub const VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID: u16 = 0x4139;
+
 /// USB Vendor ID for CH Products.
 ///
 /// Source: Linux kernel `drivers/hid/hid-ids.h`
@@ -330,6 +349,53 @@ pub fn cougar_hotas_model(product_id: u16) -> Option<CougarHotasModel> {
     }
 }
 
+/// Thrustmaster TCA Airbus Edition product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TcaAirbusModel {
+    /// TCA Sidestick Airbus Edition (Pilot / left-hand captain's seat). VID 0x044F, PID 0x0405.
+    SidestickPilot,
+    /// TCA Sidestick Airbus Edition (Copilot / right-hand first-officer's seat). VID 0x044F, PID 0x0406.
+    SidestickCopilot,
+    /// TCA Quadrant Airbus Edition (engines 1 & 2). VID 0x044F, PID 0x0407.
+    QuadrantEng12,
+    /// TCA Quadrant Airbus Add-On (engines 3 & 4). VID 0x044F, PID 0x0408.
+    QuadrantEng34,
+}
+
+impl TcaAirbusModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            TcaAirbusModel::SidestickPilot => "TCA Sidestick Airbus Edition (Pilot)",
+            TcaAirbusModel::SidestickCopilot => "TCA Sidestick Airbus Edition (Copilot)",
+            TcaAirbusModel::QuadrantEng12 => "TCA Quadrant Airbus Edition (Eng 1&2)",
+            TcaAirbusModel::QuadrantEng34 => "TCA Quadrant Airbus Add-On (Eng 3&4)",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known TCA Airbus device.
+pub fn is_tca_airbus_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID
+        && matches!(
+            product_id,
+            TCA_SIDESTICK_AIRBUS_PILOT_PID
+                | TCA_SIDESTICK_AIRBUS_COPILOT_PID
+                | TCA_QUADRANT_AIRBUS_ENG12_PID
+                | TCA_QUADRANT_AIRBUS_ENG34_PID
+        )
+}
+
+/// Returns the TCA Airbus model for a known PID, or `None` for unknown PIDs.
+pub fn tca_airbus_model(product_id: u16) -> Option<TcaAirbusModel> {
+    match product_id {
+        TCA_SIDESTICK_AIRBUS_PILOT_PID => Some(TcaAirbusModel::SidestickPilot),
+        TCA_SIDESTICK_AIRBUS_COPILOT_PID => Some(TcaAirbusModel::SidestickCopilot),
+        TCA_QUADRANT_AIRBUS_ENG12_PID => Some(TcaAirbusModel::QuadrantEng12),
+        TCA_QUADRANT_AIRBUS_ENG34_PID => Some(TcaAirbusModel::QuadrantEng34),
+        _ => None,
+    }
+}
+
 /// VIRPIL Controls VPC product family models.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VirpilModel {
@@ -343,6 +409,12 @@ pub enum VirpilModel {
     ControlPanel2,
     /// VPC Shark Panel. VID 0x3344, PID 0x825D.
     SharkPanel,
+    /// VPC Constellation Alpha (left grip on CM3 base). VID 0x3344, PID 0x838F.
+    ConstellationAlphaLeft,
+    /// VPC Constellation Alpha Prime (left grip, standalone HOSAS). VID 0x3344, PID 0x0138.
+    ConstellationAlphaPrimeLeft,
+    /// VPC Constellation Alpha Prime (right grip, standalone HOSAS). VID 0x3344, PID 0x4139.
+    ConstellationAlphaPrimeRight,
 }
 
 impl VirpilModel {
@@ -353,6 +425,9 @@ impl VirpilModel {
             VirpilModel::ControlPanel1 => "VPC Control Panel 1",
             VirpilModel::ControlPanel2 => "VPC Control Panel 2",
             VirpilModel::SharkPanel => "VPC Shark Panel",
+            VirpilModel::ConstellationAlphaLeft => "VPC Constellation Alpha Left (CM3)",
+            VirpilModel::ConstellationAlphaPrimeLeft => "VPC Constellation Alpha Prime Left",
+            VirpilModel::ConstellationAlphaPrimeRight => "VPC Constellation Alpha Prime Right",
         }
     }
 }
@@ -367,6 +442,9 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
                 | VIRPIL_PANEL1_PID
                 | VIRPIL_PANEL2_PID
                 | VIRPIL_SHARK_PANEL_PID
+                | VIRPIL_CONSTELLATION_ALPHA_LEFT_PID
+                | VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID
+                | VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID
         )
 }
 
@@ -378,6 +456,9 @@ pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
         VIRPIL_PANEL1_PID => Some(VirpilModel::ControlPanel1),
         VIRPIL_PANEL2_PID => Some(VirpilModel::ControlPanel2),
         VIRPIL_SHARK_PANEL_PID => Some(VirpilModel::SharkPanel),
+        VIRPIL_CONSTELLATION_ALPHA_LEFT_PID => Some(VirpilModel::ConstellationAlphaLeft),
+        VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID => Some(VirpilModel::ConstellationAlphaPrimeLeft),
+        VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID => Some(VirpilModel::ConstellationAlphaPrimeRight),
         _ => None,
     }
 }

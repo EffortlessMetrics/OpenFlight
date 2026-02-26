@@ -1,17 +1,17 @@
-# Thrustmaster TCA Quadrant Airbus Edition
+# Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 #
-# PIDs confirmed: VID 0x044F:0x0407 — linux-hardware.org ("TCA Q-Eng 1&2").
-# Engines 3&4 Add-On uses PID 0x0408; see tca-quadrant-airbus-addon.yaml.
+# PIDs confirmed: VID 0x044F:0x0408 — linux-hardware.org ("TCA Q-Eng 3&4").
+# Base Quadrant (Eng 1&2) uses PID 0x0407; see tca-quadrant-airbus.yaml.
 schema_version: "1"
 
 device:
-  name: "Thrustmaster TCA Quadrant Airbus Edition"
+  name: "Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4)"
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
-    product_id: 0x0407  # TCA Q-Eng 1&2 — confirmed via linux-hardware.org
+    product_id: 0x0408  # TCA Q-Eng 3&4 — confirmed via linux-hardware.org
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick
@@ -19,7 +19,7 @@ device:
 capabilities:
   axes:
     count: 4
-    names: [throttle_1, throttle_2, flaps, spoiler]
+    names: [throttle_3, throttle_4, flaps, spoiler]
     resolution_bits: 12
   buttons: 12
   hats: 0
@@ -35,10 +35,11 @@ quirks:
       The thrust levers have a physical TOGA/CLB/MCT/IDLE detent system.
       The idle detent is at the low end of axis travel (raw 0) and TOGA
       at the high end. Reverse thrust (if fitted) extends below idle.
-  - id: AIRBUS_SOLD_SEPARATELY
+  - id: TCA_ENG34_ADDON
     description: >
-      TCA Sidestick and TCA Quadrant are separate USB HID devices that must
-      each be enumerated independently for full axis coverage.
+      This is the Add-On pack for 4-engine aircraft. It must be used alongside
+      the base TCA Quadrant (PID 0x0407) which handles engines 1 and 2.
+      Each unit is a separate USB HID device.
 
 support:
   tier: 2
@@ -46,6 +47,6 @@ support:
     simulated: false
     hil: false
   notes: >
-    PID 0x0407 confirmed from linux-hardware.org (USB string "TCA Q-Eng 1&2").
-    Capabilities based on Thrustmaster product specification and community reports.
-    Engines 3&4 Add-On (PID 0x0408) is a separate USB device; see tca-quadrant-airbus-addon.yaml.
+    PID 0x0408 confirmed from linux-hardware.org (USB string "TCA Q-Eng 3&4").
+    Add-On pack for 4-engine aircraft (e.g. A340, A380). Requires base TCA Quadrant
+    (PID 0x0407) for engines 1&2. Capabilities mirror the base Quadrant.
