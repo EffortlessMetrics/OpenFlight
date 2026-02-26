@@ -764,4 +764,80 @@ mod tests {
         let message = adapter.check_feature_blocked("telemetry_basic");
         assert!(message.is_none());
     }
+
+    // --- State machine transition tests ---
+
+    #[test]
+    fn test_initial_state_is_disconnected() {
+        let adapter = create_test_adapter();
+        assert_eq!(adapter.state(), AdapterState::Disconnected);
+        assert!(adapter.active_connection.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_state_transitions_disconnected_connected_active() {
+        let mut adapter = create_test_adapter();
+        let addr: std::net::SocketAddr = "127.0.0.1:19901".parse().unwrap();
+
+        // Simulate Disconnected → Connected (mirrors handle_handshake)
+        adapter.active_connection = Some(DcsConnection {
+            addr,
+            version: crate::socket_bridge::ProtocolVersion::V1_0,
+            features: vec!["telemetry_basic".to_string()],
+            last_telemetry: Instant::now(),
+            aircraft: None,
+            session_type: crate::mp_detection::SessionType::Unknown,
+        });
+        adapter.state = AdapterState::Connected;
+        assert_eq!(adapter.state(), AdapterState::Connected);
+        assert!(adapter.connection_status().is_some());
+
+        // Simulate Connected → Active (mirrors handle_telemetry)
+        adapter.state = AdapterState::Active;
+        assert_eq!(adapter.state(), AdapterState::Active);
+    }
+
+    #[tokio::test]
+    async fn test_state_active_to_disconnected_on_timeout() {
+        let mut adapter = create_test_adapter();
+        let addr: std::net::SocketAddr = "127.0.0.1:19902".parse().unwrap();
+
+        // Place adapter in Active state with a timed-out connection (10 s > 2 s timeout)
+        adapter.active_connection = Some(DcsConnection {
+            addr,
+            version: crate::socket_bridge::ProtocolVersion::V1_0,
+            features: vec![],
+            last_telemetry: Instant::now() - Duration::from_secs(10),
+            aircraft: None,
+            session_type: crate::mp_detection::SessionType::Unknown,
+        });
+        adapter.state = AdapterState::Active;
+
+        // check_connection_health must detect the timeout and transition → Disconnected
+        adapter.check_connection_health().await.unwrap();
+
+        assert_eq!(adapter.state(), AdapterState::Disconnected);
+        assert!(adapter.active_connection.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_state_connected_to_disconnected_on_timeout() {
+        let mut adapter = create_test_adapter();
+        let addr: std::net::SocketAddr = "127.0.0.1:19903".parse().unwrap();
+
+        adapter.active_connection = Some(DcsConnection {
+            addr,
+            version: crate::socket_bridge::ProtocolVersion::V1_0,
+            features: vec![],
+            last_telemetry: Instant::now() - Duration::from_secs(5),
+            aircraft: None,
+            session_type: crate::mp_detection::SessionType::Unknown,
+        });
+        adapter.state = AdapterState::Connected;
+
+        adapter.check_connection_health().await.unwrap();
+
+        assert_eq!(adapter.state(), AdapterState::Disconnected);
+        assert!(adapter.active_connection.is_none());
+    }
 }

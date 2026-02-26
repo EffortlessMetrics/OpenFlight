@@ -7,7 +7,7 @@
 //! and connection timeout detection per requirements DCS-INT-01.7, DCS-INT-01.8,
 //! DCS-INT-01.11, DCS-INT-01.13, DCS-INT-01.15, SIM-TEST-01.4
 
-use flight_dcs_export::{DcsAdapter, DcsAdapterConfig};
+use flight_dcs_export::{AdapterState, DcsAdapter, DcsAdapterConfig, DcsMessage, ProtocolVersion};
 use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -736,4 +736,252 @@ fn test_flaps_clamped_at_bounds() {
         .expect("Flaps out-of-range should be clamped");
 
     assert_eq!(snapshot.config.flaps.value(), 100.0);
+}
+
+// ---------------------------------------------------------------------------
+// State machine tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_state_machine_initial_state_is_disconnected() {
+    let adapter = create_test_adapter();
+    assert_eq!(adapter.state(), AdapterState::Disconnected);
+}
+
+// ---------------------------------------------------------------------------
+// Multiple consecutive telemetry packets
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_multiple_consecutive_telemetry_packets() {
+    let adapter = create_test_adapter();
+
+    let frames: Vec<(u64, &str, serde_json::Value)> = vec![
+        (1000, "F-16C", json!({"ias": 200.0, "tas": 210.0, "altitude_asl": 5000.0})),
+        (1033, "F-16C", json!({"ias": 210.0, "tas": 221.0, "altitude_asl": 5100.0})),
+        (1066, "F-16C", json!({"ias": 220.0, "tas": 232.0, "altitude_asl": 5200.0})),
+        (1099, "F-16C", json!({"ias": 230.0, "tas": 243.0, "altitude_asl": 5300.0})),
+    ];
+
+    let mut last_ts: Option<u64> = None;
+    for (ts, aircraft, frame) in &frames {
+        let data = create_telemetry_data(frame.clone());
+        let snapshot = adapter
+            .convert_to_bus_snapshot(*ts, aircraft, &data)
+            .expect("Should convert consecutive telemetry");
+        assert_eq!(snapshot.aircraft.icao, *aircraft);
+        // Bus timestamps must be monotonically non-decreasing
+        if let Some(prev) = last_ts {
+            assert!(snapshot.timestamp >= prev);
+        }
+        last_ts = Some(snapshot.timestamp);
+    }
+}
+
+#[test]
+fn test_consecutive_telemetry_different_aircraft() {
+    let adapter = create_test_adapter();
+
+    let aircraft_frames = [
+        ("F-16C", json!({"ias": 350.0})),
+        ("Ka-50", json!({"ias": 5.0})),
+        ("A-10C", json!({"ias": 200.0})),
+    ];
+
+    for (aircraft, frame) in &aircraft_frames {
+        let data = create_telemetry_data(frame.clone());
+        let snapshot = adapter
+            .convert_to_bus_snapshot(1000, aircraft, &data)
+            .expect("Should convert telemetry for each aircraft");
+        assert_eq!(snapshot.aircraft.icao, *aircraft);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Malformed packet handling — must not panic
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_malformed_dcs_message_does_not_panic() {
+    // Malformed inputs must never cause a panic; returning a parse error is fine.
+    let malformed_inputs: &[&str] = &[
+        "",
+        "not json at all",
+        "{}",
+        r#"{"type": "UnknownVariant", "data": {}}"#,
+        r#"{"type": "Telemetry"}"#, // missing 'data' key
+        "null",
+        "[]",
+        r#"{"type": "Telemetry", "data": {"timestamp": "not_a_number"}}"#,
+        &"x".repeat(1_000), // long invalid input (value created below)
+    ];
+
+    for input in malformed_inputs {
+        let _ = serde_json::from_str::<DcsMessage>(input);
+    }
+}
+
+#[test]
+fn test_malformed_dcs_message_long_input_does_not_panic() {
+    // Very long invalid JSON input — must not panic or cause OOM
+    let long_input = "x".repeat(65_536);
+    let _ = serde_json::from_str::<DcsMessage>(&long_input);
+}
+
+#[test]
+fn test_malformed_telemetry_field_types_do_not_panic() {
+    let adapter = create_test_adapter();
+
+    // Fields with wrong JSON types — adapter must skip them gracefully
+    let bad_data = create_telemetry_data(json!({
+        "ias": "not_a_number",
+        "tas": true,
+        "altitude_asl": {"nested": "object"},
+        "heading": [],
+        "g_force": null
+    }));
+
+    // Must not panic; may succeed with defaults or return an error
+    let _ = adapter.convert_to_bus_snapshot(1000, "F-16C", &bad_data);
+}
+
+// ---------------------------------------------------------------------------
+// DCS wire protocol (Export.lua → Flight Hub) packet format tests
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_wire_protocol_handshake_roundtrip() {
+    let msg = DcsMessage::Handshake {
+        version: ProtocolVersion::V1_0,
+        features: vec![
+            "telemetry_basic".to_string(),
+            "telemetry_navigation".to_string(),
+            "session_detection".to_string(),
+        ],
+    };
+
+    // Wire protocol: newline-delimited JSON
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::Handshake { version, features } => {
+            assert_eq!(version, ProtocolVersion::V1_0);
+            assert!(features.contains(&"telemetry_basic".to_string()));
+            assert!(features.contains(&"telemetry_navigation".to_string()));
+        }
+        _ => panic!("Expected Handshake"),
+    }
+}
+
+#[test]
+fn test_wire_protocol_telemetry_roundtrip() {
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), serde_json::json!(350.0));
+    data.insert("altitude_asl".to_string(), serde_json::json!(15000.0));
+    data.insert("heading".to_string(), serde_json::json!(90.0));
+
+    let msg = DcsMessage::Telemetry {
+        timestamp: 123_456_789,
+        aircraft: "F-16C".to_string(),
+        session_type: "SP".to_string(),
+        data,
+    };
+
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::Telemetry {
+            timestamp,
+            aircraft,
+            session_type,
+            data,
+        } => {
+            assert_eq!(timestamp, 123_456_789);
+            assert_eq!(aircraft, "F-16C");
+            assert_eq!(session_type, "SP");
+            assert!(data.contains_key("ias"));
+            assert!(data.contains_key("altitude_asl"));
+        }
+        _ => panic!("Expected Telemetry"),
+    }
+}
+
+#[test]
+fn test_wire_protocol_heartbeat_roundtrip() {
+    let msg = DcsMessage::Heartbeat { timestamp: 999 };
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::Heartbeat { timestamp } => assert_eq!(timestamp, 999),
+        _ => panic!("Expected Heartbeat"),
+    }
+}
+
+#[test]
+fn test_wire_protocol_error_roundtrip() {
+    let msg = DcsMessage::Error {
+        code: "DCS_INIT_FAILED".to_string(),
+        message: "DCS failed to initialise Export.lua".to_string(),
+    };
+
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::Error { code, message } => {
+            assert_eq!(code, "DCS_INIT_FAILED");
+            assert!(message.contains("Export.lua"));
+        }
+        _ => panic!("Expected Error"),
+    }
+}
+
+#[test]
+fn test_wire_protocol_mp_telemetry_roundtrip() {
+    // Verify MP session type is preserved across the wire
+    let mut data = HashMap::new();
+    data.insert("ias".to_string(), serde_json::json!(280.0));
+    data.insert("weapons".to_string(), serde_json::json!({"missile": "AIM-120C"}));
+
+    let msg = DcsMessage::Telemetry {
+        timestamp: 500,
+        aircraft: "F/A-18C".to_string(),
+        session_type: "MP".to_string(),
+        data,
+    };
+
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::Telemetry { session_type, .. } => {
+            assert_eq!(session_type, "MP");
+        }
+        _ => panic!("Expected Telemetry"),
+    }
+}
+
+#[test]
+fn test_wire_protocol_handshake_ack_roundtrip() {
+    let msg = DcsMessage::HandshakeAck {
+        version: ProtocolVersion::V1_0,
+        accepted_features: vec!["telemetry_basic".to_string()],
+    };
+
+    let wire = format!("{}\n", serde_json::to_string(&msg).unwrap());
+    let parsed: DcsMessage = serde_json::from_str(wire.trim()).unwrap();
+
+    match parsed {
+        DcsMessage::HandshakeAck {
+            version,
+            accepted_features,
+        } => {
+            assert_eq!(version, ProtocolVersion::V1_0);
+            assert_eq!(accepted_features, vec!["telemetry_basic"]);
+        }
+        _ => panic!("Expected HandshakeAck"),
+    }
 }

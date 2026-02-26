@@ -9,7 +9,7 @@ device:
   vendor: "Honeycomb Aeronautical"
   usb:
     vendor_id: 0x294B
-    product_id: 0x0102   # Community-reported; unverified — see HARDWARE_VALIDATION note
+    product_id: 0x1900   # Confirmed: linux-hardware.org hardware probe data (8 probes, "Alpha Flight Controls")
   hid:
     usage_page: 0x01      # Generic Desktop
     usage: 0x04           # Joystick
@@ -28,11 +28,11 @@ polling:
   max_jitter_ms: 4       # USB FS device; slightly higher jitter budget
 
 quirks:
-  - id: ALPHA_PID_UNVERIFIED
+  - id: ALPHA_PID_CONFIRMED
     description: >
-      The Alpha Yoke PID (0x0102) is community-reported and has not been confirmed
-      with hardware. Verify with lsusb/USBView before matching against this PID.
-      The Bravo Throttle Quadrant confirmed PID is 0x1901.
+      The Alpha Yoke PID (0x1900) is confirmed by linux-hardware.org hardware probe
+      data (8 independent system probes, device string "Alpha Flight Controls").
+      Previously community-reported as 0x0102; updated based on hardware evidence.
   - id: MAGNETO_AS_BUTTONS
     description: >
       Magneto switch positions are reported as discrete buttons (not an axis).

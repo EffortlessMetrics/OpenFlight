@@ -47,6 +47,6 @@ support:
     simulated: true
     hil: false
   notes: >
-    Commonly paired with the Honeycomb Alpha yoke (VID 0x294B / PID 0x1901).
+    Commonly paired with the Honeycomb Alpha yoke (VID 0x294B / PID 0x1900).
     Bravo-only axis configuration supported; no dedicated crate yet.
     Last validated: 2026-02.

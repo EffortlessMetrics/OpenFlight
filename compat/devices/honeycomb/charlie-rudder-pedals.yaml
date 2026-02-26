@@ -12,7 +12,9 @@ device:
   vendor: "Honeycomb Aeronautical"
   usb:
     vendor_id: 0x294B
-    product_id: ~             # PID unconfirmed — requires lsusb / USBView verification
+    product_id: 0x1902    # Community-inferred (sequential: Alpha=0x1900, Bravo=0x1901 → Charlie=0x1902).
+                          # No independent hardware probe or open-source project has confirmed this value.
+                          # Verify with lsusb / USBView on real hardware before enabling device matching.
   hid:
     usage_page: 0x01          # Generic Desktop
     usage: 0x04               # Joystick
@@ -31,12 +33,13 @@ polling:
   max_jitter_ms: 4
 
 quirks:
-  - id: CHARLIE_PID_UNVERIFIED
+  - id: CHARLIE_PID_COMMUNITY_INFERRED
     description: >
-      The Charlie Rudder Pedals PID (product_id) is unknown at manifest creation time.
-      Device was released late 2024 and its USB PID has not appeared in any open-source
-      project or public USB ID database. Do not use for device matching until confirmed.
-      Submit confirmed PID via PR with lsusb or USBView evidence.
+      The Charlie Rudder Pedals PID (0x1902) is community-inferred from the sequential
+      Honeycomb numbering scheme (Alpha=0x1900 confirmed, Bravo=0x1901 confirmed,
+      Charlie=0x1902 inferred). No hardware probe data or open-source project
+      has confirmed this value. Do not use for production device matching until
+      verified with lsusb / USBView on real hardware. Submit confirmed PID via PR.
   - id: RUDDER_CENTRED
     description: >
       Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
@@ -48,6 +51,6 @@ support:
     simulated: false
     hil: false
   notes: >
-    VID confirmed (0x294B). PID unconfirmed at manifest creation.
-    Do not enable device matching until product_id is filled in.
-    Last reviewed: 2026-02.
+    VID confirmed (0x294B). PID community-inferred as 0x1902 (sequential pattern:
+    Alpha=0x1900, Bravo=0x1901). Not hardware-confirmed; do not use for production
+    device matching. Last reviewed: 2026-02.

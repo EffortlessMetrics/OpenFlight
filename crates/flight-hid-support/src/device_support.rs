@@ -42,17 +42,25 @@ pub const HONEYCOMB_VENDOR_ID: u16 = 0x294B;
 
 /// USB Product ID for the Honeycomb Alpha Flight Controls XPC (Yoke).
 ///
-/// **Caution:** This PID is community-reported (0x0102) and has not been confirmed
-/// with hardware. Verify with `lsusb` / USBView against real hardware before
-/// relying on it for device matching.
-pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x0102;
+/// Confirmed: VID 0x294B, PID 0x1900 — linux-hardware.org hardware probe data
+/// (8 independent system probes, device string "Alpha Flight Controls").
+pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x1900;
 
 /// USB Product ID for the Honeycomb Bravo Throttle Quadrant.
 ///
-/// Confirmed from multiple independent sources: BetterBravoLights (RoystonS),
-/// FwlDynamicJoystickMapper Lua scripts, SPAD.neXt profiles, and
-/// linux-hardware.org probe data.
+/// Confirmed from multiple independent sources: BetterBravoLights (RoystonS,
+/// `BravoLights.Common/UsbLogic.cs`), SPAD.neXt profiles, and
+/// linux-hardware.org probe data (8+ probes).
 pub const HONEYCOMB_BRAVO_PID: u16 = 0x1901;
+
+/// USB Product ID for the Honeycomb Charlie Rudder Pedals.
+///
+/// **Caution:** This PID (0x1902) is community-inferred from the sequential
+/// Honeycomb numbering scheme (Alpha=0x1900, Bravo=0x1901 → Charlie=0x1902).
+/// No independent hardware probe or open-source project has been found that
+/// confirms this value. Verify with `lsusb` / USBView on real hardware before
+/// using for production device matching.
+pub const HONEYCOMB_CHARLIE_RUDDER_PID: u16 = 0x1902;
 
 /// USB Product ID for the T.Flight Rudder Pedals (TFRP).
 ///
