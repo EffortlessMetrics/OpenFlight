@@ -25,6 +25,7 @@
 
 pub mod throttle_cm3;
 pub mod stick_mongoost;
+pub mod stick_alpha;
 pub mod panel_1;
 pub mod panel_2;
 
@@ -35,7 +36,8 @@ pub const VIRPIL_AXIS_MAX: u16 = 16384;
 
 pub use flight_hid_support::device_support::{
     VIRPIL_VENDOR_ID, VIRPIL_CM3_THROTTLE_PID, VIRPIL_MONGOOST_STICK_PID,
-    VIRPIL_PANEL1_PID, VIRPIL_PANEL2_PID, is_virpil_device, VirpilModel, virpil_model,
+    VIRPIL_PANEL1_PID, VIRPIL_PANEL2_PID, VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
+    is_virpil_device, VirpilModel, virpil_model,
 };
 
 pub use throttle_cm3::{
@@ -48,6 +50,12 @@ pub use stick_mongoost::{
     VpcMongoostAxes, VpcMongoostButtons, VpcMongoostInputState,
     VpcMongoostHat, VpcMongoostParseError, parse_mongoost_stick_report,
     VPC_MONGOOST_STICK_MIN_REPORT_BYTES,
+};
+
+pub use stick_alpha::{
+    VpcAlphaAxes, VpcAlphaButtons, VpcAlphaInputState,
+    VpcAlphaHat, VpcAlphaParseError, parse_alpha_report,
+    VPC_ALPHA_MIN_REPORT_BYTES,
 };
 
 pub use panel_1::{

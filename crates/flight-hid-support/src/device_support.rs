@@ -231,6 +231,82 @@ pub const VKB_STECS_RIGHT_SPACE_STANDARD_PID: u16 = 0x013C;
 pub const VKB_GLADIATOR_NXT_EVO_RIGHT_PID: u16 = 0x0200;
 pub const VKB_GLADIATOR_NXT_EVO_LEFT_PID: u16 = 0x0201;
 
+/// USB Product ID for the VKB S-TECS Modern Throttle Mini (2023 generation).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x012B — linux-hardware.org (1 probe,
+/// USB string "S-TECS MODERN THROTTLE MINI", vendor "VKB-Sim (C) Alex Oz 2023").
+pub const VKB_STECS_MODERN_THROTTLE_MINI_PID: u16 = 0x012B;
+
+/// USB Product ID for the VKB S-TECS Modern Throttle Max (2023 generation).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x012E — linux-hardware.org (1 probe,
+/// USB string "S-TECS MODERN THROTTLE MAX", vendor "VKB-Sim (C) Alex Oz 2023").
+pub const VKB_STECS_MODERN_THROTTLE_MAX_PID: u16 = 0x012E;
+
+/// USB Product ID for the VKB Gladiator NXT EVO Right SEM (Space/Enhanced/Modern variant).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0204 — linux-hardware.org (1 probe,
+/// USB string "VKBsim Gladiator NXT R SEM", vendor "VKB-Sim Alex Oz 2021").
+pub const VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID: u16 = 0x0204;
+
+/// USB Product ID for the VKB Gladiator Modern Combat Pro (2021 edition).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0131 — linux-hardware.org (2 probes,
+/// USB string "VKBsim Gladiator Modern Combat Pro", vendor "VKB-Sim Alex Oz 2021").
+pub const VKB_GLADIATOR_MODERN_COMBAT_PRO_PID: u16 = 0x0131;
+
+/// USB Vendor ID for all WinWing products.
+///
+/// Confirmed: VID 0x4098 — all WinWing USB HID devices (Orion series, UFC, SKYWALKER).
+pub const WINWING_VENDOR_ID: u16 = 0x4098;
+
+/// USB Product ID for the WinWing Orion 2 F/A-18C Throttle.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE62 — linux-hardware.org (2 probes,
+/// USB string "Orion Throttle Base II + F18 HANDLE").
+pub const WINWING_ORION2_F18_THROTTLE_PID: u16 = 0xBE62;
+
+/// USB Product ID for the WinWing Orion 2 F/A-18C Stick.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE63 — community-reported, matching
+/// F/A-18C JGRIP grip paired with Orion 2 base.
+pub const WINWING_ORION2_F18_STICK_PID: u16 = 0xBE63;
+
+/// USB Product ID for the WinWing TFRP Rudder Pedals.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE64 — community-reported.
+pub const WINWING_TFRP_RUDDER_PID: u16 = 0xBE64;
+
+/// USB Product ID for the WinWing Orion 2 F-16EX Stick (JGRIP-F16 grip).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEA8 — linux-hardware.org (5 probes,
+/// USB string "Orion Joystick Base 2 + JGRIP-F16").
+pub const WINWING_ORION2_F16EX_STICK_PID: u16 = 0xBEA8;
+
+/// USB Product ID for the WinWing Orion 2 F-16EX Stick with Z-axis (JGRIP-F16 + ZAXIS).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEA9 — linux-hardware.org (USB string
+/// "Orion Joystick Base 2 + ZAXIS + JGRIP-F16"). Reports an additional Z-rotation axis.
+pub const WINWING_ORION2_F16EX_STICK_ZAXIS_PID: u16 = 0xBEA9;
+
+/// USB Product ID for the WinWing SuperTaurus / F-15EX Throttle (dual-handle).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBD64 — linux-hardware.org (2 probes,
+/// USB string "Orion Throttle Base II + F15EX HANDLE L + F15EX HANDLE R").
+pub const WINWING_SUPER_TAURUS_THROTTLE_PID: u16 = 0xBD64;
+
+/// USB Product ID for the WinWing UFC1 + HUD1 panel combo.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEDE — linux-hardware.org (1 probe,
+/// USB string "UFC1 + HUD1"). Universal Flight Controller + HUD display panel.
+pub const WINWING_UFC1_HUD1_PID: u16 = 0xBEDE;
+
+/// USB Product ID for the WinWing SKYWALKER Metal Rudder Pedals.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEF0 — linux-hardware.org (5 probes,
+/// USB string "SKYWALKER Metal Rudder Pedals").
+pub const WINWING_SKYWALKER_RUDDER_PID: u16 = 0xBEF0;
+
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
 pub const USAGE_PAGE_BUTTON: u16 = 0x09;
 

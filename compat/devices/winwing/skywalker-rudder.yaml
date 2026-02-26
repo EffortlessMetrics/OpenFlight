@@ -1,0 +1,40 @@
+# WinWing SKYWALKER Metal Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBEF0 — linux-hardware.org (5 probes,
+# USB string "SKYWALKER Metal Rudder Pedals", subsystem "Winwing").
+device:
+  name: "WinWing SKYWALKER Metal Rudder Pedals"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEF0
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    All-metal construction rudder pedal set. Same axis layout as the WinWing
+    TFRP Rudder Pedals (PID 0xBE64): rudder yaw + independent left/right toe
+    brakes. The SKYWALKER uses higher-quality CNC aluminium construction.

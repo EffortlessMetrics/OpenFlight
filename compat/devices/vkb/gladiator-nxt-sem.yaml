@@ -1,0 +1,51 @@
+# VKB Gladiator NXT EVO Right SEM
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x231D (VKB), PID 0x0204 — linux-hardware.org (1 probe,
+# USB string "VKBsim Gladiator NXT R SEM", vendor "VKB-Sim Alex Oz 2021").
+device:
+  name: "VKB Gladiator NXT EVO Right SEM"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0204
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15   # 15-bit precision
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+  - id: A1_HAT_MODE
+    description: >
+      A1 hat mode behavior (8-way vs alternate 4-way) is profile-dependent
+      in VKBDevCfg.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SEM (Space/Enhanced/Modern) variant of the Gladiator NXT EVO right-hand
+    stick (PID 0x0200). Same physical hardware, different firmware feature set.
+    VKBDevCfg profiles can remap hats, ministicks, and axes.

@@ -1,0 +1,40 @@
+# WinWing Orion 2 F-16EX Stick (JGRIP-F16)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBEA8 — linux-hardware.org (5 probes,
+# USB string "Orion Joystick Base 2 + JGRIP-F16").
+device:
+  name: "WinWing Orion 2 F-16EX Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEA8
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    F-16EX JGRIP grip on Orion 2 base. PID 0xBEA9 covers the same grip
+    paired with the optional Z-axis twist module. Typically used with the
+    Orion 2 Throttle (see orion2-throttle.yaml or super-taurus-throttle.yaml).
