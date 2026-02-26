@@ -607,12 +607,12 @@ impl SafeModeManager {
                 },
             );
         }
-        // Throttle needs a smaller deadzone near zero
+        // Throttle needs a smaller deadzone near zero and no expo (linear response)
         axes.insert(
             "throttle".to_string(),
             AxisConfig {
                 deadzone: Some(0.01),
-                expo: Some(0.1),
+                expo: None,
                 slew_rate: None,
                 detents: vec![],
                 curve: None,

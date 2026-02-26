@@ -28,8 +28,9 @@ use flight_ac7_telemetry::{Ac7TelemetryAdapter as Ac7AdapterApi, Ac7TelemetryCon
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::{RwLock, mpsc, watch};
 use tokio::task::JoinHandle;
 use tracing::{debug, error, info, warn};
@@ -129,6 +130,12 @@ pub struct AircraftAutoSwitchService {
     service_rx: Arc<RwLock<Option<mpsc::UnboundedReceiver<ServiceEvent>>>>,
     /// Per-adapter detection/error counters, updated by the event loop.
     adapter_metrics: Arc<RwLock<HashMap<BusSimId, AdapterMetrics>>>,
+    /// Total aircraft switches across all adapters.
+    aircraft_switch_count: Arc<AtomicU64>,
+    /// Milliseconds since UNIX epoch of the last successful aircraft detection.
+    last_detection_time_ms: Arc<AtomicU64>,
+    /// Processing latency (ms) of the most recent aircraft detection call.
+    detection_latency_ms: Arc<AtomicU64>,
 }
 
 /// Simulator adapters
@@ -208,6 +215,12 @@ pub struct ServiceMetrics {
     pub adapter_metrics: HashMap<BusSimId, AdapterMetrics>,
     pub total_aircraft_switches: u64,
     pub average_detection_time: Duration,
+    /// Total aircraft switches tracked by the service (atomic counter).
+    pub aircraft_switch_count: u64,
+    /// Milliseconds since UNIX epoch of the last successful aircraft detection.
+    pub last_detection_time_ms: u64,
+    /// Processing latency in ms of the most recent aircraft detection call.
+    pub detection_latency_ms: u64,
 }
 
 /// Adapter-specific metrics
@@ -255,6 +268,9 @@ impl AircraftAutoSwitchService {
             service_tx,
             service_rx: Arc::new(RwLock::new(Some(service_rx))),
             adapter_metrics: Arc::new(RwLock::new(HashMap::new())),
+            aircraft_switch_count: Arc::new(AtomicU64::new(0)),
+            last_detection_time_ms: Arc::new(AtomicU64::new(0)),
+            detection_latency_ms: Arc::new(AtomicU64::new(0)),
         }
     }
 
