@@ -490,7 +490,10 @@ mod tests {
         assert_eq!(manager.version_history().len(), 2);
 
         let rolled_back = manager.rollback_to_previous().await.unwrap();
-        assert_eq!(rolled_back.version, "1.0.0", "rollback must select the previous version");
+        assert_eq!(
+            rolled_back.version, "1.0.0",
+            "rollback must select the previous version"
+        );
         assert_eq!(
             manager.current_version().unwrap().version,
             "1.0.0",
@@ -519,7 +522,10 @@ mod tests {
         manager.record_version(v1).await.unwrap();
 
         let result = manager.rollback_to_previous().await;
-        assert!(result.is_err(), "rollback with no previous version must fail");
+        assert!(
+            result.is_err(),
+            "rollback with no previous version must fail"
+        );
     }
 
     /// Rollback on an empty manager (no versions recorded) must also return an error.
@@ -572,8 +578,7 @@ mod tests {
         // Write a timestamp far in the past (Unix epoch)
         fs::write(&startup_file, "1000").await.unwrap();
 
-        let detector =
-            StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(30));
+        let detector = StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(30));
 
         // The timestamp is ancient → elapsed >> 30 s → crash detected
         assert!(

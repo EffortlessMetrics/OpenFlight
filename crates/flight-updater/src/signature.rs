@@ -352,8 +352,7 @@ mod tests {
         let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
 
         let content_hash = verifier.hash_content(content);
-        let update_sig =
-            UpdateSignature::new(tampered_sig_hex, content_hash, "test".to_string());
+        let update_sig = UpdateSignature::new(tampered_sig_hex, content_hash, "test".to_string());
 
         let result = verifier.verify_content(content, &update_sig).await.unwrap();
         assert!(!result, "corrupted signature must not verify");
@@ -418,7 +417,10 @@ mod tests {
         update_sig.algorithm = "RSA".to_string();
 
         let result = verifier.verify_content(content, &update_sig).await;
-        assert!(result.is_err(), "unsupported algorithm must return an error");
+        assert!(
+            result.is_err(),
+            "unsupported algorithm must return an error"
+        );
     }
 
     /// Passing non-hex characters as the signature must return an Err rather than panic.
@@ -438,6 +440,9 @@ mod tests {
         );
 
         let result = verifier.verify_content(content, &update_sig).await;
-        assert!(result.is_err(), "invalid hex signature must return an error");
+        assert!(
+            result.is_err(),
+            "invalid hex signature must return an error"
+        );
     }
 }

@@ -628,10 +628,17 @@ mod tests {
             .unwrap();
 
         let patched = fs::read(output_dir.join("data.bin")).await.unwrap();
-        assert_eq!(patched, target_content, "patched file must equal target content");
+        assert_eq!(
+            patched, target_content,
+            "patched file must equal target content"
+        );
 
         let new_out = fs::read(output_dir.join("new.bin")).await.unwrap();
-        assert_eq!(new_out.as_slice(), new_content, "new file must be propagated");
+        assert_eq!(
+            new_out.as_slice(),
+            new_content,
+            "new file must be propagated"
+        );
     }
 
     /// Copy operation extracts the exact byte range from the source.
@@ -743,9 +750,7 @@ mod tests {
         let mut patch = DeltaPatch::new("1.0.0".to_string(), "1.1.0".to_string());
         patch.add_file_delta(file_delta);
 
-        let result = applier
-            .apply_patch(&patch, &source_dir, &output_dir)
-            .await;
+        let result = applier.apply_patch(&patch, &source_dir, &output_dir).await;
         assert!(result.is_err(), "mismatched source hash must return error");
     }
 }

@@ -332,8 +332,7 @@ mod tests {
 
     #[test]
     fn parse_devices_list_subcommand() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "devices", "list"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "devices", "list"]).unwrap();
         assert!(matches!(
             cli.command,
             Commands::Devices {
@@ -344,18 +343,14 @@ mod tests {
 
     #[test]
     fn parse_devices_list_include_disconnected_flag() {
-        let cli = Cli::try_parse_from([
-            "flightctl",
-            "devices",
-            "list",
-            "--include-disconnected",
-        ])
-        .unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "devices", "list", "--include-disconnected"])
+            .unwrap();
         if let Commands::Devices {
-            action: commands::DeviceAction::List {
-                include_disconnected,
-                ..
-            },
+            action:
+                commands::DeviceAction::List {
+                    include_disconnected,
+                    ..
+                },
         } = cli.command
         {
             assert!(include_disconnected);

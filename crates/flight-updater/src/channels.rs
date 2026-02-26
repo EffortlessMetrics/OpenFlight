@@ -268,7 +268,10 @@ mod tests {
         let manager = ChannelManager::new();
         let config = manager.get_config(Channel::Stable).unwrap();
         assert_eq!(config.update_url, "https://updates.flight-hub.dev/stable");
-        assert!(!config.accept_prerelease, "stable must not accept pre-releases");
+        assert!(
+            !config.accept_prerelease,
+            "stable must not accept pre-releases"
+        );
         assert_eq!(config.check_frequency_hours, 24);
     }
 
