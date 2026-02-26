@@ -11,17 +11,16 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::time::sleep;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, info, warn};
 
 use flight_axis::{AxisFrame, EngineConfig as AxisEngineConfig};
-use flight_bus::BusSnapshot;
-use flight_core::blackbox::{BlackboxReader, BlackboxRecord, StreamType};
+use flight_core::blackbox::BlackboxReader;
 use flight_ffb::FfbConfig;
 
 use crate::comparison::{ComparisonConfig, ComparisonResult, OutputComparator};
 use crate::metrics::{AccuracyMetrics, PerformanceMetrics, ReplayMetrics};
 use crate::offline_engine::{EngineState, OfflineAxisEngine, OfflineFfbEngine};
-use crate::replay_config::{ReplayConfig, ReplayMode, TimingMode};
+use crate::replay_config::{ReplayConfig, ReplayMode};
 
 /// Replay harness errors
 #[derive(Error, Debug)]
@@ -159,11 +158,7 @@ impl ReplayHarness {
                     frames_processed, duration
                 );
 
-                let comparison = if let Some(comparator) = self.comparator.take() {
-                    Some(comparator.finalize())
-                } else {
-                    None
-                };
+                let comparison = self.comparator.take().map(|comparator| comparator.finalize());
 
                 Ok(ReplayResult {
                     success: true,
@@ -192,9 +187,8 @@ impl ReplayHarness {
     }
 
     /// Replay in real-time mode (matching original timing)
-    async fn replay_realtime(&mut self, reader: &mut BlackboxReader) -> Result<u64> {
+    async fn replay_realtime(&mut self, _reader: &mut BlackboxReader) -> Result<u64> {
         let mut frames_processed = 0u64;
-        let mut last_timestamp = 0u64;
         let replay_start = Instant::now();
 
         // In a real implementation, we would iterate through records
@@ -255,7 +249,6 @@ impl ReplayHarness {
             }
 
             frames_processed += 1;
-            last_timestamp = timestamp_ns;
 
             if frames_processed.is_multiple_of(250) {
                 debug!("Processed {} frames", frames_processed);
@@ -266,7 +259,7 @@ impl ReplayHarness {
     }
 
     /// Replay in fast-forward mode (as fast as possible)
-    async fn replay_fastforward(&mut self, reader: &mut BlackboxReader) -> Result<u64> {
+    async fn replay_fastforward(&mut self, _reader: &mut BlackboxReader) -> Result<u64> {
         let mut frames_processed = 0u64;
         let replay_start = Instant::now();
 
@@ -314,7 +307,7 @@ impl ReplayHarness {
     }
 
     /// Replay in step-by-step mode (for debugging)
-    async fn replay_stepbystep(&mut self, reader: &mut BlackboxReader) -> Result<u64> {
+    async fn replay_stepbystep(&mut self, _reader: &mut BlackboxReader) -> Result<u64> {
         let mut frames_processed = 0u64;
 
         info!("Step-by-step replay mode - manual stepping");

@@ -36,7 +36,7 @@ pub struct EngineState {
 /// Offline axis engine for replay
 pub struct OfflineAxisEngine {
     engine: AxisEngine,
-    config: ReplayConfig,
+    _config: ReplayConfig,
     state: EngineState,
     device_configs: HashMap<String, AxisEngineConfig>,
     last_frames: HashMap<String, AxisFrame>,
@@ -58,7 +58,7 @@ impl OfflineAxisEngine {
 
         Ok(Self {
             engine,
-            config,
+            _config: config,
             state,
             device_configs: HashMap::new(),
             last_frames: HashMap::new(),
@@ -147,7 +147,7 @@ impl OfflineAxisEngine {
 /// Offline FFB engine for replay
 pub struct OfflineFfbEngine {
     engine: FfbEngine,
-    config: ReplayConfig,
+    _config: ReplayConfig,
     state: EngineState,
     device_configs: HashMap<String, FfbConfig>,
     last_update: Instant,
@@ -177,7 +177,7 @@ impl OfflineFfbEngine {
 
         Ok(Self {
             engine,
-            config,
+            _config: config,
             state,
             device_configs: HashMap::new(),
             last_update: Instant::now(),

@@ -194,6 +194,9 @@ jobs:
     - name: Run tests
       run: cargo test --all-features --workspace --lib --tests --exclude flight-hub-examples
 
+    - name: Run flight-integration-tests explicitly
+      run: cargo test -p flight-integration-tests
+
     - name: Run doc tests
       run: cargo test --doc --workspace
 
@@ -901,6 +904,74 @@ jobs:
         # Full regression gating (criterion baselines) is tracked in QG-RT-JITTER and
         # QG-HID-LATENCY hardware gates (see ROADMAP.md).
         echo "Benchmark compilation check passed"
+
+  # ──────────────────────────────────────────────────────────────────────────────
+  # PR Fuzz Smoke (runs on every PR to catch obvious panics quickly)
+  # ──────────────────────────────────────────────────────────────────────────────
+  pr-fuzz-smoke:
+    name: PR Fuzz Smoke (Device Parsers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install nightly Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz
+
+      - name: Smoke fuzz flight-hotas-virpil parsers (5s)
+        run: |
+          cd crates/flight-hotas-virpil
+          cargo +nightly fuzz run fuzz_virpil_parsers -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-thrustmaster parsers (5s)
+        run: |
+          cd crates/flight-hotas-thrustmaster
+          cargo +nightly fuzz run fuzz_thrustmaster_parsers -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-honeycomb parsers (5s)
+        run: |
+          cd crates/flight-hotas-honeycomb
+          cargo +nightly fuzz run fuzz_honeycomb_parsers -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-logitech parsers (5s)
+        run: |
+          cd crates/flight-hotas-logitech
+          cargo +nightly fuzz run fuzz_logitech_parsers -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-winwing report (5s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_winwing_report -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-vkb Gladiator report (5s)
+        run: |
+          cd crates/flight-hotas-vkb
+          cargo +nightly fuzz run fuzz_vkb_gladiator_report -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-saitek input report (5s)
+        run: |
+          cd crates/flight-hotas-saitek
+          cargo +nightly fuzz run fuzz_saitek_input_report -- -max_total_time=5 -timeout=5
+        continue-on-error: false
 
   # ──────────────────────────────────────────────────────────────────────────────
   # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)

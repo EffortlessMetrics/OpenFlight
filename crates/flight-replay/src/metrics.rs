@@ -35,7 +35,7 @@ pub struct PerformanceMetrics {
 }
 
 /// Accuracy metrics for output validation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AccuracyMetrics {
     /// Number of frames analyzed
     pub frames_analyzed: u64,
@@ -48,7 +48,7 @@ pub struct AccuracyMetrics {
 }
 
 /// Statistics for a specific output type
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OutputStats {
     /// Minimum value observed
     pub min_value: f32,
@@ -63,7 +63,7 @@ pub struct OutputStats {
 }
 
 /// Memory usage statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryStats {
     /// Peak memory usage in bytes
     pub peak_memory_bytes: u64,
@@ -247,11 +247,7 @@ impl ReplayMetrics {
 
         for i in 1..self.timestamps.len() {
             let actual_interval = self.timestamps[i] - self.timestamps[i - 1];
-            let error = if actual_interval > expected_interval_ns {
-                actual_interval - expected_interval_ns
-            } else {
-                expected_interval_ns - actual_interval
-            };
+            let error = actual_interval.abs_diff(expected_interval_ns);
             timing_errors.push(error);
         }
 
@@ -317,39 +313,6 @@ impl Default for PerformanceMetrics {
             min_frame_time: Duration::from_secs(0),
             frames_per_second: 0.0,
             memory_stats: MemoryStats::default(),
-        }
-    }
-}
-
-impl Default for AccuracyMetrics {
-    fn default() -> Self {
-        Self {
-            frames_analyzed: 0,
-            axis_stats: OutputStats::default(),
-            ffb_stats: OutputStats::default(),
-            timing_stats: TimingAccuracyStats::default(),
-        }
-    }
-}
-
-impl Default for OutputStats {
-    fn default() -> Self {
-        Self {
-            min_value: 0.0,
-            max_value: 0.0,
-            avg_value: 0.0,
-            std_deviation: 0.0,
-            range: 0.0,
-        }
-    }
-}
-
-impl Default for MemoryStats {
-    fn default() -> Self {
-        Self {
-            peak_memory_bytes: 0,
-            avg_memory_bytes: 0,
-            allocation_count: 0,
         }
     }
 }
