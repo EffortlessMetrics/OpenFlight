@@ -1,16 +1,16 @@
 {
   "total_ac": 394,
-  "ac_with_tests": 393,
+  "ac_with_tests": 394,
   "ac_with_gherkin": 394,
-  "ac_with_tests_and_gherkin": 393,
-  "complete": 393,
+  "ac_with_tests_and_gherkin": 394,
+  "complete": 394,
   "needs_gherkin": 0,
-  "needs_tests": 1,
+  "needs_tests": 0,
   "draft": 0,
   "incomplete": 0,
-  "microcrate_total": 68,
+  "microcrate_total": 67,
   "microcrate_with_tests": 62,
-  "microcrate_with_gherkin": 63,
+  "microcrate_with_gherkin": 62,
   "microcrate_with_tests_and_gherkin": 62,
   "crate_coverage": [
     {
@@ -339,11 +339,11 @@
     },
     {
       "crate_name": "flight-hotas-vkb",
-      "total_ac": 13,
-      "ac_with_tests": 13,
-      "ac_with_gherkin": 13,
-      "ac_with_tests_and_gherkin": 13,
-      "complete": 13,
+      "total_ac": 14,
+      "ac_with_tests": 14,
+      "ac_with_gherkin": 14,
+      "ac_with_tests_and_gherkin": 14,
+      "complete": 14,
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
@@ -814,18 +814,6 @@
       "complete": 5,
       "needs_gherkin": 0,
       "needs_tests": 0,
-      "draft": 0,
-      "incomplete": 0
-    },
-    {
-      "crate_name": "unmapped",
-      "total_ac": 1,
-      "ac_with_tests": 0,
-      "ac_with_gherkin": 1,
-      "ac_with_tests_and_gherkin": 0,
-      "complete": 0,
-      "needs_gherkin": 0,
-      "needs_tests": 1,
       "draft": 0,
       "incomplete": 0
     }

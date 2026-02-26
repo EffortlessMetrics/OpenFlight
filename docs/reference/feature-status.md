@@ -17,21 +17,21 @@
 | Metric | Value |
 |--------|-------|
 | Total AC | 394 |
-| ACs with tests | 393 |
+| ACs with tests | 394 |
 | ACs with Gherkin | 394 |
-| ACs with both tests + Gherkin | 393 |
-| Complete | 393 |
+| ACs with both tests + Gherkin | 394 |
+| Complete | 394 |
 | Needs Gherkin | 0 |
-| Needs Tests | 1 |
+| Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 68 |
-| Microcrates with tests | 62 (91.2%) |
-| Microcrates with Gherkin | 63 (92.6%) |
-| Microcrates fully covered | 62 (91.2%) |
-| Test coverage | 99.7% |
+| Microcrates | 67 |
+| Microcrates with tests | 62 (92.5%) |
+| Microcrates with Gherkin | 62 (92.5%) |
+| Microcrates fully covered | 62 (92.5%) |
+| Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 99.7% |
+| Test + Gherkin coverage | 100.0% |
 
 ## BDD Microcrate Matrix
 
@@ -64,7 +64,7 @@
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 20 | 20 | 20 | 20 | 20 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-vkb | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-vkb | 14 | 14 | 14 | 14 | 14 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -104,7 +104,6 @@
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| unmapped | 1 | 0 | 1 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -318,11 +317,11 @@
 | REQ-58 | AC-58.3 | WHEN malformed or unknown-variant JSON is deserialised as a PluginMessage THEN an error SHALL be returned and the process SHALL NOT panic | specs/features/req_58_xplane_plugin_protocol.feature:45<br>specs/features/req_58_xplane_plugin_protocol.feature:52 | 1 | ✅ Complete |
 | REQ-58 | AC-58.4 | WHEN a Handshake PluginMessage is serialised THEN the resulting JSON SHALL contain both a version field and a capabilities field | specs/features/req_58_xplane_plugin_protocol.feature:61 | 1 | ✅ Complete |
 | REQ-58 | AC-58.5 | WHEN a GetDataRef request and a DataRefValue response carry the same id THEN the id SHALL round-trip through JSON serialisation unchanged | specs/features/req_58_xplane_plugin_protocol.feature:70<br>specs/features/req_58_xplane_plugin_protocol.feature:77 | 2 | ✅ Complete |
-| REQ-59 | AC-59.1 | WHEN VKB_VENDOR_ID and product ID constants are declared THEN VKB_VENDOR_ID SHALL equal 0x231D and all STECS/Gladiator PID constants SHALL be distinct non-zero values | specs/features/req_59_vkb_hotas.feature:5 | 0 | 🟡 Needs Tests |
-| REQ-59 | AC-59.2 | WHEN parsing STECS Modern Throttle HID reports THEN all four axes SHALL normalize to [0.0, 1.0] and the throttle variant SHALL be preserved in the result | specs/features/req_59_vkb_hotas.feature:12 | 4 | ✅ Complete |
-| REQ-59 | AC-59.3 | WHEN arbitrary axis raw values are presented to the STECS Modern parser THEN every axis output SHALL remain within [0.0, 1.0] and random byte patterns SHALL not cause a panic | specs/features/req_59_vkb_hotas.feature:20 | 2 | ✅ Complete |
-| REQ-59 | AC-59.4 | WHEN button bits are set in a STECS Modern report THEN is_pressed SHALL correctly identify each of the 64 button indices and out-of-range indices SHALL return false | specs/features/req_59_vkb_hotas.feature:27 | 6 | ✅ Complete |
-| REQ-59 | AC-59.5 | WHEN a HID report is shorter than the device minimum THEN the parser SHALL return a structured TooShort error rather than panicking for STECS Modern, STECS Space, and Gladiator parsers | specs/features/req_59_vkb_hotas.feature:37 | 4 | ✅ Complete |
+| REQ-59 | AC-59.1 | WHEN a VKB device health monitor is created and polled THEN it SHALL track success/failure thresholds and the device status (identified by VID/PID variant) SHALL be reflected in the health reports | specs/features/req_59_vkb_hotas.feature:5 | 5 | ✅ Complete |
+| REQ-59 | AC-59.2 | WHEN parsing STECS Modern Throttle HID reports THEN all four axes SHALL normalize to [0.0, 1.0] and the throttle variant SHALL be preserved in the result | specs/features/req_59_vkb_hotas.feature:13 | 4 | ✅ Complete |
+| REQ-59 | AC-59.3 | WHEN arbitrary axis raw values are presented to the STECS Modern parser THEN every axis output SHALL remain within [0.0, 1.0] and random byte patterns SHALL not cause a panic | specs/features/req_59_vkb_hotas.feature:21 | 2 | ✅ Complete |
+| REQ-59 | AC-59.4 | WHEN button bits are set in a STECS Modern report THEN is_pressed SHALL correctly identify each of the 64 button indices and out-of-range indices SHALL return false | specs/features/req_59_vkb_hotas.feature:28 | 6 | ✅ Complete |
+| REQ-59 | AC-59.5 | WHEN a HID report is shorter than the device minimum THEN the parser SHALL return a structured TooShort error rather than panicking for STECS Modern, STECS Space, and Gladiator parsers | specs/features/req_59_vkb_hotas.feature:38 | 4 | ✅ Complete |
 | REQ-60 | AC-60.1 | WHEN parsing X52 or X52 Pro HID reports THEN stick and throttle axes SHALL be decoded and max throttle byte SHALL produce a value ≥ 0.9; X56 dual-throttle axes SHALL both parse independently | specs/features/req_60_saitek_hotas.feature:5 | 3 | ✅ Complete |
 | REQ-60 | AC-60.2 | WHEN normalising axis bytes THEN 8-bit values SHALL map to −1.0..1.0 and 16-bit values SHALL map to −1.0..1.0 with mid-scale raw value mapping to approximately 0.0 | specs/features/req_60_saitek_hotas.feature:13 | 2 | ✅ Complete |
 | REQ-60 | AC-60.3 | WHEN monitoring a Saitek device THEN health SHALL reflect connected status after successes, consecutive failures SHALL be counted toward the offline threshold, and ghost input detection rates SHALL be tracked | specs/features/req_60_saitek_hotas.feature:24 | 4 | ✅ Complete |

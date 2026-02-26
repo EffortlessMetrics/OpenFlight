@@ -15,14 +15,14 @@
 ## Summary
 
 - **Total Checks:** 13
-- **Passed:** 11
-- **Failed:** 2
+- **Passed:** 12
+- **Failed:** 1
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 394, tests: 393 (99.7%), gherkin: 394 (100.0%), microcrates fully covered: 62 / 68 (91.2%), complete: 393, needs_gherkin: 0, needs_tests: 1, draft: 0, incomplete: 0 |
+| BDD Feature Status | ✅ Pass | AC total: 394, tests: 394 (100.0%), gherkin: 394 (100.0%), microcrates fully covered: 62 / 67 (92.5%), complete: 394, needs_gherkin: 0, needs_tests: 0, draft: 0, incomplete: 0 |
 | Schema Validation | ✅ Pass | - |
 | Cross-Reference Validation | ✅ Pass | - |
 | Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
@@ -31,7 +31,7 @@
 | QG-SANITY-GATE | ✅ Pass | - |
 | QG-FFB-SAFETY | ✅ Pass | - |
 | QG-BDD-COVERAGE | ✅ Pass | - |
-| QG-BDD-UNMAPPED-MICROCRATE | ❌ Fail | BDD metrics row `unmapped` has 1 acceptance criteria with 0 tests and 1 Gherkin mapping(s) |
+| QG-BDD-UNMAPPED-MICROCRATE | ✅ Pass | - |
 | QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
 | QG-CRATE-METADATA | ✅ Pass | - |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |

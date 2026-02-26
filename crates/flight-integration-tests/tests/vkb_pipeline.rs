@@ -56,12 +56,8 @@ fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
 fn vkb_gladiator_nxt_parses_centred_report() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     // Signed axes centre at 0x8000; throttle wheel idles at 0x0000.
-    let report = make_gladiator_report(
-        [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000],
-        0,
-        0,
-        0xFF,
-    );
+    let report =
+        make_gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
     let state = handler.parse_report(&report).expect("valid centred report");
 
     assert!(
@@ -90,12 +86,8 @@ fn vkb_gladiator_nxt_parses_centred_report() {
 #[test]
 fn vkb_gladiator_nxt_full_deflection_positive() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-    let report = make_gladiator_report(
-        [0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF],
-        0,
-        0,
-        0xFF,
-    );
+    let report =
+        make_gladiator_report([0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
     let state = handler
         .parse_report(&report)
         .expect("valid full-deflection report");

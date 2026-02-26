@@ -1342,8 +1342,13 @@ requirements:
     status: implemented
     ac:
       - id: AC-59.1
-        description: "WHEN VKB_VENDOR_ID and product ID constants are declared THEN VKB_VENDOR_ID SHALL equal 0x231D and all STECS/Gladiator PID constants SHALL be distinct non-zero values"
-        tests: []
+        description: "WHEN a VKB device health monitor is created and polled THEN it SHALL track success/failure thresholds and the device status (identified by VID/PID variant) SHALL be reflected in the health reports"
+        tests:
+          - flight-hotas-vkb::health::tests::test_health_monitor_success_and_failure_threshold
+          - flight-hotas-vkb::health::tests::test_health_status_is_healthy
+          - flight-hotas-vkb::health::tests::test_health_status_unhealthy_when_not_connected
+          - flight-hotas-vkb::health::tests::test_should_check_health_initially_true
+          - flight-hotas-vkb::health::tests::test_reset_clears_all_state
       - id: AC-59.2
         description: "WHEN parsing STECS Modern Throttle HID reports THEN all four axes SHALL normalize to [0.0, 1.0] and the throttle variant SHALL be preserved in the result"
         tests:

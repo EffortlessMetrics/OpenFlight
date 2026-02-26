@@ -33,19 +33,13 @@ mod tests {
     #[test]
     fn test_protocol_error_display() {
         let err = TransportError::Protocol("unexpected packet header".to_string());
-        assert_eq!(
-            err.to_string(),
-            "Protocol error: unexpected packet header"
-        );
+        assert_eq!(err.to_string(), "Protocol error: unexpected packet header");
     }
 
     #[test]
     fn test_timeout_error_display() {
         let err = TransportError::Timeout("read timed out after 5s".to_string());
-        assert_eq!(
-            err.to_string(),
-            "Timeout error: read timed out after 5s"
-        );
+        assert_eq!(err.to_string(), "Timeout error: read timed out after 5s");
     }
 
     #[test]
