@@ -1,0 +1,8 @@
+---
+source: crates/flight-rules/src/lib.rs
+assertion_line: 1119
+expression: err
+---
+Validation(
+    "Invalid number: notanumber",
+)

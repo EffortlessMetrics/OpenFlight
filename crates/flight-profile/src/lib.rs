@@ -925,4 +925,20 @@ mod tests {
         let err = profile.validate().unwrap_err();
         insta::assert_debug_snapshot!("profile_validation_error_schema", err);
     }
+
+    /// Snapshot a Profile deserialized from minimal valid YAML.
+    #[test]
+    fn snapshot_profile_debug_from_yaml() {
+        let yaml = "schema: \"flight.profile/1\"\nsim: msfs\naxes:\n  pitch:\n    deadzone: 0.05\n    expo: 0.3\n    slew_rate: 2.0\n    detents: []\n";
+        let profile: Profile = serde_yaml::from_str(yaml).expect("YAML should deserialize");
+        insta::assert_debug_snapshot!("profile_debug_from_yaml", profile);
+    }
+
+    /// Snapshot the deserialization error when the required `schema` field is absent.
+    #[test]
+    fn snapshot_validation_error_missing_schema_field() {
+        let yaml = "sim: msfs\naxes: {}\n";
+        let err = serde_yaml::from_str::<Profile>(yaml).unwrap_err();
+        insta::assert_snapshot!("validation_error_missing_schema_field", err.to_string());
+    }
 }

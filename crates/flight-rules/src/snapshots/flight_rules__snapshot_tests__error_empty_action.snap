@@ -1,0 +1,8 @@
+---
+source: crates/flight-rules/src/lib.rs
+assertion_line: 1151
+expression: err
+---
+Validation(
+    "Rule 1: Rule action cannot be empty",
+)
