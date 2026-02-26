@@ -212,6 +212,10 @@ pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
 //         Mad Catz stick variant; linux-hardware.org evidence favours Quadrant
 pub const SAITEK_FLIGHT_PRO_COMBAT_RUDDER_PID: u16 = 0x0764;
 pub const SAITEK_PRO_FLIGHT_QUADRANT_PID: u16 = 0x0C2D;
+/// USB Product ID for the Saitek Pro Flight Yoke System.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0BAC — linux-hardware.org (23 probes, "Pro Flight Yoke").
+pub const SAITEK_PRO_FLIGHT_YOKE_PID: u16 = 0x0BAC;
 
 /// USB Vendor ID for VIRPIL Controls UAB.
 ///
