@@ -1,0 +1,26 @@
+[package]
+name = "flight-hotas-vpforce-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-vpforce]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_vpforce_rhino"
+path = "fuzz_targets/fuzz_vpforce_rhino.rs"
+test = false
+doc = false

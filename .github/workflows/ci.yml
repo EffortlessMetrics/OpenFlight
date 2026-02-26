@@ -974,6 +974,18 @@ jobs:
           cargo +nightly fuzz run fuzz_saitek_input_report -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
+      - name: Smoke fuzz flight-hotas-brunner CLS-E report (5s)
+        run: |
+          cd crates/flight-hotas-brunner
+          cargo +nightly fuzz run fuzz_brunner_cls_e -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hotas-vpforce Rhino report (5s)
+        run: |
+          cd crates/flight-hotas-vpforce
+          cargo +nightly fuzz run fuzz_vpforce_rhino -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
@@ -1144,6 +1156,18 @@ jobs:
         run: |
           cd crates/flight-hotas-logitech
           cargo +nightly fuzz run fuzz_logitech_parsers -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-brunner CLS-E report parser (60s)
+        run: |
+          cd crates/flight-hotas-brunner
+          cargo +nightly fuzz run fuzz_brunner_cls_e -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-vpforce Rhino report parser (60s)
+        run: |
+          cd crates/flight-hotas-vpforce
+          cargo +nightly fuzz run fuzz_vpforce_rhino -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
   # ──────────────────────────────────────────────────────────────────────────────
