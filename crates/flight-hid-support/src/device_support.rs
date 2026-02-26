@@ -570,6 +570,26 @@ pub const WINWING_F18_TAKEOFF_PANEL_2_PID: u16 = 0xBF05;
 /// UFC role as the UFC1+HUD1 (`WINWING_UFC1_HUD1_PID` 0xBEDE) for F/A-18.
 pub const WINWING_ICP_PANEL_PID: u16 = 0xBF06;
 
+/// USB Product ID for the WinWing MFD1 Centre Panel (Multi-Function Display).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEE0 — linux-hardware.org (1 probe,
+/// USB string "MFD1-C"). Centre unit of the three-piece MFD set; the left and
+/// right panels use `WINWING_MFD1_L_PID` (0xBEE1) and
+/// `WINWING_MFD1_R_PID` (0xBEE2) respectively.
+pub const WINWING_MFD1_C_PID: u16 = 0xBEE0;
+
+/// USB Product ID for the WinWing MFD1 Left Panel (Multi-Function Display).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEE1 — linux-hardware.org (1 probe,
+/// USB string "MFD1-L"). Left unit of the three-piece MFD set.
+pub const WINWING_MFD1_L_PID: u16 = 0xBEE1;
+
+/// USB Product ID for the WinWing MFD1 Right Panel (Multi-Function Display).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBEE2 — linux-hardware.org (1 probe,
+/// USB string "MFD1-R"). Right unit of the three-piece MFD set.
+pub const WINWING_MFD1_R_PID: u16 = 0xBEE2;
+
 /// USB Vendor ID for all Moza (Gudsen Technology) products.
 ///
 /// Confirmed: VID 0x346E — from the-sz.com USB ID database and
