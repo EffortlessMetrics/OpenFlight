@@ -1,0 +1,51 @@
+# Thrustmaster TCA Sidestick Airbus Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID unconfirmed — no verified USB ID source available at time of writing.
+# Set product_id to null until PID is confirmed from lsusb/linux-hardware.org.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Sidestick Airbus Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: ~       # PID unconfirmed — requires lsusb verification
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: AIRBUS_SIDESTICK_DETENT
+    description: >
+      The sidestick has a centre detent. Hardware deadzone near centre is
+      minimal; a small software deadzone (~2%) is still recommended.
+  - id: AIRBUS_SOLD_SEPARATELY
+    description: >
+      TCA Sidestick and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID unconfirmed at time of manifest creation. Capabilities based on
+    Thrustmaster product specification and community reports. Do not enable
+    device matching until product_id is filled in from a verified source
+    (e.g. lsusb output or linux-hardware.org probe). Last reviewed: 2026-02.

@@ -26,6 +26,7 @@
 pub mod throttle_cm3;
 pub mod stick_mongoost;
 pub mod panel_1;
+pub mod panel_2;
 
 /// Maximum raw axis value for all VIRPIL VPC devices (14-bit resolution).
 ///
@@ -34,7 +35,7 @@ pub const VIRPIL_AXIS_MAX: u16 = 16384;
 
 pub use flight_hid_support::device_support::{
     VIRPIL_VENDOR_ID, VIRPIL_CM3_THROTTLE_PID, VIRPIL_MONGOOST_STICK_PID,
-    VIRPIL_PANEL1_PID, is_virpil_device, VirpilModel, virpil_model,
+    VIRPIL_PANEL1_PID, VIRPIL_PANEL2_PID, is_virpil_device, VirpilModel, virpil_model,
 };
 
 pub use throttle_cm3::{
@@ -52,4 +53,9 @@ pub use stick_mongoost::{
 pub use panel_1::{
     VpcPanel1Buttons, VpcPanel1InputState, VpcPanel1ParseError,
     parse_panel1_report, VPC_PANEL1_MIN_REPORT_BYTES,
+};
+
+pub use panel_2::{
+    VpcPanel2Axes, VpcPanel2Buttons, VpcPanel2InputState, VpcPanel2ParseError,
+    parse_panel2_report, VPC_PANEL2_MIN_REPORT_BYTES, PANEL2_BUTTON_COUNT,
 };

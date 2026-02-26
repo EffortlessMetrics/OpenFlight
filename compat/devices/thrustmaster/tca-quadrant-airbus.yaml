@@ -1,0 +1,52 @@
+# Thrustmaster TCA Quadrant Airbus Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID unconfirmed — no verified USB ID source available at time of writing.
+# Set product_id to null until PID is confirmed from lsusb/linux-hardware.org.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Quadrant Airbus Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: ~       # PID unconfirmed — requires lsusb verification
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_1, throttle_2, flaps, spoiler]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: TCA_QUADRANT_REVERSE_DETENT
+    description: >
+      The thrust levers have a physical TOGA/CLB/MCT/IDLE detent system.
+      The idle detent is at the low end of axis travel (raw 0) and TOGA
+      at the high end. Reverse thrust (if fitted) extends below idle.
+  - id: AIRBUS_SOLD_SEPARATELY
+    description: >
+      TCA Sidestick and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID unconfirmed at time of manifest creation. Capabilities based on
+    Thrustmaster product specification and community reports. Do not enable
+    device matching until product_id is filled in from a verified source
+    (e.g. lsusb output or linux-hardware.org probe). Last reviewed: 2026-02.

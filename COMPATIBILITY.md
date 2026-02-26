@@ -16,12 +16,16 @@
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | MFG Crosswind Rudder Pedals | ? | ? | 3 | 0 | ✗ | 3 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| Saitek Pro Flight Rudder Pedals | 0x06A3 | ? | 3 | 0 | ✗ | 3 |
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
+| Saitek X52 Flight Control System | 0x06A3 | 0x075C | 7 | 28 | ✗ | 2 |
 | Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |
 | Logitech X56 Rhino HOTAS | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
 | Thrustmaster HOTAS Cougar Stick | 0x044F | 0x0400 | 5 | 19 | ✗ | 3 |
 | T-Rudder | 0x044F | 0xB679 | 3 | 0 | ✗ | 2 |
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Airbus Edition | 0x044F | ? | 4 | 12 | ✗ | 3 |
+| Thrustmaster TCA Sidestick Airbus Edition | 0x044F | ? | 3 | 16 | ✗ | 3 |
 | T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
 | Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
 | T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |

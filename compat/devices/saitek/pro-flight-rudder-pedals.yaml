@@ -1,0 +1,52 @@
+# Saitek Pro Flight Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID unconfirmed — candidate 0x0BAD appears in community USB ID lists but has
+# not been verified from a reliable primary source (lsusb, linux-hardware.org,
+# or Linux kernel hid-ids.h). Set product_id to null until confirmed.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Rudder Pedals"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: ~           # PID unconfirmed — requires lsusb verification
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each.
+  - id: NO_FORCE_TRIM
+    description: >
+      Pedals provide no force-trim or spring-loading adjustment via software;
+      physical tension is set via a hardware knob on the unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID unconfirmed at time of manifest creation. Candidate PID 0x0BAD appears
+    in community USB ID databases but was not verified from a primary source.
+    Do not enable device matching until product_id is filled in.
+    Last reviewed: 2026-02.
