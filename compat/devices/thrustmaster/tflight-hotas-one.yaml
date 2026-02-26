@@ -1,0 +1,57 @@
+# Thrustmaster T.Flight HOTAS One
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID confirmed via linux-hardware.org:
+#   0xB68B — "T.Flight Hotas One Bulk" (registered in linux-hardware.org USB probe DB)
+#   0xB68C — XInput/gamepad mode variant (1 probe, Framework Laptop 13)
+# This manifest covers the primary HID mode (0xB68B).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS One"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0xB68B  # T.Flight Hotas One Bulk — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: XINPUT_VARIANT
+    description: >
+      A second PID (0xB68C) is registered as "T.Flight Hotas One" in XInput/gamepad
+      mode, used on Xbox and some console-mode configurations. OpenFlight operates in
+      HID mode (0xB68B) for full axis access.
+  - id: STICK_THROTTLE_SINGLE_USB
+    description: >
+      Stick and throttle share a single USB device (same HID interface). No separate
+      enumeration is needed. The throttle axis appears as the Z axis.
+  - id: CONSOLE_HOTAS_VARIANT
+    description: >
+      Originally marketed as an Xbox One accessory; mechanically very similar to the
+      T.Flight HOTAS 4 (0xB67B, PS4 edition). Both use 12-bit axis resolution.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xB68B confirmed from linux-hardware.org ("T.Flight Hotas One Bulk").
+    One of the most popular budget HOTAS units, widely used with MSFS and X-Plane.
+    Last validated: 2026-02.
