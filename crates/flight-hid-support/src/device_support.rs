@@ -477,6 +477,69 @@ pub const WINWING_UFC1_HUD1_PID: u16 = 0xBEDE;
 /// USB string "SKYWALKER Metal Rudder Pedals").
 pub const WINWING_SKYWALKER_RUDDER_PID: u16 = 0xBEF0;
 
+/// USB Product ID for the WinWing URSA MINOR Fighter Flight Stick (Left-hand).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBC29 — linux-hardware.org (2 probes,
+/// USB string "WINWING URSA MINOR FIGHTER FLIGHT STICK L"). Left-hand stick
+/// for dual-stick configurations; right-hand variant is `WINWING_URSA_MINOR_STICK_R_PID`.
+pub const WINWING_URSA_MINOR_STICK_L_PID: u16 = 0xBC29;
+
+/// USB Product ID for the WinWing URSA MINOR Fighter Flight Stick (Right-hand).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBC2A — linux-hardware.org (vendor
+/// page listing, USB string "WINWING URSA MINOR FIGHTER FLIGHT STICK R").
+/// Right-hand counterpart to `WINWING_URSA_MINOR_STICK_L_PID`.
+pub const WINWING_URSA_MINOR_STICK_R_PID: u16 = 0xBC2A;
+
+/// USB Product ID for the WinWing F/A-18 Takeoff Panel.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE04 — linux-hardware.org (1 probe,
+/// USB string "F18 TAKEOFF PANEL"). First-generation; updated variant is
+/// `WINWING_F18_TAKEOFF_PANEL_2_PID` (0xBF05).
+pub const WINWING_F18_TAKEOFF_PANEL_PID: u16 = 0xBE04;
+
+/// USB Product ID for the WinWing F/A-18 Combat Ready Panel.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE05 — linux-hardware.org (1 probe,
+/// USB string "F18 COMBAT READY PANEL"). Observed alongside the Takeoff Panel
+/// (0xBE04) and ICP (0xBF06) on the same system.
+pub const WINWING_F18_COMBAT_READY_PANEL_PID: u16 = 0xBE05;
+
+/// USB Product ID for the WinWing Orion Base 1 + F/A-18 Grip.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE11 — linux-hardware.org (2 probes,
+/// USB string "JOYSTICK BASE1 + F18 GRIP"). First-generation Orion base; the
+/// second-generation equivalent is `WINWING_ORION2_F18_STICK_PID` (0xBE63).
+pub const WINWING_ORION1_F18_STICK_PID: u16 = 0xBE11;
+
+/// USB Product ID for the WinWing Orion 2 Base + F-16 Grip (first-generation PID).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE48 — linux-hardware.org (2 probes,
+/// USB string "JOYSTICK BASE2 + JGRIP-F16"). Earlier PID variant of the Orion 2
+/// F-16EX stick; the updated variant is `WINWING_ORION2_F16EX_STICK_PID` (0xBEA8).
+pub const WINWING_ORION2_F16_STICK_GEN1_PID: u16 = 0xBE48;
+
+/// USB Product ID for the WinWing Orion Throttle Base II + F-16 Throttle Grip.
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBE68 — linux-hardware.org (3 probes,
+/// USB string "Orion Throttle Base II + TGRIP-F16"). Single-throttle F-16 variant;
+/// F/A-18C dual-throttle is `WINWING_ORION2_F18_THROTTLE_PID` (0xBE62).
+pub const WINWING_ORION2_F16_THROTTLE_PID: u16 = 0xBE68;
+
+/// USB Product ID for the WinWing F/A-18 Takeoff Panel 2 (second-generation).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBF05 — linux-hardware.org (1 probe,
+/// USB string "F18 TAKEOFF PANEL 2"). Updated variant of
+/// `WINWING_F18_TAKEOFF_PANEL_PID` (0xBE04).
+pub const WINWING_F18_TAKEOFF_PANEL_2_PID: u16 = 0xBF05;
+
+/// USB Product ID for the WinWing ICP (F-16 Integrated Control Panel).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBF06 — linux-hardware.org (1 probe,
+/// USB string "ICP"). The F-16 Integrated Control Panel (ICP) serves the same
+/// UFC role as the UFC1+HUD1 (`WINWING_UFC1_HUD1_PID` 0xBEDE) for F/A-18.
+pub const WINWING_ICP_PANEL_PID: u16 = 0xBF06;
+
 /// USB Vendor ID for all Moza (Gudsen Technology) products.
 ///
 /// Confirmed: VID 0x346E — from the-sz.com USB ID database and

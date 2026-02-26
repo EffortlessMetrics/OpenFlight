@@ -1,0 +1,42 @@
+# WinWing URSA MINOR Fighter Flight Stick (Right-hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBC2A — linux-hardware.org (listed as
+# "WINWING URSA MINOR FIGHTER FLIGHT STICK R", vendor "Winwing").
+# Counterpart to the left-hand variant (PID 0xBC29).
+device:
+  name: "WinWing URSA MINOR Fighter Flight Stick (Right)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBC2A
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    URSA MINOR right-hand fighter stick for dual-stick HOTAS configurations.
+    PID 0xBC2A confirmed from linux-hardware.org (vendor page listing).
+    The matching left-hand stick is PID 0xBC29. The URSA MINOR is
+    WinWing's compact fighter stick line, distinct from the Orion 2 series.

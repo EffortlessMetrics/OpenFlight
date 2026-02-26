@@ -1,0 +1,41 @@
+# WinWing F/A-18 Combat Ready Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBE05 — linux-hardware.org (1 probe on ASUSTek
+# TUF Gaming, USB string "F18 COMBAT READY PANEL", vendor "Winwing").
+device:
+  name: "WinWing F/A-18 Combat Ready Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE05
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    F/A-18 replica combat-ready panel covering master arm, weapons release, and
+    stores management switches. PID 0xBE05 confirmed from linux-hardware.org
+    (1 probe). Observed alongside F18 TAKEOFF PANEL (0xBE04) and
+    Orion Throttle TGRIP-F16 (0xBE68) on same system.

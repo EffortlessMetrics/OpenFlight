@@ -1,0 +1,41 @@
+# WinWing Orion (Base 1) + F/A-18 Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBE11 — linux-hardware.org (2 probes on MSI
+# 990FXA GAMING, USB string "JOYSTICK BASE1 + F18 GRIP", vendor "Winwing").
+device:
+  name: "WinWing Orion Base 1 + F/A-18 Grip"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE11
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    First-generation Orion joystick base paired with F/A-18C replica grip.
+    PID 0xBE11 confirmed from linux-hardware.org (2 probes). Distinct from
+    the second-generation Orion 2 F/A-18C Stick (PID 0xBE63). Typically
+    paired with the Orion 2 Throttle (PID 0xBE62).

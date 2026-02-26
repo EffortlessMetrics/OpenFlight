@@ -1,0 +1,40 @@
+# WinWing F/A-18 Takeoff Panel 2 (second-generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBF05 — linux-hardware.org (1 probe on Alienware
+# Aurora R6, USB string "F18 TAKEOFF PANEL 2", vendor "Winwing").
+device:
+  name: "WinWing F/A-18 Takeoff Panel 2"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF05
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Second-generation F/A-18 replica takeoff panel. PID 0xBF05 confirmed from
+    linux-hardware.org (1 probe). Observed alongside URSA MINOR FIGHTER FLIGHT
+    STICK L (0xBC29) on same system. Updated variant of PID 0xBE04.

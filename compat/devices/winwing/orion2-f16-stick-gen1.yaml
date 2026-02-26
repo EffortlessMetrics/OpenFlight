@@ -1,0 +1,44 @@
+# WinWing Orion Base 2 + F-16 Grip (JGRIP-F16, first-generation PID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBE48 — linux-hardware.org (2 probes on Gigabyte
+# Z690 AORUS M, USB string "JOYSTICK BASE2 + JGRIP-F16", vendor "Winwing").
+# Distinct from the later Orion 2 F-16EX Stick (PID 0xBEA8 / 0xBEA9) which
+# reports as "Orion Joystick Base 2 + JGRIP-F16" — different PID, possibly
+# an earlier firmware or hardware revision.
+device:
+  name: "WinWing Orion 2 Base + F-16 Grip (Gen 1)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE48
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Earlier PID variant of the Orion 2 base paired with F-16 JGRIP grip.
+    PID 0xBE48 confirmed from linux-hardware.org (2 probes). The updated
+    variant ships as PID 0xBEA8 ("Orion Joystick Base 2 + JGRIP-F16").
+    Typically paired with the Orion 2 Throttle (PID 0xBE62).
