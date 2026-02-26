@@ -89,6 +89,28 @@ pub const WARTHOG_THROTTLE_PID: u16 = 0x0404;
 /// (ID usb:044f:0400, "ThrustMaster HOTAS Cougar").
 pub const COUGAR_HOTAS_STICK_PID: u16 = 0x0400;
 
+/// USB Product ID for the TCA Sidestick Airbus Edition (Pilot / left-hand captain's seat).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0x0405 — linux-hardware.org (24 probes,
+/// USB string "T.A320 Pilot").
+pub const TCA_SIDESTICK_AIRBUS_PILOT_PID: u16 = 0x0405;
+
+/// USB Product ID for the TCA Sidestick Airbus Edition (Copilot / right-hand first-officer's seat).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0x0406 — linux-hardware.org (12 probes,
+/// USB string "T.A320 Copilot").
+pub const TCA_SIDESTICK_AIRBUS_COPILOT_PID: u16 = 0x0406;
+
+/// USB Product ID for the TCA Quadrant Airbus Edition (engines 1 & 2).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0x0407 — linux-hardware.org ("TCA Q-Eng 1&2").
+pub const TCA_QUADRANT_AIRBUS_ENG12_PID: u16 = 0x0407;
+
+/// USB Product ID for the TCA Quadrant Airbus Add-On (engines 3 & 4).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0x0408 — linux-hardware.org ("TCA Q-Eng 3&4").
+pub const TCA_QUADRANT_AIRBUS_ENG34_PID: u16 = 0x0408;
+
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
 //

@@ -62,6 +62,7 @@ members = [
     "crates/flight-hotas-honeycomb",
     "crates/flight-hotas-logitech",
     "crates/flight-hotas-virpil",
+    "crates/flight-integration-tests",
     "crates/flight-ffb-moza",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",

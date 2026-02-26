@@ -1,0 +1,19 @@
+[package]
+homepage.workspace = true
+name = "flight-integration-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "End-to-end integration tests for hardware parsing through the bus pipeline."
+publish = false
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dev-dependencies]
+flight-bus = { path = "../flight-bus" }
+flight-hotas-virpil = { path = "../flight-hotas-virpil" }
+flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
+flight-hid-support = { path = "../flight-hid-support" }
