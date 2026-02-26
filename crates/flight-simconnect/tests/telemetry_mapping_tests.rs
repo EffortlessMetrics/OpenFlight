@@ -510,3 +510,137 @@ fn test_fuel_to_percentage_conversion() {
     assert!(MsfsConverter::convert_fuel_to_percentage(20.0, 0.0).is_err());
     assert!(MsfsConverter::convert_fuel_to_percentage(20.0, -10.0).is_err());
 }
+
+/// Test NaN inputs are rejected by all converters.
+/// Requirements: QG-SANITY-GATE
+#[test]
+fn test_nan_inputs_rejected() {
+    assert!(
+        MsfsConverter::convert_ias(f64::NAN).is_err(),
+        "NaN IAS must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_tas(f64::NAN).is_err(),
+        "NaN TAS must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_ground_speed(f64::NAN).is_err(),
+        "NaN ground speed must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_angle_degrees(f64::NAN).is_err(),
+        "NaN angle must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_g_force(f64::NAN).is_err(),
+        "NaN g-force must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_mach(f64::NAN).is_err(),
+        "NaN Mach must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_percentage(f64::NAN).is_err(),
+        "NaN percentage must be rejected"
+    );
+}
+
+/// Test positive and negative infinity inputs are rejected.
+/// Requirements: QG-SANITY-GATE
+#[test]
+fn test_infinity_inputs_rejected() {
+    assert!(
+        MsfsConverter::convert_ias(f64::INFINITY).is_err(),
+        "+Inf IAS must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_ias(f64::NEG_INFINITY).is_err(),
+        "-Inf IAS must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_g_force(f64::INFINITY).is_err(),
+        "+Inf g-force must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_g_force(f64::NEG_INFINITY).is_err(),
+        "-Inf g-force must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_mach(f64::INFINITY).is_err(),
+        "+Inf Mach must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_angle_degrees(f64::INFINITY).is_err(),
+        "+Inf angle must be rejected"
+    );
+}
+
+/// Test out-of-range inputs return errors with appropriate bounds.
+/// Requirements: MSFS-INT-01.5, MSFS-INT-01.6
+#[test]
+fn test_out_of_range_inputs_rejected() {
+    // Speed: valid range 0..=1000 knots
+    assert!(
+        MsfsConverter::convert_ias(-1.0).is_err(),
+        "negative IAS must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_ias(1001.0).is_err(),
+        "IAS > 1000 kts must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_tas(-0.001).is_err(),
+        "negative TAS must be rejected"
+    );
+
+    // G-force: valid range -20..=+20 g
+    assert!(
+        MsfsConverter::convert_g_force(20.001).is_err(),
+        "g > 20 must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_g_force(-20.001).is_err(),
+        "g < -20 must be rejected"
+    );
+
+    // Mach: valid range 0..=5
+    assert!(
+        MsfsConverter::convert_mach(-0.001).is_err(),
+        "negative Mach must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_mach(5.001).is_err(),
+        "Mach > 5 must be rejected"
+    );
+
+    // Percentage: valid range 0..=100
+    assert!(
+        MsfsConverter::convert_percentage(-0.001).is_err(),
+        "negative percentage must be rejected"
+    );
+    assert!(
+        MsfsConverter::convert_percentage(100.001).is_err(),
+        "percentage > 100 must be rejected"
+    );
+}
+
+/// Test boundary values are accepted (edge of valid range).
+/// Requirements: MSFS-INT-01.5, MSFS-INT-01.6
+#[test]
+fn test_boundary_values_accepted() {
+    // Speed boundaries
+    assert!(MsfsConverter::convert_ias(0.0).is_ok(), "0 kts IAS is valid");
+    assert!(MsfsConverter::convert_ias(1000.0).is_ok(), "1000 kts IAS is valid");
+
+    // G-force boundaries
+    assert!(MsfsConverter::convert_g_force(20.0).is_ok(), "+20 g is valid");
+    assert!(MsfsConverter::convert_g_force(-20.0).is_ok(), "-20 g is valid");
+
+    // Mach boundaries
+    assert!(MsfsConverter::convert_mach(0.0).is_ok(), "Mach 0 is valid");
+    assert!(MsfsConverter::convert_mach(5.0).is_ok(), "Mach 5 is valid");
+
+    // Percentage boundaries
+    assert!(MsfsConverter::convert_percentage(0.0).is_ok(), "0% is valid");
+    assert!(MsfsConverter::convert_percentage(100.0).is_ok(), "100% is valid");
+}

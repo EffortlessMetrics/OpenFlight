@@ -9,6 +9,9 @@ license.workspace = true
 repository.workspace = true
 description = "End-to-end integration tests for hardware parsing through the bus pipeline."
 publish = false
+readme = "README.md"
+keywords = ["flight-simulation", "testing", "integration"]
+categories = ["development-tools::testing"]
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

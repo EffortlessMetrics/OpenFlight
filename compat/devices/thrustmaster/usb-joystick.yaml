@@ -1,0 +1,54 @@
+# Thrustmaster USB Joystick (legacy budget joystick)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x044F (ThrustMaster), PID 0xB304
+# Source: linux-hardware.org "Thrustmaster USB Joystick" — multiple probes.
+# Basic 3-axis joystick with twist handle, throttle slider, buttons, and hat.
+# Sold circa 2003–2010 as an entry-level PC joystick.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster USB Joystick"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB304   # Confirmed: linux-hardware.org "Thrustmaster USB Joystick"
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: USB_JOYSTICK_LOW_RES
+    description: >
+      Axes use 10-bit resolution (0..=1023). Lower precision than modern HOTAS
+      devices; software filtering is recommended to reduce perceived noise.
+  - id: USB_JOYSTICK_UNIPOLAR_THROTTLE
+    description: >
+      The throttle slider is unipolar (0 = idle, full range = maximum).
+      X, Y, and Rz axes are bipolar centered at approximately half range.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xB304 confirmed from linux-hardware.org probe data (USB string
+    "Thrustmaster USB Joystick"). Capabilities based on typical Thrustmaster
+    budget joystick specification for this era; axis resolution and button
+    count may vary by firmware revision.
+    Last reviewed: 2026-06.

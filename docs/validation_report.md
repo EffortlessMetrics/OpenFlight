@@ -15,8 +15,8 @@
 ## Summary
 
 - **Total Checks:** 13
-- **Passed:** 8
-- **Failed:** 5
+- **Passed:** 9
+- **Failed:** 4
 
 ## Check Results
 
@@ -33,7 +33,6 @@
 | QG-BDD-COVERAGE | ✅ Pass | - |
 | QG-BDD-UNMAPPED-MICROCRATE | ❌ Fail | BDD metrics row `unmapped` has 3 acceptance criteria with 0 tests and 3 Gherkin mapping(s) |
 | QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
-| QG-CRATE-METADATA | ❌ Fail | 1 crate(s) failed metadata compatibility:
-- flight-integration-tests (missing: readme, keywords, categories) |
+| QG-CRATE-METADATA | ✅ Pass | - |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |
 

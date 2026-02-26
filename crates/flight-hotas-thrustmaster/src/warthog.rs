@@ -541,6 +541,87 @@ mod tests {
                 let result = parse_warthog_throttle(&data);
                 prop_assert!(result.is_ok());
             }
+
+            // ── New invariants ────────────────────────────────────────────────
+
+            /// Any report shorter than the minimum must return an error.
+            #[test]
+            fn stick_short_report_is_error(
+                data in proptest::collection::vec(any::<u8>(), 0..WARTHOG_STICK_MIN_REPORT_BYTES)
+            ) {
+                prop_assert!(parse_warthog_stick(&data).is_err());
+            }
+
+            /// Any throttle report shorter than the minimum must return an error.
+            #[test]
+            fn throttle_short_report_is_error(
+                data in proptest::collection::vec(any::<u8>(), 0..WARTHOG_THROTTLE_MIN_REPORT_BYTES)
+            ) {
+                prop_assert!(parse_warthog_throttle(&data).is_err());
+            }
+
+            /// Oversized stick reports must not panic and must parse successfully.
+            #[test]
+            fn stick_oversized_report_no_panic(
+                data in proptest::collection::vec(any::<u8>(), WARTHOG_STICK_MIN_REPORT_BYTES..256)
+            ) {
+                let _ = parse_warthog_stick(&data);
+            }
+
+            /// Oversized throttle reports must not panic and must parse successfully.
+            #[test]
+            fn throttle_oversized_report_no_panic(
+                data in proptest::collection::vec(any::<u8>(), WARTHOG_THROTTLE_MIN_REPORT_BYTES..256)
+            ) {
+                let _ = parse_warthog_throttle(&data);
+            }
+
+            /// Button decoding must be consistent with the raw bitmask (stick).
+            #[test]
+            fn stick_buttons_decode_consistently(
+                buttons_low in any::<u16>(),
+                buttons_high in any::<u8>(),
+            ) {
+                let data = stick_report(32768, 32768, 32768, buttons_low, buttons_high, 0xFF);
+                let state = parse_warthog_stick(&data).unwrap();
+                for n in 1u8..=16 {
+                    let expected = (buttons_low >> (n - 1)) & 1 != 0;
+                    prop_assert_eq!(state.buttons.button(n), expected, "stick button {}", n);
+                }
+                for n in 17u8..=19 {
+                    let expected = (buttons_high >> (n - 17)) & 1 != 0;
+                    prop_assert_eq!(state.buttons.button(n), expected, "stick button {}", n);
+                }
+                // Out-of-range buttons always false.
+                prop_assert!(!state.buttons.button(0));
+                prop_assert!(!state.buttons.button(20));
+            }
+
+            /// Button decoding must be consistent with the raw bitmask (throttle).
+            #[test]
+            fn throttle_buttons_decode_consistently(
+                btn_low in any::<u16>(),
+                btn_mid in any::<u16>(),
+                btn_high in any::<u8>(),
+            ) {
+                let data = throttle_report(32768, 32768, 0, 0, 0, btn_low, btn_mid, btn_high, 0, 0xFF, 0xFF);
+                let state = parse_warthog_throttle(&data).unwrap();
+                for n in 1u8..=16 {
+                    let expected = (btn_low >> (n - 1)) & 1 != 0;
+                    prop_assert_eq!(state.buttons.button(n), expected, "throttle button {}", n);
+                }
+                for n in 17u8..=32 {
+                    let expected = (btn_mid >> (n - 17)) & 1 != 0;
+                    prop_assert_eq!(state.buttons.button(n), expected, "throttle button {}", n);
+                }
+                for n in 33u8..=40 {
+                    let expected = (btn_high >> (n - 33)) & 1 != 0;
+                    prop_assert_eq!(state.buttons.button(n), expected, "throttle button {}", n);
+                }
+                // Out-of-range buttons always false.
+                prop_assert!(!state.buttons.button(0));
+                prop_assert!(!state.buttons.button(41));
+            }
         }
     }
 }

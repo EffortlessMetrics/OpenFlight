@@ -204,6 +204,12 @@ pub const TCA_QUADRANT_BOEING_ENG34_PID: u16 = 0x040B;
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0xB371 — linux-hardware.org (5 probes, "Sim Pedals").
 pub const THRUSTMASTER_SIM_PEDALS_PID: u16 = 0xB371;
 
+/// USB Product ID for the Thrustmaster USB Joystick (legacy budget joystick, circa 2003–2010).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB304 — linux-hardware.org (multiple probes,
+/// USB string "Thrustmaster USB Joystick"). Basic 3-axis + throttle + twist joystick.
+pub const THRUSTMASTER_USB_JOYSTICK_PID: u16 = 0xB304;
+
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
 //
@@ -787,6 +793,11 @@ pub fn cougar_hotas_model(product_id: u16) -> Option<CougarHotasModel> {
         COUGAR_HOTAS_STICK_PID => Some(CougarHotasModel::Stick),
         _ => None,
     }
+}
+
+/// Returns `true` if this VID/PID is the Thrustmaster USB Joystick (legacy).
+pub fn is_thrustmaster_usb_joystick(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID && product_id == THRUSTMASTER_USB_JOYSTICK_PID
 }
 
 /// Thrustmaster TCA Airbus Edition product family models.
