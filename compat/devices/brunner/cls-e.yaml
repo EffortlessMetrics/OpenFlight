@@ -53,9 +53,9 @@ quirks:
       path only.
 
 support:
-  tier: 3
+  tier: 2
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     VID/PID confirmed from linux-usb.org registry. HID report layout unvalidated;
