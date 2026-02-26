@@ -291,7 +291,9 @@ mod tests {
     fn test_gauge_value_set_and_read() {
         let registry = MetricsRegistry::new();
         registry.set_gauge("my_gauge", 42.5);
-        let val = registry.gauge_value("my_gauge").expect("gauge should exist");
+        let val = registry
+            .gauge_value("my_gauge")
+            .expect("gauge should exist");
         assert!((val - 42.5).abs() < f64::EPSILON);
     }
 
@@ -340,7 +342,10 @@ mod tests {
         });
         let summary = summary.expect("summary should exist");
         // Should never exceed capacity
-        assert_eq!(summary.count, capacity, "count should be capped at capacity");
+        assert_eq!(
+            summary.count, capacity,
+            "count should be capped at capacity"
+        );
     }
 
     #[test]

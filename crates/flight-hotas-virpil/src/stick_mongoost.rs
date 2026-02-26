@@ -21,8 +21,8 @@
 //! bytes 11–14   : buttons (32 buttons → 4 bytes, LSB-first)
 //! ```
 
-use thiserror::Error;
 use crate::VIRPIL_AXIS_MAX;
+use thiserror::Error;
 
 /// Minimum byte count for a MongoosT-50CM3 stick report.
 pub const VPC_MONGOOST_STICK_MIN_REPORT_BYTES: usize = 15;
@@ -126,7 +126,9 @@ pub struct VpcMongoostInputState {
 }
 
 /// Parse one raw HID report from the VPC MongoosT-50CM3 stick.
-pub fn parse_mongoost_stick_report(data: &[u8]) -> Result<VpcMongoostInputState, VpcMongoostParseError> {
+pub fn parse_mongoost_stick_report(
+    data: &[u8],
+) -> Result<VpcMongoostInputState, VpcMongoostParseError> {
     if data.len() < VPC_MONGOOST_STICK_MIN_REPORT_BYTES {
         return Err(VpcMongoostParseError::TooShort(data.len()));
     }
@@ -157,7 +159,10 @@ pub fn parse_mongoost_stick_report(data: &[u8]) -> Result<VpcMongoostInputState,
 
     Ok(VpcMongoostInputState {
         axes,
-        buttons: VpcMongoostButtons { raw: raw_buttons, hat },
+        buttons: VpcMongoostButtons {
+            raw: raw_buttons,
+            hat,
+        },
     })
 }
 

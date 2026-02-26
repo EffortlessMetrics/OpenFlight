@@ -282,104 +282,116 @@ mod tests {
     }
 }
 
-    // ── edge cases ────────────────────────────────────────────────────────────
+// ── edge cases ────────────────────────────────────────────────────────────
 
-    #[test]
-    fn test_version_parse_too_few_parts_fails() {
-        assert!(Version::parse("1.2").is_err());
-        assert!(Version::parse("1").is_err());
-    }
+#[test]
+fn test_version_parse_too_few_parts_fails() {
+    assert!(Version::parse("1.2").is_err());
+    assert!(Version::parse("1").is_err());
+}
 
-    #[test]
-    fn test_version_parse_too_many_parts_fails() {
-        assert!(Version::parse("1.2.3.4").is_err());
-    }
+#[test]
+fn test_version_parse_too_many_parts_fails() {
+    assert!(Version::parse("1.2.3.4").is_err());
+}
 
-    #[test]
-    fn test_version_parse_non_numeric_fails() {
-        assert!(Version::parse("a.b.c").is_err());
-        assert!(Version::parse("1.2.x").is_err());
-    }
+#[test]
+fn test_version_parse_non_numeric_fails() {
+    assert!(Version::parse("a.b.c").is_err());
+    assert!(Version::parse("1.2.x").is_err());
+}
 
-    #[test]
-    fn test_feature_negotiation_no_overlap() {
-        let request = NegotiateFeaturesRequest {
-            client_version: "1.0.0".to_string(),
-            supported_features: vec!["feature-a".to_string()],
-            preferred_transport: TransportType::Unspecified.into(),
-        };
-        let server_features = vec!["feature-b".to_string()];
-        let response = negotiate_features(&request, &server_features).unwrap();
-        // Negotiation succeeds (no version mismatch) but enabled_features is empty
-        assert!(response.success);
-        assert!(response.enabled_features.is_empty());
-    }
+#[test]
+fn test_feature_negotiation_no_overlap() {
+    let request = NegotiateFeaturesRequest {
+        client_version: "1.0.0".to_string(),
+        supported_features: vec!["feature-a".to_string()],
+        preferred_transport: TransportType::Unspecified.into(),
+    };
+    let server_features = vec!["feature-b".to_string()];
+    let response = negotiate_features(&request, &server_features).unwrap();
+    // Negotiation succeeds (no version mismatch) but enabled_features is empty
+    assert!(response.success);
+    assert!(response.enabled_features.is_empty());
+}
 
-    #[test]
-    fn test_feature_negotiation_empty_client_features() {
-        let request = NegotiateFeaturesRequest {
-            client_version: "1.0.0".to_string(),
-            supported_features: vec![],
-            preferred_transport: TransportType::Unspecified.into(),
-        };
-        let server_features = vec!["device-management".to_string()];
-        let response = negotiate_features(&request, &server_features).unwrap();
-        assert!(response.success);
-        assert!(response.enabled_features.is_empty());
-    }
+#[test]
+fn test_feature_negotiation_empty_client_features() {
+    let request = NegotiateFeaturesRequest {
+        client_version: "1.0.0".to_string(),
+        supported_features: vec![],
+        preferred_transport: TransportType::Unspecified.into(),
+    };
+    let server_features = vec!["device-management".to_string()];
+    let response = negotiate_features(&request, &server_features).unwrap();
+    assert!(response.success);
+    assert!(response.enabled_features.is_empty());
+}
 
-    #[test]
-    fn test_validate_required_features_all_present() {
-        let enabled = vec!["device-management".to_string(), "health".to_string()];
-        let required = vec!["device-management".to_string()];
-        assert!(validate_required_features(&enabled, &required).is_ok());
-    }
+#[test]
+fn test_validate_required_features_all_present() {
+    let enabled = vec!["device-management".to_string(), "health".to_string()];
+    let required = vec!["device-management".to_string()];
+    assert!(validate_required_features(&enabled, &required).is_ok());
+}
 
-    #[test]
-    fn test_validate_required_features_missing_fails() {
-        let enabled = vec!["health".to_string()];
-        let required = vec!["device-management".to_string()];
-        let err = validate_required_features(&enabled, &required).unwrap_err();
-        // Error should name the missing feature
-        let msg = format!("{err}");
-        assert!(msg.contains("device-management"), "error should name missing feature: {msg}");
-    }
+#[test]
+fn test_validate_required_features_missing_fails() {
+    let enabled = vec!["health".to_string()];
+    let required = vec!["device-management".to_string()];
+    let err = validate_required_features(&enabled, &required).unwrap_err();
+    // Error should name the missing feature
+    let msg = format!("{err}");
+    assert!(
+        msg.contains("device-management"),
+        "error should name missing feature: {msg}"
+    );
+}
 
-    #[test]
-    fn test_detect_breaking_changes_no_changes() {
-        let schema = "service FlightService {\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
-        let changes = detect_breaking_changes(schema, schema).unwrap();
-        assert!(changes.is_empty(), "identical schemas have no breaking changes");
-    }
+#[test]
+fn test_detect_breaking_changes_no_changes() {
+    let schema =
+        "service FlightService {\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
+    let changes = detect_breaking_changes(schema, schema).unwrap();
+    assert!(
+        changes.is_empty(),
+        "identical schemas have no breaking changes"
+    );
+}
 
-    #[test]
-    fn test_detect_breaking_changes_removed_rpc() {
-        let old = "service FlightService {\n  rpc OldMethod(Request) returns (Response);\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
-        let new = "service FlightService {\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
-        let changes = detect_breaking_changes(old, new).unwrap();
-        assert!(!changes.is_empty(), "should detect removed RPC");
-        assert!(
-            changes.iter().any(|c| c.contains("OldMethod")),
-            "change should mention OldMethod: {:?}",
-            changes
-        );
-    }
+#[test]
+fn test_detect_breaking_changes_removed_rpc() {
+    let old = "service FlightService {\n  rpc OldMethod(Request) returns (Response);\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
+    let new =
+        "service FlightService {\n  rpc GetStatus(StatusRequest) returns (StatusResponse);\n}";
+    let changes = detect_breaking_changes(old, new).unwrap();
+    assert!(!changes.is_empty(), "should detect removed RPC");
+    assert!(
+        changes.iter().any(|c| c.contains("OldMethod")),
+        "change should mention OldMethod: {:?}",
+        changes
+    );
+}
 
-    #[test]
-    fn test_detect_breaking_changes_removed_message() {
-        let old = "message OldMessage {\n  string field = 1;\n}\nmessage KeepMe {\n  int32 x = 1;\n}";
-        let new = "message KeepMe {\n  int32 x = 1;\n}";
-        let changes = detect_breaking_changes(old, new).unwrap();
-        assert!(!changes.is_empty(), "should detect removed message");
-        assert!(
-            changes.iter().any(|c| c.contains("OldMessage")),
-            "change should mention OldMessage: {:?}",
-            changes
-        );
-    }
+#[test]
+fn test_detect_breaking_changes_removed_message() {
+    let old = "message OldMessage {\n  string field = 1;\n}\nmessage KeepMe {\n  int32 x = 1;\n}";
+    let new = "message KeepMe {\n  int32 x = 1;\n}";
+    let changes = detect_breaking_changes(old, new).unwrap();
+    assert!(!changes.is_empty(), "should detect removed message");
+    assert!(
+        changes.iter().any(|c| c.contains("OldMessage")),
+        "change should mention OldMessage: {:?}",
+        changes
+    );
+}
 
-    #[test]
-    fn test_version_display() {
-        let v = Version { major: 1, minor: 2, patch: 3 };
-        assert_eq!(v.to_string(), "1.2.3");
-    }
+#[test]
+fn test_version_display() {
+    let v = Version {
+        major: 1,
+        minor: 2,
+        patch: 3,
+    };
+    assert_eq!(v.to_string(), "1.2.3");
+}

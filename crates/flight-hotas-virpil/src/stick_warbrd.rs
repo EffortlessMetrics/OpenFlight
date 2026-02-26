@@ -19,10 +19,10 @@
 
 use thiserror::Error;
 
-use crate::stick_mongoost::{
-    parse_mongoost_stick_report, VpcMongoostInputState, VpcMongoostParseError,
-};
 pub use crate::stick_mongoost::{VpcMongoostAxes, VpcMongoostButtons, VpcMongoostHat};
+use crate::stick_mongoost::{
+    VpcMongoostInputState, VpcMongoostParseError, parse_mongoost_stick_report,
+};
 
 /// Minimum byte count for a WarBRD / WarBRD-D HID report.
 ///

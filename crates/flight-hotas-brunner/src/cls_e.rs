@@ -176,8 +176,16 @@ mod tests {
     fn max_positive_axis_parses_to_one() {
         let report = make_report(i16::MAX, i16::MAX, [0u8; 4]);
         let state = parse_cls_e_report(&report).unwrap();
-        assert!((state.axes.roll - 1.0).abs() < 1e-4, "roll={}", state.axes.roll);
-        assert!((state.axes.pitch - 1.0).abs() < 1e-4, "pitch={}", state.axes.pitch);
+        assert!(
+            (state.axes.roll - 1.0).abs() < 1e-4,
+            "roll={}",
+            state.axes.roll
+        );
+        assert!(
+            (state.axes.pitch - 1.0).abs() < 1e-4,
+            "pitch={}",
+            state.axes.pitch
+        );
     }
 
     #[test]

@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 209 |
-| ACs with tests | 209 |
-| ACs with Gherkin | 209 |
-| ACs with both tests + Gherkin | 209 |
-| Complete | 209 |
+| Total AC | 318 |
+| ACs with tests | 315 |
+| ACs with Gherkin | 318 |
+| ACs with both tests + Gherkin | 315 |
+| Complete | 315 |
 | Needs Gherkin | 0 |
-| Needs Tests | 0 |
+| Needs Tests | 3 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 47 |
-| Microcrates with tests | 43 (91.5%) |
-| Microcrates with Gherkin | 43 (91.5%) |
-| Microcrates fully covered | 43 (91.5%) |
-| Test coverage | 100.0% |
+| Microcrates | 68 |
+| Microcrates with tests | 55 (80.9%) |
+| Microcrates with Gherkin | 56 (82.4%) |
+| Microcrates fully covered | 55 (80.9%) |
+| Test coverage | 99.1% |
 | Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 100.0% |
+| Test + Gherkin coverage | 99.1% |
 
 ## BDD Microcrate Matrix
 
@@ -46,23 +46,39 @@
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-bus | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-cloud-profiles | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
-| flight-dcs-export | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-device-common | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-ffb-moza | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
+| flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-brunner | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-ch | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-honeycomb | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-logitech | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-thrustmaster | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-vkb | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-thrustmaster | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-virpil | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-vkb | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-vpforce | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-winwing | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ipc | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-macos-hid | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-open-hardware | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-process-detection | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
+| flight-process-detection | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-rules | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -70,7 +86,7 @@
 | flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-service | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-session | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
-| flight-simconnect | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-simconnect | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect-sys | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-streamdeck | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-tactile | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -80,10 +96,15 @@
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-vr-overlay | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-wingman | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-workspace-meta | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-xplane | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
+| flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
+| flight-xplane-plugin | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| unmapped | 3 | 0 | 3 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -155,6 +176,113 @@
 | REQ-35 | AC-35.4 | WHEN blackbox stream types are indexed THEN stream_type_to_index SHALL return a stable monotonic value | specs/features/req_35_blackbox.feature:28 | 1 | ✅ Complete |
 | REQ-35 | AC-35.5 | WHEN blackbox header and footer structures are serialized THEN property-based round-trips SHALL preserve all fields | specs/features/req_35_blackbox.feature:34 | 3 | ✅ Complete |
 | REQ-36 | AC-36.1 | WHEN HidDeviceInfo is constructed THEN required fields SHALL be set and optional fields SHALL default to None | specs/features/req_36_hid_types.feature:8<br>specs/features/req_36_hid_types.feature:15 | 3 | ✅ Complete |
+| REQ-37 | AC-37.1 | WHEN a Gladiator HID report is parsed THEN all six axes SHALL decode to normalized values and button bitmask SHALL be applied | specs/features/req_37_vkb_gladiator.feature:5<br>specs/features/req_37_vkb_gladiator.feature:13 | 2 | ✅ Complete |
+| REQ-37 | AC-37.2 | WHEN bidirectional axis raw value is 0x0000 THEN normalized value SHALL be -1.0; 0x8000 SHALL be 0.0; 0xFFFF SHALL be +1.0 | specs/features/req_37_vkb_gladiator.feature:20<br>specs/features/req_37_vkb_gladiator.feature:30 | 1 | ✅ Complete |
+| REQ-37 | AC-37.3 | WHEN a report shorter than 12 bytes is presented THEN a ReportTooShort error SHALL be returned | specs/features/req_37_vkb_gladiator.feature:38<br>specs/features/req_37_vkb_gladiator.feature:46 | 1 | ✅ Complete |
+| REQ-37 | AC-37.4 | WHEN bit 32 is set in the second button word THEN button index 33 SHALL be reported as pressed | specs/features/req_37_vkb_gladiator.feature:52 | 1 | ✅ Complete |
+| REQ-37 | AC-37.5 | WHEN pressed_buttons is called THEN it SHALL return 1-based indices of all active buttons | specs/features/req_37_vkb_gladiator.feature:60 | 1 | ✅ Complete |
+| REQ-38 | AC-38.1 | WHEN /indicators returns valid JSON THEN the adapter SHALL emit a BusSnapshot with sim WarThunder and converted unit values | specs/features/req_38_warthunder.feature:5<br>specs/features/req_38_warthunder.feature:13 | 1 | ✅ Complete |
+| REQ-38 | AC-38.2 | WHEN optional fields are absent THEN the adapter SHALL set partial validity flags without panicking | specs/features/req_38_warthunder.feature:21<br>specs/features/req_38_warthunder.feature:27<br>specs/features/req_38_warthunder.feature:35 | 1 | ✅ Complete |
+| REQ-38 | AC-38.3 | WHEN WtIndicators is deserialised THEN renamed JSON fields SHALL map to struct fields correctly | specs/features/req_38_warthunder.feature:41<br>specs/features/req_38_warthunder.feature:47 | 2 | ✅ Complete |
+| REQ-38 | AC-38.4 | WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected | specs/features/req_38_warthunder.feature:53<br>specs/features/req_38_warthunder.feature:61 | 2 | ✅ Complete |
+| REQ-39 | AC-39.1 | WHEN Status.json exists with GEAR_DOWN set THEN adapter SHALL emit BusSnapshot with config.gear all-down | specs/features/req_39_elite.feature:5<br>specs/features/req_39_elite.feature:13 | 3 | ✅ Complete |
+| REQ-39 | AC-39.2 | WHEN Status.json flags are unchanged between polls THEN poll_once SHALL return None (change detection) | specs/features/req_39_elite.feature:19<br>specs/features/req_39_elite.feature:25 | 2 | ✅ Complete |
+| REQ-39 | AC-39.3 | WHEN LIGHTS_ON flag is set THEN nav and landing lights SHALL be true; fuel quantities SHALL populate config.fuel | specs/features/req_39_elite.feature:31<br>specs/features/req_39_elite.feature:39 | 2 | ✅ Complete |
+| REQ-39 | AC-39.4 | WHEN DOCKED flag is set THEN validity.position_valid SHALL be false and safe_for_ffb SHALL be false | specs/features/req_39_elite.feature:46<br>specs/features/req_39_elite.feature:53 | 1 | ✅ Complete |
+| REQ-39 | AC-39.5 | WHEN Status.json is parsed THEN flags bitmask and fuel fields SHALL be populated correctly | specs/features/req_39_elite.feature:59<br>specs/features/req_39_elite.feature:65 | 3 | ✅ Complete |
+| REQ-39 | AC-39.6 | WHEN adapter lifecycle is exercised THEN start SHALL set Connected and stop SHALL set Disconnected | specs/features/req_39_elite.feature:72 | 1 | ✅ Complete |
+| REQ-39 | AC-39.7 | WHEN journal directory is present THEN JournalReader SHALL find the latest log file and tail new events | specs/features/req_39_elite.feature:80<br>specs/features/req_39_elite.feature:87 | 4 | ✅ Complete |
+| REQ-39 | AC-39.8 | WHEN journal events are applied THEN adapter state (current_system, docked_station, current_ship) SHALL reflect the events | specs/features/req_39_elite.feature:93<br>specs/features/req_39_elite.feature:100<br>specs/features/req_39_elite.feature:107 | 5 | ✅ Complete |
+| REQ-40 | AC-40.1 | WHEN connected event carries dwApplicationVersionMajor < 13 THEN sim_id SHALL be Msfs | specs/features/req_40_msfs2024.feature:5<br>specs/features/req_40_msfs2024.feature:11 | 1 | ✅ Complete |
+| REQ-40 | AC-40.2 | WHEN connected event carries dwApplicationVersionMajor >= 13 THEN sim_id SHALL be Msfs2024 | specs/features/req_40_msfs2024.feature:17<br>specs/features/req_40_msfs2024.feature:23 | 1 | ✅ Complete |
+| REQ-40 | AC-40.3 | Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *) | specs/features/req_40_msfs2024.feature:31 | 3 | ✅ Complete |
+| REQ-40 | AC-40.4 | ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units | specs/features/req_40_msfs2024.feature:39<br>specs/features/req_40_msfs2024.feature:46 | 2 | ✅ Complete |
+| REQ-40 | AC-40.5 | ProcessDetectionConfig SHALL contain a Msfs2024 definition with process FlightSimulator2024.exe | specs/features/req_40_msfs2024.feature:53<br>specs/features/req_40_msfs2024.feature:60 | 1 | ✅ Complete |
+| REQ-41 | AC-41.1 | KspAdapter::sim_id() SHALL return SimId::Ksp and initial state SHALL be Disconnected | specs/features/req_41_ksp.feature:5<br>specs/features/req_41_ksp.feature:11 | 2 | ✅ Complete |
+| REQ-41 | AC-41.2 | WHEN heading_deg > 180 THEN normalized heading SHALL be heading_deg - 360; otherwise heading SHALL be unchanged | specs/features/req_41_ksp.feature:17<br>specs/features/req_41_ksp.feature:23 | 2 | ✅ Complete |
+| REQ-41 | AC-41.3 | altitude_m SHALL be multiplied by 3.28084 to yield feet; speed_mps SHALL be multiplied by 1.94384 to yield knots | specs/features/req_41_ksp.feature:29<br>specs/features/req_41_ksp.feature:35 | 2 | ✅ Complete |
+| REQ-41 | AC-41.4 | validity.safe_for_ffb SHALL be true only when situation == FLYING (3) | specs/features/req_41_ksp.feature:41<br>specs/features/req_41_ksp.feature:47 | 1 | ✅ Complete |
+| REQ-41 | AC-41.5 | ProcessDetectionConfig SHALL contain a Ksp definition with processes KSP_x64.exe, KSP.x86_64, and window title Kerbal Space Program | specs/features/req_41_ksp.feature:53 | 1 | ✅ Complete |
+| REQ-42 | AC-42.1 | IAS/TAS/ground speed SHALL be converted from m/s to knots; attitude angles SHALL be converted from degrees to radians; psi > 180 SHALL be normalized to the range (-180, +180] | - | 3 | 🟡 Needs Gherkin |
+| REQ-42 | AC-42.2 | Angular rates P, Q, R (deg/s) SHALL be converted to rad/s and written to BusSnapshot.angular_rates | - | 1 | 🟡 Needs Gherkin |
+| REQ-42 | AC-42.3 | Engine EGT, fuel_flow (kg/s→gal/hr), oil_pressure, oil_temperature, manifold_pressure, and CHT SHALL be populated from per-engine DataRefs when present | - | 1 | 🟡 Needs Gherkin |
+| REQ-42 | AC-42.4 | BusSnapshot.environment.pressure_altitude SHALL be populated from sim/cockpit2/gauges/indicators/altitude_ft_pilot (feet, no conversion) | - | 1 | 🟡 Needs Gherkin |
+| REQ-42 | AC-42.5 | PluginInterface SHALL perform a newline-delimited JSON handshake over TCP port 52000 and SHALL use actual async I/O for send_message and read_message | - | 2 | 🟡 Needs Gherkin |
+| REQ-42 | AC-42.6 | ControlOutput SHALL map pitch/roll/yaw to sim/joystick/yoke_*_ratio DataRefs (range −1..+1), throttle to sim/flightmodel/engine/ENGN_thro[n] (range 0..1), and SHALL reject NaN/Inf with InvalidValue before attempting any write | - | 7 | 🟡 Needs Gherkin |
+| REQ-43 | AC-43.1 | ProcessDetectionConfig SHALL contain a Wingman definition with process ProjectWingman.exe and window title Project Wingman | - | 1 | 🟡 Needs Gherkin |
+| REQ-43 | AC-43.2 | WingmanAdapter::state() SHALL return AdapterState::Disconnected before start() and AdapterState::Connected after start() | - | 2 | 🟡 Needs Gherkin |
+| REQ-43 | AC-43.3 | poll_once() SHALL return a BusSnapshot with SimId::Wingman | - | 1 | 🟡 Needs Gherkin |
+| REQ-43 | AC-43.4 | All BusSnapshot validity flags SHALL be false because Project Wingman exposes no telemetry API | - | 1 | 🟡 Needs Gherkin |
+| REQ-43 | AC-43.5 | StubVirtualController SHALL clamp axis values to [-1.0, 1.0] and return AxisOutOfRange for index >= 8 | - | 2 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.1 | WHEN a DCS session update is received THEN the MP detector SHALL identify SinglePlayer, Multiplayer, or Unknown from explicit session_type markers or inferred fields (server_name, player_count, coalition) | - | 4 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.2 | WHEN enforce_mp_integrity is true AND the session is Multiplayer THEN filter_restricted_fields SHALL remove weapons, countermeasures, and rwr_contacts from the telemetry data map before bus publication | - | 3 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.3 | WHEN a feature is blocked in an MP session THEN check_feature_blocked SHALL return a user-friendly message containing 'multiplayer integrity' | - | 2 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.4 | WHEN in an MP session THEN mp_session_info SHALL return a banner containing the server name and 'Multiplayer'; WHEN in SP THEN it SHALL return None | - | 2 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.5 | WHEN in an MP session THEN self-aircraft kinematic data (ias, tas, altitude, heading, pitch, bank, g_force) SHALL be published without restriction | - | 1 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.6 | WHEN gear_down or flaps fields are present in telemetry THEN convert_to_bus_snapshot SHALL map gear_down to config.gear (Down/Transitioning/Up) and flaps to config.flaps percentage | - | 5 | 🟡 Needs Gherkin |
+| REQ-44 | AC-44.7 | WHEN Export.lua is generated THEN IAS/TAS SHALL be converted m/s→knots, altitude ASL/AGL m→ft, vertical speed m/s→ft/min, AoA rad→deg, and waypoint distance m→NM before transmission | - | 4 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.1 | WHEN a MotionFrame value exceeds -1.0..1.0 THEN clamped() SHALL clamp it to that range for all six channels | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.2 | WHEN to_simtools_string() is called THEN it SHALL produce 'A{i}B{i}C{i}D{i}E{i}F{i}\n' with values rounded to integer percent | - | 2 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.3 | WHEN a high-pass filter receives a step input THEN it SHALL pass the onset (output > 0.9 on first tick); WHEN input is sustained THEN output SHALL wash out to near zero | - | 2 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.4 | WHEN a low-pass filter receives sustained constant input THEN it SHALL converge to within 0.01 of that input | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.5 | WHEN a neutral BusSnapshot is processed for 2000 ticks THEN all MotionFrame channels SHALL be within 0.01 of zero | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.6 | WHEN intensity is set to 0.0 THEN the mapper SHALL output a neutral frame regardless of input | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.7 | WHEN a channel is disabled in configuration THEN the mapper SHALL output exactly 0.0 for that channel | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.8 | WHEN SimToolsUdpOutput sends a frame THEN the receiver SHALL get the correctly formatted SimTools datagram | - | 1 | 🟡 Needs Gherkin |
+| REQ-45 | AC-45.9 | WHEN default MotionConfig is created THEN intensity SHALL be 0.8, max_g SHALL be 3.0, max_angle_deg SHALL be 30.0, and all channels SHALL be enabled with gain 1.0 | - | 1 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.1 | WHEN a HID report of ≥ 8 bytes is received THEN PcModeDetector SHALL classify it as PcMode; WHEN < 8 bytes THEN ConsoleMode | - | 3 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.2 | WHEN confirm_count consecutive same-type reports are seen THEN the committed status SHALL be updated; fewer reports SHALL leave status Unknown | - | 2 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.3 | WHEN device is in ConsoleMode THEN console_mode_guidance SHALL return a non-empty string containing handshake instructions; WHEN in PcMode THEN None | - | 2 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.4 | WHEN PcModeDetector is reset THEN committed status SHALL revert to Unknown | - | 1 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.5 | WHEN throttle value enters a configured detent zone THEN ThrottleDetentTracker SHALL emit Entered; WHEN it exits THEN Exited | - | 2 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.6 | WHEN throttle remains inside the detent zone THEN no duplicate Entered events SHALL be emitted (hysteresis) | - | 1 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.7 | WHEN throttle exits and re-enters the detent zone THEN Entered SHALL fire again | - | 1 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.8 | WHEN ThrottleDetentTracker is reset THEN inside state is cleared and Entered fires on next zone entry | - | 1 | 🟡 Needs Gherkin |
+| REQ-46 | AC-46.9 | WHEN ThrottleDetentConfig::hotas4_idle() is used THEN position SHALL be 0.05 with half_width 0.02 giving zone [0.03, 0.07] | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.1 | WHEN ListFilter is constructed with defaults THEN sort SHALL be TopRated, page SHALL be 1, and per_page SHALL be 25 | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.2 | WHEN list_page is called with a sim filter THEN only profiles matching that sim SHALL be returned | - | 2 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.3 | WHEN get() is called and the profile is in the local cache and not expired THEN no network request SHALL be made | - | 2 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.4 | WHEN a cache entry's age exceeds the TTL THEN is_expired SHALL return true and get() SHALL fetch from network | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.5 | WHEN clear() is called on the cache THEN all stored profiles and the index SHALL be removed | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.6 | WHEN sanitize_for_upload is called THEN the schema version SHALL be normalised and the sim slug SHALL be lowercased | - | 2 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.7 | WHEN validate_for_publish is called with a title shorter than 3 chars THEN it SHALL return an error | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.8 | WHEN validate_for_publish is called with a title longer than 80 chars THEN it SHALL return an error | - | 1 | 🟡 Needs Gherkin |
+| REQ-47 | AC-47.9 | WHEN VoteDirection is serialised to JSON THEN it SHALL use lowercase snake_case (up / down) | - | 1 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.1 | WHEN OverlayConfig is constructed with default values THEN validate() SHALL return Ok | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.2 | WHEN opacity is outside [0.0, 1.0] THEN validate() SHALL return an error | - | 1 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.3 | WHEN a notification's TTL has elapsed THEN is_expired() SHALL return true; prune_expired() SHALL remove it from the queue | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.4 | WHEN the queue is at capacity THEN the oldest non-Critical item SHALL be evicted; if all are Critical the incoming notification SHALL be dropped | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.5 | WHEN acknowledge() is called on a notification THEN is_expired() SHALL return true for that notification | - | 1 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.6 | WHEN active() is called THEN notifications SHALL be returned sorted by severity descending (Critical first) | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.7 | WHEN toggle_visible() is called THEN the overlay visible flag SHALL invert | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.8 | WHEN NullRenderer::render_frame() is called THEN frames_rendered SHALL increment and last_profile SHALL record the profile name | - | 2 | 🟡 Needs Gherkin |
+| REQ-48 | AC-48.9 | WHEN OverlayService is spawned and SetProfile command is sent THEN handle.state().profile_name SHALL reflect the new name | - | 2 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.1 | WHEN a 20-byte VPforce Rhino report is parsed THEN roll, pitch, and throttle SHALL normalise to [-1,1] / [0,1] without error | - | 2 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.2 | WHEN a Rhino FFB Spring effect is serialised THEN the output report SHALL use report ID 0x10 and encode the coefficient correctly | - | 2 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.3 | WHEN three consecutive Rhino report failures are recorded THEN RhinoHealthMonitor SHALL mark the device offline | - | 2 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.4 | WHEN a 24-byte WinWing Orion2 Throttle report is parsed THEN left and right throttle axes SHALL normalise correctly | - | 2 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.5 | WHEN a 12-byte WinWing Orion2 Stick report is parsed THEN roll, pitch, twist axes SHALL normalise to 0.0 at mid-scale | - | 1 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.6 | WHEN an 8-byte WinWing TFRP report is parsed THEN rudder and toe brakes SHALL normalise to 0.0 at neutral | - | 1 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.7 | WHEN WinWingHealthMonitor records a success after failures THEN consecutive_failures SHALL reset to 0 | - | 1 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.8 | WHEN a 16-byte Moza AB9 report is parsed THEN roll and pitch SHALL normalise to 0.0 at mid-scale with no buttons active | - | 1 | 🟡 Needs Gherkin |
+| REQ-49 | AC-49.9 | WHEN a Moza TorqueCommand with out-of-range values is created THEN is_safe() SHALL return false; clamped values SHALL serialise within i16 bounds | - | 2 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.1 | WHEN HidManager::new() is called on non-macOS THEN it SHALL succeed and return an empty device list | - | 1 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.2 | WHEN HidManager::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform | - | 1 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.3 | WHEN HidDevice::open() is called on non-macOS THEN it SHALL return HidError::UnsupportedPlatform | - | 1 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.4 | WHEN set_device_matching(usagePage, usage) is called THEN criteria() SHALL reflect those values | - | 2 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.5 | WHEN MacosClock::elapsed() is called after a delay THEN it SHALL return a duration >= that delay on non-macOS | - | 2 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.6 | WHEN HidError::UnsupportedPlatform is formatted THEN the message SHALL contain 'not supported' | - | 1 | 🟡 Needs Gherkin |
+| REQ-50 | AC-50.7 | WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = "macos")'.dependencies] in Cargo.toml | - | 0 | 🟡 Needs Tests |
+| REQ-50 | AC-50.8 | WHEN the crate is compiled on Windows or Linux THEN it SHALL compile without requiring IOKit system libraries | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.1 | WHEN a centred InputReport buffer is parsed THEN all axes SHALL be zero and ffb_fault SHALL be false | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.2 | WHEN an InputReport is serialised then parsed THEN the result SHALL equal the original | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.3 | WHEN a wrong report ID is parsed THEN parse() SHALL return None | - | 3 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.4 | WHEN axes are at full deflection THEN normalise functions SHALL return approximately ±1.0 or 1.0 | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.5 | WHEN FfbOutputReport::stop() is called THEN force bytes SHALL be zero and mode SHALL be Off(0) | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.6 | WHEN an FfbOutputReport is serialised then parsed THEN the result SHALL equal the original | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.7 | WHEN LedReport::all_off() is called THEN leds byte SHALL be 0 with report ID 0x20 | - | 2 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.8 | WHEN a FirmwareVersionReport is serialised then parsed THEN version() SHALL return the correct (major, minor, patch) | - | 1 | 🟡 Needs Gherkin |
+| REQ-51 | AC-51.9 | WHEN the crate is compiled THEN VENDOR_ID SHALL be 0x1209 and PRODUCT_ID SHALL be 0xF170; the crate SHALL compile as no_std | - | 1 | 🟡 Needs Gherkin |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |
@@ -259,8 +387,10 @@
 | REQ-23 | AC-23.2 | WHEN capability enforcement is applied THEN profiles SHALL respect device capability constraints | specs/features/req_23_profile_management.feature:17 | 1 | ✅ Complete |
 | REQ-23 | AC-23.3 | WHEN canonicalizing profiles THEN equivalent configurations SHALL produce identical canonical forms | specs/features/req_23_profile_management.feature:23 | 1 | ✅ Complete |
 | REQ-23 | AC-23.4 | WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one | specs/features/req_23_profile_management.feature:29 | 1 | ✅ Complete |
+| REQ-23 | AC-23.5 | WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft | specs/features/req_23_profile_management.feature:36<br>specs/features/req_23_profile_management.feature:43<br>specs/features/req_23_profile_management.feature:50 | 0 | 🟡 Needs Tests |
+| REQ-23 | AC-23.6 | WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events | specs/features/req_23_profile_management.feature:58<br>specs/features/req_23_profile_management.feature:66 | 0 | 🟡 Needs Tests |
 | REQ-24 | AC-24.1 | WHEN validating a rules schema THEN invalid schema versions SHALL be rejected and valid ones SHALL be accepted | specs/features/req_24_led_rules.feature:5<br>specs/features/req_24_led_rules.feature:11 | 2 | ✅ Complete |
-| REQ-24 | AC-24.2 | WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types | specs/features/req_24_led_rules.feature:17 | 1 | ✅ Complete |
+| REQ-24 | AC-24.2 | WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types | specs/features/req_24_led_rules.feature:17 | 4 | ✅ Complete |
 | REQ-24 | AC-24.3 | WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized | specs/features/req_24_led_rules.feature:24<br>specs/features/req_24_led_rules.feature:30 | 2 | ✅ Complete |
 | REQ-25 | AC-25.1 | WHEN creating a process detector THEN it SHALL initialize with expected process definitions for supported simulators | specs/features/req_25_process_detection.feature:5<br>specs/features/req_25_process_detection.feature:12 | 2 | ✅ Complete |
 | REQ-25 | AC-25.2 | WHEN the process detection lifecycle runs THEN simulator processes SHALL be detected and state transitions SHALL be recorded | specs/features/req_25_process_detection.feature:19<br>specs/features/req_25_process_detection.feature:25 | 2 | ✅ Complete |

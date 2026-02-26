@@ -42,9 +42,8 @@ pub mod tfrp;
 pub mod ufc_panel;
 
 pub use f16ex_stick::{
-    BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons,
-    F16ExInputState, F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN,
-    parse_f16ex_stick_report,
+    BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
+    F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN, parse_f16ex_stick_report,
 };
 pub use health::{WinWingDevice, WinWingHealthMonitor, WinWingHealthStatus};
 pub use input::{
@@ -59,16 +58,11 @@ pub use orion2_stick::{
     Orion2StickParseError, parse_orion2_stick_report,
 };
 pub use orion2_throttle::{
-    BUTTON_COUNT as ORION2_THROTTLE_BUTTON_COUNT,
-    ENCODER_COUNT as ORION2_THROTTLE_ENCODER_COUNT,
+    BUTTON_COUNT as ORION2_THROTTLE_BUTTON_COUNT, ENCODER_COUNT as ORION2_THROTTLE_ENCODER_COUNT,
     MIN_REPORT_BYTES as ORION2_THROTTLE_REPORT_BYTES, Orion2ThrottleAxes, Orion2ThrottleButtons,
     Orion2ThrottleInputState, Orion2ThrottleParseError, parse_orion2_throttle_report,
 };
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
-pub use tfrp::{
-    MIN_REPORT_BYTES as TFRP_REPORT_BYTES, TfrpAxes, TfrpInputState, TfrpParseError,
-    parse_tfrp_report,
-};
 pub use skywalker_rudder::{
     MIN_REPORT_BYTES as SKYWALKER_RUDDER_REPORT_LEN, SKYWALKER_RUDDER_PID, SkywalkerAxes,
     SkywalkerParseError, SkywalkerRudderInputState, parse_skywalker_rudder_report,
@@ -77,6 +71,10 @@ pub use super_taurus::{
     BUTTON_COUNT as SUPER_TAURUS_BUTTON_COUNT, MIN_REPORT_BYTES as SUPER_TAURUS_REPORT_LEN,
     SUPER_TAURUS_PID, SuperTaurusAxes, SuperTaurusButtons, SuperTaurusInputState,
     SuperTaurusParseError, parse_super_taurus_report,
+};
+pub use tfrp::{
+    MIN_REPORT_BYTES as TFRP_REPORT_BYTES, TfrpAxes, TfrpInputState, TfrpParseError,
+    parse_tfrp_report,
 };
 pub use ufc_panel::{
     HUD_BUTTON_COUNT as UFC_HUD_BUTTON_COUNT, MIN_REPORT_BYTES as UFC_PANEL_REPORT_LEN,

@@ -30,8 +30,8 @@
 //! format (see [`crate`]) and cross-checked against the compat manifest
 //! `compat/devices/virpil/control-panel-2.yaml`. HIL validation is pending.
 
-use thiserror::Error;
 use crate::VIRPIL_AXIS_MAX;
+use thiserror::Error;
 
 /// Minimum byte count for a VPC Control Panel 2 report.
 pub const VPC_PANEL2_MIN_REPORT_BYTES: usize = 11;
@@ -81,7 +81,9 @@ pub struct VpcPanel2Buttons {
 
 impl Default for VpcPanel2Buttons {
     fn default() -> Self {
-        Self { raw: [0u8; PANEL2_BUTTON_BYTES] }
+        Self {
+            raw: [0u8; PANEL2_BUTTON_BYTES],
+        }
     }
 }
 
@@ -99,7 +101,9 @@ impl VpcPanel2Buttons {
 
     /// Return a `Vec` of pressed button numbers (1-indexed).
     pub fn pressed(&self) -> Vec<u8> {
-        (1u8..=PANEL2_BUTTON_COUNT).filter(|&n| self.is_pressed(n)).collect()
+        (1u8..=PANEL2_BUTTON_COUNT)
+            .filter(|&n| self.is_pressed(n))
+            .collect()
     }
 }
 

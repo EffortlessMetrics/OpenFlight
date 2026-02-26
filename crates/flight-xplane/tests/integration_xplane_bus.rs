@@ -12,11 +12,7 @@ use flight_xplane::{
     adapter::{XPlaneAdapter, XPlaneRawData},
     dataref::DataRefValue,
 };
-use std::{
-    collections::HashMap,
-    net::UdpSocket,
-    time::Instant,
-};
+use std::{collections::HashMap, net::UdpSocket, time::Instant};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,11 +41,16 @@ fn parse_first_data_record(pkt: &[u8]) -> (i32, [f32; 8]) {
     assert_eq!(&pkt[0..4], b"DATA");
 
     let offset = 5; // skip "DATA\0"
-    let index = i32::from_le_bytes([pkt[offset], pkt[offset+1], pkt[offset+2], pkt[offset+3]]);
+    let index = i32::from_le_bytes([
+        pkt[offset],
+        pkt[offset + 1],
+        pkt[offset + 2],
+        pkt[offset + 3],
+    ]);
     let mut values = [0.0f32; 8];
     for i in 0..8 {
         let o = offset + 4 + i * 4;
-        values[i] = f32::from_le_bytes([pkt[o], pkt[o+1], pkt[o+2], pkt[o+3]]);
+        values[i] = f32::from_le_bytes([pkt[o], pkt[o + 1], pkt[o + 2], pkt[o + 3]]);
     }
     (index, values)
 }
@@ -59,8 +60,8 @@ fn make_raw_data(dataref_values: HashMap<String, DataRefValue>) -> XPlaneRawData
     XPlaneRawData {
         timestamp: Instant::now(),
         aircraft_info: DetectedAircraft {
-            icao:   "C172".to_string(),
-            title:  "Cessna Skyhawk 172SP".to_string(),
+            icao: "C172".to_string(),
+            title: "Cessna Skyhawk 172SP".to_string(),
             author: "Laminar Research".to_string(),
         },
         dataref_values,
@@ -77,7 +78,7 @@ fn make_raw_data(dataref_values: HashMap<String, DataRefValue>) -> XPlaneRawData
 fn data_packet_round_trips_through_udp_socket() {
     let ias_mps = 77.17_f32; // ≈ 150 knots
     let tas_mps = 79.00_f32;
-    let gs_mps  = 75.50_f32;
+    let gs_mps = 75.50_f32;
 
     let pkt = make_xplane_data_packet(3, [ias_mps, tas_mps, gs_mps, 0.0, 0.0, 0.0, 0.0, 0.0]);
 
@@ -100,7 +101,7 @@ fn data_packet_round_trips_through_udp_socket() {
     assert_eq!(index, 3, "wrong group index");
     assert!((values[0] - ias_mps).abs() < 1e-4, "IAS mismatch");
     assert!((values[1] - tas_mps).abs() < 1e-4, "TAS mismatch");
-    assert!((values[2] - gs_mps).abs()  < 1e-4, "GS mismatch");
+    assert!((values[2] - gs_mps).abs() < 1e-4, "GS mismatch");
 }
 
 /// Exercise the core of the integration:
@@ -119,19 +120,20 @@ fn xplane_data_flows_from_udp_packet_through_bus() {
     // 1. Simulate what the UDP receive loop produces after handling a
     //    group-3 (speeds) + group-17 (attitude) DATA packet.
     // -----------------------------------------------------------------
-    let ias_mps   = 77.17_f32; // ≈ 150 knots
-    let tas_mps   = 79.00_f32;
-    let gs_mps    = 75.50_f32;
-    let pitch_deg =  5.0_f32;
-    let roll_deg  = 10.0_f32;
-    let hdg_deg   = 270.0_f32;
+    let ias_mps = 77.17_f32; // ≈ 150 knots
+    let tas_mps = 79.00_f32;
+    let gs_mps = 75.50_f32;
+    let pitch_deg = 5.0_f32;
+    let roll_deg = 10.0_f32;
+    let hdg_deg = 270.0_f32;
 
     // Group 3 packet (speeds)
     let pkt3 = make_xplane_data_packet(3, [ias_mps, tas_mps, gs_mps, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let (_, speeds) = parse_first_data_record(&pkt3);
 
     // Group 17 packet (attitude)
-    let pkt17 = make_xplane_data_packet(17, [pitch_deg, roll_deg, hdg_deg, 0.0, 0.0, 0.0, 0.0, 0.0]);
+    let pkt17 =
+        make_xplane_data_packet(17, [pitch_deg, roll_deg, hdg_deg, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let (_, attitude) = parse_first_data_record(&pkt17);
 
     // -----------------------------------------------------------------
@@ -235,10 +237,10 @@ fn xplane_data_flows_from_udp_packet_through_bus() {
 /// correctly through the bus pipeline.
 #[test]
 fn multiple_data_groups_flow_through_bus() {
-    let ias_mps  = 51.44_f32; // ≈ 100 knots
-    let g_normal =  1.05_f32;
+    let ias_mps = 51.44_f32; // ≈ 100 knots
+    let g_normal = 1.05_f32;
     let roll_deg = -15.0_f32;
-    let p_rate   =   5.0_f32; // deg/s roll rate
+    let p_rate = 5.0_f32; // deg/s roll rate
 
     let mut dataref_values: HashMap<String, DataRefValue> = HashMap::new();
 
@@ -275,8 +277,8 @@ fn multiple_data_groups_flow_through_bus() {
     );
 
     let raw = make_raw_data(dataref_values);
-    let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now())
-        .expect("convert failed");
+    let snapshot =
+        XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now()).expect("convert failed");
 
     // Verify G-load
     let g = snapshot.kinematics.g_force.value();

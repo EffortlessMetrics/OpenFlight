@@ -39,11 +39,11 @@
 pub mod rhino;
 
 pub use flight_hid_support::device_support::{
-    VPFORCE_VENDOR_ID, VPFORCE_RHINO_PID_V2, VPFORCE_RHINO_PID_V3,
-    VpforceModel, is_vpforce_device, vpforce_model,
+    VPFORCE_RHINO_PID_V2, VPFORCE_RHINO_PID_V3, VPFORCE_VENDOR_ID, VpforceModel, is_vpforce_device,
+    vpforce_model,
 };
 
 pub use rhino::{
-    RhinoAxes, RhinoButtons, RhinoInputState, RhinoParseError,
-    parse_rhino_report, RHINO_MIN_REPORT_BYTES,
+    RHINO_MIN_REPORT_BYTES, RhinoAxes, RhinoButtons, RhinoInputState, RhinoParseError,
+    parse_rhino_report,
 };

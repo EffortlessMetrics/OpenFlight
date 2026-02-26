@@ -33,7 +33,13 @@ pub struct KspControls {
 impl KspControls {
     /// Construct from individual axis values (no gear change).
     pub fn from_axes(pitch: f32, roll: f32, yaw: f32, throttle: f32) -> Self {
-        Self { pitch, roll, yaw, throttle, gear: None }
+        Self {
+            pitch,
+            roll,
+            yaw,
+            throttle,
+            gear: None,
+        }
     }
 
     /// Return a copy with all values clamped to their valid ranges.
@@ -81,7 +87,9 @@ pub async fn apply_controls(
         .await?;
     let control_id = decode_object(&control_bytes).unwrap_or(0);
     if control_id == 0 {
-        return Err(KspError::Protocol("Failed to get Control handle".to_string()));
+        return Err(KspError::Protocol(
+            "Failed to get Control handle".to_string(),
+        ));
     }
     let ctrl = |pos: u32| Argument {
         position: pos,
@@ -93,22 +101,46 @@ pub async fn apply_controls(
         (
             "SpaceCenter",
             "Control_set_Pitch",
-            vec![ctrl(0), Argument { position: 1, value: encode_float(c.pitch) }],
+            vec![
+                ctrl(0),
+                Argument {
+                    position: 1,
+                    value: encode_float(c.pitch),
+                },
+            ],
         ),
         (
             "SpaceCenter",
             "Control_set_Roll",
-            vec![ctrl(0), Argument { position: 1, value: encode_float(c.roll) }],
+            vec![
+                ctrl(0),
+                Argument {
+                    position: 1,
+                    value: encode_float(c.roll),
+                },
+            ],
         ),
         (
             "SpaceCenter",
             "Control_set_Yaw",
-            vec![ctrl(0), Argument { position: 1, value: encode_float(c.yaw) }],
+            vec![
+                ctrl(0),
+                Argument {
+                    position: 1,
+                    value: encode_float(c.yaw),
+                },
+            ],
         ),
         (
             "SpaceCenter",
             "Control_set_Throttle",
-            vec![ctrl(0), Argument { position: 1, value: encode_float(c.throttle) }],
+            vec![
+                ctrl(0),
+                Argument {
+                    position: 1,
+                    value: encode_float(c.throttle),
+                },
+            ],
         ),
     ])
     .await?;
@@ -166,25 +198,37 @@ mod tests {
 
     #[test]
     fn is_valid_rejects_pitch_over_one() {
-        let c = KspControls { pitch: 1.1, ..Default::default() };
+        let c = KspControls {
+            pitch: 1.1,
+            ..Default::default()
+        };
         assert!(!c.is_valid());
     }
 
     #[test]
     fn is_valid_rejects_negative_throttle() {
-        let c = KspControls { throttle: -0.1, ..Default::default() };
+        let c = KspControls {
+            throttle: -0.1,
+            ..Default::default()
+        };
         assert!(!c.is_valid());
     }
 
     #[test]
     fn is_valid_rejects_throttle_over_one() {
-        let c = KspControls { throttle: 1.5, ..Default::default() };
+        let c = KspControls {
+            throttle: 1.5,
+            ..Default::default()
+        };
         assert!(!c.is_valid());
     }
 
     #[test]
     fn clamped_fixes_out_of_range_pitch() {
-        let c = KspControls { pitch: 2.5, ..Default::default() };
+        let c = KspControls {
+            pitch: 2.5,
+            ..Default::default()
+        };
         let clamped = c.clamped();
         assert_eq!(clamped.pitch, 1.0);
         assert!(clamped.is_valid());
@@ -192,7 +236,10 @@ mod tests {
 
     #[test]
     fn clamped_fixes_negative_throttle() {
-        let c = KspControls { throttle: -0.5, ..Default::default() };
+        let c = KspControls {
+            throttle: -0.5,
+            ..Default::default()
+        };
         let clamped = c.clamped();
         assert_eq!(clamped.throttle, 0.0);
         assert!(clamped.is_valid());
@@ -200,7 +247,11 @@ mod tests {
 
     #[test]
     fn clamped_preserves_gear_option() {
-        let c = KspControls { gear: Some(true), throttle: 2.0, ..Default::default() };
+        let c = KspControls {
+            gear: Some(true),
+            throttle: 2.0,
+            ..Default::default()
+        };
         let clamped = c.clamped();
         assert_eq!(clamped.gear, Some(true));
         assert_eq!(clamped.throttle, 1.0);

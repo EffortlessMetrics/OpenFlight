@@ -3,8 +3,8 @@
 
 //! Output comparison with floating-point tolerance
 
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use thiserror::Error;
 
 use crate::replay_config::ToleranceConfig;

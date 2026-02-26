@@ -474,9 +474,7 @@ mod tests {
     fn axis_capability_status_defaults_are_reasonable() {
         let service = CapabilityService::new();
         let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
-        service
-            .register_axis("pitch".to_string(), engine)
-            .unwrap();
+        service.register_axis("pitch".to_string(), engine).unwrap();
 
         let status_list = service.get_capability_status(None).unwrap();
         assert_eq!(status_list.len(), 1);
@@ -514,9 +512,7 @@ mod tests {
     fn demo_mode_reports_restricted_axes() {
         let service = CapabilityService::new();
         let engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
-        service
-            .register_axis("roll".to_string(), engine)
-            .unwrap();
+        service.register_axis("roll".to_string(), engine).unwrap();
 
         service.set_demo_mode(true).unwrap();
 
@@ -530,9 +526,7 @@ mod tests {
     fn kid_mode_reports_restricted_axes() {
         let service = CapabilityService::new();
         let engine = Arc::new(AxisEngine::new_for_axis("yaw".to_string()));
-        service
-            .register_axis("yaw".to_string(), engine)
-            .unwrap();
+        service.register_axis("yaw".to_string(), engine).unwrap();
 
         service.set_kid_mode(true).unwrap();
 

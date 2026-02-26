@@ -395,9 +395,8 @@ impl StartupCrashDetector {
             .unwrap()
             .as_millis();
 
-        let elapsed = std::time::Duration::from_millis(
-            (now_ms.saturating_sub(startup_timestamp_ms)) as u64,
-        );
+        let elapsed =
+            std::time::Duration::from_millis((now_ms.saturating_sub(startup_timestamp_ms)) as u64);
 
         if elapsed > self.startup_timeout {
             tracing::warn!("Previous startup crash detected (elapsed: {:?})", elapsed);

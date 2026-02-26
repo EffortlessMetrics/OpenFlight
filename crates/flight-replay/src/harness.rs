@@ -158,7 +158,10 @@ impl ReplayHarness {
                     frames_processed, duration
                 );
 
-                let comparison = self.comparator.take().map(|comparator| comparator.finalize());
+                let comparison = self
+                    .comparator
+                    .take()
+                    .map(|comparator| comparator.finalize());
 
                 Ok(ReplayResult {
                     success: true,

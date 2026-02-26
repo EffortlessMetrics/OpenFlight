@@ -373,8 +373,8 @@ mod tests {
     }
 
     fn uuid_like() -> String {
-        use std::time::{SystemTime, UNIX_EPOCH};
         use std::sync::atomic::{AtomicU64, Ordering};
+        use std::time::{SystemTime, UNIX_EPOCH};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -382,7 +382,6 @@ mod tests {
             .unwrap_or(0);
         let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
         let tid = std::thread::current().id();
-        format!("test-{nanos:016x}-{seq:04x}-{tid:?}")
-            .replace(['(', ')', ' '], "_")
+        format!("test-{nanos:016x}-{seq:04x}-{tid:?}").replace(['(', ')', ' '], "_")
     }
 }

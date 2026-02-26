@@ -13,9 +13,9 @@ pub mod stecs_modern;
 pub use flight_hid_support::device_support::{
     VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_STECS_LEFT_SPACE_MINI_PID,
     VKB_STECS_LEFT_SPACE_MINI_PLUS_PID, VKB_STECS_LEFT_SPACE_STANDARD_PID,
+    VKB_STECS_MODERN_THROTTLE_MAX_PID, VKB_STECS_MODERN_THROTTLE_MINI_PID,
     VKB_STECS_RIGHT_SPACE_MINI_PID, VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID,
-    VKB_STECS_RIGHT_SPACE_STANDARD_PID, VKB_STECS_MODERN_THROTTLE_MINI_PID,
-    VKB_STECS_MODERN_THROTTLE_MAX_PID, VKB_VENDOR_ID, VkbGladiatorInterfaceMetadata,
+    VKB_STECS_RIGHT_SPACE_STANDARD_PID, VKB_VENDOR_ID, VkbGladiatorInterfaceMetadata,
     VkbGladiatorVariant, VkbStecsInterfaceMetadata, VkbStecsVariant, is_vkb_gladiator_device,
     is_vkb_stecs_device, vkb_gladiator_control_map, vkb_gladiator_interface_metadata,
     vkb_gladiator_physical_id, vkb_gladiator_variant, vkb_stecs_control_map,
@@ -30,6 +30,6 @@ pub use input::{
     StecsInputHandler, StecsInputState, StecsInterfaceState, StecsParseError,
 };
 pub use stecs_modern::{
-    VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES, VkcStecsMtAxes, VkcStecsMtButtons,
-    VkcStecsMtInputState, StecsMtParseError, StecsMtVariant, parse_stecs_mt_report,
+    StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
+    VkcStecsMtAxes, VkcStecsMtButtons, VkcStecsMtInputState, parse_stecs_mt_report,
 };

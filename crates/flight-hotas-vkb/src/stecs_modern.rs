@@ -62,9 +62,7 @@ impl StecsMtVariant {
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum StecsMtParseError {
     /// Report is shorter than [`VKC_STECS_MT_MIN_REPORT_BYTES`].
-    #[error(
-        "VKB STECS Modern Throttle report too short: got {0} bytes (need ≥17)"
-    )]
+    #[error("VKB STECS Modern Throttle report too short: got {0} bytes (need ≥17)")]
     TooShort(usize),
 }
 
@@ -149,13 +147,13 @@ pub fn parse_stecs_mt_report(
     let normalize = |raw: u16| raw as f32 / u16::MAX as f32;
 
     let axes = VkcStecsMtAxes {
-        throttle:   normalize(u16::from_le_bytes([p[0],  p[1]])),
-        mini_left:  normalize(u16::from_le_bytes([p[2],  p[3]])),
-        mini_right: normalize(u16::from_le_bytes([p[4],  p[5]])),
-        rotary:     normalize(u16::from_le_bytes([p[6],  p[7]])),
+        throttle: normalize(u16::from_le_bytes([p[0], p[1]])),
+        mini_left: normalize(u16::from_le_bytes([p[2], p[3]])),
+        mini_right: normalize(u16::from_le_bytes([p[4], p[5]])),
+        rotary: normalize(u16::from_le_bytes([p[6], p[7]])),
     };
 
-    let word0 = u32::from_le_bytes([p[8],  p[9],  p[10], p[11]]);
+    let word0 = u32::from_le_bytes([p[8], p[9], p[10], p[11]]);
     let word1 = u32::from_le_bytes([p[12], p[13], p[14], p[15]]);
 
     Ok(VkcStecsMtInputState {
@@ -221,10 +219,10 @@ mod tests {
     fn max_axes_map_to_one() {
         let report = make_report(u16::MAX, u16::MAX, u16::MAX, u16::MAX, 0, 0);
         let state = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
-        assert!((state.axes.throttle   - 1.0).abs() < 1e-4);
-        assert!((state.axes.mini_left  - 1.0).abs() < 1e-4);
+        assert!((state.axes.throttle - 1.0).abs() < 1e-4);
+        assert!((state.axes.mini_left - 1.0).abs() < 1e-4);
         assert!((state.axes.mini_right - 1.0).abs() < 1e-4);
-        assert!((state.axes.rotary     - 1.0).abs() < 1e-4);
+        assert!((state.axes.rotary - 1.0).abs() < 1e-4);
     }
 
     #[test]
@@ -274,9 +272,9 @@ mod tests {
     fn variant_is_preserved_in_state() {
         let report = make_report(0, 0, 0, 0, 0, 0);
         let mini = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
-        let max  = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
+        let max = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
         assert_eq!(mini.variant, StecsMtVariant::Mini);
-        assert_eq!(max.variant,  StecsMtVariant::Max);
+        assert_eq!(max.variant, StecsMtVariant::Max);
     }
 
     #[test]

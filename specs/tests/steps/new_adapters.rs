@@ -105,7 +105,11 @@ async fn when_hid_device_open(world: &mut FlightWorld) {
 }
 
 #[when(regex = r"^set_device_matching\((0x[0-9A-Fa-f]+), (0x[0-9A-Fa-f]+)\) is called$")]
-async fn when_set_device_matching(world: &mut FlightWorld, usage_page_hex: String, usage_hex: String) {
+async fn when_set_device_matching(
+    world: &mut FlightWorld,
+    usage_page_hex: String,
+    usage_hex: String,
+) {
     let usage_page = u16::from_str_radix(usage_page_hex.trim_start_matches("0x"), 16).unwrap();
     let usage = u16::from_str_radix(usage_hex.trim_start_matches("0x"), 16).unwrap();
     if let Some(ref mut mgr) = world.macos_hid_manager {
@@ -208,13 +212,21 @@ async fn then_elapsed_at_least_1ms(world: &mut FlightWorld) {
 async fn then_samples_monotonic(world: &mut FlightWorld) {
     let samples = &world.macos_clock_samples;
     assert!(samples.len() >= 2, "need 2 samples");
-    assert!(samples[1] >= samples[0], "now_ns should be monotonically non-decreasing");
+    assert!(
+        samples[1] >= samples[0],
+        "now_ns should be monotonically non-decreasing"
+    );
 }
 
 #[then(expr = "the output should contain {string}")]
 async fn then_output_contains(world: &mut FlightWorld, expected: String) {
     let s = world.macos_error_string.as_ref().expect("no error string");
-    assert!(s.contains(&expected), "expected '{}' to contain '{}'", s, expected);
+    assert!(
+        s.contains(&expected),
+        "expected '{}' to contain '{}'",
+        s,
+        expected
+    );
 }
 
 #[then("the output should contain the hex code")]
@@ -246,7 +258,9 @@ async fn then_crate_compiles(_world: &mut FlightWorld) {}
 #[given(expr = "the Cargo.toml for {word}")]
 async fn given_cargo_toml_for(_world: &mut FlightWorld, _crate_name: String) {}
 
-#[then(expr = "IOKit dependencies appear only under [target.'cfg(target_os = \"macos\")'.dependencies]")]
+#[then(
+    expr = "IOKit dependencies appear only under [target.'cfg(target_os = \"macos\")'.dependencies]"
+)]
 async fn then_iokit_target_conditional(_world: &mut FlightWorld) {
     // Structural assertion: flight-macos-hid Cargo.toml should have IOKit only under target conditional.
     let cargo_toml = std::fs::read_to_string("crates/flight-macos-hid/Cargo.toml")
@@ -256,8 +270,13 @@ async fn then_iokit_target_conditional(_world: &mut FlightWorld) {
     let outside_target = cargo_toml
         .lines()
         .take_while(|l| !l.contains("target."))
-        .any(|l| l.to_lowercase().contains("iokit") || l.to_lowercase().contains("core-foundation"));
-    assert!(!outside_target, "IOKit crates found outside target-conditional section");
+        .any(|l| {
+            l.to_lowercase().contains("iokit") || l.to_lowercase().contains("core-foundation")
+        });
+    assert!(
+        !outside_target,
+        "IOKit crates found outside target-conditional section"
+    );
 }
 
 #[then("no IOKit crates are resolved on Windows or Linux builds")]
@@ -280,7 +299,14 @@ async fn given_centered_input_report_buf(world: &mut FlightWorld) {
 }
 
 #[given(expr = "an InputReport with x={int}, y={int}, throttle={int}, buttons={int}, hat={int}")]
-async fn given_input_report(world: &mut FlightWorld, x: i32, y: i32, throttle: i32, buttons: u32, hat: u32) {
+async fn given_input_report(
+    world: &mut FlightWorld,
+    x: i32,
+    y: i32,
+    throttle: i32,
+    buttons: u32,
+    hat: u32,
+) {
     use flight_open_hardware::InputReport;
     world.open_hw_input_report = Some(InputReport {
         x: x as i16,
@@ -308,7 +334,11 @@ async fn given_input_report_axes(world: &mut FlightWorld, x: i32, y: i32, thrott
 }
 
 #[given(regex = r"^an? (\d+)-byte(?:[^,]*)? buffer with first byte (0x[0-9A-Fa-f]+)$")]
-async fn given_n_byte_buffer_with_first_byte(world: &mut FlightWorld, size: usize, first_hex: String) {
+async fn given_n_byte_buffer_with_first_byte(
+    world: &mut FlightWorld,
+    size: usize,
+    first_hex: String,
+) {
     let first = u8::from_str_radix(first_hex.trim_start_matches("0x"), 16).unwrap();
     let mut buf = vec![0u8; size];
     buf[0] = first;
@@ -316,9 +346,15 @@ async fn given_n_byte_buffer_with_first_byte(world: &mut FlightWorld, size: usiz
 }
 
 #[given(expr = "an FfbOutputReport with force_x={int}, force_y={int}, mode={word}, gain={int}")]
-async fn given_ffb_report(world: &mut FlightWorld, force_x: i32, force_y: i32, mode_str: String, gain: u32) {
-    use flight_open_hardware::output_report::FfbMode;
+async fn given_ffb_report(
+    world: &mut FlightWorld,
+    force_x: i32,
+    force_y: i32,
+    mode_str: String,
+    gain: u32,
+) {
     use flight_open_hardware::FfbOutputReport;
+    use flight_open_hardware::output_report::FfbMode;
     let mode = match mode_str.as_str() {
         "Spring" => FfbMode::Spring,
         "Constant" => FfbMode::Constant,
@@ -336,8 +372,8 @@ async fn given_ffb_report(world: &mut FlightWorld, force_x: i32, force_y: i32, m
 
 #[given(expr = "a LedReport with leds=(POWER | PC_MODE) and brightness={int}")]
 async fn given_led_report(world: &mut FlightWorld, brightness: u32) {
-    use flight_open_hardware::led_report::led_flags;
     use flight_open_hardware::LedReport;
+    use flight_open_hardware::led_report::led_flags;
     world.open_hw_led_report = Some(LedReport {
         leds: led_flags::POWER | led_flags::PC_MODE,
         brightness: brightness as u8,
@@ -345,7 +381,13 @@ async fn given_led_report(world: &mut FlightWorld, brightness: u32) {
 }
 
 #[given(expr = "a FirmwareVersionReport with major={int}, minor={int}, patch={int}, hash=[{word}]")]
-async fn given_firmware_version(world: &mut FlightWorld, major: u32, minor: u32, patch: u32, _hash: String) {
+async fn given_firmware_version(
+    world: &mut FlightWorld,
+    major: u32,
+    minor: u32,
+    patch: u32,
+    _hash: String,
+) {
     use flight_open_hardware::FirmwareVersionReport;
     world.open_hw_firmware_report = Some(FirmwareVersionReport {
         major: major as u8,
@@ -418,7 +460,10 @@ async fn when_axis_norms(world: &mut FlightWorld) {
 
 #[then(regex = r"^x, y, twist should be (-?\d+)$")]
 async fn then_xyz_zero(world: &mut FlightWorld, expected: i32) {
-    let r = world.open_hw_input_parsed.as_ref().expect("no parsed InputReport");
+    let r = world
+        .open_hw_input_parsed
+        .as_ref()
+        .expect("no parsed InputReport");
     assert_eq!(r.x, expected as i16);
     assert_eq!(r.y, expected as i16);
     assert_eq!(r.twist, expected as i16);
@@ -426,7 +471,10 @@ async fn then_xyz_zero(world: &mut FlightWorld, expected: i32) {
 
 #[then(regex = r"^throttle should be (\d+)$")]
 async fn then_throttle_zero(world: &mut FlightWorld, expected: u8) {
-    let r = world.open_hw_input_parsed.as_ref().expect("no parsed InputReport");
+    let r = world
+        .open_hw_input_parsed
+        .as_ref()
+        .expect("no parsed InputReport");
     assert_eq!(r.throttle, expected);
 }
 
@@ -441,7 +489,10 @@ async fn then_no_buttons(world: &mut FlightWorld) {
 
 #[then("ffb_fault should be false")]
 async fn then_ffb_fault_false(world: &mut FlightWorld) {
-    let r = world.open_hw_input_parsed.as_ref().expect("no parsed InputReport");
+    let r = world
+        .open_hw_input_parsed
+        .as_ref()
+        .expect("no parsed InputReport");
     assert!(!r.ffb_fault);
 }
 
@@ -449,11 +500,16 @@ async fn then_ffb_fault_false(world: &mut FlightWorld) {
 async fn then_roundtrip_equal(world: &mut FlightWorld) {
     if let (Some(orig), Some(rt)) = (&world.open_hw_input_report, &world.open_hw_input_roundtrip) {
         assert_eq!(orig, rt, "InputReport roundtrip mismatch");
-    } else if let (Some(orig), Some(rt)) = (&world.open_hw_ffb_report, &world.open_hw_ffb_roundtrip) {
+    } else if let (Some(orig), Some(rt)) = (&world.open_hw_ffb_report, &world.open_hw_ffb_roundtrip)
+    {
         assert_eq!(orig, rt, "FfbOutputReport roundtrip mismatch");
-    } else if let (Some(orig), Some(rt)) = (&world.open_hw_led_report, &world.open_hw_led_roundtrip) {
+    } else if let (Some(orig), Some(rt)) = (&world.open_hw_led_report, &world.open_hw_led_roundtrip)
+    {
         assert_eq!(orig, rt, "LedReport roundtrip mismatch");
-    } else if let (Some(orig), Some(rt)) = (&world.open_hw_firmware_report, &world.open_hw_firmware_roundtrip) {
+    } else if let (Some(orig), Some(rt)) = (
+        &world.open_hw_firmware_report,
+        &world.open_hw_firmware_roundtrip,
+    ) {
         assert_eq!(orig, rt, "FirmwareVersionReport roundtrip mismatch");
     } else {
         panic!("no original/roundtrip pair found in world");
@@ -495,13 +551,18 @@ async fn then_mode_byte_zero(world: &mut FlightWorld) {
 
 #[then("the leds byte should be 0")]
 async fn then_leds_byte_zero(world: &mut FlightWorld) {
-    let r = world.open_hw_led_all_off.as_ref().expect("no all_off report");
+    let r = world
+        .open_hw_led_all_off
+        .as_ref()
+        .expect("no all_off report");
     assert_eq!(r.leds, 0);
 }
 
 #[then(regex = r"^version\(\) should return \((\d+), (\d+), (\d+)\)$")]
 async fn then_firmware_version(world: &mut FlightWorld, major: u8, minor: u8, patch: u8) {
-    let r = world.open_hw_firmware_roundtrip.as_ref()
+    let r = world
+        .open_hw_firmware_roundtrip
+        .as_ref()
         .or(world.open_hw_firmware_report.as_ref())
         .expect("no firmware report");
     assert_eq!(r.version(), (major, minor, patch));
@@ -510,19 +571,34 @@ async fn then_firmware_version(world: &mut FlightWorld, major: u8, minor: u8, pa
 #[then(expr = "x_norm should be approximately {float}")]
 async fn then_x_norm(world: &mut FlightWorld, expected: f64) {
     let (x, _, _) = world.open_hw_norms.expect("no norms");
-    assert!((x as f64 - expected).abs() < 0.01, "x_norm {} ≠ {}", x, expected);
+    assert!(
+        (x as f64 - expected).abs() < 0.01,
+        "x_norm {} ≠ {}",
+        x,
+        expected
+    );
 }
 
 #[then(expr = "y_norm should be approximately {float}")]
 async fn then_y_norm(world: &mut FlightWorld, expected: f64) {
     let (_, y, _) = world.open_hw_norms.expect("no norms");
-    assert!((y as f64 - expected).abs() < 0.01, "y_norm {} ≠ {}", y, expected);
+    assert!(
+        (y as f64 - expected).abs() < 0.01,
+        "y_norm {} ≠ {}",
+        y,
+        expected
+    );
 }
 
 #[then(expr = "throttle_norm should be approximately {float}")]
 async fn then_throttle_norm(world: &mut FlightWorld, expected: f64) {
     let (_, _, t) = world.open_hw_norms.expect("no norms");
-    assert!((t as f64 - expected).abs() < 0.01, "throttle_norm {} ≠ {}", t, expected);
+    assert!(
+        (t as f64 - expected).abs() < 0.01,
+        "throttle_norm {} ≠ {}",
+        t,
+        expected
+    );
 }
 
 #[then("VENDOR_ID should be 0x1209 (pid.codes open allocation)")]
@@ -681,7 +757,9 @@ async fn then_roll_axis_max(_world: &mut FlightWorld) {
     // Stub — VPforce Rhino crate not yet implemented
 }
 
-#[then(regex = r"^a device with VID (0x[0-9A-Fa-f]+) and PID (0x[0-9A-Fa-f]+) should be identified as a VPforce Rhino V2$")]
+#[then(
+    regex = r"^a device with VID (0x[0-9A-Fa-f]+) and PID (0x[0-9A-Fa-f]+) should be identified as a VPforce Rhino V2$"
+)]
 async fn then_vpforce_rhino_vid_pid(_world: &mut FlightWorld, _vid: String, _pid: String) {}
 
 #[then("it should use the Rhino input parser")]

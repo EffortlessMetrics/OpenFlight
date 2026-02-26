@@ -13,18 +13,11 @@ use flight_bus::{
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
-use flight_hotas_vkb::{
-    StecsMtVariant, VKC_STECS_MT_MIN_REPORT_BYTES, parse_stecs_mt_report,
-};
+use flight_hotas_vkb::{StecsMtVariant, VKC_STECS_MT_MIN_REPORT_BYTES, parse_stecs_mt_report};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-fn make_stecs_mt_report(
-    throttle: u16,
-    mini_left: u16,
-    mini_right: u16,
-    rotary: u16,
-) -> Vec<u8> {
+fn make_stecs_mt_report(throttle: u16, mini_left: u16, mini_right: u16, rotary: u16) -> Vec<u8> {
     let mut data = vec![0x01u8]; // report_id
     data.extend_from_slice(&throttle.to_le_bytes());
     data.extend_from_slice(&mini_left.to_le_bytes());
@@ -86,8 +79,7 @@ fn vkb_stecs_modern_throttle_parses_valid_report() {
 fn vkb_stecs_modern_throttle_through_bus() {
     // Main throttle at ~75 %
     let report = make_stecs_mt_report(49151, 0, 0, 0);
-    let state =
-        parse_stecs_mt_report(&report, StecsMtVariant::Mini).expect("parse must succeed");
+    let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).expect("parse must succeed");
 
     let mut snapshot = BusSnapshot::new(SimId::Unknown, AircraftId::new("vkb-stecs-mt"));
     snapshot.control_inputs = ControlInputs {

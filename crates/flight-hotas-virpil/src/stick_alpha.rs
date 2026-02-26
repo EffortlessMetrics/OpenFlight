@@ -25,8 +25,8 @@
 //! (byte offset 14 in the report). Values 0–7 map to N/NE/E/SE/S/SW/W/NW;
 //! all other values mean center.
 
-use thiserror::Error;
 use crate::VIRPIL_AXIS_MAX;
+use thiserror::Error;
 
 /// Minimum byte count for a Constellation Alpha stick HID report.
 pub const VPC_ALPHA_MIN_REPORT_BYTES: usize = 15;
@@ -163,7 +163,10 @@ pub fn parse_alpha_report(data: &[u8]) -> Result<VpcAlphaInputState, VpcAlphaPar
 
     Ok(VpcAlphaInputState {
         axes,
-        buttons: VpcAlphaButtons { raw: raw_buttons, hat },
+        buttons: VpcAlphaButtons {
+            raw: raw_buttons,
+            hat,
+        },
     })
 }
 

@@ -1172,7 +1172,10 @@ mod tests {
         let pending = Arc::new(RwLock::new(HashMap::new()));
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_response(&data, &pending, &cache);
-        assert!(result.is_ok(), "valid DATA packet should be handled without error");
+        assert!(
+            result.is_ok(),
+            "valid DATA packet should be handled without error"
+        );
 
         let cache_guard = cache.read().unwrap();
         assert!(
@@ -1190,6 +1193,9 @@ mod tests {
         let pending = Arc::new(RwLock::new(HashMap::new()));
         let cache = Arc::new(RwLock::new(HashMap::new()));
         let result = UdpClient::handle_response(&data, &pending, &cache);
-        assert!(result.is_err(), "RREF packet shorter than 13 bytes should fail");
+        assert!(
+            result.is_err(),
+            "RREF packet shorter than 13 bytes should fail"
+        );
     }
 }

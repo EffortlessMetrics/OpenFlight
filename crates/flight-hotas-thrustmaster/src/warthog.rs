@@ -246,9 +246,7 @@ pub fn parse_warthog_stick(data: &[u8]) -> Result<WarthogStickInputState, Wartho
 /// # Errors
 /// Returns [`WarthogParseError::TooShort`] if `data` is shorter than
 /// [`WARTHOG_THROTTLE_MIN_REPORT_BYTES`].
-pub fn parse_warthog_throttle(
-    data: &[u8],
-) -> Result<WarthogThrottleInputState, WarthogParseError> {
+pub fn parse_warthog_throttle(data: &[u8]) -> Result<WarthogThrottleInputState, WarthogParseError> {
     if data.len() < WARTHOG_THROTTLE_MIN_REPORT_BYTES {
         return Err(WarthogParseError::TooShort {
             device: "Throttle",
@@ -394,9 +392,21 @@ mod tests {
         for raw in [0u16, 1, 16383, 32767, 32768, 49151, 65534, 65535] {
             let data = stick_report(raw, raw, raw, 0, 0, 0xFF);
             let state = parse_warthog_stick(&data).unwrap();
-            assert!((-1.0..=1.0).contains(&state.axes.x), "x out of range: {}", state.axes.x);
-            assert!((-1.0..=1.0).contains(&state.axes.y), "y out of range: {}", state.axes.y);
-            assert!((-1.0..=1.0).contains(&state.axes.rz), "rz out of range: {}", state.axes.rz);
+            assert!(
+                (-1.0..=1.0).contains(&state.axes.x),
+                "x out of range: {}",
+                state.axes.x
+            );
+            assert!(
+                (-1.0..=1.0).contains(&state.axes.y),
+                "y out of range: {}",
+                state.axes.y
+            );
+            assert!(
+                (-1.0..=1.0).contains(&state.axes.rz),
+                "rz out of range: {}",
+                state.axes.rz
+            );
         }
     }
 

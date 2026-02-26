@@ -203,7 +203,10 @@ mod tests {
     #[test]
     fn test_full_pitch_forward() {
         let state = parse_alpha_report(&alpha_report(2048, 0, 0, 15)).unwrap();
-        assert!(state.axes.pitch < -0.99, "full forward pitch should be ~-1.0");
+        assert!(
+            state.axes.pitch < -0.99,
+            "full forward pitch should be ~-1.0"
+        );
     }
 
     #[test]
@@ -212,7 +215,10 @@ mod tests {
         let mask: u64 = (1u64 << 0) | (1u64 << 35);
         let state = parse_alpha_report(&alpha_report(2048, 2048, mask, 15)).unwrap();
         assert!(state.buttons.is_pressed(1), "button 1 should be pressed");
-        assert!(!state.buttons.is_pressed(2), "button 2 should not be pressed");
+        assert!(
+            !state.buttons.is_pressed(2),
+            "button 2 should not be pressed"
+        );
         assert!(state.buttons.is_pressed(36), "button 36 should be pressed");
     }
 

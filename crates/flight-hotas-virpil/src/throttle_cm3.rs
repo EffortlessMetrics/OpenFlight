@@ -76,7 +76,9 @@ pub struct VpcCm3ThrottleButtons {
 
 impl Default for VpcCm3ThrottleButtons {
     fn default() -> Self {
-        Self { raw: [0u8; CM3_BUTTON_BYTES] }
+        Self {
+            raw: [0u8; CM3_BUTTON_BYTES],
+        }
     }
 }
 
@@ -109,7 +111,9 @@ pub struct VpcCm3ThrottleInputState {
 ///
 /// The first byte is the report ID (0x01), followed by 6 × 2-byte axes and
 /// 10 button bytes, for a total of 23 bytes minimum.
-pub fn parse_cm3_throttle_report(data: &[u8]) -> Result<VpcCm3ThrottleInputState, VpcCm3ParseError> {
+pub fn parse_cm3_throttle_report(
+    data: &[u8],
+) -> Result<VpcCm3ThrottleInputState, VpcCm3ParseError> {
     if data.len() < VPC_CM3_THROTTLE_MIN_REPORT_BYTES {
         return Err(VpcCm3ParseError::TooShort(data.len()));
     }
@@ -147,10 +151,7 @@ mod tests {
     use super::*;
     use proptest::prelude::*;
 
-    fn make_cm3_report(
-        axes: [u16; 6],
-        buttons: [u8; 10],
-    ) -> Vec<u8> {
+    fn make_cm3_report(axes: [u16; 6], buttons: [u8; 10]) -> Vec<u8> {
         let mut data = vec![0x01u8]; // report_id
         for ax in &axes {
             data.extend_from_slice(&ax.to_le_bytes());

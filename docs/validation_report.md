@@ -14,27 +14,26 @@
 
 ## Summary
 
-- **Total Checks:** 15
-- **Passed:** 15
-- **Failed:** 0
+- **Total Checks:** 13
+- **Passed:** 8
+- **Failed:** 5
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 209, tests: 209 (100.0%), gherkin: 209 (100.0%), microcrates fully covered: 43 / 47 (91.5%), complete: 209, needs_gherkin: 0, needs_tests: 0, draft: 0, incomplete: 0 |
-| Schema Validation | ✅ Pass | - |
-| Cross-Reference Validation | ✅ Pass | - |
-| Formatting | ✅ Pass | - |
-| Clippy | ✅ Pass | - |
-| Unit Tests | ✅ Pass | - |
+| BDD Feature Status | ✅ Pass | AC total: 318, tests: 315 (99.1%), gherkin: 318 (100.0%), microcrates fully covered: 55 / 68 (80.9%), complete: 315, needs_gherkin: 0, needs_tests: 3, draft: 0, incomplete: 0 |
+| Schema Validation | ❌ Fail | Schema validation failed with 1 error(s) |
+| Cross-Reference Validation | ❌ Fail | Failed to collect documentation front matter |
+| Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
 | QG-SANITY-GATE | ✅ Pass | - |
 | QG-FFB-SAFETY | ✅ Pass | - |
 | QG-BDD-COVERAGE | ✅ Pass | - |
-| QG-BDD-UNMAPPED-MICROCRATE | ✅ Pass | - |
+| QG-BDD-UNMAPPED-MICROCRATE | ❌ Fail | BDD metrics row `unmapped` has 3 acceptance criteria with 0 tests and 3 Gherkin mapping(s) |
 | QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
-| QG-CRATE-METADATA | ✅ Pass | - |
+| QG-CRATE-METADATA | ❌ Fail | 1 crate(s) failed metadata compatibility:
+- flight-integration-tests (missing: readme, keywords, categories) |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |
 

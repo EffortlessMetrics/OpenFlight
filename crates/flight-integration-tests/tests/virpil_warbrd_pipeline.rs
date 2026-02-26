@@ -76,8 +76,7 @@ fn virpil_warbrd_original_through_bus() {
     let x_raw = VIRPIL_AXIS_MAX * 3 / 4;
     let y_raw = VIRPIL_AXIS_MAX / 4;
     let report = make_warbrd_report([x_raw, y_raw, 0, 0, 0], [0u8; 4]);
-    let state =
-        parse_warbrd_report(&report, WarBrdVariant::Original).expect("parse must succeed");
+    let state = parse_warbrd_report(&report, WarBrdVariant::Original).expect("parse must succeed");
 
     let roll = (state.inner.axes.x * 2.0 - 1.0).clamp(-1.0, 1.0);
     let pitch = (state.inner.axes.y * 2.0 - 1.0).clamp(-1.0, 1.0);

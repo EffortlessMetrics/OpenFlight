@@ -13,8 +13,10 @@
 use proptest::prelude::*;
 
 use crate::{
-    nodes::{CurveNode, DeadzoneNode, DetentRole, DetentZone, MixerConfig, MixerInput, MixerNode, Node},
     AxisFrame,
+    nodes::{
+        CurveNode, DeadzoneNode, DetentRole, DetentZone, MixerConfig, MixerInput, MixerNode, Node,
+    },
 };
 
 proptest! {

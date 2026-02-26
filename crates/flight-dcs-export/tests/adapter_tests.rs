@@ -757,10 +757,26 @@ fn test_multiple_consecutive_telemetry_packets() {
     let adapter = create_test_adapter();
 
     let frames: Vec<(u64, &str, serde_json::Value)> = vec![
-        (1000, "F-16C", json!({"ias": 200.0, "tas": 210.0, "altitude_asl": 5000.0})),
-        (1033, "F-16C", json!({"ias": 210.0, "tas": 221.0, "altitude_asl": 5100.0})),
-        (1066, "F-16C", json!({"ias": 220.0, "tas": 232.0, "altitude_asl": 5200.0})),
-        (1099, "F-16C", json!({"ias": 230.0, "tas": 243.0, "altitude_asl": 5300.0})),
+        (
+            1000,
+            "F-16C",
+            json!({"ias": 200.0, "tas": 210.0, "altitude_asl": 5000.0}),
+        ),
+        (
+            1033,
+            "F-16C",
+            json!({"ias": 210.0, "tas": 221.0, "altitude_asl": 5100.0}),
+        ),
+        (
+            1066,
+            "F-16C",
+            json!({"ias": 220.0, "tas": 232.0, "altitude_asl": 5200.0}),
+        ),
+        (
+            1099,
+            "F-16C",
+            json!({"ias": 230.0, "tas": 243.0, "altitude_asl": 5300.0}),
+        ),
     ];
 
     let mut last_ts: Option<u64> = None;
@@ -944,7 +960,10 @@ fn test_wire_protocol_mp_telemetry_roundtrip() {
     // Verify MP session type is preserved across the wire
     let mut data = HashMap::new();
     data.insert("ias".to_string(), serde_json::json!(280.0));
-    data.insert("weapons".to_string(), serde_json::json!({"missile": "AIM-120C"}));
+    data.insert(
+        "weapons".to_string(),
+        serde_json::json!({"missile": "AIM-120C"}),
+    );
 
     let msg = DcsMessage::Telemetry {
         timestamp: 500,

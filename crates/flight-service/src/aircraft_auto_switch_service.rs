@@ -28,8 +28,8 @@ use flight_ac7_telemetry::{Ac7TelemetryAdapter as Ac7AdapterApi, Ac7TelemetryCon
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::{RwLock, mpsc, watch};
 use tokio::task::JoinHandle;
@@ -344,7 +344,6 @@ impl AircraftAutoSwitchService {
                             confidence: 0.9,
                         };
 
-
                         if let Err(e) = auto_switch.on_aircraft_detected(detected_aircraft).await {
                             error!("Failed to handle aircraft detection: {}", e);
                             // Track detection error
@@ -394,10 +393,9 @@ impl AircraftAutoSwitchService {
                         if changed && !snapshot.aircraft.icao.is_empty() {
                             let snap_aircraft = snapshot.aircraft.clone();
                             last_aircraft_per_sim.insert(snapshot.sim, snap_aircraft.clone());
-                            if let Err(e) = service_tx.send(ServiceEvent::AircraftDetected(
-                                snapshot.sim,
-                                snap_aircraft,
-                            )) {
+                            if let Err(e) = service_tx
+                                .send(ServiceEvent::AircraftDetected(snapshot.sim, snap_aircraft))
+                            {
                                 warn!("Failed to emit AircraftDetected event: {}", e);
                             }
                         }
@@ -892,7 +890,10 @@ mod tests {
             Some(last) => last.icao != a172.icao,
             None => !a172.icao.is_empty(),
         };
-        assert!(changed, "first non-empty aircraft should be detected as changed");
+        assert!(
+            changed,
+            "first non-empty aircraft should be detected as changed"
+        );
         last_aircraft_per_sim.insert(sim, a172.clone());
 
         // Same ICAO again → not changed
@@ -918,7 +919,10 @@ mod tests {
             };
             changed && !empty.icao.is_empty()
         };
-        assert!(!changed_and_nonempty, "empty ICAO should not trigger aircraft detection");
+        assert!(
+            !changed_and_nonempty,
+            "empty ICAO should not trigger aircraft detection"
+        );
 
         // After process loss: remove from map → next non-empty triggers detection
         last_aircraft_per_sim.remove(&sim);
@@ -926,6 +930,9 @@ mod tests {
             Some(last) => last.icao != a172.icao,
             None => !a172.icao.is_empty(),
         };
-        assert!(changed, "after process loss, same aircraft should be detected again");
+        assert!(
+            changed,
+            "after process loss, same aircraft should be detected again"
+        );
     }
 }

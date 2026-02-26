@@ -173,7 +173,10 @@ mod tests {
         monitor.mark_health_checked();
 
         monitor.reset();
-        assert!(!monitor.is_failed(), "is_failed should be false after reset");
+        assert!(
+            !monitor.is_failed(),
+            "is_failed should be false after reset"
+        );
         assert!(
             monitor.should_check_health(),
             "should_check_health should be true after reset"

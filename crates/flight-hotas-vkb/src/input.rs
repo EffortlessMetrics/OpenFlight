@@ -634,19 +634,18 @@ mod tests {
         let err = handler.parse_report(&[0u8; 10]);
         assert!(matches!(
             err,
-            Err(GladiatorParseError::ReportTooShort { expected: 12, actual: 10 })
+            Err(GladiatorParseError::ReportTooShort {
+                expected: 12,
+                actual: 10
+            })
         ));
     }
 
     #[test]
     fn gladiator_centre_stick_axes_normalise_to_zero() {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-        let report = make_gladiator_report(
-            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000],
-            0,
-            0,
-            0xFF,
-        );
+        let report =
+            make_gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         assert!(
             state.axes.roll.abs() < 0.01,
@@ -657,21 +656,14 @@ mod tests {
             state.axes.pitch.abs() < 0.01,
             "pitch should be ~0.0 at centre"
         );
-        assert!(
-            state.axes.yaw.abs() < 0.01,
-            "yaw should be ~0.0 at centre"
-        );
+        assert!(state.axes.yaw.abs() < 0.01, "yaw should be ~0.0 at centre");
     }
 
     #[test]
     fn gladiator_full_throttle_wheel_normalises_to_one() {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
-        let report = make_gladiator_report(
-            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF],
-            0,
-            0,
-            0xFF,
-        );
+        let report =
+            make_gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         assert!(
             (state.axes.throttle - 1.0).abs() < 0.001,

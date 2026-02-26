@@ -48,10 +48,7 @@ pub const HONEYCOMB_BRAVO_PID: u16 = 0x1901;
 /// Returns `true` if this VID/PID combination belongs to a known Honeycomb device.
 pub fn is_honeycomb_device(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == HONEYCOMB_VENDOR_ID
-        && matches!(
-            product_id,
-            HONEYCOMB_ALPHA_YOKE_PID | HONEYCOMB_BRAVO_PID
-        )
+        && matches!(product_id, HONEYCOMB_ALPHA_YOKE_PID | HONEYCOMB_BRAVO_PID)
 }
 
 /// Identify which Honeycomb model a VID/PID refers to.

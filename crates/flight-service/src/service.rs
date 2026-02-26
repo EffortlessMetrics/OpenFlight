@@ -14,7 +14,9 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, info, warn};
 
-use flight_axis::{AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult};
+use flight_axis::{
+    AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult,
+};
 use flight_core::{
     aircraft_switch::AutoSwitchConfig,
     profile::{AxisConfig, Profile},
@@ -905,7 +907,11 @@ mod tests {
         };
         // Should still compile (adds identity deadzone internally)
         let pipeline = build_pipeline_for_axis("roll", &config);
-        assert!(pipeline.is_ok(), "expected Ok for empty config, got {:?}", pipeline.err());
+        assert!(
+            pipeline.is_ok(),
+            "expected Ok for empty config, got {:?}",
+            pipeline.err()
+        );
     }
 
     #[tokio::test]
@@ -939,7 +945,11 @@ mod tests {
         };
 
         let result = service.apply_profile(&profile).await;
-        assert!(result.is_ok(), "apply_profile should succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "apply_profile should succeed: {:?}",
+            result.err()
+        );
 
         // Engine should now have a pending pipeline
         let engine = service.axis_engine.as_ref().expect("axis engine present");

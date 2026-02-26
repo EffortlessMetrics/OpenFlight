@@ -237,6 +237,9 @@ mod tests {
     fn test_knots_to_kph_known_value() {
         // 1 knot ≈ 1.852 km/h
         let kph = conversions::knots_to_kph(1.0);
-        assert!((kph - 1.852).abs() < 0.01, "1 kt should be ~1.852 kph, got {kph}");
+        assert!(
+            (kph - 1.852).abs() < 0.01,
+            "1 kt should be ~1.852 kph, got {kph}"
+        );
     }
 }

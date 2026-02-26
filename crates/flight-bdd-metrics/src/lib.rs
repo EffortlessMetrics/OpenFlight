@@ -955,7 +955,11 @@ mod tests {
             file_path: std::path::PathBuf::from("test.feature"),
             line_number: 1,
             name: "test scenario".to_string(),
-            tags: vec!["AC-001".to_string(), "smoke".to_string(), "AC-003".to_string()],
+            tags: vec![
+                "AC-001".to_string(),
+                "smoke".to_string(),
+                "AC-003".to_string(),
+            ],
         };
         let ac_tags = scenario.ac_tags();
         assert_eq!(ac_tags, vec!["AC-001", "AC-003"]);

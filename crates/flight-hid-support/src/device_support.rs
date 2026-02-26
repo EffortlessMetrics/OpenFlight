@@ -956,7 +956,9 @@ pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
         VIRPIL_SHARK_PANEL_PID => Some(VirpilModel::SharkPanel),
         VIRPIL_CONSTELLATION_ALPHA_LEFT_PID => Some(VirpilModel::ConstellationAlphaLeft),
         VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID => Some(VirpilModel::ConstellationAlphaPrimeLeft),
-        VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID => Some(VirpilModel::ConstellationAlphaPrimeRight),
+        VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID => {
+            Some(VirpilModel::ConstellationAlphaPrimeRight)
+        }
         VIRPIL_WARBRD_PID => Some(VirpilModel::WarBrd),
         VIRPIL_WARBRD_D_PID => Some(VirpilModel::WarBrdD),
         _ => None,
@@ -3673,7 +3675,10 @@ mod tests {
 
     #[test]
     fn test_tca_boeing_device_detection() {
-        assert!(is_tca_boeing_device(THRUSTMASTER_VENDOR_ID, TCA_YOKE_BOEING_PID));
+        assert!(is_tca_boeing_device(
+            THRUSTMASTER_VENDOR_ID,
+            TCA_YOKE_BOEING_PID
+        ));
         assert!(is_tca_boeing_device(
             THRUSTMASTER_VENDOR_ID,
             TCA_QUADRANT_BOEING_ENG12_PID

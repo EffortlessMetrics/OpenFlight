@@ -117,7 +117,14 @@ pub fn parse_rhino_report(data: &[u8]) -> Result<RhinoInputState, RhinoParseErro
     let hat = data[17];
 
     Ok(RhinoInputState {
-        axes: RhinoAxes { roll, pitch, throttle, rocker, twist, ry },
+        axes: RhinoAxes {
+            roll,
+            pitch,
+            throttle,
+            rocker,
+            twist,
+            ry,
+        },
         buttons: RhinoButtons { mask, hat },
     })
 }

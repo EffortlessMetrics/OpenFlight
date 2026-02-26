@@ -72,11 +72,10 @@ mod tests {
 
     #[test]
     fn test_wait_for_condition_timeout_when_never_ready() {
-        let result = wait_for_condition(
-            Duration::from_millis(50),
-            Duration::from_millis(5),
-            || false,
-        );
+        let result =
+            wait_for_condition(Duration::from_millis(50), Duration::from_millis(5), || {
+                false
+            });
         assert!(!result);
     }
 

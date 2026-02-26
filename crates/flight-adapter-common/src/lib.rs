@@ -61,11 +61,8 @@ mod tests {
     #[test]
     fn reconnection_strategy_max_backoff_caps() {
         use std::time::Duration;
-        let s = ReconnectionStrategy::new(
-            10,
-            Duration::from_millis(100),
-            Duration::from_millis(500),
-        );
+        let s =
+            ReconnectionStrategy::new(10, Duration::from_millis(100), Duration::from_millis(500));
         // Very high attempt should hit the max cap
         assert_eq!(s.next_backoff(20), Duration::from_millis(500));
     }
@@ -93,11 +90,8 @@ mod tests {
     #[test]
     fn reconnection_strategy_initial_backoff_on_first_attempt() {
         use std::time::Duration;
-        let s = ReconnectionStrategy::new(
-            5,
-            Duration::from_millis(200),
-            Duration::from_millis(2000),
-        );
+        let s =
+            ReconnectionStrategy::new(5, Duration::from_millis(200), Duration::from_millis(2000));
         assert_eq!(s.next_backoff(1), Duration::from_millis(200));
         assert_eq!(s.max_attempts(), 5);
         assert_eq!(s.initial_backoff(), Duration::from_millis(200));

@@ -708,7 +708,10 @@ mod tests {
         };
         let err = mgr.validate_plugin(manifest).unwrap_err();
         let msg = format!("{err}");
-        assert!(msg.contains("signature tampered"), "error should include reason: {msg}");
+        assert!(
+            msg.contains("signature tampered"),
+            "error should include reason: {msg}"
+        );
     }
 
     #[test]

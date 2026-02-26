@@ -73,8 +73,7 @@ fn winwing_orion2_throttle_through_bus() {
     let report = make_orion2_throttle_report(16384, 49151);
     let state = parse_orion2_throttle_report(&report).expect("parse must succeed");
 
-    let mut snapshot =
-        BusSnapshot::new(SimId::Unknown, AircraftId::new("winwing-orion2-throttle"));
+    let mut snapshot = BusSnapshot::new(SimId::Unknown, AircraftId::new("winwing-orion2-throttle"));
     snapshot.control_inputs = ControlInputs {
         pitch: 0.0,
         roll: 0.0,

@@ -95,15 +95,11 @@ pub struct TwcsInputState {
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum T16000mParseError {
     /// The report is too short to contain a complete joystick payload.
-    #[error(
-        "T.16000M joystick report too short: expected at least {expected} bytes, got {actual}"
-    )]
+    #[error("T.16000M joystick report too short: expected at least {expected} bytes, got {actual}")]
     JoystickReportTooShort { expected: usize, actual: usize },
 
     /// The report is too short to contain a complete TWCS payload.
-    #[error(
-        "TWCS throttle report too short: expected at least {expected} bytes, got {actual}"
-    )]
+    #[error("TWCS throttle report too short: expected at least {expected} bytes, got {actual}")]
     TwcsReportTooShort { expected: usize, actual: usize },
 
     /// The report has an unrecognised report ID.
@@ -413,13 +409,7 @@ mod tests {
 
     // ── TWCS Throttle ────────────────────────────────────────────────────────
 
-    fn make_twcs_report(
-        throttle: u16,
-        rx: u16,
-        ry: u16,
-        rz: u16,
-        buttons: u16,
-    ) -> Vec<u8> {
+    fn make_twcs_report(throttle: u16, rx: u16, ry: u16, rz: u16, buttons: u16) -> Vec<u8> {
         let mut r = vec![0u8; 10];
         r[0..2].copy_from_slice(&throttle.to_le_bytes());
         r[2..4].copy_from_slice(&rx.to_le_bytes());

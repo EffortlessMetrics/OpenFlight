@@ -14,8 +14,7 @@ use flight_bus::{
     types::{AircraftId, SimId},
 };
 use flight_hotas_winwing::{
-    F16EX_REPORT_LEN, SUPER_TAURUS_REPORT_LEN,
-    parse_f16ex_stick_report, parse_super_taurus_report,
+    F16EX_REPORT_LEN, SUPER_TAURUS_REPORT_LEN, parse_f16ex_stick_report, parse_super_taurus_report,
 };
 
 // ── helpers ───────────────────────────────────────────────────────────────────

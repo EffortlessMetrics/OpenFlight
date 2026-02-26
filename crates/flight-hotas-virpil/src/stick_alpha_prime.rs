@@ -21,8 +21,8 @@
 
 use thiserror::Error;
 
-use crate::stick_alpha::{parse_alpha_report, VpcAlphaInputState, VpcAlphaParseError};
 pub use crate::stick_alpha::{VpcAlphaAxes, VpcAlphaButtons, VpcAlphaHat};
+use crate::stick_alpha::{VpcAlphaInputState, VpcAlphaParseError, parse_alpha_report};
 
 /// Minimum byte count for a Constellation Alpha Prime HID report.
 ///
@@ -42,7 +42,7 @@ impl AlphaPrimeVariant {
     /// Human-readable product name for this variant.
     pub fn product_name(self) -> &'static str {
         match self {
-            Self::Left  => "VPC Constellation Alpha Prime Left",
+            Self::Left => "VPC Constellation Alpha Prime Left",
             Self::Right => "VPC Constellation Alpha Prime Right",
         }
     }
@@ -77,7 +77,11 @@ pub struct VpcAlphaPrimeInputState {
 
 impl VpcAlphaPrimeInputState {
     fn from_alpha(base: VpcAlphaInputState, variant: AlphaPrimeVariant) -> Self {
-        Self { variant, axes: base.axes, buttons: base.buttons }
+        Self {
+            variant,
+            axes: base.axes,
+            buttons: base.buttons,
+        }
     }
 }
 
@@ -147,9 +151,9 @@ mod tests {
     fn max_axes_parse_to_one() {
         let report = make_prime_report([VIRPIL_AXIS_MAX; 5], [0u8; 4]);
         let state = parse_alpha_prime_report(&report, AlphaPrimeVariant::Left).unwrap();
-        assert!((state.axes.x  - 1.0).abs() < 1e-4);
-        assert!((state.axes.y  - 1.0).abs() < 1e-4);
-        assert!((state.axes.z  - 1.0).abs() < 1e-4);
+        assert!((state.axes.x - 1.0).abs() < 1e-4);
+        assert!((state.axes.y - 1.0).abs() < 1e-4);
+        assert!((state.axes.z - 1.0).abs() < 1e-4);
         assert!((state.axes.sz - 1.0).abs() < 1e-4);
         assert!((state.axes.sl - 1.0).abs() < 1e-4);
     }
@@ -158,9 +162,9 @@ mod tests {
     fn zero_axes_parse_to_zero() {
         let report = make_prime_report([0u16; 5], [0u8; 4]);
         let state = parse_alpha_prime_report(&report, AlphaPrimeVariant::Right).unwrap();
-        assert_eq!(state.axes.x,  0.0);
-        assert_eq!(state.axes.y,  0.0);
-        assert_eq!(state.axes.z,  0.0);
+        assert_eq!(state.axes.x, 0.0);
+        assert_eq!(state.axes.y, 0.0);
+        assert_eq!(state.axes.z, 0.0);
         assert_eq!(state.axes.sz, 0.0);
         assert_eq!(state.axes.sl, 0.0);
     }

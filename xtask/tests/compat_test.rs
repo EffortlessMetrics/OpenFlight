@@ -53,7 +53,10 @@ fn test_warthog_joystick_manifest_parses() {
     let path = compat_devices_dir()
         .join("thrustmaster")
         .join("warthog-joystick.yaml");
-    assert!(path.exists(), "warthog-joystick.yaml should exist at {path:?}");
+    assert!(
+        path.exists(),
+        "warthog-joystick.yaml should exist at {path:?}"
+    );
 
     let text = std::fs::read_to_string(&path).expect("should read manifest");
     let doc: serde_yaml::Value = serde_yaml::from_str(&text).expect("should parse YAML");

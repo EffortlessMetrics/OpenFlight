@@ -511,13 +511,19 @@ mod tests {
     fn load_workspace_microcrate_names_succeeds_from_repo_root() {
         // Use the actual workspace root — this is a filesystem test
         let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()  // crates/
-            .and_then(|p| p.parent())  // workspace root
+            .parent() // crates/
+            .and_then(|p| p.parent()) // workspace root
             .map(|p| p.to_path_buf())
             .unwrap();
         let names = load_workspace_microcrate_names(&workspace_root).unwrap();
         // The workspace has many crates; confirm at least some known ones are present
-        assert!(names.contains("flight-core"), "expected flight-core in workspace members");
-        assert!(names.contains("flight-axis"), "expected flight-axis in workspace members");
+        assert!(
+            names.contains("flight-core"),
+            "expected flight-core in workspace members"
+        );
+        assert!(
+            names.contains("flight-axis"),
+            "expected flight-axis in workspace members"
+        );
     }
 }

@@ -26,12 +26,10 @@
 pub mod cls_e;
 
 pub use flight_hid_support::device_support::{
-    BRUNNER_VENDOR_ID, BRUNNER_CLS_E_YOKE_PID,
-    is_brunner_device, BrunnerModel, brunner_model,
+    BRUNNER_CLS_E_YOKE_PID, BRUNNER_VENDOR_ID, BrunnerModel, brunner_model, is_brunner_device,
 };
 
 pub use cls_e::{
-    ClsEAxes, ClsEButtons, ClsEInputState,
-    ClsEParseError, parse_cls_e_report,
-    CLS_E_MIN_REPORT_BYTES,
+    CLS_E_MIN_REPORT_BYTES, ClsEAxes, ClsEButtons, ClsEInputState, ClsEParseError,
+    parse_cls_e_report,
 };

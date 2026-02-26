@@ -1220,7 +1220,10 @@ mod tests {
     fn elite_dangerous_definition_present() {
         let config = ProcessDetectionConfig::default();
         let def = config.process_definitions.get(&SimId::EliteDangerous);
-        assert!(def.is_some(), "Elite Dangerous definition should be present");
+        assert!(
+            def.is_some(),
+            "Elite Dangerous definition should be present"
+        );
         let def = def.unwrap();
         assert!(
             !def.process_names.is_empty(),

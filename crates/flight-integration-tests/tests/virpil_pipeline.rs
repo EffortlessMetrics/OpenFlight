@@ -140,12 +140,22 @@ fn virpil_cm3_axes_clamp_at_max() {
         "left_throttle at max raw should be ≈1.0, got {}",
         state.axes.left_throttle
     );
-    assert_eq!(state.axes.right_throttle, 0.0, "right_throttle at zero raw should be 0.0");
+    assert_eq!(
+        state.axes.right_throttle, 0.0,
+        "right_throttle at zero raw should be 0.0"
+    );
 
     // Overflow: raw > VIRPIL_AXIS_MAX should be clamped to 1.0
-    let overflow_report = make_cm3_report([u16::MAX, u16::MAX, u16::MAX, u16::MAX, u16::MAX, u16::MAX], [0u8; 10]);
-    let overflow_state = parse_cm3_throttle_report(&overflow_report).expect("parse must succeed for overflow");
-    assert_eq!(overflow_state.axes.left_throttle, 1.0, "overflow should clamp to 1.0");
+    let overflow_report = make_cm3_report(
+        [u16::MAX, u16::MAX, u16::MAX, u16::MAX, u16::MAX, u16::MAX],
+        [0u8; 10],
+    );
+    let overflow_state =
+        parse_cm3_throttle_report(&overflow_report).expect("parse must succeed for overflow");
+    assert_eq!(
+        overflow_state.axes.left_throttle, 1.0,
+        "overflow should clamp to 1.0"
+    );
 
     // The clamped state must still pass bus validation.
     let mut snapshot = BusSnapshot::new(SimId::Unknown, AircraftId::new("virpil-clamp"));

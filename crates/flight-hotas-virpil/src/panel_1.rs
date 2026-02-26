@@ -39,7 +39,9 @@ pub struct VpcPanel1Buttons {
 
 impl Default for VpcPanel1Buttons {
     fn default() -> Self {
-        Self { raw: [0u8; PANEL1_BUTTON_BYTES] }
+        Self {
+            raw: [0u8; PANEL1_BUTTON_BYTES],
+        }
     }
 }
 
@@ -74,7 +76,9 @@ pub fn parse_panel1_report(data: &[u8]) -> Result<VpcPanel1InputState, VpcPanel1
     }
     let mut raw = [0u8; PANEL1_BUTTON_BYTES];
     raw.copy_from_slice(&data[1..1 + PANEL1_BUTTON_BYTES]);
-    Ok(VpcPanel1InputState { buttons: VpcPanel1Buttons { raw } })
+    Ok(VpcPanel1InputState {
+        buttons: VpcPanel1Buttons { raw },
+    })
 }
 
 #[cfg(test)]

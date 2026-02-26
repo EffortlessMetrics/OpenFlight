@@ -744,9 +744,18 @@ mod tests {
     fn test_curve_non_monotonic_rejected() {
         let mut profile = create_valid_profile();
         profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
-            CurvePoint { input: 0.0, output: 0.0 },
-            CurvePoint { input: 0.5, output: 0.5 },
-            CurvePoint { input: 0.3, output: 0.8 }, // non-monotonic input
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 0.5,
+                output: 0.5,
+            },
+            CurvePoint {
+                input: 0.3,
+                output: 0.8,
+            }, // non-monotonic input
         ]);
         assert!(profile.validate().is_err());
     }
@@ -755,9 +764,18 @@ mod tests {
     fn test_curve_valid_accepted() {
         let mut profile = create_valid_profile();
         profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
-            CurvePoint { input: 0.0, output: 0.0 },
-            CurvePoint { input: 0.5, output: 0.4 },
-            CurvePoint { input: 1.0, output: 1.0 },
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 0.5,
+                output: 0.4,
+            },
+            CurvePoint {
+                input: 1.0,
+                output: 1.0,
+            },
         ]);
         assert!(profile.validate().is_ok());
     }
@@ -871,13 +889,7 @@ mod tests {
             merged.pof_overrides.is_some(),
             "PoF overrides should be present after merge"
         );
-        assert!(
-            merged
-                .pof_overrides
-                .as_ref()
-                .unwrap()
-                .contains_key("climb")
-        );
+        assert!(merged.pof_overrides.as_ref().unwrap().contains_key("climb"));
     }
 
     #[test]

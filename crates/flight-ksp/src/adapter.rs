@@ -343,20 +343,23 @@ async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<(KspRawTelemetry, u
     let vertical_speed_mps = decode_double(&step4[5]).unwrap_or(0.0);
     let g_force = decode_double(&step4[6]).unwrap_or(1.0);
 
-    Ok((KspRawTelemetry {
-        vessel_name,
-        situation,
-        pitch_deg,
-        roll_deg,
-        heading_deg,
-        speed_mps,
-        ias_mps,
-        vertical_speed_mps,
-        g_force,
-        altitude_m,
-        latitude_deg,
-        longitude_deg,
-    }, vessel_id))
+    Ok((
+        KspRawTelemetry {
+            vessel_name,
+            situation,
+            pitch_deg,
+            roll_deg,
+            heading_deg,
+            speed_mps,
+            ias_mps,
+            vertical_speed_mps,
+            g_force,
+            altitude_m,
+            latitude_deg,
+            longitude_deg,
+        },
+        vessel_id,
+    ))
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -418,7 +421,9 @@ mod tests {
     #[tokio::test]
     async fn test_write_controls_pending_is_cleared_on_next_write() {
         let adapter = KspAdapter::new(KspConfig::default());
-        adapter.write_controls(KspControls::from_axes(0.5, -0.5, 0.0, 0.8)).await;
+        adapter
+            .write_controls(KspControls::from_axes(0.5, -0.5, 0.0, 0.8))
+            .await;
         // Second write overwrites the first
         adapter.write_controls(KspControls::default()).await;
         // Adapter is not connected so no assertion on output; just verify no panic

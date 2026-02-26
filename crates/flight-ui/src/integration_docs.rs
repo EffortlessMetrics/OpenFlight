@@ -534,7 +534,12 @@ This is a test simulator integration.
         assert!(result.is_err());
         let err = result.unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("nonexistent_sim_xyz") || msg.contains("not found") || msg.contains("IO") || msg.contains("directory"),
-            "Unexpected error message: {msg}");
+        assert!(
+            msg.contains("nonexistent_sim_xyz")
+                || msg.contains("not found")
+                || msg.contains("IO")
+                || msg.contains("directory"),
+            "Unexpected error message: {msg}"
+        );
     }
 }

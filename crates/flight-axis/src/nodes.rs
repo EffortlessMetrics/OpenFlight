@@ -1239,8 +1239,13 @@ mod unit_tests {
 
     #[test]
     fn mixer_config_no_clamp_disables_clamping() {
-        let config = MixerConfig::new("test").add_scaled_input("a", 1.0).no_clamp();
-        assert!(!config.clamp_output, "no_clamp should disable output clamping");
+        let config = MixerConfig::new("test")
+            .add_scaled_input("a", 1.0)
+            .no_clamp();
+        assert!(
+            !config.clamp_output,
+            "no_clamp should disable output clamping"
+        );
     }
 
     #[test]

@@ -734,7 +734,11 @@ mod tests {
 
         // Compilation should succeed — the compiler is fully implemented
         let result = rules.compile();
-        assert!(result.is_ok(), "compile() should succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "compile() should succeed: {:?}",
+            result.err()
+        );
         let compiled = result.unwrap();
         // Should have produced bytecode instructions
         assert!(

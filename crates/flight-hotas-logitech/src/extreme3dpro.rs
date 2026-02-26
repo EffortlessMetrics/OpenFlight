@@ -105,9 +105,7 @@ pub struct Extreme3DProInputState {
 /// Errors returned by Extreme 3D Pro report parsing.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum Extreme3DProParseError {
-    #[error(
-        "Extreme 3D Pro report too short: expected at least {expected} bytes, got {actual}"
-    )]
+    #[error("Extreme 3D Pro report too short: expected at least {expected} bytes, got {actual}")]
     TooShort { expected: usize, actual: usize },
 }
 
@@ -238,7 +236,11 @@ mod tests {
         let state = parse_extreme_3d_pro(&data).unwrap();
         assert!(state.axes.x.abs() < 0.01, "x near 0: {}", state.axes.x);
         assert!(state.axes.y.abs() < 0.01, "y near 0: {}", state.axes.y);
-        assert!(state.axes.twist.abs() < 0.01, "twist near 0: {}", state.axes.twist);
+        assert!(
+            state.axes.twist.abs() < 0.01,
+            "twist near 0: {}",
+            state.axes.twist
+        );
         assert_eq!(state.buttons.hat, Extreme3DProHat::Center);
     }
 

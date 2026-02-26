@@ -13,10 +13,8 @@ use flight_bus::{
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
-use flight_hotas_thrustmaster::{
-    TFRP_MIN_REPORT_BYTES, parse_t16000m_report, parse_tfrp_report,
-};
 use flight_hotas_thrustmaster::t16000m::T16000M_MIN_REPORT_BYTES;
+use flight_hotas_thrustmaster::{TFRP_MIN_REPORT_BYTES, parse_t16000m_report, parse_tfrp_report};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -89,7 +87,11 @@ fn tfrp_pedals_through_bus_pipeline() {
     let report = make_tfrp_report(65535, 0, 0);
     let state = parse_tfrp_report(&report).expect("parse must succeed");
 
-    assert!((state.axes.rudder - 1.0).abs() < 1e-4, "expected rudder ≈ 1.0, got {}", state.axes.rudder);
+    assert!(
+        (state.axes.rudder - 1.0).abs() < 1e-4,
+        "expected rudder ≈ 1.0, got {}",
+        state.axes.rudder
+    );
 
     let yaw = (state.axes.rudder * 2.0 - 1.0).clamp(-1.0, 1.0);
 
@@ -135,7 +137,10 @@ fn tfrp_pedals_axes_are_independent_through_bus() {
     let state = parse_tfrp_report(&report).expect("parse must succeed");
 
     assert_eq!(state.axes.rudder, 0.0, "rudder should be 0");
-    assert!((state.axes.right_pedal - 1.0).abs() < 1e-4, "right_pedal should be ≈1");
+    assert!(
+        (state.axes.right_pedal - 1.0).abs() < 1e-4,
+        "right_pedal should be ≈1"
+    );
     assert_eq!(state.axes.left_pedal, 0.0, "left_pedal should be 0");
 
     // Encode independent braking as two throttle channels (left, right brake)
@@ -269,8 +274,16 @@ fn t16000m_joystick_full_deflection_through_bus() {
     let report = make_t16000m_report(16383, 8192, 8192, u16::MAX, 0, 0x0F);
     let state = parse_t16000m_report(&report).expect("parse must succeed");
 
-    assert!(state.axes.x > 0.99, "x should be ≈ 1.0 at full right, got {}", state.axes.x);
-    assert!(state.axes.throttle > 0.99, "throttle should be ≈ 1.0 at max, got {}", state.axes.throttle);
+    assert!(
+        state.axes.x > 0.99,
+        "x should be ≈ 1.0 at full right, got {}",
+        state.axes.x
+    );
+    assert!(
+        state.axes.throttle > 0.99,
+        "throttle should be ≈ 1.0 at max, got {}",
+        state.axes.throttle
+    );
 
     let mut snapshot = BusSnapshot::new(SimId::Unknown, AircraftId::new("t16000m-full"));
     snapshot.control_inputs.roll = state.axes.x;
