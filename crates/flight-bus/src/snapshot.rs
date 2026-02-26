@@ -1110,4 +1110,54 @@ mod tests {
         assert!(lights.nav);
         assert!(lights.beacon);
     }
+
+    // Validity-flag unit tests
+
+    /// A freshly created BusSnapshot has all ValidityFlags false.
+    #[test]
+    fn test_new_snapshot_all_validity_flags_false() {
+        let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
+        assert!(!snapshot.validity.safe_for_ffb);
+        assert!(!snapshot.validity.attitude_valid);
+        assert!(!snapshot.validity.angular_rates_valid);
+        assert!(!snapshot.validity.velocities_valid);
+        assert!(!snapshot.validity.kinematics_valid);
+        assert!(!snapshot.validity.aero_valid);
+        assert!(!snapshot.validity.position_valid);
+    }
+
+    /// Setting all validity flags to true on a valid snapshot still passes validate().
+    #[test]
+    fn test_snapshot_with_all_flags_set_passes_validate() {
+        let mut snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
+        snapshot.kinematics.ias = ValidatedSpeed::new_knots(250.0).unwrap();
+        snapshot.kinematics.pitch = ValidatedAngle::new_degrees(3.0).unwrap();
+        snapshot.validity = ValidityFlags {
+            safe_for_ffb: true,
+            attitude_valid: true,
+            angular_rates_valid: true,
+            velocities_valid: true,
+            kinematics_valid: true,
+            aero_valid: true,
+            position_valid: true,
+        };
+        assert!(snapshot.validate().is_ok());
+        assert!(snapshot.validity.safe_for_ffb);
+    }
+
+    /// A snapshot whose age_ms() exceeds a staleness threshold has safe_for_ffb = false
+    /// by default; consumers must not assume stale data is safe.
+    #[test]
+    fn test_stale_snapshot_safe_for_ffb_false_by_default() {
+        let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
+        // Wait long enough that the snapshot is unambiguously stale (>100 ms)
+        std::thread::sleep(std::time::Duration::from_millis(120));
+        let age = snapshot.age_ms();
+        assert!(age >= 100, "expected age >= 100 ms, got {age} ms");
+        // The flag must remain false because no code set it true
+        assert!(
+            !snapshot.validity.safe_for_ffb,
+            "stale snapshot must have safe_for_ffb = false"
+        );
+    }
 }

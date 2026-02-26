@@ -1109,4 +1109,77 @@ mod tests {
         let cache_guard = cache.read().unwrap();
         assert!(cache_guard.is_empty());
     }
+
+    // ---------- handle_response edge-case tests ----------
+
+    /// Empty byte slice (0 bytes) must return an error, not panic.
+    #[test]
+    fn test_handle_response_empty_slice() {
+        let data: &[u8] = &[];
+        let pending = Arc::new(RwLock::new(HashMap::new()));
+        let cache = Arc::new(RwLock::new(HashMap::new()));
+        let result = UdpClient::handle_response(data, &pending, &cache);
+        assert!(result.is_err(), "expected error for empty slice");
+    }
+
+    /// A 4-byte slice (below the minimum 5-byte threshold) must return an error.
+    #[test]
+    fn test_handle_response_too_short() {
+        let data: &[u8] = b"RREF"; // 4 bytes, missing null terminator byte
+        let pending = Arc::new(RwLock::new(HashMap::new()));
+        let cache = Arc::new(RwLock::new(HashMap::new()));
+        let result = UdpClient::handle_response(data, &pending, &cache);
+        assert!(result.is_err(), "expected error for 4-byte slice");
+    }
+
+    /// An unknown 4-byte command should be silently ignored (returns Ok).
+    #[test]
+    fn test_handle_response_unknown_command() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"XXXX"); // Unknown command
+        data.push(0);
+        // Pad with dummy bytes so the packet passes the length check
+        data.extend_from_slice(&[0u8; 10]);
+        let pending = Arc::new(RwLock::new(HashMap::new()));
+        let cache = Arc::new(RwLock::new(HashMap::new()));
+        let result = UdpClient::handle_response(&data, &pending, &cache);
+        assert!(result.is_ok(), "unknown command should be silently ignored");
+    }
+
+    /// A valid DATA packet through handle_response caches values correctly.
+    #[test]
+    fn test_handle_response_valid_data_packet() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"DATA");
+        data.push(0);
+        // Group 3: speeds
+        data.extend_from_slice(&3i32.to_le_bytes());
+        data.extend_from_slice(&120.0f32.to_le_bytes()); // IAS
+        for _ in 1..8 {
+            data.extend_from_slice(&0.0f32.to_le_bytes());
+        }
+
+        let pending = Arc::new(RwLock::new(HashMap::new()));
+        let cache = Arc::new(RwLock::new(HashMap::new()));
+        let result = UdpClient::handle_response(&data, &pending, &cache);
+        assert!(result.is_ok(), "valid DATA packet should be handled without error");
+
+        let cache_guard = cache.read().unwrap();
+        assert!(
+            cache_guard.contains_key("sim/flightmodel/position/indicated_airspeed"),
+            "IAS should be cached after DATA packet"
+        );
+    }
+
+    /// An RREF packet that is too short (< 13 bytes) must return an error, not panic.
+    #[test]
+    fn test_handle_response_rref_too_short() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"RREF");
+        data.push(0); // 5 bytes total — valid header length but RREF needs >= 13
+        let pending = Arc::new(RwLock::new(HashMap::new()));
+        let cache = Arc::new(RwLock::new(HashMap::new()));
+        let result = UdpClient::handle_response(&data, &pending, &cache);
+        assert!(result.is_err(), "RREF packet shorter than 13 bytes should fail");
+    }
 }
