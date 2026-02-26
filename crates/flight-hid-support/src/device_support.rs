@@ -101,6 +101,20 @@ pub const WARTHOG_THROTTLE_PID: u16 = 0x0404;
 /// (ID usb:044f:0400, "ThrustMaster HOTAS Cougar").
 pub const COUGAR_HOTAS_STICK_PID: u16 = 0x0400;
 
+/// USB Product ID for the Thrustmaster F-16 MFD Cougar Panel 1.
+/// Part of the "MFD Cougar Pack" — a pair of LCD-framed button panels for DCS World.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB351 — linux-hardware.org (3 probes,
+/// USB name "F16 MFD 1", MSI MPG Z390 GAMING EDGE).
+pub const F16_MFD_1_PID: u16 = 0xB351;
+
+/// USB Product ID for the Thrustmaster F-16 MFD Cougar Panel 2.
+/// Identical capabilities to Panel 1; only PID differs.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB352 — linux-hardware.org (3 probes,
+/// USB name "F16 MFD 2", MSI MPG Z390 GAMING EDGE).
+pub const F16_MFD_2_PID: u16 = 0xB352;
+
 /// USB Product ID for the TCA Sidestick Airbus Edition (Pilot / left-hand captain's seat).
 ///
 /// Confirmed: VID 0x044F (Thrustmaster), PID 0x0405 — linux-hardware.org (24 probes,

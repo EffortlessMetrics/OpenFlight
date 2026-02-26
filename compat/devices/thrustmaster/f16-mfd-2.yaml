@@ -1,0 +1,57 @@
+# Thrustmaster F-16 MFD Cougar Panel 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x044F (ThrustMaster), PID 0xB352
+# Source: linux-hardware.org "F16 MFD 2" — 3 probes (MSI MPG Z390)
+# Part of the Thrustmaster MFD Cougar Pack (sold as pair with MFD 1).
+# Each MFD panel enumerates as a separate USB HID device.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F-16 MFD Cougar Panel 2"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB352   # Confirmed: linux-hardware.org "F16 MFD 2" (3 probes)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x06          # Keyboard (buttons only — no axes)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 19
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PANEL_BUTTONS_ONLY
+    description: >
+      The MFD panels have no analog axes — only 19 digital buttons arranged
+      around the LCD bezel. All buttons map to HID keyboard-class usages.
+  - id: SOLD_AS_PAIR
+    description: >
+      Typically sold as a 2-panel pack (MFD 1 = 0xB351, MFD 2 = 0xB352).
+      Each panel enumerates independently as a separate USB device.
+      Both panels have identical capabilities; only the USB PID differs.
+  - id: DCS_PRIMARY
+    description: >
+      Primarily used in DCS World for MFD/MFCD page navigation.
+      Each panel button can be bound independently via DCS input configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Button layout confirmed from linux-hardware.org probe data and community
+    DCS World forum documentation. Simulated testing not yet implemented.
+    Last reviewed: 2026-06.
