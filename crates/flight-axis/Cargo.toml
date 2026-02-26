@@ -60,11 +60,19 @@ name = "integration_tests"
 required-features = ["tests-optin"]
 
 [[test]]
+name = "filter_tests"
+required-features = ["tests-optin"]
+
+[[test]]
 name = "mixer_tests"
 required-features = ["tests-optin"]
 
 [[test]]
 name = "performance_validation"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "pipeline_composition_tests"
 required-features = ["tests-optin"]
 
 [[example]]
