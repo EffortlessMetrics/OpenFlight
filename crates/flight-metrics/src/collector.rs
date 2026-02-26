@@ -31,9 +31,9 @@ mod tests {
         reg.inc_counter("calls", 5);
         let collector: &dyn MetricsCollector = &reg;
         let metrics = collector.collect();
-        let found = metrics.iter().any(|m| {
-            matches!(m, Metric::Counter { name, value } if name == "calls" && *value == 5)
-        });
+        let found = metrics.iter().any(
+            |m| matches!(m, Metric::Counter { name, value } if name == "calls" && *value == 5),
+        );
         assert!(found);
     }
 
@@ -53,7 +53,10 @@ mod tests {
         reg.inc_counter("x", 3);
         reg.set_gauge("y", 1.5);
         reg.observe("z", 9.0);
-        let via_trait = { let c: &dyn MetricsCollector = &reg; c.collect() };
+        let via_trait = {
+            let c: &dyn MetricsCollector = &reg;
+            c.collect()
+        };
         let via_snapshot = reg.snapshot();
         // Same number of entries (order may differ)
         assert_eq!(via_trait.len(), via_snapshot.len());

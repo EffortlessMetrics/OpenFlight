@@ -1213,9 +1213,16 @@ jobs:
       - name: Check mutation kill rate (≥50% survivors fail CI)
         run: |
           if [ -d mutants-out ]; then
-            missed=0; caught=0
-            [ -f mutants-out/missed.txt ] && missed=$(grep -c . mutants-out/missed.txt 2>/dev/null || echo 0)
-            [ -f mutants-out/caught.txt ] && caught=$(grep -c . mutants-out/caught.txt 2>/dev/null || echo 0)
+            if [ -f mutants-out/outcomes.json ]; then
+              # Use JSON output for accurate counts (one entry per mutation)
+              missed=$(jq '[.[] | select(.summary == "MissedMutant")] | length' mutants-out/outcomes.json 2>/dev/null || echo 0)
+              caught=$(jq '[.[] | select(.summary == "CaughtMutant")] | length' mutants-out/outcomes.json 2>/dev/null || echo 0)
+            else
+              # Fallback: line-count from text files (one mutation per line)
+              missed=0; caught=0
+              [ -f mutants-out/missed.txt ] && missed=$(grep -c . mutants-out/missed.txt 2>/dev/null || echo 0)
+              [ -f mutants-out/caught.txt ] && caught=$(grep -c . mutants-out/caught.txt 2>/dev/null || echo 0)
+            fi
             total=$((missed + caught))
             if [ "$total" -gt 0 ]; then
               kill_rate=$(( caught * 100 / total ))
@@ -1223,7 +1230,7 @@ jobs:
               if [ "$kill_rate" -lt 50 ]; then
                 echo "❌ Mutation kill rate ${kill_rate}% is below the 50% threshold"
                 echo "   This means tests are not catching enough logic mutations."
-                echo "   See mutants-out/missed.txt for uncaught mutations."
+                echo "   See mutants-out/ for details."
                 exit 1
               fi
               echo "✅ Mutation kill rate ${kill_rate}% passes threshold (≥50%)"

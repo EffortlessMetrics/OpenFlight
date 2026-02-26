@@ -391,11 +391,12 @@ impl AircraftAutoSwitchService {
                             None => !snapshot.aircraft.icao.is_empty(),
                         };
                         if changed && !snapshot.aircraft.icao.is_empty() {
-                            let snap_aircraft = snapshot.aircraft.clone();
-                            last_aircraft_per_sim.insert(snapshot.sim, snap_aircraft.clone());
-                            if let Err(e) = service_tx
-                                .send(ServiceEvent::AircraftDetected(snapshot.sim, snap_aircraft))
-                            {
+                            // Clone once for the map; move the original into the event
+                            last_aircraft_per_sim.insert(snapshot.sim, snapshot.aircraft.clone());
+                            if let Err(e) = service_tx.send(ServiceEvent::AircraftDetected(
+                                snapshot.sim,
+                                snapshot.aircraft,
+                            )) {
                                 warn!("Failed to emit AircraftDetected event: {}", e);
                             }
                         }
