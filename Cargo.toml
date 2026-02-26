@@ -60,6 +60,7 @@ members = [
     "crates/flight-hotas-winwing",
     "crates/flight-hotas-honeycomb",
     "crates/flight-hotas-logitech",
+    "crates/flight-hotas-virpil",
     "crates/flight-ffb-moza",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",

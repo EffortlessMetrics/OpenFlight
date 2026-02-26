@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID confirmed: the-sz.com USB ID DB (VIRPIL, UAB)
+# PIDs confirmed: Buzzec/virpil open-source Rust LED control library
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel 1"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025B
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + buttons_lsb(6)"
+  total_bytes: 7
+
+quirks:
+  - id: NO_AXES
+    description: "The Control Panel 1 is a pure button panel with no analog axes."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "48 toggle switches, rotary encoders (as buttons), and push buttons."

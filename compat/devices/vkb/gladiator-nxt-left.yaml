@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Left"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0201
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: LEFT_HAND
+    description: "Left-handed stick for dual-stick setups. Axis orientation is mirrored from the right variant."
+  - id: CONFIGURABLE_AXES
+    description: "Axis mapping can be changed in VKB configuration software."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Left-hand variant; commonly paired with NXT EVO Right or STECS throttle."

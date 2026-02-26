@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID/PID confirmed: the-sz.com USB ID DB (Thrustmaster T-Rudder)
+schema_version: "1"
+
+device:
+  name: "T-Rudder"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB679
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rz, z, rx]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+hid_report:
+  format: "Rz(u16le) + Z(u16le) + Rx(u16le)"
+  total_bytes: 6
+  note: "Same layout as TFRP (0xB678)."
+
+quirks:
+  - id: NO_TOE_BRAKES
+    description: "T-Rudder is a single rudder bar without independent toe-brake pedals. Z/Rx axes track the same pedal position."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Shares parser with TFRP. VID/PID from the-sz.com."

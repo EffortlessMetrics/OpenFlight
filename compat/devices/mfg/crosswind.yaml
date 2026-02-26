@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID/PID UNCONFIRMED. Custom ATmega32U4 firmware; PID varies by firmware version.
+# Community reports: 0x0483:0x5740 (STM32) or 0x03EB:0x2402 (Atmel) — UNVERIFIED.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: ~
+    product_id: ~
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: UNCONFIRMED_PID
+    description: "PID varies by firmware version. Confirm with lsusb or USBView on real hardware and submit to OpenFlight."
+  - id: TENSION_HARDWARE_ONLY
+    description: "Spring tension is adjusted via physical spring rings — software cannot control it."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "VID/PID unconfirmed. Best-effort tier-3 support based on community documentation."

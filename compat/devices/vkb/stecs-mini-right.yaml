@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+schema_version: "1"
+
+device:
+  name: "VKB STECS Mini Right"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x013A
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [rx, ry, x, y, z]
+    resolution_bits: 12
+  buttons: 96
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MULTI_VIRTUAL_CONTROLLER
+    description: "STECS firmware exposes 3 virtual HID controllers (VC0–VC2). OpenFlight merges button state from all active VCs."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Right-handed STECS Mini variant. Same protocol as STECS Standard."

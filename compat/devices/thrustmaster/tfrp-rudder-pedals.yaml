@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID/PID confirmed: the-sz.com USB ID DB (Thrustmaster T.Flight Rudder Pedals)
+schema_version: "1"
+
+device:
+  name: "T.Flight Rudder Pedals (TFRP)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB678
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rz, z, rx]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+hid_report:
+  format: "Rz(u16le) + Z(u16le) + Rx(u16le)"
+  total_bytes: 6
+  note: "No report ID."
+
+quirks:
+  - id: NO_REPORT_ID
+    description: "Report starts directly with axis data — no leading report ID byte."
+  - id: AXIS_LAYOUT
+    description: "Rz = combined rudder, Z = right pedal, Rx = left pedal. Z/Rx are independent toe-brake axes."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "VID/PID from the-sz.com. Report layout from SDL2 gamecontrollerdb + Linux evtest captures. Parser tests passing."

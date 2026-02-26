@@ -42,11 +42,25 @@ pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x0102;
 /// linux-hardware.org probe data.
 pub const HONEYCOMB_BRAVO_PID: u16 = 0x1901;
 
+/// USB Product ID for the T.Flight Rudder Pedals (TFRP).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB678 — from the-sz.com USB ID DB.
+pub const TFRP_RUDDER_PEDALS_PID: u16 = 0xB678;
+
+/// USB Product ID for the T-Rudder pedals.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB679 — from the-sz.com USB ID DB.
+pub const T_RUDDER_PID: u16 = 0xB679;
+
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 /// Primary PID for T.Flight HOTAS 4 - verified via USBView artifact.
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
 /// Legacy PID for T.Flight HOTAS 4 - may appear on older firmware versions.
 pub const TFLIGHT_HOTAS_4_PID_LEGACY: u16 = 0xB67A;
+/// USB Product ID for the T.Flight HOTAS X (PS4/PC combined unit).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0xB108 — from open-siege/siege-studio device info.
+pub const TFLIGHT_HOTAS_X_PID: u16 = 0xB108;
 
 /// USB Product ID for the T.16000M FCS joystick.
 ///
@@ -93,6 +107,61 @@ pub const X56_MADCATZ_THROTTLE_PID: u16 = 0xA221;
 pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
 // SUSPECT: This PID needs verification - do NOT match unknown Logitech PIDs
 // pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
+
+/// USB Vendor ID for VIRPIL Controls UAB.
+///
+/// Confirmed: [the-sz.com USB ID DB](https://www.the-sz.com/products/usbid/index.php?v=0x3344)
+pub const VIRPIL_VENDOR_ID: u16 = 0x3344;
+
+/// USB Product ID for the VIRPIL VPC Throttle CM3.
+///
+/// Source: Buzzec/virpil open-source Rust LED control library.
+pub const VIRPIL_CM3_THROTTLE_PID: u16 = 0x0194;
+
+/// USB Product ID for the VIRPIL VPC MongoosT-50CM3 (right stick).
+///
+/// Source: Buzzec/virpil open-source Rust LED control library.
+pub const VIRPIL_MONGOOST_STICK_PID: u16 = 0x4130;
+
+/// USB Product ID for the VIRPIL VPC Control Panel 1.
+///
+/// Source: Buzzec/virpil open-source Rust LED control library.
+pub const VIRPIL_PANEL1_PID: u16 = 0x025B;
+
+/// USB Vendor ID for CH Products.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h`
+pub const CH_VENDOR_ID: u16 = 0x068E;
+
+/// USB Product ID for the CH Pro Throttle.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_PRO_THROTTLE)
+pub const CH_PRO_THROTTLE_PID: u16 = 0x00F1;
+
+/// USB Product ID for the CH Pro Pedals.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_PRO_PEDALS)
+pub const CH_PRO_PEDALS_PID: u16 = 0x00F2;
+
+/// USB Product ID for the CH Fighterstick.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_FIGHTERSTICK)
+pub const CH_FIGHTERSTICK_PID: u16 = 0x00F3;
+
+/// USB Product ID for the CH Combat Stick.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_COMBATSTICK)
+pub const CH_COMBAT_STICK_PID: u16 = 0x00F4;
+
+/// USB Product ID for the CH Flight Sim Eclipse Yoke.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_ECLIPSE_YOKE)
+pub const CH_ECLIPSE_YOKE_PID: u16 = 0x0051;
+
+/// USB Product ID for the CH Flight Sim Yoke.
+///
+/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_YOKE_USB)
+pub const CH_FLIGHT_YOKE_PID: u16 = 0x00FF;
 
 pub const VKB_STECS_LEFT_SPACE_MINI_PID: u16 = 0x0136;
 pub const VKB_STECS_RIGHT_SPACE_MINI_PID: u16 = 0x013A;
@@ -193,10 +262,109 @@ pub fn warthog_model(product_id: u16) -> Option<WarthogModel> {
     }
 }
 
+/// VIRPIL Controls VPC product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VirpilModel {
+    /// VPC Throttle CM3. VID 0x3344, PID 0x0194.
+    Cm3Throttle,
+    /// VPC MongoosT-50CM3 (right stick). VID 0x3344, PID 0x4130.
+    MongoostStick,
+    /// VPC Control Panel 1. VID 0x3344, PID 0x025B.
+    ControlPanel1,
+}
+
+impl VirpilModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            VirpilModel::Cm3Throttle => "VPC Throttle CM3",
+            VirpilModel::MongoostStick => "VPC MongoosT-50CM3 Stick",
+            VirpilModel::ControlPanel1 => "VPC Control Panel 1",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known VIRPIL device.
+pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == VIRPIL_VENDOR_ID
+        && matches!(
+            product_id,
+            VIRPIL_CM3_THROTTLE_PID | VIRPIL_MONGOOST_STICK_PID | VIRPIL_PANEL1_PID
+        )
+}
+
+/// Returns the VIRPIL model for a known PID, or `None` for unknown PIDs.
+pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
+    match product_id {
+        VIRPIL_CM3_THROTTLE_PID => Some(VirpilModel::Cm3Throttle),
+        VIRPIL_MONGOOST_STICK_PID => Some(VirpilModel::MongoostStick),
+        VIRPIL_PANEL1_PID => Some(VirpilModel::ControlPanel1),
+        _ => None,
+    }
+}
+
+/// CH Products device family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ChModel {
+    /// CH Pro Throttle. VID 0x068E, PID 0x00F1.
+    ProThrottle,
+    /// CH Pro Pedals. VID 0x068E, PID 0x00F2.
+    ProPedals,
+    /// CH Fighterstick. VID 0x068E, PID 0x00F3.
+    Fighterstick,
+    /// CH Combat Stick. VID 0x068E, PID 0x00F4.
+    CombatStick,
+    /// CH Flight Sim Eclipse Yoke. VID 0x068E, PID 0x0051.
+    EclipseYoke,
+    /// CH Flight Sim Yoke. VID 0x068E, PID 0x00FF.
+    FlightYoke,
+}
+
+impl ChModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            ChModel::ProThrottle => "CH Pro Throttle",
+            ChModel::ProPedals => "CH Pro Pedals",
+            ChModel::Fighterstick => "CH Fighterstick",
+            ChModel::CombatStick => "CH Combat Stick",
+            ChModel::EclipseYoke => "CH Flight Sim Eclipse Yoke",
+            ChModel::FlightYoke => "CH Flight Sim Yoke",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known CH Products device.
+pub fn is_ch_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == CH_VENDOR_ID
+        && matches!(
+            product_id,
+            CH_PRO_THROTTLE_PID
+                | CH_PRO_PEDALS_PID
+                | CH_FIGHTERSTICK_PID
+                | CH_COMBAT_STICK_PID
+                | CH_ECLIPSE_YOKE_PID
+                | CH_FLIGHT_YOKE_PID
+        )
+}
+
+/// Returns the CH Products model for a known PID, or `None` for unknown PIDs.
+pub fn ch_model(product_id: u16) -> Option<ChModel> {
+    match product_id {
+        CH_PRO_THROTTLE_PID => Some(ChModel::ProThrottle),
+        CH_PRO_PEDALS_PID => Some(ChModel::ProPedals),
+        CH_FIGHTERSTICK_PID => Some(ChModel::Fighterstick),
+        CH_COMBAT_STICK_PID => Some(ChModel::CombatStick),
+        CH_ECLIPSE_YOKE_PID => Some(ChModel::EclipseYoke),
+        CH_FLIGHT_YOKE_PID => Some(ChModel::FlightYoke),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TFlightModel {
     HotasOne,
     Hotas4,
+    /// T.Flight HOTAS X (PS4/PC). VID 0x044F, PID 0xB108.
+    HotasX,
 }
 
 impl TFlightModel {
@@ -204,6 +372,7 @@ impl TFlightModel {
         match self {
             TFlightModel::HotasOne => "T.Flight HOTAS One",
             TFlightModel::Hotas4 => "T.Flight HOTAS 4",
+            TFlightModel::HotasX => "T.Flight HOTAS X",
         }
     }
 }
@@ -347,6 +516,8 @@ fn tflight_model_from_product_name(product_name: Option<&str>) -> Option<TFlight
         Some(TFlightModel::HotasOne)
     } else if name.contains("hotas 4") || name.contains("hotas4") {
         Some(TFlightModel::Hotas4)
+    } else if name.contains("hotas x") || name.contains("hotasx") {
+        Some(TFlightModel::HotasX)
     } else {
         None
     }
@@ -360,6 +531,7 @@ pub fn tflight_model(device_info: &HidDeviceInfo) -> Option<TFlightModel> {
     match device_info.product_id {
         TFLIGHT_HOTAS_ONE_PID => Some(TFlightModel::HotasOne),
         TFLIGHT_HOTAS_4_PID | TFLIGHT_HOTAS_4_PID_LEGACY => Some(TFlightModel::Hotas4),
+        TFLIGHT_HOTAS_X_PID => Some(TFlightModel::HotasX),
         _ => tflight_model_from_product_name(device_info.product_name.as_deref()),
     }
 }
@@ -393,6 +565,7 @@ pub fn pc_mode_note(model: TFlightModel) -> &'static str {
     match model {
         TFlightModel::Hotas4 => PC_MODE_NOTE_HOTAS_4,
         TFlightModel::HotasOne => PC_MODE_NOTE_HOTAS_ONE,
+        TFlightModel::HotasX => DEFAULT_MAPPING_NOTE_UNKNOWN,
     }
 }
 

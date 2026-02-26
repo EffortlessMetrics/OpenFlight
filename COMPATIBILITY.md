@@ -6,15 +6,38 @@
 
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
-| Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1901 | 2 | 36 | ✗ | 2 |
-| Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1902 | 7 | 64 | ✗ | 2 |
+| CH Combat Stick | 0x068E | 0x00F4 | 4 | 24 | ✗ | 2 |
+| CH Flight Sim Eclipse Yoke | 0x068E | 0x0051 | 6 | 32 | ✗ | 2 |
+| CH Fighterstick | 0x068E | 0x00F3 | 4 | 32 | ✗ | 2 |
+| CH Pro Pedals | 0x068E | 0x00F2 | 3 | 0 | ✗ | 2 |
+| CH Pro Throttle | 0x068E | 0x00F1 | 5 | 32 | ✗ | 2 |
+| Honeycomb Alpha Flight Controls XPC | 0x294B | 0x0102 | 2 | 36 | ✗ | 2 |
+| Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1901 | 7 | 64 | ✗ | 2 |
+| Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
+| MFG Crosswind Rudder Pedals | ? | ? | 3 | 0 | ✗ | 3 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |
 | Logitech X56 Rhino HOTAS | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
+| T-Rudder | 0x044F | 0xB679 | 3 | 0 | ✗ | 2 |
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
+| T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
 | Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
+| T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |
+| Thrustmaster TWCS Throttle | 0x044F | 0xB687 | 4 | 14 | ✗ | 2 |
+| Thrustmaster HOTAS Warthog Joystick | 0x044F | 0x0402 | 3 | 19 | ✗ | 2 |
+| Thrustmaster HOTAS Warthog Throttle | 0x044F | 0x0404 | 5 | 40 | ✗ | 2 |
+| VIRPIL VPC Throttle CM3 | 0x3344 | 0x0194 | 6 | 78 | ✗ | 2 |
+| VIRPIL VPC Control Panel 1 | 0x3344 | 0x025B | 0 | 48 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
+| VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0126 | 8 | 32 | ✗ | 2 |
+| VKB STECS Mini Left | 0x231D | 0x0136 | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini+ Left | 0x231D | 0x0137 | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini+ Right | 0x231D | 0x013B | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini Right | 0x231D | 0x013A | 5 | 96 | ✗ | 2 |
+| VKB STECS Standard Left | 0x231D | 0x0138 | 5 | 96 | ✗ | 2 |
+| VKB STECS Standard Right | 0x231D | 0x013C | 5 | 96 | ✗ | 2 |
 | VKB STECS Standard | 0x231D | 0x0127 | 5 | 96 | ✗ | 2 |
 | VPforce Rhino FFB Joystick | 0x0483 | 0xA1C0 | 6 | 32 | ✓ | 2 |
 | WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |

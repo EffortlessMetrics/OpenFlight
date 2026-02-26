@@ -495,6 +495,9 @@ fn merged_mode_guidance(model: TFlightModel) -> &'static str {
         TFlightModel::HotasOne => {
             "If separate yaw/throttle axes are missing, switch HOTAS One to PC full-axis mode (Xbox/PC selector and Guide button procedure) before plugging in. On Linux, use a corrected descriptor setup such as hid-tflight4."
         }
+        TFlightModel::HotasX => {
+            "The T.Flight HOTAS X is a combined stick/throttle. If axes are missing, ensure the device is in PC mode (not PS4 mode) — check the mode switch on the device before plugging in."
+        }
     }
 }
 

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID/PID confirmed: open-siege/siege-studio device info database
+schema_version: "1"
+
+device:
+  name: "T.Flight HOTAS X"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB108
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, z, slider]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: COMBINED_STICK_THROTTLE
+    description: "Single USB device exposes both joystick (X/Y/Rz) and throttle (Z) axes. No split mode."
+  - id: THUMB_THROTTLE
+    description: "Throttle is a left-hand slider; not a separate unit. Range is non-return (friction)."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "VID/PID from open-siege/siege-studio. Budget HOTAS for PS4/PC, commonly seen in beginner setups."
