@@ -128,4 +128,50 @@ mod tests {
         bytes[0] = 0xFF;
         assert!(FfbOutputReport::parse(&bytes).is_none());
     }
+
+    #[test]
+    fn test_invalid_mode_byte_returns_none() {
+        let mut bytes = FfbOutputReport::stop().to_bytes();
+        bytes[5] = 0xFF; // no such mode
+        assert!(FfbOutputReport::parse(&bytes).is_none());
+    }
+
+    #[test]
+    fn test_all_ffb_modes_roundtrip() {
+        for mode in [
+            FfbMode::Off,
+            FfbMode::Constant,
+            FfbMode::Spring,
+            FfbMode::Damper,
+            FfbMode::Friction,
+        ] {
+            let cmd = FfbOutputReport {
+                force_x: 100,
+                force_y: -100,
+                mode,
+                gain: 128,
+            };
+            let parsed = FfbOutputReport::parse(&cmd.to_bytes()).unwrap();
+            assert_eq!(cmd, parsed);
+        }
+    }
+
+    #[test]
+    fn test_format_byte_positions() {
+        let cmd = FfbOutputReport {
+            force_x: 0x0102_i16,
+            force_y: 0x0304_i16,
+            mode: FfbMode::Constant,
+            gain: 0xAB,
+        };
+        let bytes = cmd.to_bytes();
+        assert_eq!(bytes[0], FFB_REPORT_ID);
+        assert_eq!(bytes[1], 0x02); // LE low byte of force_x
+        assert_eq!(bytes[2], 0x01); // LE high byte of force_x
+        assert_eq!(bytes[3], 0x04); // LE low byte of force_y
+        assert_eq!(bytes[4], 0x03); // LE high byte of force_y
+        assert_eq!(bytes[5], FfbMode::Constant as u8);
+        assert_eq!(bytes[6], 0xAB);
+        assert_eq!(bytes[7], 0); // reserved
+    }
 }

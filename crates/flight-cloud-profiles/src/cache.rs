@@ -289,7 +289,7 @@ mod tests {
     #[tokio::test]
     async fn test_cache_evict_removes_entry() {
         use chrono::Utc;
-        use flight_profile::{AircraftId, Profile};
+        use flight_profile::Profile;
         use std::collections::HashMap;
 
         let tmp = tempfile_dir();
@@ -324,7 +324,7 @@ mod tests {
     #[tokio::test]
     async fn test_cache_expired_entry_not_returned() {
         use chrono::Utc;
-        use flight_profile::{AircraftId, Profile};
+        use flight_profile::Profile;
         use std::collections::HashMap;
 
         let tmp = tempfile_dir();
@@ -355,6 +355,79 @@ mod tests {
         let cache_read = ProfileCache::new(tmp.clone(), 0);
         let result = cache_read.get("exp-test").await.unwrap();
         assert!(result.is_none(), "expired entry should not be returned");
+        cleanup_dir(&tmp);
+    }
+
+    #[tokio::test]
+    async fn test_list_cached_returns_fresh_entries() {
+        use chrono::Utc;
+        use flight_profile::Profile;
+        use std::collections::HashMap;
+
+        let tmp = tempfile_dir();
+        let cache = ProfileCache::new(tmp.clone(), 3600);
+
+        for i in 0..3u32 {
+            let profile = CloudProfile {
+                id: format!("list-{i}"),
+                title: format!("Profile {i}"),
+                description: None,
+                author_handle: "anon".to_string(),
+                upvotes: i,
+                downvotes: 0,
+                download_count: 0,
+                published_at: Utc::now(),
+                updated_at: Utc::now(),
+                profile: Profile {
+                    schema: "flight.profile/1".to_string(),
+                    sim: None,
+                    aircraft: None,
+                    axes: HashMap::new(),
+                    pof_overrides: None,
+                },
+            };
+            cache.store(&profile).await.unwrap();
+        }
+
+        let listed = cache.list_cached().await;
+        assert_eq!(listed.len(), 3);
+        cleanup_dir(&tmp);
+    }
+
+    #[tokio::test]
+    async fn test_clear_removes_all_entries() {
+        use chrono::Utc;
+        use flight_profile::Profile;
+        use std::collections::HashMap;
+
+        let tmp = tempfile_dir();
+        let cache = ProfileCache::new(tmp.clone(), 3600);
+
+        for i in 0..2u32 {
+            let profile = CloudProfile {
+                id: format!("clear-{i}"),
+                title: format!("Profile {i}"),
+                description: None,
+                author_handle: "anon".to_string(),
+                upvotes: 0,
+                downvotes: 0,
+                download_count: 0,
+                published_at: Utc::now(),
+                updated_at: Utc::now(),
+                profile: Profile {
+                    schema: "flight.profile/1".to_string(),
+                    sim: None,
+                    aircraft: None,
+                    axes: HashMap::new(),
+                    pof_overrides: None,
+                },
+            };
+            cache.store(&profile).await.unwrap();
+        }
+
+        cache.clear().await.unwrap();
+        assert!(cache.list_cached().await.is_empty());
+        assert!(cache.get("clear-0").await.unwrap().is_none());
         cleanup_dir(&tmp);
     }
 

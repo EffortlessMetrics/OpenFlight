@@ -61,3 +61,4 @@ libc = { workspace = true }
 [dev-dependencies]
 tempfile.workspace = true
 tokio-test.workspace = true
+flight-bus = { path = "../flight-bus" }

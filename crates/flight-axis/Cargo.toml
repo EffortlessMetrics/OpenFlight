@@ -75,6 +75,10 @@ required-features = ["tests-optin"]
 name = "pipeline_composition_tests"
 required-features = ["tests-optin"]
 
+[[test]]
+name = "snapshot_tests"
+required-features = ["tests-optin"]
+
 [[example]]
 name = "basic_usage"
 required-features = ["examples-optin"]

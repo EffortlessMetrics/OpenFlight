@@ -165,4 +165,35 @@ mod tests {
         assert!((report.y_norm() + 1.0).abs() < 1e-4);
         assert!((report.throttle_norm() - 1.0).abs() < 1e-3);
     }
+
+    #[test]
+    fn test_ffb_fault_flag_set() {
+        let mut r = zero_report();
+        r[11] = 1;
+        let report = InputReport::parse(&r).unwrap();
+        assert!(report.ffb_fault);
+    }
+
+    #[test]
+    fn test_button_bitmask_parsed() {
+        let mut r = zero_report();
+        // buttons_lo at bytes 8–9 (LE): set bits 0 and 15
+        r[8] = 0x01;
+        r[9] = 0x80;
+        let report = InputReport::parse(&r).unwrap();
+        assert_eq!(report.buttons, 0x8001);
+    }
+
+    #[test]
+    fn test_hat_position_parsed() {
+        let mut r = zero_report();
+        r[10] = 5; // SW (225°)
+        let report = InputReport::parse(&r).unwrap();
+        assert_eq!(report.hat, 5);
+    }
+
+    #[test]
+    fn test_empty_slice_returns_none() {
+        assert!(InputReport::parse(&[]).is_none());
+    }
 }
