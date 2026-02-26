@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 394 |
-| ACs with tests | 394 |
-| ACs with Gherkin | 394 |
-| ACs with both tests + Gherkin | 394 |
-| Complete | 394 |
-| Needs Gherkin | 0 |
+| Total AC | 399 |
+| ACs with tests | 399 |
+| ACs with Gherkin | 398 |
+| ACs with both tests + Gherkin | 398 |
+| Complete | 398 |
+| Needs Gherkin | 1 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
 | Microcrates with tests | 62 (92.5%) |
-| Microcrates with Gherkin | 62 (92.5%) |
-| Microcrates fully covered | 62 (92.5%) |
+| Microcrates with Gherkin | 61 (91.0%) |
+| Microcrates fully covered | 61 (91.0%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 100.0% |
+| Gherkin coverage | 99.7% |
+| Test + Gherkin coverage | 99.7% |
 
 ## BDD Microcrate Matrix
 
@@ -49,7 +49,7 @@
 | flight-cloud-profiles | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-core | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
-| flight-device-common | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-device-common | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-moza | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
@@ -75,7 +75,7 @@
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-open-hardware | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
-| flight-panels-core | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-panels-core | 4 | 4 | 3 | 3 | 3 | 100.0% | 75.0% | 75.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
@@ -466,6 +466,7 @@
 | REQ-30 | AC-30.1 | WHEN LED state is set THEN on, off, and blink modes SHALL be applied correctly | specs/features/req_30_panel_led.feature:5<br>specs/features/req_30_panel_led.feature:11<br>specs/features/req_30_panel_led.feature:17 | 3 | ✅ Complete |
 | REQ-30 | AC-30.2 | WHEN LED updates are rate limited THEN updates SHALL not be sent more frequently than the minimum interval | specs/features/req_30_panel_led.feature:23 | 2 | ✅ Complete |
 | REQ-30 | AC-30.3 | WHEN bytecode rules are evaluated THEN LED state SHALL be updated according to the rule's logic | specs/features/req_30_panel_led.feature:29<br>specs/features/req_30_panel_led.feature:35 | 3 | ✅ Complete |
+| REQ-30 | AC-30.4 | WHEN LED targets, brightness bounds, and state transitions are exercised THEN target equality SHALL hold, brightness SHALL be clamped to [0,1], and state sequences SHALL be correct | - | 5 | 🟡 Needs Gherkin |
 | REQ-31 | AC-31.1 | WHEN tactile effects are triggered THEN intensity SHALL be validated and expired effects SHALL be discarded | specs/features/req_31_tactile_feedback.feature:5<br>specs/features/req_31_tactile_feedback.feature:11 | 2 | ✅ Complete |
 | REQ-31 | AC-31.2 | WHEN flight events are detected THEN touchdown, stall buffet, and ground roll effects SHALL fire | specs/features/req_31_tactile_feedback.feature:17<br>specs/features/req_31_tactile_feedback.feature:23<br>specs/features/req_31_tactile_feedback.feature:29 | 3 | ✅ Complete |
 | REQ-31 | AC-31.3 | WHEN the SimShaker bridge is configured THEN packets SHALL be created and sent with correct channel values | specs/features/req_31_tactile_feedback.feature:35<br>specs/features/req_31_tactile_feedback.feature:41 | 3 | ✅ Complete |
@@ -481,6 +482,10 @@
 | INF-REQ-13 | AC-13.1 | WHEN building test configurations THEN the config builder SHALL produce sensible defaults | specs/features/req_inf_13_test_helpers.feature:5<br>specs/features/req_inf_13_test_helpers.feature:11 | 2 | ✅ Complete |
 | INF-REQ-13 | AC-13.2 | WHEN running harness-based integration tests THEN timeouts SHALL be enforced | specs/features/req_inf_13_test_helpers.feature:17 | 1 | ✅ Complete |
 | INF-REQ-13 | AC-13.3 | WHEN using test utilities THEN temp dir creation and condition waiting SHALL work reliably | specs/features/req_inf_13_test_helpers.feature:23<br>specs/features/req_inf_13_test_helpers.feature:29 | 2 | ✅ Complete |
+| INF-REQ-14 | AC-14.1 | WHEN a DeviceId is created THEN vid_pid SHALL format as lowercase hex and display SHALL include the serial number when present | - | 4 | 🟡 Needs Gherkin |
+| INF-REQ-14 | AC-14.2 | WHEN a virtual DeviceId is created THEN it SHALL use the virtual:// path scheme and carry the serial number | - | 1 | 🟡 Needs Gherkin |
+| INF-REQ-15 | AC-15.1 | WHEN a device is healthy or degraded THEN is_operational SHALL return true; quarantined and failed devices SHALL return false | - | 2 | 🟡 Needs Gherkin |
+| INF-REQ-15 | AC-15.2 | WHEN querying the health reason THEN degraded, quarantined, and failed states SHALL each return their reason string | - | 3 | 🟡 Needs Gherkin |
 | REQ-63 | AC-63.1 | WHEN a profile is serialized and deserialized THEN all fields SHALL be preserved across JSON, YAML, and TOML formats | specs/features/req_63_flight_core.feature:5<br>specs/features/req_63_flight_core.feature:11 | 3 | ✅ Complete |
 | REQ-63 | AC-63.2 | WHEN merge_with is applied THEN override values SHALL replace base values without clobbering unset fields, and the operation SHALL be idempotent when merged with self | specs/features/req_63_flight_core.feature:17<br>specs/features/req_63_flight_core.feature:23 | 3 | ✅ Complete |
 | REQ-63 | AC-63.3 | WHEN a profile fails validation rules THEN errors SHALL be returned for unknown schema versions, out-of-range deadzone, out-of-range expo, and invalid curve definitions | specs/features/req_63_flight_core.feature:29 | 4 | ✅ Complete |
