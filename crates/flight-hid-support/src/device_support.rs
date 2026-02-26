@@ -103,6 +103,16 @@ pub const TFLIGHT_HOTAS_4_PID_LEGACY: u16 = 0xB67A;
 /// Confirmed: VID 0x044F (Thrustmaster), PID 0xB108 — from open-siege/siege-studio device info.
 pub const TFLIGHT_HOTAS_X_PID: u16 = 0xB108;
 
+/// USB Product ID for the T.Flight Stick X (standalone joystick, primary firmware variant).
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0xB106 — linux-hardware.org (28 probes, "T.Flight Stick X").
+/// See also TFLIGHT_STICK_X_PID_V2 for the alternate firmware variant 0xB107.
+pub const TFLIGHT_STICK_X_PID: u16 = 0xB106;
+/// USB Product ID for the T.Flight Stick X alternate firmware variant.
+///
+/// Confirmed: VID 0x044F (Thrustmaster), PID 0xB107 — linux-hardware.org ("T.Flight Stick X").
+pub const TFLIGHT_STICK_X_PID_V2: u16 = 0xB107;
+
 /// USB Product ID for the T.16000M FCS joystick.
 ///
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0xB10A — from linux-hardware.org probe data.
