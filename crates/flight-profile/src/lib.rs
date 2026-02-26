@@ -953,4 +953,80 @@ mod tests {
         let err = serde_yaml::from_str::<Profile>(yaml).unwrap_err();
         insta::assert_snapshot!("validation_error_missing_schema_field", err.to_string());
     }
+
+    /// YAML round-trip snapshot: Profile → YAML output shape.
+    /// Catches regressions in field names and serialization format.
+    #[test]
+    fn snapshot_profile_yaml_round_trip() {
+        let profile = create_valid_profile();
+        insta::assert_yaml_snapshot!("profile_yaml_round_trip", profile);
+    }
+
+    /// YAML snapshot of a Profile with all optional fields populated.
+    #[test]
+    fn snapshot_profile_full_fields_yaml() {
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.2),
+                slew_rate: Some(1.2),
+                detents: vec![DetentZone {
+                    position: 0.0,
+                    width: 0.05,
+                    role: "center".to_string(),
+                }],
+                curve: Some(vec![
+                    CurvePoint {
+                        input: 0.0,
+                        output: 0.0,
+                    },
+                    CurvePoint {
+                        input: 0.5,
+                        output: 0.35,
+                    },
+                    CurvePoint {
+                        input: 1.0,
+                        output: 1.0,
+                    },
+                ]),
+                filter: Some(FilterConfig {
+                    alpha: 0.3,
+                    spike_threshold: Some(0.05),
+                    max_spike_count: Some(3),
+                }),
+            },
+        );
+        let profile = Profile {
+            schema: PROFILE_SCHEMA_VERSION.to_string(),
+            sim: Some("msfs".to_string()),
+            aircraft: Some(AircraftId {
+                icao: "A320".to_string(),
+            }),
+            axes,
+            pof_overrides: None,
+        };
+        insta::assert_yaml_snapshot!("profile_full_fields_yaml", profile);
+    }
+
+    /// JSON snapshot of the capability manifest for each mode.
+    /// Catches regressions in limit values and field structure.
+    #[test]
+    fn snapshot_capability_manifest_full() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Full);
+        insta::assert_json_snapshot!("capability_manifest_full", ctx);
+    }
+
+    #[test]
+    fn snapshot_capability_manifest_demo() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Demo);
+        insta::assert_json_snapshot!("capability_manifest_demo", ctx);
+    }
+
+    #[test]
+    fn snapshot_capability_manifest_kid() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Kid);
+        insta::assert_json_snapshot!("capability_manifest_kid", ctx);
+    }
 }

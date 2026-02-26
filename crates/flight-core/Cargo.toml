@@ -33,3 +33,5 @@ flight-metrics = { path = "../flight-metrics" }
 [dev-dependencies]
 proptest.workspace = true
 tempfile.workspace = true
+serde_yaml.workspace = true
+toml.workspace = true

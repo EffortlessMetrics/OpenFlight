@@ -1,0 +1,29 @@
+---
+source: crates/flight-profile/src/lib.rs
+expression: profile
+---
+schema: flight.profile/1
+sim: msfs
+aircraft:
+  icao: A320
+axes:
+  pitch:
+    deadzone: 0.03
+    expo: 0.2
+    slew_rate: 1.2
+    detents:
+      - position: 0
+        width: 0.05
+        role: center
+    curve:
+      - input: 0
+        output: 0
+      - input: 0.5
+        output: 0.35
+      - input: 1
+        output: 1
+    filter:
+      alpha: 0.3
+      spike_threshold: 0.05
+      max_spike_count: 3
+pof_overrides: ~

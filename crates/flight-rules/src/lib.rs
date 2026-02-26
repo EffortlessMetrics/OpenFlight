@@ -64,7 +64,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,
@@ -75,7 +75,7 @@ pub enum CompareOp {
 }
 
 /// Rule action parsed from DSL string
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum Action {
     /// Turn LED on
     LedOn { target: String },
@@ -93,7 +93,7 @@ pub struct RulesCompiler {
 }
 
 /// Bytecode instruction for rules evaluation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum BytecodeOp {
     /// Load variable value onto stack: LOAD var_index
     LoadVar(u16),
@@ -120,7 +120,7 @@ pub enum BytecodeOp {
 }
 
 /// Compiled bytecode program
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct BytecodeProgram {
     /// Bytecode instructions
     pub instructions: Vec<BytecodeOp>,
@@ -1181,5 +1181,49 @@ mod snapshot_tests {
         };
         let err = schema.validate().unwrap_err();
         insta::assert_debug_snapshot!("error_empty_action", err);
+    }
+
+    /// Snapshot the YAML representation of a multi-rule RulesSchema (DSL input shape).
+    #[test]
+    fn snapshot_rules_schema_yaml() {
+        let mut hysteresis = HashMap::new();
+        hysteresis.insert("aoa".to_string(), 0.5_f32);
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear == DOWN".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "aoa > 14.5".to_string(),
+                    do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                    action: "led.indexer.blink(rate_hz=6)".to_string(),
+                },
+            ],
+            defaults: Some(RuleDefaults {
+                hysteresis: Some(hysteresis),
+            }),
+        };
+        insta::assert_yaml_snapshot!("rules_schema_yaml", schema);
+    }
+
+    /// Snapshot the compiled bytecode program in YAML — catches structural regressions
+    /// in the compiler output without requiring Debug format text diffs.
+    #[test]
+    fn snapshot_compiled_bytecode_yaml() {
+        // Single-variable rule: deterministic variable_map ordering.
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear == DOWN".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled = rules.compile().expect("gear-down rule should compile");
+        insta::assert_yaml_snapshot!("compiled_bytecode_yaml", compiled.bytecode);
     }
 }

@@ -1,0 +1,15 @@
+---
+source: crates/flight-profile/src/lib.rs
+expression: ctx
+---
+{
+  "mode": "Kid",
+  "limits": {
+    "max_axis_output": 0.5,
+    "max_ffb_torque": 5.0,
+    "allow_high_torque": false,
+    "max_expo": 0.3,
+    "max_slew_rate": 20.0
+  },
+  "audit_enabled": false
+}
