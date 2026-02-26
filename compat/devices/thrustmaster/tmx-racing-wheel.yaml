@@ -1,0 +1,69 @@
+# Thrustmaster TMX Force Feedback Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID/PID confirmed from two independent sources:
+#   1. libsdl-org/SDL SDL2 branch: initial_wheel_devices[]
+#      MAKE_VIDPID(0x044f, 0xb67f), /* Thrustmaster TMX */
+#   2. linux-hardware.org: usb:044f:b67f "TMX Racing Wheel"
+#      (ThrustMaster vendor, 2 independent system probes)
+#
+# Flight sim relevance: the TMX is widely used as an axis input device in
+# flight simulators, particularly for rudder/nose-wheel steering (wheel axis)
+# and throttle/brake (pedal axes). It is not a dedicated flight sim device.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TMX Force Feedback Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB67F      # Confirmed: linux-hardware.org (2 probes) + SDL2 source
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 16
+  buttons: 14
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (full rotation range ≈900°, centred at mid-point);
+      Z = accelerator pedal (unipolar, 0 = released, max = floored);
+      Rz = brake pedal (unipolar, 0 = released, max = floored).
+      When used in flight sims, X is typically mapped to rudder or aileron
+      and Z/Rz to throttle/brake.
+  - id: FFB_BASIC_RUMBLE
+    description: >
+      Force feedback on the TMX uses a basic belt-driven rumble motor
+      rather than the full servo-based FFB found on higher-end Thrustmaster
+      wheels (T300RS, T-GT). DirectInput FFB effects are supported but
+      fidelity is limited to constant force and sine-wave patterns.
+  - id: AXIS_COUNTS_UNVERIFIED
+    description: >
+      Axis layout and button count are derived from community documentation.
+      HIL verification on physical hardware is recommended.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Racing wheel with basic force feedback. Not a dedicated flight sim
+    device, but commonly used in flight simulators for rudder axis input.
+    VID/PID confirmed from SDL2 source and linux-hardware.org (2 probes).
+    Axis layout and button count are community-sourced; HIL verification
+    pending. Last validated: 2026-02.

@@ -1,0 +1,60 @@
+# Saitek Pro Flight X-56 Rhino Throttle (Mad Catz era)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID/PID confirmed from two independent sources:
+#   1. libsdl-org/SDL SDL2 branch: initial_throttle_devices[]
+#      MAKE_VIDPID(0x0738, 0xa221), /* Saitek Pro Flight X-56 Rhino Throttle */
+#   2. linux-hardware.org: usb:0738:a221 "Saitek Pro Flight X-56 Rhino Throttle"
+#      (Mad Catz vendor, 30 independent system probes)
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight X-56 Rhino Throttle"
+  vendor: "Mad Catz / Logitech"
+  usb:
+    vendor_id: 0x0738       # Mad Catz, Inc.
+    product_id: 0xA221      # Confirmed: linux-hardware.org (30 probes) + SDL2 source
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [z, slider, rx, ry, rz, throttle2]
+    resolution_bits: 12
+  buttons: 26
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SPLIT_COMPOSITE
+    description: >
+      Throttle (0xA221) and stick (0x2221) are separate USB HID devices.
+      Both must be enumerated for full axis coverage.
+  - id: DUAL_THROTTLE
+    description: >
+      Left and right throttle halves appear as separate axes (Z and
+      throttle2). The combined mode presents a single Z axis.
+  - id: AXIS_COUNTS_UNVERIFIED
+    description: >
+      Axis count and names are derived from community documentation and
+      Linux evtest captures; they have not been validated on physical
+      hardware. HIL verification is recommended.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Mad Catz era X-56 Rhino Throttle. VID/PID confirmed from SDL2 source
+    and linux-hardware.org (30 probes). The paired stick uses PID 0x2221
+    (see x56-rhino-stick.yaml). Axis layout derived from community
+    reports; HIL verification pending. Last validated: 2026-02.

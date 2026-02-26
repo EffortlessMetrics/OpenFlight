@@ -40,6 +40,8 @@
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Saitek X52 Flight Control System | 0x06A3 | 0x075C | 7 | 28 | ✗ | 2 |
 | Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |
+| Saitek Pro Flight X-56 Rhino Stick | 0x0738 | 0x2221 | 5 | 24 | ✗ | 2 |
+| Saitek Pro Flight X-56 Rhino Throttle | 0x0738 | 0xA221 | 6 | 26 | ✗ | 2 |
 | Logitech X56 Rhino HOTAS | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
 | Thrustmaster HOTAS Cougar Stick | 0x044F | 0x0400 | 5 | 19 | ✗ | 3 |
 | Thrustmaster F-16 MFD Cougar Panel 1 | 0x044F | 0xB351 | 0 | 19 | ✗ | 3 |
@@ -59,6 +61,7 @@
 | Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
 | Thrustmaster T.Flight Stick X | 0x044F | 0xB106 | 5 | 12 | ✗ | 2 |
 | T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |
+| Thrustmaster TMX Force Feedback Racing Wheel | 0x044F | 0xB67F | 3 | 14 | ✓ | 3 |
 | Thrustmaster T-Pendular Rudder Bulk | 0x044F | 0xB68E | 3 | 0 | ✗ | 2 |
 | Thrustmaster T-Pendular Rudder (TPR) | 0x044F | 0xB68F | 3 | 0 | ✗ | 2 |
 | Thrustmaster TWCS Throttle | 0x044F | 0xB687 | 4 | 14 | ✗ | 2 |

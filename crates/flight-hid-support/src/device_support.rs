@@ -132,6 +132,13 @@ pub const T16000M_JOYSTICK_PID: u16 = 0xB10A;
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0xB687 — from linux-hardware.org probe data.
 pub const TWCS_THROTTLE_PID: u16 = 0xB687;
 
+/// USB Product ID for the Thrustmaster TMX Force Feedback Racing Wheel.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB67F — linux-hardware.org ("TMX Racing Wheel",
+/// 2 probes) + libsdl-org/SDL SDL2 initial_wheel_devices[].
+/// Primarily a racing wheel but commonly used in flight simulators for rudder input.
+pub const TMX_RACING_WHEEL_PID: u16 = 0xB67F;
+
 /// USB Product ID for the HOTAS Warthog Joystick.
 ///
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0x0402 — from linux-hardware.org probe data.
@@ -222,18 +229,19 @@ pub const X52_PRO_PID: u16 = 0x0762;
 pub const X55_STICK_PID: u16 = 0x2215;
 pub const X55_THROTTLE_PID: u16 = 0xA215;
 
-// X56 family - Mad Catz era (split USB, VID 0x0738) - confidence: LIKELY
-// These are the "blue" X56 units from the Mad Catz acquisition period
+// X56 family - Mad Catz era (split USB, VID 0x0738) - confidence: CONFIRMED
+// Confirmed: linux-hardware.org (stick 26 probes, throttle 30 probes) + SDL2 source
+// (libsdl-org/SDL SDL2 initial_flightstick_devices / initial_throttle_devices)
 pub const X56_MADCATZ_STICK_PID: u16 = 0x2221;
 pub const X56_MADCATZ_THROTTLE_PID: u16 = 0xA221;
 
-// X56 family - Logitech branded (split USB, VID 0x046D) - confidence: LIKELY/SUSPECT
-// Stick PID 0xC229 is likely correct
-// WARNING: Throttle PID 0xC22A may conflict with Logitech G110 keyboard!
-// See docs/reference/hotas-claims.md - requires lsusb verification from real hardware
-pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
-// SUSPECT: This PID needs verification - do NOT match unknown Logitech PIDs
-// pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
+// X56 family - Logitech branded (split USB, VID 0x046D) - confidence: SUSPECT/WRONG
+// WARNING: PID 0xC229 is confirmed as "G19 Gaming Keyboard Macro Interface" on
+// linux-hardware.org (80 probes). PID 0xC22A is "Gaming Keyboard G110" (116 probes).
+// Neither is the Logitech-era X56. See docs/reference/hotas-claims.md.
+// Do NOT use these PIDs for X56 matching until correct Logitech X56 PIDs are confirmed.
+pub const X56_LOGITECH_STICK_PID: u16 = 0xC229; // WRONG: this is a G19 keyboard macro IF
+// WRONG: pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A; // This is a G110 keyboard
 
 // Saitek standalone devices - confidence: CONFIRMED (linux-hardware.org)
 // 0x0764: Flight Pro Combat Rudder (2 probes) - pre-Pro Flight era gaming rudder pedals
