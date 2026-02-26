@@ -76,6 +76,7 @@
 
 | Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |
 |------|-------------|-----------|-------------------|-----|------------|
+| Ace Combat 7: Skies Unknown | UDP Telemetry Bridge (JSON) | ✓ | ✗ | ✗ | ✗ |
 | DCS World | Lua Export Script + UDP | ✓ | ✗ | ✗ | ✗ |
 | Elite Dangerous | Journal File (NDJSON) | ✓ | ✗ | ✗ | ✗ |
 | Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |

@@ -32,6 +32,8 @@ test_coverage:
   integration_tests: true   # Connection + snapshot pipeline tests in adapter.rs
   hil: false
 
+support_tier: 3
+
 known_issues:
   - id: CONTROL_INJECTION_NOT_IMPLEMENTED
     description: >

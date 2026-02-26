@@ -31,6 +31,8 @@ test_coverage:
   integration_tests: true # adapter::tests — snapshot pipeline + stale timeout
   hil: false
 
+support_tier: 1
+
 known_issues:
   - id: PLUGIN_INTERFACE_OPTIONAL
     description: >
