@@ -19,6 +19,7 @@
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |
 | Logitech X56 Rhino HOTAS | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
+| Thrustmaster HOTAS Cougar Stick | 0x044F | 0x0400 | 5 | 19 | ✗ | 3 |
 | T-Rudder | 0x044F | 0xB679 | 3 | 0 | ✗ | 2 |
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
 | T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
@@ -29,7 +30,9 @@
 | Thrustmaster HOTAS Warthog Throttle | 0x044F | 0x0404 | 5 | 40 | ✗ | 2 |
 | VIRPIL VPC Throttle CM3 | 0x3344 | 0x0194 | 6 | 78 | ✗ | 2 |
 | VIRPIL VPC Control Panel 1 | 0x3344 | 0x025B | 0 | 48 | ✗ | 2 |
+| VIRPIL VPC Control Panel 2 | 0x3344 | 0x0259 | 2 | 47 | ✗ | 2 |
 | VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0126 | 8 | 32 | ✗ | 2 |
 | VKB STECS Mini Left | 0x231D | 0x0136 | 5 | 96 | ✗ | 2 |

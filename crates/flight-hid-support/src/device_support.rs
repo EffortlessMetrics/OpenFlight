@@ -83,6 +83,12 @@ pub const WARTHOG_JOYSTICK_PID: u16 = 0x0402;
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0x0404 — from linux-hardware.org probe data.
 pub const WARTHOG_THROTTLE_PID: u16 = 0x0404;
 
+/// USB Product ID for the HOTAS Cougar stick.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x0400 — from linux-hardware.org probe data
+/// (ID usb:044f:0400, "ThrustMaster HOTAS Cougar").
+pub const COUGAR_HOTAS_STICK_PID: u16 = 0x0400;
+
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
 //
@@ -127,6 +133,18 @@ pub const VIRPIL_MONGOOST_STICK_PID: u16 = 0x4130;
 ///
 /// Source: Buzzec/virpil open-source Rust LED control library.
 pub const VIRPIL_PANEL1_PID: u16 = 0x025B;
+
+/// USB Product ID for the VIRPIL VPC Control Panel 2 (Right Panel).
+///
+/// Confirmed: VID 0x3344, PID 0x0259 — from Buzzec/virpil open-source Rust LED control library
+/// (src/right_panel.rs, `const PID: u16 = 0x0259`).
+pub const VIRPIL_PANEL2_PID: u16 = 0x0259;
+
+/// USB Product ID for the VIRPIL VPC Shark Panel.
+///
+/// Confirmed: VID 0x3344, PID 0x825D — from Buzzec/virpil open-source Rust LED control library
+/// (src/shark_panel.rs, `const PID: u16 = 0x825D`).
+pub const VIRPIL_SHARK_PANEL_PID: u16 = 0x825D;
 
 /// USB Vendor ID for CH Products.
 ///
@@ -262,6 +280,34 @@ pub fn warthog_model(product_id: u16) -> Option<WarthogModel> {
     }
 }
 
+/// HOTAS Cougar product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CougarHotasModel {
+    /// HOTAS Cougar Stick. VID 0x044F, PID 0x0400.
+    Stick,
+}
+
+impl CougarHotasModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            CougarHotasModel::Stick => "HOTAS Cougar Stick",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a HOTAS Cougar device.
+pub fn is_cougar_hotas_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID && product_id == COUGAR_HOTAS_STICK_PID
+}
+
+/// Returns the Cougar HOTAS model for a known PID, or `None` for unknown PIDs.
+pub fn cougar_hotas_model(product_id: u16) -> Option<CougarHotasModel> {
+    match product_id {
+        COUGAR_HOTAS_STICK_PID => Some(CougarHotasModel::Stick),
+        _ => None,
+    }
+}
+
 /// VIRPIL Controls VPC product family models.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VirpilModel {
@@ -269,8 +315,12 @@ pub enum VirpilModel {
     Cm3Throttle,
     /// VPC MongoosT-50CM3 (right stick). VID 0x3344, PID 0x4130.
     MongoostStick,
-    /// VPC Control Panel 1. VID 0x3344, PID 0x025B.
+    /// VPC Control Panel 1 (left panel). VID 0x3344, PID 0x025B.
     ControlPanel1,
+    /// VPC Control Panel 2 (right panel). VID 0x3344, PID 0x0259.
+    ControlPanel2,
+    /// VPC Shark Panel. VID 0x3344, PID 0x825D.
+    SharkPanel,
 }
 
 impl VirpilModel {
@@ -279,6 +329,8 @@ impl VirpilModel {
             VirpilModel::Cm3Throttle => "VPC Throttle CM3",
             VirpilModel::MongoostStick => "VPC MongoosT-50CM3 Stick",
             VirpilModel::ControlPanel1 => "VPC Control Panel 1",
+            VirpilModel::ControlPanel2 => "VPC Control Panel 2",
+            VirpilModel::SharkPanel => "VPC Shark Panel",
         }
     }
 }
@@ -288,7 +340,11 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == VIRPIL_VENDOR_ID
         && matches!(
             product_id,
-            VIRPIL_CM3_THROTTLE_PID | VIRPIL_MONGOOST_STICK_PID | VIRPIL_PANEL1_PID
+            VIRPIL_CM3_THROTTLE_PID
+                | VIRPIL_MONGOOST_STICK_PID
+                | VIRPIL_PANEL1_PID
+                | VIRPIL_PANEL2_PID
+                | VIRPIL_SHARK_PANEL_PID
         )
 }
 
@@ -298,6 +354,8 @@ pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
         VIRPIL_CM3_THROTTLE_PID => Some(VirpilModel::Cm3Throttle),
         VIRPIL_MONGOOST_STICK_PID => Some(VirpilModel::MongoostStick),
         VIRPIL_PANEL1_PID => Some(VirpilModel::ControlPanel1),
+        VIRPIL_PANEL2_PID => Some(VirpilModel::ControlPanel2),
+        VIRPIL_SHARK_PANEL_PID => Some(VirpilModel::SharkPanel),
         _ => None,
     }
 }
