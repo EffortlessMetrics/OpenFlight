@@ -53,12 +53,17 @@
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |
+| VKB Gunfighter Modern Combat Pro | 0x231D | 0x0125 | 8 | 32 | ✗ | 3 |
+| VKB Space Gunfighter L | 0x231D | 0x0127 | 8 | 32 | ✗ | 3 |
+| VKB Space Gunfighter | 0x231D | 0x0126 | 8 | 32 | ✗ | 3 |
 | VKB STECS Mini Left | 0x231D | 0x0136 | 5 | 96 | ✗ | 2 |
 | VKB STECS Mini+ Left | 0x231D | 0x0137 | 5 | 96 | ✗ | 2 |
 | VKB STECS Mini+ Right | 0x231D | 0x013B | 5 | 96 | ✗ | 2 |
 | VKB STECS Mini Right | 0x231D | 0x013A | 5 | 96 | ✗ | 2 |
 | VKB S-TECS Modern Throttle Max | 0x231D | 0x012E | 5 | 48 | ✗ | 3 |
+| VKB S-TECS Modern Throttle Mini Plus | 0x231D | 0x012C | 5 | 48 | ✗ | 3 |
 | VKB S-TECS Modern Throttle Mini | 0x231D | 0x012B | 5 | 32 | ✗ | 3 |
+| VKB S-TECS Modern Throttle Standard Stem | 0x231D | 0x012D | 5 | 48 | ✗ | 3 |
 | VKB STECS Standard Left | 0x231D | 0x0138 | 5 | 96 | ✗ | 2 |
 | VKB STECS Standard Right | 0x231D | 0x013C | 5 | 96 | ✗ | 2 |
 | VKB STECS Standard | 0x231D | 0x0127 | 5 | 96 | ✗ | 2 |

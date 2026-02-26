@@ -295,6 +295,41 @@ pub const VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID: u16 = 0x0204;
 /// USB string "VKBsim Gladiator Modern Combat Pro", vendor "VKB-Sim Alex Oz 2021").
 pub const VKB_GLADIATOR_MODERN_COMBAT_PRO_PID: u16 = 0x0131;
 
+/// USB Product ID for the VKB Gunfighter Modern Combat Pro (heavy desktop base + MCG Pro grip).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0125 — linux-hardware.org (3 probes,
+/// USB string "VKBsim Gunfighter Modern Combat Pro", vendor "Alex Oz 7238-D030").
+/// Note: distinct from `VKB_GLADIATOR_MODERN_COMBAT_PRO_PID` (0x0131), which uses the lighter
+/// Gladiator base. This PID corresponds to the heavier Gunfighter pedestal base.
+pub const VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID: u16 = 0x0125;
+
+/// USB Product ID for the VKB Space Gunfighter (Gunfighter pedestal base, right-hand or
+/// unspecified chirality).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0126 — linux-hardware.org (2 probes,
+/// USB string "VKBsim Space Gunfighter", vendor "VKB-Sim (C) Alex Oz 2023").
+pub const VKB_SPACE_GUNFIGHTER_PID: u16 = 0x0126;
+
+/// USB Product ID for the VKB Space Gunfighter L (left-hand variant).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0127 — linux-hardware.org (3 probes,
+/// USB string "VKBSim Space Gunfighter L", vendor "VKB-Sim (C) Alex Oz 2023").
+pub const VKB_SPACE_GUNFIGHTER_LEFT_PID: u16 = 0x0127;
+
+/// USB Product ID for the VKB S-TECS Modern Throttle Mini Plus (2023 generation).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x012C — linux-hardware.org (1 probe,
+/// USB string "S-TECS MODERN THROTTLE MINI PLUS", vendor "VKB-Sim (C) Alex Oz 2023").
+/// Expanded-button variant of the Modern Throttle Mini (`VKB_STECS_MODERN_THROTTLE_MINI_PID`
+/// 0x012B).
+pub const VKB_STECS_MODERN_THROTTLE_MINI_PLUS_PID: u16 = 0x012C;
+
+/// USB Product ID for the VKB S-TECS Modern Throttle Standard Stem (2023 generation).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x012D — linux-hardware.org (4 probes,
+/// USB string "S-TECS MODERN THROTTLE STANDARD STEM", vendor "VKB-Sim (C) Alex Oz 2023").
+pub const VKB_STECS_MODERN_THROTTLE_STANDARD_STEM_PID: u16 = 0x012D;
+
 /// USB Vendor ID for all WinWing products.
 ///
 /// Confirmed: VID 0x4098 — all WinWing USB HID devices (Orion series, UFC, SKYWALKER).
