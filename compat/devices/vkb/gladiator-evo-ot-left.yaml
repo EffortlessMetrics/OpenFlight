@@ -1,0 +1,57 @@
+# VKB Gladiator EVO OT L
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x231D (VKB), PID 0x3201 — linux-hardware.org (2 probes,
+# USB string "VKBsim Gladiator EVO OT L").
+# "OT" = Omni-Throttle grip variant; left-hand edition of the Gladiator EVO series.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO OT L"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D   # VKB-Sim (C) Alex Oz 2023
+    product_id: 0x3201  # VKBsim Gladiator EVO OT L — confirmed via linux-hardware.org (2 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: LEFT_HAND_GRIP
+    description: >
+      Left-hand (port-side) grip variant of the Gladiator EVO family.
+      Axis mapping is mirrored vs the right-hand (starboard) EVO R (0x0200).
+  - id: OT_GRIP_VARIANT
+    description: >
+      "OT" designates the Omni-Throttle grip configuration, which differs from
+      the standard Gladiator EVO grip in stick-top button layout and grip shape.
+  - id: VKB_FIRMWARE_CONFIGURABLE
+    description: >
+      VKB sticks are highly configurable via VKBDevCfg firmware tool.
+      Axis count and button mappings can be remapped by the user; defaults are
+      listed here (firmware v3.x with standard profile).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x3201 confirmed from linux-hardware.org ("VKBsim Gladiator EVO OT L", 2 probes).
+    Left-hand variant of the Gladiator EVO line, released 2023/2024.
+    Axis/button counts are estimates; verify with VKBDevCfg or HID descriptor dump.
+    Last validated: 2026-02.
