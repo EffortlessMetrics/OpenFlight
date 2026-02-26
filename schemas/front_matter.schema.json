@@ -28,7 +28,11 @@
         "flight-ffb",
         "flight-panels",
         "infra",
-        "ci"
+        "ci",
+        "simulation",
+        "integration",
+        "ksp",
+        "profile"
       ]
     },
     "status": {

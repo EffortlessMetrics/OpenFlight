@@ -61,6 +61,10 @@ pub enum Area {
     FlightPanels,
     Infra,
     Ci,
+    Simulation,
+    Integration,
+    Ksp,
+    Profile,
 }
 
 /// Document status enumeration.

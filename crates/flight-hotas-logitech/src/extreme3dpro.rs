@@ -166,10 +166,10 @@ pub fn parse_extreme_3d_pro(data: &[u8]) -> Result<Extreme3DProInputState, Extre
     let y = ((data[1] as u16) >> 2) | ((data[2] as u16 & 0x0F) << 6);
 
     // Twist: bits 20-27
-    let twist = ((data[2] >> 4) | ((data[3] & 0x0F) << 4)) as u8;
+    let twist = (data[2] >> 4) | ((data[3] & 0x0F) << 4);
 
     // Throttle: bits 28-34 (7 bits)
-    let throttle_raw = ((data[3] >> 4) | ((data[4] & 0x07) << 4)) as u8;
+    let throttle_raw = (data[3] >> 4) | ((data[4] & 0x07) << 4);
 
     // Buttons: bits 35-46 (12 buttons)
     let btn_low = (data[4] >> 3) as u16; // 5 bits from byte 4
@@ -177,7 +177,7 @@ pub fn parse_extreme_3d_pro(data: &[u8]) -> Result<Extreme3DProInputState, Extre
     let buttons = btn_low | (btn_high << 5);
 
     // Hat: bits 47-50 (4 bits)
-    let hat_raw = ((data[5] >> 7) | ((data[6] & 0x07) << 1)) as u8;
+    let hat_raw = (data[5] >> 7) | ((data[6] & 0x07) << 1);
 
     Ok(Extreme3DProInputState {
         axes: Extreme3DProAxes {
