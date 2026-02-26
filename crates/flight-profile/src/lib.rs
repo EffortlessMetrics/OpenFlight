@@ -705,6 +705,92 @@ mod tests {
             let kid_context = CapabilityContext::for_mode(CapabilityMode::Kid);
             prop_assert!(profile.validate_with_capabilities(&kid_context).is_err());
         }
+
+        // Prop: merging a profile with itself is idempotent (result equals the original)
+        #[test]
+        fn prop_merge_with_self_is_idempotent(
+            deadzone in 0.0f32..0.5f32,
+            expo in 0.0f32..1.0f32,
+            axis_name in "[a-z]+",
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                axis_name,
+                AxisConfig {
+                    deadzone: Some(deadzone),
+                    expo: Some(expo),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: Some("msfs".to_string()),
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            let merged = profile.merge_with(&profile).unwrap();
+            prop_assert_eq!(profile, merged);
+        }
+
+        // Prop: any normal f32 deadzone that passes validation is within [0.0, 0.5]
+        #[test]
+        fn prop_deadzone_clamped_by_validation(d in proptest::num::f32::NORMAL) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                "test".to_string(),
+                AxisConfig {
+                    deadzone: Some(d),
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None,
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            if profile.validate().is_ok() {
+                prop_assert!(d >= 0.0 && d <= MAX_DEADZONE,
+                    "validation passed but deadzone {} is outside [0.0, {}]", d, MAX_DEADZONE);
+            }
+        }
+
+        // Prop: any normal f32 expo that passes validation is within [0.0, 1.0]
+        #[test]
+        fn prop_expo_clamped_by_validation(e in proptest::num::f32::NORMAL) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                "test".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: Some(e),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None,
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            if profile.validate().is_ok() {
+                prop_assert!(e >= 0.0 && e <= MAX_EXPO,
+                    "validation passed but expo {} is outside [0.0, {}]", e, MAX_EXPO);
+            }
+        }
     }
 
     // ── validation edge cases ─────────────────────────────────────────────────

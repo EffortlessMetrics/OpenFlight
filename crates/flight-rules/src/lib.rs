@@ -983,6 +983,69 @@ mod tests {
                  prop_assert!(false, "Failed to parse valid LED OFF action: {}", expr);
             }
         }
+
+        // Prop: a valid schema rule (boolean condition) compiles to non-empty bytecode
+        #[test]
+        fn prop_valid_rule_compiles_to_bytecode(
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
+            val in -1000.0f32..1000.0f32,
+            target in "[A-Z][A-Z0-9_]*",
+        ) {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: format!("{} > {}", var_name, val),
+                    do_action: format!("led.panel('{}').on()", target),
+                    action: format!("led.panel('{}').on()", target),
+                }],
+                defaults: None,
+            };
+            prop_assert!(schema.validate().is_ok());
+            let result = schema.compile();
+            prop_assert!(result.is_ok(), "compile failed: {:?}", result.err());
+            prop_assert!(!result.unwrap().bytecode.instructions.is_empty());
+        }
+
+        // Prop: a condition string that parses successfully also passes rule validation
+        #[test]
+        fn prop_parse_implies_validate(var_name in "[a-zA-Z_][a-zA-Z0-9_]*") {
+            let compiler = RulesCompiler::new(HashMap::new());
+            if compiler.parse_condition(&var_name).is_ok() {
+                let schema = RulesSchema {
+                    schema: "flight.ledmap/1".to_string(),
+                    rules: vec![Rule {
+                        when: var_name,
+                        do_action: "led.indexer.on()".to_string(),
+                        action: "led.indexer.on()".to_string(),
+                    }],
+                    defaults: None,
+                };
+                prop_assert!(schema.validate().is_ok());
+            }
+        }
+
+        // Prop: bytecode compilation is deterministic — same input always yields identical instructions
+        #[test]
+        fn prop_compilation_is_deterministic(
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
+            val in -1000.0f32..1000.0f32,
+        ) {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: format!("{} > {}", var_name, val),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                }],
+                defaults: None,
+            };
+            let compiled1 = schema.compile().unwrap();
+            let compiled2 = schema.compile().unwrap();
+            // Use Debug representation of the instructions Vec (deterministic for ordered collections)
+            let instructions1 = format!("{:?}", compiled1.bytecode.instructions);
+            let instructions2 = format!("{:?}", compiled2.bytecode.instructions);
+            prop_assert_eq!(instructions1, instructions2);
+        }
     }
 
     // Error-path tests
