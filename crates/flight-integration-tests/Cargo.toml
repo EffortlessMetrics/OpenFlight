@@ -28,3 +28,5 @@ flight-hotas-logitech = { path = "../flight-hotas-logitech" }
 flight-hotas-honeycomb = { path = "../flight-hotas-honeycomb" }
 flight-hotas-ch = { path = "../flight-hotas-ch" }
 flight-hid-support = { path = "../flight-hid-support" }
+serde_yaml.workspace = true
+walkdir.workspace = true

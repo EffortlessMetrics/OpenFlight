@@ -2256,6 +2256,14 @@ requirements:
           - flight-panels-core::evaluator::tests::test_bytecode_evaluation
           - flight-panels-core::evaluator::tests::test_hysteresis_bytecode
           - flight-panels-core::evaluator::tests::test_zero_allocation_constraint
+      - id: AC-30.4
+        description: "WHEN LED targets, brightness bounds, and state transitions are exercised THEN target equality SHALL hold, brightness SHALL be clamped to [0,1], and state sequences SHALL be correct"
+        tests:
+          - flight-panels-core::tests::test_led_target_equality
+          - flight-panels-core::tests::test_led_brightness_clamping
+          - flight-panels-core::tests::test_led_on_off_state_transition
+          - flight-panels-core::tests::test_led_controller_initial_state
+          - flight-panels-core::tests::test_rules_evaluator_new_is_valid
 
   # Product Requirement: Tactile Feedback
   - id: REQ-31
@@ -2372,6 +2380,42 @@ requirements:
         tests:
           - flight-test-helpers::utils::tests::test_create_temp_dir
           - flight-test-helpers::utils::tests::test_wait_for_condition
+
+  # Infrastructure Requirement: Shared Device Identification
+  - id: INF-REQ-14
+    name: Shared Device Identification
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-14.1
+        description: "WHEN a DeviceId is created THEN vid_pid SHALL format as lowercase hex and display SHALL include the serial number when present"
+        tests:
+          - flight-device-common::device::tests::test_vid_pid_format
+          - flight-device-common::device::tests::test_display_with_serial
+          - flight-device-common::device::tests::test_display_without_serial
+          - flight-device-common::device::tests::test_ordering
+      - id: AC-14.2
+        description: "WHEN a virtual DeviceId is created THEN it SHALL use the virtual:// path scheme and carry the serial number"
+        tests:
+          - flight-device-common::device::tests::test_virtual_device_builder
+
+  # Infrastructure Requirement: Shared Device Health Model
+  - id: INF-REQ-15
+    name: Shared Device Health Model
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-15.1
+        description: "WHEN a device is healthy or degraded THEN is_operational SHALL return true; quarantined and failed devices SHALL return false"
+        tests:
+          - flight-device-common::health::tests::test_operational_states
+          - flight-device-common::health::tests::test_reason_healthy_is_none
+      - id: AC-15.2
+        description: "WHEN querying the health reason THEN degraded, quarantined, and failed states SHALL each return their reason string"
+        tests:
+          - flight-device-common::health::tests::test_reason_degraded
+          - flight-device-common::health::tests::test_reason_quarantined
+          - flight-device-common::health::tests::test_reason_failed
 
   # ============================================================================
   # INFRASTRUCTURE REQUIREMENTS (REQ-63 through REQ-66)
