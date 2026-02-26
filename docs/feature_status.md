@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 319 |
-| ACs with tests | 319 |
-| ACs with Gherkin | 319 |
-| ACs with both tests + Gherkin | 319 |
-| Complete | 319 |
+| Total AC | 339 |
+| ACs with tests | 339 |
+| ACs with Gherkin | 339 |
+| ACs with both tests + Gherkin | 339 |
+| Complete | 339 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
-| Microcrates with tests | 55 (82.1%) |
-| Microcrates with Gherkin | 55 (82.1%) |
-| Microcrates fully covered | 55 (82.1%) |
+| Microcrates with tests | 59 (88.1%) |
+| Microcrates with Gherkin | 59 (88.1%) |
+| Microcrates fully covered | 59 (88.1%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -57,15 +57,15 @@
 | flight-hid | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-brunner | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-hotas-ch | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-hotas-logitech | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-logitech | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-vkb | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-vpforce | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ipc | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -282,6 +282,26 @@
 | REQ-51 | AC-51.7 | WHEN LedReport::all_off() is called THEN leds byte SHALL be 0 with report ID 0x20 | - | 2 | 🟡 Needs Gherkin |
 | REQ-51 | AC-51.8 | WHEN a FirmwareVersionReport is serialised then parsed THEN version() SHALL return the correct (major, minor, patch) | - | 1 | 🟡 Needs Gherkin |
 | REQ-51 | AC-51.9 | WHEN the crate is compiled THEN VENDOR_ID SHALL be 0x1209 and PRODUCT_ID SHALL be 0xF170; the crate SHALL compile as no_std | - | 1 | 🟡 Needs Gherkin |
+| REQ-52 | AC-52.1 | WHEN recommended_preset is called for any CH Products device model THEN it SHALL return a preset whose device field matches the requested model | specs/features/req_52_ch_hotas.feature:5 | 3 | ✅ Complete |
+| REQ-52 | AC-52.2 | WHEN a preset is returned for any CH Products model THEN the deadzone field SHALL be within [0.0, 0.1] | specs/features/req_52_ch_hotas.feature:11<br>specs/features/req_52_ch_hotas.feature:17 | 2 | ✅ Complete |
+| REQ-52 | AC-52.3 | WHEN a preset is returned for any CH Products model THEN the expo field SHALL be within [0.0, 0.5] | specs/features/req_52_ch_hotas.feature:23<br>specs/features/req_52_ch_hotas.feature:29 | 2 | ✅ Complete |
+| REQ-52 | AC-52.4 | WHEN a preset is returned for a yoke model (EclipseYoke, FlightYoke) THEN invert_throttle SHALL be true; for all other models it SHALL be false | specs/features/req_52_ch_hotas.feature:35<br>specs/features/req_52_ch_hotas.feature:41 | 2 | ✅ Complete |
+| REQ-52 | AC-52.5 | WHEN a ChHealthMonitor is created THEN initial status SHALL be Unknown; status updates SHALL be reflected immediately; the device model SHALL be preserved | specs/features/req_52_ch_hotas.feature:47<br>specs/features/req_52_ch_hotas.feature:53<br>specs/features/req_52_ch_hotas.feature:59<br>specs/features/req_52_ch_hotas.feature:65<br>specs/features/req_52_ch_hotas.feature:71 | 5 | ✅ Complete |
+| REQ-53 | AC-53.1 | WHEN a HID report shorter than 7 bytes is parsed THEN parse_extreme_3d_pro SHALL return Err(TooShort) | specs/features/req_53_logitech_hotas.feature:5<br>specs/features/req_53_logitech_hotas.feature:11 | 1 | ✅ Complete |
+| REQ-53 | AC-53.2 | WHEN bipolar axes (X, Y, twist) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0 | specs/features/req_53_logitech_hotas.feature:17<br>specs/features/req_53_logitech_hotas.feature:25<br>specs/features/req_53_logitech_hotas.feature:31<br>specs/features/req_53_logitech_hotas.feature:37<br>specs/features/req_53_logitech_hotas.feature:43<br>specs/features/req_53_logitech_hotas.feature:49<br>specs/features/req_53_logitech_hotas.feature:55 | 11 | ✅ Complete |
+| REQ-53 | AC-53.3 | WHEN the throttle lever is at minimum raw (0) THEN the axis SHALL be 0.0; at maximum raw (127) it SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0 | specs/features/req_53_logitech_hotas.feature:63<br>specs/features/req_53_logitech_hotas.feature:69<br>specs/features/req_53_logitech_hotas.feature:75 | 3 | ✅ Complete |
+| REQ-53 | AC-53.4 | WHEN a hat switch nibble value is parsed THEN it SHALL map to the correct Extreme3DProHat variant (North=0, East=2, South=4, Center=8..15) | specs/features/req_53_logitech_hotas.feature:81<br>specs/features/req_53_logitech_hotas.feature:87<br>specs/features/req_53_logitech_hotas.feature:93<br>specs/features/req_53_logitech_hotas.feature:99 | 4 | ✅ Complete |
+| REQ-53 | AC-53.5 | WHEN buttons are pressed individually or in combination THEN each of the 12 buttons SHALL be independently addressable; button numbers outside 1-12 SHALL always return false | specs/features/req_53_logitech_hotas.feature:105<br>specs/features/req_53_logitech_hotas.feature:111<br>specs/features/req_53_logitech_hotas.feature:117 | 4 | ✅ Complete |
+| REQ-54 | AC-54.1 | WHEN a HID report shorter than 9 bytes is parsed THEN parse_cls_e_report SHALL return Err(TooShort) with the actual byte count | specs/features/req_54_brunner_hotas.feature:10<br>specs/features/req_54_brunner_hotas.feature:16<br>specs/features/req_54_brunner_hotas.feature:22 | 3 | ✅ Complete |
+| REQ-54 | AC-54.2 | WHEN a valid 9-byte or longer CLS-E report is parsed THEN parse_cls_e_report SHALL succeed | specs/features/req_54_brunner_hotas.feature:30<br>specs/features/req_54_brunner_hotas.feature:36 | 2 | ✅ Complete |
+| REQ-54 | AC-54.3 | WHEN roll and pitch axis bytes are decoded THEN normalised values SHALL be within [-1.0, +1.0] for all i16 inputs; i16::MAX SHALL map to approximately +1.0 and i16::MIN SHALL be clamped to -1.0 | specs/features/req_54_brunner_hotas.feature:44<br>specs/features/req_54_brunner_hotas.feature:50<br>specs/features/req_54_brunner_hotas.feature:57<br>specs/features/req_54_brunner_hotas.feature:64 | 5 | ✅ Complete |
+| REQ-54 | AC-54.4 | WHEN button bytes are decoded THEN buttons 1-32 SHALL be addressable LSB-first across 4 bytes; out-of-range button numbers SHALL return false | specs/features/req_54_brunner_hotas.feature:73<br>specs/features/req_54_brunner_hotas.feature:79<br>specs/features/req_54_brunner_hotas.feature:86<br>specs/features/req_54_brunner_hotas.feature:94<br>specs/features/req_54_brunner_hotas.feature:101<br>specs/features/req_54_brunner_hotas.feature:107 | 6 | ✅ Complete |
+| REQ-54 | AC-54.5 | WHEN parse_cls_e_report is called with arbitrary byte data of >=9 bytes THEN it SHALL never panic | specs/features/req_54_brunner_hotas.feature:115 | 1 | ✅ Complete |
+| REQ-55 | AC-55.1 | WHEN a HID report shorter than 20 bytes or with a wrong report ID is parsed THEN parse_rhino_report SHALL return a descriptive error containing the offending byte count or ID | specs/features/req_55_vpforce_hotas.feature:10<br>specs/features/req_55_vpforce_hotas.feature:16<br>specs/features/req_55_vpforce_hotas.feature:22<br>specs/features/req_55_vpforce_hotas.feature:28 | 4 | ✅ Complete |
+| REQ-55 | AC-55.2 | WHEN signed axes (roll, pitch, rocker, twist) are decoded THEN normalised values SHALL be within [-1.0, +1.0]; i16::MAX SHALL map to approximately +1.0 and i16::MIN to approximately -1.0 | specs/features/req_55_vpforce_hotas.feature:36<br>specs/features/req_55_vpforce_hotas.feature:44<br>specs/features/req_55_vpforce_hotas.feature:50<br>specs/features/req_55_vpforce_hotas.feature:56 | 4 | ✅ Complete |
+| REQ-55 | AC-55.3 | WHEN the throttle slider (HID Z) is decoded THEN it SHALL be remapped to [0.0, 1.0] with i16::MIN yielding 0.0 and i16::MAX yielding 1.0 | specs/features/req_55_vpforce_hotas.feature:64<br>specs/features/req_55_vpforce_hotas.feature:70 | 2 | ✅ Complete |
+| REQ-55 | AC-55.4 | WHEN the button bitmask and POV hat are decoded THEN each of buttons 1-32 SHALL be independently addressable; out-of-range button numbers SHALL return false; the hat byte SHALL be preserved | specs/features/req_55_vpforce_hotas.feature:78<br>specs/features/req_55_vpforce_hotas.feature:85<br>specs/features/req_55_vpforce_hotas.feature:92<br>specs/features/req_55_vpforce_hotas.feature:98 | 4 | ✅ Complete |
+| REQ-55 | AC-55.5 | WHEN parse_rhino_report is called with valid-length arbitrary byte data THEN it SHALL never panic; reports longer than 20 bytes SHALL also be accepted | specs/features/req_55_vpforce_hotas.feature:106<br>specs/features/req_55_vpforce_hotas.feature:112 | 2 | ✅ Complete |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |
