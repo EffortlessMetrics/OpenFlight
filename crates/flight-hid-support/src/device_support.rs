@@ -179,9 +179,17 @@ pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
 
 // Saitek standalone devices - confidence: CONFIRMED (linux-hardware.org)
 // 0x0764: Flight Pro Combat Rudder (2 probes) - pre-Pro Flight era gaming rudder pedals
+// 0x0BAC: Pro Flight Yoke System (23 probes) - standalone yoke; bundle includes Quadrant (0x0C2D)
 // 0x0C2D: Pro Flight Quadrant (22 probes) - NOTE: also claimed by x56.yaml for X56
 //         Mad Catz stick variant; linux-hardware.org evidence favours Quadrant
 pub const SAITEK_FLIGHT_PRO_COMBAT_RUDDER_PID: u16 = 0x0764;
+
+/// USB Product ID for the Saitek Pro Flight Yoke System.
+///
+/// Confirmed: VID 0x06A3 (Saitek/Logitech), PID 0x0BAC — linux-hardware.org (23 probes,
+/// USB string "Pro Flight Yoke"). This is the yoke unit only; the system bundle also
+/// includes the Pro Flight Quadrant (`SAITEK_PRO_FLIGHT_QUADRANT_PID` 0x0C2D).
+pub const SAITEK_PRO_FLIGHT_YOKE_PID: u16 = 0x0BAC;
 pub const SAITEK_PRO_FLIGHT_QUADRANT_PID: u16 = 0x0C2D;
 
 /// USB Vendor ID for VIRPIL Controls UAB.
@@ -291,6 +299,20 @@ pub const VKB_STECS_LEFT_SPACE_STANDARD_PID: u16 = 0x0138;
 pub const VKB_STECS_RIGHT_SPACE_STANDARD_PID: u16 = 0x013C;
 pub const VKB_GLADIATOR_NXT_EVO_RIGHT_PID: u16 = 0x0200;
 pub const VKB_GLADIATOR_NXT_EVO_LEFT_PID: u16 = 0x0201;
+
+/// USB Product ID for the VKB Gladiator NXT EVO OT Left (Original Technology firmware, left-hand).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x3201 — linux-hardware.org (2 probes,
+/// USB string "VKBsim Gladiator EVO OT L", vendor "VKB-Sim (C) Alex Oz 2023").
+/// OT = Original Technology firmware (predecessor to SEM). Left-hand variant for dual-stick.
+pub const VKB_GLADIATOR_NXT_EVO_OT_LEFT_PID: u16 = 0x3201;
+
+/// USB Product ID for the VKB Gladiator NXT SEM THQ (throttle/quadrant companion, SEM firmware).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x2214 — linux-hardware.org (1 probe,
+/// USB string "VKBSim NXT SEM THQ", vendor "VKB-Sim Alex Oz 2021").
+/// THQ = Throttle/Hand Quadrant. Pairs with the NXT SEM joystick family.
+pub const VKB_NXT_SEM_THQ_PID: u16 = 0x2214;
 
 /// USB Product ID for the VKB S-TECS Modern Throttle Mini (2023 generation).
 ///
