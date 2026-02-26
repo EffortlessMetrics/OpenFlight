@@ -679,6 +679,52 @@ impl AxisMode {
     }
 }
 
+/// USB Vendor ID used by VPforce Rhino devices.
+///
+/// Note: 0x0483 belongs to STMicroelectronics (the MCU manufacturer).
+/// VPforce does not hold a dedicated VID; this is documented in
+/// `compat/devices/vpforce/rhino.yaml` (quirk: STM_VID).
+pub const VPFORCE_VENDOR_ID: u16 = 0x0483;
+
+/// USB Product ID for the VPforce Rhino FFB joystick base (revision 2).
+pub const VPFORCE_RHINO_PID_V2: u16 = 0xA1C0;
+
+/// USB Product ID for the VPforce Rhino FFB joystick base (revision 3 / Mk II).
+pub const VPFORCE_RHINO_PID_V3: u16 = 0xA1C1;
+
+/// VPforce device model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VpforceModel {
+    /// VPforce Rhino revision 2. VID 0x0483, PID 0xA1C0.
+    RhinoV2,
+    /// VPforce Rhino revision 3 (Mk II). VID 0x0483, PID 0xA1C1.
+    RhinoV3,
+}
+
+impl VpforceModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            VpforceModel::RhinoV2 => "VPforce Rhino (v2)",
+            VpforceModel::RhinoV3 => "VPforce Rhino (v3 / Mk II)",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known VPforce device.
+pub fn is_vpforce_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == VPFORCE_VENDOR_ID
+        && matches!(product_id, VPFORCE_RHINO_PID_V2 | VPFORCE_RHINO_PID_V3)
+}
+
+/// Returns the VPforce model for a known PID, or `None` for unknown PIDs.
+pub fn vpforce_model(product_id: u16) -> Option<VpforceModel> {
+    match product_id {
+        VPFORCE_RHINO_PID_V2 => Some(VpforceModel::RhinoV2),
+        VPFORCE_RHINO_PID_V3 => Some(VpforceModel::RhinoV3),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AxisUsageSummary {
     pub has_x: bool,

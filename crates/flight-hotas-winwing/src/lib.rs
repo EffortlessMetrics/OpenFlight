@@ -3,16 +3,19 @@
 
 //! WinWing HOTAS driver for Flight Hub.
 //!
-//! Supports the **Orion 2 Throttle**, **Orion 2 F/A-18C Stick**, and
-//! **TFRP Rudder Pedals** via USB HID.
+//! Supports the **Orion 2 Throttle**, **Orion 2 F/A-18C Stick**,
+//! **TFRP Rudder Pedals**, **F-16EX Grip**, and **SuperTaurus Dual Throttle**
+//! via USB HID.
 //!
 //! # USB Identifiers
 //!
 //! | Product | VID    | PID    |
 //! |---------|--------|--------|
-//! | Orion 2 Throttle  | 0x4098 | 0xBE62 |
+//! | Orion 2 Throttle      | 0x4098 | 0xBE62 |
 //! | Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 |
-//! | TFRP Rudder Pedals | 0x4098 | 0xBE64 |
+//! | TFRP Rudder Pedals    | 0x4098 | 0xBE64 |
+//! | F-16EX Grip           | 0x4098 | 0xBEA8 |
+//! | SuperTaurus Dual Throttle | 0x4098 | 0xBD64 |
 //!
 //! # Quick start
 //!
@@ -25,10 +28,17 @@
 //! let combined = state.axes.throttle_combined;
 //! ```
 
+pub mod f16ex_stick;
 pub mod health;
 pub mod input;
 pub mod presets;
+pub mod super_taurus;
 
+pub use f16ex_stick::{
+    BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons,
+    F16ExInputState, F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN,
+    parse_f16ex_stick_report,
+};
 pub use health::{WinWingDevice, WinWingHealthMonitor, WinWingHealthStatus};
 pub use input::{
     ORION2_F18_STICK_PID, ORION2_THROTTLE_PID, RUDDER_REPORT_LEN, RudderAxes, STICK_REPORT_LEN,
@@ -37,6 +47,17 @@ pub use input::{
     parse_stick_report, parse_throttle_report,
 };
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
+pub use super_taurus::{
+    BUTTON_COUNT as SUPER_TAURUS_BUTTON_COUNT, MIN_REPORT_BYTES as SUPER_TAURUS_REPORT_LEN,
+    SUPER_TAURUS_PID, SuperTaurusAxes, SuperTaurusButtons, SuperTaurusInputState,
+    SuperTaurusParseError, parse_super_taurus_report,
+};
 
 /// All known WinWing PIDs covered by this crate.
-pub const WINWING_PIDS: &[u16] = &[ORION2_THROTTLE_PID, ORION2_F18_STICK_PID, TFRP_RUDDER_PID];
+pub const WINWING_PIDS: &[u16] = &[
+    ORION2_THROTTLE_PID,
+    ORION2_F18_STICK_PID,
+    TFRP_RUDDER_PID,
+    F16EX_STICK_PID,
+    SUPER_TAURUS_PID,
+];
