@@ -33,9 +33,11 @@
 pub mod f16ex_stick;
 pub mod health;
 pub mod input;
+pub mod orion2_throttle;
 pub mod presets;
 pub mod skywalker_rudder;
 pub mod super_taurus;
+pub mod tfrp;
 pub mod ufc_panel;
 
 pub use f16ex_stick::{
@@ -50,7 +52,17 @@ pub use input::{
     ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
     parse_stick_report, parse_throttle_report,
 };
+pub use orion2_throttle::{
+    BUTTON_COUNT as ORION2_THROTTLE_BUTTON_COUNT,
+    ENCODER_COUNT as ORION2_THROTTLE_ENCODER_COUNT,
+    MIN_REPORT_BYTES as ORION2_THROTTLE_REPORT_BYTES, Orion2ThrottleAxes, Orion2ThrottleButtons,
+    Orion2ThrottleInputState, Orion2ThrottleParseError, parse_orion2_throttle_report,
+};
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
+pub use tfrp::{
+    MIN_REPORT_BYTES as TFRP_REPORT_BYTES, TfrpAxes, TfrpInputState, TfrpParseError,
+    parse_tfrp_report,
+};
 pub use skywalker_rudder::{
     MIN_REPORT_BYTES as SKYWALKER_RUDDER_REPORT_LEN, SKYWALKER_RUDDER_PID, SkywalkerAxes,
     SkywalkerParseError, SkywalkerRudderInputState, parse_skywalker_rudder_report,
