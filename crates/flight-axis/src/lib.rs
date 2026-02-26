@@ -70,6 +70,9 @@
 //! - **Deterministic**: Same inputs always produce same outputs
 //! - **Real-time**: Processing completes within 0.5ms p99
 
+#[cfg(test)]
+mod proptest_tests;
+
 pub mod blackbox;
 pub mod compiler;
 pub mod conflict;
