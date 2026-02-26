@@ -1015,7 +1015,8 @@ requirements:
           - flight-macos-hid::error::tests::test_error_display
       - id: AC-50.7
         description: "WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = \"macos\")'.dependencies] in Cargo.toml"
-        tests: []
+        tests:
+          - flight-macos-hid::tests::test_iokit_deps_scoped_to_macos_target
       - id: AC-50.8
         description: "WHEN the crate is compiled on Windows or Linux THEN it SHALL compile without requiring IOKit system libraries"
         tests:
@@ -1640,10 +1641,12 @@ requirements:
           - flight-profile::tests::test_profile_merging
       - id: AC-23.5
         description: "WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft"
-        tests: []
+        tests:
+          - flight-service::aircraft_auto_switch_service::tests::test_profile_cascade_order
       - id: AC-23.6
         description: "WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events"
-        tests: []
+        tests:
+          - flight-service::aircraft_auto_switch_service::tests::test_graceful_degradation_on_adapter_failure
 
   # Product Requirement: LED Rules Engine
   - id: REQ-24

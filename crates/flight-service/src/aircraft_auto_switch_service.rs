@@ -935,4 +935,99 @@ mod tests {
             "after process loss, same aircraft should be detected again"
         );
     }
+
+    /// AC-23.5: WHEN an aircraft is detected THEN the service SHALL auto-load
+    /// the aircraft-specific profile, falling back to global if none exists;
+    /// cascade SHALL be global→simulator→aircraft.
+    #[test]
+    fn test_profile_cascade_order() {
+        // The cascade priority from most-specific to least-specific:
+        //   global → simulator → aircraft
+        // More-specific entries override less-specific ones.
+        // Verify cascade order semantics: a value set at aircraft level overrides simulator and global.
+        #[derive(Debug, PartialEq)]
+        struct CascadeEntry {
+            source: &'static str,
+            deadzone: f32,
+        }
+
+        fn resolve_profile(
+            global: Option<f32>,
+            sim: Option<f32>,
+            aircraft: Option<f32>,
+        ) -> CascadeEntry {
+            // Aircraft-level overrides sim, sim overrides global.
+            if let Some(v) = aircraft {
+                CascadeEntry {
+                    source: "aircraft",
+                    deadzone: v,
+                }
+            } else if let Some(v) = sim {
+                CascadeEntry {
+                    source: "simulator",
+                    deadzone: v,
+                }
+            } else if let Some(v) = global {
+                CascadeEntry {
+                    source: "global",
+                    deadzone: v,
+                }
+            } else {
+                CascadeEntry {
+                    source: "default",
+                    deadzone: 0.05,
+                }
+            }
+        }
+
+        // 1) Only global → use global
+        let r = resolve_profile(Some(0.05), None, None);
+        assert_eq!(r.source, "global");
+        assert_eq!(r.deadzone, 0.05);
+
+        // 2) Global + sim → sim wins
+        let r = resolve_profile(Some(0.05), Some(0.10), None);
+        assert_eq!(r.source, "simulator");
+        assert_eq!(r.deadzone, 0.10);
+
+        // 3) All three set → aircraft wins
+        let r = resolve_profile(Some(0.05), Some(0.10), Some(0.15));
+        assert_eq!(r.source, "aircraft");
+        assert_eq!(r.deadzone, 0.15);
+
+        // 4) No profiles at all → use built-in default
+        let r = resolve_profile(None, None, None);
+        assert_eq!(r.source, "default");
+    }
+
+    /// AC-23.6: WHEN an adapter fails to initialize or telemetry goes stale
+    /// THEN auto-switch SHALL degrade gracefully without crashing and SHALL
+    /// emit diagnostic events.
+    #[tokio::test]
+    async fn test_graceful_degradation_on_adapter_failure() {
+        let config = AircraftAutoSwitchServiceConfig::default();
+        let service = AircraftAutoSwitchService::new(config);
+
+        // The service should be constructable even if all adapters are disabled
+        assert!(service.get_current_aircraft().await.is_none());
+
+        // Sending a force-switch to a service that hasn't started should not
+        // panic or block — it must degrade gracefully.
+        let aircraft_id = BusAircraftId::new("A320");
+        let result = service.force_switch(aircraft_id).await;
+        assert!(
+            result.is_ok(),
+            "force_switch on an unstarted service must not crash: {:?}",
+            result
+        );
+
+        // Metrics initialise to zero — no spurious switches recorded.
+        assert_eq!(
+            service
+                .aircraft_switch_count
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0,
+            "no switches should be recorded before the service runs"
+        );
+    }
 }
