@@ -502,4 +502,229 @@ mod tests {
 
     // Note: Integration tests would require a running X-Plane instance with web API enabled
     // These would be better placed in a separate integration test suite
+
+    // --- URL construction ---
+
+    #[test]
+    fn test_url_status_path() {
+        let base = "http://127.0.0.1:8080";
+        let url = format!("{}/api/v1/status", base);
+        assert_eq!(url, "http://127.0.0.1:8080/api/v1/status");
+    }
+
+    #[test]
+    fn test_url_dataref_path() {
+        let base = "http://127.0.0.1:8080";
+        let name = "sim/cockpit/switches/gear_handle_status";
+        let url = format!("{}/api/v1/dataref/{}", base, name);
+        assert_eq!(
+            url,
+            "http://127.0.0.1:8080/api/v1/dataref/sim/cockpit/switches/gear_handle_status"
+        );
+    }
+
+    #[test]
+    fn test_url_aircraft_path() {
+        let base = "http://192.168.1.10:8080";
+        let url = format!("{}/api/v1/aircraft", base);
+        assert_eq!(url, "http://192.168.1.10:8080/api/v1/aircraft");
+    }
+
+    #[test]
+    fn test_url_datarefs_bulk_path() {
+        let base = "http://127.0.0.1:8080";
+        let url = format!("{}/api/v1/datarefs", base);
+        assert_eq!(url, "http://127.0.0.1:8080/api/v1/datarefs");
+    }
+
+    // --- JSON → DataRefValue error cases ---
+
+    #[test]
+    fn test_json_null_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result = client.convert_json_to_dataref_value(serde_json::Value::Null);
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_json_string_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result =
+            client.convert_json_to_dataref_value(serde_json::Value::String("42.0".to_string()));
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_json_object_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let obj = serde_json::json!({ "x": 1 });
+        let result = client.convert_json_to_dataref_value(obj);
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_json_array_with_string_element_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let arr = serde_json::Value::Array(vec![
+            serde_json::Value::Number(serde_json::Number::from(1)),
+            serde_json::Value::String("bad".to_string()),
+        ]);
+        let result = client.convert_json_to_dataref_value(arr);
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_json_empty_array_returns_int_array() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result = client
+            .convert_json_to_dataref_value(serde_json::Value::Array(vec![]))
+            .unwrap();
+        assert_eq!(result, DataRefValue::IntArray(vec![]));
+    }
+
+    #[test]
+    fn test_json_bool_false_returns_int_zero() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result = client
+            .convert_json_to_dataref_value(serde_json::Value::Bool(false))
+            .unwrap();
+        assert_eq!(result, DataRefValue::Int(0));
+    }
+
+    // --- DataRefValue → JSON error cases ---
+
+    #[test]
+    fn test_nan_float_to_json_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result = client.convert_dataref_value_to_json(DataRefValue::Float(f32::NAN));
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse for NaN float, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_nan_double_to_json_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result = client.convert_dataref_value_to_json(DataRefValue::Double(f64::NAN));
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse for NaN double, got {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_nan_in_float_array_returns_invalid_response() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let result =
+            client.convert_dataref_value_to_json(DataRefValue::FloatArray(vec![1.0, f32::NAN]));
+        assert!(
+            matches!(result, Err(WebApiError::InvalidResponse)),
+            "Expected InvalidResponse for float array with NaN, got {:?}",
+            result
+        );
+    }
+
+    // --- Double DataRefValue round-trip ---
+
+    #[test]
+    fn test_double_to_json_and_back() {
+        let config = WebApiConfig::default();
+        let client = WebApiClient::new(config).unwrap();
+
+        let json = client
+            .convert_dataref_value_to_json(DataRefValue::Double(3.14159265358979))
+            .unwrap();
+        // JSON double comes back as a Number; converting back gives a Float (f64→f32 narrowing)
+        let back = client.convert_json_to_dataref_value(json).unwrap();
+        if let DataRefValue::Float(f) = back {
+            assert!((f - 3.14159265358979_f32).abs() < 1e-5);
+        } else {
+            panic!("Expected Float, got {:?}", back);
+        }
+    }
+
+    // --- WebApiError display strings ---
+
+    #[test]
+    fn test_error_display_http() {
+        let err = WebApiError::Http("connection refused".to_string());
+        assert_eq!(err.to_string(), "HTTP request failed: connection refused");
+    }
+
+    #[test]
+    fn test_error_display_not_available() {
+        let err = WebApiError::NotAvailable;
+        assert_eq!(err.to_string(), "API not available");
+    }
+
+    #[test]
+    fn test_error_display_authentication_failed() {
+        let err = WebApiError::AuthenticationFailed;
+        assert_eq!(err.to_string(), "Authentication failed");
+    }
+
+    #[test]
+    fn test_error_display_dataref_not_found() {
+        let err = WebApiError::DataRefNotFound {
+            name: "sim/test/ref".to_string(),
+        };
+        assert_eq!(err.to_string(), "DataRef not found: sim/test/ref");
+    }
+
+    #[test]
+    fn test_error_display_timeout() {
+        let err = WebApiError::Timeout;
+        assert_eq!(err.to_string(), "Request timeout");
+    }
+
+    #[test]
+    fn test_error_display_invalid_response() {
+        let err = WebApiError::InvalidResponse;
+        assert_eq!(err.to_string(), "Invalid response format");
+    }
+
+    #[test]
+    fn test_error_from_serde_json() {
+        let json_err: serde_json::Error =
+            serde_json::from_str::<serde_json::Value>("not json").unwrap_err();
+        let err = WebApiError::from(json_err);
+        assert!(err.to_string().starts_with("JSON parsing error:"));
+    }
 }
