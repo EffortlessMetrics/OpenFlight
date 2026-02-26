@@ -1,0 +1,57 @@
+# Logitech Flight System G940
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC287 — linux-hardware.org (1 probe, "Flight System G940").
+# One of the few commercial FFB HOTAS sets ever produced. Discontinued ~2013.
+# Includes stick, throttle, and rudder pedals connected via internal USB hub.
+schema_version: "1"
+
+device:
+  name: "Logitech Flight System G940"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (Logitech Inc.)
+    product_id: 0xC287  # Flight System G940 — confirmed via linux-hardware.org (1 probe)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 11
+    names: [x, y, z, rx, ry, rz, slider, slider2, hat1_x, hat1_y, hat2_x]
+    resolution_bits: 12
+  buttons: 31
+  hats: 3
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: INTERNAL_USB_HUB
+    description: >
+      The G940 includes an internal USB 2.0 hub connecting stick, throttle, and
+      optional rudder pedals. All three devices enumerate separately in the OS
+      but may appear as a composite device depending on the hub mode.
+  - id: DIRECTINPUT_FFB
+    description: >
+      FFB on the stick supports spring, damper, constant-force, periodic, and
+      ramp effects via DirectInput. The throttle and pedals do not have FFB.
+  - id: DISCONTINUED
+    description: >
+      The G940 was discontinued circa 2013. Legacy device; no active driver
+      development but standard HID FFB continues to work on modern Windows.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC287 confirmed from linux-hardware.org ("Flight System G940", 1 probe).
+    Notable as one of the few FFB HOTAS systems ever released.
+    Axis/button counts are approximate; exact layout depends on firmware.
+    Last validated: 2026-02.

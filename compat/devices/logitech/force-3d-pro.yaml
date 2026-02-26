@@ -1,0 +1,51 @@
+# Logitech Force 3D Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC286 — linux-hardware.org (18 probes, "Force 3D Pro").
+# Force-feedback joystick popular in the early 2000s; still widely used.
+schema_version: "1"
+
+device:
+  name: "Logitech Force 3D Pro"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (Logitech Inc.)
+    product_id: 0xC286  # Force 3D Pro — confirmed via linux-hardware.org (18 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIRECTINPUT_FFB
+    description: >
+      Uses DirectInput force-feedback via USB interrupt reports. Supports
+      spring, damper, constant, periodic (sine/square/sawtooth), and ramp effects.
+      FFB is spring/twist-axis only on this model (X/Y axes with twist Rz).
+  - id: TWIST_AXIS_RZ
+    description: >
+      The twist grip provides the Rz axis (rudder). Z axis is the throttle lever
+      on the base. Rx and Ry are stick-tip micro-joystick (if installed).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC286 confirmed from linux-hardware.org ("Force 3D Pro", 18 probes).
+    One of the most popular FFB joysticks ever made; still in use today.
+    Last validated: 2026-02.

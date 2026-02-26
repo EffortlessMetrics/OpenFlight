@@ -20,6 +20,18 @@ pub const LOGITECH_VENDOR_ID: u16 = 0x046D;
 /// Confirmed: VID 0x046D (Logitech), PID 0xC215 — from linux-hardware.org (221 probes).
 pub const EXTREME_3D_PRO_PID: u16 = 0xC215;
 
+/// USB Product ID for the Logitech Force 3D Pro joystick (force-feedback).
+///
+/// Confirmed: VID 0x046D (Logitech), PID 0xC286 — linux-hardware.org (18 probes, "Force 3D Pro").
+/// One of the most popular FFB joysticks ever made; DirectInput FFB on X/Y/Rz axes.
+pub const FORCE_3D_PRO_PID: u16 = 0xC286;
+
+/// USB Product ID for the Logitech Flight System G940 (FFB HOTAS set).
+///
+/// Confirmed: VID 0x046D (Logitech), PID 0xC287 — linux-hardware.org (1 probe, "Flight System G940").
+/// One of the few commercial FFB HOTAS sets ever made; discontinued ~2013.
+pub const G940_FLIGHT_SYSTEM_PID: u16 = 0xC287;
+
 /// Returns `true` if this VID/PID combination is a Logitech Extreme 3D Pro.
 pub fn is_extreme_3d_pro(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == LOGITECH_VENDOR_ID && product_id == EXTREME_3D_PRO_PID
