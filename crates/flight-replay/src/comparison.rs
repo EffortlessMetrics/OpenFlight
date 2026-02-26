@@ -4,8 +4,6 @@
 //! Output comparison with floating-point tolerance
 
 use std::collections::HashMap;
-use std::time::Duration;
-
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -71,7 +69,7 @@ pub struct ComparisonResult {
 }
 
 /// Statistics for a specific comparison type
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ComparisonStats {
     /// Number of comparisons
     pub count: u64,
@@ -86,7 +84,7 @@ pub struct ComparisonStats {
 }
 
 /// Timing-specific statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TimingStats {
     /// Number of timing measurements
     pub count: u64,
@@ -114,8 +112,6 @@ pub struct OutputComparator {
 /// Single timing measurement
 #[derive(Debug, Clone)]
 struct TimingMeasurement {
-    expected_ns: u64,
-    actual_ns: u64,
     drift_ns_per_s: u64,
     jitter_ns: u64,
 }
@@ -221,11 +217,7 @@ impl OutputComparator {
         actual_ns: u64,
         duration_s: f64,
     ) -> Result<(), ComparisonError> {
-        let time_diff = if actual_ns > expected_ns {
-            actual_ns - expected_ns
-        } else {
-            expected_ns - actual_ns
-        };
+        let time_diff = actual_ns.abs_diff(expected_ns);
 
         // Calculate drift rate (ns per second)
         let drift_ns_per_s = if duration_s > 0.0 {
@@ -238,8 +230,6 @@ impl OutputComparator {
         let jitter_ns = time_diff;
 
         let measurement = TimingMeasurement {
-            expected_ns,
-            actual_ns,
             drift_ns_per_s,
             jitter_ns,
         };
@@ -425,31 +415,6 @@ impl Default for ComparisonConfig {
             tolerance: ToleranceConfig::default(),
             collect_stats: true,
             fail_fast: false,
-        }
-    }
-}
-
-impl Default for ComparisonStats {
-    fn default() -> Self {
-        Self {
-            count: 0,
-            max_diff: 0.0,
-            avg_diff: 0.0,
-            rms_diff: 0.0,
-            within_tolerance: 0,
-        }
-    }
-}
-
-impl Default for TimingStats {
-    fn default() -> Self {
-        Self {
-            count: 0,
-            max_drift_ns_per_s: 0,
-            avg_drift_ns_per_s: 0,
-            max_jitter_ns: 0,
-            avg_jitter_ns: 0,
-            within_tolerance: 0,
         }
     }
 }

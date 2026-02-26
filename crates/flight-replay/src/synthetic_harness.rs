@@ -12,7 +12,7 @@ use tracing::{debug, info};
 
 use flight_bus::{
     AircraftConfig, AircraftId, BusSnapshot, Environment, GForce, Kinematics, LightsConfig, Mach,
-    Navigation, Percentage, SimId, ValidatedAngle, ValidatedSpeed,
+    Navigation, SimId, ValidatedAngle, ValidatedSpeed,
     snapshot::{AngularRates, ControlInputs, TrimState, ValidityFlags},
 };
 use flight_ffb::{FfbConfig, FfbEngine, FfbMode, SafetyState};
