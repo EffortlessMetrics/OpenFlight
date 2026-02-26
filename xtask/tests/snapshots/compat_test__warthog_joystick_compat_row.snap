@@ -1,0 +1,5 @@
+---
+source: xtask/tests/compat_test.rs
+expression: row
+---
+| Thrustmaster HOTAS Warthog Joystick | 0x044F | 0x0402 | 3 | 19 | false | 2 |
