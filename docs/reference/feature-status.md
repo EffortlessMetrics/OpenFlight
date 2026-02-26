@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 339 |
-| ACs with tests | 339 |
-| ACs with Gherkin | 339 |
-| ACs with both tests + Gherkin | 339 |
-| Complete | 339 |
+| Total AC | 349 |
+| ACs with tests | 349 |
+| ACs with Gherkin | 349 |
+| ACs with both tests + Gherkin | 349 |
+| Complete | 349 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
-| Microcrates with tests | 59 (88.1%) |
-| Microcrates with Gherkin | 59 (88.1%) |
-| Microcrates fully covered | 59 (88.1%) |
+| Microcrates with tests | 61 (91.0%) |
+| Microcrates with Gherkin | 61 (91.0%) |
+| Microcrates fully covered | 61 (91.0%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -59,11 +59,11 @@
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-honeycomb | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-honeycomb | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-logitech | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-virpil | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-virpil | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vkb | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -302,6 +302,16 @@
 | REQ-55 | AC-55.3 | WHEN the throttle slider (HID Z) is decoded THEN it SHALL be remapped to [0.0, 1.0] with i16::MIN yielding 0.0 and i16::MAX yielding 1.0 | specs/features/req_55_vpforce_hotas.feature:64<br>specs/features/req_55_vpforce_hotas.feature:70 | 2 | ✅ Complete |
 | REQ-55 | AC-55.4 | WHEN the button bitmask and POV hat are decoded THEN each of buttons 1-32 SHALL be independently addressable; out-of-range button numbers SHALL return false; the hat byte SHALL be preserved | specs/features/req_55_vpforce_hotas.feature:78<br>specs/features/req_55_vpforce_hotas.feature:85<br>specs/features/req_55_vpforce_hotas.feature:92<br>specs/features/req_55_vpforce_hotas.feature:98 | 4 | ✅ Complete |
 | REQ-55 | AC-55.5 | WHEN parse_rhino_report is called with valid-length arbitrary byte data THEN it SHALL never panic; reports longer than 20 bytes SHALL also be accepted | specs/features/req_55_vpforce_hotas.feature:106<br>specs/features/req_55_vpforce_hotas.feature:112 | 2 | ✅ Complete |
+| REQ-56 | AC-56.1 | WHEN an Alpha Yoke HID report is parsed THEN roll and pitch SHALL decode centered 12-bit values to [-1.0, +1.0] with center raw value 2048 mapping to approximately 0.0 | specs/features/req_56_honeycomb_hotas.feature:5<br>specs/features/req_56_honeycomb_hotas.feature:13<br>specs/features/req_56_honeycomb_hotas.feature:19<br>specs/features/req_56_honeycomb_hotas.feature:25 | 4 | ✅ Complete |
+| REQ-56 | AC-56.2 | WHEN button bits are set in an Alpha Yoke report THEN is_pressed SHALL return true for the correct buttons and hat_direction SHALL map the raw nibble to a compass direction string | specs/features/req_56_honeycomb_hotas.feature:31<br>specs/features/req_56_honeycomb_hotas.feature:39<br>specs/features/req_56_honeycomb_hotas.feature:46 | 3 | ✅ Complete |
+| REQ-56 | AC-56.3 | WHEN a report is too short or has an unknown report ID THEN a descriptive parse error SHALL be returned for both the Alpha Yoke and Bravo Throttle parsers | specs/features/req_56_honeycomb_hotas.feature:53<br>specs/features/req_56_honeycomb_hotas.feature:59<br>specs/features/req_56_honeycomb_hotas.feature:65<br>specs/features/req_56_honeycomb_hotas.feature:71 | 4 | ✅ Complete |
+| REQ-56 | AC-56.4 | WHEN a Bravo Throttle HID report is parsed THEN all 7 axes SHALL normalize to [0.0, 1.0] and gear-up, gear-down, and AP master buttons SHALL be accessible via named methods | specs/features/req_56_honeycomb_hotas.feature:77<br>specs/features/req_56_honeycomb_hotas.feature:83<br>specs/features/req_56_honeycomb_hotas.feature:89<br>specs/features/req_56_honeycomb_hotas.feature:96 | 4 | ✅ Complete |
+| REQ-56 | AC-56.5 | WHEN a BravoLedState is serialised THEN the 5-byte feature report SHALL encode AP mode, gear, and annunciator LEDs at correct bit positions with report ID 0x00 and unused bits zero | specs/features/req_56_honeycomb_hotas.feature:102<br>specs/features/req_56_honeycomb_hotas.feature:109<br>specs/features/req_56_honeycomb_hotas.feature:115<br>specs/features/req_56_honeycomb_hotas.feature:122 | 5 | ✅ Complete |
+| REQ-57 | AC-57.1 | WHEN a VPC CM3 Throttle HID report is parsed THEN all 6 axes SHALL normalize to [0.0, 1.0] with zero raw mapping to 0.0 and VIRPIL_AXIS_MAX mapping to 1.0 | specs/features/req_57_virpil_hotas.feature:5<br>specs/features/req_57_virpil_hotas.feature:11<br>specs/features/req_57_virpil_hotas.feature:17 | 3 | ✅ Complete |
+| REQ-57 | AC-57.2 | WHEN button bytes are set in a CM3 Throttle report THEN is_pressed SHALL correctly identify each of the 78 buttons and out-of-range indices SHALL return false | specs/features/req_57_virpil_hotas.feature:23<br>specs/features/req_57_virpil_hotas.feature:31<br>specs/features/req_57_virpil_hotas.feature:37<br>specs/features/req_57_virpil_hotas.feature:43<br>specs/features/req_57_virpil_hotas.feature:50 | 5 | ✅ Complete |
+| REQ-57 | AC-57.3 | WHEN a VPC MongoosT-50CM3 stick HID report is parsed THEN all 5 axes SHALL normalize to [0.0, 1.0] and the hat switch SHALL decode from the high nibble of the last button byte | specs/features/req_57_virpil_hotas.feature:56<br>specs/features/req_57_virpil_hotas.feature:62<br>specs/features/req_57_virpil_hotas.feature:68<br>specs/features/req_57_virpil_hotas.feature:74 | 4 | ✅ Complete |
+| REQ-57 | AC-57.4 | WHEN a WarBRD or WarBRD-D HID report is parsed THEN the caller-supplied variant SHALL be preserved in the result and product_name SHALL return the correct device string | specs/features/req_57_virpil_hotas.feature:80<br>specs/features/req_57_virpil_hotas.feature:86<br>specs/features/req_57_virpil_hotas.feature:92<br>specs/features/req_57_virpil_hotas.feature:97 | 4 | ✅ Complete |
+| REQ-57 | AC-57.5 | WHEN a report shorter than the device minimum is presented THEN a TooShort error SHALL be returned for all VIRPIL device types | specs/features/req_57_virpil_hotas.feature:102<br>specs/features/req_57_virpil_hotas.feature:108<br>specs/features/req_57_virpil_hotas.feature:114 | 3 | ✅ Complete |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |

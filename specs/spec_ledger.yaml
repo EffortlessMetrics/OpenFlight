@@ -1223,6 +1223,89 @@ requirements:
           - flight-hotas-vpforce::rhino::tests::random_report_does_not_panic
           - flight-hotas-vpforce::rhino::tests::longer_report_does_not_error
 
+  # Product Requirement: Honeycomb Aeronautical HOTAS Input Parsing and LED Control
+  - id: REQ-56
+    name: Honeycomb Aeronautical HOTAS Input Parsing and LED Control
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-56.1
+        description: "WHEN an Alpha Yoke HID report is parsed THEN roll and pitch SHALL decode centered 12-bit values to [-1.0, +1.0] with center raw value 2048 mapping to approximately 0.0"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::test_neutral_position
+          - flight-hotas-honeycomb::alpha::tests::test_full_roll_right
+          - flight-hotas-honeycomb::alpha::tests::test_full_roll_left
+          - flight-hotas-honeycomb::alpha::tests::test_full_pitch_forward
+      - id: AC-56.2
+        description: "WHEN button bits are set in an Alpha Yoke report THEN is_pressed SHALL return true for the correct buttons and hat_direction SHALL map the raw nibble to a compass direction string"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::test_button_detection
+          - flight-hotas-honeycomb::alpha::tests::test_hat_north
+          - flight-hotas-honeycomb::alpha::tests::test_hat_centred
+      - id: AC-56.3
+        description: "WHEN a report is too short or has an unknown report ID THEN a descriptive parse error SHALL be returned for both the Alpha Yoke and Bravo Throttle parsers"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::test_report_too_short
+          - flight-hotas-honeycomb::alpha::tests::test_unknown_report_id
+          - flight-hotas-honeycomb::bravo::tests::test_report_too_short
+          - flight-hotas-honeycomb::bravo::tests::test_unknown_report_id
+      - id: AC-56.4
+        description: "WHEN a Bravo Throttle HID report is parsed THEN all 7 axes SHALL normalize to [0.0, 1.0] and gear-up, gear-down, and AP master buttons SHALL be accessible via named methods"
+        tests:
+          - flight-hotas-honeycomb::bravo::tests::test_all_throttles_min
+          - flight-hotas-honeycomb::bravo::tests::test_all_throttles_max
+          - flight-hotas-honeycomb::bravo::tests::test_gear_buttons
+          - flight-hotas-honeycomb::bravo::tests::test_ap_master_button
+      - id: AC-56.5
+        description: "WHEN a BravoLedState is serialised THEN the 5-byte feature report SHALL encode AP mode, gear, and annunciator LEDs at correct bit positions with report ID 0x00 and unused bits zero"
+        tests:
+          - flight-hotas-honeycomb::bravo_leds::tests::test_all_off_produces_zero_data_bytes
+          - flight-hotas-honeycomb::bravo_leds::tests::test_hdg_led_only
+          - flight-hotas-honeycomb::bravo_leds::tests::test_all_gear_helper_green
+          - flight-hotas-honeycomb::bravo_leds::tests::test_roundtrip_all_on
+          - flight-hotas-honeycomb::bravo_leds::tests::test_annunciator2_high_bits_unused
+
+  # Product Requirement: VIRPIL VPC Device Input Parsing
+  - id: REQ-57
+    name: VIRPIL VPC Device Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-57.1
+        description: "WHEN a VPC CM3 Throttle HID report is parsed THEN all 6 axes SHALL normalize to [0.0, 1.0] with zero raw mapping to 0.0 and VIRPIL_AXIS_MAX mapping to 1.0"
+        tests:
+          - flight-hotas-virpil::throttle_cm3::tests::all_zero_axes_parse_to_zero
+          - flight-hotas-virpil::throttle_cm3::tests::max_axes_parse_to_one
+          - flight-hotas-virpil::throttle_cm3::tests::half_throttle_is_approximately_half
+      - id: AC-57.2
+        description: "WHEN button bytes are set in a CM3 Throttle report THEN is_pressed SHALL correctly identify each of the 78 buttons and out-of-range indices SHALL return false"
+        tests:
+          - flight-hotas-virpil::throttle_cm3::tests::button_1_detected
+          - flight-hotas-virpil::throttle_cm3::tests::button_78_detected
+          - flight-hotas-virpil::throttle_cm3::tests::all_buttons_pressed
+          - flight-hotas-virpil::throttle_cm3::tests::out_of_range_button_index_returns_false
+          - flight-hotas-virpil::throttle_cm3::tests::no_buttons_pressed_by_default
+      - id: AC-57.3
+        description: "WHEN a VPC MongoosT-50CM3 stick HID report is parsed THEN all 5 axes SHALL normalize to [0.0, 1.0] and the hat switch SHALL decode from the high nibble of the last button byte"
+        tests:
+          - flight-hotas-virpil::stick_mongoost::tests::all_zero_axes_parse_to_zero
+          - flight-hotas-virpil::stick_mongoost::tests::max_axes_parse_to_one
+          - flight-hotas-virpil::stick_mongoost::tests::hat_south_detected
+          - flight-hotas-virpil::stick_mongoost::tests::hat_center_for_unknown_value
+      - id: AC-57.4
+        description: "WHEN a WarBRD or WarBRD-D HID report is parsed THEN the caller-supplied variant SHALL be preserved in the result and product_name SHALL return the correct device string"
+        tests:
+          - flight-hotas-virpil::stick_warbrd::tests::variant_original_preserved
+          - flight-hotas-virpil::stick_warbrd::tests::variant_d_preserved
+          - flight-hotas-virpil::stick_warbrd::tests::product_name_original
+          - flight-hotas-virpil::stick_warbrd::tests::product_name_d
+      - id: AC-57.5
+        description: "WHEN a report shorter than the device minimum is presented THEN a TooShort error SHALL be returned for all VIRPIL device types"
+        tests:
+          - flight-hotas-virpil::throttle_cm3::tests::too_short_is_error
+          - flight-hotas-virpil::stick_mongoost::tests::too_short_is_error
+          - flight-hotas-virpil::stick_warbrd::tests::too_short_returns_error
+
   # ============================================================================
   # ============================================================================
 
