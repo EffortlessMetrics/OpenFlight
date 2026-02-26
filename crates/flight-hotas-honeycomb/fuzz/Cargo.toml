@@ -1,5 +1,5 @@
 [package]
-name = "flight-hotas-saitek-fuzz"
+name = "flight-hotas-honeycomb-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2021"
@@ -12,7 +12,7 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 
-[dependencies.flight-hotas-saitek]
+[dependencies.flight-hotas-honeycomb]
 path = ".."
 
 # Cargo automatically adds this profile for fuzz targets
@@ -20,7 +20,7 @@ path = ".."
 debug = 1
 
 [[bin]]
-name = "fuzz_saitek_input_report"
-path = "fuzz_targets/fuzz_saitek_input_report.rs"
+name = "fuzz_honeycomb_parsers"
+path = "fuzz_targets/fuzz_honeycomb_parsers.rs"
 test = false
 doc = false

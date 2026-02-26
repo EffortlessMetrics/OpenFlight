@@ -1,0 +1,63 @@
+# Brunner CLS-E Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID confirmed: 0x25BB (Brunner Elektronik AG) — from the-sz.com USB ID database
+# (source: linux-usb.org, vendor registered as "Brunner Elektronik AG").
+# PID confirmed: 0x0063 — from the-sz.com USB ID database, listed as
+# "PRT.5105 [Yoke]" (PRT.5105 is the Brunner part number for the CLS-E yoke USB interface).
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB         # Brunner Elektronik AG (registered VID)
+    product_id: 0x0063        # PRT.5105 [Yoke] — confirmed from the-sz.com USB ID DB
+  hid:
+    usage_page: 0x01          # Generic Desktop
+    usage: 0x04               # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]      # Yoke roll and pitch; no integrated throttle
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine]
+    max_update_rate_hz: 250
+    torque_limit_nm: null     # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: CLS2SIM_COMPANION
+    description: >
+      The CLS-E requires the Brunner CLS2SIM companion software for FFB configuration
+      and yoke calibration. OpenFlight can read axis data directly via HID but FFB
+      effects should be sent via the CLS2SIM API or raw USB output reports.
+  - id: HIL_NOT_VALIDATED
+    description: >
+      HID report layout inferred from Brunner SDK documentation and the USB PID/part
+      mapping. Hardware-in-the-loop (HIL) validation has not been performed.
+      Axis byte order and report ID require confirmation from real hardware.
+  - id: CAN_GATEWAY_ALT
+    description: >
+      Some CLS-E installations connect via the CLS CANaerospace Gateway (PRT.5113,
+      PID 0x006A) rather than direct USB HID. This manifest covers the direct USB
+      path only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID/PID confirmed from linux-usb.org registry. HID report layout unvalidated;
+    no HIL rig. FFB integration requires CLS2SIM companion software or Brunner SDK.
+    Last reviewed: 2026-02.

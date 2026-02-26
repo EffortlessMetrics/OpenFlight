@@ -7,6 +7,9 @@
 //!
 //! - **Alpha Flight Controls XPC** — 2-axis yoke, 36 buttons, 1 hat
 //! - **Bravo Throttle Quadrant** — 7-axis throttle, 64 buttons, 21 LEDs
+//! - **Charlie Rudder Pedals** — 3-axis pedals (rudder, left/right brake);
+//!   VID 0x294B confirmed; PID unconfirmed at time of writing.
+//!   See `compat/devices/honeycomb/charlie-rudder-pedals.yaml`.
 //!
 //! # Bravo LED control
 //!

@@ -1,0 +1,53 @@
+# Honeycomb Charlie Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID confirmed: 0x294B (same as Alpha and Bravo, from BetterBravoLights and SPAD.neXt).
+# PID unconfirmed: Charlie Rudder Pedals launched late 2024; PID not yet found in any
+# open-source project or USB ID database. Confirm with lsusb / USBView on real hardware.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Charlie Rudder Pedals"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: ~             # PID unconfirmed — requires lsusb / USBView verification
+  hid:
+    usage_page: 0x01          # Generic Desktop
+    usage: 0x04               # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: CHARLIE_PID_UNVERIFIED
+    description: >
+      The Charlie Rudder Pedals PID (product_id) is unknown at manifest creation time.
+      Device was released late 2024 and its USB PID has not appeared in any open-source
+      project or public USB ID database. Do not use for device matching until confirmed.
+      Submit confirmed PID via PR with lsusb or USBView evidence.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID confirmed (0x294B). PID unconfirmed at manifest creation.
+    Do not enable device matching until product_id is filled in.
+    Last reviewed: 2026-02.

@@ -15,9 +15,6 @@ libfuzzer-sys = "0.4"
 [dependencies.flight-hotas-vkb]
 path = ".."
 
-[dependencies.flight-hid-support]
-path = "../../flight-hid-support"
-
 # Cargo automatically adds this profile for fuzz targets
 [profile.release]
 debug = 1

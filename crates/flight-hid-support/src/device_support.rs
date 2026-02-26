@@ -307,6 +307,36 @@ pub const WINWING_UFC1_HUD1_PID: u16 = 0xBEDE;
 /// USB string "SKYWALKER Metal Rudder Pedals").
 pub const WINWING_SKYWALKER_RUDDER_PID: u16 = 0xBEF0;
 
+/// USB Vendor ID for all Moza (Gudsen Technology) products.
+///
+/// Confirmed: VID 0x346E — from the-sz.com USB ID database and
+/// open-source Moza integration projects (moza-ffb, python-mozaffb).
+pub const MOZA_VENDOR_ID: u16 = 0x346E;
+
+/// USB Product ID for the Moza AB9 Force Feedback Base (joystick / flight config).
+///
+/// Confirmed: VID 0x346E, PID 0x0005 — community-tested, validated in
+/// `compat/devices/moza/ab9.yaml` and `flight-ffb-moza` crate property tests.
+/// Note: R3 FFB Base uses PID 0x0002.
+pub const MOZA_AB9_PID: u16 = 0x0005;
+
+/// USB Product ID for the Moza R3 Force Feedback Base.
+///
+/// Confirmed: VID 0x346E, PID 0x0002 — community-reported alongside AB9.
+pub const MOZA_R3_PID: u16 = 0x0002;
+
+/// USB Vendor ID for Brunner Elektronik AG.
+///
+/// Confirmed: VID 0x25BB — from the-sz.com USB ID database
+/// (source: linux-usb.org, vendor registered as "Brunner Elektronik AG").
+pub const BRUNNER_VENDOR_ID: u16 = 0x25BB;
+
+/// USB Product ID for the Brunner CLS-E FFB Yoke (PRT.5105).
+///
+/// Confirmed: VID 0x25BB, PID 0x0063 — from the-sz.com USB ID database
+/// (listed as "PRT.5105 [Yoke]", the part number for the CLS-E direct USB connection).
+pub const BRUNNER_CLS_E_YOKE_PID: u16 = 0x0063;
+
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
 pub const USAGE_PAGE_BUTTON: u16 = 0x09;
 
@@ -721,6 +751,66 @@ pub fn vpforce_model(product_id: u16) -> Option<VpforceModel> {
     match product_id {
         VPFORCE_RHINO_PID_V2 => Some(VpforceModel::RhinoV2),
         VPFORCE_RHINO_PID_V3 => Some(VpforceModel::RhinoV3),
+        _ => None,
+    }
+}
+
+/// Moza (Gudsen Technology) FFB base product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MozaModel {
+    /// Moza AB9 Force Feedback Base (joystick / flight config). VID 0x346E, PID 0x0005.
+    Ab9,
+    /// Moza R3 Force Feedback Base. VID 0x346E, PID 0x0002.
+    R3,
+}
+
+impl MozaModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            MozaModel::Ab9 => "Moza AB9 FFB Base",
+            MozaModel::R3 => "Moza R3 FFB Base",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known Moza device.
+pub fn is_moza_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == MOZA_VENDOR_ID && matches!(product_id, MOZA_AB9_PID | MOZA_R3_PID)
+}
+
+/// Returns the Moza model for a known PID, or `None` for unknown PIDs.
+pub fn moza_model(product_id: u16) -> Option<MozaModel> {
+    match product_id {
+        MOZA_AB9_PID => Some(MozaModel::Ab9),
+        MOZA_R3_PID => Some(MozaModel::R3),
+        _ => None,
+    }
+}
+
+/// Brunner Elektronik AG FFB yoke product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BrunnerModel {
+    /// Brunner CLS-E Force Feedback Yoke (PRT.5105). VID 0x25BB, PID 0x0063.
+    ClsE,
+}
+
+impl BrunnerModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            BrunnerModel::ClsE => "Brunner CLS-E FFB Yoke",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known Brunner device.
+pub fn is_brunner_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == BRUNNER_VENDOR_ID && matches!(product_id, BRUNNER_CLS_E_YOKE_PID)
+}
+
+/// Returns the Brunner model for a known PID, or `None` for unknown PIDs.
+pub fn brunner_model(product_id: u16) -> Option<BrunnerModel> {
+    match product_id {
+        BRUNNER_CLS_E_YOKE_PID => Some(BrunnerModel::ClsE),
         _ => None,
     }
 }

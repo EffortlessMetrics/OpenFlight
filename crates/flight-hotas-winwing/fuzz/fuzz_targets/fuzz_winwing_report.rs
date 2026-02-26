@@ -3,22 +3,24 @@
 
 //! Fuzz target for WinWing HID report parsers.
 //!
-//! Exercises `parse_throttle_report`, `parse_stick_report`, and
-//! `parse_rudder_report` with arbitrary byte slices.  All three are
-//! infallible from a safety perspective — they may return `Err` but must
-//! never panic, cause UB, or produce axes outside expected ranges.
+//! Exercises all WinWing parsers (Orion2 throttle/stick, TFRP rudder,
+//! F-16EX grip, SuperTaurus dual throttle, UFC panel, Skywalker rudder)
+//! with arbitrary byte slices.  All parsers must never panic, cause UB,
+//! or produce axis values outside their documented ranges.
+//!
+//! Run with: `cargo +nightly fuzz run fuzz_winwing_report`
 
 #![no_main]
 
-use flight_hotas_winwing::input::{
-    parse_rudder_report, parse_stick_report, parse_throttle_report,
+use flight_hotas_winwing::{
+    parse_f16ex_stick_report, parse_rudder_report, parse_skywalker_rudder_report,
+    parse_stick_report, parse_super_taurus_report, parse_throttle_report,
+    parse_ufc_panel_report,
 };
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
-    // Each parser is length-validated internally and returns Err on short input.
-    // We assert axis values stay in expected normalised ranges on success.
-
+    // Orion2 throttle — axes in [0.0, 1.0] (throttles) / [-1.0, 1.0] (mouse)
     if let Ok(state) = parse_throttle_report(data) {
         let axes = &state.axes;
         assert!(
@@ -48,6 +50,7 @@ fuzz_target!(|data: &[u8]| {
         );
     }
 
+    // Orion2 F/A-18C stick — axes in [-1.0, 1.0]
     if let Ok(state) = parse_stick_report(data) {
         let axes = &state.axes;
         assert!(
@@ -62,6 +65,7 @@ fuzz_target!(|data: &[u8]| {
         );
     }
 
+    // TFRP rudder pedals — rudder in [-1.0, 1.0], brakes in [0.0, 1.0]
     if let Ok(axes) = parse_rudder_report(data) {
         assert!(
             (-1.0..=1.0).contains(&axes.rudder),
@@ -76,6 +80,64 @@ fuzz_target!(|data: &[u8]| {
         assert!(
             (0.0..=1.0).contains(&axes.brake_right),
             "brake_right out of range: {}",
+            axes.brake_right
+        );
+    }
+
+    // F-16EX grip — axes in [-1.0, 1.0]
+    if let Ok(state) = parse_f16ex_stick_report(data) {
+        let axes = &state.axes;
+        assert!(
+            (-1.0..=1.0).contains(&axes.roll),
+            "f16ex roll out of range: {}",
+            axes.roll
+        );
+        assert!(
+            (-1.0..=1.0).contains(&axes.pitch),
+            "f16ex pitch out of range: {}",
+            axes.pitch
+        );
+    }
+
+    // SuperTaurus dual throttle — axes in [0.0, 1.0]
+    if let Ok(state) = parse_super_taurus_report(data) {
+        let axes = &state.axes;
+        assert!(
+            (0.0..=1.0).contains(&axes.throttle_left),
+            "super_taurus throttle_left out of range: {}",
+            axes.throttle_left
+        );
+        assert!(
+            (0.0..=1.0).contains(&axes.throttle_right),
+            "super_taurus throttle_right out of range: {}",
+            axes.throttle_right
+        );
+        assert!(
+            (0.0..=1.0).contains(&axes.throttle_combined),
+            "super_taurus throttle_combined out of range: {}",
+            axes.throttle_combined
+        );
+    }
+
+    // UFC panel — button-only panel, must not panic
+    let _ = parse_ufc_panel_report(data);
+
+    // Skywalker metal rudder pedals — rudder in [-1.0, 1.0], brakes in [0.0, 1.0]
+    if let Ok(state) = parse_skywalker_rudder_report(data) {
+        let axes = &state.axes;
+        assert!(
+            (-1.0..=1.0).contains(&axes.rudder),
+            "skywalker rudder out of range: {}",
+            axes.rudder
+        );
+        assert!(
+            (0.0..=1.0).contains(&axes.brake_left),
+            "skywalker brake_left out of range: {}",
+            axes.brake_left
+        );
+        assert!(
+            (0.0..=1.0).contains(&axes.brake_right),
+            "skywalker brake_right out of range: {}",
             axes.brake_right
         );
     }

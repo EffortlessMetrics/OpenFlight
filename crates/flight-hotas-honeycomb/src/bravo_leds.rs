@@ -170,7 +170,7 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
     // data[0] = report ID 0x00 (already zero)
 
     // Byte 1 — AP mode
-    data[1] |= (leds.hdg as u8) << 0;
+    data[1] |= leds.hdg as u8;
     data[1] |= (leds.nav as u8) << 1;
     data[1] |= (leds.apr as u8) << 2;
     data[1] |= (leds.rev as u8) << 3;
@@ -180,7 +180,7 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
     data[1] |= (leds.autopilot as u8) << 7;
 
     // Byte 2 — Gear + warnings
-    data[2] |= (leds.gear_l_green as u8) << 0;
+    data[2] |= leds.gear_l_green as u8;
     data[2] |= (leds.gear_l_red as u8) << 1;
     data[2] |= (leds.gear_c_green as u8) << 2;
     data[2] |= (leds.gear_c_red as u8) << 3;
@@ -190,7 +190,7 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
     data[2] |= (leds.engine_fire as u8) << 7;
 
     // Byte 3 — Annunciator row 1
-    data[3] |= (leds.low_oil_pressure as u8) << 0;
+    data[3] |= leds.low_oil_pressure as u8;
     data[3] |= (leds.low_fuel_pressure as u8) << 1;
     data[3] |= (leds.anti_ice as u8) << 2;
     data[3] |= (leds.starter_engaged as u8) << 3;
@@ -200,7 +200,7 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
     data[3] |= (leds.low_hyd_pressure as u8) << 7;
 
     // Byte 4 — Annunciator row 2
-    data[4] |= (leds.aux_fuel_pump as u8) << 0;
+    data[4] |= leds.aux_fuel_pump as u8;
     data[4] |= (leds.parking_brake as u8) << 1;
     data[4] |= (leds.low_volts as u8) << 2;
     data[4] |= (leds.door as u8) << 3;

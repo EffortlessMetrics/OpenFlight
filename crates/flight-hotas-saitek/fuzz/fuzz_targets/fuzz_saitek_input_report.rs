@@ -12,7 +12,7 @@
 
 use libfuzzer_sys::fuzz_target;
 use flight_hotas_saitek::input::HotasInputHandler;
-use flight_hid_support::saitek_hotas::SaitekHotasType;
+use flight_hotas_saitek::SaitekHotasType;
 
 fuzz_target!(|data: &[u8]| {
     // Test all four device types with the same byte sequence

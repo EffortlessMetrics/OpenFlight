@@ -1050,6 +1050,30 @@ jobs:
           cargo +nightly fuzz run fuzz_winwing_report -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Fuzz flight-hotas-virpil HID report parsers (60s)
+        run: |
+          cd crates/flight-hotas-virpil
+          cargo +nightly fuzz run fuzz_virpil_parsers -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-thrustmaster HID report parsers (60s)
+        run: |
+          cd crates/flight-hotas-thrustmaster
+          cargo +nightly fuzz run fuzz_thrustmaster_parsers -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-honeycomb HID report parsers (60s)
+        run: |
+          cd crates/flight-hotas-honeycomb
+          cargo +nightly fuzz run fuzz_honeycomb_parsers -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hotas-logitech HID report parser (60s)
+        run: |
+          cd crates/flight-hotas-logitech
+          cargo +nightly fuzz run fuzz_logitech_parsers -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────

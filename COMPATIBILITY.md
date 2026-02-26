@@ -6,6 +6,7 @@
 
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
+| Brunner CLS-E Force Feedback Yoke | 0x25BB | 0x0063 | 2 | 16 | ✓ | 3 |
 | CH Combat Stick | 0x068E | 0x00F4 | 4 | 24 | ✗ | 2 |
 | CH Flight Sim Eclipse Yoke | 0x068E | 0x0051 | 6 | 32 | ✗ | 2 |
 | CH Fighterstick | 0x068E | 0x00F3 | 4 | 32 | ✗ | 2 |
@@ -13,6 +14,7 @@
 | CH Pro Throttle | 0x068E | 0x00F1 | 5 | 32 | ✗ | 2 |
 | Honeycomb Alpha Flight Controls XPC | 0x294B | 0x0102 | 2 | 36 | ✗ | 2 |
 | Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1901 | 7 | 64 | ✗ | 2 |
+| Honeycomb Charlie Rudder Pedals | 0x294B | ? | 3 | 0 | ✗ | 3 |
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | MFG Crosswind Rudder Pedals | ? | ? | 3 | 0 | ✗ | 3 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
