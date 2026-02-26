@@ -39,7 +39,7 @@ support_tier: 2
 known_issues:
   - id: POLLING_RATE
     description: >
-      Telemetry is polled rather than pushed. The default 50 Hz poll rate
+      Telemetry is polled rather than pushed. The configurable poll rate
       introduces up to 20 ms additional latency vs. push-based adapters.
   - id: NO_AIRCRAFT_TYPE
     description: >
