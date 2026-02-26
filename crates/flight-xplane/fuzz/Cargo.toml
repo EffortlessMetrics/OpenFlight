@@ -30,3 +30,9 @@ name = "fuzz_xplane_dataref"
 path = "fuzz_targets/fuzz_xplane_dataref.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_udp"
+path = "fuzz_targets/fuzz_udp.rs"
+test = false
+doc = false

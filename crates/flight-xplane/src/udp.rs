@@ -686,6 +686,16 @@ impl UdpClient {
     }
 }
 
+/// Parse a raw X-Plane UDP response packet.
+///
+/// Exposed for fuzz testing: accepts arbitrary bytes and returns any parse error.
+/// Never panics — the caller should treat all `Err` variants as expected.
+pub fn parse_udp_packet(data: &[u8]) -> Result<(), UdpError> {
+    let pending = Arc::new(RwLock::new(HashMap::new()));
+    let cache = Arc::new(RwLock::new(HashMap::new()));
+    UdpClient::handle_response(data, &pending, &cache)
+}
+
 /// UDP client statistics
 #[derive(Debug, Clone)]
 pub struct UdpStats {
