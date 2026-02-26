@@ -473,6 +473,79 @@ mod tests {
         }
     }
 
+    mod xplane_proptest {
+        use super::*;
+        use crate::adapters::xplane::XPlaneConverter;
+        use proptest::prelude::*;
+
+        proptest! {
+            /// Altitude conversion (meters → feet) is monotone over valid range.
+            #[test]
+            fn altitude_conversion_monotone(
+                a in -1000.0f32..50000.0f32,
+                b in -1000.0f32..50000.0f32,
+            ) {
+                let fa = XPlaneConverter::convert_altitude_m_to_ft(a);
+                let fb = XPlaneConverter::convert_altitude_m_to_ft(b);
+                if a <= b {
+                    prop_assert!(fa <= fb, "monotone violated: {a} m -> {fa} ft, {b} m -> {fb} ft");
+                }
+            }
+
+            /// Altitude output is always finite for finite inputs.
+            #[test]
+            fn altitude_output_finite(m in -1000.0f32..50000.0f32) {
+                let ft = XPlaneConverter::convert_altitude_m_to_ft(m);
+                prop_assert!(ft.is_finite(), "altitude_m_to_ft({m}) = {ft} is not finite");
+            }
+
+            /// Airspeed knots→ValidatedSpeed is monotone over valid domain [0, 1000).
+            #[test]
+            fn airspeed_knots_monotone(
+                a in 0.0f32..999.0f32,
+                b in 0.0f32..999.0f32,
+            ) {
+                let ra = XPlaneConverter::convert_airspeed_knots(a).unwrap();
+                let rb = XPlaneConverter::convert_airspeed_knots(b).unwrap();
+                if a <= b {
+                    prop_assert!(ra.value() <= rb.value(),
+                        "monotone violated: {a} kts -> {}, {b} kts -> {}", ra.value(), rb.value());
+                }
+            }
+
+            /// Angle conversion always normalizes to [-180, 180].
+            #[test]
+            fn angle_conversion_stays_in_signed_range(degrees in -3600.0f32..3600.0f32) {
+                let result = XPlaneConverter::convert_angle_degrees(degrees);
+                prop_assert!(result.is_ok(), "conversion failed for {degrees}");
+                let deg = result.unwrap().to_degrees();
+                prop_assert!(
+                    deg >= -180.0 && deg <= 180.0,
+                    "angle {deg} outside [-180,180] for input {degrees}"
+                );
+            }
+
+            /// Angle conversion never panics for any normal (non-NaN, non-Inf) f32.
+            #[test]
+            fn angle_conversion_no_panic_normal_f32(degrees in proptest::num::f32::NORMAL) {
+                // Must not panic; result may be Ok or Err depending on value
+                let _ = XPlaneConverter::convert_angle_degrees(degrees);
+            }
+
+            /// N1 percentage is always in [0, 100] for any non-negative finite input.
+            #[test]
+            fn n1_percentage_always_in_valid_range(v in 0.0f32..1000.0f32) {
+                let result = XPlaneConverter::convert_n1_percentage(v);
+                prop_assert!(result.is_ok(), "n1 conversion failed for {v}");
+                let pct = result.unwrap().value();
+                prop_assert!(
+                    (0.0f32..=100.0f32).contains(&pct),
+                    "n1 pct {pct} outside [0,100] for input {v}"
+                );
+            }
+        }
+    }
+
     mod dcs_tests {
         use super::*;
         use crate::adapters::dcs::DcsConverter;
