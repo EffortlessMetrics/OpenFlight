@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# MFG Crosswind V1 (original generation, ~2012–2015).
+# VID 0x1551 is MFG's registered USB vendor ID. PID 0x0001 community-reported.
+# Not found in linux-hardware.org probe database (niche device).
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V1 Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0001
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: TENSION_HARDWARE_ONLY
+    description: "Spring tension is adjusted via physical spring rings — software cannot control it."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Original Crosswind generation. VID 0x1551 confirmed (MFG registered USB vendor ID).
+    PID 0x0001 community-reported; not found in linux-hardware.org probe database.
+    Prefer crosswind.yaml (V3, 0x0004) for current hardware.

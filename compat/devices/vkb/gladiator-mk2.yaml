@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VKB Gladiator Mk.II (original Gladiator generation, ~2014–2017).
+# Confirmed: VID 0x231D (VKB), PID 0x0121 — linux-hardware.org (2 probes,
+# USB string "VKBsim Gladiator", vendor "www.vkb-sim.pro Alex Oz 2012-2017").
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator Mk.II"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0121  # VKBsim Gladiator — confirmed via linux-hardware.org (2 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 13
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Original VKB Gladiator generation (pre-NXT). PID 0x0121 confirmed via
+    linux-hardware.org (2 probes, USB string "VKBsim Gladiator",
+    vendor "www.vkb-sim.pro Alex Oz 2012-2017"). For current hardware see
+    gladiator-nxt.yaml (0x0200) or gladiator-modern-combat-pro.yaml (0x0131).

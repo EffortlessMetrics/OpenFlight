@@ -1,0 +1,53 @@
+# Saitek Pro Flight Cessna Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0BD3 — linux-hardware.org (3 probes,
+# "Pro Flight Cessna Yoke"). Designed to replicate Cessna 172/182 yoke geometry.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Yoke"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0BD3      # Confirmed via linux-hardware.org (3 probes, "Pro Flight Cessna Yoke")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKE_BIPOLAR_XY
+    description: >
+      X (aileron) and Y (elevator) axes are bipolar (centred). The Z axis
+      (throttle lever) is unipolar (0 = idle, max = full). Apply separate
+      curve and deadzone profiles for the centred and unipolar axes.
+  - id: CESSNA_GEOMETRY
+    description: >
+      Yoke movement replicates Cessna 172/182 control column geometry with
+      twist-style aileron roll. Pull/push for pitch, rotate left/right for roll.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0BD3 confirmed as "Pro Flight Cessna Yoke" via linux-hardware.org (3 probes).
+    Capabilities based on Saitek Cessna Yoke product specification and community reports.
+    Part of the Saitek Cessna simulation line alongside the Cessna Rudder Pedals (0x0765)
+    and Cessna Trim Wheel (0x0BD4).
+    Last reviewed: 2026-02.

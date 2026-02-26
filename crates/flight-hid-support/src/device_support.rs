@@ -244,6 +244,23 @@ pub const SAITEK_PRO_FLIGHT_RADIO_PANEL_PID: u16 = 0x0D05;
 /// Confirmed: VID 0x06A3 (Saitek), PID 0x0D67 — linux-hardware.org ("Pro Flight Switch Panel").
 pub const SAITEK_PRO_FLIGHT_SWITCH_PANEL_PID: u16 = 0x0D67;
 
+// Saitek Cessna simulation line (VID 0x06A3) - confidence: CONFIRMED (linux-hardware.org)
+/// USB Product ID for the Saitek Pro Flight Cessna Yoke.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0BD3 — linux-hardware.org (3 probes,
+/// "Pro Flight Cessna Yoke").
+pub const SAITEK_CESSNA_YOKE_PID: u16 = 0x0BD3;
+/// USB Product ID for the Saitek Pro Flight Cessna Rudder Pedals.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0765 — linux-hardware.org (4 probes,
+/// "Pro Flight Cessna Rudder Pedals"). Cessna-branded variant of PID 0x0763.
+pub const SAITEK_CESSNA_RUDDER_PEDALS_PID: u16 = 0x0765;
+/// USB Product ID for the Saitek Pro Flight Cessna Trim Wheel.
+///
+/// Confirmed: VID 0x06A3 (Saitek), PID 0x0BD4 — linux-hardware.org (3 probes,
+/// "Pro Flight Cessna Trim Wheel").
+pub const SAITEK_CESSNA_TRIM_WHEEL_PID: u16 = 0x0BD4;
+
 /// USB Vendor ID for VIRPIL Controls UAB.
 ///
 /// Confirmed: [the-sz.com USB ID DB](https://www.the-sz.com/products/usbid/index.php?v=0x3344)
@@ -332,7 +349,8 @@ pub const CH_PRO_THROTTLE_PID: u16 = 0x00F1;
 
 /// USB Product ID for the CH Pro Pedals.
 ///
-/// Source: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_PRO_PEDALS)
+/// Confirmed: Linux kernel `drivers/hid/hid-ids.h` (USB_DEVICE_ID_CH_PRO_PEDALS);
+/// linux-hardware.org (26 probes, "Flight Sim Pedals / CH PRO PEDALS USB").
 pub const CH_PRO_PEDALS_PID: u16 = 0x00F2;
 
 /// USB Product ID for the CH Fighterstick.
@@ -569,6 +587,44 @@ pub const MOZA_AB9_PID: u16 = 0x0005;
 ///
 /// Confirmed: VID 0x346E, PID 0x0002 — community-reported alongside AB9.
 pub const MOZA_R3_PID: u16 = 0x0002;
+
+/// USB Vendor ID for MFG (Motion Fantasy Games).
+///
+/// Confirmed: VID 0x1551 — registered USB vendor ID for MFG Crosswind pedals.
+pub const MFG_VENDOR_ID: u16 = 0x1551;
+
+/// USB Product ID for the MFG Crosswind V1 Rudder Pedals (original generation, ~2012–2015).
+///
+/// Community-reported: VID 0x1551, PID 0x0001. Not found in linux-hardware.org.
+pub const MFG_CROSSWIND_V1_PID: u16 = 0x0001;
+
+/// USB Product ID for the MFG Crosswind V2 Rudder Pedals (~2015–2020).
+///
+/// Community-reported: VID 0x1551, PID 0x0002. Not found in linux-hardware.org.
+pub const MFG_CROSSWIND_V2_PID: u16 = 0x0002;
+
+/// USB Product ID for the MFG Crosswind V3 Rudder Pedals (current generation, ~2020+).
+///
+/// Community-reported: VID 0x1551, PID 0x0004. Not found in linux-hardware.org.
+pub const MFG_CROSSWIND_V3_PID: u16 = 0x0004;
+
+/// USB Vendor ID for RealSimulator.
+///
+/// Community-confirmed: VID 0x20FF — used by FSSB R3 Force Sensing Stick Base.
+pub const REALSIMULATOR_VENDOR_ID: u16 = 0x20FF;
+
+/// USB Product ID for the RealSimulator FSSB R3 (Force Sensing Stick Base).
+///
+/// Community-reported: VID 0x20FF, PID 0x0001. Covers FSSB R3, R3 Lite, and
+/// R3 Lightning variants (all share the same USB descriptor). Not found in
+/// linux-hardware.org probe database.
+pub const REALSIMULATOR_FSSB_R3_PID: u16 = 0x0001;
+
+/// USB Product ID for the VKB Gladiator Mk.II (original Gladiator, ~2014–2017).
+///
+/// Confirmed: VID 0x231D (VKB), PID 0x0121 — linux-hardware.org (2 probes,
+/// USB string "VKBsim Gladiator", vendor "www.vkb-sim.pro Alex Oz 2012-2017").
+pub const VKB_GLADIATOR_MK2_PID: u16 = 0x0121;
 
 /// USB Vendor ID for Brunner Elektronik AG.
 ///

@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
-# VID/PID UNCONFIRMED. Custom ATmega32U4 firmware; PID varies by firmware version.
-# Community reports: 0x0483:0x5740 (STM32) or 0x03EB:0x2402 (Atmel) — UNVERIFIED.
+# VID 0x1551 is MFG's registered USB vendor ID (Motion Fantasy Games).
+# PID 0x0004 corresponds to Crosswind V3 (current generation, ~2020+).
+# Community-reported; not found in linux-hardware.org probe database (niche device).
+# See crosswind-v1.yaml (0x0001) and crosswind-v2.yaml (0x0002) for older revisions.
 schema_version: "1"
 
 device:
-  name: "MFG Crosswind Rudder Pedals"
+  name: "MFG Crosswind V3 Rudder Pedals"
   vendor: "MFG (Motion Fantasy Games)"
   usb:
-    vendor_id: ~
-    product_id: ~
+    vendor_id: 0x1551
+    product_id: 0x0004
   hid:
     usage_page: 0x01
     usage: 0x04
@@ -28,14 +30,19 @@ polling:
   max_jitter_ms: 4
 
 quirks:
-  - id: UNCONFIRMED_PID
-    description: "PID varies by firmware version. Confirm with lsusb or USBView on real hardware and submit to OpenFlight."
   - id: TENSION_HARDWARE_ONLY
     description: "Spring tension is adjusted via physical spring rings — software cannot control it."
+  - id: BRAKE_AXIS_INDEPENDENT
+    description: >
+      Left and right toe brakes are reported as independent axes separate from the
+      rudder axis. Map them to separate toe-brake inputs in your profile.
 
 support:
-  tier: 3
+  tier: 2
   test_coverage:
     simulated: false
     hil: false
-  notes: "VID/PID unconfirmed. Best-effort tier-3 support based on community documentation."
+  notes: >
+    VID 0x1551 confirmed (MFG registered USB vendor ID). PID 0x0004 community-reported
+    for V3 hardware. See crosswind-v1.yaml (0x0001) and crosswind-v2.yaml (0x0002)
+    for older hardware revisions.

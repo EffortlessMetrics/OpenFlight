@@ -1,0 +1,55 @@
+# Saitek Pro Flight Cessna Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0BD4 — linux-hardware.org (3 probes,
+# "Pro Flight Cessna Trim Wheel"). A standalone trim wheel accessory designed to
+# replicate the elevator trim wheel found in Cessna 172/182 aircraft.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Trim Wheel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0BD4      # Confirmed via linux-hardware.org (3 probes, "Pro Flight Cessna Trim Wheel")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SINGLE_AXIS_TRIM
+    description: >
+      Trim wheel exposes a single unipolar axis representing elevator trim
+      position. Full-forward rotation corresponds to nose-up trim, full-aft
+      to nose-down trim. Map to the sim elevator trim axis.
+  - id: NO_DETENT
+    description: >
+      The trim wheel has no centre detent; there is no tactile centre position.
+      A software deadzone around mid-travel (0x1FF) may be desired to prevent
+      unintentional trim input near neutral.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0BD4 confirmed as "Pro Flight Cessna Trim Wheel" via linux-hardware.org
+    (3 probes). Single-axis trim wheel accessory; part of the Saitek Cessna
+    simulation line alongside the Cessna Yoke (0x0BD3) and Cessna Rudder Pedals
+    (0x0765).
+    Last reviewed: 2026-02.

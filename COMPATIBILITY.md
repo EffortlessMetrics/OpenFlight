@@ -18,8 +18,14 @@
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | Logitech Force 3D Pro | 0x046D | 0xC286 | 6 | 12 | ✓ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
-| MFG Crosswind Rudder Pedals | ? | ? | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V1 Rudder Pedals | 0x1551 | 0x0001 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V2 Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| RealSimulator FSSB R3 | 0x20FF | 0x0001 | 2 | 0 | ✗ | 3 |
+| Saitek Pro Flight Cessna Rudder Pedals | 0x06A3 | 0x0765 | 3 | 0 | ✗ | 2 |
+| Saitek Pro Flight Cessna Trim Wheel | 0x06A3 | 0x0BD4 | 1 | 0 | ✗ | 2 |
+| Saitek Pro Flight Cessna Yoke | 0x06A3 | 0x0BD3 | 3 | 8 | ✗ | 2 |
 | Saitek Flight Pro Combat Rudder | 0x06A3 | 0x0764 | 3 | 15 | ✗ | 2 |
 | Saitek Pro Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 32 | ✗ | 2 |
 | Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 |
@@ -65,6 +71,7 @@
 | VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
 | VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
 | VKB Gladiator EVO OT L | 0x231D | 0x3201 | 6 | 24 | ✗ | 3 |
+| VKB Gladiator Mk.II | 0x231D | 0x0121 | 6 | 16 | ✗ | 3 |
 | VKB Gladiator Modern Combat Pro | 0x231D | 0x0131 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
