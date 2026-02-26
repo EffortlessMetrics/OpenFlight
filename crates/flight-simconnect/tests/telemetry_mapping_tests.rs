@@ -629,18 +629,36 @@ fn test_out_of_range_inputs_rejected() {
 #[test]
 fn test_boundary_values_accepted() {
     // Speed boundaries
-    assert!(MsfsConverter::convert_ias(0.0).is_ok(), "0 kts IAS is valid");
-    assert!(MsfsConverter::convert_ias(1000.0).is_ok(), "1000 kts IAS is valid");
+    assert!(
+        MsfsConverter::convert_ias(0.0).is_ok(),
+        "0 kts IAS is valid"
+    );
+    assert!(
+        MsfsConverter::convert_ias(1000.0).is_ok(),
+        "1000 kts IAS is valid"
+    );
 
     // G-force boundaries
-    assert!(MsfsConverter::convert_g_force(20.0).is_ok(), "+20 g is valid");
-    assert!(MsfsConverter::convert_g_force(-20.0).is_ok(), "-20 g is valid");
+    assert!(
+        MsfsConverter::convert_g_force(20.0).is_ok(),
+        "+20 g is valid"
+    );
+    assert!(
+        MsfsConverter::convert_g_force(-20.0).is_ok(),
+        "-20 g is valid"
+    );
 
     // Mach boundaries
     assert!(MsfsConverter::convert_mach(0.0).is_ok(), "Mach 0 is valid");
     assert!(MsfsConverter::convert_mach(5.0).is_ok(), "Mach 5 is valid");
 
     // Percentage boundaries
-    assert!(MsfsConverter::convert_percentage(0.0).is_ok(), "0% is valid");
-    assert!(MsfsConverter::convert_percentage(100.0).is_ok(), "100% is valid");
+    assert!(
+        MsfsConverter::convert_percentage(0.0).is_ok(),
+        "0% is valid"
+    );
+    assert!(
+        MsfsConverter::convert_percentage(100.0).is_ok(),
+        "100% is valid"
+    );
 }

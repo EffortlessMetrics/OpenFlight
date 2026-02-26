@@ -119,7 +119,10 @@ fn test_exponential_backoff_calculation() {
     let steps = [1.0_f64, 2.0, 4.0, 8.0, 16.0, 30.0, 30.0];
     let mut delay = 1.0_f64;
     for &expected in &steps {
-        assert!((delay - expected).abs() < 0.001, "expected {expected}, got {delay}");
+        assert!(
+            (delay - expected).abs() < 0.001,
+            "expected {expected}, got {delay}"
+        );
         delay = (delay * 2.0).min(30.0);
     }
 }
@@ -133,12 +136,18 @@ fn test_exponential_backoff_calculation() {
 fn test_default_adapter_config_is_valid() {
     let cfg = MsfsAdapterConfig::default();
     assert!(cfg.publish_rate > 0.0, "publish_rate must be positive");
-    assert!(cfg.max_reconnect_attempts > 0, "must allow at least one reconnect");
+    assert!(
+        cfg.max_reconnect_attempts > 0,
+        "must allow at least one reconnect"
+    );
     assert!(
         cfg.aircraft_detection_timeout > Duration::ZERO,
         "detection timeout must be non-zero"
     );
-    assert!(cfg.auto_reconnect, "auto-reconnect should be enabled by default");
+    assert!(
+        cfg.auto_reconnect,
+        "auto-reconnect should be enabled by default"
+    );
 }
 
 /// Default `SessionConfig` describes a local SimConnect connection.
@@ -181,7 +190,10 @@ fn test_default_mapping_has_required_simvars() {
     let kin = &cfg.default_mapping.kinematics;
     assert!(!kin.ias.is_empty(), "IAS simvar must be set");
     assert!(!kin.tas.is_empty(), "TAS simvar must be set");
-    assert!(!kin.ground_speed.is_empty(), "ground speed simvar must be set");
+    assert!(
+        !kin.ground_speed.is_empty(),
+        "ground speed simvar must be set"
+    );
     assert!(!kin.aoa.is_empty(), "AoA simvar must be set");
     assert!(!kin.sideslip.is_empty(), "sideslip simvar must be set");
     assert!(!kin.bank.is_empty(), "bank simvar must be set");
@@ -189,16 +201,25 @@ fn test_default_mapping_has_required_simvars() {
     assert!(!kin.heading.is_empty(), "heading simvar must be set");
     assert!(!kin.g_force.is_empty(), "g-force simvar must be set");
     assert!(!kin.mach.is_empty(), "Mach simvar must be set");
-    assert!(!kin.vertical_speed.is_empty(), "vertical speed simvar must be set");
+    assert!(
+        !kin.vertical_speed.is_empty(),
+        "vertical speed simvar must be set"
+    );
 
     let config = &cfg.default_mapping.config;
     assert!(!config.gear_nose.is_empty(), "gear nose simvar must be set");
     assert!(!config.gear_left.is_empty(), "gear left simvar must be set");
-    assert!(!config.gear_right.is_empty(), "gear right simvar must be set");
+    assert!(
+        !config.gear_right.is_empty(),
+        "gear right simvar must be set"
+    );
     assert!(!config.flaps.is_empty(), "flaps simvar must be set");
     assert!(!config.ap_master.is_empty(), "AP master simvar must be set");
 
-    assert!(!cfg.default_mapping.engines.is_empty(), "engine mapping must not be empty");
+    assert!(
+        !cfg.default_mapping.engines.is_empty(),
+        "engine mapping must not be empty"
+    );
 }
 
 /// Default update rates are positive and in a sensible range.
@@ -335,9 +356,20 @@ fn test_fixture_c172_all_kinematics_golden() {
     let sv_mach = 0.15f64;
 
     // ---- Expected bus values (from "expected_bus_values") ----
-    assert_eq!(MsfsConverter::convert_ias(sv_ias).unwrap().to_knots(), 100.0f32);
-    assert_eq!(MsfsConverter::convert_tas(sv_tas).unwrap().to_knots(), 105.0f32);
-    assert_eq!(MsfsConverter::convert_ground_speed(sv_gs).unwrap().to_knots(), 98.0f32);
+    assert_eq!(
+        MsfsConverter::convert_ias(sv_ias).unwrap().to_knots(),
+        100.0f32
+    );
+    assert_eq!(
+        MsfsConverter::convert_tas(sv_tas).unwrap().to_knots(),
+        105.0f32
+    );
+    assert_eq!(
+        MsfsConverter::convert_ground_speed(sv_gs)
+            .unwrap()
+            .to_knots(),
+        98.0f32
+    );
 
     let aoa = MsfsConverter::convert_angle_degrees(sv_aoa).unwrap();
     assert!((aoa.to_degrees() - 3.5f32).abs() < 0.001);
@@ -359,8 +391,20 @@ fn test_fixture_c172_all_kinematics_golden() {
     assert!((heading.to_degrees() - (-90.0f32)).abs() < 0.001);
     assert!((heading.to_radians() - (-1.570796f32)).abs() < 0.0001);
 
-    assert_eq!(MsfsConverter::convert_g_force(sv_g).unwrap().value(), 1.0f32);
-    assert_eq!(MsfsConverter::convert_g_force(sv_g_lat).unwrap().value(), 0.05f32);
-    assert_eq!(MsfsConverter::convert_g_force(sv_g_long).unwrap().value(), 0.1f32);
-    assert_eq!(MsfsConverter::convert_mach(sv_mach).unwrap().value(), 0.15f32);
+    assert_eq!(
+        MsfsConverter::convert_g_force(sv_g).unwrap().value(),
+        1.0f32
+    );
+    assert_eq!(
+        MsfsConverter::convert_g_force(sv_g_lat).unwrap().value(),
+        0.05f32
+    );
+    assert_eq!(
+        MsfsConverter::convert_g_force(sv_g_long).unwrap().value(),
+        0.1f32
+    );
+    assert_eq!(
+        MsfsConverter::convert_mach(sv_mach).unwrap().value(),
+        0.15f32
+    );
 }
