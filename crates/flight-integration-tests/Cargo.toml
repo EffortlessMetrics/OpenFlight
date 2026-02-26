@@ -16,4 +16,7 @@ publish = false
 flight-bus = { path = "../flight-bus" }
 flight-hotas-virpil = { path = "../flight-hotas-virpil" }
 flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
+flight-hotas-winwing = { path = "../flight-hotas-winwing" }
+flight-hotas-vpforce = { path = "../flight-hotas-vpforce" }
+flight-hotas-vkb = { path = "../flight-hotas-vkb" }
 flight-hid-support = { path = "../flight-hid-support" }
