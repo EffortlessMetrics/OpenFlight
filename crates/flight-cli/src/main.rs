@@ -264,3 +264,103 @@ fn error_to_exit_code(error: &anyhow::Error) -> i32 {
         1 // Generic error
     }
 }
+
+#[cfg(all(test, feature = "cli"))]
+mod tests {
+    use super::*;
+    use clap::Parser;
+
+    #[test]
+    fn parse_status_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert!(matches!(cli.command, Commands::Status));
+    }
+
+    #[test]
+    fn parse_info_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "info"]).unwrap();
+        assert!(matches!(cli.command, Commands::Info));
+    }
+
+    #[test]
+    fn parse_output_json_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "--output", "json", "status"]).unwrap();
+        assert!(matches!(cli.output, OutputFormat::Json));
+    }
+
+    #[test]
+    fn parse_output_human_is_default() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert!(matches!(cli.output, OutputFormat::Human));
+    }
+
+    #[test]
+    fn parse_verbose_short_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "-v", "status"]).unwrap();
+        assert!(cli.verbose);
+    }
+
+    #[test]
+    fn parse_verbose_long_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "--verbose", "status"]).unwrap();
+        assert!(cli.verbose);
+    }
+
+    #[test]
+    fn parse_timeout_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "--timeout", "1000", "status"]).unwrap();
+        assert_eq!(cli.timeout, 1000);
+    }
+
+    #[test]
+    fn parse_default_timeout() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert_eq!(cli.timeout, 5000);
+    }
+
+    #[test]
+    fn parse_invalid_subcommand_returns_error() {
+        let result = Cli::try_parse_from(["flightctl", "nonexistent"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_no_subcommand_returns_error() {
+        let result = Cli::try_parse_from(["flightctl"]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_devices_list_subcommand() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "devices", "list"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Devices {
+                action: commands::DeviceAction::List { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_devices_list_include_disconnected_flag() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "devices",
+            "list",
+            "--include-disconnected",
+        ])
+        .unwrap();
+        if let Commands::Devices {
+            action: commands::DeviceAction::List {
+                include_disconnected,
+                ..
+            },
+        } = cli.command
+        {
+            assert!(include_disconnected);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+}
