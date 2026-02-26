@@ -1,0 +1,56 @@
+# Saitek Pro Flight Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: linux-hardware.org reports "Pro Flight Quadrant" at
+# USB 06A3:0C2D (22 probes). Throttle quadrant with 3 levers + 6 flip switches.
+#
+# NOTE: PID 0x0C2D is also claimed in x56.yaml as the Mad Catz X56 stick variant.
+# linux-hardware.org data strongly suggests this PID belongs to the Pro Flight
+# Quadrant. The x56.yaml claim requires re-verification from primary hardware sources.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Quadrant"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C2D      # Confirmed via linux-hardware.org (22 probes)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle1, throttle2, throttle3]
+    resolution_bits: 10
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: QUADRANT_FLIP_SWITCHES
+    description: >
+      The 6 buttons correspond to the physical flip switches on the quadrant
+      base. Switches report as momentary button events (press on flip, release
+      on flip-back); they do not hold state as latched toggles in HID.
+  - id: QUADRANT_UNIPOLAR_LEVERS
+    description: >
+      All three throttle levers are unipolar (0 = idle/back, max = full
+      forward). There is no spring return; levers hold position.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0C2D confirmed as "Pro Flight Quadrant" via linux-hardware.org
+    (22 probes). Note potential PID conflict with x56.yaml (Mad Catz X56 stick
+    claim); the X56 stick PID requires re-verification from primary hardware.
+    Last reviewed: 2026-02.

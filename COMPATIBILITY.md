@@ -18,6 +18,8 @@
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | MFG Crosswind Rudder Pedals | ? | ? | 3 | 0 | ✗ | 3 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| Saitek Flight Pro Combat Rudder | 0x06A3 | 0x0764 | 3 | 15 | ✗ | 2 |
+| Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 |
 | Saitek Pro Flight Rudder Pedals | 0x06A3 | ? | 3 | 0 | ✗ | 3 |
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Saitek X52 Flight Control System | 0x06A3 | 0x075C | 7 | 28 | ✗ | 2 |
