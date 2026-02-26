@@ -1335,6 +1335,177 @@ requirements:
           - flight-xplane-plugin::protocol::tests::plugin_message_get_dataref_serialises_id_and_name
           - flight-xplane-plugin::protocol::tests::get_dataref_and_dataref_value_ids_match
 
+  # Product Requirement: VKB HOTAS HID Parsing (STECS Modern + Gladiator NXT EVO)
+  - id: REQ-59
+    name: VKB HOTAS HID Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-59.1
+        description: "WHEN VKB_VENDOR_ID and product ID constants are declared THEN VKB_VENDOR_ID SHALL equal 0x231D and all STECS/Gladiator PID constants SHALL be distinct non-zero values"
+        tests: []
+      - id: AC-59.2
+        description: "WHEN parsing STECS Modern Throttle HID reports THEN all four axes SHALL normalize to [0.0, 1.0] and the throttle variant SHALL be preserved in the result"
+        tests:
+          - flight-hotas-vkb::stecs_modern::tests::all_zero_axes_map_to_zero
+          - flight-hotas-vkb::stecs_modern::tests::max_axes_map_to_one
+          - flight-hotas-vkb::stecs_modern::tests::exactly_min_bytes_parses_ok
+          - flight-hotas-vkb::stecs_modern::tests::variant_is_preserved_in_state
+      - id: AC-59.3
+        description: "WHEN arbitrary axis raw values are presented to the STECS Modern parser THEN every axis output SHALL remain within [0.0, 1.0] and random byte patterns SHALL not cause a panic"
+        tests:
+          - flight-hotas-vkb::stecs_modern::tests::axes_always_in_range
+          - flight-hotas-vkb::stecs_modern::tests::random_report_does_not_panic
+      - id: AC-59.4
+        description: "WHEN button bits are set in a STECS Modern report THEN is_pressed SHALL correctly identify each of the 64 button indices and out-of-range indices SHALL return false"
+        tests:
+          - flight-hotas-vkb::stecs_modern::tests::button_1_detected_in_word0
+          - flight-hotas-vkb::stecs_modern::tests::button_32_detected_at_word0_msb
+          - flight-hotas-vkb::stecs_modern::tests::button_33_detected_at_word1_lsb
+          - flight-hotas-vkb::stecs_modern::tests::button_64_detected_at_word1_msb
+          - flight-hotas-vkb::stecs_modern::tests::out_of_range_buttons_return_false
+          - flight-hotas-vkb::stecs_modern::tests::no_buttons_pressed_by_default
+      - id: AC-59.5
+        description: "WHEN a HID report is shorter than the device minimum THEN the parser SHALL return a structured TooShort error rather than panicking for STECS Modern, STECS Space, and Gladiator parsers"
+        tests:
+          - flight-hotas-vkb::stecs_modern::tests::too_short_returns_error
+          - flight-hotas-vkb::stecs_modern::tests::empty_report_returns_error
+          - flight-hotas-vkb::input::tests::test_report_too_short
+          - flight-hotas-vkb::input::tests::gladiator_report_too_short_returns_error
+
+  # Product Requirement: Saitek HOTAS HID Parsing (X52, X52 Pro, X55, X56)
+  - id: REQ-60
+    name: Saitek HOTAS HID Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-60.1
+        description: "WHEN parsing X52 or X52 Pro HID reports THEN stick and throttle axes SHALL be decoded and max throttle byte SHALL produce a value ≥ 0.9; X56 dual-throttle axes SHALL both parse independently"
+        tests:
+          - flight-hotas-saitek::input::tests::test_input_handler_creation
+          - flight-hotas-saitek::input::tests::x52_report_parses_max_throttle
+          - flight-hotas-saitek::input::tests::x56_throttle_dual_axes_parsed
+      - id: AC-60.2
+        description: "WHEN normalising axis bytes THEN 8-bit values SHALL map to −1.0..1.0 and 16-bit values SHALL map to −1.0..1.0 with mid-scale raw value mapping to approximately 0.0"
+        tests:
+          - flight-hotas-saitek::input::tests::test_normalize_8bit
+          - flight-hotas-saitek::input::tests::test_normalize_16bit
+      - id: AC-60.3
+        description: "WHEN monitoring a Saitek device THEN health SHALL reflect connected status after successes, consecutive failures SHALL be counted toward the offline threshold, and ghost input detection rates SHALL be tracked"
+        tests:
+          - flight-hotas-saitek::health::tests::test_health_monitor_success
+          - flight-hotas-saitek::health::tests::test_health_monitor_failure_threshold
+          - flight-hotas-saitek::health::tests::test_health_status_healthy
+          - flight-hotas-saitek::health::tests::test_health_status_ghost_issues
+      - id: AC-60.4
+        description: "WHEN a HID report shorter than the device minimum is parsed THEN the handler SHALL return a zero default state rather than panicking for X52 and X55/X56 families"
+        tests:
+          - flight-hotas-saitek::input::tests::x52_report_too_short_returns_default
+          - flight-hotas-saitek::input::tests::x55_stick_report_too_short_returns_default
+      - id: AC-60.5
+        description: "WHEN the Saitek output I/O policy is evaluated THEN it SHALL deny access unless the opt-in environment variable is set and SHALL cache the result across repeated calls within a polling period"
+        tests:
+          - flight-hotas-saitek::policy::tests::test_policy_denies_when_env_not_set
+          - flight-hotas-saitek::policy::tests::test_policy_allows_when_env_set
+          - flight-hotas-saitek::policy::tests::test_cache_reset
+
+  # Product Requirement: Thrustmaster HOTAS HID Parsing (Warthog, T.16000M, T.Flight, TFRP, TPR)
+  - id: REQ-61
+    name: Thrustmaster HOTAS HID Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-61.1
+        description: "WHEN Thrustmaster device presets are requested THEN every model SHALL have a preset with a deadzone within [0.0, 0.1] and filter alpha within a reasonable range"
+        tests:
+          - flight-hotas-thrustmaster::presets::tests::test_recommended_configs
+          - flight-hotas-thrustmaster::presets::tests::test_deadzone_values_reasonable
+          - flight-hotas-thrustmaster::presets::tests::test_filter_alpha_values_reasonable
+      - id: AC-61.2
+        description: "WHEN parsing Warthog stick and throttle reports THEN centered axes SHALL produce 0.0, full-deflection axes SHALL produce ±1.0, and button bitmask fields SHALL be decoded correctly"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::test_stick_centered
+          - flight-hotas-thrustmaster::warthog::tests::test_stick_full_right
+          - flight-hotas-thrustmaster::warthog::tests::test_stick_buttons
+          - flight-hotas-thrustmaster::warthog::tests::test_throttle_idle
+          - flight-hotas-thrustmaster::warthog::tests::test_throttle_full
+          - flight-hotas-thrustmaster::warthog::tests::test_throttle_buttons
+      - id: AC-61.3
+        description: "WHEN arbitrary axis raw values are parsed by Warthog stick and throttle parsers THEN all axis output values SHALL be within normalized bounds"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::test_stick_axes_within_range
+          - flight-hotas-thrustmaster::warthog::tests::test_throttle_axes_within_range
+          - flight-hotas-thrustmaster::input::tests::test_normalize_16bit
+          - flight-hotas-thrustmaster::input::tests::test_normalize_8bit_centered
+          - flight-hotas-thrustmaster::input::tests::test_normalize_throttle
+      - id: AC-61.4
+        description: "WHEN parsing T.16000M joystick and TWCS throttle reports THEN axes and buttons SHALL decode correctly and HAT values SHALL be preserved"
+        tests:
+          - flight-hotas-thrustmaster::t16000m::tests::test_joystick_centered
+          - flight-hotas-thrustmaster::t16000m::tests::test_joystick_full_right
+          - flight-hotas-thrustmaster::t16000m::tests::test_joystick_buttons
+          - flight-hotas-thrustmaster::t16000m::tests::test_twcs_full_throttle
+          - flight-hotas-thrustmaster::t16000m::tests::test_twcs_button_mask
+      - id: AC-61.5
+        description: "WHEN a HID report is shorter than the device minimum THEN a structured TooShort error SHALL be returned for Warthog stick, Warthog throttle, T.16000M joystick, and TWCS throttle parsers"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::test_stick_too_short
+          - flight-hotas-thrustmaster::warthog::tests::test_throttle_too_short
+          - flight-hotas-thrustmaster::t16000m::tests::test_joystick_too_short
+          - flight-hotas-thrustmaster::t16000m::tests::test_twcs_too_short
+          - flight-hotas-thrustmaster::input::tests::test_try_parse_short_report_error
+
+  # Product Requirement: WinWing HOTAS HID Parsing (Orion2, F-16EX, SuperTaurus, Skywalker, TFRP, UFC)
+  - id: REQ-62
+    name: WinWing HOTAS HID Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-62.1
+        description: "WHEN WinWing device presets are requested THEN throttle, stick, and rudder preset counts SHALL match the known product range and hall-effect axes SHALL have a small non-zero deadzone"
+        tests:
+          - flight-hotas-winwing::presets::tests::test_throttle_preset_count
+          - flight-hotas-winwing::presets::tests::test_stick_preset_count
+          - flight-hotas-winwing::presets::tests::test_rudder_preset_count
+          - flight-hotas-winwing::presets::tests::test_hall_effect_axes_have_small_deadzone
+      - id: AC-62.2
+        description: "WHEN Orion2 Throttle and Orion2 Stick HID reports are parsed THEN throttle axes SHALL normalize from raw u16 values, combined throttle SHALL equal the average of left and right, and stick roll/pitch SHALL decode correctly"
+        tests:
+          - flight-hotas-winwing::orion2_throttle::tests::test_throttle_min_position
+          - flight-hotas-winwing::orion2_throttle::tests::test_throttle_max_position
+          - flight-hotas-winwing::orion2_throttle::tests::test_throttle_combined_is_average
+          - flight-hotas-winwing::orion2_stick::tests::test_centred
+          - flight-hotas-winwing::orion2_stick::tests::test_full_right_roll
+      - id: AC-62.3
+        description: "WHEN F-16EX Grip, SuperTaurus Dual Throttle, Skywalker Rudder, and TFRP reports are parsed THEN all axes SHALL be within normalized bounds and differential brake SHALL be computed correctly"
+        tests:
+          - flight-hotas-winwing::f16ex_stick::tests::test_centred
+          - flight-hotas-winwing::f16ex_stick::tests::test_full_right_roll
+          - flight-hotas-winwing::super_taurus::tests::test_throttle_min_position
+          - flight-hotas-winwing::super_taurus::tests::test_throttle_combined_is_average
+          - flight-hotas-winwing::skywalker_rudder::tests::test_all_axes_centred
+          - flight-hotas-winwing::skywalker_rudder::tests::test_diff_brake_positive_when_right_dominant
+          - flight-hotas-winwing::tfrp::tests::test_all_axes_centred
+      - id: AC-62.4
+        description: "WHEN button bits are set in Orion2 Stick, F-16EX Grip, or UFC Panel reports THEN the correct button indices SHALL be detected and out-of-range indices SHALL return false"
+        tests:
+          - flight-hotas-winwing::f16ex_stick::tests::test_button_detection
+          - flight-hotas-winwing::f16ex_stick::tests::test_button_boundary
+          - flight-hotas-winwing::f16ex_stick::tests::test_button_out_of_range_returns_false
+          - flight-hotas-winwing::orion2_stick::tests::test_button_detection
+          - flight-hotas-winwing::ufc_panel::tests::test_ufc_button_1_pressed
+          - flight-hotas-winwing::ufc_panel::tests::test_multiple_buttons_simultaneously
+      - id: AC-62.5
+        description: "WHEN a HID report is shorter than the device minimum THEN all WinWing parsers (Orion2 Throttle, F-16EX, SuperTaurus, Skywalker Rudder, TFRP, UFC Panel) SHALL return a structured error rather than panicking"
+        tests:
+          - flight-hotas-winwing::orion2_throttle::tests::test_report_too_short
+          - flight-hotas-winwing::orion2_throttle::tests::test_empty_report
+          - flight-hotas-winwing::f16ex_stick::tests::test_report_too_short
+          - flight-hotas-winwing::super_taurus::tests::test_report_too_short
+          - flight-hotas-winwing::skywalker_rudder::tests::test_report_too_short
+          - flight-hotas-winwing::tfrp::tests::test_report_too_short
+          - flight-hotas-winwing::ufc_panel::tests::test_report_too_short
+
   # ============================================================================
   # ============================================================================
 
@@ -2196,3 +2367,146 @@ requirements:
         tests:
           - flight-test-helpers::utils::tests::test_create_temp_dir
           - flight-test-helpers::utils::tests::test_wait_for_condition
+
+  # ============================================================================
+  # INFRASTRUCTURE REQUIREMENTS (REQ-63 through REQ-66)
+  # ============================================================================
+
+  # Infrastructure Requirement: Core Types and Profile Management
+  - id: REQ-63
+    name: Core Types, Profile Management, and Aircraft Detection
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-63.1
+        description: "WHEN a profile is serialized and deserialized THEN all fields SHALL be preserved across JSON, YAML, and TOML formats"
+        tests:
+          - flight-core::profile_tests::profile_json_roundtrip_preserves_all_fields
+          - flight-core::profile_tests::profile_yaml_roundtrip_preserves_all_fields
+          - flight-core::profile_tests::profile_toml_roundtrip_preserves_all_fields
+      - id: AC-63.2
+        description: "WHEN merge_with is applied THEN override values SHALL replace base values without clobbering unset fields, and the operation SHALL be idempotent when merged with self"
+        tests:
+          - flight-core::profile_tests::merge_with_override_replaces_expo
+          - flight-core::profile_tests::merge_with_none_in_override_does_not_clobber_base
+          - flight-core::profile_tests::merge_with_self_is_idempotent
+      - id: AC-63.3
+        description: "WHEN a profile fails validation rules THEN errors SHALL be returned for unknown schema versions, out-of-range deadzone, out-of-range expo, and invalid curve definitions"
+        tests:
+          - flight-core::profile_tests::validate_rejects_unknown_schema_version
+          - flight-core::profile_tests::validate_rejects_deadzone_above_max
+          - flight-core::profile_tests::validate_rejects_expo_above_max
+          - flight-core::profile_tests::validate_rejects_non_monotonic_curve
+      - id: AC-63.4
+        description: "WHEN capability modes are active THEN kid mode SHALL reject high expo values and demo mode SHALL reject high slew rates"
+        tests:
+          - flight-core::profile_tests::validate_kid_mode_rejects_high_expo
+          - flight-core::profile_tests::validate_demo_mode_rejects_high_slew_rate
+      - id: AC-63.5
+        description: "WHEN effective_hash is called on the same profile THEN the result SHALL be stable across multiple calls and SHALL differ for semantically distinct profiles"
+        tests:
+          - flight-core::profile_tests::effective_hash_is_stable_across_calls
+          - flight-core::profile_tests::effective_hash_differs_for_different_profiles
+
+  # Infrastructure Requirement: Event Bus Pub/Sub
+  - id: REQ-64
+    name: Event Bus, Pub/Sub, and Bus Snapshots
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-64.1
+        description: "WHEN a message is published THEN a subscriber SHALL be able to receive it via try_recv"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_publish_and_receive
+          - flight-bus::pubsub_unit_tests::test_subscribe_creates_working_subscriber
+      - id: AC-64.2
+        description: "WHEN multiple subscribers exist THEN each SHALL independently receive the published snapshot"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_multiple_subscribers_each_receive_snapshot
+          - flight-bus::pubsub_unit_tests::test_subscriber_after_multiple_publishes
+      - id: AC-64.3
+        description: "WHEN a subscriber is created after all publications THEN it SHALL receive no stale data"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_late_subscriber_gets_no_old_data
+          - flight-bus::pubsub_unit_tests::test_subscriber_receives_no_data_before_publish
+      - id: AC-64.4
+        description: "WHEN a message containing NaN or Inf values is published THEN the bus SHALL reject it"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_publish_nan_angular_rate_rejected
+          - flight-bus::pubsub_unit_tests::test_publish_inf_altitude_rejected
+      - id: AC-64.5
+        description: "WHEN a subscriber is dropped THEN it SHALL be cleaned up on the next publish cycle"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_dropped_subscriber_cleaned_up_on_next_publish
+
+  # Infrastructure Requirement: HID Device Management
+  - id: REQ-65
+    name: HID Device Management
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-65.1
+        description: "WHEN devices are registered and unregistered THEN the device registry SHALL reflect the current device set correctly"
+        tests:
+          - flight-hid::tests::test_device_registration
+          - flight-hid::tests::test_device_unregistration
+      - id: AC-65.2
+        description: "WHEN endpoint operations are performed THEN statistics SHALL be updated and interface metadata SHALL be available"
+        tests:
+          - flight-hid::tests::test_endpoint_operations
+          - flight-hid::tests::test_adapter_statistics
+          - flight-hid::tests::test_stecs_interface_metadata_from_adapter
+      - id: AC-65.3
+        description: "WHEN HID write errors occur THEN error types SHALL have correct display strings and write result equality SHALL hold"
+        tests:
+          - flight-hid::hid_writer::tests::test_hid_writer_error_display
+          - flight-hid::hid_writer::tests::test_write_result_equality
+      - id: AC-65.4
+        description: "WHEN consecutive HID write failures occur THEN the fault detection tracker SHALL enter faulted state at the threshold"
+        tests:
+          - flight-hid::hid_writer::fault_detection_tests::test_new_tracker_not_faulted
+          - flight-hid::hid_writer::fault_detection_tests::test_exactly_at_threshold
+          - flight-hid::hid_writer::fault_detection_tests::test_interleaved_success_failure
+      - id: AC-65.5
+        description: "WHEN a faulted HID writer receives a successful write THEN it SHALL recover from the fault state"
+        tests:
+          - flight-hid::hid_writer::fault_detection_tests::test_recovery_from_fault
+
+  # Infrastructure Requirement: gRPC IPC Layer
+  - id: REQ-66
+    name: gRPC IPC Layer
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-66.1
+        description: "WHEN an IPC device message is serialized and deserialized THEN all fields SHALL be preserved across the round-trip"
+        tests:
+          - flight-ipc::integration_tests::test_device_serialization
+          - flight-ipc::integration_tests::test_device_manager_unit
+      - id: AC-66.2
+        description: "WHEN protocol versions are parsed THEN valid version strings SHALL be accepted and malformed strings SHALL be rejected"
+        tests:
+          - flight-ipc::negotiation::tests::test_version_parsing
+          - flight-ipc::negotiation::tests::test_version_parse_too_few_parts_fails
+          - flight-ipc::negotiation::tests::test_version_parse_non_numeric_fails
+          - flight-ipc::negotiation::tests::test_version_display
+      - id: AC-66.3
+        description: "WHEN breaking protocol changes are detected THEN removed RPCs and removed messages SHALL be flagged as breaking"
+        tests:
+          - flight-ipc::negotiation::tests::test_detect_breaking_changes_removed_rpc
+          - flight-ipc::negotiation::tests::test_detect_breaking_changes_removed_message
+          - flight-ipc::negotiation::tests::test_detect_breaking_changes_no_changes
+          - flight-ipc::integration_tests::test_breaking_change_detection
+      - id: AC-66.4
+        description: "WHEN feature negotiation runs THEN the intersection of client and server features SHALL be selected and missing required features SHALL be rejected"
+        tests:
+          - flight-ipc::negotiation::tests::test_feature_negotiation
+          - flight-ipc::negotiation::tests::test_feature_negotiation_no_overlap
+          - flight-ipc::negotiation::tests::test_validate_required_features_missing_fails
+          - flight-ipc::integration_tests::test_feature_negotiation_unit
+      - id: AC-66.5
+        description: "WHEN fuzz inputs are applied to IPC message handlers THEN no panics SHALL occur"
+        tests:
+          - flight-ipc::ipc_fuzz_tests::test_negotiate_features_fuzz
+          - flight-ipc::ipc_fuzz_tests::test_apply_profile_fuzz
+          - flight-ipc::ipc_fuzz_tests::test_apply_profile_json_fuzz

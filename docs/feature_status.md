@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 354 |
-| ACs with tests | 354 |
-| ACs with Gherkin | 354 |
-| ACs with both tests + Gherkin | 354 |
-| Complete | 354 |
+| Total AC | 394 |
+| ACs with tests | 393 |
+| ACs with Gherkin | 394 |
+| ACs with both tests + Gherkin | 393 |
+| Complete | 393 |
 | Needs Gherkin | 0 |
-| Needs Tests | 0 |
+| Needs Tests | 1 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 67 |
-| Microcrates with tests | 62 (92.5%) |
-| Microcrates with Gherkin | 62 (92.5%) |
-| Microcrates fully covered | 62 (92.5%) |
-| Test coverage | 100.0% |
+| Microcrates | 68 |
+| Microcrates with tests | 62 (91.2%) |
+| Microcrates with Gherkin | 63 (92.6%) |
+| Microcrates fully covered | 62 (91.2%) |
+| Test coverage | 99.7% |
 | Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 100.0% |
+| Test + Gherkin coverage | 99.7% |
 
 ## BDD Microcrate Matrix
 
@@ -44,31 +44,31 @@
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-bus | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-cloud-profiles | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
-| flight-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-core | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-device-common | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-moza | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-hid | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-logitech | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-thrustmaster | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-thrustmaster | 20 | 20 | 20 | 20 | 20 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-vkb | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-vkb | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-winwing | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-winwing | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-ipc | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-ipc | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -104,6 +104,7 @@
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| unmapped | 1 | 0 | 1 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -317,6 +318,26 @@
 | REQ-58 | AC-58.3 | WHEN malformed or unknown-variant JSON is deserialised as a PluginMessage THEN an error SHALL be returned and the process SHALL NOT panic | specs/features/req_58_xplane_plugin_protocol.feature:45<br>specs/features/req_58_xplane_plugin_protocol.feature:52 | 1 | ✅ Complete |
 | REQ-58 | AC-58.4 | WHEN a Handshake PluginMessage is serialised THEN the resulting JSON SHALL contain both a version field and a capabilities field | specs/features/req_58_xplane_plugin_protocol.feature:61 | 1 | ✅ Complete |
 | REQ-58 | AC-58.5 | WHEN a GetDataRef request and a DataRefValue response carry the same id THEN the id SHALL round-trip through JSON serialisation unchanged | specs/features/req_58_xplane_plugin_protocol.feature:70<br>specs/features/req_58_xplane_plugin_protocol.feature:77 | 2 | ✅ Complete |
+| REQ-59 | AC-59.1 | WHEN VKB_VENDOR_ID and product ID constants are declared THEN VKB_VENDOR_ID SHALL equal 0x231D and all STECS/Gladiator PID constants SHALL be distinct non-zero values | specs/features/req_59_vkb_hotas.feature:5 | 0 | 🟡 Needs Tests |
+| REQ-59 | AC-59.2 | WHEN parsing STECS Modern Throttle HID reports THEN all four axes SHALL normalize to [0.0, 1.0] and the throttle variant SHALL be preserved in the result | specs/features/req_59_vkb_hotas.feature:12 | 4 | ✅ Complete |
+| REQ-59 | AC-59.3 | WHEN arbitrary axis raw values are presented to the STECS Modern parser THEN every axis output SHALL remain within [0.0, 1.0] and random byte patterns SHALL not cause a panic | specs/features/req_59_vkb_hotas.feature:20 | 2 | ✅ Complete |
+| REQ-59 | AC-59.4 | WHEN button bits are set in a STECS Modern report THEN is_pressed SHALL correctly identify each of the 64 button indices and out-of-range indices SHALL return false | specs/features/req_59_vkb_hotas.feature:27 | 6 | ✅ Complete |
+| REQ-59 | AC-59.5 | WHEN a HID report is shorter than the device minimum THEN the parser SHALL return a structured TooShort error rather than panicking for STECS Modern, STECS Space, and Gladiator parsers | specs/features/req_59_vkb_hotas.feature:37 | 4 | ✅ Complete |
+| REQ-60 | AC-60.1 | WHEN parsing X52 or X52 Pro HID reports THEN stick and throttle axes SHALL be decoded and max throttle byte SHALL produce a value ≥ 0.9; X56 dual-throttle axes SHALL both parse independently | specs/features/req_60_saitek_hotas.feature:5 | 3 | ✅ Complete |
+| REQ-60 | AC-60.2 | WHEN normalising axis bytes THEN 8-bit values SHALL map to −1.0..1.0 and 16-bit values SHALL map to −1.0..1.0 with mid-scale raw value mapping to approximately 0.0 | specs/features/req_60_saitek_hotas.feature:13 | 2 | ✅ Complete |
+| REQ-60 | AC-60.3 | WHEN monitoring a Saitek device THEN health SHALL reflect connected status after successes, consecutive failures SHALL be counted toward the offline threshold, and ghost input detection rates SHALL be tracked | specs/features/req_60_saitek_hotas.feature:24 | 4 | ✅ Complete |
+| REQ-60 | AC-60.4 | WHEN a HID report shorter than the device minimum is parsed THEN the handler SHALL return a zero default state rather than panicking for X52 and X55/X56 families | specs/features/req_60_saitek_hotas.feature:32 | 2 | ✅ Complete |
+| REQ-60 | AC-60.5 | WHEN the Saitek output I/O policy is evaluated THEN it SHALL deny access unless the opt-in environment variable is set and SHALL cache the result across repeated calls within a polling period | specs/features/req_60_saitek_hotas.feature:40 | 3 | ✅ Complete |
+| REQ-61 | AC-61.1 | WHEN Thrustmaster device presets are requested THEN every model SHALL have a preset with a deadzone within [0.0, 0.1] and filter alpha within a reasonable range | specs/features/req_61_thrustmaster_hotas.feature:5 | 3 | ✅ Complete |
+| REQ-61 | AC-61.2 | WHEN parsing Warthog stick and throttle reports THEN centered axes SHALL produce 0.0, full-deflection axes SHALL produce ±1.0, and button bitmask fields SHALL be decoded correctly | specs/features/req_61_thrustmaster_hotas.feature:13 | 6 | ✅ Complete |
+| REQ-61 | AC-61.3 | WHEN arbitrary axis raw values are parsed by Warthog stick and throttle parsers THEN all axis output values SHALL be within normalized bounds | specs/features/req_61_thrustmaster_hotas.feature:23 | 5 | ✅ Complete |
+| REQ-61 | AC-61.4 | WHEN parsing T.16000M joystick and TWCS throttle reports THEN axes and buttons SHALL decode correctly and HAT values SHALL be preserved | specs/features/req_61_thrustmaster_hotas.feature:32 | 5 | ✅ Complete |
+| REQ-61 | AC-61.5 | WHEN a HID report is shorter than the device minimum THEN a structured TooShort error SHALL be returned for Warthog stick, Warthog throttle, T.16000M joystick, and TWCS throttle parsers | specs/features/req_61_thrustmaster_hotas.feature:42 | 5 | ✅ Complete |
+| REQ-62 | AC-62.1 | WHEN WinWing device presets are requested THEN throttle, stick, and rudder preset counts SHALL match the known product range and hall-effect axes SHALL have a small non-zero deadzone | specs/features/req_62_winwing_hotas.feature:5 | 4 | ✅ Complete |
+| REQ-62 | AC-62.2 | WHEN Orion2 Throttle and Orion2 Stick HID reports are parsed THEN throttle axes SHALL normalize from raw u16 values, combined throttle SHALL equal the average of left and right, and stick roll/pitch SHALL decode correctly | specs/features/req_62_winwing_hotas.feature:14 | 5 | ✅ Complete |
+| REQ-62 | AC-62.3 | WHEN F-16EX Grip, SuperTaurus Dual Throttle, Skywalker Rudder, and TFRP reports are parsed THEN all axes SHALL be within normalized bounds and differential brake SHALL be computed correctly | specs/features/req_62_winwing_hotas.feature:23 | 7 | ✅ Complete |
+| REQ-62 | AC-62.4 | WHEN button bits are set in Orion2 Stick, F-16EX Grip, or UFC Panel reports THEN the correct button indices SHALL be detected and out-of-range indices SHALL return false | specs/features/req_62_winwing_hotas.feature:34 | 6 | ✅ Complete |
+| REQ-62 | AC-62.5 | WHEN a HID report is shorter than the device minimum THEN all WinWing parsers (Orion2 Throttle, F-16EX, SuperTaurus, Skywalker Rudder, TFRP, UFC Panel) SHALL return a structured error rather than panicking | specs/features/req_62_winwing_hotas.feature:44 | 7 | ✅ Complete |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |
@@ -461,3 +482,23 @@
 | INF-REQ-13 | AC-13.1 | WHEN building test configurations THEN the config builder SHALL produce sensible defaults | specs/features/req_inf_13_test_helpers.feature:5<br>specs/features/req_inf_13_test_helpers.feature:11 | 2 | ✅ Complete |
 | INF-REQ-13 | AC-13.2 | WHEN running harness-based integration tests THEN timeouts SHALL be enforced | specs/features/req_inf_13_test_helpers.feature:17 | 1 | ✅ Complete |
 | INF-REQ-13 | AC-13.3 | WHEN using test utilities THEN temp dir creation and condition waiting SHALL work reliably | specs/features/req_inf_13_test_helpers.feature:23<br>specs/features/req_inf_13_test_helpers.feature:29 | 2 | ✅ Complete |
+| REQ-63 | AC-63.1 | WHEN a profile is serialized and deserialized THEN all fields SHALL be preserved across JSON, YAML, and TOML formats | specs/features/req_63_flight_core.feature:5<br>specs/features/req_63_flight_core.feature:11 | 3 | ✅ Complete |
+| REQ-63 | AC-63.2 | WHEN merge_with is applied THEN override values SHALL replace base values without clobbering unset fields, and the operation SHALL be idempotent when merged with self | specs/features/req_63_flight_core.feature:17<br>specs/features/req_63_flight_core.feature:23 | 3 | ✅ Complete |
+| REQ-63 | AC-63.3 | WHEN a profile fails validation rules THEN errors SHALL be returned for unknown schema versions, out-of-range deadzone, out-of-range expo, and invalid curve definitions | specs/features/req_63_flight_core.feature:29 | 4 | ✅ Complete |
+| REQ-63 | AC-63.4 | WHEN capability modes are active THEN kid mode SHALL reject high expo values and demo mode SHALL reject high slew rates | specs/features/req_63_flight_core.feature:35 | 2 | ✅ Complete |
+| REQ-63 | AC-63.5 | WHEN effective_hash is called on the same profile THEN the result SHALL be stable across multiple calls and SHALL differ for semantically distinct profiles | specs/features/req_63_flight_core.feature:41 | 2 | ✅ Complete |
+| REQ-64 | AC-64.1 | WHEN a message is published THEN a subscriber SHALL be able to receive it via try_recv | specs/features/req_64_flight_bus.feature:5 | 2 | ✅ Complete |
+| REQ-64 | AC-64.2 | WHEN multiple subscribers exist THEN each SHALL independently receive the published snapshot | specs/features/req_64_flight_bus.feature:11 | 2 | ✅ Complete |
+| REQ-64 | AC-64.3 | WHEN a subscriber is created after all publications THEN it SHALL receive no stale data | specs/features/req_64_flight_bus.feature:17 | 2 | ✅ Complete |
+| REQ-64 | AC-64.4 | WHEN a message containing NaN or Inf values is published THEN the bus SHALL reject it | specs/features/req_64_flight_bus.feature:23 | 2 | ✅ Complete |
+| REQ-64 | AC-64.5 | WHEN a subscriber is dropped THEN it SHALL be cleaned up on the next publish cycle | specs/features/req_64_flight_bus.feature:29 | 1 | ✅ Complete |
+| REQ-65 | AC-65.1 | WHEN devices are registered and unregistered THEN the device registry SHALL reflect the current device set correctly | specs/features/req_65_flight_hid.feature:5 | 2 | ✅ Complete |
+| REQ-65 | AC-65.2 | WHEN endpoint operations are performed THEN statistics SHALL be updated and interface metadata SHALL be available | specs/features/req_65_flight_hid.feature:11 | 3 | ✅ Complete |
+| REQ-65 | AC-65.3 | WHEN HID write errors occur THEN error types SHALL have correct display strings and write result equality SHALL hold | specs/features/req_65_flight_hid.feature:17 | 2 | ✅ Complete |
+| REQ-65 | AC-65.4 | WHEN consecutive HID write failures occur THEN the fault detection tracker SHALL enter faulted state at the threshold | specs/features/req_65_flight_hid.feature:23 | 3 | ✅ Complete |
+| REQ-65 | AC-65.5 | WHEN a faulted HID writer receives a successful write THEN it SHALL recover from the fault state | specs/features/req_65_flight_hid.feature:29 | 1 | ✅ Complete |
+| REQ-66 | AC-66.1 | WHEN an IPC device message is serialized and deserialized THEN all fields SHALL be preserved across the round-trip | specs/features/req_66_flight_ipc.feature:5 | 2 | ✅ Complete |
+| REQ-66 | AC-66.2 | WHEN protocol versions are parsed THEN valid version strings SHALL be accepted and malformed strings SHALL be rejected | specs/features/req_66_flight_ipc.feature:11 | 4 | ✅ Complete |
+| REQ-66 | AC-66.3 | WHEN breaking protocol changes are detected THEN removed RPCs and removed messages SHALL be flagged as breaking | specs/features/req_66_flight_ipc.feature:17 | 4 | ✅ Complete |
+| REQ-66 | AC-66.4 | WHEN feature negotiation runs THEN the intersection of client and server features SHALL be selected and missing required features SHALL be rejected | specs/features/req_66_flight_ipc.feature:24 | 4 | ✅ Complete |
+| REQ-66 | AC-66.5 | WHEN fuzz inputs are applied to IPC message handlers THEN no panics SHALL occur | specs/features/req_66_flight_ipc.feature:30 | 3 | ✅ Complete |
