@@ -414,4 +414,60 @@ mod tests {
         assert!(banner.is_some());
         assert!(banner.unwrap().contains("Test Server"));
     }
+
+    #[test]
+    fn test_default_state_not_multiplayer() {
+        let detector = MpDetector::new();
+        // Fresh detector has no session — must not report multiplayer
+        assert!(!detector.is_multiplayer());
+        assert!(detector.current_session().is_none());
+        // No session means every feature access is blocked
+        assert!(!detector.is_feature_allowed("telemetry_basic"));
+        assert!(!detector.is_feature_allowed("telemetry_weapons"));
+        // blocked_features is empty (no session to derive from)
+        assert!(detector.blocked_features().is_empty());
+    }
+
+    #[test]
+    fn test_invalid_input_no_panic() {
+        let mut detector = MpDetector::new();
+
+        // Empty JSON object — no recognisable fields → Unknown session
+        let empty = json!({});
+        assert!(detector.update_session(&empty).is_ok());
+        let session = detector.current_session().unwrap();
+        assert_eq!(session.session_type, SessionType::Unknown);
+        // Unknown sessions apply MP restrictions
+        assert!(!detector.is_feature_allowed("telemetry_weapons"));
+
+        // JSON with null values — must not panic
+        let nulls = json!({
+            "session_type": null,
+            "server_name": null,
+            "player_count": null
+        });
+        assert!(detector.update_session(&nulls).is_ok());
+
+        // JSON with unexpected value types — must not panic
+        let wrong_types = json!({
+            "session_type": 42,
+            "player_count": "not_a_number"
+        });
+        assert!(detector.update_session(&wrong_types).is_ok());
+    }
+
+    #[test]
+    fn test_mp_indicator_fields_trigger_mp() {
+        let indicators = ["coalition", "side", "group_id", "unit_id"];
+        for field in &indicators {
+            let mut detector = MpDetector::new();
+            let data = json!({ *field: "some_value" });
+            detector.update_session(&data).unwrap();
+            assert!(
+                detector.is_multiplayer(),
+                "field '{}' should trigger MP detection",
+                field
+            );
+        }
+    }
 }

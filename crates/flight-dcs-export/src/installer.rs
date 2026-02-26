@@ -1006,4 +1006,30 @@ mod tests {
             // So we just verify the main Export.lua is restored correctly
         }
     }
+
+    #[test]
+    fn test_uninstall_when_not_installed() {
+        let (installer, temp_dir) = create_test_installer();
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        // Deliberately do NOT create Export.lua
+        let export_path = scripts_dir.join("Export.lua");
+        let result = installer.uninstall_from_path(&export_path).unwrap();
+        assert_eq!(result.status, InstallStatus::NotInstalled);
+        assert!(result.backup_path.is_none());
+    }
+
+    #[test]
+    fn test_uninstall_conflict_not_flight_hub_file() {
+        let (installer, temp_dir) = create_test_installer();
+        let scripts_dir = temp_dir.path().join("Scripts");
+        fs::create_dir_all(&scripts_dir).unwrap();
+        let export_path = scripts_dir.join("Export.lua");
+        // Write a non-Flight Hub export (e.g., SRS)
+        fs::write(&export_path, "-- SRS Export.lua\nlocal SRS = {}").unwrap();
+        let result = installer.uninstall_from_path(&export_path).unwrap();
+        // Should report a conflict and leave the file untouched
+        assert!(matches!(result.status, InstallStatus::Conflict { .. }));
+        assert!(export_path.exists(), "Foreign file must not be deleted");
+    }
 }

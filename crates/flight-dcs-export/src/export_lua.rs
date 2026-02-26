@@ -1024,4 +1024,48 @@ mod tests {
         assert!(script.contains("1.0 / 60.0"));
         assert!(script.contains("60Hz target rate"));
     }
+
+    #[test]
+    fn test_custom_host_port_rendered() {
+        let config = ExportLuaConfig {
+            socket_address: "192.168.1.100".to_string(),
+            socket_port: 9999,
+            ..ExportLuaConfig::default()
+        };
+        let generator = ExportLuaGenerator::new(config);
+        let script = generator.generate_script();
+        assert!(script.contains("socket_address = \"192.168.1.100\""));
+        assert!(script.contains("socket_port = 9999"));
+        // Default address must not appear
+        assert!(!script.contains("socket_address = \"127.0.0.1\""));
+    }
+
+    #[test]
+    fn test_dcs_variant_as_str() {
+        assert_eq!(DcsVariant::Stable.as_str(), "DCS");
+        assert_eq!(DcsVariant::OpenBeta.as_str(), "DCS.openbeta");
+        assert_eq!(DcsVariant::OpenAlpha.as_str(), "DCS.openalpha");
+    }
+
+    #[test]
+    fn test_edge_case_empty_address_no_panic() {
+        let config = ExportLuaConfig {
+            socket_address: String::new(),
+            ..ExportLuaConfig::default()
+        };
+        let generator = ExportLuaGenerator::new(config);
+        // Must not panic
+        let _script = generator.generate_script();
+    }
+
+    #[test]
+    fn test_edge_case_special_chars_no_panic() {
+        let config = ExportLuaConfig {
+            socket_address: "\"test\"\n\\special".to_string(),
+            ..ExportLuaConfig::default()
+        };
+        let generator = ExportLuaGenerator::new(config);
+        // Must not panic regardless of unusual characters in config
+        let _script = generator.generate_script();
+    }
 }
