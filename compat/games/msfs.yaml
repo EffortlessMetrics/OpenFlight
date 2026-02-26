@@ -30,6 +30,8 @@ test_coverage:
   trace_replay: true
   hil: false
 
+support_tier: 1
+
 known_issues:
   - id: INPUT_EVENTS_STUBBED
     description: >

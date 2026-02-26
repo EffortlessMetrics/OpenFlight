@@ -32,6 +32,8 @@ test_coverage:
   fuzz_coverage: true    # flight-dcs-export/fuzz/fuzz_targets/fuzz_dcs_telemetry.rs
   hil: false
 
+support_tier: 1
+
 known_issues:
   - id: EXPORT_SCRIPT_INSTALL
     description: >
