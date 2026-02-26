@@ -52,6 +52,18 @@ pub const TFRP_RUDDER_PEDALS_PID: u16 = 0xB678;
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0xB679 — from the-sz.com USB ID DB.
 pub const T_RUDDER_PID: u16 = 0xB679;
 
+/// USB Product ID for the T-Pendular Rudder (TPR) standard variant.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB68F — linux-hardware.org (7 probes,
+/// USB device string "T-Pendular-Rudder").
+pub const TPR_PENDULAR_RUDDER_PID: u16 = 0xB68F;
+
+/// USB Product ID for the T-Pendular Rudder (TPR) Bulk-channel variant.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB68E — linux-hardware.org ("TPR Rudder Bulk").
+/// The Bulk variant uses a different USB endpoint but reports the same axes as the standard TPR.
+pub const TPR_PENDULAR_RUDDER_BULK_PID: u16 = 0xB68E;
+
 pub const TFLIGHT_HOTAS_ONE_PID: u16 = 0xB68B;
 /// Primary PID for T.Flight HOTAS 4 - verified via USBView artifact.
 pub const TFLIGHT_HOTAS_4_PID: u16 = 0xB67B;
@@ -110,6 +122,21 @@ pub const TCA_QUADRANT_AIRBUS_ENG12_PID: u16 = 0x0407;
 ///
 /// Confirmed: VID 0x044F (Thrustmaster), PID 0x0408 — linux-hardware.org ("TCA Q-Eng 3&4").
 pub const TCA_QUADRANT_AIRBUS_ENG34_PID: u16 = 0x0408;
+
+/// USB Product ID for the TCA Yoke Boeing Edition.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x0409 — linux-hardware.org (probe, "TCA YOKE BOEING").
+pub const TCA_YOKE_BOEING_PID: u16 = 0x0409;
+
+/// USB Product ID for the TCA Quadrant Boeing Edition (engines 1 & 2).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x040A — linux-hardware.org ("TCA Quadrant Boeing 1&2").
+pub const TCA_QUADRANT_BOEING_ENG12_PID: u16 = 0x040A;
+
+/// USB Product ID for the TCA Quadrant Boeing Add-On (engines 3 & 4).
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0x040B — linux-hardware.org ("TCA Quadrant Boeing 3&4").
+pub const TCA_QUADRANT_BOEING_ENG34_PID: u16 = 0x040B;
 
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
@@ -498,6 +525,46 @@ pub fn tca_airbus_model(product_id: u16) -> Option<TcaAirbusModel> {
         TCA_SIDESTICK_AIRBUS_COPILOT_PID => Some(TcaAirbusModel::SidestickCopilot),
         TCA_QUADRANT_AIRBUS_ENG12_PID => Some(TcaAirbusModel::QuadrantEng12),
         TCA_QUADRANT_AIRBUS_ENG34_PID => Some(TcaAirbusModel::QuadrantEng34),
+        _ => None,
+    }
+}
+
+/// Thrustmaster TCA Boeing Edition product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TcaBoeingModel {
+    /// TCA Yoke Boeing Edition. VID 0x044F, PID 0x0409.
+    YokeBoeing,
+    /// TCA Quadrant Boeing Edition (engines 1 & 2). VID 0x044F, PID 0x040A.
+    QuadrantBoeing12,
+    /// TCA Quadrant Boeing Add-On (engines 3 & 4). VID 0x044F, PID 0x040B.
+    QuadrantBoeing34,
+}
+
+impl TcaBoeingModel {
+    pub fn name(&self) -> &'static str {
+        match self {
+            TcaBoeingModel::YokeBoeing => "TCA Yoke Boeing Edition",
+            TcaBoeingModel::QuadrantBoeing12 => "TCA Quadrant Boeing Edition (Eng 1&2)",
+            TcaBoeingModel::QuadrantBoeing34 => "TCA Quadrant Boeing Add-On (Eng 3&4)",
+        }
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known TCA Boeing device.
+pub fn is_tca_boeing_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == THRUSTMASTER_VENDOR_ID
+        && matches!(
+            product_id,
+            TCA_YOKE_BOEING_PID | TCA_QUADRANT_BOEING_ENG12_PID | TCA_QUADRANT_BOEING_ENG34_PID
+        )
+}
+
+/// Returns the TCA Boeing model for a known PID, or `None` for unknown PIDs.
+pub fn tca_boeing_model(product_id: u16) -> Option<TcaBoeingModel> {
+    match product_id {
+        TCA_YOKE_BOEING_PID => Some(TcaBoeingModel::YokeBoeing),
+        TCA_QUADRANT_BOEING_ENG12_PID => Some(TcaBoeingModel::QuadrantBoeing12),
+        TCA_QUADRANT_BOEING_ENG34_PID => Some(TcaBoeingModel::QuadrantBoeing34),
         _ => None,
     }
 }
@@ -3274,6 +3341,56 @@ mod tests {
         assert_eq!(
             default_mapping_note(AxisMode::Unknown),
             Some(DEFAULT_MAPPING_NOTE_UNKNOWN)
+        );
+    }
+
+    #[test]
+    fn test_tca_boeing_device_detection() {
+        assert!(is_tca_boeing_device(THRUSTMASTER_VENDOR_ID, TCA_YOKE_BOEING_PID));
+        assert!(is_tca_boeing_device(
+            THRUSTMASTER_VENDOR_ID,
+            TCA_QUADRANT_BOEING_ENG12_PID
+        ));
+        assert!(is_tca_boeing_device(
+            THRUSTMASTER_VENDOR_ID,
+            TCA_QUADRANT_BOEING_ENG34_PID
+        ));
+        // Wrong vendor must not match.
+        assert!(!is_tca_boeing_device(0x1234, TCA_YOKE_BOEING_PID));
+        // Airbus PIDs must not match Boeing detector.
+        assert!(!is_tca_boeing_device(
+            THRUSTMASTER_VENDOR_ID,
+            TCA_QUADRANT_AIRBUS_ENG12_PID
+        ));
+    }
+
+    #[test]
+    fn test_tca_boeing_model_from_pid() {
+        assert_eq!(
+            tca_boeing_model(TCA_YOKE_BOEING_PID),
+            Some(TcaBoeingModel::YokeBoeing)
+        );
+        assert_eq!(
+            tca_boeing_model(TCA_QUADRANT_BOEING_ENG12_PID),
+            Some(TcaBoeingModel::QuadrantBoeing12)
+        );
+        assert_eq!(
+            tca_boeing_model(TCA_QUADRANT_BOEING_ENG34_PID),
+            Some(TcaBoeingModel::QuadrantBoeing34)
+        );
+        assert_eq!(tca_boeing_model(0x9999), None);
+    }
+
+    #[test]
+    fn test_tca_boeing_model_names() {
+        assert_eq!(TcaBoeingModel::YokeBoeing.name(), "TCA Yoke Boeing Edition");
+        assert_eq!(
+            TcaBoeingModel::QuadrantBoeing12.name(),
+            "TCA Quadrant Boeing Edition (Eng 1&2)"
+        );
+        assert_eq!(
+            TcaBoeingModel::QuadrantBoeing34.name(),
+            "TCA Quadrant Boeing Add-On (Eng 3&4)"
         );
     }
 }

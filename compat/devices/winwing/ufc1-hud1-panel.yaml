@@ -39,7 +39,7 @@ quirks:
 support:
   tier: 3
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     UFC-style button/encoder panel for fighter aircraft cockpit simulation.

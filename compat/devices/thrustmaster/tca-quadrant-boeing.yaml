@@ -1,0 +1,51 @@
+# Thrustmaster TCA Quadrant Boeing Edition (Engines 1 & 2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID confirmed: VID 0x044F:0x040A — linux-hardware.org ("TCA Quadrant Boeing 1&2").
+# Engines 3&4 Add-On uses PID 0x040B; see tca-quadrant-boeing-addon.yaml.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Quadrant Boeing Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0x040A  # TCA Quadrant Boeing 1&2 — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_1, throttle_2, flaps, speedbrake]
+    resolution_bits: 12
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: TCA_BOEING_QUADRANT_DETENT
+    description: >
+      Thrust levers feature a physical TOGA / CLB / MCT / IDLE detent system.
+      The idle detent is at the low end of axis travel and TOGA at the high end.
+      Reverse thrust gate extends below idle on compatible hardware configs.
+  - id: BOEING_SOLD_SEPARATELY
+    description: >
+      TCA Yoke and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x040A confirmed from linux-hardware.org (USB string "TCA Quadrant Boeing 1&2").
+    Axis count and names based on Thrustmaster product specification and community reports.
+    Engines 3&4 Add-On (PID 0x040B) is a separate USB device; see tca-quadrant-boeing-addon.yaml.

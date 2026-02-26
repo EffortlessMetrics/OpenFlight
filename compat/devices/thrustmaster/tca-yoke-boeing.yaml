@@ -1,0 +1,50 @@
+# Thrustmaster TCA Yoke Boeing Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID confirmed: VID 0x044F:0x0409 — linux-hardware.org probe data ("TCA YOKE BOEING").
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Yoke Boeing Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0x0409  # TCA YOKE BOEING — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 16
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: BOEING_SOLD_SEPARATELY
+    description: >
+      TCA Yoke and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+  - id: YOKE_COLUMN_ROTATION
+    description: >
+      The yoke column provides X (roll/aileron) and Y (pitch/elevator) axes.
+      Rz represents the tiller / yoke rotation axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0409 confirmed from linux-hardware.org ("TCA YOKE BOEING").
+    Axis count and names based on Thrustmaster product specification and community reports.
+    Boeing Quadrant (PID 0x040A / 0x040B) is a separate USB device;
+    see tca-quadrant-boeing.yaml and tca-quadrant-boeing-addon.yaml.

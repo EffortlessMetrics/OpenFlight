@@ -14,15 +14,19 @@ pub mod pc_mode;
 pub mod presets;
 pub mod t16000m;
 pub mod tfrp;
+pub mod tpr;
 pub mod warthog;
 
 pub use detents::{DetentEvent, ThrottleDetentConfig, ThrottleDetentTracker};
 pub use flight_hid_support::device_support::{
     AxisMode, T16000M_JOYSTICK_PID, TFLIGHT_HOTAS_4_PID, TFLIGHT_HOTAS_4_PID_LEGACY,
-    TFLIGHT_HOTAS_ONE_PID, TFLIGHT_HOTAS_X_PID, TFRP_RUDDER_PEDALS_PID, T_RUDDER_PID,
-    T16000mModel, TFlightModel, THRUSTMASTER_VENDOR_ID, TWCS_THROTTLE_PID, WARTHOG_JOYSTICK_PID,
-    WARTHOG_THROTTLE_PID, WarthogModel, is_hotas4_legacy_pid, is_t16000m_device, is_tflight_device,
-    is_warthog_device, t16000m_model, tflight_model, warthog_model,
+    TFLIGHT_HOTAS_ONE_PID, TFLIGHT_HOTAS_X_PID, TFRP_RUDDER_PEDALS_PID,
+    TCA_QUADRANT_BOEING_ENG12_PID, TCA_QUADRANT_BOEING_ENG34_PID, TCA_YOKE_BOEING_PID,
+    TPR_PENDULAR_RUDDER_BULK_PID, TPR_PENDULAR_RUDDER_PID, T_RUDDER_PID, T16000mModel,
+    TFlightModel, TcaBoeingModel, THRUSTMASTER_VENDOR_ID, TWCS_THROTTLE_PID,
+    WARTHOG_JOYSTICK_PID, WARTHOG_THROTTLE_PID, WarthogModel, is_hotas4_legacy_pid,
+    is_t16000m_device, is_tca_boeing_device, is_tflight_device, is_warthog_device, t16000m_model,
+    tca_boeing_model, tflight_model, warthog_model,
 };
 pub use health::{TFlightHealthMonitor, TFlightHealthStatus};
 pub use input::{
@@ -44,5 +48,8 @@ pub use warthog::{
 };
 pub use tfrp::{
     TFRP_MIN_REPORT_BYTES, TfrpAxes, TfrpInputState, TfrpParseError, parse_tfrp_report,
+};
+pub use tpr::{
+    TPR_MIN_REPORT_BYTES, TprAxes, TprInputState, TprParseError, parse_tpr_report,
 };
 pub use presets::{RecommendedAxisConfig, recommended_axis_config};

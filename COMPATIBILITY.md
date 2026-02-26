@@ -28,16 +28,22 @@
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
 | Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4) | 0x044F | 0x0408 | 4 | 12 | ✗ | 2 |
 | Thrustmaster TCA Quadrant Airbus Edition | 0x044F | 0x0407 | 4 | 12 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Boeing Add-On (Eng 3&4) | 0x044F | 0x040B | 4 | 10 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Boeing Edition | 0x044F | 0x040A | 4 | 10 | ✗ | 2 |
 | Thrustmaster TCA Sidestick Airbus Edition (Copilot) | 0x044F | 0x0406 | 3 | 16 | ✗ | 2 |
 | Thrustmaster TCA Sidestick Airbus Edition (Pilot) | 0x044F | 0x0405 | 3 | 16 | ✗ | 2 |
+| Thrustmaster TCA Yoke Boeing Edition | 0x044F | 0x0409 | 3 | 10 | ✗ | 2 |
 | T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
 | Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
 | T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-Pendular Rudder (TPR) | 0x044F | 0xB68F | 3 | 0 | ✗ | 2 |
 | Thrustmaster TWCS Throttle | 0x044F | 0xB687 | 4 | 14 | ✗ | 2 |
 | Thrustmaster HOTAS Warthog Joystick | 0x044F | 0x0402 | 3 | 19 | ✗ | 2 |
 | Thrustmaster HOTAS Warthog Throttle | 0x044F | 0x0404 | 5 | 40 | ✗ | 2 |
 | VIRPIL VPC Throttle CM3 | 0x3344 | 0x0194 | 6 | 78 | ✗ | 2 |
 | VIRPIL VPC Constellation Alpha Left (CM3) | 0x3344 | 0x838F | 5 | 28 | ✗ | 2 |
+| VPC Constellation Alpha Prime Left | 0x3344 | 0x0138 | 5 | 28 | ✗ | 2 |
+| VPC Constellation Alpha Prime Right | 0x3344 | 0x4139 | 5 | 28 | ✗ | 2 |
 | VIRPIL VPC Control Panel 1 | 0x3344 | 0x025B | 0 | 48 | ✗ | 2 |
 | VIRPIL VPC Control Panel 2 | 0x3344 | 0x0259 | 2 | 47 | ✗ | 2 |
 | VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
@@ -45,7 +51,7 @@
 | VKB Gladiator Modern Combat Pro | 0x231D | 0x0131 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
-| VKB Gladiator NXT EVO | 0x231D | 0x0126 | 8 | 32 | ✗ | 2 |
+| VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |
 | VKB STECS Mini Left | 0x231D | 0x0136 | 5 | 96 | ✗ | 2 |
 | VKB STECS Mini+ Left | 0x231D | 0x0137 | 5 | 96 | ✗ | 2 |
 | VKB STECS Mini+ Right | 0x231D | 0x013B | 5 | 96 | ✗ | 2 |

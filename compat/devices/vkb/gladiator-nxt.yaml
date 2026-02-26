@@ -1,4 +1,4 @@
-# VKB Gladiator NXT EVO
+# VKB Gladiator NXT EVO (Right)
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -9,7 +9,7 @@ device:
   vendor: "VKB"
   usb:
     vendor_id: 0x231D
-    product_id: 0x0126
+    product_id: 0x0200  # VKBsim Gladiator EVO R — confirmed via linux-hardware.org (24 probes)
   hid:
     usage_page: 0x01      # Generic Desktop
     usage: 0x04           # Joystick
@@ -39,4 +39,4 @@ support:
   test_coverage:
     simulated: true
     hil: false
-  notes: "Product ID may vary by firmware; 0x0126 is the NXT EVO standard mode."
+  notes: "PID 0x0200 confirmed via linux-hardware.org (24 probes, USB string 'VKBsim Gladiator EVO R'). Left-hand variant uses PID 0x0201; see gladiator-nxt-left.yaml."

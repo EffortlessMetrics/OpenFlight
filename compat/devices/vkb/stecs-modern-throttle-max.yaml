@@ -43,7 +43,7 @@ quirks:
 support:
   tier: 3
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     2023-generation full-size standalone throttle. Larger form factor with more

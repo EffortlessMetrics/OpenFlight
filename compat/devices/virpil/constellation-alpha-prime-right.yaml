@@ -1,0 +1,32 @@
+# VIRPIL VPC Constellation Alpha Prime Right (HOSAS standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x4139 — Alpha Prime right grip in standalone HOSAS configuration.
+# Left variant uses PID 0x0138 (see constellation-alpha-prime-left.yaml).
+schema_version: "1"
+
+device:
+  name: "VPC Constellation Alpha Prime Right"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4139
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  force_feedback: false
+
+support:
+  tier: 2
+  notes: "Same report format as Constellation Alpha. Prime variant with improved grip."
+  test_coverage:
+    simulated: true
+    hil: false
