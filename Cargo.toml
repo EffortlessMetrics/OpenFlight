@@ -33,6 +33,7 @@ members = [
     "crates/flight-panels-core",
     "crates/flight-panels-saitek",
     "crates/flight-hotas-saitek",
+    "crates/flight-hotas-ch",
     "crates/flight-hotas-vkb",
     "crates/flight-hotas-thrustmaster",
     "crates/flight-panels-cougar",
