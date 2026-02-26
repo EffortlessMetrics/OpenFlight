@@ -30,6 +30,7 @@ features:
 test_coverage:
   trace_replay: false
   integration_tests: true   # Connection + snapshot pipeline tests in adapter.rs
+  fuzz_coverage: true       # crates/flight-ksp/fuzz/fuzz_targets/fuzz_ksp_response.rs
   hil: false
 
 support_tier: 3

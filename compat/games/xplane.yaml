@@ -29,6 +29,7 @@ features:
 test_coverage:
   trace_replay: false     # Planned
   integration_tests: true # adapter::tests — snapshot pipeline + stale timeout
+  fuzz_coverage: true     # crates/flight-xplane/fuzz/fuzz_targets/ (fuzz_xplane_plugin_msg, fuzz_xplane_dataref, fuzz_udp)
   hil: false
 
 support_tier: 1

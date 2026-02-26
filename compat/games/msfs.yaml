@@ -28,6 +28,8 @@ features:
 
 test_coverage:
   trace_replay: true
+  integration_tests: false
+  fuzz_coverage: true    # crates/flight-simconnect/fuzz/fuzz_targets/fuzz_simconnect_fixture.rs
   hil: false
 
 support_tier: 1

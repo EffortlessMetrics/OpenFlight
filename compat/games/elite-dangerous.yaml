@@ -32,6 +32,7 @@ features:
 
 test_coverage:
   trace_replay: false
+  integration_tests: false
   fuzz_coverage: true    # crates/flight-elite/fuzz/fuzz_targets/
   hil: false
 
