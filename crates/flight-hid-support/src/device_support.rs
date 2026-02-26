@@ -191,6 +191,11 @@ pub const TCA_QUADRANT_BOEING_ENG12_PID: u16 = 0x040A;
 /// Confirmed: VID 0x044F (ThrustMaster), PID 0x040B — linux-hardware.org ("TCA Quadrant Boeing 3&4").
 pub const TCA_QUADRANT_BOEING_ENG34_PID: u16 = 0x040B;
 
+/// USB Product ID for the Thrustmaster Sim Pedals.
+///
+/// Confirmed: VID 0x044F (ThrustMaster), PID 0xB371 — linux-hardware.org (5 probes, "Sim Pedals").
+pub const THRUSTMASTER_SIM_PEDALS_PID: u16 = 0xB371;
+
 // Saitek/Logitech HOTAS PIDs
 // See docs/reference/hotas-claims.md for verification status
 //

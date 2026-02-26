@@ -1,0 +1,43 @@
+# Thrustmaster Sim Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Sim Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB371  # Confirmed: linux-hardware.org (5 probes, "Sim Pedals")
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [rz, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+support:
+  tier: 2
+  os:
+    windows: true
+    linux: true
+    macos: false
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID confirmed via linux-hardware.org (5 probes, USB string "Sim Pedals").
+    Axis layout (Rz = rudder, Z = right toe brake) is inferred from the
+    typical Thrustmaster pedal HID report structure; hardware validation
+    recommended before production deployment.
