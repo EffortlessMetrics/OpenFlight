@@ -411,6 +411,7 @@ impl StartupCrashDetector {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+    use tokio::fs;
 
     #[tokio::test]
     async fn test_rollback_manager_initialization() {
@@ -458,5 +459,126 @@ mod tests {
         // Mark success
         detector.mark_startup_success().await.unwrap();
         assert!(!detector.check_previous_crash().await.unwrap());
+    }
+
+    /// Recording two versions and rolling back should return (and activate) the
+    /// previous version, removing the failed one from history.
+    #[tokio::test]
+    async fn test_rollback_to_previous_selects_correct_version() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        // install_path does not exist on disk; create_backup skips gracefully
+        let v1 = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("nonexistent_v1"),
+        );
+        manager.record_version(v1).await.unwrap();
+
+        let v2 = VersionInfo::new(
+            "1.1.0".to_string(),
+            "def456".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("nonexistent_v2"),
+        );
+        manager.record_version(v2).await.unwrap();
+
+        assert_eq!(manager.current_version().unwrap().version, "1.1.0");
+        assert_eq!(manager.version_history().len(), 2);
+
+        let rolled_back = manager.rollback_to_previous().await.unwrap();
+        assert_eq!(rolled_back.version, "1.0.0", "rollback must select the previous version");
+        assert_eq!(
+            manager.current_version().unwrap().version,
+            "1.0.0",
+            "current version must be updated after rollback"
+        );
+        assert_eq!(
+            manager.version_history().len(),
+            1,
+            "failed version must be removed from history"
+        );
+    }
+
+    /// Requesting rollback when there is only one recorded version must return an error.
+    #[tokio::test]
+    async fn test_rollback_with_single_version_returns_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        let v1 = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("nonexistent"),
+        );
+        manager.record_version(v1).await.unwrap();
+
+        let result = manager.rollback_to_previous().await;
+        assert!(result.is_err(), "rollback with no previous version must fail");
+    }
+
+    /// Rollback on an empty manager (no versions recorded) must also return an error.
+    #[tokio::test]
+    async fn test_rollback_with_no_versions_returns_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        let result = manager.rollback_to_previous().await;
+        assert!(result.is_err(), "rollback with no versions must fail");
+    }
+
+    /// check_startup_crash respects the timeout threshold:
+    /// - A very large timeout treats a just-installed version as a potential crash.
+    /// - A zero-second timeout never triggers (install always happened at or after "now").
+    #[tokio::test]
+    async fn test_crash_count_threshold_respected() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        let version = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("nonexistent"),
+        );
+        manager.record_version(version).await.unwrap();
+
+        // Version was just installed → time_since_install < u64::MAX/2 → returns true
+        assert!(
+            manager.check_startup_crash(u64::MAX / 2).await,
+            "very long timeout must trigger for a just-installed version"
+        );
+
+        // Zero-second timeout means time_since_install (≥0) is never < 0 → returns false
+        assert!(
+            !manager.check_startup_crash(0).await,
+            "zero timeout must never trigger"
+        );
+    }
+
+    /// StartupCrashDetector reports a crash once the startup file is older than the timeout.
+    #[tokio::test]
+    async fn test_startup_crash_detector_detects_stale_startup_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let startup_file = temp_dir.path().join("startup");
+
+        // Write a timestamp far in the past (Unix epoch)
+        fs::write(&startup_file, "1000").await.unwrap();
+
+        let detector =
+            StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(30));
+
+        // The timestamp is ancient → elapsed >> 30 s → crash detected
+        assert!(
+            detector.check_previous_crash().await.unwrap(),
+            "stale startup file must be detected as a crash"
+        );
     }
 }
