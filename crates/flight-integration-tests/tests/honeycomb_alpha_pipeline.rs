@@ -146,11 +146,20 @@ fn honeycomb_alpha_button_detection() {
     let state = parse_alpha_report(&report).expect("valid Alpha report");
 
     assert!(state.buttons.is_pressed(1), "button 1 should be pressed");
-    assert!(!state.buttons.is_pressed(2), "button 2 should not be pressed");
+    assert!(
+        !state.buttons.is_pressed(2),
+        "button 2 should not be pressed"
+    );
     assert!(state.buttons.is_pressed(36), "button 36 should be pressed");
     // Out-of-range buttons always return false
-    assert!(!state.buttons.is_pressed(0), "button 0 (OOB) should be false");
-    assert!(!state.buttons.is_pressed(37), "button 37 (OOB) should be false");
+    assert!(
+        !state.buttons.is_pressed(0),
+        "button 0 (OOB) should be false"
+    );
+    assert!(
+        !state.buttons.is_pressed(37),
+        "button 37 (OOB) should be false"
+    );
 }
 
 /// VID/PID constants match the expected Honeycomb values.

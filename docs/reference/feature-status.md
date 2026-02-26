@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 349 |
-| ACs with tests | 349 |
-| ACs with Gherkin | 349 |
-| ACs with both tests + Gherkin | 349 |
-| Complete | 349 |
+| Total AC | 354 |
+| ACs with tests | 354 |
+| ACs with Gherkin | 354 |
+| ACs with both tests + Gherkin | 354 |
+| Complete | 354 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
-| Microcrates with tests | 61 (91.0%) |
-| Microcrates with Gherkin | 61 (91.0%) |
-| Microcrates fully covered | 61 (91.0%) |
+| Microcrates with tests | 62 (92.5%) |
+| Microcrates with Gherkin | 62 (92.5%) |
+| Microcrates fully covered | 62 (92.5%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -103,7 +103,7 @@
 | flight-workspace-meta | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
-| flight-xplane-plugin | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -312,6 +312,11 @@
 | REQ-57 | AC-57.3 | WHEN a VPC MongoosT-50CM3 stick HID report is parsed THEN all 5 axes SHALL normalize to [0.0, 1.0] and the hat switch SHALL decode from the high nibble of the last button byte | specs/features/req_57_virpil_hotas.feature:56<br>specs/features/req_57_virpil_hotas.feature:62<br>specs/features/req_57_virpil_hotas.feature:68<br>specs/features/req_57_virpil_hotas.feature:74 | 4 | ✅ Complete |
 | REQ-57 | AC-57.4 | WHEN a WarBRD or WarBRD-D HID report is parsed THEN the caller-supplied variant SHALL be preserved in the result and product_name SHALL return the correct device string | specs/features/req_57_virpil_hotas.feature:80<br>specs/features/req_57_virpil_hotas.feature:86<br>specs/features/req_57_virpil_hotas.feature:92<br>specs/features/req_57_virpil_hotas.feature:97 | 4 | ✅ Complete |
 | REQ-57 | AC-57.5 | WHEN a report shorter than the device minimum is presented THEN a TooShort error SHALL be returned for all VIRPIL device types | specs/features/req_57_virpil_hotas.feature:102<br>specs/features/req_57_virpil_hotas.feature:108<br>specs/features/req_57_virpil_hotas.feature:114 | 3 | ✅ Complete |
+| REQ-58 | AC-58.1 | WHEN a PluginMessage is serialised to JSON and deserialised THEN the result SHALL equal the original message | specs/features/req_58_xplane_plugin_protocol.feature:14 | 1 | ✅ Complete |
+| REQ-58 | AC-58.2 | WHEN a PluginResponse is serialised to JSON and deserialised THEN the result SHALL equal the original response including optional None fields | specs/features/req_58_xplane_plugin_protocol.feature:24<br>specs/features/req_58_xplane_plugin_protocol.feature:33 | 2 | ✅ Complete |
+| REQ-58 | AC-58.3 | WHEN malformed or unknown-variant JSON is deserialised as a PluginMessage THEN an error SHALL be returned and the process SHALL NOT panic | specs/features/req_58_xplane_plugin_protocol.feature:45<br>specs/features/req_58_xplane_plugin_protocol.feature:52 | 1 | ✅ Complete |
+| REQ-58 | AC-58.4 | WHEN a Handshake PluginMessage is serialised THEN the resulting JSON SHALL contain both a version field and a capabilities field | specs/features/req_58_xplane_plugin_protocol.feature:61 | 1 | ✅ Complete |
+| REQ-58 | AC-58.5 | WHEN a GetDataRef request and a DataRefValue response carry the same id THEN the id SHALL round-trip through JSON serialisation unchanged | specs/features/req_58_xplane_plugin_protocol.feature:70<br>specs/features/req_58_xplane_plugin_protocol.feature:77 | 2 | ✅ Complete |
 | INF-REQ-1 | AC-1.1 | WHEN documentation is created THEN it SHALL be organized into bands: requirements, design, concepts, how-to, reference, and adr under docs/ | specs/features/req_inf_1_documentation.feature:5 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.2 | WHEN a documentation file is created THEN it SHALL include YAML front matter with doc_id, kind, area, status, and links fields | specs/features/req_inf_1_documentation.feature:11 | 1 | ✅ Complete |
 | INF-REQ-1 | AC-1.3 | WHEN documentation references requirements THEN it SHALL use stable requirement IDs | specs/features/req_inf_1_documentation.feature:17 | 1 | ✅ Complete |

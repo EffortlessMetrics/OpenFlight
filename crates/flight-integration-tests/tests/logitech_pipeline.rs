@@ -26,7 +26,14 @@ use flight_hotas_logitech::{EXTREME_3D_PRO_MIN_REPORT_BYTES, parse_extreme_3d_pr
 /// - Throttle (7 bits): 0–127, 0 = top/forward (idle)
 /// - Buttons (12 bits): button bitmask
 /// - Hat (4 bits): 0=N, 1=NE, ... 7=NW, 8–15=center
-fn build_extreme_3d_pro_report(x: u16, y: u16, twist: u8, throttle: u8, buttons: u16, hat: u8) -> [u8; 7] {
+fn build_extreme_3d_pro_report(
+    x: u16,
+    y: u16,
+    twist: u8,
+    throttle: u8,
+    buttons: u16,
+    hat: u8,
+) -> [u8; 7] {
     let x = x & 0x3FF;
     let y = y & 0x3FF;
     let throttle = throttle & 0x7F;

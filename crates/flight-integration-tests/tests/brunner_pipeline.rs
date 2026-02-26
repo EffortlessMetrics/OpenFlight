@@ -61,7 +61,10 @@ fn brunner_cls_e_parses_centred_report() {
 
     assert_eq!(state.axes.roll, 0.0, "centred roll should be 0.0");
     assert_eq!(state.axes.pitch, 0.0, "centred pitch should be 0.0");
-    assert!(state.buttons.pressed().is_empty(), "no buttons should be pressed");
+    assert!(
+        state.buttons.pressed().is_empty(),
+        "no buttons should be pressed"
+    );
 }
 
 /// Full-deflection report: both axes at max produce +1.0.
@@ -143,11 +146,20 @@ fn brunner_cls_e_button_decoding() {
     let report = make_cls_e_report(0, 0, 0b0000_0001);
     let state = parse_cls_e_report(&report).expect("valid report");
     assert!(state.buttons.is_pressed(1), "button 1 should be pressed");
-    assert!(!state.buttons.is_pressed(2), "button 2 should not be pressed");
+    assert!(
+        !state.buttons.is_pressed(2),
+        "button 2 should not be pressed"
+    );
 
     // Button 32: bit 7 of fourth byte
     let report32 = make_cls_e_report(0, 0, 1 << 31);
     let state32 = parse_cls_e_report(&report32).expect("valid report");
-    assert!(state32.buttons.is_pressed(32), "button 32 should be pressed");
-    assert!(!state32.buttons.is_pressed(31), "button 31 should not be pressed");
+    assert!(
+        state32.buttons.is_pressed(32),
+        "button 32 should be pressed"
+    );
+    assert!(
+        !state32.buttons.is_pressed(31),
+        "button 31 should not be pressed"
+    );
 }
