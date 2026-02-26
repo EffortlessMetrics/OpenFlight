@@ -6,6 +6,9 @@
 
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
+| Brunner CLS-E MK II Force Feedback Joystick | 0x25BB | 0x0067 | 2 | 12 | ✓ | 2 |
+| Brunner CLS-E NG Force Feedback Yoke | 0x25BB | 0x006D | 2 | 12 | ✓ | 3 |
+| Brunner CLS-E MK II Force Feedback Rudder Pedals | 0x25BB | 0x006B | 3 | 0 | ✓ | 3 |
 | Brunner CLS-E Force Feedback Yoke | 0x25BB | 0x0063 | 2 | 16 | ✓ | 2 |
 | CH Combat Stick | 0x068E | 0x00F4 | 4 | 24 | ✗ | 2 |
 | CH Flight Sim Eclipse Yoke | 0x068E | 0x0051 | 6 | 32 | ✗ | 2 |
@@ -22,6 +25,7 @@
 | MFG Crosswind V2 Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
 | MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| RealSimulator FSSB-R3 Lighting | 0x20FF | 0x0002 | 2 | 0 | ✗ | 3 |
 | RealSimulator FSSB R3 | 0x20FF | 0x0001 | 2 | 0 | ✗ | 3 |
 | Saitek Pro Flight Cessna Rudder Pedals | 0x06A3 | 0x0765 | 3 | 0 | ✗ | 2 |
 | Saitek Pro Flight Cessna Trim Wheel | 0x06A3 | 0x0BD4 | 1 | 0 | ✗ | 2 |
@@ -58,6 +62,7 @@
 | Thrustmaster T-Pendular Rudder Bulk | 0x044F | 0xB68E | 3 | 0 | ✗ | 2 |
 | Thrustmaster T-Pendular Rudder (TPR) | 0x044F | 0xB68F | 3 | 0 | ✗ | 2 |
 | Thrustmaster TWCS Throttle | 0x044F | 0xB687 | 4 | 14 | ✗ | 2 |
+| Thrustmaster USB Joystick | 0x044F | 0xB304 | 4 | 8 | ✗ | 3 |
 | Thrustmaster HOTAS Warthog Joystick | 0x044F | 0x0402 | 3 | 19 | ✗ | 2 |
 | Thrustmaster HOTAS Warthog Throttle | 0x044F | 0x0404 | 5 | 40 | ✗ | 2 |
 | VIRPIL VPC Throttle CM3 | 0x3344 | 0x0194 | 6 | 78 | ✗ | 2 |
@@ -97,6 +102,9 @@
 | WinWing F/A-18 Takeoff Panel 2 | 0x4098 | 0xBF05 | 0 | 20 | ✗ | 3 |
 | WinWing F/A-18 Takeoff Panel | 0x4098 | 0xBE04 | 0 | 20 | ✗ | 3 |
 | WinWing ICP (F-16 Integrated Control Panel) | 0x4098 | 0xBF06 | 0 | 32 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (Captain) | 0x4098 | 0xBB36 | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (First Officer) | 0x4098 | 0xBB3E | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (Observer) | 0x4098 | 0xBB3A | 0 | 96 | ✗ | 3 |
 | WinWing MFD1 Center Panel | 0x4098 | 0xBEE0 | 0 | 20 | ✗ | 3 |
 | WinWing MFD1 Left Panel | 0x4098 | 0xBEE1 | 0 | 20 | ✗ | 3 |
 | WinWing MFD1 Right Panel | 0x4098 | 0xBEE2 | 0 | 20 | ✗ | 3 |
@@ -107,6 +115,10 @@
 | WinWing Orion 2 F-16EX Stick | 0x4098 | 0xBEA8 | 2 | 20 | ✗ | 3 |
 | WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |
 | WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE62 | 6 | 50 | ✗ | 2 |
+| WinWing SimApp Pro FCU + EFIS-L + EFIS-R | 0x4098 | 0xBA01 | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |
+| WinWing SimApp Pro FCU + EFIS-R | 0x4098 | 0xBC1E | 0 | 64 | ✗ | 3 |
+| WinWing SimApp Pro FCU | 0x4098 | 0xBB10 | 0 | 32 | ✗ | 3 |
 | WinWing SKYWALKER Metal Rudder Pedals | 0x4098 | 0xBEF0 | 3 | 0 | ✗ | 3 |
 | WinWing SuperTaurus F-15EX Throttle | 0x4098 | 0xBD64 | 6 | 50 | ✗ | 3 |
 | WinWing TFRP Rudder Pedals | 0x4098 | 0xBE64 | 3 | 0 | ✗ | 2 |

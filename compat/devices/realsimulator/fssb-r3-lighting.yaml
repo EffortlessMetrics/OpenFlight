@@ -1,0 +1,71 @@
+# RealSimulator FSSB-R3 Lighting (Force Sensing Stick Base, 2022+ generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The FSSB-R3 Lighting is the 2022+ generation FSSB product, distinct from the
+# original FSSB R3 / R3 Lite / R3 Lightning (all at PID 0x0001, covered by fssb-r3.yaml).
+# The Lighting generation adds RGB LED indicators, acoustic feedback, rotation adjust,
+# asymmetric force sensing (NASA features), and memory slots for RS grips.
+#
+# VID 0x20FF community-confirmed as RealSimulator's vendor ID.
+# PID 0x0002 community-reported for the new-generation FSSB-R3 Lighting; not found
+# in linux-hardware.org probe database (niche device). Verify with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "RealSimulator FSSB-R3 Lighting"
+  vendor: "RealSimulator"
+  usb:
+    vendor_id: 0x20FF
+    product_id: 0x0002
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16   # Hall-effect strain gauges; high-resolution force sensing
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: FORCE_SENSING_NO_SPRINGS
+    description: >
+      The FSSB-R3 Lighting uses Hall-effect strain gauges rather than a traditional
+      spring/gimbal mechanism. There is no physical travel; the applied force is
+      measured, not displacement. Do not apply deadzone or curve settings intended
+      for displacement joysticks.
+  - id: SENSITIVITY_IN_DEVICE_SOFTWARE
+    description: >
+      Force-to-output gain is configured in the RealSimulator Windows utility,
+      not in OpenFlight. Adjust sensitivity there before applying OpenFlight axis curves.
+  - id: RS_GRIP_EXTENDED_BUTTONS
+    description: >
+      When used with RealSimulator's RS grips (F16SGRH, F18CGRH), the FSSB-R3
+      Lighting supports up to 64 buttons, 8 memory slots, programmable keystrokes,
+      and a mouse emulation mode via dedicated firmware. This manifest covers the
+      base sensor data only (2 axes, no buttons); grip capabilities vary by grip model.
+  - id: PID_COMMUNITY_REPORTED
+    description: >
+      PID 0x0002 is community-reported for the new-generation FSSB-R3 Lighting.
+      The original FSSB R3 / R3 Lite / R3 Lightning variants used PID 0x0001 and
+      are covered by fssb-r3.yaml. Verify with lsusb on real hardware before relying
+      on this PID for production device matching.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x20FF community-confirmed as RealSimulator vendor ID. PID 0x0002
+    community-reported for the 2022+ FSSB-R3 Lighting generation; not found in
+    linux-hardware.org. This is distinct from the older FSSB R3/Lite/Lightning
+    (PID 0x0001, fssb-r3.yaml). Last reviewed: 2026-02.

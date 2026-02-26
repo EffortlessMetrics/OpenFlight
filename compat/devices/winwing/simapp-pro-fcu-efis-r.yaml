@@ -1,0 +1,58 @@
+# WinWing SimApp Pro FCU + EFIS-R (FCU with right-hand EFIS panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBC1E — schenlap/winwing_fcu and schenlap/XSchenFly,
+# listed as "FCU + EFIS-R" (first-officer-side EFIS).
+device:
+  name: "WinWing SimApp Pro FCU + EFIS-R"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBC1E
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      Both the FCU and EFIS-R panels feature 7-segment LCD displays. Display
+      updates are driven by HID output reports. OpenFlight writes speed,
+      heading, altitude, VS, and barometer values from the simulator.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders on both the FCU and EFIS-R panels generate HID button
+      events (increment/decrement). OpenFlight maps encoder steps to discrete
+      sim commands based on the active profile.
+  - id: MULTIPLEXED_PANELS
+    description: >
+      The FCU and EFIS-R panels enumerate as a single USB HID device.
+      Button numbering is multiplexed: FCU buttons occupy the first 32 bits,
+      EFIS-R buttons occupy the next 32 bits of the input report.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro FCU combined with the right-hand (first-officer-side)
+    EFIS panel. PID 0xBC1E confirmed from schenlap/winwing_fcu (two repos).
+    Standalone FCU is PID 0xBB10; FCU+EFIS-L is 0xBC1D;
+    FCU+EFIS-L+R combo is 0xBA01.

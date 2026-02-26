@@ -609,6 +609,52 @@ pub const WINWING_MFD1_L_PID: u16 = 0xBEE1;
 /// USB string "MFD1-R"). Right unit of the three-piece MFD set.
 pub const WINWING_MFD1_R_PID: u16 = 0xBEE2;
 
+/// USB Product ID for the WinWing SimApp Pro FCU (Airbus Flight Control Unit, standalone).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBB10 — schenlap/winwing_fcu and
+/// schenlap/XSchenFly (two independent open-source projects listing this as the
+/// standalone FCU variant). The FCU replicates the Airbus A320/A330 autopilot
+/// panel with 7-segment LCD display. Combined variants: 0xBC1D (FCU+EFIS-L),
+/// 0xBC1E (FCU+EFIS-R), 0xBA01 (FCU+EFIS-L+R).
+pub const WINWING_SIMAPP_PRO_FCU_PID: u16 = 0xBB10;
+
+/// USB Product ID for the WinWing SimApp Pro FCU + EFIS-L (FCU with captain-side EFIS).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBC1D — schenlap/winwing_fcu and
+/// schenlap/XSchenFly; also referenced as "PFP 4" in schenlap/winwing_mcdu.py.
+pub const WINWING_SIMAPP_PRO_FCU_EFIS_L_PID: u16 = 0xBC1D;
+
+/// USB Product ID for the WinWing SimApp Pro FCU + EFIS-R (FCU with first-officer-side EFIS).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBC1E — schenlap/winwing_fcu and
+/// schenlap/XSchenFly.
+pub const WINWING_SIMAPP_PRO_FCU_EFIS_R_PID: u16 = 0xBC1E;
+
+/// USB Product ID for the WinWing SimApp Pro FCU + EFIS-L + EFIS-R (full three-panel combo).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBA01 — schenlap/winwing_fcu and
+/// schenlap/XSchenFly; also referenced as "PFP 7" in schenlap/winwing_mcdu.py.
+pub const WINWING_SIMAPP_PRO_FCU_EFIS_COMBO_PID: u16 = 0xBA01;
+
+/// USB Product ID for the WinWing SimApp Pro MCDU (Airbus MCDU, Captain position).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBB36 — two independent projects:
+/// schenlap/winwing_mcdu.py ("MCDU - Captain") and Flixhummel/ioBroker.mcdu
+/// (PRODUCT_ID = 0xbb36). FO variant is 0xBB3E; Observer variant is 0xBB3A.
+pub const WINWING_MCDU_CAPT_PID: u16 = 0xBB36;
+
+/// USB Product ID for the WinWing SimApp Pro MCDU (Airbus MCDU, First Officer position).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBB3E — schenlap/winwing_mcdu.py
+/// ("MCDU - First Officer"). Identical hardware to Captain MCDU (0xBB36).
+pub const WINWING_MCDU_FO_PID: u16 = 0xBB3E;
+
+/// USB Product ID for the WinWing SimApp Pro MCDU (Airbus MCDU, Observer / third seat).
+///
+/// Confirmed: VID 0x4098 (WinWing), PID 0xBB3A — schenlap/winwing_mcdu.py
+/// ("MCDU - Observer"). Identical hardware to Captain MCDU (0xBB36).
+pub const WINWING_MCDU_OBS_PID: u16 = 0xBB3A;
+
 /// USB Vendor ID for all Moza (Gudsen Technology) products.
 ///
 /// Confirmed: VID 0x346E — from the-sz.com USB ID database and
@@ -659,6 +705,15 @@ pub const REALSIMULATOR_VENDOR_ID: u16 = 0x20FF;
 /// linux-hardware.org probe database.
 pub const REALSIMULATOR_FSSB_R3_PID: u16 = 0x0001;
 
+/// USB Product ID for the RealSimulator FSSB-R3 Lighting (2022+ generation).
+///
+/// Community-reported: VID 0x20FF, PID 0x0002. The FSSB-R3 Lighting is the
+/// 2022+ generation product with RGB LED indicators, acoustic feedback, asymmetric
+/// force sensing, and RS grip support. Distinct from the older FSSB R3/Lite/Lightning
+/// (PID 0x0001). Not found in linux-hardware.org probe database; verify with
+/// lsusb on real hardware.
+pub const REALSIMULATOR_FSSB_R3_LIGHTING_PID: u16 = 0x0002;
+
 /// USB Product ID for the VKB Gladiator Mk.II (original Gladiator, ~2014–2017).
 ///
 /// Confirmed: VID 0x231D (VKB), PID 0x0121 — linux-hardware.org (2 probes,
@@ -676,6 +731,27 @@ pub const BRUNNER_VENDOR_ID: u16 = 0x25BB;
 /// Confirmed: VID 0x25BB, PID 0x0063 — from the-sz.com USB ID database
 /// (listed as "PRT.5105 [Yoke]", the part number for the CLS-E direct USB connection).
 pub const BRUNNER_CLS_E_YOKE_PID: u16 = 0x0063;
+
+/// USB Product ID for the Brunner CLS-E MK II Force Feedback Joystick (PRT.5094).
+///
+/// Confirmed: VID 0x25BB, PID 0x0067 — from the-sz.com USB ID database
+/// (listed as "PRT.5094"). A reserved variant at PID 0x0068 also maps to PRT.5094.
+/// Product name inferred from Brunner shop catalogue; part number confirmed from USB registry.
+pub const BRUNNER_CLS_E_JOYSTICK_PID: u16 = 0x0067;
+
+/// USB Product ID for the Brunner CLS-E NG Force Feedback Yoke (PRT.5127).
+///
+/// Confirmed: VID 0x25BB, PID 0x006D — from the-sz.com USB ID database
+/// (listed as "PRT.5127"). The NG (Next Generation) Yoke is the entry-level successor
+/// to the CLS-E MK II Yoke. Product name inferred from Brunner shop catalogue.
+pub const BRUNNER_CLS_E_NG_YOKE_PID: u16 = 0x006D;
+
+/// USB Product ID for the Brunner CLS-E MK II Force Feedback Rudder Pedals (PRT.5123).
+///
+/// Confirmed: VID 0x25BB, PID 0x006B — from the-sz.com USB ID database
+/// (listed as "PRT.5123"). A reserved variant at PID 0x006C also maps to PRT.5123.
+/// Product name inferred from Brunner shop catalogue; part number confirmed from USB registry.
+pub const BRUNNER_CLS_E_RUDDER_PID: u16 = 0x006B;
 
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
 pub const USAGE_PAGE_BUTTON: u16 = 0x09;
@@ -1199,25 +1275,44 @@ pub fn moza_model(product_id: u16) -> Option<MozaModel> {
 pub enum BrunnerModel {
     /// Brunner CLS-E Force Feedback Yoke (PRT.5105). VID 0x25BB, PID 0x0063.
     ClsE,
+    /// Brunner CLS-E MK II Force Feedback Joystick (PRT.5094). VID 0x25BB, PID 0x0067.
+    ClsEJoystick,
+    /// Brunner CLS-E NG Force Feedback Yoke (PRT.5127). VID 0x25BB, PID 0x006D.
+    ClsENgYoke,
+    /// Brunner CLS-E MK II Force Feedback Rudder Pedals (PRT.5123). VID 0x25BB, PID 0x006B.
+    ClsERudder,
 }
 
 impl BrunnerModel {
     pub fn name(&self) -> &'static str {
         match self {
             BrunnerModel::ClsE => "Brunner CLS-E FFB Yoke",
+            BrunnerModel::ClsEJoystick => "Brunner CLS-E MK II FFB Joystick",
+            BrunnerModel::ClsENgYoke => "Brunner CLS-E NG FFB Yoke",
+            BrunnerModel::ClsERudder => "Brunner CLS-E MK II FFB Rudder Pedals",
         }
     }
 }
 
 /// Returns `true` if this VID/PID combination belongs to a known Brunner device.
 pub fn is_brunner_device(vendor_id: u16, product_id: u16) -> bool {
-    vendor_id == BRUNNER_VENDOR_ID && matches!(product_id, BRUNNER_CLS_E_YOKE_PID)
+    vendor_id == BRUNNER_VENDOR_ID
+        && matches!(
+            product_id,
+            BRUNNER_CLS_E_YOKE_PID
+                | BRUNNER_CLS_E_JOYSTICK_PID
+                | BRUNNER_CLS_E_NG_YOKE_PID
+                | BRUNNER_CLS_E_RUDDER_PID
+        )
 }
 
 /// Returns the Brunner model for a known PID, or `None` for unknown PIDs.
 pub fn brunner_model(product_id: u16) -> Option<BrunnerModel> {
     match product_id {
         BRUNNER_CLS_E_YOKE_PID => Some(BrunnerModel::ClsE),
+        BRUNNER_CLS_E_JOYSTICK_PID => Some(BrunnerModel::ClsEJoystick),
+        BRUNNER_CLS_E_NG_YOKE_PID => Some(BrunnerModel::ClsENgYoke),
+        BRUNNER_CLS_E_RUDDER_PID => Some(BrunnerModel::ClsERudder),
         _ => None,
     }
 }

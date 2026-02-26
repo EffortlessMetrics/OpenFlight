@@ -1,0 +1,63 @@
+# WinWing SimApp Pro MCDU (Airbus MCDU panel — Captain's seat)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBB36 — confirmed from two independent projects:
+# schenlap/winwing_mcdu.py ("MCDU - Captain") and Flixhummel/ioBroker.mcdu
+# (mcdu-client/lib/mcdu.js, PRODUCT_ID = 0xbb36). The WinWing SimApp Pro MCDU
+# replicates the Airbus A320/A330 MCDU (Multipurpose Control and Display Unit)
+# with a full alphanumeric colour LCD display and button array.
+device:
+  name: "WinWing SimApp Pro MCDU (Captain)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBB36
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 96
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: OUTPUT_COLOR_LCD
+    description: >
+      The MCDU features a full-colour alphanumeric LCD display (14 lines × 24
+      characters). Display updates require HID SET_REPORT control transfers
+      (not interrupt OUT). On Linux, use the `usb` package or libusb control
+      transfers; the firmware ignores standard interrupt OUT writes.
+  - id: SET_REPORT_REQUIRED
+    description: >
+      WinWing MCDU firmware requires USB control transfer SET_REPORT for all
+      display output commands. Standard HID interrupt OUT transfer mode is
+      ignored. This is a known firmware quirk affecting Linux hidraw/libusb.
+  - id: ANNUNCIATOR_LEDS
+    description: >
+      The MCDU has dedicated annunciator LEDs (FAIL, FM, MCDU, MENU, FM1,
+      IND, RDY, STATUS, FM2) controllable via HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro MCDU for the captain's position. PID 0xBB36 confirmed
+    from schenlap/winwing_mcdu.py and Flixhummel/ioBroker.mcdu (two independent
+    projects). First Officer variant is PID 0xBB3E; Observer is PID 0xBB3A.
+    Requires USB SET_REPORT for display output (Linux quirk).
+    Designed for Airbus A320/A330 simulation in X-Plane and MSFS with
+    TolissA320/A33X, FlyByWire A32NX, and similar add-ons.

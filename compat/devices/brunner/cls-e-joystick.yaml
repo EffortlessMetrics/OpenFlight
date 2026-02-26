@@ -1,0 +1,65 @@
+# Brunner CLS-E MK II Force Feedback Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID confirmed: 0x25BB (Brunner Elektronik AG) — from the-sz.com USB ID database
+# (source: linux-usb.org, vendor registered as "Brunner Elektronik AG").
+# PID confirmed: 0x0067 — from the-sz.com USB ID database, listed as
+# "PRT.5094" (Brunner part number for the CLS-E MK II Joystick USB interface).
+# A second reserved PID 0x0068 also maps to PRT.5094 in the same registry.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E MK II Force Feedback Joystick"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB         # Brunner Elektronik AG (registered VID)
+    product_id: 0x0067        # PRT.5094 — confirmed from the-sz.com USB ID DB
+  hid:
+    usage_page: 0x01          # Generic Desktop
+    usage: 0x04               # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]      # Dual-axis BLDC centre-stick; no integrated throttle
+    resolution_bits: 16
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine]
+    max_update_rate_hz: 250
+    torque_limit_nm: null     # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: CLS2SIM_COMPANION
+    description: >
+      The CLS-E Joystick requires the Brunner CLS2SIM companion software for FFB
+      configuration and calibration. OpenFlight can read axis data directly via HID
+      but FFB effects should be sent via the CLS2SIM API or raw USB output reports.
+  - id: HIL_NOT_VALIDATED
+    description: >
+      HID report layout inferred from Brunner SDK documentation and the USB PID/part
+      mapping. Hardware-in-the-loop (HIL) validation has not been performed.
+      Axis byte order and report ID require confirmation from real hardware.
+  - id: TM_HOTAS_GRIP_COMPAT
+    description: >
+      The CLS-E MK II Joystick base ships with an optional Thrustmaster HOTAS Warthog
+      grip adaptor. When used with the TM grip, the button count and hat layout reflect
+      the grip hardware, not the base. This manifest assumes the bare base configuration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VID/PID confirmed from linux-usb.org registry (PRT.5094). Product name inferred
+    from Brunner shop catalogue; part number confirmed from USB ID database.
+    HID report layout unvalidated; no HIL rig. FFB requires CLS2SIM companion software.
+    Last reviewed: 2026-02.
