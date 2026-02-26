@@ -163,6 +163,13 @@ pub const X56_LOGITECH_STICK_PID: u16 = 0xC229;
 // SUSPECT: This PID needs verification - do NOT match unknown Logitech PIDs
 // pub const X56_LOGITECH_THROTTLE_PID: u16 = 0xC22A;
 
+// Saitek standalone devices - confidence: CONFIRMED (linux-hardware.org)
+// 0x0764: Flight Pro Combat Rudder (2 probes) - pre-Pro Flight era gaming rudder pedals
+// 0x0C2D: Pro Flight Quadrant (22 probes) - NOTE: also claimed by x56.yaml for X56
+//         Mad Catz stick variant; linux-hardware.org evidence favours Quadrant
+pub const SAITEK_FLIGHT_PRO_COMBAT_RUDDER_PID: u16 = 0x0764;
+pub const SAITEK_PRO_FLIGHT_QUADRANT_PID: u16 = 0x0C2D;
+
 /// USB Vendor ID for VIRPIL Controls UAB.
 ///
 /// Confirmed: [the-sz.com USB ID DB](https://www.the-sz.com/products/usbid/index.php?v=0x3344)
