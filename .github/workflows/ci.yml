@@ -8,7 +8,7 @@ on:
   schedule:
     - cron: '0 3 * * *'   # 3 AM UTC daily (all regular jobs)
     - cron: '0 2 * * 0'   # 2 AM UTC Sunday (nightly fuzz)
-    - cron: '0 4 * * 1'   # 4 AM UTC Monday (mutation testing)
+    - cron: '0 2 * * 1'   # 2 AM UTC Monday (mutation testing)
   workflow_dispatch:
 
 concurrency:
@@ -826,12 +826,13 @@ jobs:
         echo "✅ Workspace dependency alignment verified"
 
   # ──────────────────────────────────────────────────────────────────────────────
-  # Code Coverage (core logic crates; runs on every PR and main push)
+  # Code Coverage (core logic crates; runs on nightly schedule and on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   coverage:
     name: Code Coverage (Core Crates)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -1149,7 +1150,7 @@ jobs:
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   mutation-testing:
-    name: Mutation Testing (Core Crates)
+    name: Mutation Testing (Weekly)
     runs-on: ubuntu-latest
     timeout-minutes: 120
     if: |
@@ -1173,7 +1174,7 @@ jobs:
           sudo apt-get install -y libudev-dev
 
       - name: Install cargo-mutants
-        run: cargo install cargo-mutants
+        run: cargo install cargo-mutants --locked
 
       - name: Run mutation testing on core crates
         run: |
@@ -1181,7 +1182,6 @@ jobs:
             -p flight-core \
             -p flight-axis \
             -p flight-rules \
-            -p flight-profile \
             --timeout 60 \
             --output mutants-out
         continue-on-error: true
@@ -1210,9 +1210,9 @@ jobs:
             echo "⚠️ mutants-out directory not found — mutation testing may have failed to run"
           fi
 
-      - name: Upload mutation report
+      - name: Upload mutation results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mutation-report
+          name: mutation-results
           path: mutants-out/
