@@ -1,10 +1,13 @@
 ---
-doc_id: HOW-TO-WINGMAN
+doc_id: DOC-HOWTO-WINGMAN
 kind: how-to
 area: simulation
-status: current
+status: active
 links:
-  - REQ-43
+  requirements:
+    - REQ-43
+  tasks: []
+  adrs: []
 ---
 
 # Project Wingman Setup

@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 318 |
-| ACs with tests | 315 |
-| ACs with Gherkin | 318 |
-| ACs with both tests + Gherkin | 315 |
-| Complete | 315 |
+| Total AC | 319 |
+| ACs with tests | 319 |
+| ACs with Gherkin | 319 |
+| ACs with both tests + Gherkin | 319 |
+| Complete | 319 |
 | Needs Gherkin | 0 |
-| Needs Tests | 3 |
+| Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
-| Microcrates | 68 |
-| Microcrates with tests | 55 (80.9%) |
-| Microcrates with Gherkin | 56 (82.4%) |
-| Microcrates fully covered | 55 (80.9%) |
-| Test coverage | 99.1% |
+| Microcrates | 67 |
+| Microcrates with tests | 55 (82.1%) |
+| Microcrates with Gherkin | 55 (82.1%) |
+| Microcrates fully covered | 55 (82.1%) |
+| Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 99.1% |
+| Test + Gherkin coverage | 100.0% |
 
 ## BDD Microcrate Matrix
 
@@ -70,7 +70,7 @@
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ipc | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
-| flight-macos-hid | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
+| flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-open-hardware | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
@@ -78,13 +78,13 @@
 | flight-panels-core | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-process-detection | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-rules | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-scheduler | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-service | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-service | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-session | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect-sys | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -104,7 +104,6 @@
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| unmapped | 3 | 0 | 3 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -272,7 +271,7 @@
 | REQ-50 | AC-50.4 | WHEN set_device_matching(usagePage, usage) is called THEN criteria() SHALL reflect those values | - | 2 | 🟡 Needs Gherkin |
 | REQ-50 | AC-50.5 | WHEN MacosClock::elapsed() is called after a delay THEN it SHALL return a duration >= that delay on non-macOS | - | 2 | 🟡 Needs Gherkin |
 | REQ-50 | AC-50.6 | WHEN HidError::UnsupportedPlatform is formatted THEN the message SHALL contain 'not supported' | - | 1 | 🟡 Needs Gherkin |
-| REQ-50 | AC-50.7 | WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = "macos")'.dependencies] in Cargo.toml | - | 0 | 🟡 Needs Tests |
+| REQ-50 | AC-50.7 | WHEN IOKit dependencies are declared THEN they SHALL appear only under [target.'cfg(target_os = "macos")'.dependencies] in Cargo.toml | - | 1 | 🟡 Needs Gherkin |
 | REQ-50 | AC-50.8 | WHEN the crate is compiled on Windows or Linux THEN it SHALL compile without requiring IOKit system libraries | - | 1 | 🟡 Needs Gherkin |
 | REQ-51 | AC-51.1 | WHEN a centred InputReport buffer is parsed THEN all axes SHALL be zero and ffb_fault SHALL be false | - | 1 | 🟡 Needs Gherkin |
 | REQ-51 | AC-51.2 | WHEN an InputReport is serialised then parsed THEN the result SHALL equal the original | - | 1 | 🟡 Needs Gherkin |
@@ -387,13 +386,14 @@
 | REQ-23 | AC-23.2 | WHEN capability enforcement is applied THEN profiles SHALL respect device capability constraints | specs/features/req_23_profile_management.feature:17 | 1 | ✅ Complete |
 | REQ-23 | AC-23.3 | WHEN canonicalizing profiles THEN equivalent configurations SHALL produce identical canonical forms | specs/features/req_23_profile_management.feature:23 | 1 | ✅ Complete |
 | REQ-23 | AC-23.4 | WHEN merging profiles using merge_with THEN the more-specific profile SHALL override the less-specific one | specs/features/req_23_profile_management.feature:29 | 1 | ✅ Complete |
-| REQ-23 | AC-23.5 | WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft | specs/features/req_23_profile_management.feature:36<br>specs/features/req_23_profile_management.feature:43<br>specs/features/req_23_profile_management.feature:50 | 0 | 🟡 Needs Tests |
-| REQ-23 | AC-23.6 | WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events | specs/features/req_23_profile_management.feature:58<br>specs/features/req_23_profile_management.feature:66 | 0 | 🟡 Needs Tests |
+| REQ-23 | AC-23.5 | WHEN an aircraft is detected THEN the service SHALL auto-load the aircraft-specific profile, falling back to global if none exists; cascade SHALL be global→simulator→aircraft | specs/features/req_23_profile_management.feature:36<br>specs/features/req_23_profile_management.feature:43<br>specs/features/req_23_profile_management.feature:50 | 1 | ✅ Complete |
+| REQ-23 | AC-23.6 | WHEN an adapter fails to initialize or telemetry goes stale THEN auto-switch SHALL degrade gracefully without crashing and SHALL emit diagnostic events | specs/features/req_23_profile_management.feature:58<br>specs/features/req_23_profile_management.feature:66 | 1 | ✅ Complete |
 | REQ-24 | AC-24.1 | WHEN validating a rules schema THEN invalid schema versions SHALL be rejected and valid ones SHALL be accepted | specs/features/req_24_led_rules.feature:5<br>specs/features/req_24_led_rules.feature:11 | 2 | ✅ Complete |
 | REQ-24 | AC-24.2 | WHEN compiling LED rules THEN bytecode SHALL be emitted correctly for supported rule types | specs/features/req_24_led_rules.feature:17 | 4 | ✅ Complete |
 | REQ-24 | AC-24.3 | WHEN parsing rule conditions and actions THEN all supported condition and action types SHALL be recognized | specs/features/req_24_led_rules.feature:24<br>specs/features/req_24_led_rules.feature:30 | 2 | ✅ Complete |
 | REQ-25 | AC-25.1 | WHEN creating a process detector THEN it SHALL initialize with expected process definitions for supported simulators | specs/features/req_25_process_detection.feature:5<br>specs/features/req_25_process_detection.feature:12 | 2 | ✅ Complete |
 | REQ-25 | AC-25.2 | WHEN the process detection lifecycle runs THEN simulator processes SHALL be detected and state transitions SHALL be recorded | specs/features/req_25_process_detection.feature:19<br>specs/features/req_25_process_detection.feature:25 | 2 | ✅ Complete |
+| REQ-25 | AC-25.3 | WHEN querying process definitions THEN definitions for War Thunder and Elite Dangerous SHALL exist with correct process names, window titles, and minimum confidence thresholds | specs/features/req_25_process_detection.feature:31<br>specs/features/req_25_process_detection.feature:39 | 2 | ✅ Complete |
 | REQ-26 | AC-26.1 | WHEN USB stall thresholds are exceeded THEN the watchdog SHALL detect the stall and reset counters on recovery | specs/features/req_26_watchdog.feature:5<br>specs/features/req_26_watchdog.feature:11 | 2 | ✅ Complete |
 | REQ-26 | AC-26.2 | WHEN plugin overrun is detected THEN the watchdog SHALL quarantine the component after the threshold is exceeded | specs/features/req_26_watchdog.feature:17<br>specs/features/req_26_watchdog.feature:23 | 2 | ✅ Complete |
 | REQ-26 | AC-26.3 | WHEN NaN or Inf values are injected THEN the NaN guard SHALL detect and respond appropriately to protect downstream components | specs/features/req_26_watchdog.feature:29<br>specs/features/req_26_watchdog.feature:35<br>specs/features/req_26_watchdog.feature:41 | 3 | ✅ Complete |

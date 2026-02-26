@@ -1688,6 +1688,11 @@ requirements:
         tests:
           - flight-process-detection::tests::test_process_detection_lifecycle
           - flight-process-detection::tests::test_sim_detection_check
+      - id: AC-25.3
+        description: "WHEN querying process definitions THEN definitions for War Thunder and Elite Dangerous SHALL exist with correct process names, window titles, and minimum confidence thresholds"
+        tests:
+          - flight-process-detection::tests::war_thunder_definition_present
+          - flight-process-detection::tests::elite_dangerous_definition_present
 
   # Product Requirement: System Watchdog and Quarantine
   - id: REQ-26
