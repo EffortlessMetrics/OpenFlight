@@ -27,6 +27,11 @@
 
 pub mod virtual_controller;
 
+#[cfg(windows)]
+pub mod vigem_controller;
+#[cfg(windows)]
+pub use vigem_controller::ViGEmXInputController;
+
 use flight_adapter_common::{AdapterError, AdapterMetrics, AdapterState};
 use flight_bus::{
     BusPublisher, BusSnapshot, PublisherError,

@@ -26,6 +26,8 @@ pub enum VirtualControllerError {
     AxisOutOfRange(u8),
     #[error("button index {0} is out of range (max 31)")]
     ButtonOutOfRange(u8),
+    #[error("ViGEm backend unavailable: {0}")]
+    ViGEmNotAvailable(String),
 }
 
 /// Trait for virtual controller backends.
