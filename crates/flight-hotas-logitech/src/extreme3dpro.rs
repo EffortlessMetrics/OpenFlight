@@ -420,6 +420,62 @@ mod tests {
                 let result = parse_extreme_3d_pro(&data);
                 prop_assert!(result.is_ok());
             }
+
+            /// Verify that *arbitrary* byte patterns (not just well-formed reports from
+            /// `build_report`) always produce axis values within the normalised output
+            /// ranges.  This exercises the bit-extraction arithmetic under adversarial
+            /// bit patterns that the structured tests cannot reach.
+            #[test]
+            fn arbitrary_bytes_all_axes_in_range(
+                data in proptest::collection::vec(any::<u8>(), 7..20usize),
+            ) {
+                let state = parse_extreme_3d_pro(&data).unwrap();
+                prop_assert!(
+                    (-1.0f32..=1.0).contains(&state.axes.x),
+                    "x out of range: {}",
+                    state.axes.x
+                );
+                prop_assert!(
+                    (-1.0f32..=1.0).contains(&state.axes.y),
+                    "y out of range: {}",
+                    state.axes.y
+                );
+                prop_assert!(
+                    (-1.0f32..=1.0).contains(&state.axes.twist),
+                    "twist out of range: {}",
+                    state.axes.twist
+                );
+                prop_assert!(
+                    (0.0f32..=1.0).contains(&state.axes.throttle),
+                    "throttle out of range: {}",
+                    state.axes.throttle
+                );
+            }
+
+            /// Verify that button numbers outside the valid 1-12 range always return
+            /// `false`, regardless of the raw report bytes.
+            #[test]
+            fn out_of_range_buttons_always_false(
+                data in proptest::collection::vec(any::<u8>(), 7..20usize),
+            ) {
+                let state = parse_extreme_3d_pro(&data).unwrap();
+                // button(0) is out-of-range; must never be reported as pressed
+                prop_assert!(!state.buttons.button(0));
+                // buttons 13-20 are all out-of-range
+                for b in 13u8..=20 {
+                    prop_assert!(
+                        !state.buttons.button(b),
+                        "button {} out of range should be false",
+                        b
+                    );
+                }
+                // The upper 4 bits of the 16-bit button word must always be 0
+                prop_assert_eq!(
+                    state.buttons.buttons & 0xF000,
+                    0,
+                    "upper bits of button word must be 0"
+                );
+            }
         }
     }
 }

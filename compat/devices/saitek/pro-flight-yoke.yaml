@@ -51,4 +51,7 @@ support:
     PID 0x0BAC confirmed as "Pro Flight Yoke" via linux-hardware.org (23 probes).
     Capabilities based on Saitek product specification and community reports.
     The system bundle pairs this yoke with the Pro Flight Quadrant (0x0C2D).
+    The Logitech G-branded reissue (sold post-2016 under the Logitech name) is the same
+    hardware and uses the same USB IDs (VID 0x06A3, PID 0x0BAC); no separate
+    Logitech VID (0x046D) entry has been confirmed in any USB hardware database.
     Last reviewed: 2026-02.
