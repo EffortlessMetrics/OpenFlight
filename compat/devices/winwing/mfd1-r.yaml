@@ -1,0 +1,43 @@
+# WinWing MFD1 Right Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBEE2 — linux-hardware.org (1 probe,
+# USB string "MFD1-R", vendor "Winwing", class 03-00-00 HID/joystick).
+device:
+  name: "WinWing MFD1 Right Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEE2
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+support:
+  tier: 3
+  os:
+    windows: true
+    linux: false
+    macos: false
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MFD1 Right panel (F/A-18 Multi-Function Display replica).
+    Button count approximate; HIL test required to confirm exact layout.
+    Typically paired with MFD1-C (0xBEE0) and MFD1-L (0xBEE1).
+    Source: linux-hardware.org usb:4098-bee2.

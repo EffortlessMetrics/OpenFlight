@@ -3687,4 +3687,55 @@ mod tests {
             "TCA Quadrant Boeing Add-On (Eng 3&4)"
         );
     }
+
+    #[test]
+    fn test_is_extreme_3d_pro_match() {
+        assert!(is_extreme_3d_pro(LOGITECH_VENDOR_ID, EXTREME_3D_PRO_PID));
+    }
+
+    #[test]
+    fn test_is_extreme_3d_pro_wrong_pid() {
+        assert!(!is_extreme_3d_pro(LOGITECH_VENDOR_ID, 0x0000));
+    }
+
+    #[test]
+    fn test_is_extreme_3d_pro_wrong_vendor() {
+        assert!(!is_extreme_3d_pro(0x1234, EXTREME_3D_PRO_PID));
+    }
+
+    #[test]
+    fn test_virpil_vendor_id_value() {
+        assert_eq!(VIRPIL_VENDOR_ID, 0x3344);
+    }
+
+    #[test]
+    fn test_vkb_vendor_id_value() {
+        assert_eq!(VKB_VENDOR_ID, 0x231D);
+    }
+
+    #[test]
+    fn test_vkb_gladiator_device_detected() {
+        let device = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        assert!(is_vkb_gladiator_device(&device));
+    }
+
+    #[test]
+    fn test_vkb_gladiator_device_wrong_vendor_not_detected() {
+        let mut device = vkb_device(VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        device.vendor_id = 0x1234;
+        assert!(!is_vkb_gladiator_device(&device));
+    }
+
+    #[test]
+    fn test_vkb_stecs_device_detected() {
+        let device = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PID);
+        assert!(is_vkb_stecs_device(&device));
+    }
+
+    #[test]
+    fn test_vkb_stecs_device_wrong_vendor_not_detected() {
+        let mut device = vkb_device(VKB_STECS_LEFT_SPACE_MINI_PID);
+        device.vendor_id = 0xAAAA;
+        assert!(!is_vkb_stecs_device(&device));
+    }
 }

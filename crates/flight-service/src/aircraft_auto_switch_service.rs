@@ -307,6 +307,9 @@ impl AircraftAutoSwitchService {
         let config = self.config.clone();
         let service_tx = self.service_tx.clone();
         let adapter_metrics = Arc::clone(&self.adapter_metrics);
+        let aircraft_switch_count = Arc::clone(&self.aircraft_switch_count);
+        let last_detection_time_ms = Arc::clone(&self.last_detection_time_ms);
+        let detection_latency_ms = Arc::clone(&self.detection_latency_ms);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -362,6 +365,15 @@ impl AircraftAutoSwitchService {
                             entry.average_detection_time = Duration::from_secs_f64(
                                 alpha * new_sample + (1.0 - alpha) * old_avg,
                             );
+                            // Update global atomic counters
+                            aircraft_switch_count.fetch_add(1, Ordering::Relaxed);
+                            let now_ms = SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_millis() as u64;
+                            last_detection_time_ms.store(now_ms, Ordering::Relaxed);
+                            detection_latency_ms
+                                .store(elapsed.as_millis() as u64, Ordering::Relaxed);
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
@@ -448,6 +460,9 @@ impl AircraftAutoSwitchService {
             auto_switch_metrics,
             process_detection_metrics,
             adapter_metrics,
+            aircraft_switch_count: self.aircraft_switch_count.load(Ordering::Relaxed),
+            last_detection_time_ms: self.last_detection_time_ms.load(Ordering::Relaxed),
+            detection_latency_ms: self.detection_latency_ms.load(Ordering::Relaxed),
         }
     }
 

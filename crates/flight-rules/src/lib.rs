@@ -1047,6 +1047,34 @@ mod tests {
         };
         assert!(schema.validate().is_err());
     }
+
+    #[test]
+    fn validate_rule_invalid_action_syntax_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "this.is.not.valid()".to_string(),
+                action: "this.is.not.valid()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_valid_rule_passes() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_ok());
+    }
 }
 
 #[cfg(test)]
