@@ -1,0 +1,70 @@
+# VIRPIL VPC WarBRD-D Joystick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PIDs:
+#   0x40CC — original WarBRD: fredemmott/cpp-remapper devicedb.h,
+#             "RIGHT VPC Stick WarBRD", HardwareID HID\VID_3344&PID_40CC&Col01
+#   0x43F5 — revised WarBRD-D: LunaBaloona/Virpil_devices_on_Linux,
+#             lsusb: "ID 3344:43f5 R-VPC Stick WarBRD-D" (real hardware)
+#
+# The WarBRD(-D) base uses the same 15-byte HID report format as the MongoosT-50CM3.
+# Use stick_warbrd.rs (which delegates to parse_mongoost_stick_report) for both PIDs.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC WarBRD-D Joystick Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x43F5     # WarBRD-D; use 0x40CC for original WarBRD
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; all other values = center.
+      Identical encoding to MongoosT-50CM3 (PID 0x4130).
+  - id: WARBRD_D_VARIANT
+    description: >
+      PID 0x43F5 is the revised WarBRD-D. The original WarBRD uses PID 0x40CC.
+      Both produce an identical 15-byte HID report; the same parser covers both.
+  - id: SHARED_REPORT_FORMAT
+    description: >
+      The WarBRD base shares its HID report format with the MongoosT-50CM3 stick
+      (PID 0x4130). flight-hotas-virpil::stick_warbrd delegates to
+      parse_mongoost_stick_report for both WarBRD variants.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x40CC confirmed from fredemmott/cpp-remapper (community hardware listing).
+    PID 0x43F5 confirmed from LunaBaloona/Virpil_devices_on_Linux (lsusb, real hardware).
+    Report format shared with MongoosT-50CM3; use parse_mongoost_stick_report.
+    Last reviewed: 2026-02.

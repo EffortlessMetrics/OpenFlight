@@ -48,6 +48,7 @@
 | VIRPIL VPC Control Panel 2 | 0x3344 | 0x0259 | 2 | 47 | ✗ | 2 |
 | VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
 | VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
+| VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
 | VKB Gladiator Modern Combat Pro | 0x231D | 0x0131 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |

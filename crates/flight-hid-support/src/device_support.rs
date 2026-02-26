@@ -214,6 +214,19 @@ pub const VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID: u16 = 0x0138;
 /// `vendor_id=0x3344, product_id=0x4139`).
 pub const VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID: u16 = 0x4139;
 
+/// USB Product ID for the VIRPIL VPC WarBRD (original, right-hand joystick base).
+///
+/// Source: fredemmott/cpp-remapper project `devicedb.h` — device listed as
+/// "RIGHT VPC Stick WarBRD" with `HardwareID: HID\VID_3344&PID_40CC&Col01`,
+/// VID 0x3344, PID 0x40CC.
+pub const VIRPIL_WARBRD_PID: u16 = 0x40CC;
+
+/// USB Product ID for the VIRPIL VPC WarBRD-D (revised "D" variant, right-hand joystick base).
+///
+/// Source: LunaBaloona/Virpil_devices_on_Linux — `lsusb` output from real hardware:
+/// `ID 3344:43f5 Leaguer Microelectronics (LME) R-VPC Stick WarBRD-D`.
+pub const VIRPIL_WARBRD_D_PID: u16 = 0x43F5;
+
 /// USB Vendor ID for CH Products.
 ///
 /// Source: Linux kernel `drivers/hid/hid-ids.h`
@@ -588,6 +601,10 @@ pub enum VirpilModel {
     ConstellationAlphaPrimeLeft,
     /// VPC Constellation Alpha Prime (right grip, standalone HOSAS). VID 0x3344, PID 0x4139.
     ConstellationAlphaPrimeRight,
+    /// VPC WarBRD (original right-hand base). VID 0x3344, PID 0x40CC.
+    WarBrd,
+    /// VPC WarBRD-D (revised right-hand base). VID 0x3344, PID 0x43F5.
+    WarBrdD,
 }
 
 impl VirpilModel {
@@ -601,6 +618,8 @@ impl VirpilModel {
             VirpilModel::ConstellationAlphaLeft => "VPC Constellation Alpha Left (CM3)",
             VirpilModel::ConstellationAlphaPrimeLeft => "VPC Constellation Alpha Prime Left",
             VirpilModel::ConstellationAlphaPrimeRight => "VPC Constellation Alpha Prime Right",
+            VirpilModel::WarBrd => "VPC WarBRD Stick",
+            VirpilModel::WarBrdD => "VPC WarBRD-D Stick",
         }
     }
 }
@@ -618,6 +637,8 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
                 | VIRPIL_CONSTELLATION_ALPHA_LEFT_PID
                 | VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID
                 | VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID
+                | VIRPIL_WARBRD_PID
+                | VIRPIL_WARBRD_D_PID
         )
 }
 
@@ -632,6 +653,8 @@ pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
         VIRPIL_CONSTELLATION_ALPHA_LEFT_PID => Some(VirpilModel::ConstellationAlphaLeft),
         VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID => Some(VirpilModel::ConstellationAlphaPrimeLeft),
         VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID => Some(VirpilModel::ConstellationAlphaPrimeRight),
+        VIRPIL_WARBRD_PID => Some(VirpilModel::WarBrd),
+        VIRPIL_WARBRD_D_PID => Some(VirpilModel::WarBrdD),
         _ => None,
     }
 }
