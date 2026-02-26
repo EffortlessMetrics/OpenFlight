@@ -156,4 +156,58 @@ mod tests {
         assert!(json.contains("GetDataRef"));
         assert!(json.contains("sim/cockpit/autopilot/altitude"));
     }
+
+    #[test]
+    fn malformed_json_returns_error() {
+        let result = serde_json::from_str::<PluginMessage>("{not valid json}");
+        assert!(
+            result.is_err(),
+            "malformed JSON must return an error, not panic"
+        );
+
+        let result2 = serde_json::from_str::<PluginMessage>(r#"{"type":"UnknownVariant"}"#);
+        assert!(result2.is_err(), "unknown type tag must return an error");
+    }
+
+    #[test]
+    fn handshake_json_contains_version_and_capabilities_fields() {
+        let msg = PluginMessage::Handshake {
+            version: "2.0".to_string(),
+            capabilities: vec!["subscribe".to_string(), "commands".to_string()],
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        assert!(
+            json.contains("\"version\""),
+            "JSON must contain version field"
+        );
+        assert!(
+            json.contains("\"capabilities\""),
+            "JSON must contain capabilities field"
+        );
+    }
+
+    #[test]
+    fn get_dataref_and_dataref_value_ids_match() {
+        let request = PluginMessage::GetDataRef {
+            id: 99,
+            name: "sim/test/dataref".to_string(),
+        };
+        let request_json = serde_json::to_string(&request).unwrap();
+        assert!(request_json.contains("99"));
+
+        let response = PluginResponse::DataRefValue {
+            id: 99,
+            name: "sim/test/dataref".to_string(),
+            value: serde_json::json!(1.5),
+            timestamp: 1000,
+        };
+        let response_json = serde_json::to_string(&response).unwrap();
+        let decoded: PluginResponse = serde_json::from_str(&response_json).unwrap();
+        if let PluginResponse::DataRefValue { id, name, .. } = decoded {
+            assert_eq!(id, 99, "DataRefValue id must match GetDataRef id");
+            assert_eq!(name, "sim/test/dataref");
+        } else {
+            panic!("Wrong variant after round-trip");
+        }
+    }
 }

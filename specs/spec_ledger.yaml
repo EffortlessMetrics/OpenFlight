@@ -1306,6 +1306,35 @@ requirements:
           - flight-hotas-virpil::stick_mongoost::tests::too_short_is_error
           - flight-hotas-virpil::stick_warbrd::tests::too_short_returns_error
 
+  # Product Requirement: X-Plane Plugin Protocol
+  - id: REQ-58
+    name: X-Plane Plugin Protocol
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-58.1
+        description: "WHEN a PluginMessage is serialised to JSON and deserialised THEN the result SHALL equal the original message"
+        tests:
+          - flight-xplane-plugin::protocol::tests::plugin_message_handshake_round_trips
+      - id: AC-58.2
+        description: "WHEN a PluginResponse is serialised to JSON and deserialised THEN the result SHALL equal the original response including optional None fields"
+        tests:
+          - flight-xplane-plugin::protocol::tests::plugin_response_pong_round_trips
+          - flight-xplane-plugin::protocol::tests::plugin_response_error_optional_fields
+      - id: AC-58.3
+        description: "WHEN malformed or unknown-variant JSON is deserialised as a PluginMessage THEN an error SHALL be returned and the process SHALL NOT panic"
+        tests:
+          - flight-xplane-plugin::protocol::tests::malformed_json_returns_error
+      - id: AC-58.4
+        description: "WHEN a Handshake PluginMessage is serialised THEN the resulting JSON SHALL contain both a version field and a capabilities field"
+        tests:
+          - flight-xplane-plugin::protocol::tests::handshake_json_contains_version_and_capabilities_fields
+      - id: AC-58.5
+        description: "WHEN a GetDataRef request and a DataRefValue response carry the same id THEN the id SHALL round-trip through JSON serialisation unchanged"
+        tests:
+          - flight-xplane-plugin::protocol::tests::plugin_message_get_dataref_serialises_id_and_name
+          - flight-xplane-plugin::protocol::tests::get_dataref_and_dataref_value_ids_match
+
   # ============================================================================
   # ============================================================================
 
