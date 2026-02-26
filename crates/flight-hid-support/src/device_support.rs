@@ -249,6 +249,18 @@ pub const SAITEK_PRO_FLIGHT_SWITCH_PANEL_PID: u16 = 0x0D67;
 /// Confirmed: [the-sz.com USB ID DB](https://www.the-sz.com/products/usbid/index.php?v=0x3344)
 pub const VIRPIL_VENDOR_ID: u16 = 0x3344;
 
+/// USB Product ID for the VIRPIL VPC MongoosT-50CM2 Throttle.
+///
+/// Confirmed: charliefoxtwo/Virpil-Communicator (`ThrottleCM2Pids = new() { 0x8193 }`)
+/// and muchimi/JoystickGremlinEx (virpil_device.py, `CM2 = [0x8193]`).
+pub const VIRPIL_CM2_THROTTLE_PID: u16 = 0x8193;
+
+/// USB Product ID for the VIRPIL VPC MongoosT-50CM2 Stick (left-hand).
+///
+/// Confirmed: RavenX8/open-vpc Linux kernel driver
+/// (driver/vpcdevice.h, `USB_DEVICE_ID_VIRPIL_STICK_MT_50CM2 0x4138`).
+pub const VIRPIL_CM2_STICK_PID: u16 = 0x4138;
+
 /// USB Product ID for the VIRPIL VPC Throttle CM3.
 ///
 /// Source: Buzzec/virpil open-source Rust LED control library.
@@ -778,6 +790,10 @@ pub fn tca_boeing_model(product_id: u16) -> Option<TcaBoeingModel> {
 /// VIRPIL Controls VPC product family models.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VirpilModel {
+    /// VPC MongoosT-50CM2 Throttle. VID 0x3344, PID 0x8193.
+    Cm2Throttle,
+    /// VPC MongoosT-50CM2 Stick (left-hand). VID 0x3344, PID 0x4138.
+    Cm2Stick,
     /// VPC Throttle CM3. VID 0x3344, PID 0x0194.
     Cm3Throttle,
     /// VPC MongoosT-50CM3 (right stick). VID 0x3344, PID 0x4130.
@@ -803,6 +819,8 @@ pub enum VirpilModel {
 impl VirpilModel {
     pub fn name(&self) -> &'static str {
         match self {
+            VirpilModel::Cm2Throttle => "VPC MongoosT-50CM2 Throttle",
+            VirpilModel::Cm2Stick => "VPC MongoosT-50CM2 Stick",
             VirpilModel::Cm3Throttle => "VPC Throttle CM3",
             VirpilModel::MongoostStick => "VPC MongoosT-50CM3 Stick",
             VirpilModel::ControlPanel1 => "VPC Control Panel 1",
@@ -822,7 +840,9 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == VIRPIL_VENDOR_ID
         && matches!(
             product_id,
-            VIRPIL_CM3_THROTTLE_PID
+            VIRPIL_CM2_THROTTLE_PID
+                | VIRPIL_CM2_STICK_PID
+                | VIRPIL_CM3_THROTTLE_PID
                 | VIRPIL_MONGOOST_STICK_PID
                 | VIRPIL_PANEL1_PID
                 | VIRPIL_PANEL2_PID
@@ -838,6 +858,8 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
 /// Returns the VIRPIL model for a known PID, or `None` for unknown PIDs.
 pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
     match product_id {
+        VIRPIL_CM2_THROTTLE_PID => Some(VirpilModel::Cm2Throttle),
+        VIRPIL_CM2_STICK_PID => Some(VirpilModel::Cm2Stick),
         VIRPIL_CM3_THROTTLE_PID => Some(VirpilModel::Cm3Throttle),
         VIRPIL_MONGOOST_STICK_PID => Some(VirpilModel::MongoostStick),
         VIRPIL_PANEL1_PID => Some(VirpilModel::ControlPanel1),

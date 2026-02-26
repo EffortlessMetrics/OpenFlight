@@ -59,6 +59,8 @@
 | VPC Constellation Alpha Prime Right | 0x3344 | 0x4139 | 5 | 28 | ✗ | 2 |
 | VIRPIL VPC Control Panel 1 | 0x3344 | 0x025B | 0 | 48 | ✗ | 2 |
 | VIRPIL VPC Control Panel 2 | 0x3344 | 0x0259 | 2 | 47 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM2 Stick | 0x3344 | 0x4138 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM2 Throttle | 0x3344 | 0x8193 | 6 | 78 | ✗ | 2 |
 | VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
 | VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
 | VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
