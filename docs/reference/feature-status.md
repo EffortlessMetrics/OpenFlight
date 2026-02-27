@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1832 |
-| ACs with tests | 1832 |
-| ACs with Gherkin | 869 |
-| ACs with both tests + Gherkin | 869 |
+| Total AC | 1904 |
+| ACs with tests | 1904 |
+| ACs with Gherkin | 941 |
+| ACs with both tests + Gherkin | 941 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 1235 |
+| Draft | 1307 |
 | Incomplete | 0 |
 | Microcrates | 80 |
 | Microcrates with tests | 65 (81.2%) |
 | Microcrates with Gherkin | 65 (81.2%) |
 | Microcrates fully covered | 65 (81.2%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 47.4% |
-| Test + Gherkin coverage | 47.4% |
+| Gherkin coverage | 49.4% |
+| Test + Gherkin coverage | 49.4% |
 
 ## BDD Microcrate Matrix
 
@@ -1916,39 +1916,111 @@
 | REQ-300 | AC-300.4 | Test runs in < 30 seconds | - | 1 | ⚪ Draft |
 | REQ-300 | AC-300.5 | Test uses deterministic timing (mock clock) | - | 1 | ⚪ Draft |
 | REQ-300 | AC-300.6 | Test failure produces a readable diff of expected vs actual axis values | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.1 | CLI can display current deadzone settings for each axis | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.2 | Display shows center deadzone and edge deadzone percentages | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.3 | Display shows effective output range after deadzone | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.4 | Visualization updates in real-time when axis is moved | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.5 | Deadzone can be adjusted interactively via CLI | - | 1 | ⚪ Draft |
-| REQ-301 | AC-301.6 | Changes are reflected immediately in axis processing | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.1 | Service subscribes to SimConnect variables defined in profile | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.2 | Variable subscription uses efficient SimConnect event-based API | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.3 | New variable subscriptions are added without restart | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.4 | Subscriptions survive MSFS sim reset (airplane change) | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.5 | Variable access latency is < 2ms from SimConnect notification | - | 1 | ⚪ Draft |
-| REQ-302 | AC-302.6 | Unsupported variable names produce a logged warning, not an error | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.1 | Service can read X-Plane DataRefs specified in profile | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.2 | DataRef binding uses UDP extplane or native X-Plane UDP | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.3 | DataRefs are polled at configurable rate (1-50Hz) | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.4 | Invalid DataRef name produces a warning in logs | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.5 | DataRef values are normalized to [-1.0, 1.0] for axis use | - | 1 | ⚪ Draft |
-| REQ-303 | AC-303.6 | Multiple DataRefs can be combined into a virtual axis | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.1 | DCS integration uses Lua export script (Export.lua hooks) | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.2 | Export.lua is generated from profile configuration | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.3 | Script sends aircraft data via UDP on port 27101 | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.4 | Service receives and parses DCS telemetry packets | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.5 | Connection loss is detected within 1 second | - | 1 | ⚪ Draft |
-| REQ-304 | AC-304.6 | Re-connection happens automatically when DCS reconnects | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.1 | Service reads War Thunder state via HTTP telemetry endpoint | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.2 | Telemetry endpoint (localhost:8111/state.json) is polled at 20Hz | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.3 | Aircraft type triggers profile switch | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.4 | Connected/disconnected state is tracked | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.5 | Ground vehicle telemetry is also supported (separate profile) | - | 1 | ⚪ Draft |
-| REQ-305 | AC-305.6 | Telemetry failure triggers fallback to idle profile | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.1 | Service connects to IL-2 via UDP export (port 21001) | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.2 | IL-2 export protocol sends airspeed, altitude, heading, pitch, roll | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.3 | Protocol magic bytes are validated on every packet | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.4 | Connection loss triggers stale snapshot after 1 second | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.5 | Aircraft type from IL-2 triggers profile matching | - | 1 | ⚪ Draft |
-| REQ-306 | AC-306.6 | Integration tests replay captured IL-2 UDP packets | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.1 | CLI can display current deadzone settings for each axis | specs/features/req_301_axis_deadzone_visualization.feature:5 | 1 | ⚪ Draft |
+| REQ-301 | AC-301.2 | Display shows center deadzone and edge deadzone percentages | specs/features/req_301_axis_deadzone_visualization.feature:11 | 1 | ⚪ Draft |
+| REQ-301 | AC-301.3 | Display shows effective output range after deadzone | specs/features/req_301_axis_deadzone_visualization.feature:17 | 1 | ⚪ Draft |
+| REQ-301 | AC-301.4 | Visualization updates in real-time when axis is moved | specs/features/req_301_axis_deadzone_visualization.feature:23 | 1 | ⚪ Draft |
+| REQ-301 | AC-301.5 | Deadzone can be adjusted interactively via CLI | specs/features/req_301_axis_deadzone_visualization.feature:29 | 1 | ⚪ Draft |
+| REQ-301 | AC-301.6 | Changes are reflected immediately in axis processing | specs/features/req_301_axis_deadzone_visualization.feature:35 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.1 | Service subscribes to SimConnect variables defined in profile | specs/features/req_302_simconnect_variable_subscription.feature:5 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.2 | Variable subscription uses efficient SimConnect event-based API | specs/features/req_302_simconnect_variable_subscription.feature:11 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.3 | New variable subscriptions are added without restart | specs/features/req_302_simconnect_variable_subscription.feature:17 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.4 | Subscriptions survive MSFS sim reset (airplane change) | specs/features/req_302_simconnect_variable_subscription.feature:23 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.5 | Variable access latency is < 2ms from SimConnect notification | specs/features/req_302_simconnect_variable_subscription.feature:29 | 1 | ⚪ Draft |
+| REQ-302 | AC-302.6 | Unsupported variable names produce a logged warning, not an error | specs/features/req_302_simconnect_variable_subscription.feature:35 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.1 | Service can read X-Plane DataRefs specified in profile | specs/features/req_303_xplane_dataref_binding.feature:5 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.2 | DataRef binding uses UDP extplane or native X-Plane UDP | specs/features/req_303_xplane_dataref_binding.feature:11 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.3 | DataRefs are polled at configurable rate (1-50Hz) | specs/features/req_303_xplane_dataref_binding.feature:17 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.4 | Invalid DataRef name produces a warning in logs | specs/features/req_303_xplane_dataref_binding.feature:23 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.5 | DataRef values are normalized to [-1.0, 1.0] for axis use | specs/features/req_303_xplane_dataref_binding.feature:29 | 1 | ⚪ Draft |
+| REQ-303 | AC-303.6 | Multiple DataRefs can be combined into a virtual axis | specs/features/req_303_xplane_dataref_binding.feature:35 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.1 | DCS integration uses Lua export script (Export.lua hooks) | specs/features/req_304_dcs_export_script.feature:5 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.2 | Export.lua is generated from profile configuration | specs/features/req_304_dcs_export_script.feature:11 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.3 | Script sends aircraft data via UDP on port 27101 | specs/features/req_304_dcs_export_script.feature:17 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.4 | Service receives and parses DCS telemetry packets | specs/features/req_304_dcs_export_script.feature:23 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.5 | Connection loss is detected within 1 second | specs/features/req_304_dcs_export_script.feature:29 | 1 | ⚪ Draft |
+| REQ-304 | AC-304.6 | Re-connection happens automatically when DCS reconnects | specs/features/req_304_dcs_export_script.feature:35 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.1 | Service reads War Thunder state via HTTP telemetry endpoint | specs/features/req_305_war_thunder_telemetry.feature:5 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.2 | Telemetry endpoint (localhost:8111/state.json) is polled at 20Hz | specs/features/req_305_war_thunder_telemetry.feature:11 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.3 | Aircraft type triggers profile switch | specs/features/req_305_war_thunder_telemetry.feature:17 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.4 | Connected/disconnected state is tracked | specs/features/req_305_war_thunder_telemetry.feature:23 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.5 | Ground vehicle telemetry is also supported (separate profile) | specs/features/req_305_war_thunder_telemetry.feature:29 | 1 | ⚪ Draft |
+| REQ-305 | AC-305.6 | Telemetry failure triggers fallback to idle profile | specs/features/req_305_war_thunder_telemetry.feature:35 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.1 | Service connects to IL-2 via UDP export (port 21001) | specs/features/req_306_il2_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.2 | IL-2 export protocol sends airspeed, altitude, heading, pitch, roll | specs/features/req_306_il2_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.3 | Protocol magic bytes are validated on every packet | specs/features/req_306_il2_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.4 | Connection loss triggers stale snapshot after 1 second | specs/features/req_306_il2_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.5 | Aircraft type from IL-2 triggers profile matching | specs/features/req_306_il2_integration.feature:29 | 1 | ⚪ Draft |
+| REQ-306 | AC-306.6 | Integration tests replay captured IL-2 UDP packets | specs/features/req_306_il2_integration.feature:35 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.1 | Service reads Falcon BMS shared memory segment "BMS-Data" | specs/features/req_307_falcon_bms_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.2 | Shared memory maps BMS flight data struct (airspeed, altitude, heading, G-force) | specs/features/req_307_falcon_bms_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.3 | Integration uses polling at 30Hz (configurable) | specs/features/req_307_falcon_bms_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.4 | BMS session start/stop is detected automatically | specs/features/req_307_falcon_bms_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.5 | Profile switching based on vehicle type in BMS | specs/features/req_307_falcon_bms_integration.feature:29 | 1 | ⚪ Draft |
+| REQ-307 | AC-307.6 | Integration test uses mock shared memory segment | specs/features/req_307_falcon_bms_integration.feature:35 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.1 | Service connects to AeroFly FS via UDP telemetry plugin | specs/features/req_308_aerofly_fs_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.2 | AeroFly sends aircraft state on port 34401 | specs/features/req_308_aerofly_fs_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.3 | Packet format includes magic bytes for validation | specs/features/req_308_aerofly_fs_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.4 | Connection state is tracked (connected/disconnected) | specs/features/req_308_aerofly_fs_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.5 | Profile switch is triggered by aircraft type detection | specs/features/req_308_aerofly_fs_integration.feature:29 | 1 | ⚪ Draft |
+| REQ-308 | AC-308.6 | Integration replay test validates packet parsing | specs/features/req_308_aerofly_fs_integration.feature:35 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.1 | Service connects to PSX via TCP socket on port 10747 | specs/features/req_309_psx_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.2 | PSX sends NMEA-like key=value lines | specs/features/req_309_psx_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.3 | Line parser extracts speed, altitude, heading, gear, flap state | specs/features/req_309_psx_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.4 | Connection drop is detected within 2 seconds | specs/features/req_309_psx_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.5 | Reconnection is automatic with 5-second backoff | specs/features/req_309_psx_integration.feature:29 | 1 | ⚪ Draft |
+| REQ-309 | AC-309.6 | Integration test uses mock TCP server | specs/features/req_309_psx_integration.feature:35 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.1 | Service detects MSFS 2024 via SimConnect client version | specs/features/req_310_msfs_2024_compatibility.feature:5 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.2 | MSFS 2024 SimConnect variables are mapped correctly | specs/features/req_310_msfs_2024_compatibility.feature:11 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.3 | FFB effects work with MSFS 2024 (same SimConnect FFB API) | specs/features/req_310_msfs_2024_compatibility.feature:17 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.4 | No breaking changes for MSFS 2020 users | specs/features/req_310_msfs_2024_compatibility.feature:23 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.5 | MSFS 2024-specific features are detected via capability check | specs/features/req_310_msfs_2024_compatibility.feature:29 | 1 | ⚪ Draft |
+| REQ-310 | AC-310.6 | CI integration test validates MSFS 2024 SimConnect schema | specs/features/req_310_msfs_2024_compatibility.feature:35 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.1 | Service ships an X-Plane 12 plugin (xpl file) for native integration | specs/features/req_311_xplane_12_native_plugin.feature:5 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.2 | Plugin reads aircraft DataRefs and sends to service via localhost UDP | specs/features/req_311_xplane_12_native_plugin.feature:11 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.3 | Plugin auto-enables on X-Plane launch (aircraft/plugin discovery) | specs/features/req_311_xplane_12_native_plugin.feature:17 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.4 | Plugin version is checked against service version on connect | specs/features/req_311_xplane_12_native_plugin.feature:23 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.5 | Plugin crash does not crash X-Plane (XPLM error boundary) | specs/features/req_311_xplane_12_native_plugin.feature:29 | 1 | ⚪ Draft |
+| REQ-311 | AC-311.6 | Plugin source compiles with X-Plane SDK 4.0+ | specs/features/req_311_xplane_12_native_plugin.feature:35 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.1 | Service reads War Thunder ground vehicle telemetry | specs/features/req_312_war_thunder_ground_vehicles.feature:5 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.2 | Ground vehicle profiles can define throttle, steering axes | specs/features/req_312_war_thunder_ground_vehicles.feature:11 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.3 | Tank turret angle is available as a virtual axis | specs/features/req_312_war_thunder_ground_vehicles.feature:17 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.4 | Combat mode detection switches profile variant | specs/features/req_312_war_thunder_ground_vehicles.feature:23 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.5 | Both aircraft and ground vehicle can be active simultaneously | specs/features/req_312_war_thunder_ground_vehicles.feature:29 | 1 | ⚪ Draft |
+| REQ-312 | AC-312.6 | Profile contains separate section for ground vs air | specs/features/req_312_war_thunder_ground_vehicles.feature:35 | 1 | ⚪ Draft |
+| REQ-313 | AC-313.1 | Service recognizes G29/G920/G923 wheels via VID/PID | - | 1 | ⚪ Draft |
+| REQ-313 | AC-313.2 | Wheel axis is exposed as yoke roll (steering to aileron) | - | 1 | ⚪ Draft |
+| REQ-313 | AC-313.3 | Pedal axes are exposed as throttle, brake, clutch | - | 1 | ⚪ Draft |
+| REQ-313 | AC-313.4 | FFB effects are applied to wheel for flight sim feedback | - | 1 | ⚪ Draft |
+| REQ-313 | AC-313.5 | Profile includes wheel-specific deadzone (typically 3-5% center) | - | 1 | ⚪ Draft |
+| REQ-313 | AC-313.6 | Wheel is listed in compatibility matrix as Tier 2 | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.1 | CI includes criterion benchmarks for axis pipeline throughput | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.2 | Pipeline benchmark measures single-axis chain at 250Hz | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.3 | Benchmark results are stored as CI artifacts | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.4 | Regression threshold: pipeline must run in < 100us per axis | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.5 | Benchmark coverage includes: deadzone, curve, EMA, all combined | - | 1 | ⚪ Draft |
+| REQ-314 | AC-314.6 | Benchmark runs on Linux (no Windows-specific overhead) | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.1 | Each parser crate (HOTAS, simulator adapters) has at least one fuzz target | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.2 | Fuzz corpus is seeded with real-world HID report examples | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.3 | Coverage is reported per fuzz target | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.4 | All fuzz targets compile without --features changes | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.5 | Fuzz manifest entries in COMPATIBILITY.md show fuzz coverage column | - | 1 | ⚪ Draft |
+| REQ-315 | AC-315.6 | CI nightly fuzz run lasts minimum 60 seconds per target | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.1 | Profile parser validates parent profile references on load | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.2 | Circular inheritance is detected and rejected with clear error | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.3 | Inherited settings can be overridden at child level | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.4 | Settings not in child profile fall through to parent | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.5 | Maximum inheritance depth is 5 levels (configurable) | - | 1 | ⚪ Draft |
+| REQ-316 | AC-316.6 | Inheritance chain is logged on profile load | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.1 | Update package is signed with a developer key | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.2 | Signature verification uses Ed25519 or similar (no RSA) | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.3 | Verification failure rejects the update and logs the error | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.4 | Public key is embedded in the service binary (pinned) | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.5 | Update manifest includes expected hash and version | - | 1 | ⚪ Draft |
+| REQ-317 | AC-317.6 | CLI shows verification status before applying update | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.1 | Service exposes metrics on /metrics (Prometheus format) | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.2 | Metrics include: axis values, device count, pipeline latency, error rates | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.3 | Metrics endpoint is configurable (port, path, enable/disable) | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.4 | Authentication for metrics endpoint is optional (bearer token) | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.5 | Metrics are updated every 100ms at most (rate-limited writes) | - | 1 | ⚪ Draft |
+| REQ-318 | AC-318.6 | CLI can display live metrics via flightctl metrics | - | 1 | ⚪ Draft |

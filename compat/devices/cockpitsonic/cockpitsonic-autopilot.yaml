@@ -1,0 +1,56 @@
+# CockpitSonic Autopilot (MCP) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CockpitSonic Autopilot module replicates the Boeing 737 NG Mode Control
+# Panel (MCP). Provides full autopilot mode selector, speed/heading/altitude/
+# VS rotaries, and associated pushbuttons in a standard MCP form factor.
+# VID 0x16C0 / PID 0x0602: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "CockpitSonic Autopilot (MCP) Panel"
+  vendor: "CockpitSonic"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0602      # Community estimate — MCP/Autopilot
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4                # SPD / HDG / ALT / VS rotaries
+    names: [speed, heading, altitude, vs]
+    resolution_bits: 8
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0602 is a community estimate. Confirm with CockpitSonic panel utility.
+  - id: MCP_DISPLAYS
+    description: >
+      MCP has LED 7-segment displays for speed, heading, altitude, and V/S.
+      Display values are driven by USB HID output reports from the sim adapter.
+  - id: ROTARY_PUSH_DUAL
+    description: >
+      Speed/heading/altitude/VS knobs support both rotation (axis) and push
+      (button) for managed vs. selected mode selection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CockpitSonic autopilot/MCP panel. VID 0x16C0 / PID 0x0602 est.
+    For overhead see cockpitsonic-overhead.yaml; for EFIS see cockpitsonic-efis.yaml.
+    Last reviewed: 2026-06.

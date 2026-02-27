@@ -1,0 +1,54 @@
+# OpenHornet F/A-18C Fuel Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY F/A-18C cockpit module — Fuel Panel. Controls fuel system switches
+# (FEED TANK SEL, SUPP TANK FEED, AIR REFUEL, etc.) in the right console area.
+# VID 0x2341 (Arduino), PID 0x803E: estimated.
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet Fuel Panel"
+  vendor: "OpenHornet"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC
+    product_id: 0x803E      # Estimated — fuel panel module
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID estimated. Verify against OpenHornet firmware release.
+  - id: DIY_FIRMWARE
+    description: >
+      Community builds may vary in button assignment.
+  - id: GUARDED_SWITCHES
+    description: >
+      Some fuel system switches have guards. Guard open/close sends a button
+      event before the underlying switch actuates.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet fuel panel. PID estimated. Community DIY build.
+    See openhornet-ifei.yaml for engine/fuel indicator display module.
+    Last reviewed: 2026-06.

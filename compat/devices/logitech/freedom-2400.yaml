@@ -1,0 +1,56 @@
+# Logitech Freedom 2400 Cordless Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID 0xC204 is a community estimate for the
+# Freedom 2400 cordless joystick USB receiver. Distinct from the Freedom 2.4
+# (PID 0xC214, freedom-2-4.yaml) which uses a 2.4 GHz RF link; the Freedom
+# 2400 is an earlier 900 MHz cordless model.
+schema_version: "1"
+
+device:
+  name: "Logitech Freedom 2400 Cordless Joystick"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc.
+    product_id: 0xC204      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100    # Wireless polling, slightly lower than wired
+  max_jitter_ms: 8         # 900 MHz cordless; higher jitter than 2.4 GHz
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC204 is a community estimate. The Freedom 2.4 (2.4 GHz) uses
+      PID 0xC214 (freedom-2-4.yaml). Confirm with lsusb on real hardware.
+  - id: WIRELESS_RECEIVER
+    description: >
+      The USB device is a 900 MHz cordless receiver dongle. Battery state is
+      not exposed via HID. Polling rate is capped by the RF link.
+  - id: THROTTLE_NOT_CENTERED
+    description: >
+      The Z axis (throttle lever) is unipolar (0 = idle). Map [0, 1] range
+      in the profile without centring.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Freedom 2400 Cordless Joystick — 900 MHz cordless model, circa
+    2000–2003. Distinct from Freedom 2.4 (PID 0xC214). PID 0xC204 is a
+    community estimate. Legacy device. Last reviewed: 2026-06.

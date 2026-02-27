@@ -1,0 +1,62 @@
+# Leo Bodnar BBI-128 USB Button Box Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Leo Bodnar BBI-128 is the 128-button variant of the BBI series USB HID
+# button box interface boards. Uses two USB HID descriptors to expose 128
+# digital inputs, making it suitable for large cockpit panel builds where
+# BBI-32 and BBI-64 are insufficient.
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x0010: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BBI-128 USB Button Box Interface"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd — confirmed
+    product_id: 0x0010      # Community estimate — BBI-128 (BBI-64 = 0x000F)
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 128
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0010 is a community estimate (BBI-64 = 0x000F; BBI-128 may follow
+      sequentially). Confirm via USB ID database or Leo Bodnar product page.
+  - id: BUTTON_ONLY_NO_AXES
+    description: >
+      Pure 128-button interface with no analogue axes. All inputs are discrete
+      digital. Suitable for large switch and encoder panels.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz USB poll rate, matching BBI-64 performance.
+  - id: DUAL_HID_DESCRIPTOR
+    description: >
+      The BBI-128 may present as two 64-button HID endpoints on the same
+      USB device, or as a single 128-button descriptor. Enumerate both paths
+      and merge button namespaces under the same device binding.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BBI-128 — 128-button USB interface. VID 0x1DD2 confirmed; PID 0x0010 est.
+    For 64-button variant see bbi-64.yaml; for 32-button see bbi-32.yaml.
+    Last reviewed: 2026-06.

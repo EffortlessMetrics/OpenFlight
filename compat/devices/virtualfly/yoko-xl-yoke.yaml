@@ -1,0 +1,54 @@
+# VirtualFly Yoko XL Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly Yoko XL is a high-fidelity aviation yoke designed for full-size
+# cockpit replica builds. Features a full-size control column travel and
+# potentiometer axes on all three axes. Manufactured by VirtualFly (Spain).
+# VID 0x2B67 / PID 0x0001: community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly Yoko XL Yoke"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — VirtualFly
+    product_id: 0x0001      # Community estimate — Yoko XL
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0001 are community estimates. Confirm via lsusb on
+      real hardware or VirtualFly product documentation.
+  - id: FULL_SIZE_COLUMN
+    description: >
+      The Yoko XL uses a full-size control column that physically sweeps
+      pitch/roll with long travel — larger than typical desktop yokes.
+      Ensure profile axis sensitivity is tuned for the extended travel range.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly Yoko XL yoke. VID 0x2B67 / PID 0x0001 est.
+    For throttle see virtualfly/tq6-plus-throttle.yaml; for pedals see ruddo-plus-pedals.yaml.
+    Last reviewed: 2026-06.

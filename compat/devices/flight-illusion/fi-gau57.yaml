@@ -1,0 +1,59 @@
+# Flight Illusion GAU-57 Gauge Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Flight Illusion (Germany) manufactures analogue gauge expansion cards for
+# simulator cockpit builds. The GAU-57 is a 5-output servo gauge driver card
+# that accepts USB HID commands and drives servo-motor-based analogue gauges
+# (airspeed, altitude, VVI, etc.) in physical instrument clusters.
+# VID 0x1F4D / PID 0x0057: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Flight Illusion GAU-57 Gauge Card"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x1F4D       # Community estimate — Flight Illusion
+    product_id: 0x0057      # Community estimate — GAU-57
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 5                # Position feedback from 5 servo gauges
+    names: [gauge_1, gauge_2, gauge_3, gauge_4, gauge_5]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1F4D / PID 0x0057 are community estimates. Confirm with Flight
+      Illusion USB utility.
+  - id: OUTPUT_ONLY_DEVICE
+    description: >
+      The GAU-57 is primarily an output device. USB HID output reports set
+      servo gauge target positions. Input reports provide servo feedback.
+  - id: SERVO_GAUGE_OUTPUTS
+    description: >
+      Gauge positions are driven by HID output reports mapping sim variables
+      (airspeed, altitude, VVI, RPM, fuel quantity) to servo angles.
+      OpenFlight drives gauges via the panel-output adapter path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion GAU-57 — 5-channel servo gauge card. VID 0x1F4D / PID 0x0057 est.
+    Output-driven; requires sim variable → gauge-angle mapping in panel profile.
+    Last reviewed: 2026-06.

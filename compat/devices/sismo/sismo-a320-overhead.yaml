@@ -1,0 +1,57 @@
+# Sismo Soluciones Airbus A320 Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Sismo A320 Overhead panel covers the forward overhead section of the
+# Airbus A320 family (electrical, fuel, hydraulics, pneumatics, anti-ice).
+# Larger and more complex than the 737 MCP; may enumerate as multiple USB devices.
+# VID 0x04D8 / PID 0xF5D3: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones Airbus A320 Overhead Panel"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF5D3      # Community estimate — Sismo A320 overhead
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 60
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF5D3 is a community estimate. Confirm with Sismo SIOC documentation.
+  - id: MULTIPLE_USB_DEVICES
+    description: >
+      Full A320 overhead may be split across two or more USB HID devices
+      due to button count limits. Enumerate all Sismo overhead modules and
+      bind them under the overhead profile group.
+  - id: ANNUNCIATOR_OUTPUTS
+    description: >
+      Overhead pushbutton annunciators (FAULT/OFF/ON lights) require HID
+      output reports driven by sim telemetry via SIOC or OpenFlight adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo A320 overhead panel. VID 0x04D8 / PID 0xF5D3 est.
+    See sismo-b737-mcp.yaml for Boeing variant. SIOC integration recommended.
+    Last reviewed: 2026-06.

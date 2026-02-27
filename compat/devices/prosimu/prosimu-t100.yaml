@@ -1,0 +1,60 @@
+# ProSimU T100 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ProSimU T100 is an entry-level 2DOF (pitch/roll) motion platform for
+# flight and driving simulation. Communicates via USB HID, presenting
+# motion commands as axis inputs and accepting motion feedback via output.
+# VID 0x1ECB / PID 0x0001: community estimate for ProSimU.
+
+schema_version: "1"
+
+device:
+  name: "ProSimU T100 Motion Platform"
+  vendor: "ProSimU"
+  usb:
+    vendor_id: 0x1ECB       # Community estimate — ProSimU
+    product_id: 0x0001      # Community estimate — T100
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1ECB / PID 0x0001 are community estimates. Confirm with ProSimU
+      USB diagnostic tool on real hardware.
+  - id: MOTION_PLATFORM
+    description: >
+      The T100 is a 2DOF motion seat that takes heave/pitch/roll commands from
+      the sim via USB output reports. Axis inputs represent the physical platform
+      position sensor feedback, not a joystick for aircraft control.
+  - id: MOTION_CUING_ALGORITHM
+    description: >
+      Motion cueing (washout filter) is applied in the ProSimU Motion Manager
+      software before commands are sent to the platform. OpenFlight integrates
+      via the motion cue API, not raw axis write.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ProSimU T100 — 2DOF motion platform. VID 0x1ECB / PID 0x0001 est.
+    Requires ProSimU Motion Manager software for full functionality.
+    See prosimu-t200.yaml for 6DOF variant.
+    Last reviewed: 2026-06.

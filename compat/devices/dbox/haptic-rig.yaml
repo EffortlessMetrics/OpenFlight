@@ -1,0 +1,60 @@
+# D-BOX Haptic Rig
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# D-BOX haptic rig — a series of actuator-based motion and haptic platforms
+# including seat, floor, and full-rig configurations. D-BOX actuators connect
+# via USB or Ethernet using a proprietary protocol managed by D-BOX Haptics
+# Creation Tool or SDK integration. This manifest covers the general D-BOX
+# haptic rig product line; for the full D-BOX motion platform see
+# motion-system.yaml.
+schema_version: "1"
+
+device:
+  name: "D-BOX Haptic Rig"
+  vendor: "D-BOX Technologies"
+  type: other
+  usb:
+    vendor_id: 0x25B6   # Placeholder — D-BOX USB interface (VID_UNCONFIRMED)
+    product_id: 0x0002  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — proprietary USB protocol, not standard HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false   # Motion/haptic output; not HID force-feedback
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x25B6 / PID 0x0002 are unconfirmed placeholders; verify with lsusb.
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      D-BOX haptic platforms communicate over a proprietary USB or Ethernet
+      protocol, not standard HID. Integration requires the D-BOX SDK or the
+      D-BOX Haptics Creation Tool plugin for the target simulator.
+  - id: OUTPUT_ONLY
+    description: >
+      The D-BOX haptic rig generates no flight control input events. It is an
+      output-only haptic/motion platform. Tracked for sim-rig compatibility
+      documentation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    D-BOX haptic rig — seat, floor, or full-rig actuator-based haptic platform.
+    Output-only; not an HID input device. Companion to motion-system.yaml.
+    Integration via D-BOX SDK or sim plugin. Last reviewed: 2026-06.

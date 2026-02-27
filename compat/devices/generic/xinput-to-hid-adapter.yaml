@@ -1,0 +1,59 @@
+# Generic XInput-to-HID Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Some USB adapters convert XInput (Xbox controller protocol) to standard
+# HID game controller reports, allowing XInput-only devices to appear as
+# generic HID joysticks. Includes products like the Brook Xbox One to PS4
+# adapter or x360ce virtual xinput driver presenting as HID.
+# VID/PID vary by adapter; this manifest documents the HID presentation layer.
+
+schema_version: "1"
+
+device:
+  name: "Generic XInput-to-HID Adapter"
+  vendor: "Various"
+  usb:
+    vendor_id: ~            # Varies by adapter brand
+    product_id: ~           # Varies by adapter SKU
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 8      # Typical XInput 0–255 mapped to HID
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VARIABLE_VID_PID
+    description: >
+      VID/PID depend entirely on the adapter hardware. Use OpenFlight's
+      manual device assignment to bind by HID report format rather than
+      USB IDs when VID/PID are unknown or shared with other products.
+  - id: AXIS_RESOLUTION_LOSS
+    description: >
+      XInput axes are 8-bit (0–255); adapters typically do not add resolution.
+      Expect coarser axis response than native 12- or 16-bit flight controllers.
+  - id: TRIGGER_AXES
+    description: >
+      XInput LT/RT triggers may present as a single combined Z axis (range
+      0–255) or as two separate axes depending on adapter firmware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic XInput-to-HID adapter. VID/PID vary. Primarily useful for repurposing
+    Xbox/generic gamepads as additional button boxes in sim cockpit setups.
+    Last reviewed: 2026-06.

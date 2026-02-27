@@ -1,0 +1,56 @@
+# CH Products Virtual Pilot
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E confirmed (CH Products).
+# PID 0x00C0 is a community estimate for the CH Virtual Pilot.
+# The CH Virtual Pilot is an entry-level joystick with a built-in
+# throttle slider. Produced in the late 1990s–early 2000s.
+schema_version: "1"
+
+device:
+  name: "CH Virtual Pilot"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products
+    product_id: 0x00C0      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, throttle]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00C0 is a community estimate. Confirm with lsusb on real hardware
+      and update when a confirmed PID is available.
+  - id: OS_MEDIATED_HID
+    description: >
+      CH Products devices use OS-mediated HID parsing; no raw report ID is
+      prepended. Axis reports are standard Generic Desktop joystick format.
+  - id: THROTTLE_UNIPOLAR
+    description: >
+      The throttle slider is unipolar (0 = idle, max = full). Profile should
+      map the [0, 1] range without centring.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Virtual Pilot — entry-level joystick with integrated throttle
+    slider. PID 0x00C0 is a community estimate. Legacy device.
+    Last reviewed: 2026-06.

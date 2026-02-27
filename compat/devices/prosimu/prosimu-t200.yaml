@@ -1,0 +1,59 @@
+# ProSimU T200 6DOF Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ProSimU T200 is a 6DOF (surge/sway/heave/pitch/roll/yaw) electric motion
+# platform for flight simulation. Larger and more capable than the T100;
+# typically used for training device (FNPT/FFS) class home cockpits.
+# VID 0x1ECB / PID 0x0002: community estimate for ProSimU.
+
+schema_version: "1"
+
+device:
+  name: "ProSimU T200 6DOF Motion Platform"
+  vendor: "ProSimU"
+  usb:
+    vendor_id: 0x1ECB
+    product_id: 0x0002      # Community estimate — T200
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [surge, sway, heave, pitch, roll, yaw]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1ECB / PID 0x0002 are community estimates. Confirm with ProSimU
+      USB diagnostic tool.
+  - id: SIX_DOF_MOTION
+    description: >
+      The T200 provides full 6DOF motion cueing. All six axes are platform
+      position sensor feedback. Motion commands come from the ProSimU Motion
+      Manager software via USB output reports.
+  - id: SAFETY_ESTOP
+    description: >
+      The T200 has a hardware E-STOP button that cuts actuator power. The
+      E-STOP state is reported as a button input. OpenFlight must inhibit
+      motion commands when E-STOP is active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ProSimU T200 — 6DOF motion platform. VID 0x1ECB / PID 0x0002 est.
+    For entry-level 2DOF see prosimu-t100.yaml. For advanced T300 see prosimu-t300.yaml.
+    Last reviewed: 2026-06.

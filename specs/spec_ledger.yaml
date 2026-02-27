@@ -9898,3 +9898,364 @@ requirements:
         description: "Integration tests replay captured IL-2 UDP packets"
         tests:
           - feature:specs/features/req_306_il2_integration.feature
+  # Product Requirement: Falcon BMS Integration
+  - id: REQ-307
+    name: Falcon BMS Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-307.1
+        description: "Service reads Falcon BMS shared memory segment \"BMS-Data\""
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+      - id: AC-307.2
+        description: "Shared memory maps BMS flight data struct (airspeed, altitude, heading, G-force)"
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+      - id: AC-307.3
+        description: "Integration uses polling at 30Hz (configurable)"
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+      - id: AC-307.4
+        description: "BMS session start/stop is detected automatically"
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+      - id: AC-307.5
+        description: "Profile switching based on vehicle type in BMS"
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+      - id: AC-307.6
+        description: "Integration test uses mock shared memory segment"
+        tests:
+          - feature:specs/features/req_307_falcon_bms_integration.feature
+  # Product Requirement: AeroFly FS Integration
+  - id: REQ-308
+    name: AeroFly FS Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-308.1
+        description: "Service connects to AeroFly FS via UDP telemetry plugin"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+      - id: AC-308.2
+        description: "AeroFly sends aircraft state on port 34401"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+      - id: AC-308.3
+        description: "Packet format includes magic bytes for validation"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+      - id: AC-308.4
+        description: "Connection state is tracked (connected/disconnected)"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+      - id: AC-308.5
+        description: "Profile switch is triggered by aircraft type detection"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+      - id: AC-308.6
+        description: "Integration replay test validates packet parsing"
+        tests:
+          - feature:specs/features/req_308_aerofly_fs_integration.feature
+  # Product Requirement: PSX (Professional SimTool X) Integration
+  - id: REQ-309
+    name: PSX (Professional SimTool X) Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-309.1
+        description: "Service connects to PSX via TCP socket on port 10747"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+      - id: AC-309.2
+        description: "PSX sends NMEA-like key=value lines"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+      - id: AC-309.3
+        description: "Line parser extracts speed, altitude, heading, gear, flap state"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+      - id: AC-309.4
+        description: "Connection drop is detected within 2 seconds"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+      - id: AC-309.5
+        description: "Reconnection is automatic with 5-second backoff"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+      - id: AC-309.6
+        description: "Integration test uses mock TCP server"
+        tests:
+          - feature:specs/features/req_309_psx_integration.feature
+  # Product Requirement: MSFS 2024 Compatibility
+  - id: REQ-310
+    name: MSFS 2024 Compatibility
+    kind: product
+    status: draft
+    ac:
+      - id: AC-310.1
+        description: "Service detects MSFS 2024 via SimConnect client version"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+      - id: AC-310.2
+        description: "MSFS 2024 SimConnect variables are mapped correctly"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+      - id: AC-310.3
+        description: "FFB effects work with MSFS 2024 (same SimConnect FFB API)"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+      - id: AC-310.4
+        description: "No breaking changes for MSFS 2020 users"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+      - id: AC-310.5
+        description: "MSFS 2024-specific features are detected via capability check"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+      - id: AC-310.6
+        description: "CI integration test validates MSFS 2024 SimConnect schema"
+        tests:
+          - feature:specs/features/req_310_msfs_2024_compatibility.feature
+  # Product Requirement: X-Plane 12 Native Plugin
+  - id: REQ-311
+    name: X-Plane 12 Native Plugin
+    kind: product
+    status: draft
+    ac:
+      - id: AC-311.1
+        description: "Service ships an X-Plane 12 plugin (xpl file) for native integration"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+      - id: AC-311.2
+        description: "Plugin reads aircraft DataRefs and sends to service via localhost UDP"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+      - id: AC-311.3
+        description: "Plugin auto-enables on X-Plane launch (aircraft/plugin discovery)"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+      - id: AC-311.4
+        description: "Plugin version is checked against service version on connect"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+      - id: AC-311.5
+        description: "Plugin crash does not crash X-Plane (XPLM error boundary)"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+      - id: AC-311.6
+        description: "Plugin source compiles with X-Plane SDK 4.0+"
+        tests:
+          - feature:specs/features/req_311_xplane_12_native_plugin.feature
+  # Product Requirement: War Thunder Ground Vehicles
+  - id: REQ-312
+    name: War Thunder Ground Vehicles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-312.1
+        description: "Service reads War Thunder ground vehicle telemetry"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+      - id: AC-312.2
+        description: "Ground vehicle profiles can define throttle, steering axes"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+      - id: AC-312.3
+        description: "Tank turret angle is available as a virtual axis"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+      - id: AC-312.4
+        description: "Combat mode detection switches profile variant"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+      - id: AC-312.5
+        description: "Both aircraft and ground vehicle can be active simultaneously"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+      - id: AC-312.6
+        description: "Profile contains separate section for ground vs air"
+        tests:
+          - feature:specs/features/req_312_war_thunder_ground_vehicles.feature
+
+  # Product Requirement: Logitech Wheel Integration
+  - id: REQ-313
+    name: Logitech Wheel Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-313.1
+        description: "Service recognizes G29/G920/G923 wheels via VID/PID"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+      - id: AC-313.2
+        description: "Wheel axis is exposed as yoke roll (steering to aileron)"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+      - id: AC-313.3
+        description: "Pedal axes are exposed as throttle, brake, clutch"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+      - id: AC-313.4
+        description: "FFB effects are applied to wheel for flight sim feedback"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+      - id: AC-313.5
+        description: "Profile includes wheel-specific deadzone (typically 3-5% center)"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+      - id: AC-313.6
+        description: "Wheel is listed in compatibility matrix as Tier 2"
+        tests:
+          - feature:specs/features/req_313_logitech_wheel_integration.feature
+  # Product Requirement: Benchmark Test Suite
+  - id: REQ-314
+    name: Benchmark Test Suite
+    kind: product
+    status: draft
+    ac:
+      - id: AC-314.1
+        description: "CI includes criterion benchmarks for axis pipeline throughput"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+      - id: AC-314.2
+        description: "Pipeline benchmark measures single-axis chain at 250Hz"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+      - id: AC-314.3
+        description: "Benchmark results are stored as CI artifacts"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+      - id: AC-314.4
+        description: "Regression threshold: pipeline must run in < 100us per axis"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+      - id: AC-314.5
+        description: "Benchmark coverage includes: deadzone, curve, EMA, all combined"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+      - id: AC-314.6
+        description: "Benchmark runs on Linux (no Windows-specific overhead)"
+        tests:
+          - feature:specs/features/req_314_benchmark_test_suite.feature
+  # Product Requirement: Fuzz Target Coverage Matrix
+  - id: REQ-315
+    name: Fuzz Target Coverage Matrix
+    kind: product
+    status: draft
+    ac:
+      - id: AC-315.1
+        description: "Each parser crate (HOTAS, simulator adapters) has at least one fuzz target"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+      - id: AC-315.2
+        description: "Fuzz corpus is seeded with real-world HID report examples"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+      - id: AC-315.3
+        description: "Coverage is reported per fuzz target"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+      - id: AC-315.4
+        description: "All fuzz targets compile without --features changes"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+      - id: AC-315.5
+        description: "Fuzz manifest entries in COMPATIBILITY.md show fuzz coverage column"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+      - id: AC-315.6
+        description: "CI nightly fuzz run lasts minimum 60 seconds per target"
+        tests:
+          - feature:specs/features/req_315_fuzz_target_coverage_matrix.feature
+  # Product Requirement: Profile Inheritance Validation
+  - id: REQ-316
+    name: Profile Inheritance Validation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-316.1
+        description: "Profile parser validates parent profile references on load"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+      - id: AC-316.2
+        description: "Circular inheritance is detected and rejected with clear error"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+      - id: AC-316.3
+        description: "Inherited settings can be overridden at child level"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+      - id: AC-316.4
+        description: "Settings not in child profile fall through to parent"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+      - id: AC-316.5
+        description: "Maximum inheritance depth is 5 levels (configurable)"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+      - id: AC-316.6
+        description: "Inheritance chain is logged on profile load"
+        tests:
+          - feature:specs/features/req_316_profile_inheritance_validation.feature
+  # Product Requirement: Secure Update Verification
+  - id: REQ-317
+    name: Secure Update Verification
+    kind: product
+    status: draft
+    ac:
+      - id: AC-317.1
+        description: "Update package is signed with a developer key"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+      - id: AC-317.2
+        description: "Signature verification uses Ed25519 or similar (no RSA)"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+      - id: AC-317.3
+        description: "Verification failure rejects the update and logs the error"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+      - id: AC-317.4
+        description: "Public key is embedded in the service binary (pinned)"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+      - id: AC-317.5
+        description: "Update manifest includes expected hash and version"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+      - id: AC-317.6
+        description: "CLI shows verification status before applying update"
+        tests:
+          - feature:specs/features/req_317_secure_update_verification.feature
+  # Product Requirement: Streaming Metrics Export
+  - id: REQ-318
+    name: Streaming Metrics Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-318.1
+        description: "Service exposes metrics on /metrics (Prometheus format)"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature
+      - id: AC-318.2
+        description: "Metrics include: axis values, device count, pipeline latency, error rates"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature
+      - id: AC-318.3
+        description: "Metrics endpoint is configurable (port, path, enable/disable)"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature
+      - id: AC-318.4
+        description: "Authentication for metrics endpoint is optional (bearer token)"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature
+      - id: AC-318.5
+        description: "Metrics are updated every 100ms at most (rate-limited writes)"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature
+      - id: AC-318.6
+        description: "CLI can display live metrics via flightctl metrics"
+        tests:
+          - feature:specs/features/req_318_streaming_metrics_export.feature

@@ -1,0 +1,56 @@
+# VirtualFly Ruddo+ Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly Ruddo+ are full-size aviation rudder pedals with toe brakes,
+# designed to pair with the Yoko XL yoke and TQ6+ throttle in a full
+# airliner replica cockpit. Hall-effect sensors on all axes.
+# VID 0x2B67 / PID 0x0020: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly Ruddo+ Rudder Pedals"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2B67
+    product_id: 0x0020      # Community estimate — Ruddo+
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0020 are community estimates. Confirm via lsusb.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three axes use contactless hall-effect sensors for improved longevity
+      and linearity compared to potentiometer-based pedals.
+  - id: ADJUSTABLE_SPRING
+    description: >
+      The Ruddo+ features adjustable spring centering tension via a screw
+      mechanism. Heavier spring settings may affect null-zone calibration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly Ruddo+ rudder pedals. VID 0x2B67 / PID 0x0020 est.
+    Pairs with yoko-xl-yoke.yaml and tq6-plus-throttle.yaml for full build.
+    Last reviewed: 2026-06.

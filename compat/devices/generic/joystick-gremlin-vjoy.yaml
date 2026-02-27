@@ -1,0 +1,62 @@
+# vJoy Virtual Joystick Device (via Joystick Gremlin)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# vJoy is a Windows kernel-level virtual joystick driver. When used with
+# Joystick Gremlin or directly via the vJoyInterface API, it presents as
+# a standard HID game controller. Used for input remapping, virtual axes,
+# macro injection, and profile switching in sim cockpit builds.
+# VID 0x1234 / PID 0xBEAD: documented vJoy default USB descriptor.
+# This is a SOFTWARE device — no physical hardware.
+
+schema_version: "1"
+
+device:
+  name: "vJoy Virtual Joystick (Joystick Gremlin)"
+  vendor: "vJoy / Joystick Gremlin"
+  usb:
+    vendor_id: 0x1234       # vJoy documented default VID
+    product_id: 0xBEAD      # vJoy documented default PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8                # Configurable; vJoy supports up to 8 HID axes
+    names: [x, y, z, rx, ry, rz, slider_1, slider_2]
+    resolution_bits: 15     # vJoy default 0–32767 range
+  buttons: 128              # vJoy supports up to 128 buttons per device
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: SOFTWARE_DEVICE
+    description: >
+      vJoy is a Windows virtual HID device. No physical hardware exists.
+      Axis count, button count, and hat count are user-configurable via
+      the vJoyConf utility. Values in this manifest reflect typical defaults.
+  - id: MULTIPLE_INSTANCES
+    description: >
+      Up to 16 vJoy device instances (IDs 1–16) can exist simultaneously,
+      each appearing as a distinct USB HID device. OpenFlight should enumerate
+      all present vJoy instances.
+  - id: AXIS_RANGE_32767
+    description: >
+      vJoy uses 0–32767 axis range (15-bit unsigned). Unlike most physical
+      controllers that use signed values, vJoy centre is at 16383.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    vJoy virtual device — software only. VID 0x1234 / PID 0xBEAD documented defaults.
+    Commonly paired with Joystick Gremlin for remapping and macro injection.
+    Axis/button counts are configurable; manifest describes typical default config.
+    Last reviewed: 2026-06.

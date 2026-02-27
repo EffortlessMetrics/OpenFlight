@@ -1,0 +1,61 @@
+# WinWing F/A-18 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing Technology Co., Ltd.).
+# PID 0xB800 is a community estimate for the WinWing F/A-18 Throttle.
+# The F/A-18 Throttle is a replica of the F/A-18C/D throttle grips with
+# independent left and right throttle levers, a built-in flap lever,
+# speed-brake switch, and many push-buttons and toggles on both grips.
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Technology Co., Ltd.
+    product_id: 0xB800      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle_left, throttle_right, flap_lever, speed_brake, slider]
+    resolution_bits: 12
+  buttons: 48
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB800 is a community estimate for the F/A-18 Throttle.
+      Confirm with lsusb before deploying. WinWing may assign a different PID
+      on production hardware.
+  - id: TWIN_THROTTLE_INDEPENDENT
+    description: >
+      Left and right throttle levers move completely independently.
+      Both are mapped to separate axis channels. The profile should handle
+      single-engine mode (link axes) or twin-engine mode (independent axes)
+      depending on the aircraft.
+  - id: GAMEPAD_USAGE
+    description: >
+      WinWing throttles report as HID Gamepad (usage 0x05) rather than
+      Joystick (0x04). Some OS-level gamepad axis inversion may apply;
+      verify axis directions after calibration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 Throttle — F/A-18C/D replica throttle with dual independent
+    grips, flap lever, and speed-brake axis. PID 0xB800 is a community estimate.
+    Last reviewed: 2026-06.
