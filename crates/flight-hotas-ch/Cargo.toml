@@ -9,7 +9,7 @@ license.workspace = true
 repository.workspace = true
 description = "CH Products device support helpers for OpenFlight."
 readme = "README.md"
-categories.workspace = true
+categories = ["hardware-support"]
 keywords = ["flight-sim", "openflight", "hotas", "ch-products"]
 # SPDX License Identifier
 # SPDX-License-Identifier: MIT OR Apache-2.0

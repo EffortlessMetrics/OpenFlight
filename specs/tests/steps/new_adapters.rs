@@ -720,7 +720,7 @@ async fn given_winwing_health_two_failures(_world: &mut FlightWorld) {}
 #[when("the report is parsed")]
 async fn when_vendor_report_parsed(world: &mut FlightWorld) {
     // Try WinWing parsers in order; also works as stub for VPforce/Moza
-    if let Some(ref buf) = world.open_hw_input_buf.clone() {
+    if let Some(buf) = world.open_hw_input_buf.as_deref() {
         if buf.len() == flight_hotas_winwing::THROTTLE_REPORT_LEN {
             if let Ok(state) = flight_hotas_winwing::parse_throttle_report(buf) {
                 // Store axes in norms: (left_throttle, right_throttle, combined)
