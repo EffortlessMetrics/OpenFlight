@@ -1,0 +1,61 @@
+# Simucube 3 Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Granite Devices Simucube 3 Pro — third-generation direct-drive wheel base
+# in the Pro tier (2024). Higher peak torque than SC3 Sport. USB HID plus
+# wireless Quick Release System (QR2) for steering wheel attachment.
+# VID 0x16D0 is Granite Devices' MCS USB vendor ID. PID unconfirmed.
+schema_version: "1"
+
+device:
+  name: "Simucube 3 Pro"
+  vendor: "Granite Devices (Simucube)"
+  usb:
+    vendor_id: 0x16D0   # Granite Devices MCS USB VID (confirmed for SC2 series)
+    product_id: 0x0D71  # Placeholder — PID_UNCONFIRMED for SC3 Pro
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [steering, pedal_combined, ffb_torque]
+    resolution_bits: 24
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0D71 is a placeholder for SC3 Pro; SC2 Pro uses 0x0D61."
+  - id: ABSOLUTE_ENCODER
+    description: >
+      24-bit absolute encoder; steering position persists across power cycles.
+  - id: QR2_WIRELESS
+    description: >
+      The SC3 Pro uses the Simucube QR2 wireless Quick Release system.
+      Steering wheel buttons/axes are transmitted wirelessly to the base unit
+      and appear as a single composite USB HID device.
+  - id: TRUEDRIVE_REQUIRED
+    description: >
+      Full FFB configuration requires Granite Devices True Drive software.
+  - id: HIGH_TORQUE_SAFETY
+    description: >
+      Higher peak torque than SC3 Sport. E-stop wiring mandatory. OpenFlight
+      must not override True Drive safety torque limits.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 3 Pro (2024). Higher torque than SC3 Sport; QR2 wireless wheel.
+    VID 0x16D0 confirmed for Granite Devices; PID requires field verification.
+    Last reviewed: 2026-02.

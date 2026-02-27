@@ -1,0 +1,59 @@
+# Gametrix JetSeat FSL Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Gametrix JetSeat FSL (Flight Simulator Labs) Edition — a haptic seat cushion
+# with embedded vibration motors. Designed for flight simulation; connects to
+# the PC via USB for firmware and configuration; haptic output driven by audio
+# signal from a secondary sound output or dedicated driver software.
+# VID/PID reflect the STM32 USB MCU commonly used in Gametrix products.
+schema_version: "1"
+
+device:
+  name: "Gametrix JetSeat FSL Edition"
+  vendor: "Gametrix"
+  usb:
+    vendor_id: 0x0483   # STMicroelectronics USB MCU (VID_UNCONFIRMED for this model)
+    product_id: 0x5740  # Placeholder — STM32 virtual COM port class (PID_UNCONFIRMED)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — USB CDC/serial control interface
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false   # Haptic output is audio-driven, not HID force-feedback
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x0483 / PID 0x5740 are STM32 placeholders; verify with lsusb."
+  - id: AUDIO_DRIVEN_HAPTICS
+    description: >
+      The JetSeat FSL receives haptic drive signals from a dedicated audio
+      output channel (or virtual audio device), not from the USB HID interface.
+      The USB connection is used only for firmware updates and device
+      configuration. OpenFlight cannot directly control haptic output
+      without a companion audio routing layer.
+  - id: NO_HID_INPUT
+    description: >
+      The JetSeat generates no HID input events. It is an output-only accessory
+      from the perspective of flight simulator input management.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gametrix JetSeat FSL Edition — haptic seat for flight simulation.
+    USB interface is for configuration only; haptic output is audio-driven.
+    Not an input device; tracked for accessory compatibility.
+    Last reviewed: 2026-02.

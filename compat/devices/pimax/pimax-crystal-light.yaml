@@ -1,0 +1,61 @@
+# Pimax Crystal Light VR Headset
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Pimax Crystal Light — standalone/PC-tethered VR headset (2024). High-resolution
+# LCD panels with inside-out tracking. Connects to the PC via USB 3.0 (data)
+# and DisplayPort (video). Enumerates as a composite USB device including a
+# HID audio device and tracking controller.
+# VID 0x2833 is Oculus/Meta's VID — Pimax uses its own VID (unconfirmed).
+# Pimax likely uses VID 0x1532 or a custom VID; this is unconfirmed.
+schema_version: "1"
+
+device:
+  name: "Pimax Crystal Light"
+  vendor: "Pimax"
+  usb:
+    vendor_id: 0x0D28   # Placeholder — Pimax custom VID (VID_UNCONFIRMED)
+    product_id: 0x0006  # Placeholder — PID_UNCONFIRMED for Crystal Light
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick (tracking controller enumeration)
+
+capabilities:
+  axes:
+    count: 6
+    names: [pos_x, pos_y, pos_z, rot_x, rot_y, rot_z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90   # Tracking update rate matches display refresh
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Pimax VID is unconfirmed; 0x0D28 is a placeholder. Verify with lsusb."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0006 is a placeholder. Crystal Light PID differs from Crystal (2023)."
+  - id: COMPOSITE_USB_DEVICE
+    description: >
+      The Crystal Light enumerates as a composite USB device including the
+      headset tracking controller, a USB audio device for headphones/mic,
+      and potentially a firmware update interface. OpenFlight tracks the
+      tracking controller interface.
+  - id: PIMAX_EXPERIENCE_REQUIRED
+    description: >
+      Full feature access (eye tracking, smart smoothing, refresh rate control)
+      requires Pimax Experience (PiTool successor) software. Tracking data
+      is available via OpenXR/SteamVR without Pimax software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pimax Crystal Light VR headset (2024). VID/PID unconfirmed; verify with
+    lsusb. Distinct from the Crystal (2023, higher spec). Tracking via OpenXR.
+    Last reviewed: 2026-02.

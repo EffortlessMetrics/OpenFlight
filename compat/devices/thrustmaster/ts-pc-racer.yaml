@@ -1,0 +1,60 @@
+# Thrustmaster TS-PC Racer Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster TS-PC Racer — direct-drive compatible racing wheel base.
+# H.E.A.R.T (HallEffect AccuRate Technology) magnetic sensor; force feedback
+# via brushless motor. USB HID. Ferrari officially licensed variant.
+# VID 0x044F is Thrustmaster's registered VID.
+# PID 0xB668 is community-reported for the TS-PC Racer (unconfirmed).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TS-PC Racer"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster registered VID (confirmed)
+    product_id: 0xB668  # Community-reported for TS-PC Racer (PID_UNCONFIRMED)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [steering, throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0xB668 is community-reported; verify against linux-hardware.org or lsusb."
+  - id: HEART_SENSOR
+    description: >
+      Steering axis uses Thrustmaster H.E.A.R.T (HallEffect AccuRate Technology)
+      magnetic sensor for contactless 16-bit position sensing. No potentiometer
+      wear.
+  - id: BRUSHLESS_FFB
+    description: >
+      Force feedback uses a brushless DC motor providing up to 5 Nm of
+      continuous force. FFB is DirectInput compatible.
+  - id: FERRARI_LICENSED
+    description: >
+      The TS-PC Racer is officially licensed by Ferrari. The default wheel
+      rim replicates Ferrari GT styling and includes additional buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TS-PC Racer (2017-). H.E.A.R.T sensor, brushless FFB motor.
+    VID 0x044F confirmed; PID 0xB668 is community-reported and unconfirmed.
+    Last reviewed: 2026-02.

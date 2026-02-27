@@ -1,0 +1,58 @@
+# GoFlight QPRO Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight QPRO — Quick Plug-n-Play Router and Controller panel (2022).
+# A multipurpose rotary/switch panel for general aviation simulation,
+# combining functions of the GF-46 and GF-45 into a single compact unit.
+# Uses GoFlight's standard USB HID panel protocol.
+# VID 0x0F7B is the registered GoFlight Technologies vendor ID.
+# PID for the QPRO is unconfirmed.
+schema_version: "1"
+
+device:
+  name: "GoFlight QPRO Controller"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0F7B   # GoFlight Technologies registered VID (confirmed)
+    product_id: 0x0220  # Placeholder — PID_UNCONFIRMED for QPRO model
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard (panel switches/rotaries)
+
+capabilities:
+  axes:
+    count: 4
+    names: [enc_outer_l, enc_inner_l, enc_outer_r, enc_inner_r]
+    resolution_bits: ~   # Relative encoder counts
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0220 is a placeholder; verify against GoFlight product documentation."
+  - id: ENCODER_RELATIVE
+    description: >
+      Rotary encoders report relative pulse increments, not absolute positions.
+      The host must maintain accumulated values. Typical GoFlight encoder
+      resolution is 24 detents per revolution.
+  - id: GOFLIGHT_USB_PROTOCOL
+    description: >
+      The QPRO uses GoFlight's proprietary USB HID panel protocol. LED output
+      reports (for annunciator lighting) use GoFlight's documented output
+      report format. Refer to the GoFlight SDK for output report structure.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight QPRO (2022) — combined rotary/switch panel. VID 0x0F7B is the
+    confirmed GoFlight vendor ID; PID requires field verification.
+    Last reviewed: 2026-02.

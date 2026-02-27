@@ -1,0 +1,58 @@
+# PointCtrl FCU v4 (VR Hand Controller)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PointCtrl FCU (Flight Computer Unit) v4 — a VR hand-mounted pointing and
+# input device for flight simulation. Worn on the back of the hand; uses
+# optical finger tracking to point at virtual cockpit controls. USB HID
+# for button/axis input; Bluetooth optional.
+# VID/PID are unconfirmed (niche product, no public USB database entries).
+schema_version: "1"
+
+device:
+  name: "PointCtrl FCU v4"
+  vendor: "PointCtrl"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — Microchip PIC USB MCU (VID_UNCONFIRMED)
+    product_id: 0x0058  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [pointer_x, pointer_y]
+    resolution_bits: 12
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 / PID 0x0058 are unconfirmed placeholders; verify with lsusb."
+  - id: OPTICAL_FINGER_TRACKING
+    description: >
+      The FCU v4 uses optical sensors to track finger position on the hand
+      mount. Pointer axes represent the projected pointing direction, not
+      physical stick deflection. Do not apply curve or deadzone settings
+      intended for gimbal-based controllers.
+  - id: VR_ONLY_RECOMMENDED
+    description: >
+      Designed exclusively for VR cockpit interaction. Pointer axes have no
+      useful meaning in 2D desktop simulator mode. The device will still
+      enumerate as a standard HID joystick in non-VR contexts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PointCtrl FCU v4 is a niche VR flight input device. VID/PID not found in
+    public USB hardware databases; field verification required.
+    Last reviewed: 2026-02.

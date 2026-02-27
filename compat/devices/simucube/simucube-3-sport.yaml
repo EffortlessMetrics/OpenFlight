@@ -1,0 +1,60 @@
+# Simucube 2 Sport (Gen 2 / Simucube 3 Sport)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Granite Devices Simucube 3 Sport — third-generation direct-drive wheel base
+# in the Sport tier (2024). Successor to Simucube 2 Sport. USB HID; True Drive
+# software required for full configuration. VID 0x16D0 is Granite Devices'
+# MCS USB vendor ID. PID is unconfirmed for SC3 Sport; SC2 Sport is 0x0D60.
+schema_version: "1"
+
+device:
+  name: "Simucube 3 Sport"
+  vendor: "Granite Devices (Simucube)"
+  usb:
+    vendor_id: 0x16D0   # Granite Devices MCS USB VID (confirmed for SC2 series)
+    product_id: 0x0D70  # Placeholder — PID_UNCONFIRMED for SC3 Sport
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [steering, pedal_combined, ffb_torque]
+    resolution_bits: 24   # Absolute encoder — very high resolution
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0D70 is a placeholder for SC3 Sport; SC2 Sport uses 0x0D60."
+  - id: ABSOLUTE_ENCODER
+    description: >
+      The SC3 uses a 24-bit absolute encoder. Steering axis reports the true
+      angular position at all times with no zeroing required on power cycle.
+  - id: TRUEDRIVE_REQUIRED
+    description: >
+      Full force feedback configuration (FFB filters, reconstruction filters,
+      slew rate limits) requires Granite Devices True Drive software.
+      Basic DirectInput FFB is available without True Drive.
+  - id: HIGH_TORQUE_SAFETY
+    description: >
+      Maximum output torque requires e-stop wiring for safe operation.
+      OpenFlight should respect the torque limit profile set in True Drive
+      and not override safety-critical FFB attenuation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 3 Sport (2024). Successor to SC2 Sport. VID 0x16D0 confirmed
+    for Granite Devices; PID requires field verification.
+    Last reviewed: 2026-02.

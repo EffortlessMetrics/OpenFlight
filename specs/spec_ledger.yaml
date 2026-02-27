@@ -7854,3 +7854,351 @@ requirements:
         description: "PSX integration requires only standard TCP/IP; no special SDK"
         tests:
           - feature:specs/features/req_236_psx_integration.feature
+  - id: REQ-237
+    name: Axis response curves validated for mathematical correctness
+    kind: product
+    status: draft
+    ac:
+      - id: AC-237.1
+        description: "Monotone curve: each control point X value strictly greater than previous"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+      - id: AC-237.2
+        description: "All control point X values must be in [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+      - id: AC-237.3
+        description: "All control point Y values must be in [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+      - id: AC-237.4
+        description: "Curve interpolation between points uses cubic Hermite spline"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+      - id: AC-237.5
+        description: "Symmetric curve option mirrors first half to second half automatically"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+      - id: AC-237.6
+        description: "Curve with zero points returns linear (identity) mapping"
+        tests:
+          - feature:specs/features/req_237_curve_editor_validation.feature
+  - id: REQ-238
+    name: Throttle detents snap axis to fixed positions at configured percentages
+    kind: product
+    status: draft
+    ac:
+      - id: AC-238.1
+        description: "Detent positions specified as fractions in [0.0, 1.0] in profile"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+      - id: AC-238.2
+        description: "When axis within snap_range of detent, output snaps to exact detent value"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+      - id: AC-238.3
+        description: "Detent crossing requires moving past snap_range to exit"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+      - id: AC-238.4
+        description: "Multiple detents per axis supported (e.g., idle, MCT, TOGA positions)"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+      - id: AC-238.5
+        description: "Detent snap configurable per axis independently"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+      - id: AC-238.6
+        description: "Detent state (active/inactive) emitted on bus for LED indicator logic"
+        tests:
+          - feature:specs/features/req_238_throttle_detents.feature
+  - id: REQ-239
+    name: Two physical axes can be mixed to produce a virtual axis
+    kind: product
+    status: draft
+    ac:
+      - id: AC-239.1
+        description: "Mix mode \"differential\" produces: output = (left - right) / 2"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+      - id: AC-239.2
+        description: "Mix mode \"average\" produces: output = (left + right) / 2"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+      - id: AC-239.3
+        description: "Mix mode \"sum\" produces: output = clamp(left + right, -1, 1)"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+      - id: AC-239.4
+        description: "Virtual axis appears on bus as if physical"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+      - id: AC-239.5
+        description: "Virtual axis mixing configured per-profile"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+      - id: AC-239.6
+        description: "Disconnect of either source axis freezes virtual axis at last value"
+        tests:
+          - feature:specs/features/req_239_axis_mixing.feature
+  - id: REQ-240
+    name: Service reports per-axis capabilities and current operational limits
+    kind: product
+    status: draft
+    ac:
+      - id: AC-240.1
+        description: "Capability report lists all active axes with resolution and range"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+      - id: AC-240.2
+        description: "Per-axis: current clamp count since service start"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+      - id: AC-240.3
+        description: "Per-axis: whether demo/kid mode limits are active"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+      - id: AC-240.4
+        description: "Per-axis: filter chain stages currently applied"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+      - id: AC-240.5
+        description: "Capability report available via gRPC `GetCapabilities` call"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+      - id: AC-240.6
+        description: "Capability report updated within 100ms of profile hot-swap"
+        tests:
+          - feature:specs/features/req_240_capability_reporting.feature
+  - id: REQ-241
+    name: IPC protobuf schema is versioned and backward compatible
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-241.1
+        description: "Proto files tagged with version in package name (e.g., flight.v1)"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+      - id: AC-241.2
+        description: "New optional fields added without breaking older clients"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+      - id: AC-241.3
+        description: "Removed fields replaced with deprecated markers, not deleted"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+      - id: AC-241.4
+        description: "Version mismatch between client and service returns explicit error"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+      - id: AC-241.5
+        description: "Proto schema changes reviewed in CI via buf lint check"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+      - id: AC-241.6
+        description: "Schema changelog maintained in `crates/flight-ipc/CHANGELOG.md`"
+        tests:
+          - feature:specs/features/req_241_ipc_protocol_versioning.feature
+  - id: REQ-242
+    name: Config file schema migrations run automatically on service start
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-242.1
+        description: "Config file includes `schema_version` field"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+      - id: AC-242.2
+        description: "On load, schema_version compared to current; migration applied if older"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+      - id: AC-242.3
+        description: "Migrations are idempotent: running twice produces same result"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+      - id: AC-242.4
+        description: "Migration failure preserves original file and logs error"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+      - id: AC-242.5
+        description: "Migrated file written atomically (write to temp, rename)"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+      - id: AC-242.6
+        description: "Migration history logged in service log at INFO level"
+        tests:
+          - feature:specs/features/req_242_config_migration.feature
+  - id: REQ-243
+    name: Bipolar axis split to dual unipolar channels for differential controls
+    kind: product
+    status: draft
+    ac:
+      - id: AC-243.1
+        description: "Split bipolar axis X into positive channel (max(X, 0)) and negative channel (max(-X, 0))"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+      - id: AC-243.2
+        description: "Split outputs both clamped to [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+      - id: AC-243.3
+        description: "Split used for differential braking: stick left → left brake; stick right → right brake"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+      - id: AC-243.4
+        description: "Combined and split modes configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+      - id: AC-243.5
+        description: "Split operation tested in combination with detents"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+      - id: AC-243.6
+        description: "Split axis output appears on bus as two named virtual axes"
+        tests:
+          - feature:specs/features/req_243_axis_split.feature
+  - id: REQ-244
+    name: Tactile transducers receive FFB haptic events from OpenFlight
+    kind: product
+    status: draft
+    ac:
+      - id: AC-244.1
+        description: "Tactile device accepts audio-format haptic waveforms"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+      - id: AC-244.2
+        description: "Stall buffet, gear rumble, and landing thud effects implemented"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+      - id: AC-244.3
+        description: "Effect intensity scales with sim parameter (e.g., G-force)"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+      - id: AC-244.4
+        description: "Tactile output does not affect RT spine timing"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+      - id: AC-244.5
+        description: "Tactile effects configurable per aircraft type in profile"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+      - id: AC-244.6
+        description: "Multiple tactile devices (seat + pedals) driven simultaneously"
+        tests:
+          - feature:specs/features/req_244_tactile_feedback.feature
+  - id: REQ-245
+    name: Elgato Stream Deck buttons and display integrate with OpenFlight panel engine
+    kind: product
+    status: draft
+    ac:
+      - id: AC-245.1
+        description: "Stream Deck connected via USB HID detected automatically"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+      - id: AC-245.2
+        description: "Button press events routed to panel engine rules"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+      - id: AC-245.3
+        description: "Key images updated via panel engine LED/display state machine"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+      - id: AC-245.4
+        description: "Stream Deck Mini, MK2, and XL all supported"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+      - id: AC-245.5
+        description: "Profile maps Stream Deck keys to named actions"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+      - id: AC-245.6
+        description: "Disconnect and reconnect handled without service restart"
+        tests:
+          - feature:specs/features/req_245_streamdeck_integration.feature
+  - id: REQ-246
+    name: Child profiles inherit settings from parent profiles via cascade
+    kind: product
+    status: draft
+    ac:
+      - id: AC-246.1
+        description: "Global → Simulator → Aircraft → Phase-of-Flight cascade applies in order"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+      - id: AC-246.2
+        description: "Child profile can override individual axis settings from parent"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+      - id: AC-246.3
+        description: "Explicit null in child profile resets axis to default (not inheriting)"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+      - id: AC-246.4
+        description: "Merge result logged at DEBUG level for debugging"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+      - id: AC-246.5
+        description: "Circular inheritance detected and rejected with error"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+      - id: AC-246.6
+        description: "Profile tree validated at load time, not at runtime"
+        tests:
+          - feature:specs/features/req_246_profile_inheritance.feature
+  - id: REQ-247
+    name: FFB force output clamped by safety interlocks to rated limits
+    kind: product
+    status: draft
+    ac:
+      - id: AC-247.1
+        description: "Per-device rated force limit read from device manifest"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+      - id: AC-247.2
+        description: "Output force clamped to rated limit before sending to device"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+      - id: AC-247.3
+        description: "Clamp events counted and available in capability report"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+      - id: AC-247.4
+        description: "Emergency stop command immediately zeros all FFB output"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+      - id: AC-247.5
+        description: "FFB envelope enforced: ramp-up rate limited to prevent shock loads"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+      - id: AC-247.6
+        description: "Safety interlock tests run as part of CI before any FFB code merge"
+        tests:
+          - feature:specs/features/req_247_ffb_safety_interlocks.feature
+  - id: REQ-248
+    name: Update system fetches and applies updates from stable/beta/canary channels
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-248.1
+        description: "Update manifest fetched from HTTPS endpoint on configurable schedule"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature
+      - id: AC-248.2
+        description: "Manifest signature verified before applying update"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature
+      - id: AC-248.3
+        description: "Delta update downloads only changed files (not full binary)"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature
+      - id: AC-248.4
+        description: "Rollback available for 2 previous versions"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature
+      - id: AC-248.5
+        description: "Update channel configurable: stable (default), beta, canary"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature
+      - id: AC-248.6
+        description: "Update applied on service restart, not mid-session"
+        tests:
+          - feature:specs/features/req_248_auto_update_channel.feature

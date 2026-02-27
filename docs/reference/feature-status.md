@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1412 |
-| ACs with tests | 1412 |
+| Total AC | 1448 |
+| ACs with tests | 1448 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 815 |
+| Draft | 851 |
 | Incomplete | 0 |
 | Microcrates | 78 |
 | Microcrates with tests | 65 (83.3%) |
 | Microcrates with Gherkin | 65 (83.3%) |
 | Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 61.5% |
-| Test + Gherkin coverage | 61.5% |
+| Gherkin coverage | 60.0% |
+| Test + Gherkin coverage | 60.0% |
 
 ## BDD Microcrate Matrix
 
@@ -1530,3 +1530,39 @@
 | REQ-236 | AC-236.4 | Unknown PSX variables logged as warnings and ignored safely | - | 1 | ⚪ Draft |
 | REQ-236 | AC-236.5 | TCP disconnect from PSX triggers graceful adapter transition to disconnected | - | 1 | ⚪ Draft |
 | REQ-236 | AC-236.6 | PSX integration requires only standard TCP/IP; no special SDK | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.1 | Monotone curve: each control point X value strictly greater than previous | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.2 | All control point X values must be in [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.3 | All control point Y values must be in [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.4 | Curve interpolation between points uses cubic Hermite spline | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.5 | Symmetric curve option mirrors first half to second half automatically | - | 1 | ⚪ Draft |
+| REQ-237 | AC-237.6 | Curve with zero points returns linear (identity) mapping | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.1 | Detent positions specified as fractions in [0.0, 1.0] in profile | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.2 | When axis within snap_range of detent, output snaps to exact detent value | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.3 | Detent crossing requires moving past snap_range to exit | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.4 | Multiple detents per axis supported (e.g., idle, MCT, TOGA positions) | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.5 | Detent snap configurable per axis independently | - | 1 | ⚪ Draft |
+| REQ-238 | AC-238.6 | Detent state (active/inactive) emitted on bus for LED indicator logic | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.1 | Mix mode "differential" produces: output = (left - right) / 2 | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.2 | Mix mode "average" produces: output = (left + right) / 2 | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.3 | Mix mode "sum" produces: output = clamp(left + right, -1, 1) | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.4 | Virtual axis appears on bus as if physical | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.5 | Virtual axis mixing configured per-profile | - | 1 | ⚪ Draft |
+| REQ-239 | AC-239.6 | Disconnect of either source axis freezes virtual axis at last value | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.1 | Capability report lists all active axes with resolution and range | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.2 | Per-axis: current clamp count since service start | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.3 | Per-axis: whether demo/kid mode limits are active | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.4 | Per-axis: filter chain stages currently applied | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.5 | Capability report available via gRPC `GetCapabilities` call | - | 1 | ⚪ Draft |
+| REQ-240 | AC-240.6 | Capability report updated within 100ms of profile hot-swap | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.1 | Proto files tagged with version in package name (e.g., flight.v1) | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.2 | New optional fields added without breaking older clients | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.3 | Removed fields replaced with deprecated markers, not deleted | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.4 | Version mismatch between client and service returns explicit error | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.5 | Proto schema changes reviewed in CI via buf lint check | - | 1 | ⚪ Draft |
+| REQ-241 | AC-241.6 | Schema changelog maintained in `crates/flight-ipc/CHANGELOG.md` | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.1 | Config file includes `schema_version` field | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.2 | On load, schema_version compared to current; migration applied if older | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.3 | Migrations are idempotent: running twice produces same result | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.4 | Migration failure preserves original file and logs error | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.5 | Migrated file written atomically (write to temp, rename) | - | 1 | ⚪ Draft |
+| REQ-242 | AC-242.6 | Migration history logged in service log at INFO level | - | 1 | ⚪ Draft |

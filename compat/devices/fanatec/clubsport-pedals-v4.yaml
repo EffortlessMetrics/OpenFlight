@@ -1,0 +1,61 @@
+# Fanatec ClubSport Pedals V4
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fanatec ClubSport Pedals V4 — fourth-generation high-end pedal set (2024).
+# Dual load-cell brake and clutch, hall-effect throttle, adjustable pedal
+# spacing and face angles. Connects via USB or Fanatec ClubSport ecosystem hub.
+# VID 0x0EB7 is Fanatec's registered USB vendor ID.
+# PID is unconfirmed for the V4; V3 is 0x0005.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V4"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7   # Fanatec registered VID (confirmed)
+    product_id: 0x0009  # Placeholder — PID_UNCONFIRMED for V4 (V3 is 0x0005)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0009 is a placeholder; verify with lsusb. V3 is PID 0x0005."
+  - id: DUAL_LOAD_CELL_BRAKE_CLUTCH
+    description: >
+      Both brake and clutch use load cells. Axis values represent applied
+      force, not pedal travel. Configure force sensitivity in Fanatec Control
+      Panel software before applying OpenFlight curves.
+  - id: FANATEC_HUB_COMPATIBILITY
+    description: >
+      Can connect directly via USB or through a Fanatec ClubSport ecosystem hub.
+      When using the hub, the pedals may enumerate under the hub's PID rather
+      than their own. Monitor for alternate enumeration paths.
+  - id: HIGH_POLLING_RATE
+    description: >
+      Supports 1000 Hz USB polling with Fanatec driver; standard HID falls
+      back to 125 Hz. High-polling mode requires Fanatec driver installed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V4 (2024). Dual load-cell, 16-bit resolution.
+    VID 0x0EB7 confirmed for Fanatec; PID requires field verification.
+    Last reviewed: 2026-02.

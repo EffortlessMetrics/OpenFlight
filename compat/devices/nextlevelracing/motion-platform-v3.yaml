@@ -1,0 +1,58 @@
+# Next Level Racing Motion Platform V3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Next Level Racing Motion Platform V3 — 3DOF motion platform for cockpit
+# simulation. Connects to the host via USB for motion data commands;
+# motion output driven by NLR Motion software receiving telemetry from the
+# simulator. VID/PID are unconfirmed; NLR may use a standard CH340 or FTDI
+# USB-serial bridge for the motion controller board.
+schema_version: "1"
+
+device:
+  name: "Next Level Racing Motion Platform V3"
+  vendor: "Next Level Racing"
+  usb:
+    vendor_id: 0x0403   # FTDI USB-Serial bridge (VID_UNCONFIRMED for NLR Motion V3)
+    product_id: 0x6001  # Placeholder — FTDI FT232R generic PID (PID_UNCONFIRMED)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — USB-serial control interface
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false   # Motion output, not HID force-feedback
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x0403 / PID 0x6001 are FTDI placeholders; verify with lsusb on V3."
+  - id: MOTION_SOFTWARE_REQUIRED
+    description: >
+      Motion commands are sent from NLR Motion software which receives
+      telemetry (G-forces, pitch, roll, yaw) from the simulator plugin.
+      OpenFlight cannot directly control motion output without an NLR
+      telemetry routing layer.
+  - id: OUTPUT_ONLY
+    description: >
+      The Motion Platform V3 generates no HID input events. It is an
+      output-only motion actuator system.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Next Level Racing Motion Platform V3 — 3DOF motion platform.
+    Output-only; requires NLR Motion software and simulator telemetry plugin.
+    VID/PID require field verification.
+    Last reviewed: 2026-02.

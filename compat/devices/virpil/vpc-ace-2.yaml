@@ -1,0 +1,58 @@
+# VIRPIL Controls VPC ACE-2 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC ACE-2 — second-generation ACE rudder pedals. Successor to
+# ACE-1 with revised spring mechanism and updated USB firmware. Hall-effect
+# sensors on all axes. VID 0x3344 is community-reported for VIRPIL.
+# PID unconfirmed for ACE-2 specifically.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-2 Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344   # Community-reported VIRPIL VID (VID_UNCONFIRMED)
+    product_id: 0x8105  # Placeholder — PID_UNCONFIRMED for ACE-2
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 15
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x3344 is community-reported for VIRPIL; PID 0x8105 is unconfirmed for ACE-2."
+  - id: HALL_EFFECT_ALL_AXES
+    description: >
+      All axes (rudder and both toe brakes) use hall-effect sensors.
+      Non-contact sensing; no potentiometer wear.
+  - id: VIRPIL_15BIT_AXES
+    description: >
+      VIRPIL axes use 15-bit resolution (0–32767). Mid-point is 16384.
+  - id: REVISED_SPRING_OVER_ACE1
+    description: >
+      ACE-2 uses a revised centering spring mechanism providing a lighter
+      and more linear rudder feel than ACE-1. Calibration profiles from
+      ACE-1 are not directly applicable.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC ACE-2 rudder pedals. Successor to ACE-1. VID/PID require
+    field verification. 15-bit resolution hall-effect sensors.
+    Last reviewed: 2026-02.

@@ -1,0 +1,61 @@
+# Simagic P1000 Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic P1000 load-cell pedal set — entry to mid-range 3-pedal set
+# with load-cell brake. Distinct from the P2000 (dual load cell, higher
+# force range). USB HID device using Simagic's standard pedal protocol.
+# VID/PID are unconfirmed; Simagic commonly uses Silicon Labs CP210x USB bridge.
+schema_version: "1"
+
+device:
+  name: "Simagic P1000 Pedals"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x10C4   # Silicon Labs CP210x USB Bridge (VID_UNCONFIRMED for P1000)
+    product_id: 0xEA60  # Placeholder — generic CP210x PID (PID_UNCONFIRMED)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x10C4 / PID 0xEA60 are CP210x placeholders; verify with lsusb on P1000."
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake pedal uses a load cell (force sensing) rather than a linear
+      potentiometer. Brake axis represents applied force, not pedal travel.
+      Calibrate brake pressure curve independently from throttle/clutch.
+  - id: HIGH_POLLING_RATE
+    description: >
+      The P1000 supports 500 Hz USB polling when the Simagic driver or
+      compatible firmware is active. Standard HID polling may default to
+      125 Hz on some systems without the Simagic software.
+  - id: DISTINCT_FROM_P2000
+    description: >
+      The P1000 has a single load-cell brake; the P2000 has dual load cells
+      and a higher force range. Do not share calibration profiles between models.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic P1000 load-cell pedal set. VID/PID require field verification.
+    Distinct from the P2000 (p2000-pedals.yaml). High-polling-rate capable
+    with Simagic driver.
+    Last reviewed: 2026-02.

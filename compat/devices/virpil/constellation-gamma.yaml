@@ -1,0 +1,59 @@
+# VIRPIL Controls VPC Constellation GAMMA Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC Constellation GAMMA — F-14 Tomcat style fighter grip (2024).
+# Released as a companion to the Constellation series alongside Alpha, Beta,
+# Delta, and Sigma grips. Mounts on VPC WarBRD or MongoosT bases.
+# VID 0x3344 is community-reported for VIRPIL devices (VID_UNCONFIRMED).
+# PID is unconfirmed for this grip.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation GAMMA Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344   # Community-reported VIRPIL VID (VID_UNCONFIRMED)
+    product_id: 0x8194  # Placeholder — PID_UNCONFIRMED for GAMMA grip
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, twist, throttle_mini, paddle]
+    resolution_bits: 15
+  buttons: 28
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x3344 is community-reported for VIRPIL; PID 0x8194 is unconfirmed for GAMMA."
+  - id: F14_GRIP_GEOMETRY
+    description: >
+      The GAMMA grip replicates the F-14 Tomcat stick geometry with a unique
+      thumb rest and paddle brake lever. The paddle axis is bipolar.
+  - id: BASE_DEPENDENT
+    description: >
+      Axes X, Y, and twist (if applicable) are provided by the base (WarBRD or
+      MongoosT), not the grip. The grip contributes buttons, hats, throttle
+      mini-stick, and paddle only. Total axis count depends on the paired base.
+  - id: VIRPIL_15BIT_AXES
+    description: >
+      VIRPIL axes use 15-bit resolution (0–32767). Mid-point is 16384.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation GAMMA grip (2024) — F-14 Tomcat style.
+    VID/PID require field verification. Capabilities depend on paired base.
+    Last reviewed: 2026-02.

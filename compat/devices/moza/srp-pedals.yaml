@@ -1,0 +1,57 @@
+# MOZA Racing SR-P Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MOZA Racing SR-P — mid-range 3-pedal set (2023). Features hall-effect sensors
+# on throttle and clutch; optional load-cell brake upgrade kit available.
+# Heavier construction than SR-P Lite with adjustable pedal faces.
+# VID 0x346E is the registered MOZA Racing USB vendor ID.
+# PID is unconfirmed for the SR-P.
+schema_version: "1"
+
+device:
+  name: "MOZA SR-P Pedals"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E   # MOZA Racing registered VID (community-confirmed)
+    product_id: 0x0007  # Placeholder — PID_UNCONFIRMED for SR-P
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0007 is a placeholder; verify with lsusb or MOZA Pit House software."
+  - id: OPTIONAL_LOAD_CELL_BRAKE
+    description: >
+      The SR-P supports an optional load-cell brake upgrade kit (sold separately).
+      With the kit installed, the brake axis represents force; without it,
+      the brake axis represents displacement. Check installed configuration
+      before applying brake curves.
+  - id: HIGHER_RESOLUTION_THAN_LITE
+    description: >
+      SR-P uses 14-bit axis resolution vs 12-bit for the SR-P Lite.
+      Calibration profiles are not interchangeable between models.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA SR-P pedals (2023). Mid-range with optional load-cell brake.
+    VID 0x346E confirmed for MOZA; PID requires verification.
+    Last reviewed: 2026-02.

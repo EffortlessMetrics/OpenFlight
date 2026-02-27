@@ -79,6 +79,7 @@ pub mod combine;
 pub mod compiler;
 pub mod conflict;
 pub mod counters;
+pub mod detent;
 pub mod engine;
 pub mod frame;
 pub mod nodes;
@@ -96,6 +97,7 @@ pub use conflict::{
     CurveConflict, CurveConflictDetector, ResolutionType,
 };
 pub use counters::{AllocationGuard, RuntimeCounters};
+pub use detent::{Detent, DetentConfig, DetentProcessor};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
