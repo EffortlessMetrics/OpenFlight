@@ -7505,3 +7505,352 @@ requirements:
         description: "Security model documented in SECURITY.md"
         tests:
           - feature:specs/features/req_224_platform_security_model.feature
+  - id: REQ-225
+    name: Recorded telemetry sessions can be replayed for testing and debugging
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-225.1
+        description: "Telemetry recorder captures all bus events with microsecond timestamps"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+      - id: AC-225.2
+        description: "Recorded session stored as compact binary file (< 1MB per 60 seconds)"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+      - id: AC-225.3
+        description: "Replay feeds recorded events into bus at original timing"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+      - id: AC-225.4
+        description: "Replay can run at 2x/4x speed for fast debugging"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+      - id: AC-225.5
+        description: "CLI command `flightctl record` starts recording; `flightctl replay` plays back"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+      - id: AC-225.6
+        description: "Replay session generates same test outcomes as live session"
+        tests:
+          - feature:specs/features/req_225_telemetry_replay.feature
+  - id: REQ-226
+    name: IL-2 Great Battles UDP adapter provides telemetry and control support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-226.1
+        description: "IL-2 UDP telemetry parsed from port 34385"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+      - id: AC-226.2
+        description: "Aircraft speed, altitude, and attitude decoded from IL-2 packets"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+      - id: AC-226.3
+        description: "Engine health (RPM, oil temp) included in telemetry bus snapshot"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+      - id: AC-226.4
+        description: "Gear and flaps state decoded from IL-2 state flags"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+      - id: AC-226.5
+        description: "IL-2 game pause state reflected in adapter status"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+      - id: AC-226.6
+        description: "Multiple IL-2 aircraft modules supported without per-module config"
+        tests:
+          - feature:specs/features/req_226_il2_integration.feature
+  - id: REQ-227
+    name: Falcon BMS shared memory adapter provides full avionics state access
+    kind: product
+    status: draft
+    ac:
+      - id: AC-227.1
+        description: "BMS-Data shared memory segment opened at service start"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+      - id: AC-227.2
+        description: "F-16 avionics data (altitude, airspeed, AoA, G-force) extracted"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+      - id: AC-227.3
+        description: "Cockpit switch states (gear, flaps, master arm) decoded from bitfields"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+      - id: AC-227.4
+        description: "BMS version number validated at connection"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+      - id: AC-227.5
+        description: "Missing shared memory segment handled gracefully (adapter in disconnected state)"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+      - id: AC-227.6
+        description: "BMS paused state reflected in telemetry staleness"
+        tests:
+          - feature:specs/features/req_227_falcon_bms_integration.feature
+  - id: REQ-228
+    name: Profile files are validated against schema before loading
+    kind: product
+    status: draft
+    ac:
+      - id: AC-228.1
+        description: "Profile must specify `schema` field at top level"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+      - id: AC-228.2
+        description: "Unknown top-level fields produce warning, not error"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+      - id: AC-228.3
+        description: "Axis deadzone outside [0.0, 1.0] rejected with descriptive error"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+      - id: AC-228.4
+        description: "Axis curve control points must be monotonically increasing"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+      - id: AC-228.5
+        description: "Profile version migration applied automatically when `schema` version detected"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+      - id: AC-228.6
+        description: "Validation errors include field path for debugging (e.g., \"axes.pitch.deadzone\")"
+        tests:
+          - feature:specs/features/req_228_profile_schema_validation.feature
+  - id: REQ-229
+    name: Service watchdog restarts flightd on unexpected failure within 5 seconds
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-229.1
+        description: "Watchdog process monitors flightd via IPC health ping every 5s"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+      - id: AC-229.2
+        description: "If 3 consecutive health pings fail, watchdog restarts flightd"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+      - id: AC-229.3
+        description: "Watchdog restart logged with timestamp and exit code"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+      - id: AC-229.4
+        description: "Watchdog respects boot loop guard: after 3 restarts in 60s, stops restarting"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+      - id: AC-229.5
+        description: "Watchdog itself monitored by OS service manager (systemd/SCM)"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+      - id: AC-229.6
+        description: "Watchdog can be disabled for development via environment variable"
+        tests:
+          - feature:specs/features/req_229_watchdog_implementation.feature
+  - id: REQ-230
+    name: flightctl CLI provides rich status and inspection of all subsystems
+    kind: product
+    status: draft
+    ac:
+      - id: AC-230.1
+        description: "`flightctl status` shows service health, device count, active profile"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+      - id: AC-230.2
+        description: "`flightctl devices` lists all connected devices with VID/PID and status"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+      - id: AC-230.3
+        description: "`flightctl axes` shows live normalized axis values with update rate"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+      - id: AC-230.4
+        description: "`flightctl profile show` dumps current active profile as TOML"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+      - id: AC-230.5
+        description: "`flightctl --json status` outputs structured JSON for tooling integration"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+      - id: AC-230.6
+        description: "All commands fail gracefully if service not running (exit code 1, clear message)"
+        tests:
+          - feature:specs/features/req_230_cli_status_commands.feature
+
+  - id: REQ-231
+    name: Safe mode generates diagnostic bundle and explanation on degradation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-231.1
+        description: "Safe mode activated on profile load failure or axis calibration error"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+      - id: AC-231.2
+        description: "Safe mode applies known-good axis defaults (deadzone 3%, expo 20%)"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+      - id: AC-231.3
+        description: "Safe mode generates a diagnostic bundle in temp directory"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+      - id: AC-231.4
+        description: "Diagnostic bundle includes failure reason, last known profile, and device list"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+      - id: AC-231.5
+        description: "Service emits \"safe_mode_active\" event on bus when degraded"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+      - id: AC-231.6
+        description: "CLI shows safe mode status prominently in `flightctl status`"
+        tests:
+          - feature:specs/features/req_231_safe_mode_diagnostics.feature
+  - id: REQ-232
+    name: Rules DSL compiles and executes event→action mappings correctly
+    kind: product
+    status: draft
+    ac:
+      - id: AC-232.1
+        description: "Rule condition syntax: `event.type == \"button_press\" && event.id == 42`"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+      - id: AC-232.2
+        description: "Rule action syntax: `set_axis(\"pitch_trim\", value + 0.01)`"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+      - id: AC-232.3
+        description: "Rules compiled to bytecode at profile load, not at runtime"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+      - id: AC-232.4
+        description: "Compilation error includes line number and column in error message"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+      - id: AC-232.5
+        description: "Runtime bytecode executes within 10µs per rule on RT spine"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+      - id: AC-232.6
+        description: "Rules DSL documented with 10+ working examples in docs/reference"
+        tests:
+          - feature:specs/features/req_232_rules_engine_dsl.feature
+  - id: REQ-233
+    name: Black box recorder captures RT spine events for post-incident analysis
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-233.1
+        description: "Recorder captures last 30 seconds of axis events in a ring buffer"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+      - id: AC-233.2
+        description: "Ring buffer stored in memory (pre-allocated, no allocation on hot path)"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+      - id: AC-233.3
+        description: "On service crash/panic, ring buffer flushed to disk atomically"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+      - id: AC-233.4
+        description: "Black box dump readable via `flightctl blackbox dump`"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+      - id: AC-233.5
+        description: "Dump format is structured binary with timestamp and axis values per tick"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+      - id: AC-233.6
+        description: "Black box write never exceeds 50µs per tick"
+        tests:
+          - feature:specs/features/req_233_black_box_recorder.feature
+  - id: REQ-234
+    name: Multiple clients can share axis inputs via cooperative profile
+    kind: product
+    status: draft
+    ac:
+      - id: AC-234.1
+        description: "Cooperative profile allows \"left seat\" and \"right seat\" device roles"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+      - id: AC-234.2
+        description: "Priority rules define which seat controls each axis at any time"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+      - id: AC-234.3
+        description: "Axis handoff between seats transitions smoothly (no snap)"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+      - id: AC-234.4
+        description: "Both seats' inputs visible in telemetry dashboard simultaneously"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+      - id: AC-234.5
+        description: "IPC protocol supports two concurrent clients without conflict"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+      - id: AC-234.6
+        description: "Disconnect of either client does not crash service; remaining client continues"
+        tests:
+          - feature:specs/features/req_234_multiplayer_axis_sharing.feature
+  - id: REQ-235
+    name: Aerofly FS 2/4 adapter provides telemetry and control support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-235.1
+        description: "Aerofly FS UDP interface polled for aircraft state"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+      - id: AC-235.2
+        description: "Altitude, airspeed, attitude decoded from Aerofly JSON packets"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+      - id: AC-235.3
+        description: "Aircraft type extracted from Aerofly telemetry payload"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+      - id: AC-235.4
+        description: "Control inputs sent to Aerofly via UDP commands"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+      - id: AC-235.5
+        description: "Aerofly FS 2 and FS 4 both supported by same adapter"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+      - id: AC-235.6
+        description: "Network address and port configurable in service config"
+        tests:
+          - feature:specs/features/req_235_aerofly_integration.feature
+  - id: REQ-236
+    name: AeroWinx PSX B747 simulator integrates via TCP text protocol
+    kind: product
+    status: draft
+    ac:
+      - id: AC-236.1
+        description: "PSX TCP text protocol connects on port 10747 by default"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature
+      - id: AC-236.2
+        description: "PSX key-value messages (Qi=12345) parsed and dispatched"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature
+      - id: AC-236.3
+        description: "PSX altitude, heading, airspeed variables tracked in bus snapshot"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature
+      - id: AC-236.4
+        description: "Unknown PSX variables logged as warnings and ignored safely"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature
+      - id: AC-236.5
+        description: "TCP disconnect from PSX triggers graceful adapter transition to disconnected"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature
+      - id: AC-236.6
+        description: "PSX integration requires only standard TCP/IP; no special SDK"
+        tests:
+          - feature:specs/features/req_236_psx_integration.feature

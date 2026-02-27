@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1340 |
-| ACs with tests | 1340 |
+| Total AC | 1412 |
+| ACs with tests | 1412 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 743 |
+| Draft | 815 |
 | Incomplete | 0 |
 | Microcrates | 78 |
 | Microcrates with tests | 65 (83.3%) |
 | Microcrates with Gherkin | 65 (83.3%) |
 | Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 64.9% |
-| Test + Gherkin coverage | 64.9% |
+| Gherkin coverage | 61.5% |
+| Test + Gherkin coverage | 61.5% |
 
 ## BDD Microcrate Matrix
 
@@ -1458,3 +1458,75 @@
 | REQ-224 | AC-224.4 | IPC channel authenticated (local socket with filesystem permissions) | - | 1 | ⚪ Draft |
 | REQ-224 | AC-224.5 | Plugin WASM sandbox cannot access filesystem or network | - | 1 | ⚪ Draft |
 | REQ-224 | AC-224.6 | Security model documented in SECURITY.md | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.1 | Telemetry recorder captures all bus events with microsecond timestamps | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.2 | Recorded session stored as compact binary file (< 1MB per 60 seconds) | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.3 | Replay feeds recorded events into bus at original timing | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.4 | Replay can run at 2x/4x speed for fast debugging | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.5 | CLI command `flightctl record` starts recording; `flightctl replay` plays back | - | 1 | ⚪ Draft |
+| REQ-225 | AC-225.6 | Replay session generates same test outcomes as live session | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.1 | IL-2 UDP telemetry parsed from port 34385 | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.2 | Aircraft speed, altitude, and attitude decoded from IL-2 packets | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.3 | Engine health (RPM, oil temp) included in telemetry bus snapshot | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.4 | Gear and flaps state decoded from IL-2 state flags | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.5 | IL-2 game pause state reflected in adapter status | - | 1 | ⚪ Draft |
+| REQ-226 | AC-226.6 | Multiple IL-2 aircraft modules supported without per-module config | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.1 | BMS-Data shared memory segment opened at service start | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.2 | F-16 avionics data (altitude, airspeed, AoA, G-force) extracted | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.3 | Cockpit switch states (gear, flaps, master arm) decoded from bitfields | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.4 | BMS version number validated at connection | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.5 | Missing shared memory segment handled gracefully (adapter in disconnected state) | - | 1 | ⚪ Draft |
+| REQ-227 | AC-227.6 | BMS paused state reflected in telemetry staleness | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.1 | Profile must specify `schema` field at top level | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.2 | Unknown top-level fields produce warning, not error | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.3 | Axis deadzone outside [0.0, 1.0] rejected with descriptive error | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.4 | Axis curve control points must be monotonically increasing | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.5 | Profile version migration applied automatically when `schema` version detected | - | 1 | ⚪ Draft |
+| REQ-228 | AC-228.6 | Validation errors include field path for debugging (e.g., "axes.pitch.deadzone") | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.1 | Watchdog process monitors flightd via IPC health ping every 5s | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.2 | If 3 consecutive health pings fail, watchdog restarts flightd | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.3 | Watchdog restart logged with timestamp and exit code | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.4 | Watchdog respects boot loop guard: after 3 restarts in 60s, stops restarting | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.5 | Watchdog itself monitored by OS service manager (systemd/SCM) | - | 1 | ⚪ Draft |
+| REQ-229 | AC-229.6 | Watchdog can be disabled for development via environment variable | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.1 | `flightctl status` shows service health, device count, active profile | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.2 | `flightctl devices` lists all connected devices with VID/PID and status | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.3 | `flightctl axes` shows live normalized axis values with update rate | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.4 | `flightctl profile show` dumps current active profile as TOML | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.5 | `flightctl --json status` outputs structured JSON for tooling integration | - | 1 | ⚪ Draft |
+| REQ-230 | AC-230.6 | All commands fail gracefully if service not running (exit code 1, clear message) | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.1 | Safe mode activated on profile load failure or axis calibration error | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.2 | Safe mode applies known-good axis defaults (deadzone 3%, expo 20%) | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.3 | Safe mode generates a diagnostic bundle in temp directory | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.4 | Diagnostic bundle includes failure reason, last known profile, and device list | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.5 | Service emits "safe_mode_active" event on bus when degraded | - | 1 | ⚪ Draft |
+| REQ-231 | AC-231.6 | CLI shows safe mode status prominently in `flightctl status` | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.1 | Rule condition syntax: `event.type == "button_press" && event.id == 42` | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.2 | Rule action syntax: `set_axis("pitch_trim", value + 0.01)` | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.3 | Rules compiled to bytecode at profile load, not at runtime | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.4 | Compilation error includes line number and column in error message | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.5 | Runtime bytecode executes within 10µs per rule on RT spine | - | 1 | ⚪ Draft |
+| REQ-232 | AC-232.6 | Rules DSL documented with 10+ working examples in docs/reference | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.1 | Recorder captures last 30 seconds of axis events in a ring buffer | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.2 | Ring buffer stored in memory (pre-allocated, no allocation on hot path) | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.3 | On service crash/panic, ring buffer flushed to disk atomically | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.4 | Black box dump readable via `flightctl blackbox dump` | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.5 | Dump format is structured binary with timestamp and axis values per tick | - | 1 | ⚪ Draft |
+| REQ-233 | AC-233.6 | Black box write never exceeds 50µs per tick | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.1 | Cooperative profile allows "left seat" and "right seat" device roles | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.2 | Priority rules define which seat controls each axis at any time | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.3 | Axis handoff between seats transitions smoothly (no snap) | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.4 | Both seats' inputs visible in telemetry dashboard simultaneously | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.5 | IPC protocol supports two concurrent clients without conflict | - | 1 | ⚪ Draft |
+| REQ-234 | AC-234.6 | Disconnect of either client does not crash service; remaining client continues | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.1 | Aerofly FS UDP interface polled for aircraft state | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.2 | Altitude, airspeed, attitude decoded from Aerofly JSON packets | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.3 | Aircraft type extracted from Aerofly telemetry payload | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.4 | Control inputs sent to Aerofly via UDP commands | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.5 | Aerofly FS 2 and FS 4 both supported by same adapter | - | 1 | ⚪ Draft |
+| REQ-235 | AC-235.6 | Network address and port configurable in service config | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.1 | PSX TCP text protocol connects on port 10747 by default | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.2 | PSX key-value messages (Qi=12345) parsed and dispatched | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.3 | PSX altitude, heading, airspeed variables tracked in bus snapshot | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.4 | Unknown PSX variables logged as warnings and ignored safely | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.5 | TCP disconnect from PSX triggers graceful adapter transition to disconnected | - | 1 | ⚪ Draft |
+| REQ-236 | AC-236.6 | PSX integration requires only standard TCP/IP; no special SDK | - | 1 | ⚪ Draft |
