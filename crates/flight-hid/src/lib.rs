@@ -8,6 +8,7 @@
 //!
 //! # Modules
 //!
+//! - [`calibration`] - HID axis calibration (raw integer → normalised float)
 //! - [`hid_writer`] - Optimized HID writer using overlapped I/O (Windows only)
 //! - [`ofp1`] - OFP-1 protocol support
 
@@ -16,6 +17,7 @@ pub use flight_hid_support::device_support;
 #[cfg(test)]
 mod fd_safety_tests;
 pub use flight_hid_support::hid_descriptor;
+pub mod calibration;
 pub mod hid_writer;
 pub mod ofp1;
 
