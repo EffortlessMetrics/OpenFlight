@@ -18,13 +18,25 @@
 | Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1900 | 2 | 36 | ✗ | 2 |
 | Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1901 | 7 | 64 | ✗ | 2 |
 | Honeycomb Charlie Rudder Pedals | 0x294B | 0x1902 | 3 | 0 | ✗ | 3 |
+| Leo Bodnar BBI-32 USB Button Box Interface | 0x1DD2 | 0x000E | 0 | 32 | ✗ | 2 |
+| Leo Bodnar BBI-64 USB Button Box Interface | 0x1DD2 | 0x000F | 0 | 64 | ✗ | 2 |
+| Leo Bodnar BU0836 USB Joystick Interface | 0x1DD2 | 0x000A | 12 | 32 | ✗ | 2 |
+| Leo Bodnar BU0836X USB Joystick Interface with LCD | 0x1DD2 | 0x000B | 12 | 32 | ✗ | 2 |
+| Leo Bodnar USB Joystick | 0x1DD2 | 0x0009 | 2 | 8 | ✗ | 3 |
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | Logitech Force 3D Pro | 0x046D | 0xC286 | 6 | 12 | ✓ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
+| Logitech X52 Pro Flight Control System | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
+| Logitech X52 Flight Control System | 0x06A3 | 0x0255 | 7 | 28 | ✗ | 2 |
+| Logitech X56 Rhino H.O.T.A.S | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
 | MFG Crosswind V1 Rudder Pedals | 0x1551 | 0x0001 | 3 | 0 | ✗ | 3 |
 | MFG Crosswind V2 Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
 | MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 |
+| Moza AB12 Force Feedback Base | 0x346E | 0x0006 | 4 | 16 | ✓ | 2 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| RealSimGear G1000 MFD Bezel | 0x04D8 | 0xF235 | 0 | 60 | ✗ | 2 |
+| RealSimGear G1000 PFD Bezel | 0x04D8 | 0xF236 | 0 | 55 | ✗ | 2 |
+| RealSimGear G3X Touch Avionics Panel | 0x04D8 | 0xF237 | 0 | 40 | ✗ | 3 |
 | RealSimulator FSSB-R3 Lighting | 0x20FF | 0x0002 | 2 | 0 | ✗ | 3 |
 | RealSimulator FSSB R3 | 0x20FF | 0x0001 | 2 | 0 | ✗ | 3 |
 | Saitek Pro Flight Cessna Rudder Pedals | 0x06A3 | 0x0765 | 3 | 0 | ✗ | 2 |
@@ -59,6 +71,7 @@
 | Thrustmaster T.Flight HOTAS One | 0x044F | 0xB68D | 5 | 14 | ✗ | 2 |
 | T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
 | Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight Rudder Pedals | 0x044F | 0xB108 | 3 | 0 | ✗ | 2 |
 | Thrustmaster T.Flight Stick X | 0x044F | 0xB106 | 5 | 12 | ✗ | 2 |
 | T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |
 | Thrustmaster TMX Force Feedback Racing Wheel | 0x044F | 0xB67F | 3 | 14 | ✓ | 3 |
@@ -78,6 +91,7 @@
 | VIRPIL VPC MongoosT-50CM2 Throttle | 0x3344 | 0x8193 | 6 | 78 | ✗ | 2 |
 | VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
 | VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
+| VIRPIL VPC VFX Joystick Grip | 0x3344 | 0x4143 | 5 | 28 | ✗ | 3 |
 | VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
 | VKB Gladiator EVO OT L | 0x231D | 0x3201 | 6 | 24 | ✗ | 3 |
 | VKB Gladiator Mk.II | 0x231D | 0x0121 | 6 | 16 | ✗ | 3 |
@@ -85,6 +99,7 @@
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |
+| VKB Gunfighter Mk.III | 0x231D | 0x0127 | 6 | 32 | ✗ | 3 |
 | VKB Gunfighter Modern Combat Pro | 0x231D | 0x0125 | 8 | 32 | ✗ | 3 |
 | VKB NXT SEM THQ (Throttle Hat Quadrant) | 0x231D | 0x2214 | 1 | 20 | ✗ | 3 |
 | VKB Space Gunfighter L | 0x231D | 0x0127 | 8 | 32 | ✗ | 3 |
@@ -100,6 +115,8 @@
 | VKB STECS Standard Left | 0x231D | 0x0138 | 5 | 96 | ✗ | 2 |
 | VKB STECS Standard Right | 0x231D | 0x013C | 5 | 96 | ✗ | 2 |
 | VKB STECS Standard | 0x231D | 0x0127 | 5 | 96 | ✗ | 2 |
+| VKB T-Rudder Mk.IV | 0x231D | 0x0126 | 3 | 0 | ✗ | 3 |
+| VPforce Mongoose FFB Joystick | 0x0483 | 0xA1C2 | 6 | 32 | ✓ | 2 |
 | VPforce Rhino FFB Joystick | 0x0483 | 0xA1C0 | 6 | 32 | ✓ | 2 |
 | WinWing F/A-18 Combat Ready Panel | 0x4098 | 0xBE05 | 0 | 32 | ✗ | 3 |
 | WinWing F/A-18 Takeoff Panel 2 | 0x4098 | 0xBF05 | 0 | 20 | ✗ | 3 |

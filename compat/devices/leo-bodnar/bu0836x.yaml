@@ -1,0 +1,59 @@
+# Leo Bodnar BU0836X USB Joystick Interface (with LCD)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x000B — USB ID database / devicehunt.com
+# 12-axis / 32-button USB HID interface with an integrated small LCD display.
+# Extended variant of the BU0836 with a 2×16 character LCD for cockpit builders
+# who want to show axis values or mode states on the panel itself.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BU0836X USB Joystick Interface with LCD"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x000B      # BU0836X — USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 12
+    names: [x, y, z, rx, ry, rz, slider1, slider2, dial1, dial2, dial3, dial4]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: INTEGRATED_LCD
+    description: >
+      Has a 2×16 character LCD display driven over a separate serial/I2C bus
+      on the board. The LCD is NOT accessible via USB HID output reports and
+      requires direct firmware interaction; OpenFlight does not currently
+      drive the BU0836X LCD.
+  - id: AXES_OPTIONAL_POPULATION
+    description: >
+      All 12 axis channels are reported regardless of whether potentiometers
+      are physically connected. Unconnected axes read at mid-scale or rail.
+      Profile should mask unused axes.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz USB poll rate with 12-bit ADC resolution.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x1DD2 / PID 0x000B confirmed via USB ID database (Leo Bodnar BU0836X).
+    Functionally identical to BU0836 (PID 0x000A) for input purposes.
+    LCD display is not accessible via HID; OpenFlight treats it as a BU0836 for mapping.
+    Last reviewed: 2026-02.

@@ -1,0 +1,58 @@
+# Leo Bodnar BU0836 USB Joystick Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x000A — USB ID database / devicehunt.com
+# 12-axis / 32-button USB HID interface board. Supports analogue potentiometers
+# (axes) and digital inputs (buttons). The standard board for DIY HOTAS and yoke builds.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BU0836 USB Joystick Interface"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x000A      # BU0836 — USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 12
+    names: [x, y, z, rx, ry, rz, slider1, slider2, dial1, dial2, dial3, dial4]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: AXES_OPTIONAL_POPULATION
+    description: >
+      All 12 axis channels are reported in every HID report regardless of whether
+      potentiometers are physically connected. Unconnected axes read at mid-scale
+      or rail depending on input impedance. Profile should mask unused axes.
+  - id: POT_LINEARITY
+    description: >
+      Axis linearity depends entirely on the quality of attached potentiometers.
+      12-bit ADC provides sufficient resolution; non-linearity is a hardware
+      characteristic of the pots themselves.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz USB poll rate. Combined with 12-bit ADC resolution,
+      this makes the BU0836 a high-quality joystick controller for DIY builds.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x1DD2 / PID 0x000A confirmed via USB ID database (Leo Bodnar BU0836).
+    Widely used as the controller board in DIY HOTAS, yoke, and throttle quadrant builds.
+    Axis count and names reflect all 12 physical input channels on the board.
+    Last reviewed: 2026-02.
