@@ -20748,3 +20748,1053 @@ requirements:
         description: "AC4: Requirement coverage spans all major subsystems"
         tests:
           - feature:specs/features/req_800_milestone_800_requirements.feature
+  - id: REQ-801
+    name: Axis Engine Pipeline Bypass
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-801.1
+        description: "AC1: Individual pipeline stages can be enabled or disabled per-axis via configuration"
+        tests:
+          - feature:specs/features/req_801_axis_engine_pipeline_bypass.feature
+      - id: AC-801.2
+        description: "AC2: Bypassed stages pass input through unmodified to the next stage"
+        tests:
+          - feature:specs/features/req_801_axis_engine_pipeline_bypass.feature
+      - id: AC-801.3
+        description: "AC3: Pipeline bypass changes take effect within one processing tick"
+        tests:
+          - feature:specs/features/req_801_axis_engine_pipeline_bypass.feature
+      - id: AC-801.4
+        description: "AC4: Bypass state is persisted across service restarts"
+        tests:
+          - feature:specs/features/req_801_axis_engine_pipeline_bypass.feature
+  - id: REQ-802
+    name: Device Hot-Swap Support
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-802.1
+        description: "AC1: Service detects device disconnection and marks it offline without crashing"
+        tests:
+          - feature:specs/features/req_802_device_hot_swap_support.feature
+      - id: AC-802.2
+        description: "AC2: Service detects device reconnection and re-initializes it automatically"
+        tests:
+          - feature:specs/features/req_802_device_hot_swap_support.feature
+      - id: AC-802.3
+        description: "AC3: Active axis mappings for reconnected devices resume without user intervention"
+        tests:
+          - feature:specs/features/req_802_device_hot_swap_support.feature
+      - id: AC-802.4
+        description: "AC4: Hot-swap events are logged with device identity and timestamp"
+        tests:
+          - feature:specs/features/req_802_device_hot_swap_support.feature
+  - id: REQ-803
+    name: CLI Profile Import Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-803.1
+        description: "AC1: CLI accepts a local file path to import a profile"
+        tests:
+          - feature:specs/features/req_803_cli_profile_import_command.feature
+      - id: AC-803.2
+        description: "AC2: CLI accepts a URL to download and import a profile"
+        tests:
+          - feature:specs/features/req_803_cli_profile_import_command.feature
+      - id: AC-803.3
+        description: "AC3: Imported profiles are validated against the current schema before saving"
+        tests:
+          - feature:specs/features/req_803_cli_profile_import_command.feature
+      - id: AC-803.4
+        description: "AC4: Import conflicts with existing profiles prompt for overwrite confirmation"
+        tests:
+          - feature:specs/features/req_803_cli_profile_import_command.feature
+  - id: REQ-804
+    name: MSFS Fuel Management
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-804.1
+        description: "AC1: SimConnect adapter reads fuel tank quantities for all aircraft tanks"
+        tests:
+          - feature:specs/features/req_804_msfs_fuel_management.feature
+      - id: AC-804.2
+        description: "AC2: Fuel flow rate per engine is exposed as a real-time variable"
+        tests:
+          - feature:specs/features/req_804_msfs_fuel_management.feature
+      - id: AC-804.3
+        description: "AC3: Fuel system state changes are published to the event bus"
+        tests:
+          - feature:specs/features/req_804_msfs_fuel_management.feature
+      - id: AC-804.4
+        description: "AC4: Fuel data refresh rate matches the configured SimConnect polling interval"
+        tests:
+          - feature:specs/features/req_804_msfs_fuel_management.feature
+  - id: REQ-805
+    name: FFB Ground Effect
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-805.1
+        description: "AC1: FFB generates increasing force cushion as aircraft descends below ground effect altitude"
+        tests:
+          - feature:specs/features/req_805_ffb_ground_effect.feature
+      - id: AC-805.2
+        description: "AC2: Ground effect intensity scales with wing configuration and airspeed"
+        tests:
+          - feature:specs/features/req_805_ffb_ground_effect.feature
+      - id: AC-805.3
+        description: "AC3: Effect transitions smoothly between ground effect and free air"
+        tests:
+          - feature:specs/features/req_805_ffb_ground_effect.feature
+      - id: AC-805.4
+        description: "AC4: Ground effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_805_ffb_ground_effect.feature
+  - id: REQ-806
+    name: Bus Metrics Dashboard API
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-806.1
+        description: "AC1: Bus exposes message throughput rate via structured API endpoint"
+        tests:
+          - feature:specs/features/req_806_bus_metrics_dashboard_api.feature
+      - id: AC-806.2
+        description: "AC2: Bus exposes subscriber count and health status per channel"
+        tests:
+          - feature:specs/features/req_806_bus_metrics_dashboard_api.feature
+      - id: AC-806.3
+        description: "AC3: Metrics API returns data in JSON format with timestamps"
+        tests:
+          - feature:specs/features/req_806_bus_metrics_dashboard_api.feature
+      - id: AC-806.4
+        description: "AC4: API response latency does not exceed 50ms under normal load"
+        tests:
+          - feature:specs/features/req_806_bus_metrics_dashboard_api.feature
+  - id: REQ-807
+    name: Profile Schema Migration
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-807.1
+        description: "AC1: Profile loader detects schema version from profile metadata"
+        tests:
+          - feature:specs/features/req_807_profile_schema_migration.feature
+      - id: AC-807.2
+        description: "AC2: Profiles with older schema versions are migrated to current version automatically"
+        tests:
+          - feature:specs/features/req_807_profile_schema_migration.feature
+      - id: AC-807.3
+        description: "AC3: Migration preserves all user-configured values without data loss"
+        tests:
+          - feature:specs/features/req_807_profile_schema_migration.feature
+      - id: AC-807.4
+        description: "AC4: Migration failures produce a detailed error report identifying incompatible fields"
+        tests:
+          - feature:specs/features/req_807_profile_schema_migration.feature
+  - id: REQ-808
+    name: DCS Radio Frequency
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-808.1
+        description: "AC1: DCS adapter reads active radio frequency from each radio unit"
+        tests:
+          - feature:specs/features/req_808_dcs_radio_frequency.feature
+      - id: AC-808.2
+        description: "AC2: Frequency changes are published to the event bus within one update cycle"
+        tests:
+          - feature:specs/features/req_808_dcs_radio_frequency.feature
+      - id: AC-808.3
+        description: "AC3: Adapter supports both VHF and UHF frequency bands"
+        tests:
+          - feature:specs/features/req_808_dcs_radio_frequency.feature
+      - id: AC-808.4
+        description: "AC4: Radio data includes modulation type (AM/FM) alongside frequency"
+        tests:
+          - feature:specs/features/req_808_dcs_radio_frequency.feature
+  - id: REQ-809
+    name: Axis Conditional Scaling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-809.1
+        description: "AC1: Axis processing supports scale factors conditioned on simulator state variables"
+        tests:
+          - feature:specs/features/req_809_axis_conditional_scaling.feature
+      - id: AC-809.2
+        description: "AC2: Multiple conditions can be combined with logical AND/OR operators"
+        tests:
+          - feature:specs/features/req_809_axis_conditional_scaling.feature
+      - id: AC-809.3
+        description: "AC3: Scale factor transitions are smoothed to avoid abrupt output changes"
+        tests:
+          - feature:specs/features/req_809_axis_conditional_scaling.feature
+      - id: AC-809.4
+        description: "AC4: Conditional scaling configuration is validated at profile load time"
+        tests:
+          - feature:specs/features/req_809_axis_conditional_scaling.feature
+  - id: REQ-810
+    name: Service Plugin System
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-810.1
+        description: "AC1: Service discovers and loads plugin modules from a configured directory"
+        tests:
+          - feature:specs/features/req_810_service_plugin_system.feature
+      - id: AC-810.2
+        description: "AC2: Plugins declare required capabilities via a manifest file"
+        tests:
+          - feature:specs/features/req_810_service_plugin_system.feature
+      - id: AC-810.3
+        description: "AC3: Plugin lifecycle events (load/unload/error) are logged"
+        tests:
+          - feature:specs/features/req_810_service_plugin_system.feature
+      - id: AC-810.4
+        description: "AC4: Faulty plugins are isolated and cannot crash the main service"
+        tests:
+          - feature:specs/features/req_810_service_plugin_system.feature
+  - id: REQ-811
+    name: CLI Device Test Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-811.1
+        description: "AC1: CLI runs a diagnostic test sequence on a specified device"
+        tests:
+          - feature:specs/features/req_811_cli_device_test_mode.feature
+      - id: AC-811.2
+        description: "AC2: Test sequence exercises all axes, buttons, and LEDs on the device"
+        tests:
+          - feature:specs/features/req_811_cli_device_test_mode.feature
+      - id: AC-811.3
+        description: "AC3: Test results are displayed in a structured pass/fail report"
+        tests:
+          - feature:specs/features/req_811_cli_device_test_mode.feature
+      - id: AC-811.4
+        description: "AC4: Device test mode times out after a configurable duration"
+        tests:
+          - feature:specs/features/req_811_cli_device_test_mode.feature
+  - id: REQ-812
+    name: X-Plane FMS Data
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-812.1
+        description: "AC1: X-Plane adapter reads active FMS route waypoints and sequences"
+        tests:
+          - feature:specs/features/req_812_xplane_fms_data.feature
+      - id: AC-812.2
+        description: "AC2: GPS course deviation and distance-to-next are exposed as variables"
+        tests:
+          - feature:specs/features/req_812_xplane_fms_data.feature
+      - id: AC-812.3
+        description: "AC3: FMS data updates are published to the event bus on change"
+        tests:
+          - feature:specs/features/req_812_xplane_fms_data.feature
+      - id: AC-812.4
+        description: "AC4: Adapter handles FMS route changes mid-flight without errors"
+        tests:
+          - feature:specs/features/req_812_xplane_fms_data.feature
+  - id: REQ-813
+    name: FFB Overspeed Warning
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-813.1
+        description: "AC1: FFB generates a distinct vibration pattern when airspeed exceeds Vne"
+        tests:
+          - feature:specs/features/req_813_ffb_overspeed_warning.feature
+      - id: AC-813.2
+        description: "AC2: Vibration intensity increases as airspeed further exceeds the limit"
+        tests:
+          - feature:specs/features/req_813_ffb_overspeed_warning.feature
+      - id: AC-813.3
+        description: "AC3: Overspeed vibration ceases immediately when airspeed returns below Vne"
+        tests:
+          - feature:specs/features/req_813_ffb_overspeed_warning.feature
+      - id: AC-813.4
+        description: "AC4: Overspeed threshold is configurable per aircraft profile"
+        tests:
+          - feature:specs/features/req_813_ffb_overspeed_warning.feature
+  - id: REQ-814
+    name: Bus Event History
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-814.1
+        description: "AC1: Bus maintains a rolling buffer of recent events for debugging"
+        tests:
+          - feature:specs/features/req_814_bus_event_history.feature
+      - id: AC-814.2
+        description: "AC2: Event history buffer size is configurable via service settings"
+        tests:
+          - feature:specs/features/req_814_bus_event_history.feature
+      - id: AC-814.3
+        description: "AC3: Historical events are queryable by event type and time range"
+        tests:
+          - feature:specs/features/req_814_bus_event_history.feature
+      - id: AC-814.4
+        description: "AC4: Buffer eviction follows FIFO order when capacity is reached"
+        tests:
+          - feature:specs/features/req_814_bus_event_history.feature
+  - id: REQ-815
+    name: Profile Conditional Activation
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-815.1
+        description: "AC1: Profiles activate automatically based on simulator state conditions"
+        tests:
+          - feature:specs/features/req_815_profile_conditional_activation.feature
+      - id: AC-815.2
+        description: "AC2: Conditions support matching on aircraft type, phase of flight, and sim variables"
+        tests:
+          - feature:specs/features/req_815_profile_conditional_activation.feature
+      - id: AC-815.3
+        description: "AC3: Multiple profiles can have activation conditions with priority ordering"
+        tests:
+          - feature:specs/features/req_815_profile_conditional_activation.feature
+      - id: AC-815.4
+        description: "AC4: Condition evaluation does not impact RT spine processing latency"
+        tests:
+          - feature:specs/features/req_815_profile_conditional_activation.feature
+  - id: REQ-816
+    name: Device LED Control
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-816.1
+        description: "AC1: Service sets device LED state based on mapped simulator conditions"
+        tests:
+          - feature:specs/features/req_816_device_led_control.feature
+      - id: AC-816.2
+        description: "AC2: LED mappings are defined in the device profile configuration"
+        tests:
+          - feature:specs/features/req_816_device_led_control.feature
+      - id: AC-816.3
+        description: "AC3: LED state changes are applied within one processing cycle"
+        tests:
+          - feature:specs/features/req_816_device_led_control.feature
+      - id: AC-816.4
+        description: "AC4: Unsupported LED commands are silently ignored with a debug log"
+        tests:
+          - feature:specs/features/req_816_device_led_control.feature
+  - id: REQ-817
+    name: CLI Replay Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-817.1
+        description: "AC1: CLI loads a recorded axis trace file and replays it through the pipeline"
+        tests:
+          - feature:specs/features/req_817_cli_replay_command.feature
+      - id: AC-817.2
+        description: "AC2: Replay speed is adjustable with a multiplier parameter"
+        tests:
+          - feature:specs/features/req_817_cli_replay_command.feature
+      - id: AC-817.3
+        description: "AC3: Replay output is written to a file or streamed to stdout"
+        tests:
+          - feature:specs/features/req_817_cli_replay_command.feature
+      - id: AC-817.4
+        description: "AC4: Replay preserves original timing relationships between samples"
+        tests:
+          - feature:specs/features/req_817_cli_replay_command.feature
+  - id: REQ-818
+    name: MSFS NavAid Data
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-818.1
+        description: "AC1: SimConnect adapter exposes VOR station identifier and bearing"
+        tests:
+          - feature:specs/features/req_818_msfs_navaid_data.feature
+      - id: AC-818.2
+        description: "AC2: ILS localizer and glideslope deviation are readable as variables"
+        tests:
+          - feature:specs/features/req_818_msfs_navaid_data.feature
+      - id: AC-818.3
+        description: "AC3: NDB relative bearing is available when ADF receiver is tuned"
+        tests:
+          - feature:specs/features/req_818_msfs_navaid_data.feature
+      - id: AC-818.4
+        description: "AC4: NavAid data refresh rate matches the SimConnect polling interval"
+        tests:
+          - feature:specs/features/req_818_msfs_navaid_data.feature
+  - id: REQ-819
+    name: Axis Mode Switching
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-819.1
+        description: "AC1: Axis engine supports runtime switching between normal, precision, and fast modes"
+        tests:
+          - feature:specs/features/req_819_axis_mode_switching.feature
+      - id: AC-819.2
+        description: "AC2: Mode switch transitions apply smoothing to avoid output discontinuities"
+        tests:
+          - feature:specs/features/req_819_axis_mode_switching.feature
+      - id: AC-819.3
+        description: "AC3: Current mode is exposed as a readable state variable"
+        tests:
+          - feature:specs/features/req_819_axis_mode_switching.feature
+      - id: AC-819.4
+        description: "AC4: Mode configuration parameters are defined per-axis in the profile"
+        tests:
+          - feature:specs/features/req_819_axis_mode_switching.feature
+  - id: REQ-820
+    name: Service Memory Budget
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-820.1
+        description: "AC1: Service enforces a configurable memory budget for total allocation"
+        tests:
+          - feature:specs/features/req_820_service_memory_budget.feature
+      - id: AC-820.2
+        description: "AC2: When budget is approached, non-critical subsystems shed load gracefully"
+        tests:
+          - feature:specs/features/req_820_service_memory_budget.feature
+      - id: AC-820.3
+        description: "AC3: Memory usage is reported periodically via the metrics API"
+        tests:
+          - feature:specs/features/req_820_service_memory_budget.feature
+      - id: AC-820.4
+        description: "AC4: Budget violations trigger a warning event on the bus"
+        tests:
+          - feature:specs/features/req_820_service_memory_budget.feature
+  - id: REQ-821
+    name: FFB Turbulence Scaling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-821.1
+        description: "AC1: FFB turbulence intensity scales proportionally with indicated airspeed"
+        tests:
+          - feature:specs/features/req_821_ffb_turbulence_scaling.feature
+      - id: AC-821.2
+        description: "AC2: Scaling curve is configurable via profile parameters"
+        tests:
+          - feature:specs/features/req_821_ffb_turbulence_scaling.feature
+      - id: AC-821.3
+        description: "AC3: Turbulence effect blends smoothly with other active FFB effects"
+        tests:
+          - feature:specs/features/req_821_ffb_turbulence_scaling.feature
+      - id: AC-821.4
+        description: "AC4: Scaling respects FFB safety envelope maximum force limits"
+        tests:
+          - feature:specs/features/req_821_ffb_turbulence_scaling.feature
+  - id: REQ-822
+    name: Bus Message Tagging
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-822.1
+        description: "AC1: Bus messages support attaching user-defined string tags"
+        tests:
+          - feature:specs/features/req_822_bus_message_tagging.feature
+      - id: AC-822.2
+        description: "AC2: Subscribers can filter incoming messages by tag patterns"
+        tests:
+          - feature:specs/features/req_822_bus_message_tagging.feature
+      - id: AC-822.3
+        description: "AC3: Tags are indexed for efficient filtering without linear scan"
+        tests:
+          - feature:specs/features/req_822_bus_message_tagging.feature
+      - id: AC-822.4
+        description: "AC4: Maximum tag count per message is enforced to prevent abuse"
+        tests:
+          - feature:specs/features/req_822_bus_message_tagging.feature
+  - id: REQ-823
+    name: Profile Template System
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-823.1
+        description: "AC1: Profile system supports defining base templates that other profiles inherit from"
+        tests:
+          - feature:specs/features/req_823_profile_template_system.feature
+      - id: AC-823.2
+        description: "AC2: Child profiles override only the fields they explicitly specify"
+        tests:
+          - feature:specs/features/req_823_profile_template_system.feature
+      - id: AC-823.3
+        description: "AC3: Template inheritance depth is limited to prevent circular references"
+        tests:
+          - feature:specs/features/req_823_profile_template_system.feature
+      - id: AC-823.4
+        description: "AC4: Template resolution is performed at profile load time, not runtime"
+        tests:
+          - feature:specs/features/req_823_profile_template_system.feature
+  - id: REQ-824
+    name: DCS Mission State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-824.1
+        description: "AC1: DCS adapter exposes current mission phase (briefing, flying, debriefing)"
+        tests:
+          - feature:specs/features/req_824_dcs_mission_state.feature
+      - id: AC-824.2
+        description: "AC2: Mission state transitions are published to the event bus"
+        tests:
+          - feature:specs/features/req_824_dcs_mission_state.feature
+      - id: AC-824.3
+        description: "AC3: Adapter detects mission restart and resets state accordingly"
+        tests:
+          - feature:specs/features/req_824_dcs_mission_state.feature
+      - id: AC-824.4
+        description: "AC4: Mission time elapsed is available as a readable variable"
+        tests:
+          - feature:specs/features/req_824_dcs_mission_state.feature
+  - id: REQ-825
+    name: Device Axis Resolution Detection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-825.1
+        description: "AC1: Service detects the actual bit resolution of each device axis"
+        tests:
+          - feature:specs/features/req_825_device_axis_resolution_detection.feature
+      - id: AC-825.2
+        description: "AC2: Detected resolution is used to optimize input scaling calculations"
+        tests:
+          - feature:specs/features/req_825_device_axis_resolution_detection.feature
+      - id: AC-825.3
+        description: "AC3: Resolution detection completes during device initialization"
+        tests:
+          - feature:specs/features/req_825_device_axis_resolution_detection.feature
+      - id: AC-825.4
+        description: "AC4: Detected resolution is reported in device info output"
+        tests:
+          - feature:specs/features/req_825_device_axis_resolution_detection.feature
+  - id: REQ-826
+    name: CLI Config Generate
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-826.1
+        description: "AC1: CLI generates default configuration files for a new installation"
+        tests:
+          - feature:specs/features/req_826_cli_config_generate.feature
+      - id: AC-826.2
+        description: "AC2: Generated config includes documented comments for each setting"
+        tests:
+          - feature:specs/features/req_826_cli_config_generate.feature
+      - id: AC-826.3
+        description: "AC3: Existing config files are not overwritten without explicit confirmation"
+        tests:
+          - feature:specs/features/req_826_cli_config_generate.feature
+      - id: AC-826.4
+        description: "AC4: Config generation supports targeting a specific output directory"
+        tests:
+          - feature:specs/features/req_826_cli_config_generate.feature
+  - id: REQ-827
+    name: X-Plane Weather Injection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-827.1
+        description: "AC1: X-Plane adapter supports injecting custom weather data via dataref writes"
+        tests:
+          - feature:specs/features/req_827_xplane_weather_injection.feature
+      - id: AC-827.2
+        description: "AC2: Injected weather includes wind direction, speed, and turbulence level"
+        tests:
+          - feature:specs/features/req_827_xplane_weather_injection.feature
+      - id: AC-827.3
+        description: "AC3: Weather injection can be enabled or disabled at runtime"
+        tests:
+          - feature:specs/features/req_827_xplane_weather_injection.feature
+      - id: AC-827.4
+        description: "AC4: Injection does not interfere with X-Plane native weather when disabled"
+        tests:
+          - feature:specs/features/req_827_xplane_weather_injection.feature
+  - id: REQ-828
+    name: FFB Engine Vibration
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-828.1
+        description: "AC1: FFB simulates engine vibration with amplitude proportional to RPM"
+        tests:
+          - feature:specs/features/req_828_ffb_engine_vibration.feature
+      - id: AC-828.2
+        description: "AC2: Vibration frequency matches a configurable harmonic of engine RPM"
+        tests:
+          - feature:specs/features/req_828_ffb_engine_vibration.feature
+      - id: AC-828.3
+        description: "AC3: Multi-engine aircraft sum vibrations from all running engines"
+        tests:
+          - feature:specs/features/req_828_ffb_engine_vibration.feature
+      - id: AC-828.4
+        description: "AC4: Engine shutdown smoothly ramps vibration to zero"
+        tests:
+          - feature:specs/features/req_828_ffb_engine_vibration.feature
+  - id: REQ-829
+    name: Bus Subscriber Heartbeat
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-829.1
+        description: "AC1: Bus subscribers send periodic heartbeat signals to indicate liveness"
+        tests:
+          - feature:specs/features/req_829_bus_subscriber_heartbeat.feature
+      - id: AC-829.2
+        description: "AC2: Dead subscribers are detected when heartbeat interval is exceeded"
+        tests:
+          - feature:specs/features/req_829_bus_subscriber_heartbeat.feature
+      - id: AC-829.3
+        description: "AC3: Dead subscriber detection triggers a warning event on the bus"
+        tests:
+          - feature:specs/features/req_829_bus_subscriber_heartbeat.feature
+      - id: AC-829.4
+        description: "AC4: Heartbeat interval is configurable per subscriber"
+        tests:
+          - feature:specs/features/req_829_bus_subscriber_heartbeat.feature
+  - id: REQ-830
+    name: Profile Export Format
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-830.1
+        description: "AC1: Profiles export to a portable JSON interchange format"
+        tests:
+          - feature:specs/features/req_830_profile_export_format.feature
+      - id: AC-830.2
+        description: "AC2: Exported format includes schema version and metadata"
+        tests:
+          - feature:specs/features/req_830_profile_export_format.feature
+      - id: AC-830.3
+        description: "AC3: Export omits internal runtime state and computed fields"
+        tests:
+          - feature:specs/features/req_830_profile_export_format.feature
+      - id: AC-830.4
+        description: "AC4: Exported profiles can be re-imported on any compatible OpenFlight version"
+        tests:
+          - feature:specs/features/req_830_profile_export_format.feature
+  - id: REQ-831
+    name: MSFS Engine Parameters
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-831.1
+        description: "AC1: SimConnect adapter exposes RPM, manifold pressure, and EGT per engine"
+        tests:
+          - feature:specs/features/req_831_msfs_engine_parameters.feature
+      - id: AC-831.2
+        description: "AC2: Engine parameter changes are published to the event bus"
+        tests:
+          - feature:specs/features/req_831_msfs_engine_parameters.feature
+      - id: AC-831.3
+        description: "AC3: Adapter supports turboprop and piston engine parameter sets"
+        tests:
+          - feature:specs/features/req_831_msfs_engine_parameters.feature
+      - id: AC-831.4
+        description: "AC4: Parameter refresh rate matches the configured polling interval"
+        tests:
+          - feature:specs/features/req_831_msfs_engine_parameters.feature
+  - id: REQ-832
+    name: Axis Hysteresis Width Config
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-832.1
+        description: "AC1: Axis hysteresis width is configurable per-axis in the profile"
+        tests:
+          - feature:specs/features/req_832_axis_hysteresis_width_config.feature
+      - id: AC-832.2
+        description: "AC2: Hysteresis prevents jitter without adding noticeable input lag"
+        tests:
+          - feature:specs/features/req_832_axis_hysteresis_width_config.feature
+      - id: AC-832.3
+        description: "AC3: Width value is validated against axis resolution bounds at load time"
+        tests:
+          - feature:specs/features/req_832_axis_hysteresis_width_config.feature
+      - id: AC-832.4
+        description: "AC4: Zero hysteresis width disables the filter for that axis"
+        tests:
+          - feature:specs/features/req_832_axis_hysteresis_width_config.feature
+  - id: REQ-833
+    name: Service Watchdog Integration
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-833.1
+        description: "AC1: Service integrates with OS-level watchdog mechanisms (MMCSS/systemd)"
+        tests:
+          - feature:specs/features/req_833_service_watchdog_integration.feature
+      - id: AC-833.2
+        description: "AC2: Watchdog is notified on each successful processing cycle"
+        tests:
+          - feature:specs/features/req_833_service_watchdog_integration.feature
+      - id: AC-833.3
+        description: "AC3: Missed watchdog notifications trigger automatic service restart"
+        tests:
+          - feature:specs/features/req_833_service_watchdog_integration.feature
+      - id: AC-833.4
+        description: "AC4: Watchdog timeout is configurable in service settings"
+        tests:
+          - feature:specs/features/req_833_service_watchdog_integration.feature
+  - id: REQ-834
+    name: CLI Axis Calibrate Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-834.1
+        description: "AC1: CLI guides users through an interactive axis calibration wizard"
+        tests:
+          - feature:specs/features/req_834_cli_axis_calibrate_command.feature
+      - id: AC-834.2
+        description: "AC2: Calibration captures minimum, center, and maximum for each axis"
+        tests:
+          - feature:specs/features/req_834_cli_axis_calibrate_command.feature
+      - id: AC-834.3
+        description: "AC3: Calibration results are saved to the device profile automatically"
+        tests:
+          - feature:specs/features/req_834_cli_axis_calibrate_command.feature
+      - id: AC-834.4
+        description: "AC4: Wizard validates that captured range meets minimum resolution threshold"
+        tests:
+          - feature:specs/features/req_834_cli_axis_calibrate_command.feature
+  - id: REQ-835
+    name: DCS Cockpit Controls
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-835.1
+        description: "AC1: DCS adapter exposes the state of clickable cockpit controls"
+        tests:
+          - feature:specs/features/req_835_dcs_cockpit_controls.feature
+      - id: AC-835.2
+        description: "AC2: Control state changes are published to the event bus"
+        tests:
+          - feature:specs/features/req_835_dcs_cockpit_controls.feature
+      - id: AC-835.3
+        description: "AC3: Adapter maps DCS argument numbers to human-readable control names"
+        tests:
+          - feature:specs/features/req_835_dcs_cockpit_controls.feature
+      - id: AC-835.4
+        description: "AC4: Unsupported controls are skipped with a debug-level log entry"
+        tests:
+          - feature:specs/features/req_835_dcs_cockpit_controls.feature
+  - id: REQ-836
+    name: FFB Buffet Frequency Control
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-836.1
+        description: "AC1: FFB buffet effect frequency is configurable in the aircraft profile"
+        tests:
+          - feature:specs/features/req_836_ffb_buffet_frequency_control.feature
+      - id: AC-836.2
+        description: "AC2: Frequency range is validated against device capability limits"
+        tests:
+          - feature:specs/features/req_836_ffb_buffet_frequency_control.feature
+      - id: AC-836.3
+        description: "AC3: Frequency transitions smoothly when changed during active effect"
+        tests:
+          - feature:specs/features/req_836_ffb_buffet_frequency_control.feature
+      - id: AC-836.4
+        description: "AC4: Default frequency is used when profile does not specify a value"
+        tests:
+          - feature:specs/features/req_836_ffb_buffet_frequency_control.feature
+  - id: REQ-837
+    name: Bus Priority Channels
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-837.1
+        description: "AC1: Bus supports priority channels that are processed before normal channels"
+        tests:
+          - feature:specs/features/req_837_bus_priority_channels.feature
+      - id: AC-837.2
+        description: "AC2: Priority messages preempt queued normal messages under backpressure"
+        tests:
+          - feature:specs/features/req_837_bus_priority_channels.feature
+      - id: AC-837.3
+        description: "AC3: Channel priority level is assigned at channel creation time"
+        tests:
+          - feature:specs/features/req_837_bus_priority_channels.feature
+      - id: AC-837.4
+        description: "AC4: Priority channel count is bounded to prevent starvation of normal traffic"
+        tests:
+          - feature:specs/features/req_837_bus_priority_channels.feature
+  - id: REQ-838
+    name: Profile Phase-of-Flight Rules
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-838.1
+        description: "AC1: Profiles auto-switch based on detected phase of flight (taxi, takeoff, cruise, approach, landing)"
+        tests:
+          - feature:specs/features/req_838_profile_phase_of_flight_rules.feature
+      - id: AC-838.2
+        description: "AC2: Phase detection uses altitude, airspeed, and gear/flap state"
+        tests:
+          - feature:specs/features/req_838_profile_phase_of_flight_rules.feature
+      - id: AC-838.3
+        description: "AC3: Phase transitions include a configurable hysteresis to avoid rapid switching"
+        tests:
+          - feature:specs/features/req_838_profile_phase_of_flight_rules.feature
+      - id: AC-838.4
+        description: "AC4: Manual phase override disables automatic detection until re-enabled"
+        tests:
+          - feature:specs/features/req_838_profile_phase_of_flight_rules.feature
+  - id: REQ-839
+    name: Device Firmware Update Check
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-839.1
+        description: "AC1: Service checks for available firmware updates for connected devices"
+        tests:
+          - feature:specs/features/req_839_device_firmware_update_check.feature
+      - id: AC-839.2
+        description: "AC2: Update availability is reported via the CLI device info command"
+        tests:
+          - feature:specs/features/req_839_device_firmware_update_check.feature
+      - id: AC-839.3
+        description: "AC3: Firmware check respects a configurable check interval"
+        tests:
+          - feature:specs/features/req_839_device_firmware_update_check.feature
+      - id: AC-839.4
+        description: "AC4: Firmware check failures are logged without affecting device operation"
+        tests:
+          - feature:specs/features/req_839_device_firmware_update_check.feature
+  - id: REQ-840
+    name: CLI Network Diagnostics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-840.1
+        description: "AC1: CLI diagnoses network connectivity to configured sim adapters"
+        tests:
+          - feature:specs/features/req_840_cli_network_diagnostics.feature
+      - id: AC-840.2
+        description: "AC2: Diagnostics report latency and packet loss for each adapter endpoint"
+        tests:
+          - feature:specs/features/req_840_cli_network_diagnostics.feature
+      - id: AC-840.3
+        description: "AC3: Results are displayed in a structured summary table"
+        tests:
+          - feature:specs/features/req_840_cli_network_diagnostics.feature
+      - id: AC-840.4
+        description: "AC4: Diagnostic command completes within a configurable timeout"
+        tests:
+          - feature:specs/features/req_840_cli_network_diagnostics.feature
+  - id: REQ-841
+    name: X-Plane Multiplayer State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-841.1
+        description: "AC1: X-Plane adapter detects whether a multiplayer session is active"
+        tests:
+          - feature:specs/features/req_841_xplane_multiplayer_state.feature
+      - id: AC-841.2
+        description: "AC2: Number of connected multiplayer aircraft is exposed as a variable"
+        tests:
+          - feature:specs/features/req_841_xplane_multiplayer_state.feature
+      - id: AC-841.3
+        description: "AC3: Multiplayer state changes are published to the event bus"
+        tests:
+          - feature:specs/features/req_841_xplane_multiplayer_state.feature
+      - id: AC-841.4
+        description: "AC4: Adapter handles multiplayer disconnect gracefully without errors"
+        tests:
+          - feature:specs/features/req_841_xplane_multiplayer_state.feature
+  - id: REQ-842
+    name: FFB Wheel Shimmy
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-842.1
+        description: "AC1: FFB simulates nose wheel shimmy vibration during ground roll"
+        tests:
+          - feature:specs/features/req_842_ffb_wheel_shimmy.feature
+      - id: AC-842.2
+        description: "AC2: Shimmy intensity increases with ground speed above a configurable threshold"
+        tests:
+          - feature:specs/features/req_842_ffb_wheel_shimmy.feature
+      - id: AC-842.3
+        description: "AC3: Shimmy effect is suppressed when nosewheel steering is centered"
+        tests:
+          - feature:specs/features/req_842_ffb_wheel_shimmy.feature
+      - id: AC-842.4
+        description: "AC4: Effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_842_ffb_wheel_shimmy.feature
+  - id: REQ-843
+    name: Bus Replay from File
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-843.1
+        description: "AC1: Bus supports loading and replaying a recorded message sequence from file"
+        tests:
+          - feature:specs/features/req_843_bus_replay_from_file.feature
+      - id: AC-843.2
+        description: "AC2: Replay preserves original message timing and ordering"
+        tests:
+          - feature:specs/features/req_843_bus_replay_from_file.feature
+      - id: AC-843.3
+        description: "AC3: Replay speed is adjustable via a multiplier parameter"
+        tests:
+          - feature:specs/features/req_843_bus_replay_from_file.feature
+      - id: AC-843.4
+        description: "AC4: Replay completion is signaled via a bus event"
+        tests:
+          - feature:specs/features/req_843_bus_replay_from_file.feature
+  - id: REQ-844
+    name: Profile Validation Report
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-844.1
+        description: "AC1: Profile validator generates a detailed compliance report"
+        tests:
+          - feature:specs/features/req_844_profile_validation_report.feature
+      - id: AC-844.2
+        description: "AC2: Report lists all validation errors with field paths and descriptions"
+        tests:
+          - feature:specs/features/req_844_profile_validation_report.feature
+      - id: AC-844.3
+        description: "AC3: Report includes warnings for deprecated or suboptimal settings"
+        tests:
+          - feature:specs/features/req_844_profile_validation_report.feature
+      - id: AC-844.4
+        description: "AC4: Report output supports JSON and human-readable formats"
+        tests:
+          - feature:specs/features/req_844_profile_validation_report.feature
+  - id: REQ-845
+    name: MSFS Terrain Data
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-845.1
+        description: "AC1: SimConnect adapter exposes terrain elevation at aircraft position"
+        tests:
+          - feature:specs/features/req_845_msfs_terrain_data.feature
+      - id: AC-845.2
+        description: "AC2: Terrain type classification is available as a readable variable"
+        tests:
+          - feature:specs/features/req_845_msfs_terrain_data.feature
+      - id: AC-845.3
+        description: "AC3: Terrain data updates at the configured SimConnect polling rate"
+        tests:
+          - feature:specs/features/req_845_msfs_terrain_data.feature
+      - id: AC-845.4
+        description: "AC4: Unavailable terrain data returns a sentinel value without error"
+        tests:
+          - feature:specs/features/req_845_msfs_terrain_data.feature
+  - id: REQ-846
+    name: Axis Emergency Stop
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-846.1
+        description: "AC1: Axis engine supports an emergency stop command that zeros all outputs immediately"
+        tests:
+          - feature:specs/features/req_846_axis_emergency_stop.feature
+      - id: AC-846.2
+        description: "AC2: Emergency stop is triggered via a configurable key binding or bus command"
+        tests:
+          - feature:specs/features/req_846_axis_emergency_stop.feature
+      - id: AC-846.3
+        description: "AC3: Recovery from emergency stop requires an explicit reset command"
+        tests:
+          - feature:specs/features/req_846_axis_emergency_stop.feature
+      - id: AC-846.4
+        description: "AC4: Emergency stop events are logged with timestamp and trigger source"
+        tests:
+          - feature:specs/features/req_846_axis_emergency_stop.feature
+  - id: REQ-847
+    name: Service Diagnostic Bundle
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-847.1
+        description: "AC1: Service generates a compressed diagnostic bundle for support analysis"
+        tests:
+          - feature:specs/features/req_847_service_diagnostic_bundle.feature
+      - id: AC-847.2
+        description: "AC2: Bundle includes logs, configuration, device info, and system metrics"
+        tests:
+          - feature:specs/features/req_847_service_diagnostic_bundle.feature
+      - id: AC-847.3
+        description: "AC3: Sensitive data is redacted before inclusion in the bundle"
+        tests:
+          - feature:specs/features/req_847_service_diagnostic_bundle.feature
+      - id: AC-847.4
+        description: "AC4: Bundle generation completes within 30 seconds under normal conditions"
+        tests:
+          - feature:specs/features/req_847_service_diagnostic_bundle.feature
+  - id: REQ-848
+    name: CLI Update Channel Switch
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-848.1
+        description: "AC1: CLI switches between update channels (stable, beta, canary)"
+        tests:
+          - feature:specs/features/req_848_cli_update_channel_switch.feature
+      - id: AC-848.2
+        description: "AC2: Channel switch persists to the service configuration file"
+        tests:
+          - feature:specs/features/req_848_cli_update_channel_switch.feature
+      - id: AC-848.3
+        description: "AC3: Switching channels triggers an immediate update check"
+        tests:
+          - feature:specs/features/req_848_cli_update_channel_switch.feature
+      - id: AC-848.4
+        description: "AC4: Current channel is displayed in the CLI version output"
+        tests:
+          - feature:specs/features/req_848_cli_update_channel_switch.feature
+  - id: REQ-849
+    name: DCS Radar State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-849.1
+        description: "AC1: DCS adapter exposes radar power state and operating mode"
+        tests:
+          - feature:specs/features/req_849_dcs_radar_state.feature
+      - id: AC-849.2
+        description: "AC2: Radar target count is available when radar is active"
+        tests:
+          - feature:specs/features/req_849_dcs_radar_state.feature
+      - id: AC-849.3
+        description: "AC3: Radar state changes are published to the event bus"
+        tests:
+          - feature:specs/features/req_849_dcs_radar_state.feature
+      - id: AC-849.4
+        description: "AC4: Adapter gracefully handles aircraft without radar systems"
+        tests:
+          - feature:specs/features/req_849_dcs_radar_state.feature
+  - id: REQ-850
+    name: FFB Crosswind Landing
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-850.1
+        description: "AC1: FFB simulates crosswind forces during approach and landing phases"
+        tests:
+          - feature:specs/features/req_850_ffb_crosswind_landing.feature
+      - id: AC-850.2
+        description: "AC2: Force direction and magnitude correspond to reported wind vector"
+        tests:
+          - feature:specs/features/req_850_ffb_crosswind_landing.feature
+      - id: AC-850.3
+        description: "AC3: Effect activates below a configurable altitude threshold"
+        tests:
+          - feature:specs/features/req_850_ffb_crosswind_landing.feature
+      - id: AC-850.4
+        description: "AC4: Crosswind forces respect FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_850_ffb_crosswind_landing.feature
