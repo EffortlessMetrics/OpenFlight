@@ -1,0 +1,59 @@
+# VIRPIL VPC Rotor TCS Plus Collective (Alt PID 0x80CC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB (the-sz.com USB ID DB).
+# PID 0x80CC is a community estimate for a further Rotor TCS Plus revision.
+# Known Rotor TCS Plus PIDs: 0x4190 (vpc-rotor-tcs-plus.yaml),
+# 0x4183 (vpc-rotor-tcs-plus-4183.yaml), 0x8194 (vpc-rotor-tcs-plus-8194.yaml).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS Plus Collective"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x80CC      # Community estimate — Rotor TCS Plus alt PID; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, rx, ry, slider]
+    resolution_bits: 15
+  buttons: 20
+  hats: 1
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x80CC is a community estimate for a Rotor TCS Plus firmware/hardware
+      revision. Known PIDs: 0x4190 (primary), 0x4183, 0x8194. Confirm with
+      lsusb or VIRPIL Configurator before deploying profiles.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Collective axis is unipolar (0 = full down, max = full up). No spring
+      centering — the collective rests at its physical position. Map with
+      unipolar [0, 1] curve in helicopter profiles.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis and button assignments can be adjusted in VIRPIL Configurator.
+      The twist axis may be mapped to engine throttle or tail-rotor yaw.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS Plus Collective — alternate PID variant (0x80CC).
+    See vpc-rotor-tcs-plus.yaml (0x4190), vpc-rotor-tcs-plus-4183.yaml,
+    vpc-rotor-tcs-plus-8194.yaml for other revisions. Last reviewed: 2026-06.

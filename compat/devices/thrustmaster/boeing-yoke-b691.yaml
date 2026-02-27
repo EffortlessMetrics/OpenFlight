@@ -1,0 +1,55 @@
+# Thrustmaster TCA Yoke Boeing Edition (Alt PID 0xB691)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster (Guillemot). PID 0xB691 is a community
+# estimate for an alternate hardware revision of the TCA Yoke Boeing Edition.
+# The confirmed primary PID is 0x0409 (tca-yoke-boeing.yaml), verified via
+# linux-hardware.org. PID 0xB691 may represent a pre-release or variant batch.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Yoke Boeing Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB691      # Community estimate — TCA Boeing Yoke alt PID; primary is 0x0409
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, throttle1, throttle2, flaps, rudder]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB691 is a community estimate for an alternate revision.
+      The confirmed primary PID is 0x0409 (tca-yoke-boeing.yaml, verified
+      via linux-hardware.org). Confirm 0xB691 with lsusb before use.
+  - id: BOEING_YOKE_AXIS_LAYOUT
+    description: >
+      Roll and pitch represent yoke lateral/fore-aft inputs. Throttle 1 and 2
+      are independent twin-engine throttle levers. Flaps lever and rudder trim
+      are additional axes. Apply non-linear curves for flap detents.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Yoke Boeing Edition — Boeing-style column yoke with
+    twin-engine throttles and flap lever. Alternate PID 0xB691 (community
+    estimate); confirmed PID is 0x0409 in tca-yoke-boeing.yaml.
+    Last reviewed: 2026-06.

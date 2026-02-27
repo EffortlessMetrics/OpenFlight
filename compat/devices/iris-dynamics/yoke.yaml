@@ -1,0 +1,63 @@
+# Iris Dynamics Yoke (Force Feedback)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 is the pid.codes shared VID used by open-source/boutique HID devices.
+# PID 0x2022 is a community estimate for the Iris Dynamics Yoke; confirm with lsusb.
+# Iris Dynamics produces consumer-grade force feedback yokes using linear
+# actuators. The yoke provides active force feedback along both roll and pitch axes.
+schema_version: "1"
+
+device:
+  name: "Iris Dynamics Yoke"
+  vendor: "Iris Dynamics"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2022      # Community estimate — Iris Dynamics Yoke; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant]
+    max_update_rate_hz: 200
+    torque_limit_nm: null     # Varies by model and configuration
+
+polling:
+  expected_rate_hz: 200
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2022 are community estimates. Iris Dynamics may use
+      a registered VID on production hardware. Confirm with lsusb before
+      deploying profiles or FFB effects.
+  - id: LINEAR_ACTUATOR_FFB
+    description: >
+      Iris Dynamics uses linear actuators (not motors) for force feedback.
+      Effect fidelity may differ from rotary-motor FFB systems. The spring
+      and damper effects closely match the physical yoke feel.
+  - id: HIL_NOT_VALIDATED
+    description: >
+      HID report descriptor and FFB output report format are not confirmed
+      from hardware probes. Validate axis byte order and FFB effect IDs
+      before production use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Iris Dynamics Yoke — consumer force feedback yoke with linear actuators.
+    VID/PID are community estimates. FFB requires HID output report support;
+    consult Iris Dynamics SDK for effect encoding. Last reviewed: 2026-06.

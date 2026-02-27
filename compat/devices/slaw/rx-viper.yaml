@@ -1,0 +1,59 @@
+# Slaw Device RX Viper Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) is used by Slaw Device products running
+# custom STM32 HID firmware. PID 0x5746 is a community estimate for the
+# RX Viper; confirm with lsusb.
+# The Slaw Device RX Viper is a precision aluminium-frame rudder pedal set
+# with long throw and high-quality potentiometers.
+schema_version: "1"
+
+device:
+  name: "Slaw Device RX Viper Rudder Pedals"
+  vendor: "Slaw Device"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (shared VID for STM32 HID)
+    product_id: 0x5746      # Community estimate — RX Viper; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5746 is a community estimate. Slaw Device uses STM32 firmware
+      (VID 0x0483 / STMicroelectronics). Multiple devices share this VID;
+      confirm the specific PID with lsusb on real hardware.
+  - id: HIGH_PRECISION_POTENTIOMETERS
+    description: >
+      The RX Viper uses high-precision potentiometers with long throw for
+      improved linearity. Apply a small deadzone at centre to compensate
+      for drift.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+      Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Slaw Device RX Viper — boutique aluminium rudder pedals with long throw.
+    Targeted at DCS and MSFS combat sims. VID 0x0483 / PID 0x5746 are
+    community estimates; confirm with lsusb. Last reviewed: 2026-06.

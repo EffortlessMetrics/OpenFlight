@@ -1,0 +1,57 @@
+# VirtualFly Yoko The Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 is the pid.codes shared VID used by open-source and boutique HID
+# devices. PID 0x2017 is a community estimate; VirtualFly's primary VID is
+# 0x2B67 (registered) but some products use the shared pid.codes VID.
+# The Yoko The Throttle is VirtualFly's multi-engine throttle quadrant,
+# designed to pair with the YOKO yoke system.
+schema_version: "1"
+
+device:
+  name: "VirtualFly Yoko The Throttle"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2017      # Community estimate — Yoko The Throttle; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, flaps, speedbrake]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2017 are community estimates. VirtualFly's confirmed
+      VID is 0x2B67 (see tq3-throttle.yaml, tq6-plus-throttle.yaml). The
+      Yoko The Throttle may use either VID depending on firmware revision.
+      Confirm with lsusb before deploying profiles.
+  - id: MULTI_ENGINE_AXES
+    description: >
+      Throttle 1 and 2 are independent axes for twin-engine aircraft.
+      Flaps and speedbrake axes are non-return (detent-style). Map each
+      axis to the appropriate sim variable in the GA/airliner profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly Yoko The Throttle — multi-engine throttle quadrant designed to
+    pair with the YOKO yoke. VID/PID are community estimates; see also
+    tq3-throttle.yaml and tq6-plus-throttle.yaml. Last reviewed: 2026-06.

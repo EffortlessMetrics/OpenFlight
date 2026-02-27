@@ -1,0 +1,59 @@
+# ForceFeel / SimShaker Tactile Feedback Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 is the pid.codes shared VID. PID 0x2030 is a community estimate
+# for the SimShaker USB interface module. SimShaker by SimShaker.ru provides
+# tactile feedback via vibration transducers (buttkickers, seat cushions,
+# platform vibrators) driven by USB HID output reports from sim data.
+schema_version: "1"
+
+device:
+  name: "SimShaker Tactile Feedback Interface"
+  vendor: "SimShaker"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2030      # Community estimate — SimShaker USB; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false     # Tactile output only; no FFB in HID sense
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10         # Tactile output — latency tolerance higher
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2030 are community estimates for the SimShaker USB
+      interface. SimShaker.ru may use a different VID/PID on shipping hardware.
+      Confirm with lsusb before deploying profiles.
+  - id: OUTPUT_ONLY_DEVICE
+    description: >
+      The SimShaker interface is primarily an output device. It receives tactile
+      effect data from the host via USB HID output reports and drives connected
+      transducers. No meaningful HID input is reported.
+  - id: TACTILE_NOT_FFB
+    description: >
+      SimShaker drives vibration transducers (not force feedback motors).
+      Effects are amplitude/frequency-modulated vibrations correlated to sim
+      events (engine RPM, gear contact, weapons, turbulence).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimShaker — USB tactile feedback interface for flight and racing sims.
+    Drives buttkickers, seat cushions, or platform transducers. VID/PID
+    are community estimates; confirm with lsusb. Last reviewed: 2026-06.

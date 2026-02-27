@@ -1,0 +1,57 @@
+# Thrustmaster TCA Officer Pack Airbus (Hardware Variant PID 0xB688)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster (Guillemot). PID 0xB688 is a community
+# estimate for an alternate PID used by the TCA Officer Pack hardware.
+# The virtual bundle entry is tca-officer-pack-airbus.yaml (no PID).
+# Individual components: TCA Sidestick (0x0405), TCA Quadrant (0x0407).
+# PID 0xB688 may correspond to a pre-release batch or bundle-specific enumeration.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Officer Pack Airbus"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB688      # Community estimate — TCA Officer Pack alt PID; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, throttle]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB688 is a community estimate for an alternate TCA Officer Pack
+      enumeration. Confirmed component PIDs: TCA Sidestick Pilot = 0x0405,
+      TCA Sidestick Copilot = 0x0406, TCA Quadrant = 0x0407. Confirm
+      0xB688 with lsusb before deploying profiles.
+  - id: AIRBUS_SIDESTICK_AXIS
+    description: >
+      X and Y axes represent the sidestick (roll/pitch with no spring centre).
+      Z axis is for the mini-throttle on the sidestick. The TCA Quadrant
+      (if present) provides additional throttle and reverse-thrust axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Officer Pack Airbus — Airbus A320-style HOTAS bundle.
+    PID 0xB688 is a community estimate; confirmed component PIDs are 0x0405
+    (sidestick pilot), 0x0406 (copilot), 0x0407 (quadrant).
+    See also tca-officer-pack-airbus.yaml (virtual bundle). Last reviewed: 2026-06.
