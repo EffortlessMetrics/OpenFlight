@@ -1,0 +1,52 @@
+# Fanatec Podium Hub (Alt PID 0x6206)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fanatec Podium Hub — quick-release steering wheel hub adapter.
+# Alternate PID 0x6206 (community estimate). Primary manifests use PID 0x0050
+# (podium-hub.yaml) and 0x0005 (fanatec_podium_hub.yaml).
+# VID 0x0EB7 confirmed (Fanatec GmbH).
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Hub (Alt PID)"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7     # Fanatec GmbH (confirmed registered VID)
+    product_id: 0x6206    # Community estimate — see also 0x0050 (podium-hub.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6206 is a community estimate adjacent to DD1 alt (0x6204) and DD2
+      alt (0x6205). Primary manifests: podium-hub.yaml (0x0050) and
+      fanatec_podium_hub.yaml (0x0005). Verify with USBView.
+  - id: HUB_PASSTHROUGH
+    description: >
+      The Podium Hub may enumerate as part of the wheel base HID device rather
+      than as a standalone USB device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium Hub — quick-release hub adapter. Alt PID 0x6206.
+    Primary: podium-hub.yaml (0x0050). VID 0x0EB7 confirmed. Last reviewed: 2026-06.

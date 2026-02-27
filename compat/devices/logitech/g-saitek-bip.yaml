@@ -1,0 +1,56 @@
+# Logitech G Saitek Backlit Information Panel (BIP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech), PID 0x0B4E — community estimate for the
+# Logitech-branded BIP variant. 25-cell LED annunciator panel driven via HID
+# output reports. A separate manifest (saitek/bip-panel.yaml) covers PID 0x0B9E.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Backlit Information Panel"
+  vendor: "Logitech / Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0B4E      # Community estimate — Logitech-era BIP variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (output-only device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+  display:
+    type: led_array
+    digits: 25
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B4E is a community estimate for the Logitech-branded BIP.
+      The earlier Saitek variant uses PID 0x0B9E (see saitek/bip-panel.yaml).
+      Confirm with lsusb or USBDeview on real hardware.
+  - id: OUTPUT_ONLY
+    description: >
+      The BIP has no button or axis inputs. LED array is driven via HID
+      output reports using the Saitek DirectOutput protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Saitek BIP — 25-cell backlit indicator panel, output-only.
+    PID 0x0B4E is a community estimate for the Logitech-era variant.
+    Last reviewed: 2026-06.

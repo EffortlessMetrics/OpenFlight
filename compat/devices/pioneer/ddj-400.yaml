@@ -1,0 +1,57 @@
+# Pioneer DDJ-400 DJ Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2B73 confirmed: Pioneer DJ (registered USB vendor ID).
+# PID 0x000A sourced from community USB captures and linux-hardware.org
+# probe entries for the Pioneer DDJ-400 entry-level DJ controller.
+# The DDJ-400 features 2-channel mixing, 16-pad performance pads, dual
+# jog wheels, channel faders, and EQ knobs. Repurposed in flight sim as
+# a rich knob/fader/button surface for throttle, mixture, prop, and
+# avionics panel control. Each jog wheel reports as a relative encoder.
+schema_version: "1"
+
+device:
+  name: "Pioneer DDJ-400 DJ Controller"
+  vendor: "Pioneer DJ"
+  usb:
+    vendor_id: 0x2B73    # Pioneer DJ (confirmed)
+    product_id: 0x000A   # DDJ-400 — community USB captures / linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 10
+    names: [jog_left, jog_right, ch1_fader, ch2_fader, crossfader,
+            ch1_knob_1, ch1_knob_2, ch2_knob_1, ch2_knob_2, master_level]
+    resolution_bits: 7
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The DDJ-400 enumerates as a USB MIDI device. Faders, knobs, and pads
+      send MIDI CC / Note messages. OpenFlight binds via MIDI profile, not
+      HID joystick. Map channel faders to throttle, knobs to mixture/prop.
+  - id: JOG_WHEEL_RELATIVE
+    description: >
+      Jog wheels report relative MIDI CC increments (+1/−1). Use OpenFlight
+      relative-encoder mode for smooth frequency or heading knob control.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pioneer DDJ-400 — entry-level DJ controller repurposed for avionics/throttle
+    input. VID 0x2B73 confirmed; PID 0x000A from community captures.
+    MIDI device; bind via OpenFlight MIDI profile. Last reviewed: 2026-06.

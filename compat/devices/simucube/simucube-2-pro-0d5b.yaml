@@ -1,0 +1,74 @@
+# Simucube 2 Pro Direct Drive Base (Alt PID 0x0D5B)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: usb.ids lists as "MCS Electronics" (Granite Devices).
+# PID 0x0D5B is a community-reported alternate PID for the Simucube 2 Pro.
+# The primary manifest uses PID 0x0D61 (simucube-2-pro.yaml). PID 0x0D5B
+# may correspond to an earlier firmware or pre-production variant.
+# Confirm with lsusb or Simucube True Drive USB enumeration.
+
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Pro"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D5B      # Community estimate — alt PID; primary is 0x0D61 (simucube-2-pro.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 24     # BISS-C high-resolution encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 25.0   # Pro rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5B is a community estimate. The primary Simucube 2 Pro manifest
+      uses 0x0D61 (simucube-2-pro.yaml). Confirm with lsusb or Simucube True
+      Drive USB descriptor capture before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Simucube 2 Pro base exposes the rotation axis only. A flight grip
+      adapter mounts on the shaft and enumerates as a separate USB HID device.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Pro alternate PID 0x0D5B. Primary manifest is simucube-2-pro.yaml
+    (PID 0x0D61). VID 0x16D0 = Granite Devices. 25 Nm peak direct-drive FFB base.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+driver:
+  type: simucube2_torque
+  notes: >
+    Requires Simucube True Drive for initial calibration and firmware updates.
+    Same torque-command HID protocol as Simucube 2 Sport.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

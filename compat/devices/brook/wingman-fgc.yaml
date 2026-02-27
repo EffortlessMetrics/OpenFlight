@@ -1,0 +1,44 @@
+# Brook Wingman FGC Controller Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C12 (Zeroplus Technology), PID 0x0034 — estimated.
+# Adapter for fighting game controllers — enables PS4 arcade sticks on PS3/PC.
+schema_version: "1"
+device:
+  name: "Brook Wingman FGC"
+  vendor: "Brook Accessory"
+  usb:
+    vendor_id: 0x0C12       # Zeroplus Technology Co., Ltd.
+    product_id: 0x0034      # Community estimate — Wingman FGC; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0034 is a community estimate. Wingman SD uses 0x0032.
+      Confirm with lsusb on real hardware.
+  - id: ADAPTER_DEVICE
+    description: >
+      Fighting game controller adapter. Translates PS4/PS3 arcade stick
+      input to standard PC HID reports.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brook Wingman FGC — VID 0x0C12 / PID 0x0034 (est). FGC controller adapter.
+    Wave-55 addition. Last reviewed: 2026-07.

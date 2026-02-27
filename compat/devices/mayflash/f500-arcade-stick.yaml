@@ -1,0 +1,45 @@
+# Mayflash F500 Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (Mayflash / GreenAsia Inc.), PID 0x0003 — estimated.
+# Budget arcade stick with universal compatibility and switchable PCB.
+schema_version: "1"
+device:
+  name: "Mayflash F500 Arcade Stick"
+  vendor: "Mayflash"
+  usb:
+    vendor_id: 0x0E8F       # Mayflash / GreenAsia Inc.
+    product_id: 0x0003      # Community estimate — F500 arcade stick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the Mayflash F500.
+      Confirm with lsusb on real hardware.
+  - id: UNIVERSAL_COMPATIBILITY
+    description: >
+      The F500 has a switch for PS3/PS4/PC/Switch compatibility modes.
+      Ensure the device is in PC mode for standard HID enumeration.
+      Different modes may enumerate with different PIDs.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mayflash F500 Arcade Stick — VID 0x0E8F / PID 0x0003 (est).
+    Budget arcade stick popular in Asian market. Wave-55 addition. Last reviewed: 2026-07.

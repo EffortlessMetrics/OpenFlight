@@ -1,0 +1,62 @@
+# RP2040 / Raspberry Pi Pico USB HID Joystick (PID 0x0003)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A (Raspberry Pi Foundation — confirmed). PID 0x0003 — community
+# estimate for RP2040/Pico-based HID joystick firmware using the TinyUSB
+# default joystick descriptor. Distinct from pico-usb-hid.yaml (0x0004),
+# pico-sdk-joystick.yaml (0x000A), and rp2040-hid-joystick.yaml (0x4001).
+# Widely used in DIY sim controller builds on the Raspberry Pi Pico board.
+schema_version: "1"
+
+device:
+  name: "RP2040 USB HID Joystick (PID 0x0003)"
+  vendor: "Raspberry Pi Foundation"
+  usb:
+    vendor_id: 0x2E8A       # Raspberry Pi Foundation (confirmed)
+    product_id: 0x0003      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate. The Raspberry Pi Foundation assigns
+      PIDs in the 0x0001–0x000F range for official firmware. Actual PID
+      depends on firmware configuration. Verify with lsusb.
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Capabilities depend entirely on the TinyUSB or SDK joystick descriptor
+      compiled into the firmware. The values above reflect a common 6-axis
+      32-button DIY flight controller configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Raspberry Pi Pico/RP2040 running DIY HID joystick firmware.
+    Commonly used for DIY rudder pedals, HOTAS throttles, and button boxes.
+    PID 0x0003 is a community estimate; verify with lsusb on real hardware.
+    See also rp2040-hid-joystick.yaml (0x4001), pico-usb-hid.yaml (0x0004).
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

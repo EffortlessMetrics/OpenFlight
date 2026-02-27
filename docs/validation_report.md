@@ -15,16 +15,16 @@
 ## Summary
 
 - **Total Checks:** 13
-- **Passed:** 7
-- **Failed:** 6
+- **Passed:** 11
+- **Failed:** 2
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ❌ Fail | Failed to parse spec ledger YAML |
-| Schema Validation | ❌ Fail | Schema validation failed with 1 error(s) |
-| Cross-Reference Validation | ❌ Fail | Failed to parse spec ledger |
+| BDD Feature Status | ❌ Fail | Failed to write feature status report |
+| Schema Validation | ✅ Pass | - |
+| Cross-Reference Validation | ✅ Pass | - |
 | Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
@@ -32,9 +32,7 @@
 | QG-FFB-SAFETY | ✅ Pass | - |
 | QG-BDD-COVERAGE | ✅ Pass | - |
 | QG-BDD-UNMAPPED-MICROCRATE | ✅ Pass | - |
-| QG-BDD-MATRIX-COMPLETE | ❌ Fail | BDD matrix completeness check failed:
-- Missing from docs/bdd_metrics.json: flight-dcs-modules, flight-metrics-http, flight-openxr, flight-prepar3d |
-| QG-CRATE-METADATA | ❌ Fail | 1 crate(s) failed metadata compatibility:
-- flight-metrics-http (missing: license, repository, homepage, readme, keywords, categories) |
+| QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
+| QG-CRATE-METADATA | ✅ Pass | - |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |
 

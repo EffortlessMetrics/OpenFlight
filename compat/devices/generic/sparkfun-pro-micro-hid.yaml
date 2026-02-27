@@ -1,0 +1,63 @@
+# SparkFun Pro Micro HID Joystick (VID 0x1B4F)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1B4F (SparkFun Electronics — confirmed). PID 0x9206 — SparkFun Pro Micro
+# in HID joystick mode. The SparkFun Pro Micro is an ATmega32U4-based board
+# frequently used in DIY flight sim controllers and button boxes. Distinct from
+# the Arduino Pro Micro (VID 0x2341) and its bootloader PID (0x9207).
+schema_version: "1"
+
+device:
+  name: "SparkFun Pro Micro HID Joystick"
+  vendor: "SparkFun Electronics"
+  usb:
+    vendor_id: 0x1B4F       # SparkFun Electronics (confirmed)
+    product_id: 0x9206      # SparkFun Pro Micro application/HID mode (confirmed sparkfun.com)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 10
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Axis count, button count, and HID descriptor depend entirely on the
+      firmware loaded by the builder. The defaults above reflect a common
+      DIY flight controller firmware configuration. Actual capabilities
+      will vary by project.
+  - id: SHARED_VID_PID
+    description: >
+      VID 0x1B4F / PID 0x9206 is shared by all SparkFun Pro Micro boards
+      in application mode. Multiple devices from different builders may
+      enumerate with the same VID/PID. Use serial-number or port-based
+      device selection in multi-device setups.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SparkFun Pro Micro running DIY HID joystick firmware. Widely used for
+    custom flight sim controllers (rudder pedals, button boxes, encoders).
+    PID 0x9206 confirmed via SparkFun documentation.
+    Bootloader mode uses PID 0x9207 — not listed here.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

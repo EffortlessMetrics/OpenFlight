@@ -1,0 +1,48 @@
+# VKB MCG Standard Grip (Alt PID 0x0260)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VKB MCG (Metal Combat Grip) Standard — joystick grip for VKB Gunfighter
+# and compatible bases. Alternate PID 0x0260 community estimate.
+# Primary manifest mcg-standard.yaml uses PID 0x0127.
+# VID 0x231D confirmed (VKBsim / VKB Sim).
+schema_version: "1"
+
+device:
+  name: "VKB MCG Standard Grip (Alt PID)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D     # VKBsim (VKB Sim) — confirmed registered VID
+    product_id: 0x0260    # Alternate community estimate — see mcg-standard.yaml (0x0127)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, twist]
+    resolution_bits: 14
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0260 is an alternate community estimate for the MCG Standard.
+      Primary manifest mcg-standard.yaml uses PID 0x0127. Verify with
+      VKBDevCfg or lsusb on real hardware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Standard Grip — alt PID 0x0260. Primary: mcg-standard.yaml (0x0127).
+    VID 0x231D confirmed. Last reviewed: 2026-06.

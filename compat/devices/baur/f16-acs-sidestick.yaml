@@ -1,0 +1,41 @@
+# BAUR F-16 ACS Sidestick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2090 — estimated.
+# Baur F-16 Active Control Sidestick replica for DCS/MSFS F-16 simulation.
+schema_version: "1"
+device:
+  name: "BAUR F-16 ACS Sidestick"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2090      # Community estimate — BAUR F-16 ACS Sidestick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2090 is a community estimate for the BAUR F-16 ACS Sidestick.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR F-16 ACS Sidestick — VID 0x1209 / PID 0x2090 (est).
+    Replica of the F-16 Active Control Sidestick. Popular for DCS F-16C Viper.
+    Wave-59 addition. Last reviewed: 2026-07.

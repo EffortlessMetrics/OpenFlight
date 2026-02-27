@@ -1,0 +1,61 @@
+# Teensy 4.0 HID Joystick (PID 0x048C)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC — confirmed). PID 0x048C — community estimate for Teensy 4.0
+# in HID joystick mode. The Teensy 4.0 uses a Cortex-M7 at 600 MHz and is
+# increasingly popular in high-resolution DIY flight sim builds. Distinct from
+# Teensy 4.0 primary HID PID 0x0486 (teensy-40-hid.yaml) and
+# Teensy 4.1 HID (0x0486, teensy-4-1-hid.yaml).
+schema_version: "1"
+
+device:
+  name: "Teensy 4.0 HID Joystick"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0       # PJRC (Paul Stoffregen — confirmed)
+    product_id: 0x048C      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 16
+    names: [x, y, z, rx, ry, rz, slider, dial, ax, ay, az, arx, ary, arz, aslider, adial]
+    resolution_bits: 16
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x048C is a community estimate for Teensy 4.0 HID joystick mode.
+      Verify with lsusb; the Teensyduino HID joystick personality may report
+      a different PID depending on the firmware version.
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Actual capabilities depend on the Teensyduino USB personality selected
+      at compile time (USB_JOYSTICK, USB_FLIGHTSIM, or composite modes).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Teensy 4.0 (Cortex-M7 600 MHz) running Teensyduino HID joystick firmware.
+    Used in high-end DIY cockpit builds requiring fast USB polling.
+    PID 0x048C is a community estimate; confirm with lsusb.
+    For the primary Teensy 4.0/4.1 profile, see teensy-40-hid.yaml (PID 0x0486).
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

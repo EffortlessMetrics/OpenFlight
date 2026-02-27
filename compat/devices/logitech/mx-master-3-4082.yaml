@@ -1,0 +1,55 @@
+# Logitech MX Master 3 (PID 0x4082 USB receiver variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Logitech MX Master 3 is an advanced wireless mouse with programmable side
+# buttons and scroll wheels. In simulation it is used for cockpit interaction
+# and instrument panel manipulation. VID 0x046D (Logitech) is confirmed.
+# PID 0x4082 is a community-reported PID for this receiver/mode variant.
+# See mx-master-3-b023.yaml (PID 0xB023) for the Unifying receiver variant.
+schema_version: "1"
+
+device:
+  name: "Logitech MX Master 3 (PID 0x4082 variant)"
+  vendor: "Logitech International SA"
+  type: mouse
+  usb:
+    vendor_id: 0x046D   # Logitech International SA (confirmed)
+    product_id: 0x4082  # Community-reported — MX Master 3 variant; see 0xB023
+  hid:
+    usage_page: 0x01
+    usage: 0x02
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, scroll]
+    resolution_bits: 16
+  buttons: 7
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0x4082 is a community-reported variant PID for the MX Master 3.
+      The Unifying receiver variant uses PID 0xB023 (mx-master-3-b023.yaml).
+      This may correspond to the Bolt receiver or USB-C wired mode.
+  - id: SIDE_BUTTONS_FOR_SIM
+    description: >
+      The MX Master 3 side buttons (back/forward + thumb rest) are programmable
+      via Logitech Options and can be bound to cockpit functions in flight sim.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech MX Master 3 — PID 0x4082 variant (see also 0xB023 in
+    mx-master-3-b023.yaml). VID 0x046D confirmed.
+    Last reviewed: 2026-07.

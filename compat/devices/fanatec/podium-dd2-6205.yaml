@@ -1,0 +1,50 @@
+# Fanatec Podium Wheel Base DD2 (Alt PID 0x6205)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fanatec Podium Wheel Base DD2 — flagship direct-drive wheel base.
+# Alternate PID 0x6205 (community estimate). Primary manifest uses
+# PID 0x0042 (podium-dd2.yaml). VID 0x0EB7 confirmed (Fanatec GmbH).
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Wheel Base DD2 (Alt PID)"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7     # Fanatec GmbH (confirmed registered VID)
+    product_id: 0x6205    # Community estimate — see also 0x0042 (podium-dd2.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction, square, triangle, sawtooth_up, sawtooth_down]
+    max_update_rate_hz: 500
+    torque_limit_nm: 25.0   # DD2 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6205 is a community estimate adjacent to the DD1 alt (0x6204).
+      Primary manifest is podium-dd2.yaml (PID 0x0042). Verify with USBView.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium DD2 — alt PID 0x6205. Primary: podium-dd2.yaml (0x0042).
+    VID 0x0EB7 confirmed. Last reviewed: 2026-06.

@@ -1,0 +1,60 @@
+# Logitech MX Keys Keyboard (0x046D / 0xB35B)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x046D (Logitech International), PID 0xB35B.
+# The Logitech MX Keys is a wireless keyboard. When used with Logi Options+ or
+# mapped via OpenFlight macros, it serves as a keypad/macro input device for
+# flight simulation (ATC comms, checklists, autopilot shortcuts).
+# PID 0xB35B confirmed from the USB ID database (Logitech Bolt receiver).
+schema_version: "1"
+
+device:
+  name: "Logitech MX Keys"
+  vendor: "Logitech"
+  type: keyboard
+  usb:
+    vendor_id: 0x046D       # Logitech International SA
+    product_id: 0xB35B      # MX Keys — USB ID database / Logitech Bolt receiver
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 110
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: WIRELESS_BOLT_RECEIVER
+    description: >
+      MX Keys connects via Logi Bolt (USB dongle, VID 0x046D/0xB35B) or Bluetooth.
+      When using the Bolt receiver the OS sees a single compound HID device.
+      Key mapping is application-defined; OpenFlight treats it as a macro keypad.
+  - id: MACRO_USE_ONLY
+    description: >
+      This manifest covers the MX Keys used as a macro/hotkey pad for flight sim.
+      Standard keyboard functions pass through the OS; only explicitly bound keys
+      are intercepted by OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech MX Keys — wireless keyboard used as macro pad for flight sim.
+    Tier 3 — community estimate. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

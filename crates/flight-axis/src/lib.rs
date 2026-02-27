@@ -73,6 +73,7 @@
 #[cfg(test)]
 mod proptest_tests;
 
+pub mod accumulator;
 pub mod blackbox;
 pub mod buttons;
 pub mod bypass;
@@ -91,17 +92,22 @@ pub mod hat;
 pub mod histogram;
 pub mod history;
 pub mod invert;
+pub mod lag_compensator;
 pub mod nodes;
+pub mod noise_floor;
 pub mod normalize;
 pub mod pid;
 pub mod pipeline;
+pub mod quantize;
 pub mod rate_limit;
 pub mod recording;
 pub mod scale;
 pub mod smoothing;
 pub mod throttle_zone;
 pub mod trim;
+pub mod velocity;
 
+pub use accumulator::{AccumulatorConfig, AxisAccumulator};
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
 pub use buttons::{
     ButtonChord, ButtonError, ButtonMacro, ButtonProcessor, MacroAction, MacroTrigger,
@@ -120,7 +126,7 @@ pub use curve::{ControlPoint, CurveError, ExpoCurveConfig, InterpolationMode, Re
 pub use deadzone::{
     AsymmetricDeadzoneConfig, DeadzoneBank, DeadzoneConfig, DeadzoneError, DeadzoneProcessor,
 };
-pub use detent::{Detent, DetentConfig, DetentProcessor};
+pub use detent::{Detent, DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
@@ -131,14 +137,17 @@ pub use history::{
     AxisHistory, AxisHistory64, AxisHistory256, AxisHistory1024, HistorySample, HistoryStats,
 };
 pub use invert::{AxisInvert, InvertBank};
+pub use lag_compensator::{LagCompensator, LagCompensatorConfig};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
     DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
+pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64};
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
+pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};
 pub use scale::{AxisScale, ScaleBank, ScaleError};

@@ -1,0 +1,47 @@
+# GoFlight MCP-PRO (estimated VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0005 — both estimated. GoFlight's confirmed VID is 0x0E9F.
+# The GF-MCP Pro is a Boeing 737-style mode control panel replica.
+# See gf-mcp-pro.yaml for the 0x0E9F:0x0004 variant.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight MCP-PRO Mode Control Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — GoFlight alt; confirmed VID is 0x0E9F
+    product_id: 0x0005      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 2
+    names: [hdg_knob, alt_knob]
+    resolution_bits: 8
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0005 are community estimates. GoFlight's confirmed
+      VID is 0x0E9F. See goflight/gf-mcp-pro.yaml for the confirmed VID variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight MCP-PRO — Boeing 737-style autopilot panel (alt VID/PID est).
+    Last reviewed: 2026-06.

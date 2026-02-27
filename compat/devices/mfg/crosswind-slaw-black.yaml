@@ -1,0 +1,59 @@
+# MFG Crosswind Rudder Pedals (Slaw Black Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MFG Crosswind Rudder Pedals (Slaw Black Edition) — a community-reported
+# variant of the MFG Crosswind with Slaw Device-style black anodised hardware.
+# VID 0x0483 (STMicroelectronics). PID 0x5741 is a community estimate;
+# PID 0x5740 is taken by other STM32 HID devices (helicopter collective, etc.).
+# Note: "(check dup)" referenced in wave-60 manifest list. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind Rudder Pedals (Slaw Black Edition)"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (shared VID for STM32 HID)
+    product_id: 0x5741      # Community estimate — PID 0x5740 taken; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5741 is a community estimate. PID 0x5740 (VID 0x0483) is used by
+      other STM32 HID devices (helicopter/generic-usb-collective.yaml,
+      gametrix/jetseat-fsl.yaml, skalarki/fcu-airbus.yaml).
+      Verify with lsusb on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind (Slaw Black Edition) — community-reported STM32 variant.
+    VID 0x0483 / PID 0x5741 community estimate. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

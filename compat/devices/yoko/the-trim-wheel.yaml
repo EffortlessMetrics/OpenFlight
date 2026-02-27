@@ -1,0 +1,47 @@
+# Yoko The Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209, PID 0x2011 — community estimates. VID 0x1209 is the pid.codes
+# open-source VID allocation. Yoko The Trim Wheel is a dedicated trim wheel
+# panel for use alongside The Yoke and throttle quadrant setups.
+
+schema_version: "1"
+
+device:
+  name: "Yoko The Trim Wheel"
+  vendor: "Yoko"
+  usb:
+    vendor_id: 0x1209       # pid.codes open-source USB VID (community allocated)
+    product_id: 0x2011      # Community estimate for Yoko The Trim Wheel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 (pid.codes) and PID 0x2011 are community estimates.
+      Confirm with lsusb or USBDeview on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Yoko The Trim Wheel — dedicated trim control panel.
+    VID 0x1209 / PID 0x2011 unconfirmed. Last reviewed: 2026-06.

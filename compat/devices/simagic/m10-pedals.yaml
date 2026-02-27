@@ -1,0 +1,47 @@
+# Simagic M10 Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic M10 Pedals — 3-pedal load-cell pedal set for the Simagic ecosystem.
+# VID 0x0483 (STMicroelectronics shared VID used by Simagic).
+# PID 0xA362 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "Simagic M10 Pedals"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483     # STMicroelectronics shared VID (used by Simagic)
+    product_id: 0xA362    # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [accelerator, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA362 is a community estimate adjacent to the Alpha Mini alt
+      (0xA360) and GT1 Wheel (0xA361). Verify with lsusb on real hardware.
+      Other Simagic pedal sets: P1000 (0xEA60), P2000 (0x2000), Q1 Mini (0x1020).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic M10 Pedals — load-cell 3-pedal set. PID 0xA362 community estimate.
+    VID 0x0483 = STMicroelectronics (Simagic). Last reviewed: 2026-06.

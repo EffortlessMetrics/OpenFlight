@@ -1,0 +1,64 @@
+# VKB Helicopter Cyclic Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim (Vadim Kotelnikov).
+# PID 0x0270 is a community estimate for the VKB Helicopter Cyclic Grip module.
+# The cyclic grip is designed for helicopter simulation, compatible with
+# VKB Gunfighter and Black Mamba base stations. PID estimated from community
+# forum reports. Confirm with VKB Joystick Device Config utility.
+
+schema_version: "1"
+
+device:
+  name: "VKB Helicopter Cyclic Grip"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim (confirmed)
+    product_id: 0x0270      # Community estimate — Helicopter Cyclic Grip; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, ministick_x, ministick_y]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0270 is a community estimate for the VKB Helicopter Cyclic Grip.
+      Confirm with VKB Joystick Device Config utility on real hardware.
+  - id: COMPOSITE_DEVICE
+    description: >
+      The grip communicates via the Gunfighter/Black Mamba base board. The
+      combined USB descriptor includes base-provided axes alongside the grip.
+  - id: HELICOPTER_CYCLIC
+    description: >
+      Cyclic axes (X/Y) represent rotor tilt. Map with bipolar [-1, +1] curves.
+      No spring centering may be preferred for realistic helicopter response;
+      adjust force trim settings accordingly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Helicopter Cyclic Grip — helicopter-specific grip module for Gunfighter/
+    Black Mamba base stations. VID 0x231D confirmed; PID 0x0270 is a community
+    estimate. PID estimated from community sources. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

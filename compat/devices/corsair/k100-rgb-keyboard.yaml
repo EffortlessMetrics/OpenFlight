@@ -1,0 +1,56 @@
+# Corsair K100 RGB Keyboard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1B1C confirmed: Corsair Gaming, Inc.
+# PID 0x1B7C sourced from community USB device databases for the
+# Corsair K100 RGB Optical-Mechanical Gaming Keyboard.
+# The K100 features a dedicated macro elitE wheel (iCUE Control Wheel)
+# and 6 programmable macro keys along the left edge, making it useful
+# for flight sim panel shortcuts when mapped via OpenFlight.
+schema_version: "1"
+
+device:
+  name: "Corsair K100 RGB Keyboard"
+  vendor: "Corsair Gaming"
+  usb:
+    vendor_id: 0x1B1C    # Corsair Gaming, Inc. (confirmed)
+    product_id: 0x1B7C   # K100 RGB — community USB database
+  hid:
+    usage_page: 0x01
+    usage: 0x06          # Keyboard
+
+capabilities:
+  axes:
+    count: 1
+    names: [control_wheel]
+    resolution_bits: 8
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: KEYBOARD_HID_COMPOSITE
+    description: >
+      The K100 enumerates as multiple HID interfaces: keyboard, macro keys,
+      and the iCUE Control Wheel. OpenFlight binds to the macro/wheel
+      interface (usage page 0x01). Use iCUE software to configure key
+      assignments and suppress default OS shortcuts.
+  - id: ICUE_REQUIRED
+    description: >
+      Full macro and wheel functionality requires Corsair iCUE software.
+      Without iCUE the control wheel may not report axis data over HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Corsair K100 RGB — macro keys + iCUE Control Wheel. VID 0x1B1C confirmed;
+    PID 0x1B7C from community USB database. Useful for flight sim panel
+    shortcuts via macro key bindings. Last reviewed: 2026-06.

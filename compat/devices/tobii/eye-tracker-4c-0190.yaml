@@ -1,0 +1,54 @@
+# Tobii Eye Tracker 4C (PID 0x0190 community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This entry covers a community-reported alternate PID for the Tobii Eye
+# Tracker 4C. VID 0x2104 (Tobii Technology AB) is confirmed. PID 0x0118 is
+# the confirmed primary PID (eye-tracker-4c.yaml). PID 0x0190 is a community
+# estimate that may appear on alternate firmware or hardware revisions.
+schema_version: "1"
+
+device:
+  name: "Tobii Eye Tracker 4C (PID 0x0190 variant)"
+  vendor: "Tobii Technology AB"
+  type: headtracker
+  usb:
+    vendor_id: 0x2104   # Tobii Technology AB (confirmed)
+    product_id: 0x0190  # Community estimate — ET 4C variant; primary PID is 0x0118
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [gaze_x, gaze_y, head_x, head_y, head_yaw, head_pitch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 12
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0x0190 is a community estimate for an alternate revision of the Tobii
+      Eye Tracker 4C. The confirmed primary PID is 0x0118 (eye-tracker-4c.yaml).
+      Verify with lsusb on real hardware.
+  - id: SDK_RECOMMENDED
+    description: >
+      Full eye and head tracking data is exposed via the Tobii Gaming SDK.
+      Raw HID axis output is limited compared to SDK access.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii Eye Tracker 4C — PID 0x0190 community estimate variant. VID 0x2104
+    confirmed; primary PID is 0x0118. PID estimated from community sources.
+    Last reviewed: 2026-07.

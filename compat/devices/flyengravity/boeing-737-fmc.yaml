@@ -1,0 +1,47 @@
+# FlyEngravity Boeing 737 FMC
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0021 — community estimates. FlyEngravity's confirmed VID
+# is 0x0BCA (OpenCockpits/Engravity family). The Boeing 737 FMC replica
+# provides a CDU-style alphanumeric keypad and LSK buttons for FMC input.
+
+schema_version: "1"
+
+device:
+  name: "FlyEngravity Boeing 737 FMC"
+  vendor: "FlyEngravity"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — FlyEngravity alt; confirmed VID is 0x0BCA
+    product_id: 0x0021      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0021 are community estimates. FlyEngravity's
+      confirmed VID is 0x0BCA (OpenCockpits/Engravity family).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FlyEngravity Boeing 737 FMC — CDU alphanumeric panel replica.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

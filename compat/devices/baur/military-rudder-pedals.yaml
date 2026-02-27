@@ -1,0 +1,45 @@
+# BAUR Military Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2062 — estimated.
+# Baur military-style rudder pedals — Chinese market combat sim rudder pedals.
+schema_version: "1"
+device:
+  name: "BAUR Military Rudder Pedals"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2062      # Community estimate — BAUR rudder pedals; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [rz, x, y]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2062 is a community estimate for the BAUR Military Rudder Pedals.
+      BAUR stick variants use 0x2060 and 0x2061. Confirm with lsusb.
+  - id: TOE_BRAKES
+    description: >
+      Separate left/right toe brake axes (x, y) in addition to the main
+      rudder axis (rz). Map all three axes in aircraft profiles.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR Military Rudder Pedals — VID 0x1209 / PID 0x2062 (est).
+    Chinese market combat sim pedals with toe brakes.
+    Wave-55 addition. Last reviewed: 2026-07.

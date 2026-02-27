@@ -1,0 +1,47 @@
+# RealSimGear GFC-500 Autopilot (alternate PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xEF72 — community
+# estimate for a newer GFC-500 firmware revision. The earlier variant uses
+# PID 0xF260 (see gfc500.yaml).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GFC-500 Autopilot Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xEF72      # Community estimate — GFC-500 alternate revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF72 is a community estimate. The earlier GFC-500 variant uses
+      PID 0xF260 (see realsimgear/gfc500.yaml). Confirm with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GFC-500 Autopilot — Garmin GFC 500 autopilot replica.
+    PID 0xEF72 community estimate (alt revision). Last reviewed: 2026-06.

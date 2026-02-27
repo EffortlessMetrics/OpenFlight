@@ -1,0 +1,60 @@
+# Simcraft APEX Motion Seat — 0x16C0 / 0x04DB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x16C0 (PJRC / V-USB community VID), PID 0x04DB (estimated).
+# The Simcraft APEX is a high-end direct-drive motion simulator cockpit used for
+# racing and flight simulation. USB HID interface for telemetry-driven motion.
+# VID 0x16C0 is the PJRC/V-USB community VID shared by many DIY and small-
+# manufacturer USB HID devices.
+# PID 0x04DB is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "Simcraft APEX Motion Seat"
+  vendor: "Simcraft"
+  type: motion_platform
+  usb:
+    vendor_id: 0x16C0       # PJRC / V-USB community VID (shared by many HID devices)
+    product_id: 0x04DB      # Community estimate — Simcraft APEX; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x04DB is a community estimate for Simcraft APEX under the PJRC shared VID.
+      The PJRC VID (0x16C0) is used by many unrelated devices; PID assignment is
+      not centrally managed. Verify with lsusb on target hardware.
+  - id: MOTION_PLATFORM
+    description: >
+      The Simcraft APEX provides 3-DOF motion. Telemetry data from the flight
+      simulator drives the motion platform via the OpenFlight motion output path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simcraft APEX Motion Seat (0x16C0/0x04DB). PID community estimate.
+    Direct-drive motion cockpit. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

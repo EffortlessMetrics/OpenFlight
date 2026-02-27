@@ -1,0 +1,60 @@
+# VKB MCG Enhanced Grip Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim (Vadim Kotelnikov).
+# PID 0x0263 is a community estimate for the VKB MCG Enhanced grip module,
+# an upgraded variant of the MCG Pro with additional thumb ministick axes and
+# enhanced button count. Estimated adjacent to MCG Pro alt PID (0x0262).
+# Confirm with VKB Joystick Device Config utility on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "VKB MCG Enhanced Grip Module"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim (confirmed)
+    product_id: 0x0263      # Community estimate — MCG Enhanced; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, ministick_x]
+    resolution_bits: 12
+  buttons: 26
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0263 is a community estimate for the MCG Enhanced, inferred as
+      adjacent to the MCG Pro alt PID 0x0262. Confirm with VKB Joystick
+      Device Config utility on real hardware before deploying profiles.
+  - id: COMPOSITE_DEVICE
+    description: >
+      The MCG Enhanced grip communicates via the Gunfighter/Black Mamba base
+      board. Base-provided axes are included in the combined USB descriptor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Enhanced grip — enhanced MCG variant with additional buttons.
+    VID 0x231D confirmed; PID 0x0263 is a community estimate.
+    PID estimated from community sources. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

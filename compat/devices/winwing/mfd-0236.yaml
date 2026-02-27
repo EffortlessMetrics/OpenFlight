@@ -1,0 +1,46 @@
+# WinWing Multi-Function Display (PID 0x0236)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0x0236 — estimated.
+# Generic MFD display panel module for use with SimAppPro software suite.
+# Distinct from fa18-ddi-*.yaml and f16-ddi-*.yaml panel entries.
+schema_version: "1"
+device:
+  name: "WinWing Multi-Function Display"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0x0236      # Community estimate — MFD module; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0236 is a community estimate for this generic MFD variant.
+      Confirm with SimAppPro device scan or lsusb on real hardware.
+  - id: DISPLAY_OUTPUT
+    description: >
+      Device may support display output via SimAppPro proprietary protocol
+      in addition to HID button input. HID button input works without SimAppPro.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Multi-Function Display — PID 0x0236 (est). Generic MFD panel with
+    OSB buttons. Compatible with SimAppPro for display output.
+    Wave-55 addition. Last reviewed: 2026-07.

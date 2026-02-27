@@ -1,16 +1,16 @@
 {
-  "total_ac": 2936,
-  "ac_with_tests": 2935,
-  "ac_with_gherkin": 1421,
-  "ac_with_tests_and_gherkin": 1420,
+  "total_ac": 3132,
+  "ac_with_tests": 3132,
+  "ac_with_gherkin": 1469,
+  "ac_with_tests_and_gherkin": 1469,
   "complete": 597,
   "needs_gherkin": 0,
   "needs_tests": 0,
-  "draft": 2339,
+  "draft": 2535,
   "incomplete": 0,
-  "microcrate_total": 87,
+  "microcrate_total": 86,
   "microcrate_with_tests": 65,
-  "microcrate_with_gherkin": 66,
+  "microcrate_with_gherkin": 65,
   "microcrate_with_tests_and_gherkin": 65,
   "crate_coverage": [
     {
@@ -1043,18 +1043,6 @@
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
-      "incomplete": 0
-    },
-    {
-      "crate_name": "unmapped",
-      "total_ac": 1,
-      "ac_with_tests": 0,
-      "ac_with_gherkin": 1,
-      "ac_with_tests_and_gherkin": 0,
-      "complete": 0,
-      "needs_gherkin": 0,
-      "needs_tests": 0,
-      "draft": 1,
       "incomplete": 0
     }
   ]

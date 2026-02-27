@@ -1,0 +1,47 @@
+# Precision Flight Controls (PFC) Radio Stack
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0012 — community estimates. PFC's primary VID is 0x04D8.
+# The PFC Radio Stack replicates a dual COM/NAV radio panel with frequency
+# tuning knobs and digit display for professional training simulators.
+
+schema_version: "1"
+
+device:
+  name: "PFC Radio Stack"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — PFC alt; primary VID is 0x04D8
+    product_id: 0x0012      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0012 are community estimates for the PFC Radio Stack.
+      PFC's confirmed VID is 0x04D8 (Microchip Technology).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Radio Stack — dual COM/NAV radio panel replica for sim training.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

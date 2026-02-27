@@ -1,0 +1,57 @@
+# SimPed USB Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimPed USB Rudder Pedals — Czech/Slovak boutique rudder pedal set with 4 axes
+# (dual brake channels per side). Uses VID 0x1209 (pid.codes open VID).
+# PID 0x2120 is a community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "SimPed USB Rudder Pedals"
+  vendor: "SimPed"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x2120      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [rudder, left_brake, right_brake, slider]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2120 are community estimates for the SimPed USB
+      Rudder Pedals. Confirm with lsusb on real hardware.
+  - id: DUAL_BRAKE_CHANNELS
+    description: >
+      The SimPed provides independent left and right brake channels plus a
+      differential rudder axis. The fourth axis (slider) may be a toe-spring
+      return or a separate auxiliary axis depending on the hardware revision.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimPed USB Rudder Pedals — Czech/Slovak boutique pedals with 4-axis output.
+    VID 0x1209 / PID 0x2120 community estimate. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,50 @@
+# Cyber Flight HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cyber Flight HOTAS — Hands-On Throttle-And-Stick combo from Cyber Flight.
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2081 community estimate
+# adjacent to the Cyber Flight Rudder (0x2080).
+schema_version: "1"
+
+device:
+  name: "Cyber Flight HOTAS"
+  vendor: "Cyber Flight"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2081      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, twist, throttle, hat_x, hat_y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2081 are community estimates for the Cyber Flight
+      HOTAS. Verify with lsusb on real hardware.
+  - id: COMBO_DEVICE
+    description: >
+      HOTAS combos may enumerate as a single composite HID device or as
+      separate joystick and throttle interfaces. Verify enumeration mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cyber Flight HOTAS — 6-axis stick+throttle combo. VID 0x1209 / PID 0x2081
+    community estimate. Last reviewed: 2026-06.

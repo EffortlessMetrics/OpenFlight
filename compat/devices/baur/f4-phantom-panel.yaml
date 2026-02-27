@@ -1,0 +1,44 @@
+# BAUR F-4 Phantom Cockpit Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0BCA (Baur / Engravity shared VID range), PID 0x0065 — estimated.
+# Baur F-4 Phantom II cockpit panel for DCS F-4E simulation.
+schema_version: "1"
+device:
+  name: "Baur F-4 Phantom Cockpit Panel"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Baur / Engravity VID range
+    product_id: 0x0065      # Community estimate — F-4 Phantom panel; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0065 are community estimates. IL-2 Switch Panel
+      uses 0x0060, A-10 Cockpit Panel uses 0x0063. Confirm with lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      Panel input with switches, toggles, and rotary positions mapped as
+      HID buttons. Designed for DCS World F-4E Phantom II module.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Baur F-4 Phantom Cockpit Panel — VID 0x0BCA / PID 0x0065 (est).
+    F-4E Phantom II cockpit panel. Wave-55 addition. Last reviewed: 2026-07.

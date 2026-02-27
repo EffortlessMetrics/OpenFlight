@@ -1,0 +1,59 @@
+# GoFlight GF-RP48 (0x0738 variant) — 0x0738 / 0x1040
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x0738, PID 0x1040 (estimated).
+# GoFlight GF-RP48 Radio Panel — 48-channel radio/navigation panel for flight
+# simulation. This variant uses VID 0x0738; the primary entry (gf-rp48.yaml)
+# uses VID 0x0E9F (GoFlight Inc.). VID 0x0738 appears in other GoFlight device
+# entries (gf-100-0738.yaml, gf-efis-0738.yaml) confirming this is a legitimate
+# GoFlight USB VID. PID 0x1040 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-RP48 Radio Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0738       # GoFlight / Mad Catz VID (shared; confirmed for GoFlight)
+    product_id: 0x1040      # Community estimate — GF-RP48 0x0738 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1040 is a community estimate for the GF-RP48 under VID 0x0738.
+      The primary GF-RP48 entry uses VID 0x0E9F, PID 0x0014 (gf-rp48.yaml).
+      Verify with lsusb on target hardware.
+  - id: PANEL_DEVICE
+    description: >
+      The GF-RP48 exposes 48 radio channel selectors as HID buttons. Map via
+      OpenFlight panel bindings to COM/NAV frequency selection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-RP48 Radio Panel (0x0738/0x1040). PID community estimate.
+    0x0738 VID variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

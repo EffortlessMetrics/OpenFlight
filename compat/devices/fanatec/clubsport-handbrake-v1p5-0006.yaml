@@ -1,0 +1,59 @@
+# Fanatec ClubSport Handbrake V1.5 — 0x0EB7 / 0x0006
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x0EB7 (Fanatec GmbH), PID 0x0006.
+# Fanatec ClubSport Handbrake V1.5 — a hydraulic-style USB handbrake used
+# in racing sim and occasionally adapted for flight sim differential brake
+# inputs. This PID variant is reported by the community; the primary handbrake
+# manifest (clubsport-handbrake-v1p5.yaml) uses PID 0x0011.
+# PID 0x0006 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Handbrake V1.5"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0006      # Community estimate — Handbrake V1.5 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [z]
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0006 is a community estimate. The primary handbrake manifest
+      (clubsport-handbrake-v1p5.yaml) uses PID 0x0011. Both may represent the
+      same hardware with different firmware revisions. Verify with lsusb.
+  - id: DIFFERENTIAL_BRAKE_USE
+    description: >
+      When used in flight simulation this handbrake is typically mapped to a
+      differential brake axis or spoiler/speedbrake control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Handbrake V1.5 (0x0EB7/0x0006). PID community estimate.
+    Single-axis hydraulic handbrake. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

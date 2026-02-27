@@ -1,0 +1,48 @@
+# OpenCockpits SIOC I/O Card (alternate VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0407, PID 0xC001 — community estimates. OpenCockpits uses multiple VIDs
+# including 0x0BCA. The SIOC I/O card is the primary I/O controller used with
+# the SIOC scripting system for complex cockpit wiring.
+# See opencockpits/sioc-usb.yaml for the 0x0BCA VID variant.
+
+schema_version: "1"
+
+device:
+  name: "OpenCockpits SIOC I/O Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x0407       # VID_UNCONFIRMED — OpenCockpits alt; primary is 0x0BCA
+    product_id: 0xC001      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 128
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x0407 and PID 0xC001 are community estimates. OpenCockpits'
+      primary SIOC VID is 0x0BCA. See opencockpits/sioc-usb.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits SIOC I/O Card — general-purpose I/O for SIOC-based cockpits.
+    VID 0x0407 and PID 0xC001 unconfirmed. Last reviewed: 2026-06.

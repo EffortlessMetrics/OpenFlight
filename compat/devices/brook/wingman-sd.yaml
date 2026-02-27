@@ -1,0 +1,45 @@
+# Brook Wingman SD Controller Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C12 (Zeroplus Technology), PID 0x0032 — estimated.
+# Adapter enabling PS4/Switch controllers to work on Sega Dreamcast.
+# Also enumerates as standard HID gamepad on PC.
+schema_version: "1"
+device:
+  name: "Brook Wingman SD"
+  vendor: "Brook Accessory"
+  usb:
+    vendor_id: 0x0C12       # Zeroplus Technology Co., Ltd. (Brook accessory OEM VID)
+    product_id: 0x0032      # Community estimate — Wingman SD; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0032 is a community estimate for the Wingman SD adapter.
+      Wingman XB uses 0x0030. Confirm with lsusb on real hardware.
+  - id: ADAPTER_DEVICE
+    description: >
+      Controller adapter. Actual button/axis layout depends on the
+      connected source controller.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brook Wingman SD — VID 0x0C12 / PID 0x0032 (est). Cross-console adapter.
+    Wave-55 addition. Last reviewed: 2026-07.

@@ -21,6 +21,7 @@ use std::process;
 mod client_manager;
 #[cfg(feature = "cli")]
 mod commands;
+mod completions;
 #[cfg(feature = "cli")]
 mod output;
 

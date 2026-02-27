@@ -1,0 +1,61 @@
+# MFG Crosswind V3 Black Edition Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MFG Crosswind V3 Black Edition — blackened anodised aluminium finish variant
+# of the Crosswind V3. Uses STM32 USB firmware (VID 0x0483). PID 0x5739 is a
+# community estimate. The standard V3 primary manifest is crosswind-v3.yaml
+# (VID 0x1551, PID 0x0003). Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V3 Black Edition Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — STM32 HID firmware variant
+    product_id: 0x5739      # Community estimate — V3 Black; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5739 with VID 0x0483 (STM) is a community estimate for the
+      MFG Crosswind V3 Black Edition. Primary manifest: crosswind-v3.yaml
+      (VID 0x1551, PID 0x0003). Confirm with lsusb on real hardware.
+  - id: COSMETIC_VARIANT
+    description: >
+      The V3 Black Edition is a cosmetic variant with anodised black aluminium
+      finish. Internals and firmware are identical to the standard V3.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V3 Black Edition — cosmetic variant, STM32 firmware.
+    VID 0x0483 / PID 0x5739 community estimate. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

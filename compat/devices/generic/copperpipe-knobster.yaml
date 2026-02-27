@@ -1,0 +1,61 @@
+# Copperpipe Knobster USB Rotary Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes open-source hardware VID namespace), PID 0x2080 (est).
+# The Copperpipe Knobster is a compact dual-encoder USB HID device designed for
+# avionics frequency tuning and panel control in MSFS and X-Plane. Presents two
+# relative rotary encoder axes and four push-button inputs.
+schema_version: "1"
+
+device:
+  name: "Copperpipe Knobster"
+  vendor: "Copperpipe (community)"
+  usb:
+    vendor_id: 0x1209       # pid.codes open-source hardware VID namespace
+    product_id: 0x2080      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [encoder_left, encoder_right]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 (pid.codes) / PID 0x2080 is a community estimate. VID 0x1209 is
+      shared across many open-hardware projects; differentiate by PID and USB
+      product string. Confirm with lsusb on real hardware.
+  - id: ROTARY_ENCODER_RELATIVE
+    description: >
+      Both axes are relative rotary encoders reporting delta increments, not
+      absolute positions. The host must accumulate delta values.
+  - id: PID_CODES_VID
+    description: >
+      VID 0x1209 is the pid.codes community VID namespace. Multiple unrelated
+      open-hardware devices share this VID; always match by VID+PID together.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Copperpipe Knobster — dual-encoder USB HID device for avionics control.
+    VID 0x1209 / PID 0x2080 (est). 2 relative encoder axes, 4 buttons.
+    PID estimated from community sources. Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

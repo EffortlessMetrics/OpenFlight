@@ -1,9 +1,16 @@
 [package]
 name = "flight-headless"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Headless and batch operation mode for OpenFlight"
+readme = "README.md"
+keywords = ["headless", "batch", "flight-sim", "automation"]
+categories = ["aerospace", "command-line-utilities"]
 
 [dependencies]
 flight-core = { path = "../flight-core" }

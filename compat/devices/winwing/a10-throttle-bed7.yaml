@@ -1,0 +1,47 @@
+# WinWing A-10 Throttle (PID 0xBED7)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBED7 — estimated.
+# Distinct from a10c-throttle.yaml (PID 0xBE63) and a10c-throttle-021a.yaml (0x021A).
+# Intended for the standalone A-10 twin-throttle module.
+schema_version: "1"
+device:
+  name: "WinWing A-10 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0xBED7      # Community estimate — A-10 throttle variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, x, y, rz, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBED7 is a community estimate for the WinWing A-10 Throttle.
+      Confirm with SimAppPro device scan or lsusb on real hardware.
+  - id: TWIN_THROTTLE
+    description: >
+      Dual independent throttle axes (throttle_l, throttle_r) matching the
+      A-10 Thunderbolt II twin-engine throttle quadrant. Map both axes
+      independently in DCS World A-10C II profiles.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing A-10 Throttle — PID 0xBED7 (est). Twin-lever throttle replicating
+    A-10C II layout. Popular for DCS World A-10C II module.
+    Last reviewed: 2026-07.

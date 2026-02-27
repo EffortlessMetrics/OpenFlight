@@ -1,0 +1,54 @@
+# DIY Polish Cockpit USB Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic DIY USB interface card used by Polish home cockpit builders for
+# digital I/O (switches, encoders, annunciators). Based on Microchip PIC USB
+# MCU hardware. VID 0x04D8 (Microchip Technology). PID 0xEB60 community estimate.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "DIY Polish Cockpit USB Interface Card"
+  vendor: "DIY (Polish community)"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (PIC USB MCU)
+    product_id: 0xEB60      # Community estimate — Polish DIY; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel / I/O device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 / PID 0xEB60 are community estimates. Multiple DIY builders
+      in the Polish flight sim community use Microchip PIC-based USB cards with
+      this VID. Button count varies by build. Confirm PID with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Polish Cockpit USB card — generic Microchip PIC USB I/O for home cockpit
+    builds. VID 0x04D8 / PID 0xEB60 community estimate. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

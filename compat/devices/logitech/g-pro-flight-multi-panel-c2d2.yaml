@@ -1,0 +1,57 @@
+# Logitech G Pro Flight Multi-Panel (0x046D / 0xC2D2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x046D (Logitech International), PID 0xC2D2.
+# New USB HID variant of the G Pro Flight Multi-Panel sold from ~2022 onward.
+# Earlier variants used VID 0x06A3 (Saitek/Logitech PLC): see g-flight-multi-panel.yaml.
+# PID 0xC2D2 is a community estimate — confirm with lsusb or Windows Device Manager.
+schema_version: "1"
+
+device:
+  name: "Logitech G Pro Flight Multi-Panel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech International SA
+    product_id: 0xC2D2      # Community estimate — new variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [throttle]
+    resolution_bits: 8
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC2D2 is a community estimate for the updated Logitech-branded variant.
+      Earlier units use VID 0x06A3 (Saitek/Logitech PLC) and appear in
+      g-flight-multi-panel.yaml. Verify with lsusb on target hardware.
+  - id: PANEL_DEVICE
+    description: >
+      The Multi-Panel exposes autopilot mode selectors, altitude/VS/IAS knobs,
+      and trim wheel as HID buttons/axes. Map via OpenFlight profile panel bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Pro Flight Multi-Panel — new Logitech-VID variant (0x046D/0xC2D2).
+    PID community estimate only. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,46 @@
+# RealFeel Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealFeel Yoke — force-feedback capable yoke peripheral for flight simulation.
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2071 community estimate
+# adjacent to the Fulcrum One Yoke (0x2070).
+schema_version: "1"
+
+device:
+  name: "RealFeel Yoke"
+  vendor: "RealFeel"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2071      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [roll, pitch, throttle_l, throttle_r, rudder]
+    resolution_bits: 12
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2071 are community estimates for the RealFeel Yoke.
+      Verify with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealFeel Yoke — 5-axis yoke. VID 0x1209 / PID 0x2071 community estimate.
+    Last reviewed: 2026-06.

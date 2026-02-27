@@ -1,0 +1,46 @@
+# Iris Dynamics Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Iris Dynamics Pedals — rudder/brake pedal set from Iris Dynamics.
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2023 community estimate
+# adjacent to the Iris Dynamics Yoke (0x2022) and Yoke Pro (0x2021).
+schema_version: "1"
+
+device:
+  name: "Iris Dynamics Pedals"
+  vendor: "Iris Dynamics"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2023      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2023 is a community estimate adjacent to the Iris Dynamics Yoke
+      (0x2022) and Yoke Pro (0x2021). Verify with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Iris Dynamics Pedals — rudder/brake pedal set. VID 0x1209 / PID 0x2023
+    community estimate. Last reviewed: 2026-06.

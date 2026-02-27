@@ -1,0 +1,60 @@
+# NaturalPoint OptiTrack — 0x131D / 0x0200
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x131D (NaturalPoint Inc.), PID 0x0200 (estimated).
+# NaturalPoint OptiTrack is a professional motion capture and head tracking
+# system. In flight simulation contexts OptiTrack is used for ultra-precise
+# head tracking with sub-millimetre latency via the OpenTrack/TrackIR protocol.
+# PID 0x0200 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint OptiTrack"
+  vendor: "NaturalPoint Inc."
+  type: head_tracker
+  usb:
+    vendor_id: 0x131D       # NaturalPoint Inc. (confirmed)
+    product_id: 0x0200      # Community estimate — OptiTrack USB endpoint; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (motion capture / tracker)
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0200 is a community estimate for the OptiTrack USB interface.
+      OptiTrack systems may use a proprietary software SDK (Motive) for data
+      delivery rather than raw HID. Verify with lsusb on target hardware.
+  - id: PROFESSIONAL_MOCAP
+    description: >
+      OptiTrack requires the Motive software or OpenTrack plugin for flight sim
+      head tracking integration. Raw HID pose data is available via the TrackIR
+      protocol emulation layer.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint OptiTrack (0x131D/0x0200). PID community estimate.
+    Professional motion capture head tracking system. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

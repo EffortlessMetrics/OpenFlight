@@ -1,0 +1,44 @@
+# Hori Fighting Stick Alpha (PS4/PS5)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D (Hori Co., Ltd.), PID 0x0105 — estimated.
+# Large-format arcade stick with touchpad for PS4/PS5/PC. Hayabusa 2 joystick.
+schema_version: "1"
+device:
+  name: "Hori Fighting Stick Alpha"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd. (confirmed VID)
+    product_id: 0x0105      # Community estimate — Fighting Stick Alpha; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0105 is a community estimate for the Fighting Stick Alpha.
+      Confirm with lsusb on real hardware before production deployment.
+  - id: TOUCHPAD_BUTTON
+    description: >
+      Includes PS4/PS5 touchpad mapped as additional HID button. The touchpad
+      click is accessible as a discrete button input.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori Fighting Stick Alpha — VID 0x0F0D / PID 0x0105 (est).
+    Large-format PS4/PS5/PC arcade stick. Wave-55 addition. Last reviewed: 2026-07.

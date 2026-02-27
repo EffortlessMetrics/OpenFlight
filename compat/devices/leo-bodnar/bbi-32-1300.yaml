@@ -1,0 +1,58 @@
+# Leo Bodnar BBI-32 (PID 0x1300 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd — confirmed). PID 0x1300 — community-estimated
+# variant PID for a Leo Bodnar 32-button interface. The established BBI-32
+# (bbi-32.yaml) uses PID 0x000E. PID 0x1300 is a community-reported estimate
+# for a different batch or firmware revision; verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BBI-32 (variant PID 0x1300)"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x1300      # Community estimate — PID_UNCONFIRMED; variant batch
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1300 is a community estimate. The established Leo Bodnar BBI-32
+      uses PID 0x000E (bbi-32.yaml). Verify with lsusb on real hardware.
+  - id: BUTTON_ONLY_NO_AXES
+    description: >
+      Pure button interface with no analogue axes. All 32 inputs are discrete
+      digital on/off signals.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BBI-32 variant with community-estimated PID 0x1300.
+    For the confirmed BBI-32 at PID 0x000E, see bbi-32.yaml.
+    No analogue axes — axis-binding rules do not apply.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

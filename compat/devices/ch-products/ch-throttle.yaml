@@ -1,0 +1,52 @@
+# CH Products USB Throttle Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products — confirmed). PID 0x00FA — community estimate for
+# the standalone CH Products USB throttle quadrant/controller. Distinct from
+# the CH Pro Throttle (0x00F5) and throttle-quadrant (0x00F4).
+schema_version: "1"
+
+device:
+  name: "CH Products USB Throttle Controller"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00FA      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, slider, rx, ry]
+    resolution_bits: 10
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00FA is a community estimate for the CH Products USB throttle.
+      Verify with lsusb on real hardware. The CH Pro Throttle uses 0x00F5.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products USB Throttle Controller — vintage USB throttle quadrant.
+    PID 0x00FA is a community estimate; confirm with lsusb.
+    Tier 3 — community-reported. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

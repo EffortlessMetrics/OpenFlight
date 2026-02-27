@@ -1,0 +1,53 @@
+# ButtKicker Gamer 2 (USB HID variant, PID 0x3010)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This entry covers a USB HID variant of the ButtKicker Gamer 2 tactile
+# transducer amplifier with VID 0x1209 (pid.codes) / PID 0x3010.
+# Some firmware revisions of the Gamer 2 USB interface enumerate at this
+# PID. See gamer2.yaml for the non-HID audio-only variant.
+schema_version: "1"
+
+device:
+  name: "ButtKicker Gamer 2 (USB HID variant)"
+  vendor: "ButtKicker (Guitammer)"
+  type: tactile
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3010  # Community estimate — Gamer 2 USB HID; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x3010 are community estimates for this USB HID variant
+      of the Gamer 2 amplifier. See gamer2.yaml for the primary entry.
+  - id: TACTILE_OUTPUT_ONLY
+    description: >
+      The ButtKicker Gamer 2 is a tactile transducer output device. It does not
+      generate HID input events. Audio-driven haptic feedback for sim rigs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ButtKicker Gamer 2 tactile transducer (USB HID variant). VID 0x1209 /
+    PID 0x3010 community estimate. PID estimated from community sources.
+    Last reviewed: 2026-07.

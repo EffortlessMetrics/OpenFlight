@@ -1,0 +1,59 @@
+# CH Products USB TPM Throttle (0x068E / 0x00FA)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x068E (CH Products), PID 0x00FA.
+# CH Products USB Three-Position Mode (TPM) Throttle — a standalone throttle
+# controller featuring twin throttle levers, three-position mode switch, and
+# multiple button inputs for flight simulation.
+# PID 0x00FA is a community estimate; other CH throttle PIDs include 0x00F1
+# (pro-throttle.yaml). Confirm with lsusb or Windows Device Manager.
+schema_version: "1"
+
+device:
+  name: "CH Products USB TPM Throttle"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00FA      # Community estimate — TPM Throttle variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, rx, ry]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00FA is a community estimate. Existing CH Products throttle entry
+      (pro-throttle.yaml) uses PID 0x00F1. Verify with lsusb on target hardware.
+  - id: TWIN_THROTTLE
+    description: >
+      The TPM Throttle exposes dual throttle levers as independent axes, suitable
+      for twin-engine aircraft profiles. Map each lever to separate engine throttle
+      axes in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products USB TPM Throttle — PID 0x00FA community estimate.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

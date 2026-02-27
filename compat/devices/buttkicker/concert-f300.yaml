@@ -1,0 +1,60 @@
+# ButtKicker Concert Tactile Transducer — 0x04D8 / 0xF300
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x04D8 (Microchip Technology), PID 0xF300 (estimated).
+# The ButtKicker Concert is a high-output tactile transducer/bass shaker used
+# in motion simulator cockpits and flight sim seats. When equipped with a USB
+# audio/HID control interface the OS sees this Microchip VID.
+# PID 0xF300 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "ButtKicker Concert"
+  vendor: "ButtKicker"
+  type: tactile_transducer
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by ButtKicker USB interface)
+    product_id: 0xF300      # Community estimate — Concert model; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (tactile output device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF300 is a community estimate for the ButtKicker Concert USB interface.
+      Some ButtKicker units present as USB audio devices and have no HID interface.
+      Verify with lsusb on target hardware.
+  - id: TACTILE_OUTPUT_ONLY
+    description: >
+      The ButtKicker Concert is a tactile output device; it does not provide HID
+      input. OpenFlight communicates with it via the audio or haptic output path,
+      not the HID joystick path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ButtKicker Concert tactile transducer (0x04D8/0xF300). PID community estimate.
+    High-output bass shaker for cockpit seat feedback. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

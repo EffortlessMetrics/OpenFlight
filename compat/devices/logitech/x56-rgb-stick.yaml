@@ -1,0 +1,56 @@
+# Logitech G Saitek X56 RGB Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Logitech / Saitek), PID 0x0C59 — community estimate for the
+# Logitech-branded X56 RGB Stick. Part of the X56 RGB HOTAS set.
+# Paired with the X56 RGB Throttle (PID 0x0C5B, see x56-rgb-throttle.yaml).
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek X56 RGB Stick"
+  vendor: "Logitech / Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C59      # Community estimate — X56 RGB Stick (Logitech era)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, rx, ry]
+    resolution_bits: 12
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C59 is a community estimate for the Logitech-era X56 RGB Stick.
+      Confirm with lsusb or USBDeview on real hardware.
+  - id: SPLIT_COMPOSITE
+    description: >
+      Stick (0x0C59) and throttle (0x0C5B) are separate USB HID devices.
+      Both must be enumerated for full HOTAS coverage.
+  - id: MINISTICK_DEADZONE
+    description: >
+      Built-in mini-stick (Rx/Ry) exhibits pronounced hardware deadzone (~8%).
+      Apply the x55_x56_ministick ghost filter preset.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G Saitek X56 RGB Stick. Successor to the X-55 stick.
+    PID 0x0C59 is a community estimate. Pair with x56-rgb-throttle.yaml.
+    Last reviewed: 2026-06.

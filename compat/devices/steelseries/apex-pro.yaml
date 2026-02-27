@@ -1,0 +1,57 @@
+# SteelSeries Apex Pro Keyboard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1038 confirmed: SteelSeries ApS.
+# PID 0x1610 sourced from community USB captures and linux-hardware.org
+# entries for the SteelSeries Apex Pro TKL / full-size gaming keyboard.
+# The Apex Pro features adjustable actuation OmniPoint switches and a
+# clickable OLED smart display with a multi-function dial. The dial and
+# macro functionality make it a capable flight sim secondary input device.
+schema_version: "1"
+
+device:
+  name: "SteelSeries Apex Pro Keyboard"
+  vendor: "SteelSeries"
+  usb:
+    vendor_id: 0x1038    # SteelSeries ApS (confirmed)
+    product_id: 0x1610   # Apex Pro — community USB capture
+  hid:
+    usage_page: 0x01
+    usage: 0x06          # Keyboard
+
+capabilities:
+  axes:
+    count: 1
+    names: [smart_dial]
+    resolution_bits: 8
+  buttons: 5
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: SMART_DIAL_AXIS
+    description: >
+      The OLED smart display dial reports as a relative axis over HID.
+      In flight sim, map the dial to COM/NAV frequency fine-tune or
+      altimeter baro setting for cockpit-style knob interaction.
+  - id: STEELSERIES_GG_CONFLICT
+    description: >
+      SteelSeries GG Engine may intercept dial and macro events.
+      Ensure OpenFlight input priority or disable GG Engine macros
+      for the Apex Pro to prevent double-firing.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SteelSeries Apex Pro — OmniPoint switches + smart dial.
+    VID 0x1038 confirmed; PID 0x1610 from community captures.
+    Smart dial useful for frequency/baro knob in flight sim.
+    Last reviewed: 2026-06.

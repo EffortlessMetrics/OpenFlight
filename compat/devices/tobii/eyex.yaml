@@ -1,0 +1,57 @@
+# Tobii EyeX Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Tobii EyeX is an eye tracking controller for gaming and interaction. It uses
+# the Tobii IS3 sensor for gaze tracking. VID 0x2104 (Tobii Technology AB) is
+# confirmed. PID 0x0102 is a community estimate — confirm with lsusb on hardware.
+# Requires Tobii Eye Tracking Core software.
+schema_version: "1"
+
+device:
+  name: "Tobii EyeX Controller"
+  vendor: "Tobii Technology AB"
+  type: headtracker
+  usb:
+    vendor_id: 0x2104   # Tobii Technology AB (confirmed)
+    product_id: 0x0102  # Community estimate — EyeX; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0102 is a community estimate for the Tobii EyeX. The EyeX is an
+      older device (superseded by ET 4C). Verify VID/PID with lsusb.
+  - id: TOBII_SDK_ONLY
+    description: >
+      The EyeX exposes gaze data via the Tobii EyeX SDK / Tobii Eye Tracking
+      Core software. Standard HID axis output is not available on all revisions.
+  - id: DISCONTINUED
+    description: >
+      The Tobii EyeX has been discontinued. New installations should use
+      Tobii Eye Tracker 4C (eye-tracker-4c.yaml) or Eye Tracker 5.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii EyeX Controller. VID 0x2104 confirmed; PID 0x0102 community estimate.
+    Discontinued; superseded by ET 4C. PID estimated from community sources.
+    Last reviewed: 2026-07.

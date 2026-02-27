@@ -1,0 +1,49 @@
+# Redbird TD3 Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology), PID 0xEE11 — community estimate.
+# The Redbird TD3 is a professional desktop flight training device (FTD) yoke.
+# Redbird Aviation uses Microchip Technology USB HID firmware for their control
+# peripherals.
+
+schema_version: "1"
+
+device:
+  name: "Redbird TD3 Yoke"
+  vendor: "Redbird Flight Simulations"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by Redbird)
+    product_id: 0xEE11      # Community estimate — Redbird TD3 yoke
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, throttle]
+    resolution_bits: 12
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEE11 is a community estimate for the Redbird TD3 yoke.
+      VID 0x04D8 is confirmed as Microchip Technology, used by Redbird.
+      Confirm product ID with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Redbird TD3 Yoke — professional desktop FTD yoke from Redbird Aviation.
+    PID 0xEE11 unconfirmed. Last reviewed: 2026-06.

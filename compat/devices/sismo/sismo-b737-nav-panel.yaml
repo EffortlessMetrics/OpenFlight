@@ -1,0 +1,59 @@
+# Sismo Soluciones Boeing 737 NAV Panel — 0x04D8 / 0x0055
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x04D8 (Microchip Technology), PID 0x0055 (estimated).
+# The Sismo Soluciones Boeing 737 NAV Panel is a replica cockpit navigation
+# panel for the B737 type rating simulator. Exposes NAV/GPS switch, VOR/LOC
+# and approach buttons, and navigation mode selectors as USB HID.
+# VID 0x04D8 (Microchip) is confirmed for Sismo devices. PID 0x0055 is a
+# community estimate — confirm with lsusb or Sismo documentation.
+schema_version: "1"
+
+device:
+  name: "Sismo Boeing 737 NAV Panel"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (common for Sismo custom USB HID)
+    product_id: 0x0055      # Community estimate — Sismo B737 NAV Panel; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0055 is a community estimate. Other Sismo B737 devices use PIDs in the
+      0xF5D0–0xF5D6 range (sismo-b737-mcp.yaml, b737-eicas.yaml, etc.).
+      Verify with lsusb or Sismo customer support.
+  - id: PANEL_DEVICE
+    description: >
+      The NAV Panel exposes navigation mode selectors and approach buttons.
+      Map via OpenFlight panel bindings to the appropriate sim variables.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo Soluciones Boeing 737 NAV Panel (0x04D8/0x0055). PID community estimate.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

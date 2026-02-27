@@ -1,0 +1,60 @@
+# Thrustmaster eSwap Pro Controller (PID 0xD009)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster / Guillemot Corporation — confirmed).
+# PID 0xD009 — community estimate for the Thrustmaster eSwap Pro modular
+# controller in PC/HID mode. The eSwap Pro features swappable modules
+# and is used in some flight simulation setups as a supplementary controller.
+# The eSwap (non-Pro) uses PID 0xB687; eSwap X Pro uses PID 0x0402.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster eSwap Pro Controller"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot Corporation (confirmed)
+    product_id: 0xD009      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xD009 is a community estimate for the eSwap Pro in HID mode.
+      The eSwap (non-Pro) uses 0xB687 (eswap-pro.yaml).
+      Verify with lsusb or Windows Device Manager.
+  - id: MODULAR_INPUTS
+    description: >
+      The eSwap Pro features swappable D-pad and stick modules. Axis layout
+      may change depending on the module configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster eSwap Pro modular controller in PC HID mode.
+    PID 0xD009 is a community estimate.
+    See also eswap-pro.yaml (0xB687) and eswap-x-pro.yaml (0x0402).
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

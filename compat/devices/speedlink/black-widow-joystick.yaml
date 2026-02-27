@@ -1,0 +1,42 @@
+# SpeedLink Black Widow Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 (SpeedLink / Büro), PID 0x0C31 — estimated.
+# Budget USB joystick by SpeedLink, popular in European and emerging markets.
+# Distinct from the Black Widow Gamepad (PID 0x1000).
+schema_version: "1"
+device:
+  name: "SpeedLink Black Widow Joystick"
+  vendor: "SpeedLink"
+  usb:
+    vendor_id: 0x1781       # SpeedLink / Büro GmbH
+    product_id: 0x0C31      # Community estimate — Black Widow Joystick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C31 is a community estimate for the Black Widow Joystick.
+      The Black Widow Gamepad uses PID 0x1000. Confirm with lsusb.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SpeedLink Black Widow Joystick — VID 0x1781 / PID 0x0C31 (est).
+    Budget USB joystick. Distinct from Black Widow Gamepad (0x1000).
+    Wave-55 addition. Last reviewed: 2026-07.

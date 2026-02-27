@@ -1,0 +1,40 @@
+# SpeedLink SL-6560 Turbo Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 (SpeedLink / Büro), PID 0x0C30 — estimated.
+# Budget USB joystick with twist rudder, adjacent to Black Widow Joystick (0x0C31).
+schema_version: "1"
+device:
+  name: "SpeedLink SL-6560 Turbo Joystick"
+  vendor: "SpeedLink"
+  usb:
+    vendor_id: 0x1781       # SpeedLink / Büro GmbH
+    product_id: 0x0C30      # Community estimate — SL-6560 Turbo; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C30 is a community estimate for the SL-6560 Turbo Joystick.
+      Black Widow Joystick uses 0x0C31. Confirm with lsusb.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SpeedLink SL-6560 Turbo Joystick — VID 0x1781 / PID 0x0C30 (est).
+    Budget USB joystick with twist rudder. Wave-55 addition. Last reviewed: 2026-07.

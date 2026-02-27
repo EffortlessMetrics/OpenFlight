@@ -1,0 +1,48 @@
+# OpenCockpits USB Expansion Card (alternate VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0407, PID 0xC000 — community estimates. OpenCockpits uses multiple VIDs
+# including 0x1000 and 0x0BCA. PID 0xC000 covers an alternate enumeration of
+# the USB expansion card used for digital I/O in cockpit builds.
+# See opencockpits/usb-expansion.yaml for the 0x1000 VID variant.
+
+schema_version: "1"
+
+device:
+  name: "OpenCockpits USB Expansion Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x0407       # VID_UNCONFIRMED — OpenCockpits alt; primary is 0x1000
+    product_id: 0xC000      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x0407 and PID 0xC000 are community estimates. OpenCockpits' primary
+      VIDs are 0x1000 and 0x0BCA. See opencockpits/usb-expansion.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits USB Expansion Card — digital I/O card for sim cockpit builds.
+    VID 0x0407 and PID 0xC000 unconfirmed. Last reviewed: 2026-06.

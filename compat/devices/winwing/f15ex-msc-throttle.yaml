@@ -1,0 +1,56 @@
+# WinWing F-15EX MSC Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F-15EX MSC (Multi-Switch Console) Throttle — HOTAS throttle designed
+# for the F-15EX Eagle II, with MSC-style switch panels integrated into the
+# throttle grip. Popular in the European DCS community. VID 0x4098 confirmed
+# (WinWing). PID 0xBEDA is a community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "WinWing F-15EX MSC Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBEDA      # Community estimate — F-15EX MSC; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, x, y, rz, slider]
+    resolution_bits: 12
+  buttons: 40
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEDA is a community estimate for the F-15EX MSC Throttle.
+      WinWing VID 0x4098 is confirmed. Confirm PID with lsusb on real hardware.
+  - id: DUAL_THROTTLE
+    description: >
+      The F-15EX MSC provides independent left and right throttle axes for
+      the two-engine F-15 configuration. Both are required for full realism.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-15EX MSC Throttle. VID 0x4098 confirmed; PID 0xBEDA community
+    estimate. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

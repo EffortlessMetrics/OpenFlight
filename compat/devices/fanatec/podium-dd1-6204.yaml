@@ -1,0 +1,52 @@
+# Fanatec Podium Wheel Base DD1 (Alt PID 0x6204)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fanatec Podium Wheel Base DD1 — high-end direct-drive wheel base.
+# Alternate PID 0x6204 (community estimate). Primary manifest uses
+# PID 0x0040 (podium-dd1.yaml); alternate PID 0x0010 in podium-dd1-0010.yaml.
+# VID 0x0EB7 confirmed (Fanatec GmbH).
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Wheel Base DD1 (Alt PID)"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7     # Fanatec GmbH (confirmed registered VID)
+    product_id: 0x6204    # Community estimate — see also 0x0040 (podium-dd1.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction, square, triangle, sawtooth_up, sawtooth_down]
+    max_update_rate_hz: 500
+    torque_limit_nm: 20.0   # DD1 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6204 is a community estimate. Primary manifest is podium-dd1.yaml
+      (PID 0x0040); alternate is podium-dd1-0010.yaml (PID 0x0010).
+      Verify with USBView on real hardware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium DD1 — alt PID 0x6204. Primary: podium-dd1.yaml (0x0040).
+    VID 0x0EB7 confirmed. Last reviewed: 2026-06.

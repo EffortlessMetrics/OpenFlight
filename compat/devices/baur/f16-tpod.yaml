@@ -1,0 +1,45 @@
+# BAUR F-16 TPOD Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2092 — estimated.
+# Baur F-16 Targeting Pod (TPOD) control panel replica for DCS F-16C Viper.
+schema_version: "1"
+device:
+  name: "BAUR F-16 TPOD Panel"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2092      # Community estimate — BAUR F-16 TPOD panel; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 10
+  buttons: 24
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2092 is a community estimate for the BAUR F-16 TPOD panel.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Targeting pod control panel with cursor slew axes and function buttons.
+      Designed for the DCS F-16C Viper LITENING/HARM targeting pod workflow.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR F-16 TPOD Panel — VID 0x1209 / PID 0x2092 (est).
+    F-16 Targeting POD control panel replica. DCS F-16C Viper use.
+    Wave-59 addition. Last reviewed: 2026-07.

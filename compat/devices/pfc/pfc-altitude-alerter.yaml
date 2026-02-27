@@ -1,0 +1,47 @@
+# Precision Flight Controls (PFC) Altitude Alerter Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0011 — community estimates. PFC's primary VID is 0x04D8.
+# The Altitude Alerter provides an altitude preselect knob and alert button
+# for GA and commercial training simulator setups.
+
+schema_version: "1"
+
+device:
+  name: "PFC Altitude Alerter Panel"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — PFC alt; primary VID is 0x04D8
+    product_id: 0x0011      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 1
+    names: [alt_set]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0011 are community estimates for this PFC panel.
+      PFC's confirmed VID is 0x04D8 (Microchip Technology).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Altitude Alerter Panel — altitude preselect panel for sim training.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

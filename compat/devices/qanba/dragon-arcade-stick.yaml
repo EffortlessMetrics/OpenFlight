@@ -1,0 +1,55 @@
+# Qanba Dragon Arcade Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2C22 and PID 0x2503 are community estimates for the Qanba Dragon
+# arcade joystick (PS4/PC edition). The Qanba Dragon features a Sanwa
+# JLF joystick and Sanwa OBSF-30 buttons in a premium aluminum-panel
+# enclosure. Designed for fighting games; repurposed in flight sim as a
+# digital joystick for helicopter cyclic or for panel button assignments.
+# NOTE: VID 0x2C22 / PID 0x2503 are community estimates — verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Qanba Dragon Arcade Joystick"
+  vendor: "Qanba"
+  usb:
+    vendor_id: 0x2C22    # Community estimate — verify with lsusb
+    product_id: 0x2503   # PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2C22 / PID 0x2503 are community estimates for the Qanba Dragon.
+      Verify with lsusb before deployment. Qanba may use different PIDs for
+      PS3, PS4, and PC-only variants of the Dragon.
+  - id: DIGITAL_STICK_ONLY
+    description: >
+      The Sanwa JLF is a digital 8-way microswitch joystick. Axis reports are
+      step-quantized; not suitable for fine analog throttle or elevator inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Qanba Dragon — Sanwa JLF + 8-button arcade stick (PS4/PC).
+    VID 0x2C22 / PID 0x2503 are community estimates; verify with lsusb.
+    Digital 8-way; limited analog precision. Last reviewed: 2026-06.

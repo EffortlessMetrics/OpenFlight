@@ -1,0 +1,51 @@
+# CAE SimFinity Control
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1055 (estimated professional simulation VID), PID 0x0002 — estimated.
+# CAE SimFinity series professional flight simulation control loader.
+schema_version: "1"
+device:
+  name: "CAE SimFinity Control"
+  vendor: "CAE Inc."
+  usb:
+    vendor_id: 0x1055       # Community estimate — professional sim VID; confirm with lsusb
+    product_id: 0x0002      # Community estimate — SimFinity Control; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 16
+  buttons: 12
+  hats: 0
+  force_feedback: true
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1055 and PID 0x0002 are community estimates for the CAE SimFinity
+      Control. Professional aviation training hardware. Confirm VID/PID with
+      CAE documentation or lsusb before deployment.
+  - id: PROFESSIONAL_HARDWARE
+    description: >
+      CAE SimFinity is a professional flight training device (FTD) product
+      line. This USB HID interface may represent a simplified connectivity
+      mode — full simulation use requires the CAE SimFinity SDK.
+  - id: HIGH_RESOLUTION_FFB
+    description: >
+      High-resolution axis and force feedback. FFB safety limits should be
+      enforced per ADR-009 interlock design before enabling FFB output.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CAE SimFinity Control — VID 0x1055 / PID 0x0002 (est).
+    Professional aviation training control loader. Moog/CAE class hardware.
+    Wave-59 addition. Last reviewed: 2026-07.

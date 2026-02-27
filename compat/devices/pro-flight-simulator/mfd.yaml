@@ -1,0 +1,49 @@
+# Pro Flight Simulator MFD
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551 (estimated), PID 0x0030 — estimated.
+# Pro Flight Simulator multi-function display (MFD) panel for cockpit builders.
+schema_version: "1"
+device:
+  name: "Pro Flight Simulator MFD"
+  vendor: "Pro Flight Simulator"
+  usb:
+    vendor_id: 0x1551       # Community estimate — Pro Flight Simulator VID; confirm with lsusb
+    product_id: 0x0030      # Community estimate — PFS MFD; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — display/panel device
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0030 are community estimates for the Pro Flight
+      Simulator MFD. Confirm with lsusb or Windows Device Manager before use.
+  - id: PANEL_DEVICE
+    description: >
+      Multi-function display panel with button matrix input. Display output
+      may require proprietary Pro Flight Simulator software or plugin.
+  - id: DISPLAY_OUTPUT
+    description: >
+      Device includes a display (LCD/OLED) for flight data. Display output
+      is vendor-specific and may not be accessible via standard HID.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pro Flight Simulator MFD — VID 0x1551 / PID 0x0030 (est).
+    MFD panel for home cockpit builds. Button input + display output.
+    Wave-59 addition. Last reviewed: 2026-07.

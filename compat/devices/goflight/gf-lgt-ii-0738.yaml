@@ -1,0 +1,59 @@
+# GoFlight GF-LGT-II Landing Gear Panel (0x0738 variant) — 0x0738 / 0x1041
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x0738, PID 0x1041 (estimated).
+# GoFlight GF-LGT-II Landing Gear and Trim panel — provides landing gear lever,
+# flap/trim controls, and indicator lights for flight simulation. The Mark II
+# variant with revised PID. The primary entry (gf-lgt.yaml) uses VID 0x0E9F
+# PID 0x0006. This variant uses VID 0x0738, consistent with the 0x0738-suffixed
+# GoFlight entries already in this directory. PID 0x1041 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-LGT-II Landing Gear Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0738       # GoFlight / Mad Catz VID (shared; confirmed for GoFlight)
+    product_id: 0x1041      # Community estimate — GF-LGT-II 0x0738 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [z]              # Trim wheel axis
+    resolution_bits: 8
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1041 is a community estimate for the GF-LGT-II under VID 0x0738.
+      The primary GF-LGT entry uses VID 0x0E9F, PID 0x0006 (gf-lgt.yaml).
+      Verify with lsusb on target hardware.
+  - id: GEAR_LEVER_DETENT
+    description: >
+      The landing gear lever has a detent mechanism. Map the lever to the
+      landing gear toggle binding in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-LGT-II (0x0738/0x1041). PID community estimate.
+    0x0738 VID variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

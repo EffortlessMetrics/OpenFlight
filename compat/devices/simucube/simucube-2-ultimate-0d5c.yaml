@@ -1,0 +1,81 @@
+# Simucube 2 Ultimate Direct Drive Base (Alt PID 0x0D5C)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: usb.ids lists as "MCS Electronics" (Granite Devices).
+# PID 0x0D5C is a community-reported alternate PID for the Simucube 2 Ultimate.
+# The primary manifest uses PID 0x0D62 (simucube-2-ultimate.yaml). PID 0x0D5C
+# may correspond to an earlier firmware or pre-production variant.
+# Confirm with lsusb or Simucube True Drive USB enumeration.
+
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Ultimate"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D5C      # Community estimate — alt PID; primary is 0x0D62 (simucube-2-ultimate.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 24     # BISS-C high-resolution encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 32.0   # Ultimate rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5C is a community estimate. The primary Simucube 2 Ultimate
+      manifest uses 0x0D62 (simucube-2-ultimate.yaml). Confirm with lsusb or
+      Simucube True Drive USB descriptor capture before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types.
+  - id: HIGH_TORQUE_SAFETY
+    description: >
+      At 32 Nm peak, hardware torque limits must be configured in Simucube
+      True Drive before use. OpenFlight enforces software torque caps via the
+      FFB safety envelope (ADR-009); hardware limits must also be set.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Simucube 2 Ultimate base exposes only the rotation axis. A flight
+      grip adapter mounts on the shaft and enumerates as a separate USB HID
+      device.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Ultimate alternate PID 0x0D5C. Primary manifest is
+    simucube-2-ultimate.yaml (PID 0x0D62). VID 0x16D0 = Granite Devices.
+    32 Nm peak direct-drive FFB base. Hardware torque limits must be set.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+driver:
+  type: simucube2_torque
+  notes: >
+    Requires Simucube True Drive for initial calibration and firmware updates.
+    Hardware torque limits must be configured in Simucube True Drive.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

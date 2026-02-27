@@ -1,0 +1,47 @@
+# SISMO B737 MCP (alternate VID/PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1554, PID 0x0002 — community estimates for SISMO. SISMO's confirmed
+# VID is 0x04D8 (Microchip Technology). The B737 MCP is a 737NG mode control
+# panel replica. See sismo/sismo-b737-mcp.yaml for the 0x04D8 variant.
+
+schema_version: "1"
+
+device:
+  name: "SISMO B737 MCP"
+  vendor: "SISMO Soluciones"
+  usb:
+    vendor_id: 0x1554       # VID_UNCONFIRMED — SISMO alt; confirmed VID is 0x04D8
+    product_id: 0x0002      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob]
+    resolution_bits: 10
+  buttons: 36
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1554 and PID 0x0002 are community estimates. SISMO's confirmed VID
+      is 0x04D8. See sismo/sismo-b737-mcp.yaml for the confirmed variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SISMO B737 MCP — Boeing 737 MCP replica (alt VID/PID est).
+    See sismo-b737-mcp.yaml for confirmed 0x04D8 variant. Last reviewed: 2026-06.

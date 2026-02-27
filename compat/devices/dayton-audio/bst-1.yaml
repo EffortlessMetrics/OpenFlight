@@ -1,0 +1,53 @@
+# Dayton Audio BST-1 Bass Shaker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Dayton Audio BST-1 is a bass shaker / tactile transducer used in simulation
+# rigs for haptic feedback. It is driven by an audio amplifier signal; some
+# USB amplifier variants enumerate as HID. VID 0x1209 and PID 0x3011 are
+# community estimates — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "Dayton Audio BST-1 Bass Shaker"
+  vendor: "Dayton Audio"
+  type: tactile
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3011  # Community estimate — BST-1; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x3011 are community estimates. The BST-1 is primarily
+      audio-driven; USB presence varies by companion amplifier/controller.
+  - id: TACTILE_OUTPUT_ONLY
+    description: >
+      The BST-1 is a tactile transducer output device. It does not generate
+      HID input events. Used with SimHub, SimShaker, or similar software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Dayton Audio BST-1 bass shaker / tactile transducer. VID 0x1209 / PID
+    0x3011 community estimate. PID estimated from community sources.
+    Last reviewed: 2026-07.

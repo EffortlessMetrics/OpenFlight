@@ -1,0 +1,42 @@
+# VKB GF3 RH SEM
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim), PID 0x0231 — estimated.
+# VKB GF3 base with Right Hand Space-Exploration Module grip.
+schema_version: "1"
+device:
+  name: "VKB GF3 RH SEM"
+  vendor: "VKB Sim"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0231      # Community estimate — GF3 RH SEM; confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0231 is a community estimate for the VKB GF3 RH SEM.
+      VKB assigns PIDs per base+grip combination. Confirm with VKBDevCfg
+      or lsusb on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB GF3 RH SEM — VID 0x231D / PID 0x0231 (est).
+    VKB Gunfighter 3 base with Space-Exploration Module right-hand grip.
+    Wave-59 addition. Last reviewed: 2026-07.

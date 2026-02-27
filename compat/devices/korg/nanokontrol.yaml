@@ -1,0 +1,58 @@
+# Korg nanoKONTROL (v1) MIDI Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0944 confirmed: Korg, Inc. (registered USB vendor ID).
+# PID 0x0175 sourced from community USB captures and linux-hardware.org
+# entries for the original Korg nanoKONTROL (first generation, ~2009).
+# Distinct from nanokontrol2.yaml (PID 0x0117), which is the redesigned
+# 2nd generation. The original nanoKONTROL features 9 faders, 9 knobs,
+# and transport + scene buttons in a compact form factor.
+# In flight sim it is used for throttle, mixture, prop, and avionics knobs.
+schema_version: "1"
+
+device:
+  name: "Korg nanoKONTROL MIDI Controller"
+  vendor: "Korg"
+  usb:
+    vendor_id: 0x0944       # Korg, Inc. (confirmed)
+    product_id: 0x0175      # nanoKONTROL v1 — community USB captures
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 18
+    names: [fader_1, fader_2, fader_3, fader_4, fader_5, fader_6, fader_7, fader_8, fader_9,
+            knob_1, knob_2, knob_3, knob_4, knob_5, knob_6, knob_7, knob_8, knob_9]
+    resolution_bits: 7
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The nanoKONTROL is a pure USB MIDI device. Faders and knobs send MIDI CC;
+      buttons send MIDI Note On/Off. OpenFlight must use the MIDI input subsystem.
+      Distinct from nanoKONTROL2 (nanokontrol2.yaml, PID 0x0117).
+  - id: SCENE_SETS
+    description: >
+      The nanoKONTROL supports 4 configurable scenes via Korg Kontrol Editor.
+      Ensure the active scene matches the expected CC assignments in the
+      OpenFlight MIDI profile to avoid axis mismatches.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Korg nanoKONTROL (v1) — 9 faders + 9 knobs + transport buttons.
+    VID 0x0944 confirmed; PID 0x0175 from community captures.
+    Pure MIDI device; distinct from nanoKONTROL2. Last reviewed: 2026-06.

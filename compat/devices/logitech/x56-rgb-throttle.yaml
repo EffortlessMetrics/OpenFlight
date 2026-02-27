@@ -1,0 +1,53 @@
+# Logitech G Saitek X56 RGB Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Logitech / Saitek), PID 0x0C5B — community estimate for the
+# Logitech-branded X56 RGB Throttle. The X56 RGB is the successor to the X-55.
+# Paired with the X56 RGB Stick (PID 0x0C59, see x56-rgb-stick.yaml).
+# The older Mad Catz X56 Rhino throttle uses VID 0x0738 PID 0xA221.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek X56 RGB Throttle"
+  vendor: "Logitech / Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C5B      # Community estimate — X56 RGB Throttle (Logitech era)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_left, throttle_right, slider_left, slider_right, rx, ry]
+    resolution_bits: 10
+  buttons: 28
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C5B is a community estimate for the Logitech-era X56 RGB Throttle.
+      Confirm with lsusb or USBDeview on real hardware.
+  - id: SPLIT_COMPOSITE
+    description: >
+      Throttle (0x0C5B) and stick (0x0C59) are separate USB HID devices.
+      Both must be enumerated for full HOTAS coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G Saitek X56 RGB Throttle. Successor to the X-55.
+    PID 0x0C5B is a community estimate. Pair with x56-rgb-stick.yaml.
+    Last reviewed: 2026-06.

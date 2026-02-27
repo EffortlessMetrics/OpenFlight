@@ -1,0 +1,57 @@
+# Logitech MX Master 3 Mouse (0x046D / 0xB023)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x046D (Logitech International), PID 0xB023.
+# The Logitech MX Master 3 is a wireless productivity mouse. When mapped via
+# OpenFlight macros, its thumb buttons and scroll wheel serve as macro/scroll
+# inputs for flight simulation (zoom, map pan, radio tuning).
+# PID 0xB023 confirmed from USB ID database (Logitech Bolt/Unifying receiver).
+schema_version: "1"
+
+device:
+  name: "Logitech MX Master 3"
+  vendor: "Logitech"
+  type: mouse
+  usb:
+    vendor_id: 0x046D       # Logitech International SA
+    product_id: 0xB023      # MX Master 3 — USB ID database / Unifying receiver
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x02             # Mouse
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, wheel]
+    resolution_bits: 16
+  buttons: 7
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: WIRELESS_UNIFYING
+    description: >
+      MX Master 3 connects via Logitech Unifying or Bolt receiver, or Bluetooth.
+      Over Unifying/Bolt the OS sees VID 0x046D, PID 0xB023 on the receiver.
+  - id: MACRO_SCROLL_USE
+    description: >
+      The thumb buttons and electromagnetic scroll wheel are the primary inputs
+      of interest for flight sim use — zoom, map pan, or radio frequency tuning.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech MX Master 3 — wireless mouse used for macro/scroll input in flight sim.
+    Tier 3 — community estimate. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

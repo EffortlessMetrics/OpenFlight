@@ -1,0 +1,51 @@
+# FlyEngravity A320 EFIS (alternate VID/PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0022 — community estimates. FlyEngravity's confirmed VID
+# is 0x0BCA with PID 0x0080 (see a320-efis.yaml). This entry covers a reported
+# alternate enumeration. Note: same physical device, different VID/PID variant.
+
+schema_version: "1"
+
+device:
+  name: "FlyEngravity A320 EFIS"
+  vendor: "FlyEngravity"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — alt variant; see a320-efis.yaml for 0x0BCA
+    product_id: 0x0022      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro_knob, nd_range_knob]
+    resolution_bits: 8
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0022 are community estimates. The confirmed variant
+      uses VID 0x0BCA, PID 0x0080 (see flyengravity/a320-efis.yaml).
+  - id: FUNCTIONAL_DUPLICATE
+    description: >
+      This manifest covers the same physical device as flyengravity/a320-efis.yaml
+      under a different estimated VID/PID enumeration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FlyEngravity A320 EFIS — alternate VID/PID entry (0x1551:0x0022 est).
+    See a320-efis.yaml for confirmed 0x0BCA:0x0080. Last reviewed: 2026-06.

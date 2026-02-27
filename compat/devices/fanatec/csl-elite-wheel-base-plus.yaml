@@ -1,0 +1,69 @@
+# Fanatec CSL Elite Wheel Base+
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH (registered USB vendor).
+# PID 0x0013 is a community estimate for the CSL Elite Wheel Base+ (Plus).
+# The CSL Elite Wheel Base+ is the upgraded variant of the CSL Elite Wheel Base
+# (csl-elite-wheel-base.yaml, PID 0x0006), featuring an improved motor and
+# updated torque output. Fanatec's entry-level FFB wheel base with ClubSport
+# quick-release support. Confirm PID with lsusb or Fanatec Control Panel.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Wheel Base+"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0013      # Community estimate — CSL Elite WB+; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 500
+    torque_limit_nm: 5.5    # CSL Elite+ rated peak (Nm) — estimated
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0013 is a community estimate for the CSL Elite Wheel Base+.
+      Confirm with Fanatec Control Panel → Hardware tab or lsusb.
+      The base CSL Elite uses PID 0x0006 (csl-elite-wheel-base.yaml).
+  - id: FANATEC_FANALAB_RECOMMENDED
+    description: >
+      Full FFB tuning requires Fanatec's Fanalab software. DirectInput FFB
+      effects function without Fanalab but with reduced adjustability.
+  - id: BELT_DRIVE
+    description: >
+      Belt-drive motor; lower peak torque than the direct-drive CSL DD.
+      In flight sim use for rudder/yoke axis with spring centering FFB.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Wheel Base+. VID 0x0EB7 confirmed; PID 0x0013 community
+    estimate. Upgraded variant of CSL Elite (csl-elite-wheel-base.yaml).
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,52 @@
+# FSSB R3 Slim Force Sensing Stick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FSSB (Flight Sim Stick Base) R3 Slim — high-precision isometric force sensing joystick.
+# VID 0x1209 (pid.codes shared VID for open-source hardware), PID 0x2050 — estimated.
+# Zero mechanical movement; forces are measured by strain gauges.
+schema_version: "1"
+device:
+  name: "FSSB R3 Slim"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2050      # Community estimate — FSSB R3 Slim; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2050 is a community estimate for the FSSB R3 Slim.
+      Confirm with lsusb or USBView on real hardware.
+  - id: ISOMETRIC_FORCE_SENSING
+    description: >
+      The R3 Slim is a force-sensing (isometric) stick with no mechanical
+      deflection. Input values represent applied force, not displacement.
+      Calibration profiles differ significantly from conventional joysticks.
+      Sensitivity should be mapped through custom curves.
+  - id: FFB_FORCE_TRIM
+    description: >
+      Force feedback capability used for active force trim (centering force)
+      rather than traditional FFB effects. Requires driver support.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R3 Slim — VID 0x1209 / PID 0x2050 (est). Zero-travel force sensing stick.
+    High-precision isometric input for fighter aircraft simulation.
+    Popular in Asian sim community. Wave-55 addition. Last reviewed: 2026-07.

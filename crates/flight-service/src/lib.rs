@@ -22,7 +22,9 @@ pub mod capability_service;
 pub mod curve_conflict_service;
 pub mod diagnostic_bundle;
 pub mod error_taxonomy;
+pub mod first_run;
 pub mod health;
+pub mod health_http;
 pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
@@ -30,6 +32,7 @@ pub mod one_click_resolver;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
+pub mod startup_sequence;
 pub mod stecs_runtime;
 
 #[cfg(feature = "tflight-hidapi")]

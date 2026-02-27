@@ -1,0 +1,52 @@
+# 3Dconnexion SpaceMouse Pro (PID 0xC62B)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F (3Dconnexion GmbH), PID 0xC62B — community estimate.
+# 3Dconnexion SpaceMouse Pro variant — additional PID from community sources.
+# The confirmed SpaceMouse Pro PID is 0xC631 (space-mouse-pro.yaml).
+# PID 0xC62B may represent a regional variant or firmware revision.
+schema_version: "1"
+device:
+  name: "3Dconnexion SpaceMouse Pro (0xC62B)"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F       # 3Dconnexion GmbH (confirmed)
+    product_id: 0xC62B      # Community estimate — SpaceMouse Pro variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x08             # Multi-axis Controller
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 15
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC62B is a community-reported alternate PID for the SpaceMouse Pro.
+      Confirmed primary PID is 0xC631 (space-mouse-pro.yaml). 0xC62B may be
+      a regional variant, OEM edition, or older firmware. Confirm with lsusb.
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck with 15 programmable function keys.
+      Translation (Tx/Ty/Tz) and rotation (Rx/Ry/Rz) axes spring-centred.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      Not a dedicated flight controller. Suitable for MSFS/X-Plane cockpit
+      navigation, camera control, and drone/external view panning.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    3Dconnexion SpaceMouse Pro (0xC62B) — VID 0x256F / PID 0xC62B (est).
+    Alternate PID variant of the SpaceMouse Pro (primary: 0xC631).
+    Wave-59 addition. Last reviewed: 2026-07.

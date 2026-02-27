@@ -1,0 +1,59 @@
+# Thrustmaster TMX Force Feedback Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB66B sourced from community USB captures and SDL2 gamecontrollerdb
+# entries for the Thrustmaster TMX Force Feedback wheel (PC/Xbox One).
+# Distinct from tmx-racing-wheel.yaml (PID 0xB67F, non-FFB variant) and
+# tmx-pro.yaml (PID 0xB673). The TMX FFB uses a rubber-belt drive motor
+# with 900° rotation and is occasionally used for rudder axis input in
+# flight sim setups where a wheel is preferred over pedals.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TMX Force Feedback Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB66B      # TMX Force Feedback — community USB capture
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (900° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Map X to rudder and Z/Rz to throttle/toe-brake
+      in flight sim profiles.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB66B is a community estimate. Verify with lsusb on real hardware.
+      The non-FFB TMX uses 0xB67F; the TMX Pro uses 0xB673.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TMX Force Feedback — rubber-belt FFB wheel, 900° rotation.
+    VID 0x044F confirmed; PID 0xB66B from community captures (estimate).
+    Occasionally used for rudder axis in flight sim. Last reviewed: 2026-06.

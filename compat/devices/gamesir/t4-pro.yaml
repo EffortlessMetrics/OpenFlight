@@ -1,0 +1,56 @@
+# GameSir T4 Pro Wireless Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1949 and PID 0x0401 are community estimates for the GameSir T4 Pro
+# wireless gamepad (PC / Android / Switch / iOS). The T4 Pro features dual
+# Hall-effect analog sticks, a gyroscope, and a symmetric face-button layout
+# designed for multi-platform use. In flight sim it is used as a secondary
+# gamepad for menu navigation, camera control, or panel button assignments.
+# NOTE: VID 0x1949 / PID 0x0401 are community estimates — verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "GameSir T4 Pro Wireless Gamepad"
+  vendor: "GameSir"
+  usb:
+    vendor_id: 0x1949    # Community estimate — verify with lsusb
+    product_id: 0x0401   # PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1949 / PID 0x0401 are community estimates. Verify with lsusb.
+      The T4 Pro may present different VID/PIDs when in PC XInput vs DInput
+      mode. Ensure DInput (HID) mode is selected for OpenFlight compatibility.
+  - id: HALL_EFFECT_STICKS
+    description: >
+      Hall-effect magnetic sensors on both sticks provide near-zero drift
+      over lifetime. Axis resolution is 8-bit in standard HID mode; upgrade
+      to 16-bit is available in some firmware versions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GameSir T4 Pro — Hall-effect dual-stick gamepad.
+    VID 0x1949 / PID 0x0401 are community estimates; verify with lsusb.
+    Use DInput mode for OpenFlight HID compatibility. Last reviewed: 2026-06.

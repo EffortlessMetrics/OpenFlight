@@ -1,0 +1,54 @@
+# DOF Reality H2 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DOF Reality H2 is a 2-degrees-of-freedom motion platform (pitch + roll) for
+# flight and driving simulation. USB HID output is used to receive motion cues
+# from simulation software (e.g., SimTools). VID 0x1209 is the pid.codes open
+# VID; PID 0x3001 is a community estimate — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "DOF Reality H2 Motion Platform"
+  vendor: "DOF Reality"
+  type: platform
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3001  # Community estimate — H2; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined — motion output device, not standard HID input
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 (pid.codes) and PID 0x3001 are community estimates for the H2
+      platform. Verify with lsusb on real hardware. Motion output is typically
+      driven via SimTools or Motion Compensation software.
+  - id: MOTION_OUTPUT_ONLY
+    description: >
+      The H2 receives motion commands from the PC; it does not generate HID
+      input events. OpenFlight tracks this for sim-rig compatibility.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DOF Reality H2 2-DOF motion platform (pitch + roll). VID 0x1209 / PID
+    0x3001 community estimate. Motion output device; driven by SimTools.
+    Last reviewed: 2026-07.

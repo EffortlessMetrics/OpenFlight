@@ -1,0 +1,50 @@
+# Moog Quickloader II
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1055 (estimated professional simulation VID), PID 0x0001 — estimated.
+# Moog Quickloader II professional flight simulation force-feedback controller.
+schema_version: "1"
+device:
+  name: "Moog Quickloader II"
+  vendor: "Moog Inc."
+  usb:
+    vendor_id: 0x1055       # Community estimate — professional sim VID; confirm with lsusb
+    product_id: 0x0001      # Community estimate — Quickloader II; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1055 and PID 0x0001 are community estimates for the Moog
+      Quickloader II. Professional simulation hardware. Confirm exact VID/PID
+      with device documentation or lsusb before deployment.
+  - id: PROFESSIONAL_HARDWARE
+    description: >
+      Professional-grade force feedback stick intended for training simulation.
+      May require proprietary SDK or driver for full FFB envelope access.
+  - id: HIGH_RESOLUTION_FFB
+    description: >
+      16-bit axis resolution and FFB at up to 500 Hz update rate. FFB safety
+      limits should be enforced per ADR-009 interlock design.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moog Quickloader II — VID 0x1055 / PID 0x0001 (est).
+    Professional force-feedback simulation controller. Moog/CAE class hardware.
+    Wave-59 addition. Last reviewed: 2026-07.

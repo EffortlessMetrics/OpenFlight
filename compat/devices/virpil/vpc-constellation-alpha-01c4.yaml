@@ -1,0 +1,42 @@
+# VIRPIL VPC Constellation ALPHA
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls), PID 0x01C4 — community estimate.
+# VIRPIL VPC Constellation ALPHA joystick grip.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC Constellation ALPHA"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls (confirmed)
+    product_id: 0x01C4      # Community estimate — Constellation ALPHA; confirm with VPC Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 14
+  buttons: 30
+  hats: 3
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x01C4 is a community estimate for the VPC Constellation ALPHA.
+      VIRPIL grip+base combos may enumerate different PIDs. Confirm with
+      VPC Configurator or lsusb on real hardware.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation ALPHA — VID 0x3344 / PID 0x01C4 (est).
+    High-performance joystick grip for the VIRPIL WarBRD or T-50CM3 base.
+    Wave-59 addition. Last reviewed: 2026-07.

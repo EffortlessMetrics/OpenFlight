@@ -1,0 +1,55 @@
+# 3Dconnexion SpaceMouse Wireless (Wired USB mode, PID 0xC62E)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 3Dconnexion SpaceMouse Wireless can be connected directly via USB cable in
+# wired mode. In wired mode it enumerates at PID 0xC62E, distinct from the
+# wireless USB receiver PID 0xC652 (space-mouse-wireless.yaml). VID 0x256F
+# (3Dconnexion) is confirmed.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Wireless (Wired USB Mode)"
+  vendor: "3Dconnexion"
+  type: 6dof
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion (confirmed)
+    product_id: 0xC62E  # SpaceMouse Wireless wired USB mode — community confirmed
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: WIRED_VS_WIRELESS_PID
+    description: >
+      PID 0xC62E is the wired USB mode PID for the SpaceMouse Wireless device.
+      When used via the wireless USB receiver, the PID is 0xC652 (see
+      space-mouse-wireless.yaml). The wired mode uses direct USB connection.
+  - id: 6DOF_RELATIVE_INPUT
+    description: >
+      The SpaceMouse provides 6DOF relative input (push/pull/twist on the
+      puck cap). Axes represent force and torque, not absolute position.
+      Suitable for camera control and 3D navigation in flight simulation.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    3Dconnexion SpaceMouse Wireless in wired USB mode. VID 0x256F confirmed;
+    PID 0xC62E for wired mode (wireless receiver uses 0xC652).
+    Last reviewed: 2026-07.

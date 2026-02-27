@@ -1,0 +1,47 @@
+# RealSimGear G1000 PFD (alternate PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xEF70 — community
+# estimate for a newer G1000 PFD firmware revision. The earlier G1000 PFD
+# uses PID 0xF236 (see g1000-pfd.yaml).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 PFD"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xEF70      # Community estimate — G1000 PFD alternate revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF70 is a community estimate. The earlier G1000 PFD variant uses
+      PID 0xF236 (see realsimgear/g1000-pfd.yaml). Confirm with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 PFD — Garmin G1000 primary flight display replica.
+    PID 0xEF70 community estimate (alt revision). Last reviewed: 2026-06.

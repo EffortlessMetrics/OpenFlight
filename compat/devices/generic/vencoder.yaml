@@ -1,0 +1,61 @@
+# vEncoder Virtual Encoder USB HID Device
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes open-source hardware VID namespace), PID 0x2081 (est).
+# The vEncoder is a multi-axis virtual encoder USB HID device for flight simulation
+# cockpit building. Presents eight independent rotary encoder axes for avionics
+# panel control (COM/NAV tuning, autopilot knobs, etc.).
+schema_version: "1"
+
+device:
+  name: "vEncoder Virtual Encoder"
+  vendor: "vEncoder (community)"
+  usb:
+    vendor_id: 0x1209       # pid.codes open-source hardware VID namespace
+    product_id: 0x2081      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [enc0, enc1, enc2, enc3, enc4, enc5, enc6, enc7]
+    resolution_bits: 8
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 (pid.codes) / PID 0x2081 is a community estimate. VID 0x1209 is
+      shared across many open-hardware projects; differentiate by PID and USB
+      product string. Confirm with lsusb on real hardware.
+  - id: ROTARY_ENCODER_RELATIVE
+    description: >
+      All eight axes are relative rotary encoders reporting delta increments.
+      The host must accumulate delta values to track absolute positions.
+  - id: PID_CODES_VID
+    description: >
+      VID 0x1209 is the pid.codes community VID namespace. Multiple unrelated
+      open-hardware devices share this VID; always match by VID+PID together.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    vEncoder Virtual Encoder — 8-axis relative encoder USB HID device.
+    VID 0x1209 / PID 0x2081 (est). Intended for multi-knob avionics panel builds.
+    PID estimated from community sources. Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

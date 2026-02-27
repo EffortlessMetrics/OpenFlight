@@ -1,0 +1,48 @@
+# Yoko The Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209, PID 0x2010 — community estimates. VID 0x1209 is the pid.codes
+# open-source VID allocation. Yoko produces professional-grade flight yokes
+# for sim builders. The Yoke provides pitch, roll, and additional axes with
+# a quality detachable yoke column design.
+
+schema_version: "1"
+
+device:
+  name: "Yoko The Yoke"
+  vendor: "Yoko"
+  usb:
+    vendor_id: 0x1209       # pid.codes open-source USB VID (community allocated)
+    product_id: 0x2010      # Community estimate for Yoko The Yoke
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 (pid.codes) and PID 0x2010 are community estimates.
+      Confirm with lsusb or USBDeview on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Yoko The Yoke — professional quality detachable flight yoke.
+    VID 0x1209 / PID 0x2010 unconfirmed. Last reviewed: 2026-06.

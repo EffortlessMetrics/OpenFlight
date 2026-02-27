@@ -1,0 +1,56 @@
+# Thrustmaster TCA Throttle Pack (PID 0xB697)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster TCA Throttle Pack — standalone TCA Quadrant Airbus throttle
+# bundle with engine levers. VID 0x044F confirmed (Thrustmaster). PID 0xB697
+# is a community estimate; PID 0xB695 is taken by tss-handbrake.yaml.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Throttle Pack Airbus"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (GUILLEMOT) — confirmed
+    product_id: 0xB697      # Community estimate — PID 0xB695 taken; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle_l, throttle_r, flap]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB697 is a community estimate. PID 0xB695 (VID 0x044F) is taken by
+      tss-handbrake.yaml. Confirm with lsusb on real hardware.
+  - id: DETENT_REVERSER
+    description: >
+      The TCA Quadrant Airbus has a thrust reverser detent gate. Ensure the
+      profile maps the reverser zone correctly for the active simulator.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster TCA Throttle Pack Airbus. PID 0xB697 community estimate.
+    PID 0xB695 taken by tss-handbrake.yaml. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

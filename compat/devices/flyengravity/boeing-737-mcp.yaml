@@ -1,0 +1,47 @@
+# FlyEngravity Boeing 737 MCP
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0020 — community estimates. FlyEngravity's confirmed VID
+# is 0x0BCA (OpenCockpits/Engravity family). The Boeing 737 MCP is a full-width
+# mode control panel replica for 737NG cockpit simulation setups.
+
+schema_version: "1"
+
+device:
+  name: "FlyEngravity Boeing 737 MCP"
+  vendor: "FlyEngravity"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — FlyEngravity alt; confirmed VID is 0x0BCA
+    product_id: 0x0020      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob]
+    resolution_bits: 10
+  buttons: 40
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0020 are community estimates. FlyEngravity's
+      confirmed VID is 0x0BCA (OpenCockpits/Engravity family).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FlyEngravity Boeing 737 MCP — full 737NG mode control panel replica.
+    VID 0x1551 and PID 0x0020 unconfirmed. Last reviewed: 2026-06.

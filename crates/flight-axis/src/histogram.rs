@@ -245,7 +245,11 @@ mod tests {
         h.reset();
         assert_eq!(h.total_samples(), 0);
         for i in 0..HISTOGRAM_BUCKETS {
-            assert_eq!(h.bucket_count(i), 0, "bucket {i} should be zero after reset");
+            assert_eq!(
+                h.bucket_count(i),
+                0,
+                "bucket {i} should be zero after reset"
+            );
         }
     }
 
@@ -266,10 +270,7 @@ mod tests {
             h.record(0.0); // well inside |value| < 0.05
         }
         let pct = h.center_deadzone_percent();
-        assert!(
-            (pct - 100.0).abs() < 0.01,
-            "expected ~100%, got {pct}"
-        );
+        assert!((pct - 100.0).abs() < 0.01, "expected ~100%, got {pct}");
     }
 
     #[test]
@@ -279,10 +280,7 @@ mod tests {
             h.record(1.0); // |value| > 0.95
         }
         let pct = h.saturation_percent();
-        assert!(
-            (pct - 100.0).abs() < 0.01,
-            "expected ~100%, got {pct}"
-        );
+        assert!((pct - 100.0).abs() < 0.01, "expected ~100%, got {pct}");
     }
 
     #[test]
@@ -295,7 +293,11 @@ mod tests {
             1,
             "1.5 should be clamped to last bucket"
         );
-        assert_eq!(h.bucket_count(0), 1, "-1.5 should be clamped to first bucket");
+        assert_eq!(
+            h.bucket_count(0),
+            1,
+            "-1.5 should be clamped to first bucket"
+        );
         assert_eq!(h.total_samples(), 2);
     }
 

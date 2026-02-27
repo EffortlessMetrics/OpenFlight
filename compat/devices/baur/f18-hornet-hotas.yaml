@@ -1,0 +1,40 @@
+# BAUR F-18 HORNET HOTAS Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2061 — estimated.
+# Baur F/A-18 Hornet HOTAS stick — Chinese market replica of F/A-18 sidestick grip.
+schema_version: "1"
+device:
+  name: "BAUR F-18 HORNET HOTAS Stick"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2061      # Community estimate — BAUR F-18 stick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 18
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2061 is a community estimate for the BAUR F-18 HORNET stick.
+      F-16 VIPER variant uses 0x2060. Confirm with lsusb on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR F-18 HORNET HOTAS Stick — VID 0x1209 / PID 0x2061 (est).
+    Chinese market F/A-18 sidestick replica. Wave-55 addition. Last reviewed: 2026-07.

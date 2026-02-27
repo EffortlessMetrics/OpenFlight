@@ -1,0 +1,59 @@
+# MFG Crosswind V2 Rudder Pedals (STM32 alt, PID 0x5738)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) is used by some MFG Crosswind firmware variants.
+# PID 0x5738 is a community estimate; the primary MFG Crosswind V2 manifest
+# (crosswind-v2.yaml) uses VID 0x1551, PID 0x0002. See also crosswind-v2-stm.yaml
+# (PID 0xA350). Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V2 Rudder Pedals (STM32 alt PID)"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — alternate MFG firmware VID
+    product_id: 0x5738      # Community estimate — alt STM32 variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5738 with VID 0x0483 (STM) is a community estimate for an
+      MFG Crosswind V2 STM32 firmware variant. Primary MFG VID is 0x1551
+      (crosswind-v2.yaml). Also see crosswind-v2-stm.yaml (PID 0xA350).
+      Confirm with lsusb on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+      Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V2 alt STM32 variant — VID 0x0483, PID 0x5738 community
+    estimate. Primary: crosswind-v2.yaml (VID 0x1551). Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,50 @@
+# AeroSim B737 Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# AeroSim (Aerobask/AeroSim Controls) Boeing 737-style yoke replica for
+# home cockpit use. VID 0x04D8 (Microchip Technology shared VID).
+# PID 0xEF90 is a community estimate from AeroSim forums.
+schema_version: "1"
+
+device:
+  name: "AeroSim B737 Yoke"
+  vendor: "AeroSim Controls"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology shared VID (community estimate)
+    product_id: 0xEF90      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle_l, throttle_r]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF90 is a community estimate for the AeroSim B737 Yoke.
+      Verify with lsusb or USBView on real hardware.
+  - id: VID_SHARED
+    description: >
+      VID 0x04D8 (Microchip Technology) is shared by many boutique manufacturers.
+      Match on both VID and PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    AeroSim B737 Yoke — Boeing 737-style replica yoke for home cockpit.
+    PID 0xEF90 community estimate. Last reviewed: 2026-06.

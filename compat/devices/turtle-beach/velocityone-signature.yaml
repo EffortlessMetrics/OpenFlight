@@ -1,0 +1,47 @@
+# Turtle Beach VelocityOne Signature Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Turtle Beach VelocityOne Signature Edition — premium variant of the
+# VelocityOne Flight ecosystem with additional build quality upgrades.
+# VID 0x10F5 (Turtle Beach Corporation). PID 0x3086 community estimate.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Signature Edition"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x10F5       # Turtle Beach Corporation (confirmed VID)
+    product_id: 0x3086      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, throttle_l, throttle_r, rudder, toe_brake]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3086 is a community estimate adjacent to the VelocityOne Flight Yoke
+      (0x3085) and FlightDeck series (0x3082–0x3083). Verify with USBView or
+      lsusb on real hardware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Signature Edition — premium build variant.
+    PID 0x3086 community estimate. VID 0x10F5 confirmed. Last reviewed: 2026-06.

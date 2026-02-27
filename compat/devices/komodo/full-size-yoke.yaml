@@ -1,0 +1,50 @@
+# Komodo Sim Full Size Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim (UK) full-size yoke for home cockpit builds.
+# VID 0x04D8 (Microchip Technology — shared USB VID used by many boutique manufacturers).
+# PID 0xEF80 is a community estimate distinct from existing Komodo panel PIDs.
+schema_version: "1"
+
+device:
+  name: "Komodo Sim Full Size Yoke"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology shared VID (community estimate)
+    product_id: 0xEF80      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, throttle_l, throttle_r, trim, toe_brake]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF80 is a community estimate. Verify with lsusb or USBView on real
+      Komodo Sim Full Size Yoke hardware.
+  - id: VID_SHARED
+    description: >
+      VID 0x04D8 (Microchip Technology) is shared by many boutique/DIY
+      manufacturers. Match on both VID and PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim Full Size Yoke — 6-axis yoke for home cockpit builds.
+    PID 0xEF80 community estimate. Last reviewed: 2026-06.

@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 2936 |
-| ACs with tests | 2935 |
-| ACs with Gherkin | 1421 |
-| ACs with both tests + Gherkin | 1420 |
+| Total AC | 3132 |
+| ACs with tests | 3132 |
+| ACs with Gherkin | 1469 |
+| ACs with both tests + Gherkin | 1469 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 2339 |
+| Draft | 2535 |
 | Incomplete | 0 |
-| Microcrates | 87 |
-| Microcrates with tests | 65 (74.7%) |
-| Microcrates with Gherkin | 66 (75.9%) |
-| Microcrates fully covered | 65 (74.7%) |
+| Microcrates | 86 |
+| Microcrates with tests | 65 (75.6%) |
+| Microcrates with Gherkin | 65 (75.6%) |
+| Microcrates fully covered | 65 (75.6%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 48.4% |
-| Test + Gherkin coverage | 48.4% |
+| Gherkin coverage | 46.9% |
+| Test + Gherkin coverage | 46.9% |
 
 ## BDD Microcrate Matrix
 
@@ -123,7 +123,6 @@
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| unmapped | 1 | 0 | 1 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -2462,7 +2461,7 @@
 | REQ-402 | AC-402.3 | Optional dependencies (sim adapters) log warnings but don't block startup | specs/features/req_402_service_dependency_health_check.feature:17 | 1 | ⚪ Draft |
 | REQ-402 | AC-402.4 | Health check results are written to the log and available via `flightctl health` | specs/features/req_402_service_dependency_health_check.feature:23 | 1 | ⚪ Draft |
 | REQ-402 | AC-402.5 | Health check completes within 2 seconds | specs/features/req_402_service_dependency_health_check.feature:29 | 1 | ⚪ Draft |
-| REQ-402 | AC-402.6 | Each dependency check has an individual timeout of 500 ms | specs/features/req_402_service_dependency_health_check.feature:35 | 0 | ⚪ Draft |
+| REQ-402 | AC-402.6 | Each dependency check has an individual timeout of 500 ms | specs/features/req_402_service_dependency_health_check.feature:35 | 1 | ⚪ Draft |
 | REQ-403 | AC-403.1 | Blend factor (0.0=raw, 1.0=filtered) is configurable per axis | specs/features/req_403_axis_blend_smoothing.feature:5 | 1 | ⚪ Draft |
 | REQ-403 | AC-403.2 | Blend is applied as the last step after all other filters | specs/features/req_403_axis_blend_smoothing.feature:11 | 1 | ⚪ Draft |
 | REQ-403 | AC-403.3 | Property test: blend output is always between raw and filtered | specs/features/req_403_axis_blend_smoothing.feature:17 | 1 | ⚪ Draft |
@@ -3063,3 +3062,199 @@
 | REQ-522 | AC-522.2 | flightctl update rollback restores previous version | specs/features/req_522_installer_rollback.feature:5 | 1 | ⚪ Draft |
 | REQ-522 | AC-522.3 | Rollback preserves user configuration | specs/features/req_522_installer_rollback.feature:11 | 1 | ⚪ Draft |
 | REQ-522 | AC-522.4 | Rollback is available for 7 days after successful upgrade | specs/features/req_522_installer_rollback.feature:17 | 1 | ⚪ Draft |
+| REQ-523 | AC-523.1 | AC1: Trend detector identifies rapid input changes vs slow drift | - | 1 | ⚪ Draft |
+| REQ-523 | AC-523.2 | AC2: Adaptive smoothing applies higher filtering during slow drift | - | 1 | ⚪ Draft |
+| REQ-523 | AC-523.3 | AC3: Trend analysis uses configurable window size | - | 1 | ⚪ Draft |
+| REQ-523 | AC-523.4 | AC4: Trend state is included in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-524 | AC-524.1 | AC1: Primary adapter failure triggers fallback to secondary adapter | - | 1 | ⚪ Draft |
+| REQ-524 | AC-524.2 | AC2: Fallback order is configurable in service config | - | 1 | ⚪ Draft |
+| REQ-524 | AC-524.3 | AC3: Fallback event is published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-524 | AC-524.4 | AC4: Service recovers primary adapter when it becomes available again | - | 1 | ⚪ Draft |
+| REQ-525 | AC-525.1 | AC1: flightctl generates shell completion scripts for bash, zsh, fish | - | 1 | ⚪ Draft |
+| REQ-525 | AC-525.2 | AC2: Tab completion suggests valid axis names and device IDs | - | 1 | ⚪ Draft |
+| REQ-525 | AC-525.3 | AC3: Completion is generated at install time | - | 1 | ⚪ Draft |
+| REQ-525 | AC-525.4 | AC4: flightctl completions install command installs completion scripts | - | 1 | ⚪ Draft |
+| REQ-526 | AC-526.1 | AC1: Blend combines two axes using configurable blend factor 0.0 to 1.0 | - | 1 | ⚪ Draft |
+| REQ-526 | AC-526.2 | AC2: Factor 0.0 uses only first axis, 1.0 uses only second | - | 1 | ⚪ Draft |
+| REQ-526 | AC-526.3 | AC3: Blend factor can be mapped to a third axis for dynamic control | - | 1 | ⚪ Draft |
+| REQ-526 | AC-526.4 | AC4: Blend result is clamped to valid output range | - | 1 | ⚪ Draft |
+| REQ-527 | AC-527.1 | AC1: Service writes PID to /run/user/UID/openflight.pid on Linux | - | 1 | ⚪ Draft |
+| REQ-527 | AC-527.2 | AC2: Service writes PID to %TEMP%\openflight.pid on Windows | - | 1 | ⚪ Draft |
+| REQ-527 | AC-527.3 | AC3: PID file is removed on clean shutdown | - | 1 | ⚪ Draft |
+| REQ-527 | AC-527.4 | AC4: flightctl status reads PID file to determine if service is running | - | 1 | ⚪ Draft |
+| REQ-528 | AC-528.1 | AC1: Bus events can be serialized to a structured replay file | - | 1 | ⚪ Draft |
+| REQ-528 | AC-528.2 | AC2: Replay file can be played back as bus events in test mode | - | 1 | ⚪ Draft |
+| REQ-528 | AC-528.3 | AC3: Replay preserves event timing with configurable speed | - | 1 | ⚪ Draft |
+| REQ-528 | AC-528.4 | AC4: Replay is triggered via CLI or test fixture | - | 1 | ⚪ Draft |
+| REQ-529 | AC-529.1 | AC1: Auto-calibration mode monitors axis values over time | - | 1 | ⚪ Draft |
+| REQ-529 | AC-529.2 | AC2: Detected min, max, and center are stored as calibration | - | 1 | ⚪ Draft |
+| REQ-529 | AC-529.3 | AC3: Auto-calibration runs for configured duration then completes | - | 1 | ⚪ Draft |
+| REQ-529 | AC-529.4 | AC4: Auto-calibration can be triggered via CLI command | - | 1 | ⚪ Draft |
+| REQ-530 | AC-530.1 | AC1: Service queries available OpenXR interaction profiles on session start | - | 1 | ⚪ Draft |
+| REQ-530 | AC-530.2 | AC2: Preferred interaction profile is configurable | - | 1 | ⚪ Draft |
+| REQ-530 | AC-530.3 | AC3: Action bindings are configured per interaction profile | - | 1 | ⚪ Draft |
+| REQ-530 | AC-530.4 | AC4: Profile selection is reported in OpenXR adapter diagnostics | - | 1 | ⚪ Draft |
+| REQ-531 | AC-531.1 | AC1: Per-variable update rate can be configured in profile | - | 1 | ⚪ Draft |
+| REQ-531 | AC-531.2 | AC2: High-frequency variables can run at sim frame rate | - | 1 | ⚪ Draft |
+| REQ-531 | AC-531.3 | AC3: Low-frequency variables use polling at reduced rate | - | 1 | ⚪ Draft |
+| REQ-531 | AC-531.4 | AC4: Rate configuration applies at adapter initialization | - | 1 | ⚪ Draft |
+| REQ-532 | AC-532.1 | AC1: Zero-latency mode disables smoothing and rate limiting | - | 1 | ⚪ Draft |
+| REQ-532 | AC-532.2 | AC2: Mode is activatable via profile flag or CLI command | - | 1 | ⚪ Draft |
+| REQ-532 | AC-532.3 | AC3: Zero-latency mode maintains only essential safety processing | - | 1 | ⚪ Draft |
+| REQ-532 | AC-532.4 | AC4: Latency in zero-latency mode is measurably lower than standard mode | - | 1 | ⚪ Draft |
+| REQ-533 | AC-533.1 | AC1: Calibration is keyed by device VID/PID and serial number | - | 1 | ⚪ Draft |
+| REQ-533 | AC-533.2 | AC2: Calibration survives firmware version changes if hardware is unchanged | - | 1 | ⚪ Draft |
+| REQ-533 | AC-533.3 | AC3: Calibration is invalidated when device axis count changes | - | 1 | ⚪ Draft |
+| REQ-533 | AC-533.4 | AC4: Stale calibration triggers recalibration prompt in CLI | - | 1 | ⚪ Draft |
+| REQ-534 | AC-534.1 | AC1: VIRPIL VPC devices are identified by 0x3344 VID | - | 1 | ⚪ Draft |
+| REQ-534 | AC-534.2 | AC2: VIRPIL 14-bit axis resolution is correctly normalized | - | 1 | ⚪ Draft |
+| REQ-534 | AC-534.3 | AC3: VIRPIL device configuration via HID reports is documented | - | 1 | ⚪ Draft |
+| REQ-534 | AC-534.4 | AC4: VIRPIL compatibility manifest includes all known PIDs | - | 1 | ⚪ Draft |
+| REQ-535 | AC-535.1 | AC1: Service queries HID device firmware version on enumeration | - | 1 | ⚪ Draft |
+| REQ-535 | AC-535.2 | AC2: Firmware version is included in device diagnostics | - | 1 | ⚪ Draft |
+| REQ-535 | AC-535.3 | AC3: Known firmware bugs are flagged in compatibility manifest | - | 1 | ⚪ Draft |
+| REQ-535 | AC-535.4 | AC4: flightctl devices shows firmware version per device | - | 1 | ⚪ Draft |
+| REQ-536 | AC-536.1 | AC1: Named SimConnect events can be mapped to button inputs | - | 1 | ⚪ Draft |
+| REQ-536 | AC-536.2 | AC2: Event injection is configurable in profile rules | - | 1 | ⚪ Draft |
+| REQ-536 | AC-536.3 | AC3: Event transmission rate is rate-limited to sim frame rate | - | 1 | ⚪ Draft |
+| REQ-536 | AC-536.4 | AC4: Failed injections are logged with SimConnect error code | - | 1 | ⚪ Draft |
+| REQ-537 | AC-537.1 | AC1: Phase detector uses airspeed, altitude, and gear state | - | 1 | ⚪ Draft |
+| REQ-537 | AC-537.2 | AC2: Phase transition fires only after confidence threshold met | - | 1 | ⚪ Draft |
+| REQ-537 | AC-537.3 | AC3: Scoring algorithm is configurable via profile | - | 1 | ⚪ Draft |
+| REQ-537 | AC-537.4 | AC4: Phase score history is available in diagnostics | - | 1 | ⚪ Draft |
+| REQ-538 | AC-538.1 | AC1: Custom descriptor overrides are loadable from compat manifest quirks | - | 1 | ⚪ Draft |
+| REQ-538 | AC-538.2 | AC2: Override changes axis count, range, or scaling | - | 1 | ⚪ Draft |
+| REQ-538 | AC-538.3 | AC3: Override is applied only to matching VID/PID | - | 1 | ⚪ Draft |
+| REQ-538 | AC-538.4 | AC4: Override errors are logged with context | - | 1 | ⚪ Draft |
+| REQ-539 | AC-539.1 | AC1: flightctl profile apply --dry-run shows what would change | - | 1 | ⚪ Draft |
+| REQ-539 | AC-539.2 | AC2: Dry run does not modify active profile | - | 1 | ⚪ Draft |
+| REQ-539 | AC-539.3 | AC3: Dry run reports schema validation errors | - | 1 | ⚪ Draft |
+| REQ-539 | AC-539.4 | AC4: Dry run compares against current active profile | - | 1 | ⚪ Draft |
+| REQ-540 | AC-540.1 | AC1: Diagnostics include raw, smoothed, and output values per axis | - | 1 | ⚪ Draft |
+| REQ-540 | AC-540.2 | AC2: Last N samples are available via RPC | - | 1 | ⚪ Draft |
+| REQ-540 | AC-540.3 | AC3: Sample count N is configurable | - | 1 | ⚪ Draft |
+| REQ-540 | AC-540.4 | AC4: Visualization data is structured for JSON export | - | 1 | ⚪ Draft |
+| REQ-541 | AC-541.1 | AC1: Multiple profiles can be pre-loaded into memory | - | 1 | ⚪ Draft |
+| REQ-541 | AC-541.2 | AC2: Profile swap completes atomically within one axis tick | - | 1 | ⚪ Draft |
+| REQ-541 | AC-541.3 | AC3: Profile swap latency is under 1 millisecond | - | 1 | ⚪ Draft |
+| REQ-541 | AC-541.4 | AC4: Hot-swap is available via CLI and gRPC RPC | - | 1 | ⚪ Draft |
+| REQ-542 | AC-542.1 | AC1: Criterion benchmark exists for full AxisChain process() loop | - | 1 | ⚪ Draft |
+| REQ-542 | AC-542.2 | AC2: Benchmark runs in CI nightly | - | 1 | ⚪ Draft |
+| REQ-542 | AC-542.3 | AC3: Regression threshold is p95 <= 10 microseconds per axis | - | 1 | ⚪ Draft |
+| REQ-542 | AC-542.4 | AC4: Benchmark failure blocks release merge | - | 1 | ⚪ Draft |
+| REQ-543 | AC-543.1 | AC1: DCS export script can send telemetry over TCP socket | - | 1 | ⚪ Draft |
+| REQ-543 | AC-543.2 | AC2: Service accepts TCP connections from DCS on configurable port | - | 1 | ⚪ Draft |
+| REQ-543 | AC-543.3 | AC3: TCP connection loss triggers reconnect with backoff | - | 1 | ⚪ Draft |
+| REQ-543 | AC-543.4 | AC4: TCP mode is togglable in service config | - | 1 | ⚪ Draft |
+| REQ-544 | AC-544.1 | AC1: WASM module provides direct cockpit variable access | - | 1 | ⚪ Draft |
+| REQ-544 | AC-544.2 | AC2: Service communicates with WASM module via named pipe | - | 1 | ⚪ Draft |
+| REQ-544 | AC-544.3 | AC3: WASM module is installable as part of OpenFlight packaging | - | 1 | ⚪ Draft |
+| REQ-544 | AC-544.4 | AC4: Connection state with WASM module is monitored | - | 1 | ⚪ Draft |
+| REQ-545 | AC-545.1 | AC1: Device sleep triggers safe disconnection handling | - | 1 | ⚪ Draft |
+| REQ-545 | AC-545.2 | AC2: Device wake triggers re-enumeration and configuration restore | - | 1 | ⚪ Draft |
+| REQ-545 | AC-545.3 | AC3: Power events are published on the flight-bus | - | 1 | ⚪ Draft |
+| REQ-545 | AC-545.4 | AC4: Power state is included in device diagnostics | - | 1 | ⚪ Draft |
+| REQ-546 | AC-546.1 | AC1: Range expansion multiplies axis output by configurable factor | - | 1 | ⚪ Draft |
+| REQ-546 | AC-546.2 | AC2: Expanded output is clamped to avoid overflow | - | 1 | ⚪ Draft |
+| REQ-546 | AC-546.3 | AC3: Range expansion is configurable per-axis in profile | - | 1 | ⚪ Draft |
+| REQ-546 | AC-546.4 | AC4: Expansion interacts correctly with deadzone and curves | - | 1 | ⚪ Draft |
+| REQ-547 | AC-547.1 | AC1: Axis recorder captures timestamped axis values to a binary file | specs/features/req_547_axis_input_recorder.feature:5 | 1 | ⚪ Draft |
+| REQ-547 | AC-547.2 | AC2: Recording is started and stopped via CLI command | specs/features/req_547_axis_input_recorder.feature:11 | 1 | ⚪ Draft |
+| REQ-547 | AC-547.3 | AC3: Recorded file has configurable duration limit | specs/features/req_547_axis_input_recorder.feature:18 | 1 | ⚪ Draft |
+| REQ-547 | AC-547.4 | AC4: Recording can be replayed as if from a live device | specs/features/req_547_axis_input_recorder.feature:24 | 1 | ⚪ Draft |
+| REQ-548 | AC-548.1 | AC1: Maneuver detection identifies high-energy input sequences | specs/features/req_548_adaptive_rate_limiting.feature:5 | 1 | ⚪ Draft |
+| REQ-548 | AC-548.2 | AC2: Rate limit is relaxed during detected maneuvers | specs/features/req_548_adaptive_rate_limiting.feature:11 | 1 | ⚪ Draft |
+| REQ-548 | AC-548.3 | AC3: Rate limit returns to configured value after maneuver ends | specs/features/req_548_adaptive_rate_limiting.feature:17 | 1 | ⚪ Draft |
+| REQ-548 | AC-548.4 | AC4: Maneuver detection threshold is configurable | specs/features/req_548_adaptive_rate_limiting.feature:23 | 1 | ⚪ Draft |
+| REQ-549 | AC-549.1 | AC1: Service issues tokens for CLI authentication | specs/features/req_549_ipc_message_auth.feature:5 | 1 | ⚪ Draft |
+| REQ-549 | AC-549.2 | AC2: Tokens have configurable TTL | specs/features/req_549_ipc_message_auth.feature:11 | 1 | ⚪ Draft |
+| REQ-549 | AC-549.3 | AC3: Unauthenticated requests are rejected with 401 error | specs/features/req_549_ipc_message_auth.feature:17 | 1 | ⚪ Draft |
+| REQ-549 | AC-549.4 | AC4: Token revocation is immediate | specs/features/req_549_ipc_message_auth.feature:23 | 1 | ⚪ Draft |
+| REQ-550 | AC-550.1 | AC1: GetAxisSnapshot RPC returns current value at each pipeline stage | specs/features/req_550_axis_chain_snapshot_rpc.feature:5 | 1 | ⚪ Draft |
+| REQ-550 | AC-550.2 | AC2: Snapshot includes timestamps for each stage | specs/features/req_550_axis_chain_snapshot_rpc.feature:11 | 1 | ⚪ Draft |
+| REQ-550 | AC-550.3 | AC3: Snapshot is available without enabling debug mode | specs/features/req_550_axis_chain_snapshot_rpc.feature:17 | 1 | ⚪ Draft |
+| REQ-550 | AC-550.4 | AC4: Snapshot latency does not affect RT processing | specs/features/req_550_axis_chain_snapshot_rpc.feature:23 | 1 | ⚪ Draft |
+| REQ-551 | AC-551.1 | AC1: VIRPIL HID config reports are understood and documented | specs/features/req_551_virpil_config_upload.feature:5 | 1 | ⚪ Draft |
+| REQ-551 | AC-551.2 | AC2: Axis calibration can be written back to device | specs/features/req_551_virpil_config_upload.feature:11 | 1 | ⚪ Draft |
+| REQ-551 | AC-551.3 | AC3: Config upload requires explicit user confirmation | specs/features/req_551_virpil_config_upload.feature:17 | 1 | ⚪ Draft |
+| REQ-551 | AC-551.4 | AC4: Failed uploads are retried once | specs/features/req_551_virpil_config_upload.feature:23 | 1 | ⚪ Draft |
+| REQ-552 | AC-552.1 | AC1: Managed data requests reduce per-frame SimConnect overhead | specs/features/req_552_simconnect_managed_data.feature:5 | 1 | ⚪ Draft |
+| REQ-552 | AC-552.2 | AC2: Data period is configurable per variable group | specs/features/req_552_simconnect_managed_data.feature:11 | 1 | ⚪ Draft |
+| REQ-552 | AC-552.3 | AC3: Changed-only updates are used for low-frequency data | specs/features/req_552_simconnect_managed_data.feature:17 | 1 | ⚪ Draft |
+| REQ-552 | AC-552.4 | AC4: Managed request IDs are tracked and released on shutdown | specs/features/req_552_simconnect_managed_data.feature:23 | 1 | ⚪ Draft |
+| REQ-553 | AC-553.1 | AC1: Profile loader detects schema version from file | specs/features/req_553_profile_schema_migration.feature:5 | 1 | ⚪ Draft |
+| REQ-553 | AC-553.2 | AC2: Profiles with older versions are migrated automatically | specs/features/req_553_profile_schema_migration.feature:11 | 1 | ⚪ Draft |
+| REQ-553 | AC-553.3 | AC3: Migration preserves user-specified values | specs/features/req_553_profile_schema_migration.feature:17 | 1 | ⚪ Draft |
+| REQ-553 | AC-553.4 | AC4: Migrated profile is saved back in new schema version | specs/features/req_553_profile_schema_migration.feature:23 | 1 | ⚪ Draft |
+| REQ-554 | AC-554.1 | AC1: Boost multiplies axis sensitivity by configurable factor | specs/features/req_554_axis_boost_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-554 | AC-554.2 | AC2: Boost is activated by a mapped button | specs/features/req_554_axis_boost_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-554 | AC-554.3 | AC3: Boost deactivates when button is released | specs/features/req_554_axis_boost_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-554 | AC-554.4 | AC4: Boost does not bypass safety clamping | specs/features/req_554_axis_boost_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-555 | AC-555.1 | AC1: Service can trigger MSFS flight recorder start/stop via SimConnect event | specs/features/req_555_flight_recorder_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-555 | AC-555.2 | AC2: OpenFlight axis log can be time-synchronized with MSFS recording | specs/features/req_555_flight_recorder_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-555 | AC-555.3 | AC3: Synchronized log export is available via CLI | specs/features/req_555_flight_recorder_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-555 | AC-555.4 | AC4: Recording metadata includes software version | specs/features/req_555_flight_recorder_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-556 | AC-556.1 | AC1: Device connect/disconnect is broadcast on flight-bus | specs/features/req_556_device_discovery_broadcast.feature:5 | 1 | ⚪ Draft |
+| REQ-556 | AC-556.2 | AC2: Bus event includes VID, PID, and device type | specs/features/req_556_device_discovery_broadcast.feature:11 | 1 | ⚪ Draft |
+| REQ-556 | AC-556.3 | AC3: Subscribers can react to device changes in real time | specs/features/req_556_device_discovery_broadcast.feature:17 | 1 | ⚪ Draft |
+| REQ-556 | AC-556.4 | AC4: Discovery events have configurable debounce delay | specs/features/req_556_device_discovery_broadcast.feature:23 | 1 | ⚪ Draft |
+| REQ-557 | AC-557.1 | AC1: Reversal detection checks expected control response direction | specs/features/req_557_axis_reversal_detection.feature:5 | 1 | ⚪ Draft |
+| REQ-557 | AC-557.2 | AC2: Detection result is surfaced as a diagnostic warning | specs/features/req_557_axis_reversal_detection.feature:11 | 1 | ⚪ Draft |
+| REQ-557 | AC-557.3 | AC3: User can confirm reversal and apply invert flag | specs/features/req_557_axis_reversal_detection.feature:17 | 1 | ⚪ Draft |
+| REQ-557 | AC-557.4 | AC4: Reversal state is persisted per device | specs/features/req_557_axis_reversal_detection.feature:23 | 1 | ⚪ Draft |
+| REQ-558 | AC-558.1 | AC1: Plugin manifest declares minimum API version required | specs/features/req_558_plugin_api_versioning.feature:5 | 1 | ⚪ Draft |
+| REQ-558 | AC-558.2 | AC2: Service rejects plugins requiring higher API version | specs/features/req_558_plugin_api_versioning.feature:11 | 1 | ⚪ Draft |
+| REQ-558 | AC-558.3 | AC3: Deprecated API features emit a warning when used | specs/features/req_558_plugin_api_versioning.feature:17 | 1 | ⚪ Draft |
+| REQ-558 | AC-558.4 | AC4: API changelog is maintained in documentation | specs/features/req_558_plugin_api_versioning.feature:23 | 1 | ⚪ Draft |
+| REQ-559 | AC-559.1 | AC1: Group phase tracking updates all member axes within the same tick | - | 1 | ⚪ Draft |
+| REQ-559 | AC-559.2 | AC2: Phase difference between group members is monitored | - | 1 | ⚪ Draft |
+| REQ-559 | AC-559.3 | AC3: Phase coherence violation triggers a diagnostic event | - | 1 | ⚪ Draft |
+| REQ-559 | AC-559.4 | AC4: Coherence window is configurable per group | - | 1 | ⚪ Draft |
+| REQ-560 | AC-560.1 | AC1: Config validation runs synchronously before hot-reload | - | 1 | ⚪ Draft |
+| REQ-560 | AC-560.2 | AC2: Invalid config is rejected and old config stays active | - | 1 | ⚪ Draft |
+| REQ-560 | AC-560.3 | AC3: Validation result is returned in CLI response | - | 1 | ⚪ Draft |
+| REQ-560 | AC-560.4 | AC4: Validation errors include file path and line number | - | 1 | ⚪ Draft |
+| REQ-561 | AC-561.1 | AC1: ATC events such as radio frequency changes can be bound to buttons | - | 1 | ⚪ Draft |
+| REQ-561 | AC-561.2 | AC2: ATC event bindings are configurable in profile rules | - | 1 | ⚪ Draft |
+| REQ-561 | AC-561.3 | AC3: ATC state changes are received from MSFS via SimConnect | - | 1 | ⚪ Draft |
+| REQ-561 | AC-561.4 | AC4: ATC event bus snapshot includes current frequency | - | 1 | ⚪ Draft |
+| REQ-562 | AC-562.1 | AC1: Adapter can write float DataRef values via UDP extplane protocol | - | 1 | ⚪ Draft |
+| REQ-562 | AC-562.2 | AC2: DataRef writes are rate-limited to avoid flooding X-Plane | - | 1 | ⚪ Draft |
+| REQ-562 | AC-562.3 | AC3: Write-only DataRefs are listed in adapter config | - | 1 | ⚪ Draft |
+| REQ-562 | AC-562.4 | AC4: Write failures are logged with DataRef name and value | - | 1 | ⚪ Draft |
+| REQ-563 | AC-563.1 | AC1: All profile changes are written to audit log with timestamp and operator | - | 1 | ⚪ Draft |
+| REQ-563 | AC-563.2 | AC2: Audit log survives service restarts | - | 1 | ⚪ Draft |
+| REQ-563 | AC-563.3 | AC3: Audit log is viewable via CLI | - | 1 | ⚪ Draft |
+| REQ-563 | AC-563.4 | AC4: Audit log has configurable retention period | - | 1 | ⚪ Draft |
+| REQ-564 | AC-564.1 | AC1: Noise floor detector measures signal variance when control is at rest | - | 1 | ⚪ Draft |
+| REQ-564 | AC-564.2 | AC2: Automatic micro-deadzone is applied above detected noise floor | - | 1 | ⚪ Draft |
+| REQ-564 | AC-564.3 | AC3: Noise floor measurement is stored per device in calibration store | - | 1 | ⚪ Draft |
+| REQ-564 | AC-564.4 | AC4: Noise floor can be measured via CLI calibration command | - | 1 | ⚪ Draft |
+| REQ-565 | AC-565.1 | AC1: AIRCRAFT_LOADED SimConnect event triggers aircraft detection update | - | 1 | ⚪ Draft |
+| REQ-565 | AC-565.2 | AC2: New aircraft title and type are reported via flight-bus | - | 1 | ⚪ Draft |
+| REQ-565 | AC-565.3 | AC3: Profile auto-select runs after aircraft load event | - | 1 | ⚪ Draft |
+| REQ-565 | AC-565.4 | AC4: Aircraft load events are counted in adapter metrics | - | 1 | ⚪ Draft |
+| REQ-566 | AC-566.1 | AC1: VKB devices are identified by 0x231D VID | - | 1 | ⚪ Draft |
+| REQ-566 | AC-566.2 | AC2: VKB 16-bit axis resolution is correctly normalized | - | 1 | ⚪ Draft |
+| REQ-566 | AC-566.3 | AC3: VKB device configuration mode is documented in manifest quirks | - | 1 | ⚪ Draft |
+| REQ-566 | AC-566.4 | AC4: VKB compatibility manifests cover all major device families | - | 1 | ⚪ Draft |
+| REQ-567 | AC-567.1 | AC1: Template library contains profiles for common aircraft types | - | 1 | ⚪ Draft |
+| REQ-567 | AC-567.2 | AC2: Templates are versioned and shipped with the service | - | 1 | ⚪ Draft |
+| REQ-567 | AC-567.3 | AC3: flightctl profile templates lists available templates | - | 1 | ⚪ Draft |
+| REQ-567 | AC-567.4 | AC4: New profile can be created from a template via CLI | - | 1 | ⚪ Draft |
+| REQ-568 | AC-568.1 | AC1: Axis resolution is detected from HID descriptor | - | 1 | ⚪ Draft |
+| REQ-568 | AC-568.2 | AC2: FFB capability presence is detected and cached | - | 1 | ⚪ Draft |
+| REQ-568 | AC-568.3 | AC3: Capability cache is invalidated on firmware version change | - | 1 | ⚪ Draft |
+| REQ-568 | AC-568.4 | AC4: Capabilities are exposed in device diagnostics JSON | - | 1 | ⚪ Draft |
+| REQ-569 | AC-569.1 | AC1: IL-2 export protocol supports axis value injection messages | - | 1 | ⚪ Draft |
+| REQ-569 | AC-569.2 | AC2: Injection is opt-in and disabled by default | - | 1 | ⚪ Draft |
+| REQ-569 | AC-569.3 | AC3: Injection rate is capped at IL-2 expected frame rate | - | 1 | ⚪ Draft |
+| REQ-569 | AC-569.4 | AC4: Injection errors are reported in adapter metrics | - | 1 | ⚪ Draft |
+| REQ-570 | AC-570.1 | AC1: Graceful shutdown waits for active tasks to finish | - | 1 | ⚪ Draft |
+| REQ-570 | AC-570.2 | AC2: Tasks that do not finish within timeout are forcefully stopped | - | 1 | ⚪ Draft |
+| REQ-570 | AC-570.3 | AC3: Shutdown timeout is configurable with a default of 5 seconds | - | 1 | ⚪ Draft |
+| REQ-570 | AC-570.4 | AC4: Shutdown sequence is logged with per-task timing | - | 1 | ⚪ Draft |
+| REQ-571 | AC-571.1 | AC1: Watchdog fires if axis tick exceeds 10ms wall time | - | 1 | ⚪ Draft |
+| REQ-571 | AC-571.2 | AC2: Stuck tick is logged with timestamp and axis state | - | 1 | ⚪ Draft |
+| REQ-571 | AC-571.3 | AC3: Watchdog resets axis engine to last known good state | - | 1 | ⚪ Draft |
+| REQ-571 | AC-571.4 | AC4: Watchdog event is published on flight-bus | - | 1 | ⚪ Draft |

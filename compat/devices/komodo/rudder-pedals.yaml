@@ -1,0 +1,46 @@
+# Komodo Sim Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim (UK) rudder pedal set for home cockpit builds.
+# VID 0x04D8 (Microchip Technology shared VID).
+# PID 0xEF82 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "Komodo Sim Rudder Pedals"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology shared VID (community estimate)
+    product_id: 0xEF82      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF82 is a community estimate adjacent to the Komodo Full Size Yoke
+      (0xEF80) and Trim Wheel (0xEF81). Verify with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim Rudder Pedals — 3-axis rudder + toe-brake pedal set.
+    PID 0xEF82 community estimate. Last reviewed: 2026-06.

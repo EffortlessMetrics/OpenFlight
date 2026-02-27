@@ -1,0 +1,56 @@
+# Microsoft Xbox One S Controller (PID 0x02FD variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This entry covers the Xbox One S Controller USB PID 0x02FD variant.
+# VID 0x045E (Microsoft Corp.) is confirmed. The primary confirmed PID for
+# the Xbox One S wired mode is 0x02DD (xbox-one-s-controller.yaml). PID 0x02FD
+# is a community-reported alternate PID for certain revisions or firmware
+# versions of the Xbox One S Controller.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox One S Controller (PID 0x02FD variant)"
+  vendor: "Microsoft Corporation"
+  type: gamepad
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation (confirmed)
+    product_id: 0x02FD  # Community estimate — Xbox One S alt PID; primary is 0x02DD
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16
+  buttons: 15
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0x02FD is a community-reported PID for some Xbox One S controller
+      variants. The primary confirmed PID is 0x02DD (xbox-one-s-controller.yaml).
+      Verify with lsusb on real hardware.
+  - id: XINPUT_PREFERRED
+    description: >
+      On Windows, the Xbox One S Controller communicates via XInput rather than
+      raw HID. OpenFlight reads axis data via XInput on Windows. Raw HID is
+      used on Linux.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Microsoft Xbox One S Controller — PID 0x02FD community estimate variant.
+    Primary PID is 0x02DD. PID estimated from community sources.
+    Last reviewed: 2026-07.

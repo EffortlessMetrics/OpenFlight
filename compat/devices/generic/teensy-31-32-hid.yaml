@@ -1,0 +1,59 @@
+# Teensy 3.1/3.2 HID Joystick (PID 0x0489)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC — confirmed). PID 0x0489 — community-reported Teensyduino
+# HID joystick PID for Teensy 3.1 and 3.2. The 3.x series uses Cortex-M4 at
+# 72/96 MHz. Distinct from Teensy 3.2 HID (0x0487, teensy-32-hid.yaml) and
+# Teensy 4.x HID (0x0486, teensy-4x-hid.yaml).
+schema_version: "1"
+
+device:
+  name: "Teensy 3.1/3.2 HID Joystick"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0       # PJRC (Paul Stoffregen — confirmed)
+    product_id: 0x0489      # Community-reported alt HID joystick PID for Teensy 3.x
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 16
+    names: [x, y, z, rx, ry, rz, slider, dial, ax, ay, az, arx, ary, arz, aslider, adial]
+    resolution_bits: 16
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0489 is a community-reported Teensyduino joystick mode PID for
+      Teensy 3.x boards. The primary Teensy 3.2 PID is 0x0487 (teensy-32-hid.yaml).
+      Verify with lsusb on real hardware.
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Actual axis/button counts depend on the Teensyduino USB_JOYSTICK or
+      USB_FLIGHTSIM personality selected at compile time.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Teensy 3.1/3.2 running Teensyduino HID joystick firmware. Widely used
+    for custom HOTAS, rudder pedals, and cockpit controllers.
+    For the primary Teensy 3.2 profile, see teensy-32-hid.yaml (PID 0x0487).
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

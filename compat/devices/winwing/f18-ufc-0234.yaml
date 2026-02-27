@@ -1,0 +1,45 @@
+# WinWing F/A-18 UFC Panel (PID 0x0234)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0x0234 — estimated.
+# Distinct from fa18-ufc.yaml (0xB73A) and f18-ufc-0101.yaml (0x0101).
+# This entry covers a later SimAppPro-era UFC variant.
+schema_version: "1"
+device:
+  name: "WinWing F/A-18 UFC Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0x0234      # Community estimate — SimAppPro-era UFC variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0234 is a community estimate. Primary UFC variants use 0x0101 and
+      0xB73A. Confirm with SimAppPro or lsusb before production deployment.
+  - id: PANEL_DEVICE
+    description: >
+      Pure panel input — UFC keypad buttons and scratchpad mapped as HID buttons.
+      No axis output. Requires DCS A/C-specific profile for full UFC emulation.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 UFC Panel — PID 0x0234 (est). UFC front panel with keypad,
+    function buttons, and scratchpad display. Wave-55 addition. Last reviewed: 2026-07.

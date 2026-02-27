@@ -1,0 +1,57 @@
+# Behringer DDJ-400 DJ Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x154E is associated with Denon / inMusic Brands group.
+# PID 0x0064 is a community estimate for this controller variant.
+# This manifest covers a Behringer-branded DDJ-400 style controller
+# (4-channel DJ controller with 16 jog-wheel encoders, 16 faders, and
+# numerous rotary knobs). Repurposed in flight sim as a knob/fader input
+# surface for avionics panel or throttle/mixture/prop control.
+# NOTE: VID 0x154E and PID 0x0064 are estimates — verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Behringer DDJ-400 DJ Controller"
+  vendor: "Behringer"
+  usb:
+    vendor_id: 0x154E    # Denon / inMusic — community estimate; verify with lsusb
+    product_id: 0x0064   # PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 16
+    names: [fader_1, fader_2, fader_3, fader_4, fader_5, fader_6, fader_7, fader_8,
+            knob_1, knob_2, knob_3, knob_4, knob_5, knob_6, knob_7, knob_8]
+    resolution_bits: 7
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x154E and PID 0x0064 are community estimates. Verify with lsusb
+      before deployment. This controller enumerates as a USB MIDI device,
+      not a standard HID joystick — OpenFlight uses the MIDI input subsystem.
+  - id: MIDI_USB_ONLY
+    description: >
+      Enumerates as USB MIDI. Faders and knobs send MIDI CC messages.
+      OpenFlight binds via MIDI profile, not HID joystick profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Behringer DDJ-400 style DJ controller repurposed for avionics panel input.
+    VID 0x154E / PID 0x0064 are community estimates — verify with lsusb.
+    MIDI device; requires MIDI binding in OpenFlight. Last reviewed: 2026-06.

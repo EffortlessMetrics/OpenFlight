@@ -1,0 +1,61 @@
+# CXC Simulations Motion Seat — 0x16C0 / 0x04DA
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x16C0 (PJRC / V-USB community VID), PID 0x04DA (estimated).
+# The CXC Simulations Motion Seat is a high-end hydraulic motion simulator seat
+# used for racing and flight simulation. USB HID interface for motion telemetry
+# and control. VID 0x16C0 is the PJRC/V-USB community VID shared by many DIY
+# and small-manufacturer USB HID devices.
+# PID 0x04DA is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "CXC Sim Motion Seat"
+  vendor: "CXC Simulations"
+  type: motion_platform
+  usb:
+    vendor_id: 0x16C0       # PJRC / V-USB community VID (shared by many HID devices)
+    product_id: 0x04DA      # Community estimate — CXC Motion Seat; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x04DA is a community estimate for CXC Sim under the PJRC shared VID.
+      The PJRC VID (0x16C0) is used by many unrelated small-manufacturer devices;
+      PID assignment within this VID is not centrally managed.
+      Verify with lsusb on target hardware.
+  - id: MOTION_PLATFORM
+    description: >
+      The CXC Sim Motion Seat provides motion telemetry input to the OpenFlight
+      RT spine. Motion output commands are sent via the tactile/motion output path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CXC Simulations Motion Seat (0x16C0/0x04DA). PID community estimate.
+    Hydraulic motion simulator seat. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

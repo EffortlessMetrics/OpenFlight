@@ -1,0 +1,56 @@
+# Akai MPD226 MIDI Pad Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x09E8 confirmed: Akai Professional / inMusic Brands.
+# PID 0x0077 sourced from community USB captures and linux-hardware.org
+# entries for the Akai MPD226 performance pad controller.
+# The MPD226 features 16 MPC-style velocity-sensitive RGB pads, 4 assignable
+# faders, 4 knobs, and transport controls. In flight sim it is repurposed as
+# a button/fader panel for throttle quadrant, mixture, prop, and radio.
+# Distinct from mpk-mini.yaml (keyboard controller, PID differs).
+schema_version: "1"
+
+device:
+  name: "Akai MPD226 MIDI Pad Controller"
+  vendor: "Akai Professional"
+  usb:
+    vendor_id: 0x09E8    # Akai Professional / inMusic (confirmed)
+    product_id: 0x0077   # MPD226 — community USB captures
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 8
+    names: [fader_1, fader_2, fader_3, fader_4, knob_1, knob_2, knob_3, knob_4]
+    resolution_bits: 7
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The MPD226 enumerates as USB MIDI class device. Pads send MIDI Note On/Off;
+      faders and knobs send MIDI CC. OpenFlight binds via MIDI profile.
+  - id: PAD_VELOCITY_SENSITIVE
+    description: >
+      MPC pads are velocity-sensitive. For flight sim use, configure pads as
+      momentary buttons at fixed velocity to avoid unintended axis variation.
+      Use Akai MPC Beats or MPC Software to set pad behavior.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Akai MPD226 — 16 velocity pads + 4 faders + 4 knobs. VID 0x09E8 confirmed;
+    PID 0x0077 from community captures. MIDI device; bind via OpenFlight MIDI
+    profile for throttle/mixture/prop. Last reviewed: 2026-06.

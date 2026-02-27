@@ -24,6 +24,7 @@ pub mod export_lua;
 pub mod installer;
 pub mod mp_detection;
 pub mod socket_bridge;
+pub mod tcp;
 
 pub use adapter::{DcsAdapter, DcsAdapterConfig, DcsAdapterError};
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};

@@ -1,0 +1,56 @@
+# Brunner CLS-E Aileron
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLS-E Aileron — force-feedback aileron module for full-motion
+# cockpit builds. Provides active spring/damper feedback on the roll axis.
+# Uses alternate VID 0x1781 (community estimate; confirmed VID is 0x25BB).
+# PID 0x0A8D is a community estimate adjacent to CLS-P Loading Pedals (0x0A8C).
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Aileron"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781       # Alternate community estimate — confirmed VID is 0x25BB
+    product_id: 0x0A8D      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [roll]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A8D is a community estimate adjacent to the CLS-P Loading Pedals
+      (0x0A8C). Confirmed Brunner VID is 0x25BB; 0x1781 is an alternate estimate.
+      Verify with lsusb on real hardware.
+  - id: CLS2SIM_COMPANION
+    description: >
+      Requires Brunner CLS2SIM companion software for FFB and calibration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Brunner CLS-E Aileron — active-feedback aileron module for cockpit builds.
+    Alt VID 0x1781, PID 0x0A8D community estimate. Confirmed VID is 0x25BB.
+    Requires CLS2SIM. Last reviewed: 2026-06.

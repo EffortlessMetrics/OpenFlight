@@ -1,0 +1,63 @@
+# Fanatec ClubSport V3 Pedals — 0x0EB7 / 0x0101
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x0EB7 (Fanatec GmbH), PID 0x0101.
+# Fanatec ClubSport V3 Pedals with load-cell brake. This PID variant is reported
+# by community members using newer firmware or USB revision. The primary V3 entry
+# (clubsport-pedals-v3.yaml) uses PID 0x0020 (community estimate).
+# PID 0x0101 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport V3 Pedals"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0101      # Community estimate — V3 Pedals variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0101 is a community estimate for the V3 Pedals. The primary V3 manifest
+      (clubsport-pedals-v3.yaml) uses PID 0x0020. Both may represent the same
+      hardware with different firmware revisions. Verify with lsusb.
+  - id: LOADCELL_BRAKE
+    description: >
+      The V3 Pedals use a load-cell brake sensor for pressure-based input rather
+      than potentiometer travel. Calibrate the brake axis curve in the OpenFlight
+      profile for optimal linearity in flight sim use.
+  - id: FANATEC_DRIVER_RECOMMENDED
+    description: >
+      Fanatec recommends installing the Fanatec driver for full V3 configuration.
+      Generic HID access is functional but without vibration motor support.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport V3 Pedals (0x0EB7/0x0101). PID community estimate.
+    Load-cell brake variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

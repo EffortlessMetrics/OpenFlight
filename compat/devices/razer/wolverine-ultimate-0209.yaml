@@ -1,0 +1,50 @@
+# Razer Wolverine Ultimate (Alt PID 0x0209)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Razer Wolverine Ultimate Xbox-licensed gamepad with remappable buttons.
+# Alternate PID 0x0209 (community estimate). Primary manifest wolverine-ultimate.yaml
+# uses PID 0x0A21. VID 0x1532 confirmed (Razer Inc.).
+schema_version: "1"
+
+device:
+  name: "Razer Wolverine Ultimate (Alt PID)"
+  vendor: "Razer"
+  usb:
+    vendor_id: 0x1532       # Razer Inc. (confirmed registered VID)
+    product_id: 0x0209      # Community estimate — see wolverine-ultimate.yaml (0x0A21)
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0209 is an alternate community estimate. Primary manifest is
+      wolverine-ultimate.yaml (PID 0x0A21). Verify with lsusb on real hardware.
+  - id: EXTRA_BUTTONS
+    description: >
+      The Wolverine Ultimate includes 4 remappable multi-function buttons
+      (2 on face, 2 on back). Map to sim auxiliary functions.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Wolverine Ultimate — alt PID 0x0209. Primary: wolverine-ultimate.yaml
+    (0x0A21). VID 0x1532 confirmed. Last reviewed: 2026-06.

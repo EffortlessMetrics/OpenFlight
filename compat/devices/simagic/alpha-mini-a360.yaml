@@ -1,0 +1,53 @@
+# Simagic Alpha Mini (Alt PID 0xA360)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic Alpha Mini direct-drive base — alternate PID estimate 0xA360.
+# Primary manifests use PID 0x1010 (alpha-mini-base.yaml) and 0x5743
+# (alpha_mini_r.yaml). Some community reports suggest PID 0xA360 for a
+# firmware variant. VID 0x0483 (STMicroelectronics shared VID).
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Mini (Alt PID A360)"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483     # STMicroelectronics shared VID (used by Simagic)
+    product_id: 0xA360    # Alternate community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 8.5    # Alpha Mini rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA360 is an alternate community estimate for the Alpha Mini.
+      Primary estimates are 0x1010 (alpha-mini-base.yaml) and 0x5743
+      (alpha_mini_r.yaml). Verify with lsusb on hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Mini — compact direct-drive base (8.5 Nm). Alt PID 0xA360.
+    Primary estimates: 0x1010 and 0x5743. VID 0x0483 = STMicroelectronics.
+    Last reviewed: 2026-06.

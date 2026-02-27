@@ -135,6 +135,130 @@ impl DetentProcessor {
     }
 }
 
+// ── RT-safe const-generic detent processor ────────────────────────────────────
+
+/// Per-detent configuration for RT-safe axis snapping.
+///
+/// Used with [`RtDetentProcessor`]. Stores the center position, attraction zone
+/// half-width, and hysteresis offset. Zero-allocation; lives on the stack.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DetentBand {
+    /// Center position of the detent in normalized input range.
+    pub center: f32,
+    /// Half-width of the attraction zone.
+    /// Input within `center ± half_width` enters the detent.
+    pub half_width: f32,
+    /// Hysteresis: input must travel this far past the zone edge to leave.
+    pub hysteresis: f32,
+}
+
+impl DetentBand {
+    /// Creates a new `DetentBand`.
+    pub fn new(center: f32, half_width: f32, hysteresis: f32) -> Self {
+        debug_assert!(half_width > 0.0, "half_width must be positive");
+        debug_assert!(hysteresis >= 0.0, "hysteresis must be non-negative");
+        Self { center, half_width, hysteresis }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum BandEngagement {
+    Free,
+    /// `from_below` is `true` when the axis entered from the negative side.
+    Engaged { from_below: bool },
+}
+
+/// Const-generic, zero-allocation multi-detent processor.
+///
+/// `N` is the maximum number of detents (typically 2–4 for throttles).
+/// RT-safe: backed by fixed arrays, no heap allocation after construction.
+///
+/// # Example
+///
+/// ```
+/// use flight_axis::detent::{DetentBand, RtDetentProcessor};
+///
+/// let mut proc = RtDetentProcessor::<4>::new();
+/// proc.add(DetentBand::new(0.0, 0.05, 0.02)); // idle detent at centre
+/// assert_eq!(proc.process(0.03), 0.0);         // snaps to centre
+/// assert_eq!(proc.process(0.5), 0.5);          // free outside zone
+/// ```
+pub struct RtDetentProcessor<const N: usize> {
+    bands: [Option<DetentBand>; N],
+    states: [BandEngagement; N],
+    count: usize,
+}
+
+impl<const N: usize> RtDetentProcessor<N> {
+    /// Creates a new, empty `RtDetentProcessor`.
+    pub const fn new() -> Self {
+        Self {
+            bands: [None; N],
+            states: [BandEngagement::Free; N],
+            count: 0,
+        }
+    }
+
+    /// Adds a detent band. Returns `false` if already at capacity (`N`).
+    pub fn add(&mut self, band: DetentBand) -> bool {
+        if self.count >= N {
+            return false;
+        }
+        self.bands[self.count] = Some(band);
+        self.count += 1;
+        true
+    }
+
+    /// Processes `input` through all configured detent bands. RT-safe.
+    pub fn process(&mut self, input: f32) -> f32 {
+        let mut output = input;
+        for i in 0..self.count {
+            let Some(band) = self.bands[i] else { continue };
+            let dist = input - band.center;
+            match self.states[i] {
+                BandEngagement::Free => {
+                    if dist.abs() <= band.half_width {
+                        self.states[i] = BandEngagement::Engaged { from_below: dist <= 0.0 };
+                        output = band.center;
+                    }
+                }
+                BandEngagement::Engaged { from_below } => {
+                    let exit_threshold = band.half_width + band.hysteresis;
+                    let exited = if from_below {
+                        dist > exit_threshold
+                    } else {
+                        dist < -exit_threshold
+                    };
+                    if exited {
+                        self.states[i] = BandEngagement::Free;
+                    } else {
+                        output = band.center;
+                    }
+                }
+            }
+        }
+        output
+    }
+
+    /// Resets all engagement states (e.g., on axis reconnect).
+    pub fn reset(&mut self) {
+        for s in self.states.iter_mut() {
+            *s = BandEngagement::Free;
+        }
+    }
+
+    /// Returns the number of configured detent bands.
+    pub fn count(&self) -> usize {
+        self.count
+    }
+}
+
+impl<const N: usize> Default for RtDetentProcessor<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,5 +415,104 @@ mod tests {
                 out, input
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod rt_tests {
+    use super::{BandEngagement, DetentBand, RtDetentProcessor};
+
+    fn make_proc() -> RtDetentProcessor<4> {
+        let mut p = RtDetentProcessor::new();
+        p.add(DetentBand::new(0.0, 0.1, 0.05));
+        p
+    }
+
+    #[test]
+    fn test_detent_snap_to_center() {
+        let mut p = make_proc();
+        // 0.06 is within half_width=0.1 → snaps to 0.0
+        assert_eq!(p.process(0.06), 0.0);
+    }
+
+    #[test]
+    fn test_detent_free_outside_zone() {
+        let mut p = make_proc();
+        // 0.5 is outside half_width=0.1
+        assert_eq!(p.process(0.5), 0.5);
+    }
+
+    #[test]
+    fn test_detent_hysteresis_hold() {
+        let mut p = make_proc();
+        // Enter from below (dist = -0.06 < 0)
+        p.process(-0.06);
+        // Move to exactly half_width edge — inside exit threshold, still held
+        assert_eq!(p.process(0.1), 0.0);
+    }
+
+    #[test]
+    fn test_detent_hysteresis_exit() {
+        let mut p = make_proc();
+        // Enter from below
+        p.process(-0.06);
+        // Move past half_width + hysteresis = 0.15 → should exit
+        let out = p.process(0.16);
+        assert!((out - 0.16).abs() < f32::EPSILON, "should be free: got {out}");
+    }
+
+    #[test]
+    fn test_detent_exit_wrong_side_held() {
+        let mut p = make_proc();
+        // Enter from below (from_below = true)
+        p.process(-0.06);
+        // Moving to -0.16 (below) means dist = -0.16 - 0.0 = -0.16
+        // exit condition: from_below=true → dist > exit_threshold(0.15)? -0.16 > 0.15 → false → held
+        assert_eq!(p.process(-0.16), 0.0);
+    }
+
+    #[test]
+    fn test_multi_detent() {
+        let mut p: RtDetentProcessor<4> = RtDetentProcessor::new();
+        p.add(DetentBand::new(-0.5, 0.05, 0.02));
+        p.add(DetentBand::new(0.5, 0.05, 0.02));
+
+        // Near first detent — engages
+        assert_eq!(p.process(-0.5), -0.5);
+        // Move to second detent — first exits (dist=1.0 > 0.07), second engages
+        assert_eq!(p.process(0.5), 0.5);
+        // Exit second detent past its upper edge (exit_threshold = 0.07)
+        let out = p.process(0.58);
+        assert!((out - 0.58).abs() < f32::EPSILON, "should be free: got {out}");
+        // Both detents now free — midpoint passes through
+        assert_eq!(p.process(0.0), 0.0);
+    }
+
+    #[test]
+    fn test_add_at_capacity() {
+        let mut p: RtDetentProcessor<2> = RtDetentProcessor::new();
+        assert!(p.add(DetentBand::new(-0.5, 0.05, 0.0)));
+        assert!(p.add(DetentBand::new(0.5, 0.05, 0.0)));
+        // N=2, already full
+        assert!(!p.add(DetentBand::new(0.0, 0.05, 0.0)));
+        assert_eq!(p.count(), 2);
+    }
+
+    #[test]
+    fn test_detent_reset() {
+        let mut p = make_proc();
+        p.process(0.06); // engage
+        assert_eq!(p.states[0], BandEngagement::Engaged { from_below: false });
+        p.reset();
+        assert_eq!(p.states[0], BandEngagement::Free);
+        // After reset, should re-engage on next pass through zone
+        assert_eq!(p.process(0.06), 0.0);
+    }
+
+    #[test]
+    fn test_default_trait() {
+        let mut p: RtDetentProcessor<4> = RtDetentProcessor::default();
+        p.add(DetentBand::new(0.0, 0.1, 0.05));
+        assert_eq!(p.process(0.06), 0.0);
     }
 }

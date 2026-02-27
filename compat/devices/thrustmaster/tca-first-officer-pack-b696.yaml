@@ -1,0 +1,56 @@
+# Thrustmaster TCA First Officer Pack (PID 0xB696)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster TCA First Officer Pack — TCA Sidestick Airbus (copilot) plus
+# TCA Quadrant Airbus. VID 0x044F confirmed (Thrustmaster). PID 0xB696 is a
+# community estimate; PID 0xB694 is taken by tca-sidestick-x.yaml.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA First Officer Pack Airbus"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (GUILLEMOT) — confirmed
+    product_id: 0xB696      # Community estimate — PID 0xB694 taken; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, throttle_l, throttle_r, flap, spoiler]
+    resolution_bits: 12
+  buttons: 28
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB696 is a community estimate. PID 0xB694 (VID 0x044F) is already
+      taken by tca-sidestick-x.yaml. Verify with lsusb on real hardware.
+  - id: FIRST_OFFICER_COPILOT
+    description: >
+      The First Officer Pack provides a right-hand (copilot) Airbus sidestick
+      geometry. Roll/pitch axes are mirrored relative to captain config.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster TCA First Officer Pack Airbus. PID 0xB696 community estimate.
+    PID 0xB694 is taken by tca-sidestick-x.yaml. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

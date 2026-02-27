@@ -1,0 +1,41 @@
+# BAUR F-18 Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2091 — estimated.
+# Baur F-18 Hornet grip replica for DCS F/A-18C simulation.
+schema_version: "1"
+device:
+  name: "BAUR F-18 Grip"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2091      # Community estimate — BAUR F-18 Grip; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2091 is a community estimate for the BAUR F-18 Grip.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR F-18 Grip — VID 0x1209 / PID 0x2091 (est).
+    Replica of the F/A-18C Hornet HOTAS grip. High button count for DCS.
+    Wave-59 addition. Last reviewed: 2026-07.

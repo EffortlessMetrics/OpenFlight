@@ -1,0 +1,49 @@
+# Mayflash GameCube Controller Adapter (4-Port)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (Mayflash / GreenAsia Inc.), PID 0x0012 — estimated.
+# 4-port GameCube controller adapter for PC/Switch/Wii U.
+# Enumerates as HID gamepad on PC in Direct Input mode.
+schema_version: "1"
+device:
+  name: "Mayflash GameCube Controller Adapter"
+  vendor: "Mayflash"
+  usb:
+    vendor_id: 0x0E8F       # Mayflash / GreenAsia Inc.
+    product_id: 0x0012      # Community estimate — GCN 4-port adapter; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0012 is a community estimate for the Mayflash GCN adapter.
+      Joystick Adapter uses 0x0014. Confirm with lsusb.
+  - id: ADAPTER_DEVICE
+    description: >
+      Each adapter port enumerates as a separate HID device on PC.
+      Switch mode affects enumeration — use PC mode for HID input.
+  - id: CSTICK_AXIS
+    description: >
+      The C-stick maps to rx/ry axes. The GameCube L/R triggers are
+      analog (8-bit) and map to z/rz axes on the source controller.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mayflash GameCube Controller Adapter — VID 0x0E8F / PID 0x0012 (est).
+    4-port GCN adapter. Wave-55 addition. Last reviewed: 2026-07.

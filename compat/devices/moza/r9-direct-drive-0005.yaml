@@ -1,0 +1,70 @@
+# Moza R9 Direct Drive Base (Alt PID 0x0005)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology (Moza).
+# PID 0x0005 is a community-reported alternate PID for the Moza R9.
+# The primary manifest uses PID 0x000C (r9-base.yaml). PID 0x0005 may
+# correspond to an earlier firmware revision or production batch.
+# Note: PID 0x0005 is shared across Moza's lineup per community reports
+# (cf. moza AB9 uses PID 0x0005 in ab9.yaml). Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Moza R9 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology) — confirmed
+    product_id: 0x0005      # Community estimate — alt PID; primary is 0x000C (r9-base.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 17     # Moza proprietary encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 9.0    # R9 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is a community estimate. The primary Moza R9 manifest uses
+      PID 0x000C (r9-base.yaml). This PID may overlap with the Moza AB9.
+      Verify with lsusb or Moza Pit House software before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R9 accepts raw torque commands rather than DirectInput effect types.
+      Same torque protocol as the Moza AB series (report ID 0x20).
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R9 base exposes only the rotation axis. When used for flight sim,
+      a grip adapter provides buttons; map the rotation axis in the OpenFlight
+      profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R9 Direct Drive alternate PID 0x0005. Primary manifest is r9-base.yaml
+    (PID 0x000C). VID 0x346E = Moza (Gudsen Technology). 9 Nm peak.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

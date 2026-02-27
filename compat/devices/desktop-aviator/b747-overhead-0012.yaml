@@ -1,0 +1,59 @@
+# Desktop Aviator Boeing 747 Overhead Panel — 0x2B67 / 0x0012
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x2B67 (community HID VID), PID 0x0012 (estimated).
+# The Desktop Aviator Boeing 747 Overhead Panel is a replica cockpit overhead
+# module for B747 simulation, exposing fuel, hydraulics, electrical, and bleed
+# air switches as USB HID. VID 0x2B67 is the community HID VID used by multiple
+# Desktop Aviator products (see also a320-fcu.yaml PID 0x0011).
+# PID 0x0012 is a community estimate — confirm with lsusb or Desktop Aviator docs.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator B747 Overhead Panel"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x2B67       # Community HID VID (used by Desktop Aviator and others)
+    product_id: 0x0012      # Community estimate — B747 Overhead; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0012 is a community estimate. Adjacent Desktop Aviator PIDs under
+      VID 0x2B67: 0x0011 (A320 FCU, a320-fcu.yaml). Verify with lsusb or
+      Desktop Aviator customer documentation.
+  - id: PANEL_DEVICE
+    description: >
+      The B747 Overhead exposes aircraft systems switches. Map to the appropriate
+      aircraft-specific sim variables via OpenFlight profile panel bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator B747 Overhead Panel (0x2B67/0x0012). PID community estimate.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

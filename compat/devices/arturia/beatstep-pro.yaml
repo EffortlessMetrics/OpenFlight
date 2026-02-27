@@ -1,0 +1,58 @@
+# Arturia BeatStep Pro MIDI Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1C75 confirmed: Arturia (registered USB vendor ID).
+# PID 0x0288 sourced from community USB device databases and linux-hardware.org
+# entries for the Arturia BeatStep Pro step sequencer / controller.
+# The BeatStep Pro features 32 step buttons, 16 rotary encoders, a pressure/
+# velocity pad controller, and CV/Gate outputs. In flight sim it is used as
+# a high-density rotary encoder surface for heading, course, frequency, and
+# autopilot parameter adjustment.
+schema_version: "1"
+
+device:
+  name: "Arturia BeatStep Pro"
+  vendor: "Arturia"
+  usb:
+    vendor_id: 0x1C75    # Arturia (confirmed)
+    product_id: 0x0288   # BeatStep Pro — community USB database
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 16
+    names: [enc_1, enc_2, enc_3, enc_4, enc_5, enc_6, enc_7, enc_8,
+            enc_9, enc_10, enc_11, enc_12, enc_13, enc_14, enc_15, enc_16]
+    resolution_bits: 7
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The BeatStep Pro enumerates as USB MIDI class device. Encoders and
+      buttons send MIDI CC / Note messages. OpenFlight binds via MIDI profile.
+      Use Arturia MIDI Control Center to configure CC assignments before use.
+  - id: ENCODER_RELATIVE
+    description: >
+      Rotary encoders report relative increments (+1/−1) in default mode.
+      Configure via MIDI Control Center or use OpenFlight relative-encoder
+      binding for autopilot heading, course, and altitude knobs.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arturia BeatStep Pro — 16 encoders + 32 step pads. VID 0x1C75 confirmed;
+    PID 0x0288 from community database. MIDI device; ideal for AP panel knobs.
+    Last reviewed: 2026-06.

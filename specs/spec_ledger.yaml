@@ -12420,6 +12420,7 @@ requirements:
       - id: AC-402.6
         description: "Each dependency check has an individual timeout of 500 ms"
         tests:
+          - feature:specs/features/req_402_service_dependency_health_check.feature
   # Product Requirement: Axis Blend Value Smoothing
   - id: REQ-403
     name: Axis Blend Value Smoothing
@@ -15589,7 +15590,8 @@ requirements:
       - id: AC-522.4
         description: "Rollback is available for 7 days after successful upgrade"
         tests:
-          - feature:specs/features/req_522_installer_rollback.feature  - id: REQ-523
+          - feature:specs/features/req_522_installer_rollback.feature
+  - id: REQ-523
     name: Axis Motor Trend Analysis
     kind: product
     status: draft
@@ -15683,7 +15685,7 @@ requirements:
         tests:
           - feature:specs/features/req_527_service_pid_file.feature
       - id: AC-527.2
-        description: "AC2: Service writes PID to %TEMP%\openflight.pid on Windows"
+        description: "AC2: Service writes PID to %TEMP%\\openflight.pid on Windows"
         tests:
           - feature:specs/features/req_527_service_pid_file.feature
       - id: AC-527.3
@@ -15841,3 +15843,3101 @@ requirements:
         description: "AC4: VIRPIL compatibility manifest includes all known PIDs"
         tests:
           - feature:specs/features/req_534_virpil_protocol_support.feature
+  - id: REQ-535
+    name: Device Firmware Version Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-535.1
+        description: "AC1: Service queries HID device firmware version on enumeration"
+        tests:
+          - feature:specs/features/req_535_device_firmware_detection.feature
+      - id: AC-535.2
+        description: "AC2: Firmware version is included in device diagnostics"
+        tests:
+          - feature:specs/features/req_535_device_firmware_detection.feature
+      - id: AC-535.3
+        description: "AC3: Known firmware bugs are flagged in compatibility manifest"
+        tests:
+          - feature:specs/features/req_535_device_firmware_detection.feature
+      - id: AC-535.4
+        description: "AC4: flightctl devices shows firmware version per device"
+        tests:
+          - feature:specs/features/req_535_device_firmware_detection.feature
+  - id: REQ-536
+    name: MSFS SimConnect Event Injection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-536.1
+        description: "AC1: Named SimConnect events can be mapped to button inputs"
+        tests:
+          - feature:specs/features/req_536_msfs_event_injection.feature
+      - id: AC-536.2
+        description: "AC2: Event injection is configurable in profile rules"
+        tests:
+          - feature:specs/features/req_536_msfs_event_injection.feature
+      - id: AC-536.3
+        description: "AC3: Event transmission rate is rate-limited to sim frame rate"
+        tests:
+          - feature:specs/features/req_536_msfs_event_injection.feature
+      - id: AC-536.4
+        description: "AC4: Failed injections are logged with SimConnect error code"
+        tests:
+          - feature:specs/features/req_536_msfs_event_injection.feature
+  - id: REQ-537
+    name: Flight Phase Telemetry Scoring
+    kind: product
+    status: draft
+    ac:
+      - id: AC-537.1
+        description: "AC1: Phase detector uses airspeed, altitude, and gear state"
+        tests:
+          - feature:specs/features/req_537_flight_phase_scoring.feature
+      - id: AC-537.2
+        description: "AC2: Phase transition fires only after confidence threshold met"
+        tests:
+          - feature:specs/features/req_537_flight_phase_scoring.feature
+      - id: AC-537.3
+        description: "AC3: Scoring algorithm is configurable via profile"
+        tests:
+          - feature:specs/features/req_537_flight_phase_scoring.feature
+      - id: AC-537.4
+        description: "AC4: Phase score history is available in diagnostics"
+        tests:
+          - feature:specs/features/req_537_flight_phase_scoring.feature
+  - id: REQ-538
+    name: Configurable HID Report Descriptor Parsing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-538.1
+        description: "AC1: Custom descriptor overrides are loadable from compat manifest quirks"
+        tests:
+          - feature:specs/features/req_538_hid_descriptor_override.feature
+      - id: AC-538.2
+        description: "AC2: Override changes axis count, range, or scaling"
+        tests:
+          - feature:specs/features/req_538_hid_descriptor_override.feature
+      - id: AC-538.3
+        description: "AC3: Override is applied only to matching VID/PID"
+        tests:
+          - feature:specs/features/req_538_hid_descriptor_override.feature
+      - id: AC-538.4
+        description: "AC4: Override errors are logged with context"
+        tests:
+          - feature:specs/features/req_538_hid_descriptor_override.feature
+  - id: REQ-539
+    name: Profile Dry Run
+    kind: product
+    status: draft
+    ac:
+      - id: AC-539.1
+        description: "AC1: flightctl profile apply --dry-run shows what would change"
+        tests:
+          - feature:specs/features/req_539_profile_dry_run.feature
+      - id: AC-539.2
+        description: "AC2: Dry run does not modify active profile"
+        tests:
+          - feature:specs/features/req_539_profile_dry_run.feature
+      - id: AC-539.3
+        description: "AC3: Dry run reports schema validation errors"
+        tests:
+          - feature:specs/features/req_539_profile_dry_run.feature
+      - id: AC-539.4
+        description: "AC4: Dry run compares against current active profile"
+        tests:
+          - feature:specs/features/req_539_profile_dry_run.feature
+  - id: REQ-540
+    name: Axis Smoothing Visualization Data
+    kind: product
+    status: draft
+    ac:
+      - id: AC-540.1
+        description: "AC1: Diagnostics include raw, smoothed, and output values per axis"
+        tests:
+          - feature:specs/features/req_540_axis_smoothing_visualization.feature
+      - id: AC-540.2
+        description: "AC2: Last N samples are available via RPC"
+        tests:
+          - feature:specs/features/req_540_axis_smoothing_visualization.feature
+      - id: AC-540.3
+        description: "AC3: Sample count N is configurable"
+        tests:
+          - feature:specs/features/req_540_axis_smoothing_visualization.feature
+      - id: AC-540.4
+        description: "AC4: Visualization data is structured for JSON export"
+        tests:
+          - feature:specs/features/req_540_axis_smoothing_visualization.feature
+  - id: REQ-541
+    name: Multi-Profile Hot-Swap
+    kind: product
+    status: draft
+    ac:
+      - id: AC-541.1
+        description: "AC1: Multiple profiles can be pre-loaded into memory"
+        tests:
+          - feature:specs/features/req_541_multi_profile_hot_swap.feature
+      - id: AC-541.2
+        description: "AC2: Profile swap completes atomically within one axis tick"
+        tests:
+          - feature:specs/features/req_541_multi_profile_hot_swap.feature
+      - id: AC-541.3
+        description: "AC3: Profile swap latency is under 1 millisecond"
+        tests:
+          - feature:specs/features/req_541_multi_profile_hot_swap.feature
+      - id: AC-541.4
+        description: "AC4: Hot-swap is available via CLI and gRPC RPC"
+        tests:
+          - feature:specs/features/req_541_multi_profile_hot_swap.feature
+  - id: REQ-542
+    name: Axis Chain Benchmark Regression
+    kind: product
+    status: draft
+    ac:
+      - id: AC-542.1
+        description: "AC1: Criterion benchmark exists for full AxisChain process() loop"
+        tests:
+          - feature:specs/features/req_542_axis_chain_benchmark.feature
+      - id: AC-542.2
+        description: "AC2: Benchmark runs in CI nightly"
+        tests:
+          - feature:specs/features/req_542_axis_chain_benchmark.feature
+      - id: AC-542.3
+        description: "AC3: Regression threshold is p95 <= 10 microseconds per axis"
+        tests:
+          - feature:specs/features/req_542_axis_chain_benchmark.feature
+      - id: AC-542.4
+        description: "AC4: Benchmark failure blocks release merge"
+        tests:
+          - feature:specs/features/req_542_axis_chain_benchmark.feature
+  - id: REQ-543
+    name: DCS Export TCP Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-543.1
+        description: "AC1: DCS export script can send telemetry over TCP socket"
+        tests:
+          - feature:specs/features/req_543_dcs_export_tcp.feature
+      - id: AC-543.2
+        description: "AC2: Service accepts TCP connections from DCS on configurable port"
+        tests:
+          - feature:specs/features/req_543_dcs_export_tcp.feature
+      - id: AC-543.3
+        description: "AC3: TCP connection loss triggers reconnect with backoff"
+        tests:
+          - feature:specs/features/req_543_dcs_export_tcp.feature
+      - id: AC-543.4
+        description: "AC4: TCP mode is togglable in service config"
+        tests:
+          - feature:specs/features/req_543_dcs_export_tcp.feature
+  - id: REQ-544
+    name: MSFS WASM Module Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-544.1
+        description: "AC1: WASM module provides direct cockpit variable access"
+        tests:
+          - feature:specs/features/req_544_msfs_wasm_integration.feature
+      - id: AC-544.2
+        description: "AC2: Service communicates with WASM module via named pipe"
+        tests:
+          - feature:specs/features/req_544_msfs_wasm_integration.feature
+      - id: AC-544.3
+        description: "AC3: WASM module is installable as part of OpenFlight packaging"
+        tests:
+          - feature:specs/features/req_544_msfs_wasm_integration.feature
+      - id: AC-544.4
+        description: "AC4: Connection state with WASM module is monitored"
+        tests:
+          - feature:specs/features/req_544_msfs_wasm_integration.feature
+  - id: REQ-545
+    name: Device Power Management
+    kind: product
+    status: draft
+    ac:
+      - id: AC-545.1
+        description: "AC1: Device sleep triggers safe disconnection handling"
+        tests:
+          - feature:specs/features/req_545_device_power_management.feature
+      - id: AC-545.2
+        description: "AC2: Device wake triggers re-enumeration and configuration restore"
+        tests:
+          - feature:specs/features/req_545_device_power_management.feature
+      - id: AC-545.3
+        description: "AC3: Power events are published on the flight-bus"
+        tests:
+          - feature:specs/features/req_545_device_power_management.feature
+      - id: AC-545.4
+        description: "AC4: Power state is included in device diagnostics"
+        tests:
+          - feature:specs/features/req_545_device_power_management.feature
+  - id: REQ-546
+    name: Axis Range Expansion
+    kind: product
+    status: draft
+    ac:
+      - id: AC-546.1
+        description: "AC1: Range expansion multiplies axis output by configurable factor"
+        tests:
+          - feature:specs/features/req_546_axis_range_expansion.feature
+      - id: AC-546.2
+        description: "AC2: Expanded output is clamped to avoid overflow"
+        tests:
+          - feature:specs/features/req_546_axis_range_expansion.feature
+      - id: AC-546.3
+        description: "AC3: Range expansion is configurable per-axis in profile"
+        tests:
+          - feature:specs/features/req_546_axis_range_expansion.feature
+      - id: AC-546.4
+        description: "AC4: Expansion interacts correctly with deadzone and curves"
+        tests:
+          - feature:specs/features/req_546_axis_range_expansion.feature
+  - id: REQ-547
+    name: Axis Input Recorder
+    kind: product
+    status: draft
+    ac:
+      - id: AC-547.1
+        description: "AC1: Axis recorder captures timestamped axis values to a binary file"
+        tests:
+          - feature:specs/features/req_547_axis_input_recorder.feature
+      - id: AC-547.2
+        description: "AC2: Recording is started and stopped via CLI command"
+        tests:
+          - feature:specs/features/req_547_axis_input_recorder.feature
+      - id: AC-547.3
+        description: "AC3: Recorded file has configurable duration limit"
+        tests:
+          - feature:specs/features/req_547_axis_input_recorder.feature
+      - id: AC-547.4
+        description: "AC4: Recording can be replayed as if from a live device"
+        tests:
+          - feature:specs/features/req_547_axis_input_recorder.feature
+  - id: REQ-548
+    name: Adaptive Rate Limiting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-548.1
+        description: "AC1: Maneuver detection identifies high-energy input sequences"
+        tests:
+          - feature:specs/features/req_548_adaptive_rate_limiting.feature
+      - id: AC-548.2
+        description: "AC2: Rate limit is relaxed during detected maneuvers"
+        tests:
+          - feature:specs/features/req_548_adaptive_rate_limiting.feature
+      - id: AC-548.3
+        description: "AC3: Rate limit returns to configured value after maneuver ends"
+        tests:
+          - feature:specs/features/req_548_adaptive_rate_limiting.feature
+      - id: AC-548.4
+        description: "AC4: Maneuver detection threshold is configurable"
+        tests:
+          - feature:specs/features/req_548_adaptive_rate_limiting.feature
+  - id: REQ-549
+    name: IPC Message Authentication
+    kind: product
+    status: draft
+    ac:
+      - id: AC-549.1
+        description: "AC1: Service issues tokens for CLI authentication"
+        tests:
+          - feature:specs/features/req_549_ipc_message_auth.feature
+      - id: AC-549.2
+        description: "AC2: Tokens have configurable TTL"
+        tests:
+          - feature:specs/features/req_549_ipc_message_auth.feature
+      - id: AC-549.3
+        description: "AC3: Unauthenticated requests are rejected with 401 error"
+        tests:
+          - feature:specs/features/req_549_ipc_message_auth.feature
+      - id: AC-549.4
+        description: "AC4: Token revocation is immediate"
+        tests:
+          - feature:specs/features/req_549_ipc_message_auth.feature
+  - id: REQ-550
+    name: Axis Chain Snapshot RPC
+    kind: product
+    status: draft
+    ac:
+      - id: AC-550.1
+        description: "AC1: GetAxisSnapshot RPC returns current value at each pipeline stage"
+        tests:
+          - feature:specs/features/req_550_axis_chain_snapshot_rpc.feature
+      - id: AC-550.2
+        description: "AC2: Snapshot includes timestamps for each stage"
+        tests:
+          - feature:specs/features/req_550_axis_chain_snapshot_rpc.feature
+      - id: AC-550.3
+        description: "AC3: Snapshot is available without enabling debug mode"
+        tests:
+          - feature:specs/features/req_550_axis_chain_snapshot_rpc.feature
+      - id: AC-550.4
+        description: "AC4: Snapshot latency does not affect RT processing"
+        tests:
+          - feature:specs/features/req_550_axis_chain_snapshot_rpc.feature
+  - id: REQ-551
+    name: VIRPIL Config Upload
+    kind: product
+    status: draft
+    ac:
+      - id: AC-551.1
+        description: "AC1: VIRPIL HID config reports are understood and documented"
+        tests:
+          - feature:specs/features/req_551_virpil_config_upload.feature
+      - id: AC-551.2
+        description: "AC2: Axis calibration can be written back to device"
+        tests:
+          - feature:specs/features/req_551_virpil_config_upload.feature
+      - id: AC-551.3
+        description: "AC3: Config upload requires explicit user confirmation"
+        tests:
+          - feature:specs/features/req_551_virpil_config_upload.feature
+      - id: AC-551.4
+        description: "AC4: Failed uploads are retried once"
+        tests:
+          - feature:specs/features/req_551_virpil_config_upload.feature
+  - id: REQ-552
+    name: SimConnect Managed Data Request
+    kind: product
+    status: draft
+    ac:
+      - id: AC-552.1
+        description: "AC1: Managed data requests reduce per-frame SimConnect overhead"
+        tests:
+          - feature:specs/features/req_552_simconnect_managed_data.feature
+      - id: AC-552.2
+        description: "AC2: Data period is configurable per variable group"
+        tests:
+          - feature:specs/features/req_552_simconnect_managed_data.feature
+      - id: AC-552.3
+        description: "AC3: Changed-only updates are used for low-frequency data"
+        tests:
+          - feature:specs/features/req_552_simconnect_managed_data.feature
+      - id: AC-552.4
+        description: "AC4: Managed request IDs are tracked and released on shutdown"
+        tests:
+          - feature:specs/features/req_552_simconnect_managed_data.feature
+  - id: REQ-553
+    name: Profile Schema Migration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-553.1
+        description: "AC1: Profile loader detects schema version from file"
+        tests:
+          - feature:specs/features/req_553_profile_schema_migration.feature
+      - id: AC-553.2
+        description: "AC2: Profiles with older versions are migrated automatically"
+        tests:
+          - feature:specs/features/req_553_profile_schema_migration.feature
+      - id: AC-553.3
+        description: "AC3: Migration preserves user-specified values"
+        tests:
+          - feature:specs/features/req_553_profile_schema_migration.feature
+      - id: AC-553.4
+        description: "AC4: Migrated profile is saved back in new schema version"
+        tests:
+          - feature:specs/features/req_553_profile_schema_migration.feature
+  - id: REQ-554
+    name: Axis Boost Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-554.1
+        description: "AC1: Boost multiplies axis sensitivity by configurable factor"
+        tests:
+          - feature:specs/features/req_554_axis_boost_mode.feature
+      - id: AC-554.2
+        description: "AC2: Boost is activated by a mapped button"
+        tests:
+          - feature:specs/features/req_554_axis_boost_mode.feature
+      - id: AC-554.3
+        description: "AC3: Boost deactivates when button is released"
+        tests:
+          - feature:specs/features/req_554_axis_boost_mode.feature
+      - id: AC-554.4
+        description: "AC4: Boost does not bypass safety clamping"
+        tests:
+          - feature:specs/features/req_554_axis_boost_mode.feature
+  - id: REQ-555
+    name: Flight Recorder Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-555.1
+        description: "AC1: Service can trigger MSFS flight recorder start/stop via SimConnect event"
+        tests:
+          - feature:specs/features/req_555_flight_recorder_integration.feature
+      - id: AC-555.2
+        description: "AC2: OpenFlight axis log can be time-synchronized with MSFS recording"
+        tests:
+          - feature:specs/features/req_555_flight_recorder_integration.feature
+      - id: AC-555.3
+        description: "AC3: Synchronized log export is available via CLI"
+        tests:
+          - feature:specs/features/req_555_flight_recorder_integration.feature
+      - id: AC-555.4
+        description: "AC4: Recording metadata includes software version"
+        tests:
+          - feature:specs/features/req_555_flight_recorder_integration.feature
+  - id: REQ-556
+    name: Device Discovery Broadcast
+    kind: product
+    status: draft
+    ac:
+      - id: AC-556.1
+        description: "AC1: Device connect/disconnect is broadcast on flight-bus"
+        tests:
+          - feature:specs/features/req_556_device_discovery_broadcast.feature
+      - id: AC-556.2
+        description: "AC2: Bus event includes VID, PID, and device type"
+        tests:
+          - feature:specs/features/req_556_device_discovery_broadcast.feature
+      - id: AC-556.3
+        description: "AC3: Subscribers can react to device changes in real time"
+        tests:
+          - feature:specs/features/req_556_device_discovery_broadcast.feature
+      - id: AC-556.4
+        description: "AC4: Discovery events have configurable debounce delay"
+        tests:
+          - feature:specs/features/req_556_device_discovery_broadcast.feature
+  - id: REQ-557
+    name: Axis Reversal Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-557.1
+        description: "AC1: Reversal detection checks expected control response direction"
+        tests:
+          - feature:specs/features/req_557_axis_reversal_detection.feature
+      - id: AC-557.2
+        description: "AC2: Detection result is surfaced as a diagnostic warning"
+        tests:
+          - feature:specs/features/req_557_axis_reversal_detection.feature
+      - id: AC-557.3
+        description: "AC3: User can confirm reversal and apply invert flag"
+        tests:
+          - feature:specs/features/req_557_axis_reversal_detection.feature
+      - id: AC-557.4
+        description: "AC4: Reversal state is persisted per device"
+        tests:
+          - feature:specs/features/req_557_axis_reversal_detection.feature
+  - id: REQ-558
+    name: Plugin API Versioning
+    kind: product
+    status: draft
+    ac:
+      - id: AC-558.1
+        description: "AC1: Plugin manifest declares minimum API version required"
+        tests:
+          - feature:specs/features/req_558_plugin_api_versioning.feature
+      - id: AC-558.2
+        description: "AC2: Service rejects plugins requiring higher API version"
+        tests:
+          - feature:specs/features/req_558_plugin_api_versioning.feature
+      - id: AC-558.3
+        description: "AC3: Deprecated API features emit a warning when used"
+        tests:
+          - feature:specs/features/req_558_plugin_api_versioning.feature
+      - id: AC-558.4
+        description: "AC4: API changelog is maintained in documentation"
+        tests:
+          - feature:specs/features/req_558_plugin_api_versioning.feature
+
+  - id: REQ-559
+    name: Axis Group Phase Coherence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-559.1
+        description: "AC1: Group phase tracking updates all member axes within the same tick"
+        tests:
+          - feature:specs/features/req_559_axis_group_phase_coherence.feature
+      - id: AC-559.2
+        description: "AC2: Phase difference between group members is monitored"
+        tests:
+          - feature:specs/features/req_559_axis_group_phase_coherence.feature
+      - id: AC-559.3
+        description: "AC3: Phase coherence violation triggers a diagnostic event"
+        tests:
+          - feature:specs/features/req_559_axis_group_phase_coherence.feature
+      - id: AC-559.4
+        description: "AC4: Coherence window is configurable per group"
+        tests:
+          - feature:specs/features/req_559_axis_group_phase_coherence.feature
+  - id: REQ-560
+    name: Service Config Hot Validation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-560.1
+        description: "AC1: Config validation runs synchronously before hot-reload"
+        tests:
+          - feature:specs/features/req_560_service_config_hot_validation.feature
+      - id: AC-560.2
+        description: "AC2: Invalid config is rejected and old config stays active"
+        tests:
+          - feature:specs/features/req_560_service_config_hot_validation.feature
+      - id: AC-560.3
+        description: "AC3: Validation result is returned in CLI response"
+        tests:
+          - feature:specs/features/req_560_service_config_hot_validation.feature
+      - id: AC-560.4
+        description: "AC4: Validation errors include file path and line number"
+        tests:
+          - feature:specs/features/req_560_service_config_hot_validation.feature
+  - id: REQ-561
+    name: MSFS ATC Event Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-561.1
+        description: "AC1: ATC events such as radio frequency changes can be bound to buttons"
+        tests:
+          - feature:specs/features/req_561_msfs_atc_events.feature
+      - id: AC-561.2
+        description: "AC2: ATC event bindings are configurable in profile rules"
+        tests:
+          - feature:specs/features/req_561_msfs_atc_events.feature
+      - id: AC-561.3
+        description: "AC3: ATC state changes are received from MSFS via SimConnect"
+        tests:
+          - feature:specs/features/req_561_msfs_atc_events.feature
+      - id: AC-561.4
+        description: "AC4: ATC event bus snapshot includes current frequency"
+        tests:
+          - feature:specs/features/req_561_msfs_atc_events.feature
+  - id: REQ-562
+    name: X-Plane DataRef Write Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-562.1
+        description: "AC1: Adapter can write float DataRef values via UDP extplane protocol"
+        tests:
+          - feature:specs/features/req_562_xplane_dataref_write.feature
+      - id: AC-562.2
+        description: "AC2: DataRef writes are rate-limited to avoid flooding X-Plane"
+        tests:
+          - feature:specs/features/req_562_xplane_dataref_write.feature
+      - id: AC-562.3
+        description: "AC3: Write-only DataRefs are listed in adapter config"
+        tests:
+          - feature:specs/features/req_562_xplane_dataref_write.feature
+      - id: AC-562.4
+        description: "AC4: Write failures are logged with DataRef name and value"
+        tests:
+          - feature:specs/features/req_562_xplane_dataref_write.feature
+  - id: REQ-563
+    name: Service Audit Log
+    kind: product
+    status: draft
+    ac:
+      - id: AC-563.1
+        description: "AC1: All profile changes are written to audit log with timestamp and operator"
+        tests:
+          - feature:specs/features/req_563_service_audit_log.feature
+      - id: AC-563.2
+        description: "AC2: Audit log survives service restarts"
+        tests:
+          - feature:specs/features/req_563_service_audit_log.feature
+      - id: AC-563.3
+        description: "AC3: Audit log is viewable via CLI"
+        tests:
+          - feature:specs/features/req_563_service_audit_log.feature
+      - id: AC-563.4
+        description: "AC4: Audit log has configurable retention period"
+        tests:
+          - feature:specs/features/req_563_service_audit_log.feature
+  - id: REQ-564
+    name: Axis Noise Floor Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-564.1
+        description: "AC1: Noise floor detector measures signal variance when control is at rest"
+        tests:
+          - feature:specs/features/req_564_axis_noise_floor_detection.feature
+      - id: AC-564.2
+        description: "AC2: Automatic micro-deadzone is applied above detected noise floor"
+        tests:
+          - feature:specs/features/req_564_axis_noise_floor_detection.feature
+      - id: AC-564.3
+        description: "AC3: Noise floor measurement is stored per device in calibration store"
+        tests:
+          - feature:specs/features/req_564_axis_noise_floor_detection.feature
+      - id: AC-564.4
+        description: "AC4: Noise floor can be measured via CLI calibration command"
+        tests:
+          - feature:specs/features/req_564_axis_noise_floor_detection.feature
+  - id: REQ-565
+    name: SimConnect Aircraft Loaded Event
+    kind: product
+    status: draft
+    ac:
+      - id: AC-565.1
+        description: "AC1: AIRCRAFT_LOADED SimConnect event triggers aircraft detection update"
+        tests:
+          - feature:specs/features/req_565_simconnect_aircraft_loaded.feature
+      - id: AC-565.2
+        description: "AC2: New aircraft title and type are reported via flight-bus"
+        tests:
+          - feature:specs/features/req_565_simconnect_aircraft_loaded.feature
+      - id: AC-565.3
+        description: "AC3: Profile auto-select runs after aircraft load event"
+        tests:
+          - feature:specs/features/req_565_simconnect_aircraft_loaded.feature
+      - id: AC-565.4
+        description: "AC4: Aircraft load events are counted in adapter metrics"
+        tests:
+          - feature:specs/features/req_565_simconnect_aircraft_loaded.feature
+  - id: REQ-566
+    name: VKB Device Protocol Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-566.1
+        description: "AC1: VKB devices are identified by 0x231D VID"
+        tests:
+          - feature:specs/features/req_566_vkb_device_protocol.feature
+      - id: AC-566.2
+        description: "AC2: VKB 16-bit axis resolution is correctly normalized"
+        tests:
+          - feature:specs/features/req_566_vkb_device_protocol.feature
+      - id: AC-566.3
+        description: "AC3: VKB device configuration mode is documented in manifest quirks"
+        tests:
+          - feature:specs/features/req_566_vkb_device_protocol.feature
+      - id: AC-566.4
+        description: "AC4: VKB compatibility manifests cover all major device families"
+        tests:
+          - feature:specs/features/req_566_vkb_device_protocol.feature
+  - id: REQ-567
+    name: Profile Template Library
+    kind: product
+    status: draft
+    ac:
+      - id: AC-567.1
+        description: "AC1: Template library contains profiles for common aircraft types"
+        tests:
+          - feature:specs/features/req_567_profile_template_library.feature
+      - id: AC-567.2
+        description: "AC2: Templates are versioned and shipped with the service"
+        tests:
+          - feature:specs/features/req_567_profile_template_library.feature
+      - id: AC-567.3
+        description: "AC3: flightctl profile templates lists available templates"
+        tests:
+          - feature:specs/features/req_567_profile_template_library.feature
+      - id: AC-567.4
+        description: "AC4: New profile can be created from a template via CLI"
+        tests:
+          - feature:specs/features/req_567_profile_template_library.feature
+  - id: REQ-568
+    name: Hardware Capability Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-568.1
+        description: "AC1: Axis resolution is detected from HID descriptor"
+        tests:
+          - feature:specs/features/req_568_hardware_capability_detection.feature
+      - id: AC-568.2
+        description: "AC2: FFB capability presence is detected and cached"
+        tests:
+          - feature:specs/features/req_568_hardware_capability_detection.feature
+      - id: AC-568.3
+        description: "AC3: Capability cache is invalidated on firmware version change"
+        tests:
+          - feature:specs/features/req_568_hardware_capability_detection.feature
+      - id: AC-568.4
+        description: "AC4: Capabilities are exposed in device diagnostics JSON"
+        tests:
+          - feature:specs/features/req_568_hardware_capability_detection.feature
+  - id: REQ-569
+    name: IL-2 Axis Injection Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-569.1
+        description: "AC1: IL-2 export protocol supports axis value injection messages"
+        tests:
+          - feature:specs/features/req_569_il2_axis_injection.feature
+      - id: AC-569.2
+        description: "AC2: Injection is opt-in and disabled by default"
+        tests:
+          - feature:specs/features/req_569_il2_axis_injection.feature
+      - id: AC-569.3
+        description: "AC3: Injection rate is capped at IL-2 expected frame rate"
+        tests:
+          - feature:specs/features/req_569_il2_axis_injection.feature
+      - id: AC-569.4
+        description: "AC4: Injection errors are reported in adapter metrics"
+        tests:
+          - feature:specs/features/req_569_il2_axis_injection.feature
+  - id: REQ-570
+    name: Service Graceful Shutdown Timeout
+    kind: product
+    status: draft
+    ac:
+      - id: AC-570.1
+        description: "AC1: Graceful shutdown waits for active tasks to finish"
+        tests:
+          - feature:specs/features/req_570_service_graceful_shutdown.feature
+      - id: AC-570.2
+        description: "AC2: Tasks that do not finish within timeout are forcefully stopped"
+        tests:
+          - feature:specs/features/req_570_service_graceful_shutdown.feature
+      - id: AC-570.3
+        description: "AC3: Shutdown timeout is configurable with a default of 5 seconds"
+        tests:
+          - feature:specs/features/req_570_service_graceful_shutdown.feature
+      - id: AC-570.4
+        description: "AC4: Shutdown sequence is logged with per-task timing"
+        tests:
+          - feature:specs/features/req_570_service_graceful_shutdown.feature
+
+  - id: REQ-571
+    name: Axis Engine Watchdog
+    kind: product
+    status: draft
+    ac:
+      - id: AC-571.1
+        description: "AC1: Watchdog fires if axis tick exceeds 10ms wall time"
+        tests:
+          - feature:specs/features/req_571_axis_engine_watchdog.feature
+      - id: AC-571.2
+        description: "AC2: Stuck tick is logged with timestamp and axis state"
+        tests:
+          - feature:specs/features/req_571_axis_engine_watchdog.feature
+      - id: AC-571.3
+        description: "AC3: Watchdog resets axis engine to last known good state"
+        tests:
+          - feature:specs/features/req_571_axis_engine_watchdog.feature
+      - id: AC-571.4
+        description: "AC4: Watchdog event is published on flight-bus"
+        tests:
+          - feature:specs/features/req_571_axis_engine_watchdog.feature
+  - id: REQ-572
+    name: Garmin G1000 Panel Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-572.1
+        description: "AC1: G1000 panel buttons map to sim events via profile rules"
+        tests:
+          - feature:specs/features/req_572_garmin_g1000_panel.feature
+      - id: AC-572.2
+        description: "AC2: Encoder rotation maps to increment/decrement events"
+        tests:
+          - feature:specs/features/req_572_garmin_g1000_panel.feature
+      - id: AC-572.3
+        description: "AC3: Long-press detection maps to alternate function"
+        tests:
+          - feature:specs/features/req_572_garmin_g1000_panel.feature
+      - id: AC-572.4
+        description: "AC4: G1000 panel is discoverable via HID enumeration"
+        tests:
+          - feature:specs/features/req_572_garmin_g1000_panel.feature
+  - id: REQ-573
+    name: Axis Deadzone Hysteresis
+    kind: product
+    status: draft
+    ac:
+      - id: AC-573.1
+        description: "AC1: Hysteresis prevents rapid on/off toggling at deadzone boundary"
+        tests:
+          - feature:specs/features/req_573_axis_deadzone_hysteresis.feature
+      - id: AC-573.2
+        description: "AC2: Hysteresis width is configurable separately from deadzone"
+        tests:
+          - feature:specs/features/req_573_axis_deadzone_hysteresis.feature
+      - id: AC-573.3
+        description: "AC3: Hysteresis is disabled when deadzone is zero"
+        tests:
+          - feature:specs/features/req_573_axis_deadzone_hysteresis.feature
+      - id: AC-573.4
+        description: "AC4: Hysteresis state is tracked per axis instance"
+        tests:
+          - feature:specs/features/req_573_axis_deadzone_hysteresis.feature
+  - id: REQ-574
+    name: Service Update Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-574.1
+        description: "AC1: Update check queries release manifest from configured URL"
+        tests:
+          - feature:specs/features/req_574_service_update_check.feature
+      - id: AC-574.2
+        description: "AC2: Available update version is logged on startup"
+        tests:
+          - feature:specs/features/req_574_service_update_check.feature
+      - id: AC-574.3
+        description: "AC3: Update check period is configurable"
+        tests:
+          - feature:specs/features/req_574_service_update_check.feature
+      - id: AC-574.4
+        description: "AC4: Update check failures do not block service startup"
+        tests:
+          - feature:specs/features/req_574_service_update_check.feature
+  - id: REQ-575
+    name: gRPC Service Reflection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-575.1
+        description: "AC1: gRPC reflection API is enabled in service"
+        tests:
+          - feature:specs/features/req_575_grpc_service_reflection.feature
+      - id: AC-575.2
+        description: "AC2: CLI clients can discover available RPC methods"
+        tests:
+          - feature:specs/features/req_575_grpc_service_reflection.feature
+      - id: AC-575.3
+        description: "AC3: Reflection is disabled in release builds by default"
+        tests:
+          - feature:specs/features/req_575_grpc_service_reflection.feature
+      - id: AC-575.4
+        description: "AC4: flightctl help shows commands derived from reflection"
+        tests:
+          - feature:specs/features/req_575_grpc_service_reflection.feature
+  - id: REQ-576
+    name: Axis Curve Editor Preview
+    kind: product
+    status: draft
+    ac:
+      - id: AC-576.1
+        description: "AC1: GetAxisCurvePreview RPC returns output for 100 evenly-spaced inputs"
+        tests:
+          - feature:specs/features/req_576_axis_curve_preview.feature
+      - id: AC-576.2
+        description: "AC2: Preview data includes all applied stages"
+        tests:
+          - feature:specs/features/req_576_axis_curve_preview.feature
+      - id: AC-576.3
+        description: "AC3: Preview reflects current active profile"
+        tests:
+          - feature:specs/features/req_576_axis_curve_preview.feature
+      - id: AC-576.4
+        description: "AC4: Preview is generated in under 1ms"
+        tests:
+          - feature:specs/features/req_576_axis_curve_preview.feature
+  - id: REQ-577
+    name: Device Auto-Bind on Connect
+    kind: product
+    status: draft
+    ac:
+      - id: AC-577.1
+        description: "AC1: New device matches against stored auto-bind rules"
+        tests:
+          - feature:specs/features/req_577_device_auto_bind.feature
+      - id: AC-577.2
+        description: "AC2: Auto-bind applies axis and button config from matching rule"
+        tests:
+          - feature:specs/features/req_577_device_auto_bind.feature
+      - id: AC-577.3
+        description: "AC3: Auto-bind can be disabled globally or per-device"
+        tests:
+          - feature:specs/features/req_577_device_auto_bind.feature
+      - id: AC-577.4
+        description: "AC4: Auto-bind result is published as a bus event"
+        tests:
+          - feature:specs/features/req_577_device_auto_bind.feature
+  - id: REQ-578
+    name: HOTAS Cougar Protocol Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-578.1
+        description: "AC1: HOTAS Cougar is identified by VID 0x044F and PID 0x0400"
+        tests:
+          - feature:specs/features/req_578_hotas_cougar_protocol.feature
+      - id: AC-578.2
+        description: "AC2: Cougar 8-bit analog axes are correctly normalized"
+        tests:
+          - feature:specs/features/req_578_hotas_cougar_protocol.feature
+      - id: AC-578.3
+        description: "AC3: Cougar HAT switch maps to 8 discrete positions"
+        tests:
+          - feature:specs/features/req_578_hotas_cougar_protocol.feature
+      - id: AC-578.4
+        description: "AC4: Cougar compatibility manifest includes known firmware quirks"
+        tests:
+          - feature:specs/features/req_578_hotas_cougar_protocol.feature
+  - id: REQ-579
+    name: Bus Snapshot Schema Version
+    kind: product
+    status: draft
+    ac:
+      - id: AC-579.1
+        description: "AC1: BusSnapshot struct includes schema version field"
+        tests:
+          - feature:specs/features/req_579_bus_snapshot_schema_version.feature
+      - id: AC-579.2
+        description: "AC2: Schema version increments when snapshot fields are added"
+        tests:
+          - feature:specs/features/req_579_bus_snapshot_schema_version.feature
+      - id: AC-579.3
+        description: "AC3: Subscribers check schema version before reading fields"
+        tests:
+          - feature:specs/features/req_579_bus_snapshot_schema_version.feature
+      - id: AC-579.4
+        description: "AC4: Version mismatch triggers a warning log"
+        tests:
+          - feature:specs/features/req_579_bus_snapshot_schema_version.feature
+  - id: REQ-580
+    name: Profile Lock Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-580.1
+        description: "AC1: flightctl profile lock prevents profile hot-reload"
+        tests:
+          - feature:specs/features/req_580_profile_lock_mode.feature
+      - id: AC-580.2
+        description: "AC2: Lock state survives service restart"
+        tests:
+          - feature:specs/features/req_580_profile_lock_mode.feature
+      - id: AC-580.3
+        description: "AC3: Lock can be bypassed by elevated operations"
+        tests:
+          - feature:specs/features/req_580_profile_lock_mode.feature
+      - id: AC-580.4
+        description: "AC4: Lock state is visible in flightctl status"
+        tests:
+          - feature:specs/features/req_580_profile_lock_mode.feature
+  - id: REQ-581
+    name: Axis Engine Core Affinity
+    kind: product
+    status: draft
+    ac:
+      - id: AC-581.1
+        description: "AC1: Axis engine thread is pinnable to a specific CPU core"
+        tests:
+          - feature:specs/features/req_581_axis_engine_core_affinity.feature
+      - id: AC-581.2
+        description: "AC2: Core affinity is configurable in service config"
+        tests:
+          - feature:specs/features/req_581_axis_engine_core_affinity.feature
+      - id: AC-581.3
+        description: "AC3: Core affinity reduces scheduling jitter"
+        tests:
+          - feature:specs/features/req_581_axis_engine_core_affinity.feature
+      - id: AC-581.4
+        description: "AC4: Core affinity is reported in service diagnostics"
+        tests:
+          - feature:specs/features/req_581_axis_engine_core_affinity.feature
+  - id: REQ-582
+    name: Device Priority Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-582.1
+        description: "AC1: Device priority list is configurable in profile"
+        tests:
+          - feature:specs/features/req_582_device_priority_config.feature
+      - id: AC-582.2
+        description: "AC2: Higher priority device input overrides lower priority on conflict"
+        tests:
+          - feature:specs/features/req_582_device_priority_config.feature
+      - id: AC-582.3
+        description: "AC3: Priority tiebreaking uses most-recently-moved device"
+        tests:
+          - feature:specs/features/req_582_device_priority_config.feature
+      - id: AC-582.4
+        description: "AC4: Priority state is visible in axis diagnostics"
+        tests:
+          - feature:specs/features/req_582_device_priority_config.feature
+  - id: REQ-583
+    name: Axis Engine Tick Jitter Logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-583.1
+        description: "AC1: Each tick duration is recorded in a rolling window"
+        tests:
+          - feature:specs/features/req_583_axis_tick_jitter_logging.feature
+      - id: AC-583.2
+        description: "AC2: p50, p95, p99 jitter statistics are computed on demand"
+        tests:
+          - feature:specs/features/req_583_axis_tick_jitter_logging.feature
+      - id: AC-583.3
+        description: "AC3: Jitter statistics are available via gRPC RPC"
+        tests:
+          - feature:specs/features/req_583_axis_tick_jitter_logging.feature
+      - id: AC-583.4
+        description: "AC4: Jitter exceeding threshold triggers a warning log"
+        tests:
+          - feature:specs/features/req_583_axis_tick_jitter_logging.feature
+
+  - id: REQ-584
+    name: Device Reconnect Backoff
+    kind: product
+    status: draft
+    ac:
+      - id: AC-584.1
+        description: "AC1: Reconnect uses exponential backoff with configurable base delay"
+        tests:
+          - feature:specs/features/req_584_device_reconnect_backoff.feature
+      - id: AC-584.2
+        description: "AC2: Maximum backoff delay is configurable"
+        tests:
+          - feature:specs/features/req_584_device_reconnect_backoff.feature
+      - id: AC-584.3
+        description: "AC3: Successful reconnect resets backoff to base delay"
+        tests:
+          - feature:specs/features/req_584_device_reconnect_backoff.feature
+      - id: AC-584.4
+        description: "AC4: Backoff state is visible in device diagnostics"
+        tests:
+          - feature:specs/features/req_584_device_reconnect_backoff.feature
+
+  - id: REQ-585
+    name: Profile Conflict Resolution
+    kind: product
+    status: draft
+    ac:
+      - id: AC-585.1
+        description: "AC1: Conflict resolution strategy is configurable per axis"
+        tests:
+          - feature:specs/features/req_585_profile_conflict_resolution.feature
+      - id: AC-585.2
+        description: "AC2: First-wins and last-wins strategies are supported"
+        tests:
+          - feature:specs/features/req_585_profile_conflict_resolution.feature
+      - id: AC-585.3
+        description: "AC3: Conflict is logged with both conflicting values"
+        tests:
+          - feature:specs/features/req_585_profile_conflict_resolution.feature
+      - id: AC-585.4
+        description: "AC4: Resolved profile is validated before activation"
+        tests:
+          - feature:specs/features/req_585_profile_conflict_resolution.feature
+
+  - id: REQ-586
+    name: Bus Event Filtering
+    kind: product
+    status: draft
+    ac:
+      - id: AC-586.1
+        description: "AC1: Subscriber can declare interest in specific event types"
+        tests:
+          - feature:specs/features/req_586_bus_event_filtering.feature
+      - id: AC-586.2
+        description: "AC2: Filtered events are not delivered to uninterested subscribers"
+        tests:
+          - feature:specs/features/req_586_bus_event_filtering.feature
+      - id: AC-586.3
+        description: "AC3: Filter configuration applies at subscription time"
+        tests:
+          - feature:specs/features/req_586_bus_event_filtering.feature
+      - id: AC-586.4
+        description: "AC4: Filter changes take effect within one bus tick"
+        tests:
+          - feature:specs/features/req_586_bus_event_filtering.feature
+
+  - id: REQ-587
+    name: Sim Disconnect Graceful Degradation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-587.1
+        description: "AC1: Sim disconnect is detected within 2 seconds"
+        tests:
+          - feature:specs/features/req_587_sim_disconnect_degradation.feature
+      - id: AC-587.2
+        description: "AC2: Axis engine continues running after sim disconnect"
+        tests:
+          - feature:specs/features/req_587_sim_disconnect_degradation.feature
+      - id: AC-587.3
+        description: "AC3: FFB effects are ramped to zero on sim disconnect"
+        tests:
+          - feature:specs/features/req_587_sim_disconnect_degradation.feature
+      - id: AC-587.4
+        description: "AC4: Service auto-reconnects when sim becomes available"
+        tests:
+          - feature:specs/features/req_587_sim_disconnect_degradation.feature
+
+  - id: REQ-588
+    name: IL-2 Trim Axis Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-588.1
+        description: "AC1: IL-2 trim axis positions are included in telemetry frame"
+        tests:
+          - feature:specs/features/req_588_il2_trim_axes.feature
+      - id: AC-588.2
+        description: "AC2: Trim positions are normalized to range -1.0 to 1.0"
+        tests:
+          - feature:specs/features/req_588_il2_trim_axes.feature
+      - id: AC-588.3
+        description: "AC3: Trim axis bus snapshot includes pitch, roll, and yaw trim"
+        tests:
+          - feature:specs/features/req_588_il2_trim_axes.feature
+      - id: AC-588.4
+        description: "AC4: Trim axis data triggers profile rules matching on trim position"
+        tests:
+          - feature:specs/features/req_588_il2_trim_axes.feature
+
+  - id: REQ-589
+    name: Axis Input Lag Compensation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-589.1
+        description: "AC1: Lag compensation predicts future axis position using velocity"
+        tests:
+          - feature:specs/features/req_589_axis_input_lag_compensation.feature
+      - id: AC-589.2
+        description: "AC2: Prediction horizon is configurable in milliseconds"
+        tests:
+          - feature:specs/features/req_589_axis_input_lag_compensation.feature
+      - id: AC-589.3
+        description: "AC3: Lag compensation is disabled when axis is at rest"
+        tests:
+          - feature:specs/features/req_589_axis_input_lag_compensation.feature
+      - id: AC-589.4
+        description: "AC4: Compensated output remains within valid range"
+        tests:
+          - feature:specs/features/req_589_axis_input_lag_compensation.feature
+
+  - id: REQ-590
+    name: MSFS SimConnect Camera Control
+    kind: product
+    status: draft
+    ac:
+      - id: AC-590.1
+        description: "AC1: CAMERA_STATE SimConnect variable is readable"
+        tests:
+          - feature:specs/features/req_590_simconnect_camera_control.feature
+      - id: AC-590.2
+        description: "AC2: Camera look axis can be mapped to physical input axes"
+        tests:
+          - feature:specs/features/req_590_simconnect_camera_control.feature
+      - id: AC-590.3
+        description: "AC3: Camera mode change triggers a profile rule"
+        tests:
+          - feature:specs/features/req_590_simconnect_camera_control.feature
+      - id: AC-590.4
+        description: "AC4: Camera control is enabled per-profile"
+        tests:
+          - feature:specs/features/req_590_simconnect_camera_control.feature
+
+  - id: REQ-591
+    name: Device Label Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-591.1
+        description: "AC1: User-defined labels can be assigned to device VID/PID in profile"
+        tests:
+          - feature:specs/features/req_591_device_label_config.feature
+      - id: AC-591.2
+        description: "AC2: Labels appear in CLI device list and diagnostics"
+        tests:
+          - feature:specs/features/req_591_device_label_config.feature
+      - id: AC-591.3
+        description: "AC3: Labels survive device reconnection"
+        tests:
+          - feature:specs/features/req_591_device_label_config.feature
+      - id: AC-591.4
+        description: "AC4: Labels are validated to be non-empty strings up to 64 chars"
+        tests:
+          - feature:specs/features/req_591_device_label_config.feature
+
+  - id: REQ-592
+    name: Axis Engine Rust API Stability
+    kind: product
+    status: draft
+    ac:
+      - id: AC-592.1
+        description: "AC1: Breaking API changes require major version bump"
+        tests:
+          - feature:specs/features/req_592_axis_api_stability.feature
+      - id: AC-592.2
+        description: "AC2: Semver-exempt items are marked with unstable feature flag"
+        tests:
+          - feature:specs/features/req_592_axis_api_stability.feature
+      - id: AC-592.3
+        description: "AC3: API surface is documented in crate-level rustdoc"
+        tests:
+          - feature:specs/features/req_592_axis_api_stability.feature
+      - id: AC-592.4
+        description: "AC4: Semver compatibility is checked in CI via cargo-semver-checks"
+        tests:
+          - feature:specs/features/req_592_axis_api_stability.feature
+
+  - id: REQ-593
+    name: X-Plane Plugin Protocol Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-593.1
+        description: "AC1: ExtPlane plugin protocol is supported as an alternative to UDP"
+        tests:
+          - feature:specs/features/req_593_xplane_plugin_protocol.feature
+      - id: AC-593.2
+        description: "AC2: Plugin protocol connection is established on port 51000"
+        tests:
+          - feature:specs/features/req_593_xplane_plugin_protocol.feature
+      - id: AC-593.3
+        description: "AC3: Plugin protocol supports DataRef subscription and unsubscription"
+        tests:
+          - feature:specs/features/req_593_xplane_plugin_protocol.feature
+      - id: AC-593.4
+        description: "AC4: Plugin protocol uses TCP with line-oriented framing"
+        tests:
+          - feature:specs/features/req_593_xplane_plugin_protocol.feature
+
+  - id: REQ-594
+    name: Service Config Schema Documentation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-594.1
+        description: "AC1: Config schema is documented as JSON Schema"
+        tests:
+          - feature:specs/features/req_594_service_config_schema.feature
+      - id: AC-594.2
+        description: "AC2: JSON Schema is bundled with installer"
+        tests:
+          - feature:specs/features/req_594_service_config_schema.feature
+      - id: AC-594.3
+        description: "AC3: Config file is validated against schema on load"
+        tests:
+          - feature:specs/features/req_594_service_config_schema.feature
+      - id: AC-594.4
+        description: "AC4: Schema version is embedded in config files"
+        tests:
+          - feature:specs/features/req_594_service_config_schema.feature
+  - id: REQ-607
+    name: Axis Engine Power Efficiency Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-607.1
+        description: "AC1: Reduced-frequency mode runs axis engine at 60Hz instead of 250Hz"
+        tests:
+          - feature:specs/features/req_607_axis_power_efficiency_mode.feature
+      - id: AC-607.2
+        description: "AC2: Mode is activatable when no sim is connected"
+        tests:
+          - feature:specs/features/req_607_axis_power_efficiency_mode.feature
+      - id: AC-607.3
+        description: "AC3: Transition between modes is seamless with no discontinuity"
+        tests:
+          - feature:specs/features/req_607_axis_power_efficiency_mode.feature
+      - id: AC-607.4
+        description: "AC4: Current mode is shown in service diagnostics"
+        tests:
+          - feature:specs/features/req_607_axis_power_efficiency_mode.feature
+
+  - id: REQ-608
+    name: Profile Import from Community Sources
+    kind: product
+    status: draft
+    ac:
+      - id: AC-608.1
+        description: "AC1: flightctl profile import URL downloads and validates profile"
+        tests:
+          - feature:specs/features/req_608_profile_import_community.feature
+      - id: AC-608.2
+        description: "AC2: Import verifies schema version compatibility"
+        tests:
+          - feature:specs/features/req_608_profile_import_community.feature
+      - id: AC-608.3
+        description: "AC3: Imported profiles are stored in user profile directory"
+        tests:
+          - feature:specs/features/req_608_profile_import_community.feature
+      - id: AC-608.4
+        description: "AC4: Import requires explicit user confirmation"
+        tests:
+          - feature:specs/features/req_608_profile_import_community.feature
+
+  - id: REQ-609
+    name: Device Quirk Override System
+    kind: product
+    status: draft
+    ac:
+      - id: AC-609.1
+        description: "AC1: Quirk overrides can be applied without changing manifest files"
+        tests:
+          - feature:specs/features/req_609_device_quirk_overrides.feature
+      - id: AC-609.2
+        description: "AC2: Override is applied per VID/PID and persisted in user config"
+        tests:
+          - feature:specs/features/req_609_device_quirk_overrides.feature
+      - id: AC-609.3
+        description: "AC3: Override source is logged for diagnostics"
+        tests:
+          - feature:specs/features/req_609_device_quirk_overrides.feature
+      - id: AC-609.4
+        description: "AC4: flightctl devices quirks shows active overrides"
+        tests:
+          - feature:specs/features/req_609_device_quirk_overrides.feature
+
+  - id: REQ-610
+    name: FFB DirectInput Force Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-610.1
+        description: "AC1: G-force is mapped to Spring and Damper effects"
+        tests:
+          - feature:specs/features/req_610_ffb_directinput_mapping.feature
+      - id: AC-610.2
+        description: "AC2: Turbulence maps to Periodic Sine effects"
+        tests:
+          - feature:specs/features/req_610_ffb_directinput_mapping.feature
+      - id: AC-610.3
+        description: "AC3: Stall warning maps to Periodic Random effects"
+        tests:
+          - feature:specs/features/req_610_ffb_directinput_mapping.feature
+      - id: AC-610.4
+        description: "AC4: Effect intensity scales with configurable gain setting"
+        tests:
+          - feature:specs/features/req_610_ffb_directinput_mapping.feature
+
+  - id: REQ-611
+    name: WinWing Device Protocol Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-611.1
+        description: "AC1: WinWing devices are identified by VID 0x4098"
+        tests:
+          - feature:specs/features/req_611_winwing_protocol.feature
+      - id: AC-611.2
+        description: "AC2: WinWing LED state can be set via HID output report"
+        tests:
+          - feature:specs/features/req_611_winwing_protocol.feature
+      - id: AC-611.3
+        description: "AC3: WinWing button binding config is documented"
+        tests:
+          - feature:specs/features/req_611_winwing_protocol.feature
+      - id: AC-611.4
+        description: "AC4: WinWing compatibility manifests cover all major products"
+        tests:
+          - feature:specs/features/req_611_winwing_protocol.feature
+
+  - id: REQ-612
+    name: Axis Profile Script Engine
+    kind: product
+    status: draft
+    ac:
+      - id: AC-612.1
+        description: "AC1: Profile scripts can define custom axis transformation functions"
+        tests:
+          - feature:specs/features/req_612_axis_profile_scripting.feature
+      - id: AC-612.2
+        description: "AC2: Script engine is sandboxed with no file or network access"
+        tests:
+          - feature:specs/features/req_612_axis_profile_scripting.feature
+      - id: AC-612.3
+        description: "AC3: Script execution time is bounded to 100 microseconds"
+        tests:
+          - feature:specs/features/req_612_axis_profile_scripting.feature
+      - id: AC-612.4
+        description: "AC4: Script errors are caught and logged without crashing service"
+        tests:
+          - feature:specs/features/req_612_axis_profile_scripting.feature
+
+  - id: REQ-613
+    name: Service Telemetry Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-613.1
+        description: "AC1: Telemetry can be exported via OpenTelemetry OTLP protocol"
+        tests:
+          - feature:specs/features/req_613_service_telemetry_export.feature
+      - id: AC-613.2
+        description: "AC2: Export endpoint is configurable in service config"
+        tests:
+          - feature:specs/features/req_613_service_telemetry_export.feature
+      - id: AC-613.3
+        description: "AC3: Export includes axis, device, and adapter metrics"
+        tests:
+          - feature:specs/features/req_613_service_telemetry_export.feature
+      - id: AC-613.4
+        description: "AC4: Export can be disabled to reduce overhead"
+        tests:
+          - feature:specs/features/req_613_service_telemetry_export.feature
+
+  - id: REQ-614
+    name: Axis Engine Thread Safety Guarantee
+    kind: product
+    status: draft
+    ac:
+      - id: AC-614.1
+        description: "AC1: All Send and Sync bounds are documented in crate rustdoc"
+        tests:
+          - feature:specs/features/req_614_axis_thread_safety.feature
+      - id: AC-614.2
+        description: "AC2: Non-thread-safe types are explicitly marked with explanation"
+        tests:
+          - feature:specs/features/req_614_axis_thread_safety.feature
+      - id: AC-614.3
+        description: "AC3: Panic conditions are documented for all public functions"
+        tests:
+          - feature:specs/features/req_614_axis_thread_safety.feature
+      - id: AC-614.4
+        description: "AC4: Thread safety tests exist for concurrent access patterns"
+        tests:
+          - feature:specs/features/req_614_axis_thread_safety.feature
+
+  - id: REQ-615
+    name: Joystick Axis Calibration Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-615.1
+        description: "AC1: flightctl axis calibrate shows live input visualization"
+        tests:
+          - feature:specs/features/req_615_joystick_axis_calibration_viz.feature
+      - id: AC-615.2
+        description: "AC2: Visualization shows min, max, center, and current position"
+        tests:
+          - feature:specs/features/req_615_joystick_axis_calibration_viz.feature
+      - id: AC-615.3
+        description: "AC3: Calibration prompts user through physical movement sequence"
+        tests:
+          - feature:specs/features/req_615_joystick_axis_calibration_viz.feature
+      - id: AC-615.4
+        description: "AC4: Completed calibration is saved to calibration store"
+        tests:
+          - feature:specs/features/req_615_joystick_axis_calibration_viz.feature
+
+  - id: REQ-616
+    name: Prepar3D SimConnect Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-616.1
+        description: "AC1: P3D SimConnect adapter uses same interface as MSFS adapter"
+        tests:
+          - feature:specs/features/req_616_prepar3d_simconnect.feature
+      - id: AC-616.2
+        description: "AC2: P3D-specific SimConnect features are gated behind p3d feature flag"
+        tests:
+          - feature:specs/features/req_616_prepar3d_simconnect.feature
+      - id: AC-616.3
+        description: "AC3: P3D version detection distinguishes v4 and v5"
+        tests:
+          - feature:specs/features/req_616_prepar3d_simconnect.feature
+      - id: AC-616.4
+        description: "AC4: P3D is listed in compatibility matrix"
+        tests:
+          - feature:specs/features/req_616_prepar3d_simconnect.feature
+
+  - id: REQ-617
+    name: Multi-User Service Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-617.1
+        description: "AC1: Each user has isolated profile directory"
+        tests:
+          - feature:specs/features/req_617_multi_user_service.feature
+      - id: AC-617.2
+        description: "AC2: Shared hardware devices are accessible to all users"
+        tests:
+          - feature:specs/features/req_617_multi_user_service.feature
+      - id: AC-617.3
+        description: "AC3: Per-user service instance is supported on Linux via systemd user"
+        tests:
+          - feature:specs/features/req_617_multi_user_service.feature
+      - id: AC-617.4
+        description: "AC4: Concurrent multi-user access does not cause device contention"
+        tests:
+          - feature:specs/features/req_617_multi_user_service.feature
+
+  - id: REQ-618
+    name: FSSB R3 Force Sensing Stick Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-618.1
+        description: "AC1: FSSB R3 is identified by its USB descriptor"
+        tests:
+          - feature:specs/features/req_618_fssb_r3_support.feature
+      - id: AC-618.2
+        description: "AC2: Force sensor output is mapped to axis position"
+        tests:
+          - feature:specs/features/req_618_fssb_r3_support.feature
+      - id: AC-618.3
+        description: "AC3: Force sensitivity is configurable via FSSB config interface"
+        tests:
+          - feature:specs/features/req_618_fssb_r3_support.feature
+      - id: AC-618.4
+        description: "AC4: FSSB R3 compatibility manifest documents force-to-axis scaling"
+        tests:
+          - feature:specs/features/req_618_fssb_r3_support.feature  - id: REQ-595
+    name: Axis State Machine Events
+    kind: product
+    status: draft
+    ac:
+      - id: AC-595.1
+        description: "AC1: State transitions are published as typed events on flight-bus"
+        tests:
+          - feature:specs/features/req_595_axis_state_events.feature
+      - id: AC-595.2
+        description: "AC2: Events include previous and new state and timestamp"
+        tests:
+          - feature:specs/features/req_595_axis_state_events.feature
+      - id: AC-595.3
+        description: "AC3: State transition events can trigger profile rules"
+        tests:
+          - feature:specs/features/req_595_axis_state_events.feature
+      - id: AC-595.4
+        description: "AC4: Event rate is bounded to prevent bus flooding"
+        tests:
+          - feature:specs/features/req_595_axis_state_events.feature
+  - id: REQ-596
+    name: Service API Rate Limiting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-596.1
+        description: "AC1: Configurable request rate limit per connected client"
+        tests:
+          - feature:specs/features/req_596_service_api_rate_limiting.feature
+      - id: AC-596.2
+        description: "AC2: Rate limited clients receive gRPC RESOURCE_EXHAUSTED error"
+        tests:
+          - feature:specs/features/req_596_service_api_rate_limiting.feature
+      - id: AC-596.3
+        description: "AC3: Rate limit applies separately to different RPC methods"
+        tests:
+          - feature:specs/features/req_596_service_api_rate_limiting.feature
+      - id: AC-596.4
+        description: "AC4: Rate limit state is visible in service metrics"
+        tests:
+          - feature:specs/features/req_596_service_api_rate_limiting.feature
+  - id: REQ-597
+    name: DCS Aircraft Module Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-597.1
+        description: "AC1: Aircraft module name is extracted from DCS telemetry"
+        tests:
+          - feature:specs/features/req_597_dcs_aircraft_detection.feature
+      - id: AC-597.2
+        description: "AC2: Aircraft detection event is published on flight-bus"
+        tests:
+          - feature:specs/features/req_597_dcs_aircraft_detection.feature
+      - id: AC-597.3
+        description: "AC3: Profile auto-select runs on aircraft module change"
+        tests:
+          - feature:specs/features/req_597_dcs_aircraft_detection.feature
+      - id: AC-597.4
+        description: "AC4: Module name is available in adapter diagnostics"
+        tests:
+          - feature:specs/features/req_597_dcs_aircraft_detection.feature
+  - id: REQ-598
+    name: Axis Processing Profiler
+    kind: product
+    status: draft
+    ac:
+      - id: AC-598.1
+        description: "AC1: Per-stage processing time is measured in nanoseconds"
+        tests:
+          - feature:specs/features/req_598_axis_processing_profiler.feature
+      - id: AC-598.2
+        description: "AC2: Profile results are accessible via gRPC diagnostics RPC"
+        tests:
+          - feature:specs/features/req_598_axis_processing_profiler.feature
+      - id: AC-598.3
+        description: "AC3: Profiler can be enabled and disabled at runtime"
+        tests:
+          - feature:specs/features/req_598_axis_processing_profiler.feature
+      - id: AC-598.4
+        description: "AC4: Profiling overhead is less than 1 microsecond per stage"
+        tests:
+          - feature:specs/features/req_598_axis_processing_profiler.feature
+  - id: REQ-599
+    name: Profile Versioned Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-599.1
+        description: "AC1: Exported profiles include OpenFlight version and date"
+        tests:
+          - feature:specs/features/req_599_profile_versioned_export.feature
+      - id: AC-599.2
+        description: "AC2: Profile export format is stable across minor versions"
+        tests:
+          - feature:specs/features/req_599_profile_versioned_export.feature
+      - id: AC-599.3
+        description: "AC3: Import validates schema version before loading"
+        tests:
+          - feature:specs/features/req_599_profile_versioned_export.feature
+      - id: AC-599.4
+        description: "AC4: Version mismatch produces a helpful error message"
+        tests:
+          - feature:specs/features/req_599_profile_versioned_export.feature
+  - id: REQ-600
+    name: 600-Requirement Milestone
+    kind: product
+    status: draft
+    ac:
+      - id: AC-600.1
+        description: "AC1: spec_ledger.yaml contains 600 or more requirements"
+        tests:
+          - feature:specs/features/req_600_milestone_600_requirements.feature
+      - id: AC-600.2
+        description: "AC2: All requirements have unique IDs"
+        tests:
+          - feature:specs/features/req_600_milestone_600_requirements.feature
+      - id: AC-600.3
+        description: "AC3: All requirements have at least one acceptance criterion"
+        tests:
+          - feature:specs/features/req_600_milestone_600_requirements.feature
+      - id: AC-600.4
+        description: "AC4: All feature files exist for all ledger entries"
+        tests:
+          - feature:specs/features/req_600_milestone_600_requirements.feature
+  - id: REQ-601
+    name: Axis Deadzone Preview in CLI
+    kind: product
+    status: draft
+    ac:
+      - id: AC-601.1
+        description: "AC1: flightctl axis monitor shows current position and deadzone region"
+        tests:
+          - feature:specs/features/req_601_axis_deadzone_preview_cli.feature
+      - id: AC-601.2
+        description: "AC2: Position is shown as ASCII bar chart"
+        tests:
+          - feature:specs/features/req_601_axis_deadzone_preview_cli.feature
+      - id: AC-601.3
+        description: "AC3: Deadzone boundary markers are visible in the chart"
+        tests:
+          - feature:specs/features/req_601_axis_deadzone_preview_cli.feature
+      - id: AC-601.4
+        description: "AC4: Update rate is configurable"
+        tests:
+          - feature:specs/features/req_601_axis_deadzone_preview_cli.feature
+  - id: REQ-602
+    name: Thrustmaster HOTAS Warthog Long-Term Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-602.1
+        description: "AC1: Warthog stick and throttle have complete axis and button mappings"
+        tests:
+          - feature:specs/features/req_602_warthog_long_term_support.feature
+      - id: AC-602.2
+        description: "AC2: Warthog manifests cover all known firmware revisions"
+        tests:
+          - feature:specs/features/req_602_warthog_long_term_support.feature
+      - id: AC-602.3
+        description: "AC3: Warthog integration tests run on every PR"
+        tests:
+          - feature:specs/features/req_602_warthog_long_term_support.feature
+      - id: AC-602.4
+        description: "AC4: Warthog profile template is included in the template library"
+        tests:
+          - feature:specs/features/req_602_warthog_long_term_support.feature
+  - id: REQ-603
+    name: Service Health Endpoint
+    kind: product
+    status: draft
+    ac:
+      - id: AC-603.1
+        description: "AC1: GET /health returns 200 OK when service is running normally"
+        tests:
+          - feature:specs/features/req_603_service_health_endpoint.feature
+      - id: AC-603.2
+        description: "AC2: GET /health returns 503 when service is in degraded mode"
+        tests:
+          - feature:specs/features/req_603_service_health_endpoint.feature
+      - id: AC-603.3
+        description: "AC3: Health response body includes service version and status"
+        tests:
+          - feature:specs/features/req_603_service_health_endpoint.feature
+      - id: AC-603.4
+        description: "AC4: Health endpoint is on configurable port separate from metrics"
+        tests:
+          - feature:specs/features/req_603_service_health_endpoint.feature
+  - id: REQ-604
+    name: Axis Filter Chain Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-604.1
+        description: "AC1: FilterChainPreview RPC returns frequency response data"
+        tests:
+          - feature:specs/features/req_604_axis_filter_chain_visualization.feature
+      - id: AC-604.2
+        description: "AC2: Preview shows gain at 10, 50, 100, 250 Hz"
+        tests:
+          - feature:specs/features/req_604_axis_filter_chain_visualization.feature
+      - id: AC-604.3
+        description: "AC3: Preview is valid for current filter configuration"
+        tests:
+          - feature:specs/features/req_604_axis_filter_chain_visualization.feature
+      - id: AC-604.4
+        description: "AC4: Preview generation does not require active input"
+        tests:
+          - feature:specs/features/req_604_axis_filter_chain_visualization.feature
+  - id: REQ-605
+    name: Device Class Routing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-605.1
+        description: "AC1: Joysticks, throttles, pedals, and yokes are classified at enumeration"
+        tests:
+          - feature:specs/features/req_605_device_class_routing.feature
+      - id: AC-605.2
+        description: "AC2: Class routing applies default axis assignments per class"
+        tests:
+          - feature:specs/features/req_605_device_class_routing.feature
+      - id: AC-605.3
+        description: "AC3: Class routing is overridable per device in profile"
+        tests:
+          - feature:specs/features/req_605_device_class_routing.feature
+      - id: AC-605.4
+        description: "AC4: Device class is shown in flightctl devices output"
+        tests:
+          - feature:specs/features/req_605_device_class_routing.feature
+  - id: REQ-606
+    name: OpenFlight CLI Scripting Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-606.1
+        description: "AC1: flightctl --script outputs minimal formatted results"
+        tests:
+          - feature:specs/features/req_606_cli_scripting_mode.feature
+      - id: AC-606.2
+        description: "AC2: Script mode suppresses progress indicators and color"
+        tests:
+          - feature:specs/features/req_606_cli_scripting_mode.feature
+      - id: AC-606.3
+        description: "AC3: Script mode exits with non-zero code on errors"
+        tests:
+          - feature:specs/features/req_606_cli_scripting_mode.feature
+      - id: AC-606.4
+        description: "AC4: Script mode is documented in CLI help"
+        tests:
+          - feature:specs/features/req_606_cli_scripting_mode.feature
+
+
+  - id: REQ-619
+    name: Axis Engine Input Queue Overflow Handling
+    kind: product
+    status: draft
+    ac:
+      - id: AC-619.1
+        description: "AC1: Queue overflow drops oldest samples rather than newest"
+        tests:
+          - feature:specs/features/req_619_axis_queue_overflow.feature
+      - id: AC-619.2
+        description: "AC2: Overflow events are counted in engine diagnostics"
+        tests:
+          - feature:specs/features/req_619_axis_queue_overflow.feature
+      - id: AC-619.3
+        description: "AC3: Overflow does not cause panic or undefined behavior"
+        tests:
+          - feature:specs/features/req_619_axis_queue_overflow.feature
+      - id: AC-619.4
+        description: "AC4: Queue capacity is configurable at engine initialization"
+        tests:
+          - feature:specs/features/req_619_axis_queue_overflow.feature
+
+  - id: REQ-620
+    name: Falcon BMS DataExport Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-620.1
+        description: "AC1: Falcon BMS DataExport telemetry is received on UDP port 1234"
+        tests:
+          - feature:specs/features/req_620_falcon_bms_dataexport.feature
+      - id: AC-620.2
+        description: "AC2: Flight dynamics variables are extracted and normalized"
+        tests:
+          - feature:specs/features/req_620_falcon_bms_dataexport.feature
+      - id: AC-620.3
+        description: "AC3: Falcon BMS is listed in compatibility matrix"
+        tests:
+          - feature:specs/features/req_620_falcon_bms_dataexport.feature
+      - id: AC-620.4
+        description: "AC4: BMS adapter handles reconnection when sim restarts"
+        tests:
+          - feature:specs/features/req_620_falcon_bms_dataexport.feature
+
+  - id: REQ-621
+    name: Axis Feedback Loop Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-621.1
+        description: "AC1: Feedback detector identifies oscillating axis output"
+        tests:
+          - feature:specs/features/req_621_axis_feedback_loop.feature
+      - id: AC-621.2
+        description: "AC2: Detected feedback loop triggers automatic dampening"
+        tests:
+          - feature:specs/features/req_621_axis_feedback_loop.feature
+      - id: AC-621.3
+        description: "AC3: Feedback detection threshold is configurable"
+        tests:
+          - feature:specs/features/req_621_axis_feedback_loop.feature
+      - id: AC-621.4
+        description: "AC4: Feedback loop events are logged and reported"
+        tests:
+          - feature:specs/features/req_621_axis_feedback_loop.feature
+
+  - id: REQ-622
+    name: Service SIGTERM Handler
+    kind: product
+    status: draft
+    ac:
+      - id: AC-622.1
+        description: "AC1: SIGTERM triggers graceful shutdown sequence"
+        tests:
+          - feature:specs/features/req_622_service_sigterm_handler.feature
+      - id: AC-622.2
+        description: "AC2: Shutdown completes within configured timeout"
+        tests:
+          - feature:specs/features/req_622_service_sigterm_handler.feature
+      - id: AC-622.3
+        description: "AC3: All adapters are disconnected before process exits"
+        tests:
+          - feature:specs/features/req_622_service_sigterm_handler.feature
+      - id: AC-622.4
+        description: "AC4: Final state is flushed to disk before exit"
+        tests:
+          - feature:specs/features/req_622_service_sigterm_handler.feature
+
+  - id: REQ-623
+    name: Profile Axis Alias
+    kind: product
+    status: draft
+    ac:
+      - id: AC-623.1
+        description: "AC1: Axis aliases map human-readable names to physical axis IDs"
+        tests:
+          - feature:specs/features/req_623_profile_axis_alias.feature
+      - id: AC-623.2
+        description: "AC2: Aliases are usable in profile rules as axis references"
+        tests:
+          - feature:specs/features/req_623_profile_axis_alias.feature
+      - id: AC-623.3
+        description: "AC3: Duplicate alias names produce a validation error"
+        tests:
+          - feature:specs/features/req_623_profile_axis_alias.feature
+      - id: AC-623.4
+        description: "AC4: Aliases are shown in axis diagnostics"
+        tests:
+          - feature:specs/features/req_623_profile_axis_alias.feature
+
+  - id: REQ-624
+    name: X-Plane Custom DataRef Discovery
+    kind: product
+    status: draft
+    ac:
+      - id: AC-624.1
+        description: "AC1: Adapter queries DataRef Tool plugin for custom DataRef list"
+        tests:
+          - feature:specs/features/req_624_xplane_custom_datarefs.feature
+      - id: AC-624.2
+        description: "AC2: Discovered DataRefs are available for subscription"
+        tests:
+          - feature:specs/features/req_624_xplane_custom_datarefs.feature
+      - id: AC-624.3
+        description: "AC3: Discovery runs once on connection and on explicit refresh"
+        tests:
+          - feature:specs/features/req_624_xplane_custom_datarefs.feature
+      - id: AC-624.4
+        description: "AC4: Custom DataRefs are documented in X-Plane adapter guide"
+        tests:
+          - feature:specs/features/req_624_xplane_custom_datarefs.feature
+
+  - id: REQ-625
+    name: Axis Minimum Update Rate Enforcement
+    kind: product
+    status: draft
+    ac:
+      - id: AC-625.1
+        description: "AC1: If no device input is received, last value is repeated at tick rate"
+        tests:
+          - feature:specs/features/req_625_axis_min_update_rate.feature
+      - id: AC-625.2
+        description: "AC2: Repeated value includes a staleness flag"
+        tests:
+          - feature:specs/features/req_625_axis_min_update_rate.feature
+      - id: AC-625.3
+        description: "AC3: Stale repeating triggers disconnection if no input for 5 seconds"
+        tests:
+          - feature:specs/features/req_625_axis_min_update_rate.feature
+      - id: AC-625.4
+        description: "AC4: Minimum rate behavior is documented per device type"
+        tests:
+          - feature:specs/features/req_625_axis_min_update_rate.feature
+
+  - id: REQ-626
+    name: War Thunder Ground Vehicle Axis Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-626.1
+        description: "AC1: Ground vehicle controls use separate axis mapping from aircraft"
+        tests:
+          - feature:specs/features/req_626_war_thunder_ground_vehicles.feature
+      - id: AC-626.2
+        description: "AC2: Vehicle type is detected from War Thunder telemetry"
+        tests:
+          - feature:specs/features/req_626_war_thunder_ground_vehicles.feature
+      - id: AC-626.3
+        description: "AC3: Profile auto-switch uses vehicle type for rule matching"
+        tests:
+          - feature:specs/features/req_626_war_thunder_ground_vehicles.feature
+      - id: AC-626.4
+        description: "AC4: Ground vehicle mapping is configurable in profile"
+        tests:
+          - feature:specs/features/req_626_war_thunder_ground_vehicles.feature
+
+  - id: REQ-627
+    name: Axis Output Monitoring RPC
+    kind: product
+    status: draft
+    ac:
+      - id: AC-627.1
+        description: "AC1: StreamAxisOutputs RPC sends output values at configurable rate"
+        tests:
+          - feature:specs/features/req_627_axis_output_monitoring_rpc.feature
+      - id: AC-627.2
+        description: "AC2: Stream includes axis ID, raw, pipeline, and output values"
+        tests:
+          - feature:specs/features/req_627_axis_output_monitoring_rpc.feature
+      - id: AC-627.3
+        description: "AC3: Stream rate is bounded to 100Hz maximum"
+        tests:
+          - feature:specs/features/req_627_axis_output_monitoring_rpc.feature
+      - id: AC-627.4
+        description: "AC4: Stream handles client disconnect without crashing"
+        tests:
+          - feature:specs/features/req_627_axis_output_monitoring_rpc.feature
+
+  - id: REQ-628
+    name: Service Config Inheritance
+    kind: product
+    status: draft
+    ac:
+      - id: AC-628.1
+        description: "AC1: Config files can declare extends: path to base config"
+        tests:
+          - feature:specs/features/req_628_service_config_inheritance.feature
+      - id: AC-628.2
+        description: "AC2: Inherited values can be overridden in child config"
+        tests:
+          - feature:specs/features/req_628_service_config_inheritance.feature
+      - id: AC-628.3
+        description: "AC3: Circular inheritance is detected and rejected"
+        tests:
+          - feature:specs/features/req_628_service_config_inheritance.feature
+      - id: AC-628.4
+        description: "AC4: Effective config after inheritance is loggable via CLI"
+        tests:
+          - feature:specs/features/req_628_service_config_inheritance.feature
+
+  - id: REQ-629
+    name: Analog Throttle Detent Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-629.1
+        description: "AC1: Detent zones define special behavior at specific positions"
+        tests:
+          - feature:specs/features/req_629_throttle_detent_support.feature
+      - id: AC-629.2
+        description: "AC2: Military power detent snaps axis to detent value when within threshold"
+        tests:
+          - feature:specs/features/req_629_throttle_detent_support.feature
+      - id: AC-629.3
+        description: "AC3: Detent click events are published on flight-bus"
+        tests:
+          - feature:specs/features/req_629_throttle_detent_support.feature
+      - id: AC-629.4
+        description: "AC4: Detents are configurable per-axis in profile"
+        tests:
+          - feature:specs/features/req_629_throttle_detent_support.feature
+
+  - id: REQ-630
+    name: Device Serial Number Tracking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-630.1
+        description: "AC1: Serial number is read from HID string descriptor if available"
+        tests:
+          - feature:specs/features/req_630_device_serial_tracking.feature
+      - id: AC-630.2
+        description: "AC2: Serial number is used as stable device identity across USB ports"
+        tests:
+          - feature:specs/features/req_630_device_serial_tracking.feature
+      - id: AC-630.3
+        description: "AC3: Calibration store is keyed by serial number"
+        tests:
+          - feature:specs/features/req_630_device_serial_tracking.feature
+      - id: AC-630.4
+        description: "AC4: Serial number is shown in flightctl devices output"
+        tests:
+          - feature:specs/features/req_630_device_serial_tracking.feature
+
+  - id: REQ-631
+    name: Axis Position Dead Band Testing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-631.1
+        description: "AC1: Property tests verify deadband transition is monotonic"
+        tests:
+          - feature:specs/features/req_631_axis_deadband_tests.feature
+      - id: AC-631.2
+        description: "AC2: Edge values at deadband boundary produce consistent output"
+        tests:
+          - feature:specs/features/req_631_axis_deadband_tests.feature
+      - id: AC-631.3
+        description: "AC3: Tests cover both positive and negative dead band sides"
+        tests:
+          - feature:specs/features/req_631_axis_deadband_tests.feature
+      - id: AC-631.4
+        description: "AC4: Dead band tests run on every PR"
+        tests:
+          - feature:specs/features/req_631_axis_deadband_tests.feature
+
+  - id: REQ-632
+    name: Profile Export to Human-Readable Format
+    kind: product
+    status: draft
+    ac:
+      - id: AC-632.1
+        description: "AC1: flightctl profile diff shows axis-by-axis configuration summary"
+        tests:
+          - feature:specs/features/req_632_profile_human_readable_export.feature
+      - id: AC-632.2
+        description: "AC2: Diff output is colorized when terminal supports it"
+        tests:
+          - feature:specs/features/req_632_profile_human_readable_export.feature
+      - id: AC-632.3
+        description: "AC3: Diff supports comparison between two profile files"
+        tests:
+          - feature:specs/features/req_632_profile_human_readable_export.feature
+      - id: AC-632.4
+        description: "AC4: Diff output is parseable in script mode"
+        tests:
+          - feature:specs/features/req_632_profile_human_readable_export.feature
+
+  - id: REQ-633
+    name: Sim Connection Quality Metric
+    kind: product
+    status: draft
+    ac:
+      - id: AC-633.1
+        description: "AC1: Connection quality score ranges from 0 to 100"
+        tests:
+          - feature:specs/features/req_633_sim_connection_quality.feature
+      - id: AC-633.2
+        description: "AC2: Score reflects packet loss, latency, and reconnect count"
+        tests:
+          - feature:specs/features/req_633_sim_connection_quality.feature
+      - id: AC-633.3
+        description: "AC3: Quality score is available via gRPC diagnostics RPC"
+        tests:
+          - feature:specs/features/req_633_sim_connection_quality.feature
+      - id: AC-633.4
+        description: "AC4: Score dropping below threshold triggers a warning event"
+        tests:
+          - feature:specs/features/req_633_sim_connection_quality.feature
+
+  - id: REQ-634
+    name: Axis Engine Freeze Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-634.1
+        description: "AC1: Watchdog thread detects if axis tick has not run in 50ms"
+        tests:
+          - feature:specs/features/req_634_axis_freeze_detection.feature
+      - id: AC-634.2
+        description: "AC2: Freeze detection logs the current tick state"
+        tests:
+          - feature:specs/features/req_634_axis_freeze_detection.feature
+      - id: AC-634.3
+        description: "AC3: Recovery restarts the axis thread with last known good state"
+        tests:
+          - feature:specs/features/req_634_axis_freeze_detection.feature
+      - id: AC-634.4
+        description: "AC4: Freeze event count is tracked in metrics"
+        tests:
+          - feature:specs/features/req_634_axis_freeze_detection.feature
+
+  - id: REQ-635
+    name: Device Hotplug Stability Test
+    kind: product
+    status: draft
+    ac:
+      - id: AC-635.1
+        description: "AC1: Hotplug test connects and disconnects device 100 times"
+        tests:
+          - feature:specs/features/req_635_device_hotplug_stress.feature
+      - id: AC-635.2
+        description: "AC2: Service remains stable after all iterations"
+        tests:
+          - feature:specs/features/req_635_device_hotplug_stress.feature
+      - id: AC-635.3
+        description: "AC3: Memory usage does not grow with repeated hotplug"
+        tests:
+          - feature:specs/features/req_635_device_hotplug_stress.feature
+      - id: AC-635.4
+        description: "AC4: Hotplug test is in the CI integration test suite"
+        tests:
+          - feature:specs/features/req_635_device_hotplug_stress.feature
+
+  - id: REQ-636
+    name: AeroFly FS Native Plugin
+    kind: product
+    status: draft
+    ac:
+      - id: AC-636.1
+        description: "AC1: AeroFly plugin SDK protocol is documented in adapter guide"
+        tests:
+          - feature:specs/features/req_636_aerofly_native_plugin.feature
+      - id: AC-636.2
+        description: "AC2: Native plugin mode provides lower latency than UDP"
+        tests:
+          - feature:specs/features/req_636_aerofly_native_plugin.feature
+      - id: AC-636.3
+        description: "AC3: Native mode requires explicit configuration to enable"
+        tests:
+          - feature:specs/features/req_636_aerofly_native_plugin.feature
+      - id: AC-636.4
+        description: "AC4: Plugin mode availability is detected and logged"
+        tests:
+          - feature:specs/features/req_636_aerofly_native_plugin.feature
+
+  - id: REQ-637
+    name: Multi-Adapter Load Balancing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-637.1
+        description: "AC1: Multiple active adapters run on separate threads"
+        tests:
+          - feature:specs/features/req_637_multi_adapter_load_balance.feature
+      - id: AC-637.2
+        description: "AC2: Thread priority is configurable per adapter"
+        tests:
+          - feature:specs/features/req_637_multi_adapter_load_balance.feature
+      - id: AC-637.3
+        description: "AC3: Adapter thread affinity can be pinned to specific CPUs"
+        tests:
+          - feature:specs/features/req_637_multi_adapter_load_balance.feature
+      - id: AC-637.4
+        description: "AC4: Load distribution is visible in service diagnostics"
+        tests:
+          - feature:specs/features/req_637_multi_adapter_load_balance.feature
+
+  - id: REQ-638
+    name: Profile Environment Variables
+    kind: product
+    status: draft
+    ac:
+      - id: AC-638.1
+        description: "AC1: Profile fields can reference $ENV_VAR for runtime values"
+        tests:
+          - feature:specs/features/req_638_profile_env_variables.feature
+      - id: AC-638.2
+        description: "AC2: Missing env vars produce a validation warning"
+        tests:
+          - feature:specs/features/req_638_profile_env_variables.feature
+      - id: AC-638.3
+        description: "AC3: Substitution is applied before schema validation"
+        tests:
+          - feature:specs/features/req_638_profile_env_variables.feature
+      - id: AC-638.4
+        description: "AC4: Substituted values are visible in effective config log"
+        tests:
+          - feature:specs/features/req_638_profile_env_variables.feature
+
+  - id: REQ-639
+    name: Axis Input Debounce
+    kind: product
+    status: draft
+    ac:
+      - id: AC-639.1
+        description: "AC1: Button debounce window is configurable in milliseconds"
+        tests:
+          - feature:specs/features/req_639_axis_input_debounce.feature
+      - id: AC-639.2
+        description: "AC2: Rapid toggles within debounce window are treated as single press"
+        tests:
+          - feature:specs/features/req_639_axis_input_debounce.feature
+      - id: AC-639.3
+        description: "AC3: Debounce applies independently per button"
+        tests:
+          - feature:specs/features/req_639_axis_input_debounce.feature
+      - id: AC-639.4
+        description: "AC4: Debounce state is not counted toward rate limiting"
+        tests:
+          - feature:specs/features/req_639_axis_input_debounce.feature
+
+  - id: REQ-640
+    name: Service CLI JSON Output
+    kind: product
+    status: draft
+    ac:
+      - id: AC-640.1
+        description: "AC1: flightctl --json outputs valid JSON for all commands"
+        tests:
+          - feature:specs/features/req_640_service_cli_json.feature
+      - id: AC-640.2
+        description: "AC2: JSON schema is documented for each command"
+        tests:
+          - feature:specs/features/req_640_service_cli_json.feature
+      - id: AC-640.3
+        description: "AC3: JSON output is stable across patch versions"
+        tests:
+          - feature:specs/features/req_640_service_cli_json.feature
+      - id: AC-640.4
+        description: "AC4: Exit codes are independent of output format"
+        tests:
+          - feature:specs/features/req_640_service_cli_json.feature
+
+  - id: REQ-641
+    name: Axis Bend Compensation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-641.1
+        description: "AC1: Bend compensation applies a correction curve to axis output"
+        tests:
+          - feature:specs/features/req_641_axis_bend_compensation.feature
+      - id: AC-641.2
+        description: "AC2: Correction curve is calibrated during setup wizard"
+        tests:
+          - feature:specs/features/req_641_axis_bend_compensation.feature
+      - id: AC-641.3
+        description: "AC3: Compensation magnitude is configurable per axis"
+        tests:
+          - feature:specs/features/req_641_axis_bend_compensation.feature
+      - id: AC-641.4
+        description: "AC4: Compensation is applied before other pipeline stages"
+        tests:
+          - feature:specs/features/req_641_axis_bend_compensation.feature
+
+  - id: REQ-642
+    name: Bus Subscriber Health Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-642.1
+        description: "AC1: Subscriber health is checked every bus tick via heartbeat"
+        tests:
+          - feature:specs/features/req_642_bus_subscriber_health.feature
+      - id: AC-642.2
+        description: "AC2: Subscribers that miss 3 consecutive heartbeats are removed"
+        tests:
+          - feature:specs/features/req_642_bus_subscriber_health.feature
+      - id: AC-642.3
+        description: "AC3: Subscriber removal is logged with subscriber ID"
+        tests:
+          - feature:specs/features/req_642_bus_subscriber_health.feature
+      - id: AC-642.4
+        description: "AC4: Health check overhead is under 1 microsecond per subscriber"
+        tests:
+          - feature:specs/features/req_642_bus_subscriber_health.feature
+
+
+  - id: REQ-643
+    name: FFB Spring Effect Calibration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-643.1
+        description: "AC1: Spring effect gain is configurable per aircraft type in profile"
+        tests:
+          - feature:specs/features/req_643_ffb_spring_calibration.feature
+      - id: AC-643.2
+        description: "AC2: Maximum spring force is bounded by safety envelope"
+        tests:
+          - feature:specs/features/req_643_ffb_spring_calibration.feature
+      - id: AC-643.3
+        description: "AC3: Spring calibration wizard is available in CLI"
+        tests:
+          - feature:specs/features/req_643_ffb_spring_calibration.feature
+      - id: AC-643.4
+        description: "AC4: Calibrated values are stored in calibration store"
+        tests:
+          - feature:specs/features/req_643_ffb_spring_calibration.feature
+
+  - id: REQ-644
+    name: Service Log Rotation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-644.1
+        description: "AC1: Log files rotate when size exceeds configurable maximum"
+        tests:
+          - feature:specs/features/req_644_service_log_rotation.feature
+      - id: AC-644.2
+        description: "AC2: Configurable number of rotated log files are retained"
+        tests:
+          - feature:specs/features/req_644_service_log_rotation.feature
+      - id: AC-644.3
+        description: "AC3: Log rotation does not interrupt service operation"
+        tests:
+          - feature:specs/features/req_644_service_log_rotation.feature
+      - id: AC-644.4
+        description: "AC4: Log path and rotation config are in service config file"
+        tests:
+          - feature:specs/features/req_644_service_log_rotation.feature
+
+  - id: REQ-645
+    name: ATC Phraseology Axis Trigger
+    kind: product
+    status: draft
+    ac:
+      - id: AC-645.1
+        description: "AC1: ATC trigger fires when axis crosses configurable threshold"
+        tests:
+          - feature:specs/features/req_645_atc_phraseology_trigger.feature
+      - id: AC-645.2
+        description: "AC2: Trigger maps to SimConnect ATC event"
+        tests:
+          - feature:specs/features/req_645_atc_phraseology_trigger.feature
+      - id: AC-645.3
+        description: "AC3: Trigger includes configurable hysteresis"
+        tests:
+          - feature:specs/features/req_645_atc_phraseology_trigger.feature
+      - id: AC-645.4
+        description: "AC4: Trigger state is included in axis diagnostics"
+        tests:
+          - feature:specs/features/req_645_atc_phraseology_trigger.feature
+
+  - id: REQ-646
+    name: Device Enumeration Cache
+    kind: product
+    status: draft
+    ac:
+      - id: AC-646.1
+        description: "AC1: Device enumeration runs at startup and on hotplug"
+        tests:
+          - feature:specs/features/req_646_device_enum_cache.feature
+      - id: AC-646.2
+        description: "AC2: Cache is stored in memory with configurable TTL"
+        tests:
+          - feature:specs/features/req_646_device_enum_cache.feature
+      - id: AC-646.3
+        description: "AC3: Forced re-enumeration is available via CLI"
+        tests:
+          - feature:specs/features/req_646_device_enum_cache.feature
+      - id: AC-646.4
+        description: "AC4: Cache state is visible in diagnostics"
+        tests:
+          - feature:specs/features/req_646_device_enum_cache.feature
+
+  - id: REQ-647
+    name: Axis Power-On State
+    kind: product
+    status: draft
+    ac:
+      - id: AC-647.1
+        description: "AC1: All axes initialize to 0.0 on startup"
+        tests:
+          - feature:specs/features/req_647_axis_power_on_state.feature
+      - id: AC-647.2
+        description: "AC2: Power-on state is held until first device input is received"
+        tests:
+          - feature:specs/features/req_647_axis_power_on_state.feature
+      - id: AC-647.3
+        description: "AC3: Power-on state is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_647_axis_power_on_state.feature
+      - id: AC-647.4
+        description: "AC4: Time to first input is logged on startup"
+        tests:
+          - feature:specs/features/req_647_axis_power_on_state.feature
+
+  - id: REQ-648
+    name: SimConnect Data Period Tuning
+    kind: product
+    status: draft
+    ac:
+      - id: AC-648.1
+        description: "AC1: Data period can be set to SIM_FRAME, SECOND, or custom count"
+        tests:
+          - feature:specs/features/req_648_simconnect_data_period.feature
+      - id: AC-648.2
+        description: "AC2: Per-variable period is configurable in profile"
+        tests:
+          - feature:specs/features/req_648_simconnect_data_period.feature
+      - id: AC-648.3
+        description: "AC3: Period changes take effect on next SimConnect reconnect"
+        tests:
+          - feature:specs/features/req_648_simconnect_data_period.feature
+      - id: AC-648.4
+        description: "AC4: Current periods are visible in SimConnect adapter diagnostics"
+        tests:
+          - feature:specs/features/req_648_simconnect_data_period.feature
+
+  - id: REQ-649
+    name: X-Plane Simulator Paused Handling
+    kind: product
+    status: draft
+    ac:
+      - id: AC-649.1
+        description: "AC1: Pause state is detected from X-Plane dataref sim/time/paused"
+        tests:
+          - feature:specs/features/req_649_xplane_pause_handling.feature
+      - id: AC-649.2
+        description: "AC2: Paused state is published on flight-bus"
+        tests:
+          - feature:specs/features/req_649_xplane_pause_handling.feature
+      - id: AC-649.3
+        description: "AC3: FFB effects are ramped to idle when sim is paused"
+        tests:
+          - feature:specs/features/req_649_xplane_pause_handling.feature
+      - id: AC-649.4
+        description: "AC4: Profile rules can react to pause state changes"
+        tests:
+          - feature:specs/features/req_649_xplane_pause_handling.feature
+
+  - id: REQ-650
+    name: Axis Output Event Stream
+    kind: product
+    status: draft
+    ac:
+      - id: AC-650.1
+        description: "AC1: Event stream contains axis-id, value, and stage-values"
+        tests:
+          - feature:specs/features/req_650_axis_output_event_stream.feature
+      - id: AC-650.2
+        description: "AC2: Stream is delivered via gRPC server-side streaming"
+        tests:
+          - feature:specs/features/req_650_axis_output_event_stream.feature
+      - id: AC-650.3
+        description: "AC3: Stream backpressure drops oldest events if consumer is slow"
+        tests:
+          - feature:specs/features/req_650_axis_output_event_stream.feature
+      - id: AC-650.4
+        description: "AC4: Event stream can be paused and resumed by client"
+        tests:
+          - feature:specs/features/req_650_axis_output_event_stream.feature
+
+  - id: REQ-651
+    name: Device Compatibility Tier Promotion
+    kind: product
+    status: draft
+    ac:
+      - id: AC-651.1
+        description: "AC1: Passing HIL test promotes device to Tier 1"
+        tests:
+          - feature:specs/features/req_651_device_tier_promotion.feature
+      - id: AC-651.2
+        description: "AC2: Automated trace test without HIL promotes to Tier 2"
+        tests:
+          - feature:specs/features/req_651_device_tier_promotion.feature
+      - id: AC-651.3
+        description: "AC3: Tier promotion is recorded in compatibility manifest"
+        tests:
+          - feature:specs/features/req_651_device_tier_promotion.feature
+      - id: AC-651.4
+        description: "AC4: Tier changes are logged in CI artifacts"
+        tests:
+          - feature:specs/features/req_651_device_tier_promotion.feature
+
+  - id: REQ-652
+    name: Axis Engine Configuration Reload
+    kind: product
+    status: draft
+    ac:
+      - id: AC-652.1
+        description: "AC1: Engine configuration can be reloaded without restart"
+        tests:
+          - feature:specs/features/req_652_axis_engine_config_reload.feature
+      - id: AC-652.2
+        description: "AC2: Reload is atomic — either full old or full new config applies"
+        tests:
+          - feature:specs/features/req_652_axis_engine_config_reload.feature
+      - id: AC-652.3
+        description: "AC3: Failed reload reverts to previous config"
+        tests:
+          - feature:specs/features/req_652_axis_engine_config_reload.feature
+      - id: AC-652.4
+        description: "AC4: Reload events are counted in engine diagnostics"
+        tests:
+          - feature:specs/features/req_652_axis_engine_config_reload.feature
+
+  - id: REQ-653
+    name: MSFS Simvar Units Conversion
+    kind: product
+    status: draft
+    ac:
+      - id: AC-653.1
+        description: "AC1: All SimVar values are converted to SI units before publishing"
+        tests:
+          - feature:specs/features/req_653_msfs_simvar_units.feature
+      - id: AC-653.2
+        description: "AC2: Unit conversion is documented per variable in code comments"
+        tests:
+          - feature:specs/features/req_653_msfs_simvar_units.feature
+      - id: AC-653.3
+        description: "AC3: Unit conversion is tested with boundary values"
+        tests:
+          - feature:specs/features/req_653_msfs_simvar_units.feature
+      - id: AC-653.4
+        description: "AC4: Converted values match expected MSFS variable definitions"
+        tests:
+          - feature:specs/features/req_653_msfs_simvar_units.feature
+
+  - id: REQ-654
+    name: Service Version Negotiation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-654.1
+        description: "AC1: Service reports its protocol version in handshake"
+        tests:
+          - feature:specs/features/req_654_service_version_negotiation.feature
+      - id: AC-654.2
+        description: "AC2: CLI rejects connection to incompatible service version"
+        tests:
+          - feature:specs/features/req_654_service_version_negotiation.feature
+      - id: AC-654.3
+        description: "AC3: Version negotiation error has a helpful message"
+        tests:
+          - feature:specs/features/req_654_service_version_negotiation.feature
+      - id: AC-654.4
+        description: "AC4: Protocol versions are documented in IPC guide"
+        tests:
+          - feature:specs/features/req_654_service_version_negotiation.feature
+
+  - id: REQ-655
+    name: Axis Pipeline Bypassing by Rule
+    kind: product
+    status: draft
+    ac:
+      - id: AC-655.1
+        description: "AC1: Rules can enable or disable named pipeline stages at runtime"
+        tests:
+          - feature:specs/features/req_655_axis_pipeline_bypass_rule.feature
+      - id: AC-655.2
+        description: "AC2: Stage bypass takes effect within one axis tick"
+        tests:
+          - feature:specs/features/req_655_axis_pipeline_bypass_rule.feature
+      - id: AC-655.3
+        description: "AC3: Bypassed stage is indicated in axis diagnostics"
+        tests:
+          - feature:specs/features/req_655_axis_pipeline_bypass_rule.feature
+      - id: AC-655.4
+        description: "AC4: Rule-driven bypass is documented in profile schema"
+        tests:
+          - feature:specs/features/req_655_axis_pipeline_bypass_rule.feature
+
+  - id: REQ-656
+    name: Service Crash Reporting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-656.1
+        description: "AC1: Panic hook captures backtrace and last known state"
+        tests:
+          - feature:specs/features/req_656_service_crash_reporting.feature
+      - id: AC-656.2
+        description: "AC2: Crash report is written to configurable crash directory"
+        tests:
+          - feature:specs/features/req_656_service_crash_reporting.feature
+      - id: AC-656.3
+        description: "AC3: Crash report includes service version and config hash"
+        tests:
+          - feature:specs/features/req_656_service_crash_reporting.feature
+      - id: AC-656.4
+        description: "AC4: Next service startup detects prior crash and logs notice"
+        tests:
+          - feature:specs/features/req_656_service_crash_reporting.feature
+
+  - id: REQ-657
+    name: Hardware Agnostic FFB Profile
+    kind: product
+    status: draft
+    ac:
+      - id: AC-657.1
+        description: "AC1: FFB profile defines effects in physical units not device units"
+        tests:
+          - feature:specs/features/req_657_hardware_agnostic_ffb.feature
+      - id: AC-657.2
+        description: "AC2: Device adapter translates physical units to device-specific values"
+        tests:
+          - feature:specs/features/req_657_hardware_agnostic_ffb.feature
+      - id: AC-657.3
+        description: "AC3: Same profile produces equivalent experience on different FFB devices"
+        tests:
+          - feature:specs/features/req_657_hardware_agnostic_ffb.feature
+      - id: AC-657.4
+        description: "AC4: Translation mapping is documented per device in manifest"
+        tests:
+          - feature:specs/features/req_657_hardware_agnostic_ffb.feature
+
+  - id: REQ-658
+    name: Axis Sample Interpolation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-658.1
+        description: "AC1: Upsampling fills intermediate samples using linear interpolation"
+        tests:
+          - feature:specs/features/req_658_axis_sample_interpolation.feature
+      - id: AC-658.2
+        description: "AC2: Downsampling uses decimation with anti-aliasing"
+        tests:
+          - feature:specs/features/req_658_axis_sample_interpolation.feature
+      - id: AC-658.3
+        description: "AC3: Interpolation is activated automatically for mismatched rates"
+        tests:
+          - feature:specs/features/req_658_axis_sample_interpolation.feature
+      - id: AC-658.4
+        description: "AC4: Resampler adds at most one tick of latency"
+        tests:
+          - feature:specs/features/req_658_axis_sample_interpolation.feature
+
+  - id: REQ-659
+    name: DCS Export Script Version Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-659.1
+        description: "AC1: Export script sends version in first packet"
+        tests:
+          - feature:specs/features/req_659_dcs_export_version_check.feature
+      - id: AC-659.2
+        description: "AC2: Service compares script version against minimum supported"
+        tests:
+          - feature:specs/features/req_659_dcs_export_version_check.feature
+      - id: AC-659.3
+        description: "AC3: Version mismatch produces user-visible warning"
+        tests:
+          - feature:specs/features/req_659_dcs_export_version_check.feature
+      - id: AC-659.4
+        description: "AC4: Updated export script is bundled with installer"
+        tests:
+          - feature:specs/features/req_659_dcs_export_version_check.feature
+
+  - id: REQ-660
+    name: Profile Auto-Create on First Run
+    kind: product
+    status: draft
+    ac:
+      - id: AC-660.1
+        description: "AC1: Service detects first-run via absence of profile directory"
+        tests:
+          - feature:specs/features/req_660_profile_auto_create_first_run.feature
+      - id: AC-660.2
+        description: "AC2: Default profile is created from built-in template"
+        tests:
+          - feature:specs/features/req_660_profile_auto_create_first_run.feature
+      - id: AC-660.3
+        description: "AC3: Profile creation is logged with explanation"
+        tests:
+          - feature:specs/features/req_660_profile_auto_create_first_run.feature
+      - id: AC-660.4
+        description: "AC4: First-run detection is non-destructive on subsequent runs"
+        tests:
+          - feature:specs/features/req_660_profile_auto_create_first_run.feature
+
+  - id: REQ-661
+    name: Axis Output Quantization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-661.1
+        description: "AC1: Output can be quantized to N evenly spaced steps"
+        tests:
+          - feature:specs/features/req_661_axis_output_quantization.feature
+      - id: AC-661.2
+        description: "AC2: Quantization is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_661_axis_output_quantization.feature
+      - id: AC-661.3
+        description: "AC3: Quantized output is clamped to valid range"
+        tests:
+          - feature:specs/features/req_661_axis_output_quantization.feature
+      - id: AC-661.4
+        description: "AC4: Quantization is applied as the last pipeline stage"
+        tests:
+          - feature:specs/features/req_661_axis_output_quantization.feature
+
+  - id: REQ-662
+    name: SimConnect Data Logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-662.1
+        description: "AC1: SimConnect variable values are loggable to CSV on demand"
+        tests:
+          - feature:specs/features/req_662_simconnect_data_logging.feature
+      - id: AC-662.2
+        description: "AC2: Logging is started and stopped via CLI"
+        tests:
+          - feature:specs/features/req_662_simconnect_data_logging.feature
+      - id: AC-662.3
+        description: "AC3: Log includes timestamp, variable name, and value"
+        tests:
+          - feature:specs/features/req_662_simconnect_data_logging.feature
+      - id: AC-662.4
+        description: "AC4: Log rate is configurable up to sim frame rate"
+        tests:
+          - feature:specs/features/req_662_simconnect_data_logging.feature
+
+  - id: REQ-663
+    name: Axis Engine Metrics Endpoint
+    kind: product
+    status: draft
+    ac:
+      - id: AC-663.1
+        description: "AC1: Axis tick rate is exposed as a gauge metric"
+        tests:
+          - feature:specs/features/req_663_axis_engine_metrics.feature
+      - id: AC-663.2
+        description: "AC2: Per-axis clamp count is exposed as counter"
+        tests:
+          - feature:specs/features/req_663_axis_engine_metrics.feature
+      - id: AC-663.3
+        description: "AC3: Jitter p99 is exposed as gauge"
+        tests:
+          - feature:specs/features/req_663_axis_engine_metrics.feature
+      - id: AC-663.4
+        description: "AC4: Metrics endpoint path is /metrics on configured port"
+        tests:
+          - feature:specs/features/req_663_axis_engine_metrics.feature
+
+  - id: REQ-664
+    name: Device Axis Range Calibration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-664.1
+        description: "AC1: Calibration captures min and max of each axis during movement"
+        tests:
+          - feature:specs/features/req_664_device_axis_range_calibration.feature
+      - id: AC-664.2
+        description: "AC2: Calibration stores center position for axes that have one"
+        tests:
+          - feature:specs/features/req_664_device_axis_range_calibration.feature
+      - id: AC-664.3
+        description: "AC3: Center is calibrated by pressing dedicated button or command"
+        tests:
+          - feature:specs/features/req_664_device_axis_range_calibration.feature
+      - id: AC-664.4
+        description: "AC4: Calibration result replaces previous calibration for that device"
+        tests:
+          - feature:specs/features/req_664_device_axis_range_calibration.feature
+
+  - id: REQ-665
+    name: MSFS PMDG Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-665.1
+        description: "AC1: PMDG SDK data format is documented in integration guide"
+        tests:
+          - feature:specs/features/req_665_msfs_pmdg_integration.feature
+      - id: AC-665.2
+        description: "AC2: PMDG-specific SimConnect events are bindable in profile"
+        tests:
+          - feature:specs/features/req_665_msfs_pmdg_integration.feature
+      - id: AC-665.3
+        description: "AC3: PMDG adapter is gated behind pmdg feature flag"
+        tests:
+          - feature:specs/features/req_665_msfs_pmdg_integration.feature
+      - id: AC-665.4
+        description: "AC4: PMDG device support is listed in compatibility matrix"
+        tests:
+          - feature:specs/features/req_665_msfs_pmdg_integration.feature
+
+  - id: REQ-666
+    name: Axis Jitter Suppression
+    kind: product
+    status: draft
+    ac:
+      - id: AC-666.1
+        description: "AC1: Jitter suppressor ignores changes smaller than configured threshold"
+        tests:
+          - feature:specs/features/req_666_axis_jitter_suppression.feature
+      - id: AC-666.2
+        description: "AC2: Threshold is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_666_axis_jitter_suppression.feature
+      - id: AC-666.3
+        description: "AC3: Suppression applies before deadzone stage"
+        tests:
+          - feature:specs/features/req_666_axis_jitter_suppression.feature
+      - id: AC-666.4
+        description: "AC4: Suppression does not accumulate error over time"
+        tests:
+          - feature:specs/features/req_666_axis_jitter_suppression.feature
+
+  - id: REQ-679
+    name: Axis Input Lag Budget Tracking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-679.1
+        description: "AC1: Per-axis input lag from HID to output is measured in microseconds"
+        tests:
+          - feature:specs/features/req_679_axis_input_lag_budget.feature
+      - id: AC-679.2
+        description: "AC2: Lag exceeding 5ms triggers a metric increment"
+        tests:
+          - feature:specs/features/req_679_axis_input_lag_budget.feature
+      - id: AC-679.3
+        description: "AC3: Lag histogram is accessible via metrics endpoint"
+        tests:
+          - feature:specs/features/req_679_axis_input_lag_budget.feature
+      - id: AC-679.4
+        description: "AC4: Lag budget is logged in diagnostic bundle"
+        tests:
+          - feature:specs/features/req_679_axis_input_lag_budget.feature
+  - id: REQ-680
+    name: Profile Import from URL
+    kind: product
+    status: draft
+    ac:
+      - id: AC-680.1
+        description: "AC1: flightctl profile import <url> downloads and validates the profile"
+        tests:
+          - feature:specs/features/req_680_profile_import_url.feature
+      - id: AC-680.2
+        description: "AC2: HTTP and HTTPS URLs are supported"
+        tests:
+          - feature:specs/features/req_680_profile_import_url.feature
+      - id: AC-680.3
+        description: "AC3: Profile checksum is verified after download"
+        tests:
+          - feature:specs/features/req_680_profile_import_url.feature
+      - id: AC-680.4
+        description: "AC4: Import fails gracefully with a clear error on invalid URL"
+        tests:
+          - feature:specs/features/req_680_profile_import_url.feature
+  - id: REQ-681
+    name: Axis Chain Snapshot Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-681.1
+        description: "AC1: CLI command exports current axis chain config as JSON"
+        tests:
+          - feature:specs/features/req_681_axis_chain_snapshot_export.feature
+      - id: AC-681.2
+        description: "AC2: Snapshot includes filter parameters and pipeline order"
+        tests:
+          - feature:specs/features/req_681_axis_chain_snapshot_export.feature
+      - id: AC-681.3
+        description: "AC3: Snapshot can be imported to restore the configuration"
+        tests:
+          - feature:specs/features/req_681_axis_chain_snapshot_export.feature
+      - id: AC-681.4
+        description: "AC4: Snapshot export includes timestamp and device info"
+        tests:
+          - feature:specs/features/req_681_axis_chain_snapshot_export.feature
+  - id: REQ-682
+    name: Device Reconnect Backoff
+    kind: product
+    status: draft
+    ac:
+      - id: AC-682.1
+        description: "AC1: Reconnect attempts start at 100ms and double up to 30s"
+        tests:
+          - feature:specs/features/req_682_device_reconnect_backoff.feature
+      - id: AC-682.2
+        description: "AC2: Backoff state is logged at each attempt"
+        tests:
+          - feature:specs/features/req_682_device_reconnect_backoff.feature
+      - id: AC-682.3
+        description: "AC3: Reconnect succeeds within two attempts on device restore"
+        tests:
+          - feature:specs/features/req_682_device_reconnect_backoff.feature
+      - id: AC-682.4
+        description: "AC4: Backoff is reset after successful reconnection"
+        tests:
+          - feature:specs/features/req_682_device_reconnect_backoff.feature
+  - id: REQ-683
+    name: Bus Message Priority
+    kind: product
+    status: draft
+    ac:
+      - id: AC-683.1
+        description: "AC1: Messages can be tagged with High, Normal, or Low priority"
+        tests:
+          - feature:specs/features/req_683_bus_message_priority.feature
+      - id: AC-683.2
+        description: "AC2: High priority messages are processed before Normal"
+        tests:
+          - feature:specs/features/req_683_bus_message_priority.feature
+      - id: AC-683.3
+        description: "AC3: Low priority messages are dropped on queue pressure"
+        tests:
+          - feature:specs/features/req_683_bus_message_priority.feature
+      - id: AC-683.4
+        description: "AC4: Priority levels are configurable in service config"
+        tests:
+          - feature:specs/features/req_683_bus_message_priority.feature
+  - id: REQ-684
+    name: CLI Device List Command
+    kind: product
+    status: draft
+    ac:
+      - id: AC-684.1
+        description: "AC1: flightctl device list shows VID/PID and device name"
+        tests:
+          - feature:specs/features/req_684_cli_device_list.feature
+      - id: AC-684.2
+        description: "AC2: Device capabilities (axes, buttons, FFB) are shown"
+        tests:
+          - feature:specs/features/req_684_cli_device_list.feature
+      - id: AC-684.3
+        description: "AC3: Output is available in JSON format with --json flag"
+        tests:
+          - feature:specs/features/req_684_cli_device_list.feature
+      - id: AC-684.4
+        description: "AC4: Disconnected devices are shown as unavailable"
+        tests:
+          - feature:specs/features/req_684_cli_device_list.feature
+  - id: REQ-685
+    name: Axis Sample Timestamp
+    kind: product
+    status: draft
+    ac:
+      - id: AC-685.1
+        description: "AC1: HID sample timestamps are propagated through pipeline"
+        tests:
+          - feature:specs/features/req_685_axis_sample_timestamp.feature
+      - id: AC-685.2
+        description: "AC2: Timestamp resolution is at minimum 1ms"
+        tests:
+          - feature:specs/features/req_685_axis_sample_timestamp.feature
+      - id: AC-685.3
+        description: "AC3: Timestamps are included in bus snapshot"
+        tests:
+          - feature:specs/features/req_685_axis_sample_timestamp.feature
+      - id: AC-685.4
+        description: "AC4: Timestamp monotonicity is validated; non-monotonic timestamps are flagged"
+        tests:
+          - feature:specs/features/req_685_axis_sample_timestamp.feature
+  - id: REQ-686
+    name: Service Audit Log
+    kind: product
+    status: draft
+    ac:
+      - id: AC-686.1
+        description: "AC1: Profile changes are logged with before and after values"
+        tests:
+          - feature:specs/features/req_686_service_audit_log.feature
+      - id: AC-686.2
+        description: "AC2: Audit log is written to a separate audit file"
+        tests:
+          - feature:specs/features/req_686_service_audit_log.feature
+      - id: AC-686.3
+        description: "AC3: Audit entries include user, timestamp, and change description"
+        tests:
+          - feature:specs/features/req_686_service_audit_log.feature
+      - id: AC-686.4
+        description: "AC4: Audit log is readable via CLI"
+        tests:
+          - feature:specs/features/req_686_service_audit_log.feature
+  - id: REQ-687
+    name: MSFS Fuel System Data
+    kind: product
+    status: draft
+    ac:
+      - id: AC-687.1
+        description: "AC1: Total fuel quantity is published to bus snapshot"
+        tests:
+          - feature:specs/features/req_687_msfs_fuel_system_data.feature
+      - id: AC-687.2
+        description: "AC2: Fuel flow per engine is available if sim provides it"
+        tests:
+          - feature:specs/features/req_687_msfs_fuel_system_data.feature
+      - id: AC-687.3
+        description: "AC3: Fuel data polling can be toggled in profile"
+        tests:
+          - feature:specs/features/req_687_msfs_fuel_system_data.feature
+      - id: AC-687.4
+        description: "AC4: Fuel channel is documented in sim adapter reference"
+        tests:
+          - feature:specs/features/req_687_msfs_fuel_system_data.feature
+  - id: REQ-688
+    name: Axis Range Soft Limits
+    kind: product
+    status: draft
+    ac:
+      - id: AC-688.1
+        description: "AC1: Soft limits constrain output to a sub-range of full travel"
+        tests:
+          - feature:specs/features/req_688_axis_range_soft_limits.feature
+      - id: AC-688.2
+        description: "AC2: Soft limits are defined in profile YAML as min_out and max_out"
+        tests:
+          - feature:specs/features/req_688_axis_range_soft_limits.feature
+      - id: AC-688.3
+        description: "AC3: Values outside soft limits are clamped not rejected"
+        tests:
+          - feature:specs/features/req_688_axis_range_soft_limits.feature
+      - id: AC-688.4
+        description: "AC4: Soft limit application is the second-to-last pipeline stage"
+        tests:
+          - feature:specs/features/req_688_axis_range_soft_limits.feature
+  - id: REQ-689
+    name: Service Update Rollback
+    kind: product
+    status: draft
+    ac:
+      - id: AC-689.1
+        description: "AC1: If updated service fails health check within 60s, rollback is triggered"
+        tests:
+          - feature:specs/features/req_689_service_update_rollback.feature
+      - id: AC-689.2
+        description: "AC2: Previous version binary is preserved in a rollback slot"
+        tests:
+          - feature:specs/features/req_689_service_update_rollback.feature
+      - id: AC-689.3
+        description: "AC3: Rollback event is logged and surfaced in CLI"
+        tests:
+          - feature:specs/features/req_689_service_update_rollback.feature
+      - id: AC-689.4
+        description: "AC4: Rollback policy is configurable in update config"
+        tests:
+          - feature:specs/features/req_689_service_update_rollback.feature
+  - id: REQ-690
+    name: Axis Smoothing Adaptive Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-690.1
+        description: "AC1: Adaptive mode increases smoothing when input is stable"
+        tests:
+          - feature:specs/features/req_690_axis_smoothing_adaptive.feature
+      - id: AC-690.2
+        description: "AC2: Adaptive mode reduces smoothing on rapid movement"
+        tests:
+          - feature:specs/features/req_690_axis_smoothing_adaptive.feature
+      - id: AC-690.3
+        description: "AC3: Adaptation rate is configurable in profile"
+        tests:
+          - feature:specs/features/req_690_axis_smoothing_adaptive.feature
+      - id: AC-690.4
+        description: "AC4: Adaptive mode is compatible with all other pipeline stages"
+        tests:
+          - feature:specs/features/req_690_axis_smoothing_adaptive.feature

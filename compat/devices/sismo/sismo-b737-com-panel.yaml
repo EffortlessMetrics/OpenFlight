@@ -1,0 +1,58 @@
+# Sismo Soluciones Boeing 737 COM Panel — 0x04D8 / 0x0056
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x04D8 (Microchip Technology), PID 0x0056 (estimated).
+# The Sismo Soluciones Boeing 737 COM Panel is a replica cockpit communications
+# panel for the B737 type rating simulator. Exposes COM radio frequency selectors,
+# VHF L/R/C and interphone push buttons as USB HID.
+# VID 0x04D8 (Microchip) is confirmed for Sismo devices. PID 0x0056 is a
+# community estimate — confirm with lsusb or Sismo documentation.
+schema_version: "1"
+
+device:
+  name: "Sismo Boeing 737 COM Panel"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (common for Sismo custom USB HID)
+    product_id: 0x0056      # Community estimate — Sismo B737 COM Panel; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0056 is a community estimate. Other Sismo B737 devices use PIDs in the
+      0xF5D0–0xF5D6 range. Verify with lsusb or Sismo customer support.
+  - id: PANEL_DEVICE
+    description: >
+      The COM Panel exposes VHF communication radio selectors and interphone
+      push buttons. Map via OpenFlight panel bindings to COM1/COM2 sim variables.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo Soluciones Boeing 737 COM Panel (0x04D8/0x0056). PID community estimate.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

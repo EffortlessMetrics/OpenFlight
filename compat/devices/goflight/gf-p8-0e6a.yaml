@@ -1,0 +1,58 @@
+# GoFlight GF-P8 Pushbutton Panel (VID 0x0E6A variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E6A (GoFlight Inc. — community-reported alternate VID), PID 0x0221 (est).
+# The GF-P8 is an 8-button pushbutton panel for avionics control assignments.
+# This entry covers the 0x0E6A VID enumeration; the primary VID 0x0E9F variant
+# is covered in gf-p8.yaml.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-P8 Pushbutton Panel"
+  vendor: "GoFlight"
+  type: panel
+  usb:
+    vendor_id: 0x0E6A       # GoFlight Inc. — community-reported alternate VID
+    product_id: 0x0221      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0E6A / PID 0x0221 are community estimates. Confirm with lsusb or
+      Windows Device Manager on real hardware. See gf-p8.yaml for the primary
+      0x0E9F VID variant.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the GF
+      avionics panel family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-P8 Pushbutton Panel — VID 0x0E6A / PID 0x0221 (est). Alternate
+    VID variant; primary 0x0E9F variant is in gf-p8.yaml. PID estimated from
+    community sources. Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

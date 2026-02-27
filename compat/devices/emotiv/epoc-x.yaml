@@ -1,0 +1,61 @@
+# Emotiv EPOC X Brain-Computer Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Emotiv EPOC X is a 14-channel EEG headset for brain-computer interface (BCI)
+# research and gaming. In simulation contexts it is used experimentally for
+# hands-free control of avionics or view systems via mental commands.
+# VID 0x1234 and PID 0x0010 are community estimates — the actual Emotiv USB
+# VID/PID should be confirmed with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "Emotiv EPOC X"
+  vendor: "Emotiv Inc."
+  type: bci
+  usb:
+    vendor_id: 0x1234   # Community estimate — confirm Emotiv VID with lsusb
+    product_id: 0x0010  # Community estimate — EPOC X; PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 128
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x1234 and PID 0x0010 are community estimates. The Emotiv EPOC X
+      uses a proprietary USB protocol (not standard HID). The actual VID/PID
+      must be confirmed with lsusb on real hardware. Emotiv SDK is required.
+  - id: BCI_EXPERIMENTAL
+    description: >
+      BCI integration in flight simulation is experimental. Mental command
+      latency (hundreds of ms) is unsuitable for primary flight controls.
+      Use cases include cockpit mode selection, trim, or view control only.
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      The EPOC X communicates via Emotiv's proprietary USB protocol. Standard
+      HID axis/button output is not available. Requires Emotiv SDK or
+      EmotivPRO software for EEG data access.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Emotiv EPOC X 14-channel EEG BCI headset. VID 0x1234 / PID 0x0010 community
+    estimate — confirm with lsusb. Experimental BCI input for flight sim.
+    PID estimated from community sources. Last reviewed: 2026-07.

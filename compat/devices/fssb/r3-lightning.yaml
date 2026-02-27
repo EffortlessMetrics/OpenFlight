@@ -1,0 +1,53 @@
+# FSSB R3 Lightning Force Sensing Stick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FSSB R3 Lightning — enhanced high-speed variant of the R3 force sensing stick.
+# VID 0x1209 (pid.codes shared VID), PID 0x2051 — estimated.
+# Higher polling rate and refined firmware vs standard R3 Slim.
+schema_version: "1"
+device:
+  name: "FSSB R3 Lightning"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2051      # Community estimate — R3 Lightning variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: true
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2051 is a community estimate for the R3 Lightning variant.
+      R3 Slim uses 0x2050. Confirm with lsusb on real hardware.
+  - id: ISOMETRIC_FORCE_SENSING
+    description: >
+      Zero-travel isometric force sensing. Input represents applied force,
+      not mechanical displacement. Requires dedicated calibration curves.
+  - id: HIGH_POLL_RATE
+    description: >
+      Lightning variant targets 500Hz polling for reduced input latency.
+      OpenFlight will sample at 250Hz; no special handling required.
+  - id: FFB_FORCE_TRIM
+    description: >
+      Active force trim via FFB channel. Requires driver or profile support.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R3 Lightning — VID 0x1209 / PID 0x2051 (est). High-speed force sensing
+    stick with 500Hz polling. Popular in Asian F-16/F/A-18 sim community.
+    Wave-55 addition. Last reviewed: 2026-07.

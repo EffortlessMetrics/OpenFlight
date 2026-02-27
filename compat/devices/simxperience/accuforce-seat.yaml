@@ -1,0 +1,55 @@
+# SimXperience AccuForce Motion Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimXperience AccuForce is an active seat mover / motion seat for simulation
+# rigs. It uses a direct-drive servo motor to produce fore/aft and pitch motion
+# cues. USB HID is used for motion command output and force feedback.
+# VID 0x1DD2 and PID 0x2001 are community estimates — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "SimXperience AccuForce Motion Seat"
+  vendor: "SimXperience"
+  type: platform
+  usb:
+    vendor_id: 0x1DD2   # Community estimate — confirm with lsusb
+    product_id: 0x2001  # Community estimate — AccuForce seat; PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, surge]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1DD2 and PID 0x2001 are community estimates for the AccuForce
+      motion seat. Verify with lsusb on real hardware. SimXperience SimCommander
+      software is required for full motion control.
+  - id: FFB_MOTION_SEAT
+    description: >
+      The AccuForce seat uses force-feedback style USB commands to drive motion.
+      OpenFlight's FFB subsystem can issue motion cues via this interface when
+      the AccuForce driver is active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience AccuForce motion seat. VID 0x1DD2 / PID 0x2001 community
+    estimate. Force-feedback capable motion seat for sim rigs.
+    PID estimated from community sources. Last reviewed: 2026-07.

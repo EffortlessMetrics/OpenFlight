@@ -1,0 +1,54 @@
+# Clark Synthesis TST239 Tactile Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Clark Synthesis TST239 is a high-output tactile transducer (bass shaker)
+# used in professional simulation rigs. It is audio-driven and does not
+# natively enumerate as a USB HID device. VID 0x1209 and PID 0x3012 are
+# community estimates for a USB companion controller — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Clark Synthesis TST239 Tactile Transducer"
+  vendor: "Clark Synthesis"
+  type: tactile
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3012  # Community estimate — TST239; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x3012 are community estimates. The TST239 is an
+      audio-driven transducer; USB is only present via a companion controller.
+      See also tst429.yaml for the higher-output TST429 model.
+  - id: TACTILE_OUTPUT_ONLY
+    description: >
+      The TST239 is a tactile output device only. Audio signal drives haptic
+      feedback in the sim rig; no HID input is generated.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Clark Synthesis TST239 tactile transducer. VID 0x1209 / PID 0x3012 community
+    estimate. PID estimated from community sources. See tst429.yaml for TST429.
+    Last reviewed: 2026-07.

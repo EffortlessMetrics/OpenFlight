@@ -1,0 +1,56 @@
+# Iris Dynamics Yoke Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Iris Dynamics Yoke Pro — professional-grade force feedback yoke with
+# dual-axis (roll + pitch) linear actuator FFB. Upgraded from the standard
+# Iris Dynamics Yoke (PID 0x2022, see yoke.yaml).
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2021 community estimate.
+schema_version: "1"
+
+device:
+  name: "Iris Dynamics Yoke Pro"
+  vendor: "Iris Dynamics"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2021      # Community estimate — adjacent to Yoke (0x2022)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [roll, pitch, throttle]
+    resolution_bits: 14
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Varies by model configuration
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2021 are community estimates for the Pro variant.
+      The standard Iris Dynamics Yoke uses PID 0x2022 (yoke.yaml). Iris Dynamics
+      may use a registered VID on production hardware. Confirm with lsusb.
+  - id: LINEAR_ACTUATOR_FFB
+    description: >
+      Iris Dynamics uses linear actuators for FFB. Effect fidelity differs from
+      rotary-motor systems. Spring and damper effects closely match physical feel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Iris Dynamics Yoke Pro — linear actuator FFB yoke. VID 0x1209 / PID 0x2021
+    community estimate. Standard yoke uses 0x2022. Last reviewed: 2026-06.

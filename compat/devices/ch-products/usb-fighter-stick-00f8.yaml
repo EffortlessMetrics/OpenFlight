@@ -1,0 +1,54 @@
+# CH Products USB Fighter Stick (0x068E / 0x00F8)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x068E (CH Products), PID 0x00F8.
+# CH Products USB Fighter Stick — a competition-grade joystick for flight and
+# combat simulation. PID 0x00F8 is a community estimate for this variant;
+# other CH joystick PIDs in use include 0x00F0 and 0x00F3 (fighterstick.yaml).
+# Confirm with lsusb or Windows Device Manager.
+schema_version: "1"
+
+device:
+  name: "CH Products USB Fighter Stick"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00F8      # Community estimate — USB Fighter Stick variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F8 is a community estimate. Other CH Products joystick PIDs include
+      0x00F0 (ch_fighterstick.yaml) and 0x00F3 (fighterstick.yaml). Verify with
+      lsusb or Windows Device Manager on target hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products USB Fighter Stick — PID 0x00F8 variant. Community estimate.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

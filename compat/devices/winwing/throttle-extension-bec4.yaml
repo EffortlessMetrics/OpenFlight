@@ -1,0 +1,45 @@
+# WinWing Throttle Extension
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBEC4 — estimated.
+# WinWing throttle extension module for adding axis controls.
+schema_version: "1"
+device:
+  name: "WinWing Throttle Extension"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBEC4      # Community estimate — Throttle Extension; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad / Throttle
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, x, y, rz]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC4 is a community estimate for the WinWing Throttle Extension.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: EXTENSION_MODULE
+    description: >
+      Add-on extension module providing additional axes and buttons to an
+      existing WinWing throttle setup. May require WinWing SimAppPro software.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Throttle Extension — VID 0x4098 / PID 0xBEC4 (est).
+    Extension module for WinWing Orion/Ursa throttle systems.
+    Wave-59 addition. Last reviewed: 2026-07.

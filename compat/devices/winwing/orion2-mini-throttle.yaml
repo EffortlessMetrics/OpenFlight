@@ -1,0 +1,56 @@
+# WinWing Orion 2 Mini Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing Orion 2 Mini Throttle — compact single-engine throttle in the
+# Orion 2 family, popular as a second HOTAS device or as a compact desk
+# setup. VID 0x4098 confirmed (WinWing). PID 0xBEDB is a community estimate.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 Mini Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBEDB      # Community estimate — Orion 2 Mini; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, x, y, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEDB is a community estimate for the Orion 2 Mini Throttle.
+      WinWing VID 0x4098 is confirmed. Confirm PID with lsusb on real hardware.
+  - id: SINGLE_ENGINE
+    description: >
+      The Orion 2 Mini provides a single throttle axis, unlike the dual-throttle
+      Orion 2 (orion2-throttle.yaml). Suitable for single-engine aircraft.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 Mini Throttle. VID 0x4098 confirmed; PID 0xBEDB community
+    estimate. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs
