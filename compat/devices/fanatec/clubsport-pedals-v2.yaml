@@ -1,0 +1,59 @@
+# Fanatec ClubSport Pedals V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0012 is a community estimate for ClubSport Pedals V2.
+# The V2 sits between V1 (clubsport-pedals-v1.yaml) and V3 (clubsport-pedals-v3.yaml).
+# V2 added an inverted brake pedal mounting option and revised brake travel
+# over V1, while V3 further added the vibration motor on the brake.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V2"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0012   # Community estimate — ClubSport Pedals V2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0012 is a community estimate. V1 uses 0x0005 (estimated); V3 uses
+      0x0020 (estimated). Confirm V2 PID with lsusb before deployment.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      V2 uses a load-cell brake sensor like V1. The vibration motor on the
+      brake pedal was introduced in V3 (clubsport-pedals-v3.yaml).
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim: throttle → engine or rudder, brake → toe brakes (split
+      via OpenFlight profile), clutch → differential brake or rudder.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V2 — mid-generation load-cell pedals.
+    VID 0x0EB7 confirmed; PID 0x0012 is a community estimate.
+    Between V1 (clubsport-pedals-v1.yaml) and V3 (clubsport-pedals-v3.yaml).
+    Last reviewed: 2026-06.

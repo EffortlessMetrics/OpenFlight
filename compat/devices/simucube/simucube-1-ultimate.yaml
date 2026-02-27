@@ -1,0 +1,66 @@
+# Simucube 1 Ultimate (original generation SC1)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: Granite Devices.
+# PID 0x0D5F is a community estimate for the Simucube 1 (original generation).
+# The SC1 predates the SC2 series (simucube-2-*.yaml). It is based on the
+# IONI servo drive and uses a different firmware/protocol stack than SC2.
+# The SC1 Ultimate is the highest-output SC1 variant (30 Nm peak).
+# Still in use in legacy combined race+flight sim setups.
+
+schema_version: "1"
+
+device:
+  name: "Simucube 1 Ultimate"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (confirmed)
+    product_id: 0x0D5F   # Community estimate — SC1 (legacy generation)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 22  # SC1 encoder resolution (IONI-based)
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 30.0  # SC1 Ultimate peak Nm
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5F is a community estimate for the SC1 generation. SC2 series uses
+      0x0D60–0x0D62. Not confirmed from lsusb on SC1 hardware; SC1 may use a
+      different VID if produced before Granite Devices registered 0x16D0.
+  - id: LEGACY_SC1_PROTOCOL
+    description: >
+      SC1 uses the IONI servo drive protocol — different from SC2's True Drive
+      torque command interface. OpenFlight uses a legacy SC1 FFB adapter when
+      this PID is detected.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The SC1 exposes only the rotation axis. A flight grip adapter is required
+      to add button inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 1 Ultimate — first-generation SC direct-drive base (30 Nm peak).
+    VID 0x16D0 confirmed; PID 0x0D5F is a community estimate.
+    Legacy device; superseded by Simucube 2 series (simucube-2-*.yaml).
+    Last reviewed: 2026-06.

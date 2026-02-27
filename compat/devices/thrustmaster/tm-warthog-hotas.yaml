@@ -1,0 +1,57 @@
+# Thrustmaster Warthog HOTAS (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device entry for the Thrustmaster Warthog HOTAS
+# (A-10C Warthog replica) bundle. The joystick and throttle enumerate as two
+# independent USB HID devices on the host.
+# Component manifests:
+#   - warthog-joystick.yaml   (A-10C stick, PID 0x0402 — confirmed)
+#   - warthog-throttle.yaml   (A-10C twin throttle, PID 0x404 — confirmed)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Warthog HOTAS (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~        # Virtual bundle — see warthog-joystick.yaml and warthog-throttle.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7             # Combined: stick (2) + throttle (5)
+    names: [x, y, throttle_l, throttle_r, slider, rx, ry]
+    resolution_bits: 16  # 16-bit on warthog axes
+  buttons: 49            # Combined: 19 stick + 30 throttle
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The Warthog HOTAS ships as one package but the joystick and throttle
+      are separate USB devices. OpenFlight merges axis/button namespaces via
+      the combined-device profile binding.
+      Components: warthog-joystick.yaml, warthog-throttle.yaml.
+  - id: TWIN_THROTTLE_AXES
+    description: >
+      The Warthog throttle provides two independent throttle axes (left and
+      right) for realistic A-10C differential power management.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle entry for the Thrustmaster Warthog HOTAS (A-10C replica).
+    Components enumerate independently as warthog-joystick.yaml and
+    warthog-throttle.yaml. Last reviewed: 2026-06.

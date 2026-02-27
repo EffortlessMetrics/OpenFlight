@@ -1,0 +1,54 @@
+# Thrustmaster F-16 Combat Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device entry for the Thrustmaster F-16 Combat Pack,
+# a retail bundle combining the Viper TQS throttle and compatible F-16C grip
+# with the T.16000M base. Each component enumerates independently.
+# Component manifests:
+#   - viper-tqs.yaml    (Viper TQS throttle)
+#   - f16c-grip.yaml    (F-16C Viper grip)
+#   - t16000m.yaml      (T.16000M base for grip)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F-16 Combat Pack (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~        # Virtual bundle — components enumerate independently
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7             # Combined: stick (3) + throttle (4)
+    names: [x, y, rz, throttle, slider, rx, ry]
+    resolution_bits: 14
+  buttons: 30            # Combined across grip and TQS
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      F-16 Combat Pack is a retail bundle; stick, grip, and throttle enumerate
+      as separate USB HID devices. OpenFlight merges them via the combined-device
+      profile binding. See viper-tqs.yaml, f16c-grip.yaml, t16000m.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle entry for the Thrustmaster F-16 Combat Pack.
+    Components: Viper TQS (viper-tqs.yaml), F-16C Grip (f16c-grip.yaml),
+    T.16000M base (t16000m.yaml). Designed for DCS F-16C Viper module.
+    Last reviewed: 2026-06.

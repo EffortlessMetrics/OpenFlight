@@ -1,0 +1,55 @@
+# Thrustmaster T.Flight Full Kit (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device entry documenting the Thrustmaster T.Flight
+# Full Kit bundle. The bundle combines the T.Flight HOTAS One and T.Flight Rudder
+# Pedals as a package; each device enumerates independently on the USB host.
+# Component manifests:
+#   - tflight-hotas-one.yaml     (joystick + throttle HOTAS)
+#   - tflight-rudder-pedals.yaml (rudder pedal set)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Full Kit (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~        # Virtual bundle — see component manifests
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8             # Combined: 5 HOTAS + 3 pedal axes
+    names: [x, y, z, throttle, rz, rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The T.Flight Full Kit is a retail bundle containing the T.Flight HOTAS One
+      and T.Flight Rudder Pedals sold together. Each device enumerates as a
+      separate USB HID device. OpenFlight merges axis/button namespaces in the
+      active profile using the combined-device binding.
+      Components: tflight-hotas-one.yaml and tflight-rudder-pedals.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle entry for the Thrustmaster T.Flight Full Kit.
+    Components: T.Flight HOTAS One (tflight-hotas-one.yaml) and T.Flight Rudder
+    Pedals (tflight-rudder-pedals.yaml). Axis counts are combined totals.
+    Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# VIRPIL VPC Rotor TCS v2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x4192 is a community estimate for the Rotor TCS v2 (updated revision).
+# The base VPC Rotor TCS is in vpc-collective.yaml; the Plus variant is in
+# vpc-rotor-tcs-plus.yaml (PID 0x4190). The v2 is a hardware revision of
+# the Rotor TCS with revised grip ergonomics and an updated PCB. If VIRPIL
+# did not change the PID between revisions, this file may share a PID with
+# the TCS Plus; update when confirmed from VIRPIL Configurator or lsusb.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS v2 Collective"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4192   # Community estimate — Rotor TCS v2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, rx, ry, slider]
+    resolution_bits: 15
+  buttons: 24
+  hats: 1
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4192 is a community estimate for the Rotor TCS v2. The TCS Plus
+      uses PID 0x4190 (vpc-rotor-tcs-plus.yaml). VIRPIL may not have assigned
+      a distinct PID to the v2 hardware revision — confirm with VIRPIL Configurator
+      or lsusb before deployment.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      The collective axis is unipolar (no spring return). Map [0, 1] unipolar
+      in the helicopter profile for correct collective travel.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings are configurable in VIRPIL Configurator.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS v2 — revised Rotor TCS hardware with updated grip.
+    VID 0x3344 confirmed; PID 0x4192 is a community estimate.
+    See vpc-rotor-tcs-plus.yaml for the Plus variant. Last reviewed: 2026-06.

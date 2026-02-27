@@ -1,0 +1,55 @@
+# Thrustmaster T.Flight Pro Combat Grip (for TWCS)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB10A is a community estimate for the T.Flight Pro Combat Grip.
+# The Pro Combat Grip is a standalone grip designed for use with the TWCS
+# (T.16000M Throttle, twcs-throttle.yaml). It provides a more feature-rich
+# option than the T.16000M grip, with additional buttons and a longer trigger.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Pro Combat Grip"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB10A   # Community estimate — T.Flight Pro Combat Grip
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 14  # T.16000M-class resolution
+  buttons: 16
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB10A is a community estimate. Confirm with lsusb before deployment.
+  - id: TWCS_PAIRING
+    description: >
+      The Pro Combat Grip is designed to pair with the TWCS Throttle
+      (twcs-throttle.yaml). Together they form a budget-friendly HOTAS
+      alternative to the T.16000M FCS. Combined-device binding recommended
+      in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight Pro Combat Grip — standalone grip for TWCS pairing.
+    PID 0xB10A is a community estimate. Pairs with TWCS Throttle (twcs-throttle.yaml)
+    to form a budget HOTAS combination. Last reviewed: 2026-06.

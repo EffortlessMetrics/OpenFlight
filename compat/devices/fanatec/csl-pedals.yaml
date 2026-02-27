@@ -1,0 +1,60 @@
+# Fanatec CSL Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0014 is a community estimate for the Fanatec CSL Pedals (2022 entry-level).
+# The CSL Pedals are Fanatec's current entry-level pedal set, replacing the
+# earlier CSL Elite Pedals (csl-elite-pedals.yaml) at a lower price point.
+# Uses standard potentiometers (no load cell on base model); optional LC kit
+# available as an upgrade.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Pedals"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0014   # Community estimate — CSL Pedals (2022 model)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0014 is a community estimate for the CSL Pedals (2022).
+      Confirm with lsusb before deployment.
+  - id: OPTIONAL_LC_UPGRADE
+    description: >
+      The base CSL Pedals use standard potentiometers. An optional Load Cell Kit
+      can be installed on the brake pedal, improving brake resolution. When the LC
+      Kit is installed, brake axis behaviour is non-linear (pressure-based).
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim: throttle → engine or rudder axis, brake → toe brakes
+      (split via profile), clutch → differential brake.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Pedals — entry-level 2022 pedal set. Succeeds CSL Elite Pedals.
+    VID 0x0EB7 confirmed; PID 0x0014 is a community estimate.
+    Optional LC Kit available for brake load-cell upgrade. Last reviewed: 2026-06.

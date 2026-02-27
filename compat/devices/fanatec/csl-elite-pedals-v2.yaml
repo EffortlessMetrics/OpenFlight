@@ -1,0 +1,59 @@
+# Fanatec CSL Elite Pedals V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0016 is a community estimate for the CSL Elite Pedals V2.
+# The V2 succeeds the original CSL Elite Pedals (csl-elite-pedals.yaml) with
+# a revised brake pedal geometry and improved build quality. Retains the same
+# three-axis potentiometer layout as V1 with optional LC (Load Cell) upgrade kit.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Pedals V2"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0016   # Community estimate — CSL Elite Pedals V2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0016 is a community estimate for the CSL Elite Pedals V2.
+      V1 is PID 0x0011 (csl-elite-pedals.yaml). Confirm V2 PID with lsusb.
+  - id: OPTIONAL_LC_UPGRADE
+    description: >
+      Like the V1, the V2 accepts the Fanatec Load Cell kit on the brake pedal.
+      With LC, brake axis is pressure-based with non-linear response.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      Map throttle → engine/rudder, brake → toe brakes (split), clutch → differential
+      brake or secondary rudder in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Pedals V2 — revised CSL Elite with improved brake geometry.
+    VID 0x0EB7 confirmed; PID 0x0016 is a community estimate.
+    Succeeds V1 (csl-elite-pedals.yaml). Used in flight sim for rudder/brake.
+    Last reviewed: 2026-06.

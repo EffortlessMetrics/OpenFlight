@@ -1,0 +1,60 @@
+# Heusinkveld Ultimate+ Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 is a community estimate (Microchip Technology licensed VID).
+# PID 0xF6D1 is a community estimate adjacent to Sprint Pedals (0xF6D0).
+# Heusinkveld Ultimate+ are the top-of-the-range pedals with higher-resolution
+# load cells, adjustable pedal geometry, and heavier construction than Sprint.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Ultimate+ Pedals"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D1   # Community estimate — confirm with lsusb on hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14  # Higher resolution than Sprint
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D1 is a community estimate adjacent to Sprint Pedals (0xF6D0).
+      VID 0x04D8 is also unconfirmed for this model. Confirm with lsusb before
+      enabling production device matching.
+  - id: LOAD_CELL_ALL_AXES
+    description: >
+      Unlike the Sprint Pedals, the Ultimate+ uses load cells on all three axes
+      (throttle, brake, and clutch). All axes have pressure-based sensing with
+      adjustable pedal weight via the Heusinkveld setup software.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim use: throttle → engine throttle or rudder, brake → toe brake
+      pair (split via OpenFlight profile), clutch → differential brake.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Ultimate+ — flagship load-cell sim pedals, all-axis load cells.
+    VID 0x04D8 / PID 0xF6D1 are community estimates; confirm with lsusb.
+    Higher precision than Sprint Pedals; used for serious GA and military sim setups.
+    Last reviewed: 2026-06.

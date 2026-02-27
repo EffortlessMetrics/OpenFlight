@@ -1,0 +1,62 @@
+# VKB GNX-EVO Throttle+
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKBsim.
+# PID 0x0241 is a community estimate for the GNX-EVO Throttle+ (enhanced variant
+# of the GNX-EVO Throttle with additional button panels and a slew control).
+# The Throttle+ adds a detachable panel module with extra switches, an MFCD
+# mini-display interface, and an expanded encoder bank compared to the base
+# GNX-EVO Throttle (see gnx-evo-throttle.yaml).
+
+schema_version: "1"
+
+device:
+  name: "VKB GNX-EVO Throttle+"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0241   # Community estimate — GNX-EVO Throttle+
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle, throttle2, slider, rx, ry, mini_stick]
+    resolution_bits: 15
+  buttons: 36
+  hats: 2
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0241 is a community estimate for the GNX-EVO Throttle+.
+      The base GNX-EVO Throttle is PID 0x0240 (gnx-evo-throttle.yaml).
+      Confirm with lsusb or VKB community resources before deployment.
+  - id: EXPANDED_PANEL_MODULE
+    description: >
+      The Throttle+ includes an additional detachable panel module with extra
+      toggle switches, push-buttons, and a slew control mini-stick. All panel
+      inputs are part of the single composite HID device.
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      Two independent throttle axes for twin-engine profiles. Decoupled via
+      OpenFlight profile for differential thrust.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB GNX-EVO Throttle+ — enhanced GNX-EVO Throttle with extra panel module.
+    PID 0x0241 is a community estimate. See gnx-evo-throttle.yaml for base model.
+    VID 0x231D confirmed for VKBsim. Last reviewed: 2026-06.

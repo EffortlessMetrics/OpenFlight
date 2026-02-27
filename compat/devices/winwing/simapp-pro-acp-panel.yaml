@@ -1,0 +1,62 @@
+# WinWing SimAppPro ACP Panel (Audio Control Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBF20 is a community estimate in the SimAppPro panel range.
+# The SimAppPro ACP replicates the A320 Audio Control Panel (ACP) with
+# VHF/HF/NAV selector knobs, hot mic, and cabin address controls.
+# Used alongside SimAppPro FCU (simapp-pro-fcu.yaml) in A320 cockpit setups.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro ACP Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF20   # Community estimate — SimAppPro ACP
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 4            # VHF1, VHF2, HF1, NAV volume knobs
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF20 is a community estimate for the SimAppPro ACP panel.
+      Confirm with lsusb on real hardware before enabling device matching.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Volume knobs report encoder rotation as HID button press/release events
+      (increment/decrement). OpenFlight maps encoder steps to discrete commands
+      in the A320 comms profile.
+  - id: A320_SPECIFIC
+    description: >
+      The ACP panel is designed for A320-family aircraft in MSFS and X-Plane.
+      Selector positions (VHF1/VHF2/HF1/HF2/NAV/PA) correspond to A320 ACP
+      channel assignments; bind to matching MSFS/X-Plane audio variables.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro ACP — Airbus A320 Audio Control Panel replica.
+    PID 0xBF20 is a community estimate. Complements the SimAppPro FCU panel
+    (simapp-pro-fcu.yaml). Used for A320 comms management in MSFS / X-Plane.
+    Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Honeycomb Echo Gyroplane Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B confirmed: Honeycomb Aeronautical (registered USB vendor;
+#   same VID as Alpha Yoke 0x1900 and Bravo Throttle 0x1901).
+# PID 0x1904 is a community estimate for the Echo Gyroplane Controller.
+# The Honeycomb Echo is a gyroplane/helicopter cyclic+collective controller,
+# introduced to complement the Alpha/Bravo/Charlie flight deck series.
+# Provides a realistic rotor head cyclic stick and collective lever in a
+# single compact unit for helicopter/gyroplane simulation.
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Echo Gyroplane Controller"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B    # Honeycomb Aeronautical (confirmed)
+    product_id: 0x1904   # Community estimate — Echo Gyroplane
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [cyclic_x, cyclic_y, collective, tail_rotor]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1904 is a community estimate. Alpha Yoke uses 0x1900; Bravo uses
+      0x1901; Charlie uses 0x1902; Delta is estimated at 0x1903. Confirm Echo
+      PID with lsusb on real hardware before deployment.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      The collective axis is unipolar (0 = full down, max = full up) with no
+      spring return. Map collective [0, 1] unipolar in the helicopter profile.
+  - id: TAIL_ROTOR_TWIST
+    description: >
+      Tail rotor pedal axis may be exposed as a twist axis or a dedicated slider
+      depending on Echo firmware version. Confirm axis mapping in the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Echo Gyroplane Controller — helicopter cyclic+collective unit.
+    VID 0x294B confirmed; PID 0x1904 is a community estimate.
+    Complements Alpha (yoke), Bravo (throttle quadrant), Charlie (rudder pedals).
+    Last reviewed: 2026-06.

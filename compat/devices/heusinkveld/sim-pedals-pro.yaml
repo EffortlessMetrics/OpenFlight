@@ -1,0 +1,60 @@
+# Heusinkveld Sim Pedals Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 is a community estimate (Microchip Technology licensed VID).
+# PID 0xF6D2 is a community estimate.
+# Heusinkveld Sim Pedals Pro is the mid-range model in the Heusinkveld lineup,
+# sitting between Sprint and Ultimate+. Features load-cell brake and adjustable
+# throttle/clutch potentiometers.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Pro"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D2   # Community estimate — confirm with lsusb on hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D2 is a community estimate. VID 0x04D8 is unconfirmed for this model.
+      Confirm with lsusb on real Sim Pedals Pro hardware before deployment.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The Sim Pedals Pro uses a load cell on the brake axis only.
+      Throttle and clutch use standard potentiometers. Brake load cell
+      provides non-linear pressure-based response.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      Commonly used in flight sim for rudder (throttle axis), toe brakes (brake
+      split left/right via OpenFlight profile), and differential brake (clutch).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Pro — mid-range model with load-cell brake.
+    VID 0x04D8 / PID 0xF6D2 are community estimates; confirm with lsusb.
+    Used in combined sim setups for rudder/toe-brake flight controls.
+    Last reviewed: 2026-06.

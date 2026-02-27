@@ -1,0 +1,68 @@
+# Simucube Active Pedal
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: Granite Devices (usb.ids "MCS Electronics").
+# PID 0x0D65 is a community estimate for the Simucube Active Pedal.
+# The Active Pedal is a force-feedback pedal system (each pedal independently
+# actuated) launched by Granite Devices in 2023. Unlike passive load-cell
+# pedals, each pedal motor generates configurable resistance and feedback forces,
+# enabling ABS rumble, surface simulation, and progressive resistance profiles.
+
+schema_version: "1"
+
+device:
+  name: "Simucube Active Pedal"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (confirmed)
+    product_id: 0x0D65   # Community estimate — confirm from True Drive or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 24  # High-resolution encoder feedback
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 30.0  # Per-pedal peak force
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D65 is a community estimate for the Active Pedal. Simucube 2 series
+      uses PIDs 0x0D60–0x0D62. Active Pedal is a distinct product line.
+      Confirm from lsusb or Simucube True Drive software capture.
+  - id: FFB_PEDALS
+    description: >
+      Unlike passive pedals, each Active Pedal axis has an independently controlled
+      motor providing configurable resistance force. The brake can simulate ABS
+      pulsing, ground surface texture, and progressive resistance. In flight sim
+      use, map toe brakes to the brake/clutch axes with appropriate force profiles.
+  - id: TORQUE_PER_PEDAL
+    description: >
+      Force feedback is per-pedal (each of brake and clutch has its own actuator).
+      Throttle is passive (no FFB on throttle axis). OpenFlight maps FFB to
+      brake axis for runway/carrier deck surface feedback.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube Active Pedal — force-feedback pedal system (2023).
+    VID 0x16D0 confirmed (Granite Devices); PID 0x0D65 is a community estimate.
+    Each pedal has independent actuator for configurable resistance/FFB.
+    Used in flight sim for realistic brake/toe pressure simulation. Last reviewed: 2026-06.

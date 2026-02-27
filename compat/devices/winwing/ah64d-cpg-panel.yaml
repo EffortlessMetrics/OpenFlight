@@ -1,0 +1,55 @@
+# WinWing AH-64D CPG Panel (Co-Pilot/Gunner Station)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBD50 is a community estimate for the AH-64D CPG panel.
+# The AH-64D George Panel (ah64d-george-panel.yaml) covers the pilot-side
+# George AI interface. This CPG Panel covers the gunner/co-pilot station
+# controls for the AH-64D Apache in DCS World.
+
+schema_version: "1"
+
+device:
+  name: "WinWing AH-64D CPG Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD50   # Community estimate — AH-64D CPG station panel
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD50 is a community estimate for the AH-64D CPG Panel.
+      The AH-64D George Panel uses a different PID (see ah64d-george-panel.yaml).
+      Confirm with lsusb on real hardware before deployment.
+  - id: DCS_AH64D_SPECIFIC
+    description: >
+      Designed for the DCS World AH-64D Apache module. Button layout replicates
+      the CPG station's weapon and targeting controls (TADS, FCR, Hellfire, etc.).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing AH-64D CPG Panel — co-pilot/gunner station for DCS World AH-64D module.
+    PID 0xBD50 is a community estimate. See also: ah64d-george-panel.yaml
+    (pilot-side George AI interface). Last reviewed: 2026-06.

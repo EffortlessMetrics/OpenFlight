@@ -1,0 +1,57 @@
+# WinWing F-4E Armament/Utility Panel (AUP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBD40 is a community estimate for the F-4E Armament/Utility Panel.
+# The F-4E AUP complements the WinWing F-4E Fighter Stick (f4e-fighter-stick.yaml)
+# and F-4E Fighter Throttle (f4e-fighter-throttle.yaml) to complete the
+# WinWing F-4E Phantom II cockpit replica set for DCS World.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-4E Armament/Utility Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD40   # Community estimate — F-4E AUP
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD40 is a community estimate for the F-4E AUP. The F-4E stick uses
+      PID 0xBE7C and throttle uses 0xBE7D (see f4e-fighter-stick.yaml and
+      f4e-fighter-throttle.yaml). Confirm with lsusb before deployment.
+  - id: DCS_F4E_SPECIFIC
+    description: >
+      This panel is designed for the DCS World F-4E Phantom II module.
+      Button assignments replicate the F-4E armament/utility panel layout
+      including Master Arm, weapon selector, jettison, and utility switches.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-4E Armament/Utility Panel — for DCS World F-4E Phantom II module.
+    PID 0xBD40 is a community estimate. Pairs with F-4E Fighter Stick
+    (f4e-fighter-stick.yaml) and Throttle (f4e-fighter-throttle.yaml).
+    Last reviewed: 2026-06.
