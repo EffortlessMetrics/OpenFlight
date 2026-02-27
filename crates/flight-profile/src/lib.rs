@@ -70,7 +70,9 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+pub mod hot_reload;
 pub mod profile_compare;
+pub mod profile_migration;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

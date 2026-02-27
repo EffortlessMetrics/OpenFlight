@@ -12,6 +12,7 @@
 //! web API integration, and comprehensive latency measurement and validation.
 
 pub mod adapter;
+pub mod adapter_state;
 pub mod aircraft;
 pub mod control;
 pub mod dataref;
@@ -24,6 +25,7 @@ pub mod udp;
 pub mod web_api;
 
 pub use adapter::{XPlaneAdapter, XPlaneAdapterConfig, XPlaneError};
+pub use adapter_state::{AdapterEvent, AdapterStateMachine, TransitionError, XPlaneAdapterState};
 pub use aircraft::{AircraftDetector, DetectedAircraft, XPlaneAircraftInfo};
 pub use control::ControlOutput;
 pub use dataref::{DataRef, DataRefManager, DataRefRequest, DataRefValue};
