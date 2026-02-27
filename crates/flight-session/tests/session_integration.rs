@@ -398,7 +398,10 @@ async fn force_switch_c172_commits_switch_and_sets_aircraft() {
     let metrics = auto_switch.get_metrics().await;
     assert_eq!(metrics.committed_switches, 1, "force_switch should commit");
     let current = auto_switch.get_current_aircraft().await;
-    assert!(current.is_some(), "current aircraft should be set after force_switch");
+    assert!(
+        current.is_some(),
+        "current aircraft should be set after force_switch"
+    );
     assert_eq!(current.unwrap().aircraft_id.icao, "C172");
 }
 
@@ -619,7 +622,10 @@ async fn pof_hysteresis_single_outlier_frame_does_not_transition() {
 
     // Establish Ground with 5 consistent frames.
     for _ in 0..5 {
-        auto_switch.on_telemetry_update(ground.clone()).await.unwrap();
+        auto_switch
+            .on_telemetry_update(ground.clone())
+            .await
+            .unwrap();
     }
     tokio::time::sleep(Duration::from_millis(150)).await;
     assert_eq!(
@@ -640,7 +646,10 @@ async fn pof_hysteresis_single_outlier_frame_does_not_transition() {
 
     // Immediately return to ground conditions — resets the candidate.
     for _ in 0..3 {
-        auto_switch.on_telemetry_update(ground.clone()).await.unwrap();
+        auto_switch
+            .on_telemetry_update(ground.clone())
+            .await
+            .unwrap();
     }
     tokio::time::sleep(Duration::from_millis(150)).await;
 
@@ -674,7 +683,10 @@ async fn pof_transitions_to_approach_after_consecutive_frames() {
     };
 
     for _ in 0..3 {
-        auto_switch.on_telemetry_update(approach.clone()).await.unwrap();
+        auto_switch
+            .on_telemetry_update(approach.clone())
+            .await
+            .unwrap();
     }
     tokio::time::sleep(Duration::from_millis(200)).await;
 
@@ -789,7 +801,10 @@ fn profile_source_update_path_converts_in_memory_to_file() {
 
     src.update_path(PathBuf::from("/tmp/new_profile.json"));
 
-    assert!(!src.is_in_memory(), "update_path should switch to File variant");
+    assert!(
+        !src.is_in_memory(),
+        "update_path should switch to File variant"
+    );
     assert!(src.has_file());
     assert!(src.primary_path().is_some());
 }
