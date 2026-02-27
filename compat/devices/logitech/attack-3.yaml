@@ -1,0 +1,62 @@
+# Logitech Attack 3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC214 — linux-hardware.org (50+ probes,
+# "Logitech Attack 3"). Popular entry-level joystick widely used for flight
+# simulation. Features a throttle lever on the base, twist rudder axis, and
+# 11-button layout.
+schema_version: "1"
+
+device:
+  name: "Logitech Attack 3"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech Inc.
+    product_id: 0xC214  # Attack 3 — confirmed via linux-hardware.org (50+ probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, z]
+    resolution_bits: 10   # X/Y are 10-bit; Rz and Z are 8-bit
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: ATTACK3_MIXED_RESOLUTION
+    description: >
+      X (roll) and Y (pitch) are 10-bit (0–1023); Rz (twist rudder) and
+      Z (base throttle lever) are 8-bit (0–255). OpenFlight normalizes all
+      axes to the −1.0..=1.0 or 0.0..=1.0 range.
+  - id: ATTACK3_THROTTLE_DIRECTION
+    description: >
+      The base-mounted throttle lever (Z axis) has no spring return.
+      Physical "forward/top" maps to raw value 0; "back/bottom" maps to
+      raw 255. Users who prefer the conventional "forward = full throttle"
+      mapping should invert the Z axis in their profile.
+  - id: ATTACK3_HAT_ENCODING
+    description: >
+      The 4-direction hat switch is encoded as a single-byte value using
+      the HID hat-switch encoding (0 = N, 2 = E, 4 = S, 6 = W, 8 = centred).
+      Diagonals are not supported.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC214 confirmed from linux-hardware.org probe database.
+    Entry-level joystick popular with beginner and budget-conscious flight
+    sim users across MSFS, X-Plane, and DCS. Axis count and resolution are
+    community-documented from HID descriptors.
+    Last validated: 2026-02.
