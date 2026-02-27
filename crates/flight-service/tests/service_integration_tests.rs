@@ -81,8 +81,7 @@ async fn test_auto_switch_empty_icao_snapshot_is_ignored() {
 
     // Publish a snapshot with an empty ICAO.
     let empty_snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new(""));
-    bus.publish(empty_snapshot)
-        .expect("publish must not fail");
+    bus.publish(empty_snapshot).expect("publish must not fail");
 
     // Allow at least two bus-monitor ticks (30 Hz → ~33 ms each) to pass.
     tokio::time::sleep(Duration::from_millis(200)).await;

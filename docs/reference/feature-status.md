@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 445 |
-| ACs with tests | 445 |
-| ACs with Gherkin | 445 |
-| ACs with both tests + Gherkin | 445 |
-| Complete | 445 |
+| Total AC | 482 |
+| ACs with tests | 482 |
+| ACs with Gherkin | 482 |
+| ACs with both tests + Gherkin | 482 |
+| Complete | 482 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -60,11 +60,11 @@
 | flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-logitech | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-logitech | 21 | 21 | 21 | 21 | 21 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 20 | 20 | 20 | 20 | 20 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-virpil | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-vkb | 14 | 14 | 14 | 14 | 14 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-virpil | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-vkb | 24 | 24 | 24 | 24 | 24 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -552,3 +552,40 @@
 | INF-REQ-17 | AC-17.2 | WHEN CrateMetadataIssue summary is formatted THEN missing fields SHALL be listed as 'missing' and invalid fields as 'invalid' | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:68 | 2 | ✅ Complete |
 | INF-REQ-17 | AC-17.3 | WHEN readme path is resolved THEN absolute paths SHALL be returned unchanged and relative paths SHALL be joined to the manifest directory; None readme SHALL yield None path | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:74<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:80 | 3 | ✅ Complete |
 | INF-REQ-17 | AC-17.4 | WHEN workspace microcrate names are loaded from the repo root THEN core flight crates SHALL be present in the result | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:86 | 2 | ✅ Complete |
+| REQ-75 | AC-75.1 | WHEN a G940 joystick HID report shorter than 11 bytes is parsed THEN parse_g940_joystick SHALL return Err(JoystickTooShort) | specs/features/req_75_logitech_g940.feature:5<br>specs/features/req_75_logitech_g940.feature:11 | 1 | ✅ Complete |
+| REQ-75 | AC-75.2 | WHEN G940 joystick bipolar axes (X, Y, Rz) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0 | specs/features/req_75_logitech_g940.feature:17<br>specs/features/req_75_logitech_g940.feature:25<br>specs/features/req_75_logitech_g940.feature:31<br>specs/features/req_75_logitech_g940.feature:37 | 12 | ✅ Complete |
+| REQ-75 | AC-75.3 | WHEN the G940 joystick Z axis (stick-body throttle) is at raw minimum (0) THEN the axis SHALL be 0.0; at raw maximum (4095) it SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0 | specs/features/req_75_logitech_g940.feature:45<br>specs/features/req_75_logitech_g940.feature:51 | 3 | ✅ Complete |
+| REQ-75 | AC-75.4 | WHEN a G940 hat switch nibble value is parsed THEN it SHALL map to the correct G940Hat variant (North=0, NorthEast=1, East=2, SouthEast=3, South=4, SouthWest=5, West=6, NorthWest=7, Center=8..15) | specs/features/req_75_logitech_g940.feature:57<br>specs/features/req_75_logitech_g940.feature:63<br>specs/features/req_75_logitech_g940.feature:69<br>specs/features/req_75_logitech_g940.feature:75 | 5 | ✅ Complete |
+| REQ-75 | AC-75.5 | WHEN G940 joystick buttons are pressed individually or in combination THEN each of the 20 buttons SHALL be independently addressable; button numbers outside 1-20 SHALL always return false | specs/features/req_75_logitech_g940.feature:81<br>specs/features/req_75_logitech_g940.feature:87<br>specs/features/req_75_logitech_g940.feature:93 | 5 | ✅ Complete |
+| REQ-75 | AC-75.6 | WHEN a G940 throttle HID report shorter than 5 bytes is parsed THEN parse_g940_throttle SHALL return Err(ThrottleTooShort) | specs/features/req_75_logitech_g940.feature:99<br>specs/features/req_75_logitech_g940.feature:105 | 1 | ✅ Complete |
+| REQ-75 | AC-75.7 | WHEN the G940 throttle dual levers are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (4095) each SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0 | specs/features/req_75_logitech_g940.feature:111<br>specs/features/req_75_logitech_g940.feature:117<br>specs/features/req_75_logitech_g940.feature:123<br>specs/features/req_75_logitech_g940.feature:129 | 6 | ✅ Complete |
+| REQ-75 | AC-75.8 | WHEN G940 throttle buttons are pressed individually or in combination THEN each of the 11 buttons SHALL be independently addressable; button numbers outside 1-11 SHALL always return false | specs/features/req_75_logitech_g940.feature:135<br>specs/features/req_75_logitech_g940.feature:141<br>specs/features/req_75_logitech_g940.feature:147 | 4 | ✅ Complete |
+| REQ-76 | AC-76.1 | WHEN a G Flight Yoke HID report shorter than 8 bytes is parsed THEN parse_g_flight_yoke SHALL return Err(TooShort) | specs/features/req_76_logitech_g_flight_yoke.feature:5<br>specs/features/req_76_logitech_g_flight_yoke.feature:11 | 2 | ✅ Complete |
+| REQ-76 | AC-76.2 | WHEN G Flight Yoke bipolar axes (X, Y) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0 | specs/features/req_76_logitech_g_flight_yoke.feature:17<br>specs/features/req_76_logitech_g_flight_yoke.feature:24<br>specs/features/req_76_logitech_g_flight_yoke.feature:30<br>specs/features/req_76_logitech_g_flight_yoke.feature:36 | 7 | ✅ Complete |
+| REQ-76 | AC-76.3 | WHEN G Flight Yoke unipolar axes (Rz prop-pitch, Slider mixture, Slider2 carb-heat) are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (255) each SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0 | specs/features/req_76_logitech_g_flight_yoke.feature:43<br>specs/features/req_76_logitech_g_flight_yoke.feature:49<br>specs/features/req_76_logitech_g_flight_yoke.feature:55<br>specs/features/req_76_logitech_g_flight_yoke.feature:61 | 7 | ✅ Complete |
+| REQ-76 | AC-76.4 | WHEN a G Flight Yoke hat switch nibble value is parsed THEN it SHALL map to the correct GFlightYokeHat variant (North=0, NorthEast=1, East=2, SouthEast=3, South=4, SouthWest=5, West=6, NorthWest=7, Center=8..15) | specs/features/req_76_logitech_g_flight_yoke.feature:67<br>specs/features/req_76_logitech_g_flight_yoke.feature:73<br>specs/features/req_76_logitech_g_flight_yoke.feature:79<br>specs/features/req_76_logitech_g_flight_yoke.feature:85 | 5 | ✅ Complete |
+| REQ-76 | AC-76.5 | WHEN G Flight Yoke buttons are pressed individually or in combination THEN each of the 12 buttons SHALL be independently addressable; button numbers outside 1-12 SHALL always return false | specs/features/req_76_logitech_g_flight_yoke.feature:91<br>specs/features/req_76_logitech_g_flight_yoke.feature:97<br>specs/features/req_76_logitech_g_flight_yoke.feature:103 | 5 | ✅ Complete |
+| REQ-77 | AC-77.1 | WHEN a G Flight Throttle Quadrant HID report shorter than 6 bytes is parsed THEN parse_g_flight_throttle SHALL return Err(TooShort) | specs/features/req_77_logitech_g_flight_throttle.feature:5<br>specs/features/req_77_logitech_g_flight_throttle.feature:11 | 2 | ✅ Complete |
+| REQ-77 | AC-77.2 | WHEN G Flight Throttle Quadrant levers are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (4095) each SHALL be 1.0; levers SHALL be independently addressable; arbitrary inputs SHALL always produce values within 0.0..=1.0 | specs/features/req_77_logitech_g_flight_throttle.feature:17<br>specs/features/req_77_logitech_g_flight_throttle.feature:25<br>specs/features/req_77_logitech_g_flight_throttle.feature:33<br>specs/features/req_77_logitech_g_flight_throttle.feature:41 | 7 | ✅ Complete |
+| REQ-77 | AC-77.3 | WHEN G Flight Throttle Quadrant buttons are pressed individually or in combination THEN each of the 6 buttons SHALL be independently addressable; button numbers outside 1-6 SHALL always return false | specs/features/req_77_logitech_g_flight_throttle.feature:49<br>specs/features/req_77_logitech_g_flight_throttle.feature:55<br>specs/features/req_77_logitech_g_flight_throttle.feature:61 | 4 | ✅ Complete |
+| REQ-78 | AC-78.1 | WHEN a VPC Constellation Alpha HID report shorter than VPC_ALPHA_MIN_REPORT_BYTES is parsed THEN parse_alpha_report SHALL return an error; at exactly the minimum length it SHALL succeed; one byte short SHALL also fail | specs/features/req_78_virpil_alpha.feature:5<br>specs/features/req_78_virpil_alpha.feature:11<br>specs/features/req_78_virpil_alpha.feature:17 | 3 | ✅ Complete |
+| REQ-78 | AC-78.2 | WHEN any raw u16 axis values are parsed by parse_alpha_report THEN all five axes (x, y, z, sz, sl) SHALL be finite (never NaN or Inf) | specs/features/req_78_virpil_alpha.feature:23 | 1 | ✅ Complete |
+| REQ-78 | AC-78.3 | WHEN a 28-bit button mask is stored in a Constellation Alpha report THEN is_pressed(n) for n in 1..=28 SHALL equal bit (n-1) of the mask, and is_pressed(0) and is_pressed(29+) SHALL always return false | specs/features/req_78_virpil_alpha.feature:29 | 1 | ✅ Complete |
+| REQ-79 | AC-79.1 | WHEN a VPC Constellation Alpha Prime HID report shorter than VPC_ALPHA_PRIME_MIN_REPORT_BYTES is parsed THEN parse_alpha_prime_report SHALL return an error | specs/features/req_79_virpil_alpha_prime.feature:5 | 1 | ✅ Complete |
+| REQ-79 | AC-79.2 | WHEN any raw u16 axis values are parsed by parse_alpha_prime_report THEN all five axes (x, y, z, sz, sl) SHALL be within [0.0, 1.0] | specs/features/req_79_virpil_alpha_prime.feature:11 | 1 | ✅ Complete |
+| REQ-79 | AC-79.3 | WHEN parse_alpha_prime_report is called with AlphaPrimeVariant::Left or ::Right THEN the returned state.variant SHALL equal the caller-supplied value | specs/features/req_79_virpil_alpha_prime.feature:17<br>specs/features/req_79_virpil_alpha_prime.feature:23 | 1 | ✅ Complete |
+| REQ-80 | AC-80.1 | WHEN a VPC Control Panel 1 HID report shorter than VPC_PANEL1_MIN_REPORT_BYTES is parsed THEN parse_panel1_report SHALL return an error; at exactly the minimum length it SHALL succeed | specs/features/req_80_virpil_control_panel.feature:5<br>specs/features/req_80_virpil_control_panel.feature:11 | 2 | ✅ Complete |
+| REQ-80 | AC-80.2 | WHEN a 48-bit button mask is stored in a VPC Control Panel 1 report THEN is_pressed(n) for n in 1..=48 SHALL equal bit (n-1) of the mask, and is_pressed(0) and is_pressed(49+) SHALL always return false | specs/features/req_80_virpil_control_panel.feature:17 | 1 | ✅ Complete |
+| REQ-80 | AC-80.3 | WHEN a VPC Control Panel 2 report is parsed with axis values in [0, VIRPIL_AXIS_MAX] THEN a1_normalised and a2_normalised SHALL each be within [0.0, 1.0] and SHALL be finite; raw axis values SHALL round-trip through the state | specs/features/req_80_virpil_control_panel.feature:24<br>specs/features/req_80_virpil_control_panel.feature:30 | 2 | ✅ Complete |
+| REQ-80 | AC-80.4 | WHEN a 47-bit button mask is stored in a VPC Control Panel 2 report THEN is_pressed(n) for n in 1..=47 SHALL equal bit (n-1) of the mask, and out-of-range indices SHALL always return false | specs/features/req_80_virpil_control_panel.feature:37 | 1 | ✅ Complete |
+| REQ-80 | AC-80.5 | WHEN a VPC Control Panel 2 HID report shorter than VPC_PANEL2_MIN_REPORT_BYTES is parsed THEN parse_panel2_report SHALL return an error | specs/features/req_80_virpil_control_panel.feature:44 | 1 | ✅ Complete |
+| REQ-81 | AC-81.1 | WHEN any raw u16 axis values are presented to StecsInputHandler::parse_interface_report THEN all five axes (rx, ry, x, y, z) SHALL be within [0.0, 1.0] | specs/features/req_81_vkb_stecs.feature:5 | 1 | ✅ Complete |
+| REQ-81 | AC-81.2 | WHEN any raw u16 axis values are parsed by StecsInputHandler THEN all axes SHALL be finite (never NaN or Inf) | specs/features/req_81_vkb_stecs.feature:11 | 1 | ✅ Complete |
+| REQ-81 | AC-81.3 | WHEN a STECS interface report shorter than 4 bytes is parsed THEN StecsParseError::ReportTooShort SHALL be returned | specs/features/req_81_vkb_stecs.feature:17 | 1 | ✅ Complete |
+| REQ-81 | AC-81.4 | WHEN a 32-bit button mask is stored in a STECS interface report THEN state.buttons SHALL exactly equal the input mask | specs/features/req_81_vkb_stecs.feature:23 | 1 | ✅ Complete |
+| REQ-81 | AC-81.5 | WHEN any raw u16 STECS Modern Throttle axis values are parsed THEN all four axes SHALL be within [0.0, 1.0] and SHALL be finite; short reports SHALL return StecsMtParseError::TooShort; both button words SHALL round-trip through parsing | specs/features/req_81_vkb_stecs.feature:29<br>specs/features/req_81_vkb_stecs.feature:35<br>specs/features/req_81_vkb_stecs.feature:41 | 4 | ✅ Complete |
+| REQ-82 | AC-82.1 | WHEN any raw u16 values are parsed for Gladiator NXT EVO signed axes (roll, pitch, yaw, mini_x, mini_y) THEN each SHALL be within [-1.0, 1.0] | specs/features/req_82_vkb_gladiator.feature:5 | 1 | ✅ Complete |
+| REQ-82 | AC-82.2 | WHEN any raw u16 throttle value is parsed by GladiatorInputHandler THEN state.axes.throttle SHALL be within [0.0, 1.0] | specs/features/req_82_vkb_gladiator.feature:11 | 1 | ✅ Complete |
+| REQ-82 | AC-82.3 | WHEN any raw u16 axis values are parsed by GladiatorInputHandler THEN roll, pitch, yaw, and throttle SHALL all be finite (never NaN or Inf) | specs/features/req_82_vkb_gladiator.feature:17 | 1 | ✅ Complete |
+| REQ-82 | AC-82.4 | WHEN a Gladiator NXT EVO report shorter than 12 bytes is parsed THEN GladiatorParseError::ReportTooShort SHALL be returned | specs/features/req_82_vkb_gladiator.feature:23 | 1 | ✅ Complete |
+| REQ-82 | AC-82.5 | WHEN 64 button bits are packed into btn_lo (bits 0–31) and btn_hi (bits 32–63) THEN state.buttons[0..31] SHALL exactly reflect btn_lo bits and state.buttons[32..63] SHALL exactly reflect btn_hi bits | specs/features/req_82_vkb_gladiator.feature:29 | 1 | ✅ Complete |
