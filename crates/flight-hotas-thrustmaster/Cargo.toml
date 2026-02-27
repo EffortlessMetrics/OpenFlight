@@ -25,6 +25,7 @@ tracing.workspace = true
 
 [dev-dependencies]
 hidapi.workspace = true
+insta = { workspace = true }
 proptest.workspace = true
 
 [[example]]

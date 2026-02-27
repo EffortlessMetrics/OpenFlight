@@ -1,0 +1,12 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+G940InputState {
+    x: 1.0,
+    y: -1.0,
+    rz: 1.0,
+    z: 1.0,
+    buttons: 1048575,
+    hat: North,
+}

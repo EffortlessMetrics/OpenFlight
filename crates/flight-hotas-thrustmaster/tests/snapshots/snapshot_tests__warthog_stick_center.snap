@@ -1,0 +1,16 @@
+---
+source: crates/flight-hotas-thrustmaster/tests/snapshot_tests.rs
+expression: state
+---
+WarthogStickInputState {
+    axes: WarthogStickAxes {
+        x: 1.5259022e-5,
+        y: 1.5259022e-5,
+        rz: 1.5259022e-5,
+    },
+    buttons: WarthogStickButtons {
+        buttons_low: 0,
+        buttons_high: 0,
+        hat: Center,
+    },
+}

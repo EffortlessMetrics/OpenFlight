@@ -1,0 +1,17 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+GFlightYokeInputState {
+    axes: GFlightYokeAxes {
+        x: -0.00024420026,
+        y: -0.00024420026,
+        rz: 0.0,
+        slider: 0.0,
+        slider2: 0.0,
+    },
+    buttons: GFlightYokeButtons {
+        buttons: 0,
+        hat: Center,
+    },
+}
