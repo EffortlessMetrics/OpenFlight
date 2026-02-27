@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Delan Clip"
+  name: "Delan Clip Gamer Kit (with camera)"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF376"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Delan Clip Gamer Kit bundled with PS3Eye IR camera."
+  driver: "UVC camera"
+quirks:
+  - id: OPENTRACK_REQUIRED
+    description: "Includes modified PS3Eye camera; requires opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

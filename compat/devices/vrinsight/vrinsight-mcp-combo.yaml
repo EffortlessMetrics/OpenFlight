@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VRInsight"
+  name: "VRInsight MCP Combo"
+  usb:
+    vid: "0x14B8"
+    pid: "0x0060"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "VRInsight MCP combo panel for Boeing-style MCP simulation."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

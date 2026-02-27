@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "CAMMUS"
+  name: "CAMMUS C12 Direct Drive"
+  usb:
+    vid: "0x3416"
+    pid: "0x0002"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 16
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "CAMMUS C12 mid-range direct drive wheel for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

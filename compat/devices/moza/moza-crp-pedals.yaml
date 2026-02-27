@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "MOZA Racing"
+  name: "MOZA CRP Pedals"
+  usb:
+    vid: "0x346E"
+    pid: "0x0021"
+  type: "pedals"
+capabilities:
+  axes: 2
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "MOZA CRP pedals for sim racing and flight."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "USB Potentiometer Axis Card"
+  usb:
+    vid: "0x1B4F"
+    pid: "0x9320"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "USB adapter card converting analog potentiometers to USB axes."
+  driver: "built-in HID"
+quirks:
+  - id: GENERIC_HID
+    description: "Various manufacturers; converts analog pots to USB HID axes."
+tested_games: ["msfs", "xplane", "dcs"]

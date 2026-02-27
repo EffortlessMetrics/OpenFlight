@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Raspberry Pi Foundation"
+  name: "Raspberry Pi Pico W USB HID"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x0005"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Raspberry Pi Pico W with wireless and USB HID."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "PID depends on firmware; Pico W adds WiFi capability."
+tested_games: ["msfs", "xplane", "dcs"]

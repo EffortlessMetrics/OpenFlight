@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Logitech"
+  name: "Logitech G PRO Racing Pedals (standalone)"
+  usb:
+    vid: "0x046D"
+    pid: "0xC2A0"
+  type: "pedals"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Logitech G PRO load cell pedals for flight sim rudder."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

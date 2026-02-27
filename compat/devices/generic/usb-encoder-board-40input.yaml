@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "USB Encoder Board 40-Input"
+  usb:
+    vid: "0x0079"
+    pid: "0x0006"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 40
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Generic USB encoder board with 40 inputs for button boxes."
+  driver: "built-in HID"
+quirks:
+  - id: GENERIC_HID
+    description: "Common Chinese USB encoder; multiple manufacturers use same VID/PID."
+tested_games: ["msfs", "xplane", "dcs"]

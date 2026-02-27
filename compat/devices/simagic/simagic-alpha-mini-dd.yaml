@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Simagic"
+  name: "Simagic Alpha Mini Direct Drive"
+  usb:
+    vid: "0x0483"
+    pid: "0x0520"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 12
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Simagic Alpha Mini 10Nm direct drive wheelbase for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

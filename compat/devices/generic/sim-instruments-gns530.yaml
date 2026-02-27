@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sim Instruments"
+  name: "Sim Instruments GNS 530 Panel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF711"
+  type: "panel"
+capabilities:
+  axes: 4
+  buttons: 18
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sim Instruments hardware replica of Garmin GNS 530."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

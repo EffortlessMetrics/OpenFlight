@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Pico Interactive"
+  name: "Pico 4 Ultra Controller (Right)"
+  usb:
+    vid: "0x2D1F"
+    pid: "0x0004"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 8
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "Pico 4 Ultra right VR controller."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires SteamVR or Pico runtime."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "BU0836 Clone 12-Axis Interface"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x000B"
+  type: "joystick"
+capabilities:
+  axes: 12
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Third-party BU0836 clone 12-axis USB interface."
+  driver: "built-in HID"
+quirks:
+  - id: CLONE_DEVICE
+    description: "Clone of Leo Bodnar BU0836; VID may differ between manufacturers."
+tested_games: ["msfs", "xplane", "dcs"]

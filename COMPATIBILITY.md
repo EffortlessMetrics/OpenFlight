@@ -42,6 +42,8 @@
 | Akai MPK Mini MIDI Controller | 0x09E8 | 0x0028 | 4 | 17 | ✗ | 2 |
 | Alpha Flight Controls USB Yoke | 0x2B67 | 0x0003 | 3 | 8 | ✗ | 3 |
 | Amkette Evo Gamepad Pro | 0x20D6 | 0x89F3 | 4 | 12 | ✗ | 3 |
+| APEM HF45 Industrial Joystick | ? | ? | ? | 4 | ✗ | 2 |
+| APEM HT Series Thumbstick | ? | ? | ? | 2 | ✗ | 2 |
 | Arturia BeatStep Pro | 0x1C75 | 0x0288 | 16 | 48 | ✗ | 2 |
 | Asetek SimSports Entry Level Pedals | 0x2735 | 0x0010 | 3 | 0 | ✗ | 3 |
 | Asetek SimSports Forte Wheel Base | 0x2341 | 0x8037 | 1 | 0 | ✓ | 3 |
@@ -107,8 +109,10 @@
 | Cammus C12 Direct Drive Wheel Base | 0x3416 | 0x0302 | 1 | 0 | ✓ | 3 |
 | Cammus C5 Direct Drive (Alt PID) | 0x2433 | 0x0001 | 1 | 0 | ✓ | 3 |
 | Cammus C5 Direct Drive Wheel Base | 0x3416 | 0x0301 | 1 | 0 | ✓ | 3 |
+| CAMMUS C12 Direct Drive | ? | ? | ? | 16 | ✗ | 2 |
 | Cammus C12 Direct Drive Wheelbase | 0x3416 | 0x0106 | 5 | 20 | ✓ | 3 |
 | Cammus C15 Direct Drive Wheelbase | 0x3416 | 0x0107 | 5 | 20 | ✓ | 3 |
+| CAMMUS C5 Direct Drive | ? | ? | ? | 16 | ✗ | 2 |
 | Cammus C5 Direct Drive Wheelbase | 0x3416 | 0x0105 | 5 | 20 | ✓ | 3 |
 | Cammus C5 Lite Direct Drive Wheel Base | 0x3416 | 0x0010 | 1 | 0 | ✓ | 3 |
 | Cammus P1000 Sim Pedals | 0x3416 | 0x0310 | 3 | 0 | ✗ | 3 |
@@ -184,6 +188,8 @@
 | Defender Game Racer Wireless Pro | 0x0079 | 0x0006 | 4 | 12 | ✗ | 3 |
 | Delan Clip Head Tracker | 0x04D8 | 0xEB91 | 6 | 1 | ✗ | 2 |
 | Delanclip Enterprise IR Head Tracker | 0x04D8 | 0xF374 | 3 | 0 | ✗ | 3 |
+| Delan Clip Gamer Kit (with camera) | ? | ? | ? | 0 | ✗ | 2 |
+| Delan Clip Gamer | ? | ? | ? | 0 | ✗ | 2 |
 | Delanclip Sport IR Head Tracker | 0x04D8 | 0xF373 | 3 | 0 | ✗ | 3 |
 | Delanclip Fusion IR Head Tracker | 0x04D8 | 0xF372 | 6 | 0 | ✗ | 2 |
 | Desktop Aviator A320 FCU | 0x2B67 | 0x0011 | 5 | 20 | ✗ | 3 |
@@ -208,6 +214,13 @@
 | DragonRise USB Gamepad (Alt PID) | 0x0079 | 0x181C | 4 | 10 | ✗ | 3 |
 | DragonRise Generic USB Flight Stick | 0x0079 | 0x0032 | 4 | 8 | ✗ | 3 |
 | DragonRise Twin USB Gamepad | 0x0079 | 0x0003 | 4 | 12 | ✗ | 3 |
+| DSD Button Box 12 | ? | ? | ? | 12 | ✗ | 2 |
+| DSD Button Box 24 | ? | ? | ? | 24 | ✗ | 2 |
+| DSD Button Box 36 | ? | ? | ? | 36 | ✗ | 2 |
+| DSD Button Box 48 | ? | ? | ? | 48 | ✗ | 2 |
+| EDTracker DIY | ? | ? | ? | 0 | ✗ | 3 |
+| EDTracker Pro Wireless | ? | ? | ? | 0 | ✗ | 2 |
+| EDTracker Pro | ? | ? | ? | 0 | ✗ | 2 |
 | Elgato 4K X Capture Card | 0x0FD9 | 0x0079 | 0 | 2 | ✗ | 3 |
 | Elgato Facecam Pro | 0x0FD9 | 0x0070 | 0 | 1 | ✗ | 3 |
 | Elgato Stream Deck Pedal | 0x0FD9 | 0x009D | 0 | 3 | ✗ | 3 |
@@ -235,6 +248,7 @@
 | Emotiv EPOC X | 0x1234 | 0x0010 | 0 | 0 | ✗ | 3 |
 | EPOS H3Pro Hybrid | 0x1395 | 0x0310 | 0 | 4 | ✗ | 3 |
 | Eyeware Beam Eye Tracker | 0x2104 | 0x0119 | 6 | 0 | ✗ | 3 |
+| Eyeware Beam | ? | ? | ? | 0 | ✗ | 3 |
 | EyeWorks IR Module | 0x0479 | 0x0100 | 0 | 0 | ✗ | 3 |
 | FaceTrackNoIR DIY Arduino Head Tracker | 0x2341 | 0x8037 | 6 | 0 | ✗ | 4 |
 | FaceTrackNoIR Virtual Head Tracker | 0x0000 | 0x0000 | 6 | 0 | ✗ | 2 |
@@ -270,7 +284,11 @@
 | Fanatec CSL Elite Wheel Base (PS4 Edition) | 0x0EB7 | 0x0002 | 5 | 24 | ✓ | 3 |
 | Fanatec ClubSport Wheel V2.5 Base | 0x0EB7 | 0x0005 | 3 | 0 | ✓ | 3 |
 | Fanatec ClubSport Wheel V2 Base | 0x0EB7 | 0x0004 | 3 | 0 | ✓ | 3 |
+| Fanatec ClubSport Pedals V3 | ? | ? | ? | 0 | ✗ | 2 |
+| Fanatec CSL DD (5 Nm) | ? | ? | ? | 12 | ✗ | 2 |
+| Fanatec CSL DD (8 Nm) | ? | ? | ? | 12 | ✗ | 2 |
 | Fanatec CSL DD+ Wheelbase | 0x0EB7 | 0x0E0B | 5 | 20 | ✓ | 2 |
+| Fanatec CSL Pedals Load Cell Kit | ? | ? | ? | 0 | ✗ | 2 |
 | Fanatec Podium DD1 Wheelbase | 0x0EB7 | 0x0E08 | 5 | 20 | ✓ | 2 |
 | Fanatec Podium DD2 Wheelbase | 0x0EB7 | 0x0E09 | 5 | 20 | ✓ | 2 |
 | Fanatec Gran Turismo DD Pro | 0x0EB7 | 0x0E0A | 5 | 24 | ✓ | 2 |
@@ -322,18 +340,25 @@
 | GameSir X2 Type-C Mobile Controller | 0x1949 | 0x0403 | 4 | 14 | ✗ | 3 |
 | GameSir T4 Pro Wireless Gamepad | 0x1949 | 0x0401 | 6 | 16 | ✗ | 3 |
 | Gametrix JetSeat FSL Edition | 0x0483 | 0x5740 | 0 | 0 | ✗ | 3 |
+| Adafruit Feather RP2040 USB HID | ? | ? | ? | 16 | ✗ | 3 |
+| AITrack Compatible Camera | ? | ? | ? | 0 | ✗ | 3 |
+| Arduino Due USB HID Joystick | ? | ? | ? | 32 | ✗ | 3 |
 | Arduino Due USB HID Joystick (DIY) | 0x2341 | 0x003E | 6 | 32 | ✗ | 3 |
 | Arduino Leonardo USB HID Joystick (DIY) | 0x2341 | 0x0036 | 6 | 32 | ✗ | 3 |
 | Arduino Leonardo HID Joystick | 0x2341 | 0x8036 | 4 | 10 | ✗ | 3 |
+| Arduino Mega 2560 USB HID | ? | ? | ? | 32 | ✗ | 3 |
 | Arduino Mega HID Joystick (DIY) | 0x2341 | 0x0010 | 6 | 32 | ✗ | 3 |
 | Arduino Micro HID Joystick | 0x2341 | 0x8037 | 4 | 10 | ✗ | 3 |
 | Arduino Pro Micro as HID (Runtime Mode) | 0x2341 | 0x0037 | 8 | 32 | ✗ | 3 |
 | Arduino Pro Micro USB Trim Wheel (DIY) | 0x2341 | 0x8037 | 1 | 4 | ✗ | 3 |
 | Arduino Trim Controller | 0x2341 | 0x8038 | 2 | 4 | ✗ | 3 |
+| ArUco Marker Head Tracker | ? | ? | ? | 0 | ✗ | 3 |
 | Blue Pill STM32 HID Joystick (DIY) | 0x1EAF | 0x0024 | 6 | 24 | ✗ | 3 |
+| BU0836 Clone 12-Axis Interface | ? | ? | ? | 32 | ✗ | 3 |
 | Generic Chinese OEM HOTAS (DragonRise / No-Brand) | 0x0079 | 0x0006 | 5 | 12 | ✗ | 3 |
 | Copperpipe Knobster | 0x1209 | 0x2080 | 2 | 4 | ✗ | 3 |
 | DIY USB Aileron Trim Control | 0x1209 | 0xE011 | 1 | 2 | ✗ | 3 |
+| DIY Arduino Button Box 32 | ? | ? | ? | 32 | ✗ | 3 |
 | DIY Arduino Collective Controller | 0x2341 | 0x8037 | 2 | 8 | ✗ | 3 |
 | DIY STM32 Cyclic Controller | 0x0483 | 0x5740 | 3 | 12 | ✗ | 3 |
 | DIY Polish Cockpit USB Interface Card | 0x04D8 | 0xEB60 | 0 | 48 | ✗ | 3 |
@@ -349,31 +374,43 @@
 | DSD ButtonBox 32 | 0x16C0 | 0x048F | 0 | 32 | ✗ | 2 |
 | ExpressLRS RC Controller (USB HID Joystick Mode) | 0x303A | 0x1001 | 6 | 16 | ✗ | 3 |
 | ESP32 USB HID Joystick | 0x303A | 0x4001 | 6 | 32 | ✗ | 3 |
+| ESP32-S3 USB HID Joystick | ? | ? | ? | 32 | ✗ | 3 |
+| FaceTrackNoIR Compatible Webcam | ? | ? | ? | 0 | ✗ | 3 |
 | Generic USB Force Sensing Stick | 0x1209 | 0xF500 | 2 | 4 | ✗ | 3 |
 | Generic F-16 VIPER Stick | 0x0079 | 0x0011 | 3 | 12 | ✗ | 3 |
 | Generic F-18 HORNET Stick | 0x0079 | 0x0012 | 3 | 14 | ✗ | 3 |
 | Generic USB Rudder Pedals (3-Axis) | 0x1209 | 0x4F04 | 3 | 0 | ✗ | 3 |
 | Generic USB Rudder Pedals (Single Axis) | 0x1209 | 0x4F05 | 1 | 0 | ✗ | 3 |
 | Gladiator M4 Pro Flight Stick | 0x0079 | 0x1800 | 4 | 12 | ✗ | 3 |
+| Grass Monkey Head Tracker | ? | ? | ? | 0 | ✗ | 2 |
 | Great Planes InterLink USB Controller | 0x0A5C | 0x0E55 | 4 | 8 | ✗ | 3 |
+| GyrOSC Phone Head Tracker | ? | ? | ? | 0 | ✗ | 3 |
 | Generic USB HID Game Controller | 0x0000 | 0x0000 | 4 | 10 | ✗ | 3 |
 | DIY IR LED Clip Head Tracker (Teensy) | 0x16C0 | 0x0483 | 3 | 0 | ✗ | 3 |
 | vJoy Virtual Joystick (Joystick Gremlin) | 0x1234 | 0xBEAD | 8 | 128 | ✗ | 3 |
 | USB Accelerometer Motion Cue Device (Cypress HID) | 0x04B4 | 0x0002 | 3 | 0 | ✗ | 3 |
 | Knobster | 0x1209 | 0x4853 | 1 | 1 | ✗ | 3 |
 | OpenSimPit DIY Cockpit Controller | 0x1209 | 0x5100 | 8 | 64 | ✗ | 3 |
+| OpenTrack Compatible IMU Tracker | ? | ? | ? | 0 | ✗ | 3 |
+| OTTO USB Control Grip | ? | ? | ? | 12 | ✗ | 2 |
 | Otto Controls OttoSwitch Mil-Spec HID Panel | 0x03EB | 0x2402 | 0 | 24 | ✗ | 3 |
 | Raspberry Pi Pico SDK HID Joystick (RP2040) | 0x2E8A | 0x000A | 8 | 32 | ✗ | 3 |
 | Raspberry Pi Pico USB HID | 0x2E8A | 0x0004 | 8 | 32 | ✗ | 3 |
 | Raspberry Pi Pico W USB HID | 0x2E8A | 0x000B | 8 | 32 | ✗ | 3 |
 | SparkFun Pro Micro 3.3V HID | 0x1B4F | 0x9206 | 6 | 32 | ✗ | 3 |
 | Arduino Pro Micro HID Button Box (Generic) | 0x1B4F | 0x9205 | 0 | 32 | ✗ | 3 |
+| PS3 Eye IR Camera (Modified) | ? | ? | ? | 0 | ✗ | 2 |
 | Raspberry Pi Pico HID Controller (RP2040) | 0x2E8A | 0x0005 | 8 | 32 | ✗ | 3 |
+| Raspberry Pi Pico USB Joystick | ? | ? | ? | 32 | ✗ | 2 |
+| Raspberry Pi Pico W USB HID | ? | ? | ? | 32 | ✗ | 2 |
 | RealFlight InterLink DX Controller | 0x0A5C | 0x0E56 | 6 | 8 | ✗ | 3 |
 | RealFlight InterLink Elite Controller | 0x0A5C | 0x0E57 | 6 | 10 | ✗ | 3 |
 | Raspberry Pi Pico / RP2040 USB HID Joystick (DIY) | 0x2E8A | 0x4001 | 6 | 16 | ✗ | 3 |
 | RP2040 USB Trim Wheel | 0x2E8A | 0x000B | 1 | 2 | ✗ | 3 |
 | RP2040 USB HID Joystick (PID 0x0003) | 0x2E8A | 0x0003 | 6 | 32 | ✗ | 3 |
+| RP2040-Zero USB HID Controller | ? | ? | ? | 24 | ✗ | 3 |
+| Sim Instruments GNS 430 Panel | ? | ? | ? | 16 | ✗ | 2 |
+| Sim Instruments GNS 530 Panel | ? | ? | ? | 18 | ✗ | 2 |
 | DIY Load Cell Rudder Pedals | 0x1209 | 0x0000 | 3 | 0 | ✗ | 3 |
 | SimMaxx Button Panel Pro | 0x04D8 | 0x0E1C | 0 | 24 | ✗ | 2 |
 | SparkFun Pro Micro HID Joystick | 0x1B4F | 0x9206 | 8 | 32 | ✗ | 3 |
@@ -381,26 +418,35 @@
 | STM32 USB HID Joystick | 0x0483 | 0x5710 | 8 | 32 | ✗ | 3 |
 | STM32-based USB HID Panel Controller (DIY) | 0x0483 | 0x5750 | 0 | 32 | ✗ | 3 |
 | STM32 Nucleo USB HID Joystick (DIY) | 0x0483 | 0x5711 | 8 | 32 | ✗ | 2 |
+| STM32F103 Blue Pill Panel Controller | ? | ? | ? | 32 | ✗ | 3 |
+| Teensy 2.0 USB HID Controller | ? | ? | ? | 32 | ✗ | 2 |
+| Teensy 2.0++ USB HID Controller | ? | ? | ? | 48 | ✗ | 2 |
 | Teensy 3.1/3.2 HID Joystick | 0x16C0 | 0x0489 | 16 | 32 | ✗ | 3 |
 | Teensy 3.2 USB HID Joystick (DIY) | 0x16C0 | 0x0487 | 16 | 64 | ✗ | 2 |
 | Teensy 4.1 USB HID Joystick (DIY) | 0x16C0 | 0x0486 | 8 | 32 | ✗ | 3 |
 | Teensy 4.0 USB HID (Alt PID) | 0x16C0 | 0x0486 | 8 | 32 | ✗ | 3 |
 | Teensy 4.0 HID Joystick | 0x16C0 | 0x048C | 16 | 32 | ✗ | 3 |
 | Teensy 4.0 USB Throttle Controller (DIY) | 0x16C0 | 0x0478 | 2 | 8 | ✗ | 3 |
+| Teensy 4.1 USB HID Panel Controller | ? | ? | ? | 64 | ✗ | 2 |
 | Teensy LC HID Joystick | 0x16C0 | 0x0488 | 6 | 12 | ✗ | 3 |
 | Teensy USB Trim Wheel | 0x16C0 | 0x0489 | 1 | 2 | ✗ | 3 |
 | USB Annunciator Panel Generic | 0x1209 | 0xA009 | 0 | 8 | ✗ | 3 |
 | Generic STM32 USB HID Button Matrix (DIY) | 0x0483 | 0x5760 | 0 | 64 | ✗ | 3 |
 | USB Dual Rotary Trim Control | 0x1209 | 0xE002 | 2 | 4 | ✗ | 3 |
+| USB Encoder Board 40-Input | ? | ? | ? | 40 | ✗ | 3 |
 | USB Rotary Encoder Panel (Generic DIY) | 0x2341 | 0x8036 | 0 | 48 | ✗ | 3 |
 | Generic USB Foot Pedal Controller | 0x0C45 | 0x7401 | 3 | 3 | ✗ | 3 |
+| USB Hall Sensor Axis Adapter | ? | ? | ? | 0 | ✗ | 3 |
 | Generic USB HID Multi-Axis Card | 0x04D8 | 0x00F1 | 8 | 0 | ✗ | 3 |
 | Generic USB HID Rudder Pedals (OEM) | 0x0079 | 0x0011 | 2 | 0 | ✗ | 3 |
 | Generic USB HID Trim Wheel | 0x2341 | 0x8036 | 1 | 2 | ✗ | 3 |
 | Generic USB MIDI Interface | 0x1235 | 0x0001 | 8 | 16 | ✗ | 3 |
 | Generic USB Numeric Keypad (Button Box) | ? | ? | 0 | 21 | ✗ | 5 |
+| USB Potentiometer Axis Card | ? | ? | ? | 0 | ✗ | 3 |
 | USB Rotary Encoder Trim Controller | 0x1209 | 0xE001 | 1 | 2 | ✗ | 3 |
 | USB 8-Switch Panel Generic | 0x1209 | 0xA008 | 0 | 8 | ✗ | 3 |
+| USB Toggle Switch Panel 12-Position | ? | ? | ? | 12 | ✗ | 2 |
+| USB Toggle Switch Panel 24-Position | ? | ? | ? | 24 | ✗ | 2 |
 | USB Trim Lever Single Axis | 0x1209 | 0xE013 | 1 | 2 | ✗ | 3 |
 | vEncoder Virtual Encoder | 0x1209 | 0x2081 | 8 | 0 | ✗ | 3 |
 | Waveshare RP2040-Zero HID Controller | 0x2E8A | 0x0009 | 4 | 8 | ✗ | 3 |
@@ -559,6 +605,12 @@
 | HPG Collective Grip Handle | 0x1209 | 0xC003 | 2 | 10 | ✗ | 3 |
 | HPG Helicopter Collective Pro | 0x1209 | 0xC002 | 5 | 20 | ✗ | 3 |
 | HPG Helicopter Collective | 0x1209 | 0xC001 | 3 | 12 | ✗ | 3 |
+| HTC Vive Focus 3 Controller (Left) | ? | ? | ? | 8 | ✗ | 3 |
+| HTC Vive Focus 3 Controller (Right) | ? | ? | ? | 8 | ✗ | 3 |
+| HTC Vive Wand Controller (2018) | ? | ? | ? | 4 | ✗ | 2 |
+| HTC Vive Wand Controller | ? | ? | ? | 4 | ✗ | 2 |
+| HTC Vive XR Elite Controller (Left) | ? | ? | ? | 8 | ✗ | 3 |
+| HTC Vive XR Elite Controller (Right) | ? | ? | ? | 8 | ✗ | 3 |
 | iPega PG-9023 Telescopic Gamepad | 0x1BAD | 0x5500 | 4 | 14 | ✗ | 3 |
 | iPega PG-9083 Retractable Gamepad | 0x1BAD | 0x5501 | 4 | 14 | ✗ | 3 |
 | IPEGA PG-9099 Gamepad | 0x05AC | 0x055B | 4 | 14 | ✗ | 3 |
@@ -611,6 +663,11 @@
 | Leo Bodnar BU0836LC USB Joystick Controller | 0x1DD2 | 0x000C | 8 | 32 | ✗ | 2 |
 | Leo Bodnar BU0836X USB Joystick Interface with LCD | 0x1DD2 | 0x000B | 12 | 32 | ✗ | 2 |
 | Leo Bodnar USB Button Box Controller | 0x1DD2 | 0x1005 | 0 | 32 | ✗ | 3 |
+| Leo Bodnar BBI-128 Rev 2 | ? | ? | ? | 128 | ✗ | 2 |
+| Leo Bodnar BU0836A 24-bit | ? | ? | ? | 32 | ✗ | 2 |
+| Leo Bodnar GPS Reference Clock | ? | ? | ? | 0 | ✗ | 3 |
+| Leo Bodnar SLI-F1 Display | ? | ? | ? | 0 | ✗ | 2 |
+| Leo Bodnar USB Joystick 12-bit | ? | ? | ? | 32 | ✗ | 2 |
 | Leo Bodnar USB Joystick Interface | 0x1DD2 | 0x0003 | 8 | 32 | ✗ | 3 |
 | Leo Bodnar BT-BBU32 USB Button Box Interface | 0x1DD2 | 0x0005 | 0 | 32 | ✗ | 2 |
 | Leo Bodnar BT-LBU Standalone USB Encoder | 0x1DD2 | 0x0001 | 2 | 1 | ✗ | 2 |
@@ -683,6 +740,9 @@
 | Logitech G923 Racing Wheel (PS4/PS5) | 0x046D | 0xC266 | 6 | 20 | ✓ | 2 |
 | Logitech G923 Racing Wheel (Xbox/PC) | 0x046D | 0xC267 | 6 | 20 | ✓ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
+| Logitech G PRO Racing Pedals (standalone) | ? | ? | ? | 0 | ✗ | 2 |
+| Logitech G29 Driving Force Racing Wheel | ? | ? | ? | 16 | ✗ | 2 |
+| Logitech G920 Driving Force Racing Wheel | ? | ? | ? | 11 | ✗ | 2 |
 | Logitech 3D Pro Plus | 0x046D | 0xC215 | 6 | 12 | ✗ | 2 |
 | Logitech Driving Force GT | 0x046D | 0xC25B | 3 | 10 | ✓ | 2 |
 | Logitech MOMO Racing Force Feedback Wheel | 0x046D | 0xCA03 | 3 | 10 | ✓ | 3 |
@@ -739,6 +799,9 @@
 | Meridian Simulation Rudder Pedals | 0x04D8 | 0x0502 | 3 | 0 | ✗ | 3 |
 | Meridian Simulation Throttle Quadrant | 0x04D8 | 0x0501 | 3 | 6 | ✗ | 3 |
 | Meridian Simulation Yoke | 0x04D8 | 0x0500 | 2 | 8 | ✗ | 3 |
+| Meta Quest Pro Touch Controller | ? | ? | ? | 10 | ✗ | 2 |
+| Meta Quest 2 Touch Controller v2 | ? | ? | ? | 8 | ✗ | 2 |
+| Meta Quest 3 Touch Plus Controller | ? | ? | ? | 8 | ✗ | 2 |
 | Meta Quest Pro VR HMD | 0x2833 | 0x0133 | 6 | 0 | ✗ | 3 |
 | Meta Quest 2 Touch Controllers | 0x2833 | 0x0082 | 6 | 12 | ✗ | 3 |
 | Meta Quest 3 VR HMD | 0x2833 | 0x0137 | 6 | 0 | ✗ | 3 |
@@ -783,6 +846,8 @@
 | Microsoft SideWinder Joystick Plus | 0x045E | 0x001B | 4 | 9 | ✗ | 3 |
 | Microsoft Sidewinder Strategic Commander | 0x045E | 0x0033 | 4 | 13 | ✗ | 3 |
 | Microsoft Surface Dial | 0x045E | 0x091B | 0 | 1 | ✗ | 3 |
+| WMR Motion Controller (Left) | ? | ? | ? | 7 | ✗ | 3 |
+| WMR Motion Controller (Right) | ? | ? | ? | 7 | ✗ | 3 |
 | Microsoft Xbox 360 Wired Controller | 0x045E | 0x028E | 6 | 14 | ✓ | 3 |
 | Microsoft Xbox Adaptive Controller | 0x045E | 0x0B12 | 6 | 21 | ✓ | 2 |
 | Microsoft Xbox Elite Controller Series 1 | 0x045E | 0x02E3 | 6 | 19 | ✓ | 3 |
@@ -817,11 +882,16 @@
 | MOZA HF8 Force Feedback Flight Yoke | 0x346E | 0x0005 | 3 | 14 | ✓ | 2 |
 | Moza HGP Pedals | 0x346E | 0x0018 | 3 | 0 | ✗ | 3 |
 | Moza KM Steering Wheel | 0x346E | 0x0062 | 1 | 14 | ✗ | 2 |
+| MOZA CRP Pedals | ? | ? | ? | 0 | ✗ | 2 |
+| MOZA R12 Direct Drive Base | ? | ? | ? | 12 | ✗ | 2 |
 | Moza R12 Direct Drive Wheelbase | 0x346E | 0x0019 | 5 | 20 | ✓ | 2 |
 | Moza R16 Direct Drive Wheelbase | 0x346E | 0x001A | 5 | 20 | ✓ | 2 |
 | Moza R21 Direct Drive Wheelbase | 0x346E | 0x001C | 5 | 20 | ✓ | 2 |
+| MOZA R5 Direct Drive Base | ? | ? | ? | 12 | ✗ | 2 |
 | Moza R5 Direct Drive Wheelbase | 0x346E | 0x0017 | 5 | 20 | ✓ | 2 |
+| MOZA R9 Direct Drive Base | ? | ? | ? | 12 | ✗ | 2 |
 | Moza R9 V2 Wheelbase Bundle | 0x346E | 0x001B | 5 | 20 | ✓ | 2 |
+| MOZA SRP Pedals | ? | ? | ? | 0 | ✗ | 2 |
 | MOZA ES Steering Wheel | 0x346E | 0x0020 | 0 | 12 | ✗ | 3 |
 | MOZA SR-P Lite Pedals | 0x346E | 0x0011 | 3 | 0 | ✗ | 2 |
 | Moza R12 Direct Drive Base | 0x346E | 0x0008 | 1 | 0 | ✓ | 3 |
@@ -872,11 +942,13 @@
 | NaturalPoint TrackClip | 0x131D | 0x0156 | 0 | 0 | ✗ | 3 |
 | NaturalPoint TrackIR 3 Pro (Alt PID) | 0x131D | 0x0153 | 6 | 0 | ✗ | 2 |
 | NaturalPoint TrackIR 3 Pro | 0x131D | 0x0100 | 1 | 0 | ✗ | 3 |
+| NaturalPoint TrackIR 4 Plus | ? | ? | ? | 0 | ✗ | 2 |
 | NaturalPoint TrackIR 4 Pro (Alt PID) | 0x131D | 0x0154 | 6 | 0 | ✗ | 2 |
 | NaturalPoint TrackIR 4 Pro | 0x131D | 0x0150 | 6 | 3 | ✗ | 2 |
 | NaturalPoint TrackIR 5 (Alt PID) | 0x131D | 0x0156 | 6 | 0 | ✗ | 2 |
 | NaturalPoint TrackIR 5 Pro | 0x131D | 0x0157 | 6 | 0 | ✗ | 3 |
 | NaturalPoint TrackIR 5 | 0x131D | 0x0155 | 6 | 3 | ✗ | 2 |
+| NaturalPoint TrackClip Pro V2 | ? | ? | ? | 0 | ✗ | 2 |
 | NaturalPoint TrackIR 3 Pro | 0x131D | 0x0117 | 6 | 0 | ✗ | 3 |
 | NaturalPoint TrackIR 4 | 0x131D | 0x0155 | 6 | 3 | ✗ | 2 |
 | Next Level Racing F-GT Motion Platform | 0x16C0 | 0x048B | 0 | 0 | ✗ | 3 |
@@ -962,10 +1034,17 @@
 | PFC Twin-Engine Throttle Quadrant | 0x04D8 | 0x0130 | 6 | 8 | ✗ | 3 |
 | PFC Weather Radar Panel | 0x1551 | 0x0013 | 2 | 8 | ✗ | 3 |
 | PFC Professional Yoke System | 0x04D8 | 0x0100 | 3 | 12 | ✗ | 3 |
+| Pico 4 Controller (Left) | ? | ? | ? | 7 | ✗ | 3 |
+| Pico 4 Controller (Right) | ? | ? | ? | 7 | ✗ | 3 |
+| Pico 4 Ultra Controller (Left) | ? | ? | ? | 8 | ✗ | 3 |
+| Pico 4 Ultra Controller (Right) | ? | ? | ? | 8 | ✗ | 3 |
 | Pilotek Rudder V3 Pedals | 0x1209 | 0x2140 | 3 | 0 | ✗ | 3 |
 | Pimax 4K OLED | 0x0483 | 0x0101 | 6 | 2 | ✗ | 3 |
 | Pimax 8K X VR HMD | 0x0483 | 0x0119 | 6 | 0 | ✗ | 3 |
 | Pimax 8KX VR HMD | 0x34B2 | 0x0100 | 6 | 0 | ✗ | 3 |
+| Pimax Crystal Controller (Left) | ? | ? | ? | 8 | ✗ | 3 |
+| Pimax Crystal Controller (Right) | ? | ? | ? | 8 | ✗ | 3 |
+| Pimax Crystal Eye Tracking Module | ? | ? | ? | 0 | ✗ | 3 |
 | Pimax Crystal Light | 0x0D28 | 0x0006 | 6 | 0 | ✗ | 3 |
 | Pimax Crystal VR HMD | 0x34B2 | 0x0200 | 6 | 0 | ✗ | 3 |
 | Pioneer DDJ-400 DJ Controller | 0x2B73 | 0x000A | 10 | 32 | ✗ | 2 |
@@ -1185,6 +1264,10 @@
 | Saitek X65F Combat Control System Throttle | 0x06A3 | 0x0262 | 5 | 32 | ✗ | 2 |
 | SCUF Instinct Pro Controller | 0x0E6F | 0x02DA | 6 | 20 | ✗ | 3 |
 | SCUF Reflex Pro Controller | 0x0E6F | 0x02DB | 6 | 20 | ✓ | 3 |
+| Sim Innovations Button Panel 16 | ? | ? | ? | 16 | ✗ | 2 |
+| Sim Innovations Knobster Panel | ? | ? | ? | 8 | ✗ | 2 |
+| Sim Innovations Radio Panel | ? | ? | ? | 12 | ✗ | 2 |
+| Sim Innovations Switch Panel | ? | ? | ? | 24 | ✗ | 2 |
 | Simagic Alpha Mini (Alt PID A360) | 0x0483 | 0xA360 | 1 | 0 | ✓ | 3 |
 | Simagic Alpha Mini Direct Drive Wheel Base | 0x0EBC | 0x1010 | 1 | 0 | ✓ | 3 |
 | Simagic Alpha Mini S Wheel Base | 0x0483 | 0x0009 | 3 | 0 | ✓ | 3 |
@@ -1203,6 +1286,7 @@
 | Simagic P2000 Sim Pedals | 0x0EBC | 0x2000 | 3 | 0 | ✗ | 3 |
 | Simagic Q1 Mini Pedals | 0x0EBC | 0x1020 | 3 | 0 | ✗ | 3 |
 | Simagic QR Quick-Release Adapter | ? | ? | 0 | 0 | ✗ | 3 |
+| Simagic Alpha Mini Direct Drive | ? | ? | ? | 12 | ✗ | 2 |
 | Simagic Alpha Mini Direct Drive Wheelbase | 0x0483 | 0xA30E | 5 | 20 | ✓ | 2 |
 | Simagic Alpha Ultimate Direct Drive Wheelbase | 0x0483 | 0xA310 | 5 | 20 | ✓ | 2 |
 | Simagic Alpha Direct Drive Wheelbase | 0x0483 | 0xA30F | 5 | 20 | ✓ | 2 |
@@ -1290,6 +1374,7 @@
 | Slaw Device Helicopter Pedals | 0x1209 | 0x3203 | 2 | 0 | ✗ | 2 |
 | Slaw Device Viper RX Pedals | 0x1209 | 0x3201 | 3 | 0 | ✗ | 2 |
 | SmartNav AT Head Tracker | 0x0C10 | 0x0001 | 2 | 0 | ✗ | 3 |
+| SmoothTrack Phone Head Tracker | ? | ? | ? | 0 | ✗ | 2 |
 | Sony DualSense Edge Wireless Controller | 0x054C | 0x0DF2 | 6 | 21 | ✓ | 2 |
 | Sony DualSense | 0x054C | 0x0CE6 | 6 | 17 | ✓ | 3 |
 | Sony DualShock 3 / SIXAXIS | 0x054C | 0x0268 | 6 | 17 | ✓ | 3 |
@@ -1299,6 +1384,8 @@
 | Sony PlayStation Move Navigation Controller | 0x054C | 0x042F | 2 | 10 | ✓ | 3 |
 | Sony PlayStation VR Aim Controller | 0x054C | 0x0BA0 | 4 | 14 | ✗ | 3 |
 | Sony PlayStation Access Controller | 0x054C | 0x0E5F | 4 | 20 | ✗ | 2 |
+| PlayStation VR2 Sense Controller (Left) | ? | ? | ? | 8 | ✗ | 3 |
+| PlayStation VR2 Sense Controller (Right) | ? | ? | ? | 8 | ✗ | 3 |
 | Sony PlayStation VR2 | 0x054C | 0x0CF6 | 6 | 0 | ✗ | 3 |
 | Speedlink Aerial Flightstick | 0x1781 | 0x0A8B | 4 | 10 | ✗ | 3 |
 | SPEEDLINK Black Widow Gamepad | 0x0E6F | 0x1000 | 4 | 12 | ✓ | 3 |
@@ -1440,6 +1527,11 @@
 | Thrustmaster T.Flight Rudder Pedals V2 | 0x044F | 0xB69E | 3 | 0 | ✗ | 2 |
 | Thrustmaster TH8A Add-On Shifter | 0x044F | 0xB664 | 2 | 1 | ✗ | 3 |
 | Thrustmaster TH8S Shifter Add-On | 0x044F | 0xB675 | 1 | 2 | ✗ | 3 |
+| Thrustmaster SF1000 Formula Wheel | ? | ? | ? | 24 | ✗ | 2 |
+| Thrustmaster T.Flight Rudder Pedals | ? | ? | ? | 0 | ✗ | 2 |
+| Thrustmaster T-LCM Pedals | ? | ? | ? | 0 | ✗ | 2 |
+| Thrustmaster T248 Direct Drive | ? | ? | ? | 25 | ✗ | 2 |
+| Thrustmaster T818 Direct Drive | ? | ? | ? | 20 | ✗ | 2 |
 | Thrustmaster T300 RS GT Edition | 0x044F | 0xB66D | 5 | 24 | ✓ | 2 |
 | Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB654 | 5 | 30 | ✓ | 2 |
 | Thrustmaster TS-XW Racer Sparco P310 | 0x044F | 0xB698 | 5 | 26 | ✓ | 2 |
@@ -1474,9 +1566,13 @@
 | Tobii Eye Tracker 5 | 0x2104 | 0x0118 | 2 | 0 | ✗ | 3 |
 | Tobii Eye Tracker 5 | 0x2104 | 0x0408 | 2 | 0 | ✗ | 3 |
 | Tobii EyeX Controller | 0x2104 | 0x0102 | 2 | 0 | ✗ | 3 |
+| Tobii Aware (Laptop Integrated) | ? | ? | ? | 0 | ✗ | 3 |
+| Tobii Eye Tracker 4C (alt PID) | ? | ? | ? | 0 | ✗ | 2 |
 | Tobii Eye Tracker 5 | 0x2104 | 0x0202 | 2 | 0 | ✗ | 2 |
 | SteelSeries Tobii Eye Tracker 5 | 0x2104 | 0x0C02 | 2 | 0 | ✗ | 3 |
 | TrackHat Clip+ v2 | 0x33DD | 0x0002 | 6 | 0 | ✗ | 3 |
+| TrackHat Clip Plus V3 | ? | ? | ? | 0 | ✗ | 2 |
+| TrackHat OpenTrack Camera | ? | ? | ? | 0 | ✗ | 2 |
 | TrackHat Sensor v3 IMU Head Tracker | 0x33DD | 0x0003 | 3 | 0 | ✗ | 3 |
 | TrackHat Clip Head Tracker | 0x2341 | 0x0042 | 6 | 0 | ✗ | 3 |
 | TrackHat Sensor IMU Head Tracker | 0x2341 | 0x8036 | 6 | 0 | ✗ | 3 |
@@ -1740,6 +1836,10 @@
 | VPforce Rhino FFB Joystick Mk.III | 0x0483 | 0xA1C3 | 3 | 32 | ✓ | 3 |
 | VPforce Rhino FFB Joystick Mk.4 | 0x0483 | 0xA1C4 | 6 | 32 | ✓ | 2 |
 | VPforce Rhino FFB Joystick | 0x0483 | 0xA1C0 | 6 | 32 | ✓ | 2 |
+| VRInsight CDU II | ? | ? | ? | 64 | ✗ | 2 |
+| VRInsight MCP Combo | ? | ? | ? | 32 | ✗ | 2 |
+| VRInsight Overhead Panel | ? | ? | ? | 48 | ✗ | 2 |
+| VRInsight Throttle Quadrant | ? | ? | ? | 12 | ✗ | 2 |
 | VRS DirectForce Pro | 0x0483 | 0xA3A4 | 1 | 0 | ✓ | 3 |
 | Wacom Intuos Pro M | 0x056A | 0x0357 | 5 | 9 | ✗ | 3 |
 | Wilco Boeing 737 FMC | 0x04B4 | 0xF285 | 0 | 64 | ✗ | 3 |

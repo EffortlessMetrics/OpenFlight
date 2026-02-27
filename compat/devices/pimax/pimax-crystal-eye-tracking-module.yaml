@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Pimax Innovation"
+  name: "Pimax Crystal Eye Tracking Module"
+  usb:
+    vid: "0x0483"
+    pid: "0x0410"
+  type: "eye_tracker"
+capabilities:
+  axes: 2
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Built-in eye tracking for Pimax Crystal headset."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Eye tracking data accessed through OpenXR eye tracking extension."
+tested_games: ["msfs", "xplane", "dcs"]

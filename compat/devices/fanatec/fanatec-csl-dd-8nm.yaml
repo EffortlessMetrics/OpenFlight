@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Fanatec"
+  name: "Fanatec CSL DD (8 Nm)"
+  usb:
+    vid: "0x0EB7"
+    pid: "0x0E07"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 12
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Fanatec CSL DD 8Nm direct drive base for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

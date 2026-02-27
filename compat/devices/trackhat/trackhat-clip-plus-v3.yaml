@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "TrackHat"
+  name: "TrackHat Clip Plus V3"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF380"
+  type: "head_tracker"
+capabilities:
+  axes: 0
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "TrackHat Clip Plus V3 IR LED clip for opentrack."
+  driver: "passive accessory"
+quirks:
+  - id: ACCESSORY_ONLY
+    description: "IR LED clip; requires IR camera and opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "HTC Corporation"
+  name: "HTC Vive Wand Controller"
+  usb:
+    vid: "0x0BB4"
+    pid: "0x2C87"
+  type: "vr_controller"
+capabilities:
+  axes: 3
+  buttons: 4
+  hats: 0
+  ffb: true
+support:
+  tier: 2
+  notes: "HTC Vive Wand for SteamVR flight sim use."
+  driver: "SteamVR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Lighthouse-tracked; requires SteamVR for input."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Leo Bodnar"
+  name: "Leo Bodnar USB Joystick 12-bit"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x0015"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Leo Bodnar USB joystick controller with 12-bit axis resolution."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

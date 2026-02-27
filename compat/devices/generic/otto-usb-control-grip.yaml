@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "OTTO Engineering"
+  name: "OTTO USB Control Grip"
+  usb:
+    vid: "0x1DED"
+    pid: "0x0001"
+  type: "joystick"
+capabilities:
+  axes: 2
+  buttons: 12
+  hats: 1
+  ffb: false
+support:
+  tier: 2
+  notes: "OTTO USB control grip with multiple switches and hat."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

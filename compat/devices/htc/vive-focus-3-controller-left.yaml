@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "HTC Corporation"
+  name: "HTC Vive Focus 3 Controller (Left)"
+  usb:
+    vid: "0x0BB4"
+    pid: "0x0313"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 8
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "Vive Focus 3 left controller for enterprise VR flight sim."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires Vive Business Streaming or SteamVR."
+tested_games: ["msfs", "xplane", "dcs"]

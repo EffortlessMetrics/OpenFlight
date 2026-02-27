@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "HTC Corporation"
+  name: "HTC Vive XR Elite Controller (Right)"
+  usb:
+    vid: "0x0BB4"
+    pid: "0x0316"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 8
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "Vive XR Elite right controller."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires SteamVR or OpenXR."
+tested_games: ["msfs", "xplane", "dcs"]
