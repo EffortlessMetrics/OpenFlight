@@ -19698,3 +19698,1053 @@ requirements:
         description: "AC4: Requirement coverage spans all major subsystems"
         tests:
           - feature:specs/features/req_750_milestone_750_requirements.feature
+  - id: REQ-751
+    name: Axis Engine Warm-Up Period
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-751.1
+        description: "AC1: Axis engine discards input during configurable warm-up ticks after startup"
+        tests:
+          - feature:specs/features/req_751_axis_engine_warm_up_period.feature
+      - id: AC-751.2
+        description: "AC2: Warm-up tick count defaults to 50 ticks (200ms at 250Hz)"
+        tests:
+          - feature:specs/features/req_751_axis_engine_warm_up_period.feature
+      - id: AC-751.3
+        description: "AC3: Warm-up period is configurable via profile"
+        tests:
+          - feature:specs/features/req_751_axis_engine_warm_up_period.feature
+      - id: AC-751.4
+        description: "AC4: Axis output is held at neutral during warm-up"
+        tests:
+          - feature:specs/features/req_751_axis_engine_warm_up_period.feature
+  - id: REQ-752
+    name: Device Quirk Database
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-752.1
+        description: "AC1: Service maintains a database of known device quirks"
+        tests:
+          - feature:specs/features/req_752_device_quirk_database.feature
+      - id: AC-752.2
+        description: "AC2: Quirk database is queryable by vendor and product ID"
+        tests:
+          - feature:specs/features/req_752_device_quirk_database.feature
+      - id: AC-752.3
+        description: "AC3: Quirks are applied automatically when a matching device is connected"
+        tests:
+          - feature:specs/features/req_752_device_quirk_database.feature
+      - id: AC-752.4
+        description: "AC4: Quirk database is extensible via configuration files"
+        tests:
+          - feature:specs/features/req_752_device_quirk_database.feature
+  - id: REQ-753
+    name: CLI Profile Validate Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-753.1
+        description: "AC1: CLI provides a validate subcommand for profile YAML files"
+        tests:
+          - feature:specs/features/req_753_cli_profile_validate.feature
+      - id: AC-753.2
+        description: "AC2: Validation reports schema errors with line numbers"
+        tests:
+          - feature:specs/features/req_753_cli_profile_validate.feature
+      - id: AC-753.3
+        description: "AC3: Validation does not apply or activate the profile"
+        tests:
+          - feature:specs/features/req_753_cli_profile_validate.feature
+      - id: AC-753.4
+        description: "AC4: Exit code is non-zero when validation fails"
+        tests:
+          - feature:specs/features/req_753_cli_profile_validate.feature
+  - id: REQ-754
+    name: MSFS SimObject Position
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-754.1
+        description: "AC1: SimConnect adapter reads SimObject latitude and longitude"
+        tests:
+          - feature:specs/features/req_754_msfs_simobject_position.feature
+      - id: AC-754.2
+        description: "AC2: SimConnect adapter reads SimObject altitude and heading"
+        tests:
+          - feature:specs/features/req_754_msfs_simobject_position.feature
+      - id: AC-754.3
+        description: "AC3: Position data is updated at least once per second"
+        tests:
+          - feature:specs/features/req_754_msfs_simobject_position.feature
+      - id: AC-754.4
+        description: "AC4: Position data is published on the event bus"
+        tests:
+          - feature:specs/features/req_754_msfs_simobject_position.feature
+  - id: REQ-755
+    name: Axis Output Smoothing Preview
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-755.1
+        description: "AC1: CLI previews the effect of smoothing settings on sample data"
+        tests:
+          - feature:specs/features/req_755_axis_output_smoothing_preview.feature
+      - id: AC-755.2
+        description: "AC2: Preview displays before and after comparison"
+        tests:
+          - feature:specs/features/req_755_axis_output_smoothing_preview.feature
+      - id: AC-755.3
+        description: "AC3: Preview supports all smoothing algorithm types"
+        tests:
+          - feature:specs/features/req_755_axis_output_smoothing_preview.feature
+      - id: AC-755.4
+        description: "AC4: Preview output is exportable to file"
+        tests:
+          - feature:specs/features/req_755_axis_output_smoothing_preview.feature
+  - id: REQ-756
+    name: Service Component Health
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-756.1
+        description: "AC1: Service tracks health status for each registered component"
+        tests:
+          - feature:specs/features/req_756_service_component_health.feature
+      - id: AC-756.2
+        description: "AC2: Health status includes healthy, degraded, and failed states"
+        tests:
+          - feature:specs/features/req_756_service_component_health.feature
+      - id: AC-756.3
+        description: "AC3: Component health is queryable via gRPC API"
+        tests:
+          - feature:specs/features/req_756_service_component_health.feature
+      - id: AC-756.4
+        description: "AC4: Health transitions emit events on the bus"
+        tests:
+          - feature:specs/features/req_756_service_component_health.feature
+  - id: REQ-757
+    name: DCS Weapon Release Detection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-757.1
+        description: "AC1: DCS adapter detects weapon release events from export data"
+        tests:
+          - feature:specs/features/req_757_dcs_weapon_release_detection.feature
+      - id: AC-757.2
+        description: "AC2: Weapon type is identified in the release event"
+        tests:
+          - feature:specs/features/req_757_dcs_weapon_release_detection.feature
+      - id: AC-757.3
+        description: "AC3: Release events are published on the event bus"
+        tests:
+          - feature:specs/features/req_757_dcs_weapon_release_detection.feature
+      - id: AC-757.4
+        description: "AC4: Multiple rapid releases are individually tracked"
+        tests:
+          - feature:specs/features/req_757_dcs_weapon_release_detection.feature
+  - id: REQ-758
+    name: Bus Event Filtering
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-758.1
+        description: "AC1: Bus subscribers can register interest in specific event types"
+        tests:
+          - feature:specs/features/req_758_bus_event_filtering.feature
+      - id: AC-758.2
+        description: "AC2: Filtered subscribers only receive matching events"
+        tests:
+          - feature:specs/features/req_758_bus_event_filtering.feature
+      - id: AC-758.3
+        description: "AC3: Filters can be updated without resubscribing"
+        tests:
+          - feature:specs/features/req_758_bus_event_filtering.feature
+      - id: AC-758.4
+        description: "AC4: Filter evaluation does not allocate on the RT path"
+        tests:
+          - feature:specs/features/req_758_bus_event_filtering.feature
+  - id: REQ-759
+    name: Profile Variable Substitution
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-759.1
+        description: "AC1: Profile YAML supports dollar-brace variable references"
+        tests:
+          - feature:specs/features/req_759_profile_variable_substitution.feature
+      - id: AC-759.2
+        description: "AC2: Variables resolve from environment at profile load time"
+        tests:
+          - feature:specs/features/req_759_profile_variable_substitution.feature
+      - id: AC-759.3
+        description: "AC3: Unresolved variables cause a validation error"
+        tests:
+          - feature:specs/features/req_759_profile_variable_substitution.feature
+      - id: AC-759.4
+        description: "AC4: Variable substitution works in all string-valued fields"
+        tests:
+          - feature:specs/features/req_759_profile_variable_substitution.feature
+  - id: REQ-760
+    name: Axis Engine Tick Budget Monitor
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-760.1
+        description: "AC1: Service monitors time spent in each axis engine tick"
+        tests:
+          - feature:specs/features/req_760_axis_engine_tick_budget_monitor.feature
+      - id: AC-760.2
+        description: "AC2: Budget overruns are logged as warnings"
+        tests:
+          - feature:specs/features/req_760_axis_engine_tick_budget_monitor.feature
+      - id: AC-760.3
+        description: "AC3: Tick budget threshold is configurable"
+        tests:
+          - feature:specs/features/req_760_axis_engine_tick_budget_monitor.feature
+      - id: AC-760.4
+        description: "AC4: Tick budget metrics are exposed via telemetry"
+        tests:
+          - feature:specs/features/req_760_axis_engine_tick_budget_monitor.feature
+  - id: REQ-761
+    name: Device Multi-Instance Support
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-761.1
+        description: "AC1: Service distinguishes multiple identical devices by serial number or path"
+        tests:
+          - feature:specs/features/req_761_device_multi_instance.feature
+      - id: AC-761.2
+        description: "AC2: Each instance can have independent axis mappings"
+        tests:
+          - feature:specs/features/req_761_device_multi_instance.feature
+      - id: AC-761.3
+        description: "AC3: Device instance assignment persists across reconnects"
+        tests:
+          - feature:specs/features/req_761_device_multi_instance.feature
+      - id: AC-761.4
+        description: "AC4: Profile can reference devices by instance identifier"
+        tests:
+          - feature:specs/features/req_761_device_multi_instance.feature
+  - id: REQ-762
+    name: CLI Service Restart Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-762.1
+        description: "AC1: CLI provides a restart subcommand for the service"
+        tests:
+          - feature:specs/features/req_762_cli_service_restart.feature
+      - id: AC-762.2
+        description: "AC2: Restart waits for graceful shutdown before restarting"
+        tests:
+          - feature:specs/features/req_762_cli_service_restart.feature
+      - id: AC-762.3
+        description: "AC3: Restart preserves device assignments"
+        tests:
+          - feature:specs/features/req_762_cli_service_restart.feature
+      - id: AC-762.4
+        description: "AC4: Restart timeout is configurable"
+        tests:
+          - feature:specs/features/req_762_cli_service_restart.feature
+  - id: REQ-763
+    name: X-Plane Menu Plugin
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-763.1
+        description: "AC1: X-Plane plugin adds an OpenFlight menu to the plugins menu"
+        tests:
+          - feature:specs/features/req_763_xplane_menu_plugin.feature
+      - id: AC-763.2
+        description: "AC2: Menu includes options to enable and disable the connection"
+        tests:
+          - feature:specs/features/req_763_xplane_menu_plugin.feature
+      - id: AC-763.3
+        description: "AC3: Menu displays current connection status"
+        tests:
+          - feature:specs/features/req_763_xplane_menu_plugin.feature
+      - id: AC-763.4
+        description: "AC4: Menu state persists across X-Plane sessions"
+        tests:
+          - feature:specs/features/req_763_xplane_menu_plugin.feature
+  - id: REQ-764
+    name: Axis Trim Wheel Support
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-764.1
+        description: "AC1: Axis engine processes trim wheel incremental input correctly"
+        tests:
+          - feature:specs/features/req_764_axis_trim_wheel_support.feature
+      - id: AC-764.2
+        description: "AC2: Trim position accumulates from incremental deltas"
+        tests:
+          - feature:specs/features/req_764_axis_trim_wheel_support.feature
+      - id: AC-764.3
+        description: "AC3: Trim range is bounded by configurable limits"
+        tests:
+          - feature:specs/features/req_764_axis_trim_wheel_support.feature
+      - id: AC-764.4
+        description: "AC4: Trim position resets on profile change or explicit reset"
+        tests:
+          - feature:specs/features/req_764_axis_trim_wheel_support.feature
+  - id: REQ-765
+    name: Service Process Priority
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-765.1
+        description: "AC1: Service sets OS process priority to above-normal on startup"
+        tests:
+          - feature:specs/features/req_765_service_process_priority.feature
+      - id: AC-765.2
+        description: "AC2: Priority level is configurable in service settings"
+        tests:
+          - feature:specs/features/req_765_service_process_priority.feature
+      - id: AC-765.3
+        description: "AC3: Windows uses MMCSS for thread priority elevation"
+        tests:
+          - feature:specs/features/req_765_service_process_priority.feature
+      - id: AC-765.4
+        description: "AC4: Failure to set priority is logged but does not prevent startup"
+        tests:
+          - feature:specs/features/req_765_service_process_priority.feature
+  - id: REQ-766
+    name: FFB Wind Effect
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-766.1
+        description: "AC1: FFB engine generates wind buffet effects from telemetry airspeed"
+        tests:
+          - feature:specs/features/req_766_ffb_wind_effect.feature
+      - id: AC-766.2
+        description: "AC2: Buffet intensity scales with indicated airspeed"
+        tests:
+          - feature:specs/features/req_766_ffb_wind_effect.feature
+      - id: AC-766.3
+        description: "AC3: Wind direction influences force vector orientation"
+        tests:
+          - feature:specs/features/req_766_ffb_wind_effect.feature
+      - id: AC-766.4
+        description: "AC4: Effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_766_ffb_wind_effect.feature
+  - id: REQ-767
+    name: CLI Export Axis Trace
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-767.1
+        description: "AC1: CLI exports axis trace data from blackbox to CSV format"
+        tests:
+          - feature:specs/features/req_767_cli_export_axis_trace.feature
+      - id: AC-767.2
+        description: "AC2: Export includes timestamp, raw input, and processed output columns"
+        tests:
+          - feature:specs/features/req_767_cli_export_axis_trace.feature
+      - id: AC-767.3
+        description: "AC3: Time range is filterable with start and end parameters"
+        tests:
+          - feature:specs/features/req_767_cli_export_axis_trace.feature
+      - id: AC-767.4
+        description: "AC4: Export supports selecting specific axes by name"
+        tests:
+          - feature:specs/features/req_767_cli_export_axis_trace.feature
+  - id: REQ-768
+    name: MSFS Autopilot State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-768.1
+        description: "AC1: SimConnect adapter tracks autopilot master engagement state"
+        tests:
+          - feature:specs/features/req_768_msfs_autopilot_state.feature
+      - id: AC-768.2
+        description: "AC2: Adapter detects autopilot mode changes (heading, altitude, nav)"
+        tests:
+          - feature:specs/features/req_768_msfs_autopilot_state.feature
+      - id: AC-768.3
+        description: "AC3: Autopilot state changes are published on the event bus"
+        tests:
+          - feature:specs/features/req_768_msfs_autopilot_state.feature
+      - id: AC-768.4
+        description: "AC4: FFB effects adjust when autopilot is engaged"
+        tests:
+          - feature:specs/features/req_768_msfs_autopilot_state.feature
+  - id: REQ-769
+    name: Bus Snapshot Diff
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-769.1
+        description: "AC1: Bus supports computing a diff between two state snapshots"
+        tests:
+          - feature:specs/features/req_769_bus_snapshot_diff.feature
+      - id: AC-769.2
+        description: "AC2: Diff identifies added, removed, and changed entries"
+        tests:
+          - feature:specs/features/req_769_bus_snapshot_diff.feature
+      - id: AC-769.3
+        description: "AC3: Diff computation does not allocate on the RT path"
+        tests:
+          - feature:specs/features/req_769_bus_snapshot_diff.feature
+      - id: AC-769.4
+        description: "AC4: Diff result is serializable for diagnostic export"
+        tests:
+          - feature:specs/features/req_769_bus_snapshot_diff.feature
+  - id: REQ-770
+    name: Profile Merge Conflict Resolution
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-770.1
+        description: "AC1: Profile merge resolves conflicts using most-specific-wins rule"
+        tests:
+          - feature:specs/features/req_770_profile_merge_conflict_resolution.feature
+      - id: AC-770.2
+        description: "AC2: Conflicting keys are logged with their source profiles"
+        tests:
+          - feature:specs/features/req_770_profile_merge_conflict_resolution.feature
+      - id: AC-770.3
+        description: "AC3: Merge result is deterministic for the same input set"
+        tests:
+          - feature:specs/features/req_770_profile_merge_conflict_resolution.feature
+      - id: AC-770.4
+        description: "AC4: Explicit override markers bypass conflict resolution"
+        tests:
+          - feature:specs/features/req_770_profile_merge_conflict_resolution.feature
+  - id: REQ-771
+    name: Device Polling Rate Detection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-771.1
+        description: "AC1: Service measures actual device polling rate over a sample window"
+        tests:
+          - feature:specs/features/req_771_device_polling_rate_detection.feature
+      - id: AC-771.2
+        description: "AC2: Detected rate is compared against expected rate from device descriptor"
+        tests:
+          - feature:specs/features/req_771_device_polling_rate_detection.feature
+      - id: AC-771.3
+        description: "AC3: Significant deviation triggers a warning"
+        tests:
+          - feature:specs/features/req_771_device_polling_rate_detection.feature
+      - id: AC-771.4
+        description: "AC4: Polling rate is exposed in device status"
+        tests:
+          - feature:specs/features/req_771_device_polling_rate_detection.feature
+  - id: REQ-772
+    name: CLI Interactive Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-772.1
+        description: "AC1: CLI supports a REPL mode with the interactive subcommand"
+        tests:
+          - feature:specs/features/req_772_cli_interactive_mode.feature
+      - id: AC-772.2
+        description: "AC2: REPL provides tab completion for commands and arguments"
+        tests:
+          - feature:specs/features/req_772_cli_interactive_mode.feature
+      - id: AC-772.3
+        description: "AC3: Command history is preserved across REPL sessions"
+        tests:
+          - feature:specs/features/req_772_cli_interactive_mode.feature
+      - id: AC-772.4
+        description: "AC4: REPL displays live status updates between commands"
+        tests:
+          - feature:specs/features/req_772_cli_interactive_mode.feature
+  - id: REQ-773
+    name: DCS Damage Model State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-773.1
+        description: "AC1: DCS adapter exposes per-component damage percentage"
+        tests:
+          - feature:specs/features/req_773_dcs_damage_model_state.feature
+      - id: AC-773.2
+        description: "AC2: Damage state updates when the aircraft takes hits"
+        tests:
+          - feature:specs/features/req_773_dcs_damage_model_state.feature
+      - id: AC-773.3
+        description: "AC3: Damage state is published on the event bus"
+        tests:
+          - feature:specs/features/req_773_dcs_damage_model_state.feature
+      - id: AC-773.4
+        description: "AC4: Total damage summary is available as a single value"
+        tests:
+          - feature:specs/features/req_773_dcs_damage_model_state.feature
+  - id: REQ-774
+    name: Axis Engine Config Snapshot
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-774.1
+        description: "AC1: Axis engine configuration is snapshottable at any tick boundary"
+        tests:
+          - feature:specs/features/req_774_axis_engine_config_snapshot.feature
+      - id: AC-774.2
+        description: "AC2: Snapshot captures all axis mappings and processing parameters"
+        tests:
+          - feature:specs/features/req_774_axis_engine_config_snapshot.feature
+      - id: AC-774.3
+        description: "AC3: Snapshot is exportable for diagnostic purposes"
+        tests:
+          - feature:specs/features/req_774_axis_engine_config_snapshot.feature
+      - id: AC-774.4
+        description: "AC4: Snapshot operation does not block the RT path"
+        tests:
+          - feature:specs/features/req_774_axis_engine_config_snapshot.feature
+  - id: REQ-775
+    name: Service Telemetry Sampling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-775.1
+        description: "AC1: Service supports configurable telemetry sampling rates per metric"
+        tests:
+          - feature:specs/features/req_775_service_telemetry_sampling.feature
+      - id: AC-775.2
+        description: "AC2: Sampling rate can be changed at runtime without restart"
+        tests:
+          - feature:specs/features/req_775_service_telemetry_sampling.feature
+      - id: AC-775.3
+        description: "AC3: High-frequency metrics default to 1-in-N sampling"
+        tests:
+          - feature:specs/features/req_775_service_telemetry_sampling.feature
+      - id: AC-775.4
+        description: "AC4: Sampling configuration is persisted across restarts"
+        tests:
+          - feature:specs/features/req_775_service_telemetry_sampling.feature
+  - id: REQ-776
+    name: FFB Trim Effect
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-776.1
+        description: "AC1: FFB engine shifts the centering force to match trim position"
+        tests:
+          - feature:specs/features/req_776_ffb_trim_effect.feature
+      - id: AC-776.2
+        description: "AC2: Trim shift is smooth over a configurable transition period"
+        tests:
+          - feature:specs/features/req_776_ffb_trim_effect.feature
+      - id: AC-776.3
+        description: "AC3: Trim effect combines correctly with other active effects"
+        tests:
+          - feature:specs/features/req_776_ffb_trim_effect.feature
+      - id: AC-776.4
+        description: "AC4: Trim effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_776_ffb_trim_effect.feature
+  - id: REQ-777
+    name: Milestone 777 Requirements
+    kind: product
+    status: draft
+    ac:
+      - id: AC-777.1
+        description: "AC1: Spec ledger contains at least 777 tracked requirements"
+        tests:
+          - feature:specs/features/req_777_milestone_777_requirements.feature
+      - id: AC-777.2
+        description: "AC2: All requirements have at least one acceptance criterion"
+        tests:
+          - feature:specs/features/req_777_milestone_777_requirements.feature
+      - id: AC-777.3
+        description: "AC3: All acceptance criteria reference a feature file"
+        tests:
+          - feature:specs/features/req_777_milestone_777_requirements.feature
+      - id: AC-777.4
+        description: "AC4: Requirement coverage spans all major subsystems"
+        tests:
+          - feature:specs/features/req_777_milestone_777_requirements.feature
+  - id: REQ-778
+    name: Device Composite Handling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-778.1
+        description: "AC1: Service correctly enumerates interfaces of USB composite devices"
+        tests:
+          - feature:specs/features/req_778_device_composite_handling.feature
+      - id: AC-778.2
+        description: "AC2: Each interface is treated as a separate logical device"
+        tests:
+          - feature:specs/features/req_778_device_composite_handling.feature
+      - id: AC-778.3
+        description: "AC3: Composite device relationship is tracked for status display"
+        tests:
+          - feature:specs/features/req_778_device_composite_handling.feature
+      - id: AC-778.4
+        description: "AC4: Disconnecting a composite device removes all its interfaces"
+        tests:
+          - feature:specs/features/req_778_device_composite_handling.feature
+  - id: REQ-779
+    name: CLI Benchmark Command
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-779.1
+        description: "AC1: CLI provides a benchmark subcommand for axis engine performance"
+        tests:
+          - feature:specs/features/req_779_cli_benchmark_command.feature
+      - id: AC-779.2
+        description: "AC2: Benchmark reports mean, p50, p99, and max tick latency"
+        tests:
+          - feature:specs/features/req_779_cli_benchmark_command.feature
+      - id: AC-779.3
+        description: "AC3: Benchmark duration is configurable"
+        tests:
+          - feature:specs/features/req_779_cli_benchmark_command.feature
+      - id: AC-779.4
+        description: "AC4: Benchmark results are exportable to JSON"
+        tests:
+          - feature:specs/features/req_779_cli_benchmark_command.feature
+  - id: REQ-780
+    name: MSFS Traffic Data
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-780.1
+        description: "AC1: SimConnect adapter exposes AI traffic aircraft positions"
+        tests:
+          - feature:specs/features/req_780_msfs_traffic_data.feature
+      - id: AC-780.2
+        description: "AC2: Traffic data includes callsign, type, and distance"
+        tests:
+          - feature:specs/features/req_780_msfs_traffic_data.feature
+      - id: AC-780.3
+        description: "AC3: Only traffic within a configurable radius is reported"
+        tests:
+          - feature:specs/features/req_780_msfs_traffic_data.feature
+      - id: AC-780.4
+        description: "AC4: Traffic data is published on the event bus"
+        tests:
+          - feature:specs/features/req_780_msfs_traffic_data.feature
+  - id: REQ-781
+    name: Axis Pipeline Stage Metrics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-781.1
+        description: "AC1: Each axis pipeline stage reports its processing time"
+        tests:
+          - feature:specs/features/req_781_axis_pipeline_stage_metrics.feature
+      - id: AC-781.2
+        description: "AC2: Stage metrics are collected without allocating on the RT path"
+        tests:
+          - feature:specs/features/req_781_axis_pipeline_stage_metrics.feature
+      - id: AC-781.3
+        description: "AC3: Metrics are aggregated over configurable windows"
+        tests:
+          - feature:specs/features/req_781_axis_pipeline_stage_metrics.feature
+      - id: AC-781.4
+        description: "AC4: Stage metrics are queryable via gRPC API"
+        tests:
+          - feature:specs/features/req_781_axis_pipeline_stage_metrics.feature
+  - id: REQ-782
+    name: Service Log Level Control
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-782.1
+        description: "AC1: Service log level is changeable at runtime via CLI command"
+        tests:
+          - feature:specs/features/req_782_service_log_level_control.feature
+      - id: AC-782.2
+        description: "AC2: Log level changes take effect immediately without restart"
+        tests:
+          - feature:specs/features/req_782_service_log_level_control.feature
+      - id: AC-782.3
+        description: "AC3: Per-module log levels are supported"
+        tests:
+          - feature:specs/features/req_782_service_log_level_control.feature
+      - id: AC-782.4
+        description: "AC4: Current log level is queryable via CLI"
+        tests:
+          - feature:specs/features/req_782_service_log_level_control.feature
+  - id: REQ-783
+    name: X-Plane Failure State
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-783.1
+        description: "AC1: X-Plane adapter tracks system failure states via datarefs"
+        tests:
+          - feature:specs/features/req_783_xplane_failure_state.feature
+      - id: AC-783.2
+        description: "AC2: Failure states include engine, electrical, and hydraulic systems"
+        tests:
+          - feature:specs/features/req_783_xplane_failure_state.feature
+      - id: AC-783.3
+        description: "AC3: Failure state changes are published on the event bus"
+        tests:
+          - feature:specs/features/req_783_xplane_failure_state.feature
+      - id: AC-783.4
+        description: "AC4: Active failures are included in the status report"
+        tests:
+          - feature:specs/features/req_783_xplane_failure_state.feature
+  - id: REQ-784
+    name: Bus Backpressure Metrics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-784.1
+        description: "AC1: Bus reports the count of dropped events due to backpressure"
+        tests:
+          - feature:specs/features/req_784_bus_backpressure_metrics.feature
+      - id: AC-784.2
+        description: "AC2: Drop counts are tracked per subscriber"
+        tests:
+          - feature:specs/features/req_784_bus_backpressure_metrics.feature
+      - id: AC-784.3
+        description: "AC3: Sustained backpressure triggers a degraded health status"
+        tests:
+          - feature:specs/features/req_784_bus_backpressure_metrics.feature
+      - id: AC-784.4
+        description: "AC4: Backpressure metrics are exposed via telemetry"
+        tests:
+          - feature:specs/features/req_784_bus_backpressure_metrics.feature
+  - id: REQ-785
+    name: Profile Import Validation
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-785.1
+        description: "AC1: Imported profiles are schema-validated before activation"
+        tests:
+          - feature:specs/features/req_785_profile_import_validation.feature
+      - id: AC-785.2
+        description: "AC2: Validation rejects profiles with unknown fields"
+        tests:
+          - feature:specs/features/req_785_profile_import_validation.feature
+      - id: AC-785.3
+        description: "AC3: Validation errors include field path and expected type"
+        tests:
+          - feature:specs/features/req_785_profile_import_validation.feature
+      - id: AC-785.4
+        description: "AC4: Valid profiles are imported without modification"
+        tests:
+          - feature:specs/features/req_785_profile_import_validation.feature
+  - id: REQ-786
+    name: Device Axis Inversion
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-786.1
+        description: "AC1: Device axis inversion is configurable per-axis in profile"
+        tests:
+          - feature:specs/features/req_786_device_axis_inversion.feature
+      - id: AC-786.2
+        description: "AC2: Inversion is applied before curve processing"
+        tests:
+          - feature:specs/features/req_786_device_axis_inversion.feature
+      - id: AC-786.3
+        description: "AC3: Inverted axes are indicated in device status"
+        tests:
+          - feature:specs/features/req_786_device_axis_inversion.feature
+      - id: AC-786.4
+        description: "AC4: Inversion changes take effect without device reconnect"
+        tests:
+          - feature:specs/features/req_786_device_axis_inversion.feature
+  - id: REQ-787
+    name: CLI Status Dashboard
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-787.1
+        description: "AC1: CLI shows a rich status dashboard with the --dashboard flag"
+        tests:
+          - feature:specs/features/req_787_cli_status_dashboard.feature
+      - id: AC-787.2
+        description: "AC2: Dashboard displays device, axis, and service health in real time"
+        tests:
+          - feature:specs/features/req_787_cli_status_dashboard.feature
+      - id: AC-787.3
+        description: "AC3: Dashboard auto-refreshes at a configurable interval"
+        tests:
+          - feature:specs/features/req_787_cli_status_dashboard.feature
+      - id: AC-787.4
+        description: "AC4: Dashboard gracefully degrades in non-TTY environments"
+        tests:
+          - feature:specs/features/req_787_cli_status_dashboard.feature
+  - id: REQ-788
+    name: FFB Stall Buffet Effect
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-788.1
+        description: "AC1: FFB engine generates stall buffet from angle of attack telemetry"
+        tests:
+          - feature:specs/features/req_788_ffb_stall_buffet_effect.feature
+      - id: AC-788.2
+        description: "AC2: Buffet intensity increases as AoA approaches critical angle"
+        tests:
+          - feature:specs/features/req_788_ffb_stall_buffet_effect.feature
+      - id: AC-788.3
+        description: "AC3: Buffet frequency matches aerodynamic characteristics"
+        tests:
+          - feature:specs/features/req_788_ffb_stall_buffet_effect.feature
+      - id: AC-788.4
+        description: "AC4: Effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_788_ffb_stall_buffet_effect.feature
+  - id: REQ-789
+    name: Service Graceful Upgrade
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-789.1
+        description: "AC1: Service supports zero-downtime upgrades via staged restart"
+        tests:
+          - feature:specs/features/req_789_service_graceful_upgrade.feature
+      - id: AC-789.2
+        description: "AC2: New version is validated before old version shuts down"
+        tests:
+          - feature:specs/features/req_789_service_graceful_upgrade.feature
+      - id: AC-789.3
+        description: "AC3: Device state is transferred to the new service instance"
+        tests:
+          - feature:specs/features/req_789_service_graceful_upgrade.feature
+      - id: AC-789.4
+        description: "AC4: Upgrade rollback is automatic if the new version fails health check"
+        tests:
+          - feature:specs/features/req_789_service_graceful_upgrade.feature
+  - id: REQ-790
+    name: DCS FLIR Data
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-790.1
+        description: "AC1: DCS adapter exposes FLIR and targeting pod status when available"
+        tests:
+          - feature:specs/features/req_790_dcs_flir_data.feature
+      - id: AC-790.2
+        description: "AC2: FLIR data includes lock state and target coordinates"
+        tests:
+          - feature:specs/features/req_790_dcs_flir_data.feature
+      - id: AC-790.3
+        description: "AC3: Data is published on the event bus"
+        tests:
+          - feature:specs/features/req_790_dcs_flir_data.feature
+      - id: AC-790.4
+        description: "AC4: Unavailable FLIR data returns a well-defined absent status"
+        tests:
+          - feature:specs/features/req_790_dcs_flir_data.feature
+  - id: REQ-791
+    name: Axis History Export
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-791.1
+        description: "AC1: Axis history buffer contents are exportable for analysis"
+        tests:
+          - feature:specs/features/req_791_axis_history_export.feature
+      - id: AC-791.2
+        description: "AC2: Export includes raw input, processed output, and timestamps"
+        tests:
+          - feature:specs/features/req_791_axis_history_export.feature
+      - id: AC-791.3
+        description: "AC3: Export format supports CSV and JSON"
+        tests:
+          - feature:specs/features/req_791_axis_history_export.feature
+      - id: AC-791.4
+        description: "AC4: Export does not block the RT processing path"
+        tests:
+          - feature:specs/features/req_791_axis_history_export.feature
+  - id: REQ-792
+    name: Bus Event Priority Queue
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-792.1
+        description: "AC1: Bus processes high-priority events before normal-priority events"
+        tests:
+          - feature:specs/features/req_792_bus_event_priority_queue.feature
+      - id: AC-792.2
+        description: "AC2: Priority levels include high, normal, and low"
+        tests:
+          - feature:specs/features/req_792_bus_event_priority_queue.feature
+      - id: AC-792.3
+        description: "AC3: Same-priority events maintain FIFO order"
+        tests:
+          - feature:specs/features/req_792_bus_event_priority_queue.feature
+      - id: AC-792.4
+        description: "AC4: Priority queue does not allocate on the RT path"
+        tests:
+          - feature:specs/features/req_792_bus_event_priority_queue.feature
+  - id: REQ-793
+    name: Profile Aircraft Matching
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-793.1
+        description: "AC1: Profiles match aircraft by glob pattern not just exact name"
+        tests:
+          - feature:specs/features/req_793_profile_aircraft_matching.feature
+      - id: AC-793.2
+        description: "AC2: Pattern matching supports wildcards and character classes"
+        tests:
+          - feature:specs/features/req_793_profile_aircraft_matching.feature
+      - id: AC-793.3
+        description: "AC3: Most specific matching pattern takes precedence"
+        tests:
+          - feature:specs/features/req_793_profile_aircraft_matching.feature
+      - id: AC-793.4
+        description: "AC4: Match results are logged for troubleshooting"
+        tests:
+          - feature:specs/features/req_793_profile_aircraft_matching.feature
+  - id: REQ-794
+    name: Device Auto-Calibration
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-794.1
+        description: "AC1: Service auto-calibrates devices by sampling range on first connection"
+        tests:
+          - feature:specs/features/req_794_device_auto_calibration.feature
+      - id: AC-794.2
+        description: "AC2: Calibration data is stored and reused on subsequent connections"
+        tests:
+          - feature:specs/features/req_794_device_auto_calibration.feature
+      - id: AC-794.3
+        description: "AC3: Manual calibration override is available via CLI"
+        tests:
+          - feature:specs/features/req_794_device_auto_calibration.feature
+      - id: AC-794.4
+        description: "AC4: Calibration status is reported in device info"
+        tests:
+          - feature:specs/features/req_794_device_auto_calibration.feature
+  - id: REQ-795
+    name: CLI Firmware Info
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-795.1
+        description: "AC1: CLI displays device firmware version in device info output"
+        tests:
+          - feature:specs/features/req_795_cli_firmware_info.feature
+      - id: AC-795.2
+        description: "AC2: Firmware version is read from the HID device descriptor"
+        tests:
+          - feature:specs/features/req_795_cli_firmware_info.feature
+      - id: AC-795.3
+        description: "AC3: Unknown firmware version displays a placeholder"
+        tests:
+          - feature:specs/features/req_795_cli_firmware_info.feature
+      - id: AC-795.4
+        description: "AC4: Firmware info is included in diagnostic export"
+        tests:
+          - feature:specs/features/req_795_cli_firmware_info.feature
+  - id: REQ-796
+    name: MSFS Electrical System
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-796.1
+        description: "AC1: SimConnect adapter exposes main bus voltage and battery state"
+        tests:
+          - feature:specs/features/req_796_msfs_electrical_system.feature
+      - id: AC-796.2
+        description: "AC2: Electrical data includes generator and alternator status"
+        tests:
+          - feature:specs/features/req_796_msfs_electrical_system.feature
+      - id: AC-796.3
+        description: "AC3: Electrical state changes are published on the event bus"
+        tests:
+          - feature:specs/features/req_796_msfs_electrical_system.feature
+      - id: AC-796.4
+        description: "AC4: Electrical data is updated at least once per second"
+        tests:
+          - feature:specs/features/req_796_msfs_electrical_system.feature
+  - id: REQ-797
+    name: Axis Engine Thread Safety Audit
+    kind: quality
+    status: draft
+    ac:
+      - id: AC-797.1
+        description: "AC1: Axis engine code passes a documented thread safety audit"
+        tests:
+          - feature:specs/features/req_797_axis_engine_thread_safety_audit.feature
+      - id: AC-797.2
+        description: "AC2: All shared mutable state uses atomic or lock-free primitives"
+        tests:
+          - feature:specs/features/req_797_axis_engine_thread_safety_audit.feature
+      - id: AC-797.3
+        description: "AC3: No data races are possible according to the Rust type system"
+        tests:
+          - feature:specs/features/req_797_axis_engine_thread_safety_audit.feature
+      - id: AC-797.4
+        description: "AC4: Audit findings are documented and tracked"
+        tests:
+          - feature:specs/features/req_797_axis_engine_thread_safety_audit.feature
+  - id: REQ-798
+    name: Service Resource Limits
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-798.1
+        description: "AC1: Service enforces configurable memory usage limits"
+        tests:
+          - feature:specs/features/req_798_service_resource_limits.feature
+      - id: AC-798.2
+        description: "AC2: Service enforces configurable CPU usage limits"
+        tests:
+          - feature:specs/features/req_798_service_resource_limits.feature
+      - id: AC-798.3
+        description: "AC3: Approaching resource limits triggers a warning"
+        tests:
+          - feature:specs/features/req_798_service_resource_limits.feature
+      - id: AC-798.4
+        description: "AC4: Exceeding hard limits triggers graceful degradation"
+        tests:
+          - feature:specs/features/req_798_service_resource_limits.feature
+  - id: REQ-799
+    name: FFB Runway Rumble Effect
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-799.1
+        description: "AC1: FFB engine generates runway surface rumble during ground roll"
+        tests:
+          - feature:specs/features/req_799_ffb_runway_rumble_effect.feature
+      - id: AC-799.2
+        description: "AC2: Rumble intensity scales with ground speed"
+        tests:
+          - feature:specs/features/req_799_ffb_runway_rumble_effect.feature
+      - id: AC-799.3
+        description: "AC3: Surface type affects rumble characteristics"
+        tests:
+          - feature:specs/features/req_799_ffb_runway_rumble_effect.feature
+      - id: AC-799.4
+        description: "AC4: Effect respects FFB safety envelope limits"
+        tests:
+          - feature:specs/features/req_799_ffb_runway_rumble_effect.feature
+  - id: REQ-800
+    name: Milestone 800 Requirements
+    kind: product
+    status: draft
+    ac:
+      - id: AC-800.1
+        description: "AC1: Spec ledger contains at least 800 tracked requirements"
+        tests:
+          - feature:specs/features/req_800_milestone_800_requirements.feature
+      - id: AC-800.2
+        description: "AC2: All requirements have at least one acceptance criterion"
+        tests:
+          - feature:specs/features/req_800_milestone_800_requirements.feature
+      - id: AC-800.3
+        description: "AC3: All acceptance criteria reference a feature file"
+        tests:
+          - feature:specs/features/req_800_milestone_800_requirements.feature
+      - id: AC-800.4
+        description: "AC4: Requirement coverage spans all major subsystems"
+        tests:
+          - feature:specs/features/req_800_milestone_800_requirements.feature
