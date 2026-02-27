@@ -1,0 +1,62 @@
+# RealSimGear GFC 600 Autopilot Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear GFC 600 is a replica bezel for the Garmin GFC 600
+# autopilot — a digital autopilot for light twin and turboprop aircraft
+# (Beechcraft King Air, Piper Meridian, etc.). More capable than the
+# GFC 500; adds pitch/roll control wheel steering and flight director modes.
+# Distinct from gfc500.yaml (which covers the GFC 500 single-engine AP).
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF261 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GFC 600 Autopilot Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF261   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  encoders: 2             # Altitude selector and VS/FPA encoder
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF261 is a community estimate adjacent to the GFC 500 (0xF260).
+      RealSimGear uses VID 0x04D8 (Microchip); confirm PID with lsusb.
+  - id: DISTINCT_FROM_GFC500
+    description: >
+      The GFC 600 (this manifest) targets light twin and turboprop aircraft
+      and adds more AP modes than the GFC 500 (gfc500.yaml, single-engine).
+      Button count and encoder layout differ between the two panels.
+  - id: AUTOPILOT_BUTTONS
+    description: >
+      AP, FD, HDG, NAV, APR, BC, VS, FLC, ALT, and CWS mode buttons.
+      Bind each to the corresponding Garmin GFC 600 autopilot event.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GFC 600 — Garmin GFC 600 autopilot replica bezel.
+    Distinct from gfc500.yaml. VID 0x04D8 confirmed; PID 0xF261 community estimate.
+    Last reviewed: 2026-06.

@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 933 |
-| ACs with tests | 933 |
-| ACs with Gherkin | 714 |
-| ACs with both tests + Gherkin | 714 |
+| Total AC | 971 |
+| ACs with tests | 971 |
+| ACs with Gherkin | 752 |
+| ACs with both tests + Gherkin | 752 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 336 |
+| Draft | 374 |
 | Incomplete | 0 |
 | Microcrates | 73 |
 | Microcrates with tests | 65 (89.0%) |
 | Microcrates with Gherkin | 65 (89.0%) |
 | Microcrates fully covered | 65 (89.0%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 76.5% |
-| Test + Gherkin coverage | 76.5% |
+| Gherkin coverage | 77.4% |
+| Test + Gherkin coverage | 77.4% |
 
 ## BDD Microcrate Matrix
 
@@ -1046,3 +1046,41 @@
 | REQ-158 | AC-158.4 | The effect SHALL cease and no further output commands SHALL be issued when the device is disconnected | - | 1 | ⚪ Draft |
 | REQ-158 | AC-158.5 | Signals below 100 Hz SHALL be prioritised in the output rendering when a mix of frequencies is submitted | - | 1 | ⚪ Draft |
 | REQ-158 | AC-158.6 | The device SHALL be assigned to the correct output channel based on its identifier during the binding process | - | 1 | ⚪ Draft |
+| REQ-159 | AC-159.1 | The speed value SHALL increment by 1 knot when the GF-MCP Pro speed knob is rotated one step clockwise | specs/features/req_159_goflight_panels.feature:5 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.2 | The heading value SHALL increment by 1 degree when the GF-MCP Pro heading knob is rotated one step clockwise | specs/features/req_159_goflight_panels.feature:11 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.3 | The corresponding barometric pressure event SHALL be emitted with the correct delta when the GF-EFIS BARO knob is rotated | specs/features/req_159_goflight_panels.feature:17 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.4 | The decoded position value SHALL match the physical knob position for the GF-RP48 16-position rotary | specs/features/req_159_goflight_panels.feature:23 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.5 | The toggle event SHALL report the correct on or off state when any GF-T8 Plus toggle switch changes state | specs/features/req_159_goflight_panels.feature:29 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.6 | The panel LEDs SHALL reflect the requested state within one processing cycle when a GoFlight panel LED state update is written | specs/features/req_159_goflight_panels.feature:35 | 1 | ⚪ Draft |
+| REQ-159 | AC-159.7 | The panel SHALL be enumerated and its type identified from the USB VID/PID pair when a GoFlight panel is connected | specs/features/req_159_goflight_panels.feature:41 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.1 | The corresponding soft key event SHALL be emitted with the correct key index when a G1000 PFD soft key is pressed | specs/features/req_160_realsimgear_panels.feature:5 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.2 | A knob step event SHALL be emitted with the correct direction and magnitude when the GNS 530 outer knob is rotated | specs/features/req_160_realsimgear_panels.feature:11 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.3 | An increment event SHALL be emitted for the GNS 430W main knob when rotated one step clockwise | specs/features/req_160_realsimgear_panels.feature:17 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.4 | The corresponding autopilot button event SHALL be emitted when a KAP 140 AP button is pressed | specs/features/req_160_realsimgear_panels.feature:23 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.5 | The mode change event SHALL be emitted with the correct mode identifier when a GFC 600 flight director mode button is pressed | specs/features/req_160_realsimgear_panels.feature:29 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.6 | The panel SHALL be identified by its serial number for profile binding when a RealSimGear panel is enumerated | specs/features/req_160_realsimgear_panels.feature:35 | 1 | ⚪ Draft |
+| REQ-160 | AC-160.7 | All key bindings SHALL be cleared and the panel SHALL return to its default state when the profile is unloaded | specs/features/req_160_realsimgear_panels.feature:41 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.1 | The G27 steering wheel axis value SHALL be normalized to [-1.0, 1.0] across its full range | specs/features/req_161_racing_wheel_flight.feature:5 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.2 | The G27 accelerator pedal axis value SHALL be normalized to [0.0, 1.0] across its full range | specs/features/req_161_racing_wheel_flight.feature:11 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.3 | The G29 steering axis SHALL be decoded at 16-bit resolution | specs/features/req_161_racing_wheel_flight.feature:17 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.4 | Each G29 pedal axis SHALL produce an independent normalized value when actuated | specs/features/req_161_racing_wheel_flight.feature:23 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.5 | Shift paddles on G27/G29 SHALL be decoded as button press events | specs/features/req_161_racing_wheel_flight.feature:29 | 1 | ⚪ Draft |
+| REQ-161 | AC-161.6 | Pitch and bank sim variables SHALL be updated when a profile remaps the steering wheel to those axes | specs/features/req_161_racing_wheel_flight.feature:35 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.1 | Pitch and roll sim variables SHALL be updated proportionally when the 8BitDo Pro 2 left stick is moved | specs/features/req_162_8bitdo_flight.feature:5 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.2 | The throttle sim variable SHALL be updated proportionally when the 8BitDo Pro 2 right trigger is pressed | specs/features/req_162_8bitdo_flight.feature:11 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.3 | The profile-defined action SHALL be executed when a customized 8BitDo Pro 2 button is pressed | specs/features/req_162_8bitdo_flight.feature:17 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.4 | The 8BitDo Pro 2 D-pad SHALL be decoded as either a hat switch value or discrete button events per profile configuration | specs/features/req_162_8bitdo_flight.feature:24 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.5 | The 8BitDo Pro 2 SHALL be rebound automatically and input SHALL resume without user intervention after a wireless reconnect | specs/features/req_162_8bitdo_flight.feature:30 | 1 | ⚪ Draft |
+| REQ-162 | AC-162.6 | A device with VID 0x2DC8 SHALL be identified as an 8BitDo controller and offered for flight profile binding | specs/features/req_162_8bitdo_flight.feature:36 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.1 | Both left stick axes SHALL be decoded and normalized to [-1.0, 1.0] when the Switch Pro Controller left stick is moved | specs/features/req_163_switch_pro_controller.feature:5 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.2 | Both right stick axes SHALL be decoded and normalized to [-1.0, 1.0] when the Switch Pro Controller right stick is moved | specs/features/req_163_switch_pro_controller.feature:11 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.3 | The corresponding button event SHALL be emitted when the Switch Pro Controller L or R trigger button is pressed | specs/features/req_163_switch_pro_controller.feature:17 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.4 | The corresponding button event SHALL be emitted when the Switch Pro Controller ZL or ZR shoulder button is pressed | specs/features/req_163_switch_pro_controller.feature:23 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.5 | Gyroscope data SHALL be available as optional axis inputs when motion control is enabled and the controller is rotated | specs/features/req_163_switch_pro_controller.feature:29 | 1 | ⚪ Draft |
+| REQ-163 | AC-163.6 | A device with VID 0x057E and PID 0x2009 SHALL be identified as a Nintendo Switch Pro Controller and offered for flight profile binding | specs/features/req_163_switch_pro_controller.feature:36 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.1 | The corresponding button event SHALL be emitted with the correct identifier when an OpenHornet UFC keypad button is pressed | specs/features/req_164_openhornet_diy.feature:5 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.2 | The corresponding button event SHALL be emitted with the correct identifier when an OpenHornet IFEI button is pressed | specs/features/req_164_openhornet_diy.feature:11 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.3 | The generic HID report parser SHALL parse custom OpenHornet USB HID reports and emit events for each changed control | specs/features/req_164_openhornet_diy.feature:17 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.4 | The health report SHALL indicate Tier 3 community support for OpenHornet devices when a health report is requested | specs/features/req_164_openhornet_diy.feature:23 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.5 | A device with the OpenHornet VID but an unrecognised PID SHALL fall back to generic HID parsing without a fatal error | specs/features/req_164_openhornet_diy.feature:29 | 1 | ⚪ Draft |
+| REQ-164 | AC-164.6 | OpenHornet panel button events SHALL be forwarded to the DCS export adapter when the DCS export adapter is active | specs/features/req_164_openhornet_diy.feature:35 | 1 | ⚪ Draft |

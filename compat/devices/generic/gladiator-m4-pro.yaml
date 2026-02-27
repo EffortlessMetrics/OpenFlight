@@ -1,0 +1,57 @@
+# Gladiator M4 Pro Flight Stick (Custom OEM)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The "Gladiator M4 Pro" is a budget flight stick marketed under various
+# generic/OEM brand names (primarily Chinese OEM). Features a twist-rudder
+# axis, throttle slider, and illuminated buttons. Occasionally rebadged under
+# different product names. VID/PID unconfirmed — multiple OEM vendors use
+# the same mechanical design with different USB descriptors.
+
+schema_version: "1"
+
+device:
+  name: "Gladiator M4 Pro Flight Stick"
+  vendor: "Generic / OEM"
+  usb:
+    vendor_id: 0x0079       # Placeholder — common generic USB gamepad VID
+    product_id: 0x1800      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID/PID vary across OEM batches. Common VIDs observed: 0x0079 (generic),
+      0x2563 (ShanDian), 0x12BD (generic). Match by device string
+      "Gladiator M4 Pro" if USB descriptor is available.
+  - id: TWIST_RUDDER
+    description: "Twist grip provides Rz (rudder) axis. Z is a throttle slider on the base."
+  - id: CHINESE_OEM
+    description: >
+      Budget OEM joystick produced by multiple Chinese manufacturers under
+      the same or similar product names. Quality and axis linearity vary
+      between production batches.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gladiator M4 Pro — generic budget flight stick. VID/PID unconfirmed.
+    Multiple OEM variants exist. Last reviewed: 2026-06.

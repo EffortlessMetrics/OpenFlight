@@ -1,0 +1,55 @@
+# Generic USB HID Multi-Axis Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic USB HID axis expansion cards are used by home cockpit builders
+# to add multiple analog potentiometer inputs (throttle quadrants, mixture
+# levers, trim wheels) without a full joystick controller board. These
+# boards typically appear as a standard HID joystick/gamepad with N axes
+# and no buttons. Common boards: DIY USB HID 8-axis, various KV1 boards.
+# VID/PID unconfirmed — varies by board design.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB HID Multi-Axis Card"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — Microchip (common on HID boards)
+    product_id: 0x00F1      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [axis1, axis2, axis3, axis4, axis5, axis6, axis7, axis8]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x04D8 (Microchip) and PID 0x00F1 are placeholders. Actual VID/PID
+      depends on the specific board design and firmware. Leo Bodnar boards
+      (bu0836 series) are a popular alternative with confirmed VIDs.
+  - id: POTENTIOMETER_NONLINEARITY
+    description: >
+      Cheap potentiometers on generic axis boards may have nonlinear response
+      curves near end-stops. Apply a curve correction in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB HID axis expansion card. VID/PID board-dependent. For boards
+    with known VIDs, see leo-bodnar/bu0836.yaml and related. Last reviewed: 2026-06.

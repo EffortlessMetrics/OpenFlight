@@ -8,6 +8,9 @@
 //! - Logitech G Flight Yoke System (VID 0x046D, PID 0xC259)
 //! - Logitech G Flight Throttle Quadrant (VID 0x046D, PID 0xC25A)
 //! - Logitech Flight System G940 FFB HOTAS (VID 0x046D, PID 0xC287)
+//! - Logitech G27 Racing Wheel (VID 0x046D, PID 0xC29B)
+//! - Logitech G29 Racing Wheel (VID 0x046D, PID 0xC24F)
+//! - Logitech G920 Racing Wheel (VID 0x046D, PID 0xC262)
 //!
 //! # Architecture
 //!
@@ -15,6 +18,8 @@
 //! to −1.0..=1.0 (bipolar) or 0.0..=1.0 (unipolar).
 
 pub mod extreme3dpro;
+pub mod g27_wheel;
+pub mod g29_wheel;
 pub mod g940;
 pub mod g_flight_throttle;
 pub mod g_flight_yoke;
@@ -37,6 +42,10 @@ pub use g_flight_yoke::{
     GFlightYokeAxes, GFlightYokeButtons, GFlightYokeHat, GFlightYokeInputState,
     GFlightYokeParseError, parse_g_flight_yoke,
 };
+pub use g27_wheel::{
+    G27_MIN_REPORT_BYTES, G27_PID, G27ParseError, G27State, LOGITECH_VID, parse_g27,
+};
+pub use g29_wheel::{G29_MIN_REPORT_BYTES, G29_PID, G29ParseError, G29State, G920_PID, parse_g29};
 pub use g940::{
     G940_AXIS_BITS, G940_AXIS_CENTER, G940_AXIS_MAX, G940_JOYSTICK_MIN_REPORT_BYTES,
     G940_JOYSTICK_PID, G940_THROTTLE_MIN_REPORT_BYTES, G940_THROTTLE_PID, G940Hat, G940InputState,

@@ -1,0 +1,63 @@
+# RealSimGear G1000 NXi Integration Kit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear G1000 NXi Integration Kit is a hardware bundle that includes
+# PFD and MFD bezel adapters with USB controllers for the Garmin G1000 NXi
+# avionics suite. Distinct from g1000-nxi.yaml (which covers the NXi software
+# interface); this kit includes physical hardware bezels with illuminated knobs,
+# softkeys, and FMS cursor controls that expose as USB HID devices.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF270 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 NXi Integration Kit"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF270   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24             # Softkeys (12×PFD + 12×MFD) plus direct-to, menu
+  hats: 0
+  encoders: 8             # COM/NAV outer/inner, baro, HDG, CRS, FMS outer/inner
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF270 is a community estimate. RealSimGear integration kits may
+      enumerate as two separate HID devices (PFD + MFD). Confirm with lsusb.
+  - id: DUAL_HID_ENUMERATION
+    description: >
+      The Integration Kit may enumerate as two USB HID devices (one per display
+      bezel). Each device should be assigned its own manifest instance. Apply
+      this manifest to both and differentiate by USB port path.
+  - id: DISTINCT_FROM_G1000_NXI_YAML
+    description: >
+      g1000-nxi.yaml covers the Garmin G1000 NXi avionics suite for MSFS.
+      This manifest covers the RealSimGear physical hardware kit that provides
+      USB HID input from physical G1000 NXi bezels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 NXi Integration Kit — physical G1000 NXi bezel hardware.
+    Distinct from g1000-nxi.yaml (NXi avionics software interface).
+    VID 0x04D8 confirmed; PID 0xF270 community estimate. Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Nintendo Switch Joy-Con R
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x057E (Nintendo Co., Ltd.) confirmed.
+# PID 0x2007 confirmed: Linux kernel drivers/hid/hid-nintendo.c,
+#   "Nintendo Switch Joy-Con (R)" (hid_device_id table).
+# The Joy-Con R provides a right analog stick, ZR/R shoulder buttons, A/B/X/Y
+# face buttons, and an IR Motion Camera over Bluetooth. Used with the Joy-Con L
+# (PID 0x2006) as a paired set or as a standalone controller.
+
+schema_version: "1"
+
+device:
+  name: "Nintendo Switch Joy-Con (R)"
+  vendor: "Nintendo Co., Ltd."
+  usb:
+    vendor_id: 0x057E    # Nintendo Co., Ltd. (confirmed)
+    product_id: 0x2007   # Joy-Con (R) — confirmed from Linux kernel hid-nintendo.c
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 2
+    names: [right_x, right_y]
+    resolution_bits: 12
+  buttons: 12             # R, ZR, Plus, Home, SL, SR, A, B, X, Y, stick, NFC
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [rumble_hd]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: BLUETOOTH_PRIMARY
+    description: >
+      The Joy-Con (R) connects primarily over Bluetooth. See joy-con-l.yaml
+      for the left counterpart. USB enumeration occurs only with an adapter.
+  - id: HD_RUMBLE
+    description: >
+      Joy-Con HD Rumble uses Nintendo's proprietary LRA vibration protocol.
+      Requires hid-nintendo kernel module or libhidapi for HD Rumble support.
+  - id: IR_CAMERA
+    description: >
+      The Joy-Con R includes an IR Motion Camera for proximity and distance
+      sensing. Not relevant for flight sim use; ignore in OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo Switch Joy-Con (R). VID 0x057E / PID 0x2007 confirmed from Linux
+    kernel hid-nintendo.c. Use with joy-con-l.yaml for paired operation.
+    Last reviewed: 2026-06.

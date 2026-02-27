@@ -1,0 +1,56 @@
+# RealSimGear G600 EFIS Display Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear G600 is a hardware bezel for the Garmin G600 TXi glass
+# cockpit EFIS — found in larger piston and turboprop aircraft (Baron, Seneca,
+# TBM series). Provides PFD and MFD softkeys, joystick cursor, COM/NAV tuning
+# knobs, and baro setting encoders as USB HID inputs.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF275 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G600 EFIS Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF275   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [joystick_x, joystick_y]   # FMS cursor joystick
+    resolution_bits: 8
+  buttons: 20             # Softkeys, direct-to, menu, FPL, NRST
+  hats: 0
+  encoders: 6             # Baro, COM outer/inner, NAV outer/inner, range
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF275 is a community estimate for the G600 controller bezel.
+      RealSimGear uses VID 0x04D8 (Microchip); confirm PID with lsusb.
+  - id: CURSOR_JOYSTICK
+    description: >
+      The G600 TXi includes an integrated joystick for MFD cursor control.
+      Reports as two axes (X/Y) in the HID descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G600 — Garmin G600 TXi EFIS replica bezel. Larger aircraft
+    variant (Baron/Seneca/TBM). Distinct from G3X (g3x-efis.yaml) and G1000 family.
+    VID 0x04D8 confirmed; PID 0xF275 community estimate. Last reviewed: 2026-06.

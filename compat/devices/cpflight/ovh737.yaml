@@ -1,0 +1,62 @@
+# CPFlight OVH737 Overhead Panel Boeing 737
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight (Italy) OVH737 — Boeing 737 Overhead Panel replica covering the
+# forward and aft overhead sections (fuel, hydraulics, electrical, pressurisation,
+# anti-ice, warning annunciators). Intended for professional home cockpit builds
+# alongside the ECM737 and MCP Pro panels. Uses CPFlight's serial-over-USB
+# protocol. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight OVH737 Overhead Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0DC3       # Placeholder — community estimate for CPFlight USB VID
+    product_id: 0x0820      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64               # Fuel pumps, hydraulics, electrics, anti-ice, CDU annunciators
+  hats: 0
+  encoders: 4               # Lighting rheostats
+  force_feedback: false
+  display:
+    type: led_annunciator
+    digits: 0
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0DC3 and PID 0x0820 are community estimates. Verify with USBView.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels use a proprietary serial-over-USB protocol. OpenFlight's
+      CPFlight adapter translates this to standard button/encoder events.
+  - id: LED_OUTPUT_REQUIRED
+    description: >
+      Overhead annunciator LEDs must be driven by HID output reports from
+      the sim telemetry layer. Annunciator state (MASTER CAUTION, fire warnings,
+      system advisories) must be updated at the sim frame rate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight OVH737 — Boeing 737 overhead panel replica. Distinct from
+    Skalarki overhead panels (skalarki/ directory). VID/PID unconfirmed.
+    Last reviewed: 2026-06.
