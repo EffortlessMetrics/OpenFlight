@@ -3039,3 +3039,129 @@ requirements:
           - flight-hotas-logitech::g_flight_throttle::tests::test_all_buttons_pressed
           - flight-hotas-logitech::g_flight_throttle::tests::test_out_of_range_button_returns_false
           - flight-hotas-logitech::g_flight_throttle::tests::proptest_tests::buttons_roundtrip
+
+  # Product Requirement: VIRPIL Constellation Alpha HID Input Parsing
+  - id: REQ-78
+    name: VIRPIL Constellation Alpha HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-78.1
+        description: "WHEN a VPC Constellation Alpha HID report shorter than VPC_ALPHA_MIN_REPORT_BYTES is parsed THEN parse_alpha_report SHALL return an error; at exactly the minimum length it SHALL succeed; one byte short SHALL also fail"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_alpha_short_report_errors
+          - flight-hotas-virpil::parse_property_tests::alpha_one_byte_short_fails
+          - flight-hotas-virpil::parse_property_tests::alpha_boundary_min_len_succeeds
+      - id: AC-78.2
+        description: "WHEN any raw u16 axis values are parsed by parse_alpha_report THEN all five axes (x, y, z, sz, sl) SHALL be finite (never NaN or Inf)"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_alpha_axes_finite
+      - id: AC-78.3
+        description: "WHEN a 28-bit button mask is stored in a Constellation Alpha report THEN is_pressed(n) for n in 1..=28 SHALL equal bit (n-1) of the mask, and is_pressed(0) and is_pressed(29+) SHALL always return false"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_alpha_button_query_matches_mask
+
+  # Product Requirement: VIRPIL Constellation Alpha Prime HID Input Parsing
+  - id: REQ-79
+    name: VIRPIL Constellation Alpha Prime HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-79.1
+        description: "WHEN a VPC Constellation Alpha Prime HID report shorter than VPC_ALPHA_PRIME_MIN_REPORT_BYTES is parsed THEN parse_alpha_prime_report SHALL return an error"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_alpha_prime_short_report_errors
+      - id: AC-79.2
+        description: "WHEN any raw u16 axis values are parsed by parse_alpha_prime_report THEN all five axes (x, y, z, sz, sl) SHALL be within [0.0, 1.0]"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_alpha_prime_axes_in_range
+      - id: AC-79.3
+        description: "WHEN parse_alpha_prime_report is called with AlphaPrimeVariant::Left or ::Right THEN the returned state.variant SHALL equal the caller-supplied value"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::alpha_prime_variant_preserved_in_state
+
+  # Product Requirement: VIRPIL VPC Control Panel HID Input Parsing
+  - id: REQ-80
+    name: VIRPIL VPC Control Panel HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-80.1
+        description: "WHEN a VPC Control Panel 1 HID report shorter than VPC_PANEL1_MIN_REPORT_BYTES is parsed THEN parse_panel1_report SHALL return an error; at exactly the minimum length it SHALL succeed"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_panel1_short_report_errors
+          - flight-hotas-virpil::parse_property_tests::panel1_boundary_min_len_succeeds
+      - id: AC-80.2
+        description: "WHEN a 48-bit button mask is stored in a VPC Control Panel 1 report THEN is_pressed(n) for n in 1..=48 SHALL equal bit (n-1) of the mask, and is_pressed(0) and is_pressed(49+) SHALL always return false"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_panel1_button_query_matches_mask
+      - id: AC-80.3
+        description: "WHEN a VPC Control Panel 2 report is parsed with axis values in [0, VIRPIL_AXIS_MAX] THEN a1_normalised and a2_normalised SHALL each be within [0.0, 1.0] and SHALL be finite; raw axis values SHALL round-trip through the state"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_panel2_axes_normalised_non_negative_finite
+          - flight-hotas-virpil::parse_property_tests::panel2_axes_raw_round_trip
+      - id: AC-80.4
+        description: "WHEN a 47-bit button mask is stored in a VPC Control Panel 2 report THEN is_pressed(n) for n in 1..=47 SHALL equal bit (n-1) of the mask, and out-of-range indices SHALL always return false"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_panel2_button_query_matches_mask
+      - id: AC-80.5
+        description: "WHEN a VPC Control Panel 2 HID report shorter than VPC_PANEL2_MIN_REPORT_BYTES is parsed THEN parse_panel2_report SHALL return an error"
+        tests:
+          - flight-hotas-virpil::parse_property_tests::prop_panel2_short_report_errors
+
+  # Product Requirement: VKB STECS Interface HID Input Parsing Property Invariants
+  - id: REQ-81
+    name: VKB STECS Interface HID Input Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-81.1
+        description: "WHEN any raw u16 axis values are presented to StecsInputHandler::parse_interface_report THEN all five axes (rx, ry, x, y, z) SHALL be within [0.0, 1.0]"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_axes_in_range
+      - id: AC-81.2
+        description: "WHEN any raw u16 axis values are parsed by StecsInputHandler THEN all axes SHALL be finite (never NaN or Inf)"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_axes_finite
+      - id: AC-81.3
+        description: "WHEN a STECS interface report shorter than 4 bytes is parsed THEN StecsParseError::ReportTooShort SHALL be returned"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_short_report_errors
+      - id: AC-81.4
+        description: "WHEN a 32-bit button mask is stored in a STECS interface report THEN state.buttons SHALL exactly equal the input mask"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_button_mask_round_trips
+      - id: AC-81.5
+        description: "WHEN any raw u16 STECS Modern Throttle axis values are parsed THEN all four axes SHALL be within [0.0, 1.0] and SHALL be finite; short reports SHALL return StecsMtParseError::TooShort; both button words SHALL round-trip through parsing"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_mt_axes_in_range
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_mt_axes_finite
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_mt_short_errors
+          - flight-hotas-vkb::parse_property_tests::prop_stecs_mt_buttons_preserve
+
+  # Product Requirement: VKB Gladiator NXT EVO HID Input Parsing Property Invariants
+  - id: REQ-82
+    name: VKB Gladiator NXT EVO HID Input Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-82.1
+        description: "WHEN any raw u16 values are parsed for Gladiator NXT EVO signed axes (roll, pitch, yaw, mini_x, mini_y) THEN each SHALL be within [-1.0, 1.0]"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_gladiator_signed_axes_in_range
+      - id: AC-82.2
+        description: "WHEN any raw u16 throttle value is parsed by GladiatorInputHandler THEN state.axes.throttle SHALL be within [0.0, 1.0]"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_gladiator_throttle_in_range
+      - id: AC-82.3
+        description: "WHEN any raw u16 axis values are parsed by GladiatorInputHandler THEN roll, pitch, yaw, and throttle SHALL all be finite (never NaN or Inf)"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_gladiator_axes_finite
+      - id: AC-82.4
+        description: "WHEN a Gladiator NXT EVO report shorter than 12 bytes is parsed THEN GladiatorParseError::ReportTooShort SHALL be returned"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_gladiator_short_report_errors
+      - id: AC-82.5
+        description: "WHEN 64 button bits are packed into btn_lo (bits 0–31) and btn_hi (bits 32–63) THEN state.buttons[0..31] SHALL exactly reflect btn_lo bits and state.buttons[32..63] SHALL exactly reflect btn_hi bits"
+        tests:
+          - flight-hotas-vkb::parse_property_tests::prop_gladiator_button_bits_match
