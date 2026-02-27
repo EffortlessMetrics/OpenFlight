@@ -118,12 +118,14 @@
 | VIRPIL VPC VFX Joystick Grip | 0x3344 | 0x4143 | 5 | 28 | ✗ | 3 |
 | VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
 | VKB Gladiator EVO OT L | 0x231D | 0x3201 | 6 | 24 | ✗ | 3 |
+| VKB Gladiator EVO OT R | 0x231D | 0x3200 | 6 | 24 | ✗ | 3 |
 | VKB Gladiator Mk.II | 0x231D | 0x0121 | 6 | 16 | ✗ | 3 |
 | VKB Gladiator Modern Combat Pro | 0x231D | 0x0131 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |
 | VKB Gunfighter Mk.III | 0x231D | 0x0127 | 6 | 32 | ✗ | 3 |
+| VKB Gunfighter Mk.IV | 0x231D | 0x0129 | 6 | 32 | ✗ | 3 |
 | VKB Gunfighter Modern Combat Pro | 0x231D | 0x0125 | 8 | 32 | ✗ | 3 |
 | VKB NXT SEM THQ (Throttle Hat Quadrant) | 0x231D | 0x2214 | 1 | 20 | ✗ | 3 |
 | VKB Space Gunfighter L | 0x231D | 0x0127 | 8 | 32 | ✗ | 3 |
@@ -159,6 +161,8 @@
 | WinWing Orion 2 F-16EX Stick | 0x4098 | 0xBEA8 | 2 | 20 | ✗ | 3 |
 | WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |
 | WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE62 | 6 | 50 | ✗ | 2 |
+| WinWing Orion 3 F-15EX Stick | 0x4098 | 0xBD38 | 2 | 20 | ✗ | 2 |
+| WinWing Orion 3 F-16EX HOTAS Bundle (Virtual) | 0x4098 | ? | 6 | 52 | ✗ | 3 |
 | WinWing Orion 3 F-16EX Throttle | 0x4098 | 0xBD48 | 4 | 32 | ✗ | 2 |
 | WinWing SimApp Pro FCU + EFIS-L + EFIS-R | 0x4098 | 0xBA01 | 0 | 96 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |

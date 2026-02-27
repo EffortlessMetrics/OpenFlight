@@ -14,6 +14,7 @@ use flight_ipc::{
 };
 use prost::Message;
 use std::time::SystemTime;
+use std::collections::HashMap;
 
 fn create_test_device() -> Device {
     Device {
