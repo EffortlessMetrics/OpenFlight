@@ -3165,3 +3165,129 @@ requirements:
         description: "WHEN 64 button bits are packed into btn_lo (bits 0–31) and btn_hi (bits 32–63) THEN state.buttons[0..31] SHALL exactly reflect btn_lo bits and state.buttons[32..63] SHALL exactly reflect btn_hi bits"
         tests:
           - flight-hotas-vkb::parse_property_tests::prop_gladiator_button_bits_match
+
+  # Product Requirement: Thrustmaster HOTAS Cougar HID Input Parsing
+  - id: REQ-83
+    name: Thrustmaster HOTAS Cougar HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-83.1
+        description: "WHEN a HOTAS Cougar report is parsed THEN stick X and Y axes SHALL normalize 16-bit unsigned values to [-1.0, 1.0] with center value 32768 mapping to approximately 0.0 and extreme values (0 / 65535) to approximately ±1.0"
+        tests:
+          - flight-hotas-thrustmaster::cougar::tests::test_centered_axes_near_zero
+          - flight-hotas-thrustmaster::cougar::tests::test_stick_full_right
+          - flight-hotas-thrustmaster::cougar::tests::test_stick_full_left
+          - flight-hotas-thrustmaster::cougar::tests::test_stick_full_back
+          - flight-hotas-thrustmaster::cougar::tests::test_stick_full_forward
+          - flight-hotas-thrustmaster::cougar::tests::proptest_tests::stick_axes_always_in_range
+      - id: AC-83.2
+        description: "WHEN a HOTAS Cougar report is parsed THEN the throttle lever SHALL normalize 16-bit unsigned values to [0.0, 1.0] with 0 mapping to 0.0 and 65535 mapping to 1.0"
+        tests:
+          - flight-hotas-thrustmaster::cougar::tests::test_throttle_idle
+          - flight-hotas-thrustmaster::cougar::tests::test_throttle_full
+          - flight-hotas-thrustmaster::cougar::tests::proptest_tests::throttle_unipolar_in_range
+      - id: AC-83.3
+        description: "WHEN a HOTAS Cougar HID buffer shorter than 10 bytes is parsed THEN parse_cougar SHALL return CougarParseError::TooShort and SHALL never panic"
+        tests:
+          - flight-hotas-thrustmaster::cougar::tests::test_too_short_returns_error
+          - flight-hotas-thrustmaster::cougar::tests::test_empty_returns_error
+          - flight-hotas-thrustmaster::cougar::tests::proptest_tests::short_report_always_errors
+      - id: AC-83.4
+        description: "WHEN a 16-bit button bitmask is present in the HOTAS Cougar report THEN each of the 16 buttons SHALL be individually addressable via button(1..=16) and out-of-range indices SHALL return false"
+        tests:
+          - flight-hotas-thrustmaster::cougar::tests::test_trigger_tg1_pressed
+          - flight-hotas-thrustmaster::cougar::tests::test_trigger_tg2_pressed
+          - flight-hotas-thrustmaster::cougar::tests::test_button_decode_consistency
+          - flight-hotas-thrustmaster::cougar::tests::test_button_out_of_range_returns_false
+          - flight-hotas-thrustmaster::cougar::tests::proptest_tests::buttons_decode_consistently
+      - id: AC-83.5
+        description: "WHEN the TMS hat nibble in byte 8 is decoded THEN values 0–7 SHALL map to the eight compass directions (N/NE/E/SE/S/SW/W/NW) and values 8–15 SHALL map to Center"
+        tests:
+          - flight-hotas-thrustmaster::cougar::tests::test_tms_hat_center
+          - flight-hotas-thrustmaster::cougar::tests::test_tms_hat_north
+          - flight-hotas-thrustmaster::cougar::tests::test_tms_hat_east
+          - flight-hotas-thrustmaster::cougar::tests::test_tms_hat_south
+          - flight-hotas-thrustmaster::cougar::tests::test_tms_hat_west
+
+  # Product Requirement: Honeycomb Alpha Yoke HID Parsing Property Invariants
+  - id: REQ-84
+    name: Honeycomb Alpha Yoke HID Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-84.1
+        description: "WHEN any raw 12-bit roll value (0..=4095) is parsed by parse_alpha_report THEN state.axes.roll SHALL be within [-1.001, 1.001]"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::proptest_tests::roll_within_bounds
+      - id: AC-84.2
+        description: "WHEN any raw 12-bit pitch value (0..=4095) is parsed by parse_alpha_report THEN state.axes.pitch SHALL be within [-1.001, 1.001]"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::proptest_tests::pitch_within_bounds
+      - id: AC-84.3
+        description: "WHEN an Alpha Yoke report is built with arbitrary roll, pitch, 64-bit button mask, and hat nibble THEN parse_alpha_report SHALL always return Ok"
+        tests:
+          - flight-hotas-honeycomb::alpha::tests::proptest_tests::any_valid_report_parses
+
+  # Product Requirement: Honeycomb Bravo Throttle HID Parsing Property Invariants
+  - id: REQ-85
+    name: Honeycomb Bravo Throttle HID Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-85.1
+        description: "WHEN any raw 12-bit throttle axis values (0..=4095) are parsed by parse_bravo_report THEN each of the 7 throttle levers SHALL be within [0.0, 1.0001]"
+        tests:
+          - flight-hotas-honeycomb::bravo::tests::proptest_tests::throttles_within_bounds
+      - id: AC-85.2
+        description: "WHEN a Bravo Throttle report is built with arbitrary per-lever throttle values and a 64-bit button mask THEN parse_bravo_report SHALL always return Ok"
+        tests:
+          - flight-hotas-honeycomb::bravo::tests::proptest_tests::any_valid_report_parses
+
+  # Product Requirement: Thrustmaster Warthog Stick HID Parsing Property Invariants
+  - id: REQ-86
+    name: Thrustmaster Warthog Stick HID Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-86.1
+        description: "WHEN any raw u16 values are parsed for Warthog stick axes (X, Y, Rz) THEN each SHALL be within [-1.0, 1.0]"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::stick_axes_always_in_range
+      - id: AC-86.2
+        description: "WHEN a Warthog stick HID buffer shorter than the minimum report size is parsed THEN parse_warthog_stick SHALL return an error"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::stick_short_report_is_error
+      - id: AC-86.3
+        description: "WHEN arbitrary 16-bit button-low and 8-bit button-high values are packed into a Warthog stick report THEN state.buttons.button(n) SHALL exactly reflect the corresponding bit for n in 1..=19"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::stick_buttons_decode_consistently
+      - id: AC-86.4
+        description: "WHEN a Warthog stick HID buffer of valid or oversized length is parsed THEN parse_warthog_stick SHALL return Ok and SHALL never panic"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::any_valid_stick_report_parses
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::stick_oversized_report_no_panic
+
+  # Product Requirement: Thrustmaster Warthog Throttle HID Parsing Property Invariants
+  - id: REQ-87
+    name: Thrustmaster Warthog Throttle HID Parsing Property Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-87.1
+        description: "WHEN any raw u16 values are parsed for Warthog throttle axes (throttle_left, throttle_right) THEN each SHALL be within [0.0, 1.0]"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::throttle_unipolar_axes_in_range
+      - id: AC-87.2
+        description: "WHEN a Warthog throttle HID buffer shorter than the minimum report size is parsed THEN parse_warthog_throttle SHALL return an error"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::throttle_short_report_is_error
+      - id: AC-87.3
+        description: "WHEN arbitrary 16-bit btn_low, 16-bit btn_mid, and 8-bit btn_high values are packed into a Warthog throttle report THEN state.buttons.button(n) SHALL exactly reflect the corresponding bit for n in 1..=40"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::throttle_buttons_decode_consistently
+      - id: AC-87.4
+        description: "WHEN a Warthog throttle HID buffer of valid or oversized length is parsed THEN parse_warthog_throttle SHALL return Ok and SHALL never panic"
+        tests:
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::any_valid_throttle_report_parses
+          - flight-hotas-thrustmaster::warthog::tests::proptest_tests::throttle_oversized_report_no_panic
