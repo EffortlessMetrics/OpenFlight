@@ -3391,3 +3391,60 @@ requirements:
           - flight-hotas-ch::integration_tests::ch_health_monitor_reconnects_after_disconnect
           - flight-hotas-ch::integration_tests::ch_health_monitor_preserves_model
           - flight-hotas-ch::integration_tests::ch_health_monitor_all_models_full_cycle
+
+  - id: REQ-93
+    name: Moza AB9 / R3 FFB Base HID Parsing and Torque Control
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-93.1
+        description: "WHEN a HID input buffer shorter than AB9_REPORT_LEN (16 bytes) is passed to parse_ab9_report THEN the result SHALL be Err(MozaParseError::TooShort); WHEN byte 0 is not 0x01 THEN the result SHALL be Err(MozaParseError::UnknownReportId)"
+        tests:
+          - flight_ffb_moza::input::tests::test_report_too_short
+          - flight_ffb_moza::input::tests::test_wrong_report_id
+      - id: AC-93.2
+        description: "WHEN a valid AB9 report is parsed THEN axes.roll, axes.pitch, and axes.twist SHALL be within -1.0..=1.0 and axes.throttle SHALL be within 0.0..=1.0; full positive roll deflection SHALL produce axes.roll ≈ 1.0"
+        tests:
+          - flight_ffb_moza::input::tests::test_centred_axes_are_zero
+          - flight_ffb_moza::input::tests::test_full_roll_deflection
+          - flight_ffb_moza::input::tests::test_throttle_full_range
+      - id: AC-93.3
+        description: "WHEN bytes 9-10 of a report encode a button bitmask THEN buttons.is_pressed(n) SHALL return true for set bits; out-of-range indices (0, 17) SHALL always return false"
+        tests:
+          - flight_ffb_moza::input::tests::test_button_pressed
+      - id: AC-93.4
+        description: "WHEN TorqueCommand::to_report is called THEN the first byte SHALL be TORQUE_REPORT_ID (0x20) and the report SHALL be TORQUE_REPORT_LEN (6) bytes; values beyond [-1.0, 1.0] SHALL be clamped; ZERO torque SHALL produce all-zero payload bytes"
+        tests:
+          - flight_ffb_moza::effects::tests::test_zero_torque_report
+          - flight_ffb_moza::effects::tests::test_full_positive_x_torque
+          - flight_ffb_moza::effects::tests::test_full_negative_y_torque
+          - flight_ffb_moza::effects::tests::test_torque_clamps_over_range
+  - id: REQ-94
+    name: Saitek Pro Flight Multi Panel LCD Display, LED Mask, and Button Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-94.1
+        description: "WHEN LcdDisplay::from_str is called with a 5-character string THEN each character SHALL be 7-segment encoded left-to-right; short strings SHALL be right-padded with blanks; to_hid_report SHALL produce a 12-byte report with display bytes at positions 1-5 and LED mask at byte 11"
+        tests:
+          - flight_panels_saitek::multi_panel::tests::test_lcd_from_str_five_digits
+          - flight_panels_saitek::multi_panel::tests::test_lcd_from_str_shorter_than_five_pads_right
+          - flight_panels_saitek::multi_panel::tests::test_lcd_to_hid_report_format
+      - id: AC-94.2
+        description: "WHEN the eight led_bits constants are inspected THEN each SHALL be a distinct power of two and their bitwise OR SHALL equal 0xFF; MultiPanelLedMask::NONE SHALL be 0x00 and ALL SHALL be 0xFF; the set builder SHALL correctly set and clear individual bits"
+        tests:
+          - flight_panels_saitek::multi_panel::tests::test_led_bit_constants_are_distinct_powers_of_two
+          - flight_panels_saitek::multi_panel::tests::test_led_mask_none_is_zero
+          - flight_panels_saitek::multi_panel::tests::test_led_mask_all_is_ff
+          - flight_panels_saitek::multi_panel::tests::test_led_mask_set_method
+      - id: AC-94.3
+        description: "WHEN a 3-byte HID input report is parsed by parse_multi_panel_input THEN byte 1 selector and encoder bits SHALL map to the correct sel_*/enc_* accessors and byte 2 SHALL map to the correct btn_* accessors"
+        tests:
+          - flight_panels_saitek::multi_panel::tests::test_parse_input_mode_selector_bits
+          - flight_panels_saitek::multi_panel::tests::test_parse_input_encoder_bits
+          - flight_panels_saitek::multi_panel::tests::test_parse_input_ap_buttons
+          - flight_panels_saitek::multi_panel::tests::test_parse_input_no_buttons_pressed
+      - id: AC-94.4
+        description: "WHEN parse_multi_panel_input is called with a buffer shorter than MULTI_PANEL_INPUT_MIN_BYTES (3) THEN the result SHALL be None for every such buffer"
+        tests:
+          - flight_panels_saitek::multi_panel::tests::test_parse_input_too_short_returns_none

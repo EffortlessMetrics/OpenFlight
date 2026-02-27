@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 507 |
-| ACs with tests | 507 |
-| ACs with Gherkin | 507 |
-| ACs with both tests + Gherkin | 507 |
-| Complete | 507 |
+| Total AC | 524 |
+| ACs with tests | 524 |
+| ACs with Gherkin | 524 |
+| ACs with both tests + Gherkin | 524 |
+| Complete | 524 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -52,15 +52,15 @@
 | flight-device-common | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-ffb-moza | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
+| flight-ffb-moza | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-ch | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-logitech | 21 | 21 | 21 | 21 | 21 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-logitech | 26 | 26 | 26 | 26 | 26 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 33 | 33 | 33 | 33 | 33 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
@@ -77,7 +77,7 @@
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-panels-saitek | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -614,3 +614,20 @@
 | REQ-89 | AC-89.1 | WHEN a HID report shorter than 24 bytes is parsed by parse_orion2_throttle_report THEN the result SHALL be Err(Orion2ThrottleParseError::TooShort) containing the expected byte count | specs/features/req_89_winwing_orion2_throttle.feature:8<br>specs/features/req_89_winwing_orion2_throttle.feature:15 | 2 | ✅ Complete |
 | REQ-89 | AC-89.2 | WHEN any raw u16 values are used for throttle_left, throttle_right, and friction THEN parse_orion2_throttle_report SHALL produce all throttle and friction axes within [0.0, 1.0] | specs/features/req_89_winwing_orion2_throttle.feature:21<br>specs/features/req_89_winwing_orion2_throttle.feature:29<br>specs/features/req_89_winwing_orion2_throttle.feature:37 | 3 | ✅ Complete |
 | REQ-89 | AC-89.3 | WHEN a valid Orion2 Throttle report is parsed THEN all axis values SHALL be finite | specs/features/req_89_winwing_orion2_throttle.feature:46 | 1 | ✅ Complete |
+| REQ-91 | AC-91.1 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN axes.x, axes.y, and axes.twist SHALL be within -1.0..=1.0 and axes.throttle SHALL be within 0.0..=1.0 | specs/features/req_91_extreme3dpro_proptest.feature:8 | 1 | ✅ Complete |
+| REQ-91 | AC-91.2 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN all axis values SHALL be finite (never NaN or Inf) | specs/features/req_91_extreme3dpro_proptest.feature:17 | 1 | ✅ Complete |
+| REQ-91 | AC-91.3 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN buttons.buttons SHALL be within the 12-bit mask (≤ 0x0FFF) | specs/features/req_91_extreme3dpro_proptest.feature:26 | 1 | ✅ Complete |
+| REQ-91 | AC-91.4 | WHEN a hat nibble value in 0..=15 is encoded into a 7-byte report and parsed THEN buttons.hat SHALL always be a valid Extreme3DProHat variant | specs/features/req_91_extreme3dpro_proptest.feature:33 | 1 | ✅ Complete |
+| REQ-91 | AC-91.5 | WHEN a byte buffer whose length is less than EXTREME_3D_PRO_MIN_REPORT_BYTES is passed to parse_extreme_3d_pro THEN the result SHALL always be Err | specs/features/req_91_extreme3dpro_proptest.feature:39 | 1 | ✅ Complete |
+| REQ-92 | AC-92.1 | WHEN recommended_preset is called for any of the six CH Products models THEN the returned ChAxisPreset SHALL have its device field equal to the requested model | specs/features/req_92_ch_products_integration.feature:9 | 1 | ✅ Complete |
+| REQ-92 | AC-92.2 | WHEN recommended_preset is called for any CH Products model THEN deadzone SHALL be within [0.0, 0.5], expo SHALL be within [0.0, 1.0], and both SHALL be finite | specs/features/req_92_ch_products_integration.feature:15<br>specs/features/req_92_ch_products_integration.feature:21<br>specs/features/req_92_ch_products_integration.feature:27 | 4 | ✅ Complete |
+| REQ-92 | AC-92.3 | WHEN recommended_preset is called for EclipseYoke or FlightYoke THEN invert_throttle SHALL be true; for all other models it SHALL be false | specs/features/req_92_ch_products_integration.feature:34<br>specs/features/req_92_ch_products_integration.feature:40 | 2 | ✅ Complete |
+| REQ-92 | AC-92.4 | WHEN a ChHealthMonitor is created THEN initial status SHALL be Unknown; status updates SHALL be reflected immediately; model SHALL be preserved; all models SHALL support a full Unknown→Connected→Disconnected→Connected cycle | specs/features/req_92_ch_products_integration.feature:46<br>specs/features/req_92_ch_products_integration.feature:52<br>specs/features/req_92_ch_products_integration.feature:58<br>specs/features/req_92_ch_products_integration.feature:64<br>specs/features/req_92_ch_products_integration.feature:70<br>specs/features/req_92_ch_products_integration.feature:76 | 6 | ✅ Complete |
+| REQ-93 | AC-93.1 | WHEN a HID input buffer shorter than AB9_REPORT_LEN (16 bytes) is passed to parse_ab9_report THEN the result SHALL be Err(MozaParseError::TooShort); WHEN byte 0 is not 0x01 THEN the result SHALL be Err(MozaParseError::UnknownReportId) | specs/features/req_93_moza_ffb_base.feature:8<br>specs/features/req_93_moza_ffb_base.feature:15 | 2 | ✅ Complete |
+| REQ-93 | AC-93.2 | WHEN a valid AB9 report is parsed THEN axes.roll, axes.pitch, and axes.twist SHALL be within -1.0..=1.0 and axes.throttle SHALL be within 0.0..=1.0; full positive roll deflection SHALL produce axes.roll ≈ 1.0 | specs/features/req_93_moza_ffb_base.feature:21<br>specs/features/req_93_moza_ffb_base.feature:29<br>specs/features/req_93_moza_ffb_base.feature:35 | 3 | ✅ Complete |
+| REQ-93 | AC-93.3 | WHEN bytes 9-10 of a report encode a button bitmask THEN buttons.is_pressed(n) SHALL return true for set bits; out-of-range indices (0, 17) SHALL always return false | specs/features/req_93_moza_ffb_base.feature:43<br>specs/features/req_93_moza_ffb_base.feature:51 | 1 | ✅ Complete |
+| REQ-93 | AC-93.4 | WHEN TorqueCommand::to_report is called THEN the first byte SHALL be TORQUE_REPORT_ID (0x20) and the report SHALL be TORQUE_REPORT_LEN (6) bytes; values beyond [-1.0, 1.0] SHALL be clamped; ZERO torque SHALL produce all-zero payload bytes | specs/features/req_93_moza_ffb_base.feature:57<br>specs/features/req_93_moza_ffb_base.feature:64<br>specs/features/req_93_moza_ffb_base.feature:71 | 4 | ✅ Complete |
+| REQ-94 | AC-94.1 | WHEN LcdDisplay::from_str is called with a 5-character string THEN each character SHALL be 7-segment encoded left-to-right; short strings SHALL be right-padded with blanks; to_hid_report SHALL produce a 12-byte report with display bytes at positions 1-5 and LED mask at byte 11 | specs/features/req_94_saitek_multi_panel.feature:8<br>specs/features/req_94_saitek_multi_panel.feature:18<br>specs/features/req_94_saitek_multi_panel.feature:26 | 3 | ✅ Complete |
+| REQ-94 | AC-94.2 | WHEN the eight led_bits constants are inspected THEN each SHALL be a distinct power of two and their bitwise OR SHALL equal 0xFF; MultiPanelLedMask::NONE SHALL be 0x00 and ALL SHALL be 0xFF; the set builder SHALL correctly set and clear individual bits | specs/features/req_94_saitek_multi_panel.feature:36<br>specs/features/req_94_saitek_multi_panel.feature:43<br>specs/features/req_94_saitek_multi_panel.feature:50 | 4 | ✅ Complete |
+| REQ-94 | AC-94.3 | WHEN a 3-byte HID input report is parsed by parse_multi_panel_input THEN byte 1 selector and encoder bits SHALL map to the correct sel_*/enc_* accessors and byte 2 SHALL map to the correct btn_* accessors | specs/features/req_94_saitek_multi_panel.feature:59<br>specs/features/req_94_saitek_multi_panel.feature:69 | 4 | ✅ Complete |
+| REQ-94 | AC-94.4 | WHEN parse_multi_panel_input is called with a buffer shorter than MULTI_PANEL_INPUT_MIN_BYTES (3) THEN the result SHALL be None for every such buffer | specs/features/req_94_saitek_multi_panel.feature:82 | 1 | ✅ Complete |
