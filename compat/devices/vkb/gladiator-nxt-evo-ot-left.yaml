@@ -1,0 +1,59 @@
+# VKB Gladiator NXT EVO OT Left
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x231D (VKB), PID 0x3201 — linux-hardware.org (2 probes,
+# USB string "VKBsim Gladiator EVO OT L", vendor "VKB-Sim (C) Alex Oz 2023").
+# "OT" = Original Technology firmware (predecessor to the SEM/EVO firmware line).
+# Left-hand (reversed chirality) variant; commonly used in dual-stick setups.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO OT Left"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x3201  # VKBsim Gladiator EVO OT L — confirmed via linux-hardware.org (2 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15   # 15-bit precision
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: LEFT_HAND
+    description: >
+      Left-handed stick for dual-stick setups. Axis orientation is mirrored
+      from the right variant; verify per-axis polarity in OpenFlight profile.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software. OpenFlight reads
+      whatever the device reports; user must align VKB config with OpenFlight
+      axis assignments.
+  - id: OT_FIRMWARE
+    description: >
+      This variant runs the OT (Original Technology) firmware rather than the
+      SEM (Space/Enhanced/Modern) firmware. Feature set and button layout may
+      differ from the SEM variants (PIDs 0x0201, 0x0204).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x3201 confirmed via linux-hardware.org (2 probes, "VKBsim Gladiator EVO OT L").
+    OT firmware variant of the Gladiator NXT EVO left-hand stick. See gladiator-nxt-left.yaml
+    (PID 0x0201) for the standard EVO left variant.
+    Last reviewed: 2026-02.
