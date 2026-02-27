@@ -3659,3 +3659,110 @@ requirements:
         tests:
           - flight_virtual::ofp1_emulator::tests::test_emulator_creation
           - flight_virtual::ofp1_emulator::tests::test_emulator_capabilities
+
+  # Product Requirement: Rules DSL Condition Parsing
+  - id: REQ-103
+    name: Rules DSL Condition Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-103.1
+        description: "WHEN a plain variable name is parsed as a condition THEN it SHALL produce a Boolean condition with negate=false"
+        tests:
+          - flight_rules::tests::test_condition_parsing
+          - flight_rules::tests::prop_parse_boolean_condition
+      - id: AC-103.2
+        description: "WHEN a numeric greater-than condition string is parsed THEN it SHALL produce a Compare condition with operator Greater"
+        tests:
+          - flight_rules::tests::test_condition_parsing
+          - flight_rules::tests::prop_parse_numeric_comparison
+      - id: AC-103.3
+        description: "WHEN a rule schema contains an empty condition string THEN validation SHALL fail with a condition error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-103.4
+        description: "WHEN a condition string prefixed with '!' is parsed THEN it SHALL produce a Boolean condition with negate=true"
+        tests:
+          - flight_rules::tests::test_condition_parsing
+          - flight_rules::tests::prop_parse_boolean_condition
+      - id: AC-103.5
+        description: "WHEN a condition joined by 'and' is parsed THEN it SHALL produce an And condition with the correct sub-conditions"
+        tests:
+          - flight_rules::tests::test_compound_and_condition
+      - id: AC-103.6
+        description: "WHEN a condition joined by 'or' is parsed THEN it SHALL produce an Or condition with the correct sub-conditions"
+        tests:
+          - flight_rules::tests::test_compound_or_condition
+      - id: AC-103.7
+        description: "WHEN any of the six comparison operators (>, <, ==, !=, >=, <=) appear in a condition THEN the correct CompareOp variant SHALL be produced"
+        tests:
+          - flight_rules::tests::test_new_comparison_operators
+          - flight_rules::tests::test_ge_not_confused_with_gt
+          - flight_rules::tests::prop_parse_numeric_comparison
+
+  # Product Requirement: Rules DSL Action Parsing
+  - id: REQ-104
+    name: Rules DSL Action Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-104.1
+        description: "WHEN 'led.panel(TARGET).on()' is parsed as an action THEN it SHALL produce a LedOn action with the correct target"
+        tests:
+          - flight_rules::tests::test_action_parsing
+          - flight_rules::tests::prop_parse_action_led_on_off
+      - id: AC-104.2
+        description: "WHEN 'led.panel(TARGET).blink(rate_hz=N)' is parsed as an action THEN it SHALL produce a LedBlink action with the correct target and rate"
+        tests:
+          - flight_rules::tests::test_panel_blink_action
+      - id: AC-104.3
+        description: "WHEN an empty string is parsed as an action THEN parsing SHALL fail with an unsupported action syntax error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-104.4
+        description: "WHEN an unrecognised action string is parsed THEN parsing SHALL fail with an unsupported action syntax error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-104.5
+        description: "WHEN 'led.indexer.blink(rate_hz=N)' is parsed as an action THEN it SHALL produce a LedBlink action with target 'indexer'"
+        tests:
+          - flight_rules::tests::test_action_parsing
+          - flight_rules::tests::test_indexer_on_off_action
+      - id: AC-104.6
+        description: "WHEN 'led.panel(TARGET).brightness(V)' is parsed as an action THEN it SHALL produce a LedBrightness action with the correct target and brightness value"
+        tests:
+          - flight_rules::tests::test_panel_brightness_action
+
+  # Product Requirement: Rules Schema Validation
+  - id: REQ-105
+    name: Rules Schema Validation
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-105.1
+        description: "WHEN a rules schema has version 'flight.ledmap/1' and all rules have valid conditions and actions THEN validation SHALL succeed"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+          - flight_rules::snapshot_tests::snapshot_bytecode_gear_down_panel
+      - id: AC-105.2
+        description: "WHEN a rules schema specifies an unsupported version THEN validation SHALL fail with a version error"
+        tests:
+          - flight_rules::tests::test_invalid_schema_version
+      - id: AC-105.3
+        description: "WHEN a rule in the schema has an empty condition THEN validation SHALL fail with a condition error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-105.4
+        description: "WHEN a rule in the schema has an empty action THEN validation SHALL fail with an action error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-105.5
+        description: "WHEN a rule in the schema has an invalid action syntax THEN validation SHALL fail with an invalid action error"
+        tests:
+          - flight_rules::tests::test_rules_schema_validation
+      - id: AC-105.6
+        description: "WHEN a schema containing multiple valid rules is compiled THEN the bytecode program SHALL be non-empty and contain instructions for all rules"
+        tests:
+          - flight_rules::tests::test_rule_compilation
+          - flight_rules::tests::prop_valid_rule_compiles_to_bytecode
+          - flight_rules::snapshot_tests::snapshot_bytecode_compound_and
