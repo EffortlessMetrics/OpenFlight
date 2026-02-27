@@ -3766,3 +3766,62 @@ requirements:
           - flight_rules::tests::test_rule_compilation
           - flight_rules::tests::prop_valid_rule_compiles_to_bytecode
           - flight_rules::snapshot_tests::snapshot_bytecode_compound_and
+
+  # Product Requirement: Core Type Safety
+  - id: REQ-106
+    name: Core Type Safety
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-106.1
+        description: "WHEN any SimId variant is formatted with Display THEN the result SHALL be non-empty and contain only printable Unicode characters"
+        tests:
+          - flight-core::tests::sim_id_display_ksp
+      - id: AC-106.2
+        description: "WHEN two DeviceId values with the same vendor and product IDs are compared via Ord THEN they SHALL compare as equal on every call"
+        tests:
+          - flight-device-common::device::tests::test_ordering
+      - id: AC-106.3
+        description: "WHEN a Profile whose AircraftId ICAO is 'C172' is serialized to JSON and deserialized THEN the ICAO field SHALL equal 'C172' without modification"
+        tests:
+          - flight-core::profile_tests::profile_json_roundtrip_preserves_all_fields
+      - id: AC-106.4
+        description: "WHEN a FlightError variant is formatted with Display THEN the message SHALL be non-empty and SHALL contain the original context string"
+        tests:
+          - flight-core::tests::flight_error_display_variants
+          - flight-core::tests::flight_error_profile_and_io_variants
+      - id: AC-106.5
+        description: "WHEN an arbitrary byte sequence is passed to the profile JSON parser THEN it SHALL return Err and SHALL NOT panic"
+        tests:
+          - flight-core::fuzz_tests::test_profile_json_deserialization_no_panic
+          - flight-core::fuzz_tests::test_rules_json_deserialization_no_panic
+
+  # Product Requirement: Event Bus Delivery Guarantees
+  - id: REQ-107
+    name: Event Bus Delivery Guarantees
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-107.1
+        description: "WHEN a snapshot is published to a BusPublisher with multiple active subscribers THEN each subscriber SHALL independently receive the snapshot via try_recv"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_multiple_subscribers_each_receive_snapshot
+      - id: AC-107.2
+        description: "WHEN N snapshots are published in sequence with distinct SimId tags THEN the subscriber SHALL receive all N snapshots in exactly that order"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_subscriber_after_multiple_publishes
+          - flight-bus::proptest_bus_invariants::fifo_ordering_within_channel
+      - id: AC-107.3
+        description: "WHEN the publisher-level rate limiter suppresses a snapshot THEN none of the N registered subscribers (1-4) SHALL receive it"
+        tests:
+          - flight-bus::proptest_bus_invariants::rate_limited_drop_reaches_no_subscriber
+      - id: AC-107.4
+        description: "WHEN a snapshot with arbitrary f32 bit patterns (NaN, Inf, subnormal) is published THEN the call SHALL return Ok or Err but SHALL NOT panic"
+        tests:
+          - flight-bus::pubsub_unit_tests::test_publish_nan_angular_rate_rejected
+          - flight-bus::pubsub_unit_tests::test_publish_inf_altitude_rejected
+          - flight-bus::proptest_bus_invariants::no_panic_on_arbitrary_float_payloads
+      - id: AC-107.5
+        description: "WHEN a subscriber is configured with a low per-subscriber max_rate_hz and a second snapshot is published before the minimum interval THEN the subscriber SHALL not receive it but the publish call SHALL succeed"
+        tests:
+          - flight-bus::publisher::tests::test_subscriber_rate_limiting
