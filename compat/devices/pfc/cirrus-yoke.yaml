@@ -1,0 +1,54 @@
+# PFC Cirrus-Licensed Training Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC (Precision Flight Controls) produces licensed replica aircraft controls
+# for FAA-certified aviation training devices (ATDs). The Cirrus yoke replicates
+# the Cirrus SR20/SR22 sidestick-style yoke geometry. VID/PID unconfirmed;
+# PFC uses Microchip (0x04D8) or FTDI (0x0403) USB bridges depending on model.
+
+schema_version: "1"
+
+device:
+  name: "PFC Cirrus Training Yoke"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip common in PFC hardware)
+    product_id: 0x0110      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 6               # Hat switch on grip, PTT, AP disconnect
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. PFC uses Microchip USBHID or FTDI serial bridges
+      depending on the product generation. Confirm with lsusb on real hardware.
+  - id: CIRRUS_SIDESTICK_GEOMETRY
+    description: >
+      Cirrus-style control replicates the SR20/SR22 side-stick geometry rather
+      than a traditional centre column. Pitch and roll axes may have asymmetric
+      travel ranges compared to column-style yokes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Cirrus-licensed training yoke. VID/PID unconfirmed. Used in FAA-approved
+    ATD setups. Contact PFC for exact USB descriptor details.
+    Last reviewed: 2026-06.

@@ -4696,3 +4696,217 @@ requirements:
         description: "Controller disconnect and reconnect SHALL be handled cleanly with no panic or stale axis values"
         tests:
           - feature:specs/features/req_134_gamepad_flight_control.feature
+  - id: REQ-135
+    name: OpenTrack head tracking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-135.1
+        description: "A 48-byte OpenTrack UDP packet SHALL be parsed to a structured frame with correct field values"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.2
+        description: "A packet containing a NaN floating-point value SHALL return a parse error"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.3
+        description: "A packet shorter than 48 bytes SHALL return an insufficient-length error"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.4
+        description: "Yaw 0 degrees SHALL normalize to axis value 0.5"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.5
+        description: "Pitch 0 degrees SHALL normalize to axis value 0.5"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.6
+        description: "Yaw -180 degrees SHALL map to normalized axis value 0.0"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.7
+        description: "Yaw +180 degrees SHALL map to normalized axis value 1.0"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+      - id: AC-135.8
+        description: "A configured deadzone SHALL suppress head-tracking output when angular displacement is below the threshold"
+        tests:
+          - feature:specs/features/req_135_opentrack_head_tracking.feature
+  - id: REQ-136
+    name: Saitek FIP panel integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-136.1
+        description: "The FIP display buffer SHALL be exactly 320 pixels wide and 240 pixels tall"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.2
+        description: "A pixel written at position (0,0) SHALL read back with the correct RGB value"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.3
+        description: "A pixel written at position (319,239) SHALL read back with the correct RGB value"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.4
+        description: "RGB565 encoding SHALL produce the correct big-endian byte order"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.5
+        description: "A Page1 button press SHALL produce the correct button-press event"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.6
+        description: "A clockwise rotary-encoder step SHALL produce a rotary-CW event"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.7
+        description: "An all-zero frame buffer SHALL render as an all-black display"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+      - id: AC-136.8
+        description: "An out-of-bounds pixel write SHALL not panic and SHALL leave the buffer unchanged"
+        tests:
+          - feature:specs/features/req_136_saitek_fip_panel.feature
+  - id: REQ-137
+    name: Saitek BIP panel
+    kind: product
+    status: draft
+    ac:
+      - id: AC-137.1
+        description: "A newly initialised BIP panel SHALL have all LEDs in the Off state"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.2
+        description: "An LED set to Green SHALL read back as Green"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.3
+        description: "An LED set to Amber SHALL read back as Amber"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.4
+        description: "An LED set to Red SHALL read back as Red"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.5
+        description: "An out-of-bounds LED set operation SHALL be silently ignored without panic"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.6
+        description: "An out-of-bounds LED get operation SHALL return None"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.7
+        description: "encode_strip SHALL produce a 25-byte output matching the expected encoding for a known LED pattern"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+      - id: AC-137.8
+        description: "count_color SHALL return the correct count for a given colour in a mixed LED strip"
+        tests:
+          - feature:specs/features/req_137_saitek_bip_panel.feature
+  - id: REQ-138
+    name: Cloud profile sync
+    kind: product
+    status: draft
+    ac:
+      - id: AC-138.1
+        description: "Upload SHALL serialize the profile data and metadata into the expected payload format"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.2
+        description: "Download SHALL deserialize a valid payload back to the original profile"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.3
+        description: "The local-wins conflict resolution strategy SHALL preserve the local version when the local profile is newer"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.4
+        description: "A paginated list fetch SHALL return all items across all pages"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.5
+        description: "A network error during upload SHALL return a typed NetworkError variant"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.6
+        description: "A schema-version mismatch on download SHALL return a SchemaMismatch error"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.7
+        description: "sanitize-for-upload SHALL be idempotent"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+      - id: AC-138.8
+        description: "Vote direction Up and Down SHALL each serialize to their canonical wire representations"
+        tests:
+          - feature:specs/features/req_138_cloud_profile_sync.feature
+  - id: REQ-139
+    name: Streaming telemetry bus
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-139.1
+        description: "Bus snapshots SHALL carry monotonically non-decreasing timestamps"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+      - id: AC-139.2
+        description: "Concurrent publishers writing to distinct fields SHALL not corrupt shared snapshot state"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+      - id: AC-139.3
+        description: "A slow consumer SHALL receive at most the queue capacity of items under backpressure with older items dropped"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+      - id: AC-139.4
+        description: "A published value SHALL be observable by a subscriber within one 250 Hz tick"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+      - id: AC-139.5
+        description: "A snapshot SHALL be marked invalid after exceeding the configured staleness threshold of missed ticks"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+      - id: AC-139.6
+        description: "Unsubscribing SHALL free the subscriber slot for reuse"
+        tests:
+          - feature:specs/features/req_139_telemetry_bus.feature
+  - id: REQ-140
+    name: Installer and update pipeline
+    kind: product
+    status: draft
+    ac:
+      - id: AC-140.1
+        description: "The Windows MSI installer SHALL place flightd.exe and flightctl.exe in the installation directory"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.2
+        description: "The Linux deb package SHALL install flightd and flightctl to /usr/local/bin"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.3
+        description: "The Linux deb package SHALL install the OpenFlight udev rules file to /etc/udev/rules.d/"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.4
+        description: "The Linux deb package SHALL install the flightd systemd user unit file to /usr/lib/systemd/user/"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.5
+        description: "Uninstalling the package SHALL remove all files that were installed"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.6
+        description: "Applying a delta patch SHALL update the installed binary to the target version"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.7
+        description: "Rollback SHALL restore the previously installed version and leave the system in a consistent state"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature
+      - id: AC-140.8
+        description: "Signature verification SHALL succeed for a binary accompanied by a valid Ed25519 signature"
+        tests:
+          - feature:specs/features/req_140_installer_update.feature

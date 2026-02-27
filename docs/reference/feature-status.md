@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 756 |
-| ACs with tests | 756 |
+| Total AC | 802 |
+| ACs with tests | 802 |
 | ACs with Gherkin | 714 |
 | ACs with both tests + Gherkin | 714 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 159 |
+| Draft | 205 |
 | Incomplete | 0 |
-| Microcrates | 71 |
-| Microcrates with tests | 65 (91.5%) |
-| Microcrates with Gherkin | 65 (91.5%) |
-| Microcrates fully covered | 65 (91.5%) |
+| Microcrates | 72 |
+| Microcrates with tests | 65 (90.3%) |
+| Microcrates with Gherkin | 65 (90.3%) |
+| Microcrates fully covered | 65 (90.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 94.4% |
-| Test + Gherkin coverage | 94.4% |
+| Gherkin coverage | 89.0% |
+| Test + Gherkin coverage | 89.0% |
 
 ## BDD Microcrate Matrix
 
@@ -77,6 +77,7 @@
 | flight-metrics | 19 | 19 | 19 | 19 | 19 | 100.0% | 100.0% | 100.0% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-open-hardware | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
+| flight-opentrack | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -867,3 +868,49 @@
 | REQ-134 | AC-134.6 | Button repeat at a configured rate SHALL fire the bound action at approximately that frequency while held | - | 1 | ⚪ Draft |
 | REQ-134 | AC-134.7 | Xbox Elite rear paddles SHALL be assignable to custom axes in the profile | - | 1 | ⚪ Draft |
 | REQ-134 | AC-134.8 | Controller disconnect and reconnect SHALL be handled cleanly with no panic or stale axis values | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.1 | A 48-byte OpenTrack UDP packet SHALL be parsed to a structured frame with correct field values | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.2 | A packet containing a NaN floating-point value SHALL return a parse error | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.3 | A packet shorter than 48 bytes SHALL return an insufficient-length error | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.4 | Yaw 0 degrees SHALL normalize to axis value 0.5 | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.5 | Pitch 0 degrees SHALL normalize to axis value 0.5 | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.6 | Yaw -180 degrees SHALL map to normalized axis value 0.0 | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.7 | Yaw +180 degrees SHALL map to normalized axis value 1.0 | - | 1 | ⚪ Draft |
+| REQ-135 | AC-135.8 | A configured deadzone SHALL suppress head-tracking output when angular displacement is below the threshold | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.1 | The FIP display buffer SHALL be exactly 320 pixels wide and 240 pixels tall | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.2 | A pixel written at position (0,0) SHALL read back with the correct RGB value | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.3 | A pixel written at position (319,239) SHALL read back with the correct RGB value | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.4 | RGB565 encoding SHALL produce the correct big-endian byte order | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.5 | A Page1 button press SHALL produce the correct button-press event | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.6 | A clockwise rotary-encoder step SHALL produce a rotary-CW event | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.7 | An all-zero frame buffer SHALL render as an all-black display | - | 1 | ⚪ Draft |
+| REQ-136 | AC-136.8 | An out-of-bounds pixel write SHALL not panic and SHALL leave the buffer unchanged | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.1 | A newly initialised BIP panel SHALL have all LEDs in the Off state | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.2 | An LED set to Green SHALL read back as Green | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.3 | An LED set to Amber SHALL read back as Amber | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.4 | An LED set to Red SHALL read back as Red | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.5 | An out-of-bounds LED set operation SHALL be silently ignored without panic | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.6 | An out-of-bounds LED get operation SHALL return None | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.7 | encode_strip SHALL produce a 25-byte output matching the expected encoding for a known LED pattern | - | 1 | ⚪ Draft |
+| REQ-137 | AC-137.8 | count_color SHALL return the correct count for a given colour in a mixed LED strip | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.1 | Upload SHALL serialize the profile data and metadata into the expected payload format | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.2 | Download SHALL deserialize a valid payload back to the original profile | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.3 | The local-wins conflict resolution strategy SHALL preserve the local version when the local profile is newer | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.4 | A paginated list fetch SHALL return all items across all pages | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.5 | A network error during upload SHALL return a typed NetworkError variant | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.6 | A schema-version mismatch on download SHALL return a SchemaMismatch error | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.7 | sanitize-for-upload SHALL be idempotent | - | 1 | ⚪ Draft |
+| REQ-138 | AC-138.8 | Vote direction Up and Down SHALL each serialize to their canonical wire representations | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.1 | Bus snapshots SHALL carry monotonically non-decreasing timestamps | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.2 | Concurrent publishers writing to distinct fields SHALL not corrupt shared snapshot state | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.3 | A slow consumer SHALL receive at most the queue capacity of items under backpressure with older items dropped | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.4 | A published value SHALL be observable by a subscriber within one 250 Hz tick | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.5 | A snapshot SHALL be marked invalid after exceeding the configured staleness threshold of missed ticks | - | 1 | ⚪ Draft |
+| REQ-139 | AC-139.6 | Unsubscribing SHALL free the subscriber slot for reuse | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.1 | The Windows MSI installer SHALL place flightd.exe and flightctl.exe in the installation directory | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.2 | The Linux deb package SHALL install flightd and flightctl to /usr/local/bin | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.3 | The Linux deb package SHALL install the OpenFlight udev rules file to /etc/udev/rules.d/ | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.4 | The Linux deb package SHALL install the flightd systemd user unit file to /usr/lib/systemd/user/ | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.5 | Uninstalling the package SHALL remove all files that were installed | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.6 | Applying a delta patch SHALL update the installed binary to the target version | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.7 | Rollback SHALL restore the previously installed version and leave the system in a consistent state | - | 1 | ⚪ Draft |
+| REQ-140 | AC-140.8 | Signature verification SHALL succeed for a binary accompanied by a valid Ed25519 signature | - | 1 | ⚪ Draft |

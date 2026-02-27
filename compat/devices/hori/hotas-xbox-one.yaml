@@ -1,0 +1,54 @@
+# HORI HOTAS Flight Stick for Xbox One
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x0084 is a community estimate for the Xbox One HOTAS flight stick variant.
+# The HORI HOTAS Flight Stick for Xbox One features a separate throttle unit
+# with dedicated axes. Microsoft Flight Simulator Xbox-native, also PC-compatible
+# when XInput mode is active.
+
+schema_version: "1"
+
+device:
+  name: "HORI HOTAS Flight Stick for Xbox One"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0084      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0084 is a community estimate. Confirm with lsusb on real hardware.
+  - id: XINPUT_XBOX_MODE
+    description: >
+      The Xbox One variant may enumerate via XInput rather than standard HID on
+      Windows. OpenFlight reads the DirectInput/HID interface; XInput path is
+      handled by the system gamepad layer.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI HOTAS Flight Stick for Xbox One — separate joystick + throttle unit.
+    PID 0x0084 is a community estimate. Compatible with MSFS on Xbox and PC.
+    Last reviewed: 2026-06.

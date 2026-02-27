@@ -1,0 +1,52 @@
+# VIRPIL VPC Control Panel #1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x025B confirmed via community USB descriptor captures; referenced in
+# vpc-control-panel-3.yaml (PID comment cross-reference).
+# The VPC Control Panel #1 is a programmable button/encoder/switch panel for
+# desktop mounting, providing 8 toggle switches, 4 rotary encoders, and
+# 3 push buttons.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel #1"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x025B      # Confirmed via community USB descriptor cross-reference
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 15               # 8 toggles + 4 encoder pushes + 3 dedicated buttons
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Rotary encoders report increment/decrement as button pairs. Each rotation
+      step fires a momentary button event.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel #1. PID 0x025B confirmed via community cross-reference
+    (see vpc-control-panel-3.yaml). Desktop button/encoder/switch panel for
+    sim systems bindings. Last reviewed: 2026-06.

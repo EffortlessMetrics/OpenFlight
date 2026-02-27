@@ -1,0 +1,50 @@
+# Thrustmaster GPX PC Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot).
+# PID 0xB313 confirmed from SDL GameControllerDB:
+#   MAKE_VIDPID(0x044f, 0xb313) — "Thrustmaster GPX"
+# The Thrustmaster GPX is a budget USB/wireless gamepad with dual analog sticks,
+# shoulder triggers, and rumble. Some flight simmers use it as a secondary
+# controller for camera or autopilot interactions.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster GPX PC Gamepad"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB313      # Confirmed via SDL GameControllerDB
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUMBLE_MOTORS
+    description: >
+      Dual rumble motors; force_feedback flag is informational only. OpenFlight
+      does not use gamepad rumble output.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster GPX Gamepad. PID 0xB313 confirmed via SDL GameControllerDB.
+    Occasionally used as a secondary flight sim controller. Last reviewed: 2026-06.

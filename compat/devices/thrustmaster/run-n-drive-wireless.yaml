@@ -1,0 +1,54 @@
+# Thrustmaster Run N Drive Wireless Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot).
+# PID 0xB653 is a community estimate; the Run N Drive Wireless is a budget
+# wireless steering wheel primarily for racing games. Some flight simmers
+# use it for helicopter collective/trim axis control or camera panning.
+# Not a dedicated flight sim controller.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Run N Drive Wireless Steering Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB653      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [wheel, gas, brake]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB653 is a community estimate. Thrustmaster racing wheels use the
+      0xB6xx range; confirm exact PID with lsusb on real hardware.
+  - id: NOT_PRIMARY_SIM_DEVICE
+    description: >
+      Steering wheel designed for racing; used in flight sims only as a
+      supplemental axis device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Run N Drive Wireless steering wheel. PID 0xB653 unconfirmed.
+    Budget racing wheel occasionally repurposed for sim auxiliary axes.
+    Last reviewed: 2026-06.

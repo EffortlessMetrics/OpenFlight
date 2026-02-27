@@ -1,0 +1,53 @@
+# PFC Boeing 737 Column (Yoke System)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC (Precision Flight Controls) Boeing 737-style control column.
+# Replicates the captain's column geometry with pitch/roll axes and standard
+# cockpit switch positions. Used in high-fidelity Boeing 737 home cockpit builds
+# and FAA-certified ATD setups. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Boeing 737 Control Column"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0120      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 8               # AP disconnect, PTT, trim switches on both columns
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. PFC B737 column hardware may use Microchip USB HID
+      or a custom serial-to-USB bridge. Contact PFC for exact descriptor.
+  - id: DUAL_COLUMN_POSSIBLE
+    description: >
+      Some builds include both captain and first-officer columns; each
+      enumerates as a separate USB device with the same VID/PID but
+      different USB address.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Boeing 737 control column for home cockpit and ATD use. VID/PID
+    unconfirmed. Contact PFC for USB descriptor details. Last reviewed: 2026-06.

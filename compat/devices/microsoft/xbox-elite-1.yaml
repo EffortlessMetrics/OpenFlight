@@ -1,0 +1,57 @@
+# Microsoft Xbox Elite Controller Series 1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x02E3 confirmed from:
+#   1. SDL GameControllerDB: MAKE_VIDPID(0x045e, 0x02e3) — "Xbox One Elite Controller"
+#   2. linux-hardware.org: usb:045e:02e3 (multiple probes)
+#   3. xpad Linux kernel driver: USB_DEVICE(0x045e, 0x02e3)
+# The Xbox Elite Series 1 adds four rear paddles, adjustable thumbstick tension,
+# and hair-trigger locks. Used by some flight simmers as a secondary controller.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox Elite Controller Series 1"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x02E3      # Xbox Elite Series 1 (confirmed SDL + xpad driver)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16
+  buttons: 19              # Standard 11 + 4 paddles + 3 profile + trigger locks
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_PRIMARY
+    description: >
+      The Elite Series 1 primarily uses XInput on Windows. DirectInput/HID
+      access is available via the secondary interface. OpenFlight reads the
+      HID path; XInput path is handled by the system gamepad layer.
+  - id: FOUR_REAR_PADDLES
+    description: >
+      Four rear paddles (P1–P4) are remappable and report as additional
+      button bits in the Xbox Elite firmware HID report extension.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Xbox Elite Controller Series 1. PID 0x02E3 confirmed from SDL
+    GameControllerDB and xpad Linux driver. Used as secondary flight sim
+    controller with rear paddles for throttle/trim. Last reviewed: 2026-06.

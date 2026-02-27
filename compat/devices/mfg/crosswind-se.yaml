@@ -1,0 +1,56 @@
+# MFG Crosswind Special Edition Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551 confirmed (MFG — Motion Fantasy Games, registered USB vendor ID).
+# PID 0x0006 is a community estimate following MFG's sequential PID scheme:
+#   V1=0x0001, V2=0x0002, V3=0x0004, V4=0x0005 (estimates).
+# The Crosswind Special Edition is a limited-production variant of the V2/V3
+# with polished aluminium toe-brake arms, anti-vibration feet, and an upgraded
+# spring assembly. Electrically identical to the standard Crosswind (same MCU
+# and USB descriptor) so PID may match the V2 (0x0002) in practice.
+
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind Special Edition Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0002      # Likely shares PID with V2; 0x0006 used if unique
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_MAY_MATCH_V2
+    description: >
+      The Special Edition may enumerate with the same PID as the standard V2
+      (0x0002) because the firmware is identical. If lsusb reports 0x0002,
+      use crosswind-v2.yaml instead. Assign this manifest only if a distinct
+      PID is confirmed.
+  - id: TENSION_HARDWARE_ONLY
+    description: "Spring tension adjusted physically — not configurable via software."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind Special Edition — polished aluminium cosmetic/hardware
+    upgrade over standard V2. May share PID 0x0002 with V2. Use crosswind-v2.yaml
+    if lsusb confirms 0x0002. Last reviewed: 2026-06.

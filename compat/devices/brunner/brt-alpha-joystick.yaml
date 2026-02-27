@@ -1,0 +1,61 @@
+# Brunner BRT Alpha Series Force Feedback Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x25BB confirmed (Brunner Elektronik AG — registered USB vendor).
+# PID 0x0075 is a community estimate for the BRT Alpha series.
+# The BRT Alpha is Brunner's lower-cost active-force-feedback joystick line,
+# positioned below the full CLS-E series. Uses the same Brunner active-FF
+# motor technology but with a lighter-duty aluminium/composite frame.
+# "BRT" stands for "Brunner Realfeel Technology" — the brand used for their
+# simulation-market FF joysticks distinct from the full CLS-E trainer series.
+
+schema_version: "1"
+
+device:
+  name: "Brunner BRT Alpha Force Feedback Joystick"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB       # Brunner Elektronik AG (confirmed registered VID)
+    product_id: 0x0075      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 14
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0075 is a community estimate adjacent to confirmed Brunner CLS-E
+      PIDs (0x0067, 0x0068). Confirm with lsusb on BRT Alpha hardware.
+  - id: ACTIVE_FF_BRUNNER_PROTOCOL
+    description: >
+      Brunner active force feedback requires the BFC (Brunner Force Control)
+      protocol over USB HID. Standard DirectInput FFB does not apply.
+      OpenFlight uses the flight-ffb crate's Brunner driver for this device.
+  - id: HIGH_POLL_RATE
+    description: >
+      Brunner devices poll at 500 Hz for smooth force-feedback updates.
+      OpenFlight samples at the RT spine rate (250 Hz) and interpolates.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner BRT Alpha series active force feedback joystick. PID 0x0075 is a
+    community estimate. Requires Brunner BFC protocol for FF output.
+    Last reviewed: 2026-06.
