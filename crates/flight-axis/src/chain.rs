@@ -3,11 +3,11 @@
 
 //! Axis filter chain composing all processing stages in the correct order.
 //!
-//! Pipeline order: `calibration → invert → deadzone → curve → ema_smoothing → rate_limit → trim`
+//! Pipeline order: `calibration → invert → deadzone → curve → ema_smoothing → rate_limit → trim → normalize`
 
 use crate::{
-    AxisCalibration, AxisInvert, AxisRateLimiter, AxisTrim, DeadzoneConfig, DeadzoneProcessor,
-    EmaFilter, ResponseCurve,
+    AxisCalibration, AxisInvert, AxisNormalizer, AxisRateLimiter, AxisTrim, DeadzoneConfig,
+    DeadzoneProcessor, EmaFilter, NormalizeConfig, ResponseCurve,
 };
 
 /// Configuration for an axis filter chain.
@@ -46,18 +46,21 @@ pub struct ChainStageValues {
     pub after_rate_limit: f32,
     /// Final output after trim.
     pub output: f32,
+    /// Final validated output after normalization guard (always in [-1.0, 1.0]).
+    pub validated: f32,
 }
 
 /// Composed axis processing chain.
 ///
 /// Applies stages in order:
-/// `calibration → invert → deadzone → curve → ema_smoothing → rate_limit → trim`
+/// `calibration → invert → deadzone → curve → ema_smoothing → rate_limit → trim → normalize`
 pub struct AxisChain {
     config: AxisChainConfig,
     ema: Option<EmaFilter>,
     rate_limiter: Option<AxisRateLimiter>,
     trim: AxisTrim,
     deadzone: DeadzoneProcessor,
+    normalizer: AxisNormalizer,
 }
 
 impl AxisChain {
@@ -75,6 +78,7 @@ impl AxisChain {
             rate_limiter,
             trim,
             deadzone,
+            normalizer: AxisNormalizer::new(NormalizeConfig::default()),
         }
     }
 
@@ -99,7 +103,7 @@ impl AxisChain {
         self.run_pipeline(input)
     }
 
-    /// Runs stages 2–7 on a normalized f32 value.
+    /// Runs stages 2–8 on a normalized f32 value.
     fn run_pipeline(&mut self, raw_f32: f32) -> (f32, ChainStageValues) {
         // Stage 2: invert
         let after_invert = self.config.invert.apply(raw_f32);
@@ -137,6 +141,9 @@ impl AxisChain {
         // Stage 7: trim (additive offset + clamp)
         let output = self.trim.apply(after_rate_limit);
 
+        // Stage 8: normalization guard — ensures output is always in [-1.0, 1.0]
+        let validated = self.normalizer.process(output);
+
         let stages = ChainStageValues {
             raw_f32,
             after_invert,
@@ -145,9 +152,10 @@ impl AxisChain {
             after_smoothing,
             after_rate_limit,
             output,
+            validated,
         };
 
-        (output, stages)
+        (validated, stages)
     }
 
     /// Returns the current trim offset.

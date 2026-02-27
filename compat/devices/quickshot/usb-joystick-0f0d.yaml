@@ -1,0 +1,61 @@
+# Quickshot USB Joystick (VID 0x0F0D, PID 0x0086, estimated)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D is listed in usb.ids as "Hori Co., Ltd" — an OEM manufacturer
+# that supplied hardware under multiple brand labels including Quickshot budget
+# peripherals in some markets. PID 0x0086 is an estimated PID from community
+# sources for a generic Quickshot-branded USB joystick.
+# Both VID and PID are unconfirmed for this specific device. Treat as a
+# best-effort community manifest for legacy hardware identification.
+schema_version: "1"
+
+device:
+  name: "Quickshot USB Joystick"
+  vendor: "Quickshot (Spectravideo)"
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd / OEM — community estimate for Quickshot USB
+    product_id: 0x0086      # PID estimated from community sources — unconfirmed
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 4
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Both VID 0x0F0D and PID 0x0086 are estimates from community sources.
+      VID 0x0F0D is a known OEM manufacturer VID. Confirm both values with
+      lsusb on real hardware. This manifest is best-effort for legacy device
+      identification only.
+  - id: OEM_GENERIC_CHIPSET
+    description: >
+      Budget OEM USB joystick; axis calibration is typically poor from factory.
+      Apply a 5–10% software deadzone and linear recalibration in the profile.
+  - id: RETRO_COMPATIBILITY
+    description: >
+      This manifest exists for retro-compatibility with Quickshot-branded
+      hardware sold in the early 2000s. Modern flight simulation use is
+      not recommended due to low axis resolution and polling rate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Quickshot USB Joystick — budget early-2000s hardware. VID 0x0F0D / PID 0x0086
+    both estimated from community sources. See also quickshot/defender.yaml
+    for the Dragonrise OEM chipset variant. Wave-49 addition. Last reviewed: 2026-07.

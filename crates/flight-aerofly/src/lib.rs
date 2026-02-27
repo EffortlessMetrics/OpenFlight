@@ -8,12 +8,14 @@
 //! controller via ViGEm or vJoy (see the `aerofly-fs` game manifest and the
 //! `flight-virtual` crate).
 //!
-//! This crate provides two parsing paths for future telemetry work:
+//! This crate provides three parsing paths for telemetry work:
 //!
 //! 1. **Binary UDP** — a compact little-endian struct broadcast on UDP port
 //!    [`AEROFLY_DEFAULT_PORT`] (stub format; not yet standardised by IPACS).
 //! 2. **JSON** — a line-delimited JSON object matching the draft IPACS SDK
 //!    telemetry schema.
+//! 3. **Text key=value** — newline-separated `key=value` pairs (community
+//!    documented; see [`parse_text_telemetry`]).
 //!
 //! ## Binary frame layout
 //!
@@ -67,6 +69,10 @@ pub enum AeroflyAdapterError {
     /// The JSON payload could not be parsed.
     #[error("JSON parse error: {0}")]
     JsonError(String),
+
+    /// The text payload was empty.
+    #[error("empty telemetry data")]
+    EmptyData,
 }
 
 // ── Domain types ──────────────────────────────────────────────────────────────
@@ -90,6 +96,12 @@ pub struct AeroflyTelemetry {
     pub gear_down: bool,
     /// Flap deployment ratio normalised to `0.0` (up) – `1.0` (full).
     pub flaps_ratio: f32,
+    /// Vertical speed in feet per minute (positive = climbing).
+    ///
+    /// Not present in the binary frame; available via text and JSON formats.
+    /// Defaults to `0.0` when absent.
+    #[serde(default)]
+    pub vspeed_fpm: f32,
 }
 
 impl Default for AeroflyTelemetry {
@@ -103,7 +115,52 @@ impl Default for AeroflyTelemetry {
             throttle_pos: 0.0,
             gear_down: false,
             flaps_ratio: 0.0,
+            vspeed_fpm: 0.0,
         }
+    }
+}
+
+// Conversion constants.
+const FT_PER_METRE: f32 = 3.280_84;
+const FPM_PER_MS: f32 = FT_PER_METRE * 60.0;
+const KNOTS_PER_MS: f32 = 1.943_844;
+const DEG_TO_RAD: f32 = std::f32::consts::PI / 180.0;
+
+impl AeroflyTelemetry {
+    /// Altitude converted to metres MSL.
+    #[inline]
+    pub fn altitude_m(&self) -> f32 {
+        self.altitude / FT_PER_METRE
+    }
+
+    /// Indicated airspeed converted to metres per second.
+    #[inline]
+    pub fn airspeed_ms(&self) -> f32 {
+        self.airspeed / KNOTS_PER_MS
+    }
+
+    /// Vertical speed converted to metres per second.
+    #[inline]
+    pub fn vspeed_ms(&self) -> f32 {
+        self.vspeed_fpm / FPM_PER_MS
+    }
+
+    /// Pitch angle converted to radians.
+    #[inline]
+    pub fn pitch_rad(&self) -> f32 {
+        self.pitch * DEG_TO_RAD
+    }
+
+    /// Roll angle converted to radians.
+    #[inline]
+    pub fn roll_rad(&self) -> f32 {
+        self.roll * DEG_TO_RAD
+    }
+
+    /// Heading converted to radians.
+    #[inline]
+    pub fn heading_rad(&self) -> f32 {
+        self.heading * DEG_TO_RAD
     }
 }
 
@@ -197,6 +254,16 @@ impl AeroflyAdapter {
         Ok(telemetry)
     }
 
+    /// Decode a text key=value telemetry string and cache the result.
+    ///
+    /// See [`parse_text_telemetry`] for the expected format.
+    pub fn process_text(&mut self, text: &str) -> Result<AeroflyTelemetry, AeroflyAdapterError> {
+        tracing::debug!("processing Aerofly text telemetry");
+        let telemetry = parse_text_telemetry(text)?;
+        self.last_telemetry = Some(telemetry.clone());
+        Ok(telemetry)
+    }
+
     /// Return the most recently decoded telemetry snapshot, if any.
     pub fn last_telemetry(&self) -> Option<&AeroflyTelemetry> {
         self.last_telemetry.as_ref()
@@ -254,6 +321,7 @@ pub fn parse_telemetry(data: &[u8]) -> Result<AeroflyTelemetry, AeroflyAdapterEr
         throttle_pos,
         gear_down,
         flaps_ratio,
+        vspeed_fpm: 0.0,
     })
 }
 
@@ -268,6 +336,64 @@ pub fn parse_telemetry(data: &[u8]) -> Result<AeroflyTelemetry, AeroflyAdapterEr
 /// or does not match the expected schema.
 pub fn parse_json_telemetry(json: &str) -> Result<AeroflyTelemetry, AeroflyAdapterError> {
     serde_json::from_str(json).map_err(|e| AeroflyAdapterError::JsonError(e.to_string()))
+}
+
+/// Decode a text key=value UDP packet into [`AeroflyTelemetry`].
+///
+/// Each line must be in the form `key=value`.  Unknown keys are silently
+/// ignored; missing keys retain their [`Default`] values.  Unparseable
+/// numeric values are treated as `0.0`.
+///
+/// ### Recognised keys
+///
+/// | Key         | Field              | Unit  |
+/// |-------------|--------------------|-------|
+/// | `pitch`     | `pitch`            | deg   |
+/// | `roll`      | `roll`             | deg   |
+/// | `hdg`       | `heading`          | deg   |
+/// | `ias`       | `airspeed`         | knots |
+/// | `alt`       | `altitude`         | ft    |
+/// | `throttle`  | `throttle_pos`     | 0–1   |
+/// | `gear`      | `gear_down`        | 0/1   |
+/// | `flaps`     | `flaps_ratio`      | 0–1   |
+/// | `vspeed`    | `vspeed_fpm`       | fpm   |
+///
+/// # Errors
+///
+/// Returns [`AeroflyAdapterError::EmptyData`] when `text` is empty or
+/// contains only whitespace.
+pub fn parse_text_telemetry(text: &str) -> Result<AeroflyTelemetry, AeroflyAdapterError> {
+    if text.trim().is_empty() {
+        return Err(AeroflyAdapterError::EmptyData);
+    }
+
+    let mut frame = AeroflyTelemetry::default();
+
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let mut parts = line.splitn(2, '=');
+        let Some(key) = parts.next() else { continue };
+        let val_str = parts.next().unwrap_or("").trim();
+        let val: f32 = val_str.parse().unwrap_or(0.0);
+
+        match key.trim() {
+            "pitch" => frame.pitch = val,
+            "roll" => frame.roll = val,
+            "hdg" => frame.heading = val,
+            "ias" => frame.airspeed = val,
+            "alt" => frame.altitude = val,
+            "throttle" => frame.throttle_pos = val.clamp(0.0, 1.0),
+            "gear" => frame.gear_down = val > 0.5,
+            "flaps" => frame.flaps_ratio = val.clamp(0.0, 1.0),
+            "vspeed" => frame.vspeed_fpm = val,
+            _ => {}
+        }
+    }
+
+    Ok(frame)
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────
@@ -482,6 +608,7 @@ mod tests {
         assert_eq!(t.throttle_pos, 0.0);
         assert!(!t.gear_down);
         assert_eq!(t.flaps_ratio, 0.0);
+        assert_eq!(t.vspeed_fpm, 0.0);
     }
 
     #[test]
@@ -495,6 +622,7 @@ mod tests {
             throttle_pos: 0.75,
             gear_down: true,
             flaps_ratio: 0.25,
+            vspeed_fpm: 500.0,
         };
         let json = serde_json::to_string(&t).expect("serialize");
         let back: AeroflyTelemetry = serde_json::from_str(&json).expect("deserialize");
@@ -545,5 +673,187 @@ mod tests {
         let t = adapter.process_json(json).unwrap();
         assert!((t.airspeed - 60.0).abs() < 0.01);
         assert!(adapter.last_telemetry().is_some());
+    }
+
+    // ── parse_text_telemetry ─────────────────────────────────────────────────
+
+    #[test]
+    fn parse_text_all_fields() {
+        let text = "pitch=10.0\nroll=-5.0\nhdg=270.0\nias=120.0\nalt=5000.0\nthrottle=0.8\ngear=1.0\nflaps=0.5\nvspeed=800.0";
+        let t = parse_text_telemetry(text).unwrap();
+        assert!((t.pitch - 10.0).abs() < 0.01, "pitch");
+        assert!((t.roll - (-5.0)).abs() < 0.01, "roll");
+        assert!((t.heading - 270.0).abs() < 0.01, "heading");
+        assert!((t.airspeed - 120.0).abs() < 0.01, "airspeed");
+        assert!((t.altitude - 5_000.0).abs() < 0.01, "altitude");
+        assert!((t.throttle_pos - 0.8).abs() < 0.01, "throttle_pos");
+        assert!(t.gear_down, "gear_down");
+        assert!((t.flaps_ratio - 0.5).abs() < 0.01, "flaps_ratio");
+        assert!((t.vspeed_fpm - 800.0).abs() < 0.01, "vspeed_fpm");
+    }
+
+    #[test]
+    fn parse_text_empty_returns_error() {
+        assert!(matches!(
+            parse_text_telemetry("").unwrap_err(),
+            AeroflyAdapterError::EmptyData
+        ));
+        assert!(matches!(
+            parse_text_telemetry("   \n  ").unwrap_err(),
+            AeroflyAdapterError::EmptyData
+        ));
+    }
+
+    #[test]
+    fn parse_text_partial_uses_defaults() {
+        // Only pitch and altitude provided; all other fields should be their defaults.
+        let text = "pitch=15.0\nalt=2000.0";
+        let t = parse_text_telemetry(text).unwrap();
+        assert!((t.pitch - 15.0).abs() < 0.01);
+        assert!((t.altitude - 2_000.0).abs() < 0.01);
+        assert_eq!(t.roll, 0.0);
+        assert_eq!(t.airspeed, 0.0);
+        assert!(!t.gear_down);
+        assert_eq!(t.vspeed_fpm, 0.0);
+    }
+
+    #[test]
+    fn parse_text_invalid_numbers_default_to_zero() {
+        let text = "pitch=not_a_number\nalt=banana\nias=120.0";
+        let t = parse_text_telemetry(text).unwrap();
+        assert_eq!(t.pitch, 0.0, "invalid pitch should default to 0");
+        assert_eq!(t.altitude, 0.0, "invalid alt should default to 0");
+        assert!((t.airspeed - 120.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn parse_text_unknown_keys_ignored() {
+        let text = "unknown_key=999.0\nfuture_field=42\npitch=3.0";
+        let t = parse_text_telemetry(text).unwrap();
+        assert!((t.pitch - 3.0).abs() < 0.01);
+        assert_eq!(t.roll, 0.0);
+    }
+
+    #[test]
+    fn parse_text_gear_state_boundary() {
+        // exactly 0.5 → gear up (not strictly > 0.5)
+        let t_up = parse_text_telemetry("gear=0.5\nalt=1000").unwrap();
+        assert!(!t_up.gear_down, "gear=0.5 should be up");
+
+        let t_down = parse_text_telemetry("gear=0.6\nalt=1000").unwrap();
+        assert!(t_down.gear_down, "gear=0.6 should be down");
+    }
+
+    #[test]
+    fn parse_text_throttle_clamped() {
+        let t = parse_text_telemetry("throttle=2.0\nalt=0").unwrap();
+        assert!(
+            (t.throttle_pos - 1.0).abs() < 0.01,
+            "throttle clamped to 1.0"
+        );
+
+        let t2 = parse_text_telemetry("throttle=-0.5\nalt=0").unwrap();
+        assert!(
+            (t2.throttle_pos - 0.0).abs() < 0.01,
+            "throttle clamped to 0.0"
+        );
+    }
+
+    #[test]
+    fn parse_text_negative_altitude() {
+        // Below sea level (e.g. Death Valley)
+        let text = "alt=-200.0";
+        let t = parse_text_telemetry(text).unwrap();
+        assert!((t.altitude - (-200.0)).abs() < 0.01);
+    }
+
+    #[test]
+    fn parse_text_whitespace_tolerance() {
+        // Extra whitespace around keys and values should be handled.
+        let text = "  pitch  =  7.5  \n  ias = 90.0  ";
+        let t = parse_text_telemetry(text).unwrap();
+        assert!((t.pitch - 7.5).abs() < 0.01);
+        assert!((t.airspeed - 90.0).abs() < 0.01);
+    }
+
+    // ── Unit conversions ─────────────────────────────────────────────────────
+
+    #[test]
+    fn altitude_conversion_ft_to_m() {
+        let t = AeroflyTelemetry {
+            altitude: 3_280.84,
+            ..Default::default()
+        };
+        // 3280.84 ft ≈ 1000 m
+        assert!(
+            (t.altitude_m() - 1_000.0).abs() < 0.1,
+            "altitude_m={}",
+            t.altitude_m()
+        );
+    }
+
+    #[test]
+    fn airspeed_conversion_knots_to_ms() {
+        let t = AeroflyTelemetry {
+            airspeed: 97.192, // ≈ 50 m/s
+            ..Default::default()
+        };
+        assert!(
+            (t.airspeed_ms() - 50.0).abs() < 0.1,
+            "airspeed_ms={}",
+            t.airspeed_ms()
+        );
+    }
+
+    #[test]
+    fn attitude_conversion_deg_to_rad() {
+        let t = AeroflyTelemetry {
+            pitch: 90.0,
+            roll: 180.0,
+            heading: 360.0,
+            ..Default::default()
+        };
+        assert!((t.pitch_rad() - std::f32::consts::FRAC_PI_2).abs() < 0.001);
+        assert!((t.roll_rad() - std::f32::consts::PI).abs() < 0.001);
+        assert!((t.heading_rad() - std::f32::consts::TAU).abs() < 0.001);
+    }
+
+    #[test]
+    fn vspeed_conversion_fpm_to_ms() {
+        let t = AeroflyTelemetry {
+            vspeed_fpm: 197.0, // ≈ 1 m/s
+            ..Default::default()
+        };
+        assert!(
+            (t.vspeed_ms() - 1.0).abs() < 0.1,
+            "vspeed_ms={}",
+            t.vspeed_ms()
+        );
+    }
+
+    #[test]
+    fn zero_altitude_conversion() {
+        let t = AeroflyTelemetry::default();
+        assert_eq!(t.altitude_m(), 0.0);
+        assert_eq!(t.airspeed_ms(), 0.0);
+        assert_eq!(t.vspeed_ms(), 0.0);
+    }
+
+    #[test]
+    fn adapter_process_text_updates_last() {
+        let mut adapter = AeroflyAdapter::new();
+        let text = "pitch=5.0\nalt=1000.0\nias=80.0\ngear=1.0";
+        let t = adapter.process_text(text).unwrap();
+        assert!((t.pitch - 5.0).abs() < 0.01);
+        assert!(t.gear_down);
+        assert!(adapter.last_telemetry().is_some());
+    }
+
+    #[test]
+    fn json_vspeed_defaults_to_zero_when_absent() {
+        // JSON without vspeed_fpm should deserialise successfully (serde default).
+        let json = r#"{"pitch":0.0,"roll":0.0,"heading":0.0,"airspeed":0.0,"altitude":0.0,"throttle_pos":0.0,"gear_down":false,"flaps_ratio":0.0}"#;
+        let t = parse_json_telemetry(json).unwrap();
+        assert_eq!(t.vspeed_fpm, 0.0);
     }
 }

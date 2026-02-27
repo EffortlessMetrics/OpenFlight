@@ -169,6 +169,60 @@ impl DeadzoneBank {
     }
 }
 
+/// Asymmetric deadzone configuration.
+///
+/// Allows different positive and negative deadzone widths (useful for brake pedals).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AsymmetricDeadzoneConfig {
+    /// Width of deadzone on positive side [0.0, 1.0].
+    pub positive: f32,
+    /// Width of deadzone on negative side [0.0, 1.0].
+    pub negative: f32,
+}
+
+impl AsymmetricDeadzoneConfig {
+    /// Create a new asymmetric deadzone config, clamping both widths to [0.0, 1.0].
+    pub fn new(positive: f32, negative: f32) -> Self {
+        Self {
+            positive: positive.clamp(0.0, 1.0),
+            negative: negative.clamp(0.0, 1.0),
+        }
+    }
+
+    /// Symmetric deadzone (equal positive and negative widths).
+    pub fn symmetric(width: f32) -> Self {
+        let w = width.clamp(0.0, 1.0);
+        Self {
+            positive: w,
+            negative: w,
+        }
+    }
+
+    /// Apply deadzone to a value in [-1.0, 1.0].
+    ///
+    /// Values within the deadzone collapse to `0.0`; values outside are rescaled
+    /// so that the edge of the deadzone maps to `0.0` and `±1.0` maps to `±1.0`.
+    #[inline]
+    pub fn apply(&self, value: f32) -> f32 {
+        if value >= 0.0 {
+            if value < self.positive {
+                0.0
+            } else {
+                (value - self.positive) / (1.0 - self.positive).max(f32::EPSILON)
+            }
+        } else if value > -self.negative {
+            0.0
+        } else {
+            (value + self.negative) / (1.0 - self.negative).max(f32::EPSILON)
+        }
+    }
+
+    /// Returns `true` if positive and negative widths are equal.
+    pub fn is_symmetric(&self) -> bool {
+        (self.positive - self.negative).abs() < f32::EPSILON
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -375,5 +429,83 @@ mod tests {
                 );
             }
         }
+    }
+
+    // ── AsymmetricDeadzoneConfig tests ───────────────────────────────────────
+
+    #[test]
+    fn test_asymmetric_zero_positive_passes_positive() {
+        let cfg = AsymmetricDeadzoneConfig::new(0.0, 0.1);
+        assert!((cfg.apply(0.5) - 0.5).abs() < 1e-6);
+        assert!((cfg.apply(1.0) - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_asymmetric_symmetric_matches_center_only() {
+        let asym = AsymmetricDeadzoneConfig::symmetric(0.1);
+        let config = DeadzoneConfig::center_only(0.1).unwrap();
+        let proc = DeadzoneProcessor::new(config);
+        for v in [0.0_f32, 0.05, 0.1, 0.15, 0.5, 1.0] {
+            let asym_out = asym.apply(v);
+            let proc_out = proc.apply(v);
+            assert!(
+                (asym_out - proc_out).abs() < 1e-5,
+                "mismatch at v={v}: asym={asym_out}, proc={proc_out}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_asymmetric_positive_deadzone() {
+        let cfg = AsymmetricDeadzoneConfig::new(0.2, 0.0);
+        assert_eq!(cfg.apply(0.1), 0.0);
+        let expected = 0.4_f32 / 0.8_f32;
+        assert!((cfg.apply(0.6) - expected).abs() < 1e-6);
+        assert!((cfg.apply(-0.5) - (-0.5)).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_asymmetric_negative_deadzone() {
+        let cfg = AsymmetricDeadzoneConfig::new(0.0, 0.2);
+        assert_eq!(cfg.apply(-0.1), 0.0);
+        let expected = -0.4_f32 / 0.8_f32;
+        assert!((cfg.apply(-0.6) - expected).abs() < 1e-6);
+        assert!((cfg.apply(0.5) - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_asymmetric_exact_boundary_zeroed() {
+        let cfg = AsymmetricDeadzoneConfig::new(0.15, 0.25);
+        // Boundary on positive side: (0.15 - 0.15) / 0.85 = 0.0
+        assert!((cfg.apply(0.15)).abs() < 1e-6);
+        // Just inside: 0.14 < 0.15 → 0.0
+        assert_eq!(cfg.apply(0.14), 0.0);
+        // Boundary on negative side: (-0.25 + 0.25) / 0.75 = 0.0
+        assert!((cfg.apply(-0.25)).abs() < 1e-6);
+        // Just inside: -0.24 > -0.25 → 0.0
+        assert_eq!(cfg.apply(-0.24), 0.0);
+    }
+
+    #[test]
+    fn test_asymmetric_just_outside_boundary_scaled() {
+        let cfg = AsymmetricDeadzoneConfig::new(0.1, 0.1);
+        let expected = 0.1_f32 / 0.9_f32;
+        assert!((cfg.apply(0.2) - expected).abs() < 1e-5);
+        assert!((cfg.apply(-0.2) - (-expected)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_asymmetric_constructor_clamps_to_range() {
+        let cfg = AsymmetricDeadzoneConfig::new(1.5, -0.5);
+        assert!((cfg.positive - 1.0).abs() < f32::EPSILON);
+        assert!((cfg.negative - 0.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn test_asymmetric_is_symmetric() {
+        assert!(AsymmetricDeadzoneConfig::symmetric(0.1).is_symmetric());
+        assert!(AsymmetricDeadzoneConfig::new(0.1, 0.1).is_symmetric());
+        assert!(!AsymmetricDeadzoneConfig::new(0.1, 0.2).is_symmetric());
+        assert!(!AsymmetricDeadzoneConfig::new(0.2, 0.1).is_symmetric());
     }
 }

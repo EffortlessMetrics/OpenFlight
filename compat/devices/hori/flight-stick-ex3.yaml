@@ -1,0 +1,56 @@
+# HORI Flight Stick EX3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x006A is a community-reported PID for the HORI Flight Stick EX3.
+# The Flight Stick EX3 is a joystick for Xbox 360/PC designed for flight
+# simulation, featuring a twist-rudder axis, throttle slider, and
+# programmable buttons.
+schema_version: "1"
+
+device:
+  name: "HORI Flight Stick EX3"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x006A      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x006A is a community estimate for the Flight Stick EX3.
+      Confirm with lsusb on real hardware.
+  - id: XBOX360_PC_COMPAT
+    description: >
+      Designed for Xbox 360 but enumerates as a standard HID joystick on PC.
+      XInput mode may conflict with OpenFlight HID binding; use DirectInput mode.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI Flight Stick EX3 for Xbox 360/PC. PID 0x006A is a community estimate;
+    verify with lsusb. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - dcs

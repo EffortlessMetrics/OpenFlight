@@ -1,0 +1,78 @@
+# Brunner CLS-P PC Helicopter Collective (STM variant, PID 0x5752)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) — alternate firmware variant for the
+# Brunner CLS-P PC helicopter collective controller. The primary CLS-P PC
+# uses VID 0x25BB (Brunner's registered USB vendor ID, PID 0x0090).
+# PID 0x5752 is a community estimate for this STM firmware variant.
+# The CLS-P PC is a force-feedback helicopter collective used in flight
+# training and enthusiast simulation setups.
+# See cls-p-pc.yaml (VID 0x25BB, PID 0x0090) for the primary manifest.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P PC Helicopter Collective (STM variant)"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — alternate CLS-P PC firmware VID
+    product_id: 0x5752      # Community estimate — STM variant; primary is 0x25BB:0x0090
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [collective]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured via CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5752 with VID 0x0483 (STM) is a community estimate for the
+      Brunner CLS-P PC STM firmware variant. The primary manifest is
+      cls-p-pc.yaml (VID 0x25BB, PID 0x0090). Confirm with lsusb.
+  - id: STM_FIRMWARE_VARIANT
+    description: >
+      This manifest covers CLS-P PC units that ship with STM32-based
+      USB firmware (VID 0x0483). Functionally identical to the 0x25BB
+      variant but requires a separate profile entry for device matching.
+  - id: CLS2SIM_COMPANION
+    description: >
+      Requires Brunner CLS2SIM companion software for FFB configuration and
+      collective calibration. OpenFlight reads axis data directly via HID.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Single-axis collective lever with force feedback providing realistic
+      collective load feel. Pair with a cyclic and anti-torque pedal device
+      for complete helicopter control.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-P PC Helicopter Collective STM variant (VID 0x0483, PID 0x5752 est).
+    Alternate firmware variant of the CLS-P PC. Primary manifest: cls-p-pc.yaml.
+    Wave-49 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Helicopter collective axis; used with DCS Mi-8, Ka-50, and UH-1H."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Helicopter collective control for H125 and other rotor aircraft."

@@ -1,0 +1,63 @@
+# Leo Bodnar BU0836A 12-Bit USB Joystick Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 confirmed (Leo Bodnar Ltd.).
+# PID 0x1001 is a community-reported PID for a BU0836A variant with
+# 12-bit analog input resolution. The BU0836A (Rev A) primary PID is 0x000B
+# (bu0836a.yaml). This 12-bit variant may correspond to a later production
+# run with enhanced ADC resolution for flight sim axis inputs.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BU0836A 12-Bit USB Joystick Interface"
+  vendor: "Leo Bodnar Ltd."
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd. — confirmed
+    product_id: 0x1001      # Community-reported 12-bit variant; primary is 0x000B
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 12
+    names: [x, y, z, rx, ry, rz, slider, dial, ax1, ax2, ax3, ax4]
+    resolution_bits: 12
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1001 is community-reported for the BU0836A 12-bit variant.
+      Confirm with lsusb. The standard BU0836A uses 0x000B (bu0836a.yaml).
+  - id: DIY_INTERFACE_BOARD
+    description: >
+      The BU0836A is a DIY joystick encoder board. Axis count, button count,
+      and hat count depend on the hardware wired to the board. The values
+      here represent the maximum capability of the 12-axis/32-button board.
+  - id: HIGH_RES_12BIT
+    description: >
+      12-bit ADC provides 4096 steps per axis — higher resolution than the
+      10-bit BU0836 (1024 steps). Minimal software filtering is typically needed.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BU0836A 12-bit variant (PID 0x1001). DIY joystick encoder board
+    with 12-bit ADC resolution. PID is community-reported; verify with lsusb.
+    See bu0836a.yaml for the standard variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

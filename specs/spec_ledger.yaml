@@ -1,4 +1,4 @@
-﻿# Spec Ledger
+# Spec Ledger
 # Machine-readable mapping of requirements to acceptance criteria and tests
 # This file is validated against schemas/spec_ledger.schema.json
 
@@ -14281,3 +14281,1058 @@ requirements:
         description: "Auth requirement is disabled by default for local connections"
         tests:
           - feature:specs/features/req_462_ipc_authentication.feature
+  # Product Requirement: Gamepad D-Pad Axis Mapping
+  - id: REQ-463
+    name: Gamepad D-Pad Axis Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-463.1
+        description: "D-pad buttons are enumerated as hat switch or directional buttons"
+        tests:
+          - feature:specs/features/req_463_gamepad_dpad_axis_mapping.feature
+      - id: AC-463.2
+        description: "D-pad can be mapped to virtual pitch and roll axes"
+        tests:
+          - feature:specs/features/req_463_gamepad_dpad_axis_mapping.feature
+      - id: AC-463.3
+        description: "D-pad axis sensitivity is configurable"
+        tests:
+          - feature:specs/features/req_463_gamepad_dpad_axis_mapping.feature
+      - id: AC-463.4
+        description: "D-pad mapping supports 8-way diagonal input"
+        tests:
+          - feature:specs/features/req_463_gamepad_dpad_axis_mapping.feature
+  # Product Requirement: Axis Smoothing Preset System
+  - id: REQ-464
+    name: Axis Smoothing Preset System
+    kind: product
+    status: draft
+    ac:
+      - id: AC-464.1
+        description: "Presets include default, minimal, medium, aggressive, and custom"
+        tests:
+          - feature:specs/features/req_464_axis_smoothing_presets.feature
+      - id: AC-464.2
+        description: "Preset selection applies appropriate filter parameters automatically"
+        tests:
+          - feature:specs/features/req_464_axis_smoothing_presets.feature
+      - id: AC-464.3
+        description: "Custom preset allows full parameter override"
+        tests:
+          - feature:specs/features/req_464_axis_smoothing_presets.feature
+      - id: AC-464.4
+        description: "Active preset name is reported in axis diagnostics"
+        tests:
+          - feature:specs/features/req_464_axis_smoothing_presets.feature
+  # Product Requirement: War Thunder Telemetry Integration
+  - id: REQ-465
+    name: War Thunder Telemetry Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-465.1
+        description: "Adapter connects to War Thunder localhost telemetry port 8111"
+        tests:
+          - feature:specs/features/req_465_war_thunder_telemetry.feature
+      - id: AC-465.2
+        description: "Telemetry JSON is parsed and converted to BusSnapshot"
+        tests:
+          - feature:specs/features/req_465_war_thunder_telemetry.feature
+      - id: AC-465.3
+        description: "Aircraft type from telemetry triggers profile selection"
+        tests:
+          - feature:specs/features/req_465_war_thunder_telemetry.feature
+      - id: AC-465.4
+        description: "Parse errors are counted and logged without crashing"
+        tests:
+          - feature:specs/features/req_465_war_thunder_telemetry.feature
+  # Product Requirement: Auto-Switch Confidence Threshold
+  - id: REQ-466
+    name: Auto-Switch Confidence Threshold
+    kind: product
+    status: draft
+    ac:
+      - id: AC-466.1
+        description: "Auto-switch only applies profile when detection confidence exceeds threshold"
+        tests:
+          - feature:specs/features/req_466_auto_switch_confidence.feature
+      - id: AC-466.2
+        description: "Confidence threshold is configurable per simulator in profile"
+        tests:
+          - feature:specs/features/req_466_auto_switch_confidence.feature
+      - id: AC-466.3
+        description: "Low-confidence detections are logged as warnings"
+        tests:
+          - feature:specs/features/req_466_auto_switch_confidence.feature
+      - id: AC-466.4
+        description: "Manual override bypasses confidence check"
+        tests:
+          - feature:specs/features/req_466_auto_switch_confidence.feature
+  # Product Requirement: Axis Expo Curve Adjustment
+  - id: REQ-467
+    name: Axis Expo Curve Adjustment
+    kind: product
+    status: draft
+    ac:
+      - id: AC-467.1
+        description: "Expo curve parameter ranges from -1.0 (linear) to 1.0 (maximum expo)"
+        tests:
+          - feature:specs/features/req_467_axis_expo_curve.feature
+      - id: AC-467.2
+        description: "Positive expo increases sensitivity at center"
+        tests:
+          - feature:specs/features/req_467_axis_expo_curve.feature
+      - id: AC-467.3
+        description: "Negative expo decreases sensitivity at center"
+        tests:
+          - feature:specs/features/req_467_axis_expo_curve.feature
+      - id: AC-467.4
+        description: "Expo curve is applied after deadzone and before output"
+        tests:
+          - feature:specs/features/req_467_axis_expo_curve.feature
+  # Product Requirement: P3D SimConnect Adapter
+  - id: REQ-468
+    name: P3D SimConnect Adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-468.1
+        description: "Adapter connects to P3D SimConnect with same API as MSFS"
+        tests:
+          - feature:specs/features/req_468_p3d_simconnect_adapter.feature
+      - id: AC-468.2
+        description: "Aircraft state variables are subscribed and published as BusSnapshot"
+        tests:
+          - feature:specs/features/req_468_p3d_simconnect_adapter.feature
+      - id: AC-468.3
+        description: "P3D-specific add-ons directory is supported for panel configs"
+        tests:
+          - feature:specs/features/req_468_p3d_simconnect_adapter.feature
+      - id: AC-468.4
+        description: "P3D version 4.x and 5.x are both supported"
+        tests:
+          - feature:specs/features/req_468_p3d_simconnect_adapter.feature
+  # Product Requirement: Axis Value Snapshot RPC
+  - id: REQ-469
+    name: Axis Value Snapshot RPC
+    kind: product
+    status: draft
+    ac:
+      - id: AC-469.1
+        description: "GetAxisSnapshot RPC returns current processed value for all axes"
+        tests:
+          - feature:specs/features/req_469_axis_value_snapshot_rpc.feature
+      - id: AC-469.2
+        description: "Snapshot includes pipeline stage values for diagnostics"
+        tests:
+          - feature:specs/features/req_469_axis_value_snapshot_rpc.feature
+      - id: AC-469.3
+        description: "Response time is under 10ms from request"
+        tests:
+          - feature:specs/features/req_469_axis_value_snapshot_rpc.feature
+      - id: AC-469.4
+        description: "Snapshot includes device ID and axis name for each value"
+        tests:
+          - feature:specs/features/req_469_axis_value_snapshot_rpc.feature
+  # Product Requirement: Config Hot-Reload Without Restart
+  - id: REQ-470
+    name: Config Hot-Reload Without Restart
+    kind: product
+    status: draft
+    ac:
+      - id: AC-470.1
+        description: "Service detects config file changes within 2 seconds"
+        tests:
+          - feature:specs/features/req_470_config_hot_reload.feature
+      - id: AC-470.2
+        description: "Valid config changes are applied atomically"
+        tests:
+          - feature:specs/features/req_470_config_hot_reload.feature
+      - id: AC-470.3
+        description: "Invalid config changes are rejected with error log and original retained"
+        tests:
+          - feature:specs/features/req_470_config_hot_reload.feature
+      - id: AC-470.4
+        description: "Hot-reload events are broadcast on the flight-bus"
+        tests:
+          - feature:specs/features/req_470_config_hot_reload.feature
+  # Product Requirement: Multi-Device Priority Ordering
+  - id: REQ-471
+    name: Multi-Device Priority Ordering
+    kind: product
+    status: draft
+    ac:
+      - id: AC-471.1
+        description: "Priority order is configurable per virtual axis"
+        tests:
+          - feature:specs/features/req_471_multi_device_priority.feature
+      - id: AC-471.2
+        description: "Highest-priority active device value is used by default"
+        tests:
+          - feature:specs/features/req_471_multi_device_priority.feature
+      - id: AC-471.3
+        description: "Device priority can be set to override, blend, or sum mode"
+        tests:
+          - feature:specs/features/req_471_multi_device_priority.feature
+      - id: AC-471.4
+        description: "Priority order changes take effect without service restart"
+        tests:
+          - feature:specs/features/req_471_multi_device_priority.feature
+  # Product Requirement: Batch Profile Apply
+  - id: REQ-472
+    name: Batch Profile Apply
+    kind: product
+    status: draft
+    ac:
+      - id: AC-472.1
+        description: "flightctl profile apply accepts a JSON or YAML patch document"
+        tests:
+          - feature:specs/features/req_472_batch_profile_apply.feature
+      - id: AC-472.2
+        description: "Batch apply is atomic: all changes succeed or none are applied"
+        tests:
+          - feature:specs/features/req_472_batch_profile_apply.feature
+      - id: AC-472.3
+        description: "Dry-run mode shows what would change without applying"
+        tests:
+          - feature:specs/features/req_472_batch_profile_apply.feature
+      - id: AC-472.4
+        description: "Applied changes are reported as a diff summary"
+        tests:
+          - feature:specs/features/req_472_batch_profile_apply.feature
+  # Product Requirement: Telemetry Statistics Export
+  - id: REQ-473
+    name: Telemetry Statistics Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-473.1
+        description: "Statistics include axis update rate, error rate, and latency percentiles"
+        tests:
+          - feature:specs/features/req_473_telemetry_statistics_export.feature
+      - id: AC-473.2
+        description: "Statistics are exported to a configurable log file"
+        tests:
+          - feature:specs/features/req_473_telemetry_statistics_export.feature
+      - id: AC-473.3
+        description: "Statistics export interval is configurable"
+        tests:
+          - feature:specs/features/req_473_telemetry_statistics_export.feature
+      - id: AC-473.4
+        description: "Statistics are also accessible via flightctl stats command"
+        tests:
+          - feature:specs/features/req_473_telemetry_statistics_export.feature
+  # Product Requirement: OpenXR Head Tracking Integration
+  - id: REQ-474
+    name: OpenXR Head Tracking Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-474.1
+        description: "Service connects to OpenXR runtime when openxr feature is enabled"
+        tests:
+          - feature:specs/features/req_474_openxr_head_tracking.feature
+      - id: AC-474.2
+        description: "Head pose data is published as 6DOF values on flight-bus"
+        tests:
+          - feature:specs/features/req_474_openxr_head_tracking.feature
+      - id: AC-474.3
+        description: "Head tracking maps to configurable virtual axes"
+        tests:
+          - feature:specs/features/req_474_openxr_head_tracking.feature
+      - id: AC-474.4
+        description: "OpenXR session lifecycle follows runtime state machine correctly"
+        tests:
+          - feature:specs/features/req_474_openxr_head_tracking.feature
+  # Product Requirement: Axis Histogram Reporting
+  - id: REQ-475
+    name: Axis Histogram Reporting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-475.1
+        description: "Histogram records value distribution across 100 equal-width buckets"
+        tests:
+          - feature:specs/features/req_475_axis_histogram_reporting.feature
+      - id: AC-475.2
+        description: "Histogram is accessible via flightctl axis histogram command"
+        tests:
+          - feature:specs/features/req_475_axis_histogram_reporting.feature
+      - id: AC-475.3
+        description: "ASCII histogram is displayed in terminal with frequency bars"
+        tests:
+          - feature:specs/features/req_475_axis_histogram_reporting.feature
+      - id: AC-475.4
+        description: "Histogram data can be exported as JSON for further analysis"
+        tests:
+          - feature:specs/features/req_475_axis_histogram_reporting.feature
+  # Product Requirement: DCS Falcon BMS Integration
+  - id: REQ-476
+    name: DCS Falcon BMS Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-476.1
+        description: "Adapter reads from BMS FlightData shared memory mapping"
+        tests:
+          - feature:specs/features/req_476_dcs_falcon_bms.feature
+      - id: AC-476.2
+        description: "Shared memory fields are converted to BusSnapshot values"
+        tests:
+          - feature:specs/features/req_476_dcs_falcon_bms.feature
+      - id: AC-476.3
+        description: "BMS disconnection is detected within 500ms"
+        tests:
+          - feature:specs/features/req_476_dcs_falcon_bms.feature
+      - id: AC-476.4
+        description: "Adapter is only available on Windows where shared memory is supported"
+        tests:
+          - feature:specs/features/req_476_dcs_falcon_bms.feature
+  # Product Requirement: IL-2 Sturmovik Telemetry
+  - id: REQ-477
+    name: IL-2 Sturmovik Telemetry
+    kind: product
+    status: draft
+    ac:
+      - id: AC-477.1
+        description: "Adapter binds to configurable UDP port (default 29373)"
+        tests:
+          - feature:specs/features/req_477_il2_telemetry.feature
+      - id: AC-477.2
+        description: "Telemetry frames are parsed and converted to BusSnapshot"
+        tests:
+          - feature:specs/features/req_477_il2_telemetry.feature
+      - id: AC-477.3
+        description: "Missing or partial frames use last-known values with stale flag"
+        tests:
+          - feature:specs/features/req_477_il2_telemetry.feature
+      - id: AC-477.4
+        description: "Parse error rate is tracked in adapter metrics"
+        tests:
+          - feature:specs/features/req_477_il2_telemetry.feature
+  # Product Requirement: AeroFly FS Telemetry
+  - id: REQ-478
+    name: AeroFly FS Telemetry
+    kind: product
+    status: draft
+    ac:
+      - id: AC-478.1
+        description: "Adapter connects to AeroFly FS UDP data stream"
+        tests:
+          - feature:specs/features/req_478_aerofly_fs_telemetry.feature
+      - id: AC-478.2
+        description: "Aircraft state data is converted to BusSnapshot"
+        tests:
+          - feature:specs/features/req_478_aerofly_fs_telemetry.feature
+      - id: AC-478.3
+        description: "Aircraft type detection triggers appropriate profile selection"
+        tests:
+          - feature:specs/features/req_478_aerofly_fs_telemetry.feature
+      - id: AC-478.4
+        description: "Adapter handles AeroFly FS2 and AeroFly FS4 protocol variants"
+        tests:
+          - feature:specs/features/req_478_aerofly_fs_telemetry.feature
+  # Product Requirement: FFB Ramp Effect
+  - id: REQ-479
+    name: FFB Ramp Effect
+    kind: product
+    status: draft
+    ac:
+      - id: AC-479.1
+        description: "Ramp effect increases force linearly over configured duration"
+        tests:
+          - feature:specs/features/req_479_ffb_ramp_effect.feature
+      - id: AC-479.2
+        description: "Ramp can be configured with start force, end force, and duration"
+        tests:
+          - feature:specs/features/req_479_ffb_ramp_effect.feature
+      - id: AC-479.3
+        description: "Ramp loops or stops at completion according to configuration"
+        tests:
+          - feature:specs/features/req_479_ffb_ramp_effect.feature
+      - id: AC-479.4
+        description: "Ramp is composable with other effects"
+        tests:
+          - feature:specs/features/req_479_ffb_ramp_effect.feature
+  # Product Requirement: Service IPC Version Reporting
+  - id: REQ-480
+    name: Service IPC Version Reporting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-480.1
+        description: "Connect response includes service version string"
+        tests:
+          - feature:specs/features/req_480_service_ipc_version.feature
+      - id: AC-480.2
+        description: "Connect response includes supported API capabilities"
+        tests:
+          - feature:specs/features/req_480_service_ipc_version.feature
+      - id: AC-480.3
+        description: "Client can detect version mismatch and warn user"
+        tests:
+          - feature:specs/features/req_480_service_ipc_version.feature
+      - id: AC-480.4
+        description: "Version is also accessible via flightctl version command"
+        tests:
+          - feature:specs/features/req_480_service_ipc_version.feature
+  # Product Requirement: Axis Statistics Collection
+  - id: REQ-481
+    name: Axis Statistics Collection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-481.1
+        description: "Statistics include min, max, mean, and standard deviation of values"
+        tests:
+          - feature:specs/features/req_481_axis_statistics_collection.feature
+      - id: AC-481.2
+        description: "Statistics are computed over configurable sliding window"
+        tests:
+          - feature:specs/features/req_481_axis_statistics_collection.feature
+      - id: AC-481.3
+        description: "Statistics are accessible via IPC without impacting RT performance"
+        tests:
+          - feature:specs/features/req_481_axis_statistics_collection.feature
+      - id: AC-481.4
+        description: "Statistics reset is triggerable via CLI command"
+        tests:
+          - feature:specs/features/req_481_axis_statistics_collection.feature
+  # Product Requirement: USB Enumeration Diagnostics
+  - id: REQ-482
+    name: USB Enumeration Diagnostics
+    kind: product
+    status: draft
+    ac:
+      - id: AC-482.1
+        description: "On startup service logs all connected HID devices with VID/PID"
+        tests:
+          - feature:specs/features/req_482_usb_enumeration_diagnostics.feature
+      - id: AC-482.2
+        description: "Known devices are identified by name from compat manifests"
+        tests:
+          - feature:specs/features/req_482_usb_enumeration_diagnostics.feature
+      - id: AC-482.3
+        description: "Unknown devices are logged with VID/PID and capabilities"
+        tests:
+          - feature:specs/features/req_482_usb_enumeration_diagnostics.feature
+      - id: AC-482.4
+        description: "Enumeration results are included in diagnostic bundle"
+        tests:
+          - feature:specs/features/req_482_usb_enumeration_diagnostics.feature
+  # Product Requirement: Profile Validation Command
+  - id: REQ-483
+    name: Profile Validation Command
+    kind: product
+    status: draft
+    ac:
+      - id: AC-483.1
+        description: "flightctl profile validate checks YAML schema and field values"
+        tests:
+          - feature:specs/features/req_483_profile_validation_command.feature
+      - id: AC-483.2
+        description: "Validation reports all errors not just the first"
+        tests:
+          - feature:specs/features/req_483_profile_validation_command.feature
+      - id: AC-483.3
+        description: "Valid profiles exit 0, invalid exit 1 with error summary"
+        tests:
+          - feature:specs/features/req_483_profile_validation_command.feature
+      - id: AC-483.4
+        description: "Validation includes checking referenced device manifests exist"
+        tests:
+          - feature:specs/features/req_483_profile_validation_command.feature
+  # Product Requirement: Axis Invert Toggle
+  - id: REQ-484
+    name: Axis Invert Toggle
+    kind: product
+    status: draft
+    ac:
+      - id: AC-484.1
+        description: "flightctl axis invert command toggles inversion for specified axis"
+        tests:
+          - feature:specs/features/req_484_axis_invert_toggle.feature
+      - id: AC-484.2
+        description: "Inversion state persists across service restarts"
+        tests:
+          - feature:specs/features/req_484_axis_invert_toggle.feature
+      - id: AC-484.3
+        description: "Inversion toggle takes effect on next axis tick"
+        tests:
+          - feature:specs/features/req_484_axis_invert_toggle.feature
+      - id: AC-484.4
+        description: "Current inversion state is shown in flightctl axis status"
+        tests:
+          - feature:specs/features/req_484_axis_invert_toggle.feature
+  # Product Requirement: Boot-Time Device Check
+  - id: REQ-485
+    name: Boot-Time Device Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-485.1
+        description: "Startup check lists required devices from active profile"
+        tests:
+          - feature:specs/features/req_485_boot_time_device_check.feature
+      - id: AC-485.2
+        description: "Missing required devices are logged as warnings"
+        tests:
+          - feature:specs/features/req_485_boot_time_device_check.feature
+      - id: AC-485.3
+        description: "Service continues with reduced functionality if optional devices absent"
+        tests:
+          - feature:specs/features/req_485_boot_time_device_check.feature
+      - id: AC-485.4
+        description: "Boot check results are included in flightctl status output"
+        tests:
+          - feature:specs/features/req_485_boot_time_device_check.feature
+  # Product Requirement: Profile Export to JSON
+  - id: REQ-486
+    name: Profile Export to JSON
+    kind: product
+    status: draft
+    ac:
+      - id: AC-486.1
+        description: "flightctl profile export outputs profile as valid JSON"
+        tests:
+          - feature:specs/features/req_486_profile_export_json.feature
+      - id: AC-486.2
+        description: "Exported JSON can be reimported without data loss"
+        tests:
+          - feature:specs/features/req_486_profile_export_json.feature
+      - id: AC-486.3
+        description: "JSON export includes all axis configs, curves, and metadata"
+        tests:
+          - feature:specs/features/req_486_profile_export_json.feature
+      - id: AC-486.4
+        description: "Export format is versioned for future migrations"
+        tests:
+          - feature:specs/features/req_486_profile_export_json.feature
+
+  # Product Requirement: CLI JSON Output Mode
+  - id: REQ-487
+    name: CLI JSON Output Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-487.1
+        description: "All flightctl commands support --json flag"
+        tests:
+          - feature:specs/features/req_487_cli_json_output.feature
+      - id: AC-487.2
+        description: "JSON output includes all human-readable fields in structured form"
+        tests:
+          - feature:specs/features/req_487_cli_json_output.feature
+      - id: AC-487.3
+        description: "Exit codes are consistent: 0 for success, non-zero for errors"
+        tests:
+          - feature:specs/features/req_487_cli_json_output.feature
+      - id: AC-487.4
+        description: "JSON format is stable and versioned"
+        tests:
+          - feature:specs/features/req_487_cli_json_output.feature
+
+  # Product Requirement: FFB DirectInput Backend
+  - id: REQ-488
+    name: FFB DirectInput Backend
+    kind: product
+    status: draft
+    ac:
+      - id: AC-488.1
+        description: "FFB backend uses DirectInput8 on Windows when devices are present"
+        tests:
+          - feature:specs/features/req_488_ffb_directinput_backend.feature
+      - id: AC-488.2
+        description: "DirectInput effects map to FFB engine effect types"
+        tests:
+          - feature:specs/features/req_488_ffb_directinput_backend.feature
+      - id: AC-488.3
+        description: "Gain and envelope parameters are applied via DirectInput"
+        tests:
+          - feature:specs/features/req_488_ffb_directinput_backend.feature
+      - id: AC-488.4
+        description: "Fallback to stub backend when no FFB devices are connected"
+        tests:
+          - feature:specs/features/req_488_ffb_directinput_backend.feature
+
+  # Product Requirement: Service Configuration Schema
+  - id: REQ-489
+    name: Service Configuration Schema
+    kind: product
+    status: draft
+    ac:
+      - id: AC-489.1
+        description: "Config schema is defined as a JSON Schema document"
+        tests:
+          - feature:specs/features/req_489_service_config_schema.feature
+      - id: AC-489.2
+        description: "Unknown config keys produce warnings not errors"
+        tests:
+          - feature:specs/features/req_489_service_config_schema.feature
+      - id: AC-489.3
+        description: "Schema is versioned and migration path is documented"
+        tests:
+          - feature:specs/features/req_489_service_config_schema.feature
+      - id: AC-489.4
+        description: "flightctl config validate uses the schema"
+        tests:
+          - feature:specs/features/req_489_service_config_schema.feature
+
+  # Product Requirement: Axis Deadzone Visualization
+  - id: REQ-490
+    name: Axis Deadzone Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-490.1
+        description: "flightctl axis show displays deadzone as ASCII range indicator"
+        tests:
+          - feature:specs/features/req_490_axis_deadzone_viz.feature
+      - id: AC-490.2
+        description: "Visualization shows current value position relative to deadzone"
+        tests:
+          - feature:specs/features/req_490_axis_deadzone_viz.feature
+      - id: AC-490.3
+        description: "Both symmetric and asymmetric deadzones are visualized correctly"
+        tests:
+          - feature:specs/features/req_490_axis_deadzone_viz.feature
+      - id: AC-490.4
+        description: "Color coding distinguishes in-deadzone vs active range"
+        tests:
+          - feature:specs/features/req_490_axis_deadzone_viz.feature
+
+  # Product Requirement: MSFS Profile Phase Integration
+  - id: REQ-491
+    name: MSFS Profile Phase Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-491.1
+        description: "Adapter detects parking brake state to trigger parked profile"
+        tests:
+          - feature:specs/features/req_491_msfs_profile_phase.feature
+      - id: AC-491.2
+        description: "Adapter detects gear retraction to trigger climb profile"
+        tests:
+          - feature:specs/features/req_491_msfs_profile_phase.feature
+      - id: AC-491.3
+        description: "Phase events are published on flight-bus within one update cycle"
+        tests:
+          - feature:specs/features/req_491_msfs_profile_phase.feature
+      - id: AC-491.4
+        description: "Phase detection thresholds are configurable in profile"
+        tests:
+          - feature:specs/features/req_491_msfs_profile_phase.feature
+
+  # Product Requirement: DCS Axis Injection
+  - id: REQ-492
+    name: DCS Axis Injection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-492.1
+        description: "Adapter sends axis values to DCS via export socket commands"
+        tests:
+          - feature:specs/features/req_492_dcs_axis_injection.feature
+      - id: AC-492.2
+        description: "Injection supports rudder, throttle, aileron, elevator axes"
+        tests:
+          - feature:specs/features/req_492_dcs_axis_injection.feature
+      - id: AC-492.3
+        description: "Injection is gated by enable_injection config flag"
+        tests:
+          - feature:specs/features/req_492_dcs_axis_injection.feature
+      - id: AC-492.4
+        description: "Failed injections are counted and logged per axis"
+        tests:
+          - feature:specs/features/req_492_dcs_axis_injection.feature
+
+  # Product Requirement: Profile Diff View
+  - id: REQ-493
+    name: Profile Diff View
+    kind: product
+    status: draft
+    ac:
+      - id: AC-493.1
+        description: "flightctl profile diff shows axis-level changes between profiles"
+        tests:
+          - feature:specs/features/req_493_profile_diff_view.feature
+      - id: AC-493.2
+        description: "Added, removed, and modified axes are clearly indicated"
+        tests:
+          - feature:specs/features/req_493_profile_diff_view.feature
+      - id: AC-493.3
+        description: "Diff can compare active profile against a file"
+        tests:
+          - feature:specs/features/req_493_profile_diff_view.feature
+      - id: AC-493.4
+        description: "Diff output supports --json flag"
+        tests:
+          - feature:specs/features/req_493_profile_diff_view.feature
+
+  # Product Requirement: Auto-Update Check
+  - id: REQ-494
+    name: Auto-Update Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-494.1
+        description: "Service checks configured update channel on startup"
+        tests:
+          - feature:specs/features/req_494_auto_update_check.feature
+      - id: AC-494.2
+        description: "Available updates are logged and reported in flightctl status"
+        tests:
+          - feature:specs/features/req_494_auto_update_check.feature
+      - id: AC-494.3
+        description: "Automatic update download is opt-in and disabled by default"
+        tests:
+          - feature:specs/features/req_494_auto_update_check.feature
+      - id: AC-494.4
+        description: "Update check interval is configurable"
+        tests:
+          - feature:specs/features/req_494_auto_update_check.feature
+
+  # Product Requirement: Gamepad Trigger Axis Support
+  - id: REQ-495
+    name: Gamepad Trigger Axis Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-495.1
+        description: "Left and right triggers are exposed as separate axes in 0.0 to 1.0 range"
+        tests:
+          - feature:specs/features/req_495_gamepad_trigger_axis.feature
+      - id: AC-495.2
+        description: "Triggers can be mapped to throttle or brake axes"
+        tests:
+          - feature:specs/features/req_495_gamepad_trigger_axis.feature
+      - id: AC-495.3
+        description: "Trigger dead zone is configurable"
+        tests:
+          - feature:specs/features/req_495_gamepad_trigger_axis.feature
+      - id: AC-495.4
+        description: "Dual trigger combo maps to split axis"
+        tests:
+          - feature:specs/features/req_495_gamepad_trigger_axis.feature
+
+  # Product Requirement: Service Health Dashboard
+  - id: REQ-496
+    name: Service Health Dashboard
+    kind: product
+    status: draft
+    ac:
+      - id: AC-496.1
+        description: "flightctl dashboard shows live axis values, adapter status, and metrics"
+        tests:
+          - feature:specs/features/req_496_service_health_dashboard.feature
+      - id: AC-496.2
+        description: "Dashboard refreshes at configurable rate"
+        tests:
+          - feature:specs/features/req_496_service_health_dashboard.feature
+      - id: AC-496.3
+        description: "Dashboard can be launched in both color and monochrome modes"
+        tests:
+          - feature:specs/features/req_496_service_health_dashboard.feature
+      - id: AC-496.4
+        description: "Dashboard exits cleanly on Ctrl+C"
+        tests:
+          - feature:specs/features/req_496_service_health_dashboard.feature
+
+  # Product Requirement: Device Hotplug Notification
+  - id: REQ-497
+    name: Device Hotplug Notification
+    kind: product
+    status: draft
+    ac:
+      - id: AC-497.1
+        description: "flightctl monitor shows real-time device plug/unplug events"
+        tests:
+          - feature:specs/features/req_497_device_hotplug_notification.feature
+      - id: AC-497.2
+        description: "Events include device name, VID/PID, and timestamp"
+        tests:
+          - feature:specs/features/req_497_device_hotplug_notification.feature
+      - id: AC-497.3
+        description: "Known devices are identified by name from compat manifests"
+        tests:
+          - feature:specs/features/req_497_device_hotplug_notification.feature
+      - id: AC-497.4
+        description: "Hotplug events are also published on flight-bus"
+        tests:
+          - feature:specs/features/req_497_device_hotplug_notification.feature
+
+  # Product Requirement: Axis Trim Persistence
+  - id: REQ-498
+    name: Axis Trim Persistence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-498.1
+        description: "Trim values are saved to calibration store on change"
+        tests:
+          - feature:specs/features/req_498_axis_trim_persistence.feature
+      - id: AC-498.2
+        description: "Trim values are loaded from calibration store on service start"
+        tests:
+          - feature:specs/features/req_498_axis_trim_persistence.feature
+      - id: AC-498.3
+        description: "Trim reset clears both in-memory and stored values"
+        tests:
+          - feature:specs/features/req_498_axis_trim_persistence.feature
+      - id: AC-498.4
+        description: "Trim values are included in diagnostic bundle"
+        tests:
+          - feature:specs/features/req_498_axis_trim_persistence.feature  - id: REQ-499
+    name: Axis Output Clamping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-499.1
+        description: "Output clamp range is configurable per axis (default -1.0 to 1.0)"
+        tests:
+          - feature:specs/features/req_499_axis_output_clamping.feature
+      - id: AC-499.2
+        description: "Clamp events are counted and included in axis diagnostics"
+        tests:
+          - feature:specs/features/req_499_axis_output_clamping.feature
+      - id: AC-499.3
+        description: "Clamp is applied as the final processing stage"
+        tests:
+          - feature:specs/features/req_499_axis_output_clamping.feature
+      - id: AC-499.4
+        description: "Asymmetric clamp supports different positive and negative limits"
+        tests:
+          - feature:specs/features/req_499_axis_output_clamping.feature
+  - id: REQ-500
+    name: OpenFlight 500-Requirement Milestone
+    kind: product
+    status: draft
+    ac:
+      - id: AC-500.1
+        description: "Specification ledger contains at least 500 unique requirements"
+        tests:
+          - feature:specs/features/req_500_milestone_500_requirements.feature
+      - id: AC-500.2
+        description: "All requirements have at least three acceptance criteria"
+        tests:
+          - feature:specs/features/req_500_milestone_500_requirements.feature
+      - id: AC-500.3
+        description: "All requirements have associated BDD feature files"
+        tests:
+          - feature:specs/features/req_500_milestone_500_requirements.feature
+      - id: AC-500.4
+        description: "Requirements span all major system components"
+        tests:
+          - feature:specs/features/req_500_milestone_500_requirements.feature
+  - id: REQ-501
+    name: Axis Pipeline Diagnostics
+    kind: product
+    status: draft
+    ac:
+      - id: AC-501.1
+        description: "Each pipeline stage output is recorded in ChainStageValues struct"
+        tests:
+          - feature:specs/features/req_501_axis_pipeline_diagnostics.feature
+      - id: AC-501.2
+        description: "Stage values are accessible via IPC diagnostic query"
+        tests:
+          - feature:specs/features/req_501_axis_pipeline_diagnostics.feature
+      - id: AC-501.3
+        description: "Stage diagnostics include input, post-deadzone, post-curve, and output values"
+        tests:
+          - feature:specs/features/req_501_axis_pipeline_diagnostics.feature
+      - id: AC-501.4
+        description: "Diagnostics collection has near-zero overhead when disabled"
+        tests:
+          - feature:specs/features/req_501_axis_pipeline_diagnostics.feature
+  - id: REQ-502
+    name: Profile Backup and Restore
+    kind: product
+    status: draft
+    ac:
+      - id: AC-502.1
+        description: "Profile backup is created automatically before any modification"
+        tests:
+          - feature:specs/features/req_502_profile_backup_restore.feature
+      - id: AC-502.2
+        description: "Backup is stored in a versioned backup directory"
+        tests:
+          - feature:specs/features/req_502_profile_backup_restore.feature
+      - id: AC-502.3
+        description: "flightctl profile restore lists available backups and restores selected"
+        tests:
+          - feature:specs/features/req_502_profile_backup_restore.feature
+      - id: AC-502.4
+        description: "Maximum backup count is configurable"
+        tests:
+          - feature:specs/features/req_502_profile_backup_restore.feature
+  - id: REQ-503
+    name: FFB Tactile Feedback Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-503.1
+        description: "Tactile mode generates rumble patterns without directional force"
+        tests:
+          - feature:specs/features/req_503_ffb_tactile_feedback.feature
+      - id: AC-503.2
+        description: "Tactile intensity and frequency are configurable"
+        tests:
+          - feature:specs/features/req_503_ffb_tactile_feedback.feature
+      - id: AC-503.3
+        description: "Tactile can be triggered by events: engine start, gear down, weapons"
+        tests:
+          - feature:specs/features/req_503_ffb_tactile_feedback.feature
+      - id: AC-503.4
+        description: "Tactile mode works on both FFB joysticks and tactile transducers"
+        tests:
+          - feature:specs/features/req_503_ffb_tactile_feedback.feature
+  - id: REQ-504
+    name: Telemetry Data Rate Monitoring
+    kind: product
+    status: draft
+    ac:
+      - id: AC-504.1
+        description: "Data rate is measured as packets per second for each adapter"
+        tests:
+          - feature:specs/features/req_504_telemetry_data_rate.feature
+      - id: AC-504.2
+        description: "Rate below threshold triggers a degraded-mode warning"
+        tests:
+          - feature:specs/features/req_504_telemetry_data_rate.feature
+      - id: AC-504.3
+        description: "Rate history is maintained for the last 60 seconds"
+        tests:
+          - feature:specs/features/req_504_telemetry_data_rate.feature
+      - id: AC-504.4
+        description: "Data rate is included in flightctl status output"
+        tests:
+          - feature:specs/features/req_504_telemetry_data_rate.feature
+  - id: REQ-505
+    name: Config File Schema Documentation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-505.1
+        description: "cargo xtask gen-docs generates reference documentation for config options"
+        tests:
+          - feature:specs/features/req_505_config_docs_generation.feature
+      - id: AC-505.2
+        description: "Documentation includes field names, types, defaults, and descriptions"
+        tests:
+          - feature:specs/features/req_505_config_docs_generation.feature
+      - id: AC-505.3
+        description: "Documentation is published as Markdown in docs/reference/"
+        tests:
+          - feature:specs/features/req_505_config_docs_generation.feature
+      - id: AC-505.4
+        description: "Documentation is regenerated as part of CI validate step"
+        tests:
+          - feature:specs/features/req_505_config_docs_generation.feature
+  - id: REQ-506
+    name: HID Polling Rate Control
+    kind: product
+    status: draft
+    ac:
+      - id: AC-506.1
+        description: "HID polling rate is configurable from 60 Hz to 1000 Hz"
+        tests:
+          - feature:specs/features/req_506_hid_polling_rate.feature
+      - id: AC-506.2
+        description: "Polling rate is applied per device where OS permits"
+        tests:
+          - feature:specs/features/req_506_hid_polling_rate.feature
+      - id: AC-506.3
+        description: "Actual polling rate is measured and reported in metrics"
+        tests:
+          - feature:specs/features/req_506_hid_polling_rate.feature
+      - id: AC-506.4
+        description: "Polling rate mismatch with RT spine rate is logged as warning"
+        tests:
+          - feature:specs/features/req_506_hid_polling_rate.feature
+  - id: REQ-507
+    name: Service Startup Sequence Logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-507.1
+        description: "Each startup phase is logged with timestamp and duration"
+        tests:
+          - feature:specs/features/req_507_startup_sequence_logging.feature
+      - id: AC-507.2
+        description: "Startup log includes device enumeration results"
+        tests:
+          - feature:specs/features/req_507_startup_sequence_logging.feature
+      - id: AC-507.3
+        description: "Startup failures identify the failing component and reason"
+        tests:
+          - feature:specs/features/req_507_startup_sequence_logging.feature
+      - id: AC-507.4
+        description: "Total startup time is logged and compared to previous run"
+        tests:
+          - feature:specs/features/req_507_startup_sequence_logging.feature
+  - id: REQ-508
+    name: Axis Position Hold Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-508.1
+        description: "Position hold mode freezes axis output at current value"
+        tests:
+          - feature:specs/features/req_508_axis_position_hold.feature
+      - id: AC-508.2
+        description: "Hold is activatable via IPC command or hardware button"
+        tests:
+          - feature:specs/features/req_508_axis_position_hold.feature
+      - id: AC-508.3
+        description: "Hold is automatically released when physical axis moves beyond threshold"
+        tests:
+          - feature:specs/features/req_508_axis_position_hold.feature
+      - id: AC-508.4
+        description: "Hold state is visible in axis diagnostics"
+        tests:
+          - feature:specs/features/req_508_axis_position_hold.feature
+  - id: REQ-509
+    name: Cross-Platform Compatibility Testing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-509.1
+        description: "CI runs core crate tests on both Windows and Linux runners"
+        tests:
+          - feature:specs/features/req_509_cross_platform_testing.feature
+      - id: AC-509.2
+        description: "Platform-specific code is properly gated with cfg attributes"
+        tests:
+          - feature:specs/features/req_509_cross_platform_testing.feature
+      - id: AC-509.3
+        description: "Hardware-specific tests skip gracefully on platforms without hardware"
+        tests:
+          - feature:specs/features/req_509_cross_platform_testing.feature
+      - id: AC-509.4
+        description: "Cross-platform test coverage is tracked in CI"
+        tests:
+          - feature:specs/features/req_509_cross_platform_testing.feature
+  - id: REQ-510
+    name: Release Artifact Signing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-510.1
+        description: "Release binaries are signed with project key in CI pipeline"
+        tests:
+          - feature:specs/features/req_510_release_artifact_signing.feature
+      - id: AC-510.2
+        description: "Signature files are published alongside binaries"
+        tests:
+          - feature:specs/features/req_510_release_artifact_signing.feature
+      - id: AC-510.3
+        description: "flightctl verify command checks artifact signatures"
+        tests:
+          - feature:specs/features/req_510_release_artifact_signing.feature
+      - id: AC-510.4
+        description: "Update system verifies signatures before applying updates"
+        tests:
+          - feature:specs/features/req_510_release_artifact_signing.feature

@@ -1,0 +1,56 @@
+# VIRPIL VPC Collective Base (PID 0x0172 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0172 is a community estimate for the VPC Collective Base.
+# The existing vpc-collective.yaml uses PID 0x8204.
+# 0x0172 is an alternative community-sourced PID for the same hardware family.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Collective Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0172   # Community estimate — alternative to 0x8204; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, slider]
+    resolution_bits: 14
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0172 is a community estimate. The primary VPC Collective manifest
+      (vpc-collective.yaml) uses 0x8204. Only one PID will match real hardware.
+      Verify with VIRPIL Configurator or lsusb.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      See vpc-collective.yaml (0x8204) for the other community estimate for
+      this device. Run lsusb or VIRPIL Configurator to determine the actual PID.
+  - id: HELICOPTER_USE
+    description: >
+      The VPC Collective Base is designed for helicopter simulation. The
+      collective axis maps to vertical thrust; use helicopter-specific profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Collective Base, PID 0x0172 community estimate. VID 0x3344
+    confirmed. See also vpc-collective.yaml (PID 0x8204). Last reviewed: 2026-06.

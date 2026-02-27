@@ -1,0 +1,52 @@
+# Mad Catz V.1 Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0738 confirmed (Mad Catz, Inc.).
+# PID 0x4728 is a community-reported PID for the Mad Catz V.1 Arcade Stick.
+# The V.1 Arcade Stick is a wired USB fightstick for Xbox 360/PC featuring
+# a standard joystick (4+8 direction) and 8 primary buttons. Used in sim
+# cockpit builds for discrete button panel assignments.
+schema_version: "1"
+
+device:
+  name: "Mad Catz V.1 Arcade Stick"
+  vendor: "Mad Catz, Inc."
+  usb:
+    vendor_id: 0x0738       # Mad Catz, Inc.
+    product_id: 0x4728      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4728 is a community estimate for the Mad Catz V.1 Arcade Stick.
+      Confirm with lsusb on real hardware.
+  - id: ARCADE_STICK_AXES
+    description: >
+      The joystick reports as digital X/Y axes. Values are -1, 0, or +1.
+      Not suitable for analog flight control; use for discrete button assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mad Catz V.1 Arcade Stick — Xbox 360/PC USB fightstick used as a cockpit
+    button panel. PID 0x4728 is a community estimate. Last reviewed: 2026-06.

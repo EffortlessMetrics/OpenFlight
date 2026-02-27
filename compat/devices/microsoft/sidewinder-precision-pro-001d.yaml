@@ -1,0 +1,52 @@
+# Microsoft SideWinder Precision Pro (Alt PID 0x001D)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x001D is a community-reported alternate PID for the SideWinder Precision Pro.
+# The primary USB Precision Pro variant uses PID 0x001C (sidewinder-precision-pro.yaml).
+# The SideWinder Precision Pro featured a digital gameport interface; this USB
+# variant is the later USB-native revision with analog precision controls.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Precision Pro (Alt PID)"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x001D      # Community-reported alt PID; primary USB variant is 0x001C
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 10
+  buttons: 9
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001D is community-reported for a SideWinder Precision Pro revision.
+      Confirm with lsusb. The primary USB variant uses 0x001C (sidewinder-precision-pro.yaml).
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      Handled by Windows built-in HID joystick driver on Windows 10/11.
+      No SideWinder-specific software needed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Precision Pro alternate PID (0x001D). See
+    sidewinder-precision-pro.yaml for the primary variant. Last reviewed: 2026-06.

@@ -1,0 +1,54 @@
+# Turtle Beach VelocityOne Rudder Pedals (PID 0x3083 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 confirmed: Turtle Beach Corporation.
+# PID 0x3083 is a community estimate for the VelocityOne Rudder pedals.
+# An alternative estimate 0x1051 is documented in velocityone-rudder.yaml.
+# 0x3083 is sequential to the Flightdeck estimate 0x3082.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Rudder"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x3083   # Community estimate — alternative to 0x1051; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3083 is a community estimate. An alternative estimate 0x1051 is
+      documented in velocityone-rudder.yaml. Verify with lsusb or USBView.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      See velocityone-rudder.yaml (PID 0x1051) for the other estimate.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Rudder, PID 0x3083 community estimate.
+    VID 0x10F5 confirmed. See also velocityone-rudder.yaml (0x1051).
+    Last reviewed: 2026-06.

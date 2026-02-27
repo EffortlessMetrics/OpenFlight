@@ -1,0 +1,54 @@
+# WinWing Ursa Minor Left Throttle (PID 0x021B variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (SimFlight Technology).
+# PID 0x021B is a community estimate for this Ursa Minor Left throttle variant.
+# Existing Ursa Minor Left (ursa_minor_l_throttle.yaml) uses 0xBE18.
+# The F-16 and F/A-18 Ursa Minor variants use 0xBD20 and 0xBE12 respectively.
+schema_version: "1"
+
+device:
+  name: "WinWing Ursa Minor Left Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x021B   # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x021B is a community estimate. The primary Ursa Minor Left file
+      (ursa_minor_l_throttle.yaml) uses 0xBE18. Verify 0x021B via SimAppPro
+      USB info or lsusb on real hardware.
+  - id: LEFT_HAND_THROTTLE
+    description: >
+      Compact left-hand throttle intended for use with a right-hand HOTAS stick.
+      Single throttle axis with additional axis controls on the grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Ursa Minor Left Throttle, PID 0x021B community estimate.
+    VID 0x4098 confirmed. See ursa_minor_l_throttle.yaml (0xBE18) for the
+    primary variant. Last reviewed: 2026-06.

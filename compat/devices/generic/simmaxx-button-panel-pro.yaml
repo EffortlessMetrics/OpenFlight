@@ -1,0 +1,61 @@
+# SimMaxx Button Panel Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 is Microchip Technology Inc. — commonly used by custom/DIY USB
+# HID peripherals built on the Microchip PIC USB stack.
+# PID 0x0E1C is a community estimate for the SimMaxx Button Panel Pro.
+# SimMaxx produces sim cockpit accessories for MSFS and DCS.
+schema_version: "1"
+
+device:
+  name: "SimMaxx Button Panel Pro"
+  vendor: "SimMaxx"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology Inc. — OEM USB chipset
+    product_id: 0x0E1C      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 / PID 0x0E1C are community estimates for the SimMaxx Button Panel Pro.
+      Microchip VID 0x04D8 is used by many custom HID devices. Confirm with lsusb
+      and match by product string.
+  - id: MICROCHIP_SHARED_VID
+    description: >
+      VID 0x04D8 (Microchip Technology) is used by many custom HID products.
+      Disambiguate by product string "SimMaxx" or device serial number.
+  - id: BUTTONS_HATS_ONLY
+    description: >
+      The Button Panel Pro exposes 24 buttons and 2 hat switches with no analog
+      axes. Bind to discrete panel actions or sim commands.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimMaxx Button Panel Pro — sim cockpit button interface. VID 0x04D8 is
+    Microchip Technology (common for custom HID). PID 0x0E1C is a community
+    estimate; verify with lsusb. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - dcs

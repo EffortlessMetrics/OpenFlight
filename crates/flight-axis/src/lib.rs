@@ -75,6 +75,7 @@ mod proptest_tests;
 
 pub mod blackbox;
 pub mod buttons;
+pub mod bypass;
 pub mod calibration;
 pub mod chain;
 pub mod combine;
@@ -90,6 +91,7 @@ pub mod hat;
 pub mod history;
 pub mod invert;
 pub mod nodes;
+pub mod normalize;
 pub mod pid;
 pub mod pipeline;
 pub mod rate_limit;
@@ -103,6 +105,7 @@ pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDet
 pub use buttons::{
     ButtonChord, ButtonError, ButtonMacro, ButtonProcessor, MacroAction, MacroTrigger,
 };
+pub use bypass::{BypassBank, BypassConfig, BypassGate};
 pub use calibration::{AxisCalibration, CalibrationBank};
 pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
 pub use combine::{combine_average, combine_differential, split_bipolar};
@@ -112,8 +115,10 @@ pub use conflict::{
     CurveConflict, CurveConflictDetector, ResolutionType,
 };
 pub use counters::{AllocationGuard, RuntimeCounters};
-pub use curve::{ControlPoint, CurveError, InterpolationMode, ResponseCurve};
-pub use deadzone::{DeadzoneBank, DeadzoneConfig, DeadzoneError, DeadzoneProcessor};
+pub use curve::{ControlPoint, CurveError, ExpoCurveConfig, InterpolationMode, ResponseCurve};
+pub use deadzone::{
+    AsymmetricDeadzoneConfig, DeadzoneBank, DeadzoneConfig, DeadzoneError, DeadzoneProcessor,
+};
 pub use detent::{Detent, DetentConfig, DetentProcessor};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
@@ -129,6 +134,7 @@ pub use nodes::{
     DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
+pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};

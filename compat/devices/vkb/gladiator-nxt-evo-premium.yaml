@@ -1,0 +1,59 @@
+# VKB Gladiator NXT EVO Premium (Right-Hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB Sim.
+# PID 0x0130 is a community estimate for the Gladiator NXT EVO Premium.
+# The EVO Pro uses 0x0202 and the standard EVO uses 0x0200.
+# The Premium sits between EVO and EVO Pro in the product line.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Premium"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0130   # Community estimate — NXT EVO Premium; verify with VKBDevCfg
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 26
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0130 is a community estimate for the NXT EVO Premium. The EVO
+      standard uses 0x0200 and the EVO Pro uses 0x0202. Verify with VKBDevCfg
+      USB Info tab or lsusb on real hardware.
+  - id: HALL_EFFECT_GIMBAL
+    description: >
+      The NXT EVO Premium uses VKB's Hall-effect contactless gimbal.
+      15-bit axis resolution with no mechanical wear. No deadzone compensation
+      required in standard use.
+  - id: PREMIUM_GRIP_EXTRAS
+    description: >
+      The Premium grip adds a second hat switch and additional thumb buttons
+      compared to the standard EVO grip. Button count reflects Premium variant.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO Premium (right-hand). VID 0x231D confirmed; PID 0x0130
+    is a community estimate. 15-bit Hall-effect gimbal, 26 buttons, 2 hats.
+    Mid-tier in the NXT EVO line between standard (0x0200) and Pro (0x0202).
+    Last reviewed: 2026-06.

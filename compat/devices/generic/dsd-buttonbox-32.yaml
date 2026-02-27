@@ -1,0 +1,63 @@
+# DSD ButtonBox 32
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 is Van Ooijen Technische Informatica (VOTI) — used by many
+# DIY USB HID devices including the DSD (Digital Sim Devices) ButtonBox family.
+# PID 0x048F is a community estimate for the DSD ButtonBox 32-button interface.
+# DSD ButtonBoxes are popular sim racing and flight sim cockpit accessories.
+schema_version: "1"
+
+device:
+  name: "DSD ButtonBox 32"
+  vendor: "DSD (Digital Sim Devices)"
+  usb:
+    vendor_id: 0x16C0       # VOTI / Van Ooijen Technische Informatica — DIY USB VID
+    product_id: 0x048F      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x048F are community estimates for the DSD ButtonBox 32.
+      VOTI VID 0x16C0 is a shared VID for many DIY HID devices. Confirm with
+      lsusb and match by product string "DSD ButtonBox" or serial number.
+  - id: SHARED_DIY_VID
+    description: >
+      VID 0x16C0 is shared across thousands of DIY USB HID devices (VOTI shared
+      VID scheme). OpenFlight disambiguates by product string match. Ensure the
+      device product string reports "DSD ButtonBox" or similar.
+  - id: BUTTONS_ONLY
+    description: >
+      The DSD ButtonBox 32 exposes 32 buttons with no analog axes. Bind directly
+      to panel actions, modifier keys, or discrete sim commands.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DSD ButtonBox 32 — 32-button sim cockpit button interface. VID 0x16C0 is a
+    shared VOTI VID; disambiguate by product string. PID 0x048F is a community
+    estimate. Popular for racing and flight sim cockpit builds. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

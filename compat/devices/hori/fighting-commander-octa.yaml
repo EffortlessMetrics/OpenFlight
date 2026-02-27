@@ -1,0 +1,53 @@
+# HORI Fighting Commander OCTA
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x0151 is a community-reported PID for the HORI Fighting Commander OCTA.
+# The Fighting Commander OCTA is an 8-button fightstick/gamepad with octagonal
+# gate restrictor, used in some cockpit builds for MFD and CDU panel assignments.
+schema_version: "1"
+
+device:
+  name: "HORI Fighting Commander OCTA"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0151      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 15
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0151 is a community estimate for the Fighting Commander OCTA.
+      Confirm with lsusb on real hardware.
+  - id: OCTAGONAL_GATE
+    description: >
+      The octagonal gate restrictor limits analog stick movement to 8 cardinal
+      and diagonal directions. Diagonal positions report reduced axis values
+      compared to a circular gate; profile deadzones should compensate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI Fighting Commander OCTA — tournament gamepad with octagonal gate.
+    Used as a button panel in cockpit sim builds. PID 0x0151 is a community
+    estimate; verify with lsusb. Last reviewed: 2026-06.

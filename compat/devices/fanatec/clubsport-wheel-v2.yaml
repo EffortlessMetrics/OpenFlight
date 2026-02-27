@@ -1,0 +1,64 @@
+# Fanatec ClubSport Steering Wheel V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed (Endor AG / Fanatec).
+# PID 0x0001 is a community-reported PID for the ClubSport Steering Wheel V2.
+# The ClubSport Wheel V2 is a premium 30cm Alcantara-wrapped wheel rim for
+# Fanatec ClubSport wheel bases. It connects to the base via Fanatec's Quick
+# Release system and does not enumerate directly as a USB device on PC —
+# the wheel base enumerates instead.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Steering Wheel V2"
+  vendor: "Fanatec / Endor AG"
+  usb:
+    vendor_id: 0x0EB7       # Endor AG / Fanatec — confirmed
+    product_id: 0x0001      # Community-reported PID for ClubSport Wheel V2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 16
+  buttons: 25
+  hats: 2
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant, periodic]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0001 is community-reported for the ClubSport Wheel V2. The wheel
+      rim itself enumerates through the connected wheel base; confirm the actual
+      USB PID with lsusb. The V2.5 base uses 0x0005 (clubsport-wheel-v25-eb03.yaml).
+  - id: WHEEL_BASE_ENUMERATION
+    description: >
+      The ClubSport Wheel V2 rim communicates with the wheel base via Fanatec's
+      Quick Release and internal protocol. The USB device that appears on the PC
+      is the wheel base, not the rim itself. Button and shifter inputs are
+      forwarded by the base.
+  - id: HIGH_RES_STEERING
+    description: >
+      Fanatec wheel bases provide 16-bit steering axis resolution (65536 steps).
+      Minimal software filtering is recommended; the hardware encoder is precise.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Steering Wheel V2 — premium 30cm Alcantara wheel rim for
+    Fanatec bases. PID 0x0001 is community-reported; the USB device is the base.
+    Confirm with lsusb. Last reviewed: 2026-06.

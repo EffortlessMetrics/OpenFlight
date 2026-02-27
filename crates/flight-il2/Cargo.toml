@@ -16,6 +16,7 @@ keywords = ["flight-sim", "openflight", "il-2", "adapter"]
 
 [dependencies]
 flight-core = { path = "../flight-core" }
+flight-bus = { path = "../flight-bus" }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

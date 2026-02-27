@@ -248,6 +248,42 @@ fn hermite_eval(t: f32, dx: f32, y0: f32, y1: f32, m0: f32, m1: f32) -> f32 {
     h00 * y0 + h10 * dx * m0 + h01 * y1 + h11 * dx * m1
 }
 
+/// Exponential response curve.
+///
+/// Modifies axis sensitivity around center.
+/// - expo = 0.0: linear
+/// - expo > 0.0: reduced center sensitivity (typical flight sim "expo")
+/// - expo < 0.0: increased center sensitivity
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ExpoCurveConfig {
+    /// Expo factor clamped to [-1.0, 1.0].
+    pub expo: f32,
+}
+
+impl ExpoCurveConfig {
+    /// Create a new expo config, clamping `expo` to [-1.0, 1.0].
+    pub fn new(expo: f32) -> Self {
+        Self {
+            expo: expo.clamp(-1.0, 1.0),
+        }
+    }
+
+    /// Linear response (no expo applied).
+    pub fn linear() -> Self {
+        Self { expo: 0.0 }
+    }
+
+    /// Apply expo curve to a value in [-1.0, 1.0].
+    ///
+    /// Uses the formula `expo * v³ + (1 − expo) * v`, clamped to [-1.0, 1.0].
+    #[inline]
+    pub fn apply(&self, value: f32) -> f32 {
+        let v = value.clamp(-1.0, 1.0);
+        let e = self.expo;
+        (e * v * v * v + (1.0 - e) * v).clamp(-1.0, 1.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -462,6 +498,99 @@ mod tests {
                 ya <= yb + 1e-5,
                 "monotone violated: evaluate({a}) = {ya} > evaluate({b}) = {yb}"
             );
+        }
+    }
+
+    // ── ExpoCurveConfig tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_expo_zero_is_linear() {
+        let expo = ExpoCurveConfig::linear();
+        assert!((expo.apply(0.5) - 0.5).abs() < 1e-6);
+        assert!((expo.apply(-0.3) - (-0.3)).abs() < 1e-6);
+        assert!(expo.apply(0.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_expo_positive_reduces_center_sensitivity() {
+        let expo = ExpoCurveConfig::new(0.5);
+        let out = expo.apply(0.5);
+        assert!(out < 0.5, "expected output < 0.5, got {out}");
+        let out_neg = expo.apply(-0.5);
+        assert!(out_neg > -0.5, "expected output > -0.5, got {out_neg}");
+    }
+
+    #[test]
+    fn test_expo_negative_increases_center_sensitivity() {
+        let expo = ExpoCurveConfig::new(-0.5);
+        let out = expo.apply(0.5);
+        assert!(out > 0.5, "expected output > 0.5, got {out}");
+        let out_neg = expo.apply(-0.5);
+        assert!(out_neg < -0.5, "expected output < -0.5, got {out_neg}");
+    }
+
+    #[test]
+    fn test_expo_extremes_clamp() {
+        let expo_max = ExpoCurveConfig::new(1.0);
+        let expo_min = ExpoCurveConfig::new(-1.0);
+        for &v in &[-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
+            let out_max = expo_max.apply(v);
+            let out_min = expo_min.apply(v);
+            assert!(
+                (-1.0..=1.0).contains(&out_max),
+                "expo=1.0, v={v}: output {out_max} out of range"
+            );
+            assert!(
+                (-1.0..=1.0).contains(&out_min),
+                "expo=-1.0, v={v}: output {out_min} out of range"
+            );
+        }
+        assert!((expo_max.apply(1.0) - 1.0).abs() < 1e-5);
+        assert!((expo_min.apply(1.0) - 1.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_expo_zero_input_maps_to_zero() {
+        for &e in &[-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
+            let expo = ExpoCurveConfig::new(e);
+            assert!(expo.apply(0.0).abs() < 1e-6, "expo={e}: apply(0.0) != 0.0");
+        }
+    }
+
+    #[test]
+    fn test_expo_one_input_maps_to_one() {
+        for &e in &[-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
+            let expo = ExpoCurveConfig::new(e);
+            assert!(
+                (expo.apply(1.0) - 1.0).abs() < 1e-5,
+                "expo={e}: apply(1.0) != 1.0"
+            );
+        }
+    }
+
+    #[test]
+    fn test_expo_neg_one_input_maps_to_neg_one() {
+        for &e in &[-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
+            let expo = ExpoCurveConfig::new(e);
+            assert!(
+                (expo.apply(-1.0) + 1.0).abs() < 1e-5,
+                "expo={e}: apply(-1.0) != -1.0"
+            );
+        }
+    }
+
+    #[test]
+    fn test_expo_monotonic_for_positive_expo() {
+        let expo = ExpoCurveConfig::new(0.7);
+        let mut prev = -1.1_f32;
+        for i in 0..=100 {
+            let v = -1.0 + 2.0 * i as f32 / 100.0;
+            let out = expo.apply(v);
+            assert!(
+                out >= prev - 1e-5,
+                "monotonicity violated at v={v}: {out} < {prev}"
+            );
+            prev = out;
         }
     }
 }

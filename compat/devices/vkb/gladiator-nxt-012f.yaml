@@ -1,0 +1,74 @@
+# VKB Gladiator NXT (PID 0x012F community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed (VKB-Sim). PID 0x012F is a community estimate for
+# a Gladiator NXT firmware or production variant. The primary Gladiator NXT
+# manifests are gladiator-nxt.yaml (PID 0x0200) and gladiator-nxt-evo.yaml
+# (PID 0x0200). PID 0x012F has been reported in the 0x012x range alongside
+# other VKB Gunfighter products; it may correspond to a Gladiator NXT
+# release with the legacy 0x012x PID assignment. Confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT (legacy PID variant)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim — confirmed
+    product_id: 0x012F      # Community estimate — Gladiator NXT 0x012x series variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 13
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x012F is a community estimate for a Gladiator NXT variant in the
+      legacy 0x012x PID range. Primary manifests: gladiator-nxt.yaml (0x0200),
+      gladiator-nxt-evo.yaml (0x0200). Confirm PID with lsusb or VKBDevCfg.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKBDevCfg software. OpenFlight reads
+      whatever the device reports; align VKB config with OpenFlight assignments.
+  - id: ENTRY_LEVEL_GLADIATOR
+    description: >
+      The Gladiator NXT is VKB's entry-level joystick using a contactless
+      hall-effect gimbal. It does not support modular grips. The NXT Evo
+      adds interchangeable stick heads and is the more common current model.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT PID 0x012F community estimate (legacy variant).
+    Primary manifests: gladiator-nxt.yaml, gladiator-nxt-evo.yaml (both 0x0200).
+    Wave-49 addition. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg useful for firmware updates and axis calibration but not
+    required for basic HID operation.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Plug and play; 4-axis NXT well suited for fixed-wing aircraft."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Recognised automatically; axes and buttons mapped in sim."

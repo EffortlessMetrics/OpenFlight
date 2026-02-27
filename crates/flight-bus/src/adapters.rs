@@ -269,6 +269,49 @@ pub mod ac7 {
     }
 }
 
+/// IL-2 Great Battles adapter helper functions
+pub mod il2 {
+    use super::*;
+
+    /// Convert IL-2 UDP telemetry units to normalized bus values.
+    pub struct Il2Converter;
+
+    impl Il2Converter {
+        /// Convert IL-2 speed (m/s) to [`ValidatedSpeed`].
+        ///
+        /// **Protocol field**: `speed` (m/s)
+        /// **Conversion**: None (already in m/s)
+        pub fn convert_speed_mps(value: f32) -> Result<ValidatedSpeed, BusTypeError> {
+            ValidatedSpeed::new_mps(value)
+        }
+
+        /// Convert IL-2 angle (degrees) to [`ValidatedAngle`], normalizing to `[-180, 180]`.
+        ///
+        /// **Protocol fields**: `pitch`, `roll`, `yaw` (degrees)
+        /// **Conversion**: `normalize_degrees_signed` then store as degrees
+        pub fn convert_angle_degrees(value: f32) -> Result<ValidatedAngle, BusTypeError> {
+            let normalized = angles::normalize_degrees_signed(value);
+            ValidatedAngle::new_degrees(normalized)
+        }
+
+        /// Convert IL-2 altitude (metres) to feet.
+        ///
+        /// **Protocol field**: `altitude` (metres)
+        /// **Conversion**: 1 m = 3.28084 ft
+        pub fn convert_altitude_m_to_ft(meters: f32) -> f32 {
+            conversions::meters_to_feet(meters)
+        }
+
+        /// Convert IL-2 throttle (0.0 – 1.0) to [`Percentage`].
+        ///
+        /// **Protocol field**: `throttle` (normalised 0-1)
+        /// **Conversion**: multiply by 100
+        pub fn convert_throttle(value: f32) -> Result<Percentage, BusTypeError> {
+            Percentage::from_normalized(value.clamp(0.0, 1.0))
+        }
+    }
+}
+
 /// Generic validation helpers
 pub mod validation {
     use super::*;

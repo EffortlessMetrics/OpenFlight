@@ -16,10 +16,10 @@
 //! | 16     | 4    | `yaw`      | degrees    |
 //! | 20     | 4    | `speed`    | m/s        |
 //! | 24     | 4    | `altitude` | metres     |
-//! | 28     | 4    | `throttle` | 0.0 – 1.0  |
+//! | 28     | 4    | `throttle` | 0.0 - 1.0  |
 //! | 32     | 1    | `gear`     | [`GearState`] |
 //!
-//! **Magic**: `0x494C_3200` (`"IL2\0"` in ASCII, little-endian).  
+//! **Magic**: `0x494C_3200` (`"IL2\0"` in ASCII, little-endian).
 //! **UDP port**: [`IL2_DEFAULT_PORT`] (configurable in `startup.cfg`).
 //!
 //! ## Enabling telemetry in IL-2
@@ -33,12 +33,17 @@
 //!   freq = 50
 //! ```
 
+use flight_bus::{
+    adapters::SimAdapter,
+    snapshot::{AircraftConfig, BusSnapshot, EngineData, Environment, Navigation},
+    types::{
+        AircraftId, GearPosition, GearState as BusGearState, Percentage, SimId, ValidatedAngle,
+        ValidatedSpeed,
+    },
+};
+use flight_core::units::{angles, conversions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-
-// Suppress the lint for the dep that is reserved for future real implementation.
-#[allow(unused_extern_crates)]
-extern crate flight_core;
 
 /// Expected magic number at the start of every IL-2 telemetry frame (`"IL2\0"`).
 pub const IL2_MAGIC: u32 = 0x494C_3200;
@@ -52,7 +57,7 @@ pub const MIN_FRAME_SIZE: usize = 33;
 /// Protocol version supported by this adapter.
 pub const SUPPORTED_VERSION: u32 = 1;
 
-// ── Error type ────────────────────────────────────────────────────────────────
+// -- Error type ---------------------------------------------------------------
 
 /// Errors produced by the IL-2 adapter.
 #[derive(Debug, Error, PartialEq)]
@@ -72,9 +77,13 @@ pub enum Il2AdapterError {
     /// A field could not be read at the given byte offset.
     #[error("failed to read field at offset {offset}")]
     ReadError { offset: usize },
+
+    /// A telemetry value could not be converted to a bus type.
+    #[error("bus conversion failed for field '{field}': {reason}")]
+    ConversionError { field: &'static str, reason: String },
 }
 
-// ── Domain types ──────────────────────────────────────────────────────────────
+// -- Domain types -------------------------------------------------------------
 
 /// Landing gear state reported by the IL-2 telemetry protocol.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,13 +117,13 @@ pub struct Il2TelemetryFrame {
     pub pitch: f32,
     /// Roll / bank angle in degrees (positive = right-wing-down).
     pub roll: f32,
-    /// Yaw / heading in degrees (0 – 360).
+    /// Yaw / heading in degrees (0 - 360).
     pub yaw: f32,
     /// True airspeed in m/s.
     pub speed: f32,
     /// Altitude above sea level in metres.
     pub altitude: f32,
-    /// Throttle position normalised to `0.0` (idle) – `1.0` (full).
+    /// Throttle position normalised to `0.0` (idle) - `1.0` (full).
     pub throttle: f32,
     /// Landing gear state.
     pub gear: GearState,
@@ -173,7 +182,27 @@ impl Il2AircraftType {
     }
 }
 
-// ── Adapter ───────────────────────────────────────────────────────────────────
+// -- Connection state machine -------------------------------------------------
+
+/// Connection state of the IL-2 UDP telemetry adapter.
+///
+/// ```text
+/// Disconnected --> Connected --> Error
+///       ^              ^           |
+///       +--------------+-----------+  (any valid datagram resets to Connected)
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum ConnectionState {
+    /// No datagrams received yet (initial state).
+    #[default]
+    Disconnected,
+    /// At least one valid datagram received; stream is healthy.
+    Connected,
+    /// The most recent datagram was invalid or could not be parsed.
+    Error,
+}
+
+// -- Adapter ------------------------------------------------------------------
 
 /// IL-2 Great Battles UDP telemetry adapter.
 ///
@@ -183,6 +212,8 @@ pub struct Il2Adapter {
     /// UDP port the adapter listens on.
     pub port: u16,
     last_frame: Option<Il2TelemetryFrame>,
+    state: ConnectionState,
+    error_count: u32,
 }
 
 impl Il2Adapter {
@@ -193,6 +224,8 @@ impl Il2Adapter {
         Self {
             port: IL2_DEFAULT_PORT,
             last_frame: None,
+            state: ConnectionState::Disconnected,
+            error_count: 0,
         }
     }
 
@@ -202,22 +235,53 @@ impl Il2Adapter {
         Self {
             port,
             last_frame: None,
+            state: ConnectionState::Disconnected,
+            error_count: 0,
         }
     }
 
     /// Decode a raw UDP datagram and cache the result.
     ///
-    /// Returns the parsed frame on success.
+    /// On success, transitions to [`ConnectionState::Connected`].
+    /// On failure, transitions to [`ConnectionState::Error`] and increments the
+    /// error counter.
     pub fn process_datagram(&mut self, data: &[u8]) -> Result<Il2TelemetryFrame, Il2AdapterError> {
         tracing::debug!(len = data.len(), "processing IL-2 UDP datagram");
-        let frame = parse_telemetry_frame(data)?;
-        self.last_frame = Some(frame.clone());
-        Ok(frame)
+        match parse_telemetry_frame(data) {
+            Ok(frame) => {
+                self.state = ConnectionState::Connected;
+                self.last_frame = Some(frame.clone());
+                Ok(frame)
+            }
+            Err(e) => {
+                self.state = ConnectionState::Error;
+                self.error_count = self.error_count.saturating_add(1);
+                Err(e)
+            }
+        }
     }
 
     /// Return the most recently decoded telemetry frame, if any.
     pub fn last_frame(&self) -> Option<&Il2TelemetryFrame> {
         self.last_frame.as_ref()
+    }
+
+    /// Return the current connection state.
+    pub fn state(&self) -> ConnectionState {
+        self.state
+    }
+
+    /// Return the total number of parse errors since creation (or last reset).
+    pub fn error_count(&self) -> u32 {
+        self.error_count
+    }
+
+    /// Reset to the initial [`ConnectionState::Disconnected`] state, clearing
+    /// the last frame and the error counter.
+    pub fn reset(&mut self) {
+        self.state = ConnectionState::Disconnected;
+        self.last_frame = None;
+        self.error_count = 0;
     }
 }
 
@@ -227,15 +291,169 @@ impl Default for Il2Adapter {
     }
 }
 
-// ── Parsing ───────────────────────────────────────────────────────────────────
+// -- SimAdapter implementation ------------------------------------------------
+
+impl SimAdapter for Il2Adapter {
+    type RawData = Il2TelemetryFrame;
+    type Error = Il2AdapterError;
+
+    fn sim_id(&self) -> SimId {
+        SimId::Il2
+    }
+
+    fn validate_raw_data(&self, raw: &Self::RawData) -> Result<(), Self::Error> {
+        if !raw.altitude.is_finite() || !raw.speed.is_finite() || raw.speed < 0.0 {
+            return Err(Il2AdapterError::ConversionError {
+                field: "speed/altitude",
+                reason: "value is not finite or speed is negative".to_string(),
+            });
+        }
+        if !raw.pitch.is_finite() || !raw.roll.is_finite() || !raw.yaw.is_finite() {
+            return Err(Il2AdapterError::ConversionError {
+                field: "attitude",
+                reason: "pitch, roll, or yaw is not finite".to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    fn convert_to_snapshot(&self, raw: Self::RawData) -> Result<BusSnapshot, Self::Error> {
+        convert_frame_to_snapshot(&raw)
+    }
+}
+
+// -- Frame -> BusSnapshot conversion ------------------------------------------
+
+/// Convert an [`Il2TelemetryFrame`] into a [`BusSnapshot`] for publication on
+/// the flight bus.
+///
+/// # Mapping
+///
+/// | Frame field | Snapshot field | Notes |
+/// |---|---|---|
+/// | `speed` (m/s) | `kinematics.ias/.tas/.ground_speed` | IL-2 does not separate IAS from TAS |
+/// | `pitch` (deg) | `kinematics.pitch` | Normalised to -180..180 |
+/// | `roll` (deg)  | `kinematics.bank`  | Normalised to -180..180 |
+/// | `yaw` (deg)   | `kinematics.heading` | Normalised to -180..180 |
+/// | `altitude` (m)| `environment.altitude`, `environment.pressure_altitude` | Converted to feet |
+/// | `throttle` (0-1)| `control_inputs.throttle[0]` | Single-engine |
+/// | `gear`        | `config.gear` (all three legs) | |
+pub fn convert_frame_to_snapshot(
+    frame: &Il2TelemetryFrame,
+) -> Result<BusSnapshot, Il2AdapterError> {
+    let speed = ValidatedSpeed::new_mps(frame.speed.max(0.0)).map_err(|e| {
+        Il2AdapterError::ConversionError {
+            field: "speed",
+            reason: e.to_string(),
+        }
+    })?;
+
+    let pitch = ValidatedAngle::new_degrees(angles::normalize_degrees_signed(frame.pitch))
+        .map_err(|e| Il2AdapterError::ConversionError {
+            field: "pitch",
+            reason: e.to_string(),
+        })?;
+    let bank =
+        ValidatedAngle::new_degrees(angles::normalize_degrees_signed(frame.roll)).map_err(|e| {
+            Il2AdapterError::ConversionError {
+                field: "roll",
+                reason: e.to_string(),
+            }
+        })?;
+    let heading = ValidatedAngle::new_degrees(angles::normalize_degrees_signed(frame.yaw))
+        .map_err(|e| Il2AdapterError::ConversionError {
+            field: "yaw",
+            reason: e.to_string(),
+        })?;
+
+    let altitude_ft = conversions::meters_to_feet(frame.altitude);
+
+    let throttle_pct = Percentage::from_normalized(frame.throttle).map_err(|e| {
+        Il2AdapterError::ConversionError {
+            field: "throttle",
+            reason: e.to_string(),
+        }
+    })?;
+
+    let gear_pos = match frame.gear {
+        GearState::Up => GearPosition::Up,
+        GearState::Transitioning => GearPosition::Transitioning,
+        GearState::Down => GearPosition::Down,
+    };
+    let bus_gear = BusGearState {
+        nose: gear_pos,
+        left: gear_pos,
+        right: gear_pos,
+    };
+
+    use flight_bus::snapshot::{AngularRates, ControlInputs, Kinematics, TrimState};
+    use flight_bus::types::{AutopilotState, GForce, LightsConfig, Mach, ValidityFlags};
+
+    let snapshot = BusSnapshot {
+        sim: SimId::Il2,
+        aircraft: AircraftId::new("IL2-unknown"),
+        kinematics: Kinematics {
+            ias: speed,
+            tas: speed,
+            ground_speed: speed,
+            pitch,
+            bank,
+            heading,
+            ..Kinematics::default()
+        },
+        config: AircraftConfig {
+            gear: bus_gear,
+            ..AircraftConfig::default()
+        },
+        control_inputs: ControlInputs {
+            throttle: vec![frame.throttle],
+            ..ControlInputs::default()
+        },
+        environment: Environment {
+            altitude: altitude_ft,
+            pressure_altitude: altitude_ft,
+            ..Environment::default()
+        },
+        engines: vec![EngineData {
+            index: 0,
+            running: frame.throttle > 0.0,
+            rpm: throttle_pct,
+            manifold_pressure: None,
+            egt: None,
+            cht: None,
+            fuel_flow: None,
+            oil_pressure: None,
+            oil_temperature: None,
+        }],
+        validity: ValidityFlags {
+            attitude_valid: true,
+            velocities_valid: true,
+            ..ValidityFlags::default()
+        },
+        ..BusSnapshot::default()
+    };
+
+    tracing::trace!(
+        pitch = frame.pitch,
+        roll = frame.roll,
+        yaw = frame.yaw,
+        speed = frame.speed,
+        altitude = frame.altitude,
+        "converted IL-2 frame to BusSnapshot"
+    );
+
+    Ok(snapshot)
+}
+
+// -- Parsing ------------------------------------------------------------------
 
 /// Decode a raw IL-2 UDP datagram into an [`Il2TelemetryFrame`].
 ///
 /// # Errors
 ///
-/// - [`Il2AdapterError::FrameTooShort`] — fewer than [`MIN_FRAME_SIZE`] bytes.
-/// - [`Il2AdapterError::BadMagic`] — bytes 0–3 ≠ [`IL2_MAGIC`].
-/// - [`Il2AdapterError::UnsupportedVersion`] — bytes 4–7 ≠ [`SUPPORTED_VERSION`].
+/// - [`Il2AdapterError::FrameTooShort`] -- fewer than [`MIN_FRAME_SIZE`] bytes.
+/// - [`Il2AdapterError::BadMagic`] -- bytes 0-3 != [`IL2_MAGIC`].
+/// - [`Il2AdapterError::UnsupportedVersion`] -- bytes 4-7 != [`SUPPORTED_VERSION`].
 pub fn parse_telemetry_frame(data: &[u8]) -> Result<Il2TelemetryFrame, Il2AdapterError> {
     if data.len() < MIN_FRAME_SIZE {
         return Err(Il2AdapterError::FrameTooShort { found: data.len() });
@@ -279,7 +497,7 @@ pub fn parse_telemetry_frame(data: &[u8]) -> Result<Il2TelemetryFrame, Il2Adapte
     })
 }
 
-// ── Private helpers ───────────────────────────────────────────────────────────
+// -- Private helpers ----------------------------------------------------------
 
 fn read_f32_le(data: &[u8], offset: usize) -> Result<f32, Il2AdapterError> {
     let bytes: [u8; 4] = data
@@ -299,7 +517,7 @@ fn read_u32_le(data: &[u8], offset: usize) -> Result<u32, Il2AdapterError> {
     Ok(u32::from_le_bytes(bytes))
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// -- Tests --------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -328,7 +546,7 @@ mod tests {
         buf
     }
 
-    // ── parse_telemetry_frame ────────────────────────────────────────────────
+    // -- parse_telemetry_frame ------------------------------------------------
 
     #[test]
     fn parse_valid_frame() {
@@ -399,7 +617,6 @@ mod tests {
 
     #[test]
     fn gear_unknown_byte_defaults_to_up() {
-        // Byte 0xFF is not a valid GearState; should default to Up.
         let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0xFF);
         let frame = parse_telemetry_frame(&data).unwrap();
         assert_eq!(frame.gear, GearState::Up);
@@ -423,7 +640,7 @@ mod tests {
         assert!(frame.throttle >= 0.0, "throttle={}", frame.throttle);
     }
 
-    // ── Il2AircraftType ──────────────────────────────────────────────────────
+    // -- Il2AircraftType ------------------------------------------------------
 
     #[test]
     fn aircraft_type_from_name() {
@@ -465,7 +682,7 @@ mod tests {
         );
     }
 
-    // ── Il2TelemetryFrame ────────────────────────────────────────────────────
+    // -- Il2TelemetryFrame ----------------------------------------------------
 
     #[test]
     fn telemetry_frame_default_values() {
@@ -495,7 +712,7 @@ mod tests {
         assert_eq!(back, frame);
     }
 
-    // ── Il2Adapter ───────────────────────────────────────────────────────────
+    // -- Il2Adapter -----------------------------------------------------------
 
     #[test]
     fn adapter_last_frame_none_initially() {
@@ -530,5 +747,174 @@ mod tests {
         let result = adapter.process_datagram(&[0u8; 4]);
         assert!(result.is_err());
         assert!(adapter.last_frame().is_none());
+    }
+
+    // -- ConnectionState ------------------------------------------------------
+
+    #[test]
+    fn adapter_initial_state_is_disconnected() {
+        let adapter = Il2Adapter::new();
+        assert_eq!(adapter.state(), ConnectionState::Disconnected);
+        assert_eq!(adapter.error_count(), 0);
+    }
+
+    #[test]
+    fn adapter_transitions_to_connected_on_valid_datagram() {
+        let mut adapter = Il2Adapter::new();
+        let data = build_frame(0.0, 0.0, 0.0, 50.0, 1_000.0, 0.5, 0);
+        adapter.process_datagram(&data).unwrap();
+        assert_eq!(adapter.state(), ConnectionState::Connected);
+        assert_eq!(adapter.error_count(), 0);
+    }
+
+    #[test]
+    fn adapter_transitions_to_error_on_invalid_datagram() {
+        let mut adapter = Il2Adapter::new();
+        let _ = adapter.process_datagram(&[0u8; 4]);
+        assert_eq!(adapter.state(), ConnectionState::Error);
+        assert_eq!(adapter.error_count(), 1);
+    }
+
+    #[test]
+    fn adapter_error_count_increments_per_failure() {
+        let mut adapter = Il2Adapter::new();
+        for i in 1..=3 {
+            let _ = adapter.process_datagram(&[0u8; 4]);
+            assert_eq!(adapter.error_count(), i);
+        }
+    }
+
+    #[test]
+    fn adapter_recovers_to_connected_after_error() {
+        let mut adapter = Il2Adapter::new();
+        let _ = adapter.process_datagram(&[0u8; 4]);
+        assert_eq!(adapter.state(), ConnectionState::Error);
+        let data = build_frame(0.0, 0.0, 0.0, 50.0, 1_000.0, 0.5, 0);
+        adapter.process_datagram(&data).unwrap();
+        assert_eq!(adapter.state(), ConnectionState::Connected);
+    }
+
+    #[test]
+    fn adapter_reset_clears_state_and_error_count() {
+        let mut adapter = Il2Adapter::new();
+        let data = build_frame(1.0, 0.0, 0.0, 50.0, 500.0, 0.3, 0);
+        adapter.process_datagram(&data).unwrap();
+        let _ = adapter.process_datagram(&[0u8; 4]);
+        adapter.reset();
+        assert_eq!(adapter.state(), ConnectionState::Disconnected);
+        assert_eq!(adapter.error_count(), 0);
+        assert!(adapter.last_frame().is_none());
+    }
+
+    // -- BusSnapshot conversion -----------------------------------------------
+
+    #[test]
+    fn convert_frame_to_snapshot_fields() {
+        let frame = Il2TelemetryFrame {
+            pitch: 5.0,
+            roll: -10.0,
+            yaw: 90.0,
+            speed: 80.0,
+            altitude: 2_000.0,
+            throttle: 0.75,
+            gear: GearState::Down,
+        };
+        let snap = convert_frame_to_snapshot(&frame).unwrap();
+        assert_eq!(snap.sim, SimId::Il2);
+        assert!((snap.kinematics.ias.to_mps() - 80.0).abs() < 0.1);
+        // 2000 m -> ~6561.68 ft
+        assert!((snap.environment.altitude - 6_561.68).abs() < 1.0);
+        assert_eq!(snap.config.gear.nose, GearPosition::Down);
+        assert_eq!(snap.config.gear.left, GearPosition::Down);
+        assert_eq!(snap.config.gear.right, GearPosition::Down);
+        assert!((snap.control_inputs.throttle[0] - 0.75).abs() < 0.01);
+        assert!(snap.engines[0].running);
+    }
+
+    #[test]
+    fn convert_frame_gear_up_maps_to_bus_gear_up() {
+        let frame = Il2TelemetryFrame {
+            gear: GearState::Up,
+            ..Il2TelemetryFrame::default()
+        };
+        let snap = convert_frame_to_snapshot(&frame).unwrap();
+        assert_eq!(snap.config.gear.nose, GearPosition::Up);
+        assert_eq!(snap.config.gear.left, GearPosition::Up);
+        assert_eq!(snap.config.gear.right, GearPosition::Up);
+    }
+
+    #[test]
+    fn convert_frame_gear_transitioning_maps_to_bus_gear_transitioning() {
+        let frame = Il2TelemetryFrame {
+            gear: GearState::Transitioning,
+            ..Il2TelemetryFrame::default()
+        };
+        let snap = convert_frame_to_snapshot(&frame).unwrap();
+        assert_eq!(snap.config.gear.nose, GearPosition::Transitioning);
+    }
+
+    #[test]
+    fn convert_frame_yaw_normalized_to_signed_range() {
+        // 270 deg -> -90 deg
+        let frame = Il2TelemetryFrame {
+            yaw: 270.0,
+            ..Il2TelemetryFrame::default()
+        };
+        let snap = convert_frame_to_snapshot(&frame).unwrap();
+        assert!((snap.kinematics.heading.to_degrees() - (-90.0)).abs() < 0.01);
+    }
+
+    #[test]
+    fn convert_frame_engine_not_running_when_throttle_zero() {
+        let frame = Il2TelemetryFrame {
+            throttle: 0.0,
+            ..Il2TelemetryFrame::default()
+        };
+        let snap = convert_frame_to_snapshot(&frame).unwrap();
+        assert!(!snap.engines[0].running);
+    }
+
+    #[test]
+    fn sim_adapter_sim_id_is_il2() {
+        let adapter = Il2Adapter::new();
+        assert_eq!(adapter.sim_id(), SimId::Il2);
+    }
+
+    #[test]
+    fn sim_adapter_convert_to_snapshot_roundtrip() {
+        let adapter = Il2Adapter::new();
+        let frame = Il2TelemetryFrame {
+            pitch: 2.0,
+            roll: 5.0,
+            yaw: 45.0,
+            speed: 100.0,
+            altitude: 3_000.0,
+            throttle: 0.8,
+            gear: GearState::Up,
+        };
+        adapter.validate_raw_data(&frame).unwrap();
+        let snap = adapter.convert_to_snapshot(frame).unwrap();
+        assert_eq!(snap.sim, SimId::Il2);
+        assert!((snap.kinematics.ias.to_mps() - 100.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn sim_adapter_validate_rejects_nan_speed() {
+        let adapter = Il2Adapter::new();
+        let frame = Il2TelemetryFrame {
+            speed: f32::NAN,
+            ..Il2TelemetryFrame::default()
+        };
+        assert!(adapter.validate_raw_data(&frame).is_err());
+    }
+
+    #[test]
+    fn sim_adapter_validate_rejects_negative_speed() {
+        let adapter = Il2Adapter::new();
+        let frame = Il2TelemetryFrame {
+            speed: -1.0,
+            ..Il2TelemetryFrame::default()
+        };
+        assert!(adapter.validate_raw_data(&frame).is_err());
     }
 }

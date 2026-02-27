@@ -1,0 +1,16 @@
+[package]
+name = "flight-metrics-http"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Minimal Prometheus HTTP metrics server for OpenFlight services"
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+tracing.workspace = true
+atomic_enum = { version = "0.3", optional = true }
+
+[dev-dependencies]
+
+[features]
+default = []

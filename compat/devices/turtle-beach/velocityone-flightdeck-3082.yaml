@@ -1,0 +1,59 @@
+# Turtle Beach VelocityOne Flightdeck (PID 0x3082 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 confirmed: Turtle Beach Corporation.
+# PID 0x3082 is a community estimate for the VelocityOne Flightdeck.
+# An alternative estimate 0x1050 is documented in velocityone-flightdeck.yaml.
+# 0x3082 appears in community USB capture logs from revised hardware revisions.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Flightdeck"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x3082   # Community estimate — alternative to 0x1050; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, rudder, throttle, prop_rpm, mixture]
+    resolution_bits: 12
+  buttons: 63
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3082 is a community estimate. An alternative estimate 0x1050 is
+      documented in velocityone-flightdeck.yaml. Only one will match real
+      hardware. Verify with lsusb or USBView before production matching.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      See velocityone-flightdeck.yaml (PID 0x1050) for the other community
+      estimate. Run lsusb or Windows Device Manager to find the correct PID.
+  - id: COMBINED_YOKE_THROTTLE
+    description: >
+      Single USB device exposing both yoke axes and throttle-quadrant axes.
+  - id: GEAR_LEVER_AS_BUTTON
+    description: >
+      Landing gear lever reported as discrete up/down buttons, not as an axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Flightdeck, PID 0x3082 community estimate.
+    VID 0x10F5 confirmed. See also velocityone-flightdeck.yaml (0x1050).
+    Last reviewed: 2026-06.

@@ -1,0 +1,77 @@
+# OSW Small MIGE 15Nm Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 confirmed: Leo Bodnar Ltd. (shared across all OSW/SimSteering
+# hardware that uses the Bodnar BBI/IONI controller electronics).
+# PID 0x1003 is a community estimate for the OSW Small MIGE 15Nm variant.
+# The 15Nm variant uses a smaller MIGE frame (typically 80ST series) compared
+# to the 30Nm variant (osw-small-mige-30nm.yaml, PID 0x1002).
+# Confirm PID with lsusb capture from real hardware.
+schema_version: "1"
+
+device:
+  name: "OSW Small MIGE 15Nm Direct Drive Base"
+  vendor: "OSW / SimSteering (Bodnar-based)"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd. — confirmed for all OSW/Bodnar hardware
+    product_id: 0x1003      # Community estimate — 15Nm MIGE variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 24
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 15.0   # Peak torque of the Small MIGE 80ST series servo
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1003 is a community estimate. Confirm from lsusb or Granite Devices
+      Granity / IONI software USB descriptor capture. See osw-small-mige-30nm.yaml
+      (PID 0x1002) for the higher-torque 30Nm variant.
+  - id: TORQUE_ONLY
+    description: >
+      The OSW/IONI controller accepts raw torque commands via the Bodnar
+      vendor HID protocol. Standard DirectInput effect types are not
+      natively supported; the host must translate to torque commands.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The OSW base exposes only the rotation axis. A flight grip adapter is
+      required to expose additional buttons and enumerates as a separate HID device.
+  - id: IONI_DRIVE_REQUIRED
+    description: >
+      Requires Granite Devices IONI Pro servo drive for motor commutation.
+      The IONI drive enumerates via the Leo Bodnar USB interface board.
+      Granity software required for initial drive configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OSW Small MIGE 15Nm direct drive base. VID 0x1DD2 (Leo Bodnar) confirmed;
+    PID 0x1003 community estimate. Lower-torque companion to the 30Nm variant.
+    Wave-49 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Used with flight grip adapter; 15Nm suitable for most combat aircraft."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Single rotation axis; grip adapter required for button inputs."

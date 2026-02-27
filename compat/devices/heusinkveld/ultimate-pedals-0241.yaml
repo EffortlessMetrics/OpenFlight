@@ -1,0 +1,64 @@
+# Heusinkveld Ultimate Sim Pedals (Fanatec USB VID 0x0EB7, PID 0x0241)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH USB vendor ID, shared by some Heusinkveld hardware).
+# The primary Heusinkveld Ultimate Pedals manifest (sim-pedals-ultimate.yaml)
+# uses VID 0x04D8, PID 0xF6D2. PID 0x0241 with VID 0x0EB7 is a community
+# estimate for a variant or production run that enumerates under 0x0EB7.
+# The Ultimate pedals are Heusinkveld's top-tier three-pedal set with
+# hall-effect sensors and high-resolution load cells on all three axes.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Ultimate Sim Pedals"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec VID — shared with some Heusinkveld products
+    product_id: 0x0241      # Community estimate — Ultimate 0x0EB7 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0241 with VID 0x0EB7 is a community estimate for an Ultimate
+      variant. Primary manifest: sim-pedals-ultimate.yaml (VID 0x04D8,
+      PID 0xF6D2). Confirm with lsusb on real hardware.
+  - id: HALL_EFFECT_ALL_AXES
+    description: >
+      All three axes use hall-effect sensors, providing contactless measurement
+      with no wear or hysteresis. Paired with load cells for brake and
+      clutch force input.
+  - id: HIGH_RESOLUTION_16BIT
+    description: >
+      16-bit ADC resolution (65536 steps per axis) provides extremely fine
+      input granularity. Minimal software filtering is typically needed.
+  - id: VID_SHARED_WITH_FANATEC
+    description: >
+      VID 0x0EB7 is shared between Fanatec and some Heusinkveld products.
+      Verify device identity when matching profiles to avoid false matches.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Ultimate pedals (VID 0x0EB7 variant). PID 0x0241 community
+    estimate. Hall-effect sensors, 16-bit, 1000 Hz. Primary: sim-pedals-ultimate.yaml.
+    Wave-49 addition. Last reviewed: 2026-07.

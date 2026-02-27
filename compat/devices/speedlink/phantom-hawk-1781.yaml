@@ -1,0 +1,54 @@
+# Speedlink Phantom Hawk Flightstick (VID 0x1781)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 is a community-reported VID for this Speedlink variant.
+# PID 0x0A8A is a community estimate for the Phantom Hawk Flightstick.
+# Note: Other Speedlink devices use GreenAsia (0x0E8F) or Cypress (0x04B4)
+# as their OEM chipset VID. This entry documents the 0x1781 variant.
+# The Phantom Hawk is a full-size joystick with throttle slider and twist rudder.
+schema_version: "1"
+
+device:
+  name: "Speedlink Phantom Hawk Flightstick"
+  vendor: "Speedlink"
+  usb:
+    vendor_id: 0x1781       # Community-reported VID for this Speedlink variant
+    product_id: 0x0A8A      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 / PID 0x0A8A are community estimates for this Speedlink
+      Phantom Hawk variant. Other Speedlink products use GreenAsia VID 0x0E8F.
+      Confirm both VID and PID with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Phantom Hawk Flightstick (VID 0x1781 variant). Both VID and PID
+    are community estimates. See also phantom-hawk.yaml for the GreenAsia VID
+    variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

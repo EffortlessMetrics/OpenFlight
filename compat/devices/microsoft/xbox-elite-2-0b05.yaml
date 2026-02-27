@@ -1,0 +1,55 @@
+# Microsoft Xbox Elite Wireless Controller Series 2 (Alt PID 0x0B05)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x0B05 is a community-reported alternate PID for the Xbox Elite Series 2.
+# The primary confirmed PID is 0x0B00 (xbox-elite-2.yaml).
+# This PID may correspond to a specific firmware version or the USB wired mode
+# of the Elite Series 2. The controller features adjustable thumbstick tension,
+# swappable components, and trigger locks.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox Elite Wireless Controller Series 2 (Alt PID)"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x0B05      # Community-reported alt PID; primary is 0x0B00
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rx, ry, z, rz]
+    resolution_bits: 16
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B05 is community-reported for the Xbox Elite Series 2.
+      Confirm with lsusb. Primary PID is 0x0B00 (xbox-elite-2.yaml).
+  - id: XINPUT_GIP_MODE
+    description: >
+      The Xbox Elite Series 2 primarily uses the GIP (Gaming Input Protocol)
+      over USB on Xbox and Xbox Wireless Adapter. In PC USB wired mode it
+      exposes an XInput-compatible HID descriptor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Xbox Elite Series 2 alternate PID (0x0B05). Used in flight sims
+    for axis input and button panel assignments. See xbox-elite-2.yaml for the
+    primary variant. Last reviewed: 2026-06.

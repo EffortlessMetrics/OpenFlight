@@ -1,0 +1,57 @@
+# Mad Catz Cyborg R.A.T. 7 Mouse (axis input)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0738 confirmed (Mad Catz, Inc.).
+# PID 0x1729 is a community-reported PID for the Cyborg R.A.T. 7 gaming mouse.
+# While primarily a mouse, the R.A.T. 7 exposes analog axes via HID that some
+# sim users map to view panning and throttle trim. The adjustable body system
+# allows ergonomic customization.
+schema_version: "1"
+
+device:
+  name: "Mad Catz Cyborg R.A.T. 7 Mouse"
+  vendor: "Mad Catz, Inc."
+  usb:
+    vendor_id: 0x0738       # Mad Catz, Inc.
+    product_id: 0x1729      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x02             # Mouse
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, wheel]
+    resolution_bits: 16
+  buttons: 9
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1729 is a community estimate for the R.A.T. 7. Confirm with lsusb.
+  - id: MOUSE_HID_USAGE
+    description: >
+      The R.A.T. 7 uses HID Usage Page 0x01 / Usage 0x02 (Mouse), not the
+      Joystick usage. OpenFlight must explicitly bind this device as a mouse-axis
+      source for view panning or trim inputs.
+  - id: HIGH_RESOLUTION_AXES
+    description: >
+      Mouse axes report relative movement (delta), not absolute position.
+      Integrate with a rate-mode axis binding rather than a direct axis mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mad Catz Cyborg R.A.T. 7 — gaming mouse with analog axis exposure for sim use.
+    PID 0x1729 is a community estimate. Used for view panning / trim in DCS/MSFS.
+    Last reviewed: 2026-06.

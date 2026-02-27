@@ -35,9 +35,11 @@ pub mod adapter;
 pub mod aircraft;
 pub mod events;
 pub mod fixtures;
+pub mod injection;
 pub mod mapping;
 pub mod sanity_gate;
 pub mod session;
+pub mod subscription;
 pub mod transport;
 
 // Re-export main types
@@ -46,6 +48,10 @@ pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
 pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
+pub use injection::{AxisInjectionConfig, AxisInjector};
 pub use mapping::{MappingConfig, MappingError, VariableMapping};
 pub use sanity_gate::{SanityGate, SanityGateConfig, SanityState};
 pub use session::{SessionConfig, SessionError, SimConnectSession};
+pub use subscription::{
+    CORE_SUBSCRIPTION_VARS, DataSubscription, DataSubscriptionConfig, SubscriptionVariable,
+};

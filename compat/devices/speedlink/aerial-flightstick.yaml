@@ -1,0 +1,51 @@
+# Speedlink Aerial Flightstick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 is a community-reported VID for this Speedlink variant.
+# PID 0x0A8B is a community estimate for the Aerial Flightstick.
+# The Speedlink Aerial is a compact joystick designed for flight simulation,
+# featuring a twist-rudder axis and top-mounted throttle slider.
+schema_version: "1"
+
+device:
+  name: "Speedlink Aerial Flightstick"
+  vendor: "Speedlink"
+  usb:
+    vendor_id: 0x1781       # Community-reported VID for this Speedlink variant
+    product_id: 0x0A8B      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 / PID 0x0A8B are community estimates for the Speedlink Aerial.
+      Confirm both VID and PID with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Aerial Flightstick — compact budget joystick. Both VID and PID
+    are community estimates; verify with lsusb. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

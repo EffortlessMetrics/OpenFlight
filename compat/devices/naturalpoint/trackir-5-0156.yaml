@@ -1,0 +1,64 @@
+# NaturalPoint TrackIR 5 (Alt PID 0x0156)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed (NaturalPoint, Inc.).
+# PID 0x0156 is a community-reported alternate PID for the TrackIR 5.
+# The primary confirmed TrackIR 5 PID is 0x0155 (linux-hardware.org).
+# The TrackIR 5 delivers 6DOF tracking at 120Hz using either a reflective
+# TrackClip or the active TrackClip Pro LED accessory.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 5 (Alt PID)"
+  vendor: "NaturalPoint, Inc."
+  usb:
+    vendor_id: 0x131D       # NaturalPoint, Inc.
+    product_id: 0x0156      # Community-reported alt PID; confirmed primary is 0x0155
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0156 is community-reported for a TrackIR 5 firmware revision.
+      The confirmed primary PID is 0x0155 (trackir-5.yaml / linux-hardware.org).
+      Confirm with lsusb on real hardware.
+  - id: TRACKIR_PROPRIETARY_PROTOCOL
+    description: >
+      TrackIR devices use a proprietary USB protocol. OpenFlight receives
+      head-tracking axis data via the opentrack UDP bridge or NPClient.dll
+      injection. No direct HID axis binding is available without opentrack.
+  - id: HIGH_PRECISION_TRACKING
+    description: >
+      The TrackIR 5 delivers 0.1° rotation precision at 120Hz. Use the
+      NaturalPoint Software or opentrack for axis smoothing and deadzone
+      configuration before feeding to OpenFlight.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 5 — 6DOF head tracker at 120Hz. PID 0x0156 is a
+    community-reported alt PID; primary is 0x0155. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

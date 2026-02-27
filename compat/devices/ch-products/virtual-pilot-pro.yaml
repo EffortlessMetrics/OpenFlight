@@ -1,0 +1,58 @@
+# CH Products Virtual Pilot Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E confirmed (CH Products).
+# PID 0x00EB is a community-reported PID for the Virtual Pilot Pro USB.
+# The CH Virtual Pilot Pro is a yoke-style controller targeting GA and
+# airliner simulation. It differs from the standard Virtual Pilot (0x00C0)
+# with enhanced axis resolution and button layout.
+schema_version: "1"
+
+device:
+  name: "CH Products Virtual Pilot Pro"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products
+    product_id: 0x00EB      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00EB is a community estimate for the Virtual Pilot Pro USB.
+      Confirm with lsusb. The standard Virtual Pilot uses 0x00C0 (virtual-pilot.yaml).
+  - id: YOKE_AXIS_MAPPING
+    description: >
+      The yoke controller maps roll to X axis and pitch to Y axis using CH's
+      mechanical pivot system. No twist axis is present; separate rudder pedals
+      recommended.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Virtual Pilot Pro — yoke-style flight controller. PID 0x00EB is
+    a community estimate. See virtual-pilot.yaml for the standard variant.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

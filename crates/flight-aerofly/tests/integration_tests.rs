@@ -8,7 +8,7 @@
 
 use flight_aerofly::{
     AEROFLY_MAGIC, AeroflyAdapter, AeroflyAdapterError, AeroflyTelemetry, MIN_FRAME_SIZE,
-    parse_json_telemetry, parse_telemetry,
+    parse_json_telemetry, parse_telemetry, parse_text_telemetry,
 };
 
 // ── Helper ─────────────────────────────────────────────────────────────────────
@@ -156,10 +156,76 @@ fn adapter_json_round_trip_preserves_all_fields() {
         throttle_pos: 0.9,
         gear_down: false,
         flaps_ratio: 0.0,
+        vspeed_fpm: 0.0,
     };
     // serde_json is a regular dep of flight-aerofly, available in tests.
     let json = serde_json::to_string(&original).expect("serialize");
     let mut adapter = AeroflyAdapter::new();
     let parsed = adapter.process_json(&json).unwrap();
     assert_eq!(parsed, original);
+}
+
+/// Text key=value format is parsed correctly and all three adapter paths can be
+/// used on the same adapter instance.
+#[test]
+fn text_format_parsed_and_all_three_paths_work() {
+    let mut adapter = AeroflyAdapter::new();
+
+    // Binary path
+    let block = build_frame(1.0, 0.0, 90.0, 100.0, 1_000.0, 0.5, 1, 0.0);
+    let t1 = adapter.process_datagram(&block).unwrap();
+    assert!(t1.gear_down);
+
+    // JSON path
+    let json = r#"{"pitch":2.0,"roll":0.0,"heading":0.0,"airspeed":60.0,"altitude":500.0,"throttle_pos":0.3,"gear_down":false,"flaps_ratio":0.0}"#;
+    adapter.process_json(json).unwrap();
+
+    // Text path via standalone function
+    let text = "pitch=4.0\nhdg=180.0\nias=90.0\nalt=3000.0\nthrottle=0.6\ngear=0.0\nvspeed=200.0";
+    let t3 = parse_text_telemetry(text).unwrap();
+    assert!((t3.pitch - 4.0).abs() < 0.01, "pitch={}", t3.pitch);
+    assert!((t3.heading - 180.0).abs() < 0.01, "heading={}", t3.heading);
+    assert!(!t3.gear_down, "gear should be up");
+    assert!(
+        (t3.vspeed_fpm - 200.0).abs() < 0.01,
+        "vspeed_fpm={}",
+        t3.vspeed_fpm
+    );
+
+    // Also exercise adapter text path
+    let t4 = adapter.process_text(text).unwrap();
+    assert!((t4.pitch - 4.0).abs() < 0.01);
+
+    assert!(adapter.last_telemetry().is_some());
+}
+
+/// Unit conversion helpers return SI values from the native ft/knots/deg storage.
+#[test]
+fn unit_conversion_helpers_are_consistent() {
+    let t = AeroflyTelemetry {
+        pitch: 0.0,
+        roll: 0.0,
+        heading: 0.0,
+        airspeed: 194.384,  // ≈ 100 m/s
+        altitude: 32_808.4, // ≈ 10_000 m
+        throttle_pos: 1.0,
+        gear_down: false,
+        flaps_ratio: 0.0,
+        vspeed_fpm: 196.85, // ≈ 1 m/s
+    };
+    assert!(
+        (t.airspeed_ms() - 100.0).abs() < 0.5,
+        "airspeed_ms={}",
+        t.airspeed_ms()
+    );
+    assert!(
+        (t.altitude_m() - 10_000.0).abs() < 1.0,
+        "altitude_m={}",
+        t.altitude_m()
+    );
+    assert!(
+        (t.vspeed_ms() - 1.0).abs() < 0.05,
+        "vspeed_ms={}",
+        t.vspeed_ms()
+    );
 }

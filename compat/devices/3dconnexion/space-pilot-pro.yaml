@@ -1,0 +1,71 @@
+# 3Dconnexion SpacePilot Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed (3Dconnexion GmbH).
+# PID 0xC629 — confirmed via Linux kernel hid-ids.h
+# (USB_DEVICE_ID_3DCONNEXION_SPACEPILOT_PRO) and spacenavd daemon source.
+# The SpacePilot Pro is 3Dconnexion's flagship 6-DOF controller featuring
+# 31 programmable buttons, a built-in LCD display, and a dedicated application
+# key strip. Used in MSFS and DCS for camera control and cockpit interaction.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpacePilot Pro"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F       # 3Dconnexion GmbH — confirmed
+    product_id: 0xC629      # SpacePilot Pro — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 31
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck provides simultaneous translation (Tx/Ty/Tz)
+      and rotation (Rx/Ry/Rz) axes. All axes spring-return to zero on release.
+  - id: LCD_DISPLAY
+    description: >
+      The SpacePilot Pro includes a built-in LCD display and application key strip.
+      Display output is not currently managed by OpenFlight; the device is used
+      purely as a 6-DOF axis and button input source.
+  - id: EXTENDED_BUTTON_COUNT
+    description: >
+      31 programmable buttons including dedicated application-specific function
+      keys. Button events are transmitted in a separate HID report from axis data.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      Not a dedicated flight controller. Most useful for MSFS camera panning,
+      cockpit navigation, and drone view. Map Tz to altitude and Rx/Ry to pan.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC629 confirmed from Linux kernel hid-ids.h and spacenavd.
+    Flagship 6-DOF controller with LCD and 31 buttons. See also
+    space-mouse-pro.yaml (PID 0xC631). Wave-49 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "6-DOF puck used for camera/cockpit navigation and view panning."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Multi-axis input for external camera and view control."
