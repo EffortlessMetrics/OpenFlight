@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 556 |
-| ACs with tests | 556 |
-| ACs with Gherkin | 556 |
-| ACs with both tests + Gherkin | 556 |
-| Complete | 556 |
+| Total AC | 585 |
+| ACs with tests | 585 |
+| ACs with Gherkin | 585 |
+| ACs with both tests + Gherkin | 585 |
+| Complete | 585 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -44,12 +44,12 @@
 | flight-axis | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-bus | 14 | 14 | 14 | 14 | 14 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-cloud-profiles | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
-| flight-core | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-core | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
-| flight-device-common | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
+| flight-device-common | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-moza | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
@@ -81,7 +81,7 @@
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-rules | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-rules | 22 | 22 | 22 | 22 | 22 | 100.0% | 100.0% | 100.0% |
 | flight-scheduler | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-service | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
@@ -663,3 +663,32 @@
 | REQ-102 | AC-102.2 | WHEN any axis value is written to a virtual device THEN the reported output SHALL be within the device's valid range | specs/features/req_102_virtual_device.feature:11 | 2 | ✅ Complete |
 | REQ-102 | AC-102.3 | WHEN a disconnected virtual device is written to THEN the error SHALL be reported without a panic or memory-safety violation | specs/features/req_102_virtual_device.feature:17 | 1 | ✅ Complete |
 | REQ-102 | AC-102.4 | WHEN the OFP-1 handshake sequence is initiated THEN the emulator SHALL report successful capability negotiation | specs/features/req_102_virtual_device.feature:23 | 2 | ✅ Complete |
+| REQ-103 | AC-103.1 | WHEN a plain variable name is parsed as a condition THEN it SHALL produce a Boolean condition with negate=false | specs/features/req_103_105_rules_dsl.feature:7 | 2 | ✅ Complete |
+| REQ-103 | AC-103.2 | WHEN a numeric greater-than condition string is parsed THEN it SHALL produce a Compare condition with operator Greater | specs/features/req_103_105_rules_dsl.feature:14 | 2 | ✅ Complete |
+| REQ-103 | AC-103.3 | WHEN a rule schema contains an empty condition string THEN validation SHALL fail with a condition error | specs/features/req_103_105_rules_dsl.feature:21 | 1 | ✅ Complete |
+| REQ-103 | AC-103.4 | WHEN a condition string prefixed with '!' is parsed THEN it SHALL produce a Boolean condition with negate=true | specs/features/req_103_105_rules_dsl.feature:27 | 2 | ✅ Complete |
+| REQ-103 | AC-103.5 | WHEN a condition joined by 'and' is parsed THEN it SHALL produce an And condition with the correct sub-conditions | specs/features/req_103_105_rules_dsl.feature:34 | 1 | ✅ Complete |
+| REQ-103 | AC-103.6 | WHEN a condition joined by 'or' is parsed THEN it SHALL produce an Or condition with the correct sub-conditions | specs/features/req_103_105_rules_dsl.feature:41 | 1 | ✅ Complete |
+| REQ-103 | AC-103.7 | WHEN any of the six comparison operators (>, <, ==, !=, >=, <=) appear in a condition THEN the correct CompareOp variant SHALL be produced | specs/features/req_103_105_rules_dsl.feature:48 | 3 | ✅ Complete |
+| REQ-104 | AC-104.1 | WHEN 'led.panel(TARGET).on()' is parsed as an action THEN it SHALL produce a LedOn action with the correct target | specs/features/req_103_105_rules_dsl.feature:66 | 2 | ✅ Complete |
+| REQ-104 | AC-104.2 | WHEN 'led.panel(TARGET).blink(rate_hz=N)' is parsed as an action THEN it SHALL produce a LedBlink action with the correct target and rate | specs/features/req_103_105_rules_dsl.feature:73 | 1 | ✅ Complete |
+| REQ-104 | AC-104.3 | WHEN an empty string is parsed as an action THEN parsing SHALL fail with an unsupported action syntax error | specs/features/req_103_105_rules_dsl.feature:80 | 1 | ✅ Complete |
+| REQ-104 | AC-104.4 | WHEN an unrecognised action string is parsed THEN parsing SHALL fail with an unsupported action syntax error | specs/features/req_103_105_rules_dsl.feature:86 | 1 | ✅ Complete |
+| REQ-104 | AC-104.5 | WHEN 'led.indexer.blink(rate_hz=N)' is parsed as an action THEN it SHALL produce a LedBlink action with target 'indexer' | specs/features/req_103_105_rules_dsl.feature:92 | 2 | ✅ Complete |
+| REQ-104 | AC-104.6 | WHEN 'led.panel(TARGET).brightness(V)' is parsed as an action THEN it SHALL produce a LedBrightness action with the correct target and brightness value | specs/features/req_103_105_rules_dsl.feature:99 | 1 | ✅ Complete |
+| REQ-105 | AC-105.1 | WHEN a rules schema has version 'flight.ledmap/1' and all rules have valid conditions and actions THEN validation SHALL succeed | specs/features/req_103_105_rules_dsl.feature:108 | 2 | ✅ Complete |
+| REQ-105 | AC-105.2 | WHEN a rules schema specifies an unsupported version THEN validation SHALL fail with a version error | specs/features/req_103_105_rules_dsl.feature:114 | 1 | ✅ Complete |
+| REQ-105 | AC-105.3 | WHEN a rule in the schema has an empty condition THEN validation SHALL fail with a condition error | specs/features/req_103_105_rules_dsl.feature:120 | 1 | ✅ Complete |
+| REQ-105 | AC-105.4 | WHEN a rule in the schema has an empty action THEN validation SHALL fail with an action error | specs/features/req_103_105_rules_dsl.feature:126 | 1 | ✅ Complete |
+| REQ-105 | AC-105.5 | WHEN a rule in the schema has an invalid action syntax THEN validation SHALL fail with an invalid action error | specs/features/req_103_105_rules_dsl.feature:132 | 1 | ✅ Complete |
+| REQ-105 | AC-105.6 | WHEN a schema containing multiple valid rules is compiled THEN the bytecode program SHALL be non-empty and contain instructions for all rules | specs/features/req_103_105_rules_dsl.feature:138 | 3 | ✅ Complete |
+| REQ-106 | AC-106.1 | WHEN any SimId variant is formatted with Display THEN the result SHALL be non-empty and contain only printable Unicode characters | specs/features/req_106_core_types.feature:5 | 1 | ✅ Complete |
+| REQ-106 | AC-106.2 | WHEN two DeviceId values with the same vendor and product IDs are compared via Ord THEN they SHALL compare as equal on every call | specs/features/req_106_core_types.feature:11 | 1 | ✅ Complete |
+| REQ-106 | AC-106.3 | WHEN a Profile whose AircraftId ICAO is 'C172' is serialized to JSON and deserialized THEN the ICAO field SHALL equal 'C172' without modification | specs/features/req_106_core_types.feature:17 | 1 | ✅ Complete |
+| REQ-106 | AC-106.4 | WHEN a FlightError variant is formatted with Display THEN the message SHALL be non-empty and SHALL contain the original context string | specs/features/req_106_core_types.feature:23 | 2 | ✅ Complete |
+| REQ-106 | AC-106.5 | WHEN an arbitrary byte sequence is passed to the profile JSON parser THEN it SHALL return Err and SHALL NOT panic | specs/features/req_106_core_types.feature:29 | 2 | ✅ Complete |
+| REQ-107 | AC-107.1 | WHEN a snapshot is published to a BusPublisher with multiple active subscribers THEN each subscriber SHALL independently receive the snapshot via try_recv | specs/features/req_107_bus_guarantees.feature:5 | 1 | ✅ Complete |
+| REQ-107 | AC-107.2 | WHEN N snapshots are published in sequence with distinct SimId tags THEN the subscriber SHALL receive all N snapshots in exactly that order | specs/features/req_107_bus_guarantees.feature:11 | 2 | ✅ Complete |
+| REQ-107 | AC-107.3 | WHEN the publisher-level rate limiter suppresses a snapshot THEN none of the N registered subscribers (1-4) SHALL receive it | specs/features/req_107_bus_guarantees.feature:17 | 1 | ✅ Complete |
+| REQ-107 | AC-107.4 | WHEN a snapshot with arbitrary f32 bit patterns (NaN, Inf, subnormal) is published THEN the call SHALL return Ok or Err but SHALL NOT panic | specs/features/req_107_bus_guarantees.feature:23 | 3 | ✅ Complete |
+| REQ-107 | AC-107.5 | WHEN a subscriber is configured with a low per-subscriber max_rate_hz and a second snapshot is published before the minimum interval THEN the subscriber SHALL not receive it but the publish call SHALL succeed | specs/features/req_107_bus_guarantees.feature:29 | 1 | ✅ Complete |

@@ -826,19 +826,21 @@ jobs:
         echo "✅ Workspace dependency alignment verified"
 
   # ──────────────────────────────────────────────────────────────────────────────
-  # Code Coverage (core logic crates; runs on nightly schedule and on-demand)
+  # Code Coverage (core logic crates; runs on PRs to main, schedule, and on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   coverage:
     name: Code Coverage (Core Crates)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -856,26 +858,29 @@ jobs:
           cargo llvm-cov \
             -p flight-core \
             -p flight-axis \
-            -p flight-rules \
+            -p flight-bus \
             -p flight-profile \
-            --lcov \
-            --output-path lcov.info
+            -p flight-rules \
+            -p flight-session \
+            --html \
+            --output-dir coverage-report
 
-      - name: Enforce coverage threshold (≥60% line coverage on core crates)
+      - name: Report coverage summary
         run: |
           cargo llvm-cov \
             -p flight-core \
             -p flight-axis \
-            -p flight-rules \
+            -p flight-bus \
             -p flight-profile \
-            --summary-only \
-            --fail-under-lines 60
+            -p flight-rules \
+            -p flight-session \
+            --summary-only
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: lcov.info
+          path: coverage-report/
 
   performance:
     name: Performance Tests

@@ -69,7 +69,8 @@ fn test_token_format_validation() {
 
     // Invalid: partial/misspelled ID must not sneak through
     assert!(
-        mgr.validate_ipc_acl(&make_client("valid-user-extra")).is_err(),
+        mgr.validate_ipc_acl(&make_client("valid-user-extra"))
+            .is_err(),
         "a suffix-extended user ID must not match an allow-list entry"
     );
     assert!(

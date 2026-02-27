@@ -7,9 +7,7 @@
 //! known input values.  Any change to the struct layout, normalization formula,
 //! or enum variant naming will surface as a diff before it reaches users.
 
-use flight_hotas_logitech::{
-    parse_g940_joystick, parse_g940_throttle, parse_g_flight_yoke,
-};
+use flight_hotas_logitech::{parse_g_flight_yoke, parse_g940_joystick, parse_g940_throttle};
 
 // ── G940 report builders ──────────────────────────────────────────────────────
 

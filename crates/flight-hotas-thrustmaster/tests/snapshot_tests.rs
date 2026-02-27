@@ -92,7 +92,9 @@ fn snapshot_warthog_throttle_idle() {
 #[test]
 fn snapshot_warthog_throttle_full() {
     // hat_dms byte 0x00 → North; hat_csl byte 0x04 → South
-    let report = throttle_report(32768, 32768, 65535, 65535, 65535, 0xFFFF, 0xFFFF, 0xFF, 0xFF, 0x00, 0x04);
+    let report = throttle_report(
+        32768, 32768, 65535, 65535, 65535, 0xFFFF, 0xFFFF, 0xFF, 0xFF, 0x00, 0x04,
+    );
     let state = parse_warthog_throttle(&report).expect("valid report");
     insta::assert_debug_snapshot!("warthog_throttle_full", state);
 }
