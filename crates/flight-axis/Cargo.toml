@@ -47,6 +47,11 @@ name = "detent_performance"
 harness = false
 required-features = ["benches-optin"]
 
+[[bench]]
+name = "pipeline_throughput"
+harness = false
+required-features = ["benches-optin"]
+
 [[test]]
 name = "detent_integration"
 required-features = ["tests-optin"]
@@ -69,6 +74,10 @@ required-features = ["tests-optin"]
 
 [[test]]
 name = "performance_validation"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "rt_timing_test"
 required-features = ["tests-optin"]
 
 [[test]]

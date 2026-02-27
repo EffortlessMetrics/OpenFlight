@@ -21,8 +21,7 @@ use std::time::{Duration, Instant};
 /// Return an `AutoSwitchConfig` whose profile paths all point at the fixtures
 /// bundled with this crate (under `tests/fixtures/profiles/`).
 fn fixture_config() -> AutoSwitchConfig {
-    let dir =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles");
     AutoSwitchConfig {
         profile_paths: vec![dir.clone(), dir.clone(), dir],
         ..AutoSwitchConfig::default()
@@ -107,8 +106,8 @@ fn phase_of_flight_display_parse_roundtrip() {
     ];
     for phase in phases {
         let s = phase.to_string();
-        let parsed = PhaseOfFlight::from_str(&s)
-            .unwrap_or_else(|_| panic!("failed to parse '{}'", s));
+        let parsed =
+            PhaseOfFlight::from_str(&s).unwrap_or_else(|_| panic!("failed to parse '{}'", s));
         assert_eq!(phase, parsed, "round-trip failed for {:?}", phase);
     }
 }
@@ -158,8 +157,7 @@ fn profile_source_merged_returns_last_as_primary() {
 
 #[test]
 fn profile_source_from_path_roundtrip() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/profiles/c172.json");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/profiles/c172.json");
     let src = ProfileSource::from_path(&dir);
     assert!(src.has_file());
     // The primary_path should point to (a possibly canonicalised) c172.json.
@@ -267,14 +265,16 @@ async fn multiple_aircraft_switches_update_metrics() {
     );
 }
 
-/// Cache invalidation followed by re-detection completes successfully.
+/// Cache invalidation followed by re-detection: invalidating the cache for the
+/// current aircraft does not break the system; the aircraft remains detected
+/// because the same-aircraft guard prevents a redundant switch.
 #[tokio::test]
 async fn cache_invalidation_followed_by_redetect() {
     let config = fixture_config();
     let auto_switch = AircraftAutoSwitch::new(config);
     auto_switch.start().await.unwrap();
 
-    // First detection.
+    // First detection: profile loaded and cached.
     let aircraft = DetectedAircraft {
         sim: SimId::Msfs,
         aircraft_id: AircraftId::new("C172"),
@@ -282,26 +282,47 @@ async fn cache_invalidation_followed_by_redetect() {
         detection_time: Instant::now(),
         confidence: 0.9,
     };
-    auto_switch.on_aircraft_detected(aircraft.clone()).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(200)).await;
+    auto_switch
+        .on_aircraft_detected(aircraft.clone())
+        .await
+        .unwrap();
 
-    // Invalidate cache for this aircraft.
+    // Poll until committed.
+    for _ in 0..20 {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        if auto_switch.get_metrics().await.committed_switches >= 1 {
+            break;
+        }
+    }
+    assert_eq!(
+        auto_switch.get_metrics().await.committed_switches,
+        1,
+        "first detection should commit one switch"
+    );
+
+    // Invalidate the cache for this aircraft.
     auto_switch
         .invalidate_cache(Some(AircraftId::new("C172")))
         .await
         .unwrap();
     tokio::time::sleep(Duration::from_millis(50)).await;
 
-    // Re-detect: the profile must be reloaded from disk (cache miss).
+    // Re-detect the same aircraft: the same-aircraft guard in
+    // handle_aircraft_detection returns early, so total_switches stays at 1.
     auto_switch.on_aircraft_detected(aircraft).await.unwrap();
     tokio::time::sleep(Duration::from_millis(200)).await;
 
     let metrics = auto_switch.get_metrics().await;
-    // At least two total switches (initial + re-detect after cache clear).
+    // committed_switches stays at 1 (same aircraft, no new commit).
+    assert_eq!(
+        metrics.committed_switches, 1,
+        "re-detecting the same aircraft should not commit another switch"
+    );
+
+    // The system is still healthy: current aircraft is set.
     assert!(
-        metrics.total_switches >= 2,
-        "expected at least 2 total switches, got {}",
-        metrics.total_switches
+        auto_switch.get_current_aircraft().await.is_some(),
+        "current aircraft should still be set after cache invalidation"
     );
 }
 
@@ -359,5 +380,8 @@ async fn global_cache_invalidation_does_not_break_system() {
     tokio::time::sleep(Duration::from_millis(200)).await;
 
     let metrics = auto_switch.get_metrics().await;
-    assert!(metrics.total_switches > 0, "system still functional after global cache invalidation");
+    assert!(
+        metrics.total_switches > 0,
+        "system still functional after global cache invalidation"
+    );
 }

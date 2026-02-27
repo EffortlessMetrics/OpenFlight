@@ -20,7 +20,7 @@
 
 use flight_bus::adapters::msfs::MsfsConverter;
 use flight_bus::types::AutopilotState;
-use flight_simconnect::mapping::{create_default_mapping, EngineMapping};
+use flight_simconnect::mapping::{EngineMapping, create_default_mapping};
 
 // ============================================================================
 // Helpers
@@ -188,7 +188,10 @@ fn test_airspeed_simvar_names_are_correct() {
 #[test]
 fn test_altitude_simvar_name_is_indicated_altitude() {
     let cfg = create_default_mapping();
-    assert_eq!(cfg.default_mapping.environment.altitude, "INDICATED ALTITUDE");
+    assert_eq!(
+        cfg.default_mapping.environment.altitude,
+        "INDICATED ALTITUDE"
+    );
 }
 
 /// Geographic position SimVars use the PLANE LATITUDE / PLANE LONGITUDE names.
@@ -307,10 +310,18 @@ fn test_engine_simvars_use_one_based_index_suffix() {
         );
     }
     if let Some(ref egt) = eng.egt {
-        assert!(egt.ends_with(":1"), "EGT SimVar '{}' must end with ':1'", egt);
+        assert!(
+            egt.ends_with(":1"),
+            "EGT SimVar '{}' must end with ':1'",
+            egt
+        );
     }
     if let Some(ref cht) = eng.cht {
-        assert!(cht.ends_with(":1"), "CHT SimVar '{}' must end with ':1'", cht);
+        assert!(
+            cht.ends_with(":1"),
+            "CHT SimVar '{}' must end with ':1'",
+            cht
+        );
     }
     if let Some(ref ff) = eng.fuel_flow {
         assert!(
@@ -364,7 +375,13 @@ fn test_second_engine_uses_index_two_suffix() {
         "'{}' must use MSFS one-based index :2",
         engine2.rpm
     );
-    assert!(engine2.manifold_pressure.as_deref().unwrap().ends_with(":2"));
+    assert!(
+        engine2
+            .manifold_pressure
+            .as_deref()
+            .unwrap()
+            .ends_with(":2")
+    );
     assert!(engine2.egt.as_deref().unwrap().ends_with(":2"));
     assert!(engine2.cht.as_deref().unwrap().ends_with(":2"));
     assert!(engine2.fuel_flow.as_deref().unwrap().ends_with(":2"));
@@ -447,7 +464,11 @@ fn test_heading_east_converts_to_half_pi_radians() {
 #[test]
 fn test_pitch_up_degree_round_trip() {
     let pitch = MsfsConverter::convert_angle_degrees(5.0).unwrap();
-    assert_eq!(pitch.to_degrees(), 5.0f32, "5° pitch must round-trip exactly");
+    assert_eq!(
+        pitch.to_degrees(),
+        5.0f32,
+        "5° pitch must round-trip exactly"
+    );
 }
 
 /// 2° bank survives the degrees → stored → degrees round-trip losslessly.
@@ -497,9 +518,13 @@ fn test_vertical_speed_500_fpm_is_approximately_2p54_mps() {
 #[test]
 fn test_acceleration_body_one_g_equals_standard_gravity_ft_s2() {
     const STANDARD_GRAVITY_FT_S2: f64 = 32.174;
-    let g = MsfsConverter::convert_g_force(STANDARD_GRAVITY_FT_S2 / STANDARD_GRAVITY_FT_S2)
-        .unwrap();
-    assert_eq!(g.value(), 1.0f32, "32.174 ft/s² must convert to exactly 1 g");
+    let g =
+        MsfsConverter::convert_g_force(STANDARD_GRAVITY_FT_S2 / STANDARD_GRAVITY_FT_S2).unwrap();
+    assert_eq!(
+        g.value(),
+        1.0f32,
+        "32.174 ft/s² must convert to exactly 1 g"
+    );
 }
 
 // ============================================================================
@@ -532,7 +557,11 @@ fn test_autopilot_master_bool_to_state() {
     } else {
         AutopilotState::Off
     };
-    assert_eq!(state, AutopilotState::Off, "AP master 0 must produce Off state");
+    assert_eq!(
+        state,
+        AutopilotState::Off,
+        "AP master 0 must produce Off state"
+    );
 
     let ap_on = simvar_bool_from_int32(1);
     let state = if ap_on {
@@ -540,7 +569,11 @@ fn test_autopilot_master_bool_to_state() {
     } else {
         AutopilotState::Off
     };
-    assert_eq!(state, AutopilotState::Armed, "AP master 1 must produce Armed state");
+    assert_eq!(
+        state,
+        AutopilotState::Armed,
+        "AP master 1 must produce Armed state"
+    );
 }
 
 /// AUTOPILOT MASTER on with a hold mode active → Engaged.
@@ -689,7 +722,10 @@ fn normalise_axis(raw: i32) -> f32 {
 #[test]
 fn test_all_simvar_names_are_nonempty() {
     for name in all_simvar_names_sorted() {
-        assert!(!name.is_empty(), "found empty SimVar name in default mapping");
+        assert!(
+            !name.is_empty(),
+            "found empty SimVar name in default mapping"
+        );
     }
 }
 

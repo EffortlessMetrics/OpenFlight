@@ -307,7 +307,10 @@ fn test_graceful_shutdown_clears_all_watches() {
     assert_eq!(post_summary.total_components, 0, "all components cleared");
     assert_eq!(post_summary.quarantined_components, 0);
     assert_eq!(post_summary.active_components, 0);
-    assert!(watchdog.get_all_events().is_empty(), "event history cleared");
+    assert!(
+        watchdog.get_all_events().is_empty(),
+        "event history cleared"
+    );
     assert_eq!(watchdog.get_quarantined_components().len(), 0);
 }
 

@@ -227,6 +227,72 @@ fn test_timing_validator() {
     assert!(result.jitter_stats.sample_count > 0);
 }
 
+/// Verify that consecutive 250Hz tick intervals stay within jitter tolerance.
+///
+/// Measures the wall-clock gap between consecutive ticks and checks that the
+/// p99 deviation from the 4ms target is ≤0.5ms on dev hardware (generous
+/// tolerance applied in CI where shared runners introduce scheduling noise).
+#[test]
+fn test_250hz_interval_precision() {
+    let config = SchedulerConfig {
+        frequency_hz: 250,
+        busy_spin_us: 65,
+        pll_gain: 0.001,
+        measure_jitter: true,
+    };
+    let mut scheduler = Scheduler::new(config);
+    let expected_interval = Duration::from_micros(4_000);
+
+    // Tolerances: 0.5ms on bare metal, 5ms on shared CI runners.
+    let tolerance = if std::env::var_os("CI").is_some() {
+        Duration::from_millis(5)
+    } else {
+        Duration::from_micros(500)
+    };
+
+    // Warm up – allow PLL to converge.
+    for _ in 0..50 {
+        scheduler.wait_for_tick();
+    }
+
+    // Collect 200 tick intervals (~0.8 s wall time at 250Hz).
+    const SAMPLES: usize = 200;
+    let mut intervals = Vec::with_capacity(SAMPLES);
+
+    scheduler.wait_for_tick();
+    let mut prev = Instant::now();
+
+    for _ in 0..SAMPLES {
+        scheduler.wait_for_tick();
+        let now = Instant::now();
+        intervals.push(now.duration_since(prev));
+        prev = now;
+    }
+
+    intervals.sort();
+    let p99_idx = (SAMPLES as f32 * 0.99) as usize;
+    let p99 = intervals[p99_idx.min(intervals.len() - 1)];
+
+    let jitter = if p99 > expected_interval {
+        p99 - expected_interval
+    } else {
+        expected_interval - p99
+    };
+
+    println!(
+        "250Hz interval p99 jitter: {}μs (tolerance: {}μs)",
+        jitter.as_micros(),
+        tolerance.as_micros()
+    );
+
+    assert!(
+        jitter <= tolerance,
+        "250Hz p99 interval jitter {}μs exceeds {}μs tolerance",
+        jitter.as_micros(),
+        tolerance.as_micros()
+    );
+}
+
 /// Integration test that runs scheduler for extended period
 #[test]
 #[ignore] // Ignore by default as it takes time
