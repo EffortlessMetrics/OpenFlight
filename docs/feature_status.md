@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1448 |
-| ACs with tests | 1448 |
+| Total AC | 1520 |
+| ACs with tests | 1520 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 851 |
+| Draft | 923 |
 | Incomplete | 0 |
 | Microcrates | 78 |
 | Microcrates with tests | 65 (83.3%) |
 | Microcrates with Gherkin | 65 (83.3%) |
 | Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 60.0% |
-| Test + Gherkin coverage | 60.0% |
+| Gherkin coverage | 57.2% |
+| Test + Gherkin coverage | 57.2% |
 
 ## BDD Microcrate Matrix
 
@@ -1566,3 +1566,75 @@
 | REQ-242 | AC-242.4 | Migration failure preserves original file and logs error | - | 1 | ⚪ Draft |
 | REQ-242 | AC-242.5 | Migrated file written atomically (write to temp, rename) | - | 1 | ⚪ Draft |
 | REQ-242 | AC-242.6 | Migration history logged in service log at INFO level | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.1 | Split bipolar axis X into positive channel (max(X, 0)) and negative channel (max(-X, 0)) | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.2 | Split outputs both clamped to [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.3 | Split used for differential braking: stick left → left brake; stick right → right brake | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.4 | Combined and split modes configurable per axis in profile | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.5 | Split operation tested in combination with detents | - | 1 | ⚪ Draft |
+| REQ-243 | AC-243.6 | Split axis output appears on bus as two named virtual axes | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.1 | Tactile device accepts audio-format haptic waveforms | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.2 | Stall buffet, gear rumble, and landing thud effects implemented | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.3 | Effect intensity scales with sim parameter (e.g., G-force) | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.4 | Tactile output does not affect RT spine timing | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.5 | Tactile effects configurable per aircraft type in profile | - | 1 | ⚪ Draft |
+| REQ-244 | AC-244.6 | Multiple tactile devices (seat + pedals) driven simultaneously | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.1 | Stream Deck connected via USB HID detected automatically | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.2 | Button press events routed to panel engine rules | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.3 | Key images updated via panel engine LED/display state machine | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.4 | Stream Deck Mini, MK2, and XL all supported | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.5 | Profile maps Stream Deck keys to named actions | - | 1 | ⚪ Draft |
+| REQ-245 | AC-245.6 | Disconnect and reconnect handled without service restart | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.1 | Global → Simulator → Aircraft → Phase-of-Flight cascade applies in order | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.2 | Child profile can override individual axis settings from parent | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.3 | Explicit null in child profile resets axis to default (not inheriting) | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.4 | Merge result logged at DEBUG level for debugging | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.5 | Circular inheritance detected and rejected with error | - | 1 | ⚪ Draft |
+| REQ-246 | AC-246.6 | Profile tree validated at load time, not at runtime | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.1 | Per-device rated force limit read from device manifest | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.2 | Output force clamped to rated limit before sending to device | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.3 | Clamp events counted and available in capability report | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.4 | Emergency stop command immediately zeros all FFB output | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.5 | FFB envelope enforced: ramp-up rate limited to prevent shock loads | - | 1 | ⚪ Draft |
+| REQ-247 | AC-247.6 | Safety interlock tests run as part of CI before any FFB code merge | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.1 | Update manifest fetched from HTTPS endpoint on configurable schedule | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.2 | Manifest signature verified before applying update | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.3 | Delta update downloads only changed files (not full binary) | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.4 | Rollback available for 2 previous versions | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.5 | Update channel configurable: stable (default), beta, canary | - | 1 | ⚪ Draft |
+| REQ-248 | AC-248.6 | Update applied on service restart, not mid-session | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.1 | Service startup generates session ID (UUID) logged to audit log | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.2 | Active session duration tracked and available in health response | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.3 | SIGTERM/SIGINT causes graceful session shutdown within 5 seconds | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.4 | Graceful shutdown flushes black box ring buffer to disk | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.5 | Session end event emitted to bus before shutdown completes | - | 1 | ⚪ Draft |
+| REQ-249 | AC-249.6 | Multiple overlapping sessions (e.g. during update) handled without conflict | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.1 | `cargo xtask gen-compat` generates COMPATIBILITY.md from YAML manifests | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.2 | CI fails if COMPATIBILITY.md is outdated (stale check) | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.3 | Manifest schema validated in CI (required fields, valid tier values) | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.4 | JSON export of compatibility data published as CI artifact | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.5 | Tier statistics (T1/T2/T3 counts) included in generated output | - | 1 | ⚪ Draft |
+| REQ-250 | AC-250.6 | New manifest without `support.tier` field fails CI validation | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.1 | PID controller configurable with P, I, D gains per axis | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.2 | Integral windup limited to configurable maximum | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.3 | Derivative term smoothed with low-pass filter to reduce noise | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.4 | PID setpoint configurable as profile parameter or runtime value | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.5 | PID state (integral accumulator) resets on axis disconnect | - | 1 | ⚪ Draft |
+| REQ-251 | AC-251.6 | PID output bounded to [-1.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.1 | Device USB selective suspend does not cause axis data loss | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.2 | Device wake-up detected within 200ms | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.3 | Wireless HID receiver (dongles) treated as persistent connection | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.4 | USB 3.x hub compatibility: device polling works at full rate | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.5 | Battery-powered devices: low battery event forwarded to bus | - | 1 | ⚪ Draft |
+| REQ-252 | AC-252.6 | Power state transitions logged at DEBUG level | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.1 | CLI output respects LANG/LC_ALL environment variable | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.2 | English (default) and at minimum German and Japanese message catalogs provided | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.3 | Log messages always in English regardless of locale (for support) | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.4 | Date/time output follows locale conventions | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.5 | Device vendor names preserved as-is without translation | - | 1 | ⚪ Draft |
+| REQ-253 | AC-253.6 | Missing translation string falls back to English without crash | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.1 | Criterion benchmark measures single-axis pipeline (calibration→EMA→rate→trim) | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.2 | Benchmark runs 1000 iterations to reach stable p99 estimate | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.3 | Benchmark result compared to baseline stored in CI artifacts | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.4 | Regression threshold: p99 latency must stay under 2µs per axis | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.5 | Benchmark flamegraph generated and published as CI artifact | - | 1 | ⚪ Draft |
+| REQ-254 | AC-254.6 | Benchmark suite documented in `docs/how-to/benchmarking.md` | - | 1 | ⚪ Draft |

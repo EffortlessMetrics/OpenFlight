@@ -83,6 +83,7 @@ pub mod detent;
 pub mod engine;
 pub mod frame;
 pub mod nodes;
+pub mod pid;
 pub mod pipeline;
 pub mod rate_limit;
 pub mod smoothing;
@@ -107,6 +108,7 @@ pub use nodes::{
     DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
+pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use smoothing::{EmaFilter, EmaFilterBank};

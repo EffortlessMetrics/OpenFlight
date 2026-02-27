@@ -8202,3 +8202,177 @@ requirements:
         description: "Update applied on service restart, not mid-session"
         tests:
           - feature:specs/features/req_248_auto_update_channel.feature
+  - id: REQ-249
+    name: Service sessions tracked and cleanly terminated on shutdown
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-249.1
+        description: "Service startup generates session ID (UUID) logged to audit log"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+      - id: AC-249.2
+        description: "Active session duration tracked and available in health response"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+      - id: AC-249.3
+        description: "SIGTERM/SIGINT causes graceful session shutdown within 5 seconds"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+      - id: AC-249.4
+        description: "Graceful shutdown flushes black box ring buffer to disk"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+      - id: AC-249.5
+        description: "Session end event emitted to bus before shutdown completes"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+      - id: AC-249.6
+        description: "Multiple overlapping sessions (e.g. during update) handled without conflict"
+        tests:
+          - feature:specs/features/req_249_session_management.feature
+  - id: REQ-250
+    name: COMPATIBILITY.md is automatically generated and kept current in CI
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-250.1
+        description: "`cargo xtask gen-compat` generates COMPATIBILITY.md from YAML manifests"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+      - id: AC-250.2
+        description: "CI fails if COMPATIBILITY.md is outdated (stale check)"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+      - id: AC-250.3
+        description: "Manifest schema validated in CI (required fields, valid tier values)"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+      - id: AC-250.4
+        description: "JSON export of compatibility data published as CI artifact"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+      - id: AC-250.5
+        description: "Tier statistics (T1/T2/T3 counts) included in generated output"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+      - id: AC-250.6
+        description: "New manifest without `support.tier` field fails CI validation"
+        tests:
+          - feature:specs/features/req_250_compat_matrix_ci.feature
+  - id: REQ-251
+    name: PID controller available as axis processing stage for stable outputs
+    kind: product
+    status: draft
+    ac:
+      - id: AC-251.1
+        description: "PID controller configurable with P, I, D gains per axis"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+      - id: AC-251.2
+        description: "Integral windup limited to configurable maximum"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+      - id: AC-251.3
+        description: "Derivative term smoothed with low-pass filter to reduce noise"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+      - id: AC-251.4
+        description: "PID setpoint configurable as profile parameter or runtime value"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+      - id: AC-251.5
+        description: "PID state (integral accumulator) resets on axis disconnect"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+      - id: AC-251.6
+        description: "PID output bounded to [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_251_pid_controller.feature
+  - id: REQ-252
+    name: OpenFlight handles USB device power states without dropping inputs
+    kind: product
+    status: draft
+    ac:
+      - id: AC-252.1
+        description: "Device USB selective suspend does not cause axis data loss"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+      - id: AC-252.2
+        description: "Device wake-up detected within 200ms"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+      - id: AC-252.3
+        description: "Wireless HID receiver (dongles) treated as persistent connection"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+      - id: AC-252.4
+        description: "USB 3.x hub compatibility: device polling works at full rate"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+      - id: AC-252.5
+        description: "Battery-powered devices: low battery event forwarded to bus"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+      - id: AC-252.6
+        description: "Power state transitions logged at DEBUG level"
+        tests:
+          - feature:specs/features/req_252_usb_power_management.feature
+  - id: REQ-253
+    name: OpenFlight CLI and logs support localized output
+    kind: product
+    status: draft
+    ac:
+      - id: AC-253.1
+        description: "CLI output respects LANG/LC_ALL environment variable"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+      - id: AC-253.2
+        description: "English (default) and at minimum German and Japanese message catalogs provided"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+      - id: AC-253.3
+        description: "Log messages always in English regardless of locale (for support)"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+      - id: AC-253.4
+        description: "Date/time output follows locale conventions"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+      - id: AC-253.5
+        description: "Device vendor names preserved as-is without translation"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+      - id: AC-253.6
+        description: "Missing translation string falls back to English without crash"
+        tests:
+          - feature:specs/features/req_253_localization.feature
+  - id: REQ-254
+    name: Benchmark suite measures axis pipeline performance at 250Hz
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-254.1
+        description: "Criterion benchmark measures single-axis pipeline (calibration→EMA→rate→trim)"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
+      - id: AC-254.2
+        description: "Benchmark runs 1000 iterations to reach stable p99 estimate"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
+      - id: AC-254.3
+        description: "Benchmark result compared to baseline stored in CI artifacts"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
+      - id: AC-254.4
+        description: "Regression threshold: p99 latency must stay under 2µs per axis"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
+      - id: AC-254.5
+        description: "Benchmark flamegraph generated and published as CI artifact"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
+      - id: AC-254.6
+        description: "Benchmark suite documented in `docs/how-to/benchmarking.md`"
+        tests:
+          - feature:specs/features/req_254_benchmark_suite.feature
