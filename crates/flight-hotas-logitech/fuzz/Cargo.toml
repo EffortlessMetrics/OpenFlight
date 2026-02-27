@@ -24,3 +24,21 @@ name = "fuzz_logitech_parsers"
 path = "fuzz_targets/fuzz_logitech_parsers.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_extreme3dpro"
+path = "fuzz_targets/fuzz_extreme3dpro.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_g_flight_yoke"
+path = "fuzz_targets/fuzz_g_flight_yoke.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_g940_joystick"
+path = "fuzz_targets/fuzz_g940_joystick.rs"
+test = false
+doc = false

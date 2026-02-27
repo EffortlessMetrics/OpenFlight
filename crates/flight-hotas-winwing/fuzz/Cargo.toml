@@ -24,3 +24,21 @@ name = "fuzz_winwing_report"
 path = "fuzz_targets/fuzz_winwing_report.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_orion2_stick"
+path = "fuzz_targets/fuzz_orion2_stick.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_orion2_throttle"
+path = "fuzz_targets/fuzz_orion2_throttle.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_tfrp_rudder"
+path = "fuzz_targets/fuzz_tfrp_rudder.rs"
+test = false
+doc = false
