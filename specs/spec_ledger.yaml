@@ -2804,3 +2804,32 @@ requirements:
         description: "WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow"
         tests:
           - flight-metrics::dashboard::tests::large_counter_value_stored_correctly
+
+  # Product Requirement: UI Settings Panel and Integration Docs
+  - id: REQ-74
+    name: UI Settings Panel and Integration Documentation
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-74.1
+        description: "WHEN the UI settings panel is created THEN it SHALL construct without error and its default state SHALL be valid"
+        tests:
+          - flight-ui::settings::tests::test_settings_panel_creation
+          - flight-ui::settings::tests::settings_panel_default_equals_new
+          - flight-ui::settings::tests::flight_ui_default_constructs
+      - id: AC-74.2
+        description: "WHEN integration docs are loaded for a simulator THEN the document SHALL be parsed with overview, files, network connections, and revert steps populated"
+        tests:
+          - flight-ui::integration_docs::tests::test_integration_docs_manager
+          - flight-ui::integration_docs::tests::integration_docs_manager_not_found_returns_error
+      - id: AC-74.3
+        description: "WHEN validation results are constructed THEN errors SHALL mark the result invalid, warnings SHALL not affect validity, and the initial state SHALL be valid"
+        tests:
+          - flight-ui::integration_docs::tests::validation_result_starts_valid
+          - flight-ui::integration_docs::tests::validation_result_error_marks_invalid
+          - flight-ui::integration_docs::tests::validation_result_warning_stays_valid
+      - id: AC-74.4
+        description: "WHEN the installer summary aggregates multiple simulators THEN file counts SHALL accumulate, network ports SHALL be deduplicated, and simulator names SHALL all appear"
+        tests:
+          - flight-ui::integration_docs::tests::installer_summary_add_simulator_deduplicates_ports
+          - flight-ui::integration_docs::tests::installer_summary_counts_files_across_simulators

@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 433 |
-| ACs with tests | 433 |
-| ACs with Gherkin | 433 |
-| ACs with both tests + Gherkin | 433 |
-| Complete | 433 |
+| Total AC | 437 |
+| ACs with tests | 437 |
+| ACs with Gherkin | 437 |
+| ACs with both tests + Gherkin | 437 |
+| Complete | 437 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
-| Microcrates with tests | 62 (92.5%) |
-| Microcrates with Gherkin | 62 (92.5%) |
-| Microcrates fully covered | 62 (92.5%) |
+| Microcrates with tests | 63 (94.0%) |
+| Microcrates with Gherkin | 63 (94.0%) |
+| Microcrates fully covered | 63 (94.0%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -92,7 +92,7 @@
 | flight-tactile | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-test-helpers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-tracing | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
-| flight-ui | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-ui | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -540,3 +540,7 @@
 | REQ-73 | AC-73.1 | WHEN the sim.connection_state gauge equals exactly 0.5 THEN the dashboard SHALL report connected=true; values below 0.5 or equal to 0.0 SHALL report connected=false | specs/features/req_70_73_metrics_extended.feature:83<br>specs/features/req_70_73_metrics_extended.feature:89 | 3 | ✅ Complete |
 | REQ-73 | AC-73.2 | WHEN duplicate counter entries for the same metric name appear in a raw snapshot slice THEN the last entry in the slice SHALL take precedence in the dashboard view | specs/features/req_70_73_metrics_extended.feature:95 | 1 | ✅ Complete |
 | REQ-73 | AC-73.3 | WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow | specs/features/req_70_73_metrics_extended.feature:101 | 1 | ✅ Complete |
+| REQ-74 | AC-74.1 | WHEN the UI settings panel is created THEN it SHALL construct without error and its default state SHALL be valid | specs/features/req_74_ui_settings.feature:5 | 3 | ✅ Complete |
+| REQ-74 | AC-74.2 | WHEN integration docs are loaded for a simulator THEN the document SHALL be parsed with overview, files, network connections, and revert steps populated | specs/features/req_74_ui_settings.feature:11<br>specs/features/req_74_ui_settings.feature:17 | 2 | ✅ Complete |
+| REQ-74 | AC-74.3 | WHEN validation results are constructed THEN errors SHALL mark the result invalid, warnings SHALL not affect validity, and the initial state SHALL be valid | specs/features/req_74_ui_settings.feature:23<br>specs/features/req_74_ui_settings.feature:29<br>specs/features/req_74_ui_settings.feature:35 | 3 | ✅ Complete |
+| REQ-74 | AC-74.4 | WHEN the installer summary aggregates multiple simulators THEN file counts SHALL accumulate, network ports SHALL be deduplicated, and simulator names SHALL all appear | specs/features/req_74_ui_settings.feature:41<br>specs/features/req_74_ui_settings.feature:47 | 2 | ✅ Complete |
