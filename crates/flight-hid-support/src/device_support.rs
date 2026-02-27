@@ -32,9 +32,28 @@ pub const FORCE_3D_PRO_PID: u16 = 0xC286;
 /// One of the few commercial FFB HOTAS sets ever made; discontinued ~2013.
 pub const G940_FLIGHT_SYSTEM_PID: u16 = 0xC287;
 
+/// USB Product ID for the G940 throttle interface.
+///
+/// **Unconfirmed:** Inferred from the sequential Logitech flight-controller
+/// numbering (Force 3D Pro = 0xC286, G940 joystick = 0xC287 → throttle = 0xC288).
+/// No independent hardware probe has confirmed this PID.
+pub const G940_THROTTLE_PID: u16 = 0xC288;
+
 /// Returns `true` if this VID/PID combination is a Logitech Extreme 3D Pro.
 pub fn is_extreme_3d_pro(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == LOGITECH_VENDOR_ID && product_id == EXTREME_3D_PRO_PID
+}
+
+/// Returns `true` if this VID/PID combination is a Logitech G940 joystick.
+pub fn is_g940_joystick(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == LOGITECH_VENDOR_ID && product_id == G940_FLIGHT_SYSTEM_PID
+}
+
+/// Returns `true` if this VID/PID combination is a Logitech G940 throttle.
+///
+/// **Note:** Uses the unconfirmed [`G940_THROTTLE_PID`] constant.
+pub fn is_g940_throttle(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == LOGITECH_VENDOR_ID && product_id == G940_THROTTLE_PID
 }
 
 /// USB Product ID for the Logitech G Flight Yoke System.
@@ -3876,6 +3895,36 @@ mod tests {
     #[test]
     fn test_is_extreme_3d_pro_wrong_vendor() {
         assert!(!is_extreme_3d_pro(0x1234, EXTREME_3D_PRO_PID));
+    }
+
+    #[test]
+    fn test_is_g940_joystick_match() {
+        assert!(is_g940_joystick(LOGITECH_VENDOR_ID, G940_FLIGHT_SYSTEM_PID));
+    }
+
+    #[test]
+    fn test_is_g940_joystick_wrong_pid() {
+        assert!(!is_g940_joystick(LOGITECH_VENDOR_ID, 0x0000));
+    }
+
+    #[test]
+    fn test_is_g940_joystick_wrong_vendor() {
+        assert!(!is_g940_joystick(0x1234, G940_FLIGHT_SYSTEM_PID));
+    }
+
+    #[test]
+    fn test_is_g940_throttle_match() {
+        assert!(is_g940_throttle(LOGITECH_VENDOR_ID, G940_THROTTLE_PID));
+    }
+
+    #[test]
+    fn test_is_g940_throttle_wrong_pid() {
+        assert!(!is_g940_throttle(LOGITECH_VENDOR_ID, 0x0000));
+    }
+
+    #[test]
+    fn test_is_g940_throttle_wrong_vendor() {
+        assert!(!is_g940_throttle(0x1234, G940_THROTTLE_PID));
     }
 
     #[test]

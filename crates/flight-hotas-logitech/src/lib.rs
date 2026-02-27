@@ -7,6 +7,7 @@
 //! - Logitech Extreme 3D Pro (VID 0x046D, PID 0xC215)
 //! - Logitech G Flight Yoke System (VID 0x046D, PID 0xC259)
 //! - Logitech G Flight Throttle Quadrant (VID 0x046D, PID 0xC25A)
+//! - Logitech Flight System G940 FFB HOTAS (VID 0x046D, PID 0xC287)
 //!
 //! # Architecture
 //!
@@ -14,6 +15,7 @@
 //! to −1.0..=1.0 (bipolar) or 0.0..=1.0 (unipolar).
 
 pub mod extreme3dpro;
+pub mod g940;
 pub mod g_flight_throttle;
 pub mod g_flight_yoke;
 
@@ -23,7 +25,8 @@ pub use extreme3dpro::{
 };
 pub use flight_hid_support::device_support::{
     EXTREME_3D_PRO_PID, G_FLIGHT_THROTTLE_QUADRANT_PID, G_FLIGHT_YOKE_PID, LOGITECH_VENDOR_ID,
-    is_extreme_3d_pro, is_g_flight_throttle_quadrant, is_g_flight_yoke,
+    is_extreme_3d_pro, is_g_flight_throttle_quadrant, is_g_flight_yoke, is_g940_joystick,
+    is_g940_throttle,
 };
 pub use g_flight_throttle::{
     G_FLIGHT_THROTTLE_MIN_REPORT_BYTES, GFlightThrottleAxes, GFlightThrottleButtons,
@@ -33,4 +36,9 @@ pub use g_flight_yoke::{
     G_FLIGHT_YOKE_AXIS_CENTER, G_FLIGHT_YOKE_AXIS_MAX, G_FLIGHT_YOKE_MIN_REPORT_BYTES,
     GFlightYokeAxes, GFlightYokeButtons, GFlightYokeHat, GFlightYokeInputState,
     GFlightYokeParseError, parse_g_flight_yoke,
+};
+pub use g940::{
+    G940_AXIS_BITS, G940_AXIS_CENTER, G940_AXIS_MAX, G940_JOYSTICK_MIN_REPORT_BYTES,
+    G940_JOYSTICK_PID, G940_THROTTLE_MIN_REPORT_BYTES, G940_THROTTLE_PID, G940Hat, G940InputState,
+    G940ParseError, G940ThrottleState, parse_g940_joystick, parse_g940_throttle,
 };
