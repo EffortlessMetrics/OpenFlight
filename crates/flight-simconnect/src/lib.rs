@@ -34,6 +34,7 @@
 pub mod adapter;
 pub mod aircraft;
 pub mod camera;
+pub mod engine_params;
 pub mod events;
 pub mod fixtures;
 pub mod injection;
@@ -58,4 +59,5 @@ pub use subscription::{
     CORE_SUBSCRIPTION_VARS, DataSubscription, DataSubscriptionConfig, SubscriptionVariable,
 };
 pub use camera::{CameraChannel, CameraConfig, format_camera_simvar};
+pub use engine_params::{EngineParameters, parse_engine_params, simvars_for_engines};
 pub use weather::{WeatherConfig, WeatherData, parse_weather_simvars};
