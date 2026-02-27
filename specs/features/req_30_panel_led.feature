@@ -36,3 +36,21 @@ Feature: Panel LED control and bytecode rule evaluation
     Given a compiled bytecode rule
     When the evaluator is run on the hot path
     Then no heap allocations SHALL occur during evaluation
+
+  @AC-30.4
+  Scenario: LED target equality and brightness clamping
+    Given two LED targets with identical parameters
+    When target equality is checked
+    Then the targets SHALL compare equal
+
+  @AC-30.4
+  Scenario: LED brightness is clamped to valid range
+    Given a panel LED driver
+    When brightness is set outside the valid [0.0, 1.0] range
+    Then the brightness SHALL be clamped to the nearest valid boundary
+
+  @AC-30.4
+  Scenario: LED controller initial state is valid
+    Given a newly created LED controller
+    When its state is inspected
+    Then all LEDs SHALL be in the default off state with no pending updates
