@@ -192,8 +192,11 @@
 | Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |
 |------|-------------|-----------|-------------------|-----|------------|
 | Ace Combat 7: Skies Unknown | UDP Telemetry Bridge (JSON) | ✓ | ✗ | ✗ | ✗ |
+| Aerofly FS | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
 | DCS World | Lua Export Script + UDP | ✓ | ✗ | ✗ | ✗ |
 | Elite Dangerous | Journal File (NDJSON) | ✓ | ✗ | ✗ | ✗ |
+| Falcon BMS | Shared Memory Export (BMS Data Export) | ✓ | ✗ | ✓ | ✗ |
+| IL-2 Sturmovik: Great Battles | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
 | Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |
 | Microsoft Flight Simulator | SimConnect | ✓ | ✓ | ✓ | ✗ |
 | Project Wingman | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |

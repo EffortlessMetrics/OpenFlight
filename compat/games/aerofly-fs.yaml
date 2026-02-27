@@ -1,0 +1,65 @@
+# Aerofly FS — Virtual Controller Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Aerofly FS"
+  id: aerofly-fs
+  developer: "IPACS"
+
+integration:
+  mechanism: "Virtual Controller (ViGEm/vJoy)"
+  crate: flight-virtual
+  protocol_notes: >
+    Aerofly FS reads flight controls via DirectInput. OpenFlight maps
+    physical HOTAS inputs through its axis pipeline and presents them as a
+    virtual controller via ViGEm or vJoy. Aerofly FS 4 (desktop) added a
+    partial SimConnect-compatible interface, but coverage of SimVars and
+    events is substantially more limited than MSFS. A native Aerofly FS
+    adapter using the IPACS SDK is not yet implemented. The virtual
+    controller approach provides axis curve, deadzone, and detent processing
+    for all Aerofly FS versions.
+
+supported_versions:
+  - "Aerofly FS 2 (all)"
+  - "Aerofly FS 4 (all)"
+
+requirements:
+  - "ViGEm Bus Driver must be installed separately on Windows"
+  - "In-game controller bindings must be mapped to the virtual controller axes"
+
+features:
+  telemetry_read: false
+  control_injection:
+    direct: false
+    virtual_controller: true    # via ViGEm/vJoy bridge
+  force_feedback_translation: false
+  aircraft_detection: false     # No telemetry or SDK adapter implemented
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 3
+
+known_issues:
+  - id: NO_NATIVE_ADAPTER
+    description: >
+      A dedicated Aerofly FS adapter using the IPACS SDK or the partial
+      SimConnect interface present in FS 4 is not yet implemented.
+      Full telemetry, aircraft detection, and safe-for-FFB signals are
+      therefore unavailable.
+  - id: VIGEM_DEPENDENCY
+    description: >
+      ViGEm Bus Driver must be installed separately on Windows for the
+      virtual controller bridge to function.
+  - id: SIMCONNECT_SUBSET_ONLY
+    description: >
+      Aerofly FS 4 exposes a subset of the SimConnect API. Not all MSFS
+      SimVars or client events are available. Using the flight-simconnect
+      crate directly against Aerofly FS 4 is unsupported and may produce
+      undefined behaviour.

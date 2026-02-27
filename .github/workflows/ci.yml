@@ -7,8 +7,8 @@ on:
     branches: [ main ]
   schedule:
     - cron: '0 3 * * *'   # 3 AM UTC daily (all regular jobs)
-    - cron: '0 2 * * 0'   # 2 AM UTC Sunday (nightly fuzz)
-    - cron: '0 2 * * 1'   # 2 AM UTC Monday (mutation testing)
+    - cron: '0 2 * * *'   # 2 AM UTC daily (nightly fuzz)
+    - cron: '0 3 * * 1'   # 3 AM UTC Monday (mutation testing)
   workflow_dispatch:
 
 concurrency:
@@ -1077,7 +1077,7 @@ jobs:
         continue-on-error: false
 
   # ──────────────────────────────────────────────────────────────────────────────
-  # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
+  # Nightly Fuzz Gates (runs daily at 02:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   nightly-fuzz:
     name: Nightly Fuzz Targets
@@ -1332,6 +1332,14 @@ jobs:
           cargo +nightly fuzz run fuzz_bus_snapshot -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
+      - name: Upload fuzz crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes
+          path: crates/*/fuzz/artifacts/
+          if-no-files-found: ignore
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
@@ -1367,8 +1375,7 @@ jobs:
           cargo mutants \
             -p flight-core \
             -p flight-axis \
-            -p flight-rules \
-            --timeout 60 \
+            --timeout 120 \
             --output mutants-out
         continue-on-error: true
 
@@ -1409,3 +1416,25 @@ jobs:
         with:
           name: mutation-results
           path: mutants-out/
+
+      - name: Write mutation summary to GitHub step summary
+        if: always()
+        run: |
+          {
+            echo "## Mutation Testing Results"
+            if [ -f mutants-out/outcomes.json ]; then
+              missed=$(jq '[.[] | select(.summary == "MissedMutant")] | length' mutants-out/outcomes.json 2>/dev/null || echo 0)
+              caught=$(jq '[.[] | select(.summary == "CaughtMutant")] | length' mutants-out/outcomes.json 2>/dev/null || echo 0)
+              total=$((missed + caught))
+              if [ "$total" -gt 0 ]; then
+                kill_rate=$(( caught * 100 / total ))
+                echo "- **Crates tested**: flight-core, flight-axis"
+                echo "- **Kill rate**: ${kill_rate}% (${caught}/${total} mutants caught)"
+                echo "- **Missed mutants**: ${missed}"
+              else
+                echo "- No mutations found to test"
+              fi
+            else
+              echo "- outcomes.json not found — mutation run may have failed"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

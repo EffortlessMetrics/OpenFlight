@@ -1,0 +1,69 @@
+# Falcon BMS — Shared Memory Export Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Falcon BMS"
+  id: falcon-bms
+  developer: "Benchmark Sims (community)"
+
+integration:
+  mechanism: "Shared Memory Export (BMS Data Export)"
+  crate: flight-falcon-bms
+  protocol_notes: >
+    Falcon BMS exposes flight and avionics state through a documented
+    shared memory interface (FalconSharedMemoryArea / FalconSharedMemoryArea2).
+    This interface is enabled by default and provides position, attitude,
+    airspeed, gear state, and cockpit instrument data at the game's own
+    update rate. OpenFlight maps a read-only view of the shared memory
+    region and publishes telemetry snapshots to the RT bus. Control
+    injection is not supported; HOTAS inputs are handled via standard
+    DirectInput device binding inside BMS. The flight-falcon-bms crate
+    is not yet implemented; this manifest documents the planned integration.
+
+supported_versions:
+  - "Falcon BMS 4.37.x"
+  - "Falcon BMS 4.38.x"
+
+requirements:
+  - "Falcon BMS must be running on the same machine (shared memory is local only)"
+  - "Windows only — shared memory API is Win32 named file mapping"
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false          # BMS does not expose a control injection API
+  force_feedback_translation: true   # Planned: g-force and stick-shaker data available in shm
+  aircraft_detection: false          # BMS shared memory does not expose aircraft model strings
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 3
+
+known_issues:
+  - id: CRATE_NOT_YET_IMPLEMENTED
+    description: >
+      The flight-falcon-bms crate is planned but not yet implemented.
+      This manifest documents the intended integration design. Telemetry
+      and FFB translation features are not available until the crate ships.
+  - id: WINDOWS_ONLY
+    description: >
+      The BMS shared memory interface uses Win32 named file mappings
+      (OpenFileMapping / MapViewOfFile). Linux is not supported.
+  - id: NO_AIRCRAFT_DETECTION
+    description: >
+      The BMS shared memory area does not include an aircraft model
+      identifier. Aircraft auto-switch is therefore not possible for
+      this adapter.
+  - id: SHARED_MEMORY_VERSION_MISMATCH
+    description: >
+      The BMS shared memory layout (FalconSharedMemoryArea version field)
+      may change between BMS minor releases. The adapter must validate
+      the version field before reading and refuse to parse on mismatch
+      to avoid misinterpreting shifted fields.
