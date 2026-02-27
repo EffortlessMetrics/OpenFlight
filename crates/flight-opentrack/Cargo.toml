@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-opentrack"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OpenTrack head tracking adapter for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "opentrack", "head-tracking"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+proptest = { workspace = true }

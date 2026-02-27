@@ -1,0 +1,66 @@
+# Microsoft Xbox Adaptive Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E (Microsoft Corp.), PID 0x0B12 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h and multiple linux-hardware.org captures. The Xbox
+# Adaptive Controller (XAC) is an accessibility-focused gamepad with two
+# large programmable buttons and 19 3.5mm jack ports for external switches.
+# In flight sim accessibility setups, external switches can be connected
+# to the 3.5mm ports and mapped to sim functions.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox Adaptive Controller"
+  vendor: "Microsoft Corp."
+  usb:
+    vendor_id: 0x045E       # Microsoft Corp. (confirmed)
+    product_id: 0x0B12      # Confirmed: Linux kernel hid-ids.h + linux-hardware.org
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16
+  buttons: 21
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: ACCESSIBILITY_EXTERNAL_JACKS
+    description: >
+      The 19 external 3.5mm jack ports can each be assigned to any gamepad
+      button or axis via the Xbox Accessories app. External switches,
+      foot pedals, joysticks, or sip-and-puff sensors connect here. In
+      flight sim accessibility setups, this allows custom input devices to
+      be mapped to throttle, rudder, or panel buttons.
+  - id: XGI_PROTOCOL
+    description: >
+      On Windows, the XAC enumerates as an Xbox HID device (XGI protocol).
+      It also works as standard HID (DInput) on Linux and macOS.
+  - id: AXIS_RANGE_FULL
+    description: >
+      Left/right sticks and triggers use the full 16-bit range. External
+      analogue inputs (via 3.5mm analogue-compatible jacks) are also
+      reported on the trigger or stick axes depending on assignment.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Xbox Adaptive Controller. VID/PID confirmed from Linux kernel
+    hid-ids.h. Accessibility device with 19 external input jacks. Used in
+    flight sim for users requiring alternative input methods.
+    Last reviewed: 2026-06.

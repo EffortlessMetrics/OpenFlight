@@ -1,0 +1,58 @@
+# Thrustmaster Ferrari 458 Spider Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB660 sourced from SDL2 gamecontrollerdb
+# and community USB captures for the Ferrari 458 Spider Racing Wheel
+# (Xbox One edition). The 458 Spider uses the same rubber-belt drive as
+# the T150. In flight sim it is occasionally used as a rudder axis input
+# with spring-centering from the Thrustmaster elastomers.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Ferrari 458 Spider Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB660      # Community-confirmed from SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 12
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (270° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). No independent toe-brake or clutch axes.
+  - id: NO_FORCE_FEEDBACK
+    description: >
+      The Ferrari 458 Spider (Xbox One edition) has no force feedback.
+      It uses a rubber elastomer centering mechanism, not a motor. This
+      provides passive centering only, not active FFB.
+  - id: XBOX_COMPATIBILITY
+    description: >
+      Designed for Xbox One; connects to PC via USB in standard DInput mode.
+      Presents as an HID joystick on both Windows and Linux.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Ferrari 458 Spider Racing Wheel. VID 0x044F confirmed;
+    PID 0xB660 from SDL2 gamecontrollerdb. No FFB (elastomer centering only).
+    Occasionally used in flight sim for rudder axis. Last reviewed: 2026-06.

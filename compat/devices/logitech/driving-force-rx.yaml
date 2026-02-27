@@ -1,0 +1,57 @@
+# Logitech Driving Force RX Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC24F confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_LOGITECH_DRIVINGFORCE_RX) and the
+# ff-lg force feedback driver. The Driving Force RX (2016) is the mid-range
+# Logitech wheel with a dual-motor H-pattern FFB system and 900° rotation.
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force RX"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC24F      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 14
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, friction, inertia]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (900° range); Z = accelerator (unipolar); Rz = brake
+      (unipolar); Rx = clutch (unipolar, 3-pedal set). Steering axis
+      maps well to rudder in flight sim with 900° → ±full-rudder range.
+  - id: LGFF_DRIVER
+    description: >
+      Uses Logitech LG Gaming FF protocol. Linux requires ff-lg kernel
+      module. Spring and constant-force FFB effects are supported for
+      rudder centering use. Compatible with G Hub and Gaming Software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force RX. VID/PID confirmed from Linux kernel hid-ids.h.
+    14-bit steering, 900° rotation, full FFB. Used in flight sim for rudder
+    axis with centering force. Last reviewed: 2026-06.

@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 714 |
-| ACs with tests | 714 |
+| Total AC | 756 |
+| ACs with tests | 756 |
 | ACs with Gherkin | 714 |
 | ACs with both tests + Gherkin | 714 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 117 |
+| Draft | 159 |
 | Incomplete | 0 |
 | Microcrates | 71 |
 | Microcrates with tests | 65 (91.5%) |
 | Microcrates with Gherkin | 65 (91.5%) |
 | Microcrates fully covered | 65 (91.5%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 100.0% |
-| Test + Gherkin coverage | 100.0% |
+| Gherkin coverage | 94.4% |
+| Test + Gherkin coverage | 94.4% |
 
 ## BDD Microcrate Matrix
 
@@ -825,3 +825,45 @@
 | REQ-128 | AC-128.4 | A snapshot older than the configured staleness timeout SHALL be marked invalid and subscribers notified | specs/features/req_128_bus_snapshot_consistency.feature:28 | 1 | ⚪ Draft |
 | REQ-128 | AC-128.5 | A registered subscriber SHALL receive each snapshot within one 4 ms tick period | specs/features/req_128_bus_snapshot_consistency.feature:35 | 1 | ⚪ Draft |
 | REQ-128 | AC-128.6 | All subscribers SHALL receive identical copies of the same snapshot with no divergent field values | specs/features/req_128_bus_snapshot_consistency.feature:41 | 1 | ⚪ Draft |
+| REQ-129 | AC-129.1 | A TraceEvent SHALL record its message and severity level accurately | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.2 | A closed span SHALL report a positive duration equal to the elapsed wall time | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.3 | A trace buffer with a configured capacity SHALL drop the oldest samples once the cap is reached | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.4 | Exporting the trace buffer to JSON SHALL produce a valid JSON document with timestamp, severity, and message fields per entry | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.5 | When the subsystem is configured at INFO level, DEBUG events SHALL NOT be stored | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.6 | Concurrent writes from multiple threads SHALL not corrupt any stored trace event | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.7 | A reset operation SHALL clear all events and counters to zero | - | 1 | ⚪ Draft |
+| REQ-129 | AC-129.8 | A HID write latency event SHALL serialise to exactly 25 bytes | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.1 | The adapter SHALL establish a SimConnect session with Prepar3D v5 and transition to the connected state | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.2 | Aircraft state variables SHALL be read via SimConnect and reflect simulator state within one tick period | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.3 | Control injection via SimConnect WriteClientData SHALL be reflected in the simulator on the next data cycle | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.4 | The matching profile SHALL load within 500 ms of an aircraft change event | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.5 | The adapter SHALL detect a sim crash within 2 s and attempt reconnection with exponential back-off | - | 1 | ⚪ Draft |
+| REQ-130 | AC-130.6 | The adapter state machine SHALL progress idle → connected → active without skipping states | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.1 | The adapter SHALL connect to FSX using the legacy SimConnect SDK and reach the connected state | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.2 | All simulation variable names SHALL conform to FSX-era naming conventions with no MSFS 2020 extensions | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.3 | When SimConnect is unavailable and FSUIPC is installed, the adapter SHALL activate FSUIPC offset mode as a fallback | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.4 | The matching profile SHALL load within 500 ms of an aircraft change event | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.5 | The FSX adapter SHALL report tier 3 in any system health report | - | 1 | ⚪ Draft |
+| REQ-131 | AC-131.6 | When neither SimConnect nor FSUIPC is available, the adapter SHALL enter limited-functionality mode without panicking | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.1 | A simple LED-on rule SHALL compile to byte-for-byte identical bytecode across independent compilations | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.2 | An AND condition SHALL compile to bytecode containing an AND opcode with two operand references | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.3 | An OR condition SHALL compile to bytecode containing an OR opcode with two operand references | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.4 | A NOT condition SHALL compile to bytecode containing a NOT opcode wrapping its operand | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.5 | A rule with two chained actions SHALL produce exactly two separate action entries in the bytecode | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.6 | An empty ruleset SHALL compile to empty bytecode with zero instructions | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.7 | Bytecode SHALL decompile to a semantically equivalent rule representation | - | 1 | ⚪ Draft |
+| REQ-132 | AC-132.8 | Re-compiling the same rule ten times SHALL produce identical bytecode on every pass | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.1 | OpenTrack UDP packets SHALL be parsed to correct yaw, pitch, and roll values | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.2 | Parsed head position SHALL be mapped to the simulator view axes with proportional scaling | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.3 | Head orientations within the calibrated deadzone radius SHALL produce zero output on all view axes | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.4 | The view axis range SHALL be remapped so that maximum head deflection produces a unit-interval output of 1.0 | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.5 | The signal-lost flag SHALL be set after N consecutive missed packets and view axes SHALL hold their last valid values | - | 1 | ⚪ Draft |
+| REQ-133 | AC-133.6 | Receipt of a valid packet after signal loss SHALL clear the signal-lost flag and resume normal output | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.1 | Xbox Controller left stick SHALL map to pitch and roll axes | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.2 | Xbox Controller triggers SHALL map to the throttle axis | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.3 | A button-to-axis assignment SHALL maintain axis deflection for the duration the button is held | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.4 | A configured deadzone SHALL suppress thumbstick output when deflection is below the threshold | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.5 | Axis curves configured in the profile SHALL be applied to gamepad thumbstick output | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.6 | Button repeat at a configured rate SHALL fire the bound action at approximately that frequency while held | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.7 | Xbox Elite rear paddles SHALL be assignable to custom axes in the profile | - | 1 | ⚪ Draft |
+| REQ-134 | AC-134.8 | Controller disconnect and reconnect SHALL be handled cleanly with no panic or stale axis values | - | 1 | ⚪ Draft |

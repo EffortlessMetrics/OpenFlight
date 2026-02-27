@@ -1,0 +1,58 @@
+# GoFlight GF-CLK Cockpit Clock / Chronometer Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed (GoFlight Inc.).
+# PID 0x000C is a community estimate following GoFlight's sequential PID scheme.
+# The GF-CLK provides a dual-display UTC/elapsed-time chronometer with CHR/SET/RST
+# button controls. Driven by HID output reports from the sim's zulu-time stream.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-CLK Cockpit Clock Panel"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x000C      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6               # CHR start/stop, RST, SET, +/- time-set
+  hats: 0
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 8               # HH:MM:SS (UTC) + MM:SS (CHR)
+
+polling:
+  expected_rate_hz: 1
+  max_jitter_ms: 200
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000C is a community estimate. Confirm with lsusb on real hardware.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      Clock display updated via HID output reports. The sim must write UTC
+      and elapsed-time values at 1 Hz or sim-time events.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight proprietary HID panel protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-CLK cockpit clock/chronometer panel. PID 0x000C is a community
+    estimate — confirm with lsusb. Driven by sim UTC/elapsed-time output.
+    Last reviewed: 2026-06.

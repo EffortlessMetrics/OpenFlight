@@ -1,0 +1,64 @@
+# Saitek BIP (Backlit Information Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek / Logitech PLC).
+# PID 0x0B9E is a community estimate for the BIP. The BIP provides 25 backlit
+# indicator lights (3 columns of configurable RGB LEDs) driven via HID output
+# reports to display sim state (gear, flaps, AP modes, warnings, etc.).
+# Pairs naturally with the Pro Flight Switch Panel and Multi Panel.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight BIP (Backlit Information Panel)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0B9E      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (LED-output-only device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0               # No physical inputs — output-only device
+  hats: 0
+  force_feedback: false
+  display:
+    type: led_array
+    digits: 25              # 25 individually addressable backlit indicator cells
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B9E is a community estimate. The BIP has different PIDs across
+      firmware revisions (older units may enumerate differently). Confirm with
+      lsusb or USBDeview on real hardware.
+  - id: OUTPUT_ONLY
+    description: >
+      The BIP has no button or axis inputs. OpenFlight drives the LED array
+      via HID output reports mapping sim state (gear down/up, flap positions,
+      AP annunciators) to individual LED cells.
+  - id: RGB_LED_PROTOCOL
+    description: >
+      Each LED cell supports red, green, and amber states selectable via the
+      Saitek DirectOutput protocol or compatible open-source driver.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek BIP — 25-cell backlit indicator panel, output-only. PID 0x0B9E is
+    a community estimate. LED state driven by sim avionics output. Common in
+    Pro Flight panel setups alongside multi/switch panels.
+    Last reviewed: 2026-06.

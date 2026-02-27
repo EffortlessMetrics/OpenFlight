@@ -87,4 +87,38 @@ mod tests {
     fn flight_ui_default_constructs() {
         let _ui = crate::FlightUi::default();
     }
+
+    #[test]
+    fn open_integration_docs_returns_error_for_missing_simulator() {
+        // Default docs path may not exist, so a nonexistent simulator must
+        // always produce a DocumentNotFound or IO error — never a panic.
+        let panel = SettingsPanel::new();
+        let result = panel.open_integration_docs("nonexistent_sim_xyz_999");
+        assert!(
+            result.is_err(),
+            "must return an error for an unknown simulator"
+        );
+    }
+
+    #[test]
+    fn get_integration_summary_string_contains_expected_keywords() {
+        let mut panel = SettingsPanel::new();
+        // Docs may or may not be present; either way the string should contain
+        // recognisable keywords when it succeeds.
+        match panel.get_integration_summary() {
+            Ok(s) => {
+                assert!(
+                    s.contains("simulator") || s.contains("Simulator"),
+                    "summary should mention simulators: {s}"
+                );
+                assert!(
+                    s.contains("files") || s.contains("Files"),
+                    "summary should mention files: {s}"
+                );
+            }
+            Err(_) => {
+                // Acceptable when the docs directory doesn't exist in CI.
+            }
+        }
+    }
 }

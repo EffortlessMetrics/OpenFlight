@@ -1,0 +1,54 @@
+# WinWing MCIP AH-64 Mission Computer Interface Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing).
+# PID is unconfirmed — the MCIP (Mission Computer Interface Panel) replicates
+# the AH-64D/E Apache left-side MPD (Multi-Purpose Display) bezel with 22
+# surround buttons. Primary use case is DCS World AH-64D.
+
+schema_version: "1"
+
+device:
+  name: "WinWing MCIP AH-64 Mission Computer Interface Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF10      # Community estimate; not confirmed from hardware probe
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 22               # 22 MPD bezel buttons (T1-T6, L1-L6, R1-R6, B1-B4)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF10 is a community estimate. WinWing panel products typically
+      enumerate in the 0xBF00–0xBFFF range for non-stick peripherals.
+      Confirm with lsusb or USBDeview on real hardware.
+  - id: DISPLAY_NOT_USB
+    description: >
+      The MCIP does not expose the MPD display as a USB device; the display
+      is rendered by DCS World natively. USB interface covers button inputs only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MCIP — replica AH-64D MPD bezel panel with 22 surround buttons.
+    PID 0xBF10 is unconfirmed. DCS World AH-64D primary use case.
+    Last reviewed: 2026-06.

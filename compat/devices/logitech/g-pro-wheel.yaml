@@ -1,0 +1,66 @@
+# Logitech G PRO Racing Wheel (Direct Drive)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). The Logitech G PRO Racing Wheel (2023) is
+# Logitech's first direct-drive wheel base, delivering up to 11 Nm peak
+# torque via a brushless servo motor. PID is a community estimate based
+# on USB captures; not yet confirmed from the Linux kernel at time of
+# writing. Confirm with lsusb or the Logitech G HUB software.
+schema_version: "1"
+
+device:
+  name: "Logitech G PRO Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC26D      # Community estimate — G PRO DD (2023); confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 26
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 2000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC26D is a community estimate. The G PRO Racing Wheel was
+      announced in 2023 and its USB descriptor has not yet been confirmed
+      from the Linux kernel hid-ids.h. Verify with lsusb or G HUB on
+      real hardware.
+  - id: DD_11NM
+    description: >
+      The G PRO DD delivers up to 11 Nm peak torque (industry-leading for
+      a consumer direct-drive wheel at time of release). In flight sim use,
+      the DDrive allows very realistic rudder centering forces with
+      configurable spring strength and damping.
+  - id: TRUEFORCE_PROTOCOL
+    description: >
+      The G PRO uses Logitech TRUEFORCE FFB protocol (enhanced over standard
+      DirectInput). On Linux, the standard ff-lg driver may not expose all
+      TRUEFORCE effects; use the Logitech SDK or G HUB on Windows for full
+      2000 Hz FFB update rate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G PRO Racing Wheel (direct drive, 2023). VID 0x046D confirmed;
+    PID 0xC26D is a community estimate. 11 Nm DD, 1000 Hz polling, TRUEFORCE
+    FFB. Excellent for flight sim rudder axis. Last reviewed: 2026-06.

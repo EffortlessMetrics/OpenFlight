@@ -1,0 +1,61 @@
+# Logitech G Flight Console (Yoke + Throttle Combo)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). The G Flight Console is a combined yoke and
+# throttle quadrant unit sold as a bundle. When connected, it enumerates as
+# a single USB HID device that combines the yoke and throttle inputs. This
+# is distinct from the separately connected G Flight Yoke and G Flight
+# Throttle Quadrant combo (see g-flight-yoke.yaml, g-flight-throttle-quadrant.yaml).
+# PID is a community estimate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Console"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC232      # Community estimate — G Flight Console integrated; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [yoke_x, yoke_y, throttle1, throttle2, throttle3, rudder]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC232 is a community estimate for the G Flight Console integrated
+      unit. When the G Flight Yoke and Throttle Quadrant are purchased as the
+      console bundle they may enumerate with a distinct PID. Verify with lsusb.
+  - id: YOKE_COLUMN_AXIS
+    description: >
+      The yoke Y axis (fore-aft) has a longer travel range than a standard
+      joystick. Calibrate the pitch axis across the full column throw range.
+  - id: THREE_LEVER_THROTTLE
+    description: >
+      Three friction throttle levers are mapped to separate axes. In GA
+      aircraft profiles, assign throttle1 = throttle, throttle2 = propeller,
+      throttle3 = mixture.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Flight Console (integrated yoke + throttle quadrant bundle).
+    VID 0x046D confirmed; PID 0xC232 is a community estimate. 6 axes,
+    20 buttons. GA aircraft primary use case in MSFS and X-Plane.
+    Last reviewed: 2026-06.

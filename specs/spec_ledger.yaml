@@ -4492,3 +4492,207 @@ requirements:
         description: "All subscribers SHALL receive identical copies of the same snapshot with no divergent field values"
         tests:
           - feature:specs/features/req_128_bus_snapshot_consistency.feature
+  # Infrastructure Requirement: Tracing and observability
+  - id: REQ-129
+    name: Tracing and observability
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-129.1
+        description: "A TraceEvent SHALL record its message and severity level accurately"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.2
+        description: "A closed span SHALL report a positive duration equal to the elapsed wall time"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.3
+        description: "A trace buffer with a configured capacity SHALL drop the oldest samples once the cap is reached"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.4
+        description: "Exporting the trace buffer to JSON SHALL produce a valid JSON document with timestamp, severity, and message fields per entry"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.5
+        description: "When the subsystem is configured at INFO level, DEBUG events SHALL NOT be stored"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.6
+        description: "Concurrent writes from multiple threads SHALL not corrupt any stored trace event"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.7
+        description: "A reset operation SHALL clear all events and counters to zero"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+      - id: AC-129.8
+        description: "A HID write latency event SHALL serialise to exactly 25 bytes"
+        tests:
+          - feature:specs/features/req_129_tracing_observability.feature
+  # Product Requirement: Prepar3D integration
+  - id: REQ-130
+    name: Prepar3D integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-130.1
+        description: "The adapter SHALL establish a SimConnect session with Prepar3D v5 and transition to the connected state"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+      - id: AC-130.2
+        description: "Aircraft state variables SHALL be read via SimConnect and reflect simulator state within one tick period"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+      - id: AC-130.3
+        description: "Control injection via SimConnect WriteClientData SHALL be reflected in the simulator on the next data cycle"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+      - id: AC-130.4
+        description: "The matching profile SHALL load within 500 ms of an aircraft change event"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+      - id: AC-130.5
+        description: "The adapter SHALL detect a sim crash within 2 s and attempt reconnection with exponential back-off"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+      - id: AC-130.6
+        description: "The adapter state machine SHALL progress idle → connected → active without skipping states"
+        tests:
+          - feature:specs/features/req_130_prepar3d_integration.feature
+  # Product Requirement: FSX legacy adapter
+  - id: REQ-131
+    name: FSX legacy adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-131.1
+        description: "The adapter SHALL connect to FSX using the legacy SimConnect SDK and reach the connected state"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+      - id: AC-131.2
+        description: "All simulation variable names SHALL conform to FSX-era naming conventions with no MSFS 2020 extensions"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+      - id: AC-131.3
+        description: "When SimConnect is unavailable and FSUIPC is installed, the adapter SHALL activate FSUIPC offset mode as a fallback"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+      - id: AC-131.4
+        description: "The matching profile SHALL load within 500 ms of an aircraft change event"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+      - id: AC-131.5
+        description: "The FSX adapter SHALL report tier 3 in any system health report"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+      - id: AC-131.6
+        description: "When neither SimConnect nor FSUIPC is available, the adapter SHALL enter limited-functionality mode without panicking"
+        tests:
+          - feature:specs/features/req_131_fsx_legacy_adapter.feature
+  # Infrastructure Requirement: Rules DSL bytecode stability
+  - id: REQ-132
+    name: Rules DSL bytecode stability
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-132.1
+        description: "A simple LED-on rule SHALL compile to byte-for-byte identical bytecode across independent compilations"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.2
+        description: "An AND condition SHALL compile to bytecode containing an AND opcode with two operand references"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.3
+        description: "An OR condition SHALL compile to bytecode containing an OR opcode with two operand references"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.4
+        description: "A NOT condition SHALL compile to bytecode containing a NOT opcode wrapping its operand"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.5
+        description: "A rule with two chained actions SHALL produce exactly two separate action entries in the bytecode"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.6
+        description: "An empty ruleset SHALL compile to empty bytecode with zero instructions"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.7
+        description: "Bytecode SHALL decompile to a semantically equivalent rule representation"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+      - id: AC-132.8
+        description: "Re-compiling the same rule ten times SHALL produce identical bytecode on every pass"
+        tests:
+          - feature:specs/features/req_132_rules_dsl_bytecode.feature
+  # Product Requirement: OpenTrack head tracking integration
+  - id: REQ-133
+    name: OpenTrack head tracking integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-133.1
+        description: "OpenTrack UDP packets SHALL be parsed to correct yaw, pitch, and roll values"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+      - id: AC-133.2
+        description: "Parsed head position SHALL be mapped to the simulator view axes with proportional scaling"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+      - id: AC-133.3
+        description: "Head orientations within the calibrated deadzone radius SHALL produce zero output on all view axes"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+      - id: AC-133.4
+        description: "The view axis range SHALL be remapped so that maximum head deflection produces a unit-interval output of 1.0"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+      - id: AC-133.5
+        description: "The signal-lost flag SHALL be set after N consecutive missed packets and view axes SHALL hold their last valid values"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+      - id: AC-133.6
+        description: "Receipt of a valid packet after signal loss SHALL clear the signal-lost flag and resume normal output"
+        tests:
+          - feature:specs/features/req_133_opentrack_integration.feature
+  # Product Requirement: Gamepad flight control
+  - id: REQ-134
+    name: Gamepad flight control
+    kind: product
+    status: draft
+    ac:
+      - id: AC-134.1
+        description: "Xbox Controller left stick SHALL map to pitch and roll axes"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.2
+        description: "Xbox Controller triggers SHALL map to the throttle axis"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.3
+        description: "A button-to-axis assignment SHALL maintain axis deflection for the duration the button is held"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.4
+        description: "A configured deadzone SHALL suppress thumbstick output when deflection is below the threshold"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.5
+        description: "Axis curves configured in the profile SHALL be applied to gamepad thumbstick output"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.6
+        description: "Button repeat at a configured rate SHALL fire the bound action at approximately that frequency while held"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.7
+        description: "Xbox Elite rear paddles SHALL be assignable to custom axes in the profile"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature
+      - id: AC-134.8
+        description: "Controller disconnect and reconnect SHALL be handled cleanly with no panic or stale axis values"
+        tests:
+          - feature:specs/features/req_134_gamepad_flight_control.feature

@@ -5,6 +5,8 @@
 
 pub use flight_panels_core::led;
 
+pub mod bip;
+pub mod fip;
 pub mod multi_panel;
 pub mod saitek;
 pub mod verify_matrix;

@@ -1,0 +1,51 @@
+# Saitek Cyborg Rumble Pad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek / Logitech PLC).
+# PID 0x040B confirmed via linux-hardware.org and SDL GameControllerDB:
+#   SDL: MAKE_VIDPID(0x06a3, 0x040b) — "Saitek Cyborg Rumble Pad"
+# Gaming gamepad with dual analog sticks, vibration motors, and 12 buttons.
+# Sometimes used as a secondary flight sim controller for camera/trim axes.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Rumble Pad"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x040B      # Confirmed via SDL GameControllerDB
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUMBLE_MOTORS
+    description: >
+      Dual vibration motors accessible via DirectInput force-feedback interface.
+      OpenFlight does not use rumble output on gamepads; force_feedback is
+      flagged informational only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg Rumble Pad. PID 0x040B confirmed from SDL GameControllerDB.
+    Gamepad occasionally used as a secondary flight sim controller for camera
+    or autopilot axis control. Last reviewed: 2026-06.
