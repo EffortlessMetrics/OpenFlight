@@ -1,0 +1,48 @@
+# DIY Arduino Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Generic). PID 0x8049 — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "DIY Arduino Rudder Pedals"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC
+    product_id: 0x8049      # Community estimate — DIY Arduino rudder
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. DIY Arduino-based rudder pedals using Arduino VID. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Arduino rudder pedals. PID 0x8049 community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

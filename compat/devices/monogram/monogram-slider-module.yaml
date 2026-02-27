@@ -1,0 +1,47 @@
+# Monogram Slider Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E4A (Monogram). PID 0x0003 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Monogram Slider Module"
+  vendor: "Monogram"
+  usb:
+    vendor_id: 0x2E4A       # Palette Gear / Monogram
+    product_id: 0x0003      # Community estimate — Slider Module
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 1
+    names: [slider]
+    resolution_bits: 10
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Monogram Slider single slider module. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Monogram Slider Module — single linear slider module. PID 0x0003 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

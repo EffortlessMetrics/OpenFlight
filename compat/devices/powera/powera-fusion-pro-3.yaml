@@ -1,0 +1,48 @@
+# PowerA Fusion Pro 3 Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x20D6 (PowerA). PID 0xA720 — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "PowerA Fusion Pro 3 Controller"
+  vendor: "PowerA"
+  usb:
+    vendor_id: 0x20D6       # PowerA
+    product_id: 0xA720      # Community estimate — Fusion Pro 3
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. PowerA Fusion Pro 3 wired Xbox controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PowerA Fusion Pro 3 — wired Xbox controller with paddles. PID 0xA720 community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

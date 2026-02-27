@@ -1,0 +1,47 @@
+# Thrustmaster T128 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB6A2 — community estimate.
+# Wave-73 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T128 Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB6A2      # Community estimate — T128 wheel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [steering, throttle, brake, slider]
+    resolution_bits: 12
+  buttons: 15
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Thrustmaster T128 entry-level FFB wheel. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T128 — entry-level FFB racing wheel. PID 0xB6A2 community estimate. Wave-73. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

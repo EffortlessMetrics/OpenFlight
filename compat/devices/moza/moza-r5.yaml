@@ -1,0 +1,47 @@
+# Moza R5 Direct Drive Wheelbase
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Moza). PID 0x0017 — community estimate.
+# Wave-73 addition.
+schema_version: "1"
+
+device:
+  name: "Moza R5 Direct Drive Wheelbase"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Gudsen (Moza)
+    product_id: 0x0017      # Community estimate — R5 wheelbase
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [steering, throttle, brake, clutch, slider]
+    resolution_bits: 16
+  buttons: 20
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Moza R5 5.5Nm direct drive wheelbase. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Moza R5 — 5.5Nm entry direct drive wheelbase. PID 0x0017 community estimate. Wave-73. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

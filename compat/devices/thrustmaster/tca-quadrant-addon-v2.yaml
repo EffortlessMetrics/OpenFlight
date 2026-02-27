@@ -1,0 +1,47 @@
+# Thrustmaster TCA Quadrant Add-On V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB69B — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Quadrant Add-On V2"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB69B      # Community estimate — TCA Quadrant Add-On V2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, flaps, spoiler]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. TCA Quadrant Add-On V2 lever module. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Quadrant Add-On V2 — updated add-on module. PID 0xB69B community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

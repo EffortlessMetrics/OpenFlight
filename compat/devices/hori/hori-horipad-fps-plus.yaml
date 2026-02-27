@@ -1,0 +1,48 @@
+# Hori HORIPAD FPS Plus
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D (Hori). PID 0x011F — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "Hori HORIPAD FPS Plus"
+  vendor: "Hori"
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x011F      # Community estimate — HORIPAD FPS Plus
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Hori HORIPAD FPS Plus controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori HORIPAD FPS Plus — FPS-optimized gamepad. PID 0x011F community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

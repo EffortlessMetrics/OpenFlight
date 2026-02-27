@@ -1,0 +1,48 @@
+# Nacon Revolution X Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x146B (Nacon). PID 0x0D1A — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "Nacon Revolution X Pro Controller"
+  vendor: "Nacon"
+  usb:
+    vendor_id: 0x146B       # Nacon / BigBen
+    product_id: 0x0D1A      # Community estimate — Revolution X Pro
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Nacon Revolution X Pro Xbox controller. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Nacon Revolution X Pro — Xbox-compatible premium controller. PID 0x0D1A community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

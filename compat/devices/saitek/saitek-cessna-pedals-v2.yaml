@@ -1,0 +1,47 @@
+# Saitek Pro Flight Cessna Pedals V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek). PID 0x0767 — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Pedals V2"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0767      # Community estimate — Cessna Pedals V2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Saitek Pro Flight Cessna Pedals V2 revision. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Cessna Pedals V2 — updated revision. PID 0x0767 community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

@@ -1,0 +1,47 @@
+# WinWing TQS F-16 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBE75 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "WinWing TQS F-16 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing
+    product_id: 0xBE75      # Community estimate — TQS F-16 throttle
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, friction, antenna]
+    resolution_bits: 16
+  buttons: 56
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. WinWing TQS F-16 Viper-replica throttle. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    WinWing TQS F-16 Throttle — Viper-replica single throttle. PID 0xBE75 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs

@@ -1,0 +1,48 @@
+# DJ TechTools MIDI Fighter 64
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2580 (DJ TechTools). PID 0x0064 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "DJ TechTools MIDI Fighter 64"
+  vendor: "DJ TechTools"
+  usb:
+    vendor_id: 0x2580       # DJ TechTools
+    product_id: 0x0064      # Community estimate — MIDI Fighter 64
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. MIDI Fighter 64 button grid controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DJ TechTools MIDI Fighter 64 — 64-button arcade grid controller. PID 0x0064 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,47 @@
+# Cammus C12 Direct Drive Wheelbase
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (Cammus). PID 0x0106 — community estimate.
+# Wave-73 addition.
+schema_version: "1"
+
+device:
+  name: "Cammus C12 Direct Drive Wheelbase"
+  vendor: "Cammus"
+  usb:
+    vendor_id: 0x3416       # Cammus
+    product_id: 0x0106      # Community estimate — C12 wheelbase
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [steering, throttle, brake, clutch, slider]
+    resolution_bits: 16
+  buttons: 20
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Cammus C12 12Nm direct drive wheelbase. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cammus C12 — 12Nm direct drive wheelbase. PID 0x0106 community estimate. Wave-73. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

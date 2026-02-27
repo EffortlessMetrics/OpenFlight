@@ -1,0 +1,48 @@
+# X-Keys XK-24 USB Key Matrix
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x05F3 (P.I. Engineering). PID 0x0467 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "X-Keys XK-24 USB Key Matrix"
+  vendor: "P.I. Engineering"
+  usb:
+    vendor_id: 0x05F3       # P.I. Engineering
+    product_id: 0x0467      # Community estimate — XK-24
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x01             # Generic Desktop
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. X-Keys XK-24 compact 24-key programmable keypad. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    X-Keys XK-24 — 24-key USB programmable matrix. PID 0x0467 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

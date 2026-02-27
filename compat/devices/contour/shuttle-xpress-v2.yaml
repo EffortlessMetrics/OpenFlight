@@ -1,0 +1,47 @@
+# Contour Design ShuttleXpress V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0B33 (Contour Design). PID 0x0021 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Contour Design ShuttleXpress V2"
+  vendor: "Contour Design"
+  usb:
+    vendor_id: 0x0B33       # Contour Design Inc.
+    product_id: 0x0021      # Community estimate — ShuttleXpress V2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 2
+    names: [jog, shuttle]
+    resolution_bits: 8
+  buttons: 5
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Contour Design ShuttleXpress V2 compact jog/shuttle. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Contour ShuttleXpress V2 — compact jog/shuttle. PID 0x0021 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

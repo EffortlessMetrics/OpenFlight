@@ -1,0 +1,47 @@
+# Razer Kishi Ultra Mobile Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 (Razer). PID 0x0A2D — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "Razer Kishi Ultra Mobile Controller"
+  vendor: "Razer"
+  usb:
+    vendor_id: 0x1532       # Razer Inc.
+    product_id: 0x0A2D      # Community estimate — Kishi Ultra
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Razer Kishi Ultra USB-C mobile controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Kishi Ultra — USB-C mobile controller usable on PC. PID 0x0A2D community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

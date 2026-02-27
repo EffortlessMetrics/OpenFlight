@@ -1,0 +1,47 @@
+# Loupedeck Live S Console
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2EC2 (Loupedeck). PID 0x0006 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Loupedeck Live S Console"
+  vendor: "Loupedeck"
+  usb:
+    vendor_id: 0x2EC2       # Loupedeck Oy
+    product_id: 0x0006      # Community estimate — Live S console
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0C             # Consumer Control
+
+capabilities:
+  axes:
+    count: 2
+    names: [dial1, dial2]
+    resolution_bits: 8
+  buttons: 15
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Loupedeck Live S compact creative console. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Loupedeck Live S — compact console with 2 dials + touchscreen. PID 0x0006 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

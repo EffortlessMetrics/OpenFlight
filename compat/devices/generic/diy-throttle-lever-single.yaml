@@ -1,0 +1,48 @@
+# DIY Single-Lever Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0x4F03 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "DIY Single-Lever Throttle"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x4F03      # Community estimate — DIY single lever
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [throttle]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Generic DIY single-lever throttle. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic DIY single-lever throttle. PID 0x4F03 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,48 @@
+# Loupedeck CT Console
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2EC2 (Loupedeck). PID 0x0005 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Loupedeck CT Console"
+  vendor: "Loupedeck"
+  usb:
+    vendor_id: 0x2EC2       # Loupedeck Oy
+    product_id: 0x0005      # Community estimate — CT console
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0C             # Consumer Control
+
+capabilities:
+  axes:
+    count: 6
+    names: [dial1, dial2, dial3, dial4, dial5, dial6]
+    resolution_bits: 8
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Loupedeck CT premium creative console. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Loupedeck CT — premium creative console with large touchscreen. PID 0x0005 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

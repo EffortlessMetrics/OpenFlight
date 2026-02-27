@@ -1,0 +1,48 @@
+# Elgato Stream Deck+ V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 (Elgato). PID 0x009B — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck+ V2"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9       # Elgato Systems
+    product_id: 0x009B      # Community estimate — Stream Deck+ V2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0C             # Consumer Control
+
+capabilities:
+  axes:
+    count: 4
+    names: [dial1, dial2, dial3, dial4]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Elgato Stream Deck+ V2 with dials and touchstrip. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck+ V2 — 8 LCD keys + 4 rotary dials + touchstrip. PID 0x009B community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

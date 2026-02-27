@@ -1,0 +1,48 @@
+# Razer Wolverine V3 Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 (Razer). PID 0x0A2B — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "Razer Wolverine V3 Pro Controller"
+  vendor: "Razer"
+  usb:
+    vendor_id: 0x1532       # Razer Inc.
+    product_id: 0x0A2B      # Community estimate — Wolverine V3 Pro
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 12
+  buttons: 22
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Razer Wolverine V3 Pro wireless with Hall Effect triggers. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Razer Wolverine V3 Pro — premium wireless controller. PID 0x0A2B community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,48 @@
+# Elgato Stream Deck Pedal
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 (Elgato). PID 0x009D — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Pedal"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9       # Elgato Systems
+    product_id: 0x009D      # Community estimate — Stream Deck Pedal
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0C             # Consumer Control
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Elgato Stream Deck Pedal 3-button foot switch. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elgato Stream Deck Pedal — 3-button USB foot switch. PID 0x009D community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,47 @@
+# VirtualFly TQ3+ Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (VirtualFly). PID 0x0109 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "VirtualFly TQ3+ Throttle Quadrant"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor
+    product_id: 0x0109      # Community estimate — TQ3+ quadrant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, prop, mixture]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. VirtualFly TQ3+ uses Cypress VID. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly TQ3+ — three-lever GA throttle quadrant. PID 0x0109 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

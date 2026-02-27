@@ -1,0 +1,48 @@
+# Elgato Stream Deck Studio
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 (Elgato). PID 0x009C — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Studio"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9       # Elgato Systems
+    product_id: 0x009C      # Community estimate — Stream Deck Studio
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0C             # Consumer Control
+
+capabilities:
+  axes:
+    count: 4
+    names: [dial1, dial2, dial3, dial4]
+    resolution_bits: 8
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Elgato Stream Deck Studio 32-key LCD deck. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck Studio — 32-key professional LCD deck. PID 0x009C community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

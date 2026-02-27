@@ -1,0 +1,47 @@
+# Thrustmaster T248X Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB6A4 — community estimate.
+# Wave-73 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T248X Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB6A4      # Community estimate — T248X wheel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [steering, throttle, brake, clutch, slider]
+    resolution_bits: 16
+  buttons: 25
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Thrustmaster T248X Xbox-compatible hybrid drive wheel. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster T248X — Xbox hybrid drive FFB wheel. PID 0xB6A4 community estimate. Wave-73. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
