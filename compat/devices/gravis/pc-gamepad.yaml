@@ -1,0 +1,44 @@
+# Gravis PC GamePad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Gravis), PID 0x4001 — estimated.
+schema_version: "1"
+
+device:
+  name: "Gravis PC GamePad"
+  vendor: "Gravis"
+  usb:
+    vendor_id: 0x0428
+    product_id: 0x4001
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4001 is estimated for this legacy device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Legacy Gravis PC GamePad USB. Budget gamepad, limited to basic axis and
+    button input. Tier 3 — community-reported support only.
+    Last reviewed: 2026-02.

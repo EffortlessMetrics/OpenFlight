@@ -74,22 +74,31 @@
 mod proptest_tests;
 
 pub mod blackbox;
+pub mod buttons;
 pub mod calibration;
 pub mod combine;
 pub mod compiler;
 pub mod conflict;
 pub mod counters;
+pub mod curve;
+pub mod deadzone;
 pub mod detent;
 pub mod engine;
 pub mod frame;
+pub mod hat;
+pub mod invert;
 pub mod nodes;
 pub mod pid;
 pub mod pipeline;
 pub mod rate_limit;
+pub mod scale;
 pub mod smoothing;
 pub mod trim;
 
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
+pub use buttons::{
+    ButtonChord, ButtonError, ButtonMacro, ButtonProcessor, MacroAction, MacroTrigger,
+};
 pub use calibration::{AxisCalibration, CalibrationBank};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
@@ -98,11 +107,15 @@ pub use conflict::{
     CurveConflict, CurveConflictDetector, ResolutionType,
 };
 pub use counters::{AllocationGuard, RuntimeCounters};
+pub use curve::{ControlPoint, CurveError, InterpolationMode, ResponseCurve};
+pub use deadzone::{DeadzoneBank, DeadzoneConfig, DeadzoneError, DeadzoneProcessor};
 pub use detent::{Detent, DetentConfig, DetentProcessor};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
 pub use frame::{AxisFrame, FrameError};
+pub use hat::{HatBank, HatDecoder, HatError, HatOutput, HatResolution};
+pub use invert::{AxisInvert, InvertBank};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
     DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
@@ -111,5 +124,6 @@ pub use nodes::{
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
+pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
 pub use trim::{AxisTrim, AxisTrimBank};

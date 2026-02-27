@@ -1,0 +1,48 @@
+# Waveshare RP2040-Zero HID Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A (Raspberry Pi), PID 0x0009 — estimated RP2040 USB device PID.
+schema_version: "1"
+
+device:
+  name: "Waveshare RP2040-Zero HID Controller"
+  vendor: "Waveshare"
+  usb:
+    vendor_id: 0x2E8A
+    product_id: 0x0009
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID varies by firmware. The RP2040-Zero uses Raspberry Pi VID 0x2E8A
+      but PID depends on the SDK/TinyUSB configuration.
+  - id: DIY_FIRMWARE
+    description: >
+      Capabilities entirely depend on user firmware (TinyUSB or CircuitPython).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Waveshare RP2040-Zero compact development board running HID joystick
+    firmware. Small form factor suited to button box and encoder builds.
+    Tier 3. Last reviewed: 2026-02.

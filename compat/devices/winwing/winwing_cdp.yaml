@@ -1,0 +1,51 @@
+# WinWing CDP (Control Display Panel / CDU-FMS Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. The WinWing CDP (Control Display Panel) replicates the
+# CDU / FMS keypad found in modern combat aircraft and airliners. Presents
+# as a pure HID button box with no analogue axes.
+# PID 0xBE90 is an estimate; verify with SimAppPro or lsusb.
+schema_version: "1"
+
+device:
+  name: "WinWing CDP (Control Display Panel)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed VID)
+    product_id: 0xBE90      # Estimated — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (WinWing panels report as Joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE90 is an estimate within the WinWing panel PID range.
+      Verify with SimAppPro → Device Scan or lsusb.
+  - id: BUTTON_BOX_ONLY
+    description: >
+      No analogue axes. All 32 inputs are HID button events corresponding
+      to CDU alphanumeric keys and function keys.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing CDP / CDU-FMS panel. 0 axes, 32 buttons. VID 0x4098 confirmed;
+    PID 0xBE90 estimated. Asian-market brand, wave-34 addition.
+    Last reviewed: 2026-06.

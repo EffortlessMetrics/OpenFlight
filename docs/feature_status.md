@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1520 |
-| ACs with tests | 1520 |
+| Total AC | 1664 |
+| ACs with tests | 1664 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 923 |
+| Draft | 1067 |
 | Incomplete | 0 |
-| Microcrates | 78 |
-| Microcrates with tests | 65 (83.3%) |
-| Microcrates with Gherkin | 65 (83.3%) |
-| Microcrates fully covered | 65 (83.3%) |
+| Microcrates | 79 |
+| Microcrates with tests | 65 (82.3%) |
+| Microcrates with Gherkin | 65 (82.3%) |
+| Microcrates fully covered | 65 (82.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 57.2% |
-| Test + Gherkin coverage | 57.2% |
+| Gherkin coverage | 52.2% |
+| Test + Gherkin coverage | 52.2% |
 
 ## BDD Microcrate Matrix
 
@@ -107,6 +107,7 @@
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 11 | 11 | 11 | 11 | 11 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
+| flight-vr | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-vr-overlay | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -1638,3 +1639,147 @@
 | REQ-254 | AC-254.4 | Regression threshold: p99 latency must stay under 2µs per axis | - | 1 | ⚪ Draft |
 | REQ-254 | AC-254.5 | Benchmark flamegraph generated and published as CI artifact | - | 1 | ⚪ Draft |
 | REQ-254 | AC-254.6 | Benchmark suite documented in `docs/how-to/benchmarking.md` | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.1 | OpenTrack UDP protocol (port 4242, 48-byte 6DOF packets) received | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.2 | Yaw/pitch/roll normalized to [-1.0, 1.0] from ±180/±90/±180 degree ranges | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.3 | Translation (x/y/z) normalized to [-1.0, 1.0] from ±100mm range | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.4 | Stale data (no packet for 500ms) detected and output frozen | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.5 | 6 virtual axes exposed on bus: head_yaw, head_pitch, head_roll, head_x, head_y, head_z | - | 1 | ⚪ Draft |
+| REQ-255 | AC-255.6 | OpenTrack pause/unpause state reflected in adapter status | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.1 | War Thunder telemetry JSON polled from http://localhost:8111/state | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.2 | Altitude, airspeed, and attitude decoded from War Thunder JSON | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.3 | Gear and flaps state decoded from WT JSON fields | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.4 | Vehicle type detected (aircraft vs ground vehicle) | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.5 | Polling rate configurable (default 20Hz) | - | 1 | ⚪ Draft |
+| REQ-256 | AC-256.6 | Service survives game restart without manual reconnect | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.1 | Linear interpolation between curve points available as option | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.2 | Cubic Hermite spline interpolation available as option | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.3 | Monotone cubic spline (Fritsch-Carlson) preserves monotonicity | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.4 | Output of any valid curve is always in [0.0, 1.0] for input [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.5 | Curve with 2 points (endpoints only) returns linear mapping | - | 1 | ⚪ Draft |
+| REQ-257 | AC-257.6 | Curve evaluation benchmarked under 100ns per point | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.1 | Aircraft-specific FFB profile selects appropriate spring/damper gains | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.2 | Fighter aircraft (high-speed) profile applies heavier spring than trainer | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.3 | FFB profile applied within 100ms of aircraft type detection | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.4 | Trim position reflected in FFB center offset | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.5 | Ground roll buffet effect enabled only while aircraft on ground | - | 1 | ⚪ Draft |
+| REQ-258 | AC-258.6 | FFB profile configurable in same profile file as axis profiles | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.1 | `ListDevices` gRPC call returns all connected HID devices | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.2 | Each device entry includes VID, PID, product name, and manufacturer | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.3 | Axis and button count reported per device | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.4 | Compatibility tier from manifest included in response | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.5 | Device reconnect triggers `DeviceConnected` server-side event stream | - | 1 | ⚪ Draft |
+| REQ-259 | AC-259.6 | `flightctl devices` CLI uses `ListDevices` API | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.1 | VR headset orientation data (yaw/pitch/roll) exposed as virtual axes | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.2 | OpenVR/SteamVR runtime queried for head pose at game frame rate | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.3 | VR tracking loss detected and output frozen at last valid pose | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.4 | VR axes available independently of flight controller axes | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.5 | VR adapter disabled automatically when OpenTrack is active | - | 1 | ⚪ Draft |
+| REQ-260 | AC-260.6 | VR headset integration documented with setup guide | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.1 | 8-way hat reports direction N produces output vector (0.0, -1.0) | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.2 | Center/neutral hat position produces output vector (0.0, 0.0) | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.3 | Diagonal directions NE/NW/SE/SW produce correct normalised diagonal vectors | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.4 | Hat switch output can drive virtual axes registered on the bus | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.5 | Multiple hats on the same device are decoded and reported independently | - | 1 | ⚪ Draft |
+| REQ-261 | AC-261.6 | Out-of-range hat value is safely rejected without panic or undefined output | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.1 | A single button press triggers the configured immediate action | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.2 | A simultaneous multi-button chord triggers the combined chord action | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.3 | Holding a button beyond the configured duration triggers a repeat action | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.4 | A button macro can modify an axis output value as its action | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.5 | Macros can be individually disabled in a profile without being removed | - | 1 | ⚪ Draft |
+| REQ-262 | AC-262.6 | Macro timing is deterministic to within ±1 RT tick (4 ms at 250 Hz) | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.1 | Two physical axes summed into a single virtual axis on the bus | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.2 | Differential mix of left and right throttles produces a yaw virtual axis | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.3 | Per-axis scaling factor is applied before the mix operation | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.4 | Mixed virtual axis output is clamped to [-1.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.5 | Mix configuration is stored per-profile and loaded atomically | - | 1 | ⚪ Draft |
+| REQ-263 | AC-263.6 | Virtual axis appears in the ListDevices device enumeration API response | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.1 | Safe mode entry produces a well-formed JSON diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.2 | Bundle includes the last 100 structured log lines captured before the fault | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.3 | Bundle includes the device enumeration snapshot at the time of the fault | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.4 | Bundle includes the serialised profile that was active at fault time | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.5 | Bundle includes all axis values sampled at the moment of the fault | - | 1 | ⚪ Draft |
+| REQ-264 | AC-264.6 | Bundle is written atomically to disk as part of safe mode entry sequence | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.1 | Service detects a firmware version mismatch when a device connects | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.2 | Firmware mismatch notification is emitted on the gRPC health event stream | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.3 | lightctl CLI displays a firmware update available message to the operator | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.4 | Notification payload includes device name, current firmware, and target firmware | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.5 | Operator can suppress firmware notifications for a specific device by VID/PID | - | 1 | ⚪ Draft |
+| REQ-265 | AC-265.6 | Firmware version check completes asynchronously and does not delay device input | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.1 | Inverted axis maps physical 1.0 to output -1.0 and physical -1.0 to output 1.0 | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.2 | Inversion is applied after deadzone processing and before the curve stage | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.3 | Inversion is configurable per individual axis in the profile YAML | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.4 | Inversion can be toggled at runtime via the IPC API without reloading the profile | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.5 | Inverted axis output remains within the valid range [-1.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-266 | AC-266.6 | Inversion state set at runtime is persisted back to the profile on save | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.1 | Throttle cut zone maps values below threshold to 0.0 output | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.2 | Throttle max zone clips values above threshold to 1.0 output | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.3 | Military power zone generates a distinct event on entry | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.4 | Afterburner zone generates an event on entry | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.5 | Individual zones can be disabled per profile without affecting other zones | - | 1 | ⚪ Draft |
+| REQ-267 | AC-267.6 | Zone boundary values are validated at profile load time | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.1 | Service records the axis input stream to a binary file on demand | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.2 | Recorded file includes per-sample timestamps with microsecond precision | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.3 | Playback replays the recorded input stream at the original inter-sample timing | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.4 | Playback is deterministic: the same recording file produces the same output on every run | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.5 | Recording can be started and stopped via the flightctl CLI | - | 1 | ⚪ Draft |
+| REQ-268 | AC-268.6 | Recording file format includes a version field to ensure forward compatibility | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.1 | UI window can be positioned and displayed on a secondary monitor | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.2 | Monitor preference (display index and position) is saved per profile | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.3 | Secondary monitor disconnect does not crash the service | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.4 | UI re-appears on the primary monitor when the preferred secondary monitor is disconnected | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.5 | UI respects the DPI scaling factor of every monitor it is displayed on | - | 1 | ⚪ Draft |
+| REQ-269 | AC-269.6 | StreamDeck button layout scales correctly when rendered on monitors with different DPI | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.1 | Axis value can be multiplied by a constant scale factor defined in the profile | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.2 | Scaled axis output is clamped to the configured output range | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.3 | Output range [min, max] is independently configurable per axis in the profile | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.4 | Default output range is [-1.0, 1.0] when no range is specified in the profile | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.5 | Scale factor is applied after deadzone and curve processing | - | 1 | ⚪ Draft |
+| REQ-270 | AC-270.6 | A configured range violation produces a warning log entry rather than a panic | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.1 | Service detects which simulator is running without user intervention | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.2 | Aircraft type change triggers a profile switch within 500 ms | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.3 | Profile match uses exact call-sign first and falls back to fuzzy match if no exact match found | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.4 | Ambiguous fuzzy match selects the most recently used profile among candidates | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.5 | Auto-matching can be disabled for the current session via CLI without restarting the service | - | 1 | ⚪ Draft |
+| REQ-271 | AC-271.6 | Each profile match event is logged with the detected aircraft name and selected profile name | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.1 | Transient HID read error is retried up to 3 times before the device is disconnected | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.2 | Device reconnect automatically restores the profile binding that was active at disconnect | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.3 | Simulator disconnect triggers a switch to the idle profile instead of stopping the service | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.4 | Profile parse error causes the service to fall back to the last successfully loaded profile | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.5 | Each recovery action is logged with the original error context | - | 1 | ⚪ Draft |
+| REQ-272 | AC-272.6 | Repeated failures on the same device or adapter trigger exponential backoff before retry | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.1 | Curve with <2 points is rejected on profile load | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.2 | Non-monotone curve (x values not sorted) is rejected | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.3 | Control point outside [0.0, 1.0] is rejected | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.4 | Valid curve passes validation without modification | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.5 | Validation error includes specific point index and value | - | 1 | ⚪ Draft |
+| REQ-273 | AC-273.6 | Profile with invalid curve falls back to linear identity curve | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.1 | Service detects profile file change within 2 seconds | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.2 | New profile is validated before being applied | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.3 | Invalid new profile does not replace current profile | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.4 | Live reload can be disabled via config flag | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.5 | Reload events are emitted on the health stream | - | 1 | ⚪ Draft |
+| REQ-274 | AC-274.6 | Reload does not interrupt running axis processing (atomic swap) | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.1 | gRPC endpoint returns current axis values snapshot | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.2 | Snapshot includes connected device list | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.3 | Snapshot includes active profile name | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.4 | Snapshot includes axis pipeline stage values (pre/post deadzone, curve, etc.) | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.5 | Snapshot is idempotent (same state produces same response) | - | 1 | ⚪ Draft |
+| REQ-275 | AC-275.6 | CLI can display snapshot in table format | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.1 | New USB device is detected within 1 second of plug-in | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.2 | Known device is automatically bound to its last profile | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.3 | Unknown device appears in diagnostics as unrecognized | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.4 | Device removal triggers idle axis state within 100ms | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.5 | Rapid plug/unplug cycle does not crash or leak resources | - | 1 | ⚪ Draft |
+| REQ-276 | AC-276.6 | PnP events are logged with VID/PID and device name | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.1 | CI nightly reports fuzz coverage percentage per target | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.2 | Coverage < 70% on a fuzz target fails the nightly gate | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.3 | Fuzz corpus is persisted between nightly runs | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.4 | New crash findings are captured as regression tests | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.5 | Fuzz summary is included in CI run artifacts | - | 1 | ⚪ Draft |
+| REQ-277 | AC-277.6 | Each parser crate has at least one fuzz target | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.1 | Profile can be exported to YAML file via CLI | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.2 | Exported file can be imported back without loss | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.3 | Import validates profile schema before applying | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.4 | Exported profile includes all axis configs and curve points | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.5 | Import handles schema version migration automatically | - | 1 | ⚪ Draft |
+| REQ-278 | AC-278.6 | Round-trip export/import produces identical profile | - | 1 | ⚪ Draft |

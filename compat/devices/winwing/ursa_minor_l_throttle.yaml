@@ -1,0 +1,57 @@
+# WinWing Ursa Minor L Throttle (Compact, Left-Hand, Estimated PID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. The Ursa Minor L ("Lite") is WinWing's most compact
+# single-engine throttle unit, offering a reduced button count compared
+# to the FA-18 and F-16 Ursa Minor variants. Intended for left-hand
+# throttle use in single-seat configurations or space-constrained setups.
+# Sibling devices:
+#   ursa-minor-f-16-throttle.yaml — F-16 grip geometry
+#   ursa-minor-fa18-throttle.yaml — FA-18 grip geometry (PID 0xBE12)
+# PID 0xBE18 is an estimate; verify with SimAppPro or lsusb.
+schema_version: "1"
+
+device:
+  name: "WinWing Ursa Minor L Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (all products)
+    product_id: 0xBE18      # Estimated — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, speedbrake]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE18 is estimated. The Ursa Minor FA-18 uses 0xBE12;
+      the L variant is assumed to follow sequentially. Confirm with
+      SimAppPro device scan or lsusb before use.
+  - id: THROTTLE_UNIPOLAR
+    description: >
+      Main throttle axis is unipolar (0x000 = idle, 0xFFF = max).
+      Map to [0.0, 1.0] range; do not use bipolar normalisation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Ursa Minor L (Lite) compact throttle. 2 axes, 16 buttons, 1 hat.
+    VID 0x4098 confirmed; PID 0xBE18 estimated. Compact left-hand single-engine
+    throttle. Asian-market brand, wave-34 addition. Last reviewed: 2026-06.

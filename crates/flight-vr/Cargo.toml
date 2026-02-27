@@ -1,0 +1,26 @@
+[package]
+homepage.workspace = true
+name = "flight-vr"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "VR headset head tracking adapter for OpenFlight"
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "vr", "head-tracking"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[features]
+default = []
+# openvr = ["dep:openvr"]   # future feature, not enabled now
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]

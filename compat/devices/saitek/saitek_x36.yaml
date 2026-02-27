@@ -1,0 +1,54 @@
+# Saitek X36 Joystick (Alternate PID Estimate — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x06A3 (Saitek / Logitech PLC). Vintage 5-axis joystick
+# sold circa 2000-2003 as a budget HOTAS alternative.
+# PID 0x0100 is an estimate (task-specified); the community-confirmed PID is
+# 0x0109 (x36-joystick.yaml). Both estimates are preserved to capture units
+# from different production runs or regional variants.
+# Tier 3 (best-effort) due to vintage hardware status.
+schema_version: "1"
+
+device:
+  name: "Saitek X36 Joystick (Alt PID)"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0100      # Estimated — community-confirmed PID is 0x0109 (x36-joystick.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0100 is an estimate. The community-confirmed X36 PID is 0x0109
+      (x36-joystick.yaml). If 0x0100 does not enumerate, use x36-joystick.yaml.
+  - id: VINTAGE_HARDWARE
+    description: >
+      Vintage Saitek X36, circa 2000-2003. Potentiometer-based axes; expect
+      drift and noise. Apply calibration and software deadzone.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X36 Joystick (alternate PID 0x0100 estimate). 5 axes, 14 buttons.
+    See x36-joystick.yaml (PID 0x0109) for confirmed entry. Wave-34 addition.
+    Last reviewed: 2026-06.

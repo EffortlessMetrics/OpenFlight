@@ -1,0 +1,60 @@
+# Thrustmaster TCA Airbus Throttle (Quadrant, PID 0xB6FF Estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB6FF is a community estimate for the TCA Quadrant Airbus Edition
+# under an alternate firmware/regional variant. Related manifests:
+#   tca-quadrant-airbus.yaml — primary entry (PID 0x0407, confirmed)
+#   tca-quadrant-airbus-addon.yaml — Engines 3&4 Add-On (PID 0x0408)
+# This entry captures the 0xB6FF PID estimate with ATHR/FCU button details.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Airbus Throttle (Alt PID)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (Guillemot Corp.)
+    product_id: 0xB6FF      # Community estimate — confirmed is 0x0407 (tca-quadrant-airbus.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, flap_lever, spoiler]
+    resolution_bits: 12
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB6FF is a community estimate. The confirmed PID is 0x0407
+      (tca-quadrant-airbus.yaml). Use the confirmed manifest unless this
+      alternate PID is observed on hardware.
+  - id: ATHR_DETENT
+    description: >
+      Each throttle lever has a physical ATHR (Auto-Throttle) detent.
+      The detent position is reported as a distinct button event.
+  - id: AIRBUS_THROTTLE_LAYOUT
+    description: >
+      Throttle levers replicate Airbus A320 throttle quadrant with FLEX/MCT,
+      CL, IDLE, and REV detent positions. Flap lever and spoiler lever are
+      separate axes.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Airbus Throttle (alternate PID 0xB6FF estimate). 4 axes,
+    24 buttons. See tca-quadrant-airbus.yaml (PID 0x0407) for primary.
+    Wave-34 addition. Last reviewed: 2026-06.

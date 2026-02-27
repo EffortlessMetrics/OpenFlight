@@ -1,0 +1,65 @@
+# Varjo Aero Professional VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0403 is the FTDI Ltd vendor ID (community estimate for Varjo Aero USB
+# interface chip). PID 0x6010 is the FTDI FT2232H dual USB serial/JTAG PID
+# and is a community estimate — may not reflect the actual Varjo Aero HID
+# endpoint. The Varjo Aero is a professional VR headset with micro-OLED
+# displays and eye tracking, widely used in professional flight simulation.
+# Communicates primarily via Varjo Base software + OpenVR/SteamVR.
+
+schema_version: "1"
+
+device:
+  name: "Varjo Aero Professional VR HMD"
+  vendor: "Varjo Technologies"
+  usb:
+    vendor_id: 0x0403    # FTDI Ltd (community estimate — likely interface chip VID)
+    product_id: 0x6010   # Community estimate — FTDI FT2232H; PID_UNCONFIRMED for Aero
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 3
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0403 / PID 0x6010 are community estimates (FTDI FT2232H chip).
+      The actual Varjo Aero HID endpoint may enumerate under a different VID/PID.
+      Confirm with lsusb or Windows Device Manager on Varjo Aero hardware.
+      Note: the XR-4 manifest (xr-4.yaml) uses a different estimated VID 0x0C45.
+  - id: VARJO_BASE_REQUIRED
+    description: >
+      Requires Varjo Base software for operation. Head tracking is exposed via
+      OpenVR/SteamVR; OpenFlight accesses tracking through the SteamVR bridge.
+      Direct HID access to 6DOF tracking data is not supported without Varjo Base.
+  - id: EYE_TRACKING
+    description: >
+      The Varjo Aero includes built-in eye tracking via the Varjo SDK.
+      Eye tracking data is not available through the standard HID interface;
+      access requires the Varjo SDK (not currently integrated in OpenFlight).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Varjo Aero professional VR HMD (micro-OLED, eye tracking). VID 0x0403 /
+    PID 0x6010 are community estimates (FTDI chip). Requires Varjo Base +
+    OpenVR/SteamVR. Used in professional flight training environments.
+    Last reviewed: 2026-06.

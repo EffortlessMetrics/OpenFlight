@@ -1,0 +1,63 @@
+# Suncom F-15 Stick (Vintage Gameport-Era USB Adapter)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. Vintage / legacy hardware. Suncom Technologies produced
+# the F-15 stick in the mid-to-late 1990s as a gameport device. This manifest
+# covers units connected through a USB gameport adapter or the rare native-USB
+# Suncom variant. VID 0x068E (CH Products) is used as a placeholder — Suncom
+# did not have a registered USB VID and some adapters report CH Products or
+# generic HID VIDs. Tier 3 (best-effort) support only.
+schema_version: "1"
+
+device:
+  name: "Suncom F-15 Stick"
+  vendor: "Suncom"
+  usb:
+    vendor_id: 0x068E       # Placeholder — CH Products VID; Suncom had no registered USB VID
+    product_id: 0x00A0      # Estimated placeholder; actual PID depends on adapter used
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: VINTAGE_GAMEPORT_HARDWARE
+    description: >
+      Original Suncom F-15 Stick is a gameport device (DA-15 connector).
+      USB support requires a gameport-to-USB adapter. The reported VID/PID
+      depends on the adapter, not the joystick itself. VID 0x068E is a
+      placeholder; common adapters also use VID 0x0738 (Mad Catz) or
+      VID 0x046D (Logitech).
+  - id: VID_PLACEHOLDER
+    description: >
+      VID 0x068E (CH Products) is used as a placeholder because Suncom
+      Technologies did not register a USB vendor ID. The PID 0x00A0 is
+      not confirmed. Do not rely on VID/PID matching for this device.
+  - id: AXIS_CALIBRATION_REQUIRED
+    description: >
+      Gameport potentiometers require calibration. Raw axis range varies
+      between units. Apply axis calibration before use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Suncom F-15 Stick — vintage gameport joystick, circa 1996-2000.
+    VID/PID are placeholders; actual values depend on USB adapter used.
+    Tier 3 (best-effort). Wave-34 addition (legacy hardware).
+    Last reviewed: 2026-06.

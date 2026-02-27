@@ -1,0 +1,43 @@
+# Gravis Analog Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Gravis), PID 0x4007 — estimated.
+schema_version: "1"
+
+device:
+  name: "Gravis Analog Pro Joystick"
+  vendor: "Gravis"
+  usb:
+    vendor_id: 0x0428
+    product_id: 0x4007
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4007 is estimated. Confirm with hardware capture.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis Analog Pro — full-size joystick with rudder twist and throttle
+    slider. Vintage USB device. Tier 3. Last reviewed: 2026-02.

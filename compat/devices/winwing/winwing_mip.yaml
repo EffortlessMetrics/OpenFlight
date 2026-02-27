@@ -1,0 +1,59 @@
+# WinWing MIP (Mission Interface Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. The WinWing MIP (Mission Interface Panel) is a large
+# button box replicating the centre glare-shield / instrument panel layout
+# for combat aircraft simulations. It presents as a HID button box with
+# no analogue axes. The sim-specific MIP panels (F-16: f16-mip-panel.yaml)
+# are distinct manifests; this manifest covers the generic WinWing MIP SKU.
+# PID 0xBE80 is an estimate; verify with SimAppPro or lsusb.
+schema_version: "1"
+
+device:
+  name: "WinWing MIP (Mission Interface Panel)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed VID)
+    product_id: 0xBE80      # Estimated — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (WinWing panels report as Joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+  buttons: 82
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE80 is an estimate. Verify with SimAppPro → Device Scan or
+      lsusb. The panel family uses several closely spaced PIDs; check
+      nearby values if 0xBE80 does not enumerate.
+  - id: BUTTON_BOX_ONLY
+    description: >
+      This device has no analogue axes. All 82 inputs are HID button events.
+      Use discrete command bindings rather than axis mappings.
+  - id: SIMAPP_PRO_RECOMMENDED
+    description: >
+      WinWing recommends using SimAppPro for LED feedback and multi-page
+      button mapping. OpenFlight reads raw HID button events directly without
+      requiring SimAppPro.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MIP generic button box. 0 axes, 82 buttons. VID 0x4098 confirmed;
+    PID 0xBE80 estimated. Distinct from sim-specific variants (f16-mip-panel.yaml).
+    Asian-market brand, wave-34 addition. Last reviewed: 2026-06.

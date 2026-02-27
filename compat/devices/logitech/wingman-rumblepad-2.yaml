@@ -1,0 +1,41 @@
+# Logitech WingMan RumblePad 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech), PID 0xC218 — confirmed Linux kernel HID table.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan RumblePad 2"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC218
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks: []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan RumblePad 2 — dual-analog gamepad with force feedback
+    rumble motors. PID 0xC218 confirmed from Linux kernel hid-ids.h.
+    Tier 3. Last reviewed: 2026-02.

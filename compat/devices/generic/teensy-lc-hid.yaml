@@ -1,0 +1,45 @@
+# Teensy LC HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC), PID 0x0488 — standard Teensy HID joystick PID.
+schema_version: "1"
+
+device:
+  name: "Teensy LC HID Joystick"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0488
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, rx, ry]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: DIY_FIRMWARE
+    description: >
+      Capabilities depend on firmware. Teensy LC supports up to 6 axes and
+      32 buttons in the standard Teensyduino HID stack.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Teensy LC (ARM Cortex-M0+) running HID joystick firmware via Teensyduino.
+    Lower cost than Teensy 4.x, suitable for axis-light builds. PID 0x0488 is
+    the standard PJRC HID joystick PID. Tier 3. Last reviewed: 2026-02.

@@ -1,0 +1,40 @@
+# Logitech Dual Action Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech), PID 0xC216 — confirmed Linux kernel HID table.
+schema_version: "1"
+
+device:
+  name: "Logitech Dual Action Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC216
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks: []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Dual Action Gamepad — dual-analog USB controller, predecessor to
+    the F310. PID 0xC216 from Linux hid-ids.h. Tier 3. Last reviewed: 2026-02.

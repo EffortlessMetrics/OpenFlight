@@ -1,0 +1,57 @@
+# CH Products Fighterstick (Alternate PID Estimate — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x068E (CH Products). PID 0x00F0 is an estimate;
+# the confirmed CH Fighterstick PID is 0x00F3 (fighterstick.yaml from the
+# Linux kernel hid-ids.h). PID 0x00F0 corresponds to an earlier production
+# run or a minor firmware variant reported in some community databases.
+# Verify with Windows Device Manager or lsusb.
+schema_version: "1"
+
+device:
+  name: "CH Products Fighterstick"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00F0      # Estimated — confirmed PID is 0x00F3 in fighterstick.yaml
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F0 is an estimate. The confirmed CH Fighterstick PID is 0x00F3
+      (see fighterstick.yaml). If 0x00F0 does not enumerate, use fighterstick.yaml.
+  - id: OS_MEDIATED_HID
+    description: >
+      CH Products devices use OS-mediated HID parsing. No raw report parser
+      needed; OS HID descriptor decoding applies.
+  - id: CALIBRATION_SOFTWARE
+    description: >
+      CH Control Manager software may be required for full axis calibration
+      on Windows.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Fighterstick (alternate PID 0x00F0 estimate). 5 axes, 32 buttons,
+    4 hats. See fighterstick.yaml (PID 0x00F3) for confirmed primary entry.
+    Wave-34 addition. Last reviewed: 2026-06.

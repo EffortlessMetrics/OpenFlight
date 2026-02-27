@@ -1,0 +1,45 @@
+# Arduino Leonardo HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC), PID 0x8036 — confirmed ATmega32u4 bootloader.
+schema_version: "1"
+
+device:
+  name: "Arduino Leonardo HID Joystick"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8036
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIY_FIRMWARE
+    description: >
+      Actual axis count, button count, and capabilities depend on user firmware.
+      Values shown are representative defaults for flight-sim HID builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Leonardo running HID joystick firmware (ATmega32u4). PID 0x8036 is
+    the standard Leonardo application PID. Commonly used for DIY button boxes,
+    rudder pedals, and trim wheels. Tier 3. Last reviewed: 2026-02.

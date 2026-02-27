@@ -1,0 +1,58 @@
+# Speedlink Phantom Hawk Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. The Speedlink Phantom Hawk is a budget-tier USB joystick
+# sold primarily in European and Asian markets. Branded under the Speedlink
+# (JÖLLENBECK GmbH) label. VID 0x0E8F is associated with GreenAsia Inc., which
+# manufactures OEM HID controllers for multiple brands including Speedlink.
+# PID 0x0020 is an estimate from the GreenAsia product range; verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Speedlink Phantom Hawk"
+  vendor: "Speedlink"
+  usb:
+    vendor_id: 0x0E8F       # GreenAsia Inc. (OEM manufacturer for Speedlink)
+    product_id: 0x0020      # Estimated — verify with lsusb or USB Prober
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is an estimate from the GreenAsia Inc. product range.
+      Speedlink resells GreenAsia OEM controllers; the actual PID may differ
+      by product generation. Verify with lsusb or Windows Device Manager.
+  - id: LOW_RESOLUTION_AXES
+    description: >
+      All axes use 8-bit resolution (256 steps). Apply a small software
+      deadzone (~2%) to mask quantisation noise near centre.
+  - id: BUDGET_TIER_HARDWARE
+    description: >
+      Budget-tier joystick with potentiometer-based axes. Expect axis
+      drift over time; recalibration may be needed periodically.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Phantom Hawk, budget-tier 5-axis joystick. VID 0x0E8F (GreenAsia OEM);
+    PID 0x0020 estimated. Sold in European/Asian markets. Wave-34 addition.
+    Last reviewed: 2026-06.

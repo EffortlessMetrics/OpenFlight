@@ -1,0 +1,63 @@
+# Simagic Q1 Mini Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic Q1 Mini — compact 3-pedal entry-level set with load-cell brake.
+# Designed as the pedal companion for the Simagic Alpha Mini base.
+# VID/PID are unconfirmed; Simagic products commonly enumerate via a
+# Silicon Labs CP210x USB-to-serial bridge or a proprietary HID endpoint.
+# Distinct from the P1000 (p1000-pedals.yaml) and P2000 (p2000-pedals.yaml).
+
+schema_version: "1"
+
+device:
+  name: "Simagic Q1 Mini Pedals"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0EBC    # Simagic Technology (community-reported estimate)
+    product_id: 0x1020   # Community estimate — Q1 Mini; confirm with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0EBC and PID 0x1020 are community estimates for the Simagic Q1
+      Mini. Confirm with lsusb or the Simagic True Drive software before
+      enabling production device matching.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The Q1 Mini brake pedal uses a load cell (pressure sensing) rather
+      than a potentiometer. The brake axis represents applied force, not
+      pedal travel. Calibrate the brake pressure curve independently from
+      the throttle and clutch axes.
+  - id: COMPACT_FORM_FACTOR
+    description: >
+      The Q1 Mini is designed as a compact pedal set for desktop or under-desk
+      mounting, paired with the Alpha Mini wheel base. Pedal spacing is
+      narrower than the P1000/P2000 series; not interchangeable with those
+      calibration profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Q1 Mini pedals — compact entry-level set with load-cell brake.
+    VID 0x0EBC / PID 0x1020 are community estimates; verify with lsusb.
+    Paired with Alpha Mini base (alpha-mini-base.yaml). Last reviewed: 2026-06.

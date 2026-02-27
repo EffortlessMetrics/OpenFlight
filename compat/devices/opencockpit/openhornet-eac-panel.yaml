@@ -1,0 +1,46 @@
+# OpenHornet EAC (Electronic Automatic Control) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY F/A-18C cockpit module. VID 0x2341 (Arduino), PID 0x8040 — estimated.
+schema_version: "1"
+
+device:
+  name: "OpenHornet EAC Panel"
+  vendor: "OpenHornet"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8040
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID estimated. Verify against OpenHornet firmware.
+  - id: DIY_FIRMWARE
+    description: >
+      Community builds may vary.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet EAC panel — autopilot disengage, FCS reset and related
+    flight-control system switches. Tier 3. Last reviewed: 2026-02.

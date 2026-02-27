@@ -61,6 +61,7 @@ members = [
     "crates/flight-session",
     "crates/flight-motion",
     "crates/flight-cloud-profiles",
+    "crates/flight-vr",
     "crates/flight-vr-overlay",
     "crates/flight-ffb-vpforce",
     "crates/flight-hotas-winwing",

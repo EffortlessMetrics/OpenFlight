@@ -35,11 +35,21 @@ pub mod health;
 pub mod input;
 pub mod orion2_stick;
 pub mod orion2_throttle;
+pub mod orion_joystick;
 pub mod presets;
 pub mod skywalker_rudder;
 pub mod super_taurus;
 pub mod tfrp;
 pub mod ufc_panel;
+
+/// Shared error type for WinWing simple device parsers.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum WinWingError {
+    #[error("Report too short: need {need} bytes, got {got}")]
+    ReportTooShort { need: usize, got: usize },
+    #[error("Unknown report ID: {0:#04x}")]
+    UnknownReportId(u8),
+}
 
 pub use f16ex_stick::{
     BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
@@ -52,6 +62,10 @@ pub use input::{
     ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
     parse_stick_report, parse_throttle_report,
 };
+pub use orion_joystick::{
+    ORION_JOYSTICK_MIN_REPORT_BYTES, ORION_JOYSTICK_PID, OrionJoystickState, URSA_MINOR_L_PID,
+    parse_orion_joystick,
+};
 pub use orion2_stick::{
     BUTTON_COUNT as ORION2_STICK_BUTTON_COUNT, MIN_REPORT_BYTES as ORION2_STICK_REPORT_LEN,
     ORION2_STICK_PID, Orion2StickAxes, Orion2StickButtons, Orion2StickInputState,
@@ -59,8 +73,10 @@ pub use orion2_stick::{
 };
 pub use orion2_throttle::{
     BUTTON_COUNT as ORION2_THROTTLE_BUTTON_COUNT, ENCODER_COUNT as ORION2_THROTTLE_ENCODER_COUNT,
-    MIN_REPORT_BYTES as ORION2_THROTTLE_REPORT_BYTES, Orion2ThrottleAxes, Orion2ThrottleButtons,
-    Orion2ThrottleInputState, Orion2ThrottleParseError, parse_orion2_throttle_report,
+    MIN_REPORT_BYTES as ORION2_THROTTLE_REPORT_BYTES, ORION2_THROTTLE_MIN_REPORT_BYTES,
+    Orion2ThrottleAxes, Orion2ThrottleButtons, Orion2ThrottleInputState, Orion2ThrottleParseError,
+    Orion2ThrottleState, normalize_axis_16bit, normalize_throttle_16bit, parse_orion2_throttle,
+    parse_orion2_throttle_report,
 };
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
 pub use skywalker_rudder::{
@@ -81,6 +97,9 @@ pub use ufc_panel::{
     TOTAL_BUTTON_COUNT as UFC_TOTAL_BUTTON_COUNT, UFC_BUTTON_COUNT, UFC_PANEL_PID, UfcButtons,
     UfcPanelInputState, UfcPanelParseError, parse_ufc_panel_report,
 };
+
+/// WinWing USB Vendor ID.
+pub const WINWING_VID: u16 = 0x4098;
 
 /// All known WinWing PIDs covered by this crate.
 pub const WINWING_PIDS: &[u16] = &[

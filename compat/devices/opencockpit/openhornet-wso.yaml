@@ -1,0 +1,48 @@
+# OpenHornet WSO (Weapon Systems Officer) Rear Cockpit Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY F/A-18D rear-seat module. VID 0x2341 (Arduino), PID 0x8041 — estimated.
+schema_version: "1"
+
+device:
+  name: "OpenHornet WSO Rear Cockpit Panel"
+  vendor: "OpenHornet"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8041
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID estimated. Verify against OpenHornet firmware.
+  - id: DIY_FIRMWARE
+    description: >
+      Community builds may vary. WSO rear panel is an extended OpenHornet
+      project component.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet WSO rear cockpit panel for F/A-18D two-seat variant simulation.
+    Includes rear-seat sensor controls and weapons management. Tier 3.
+    Last reviewed: 2026-02.

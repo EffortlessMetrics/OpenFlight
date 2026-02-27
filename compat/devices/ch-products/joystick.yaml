@@ -1,0 +1,44 @@
+# CH Products CH Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products), PID 0x0191 — estimated; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "CH Joystick"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x0191
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0191 is estimated. Confirm against lsusb before deployment.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products entry-level joystick with three axes and hat switch.
+    PID is estimated — update when confirmed hardware data is available.
+    Last reviewed: 2026-02.

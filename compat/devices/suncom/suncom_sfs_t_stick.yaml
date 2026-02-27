@@ -1,0 +1,64 @@
+# Suncom SFS T-Stick (Vintage Gameport-Era USB Adapter)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. Vintage / legacy hardware. Suncom Technologies SFS
+# (Space Flight Sim) T-Stick, a two-axis gameport joystick produced circa
+# 1995-1999. Like the Suncom F-15 Stick, this device predates USB and
+# requires a gameport-to-USB adapter for modern use. VID/PID are placeholders.
+schema_version: "1"
+
+device:
+  name: "Suncom SFS T-Stick"
+  vendor: "Suncom"
+  usb:
+    vendor_id: 0x068E       # Placeholder — CH Products VID; Suncom had no registered USB VID
+    product_id: 0x00A1      # Estimated placeholder; actual PID depends on adapter used
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: VINTAGE_GAMEPORT_HARDWARE
+    description: >
+      Original Suncom SFS T-Stick is a gameport device. USB support requires
+      a gameport-to-USB adapter. Reported VID/PID depends on the adapter.
+      VID 0x068E is a placeholder.
+  - id: VID_PLACEHOLDER
+    description: >
+      VID 0x068E (CH Products) and PID 0x00A1 are placeholders. Suncom
+      Technologies had no registered USB VID. Do not rely on VID/PID
+      matching for this device.
+  - id: AXIS_CALIBRATION_REQUIRED
+    description: >
+      Gameport potentiometers require calibration. Raw axis range varies
+      between units. Apply axis calibration before use.
+  - id: TWO_AXIS_ONLY
+    description: >
+      The SFS T-Stick is a simple two-axis (X/Y) device with only 4 fire
+      buttons. No twist axis or throttle. Suitable only for basic flight
+      training or arcade simulation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Suncom SFS T-Stick — vintage gameport joystick, circa 1995-1999.
+    VID/PID are placeholders; actual values depend on USB adapter used.
+    Tier 3 (best-effort). Wave-34 addition (legacy hardware).
+    Last reviewed: 2026-06.

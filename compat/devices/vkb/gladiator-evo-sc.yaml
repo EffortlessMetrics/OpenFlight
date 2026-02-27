@@ -1,0 +1,45 @@
+# VKB Gladiator EVO Space Combat Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB-Controller), PID 0x0152 — estimated.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO Space Combat Grip"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0152
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0152 is estimated. Verify against VKB Config Tool device list
+      or USB descriptor capture.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator EVO with Space Combat (SC) grip designed for space sim
+    titles (Star Citizen, Elite Dangerous). Features additional thumb buttons
+    optimised for six-DoF spacecraft control. Tier 2. Last reviewed: 2026-02.

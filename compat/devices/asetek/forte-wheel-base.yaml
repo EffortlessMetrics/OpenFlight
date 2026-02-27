@@ -1,0 +1,65 @@
+# Asetek SimSports Forte Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Asetek SimSports Forte — entry-level direct-drive wheel base (7 Nm).
+# VID/PID are unconfirmed; Asetek SimSports products are community-reported
+# to use Arduino-based or proprietary HID firmware. This manifest documents
+# the expected USB HID interface for force feedback control.
+
+schema_version: "1"
+
+device:
+  name: "Asetek SimSports Forte Wheel Base"
+  vendor: "Asetek SimSports"
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (community-reported for Asetek SimSports firmware)
+    product_id: 0x8037   # Community estimate — confirm with lsusb on Forte hardware
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x08          # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 7.0  # Forte peak torque (community-reported)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2341 / PID 0x8037 are community estimates. Asetek SimSports may
+      use a proprietary VID rather than the Arduino LLC VID on production
+      hardware. Confirm with lsusb or Windows Device Manager on Forte hardware.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Forte base exposes only the rotation axis. A compatible flight grip
+      or steering wheel (Quick Release) must be attached; buttons and
+      additional axes are provided by the connected rim/grip which may
+      enumerate as a separate USB HID device.
+  - id: ARDUINO_BASED_HID
+    description: >
+      Community reports indicate Asetek SimSports uses Arduino-based HID
+      firmware on their wheel bases. VID 0x2341 (Arduino LLC) reflects
+      this; confirm before production device matching.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Asetek SimSports Forte direct drive wheel base (7 Nm peak, community-reported).
+    VID 0x2341 / PID 0x8037 are community estimates. Arduino-based HID firmware
+    reported. Field verification required. Last reviewed: 2026-06.

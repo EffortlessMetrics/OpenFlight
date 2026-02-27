@@ -1,0 +1,69 @@
+# Brunner CLS-E Force Feedback Yoke (Wave-34 Entry, Estimated VID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. Brunner Elektronik AG professional FFB yoke.
+# NOTE: The confirmed VID for Brunner hardware is 0x25BB (see cls-e.yaml).
+# VID 0x1781 is listed in some community databases as an alternate estimate
+# and is preserved here for completeness. If 0x1781 does not enumerate,
+# use cls-e.yaml (VID 0x25BB, PID 0x0063) which has confirmed USB IDs.
+# This manifest targets the original CLS-E (not the CLS-E NG; see
+# cls-e-ng-yoke.yaml for the next-generation model).
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Force Feedback Yoke (Alt VID)"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781       # Alternate community estimate — confirmed VID is 0x25BB (cls-e.yaml)
+    product_id: 0x0063      # Estimated — matches cls-e.yaml PID from the-sz.com USB ID DB
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 20
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1781 is an alternate community estimate. The confirmed Brunner VID
+      is 0x25BB (registered to Brunner Elektronik AG). Use cls-e.yaml (VID 0x25BB,
+      PID 0x0063) unless you have specific reason to believe 0x1781 applies.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0063 is shared with cls-e.yaml which has confirmed sourcing from
+      the-sz.com USB ID database. PID may vary by firmware version.
+  - id: CLS2SIM_COMPANION
+    description: >
+      FFB configuration requires Brunner CLS2SIM companion software. OpenFlight
+      reads axis data directly via HID; FFB effects should be sent via CLS2SIM API.
+  - id: PROFESSIONAL_HARDWARE
+    description: >
+      The CLS-E is a professional-grade simulator yoke designed for airline and
+      military training use. Supports full FFB with configurable spring gradients
+      and aerodynamic load simulation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E FFB Yoke (alternate VID 0x1781 estimate). 3 axes, 20 buttons,
+    FFB. See cls-e.yaml (VID 0x25BB) for confirmed IDs. Wave-34 addition.
+    Last reviewed: 2026-06.

@@ -1,0 +1,55 @@
+# Thrustmaster TCA Airbus Joystick (Sidestick, PID 0xB6E0 Estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB6E0 is a community estimate for the TCA Sidestick Airbus Edition
+# under an alternate firmware/regional variant. Related manifests:
+#   tca-sidestick-airbus.yaml — primary Pilot entry (PID 0x0405, confirmed)
+#   tca-sidestick-airbus-copilot.yaml — Co-Pilot (PID 0x0406, confirmed)
+# This entry captures the 0xB6E0 PID estimate reported in some community threads.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Airbus Joystick (Alt PID)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (Guillemot Corp.)
+    product_id: 0xB6E0      # Community estimate — confirmed is 0x0405 (tca-sidestick-airbus.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB6E0 is a community estimate. The confirmed Pilot PID is 0x0405
+      (tca-sidestick-airbus.yaml). Use the confirmed manifest unless this
+      alternate PID is observed on hardware.
+  - id: AIRBUS_SIDESTICK_GEOMETRY
+    description: >
+      Replicates Airbus sidestick layout with twist-free design. The Z axis
+      is a separate slider (not twist). Matches Airbus A320 cockpit philosophy.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Airbus Sidestick (alternate PID 0xB6E0 estimate). 3 axes,
+    12 buttons, 1 hat. See tca-sidestick-airbus.yaml (PID 0x0405) for primary.
+    Wave-34 addition. Last reviewed: 2026-06.

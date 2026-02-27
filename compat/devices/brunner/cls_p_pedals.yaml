@@ -1,0 +1,59 @@
+# Brunner CLS-P Rudder Pedals (Wave-34 Entry, Alternate VID Estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. Brunner Elektronik AG professional FFB rudder pedals.
+# NOTE: cls-p-pedals.yaml covers the same device with confirmed VID 0x25BB.
+# This manifest preserves the VID 0x1781 alternate community estimate for
+# completeness. If 0x1781 does not enumerate, use cls-p-pedals.yaml.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P Rudder Pedals (Alt VID)"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781       # Alternate community estimate — confirmed VID is 0x25BB (cls-p-pedals.yaml)
+    product_id: 0x0080      # Estimated — matches cls-p-pedals.yaml community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [rudder_left, rudder_right]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1781 is an alternate community estimate. The confirmed Brunner VID
+      is 0x25BB. Use cls-p-pedals.yaml (VID 0x25BB, PID 0x0080) unless there
+      is a specific reason to use this alternate entry.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0080 is shared with cls-p-pedals.yaml community estimate.
+  - id: CLS2SIM_COMPANION
+    description: >
+      FFB configuration requires Brunner CLS2SIM companion software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-P Rudder Pedals (alternate VID 0x1781 estimate). 2 axes, FFB.
+    See cls-p-pedals.yaml (VID 0x25BB) for confirmed IDs. Wave-34 addition.
+    Last reviewed: 2026-06.

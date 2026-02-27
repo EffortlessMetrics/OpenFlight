@@ -1,0 +1,59 @@
+# Microsoft Force Feedback 2 Joystick (Wave-34 Alias Entry)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x045E (Microsoft), PID 0x001C.
+# NOTE: sidewinder-ffb2.yaml covers the same VID/PID with full quirk
+# documentation. This manifest is an alternate named entry for search
+# compatibility under the "Force Feedback 2" naming convention used in
+# some community databases (vs "Sidewinder Force Feedback 2" primary).
+schema_version: "1"
+
+device:
+  name: "Microsoft Force Feedback 2 Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x001C      # Sidewinder Force Feedback 2 — confirmed
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant, periodic]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: ALIAS_FOR_SIDEWINDER_FFB2
+    description: >
+      This manifest shares VID/PID with sidewinder-ffb2.yaml. Both refer to
+      the Microsoft Sidewinder Force Feedback 2 hardware. The primary manifest
+      is sidewinder-ffb2.yaml which has fuller DirectInput FFB quirk docs.
+  - id: DIRECTINPUT_FFB
+    description: >
+      Uses DirectInput force-feedback via USB. FFB active on X and Y axes only.
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      Handled by the built-in HID joystick driver on Windows 10/11.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Microsoft Force Feedback 2 / Sidewinder FFB2. VID 0x045E, PID 0x001C.
+    See sidewinder-ffb2.yaml for primary manifest. Wave-34 addition.
+    Last reviewed: 2026-06.

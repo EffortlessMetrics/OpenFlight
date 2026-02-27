@@ -1,0 +1,43 @@
+# VKB Gladiator NXT EVO Space Combat Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB-Controller), PID 0x0222 — estimated.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Space Combat Grip"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0222
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0222 is estimated. Confirm with VKB Config Tool or lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO Space Combat variant. Upgraded internals vs. standard
+    NXT EVO with SC-specific button layout. Tier 2. Last reviewed: 2026-02.

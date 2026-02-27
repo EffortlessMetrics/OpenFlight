@@ -1,0 +1,62 @@
+# Honeycomb Charlie Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x294B (Honeycomb Aeronautical). PID 0x1939 is a
+# community estimate for the Charlie Throttle Quadrant (multi-position lever unit).
+# Related Honeycomb manifests:
+#   alpha-yoke.yaml — Alpha Flight Controls yoke
+#   bravo-throttle.yaml — Bravo Throttle Quadrant (PID 0x1901, confirmed)
+#   charlie-rudder-pedals.yaml — Charlie Rudder Pedals
+# PID 0x1939 follows the Honeycomb sequential PID allocation pattern;
+# verify with lsusb or Honeycomb's device documentation.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Charlie Throttle Quadrant"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B       # Honeycomb Aeronautical (confirmed for Bravo at 0x1901)
+    product_id: 0x1939      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, throttle3, prop1, mixture1, condition]
+    resolution_bits: 12
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1939 is a community estimate. Confirmed Bravo PID is 0x1901.
+      Verify with lsusb or Windows Device Manager before relying on this value.
+  - id: MULTI_POSITION_LEVERS
+    description: >
+      The Charlie includes additional multi-position levers (condition lever,
+      mixture, propeller) beyond the throttle axes. These present as analogue
+      axes with discrete detent positions corresponding to named lever states.
+  - id: GA_FOCUS
+    description: >
+      Designed for general aviation simulation with twin-engine GA aircraft
+      configurations. Throttle, propeller, and mixture levers match typical
+      piston-engine GA layouts.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Charlie Throttle Quadrant. 6 axes, 6 buttons. VID 0x294B confirmed;
+    PID 0x1939 estimated. Designed for GA twin-engine configs. Wave-34 addition.
+    Last reviewed: 2026-06.

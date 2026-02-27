@@ -1,4 +1,4 @@
-# Spec Ledger
+﻿# Spec Ledger
 # Machine-readable mapping of requirements to acceptance criteria and tests
 # This file is validated against schemas/spec_ledger.schema.json
 
@@ -8376,3 +8376,699 @@ requirements:
         description: "Benchmark suite documented in `docs/how-to/benchmarking.md`"
         tests:
           - feature:specs/features/req_254_benchmark_suite.feature
+  - id: REQ-255
+    name: OpenTrack head tracking data drives view offset axes
+    kind: product
+    status: draft
+    ac:
+      - id: AC-255.1
+        description: "OpenTrack UDP protocol (port 4242, 48-byte 6DOF packets) received"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+      - id: AC-255.2
+        description: "Yaw/pitch/roll normalized to [-1.0, 1.0] from ±180/±90/±180 degree ranges"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+      - id: AC-255.3
+        description: "Translation (x/y/z) normalized to [-1.0, 1.0] from ±100mm range"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+      - id: AC-255.4
+        description: "Stale data (no packet for 500ms) detected and output frozen"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+      - id: AC-255.5
+        description: "6 virtual axes exposed on bus: head_yaw, head_pitch, head_roll, head_x, head_y, head_z"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+      - id: AC-255.6
+        description: "OpenTrack pause/unpause state reflected in adapter status"
+        tests:
+          - feature:specs/features/req_255_opentrack_integration.feature
+  - id: REQ-256
+    name: War Thunder telemetry adapter provides aircraft state from localhost HTTP
+    kind: product
+    status: draft
+    ac:
+      - id: AC-256.1
+        description: "War Thunder telemetry JSON polled from http://localhost:8111/state"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+      - id: AC-256.2
+        description: "Altitude, airspeed, and attitude decoded from War Thunder JSON"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+      - id: AC-256.3
+        description: "Gear and flaps state decoded from WT JSON fields"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+      - id: AC-256.4
+        description: "Vehicle type detected (aircraft vs ground vehicle)"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+      - id: AC-256.5
+        description: "Polling rate configurable (default 20Hz)"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+      - id: AC-256.6
+        description: "Service survives game restart without manual reconnect"
+        tests:
+          - feature:specs/features/req_256_war_thunder_integration.feature
+  - id: REQ-257
+    name: Axis curve interpolation preserves monotonicity and smoothness
+    kind: product
+    status: draft
+    ac:
+      - id: AC-257.1
+        description: "Linear interpolation between curve points available as option"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+      - id: AC-257.2
+        description: "Cubic Hermite spline interpolation available as option"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+      - id: AC-257.3
+        description: "Monotone cubic spline (Fritsch-Carlson) preserves monotonicity"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+      - id: AC-257.4
+        description: "Output of any valid curve is always in [0.0, 1.0] for input [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+      - id: AC-257.5
+        description: "Curve with 2 points (endpoints only) returns linear mapping"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+      - id: AC-257.6
+        description: "Curve evaluation benchmarked under 100ns per point"
+        tests:
+          - feature:specs/features/req_257_curve_interpolation.feature
+  - id: REQ-258
+    name: FFB profiles customized per aircraft type for authentic force feel
+    kind: product
+    status: draft
+    ac:
+      - id: AC-258.1
+        description: "Aircraft-specific FFB profile selects appropriate spring/damper gains"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+      - id: AC-258.2
+        description: "Fighter aircraft (high-speed) profile applies heavier spring than trainer"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+      - id: AC-258.3
+        description: "FFB profile applied within 100ms of aircraft type detection"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+      - id: AC-258.4
+        description: "Trim position reflected in FFB center offset"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+      - id: AC-258.5
+        description: "Ground roll buffet effect enabled only while aircraft on ground"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+      - id: AC-258.6
+        description: "FFB profile configurable in same profile file as axis profiles"
+        tests:
+          - feature:specs/features/req_258_multi_aircraft_ffb.feature
+  - id: REQ-259
+    name: gRPC API enumerates all connected HID devices with capabilities
+    kind: product
+    status: draft
+    ac:
+      - id: AC-259.1
+        description: "`ListDevices` gRPC call returns all connected HID devices"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+      - id: AC-259.2
+        description: "Each device entry includes VID, PID, product name, and manufacturer"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+      - id: AC-259.3
+        description: "Axis and button count reported per device"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+      - id: AC-259.4
+        description: "Compatibility tier from manifest included in response"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+      - id: AC-259.5
+        description: "Device reconnect triggers `DeviceConnected` server-side event stream"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+      - id: AC-259.6
+        description: "`flightctl devices` CLI uses `ListDevices` API"
+        tests:
+          - feature:specs/features/req_259_device_enumeration_api.feature
+  - id: REQ-260
+    name: VR headset provides head tracking without external tracker hardware
+    kind: product
+    status: draft
+    ac:
+      - id: AC-260.1
+        description: "VR headset orientation data (yaw/pitch/roll) exposed as virtual axes"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+      - id: AC-260.2
+        description: "OpenVR/SteamVR runtime queried for head pose at game frame rate"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+      - id: AC-260.3
+        description: "VR tracking loss detected and output frozen at last valid pose"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+      - id: AC-260.4
+        description: "VR axes available independently of flight controller axes"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+      - id: AC-260.5
+        description: "VR adapter disabled automatically when OpenTrack is active"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+      - id: AC-260.6
+        description: "VR headset integration documented with setup guide"
+        tests:
+          - feature:specs/features/req_260_vr_headset_integration.feature
+  - id: REQ-261
+    name: Hat switch decoder produces correct (x,y) vector for all 8 directions
+    kind: product
+    status: draft
+    ac:
+      - id: AC-261.1
+        description: "8-way hat reports direction N produces output vector (0.0, -1.0)"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+      - id: AC-261.2
+        description: "Center/neutral hat position produces output vector (0.0, 0.0)"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+      - id: AC-261.3
+        description: "Diagonal directions NE/NW/SE/SW produce correct normalised diagonal vectors"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+      - id: AC-261.4
+        description: "Hat switch output can drive virtual axes registered on the bus"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+      - id: AC-261.5
+        description: "Multiple hats on the same device are decoded and reported independently"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+      - id: AC-261.6
+        description: "Out-of-range hat value is safely rejected without panic or undefined output"
+        tests:
+          - feature:specs/features/req_261_hat_switch_decoding.feature
+  - id: REQ-262
+    name: Button macro system triggers actions on press, chord, and hold
+    kind: product
+    status: draft
+    ac:
+      - id: AC-262.1
+        description: "A single button press triggers the configured immediate action"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+      - id: AC-262.2
+        description: "A simultaneous multi-button chord triggers the combined chord action"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+      - id: AC-262.3
+        description: "Holding a button beyond the configured duration triggers a repeat action"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+      - id: AC-262.4
+        description: "A button macro can modify an axis output value as its action"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+      - id: AC-262.5
+        description: "Macros can be individually disabled in a profile without being removed"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+      - id: AC-262.6
+        description: "Macro timing is deterministic to within ±1 RT tick (4 ms at 250 Hz)"
+        tests:
+          - feature:specs/features/req_262_button_macro_system.feature
+  - id: REQ-263
+    name: Axis mixing combines physical axes into a clamped virtual axis
+    kind: product
+    status: draft
+    ac:
+      - id: AC-263.1
+        description: "Two physical axes summed into a single virtual axis on the bus"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+      - id: AC-263.2
+        description: "Differential mix of left and right throttles produces a yaw virtual axis"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+      - id: AC-263.3
+        description: "Per-axis scaling factor is applied before the mix operation"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+      - id: AC-263.4
+        description: "Mixed virtual axis output is clamped to [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+      - id: AC-263.5
+        description: "Mix configuration is stored per-profile and loaded atomically"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+      - id: AC-263.6
+        description: "Virtual axis appears in the ListDevices device enumeration API response"
+        tests:
+          - feature:specs/features/req_263_axis_mixing_virtual_axes.feature
+  - id: REQ-264
+    name: Safe mode entry produces a structured JSON diagnostic bundle on disk
+    kind: product
+    status: draft
+    ac:
+      - id: AC-264.1
+        description: "Safe mode entry produces a well-formed JSON diagnostic bundle"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+      - id: AC-264.2
+        description: "Bundle includes the last 100 structured log lines captured before the fault"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+      - id: AC-264.3
+        description: "Bundle includes the device enumeration snapshot at the time of the fault"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+      - id: AC-264.4
+        description: "Bundle includes the serialised profile that was active at fault time"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+      - id: AC-264.5
+        description: "Bundle includes all axis values sampled at the moment of the fault"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+      - id: AC-264.6
+        description: "Bundle is written atomically to disk as part of safe mode entry sequence"
+        tests:
+          - feature:specs/features/req_264_safe_mode_diagnostic_bundle.feature
+  - id: REQ-265
+    name: Firmware update notifications alert operator without blocking device operation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-265.1
+        description: "Service detects a firmware version mismatch when a device connects"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+      - id: AC-265.2
+        description: "Firmware mismatch notification is emitted on the gRPC health event stream"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+      - id: AC-265.3
+        description: "lightctl CLI displays a firmware update available message to the operator"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+      - id: AC-265.4
+        description: "Notification payload includes device name, current firmware, and target firmware"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+      - id: AC-265.5
+        description: "Operator can suppress firmware notifications for a specific device by VID/PID"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+      - id: AC-265.6
+        description: "Firmware version check completes asynchronously and does not delay device input"
+        tests:
+          - feature:specs/features/req_265_firmware_update_notifications.feature
+  - id: REQ-266
+    name: Axis inversion remaps output symmetrically and is persisted in profile
+    kind: product
+    status: draft
+    ac:
+      - id: AC-266.1
+        description: "Inverted axis maps physical 1.0 to output -1.0 and physical -1.0 to output 1.0"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+      - id: AC-266.2
+        description: "Inversion is applied after deadzone processing and before the curve stage"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+      - id: AC-266.3
+        description: "Inversion is configurable per individual axis in the profile YAML"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+      - id: AC-266.4
+        description: "Inversion can be toggled at runtime via the IPC API without reloading the profile"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+      - id: AC-266.5
+        description: "Inverted axis output remains within the valid range [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+      - id: AC-266.6
+        description: "Inversion state set at runtime is persisted back to the profile on save"
+        tests:
+          - feature:specs/features/req_266_axis_inversion.feature
+  - id: REQ-267
+    name: Throttle axis supports configurable zones including cut, max, military power, and afterburner
+    kind: product
+    status: draft
+    ac:
+      - id: AC-267.1
+        description: "Throttle cut zone maps values below threshold to 0.0 output"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+      - id: AC-267.2
+        description: "Throttle max zone clips values above threshold to 1.0 output"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+      - id: AC-267.3
+        description: "Military power zone generates a distinct event on entry"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+      - id: AC-267.4
+        description: "Afterburner zone generates an event on entry"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+      - id: AC-267.5
+        description: "Individual zones can be disabled per profile without affecting other zones"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+      - id: AC-267.6
+        description: "Zone boundary values are validated at profile load time"
+        tests:
+          - feature:specs/features/req_267_throttle_zone_configuration.feature
+  - id: REQ-268
+    name: Service can record and replay axis input streams with microsecond-precision timestamps
+    kind: product
+    status: draft
+    ac:
+      - id: AC-268.1
+        description: "Service records the axis input stream to a binary file on demand"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+      - id: AC-268.2
+        description: "Recorded file includes per-sample timestamps with microsecond precision"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+      - id: AC-268.3
+        description: "Playback replays the recorded input stream at the original inter-sample timing"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+      - id: AC-268.4
+        description: "Playback is deterministic: the same recording file produces the same output on every run"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+      - id: AC-268.5
+        description: "Recording can be started and stopped via the flightctl CLI"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+      - id: AC-268.6
+        description: "Recording file format includes a version field to ensure forward compatibility"
+        tests:
+          - feature:specs/features/req_268_input_recording_playback.feature
+  - id: REQ-269
+    name: UI supports secondary monitors with per-profile placement and graceful disconnect handling
+    kind: product
+    status: draft
+    ac:
+      - id: AC-269.1
+        description: "UI window can be positioned and displayed on a secondary monitor"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+      - id: AC-269.2
+        description: "Monitor preference (display index and position) is saved per profile"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+      - id: AC-269.3
+        description: "Secondary monitor disconnect does not crash the service"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+      - id: AC-269.4
+        description: "UI re-appears on the primary monitor when the preferred secondary monitor is disconnected"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+      - id: AC-269.5
+        description: "UI respects the DPI scaling factor of every monitor it is displayed on"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+      - id: AC-269.6
+        description: "StreamDeck button layout scales correctly when rendered on monitors with different DPI"
+        tests:
+          - feature:specs/features/req_269_multi_monitor_support.feature
+  - id: REQ-270
+    name: Axis output supports configurable scale factor and configurable output range
+    kind: product
+    status: draft
+    ac:
+      - id: AC-270.1
+        description: "Axis value can be multiplied by a constant scale factor defined in the profile"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+      - id: AC-270.2
+        description: "Scaled axis output is clamped to the configured output range"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+      - id: AC-270.3
+        description: "Output range [min, max] is independently configurable per axis in the profile"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+      - id: AC-270.4
+        description: "Default output range is [-1.0, 1.0] when no range is specified in the profile"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+      - id: AC-270.5
+        description: "Scale factor is applied after deadzone and curve processing"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+      - id: AC-270.6
+        description: "A configured range violation produces a warning log entry rather than a panic"
+        tests:
+          - feature:specs/features/req_270_axis_scaling_range.feature
+  - id: REQ-271
+    name: Service automatically matches profiles to detected simulator and aircraft type
+    kind: product
+    status: draft
+    ac:
+      - id: AC-271.1
+        description: "Service detects which simulator is running without user intervention"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+      - id: AC-271.2
+        description: "Aircraft type change triggers a profile switch within 500 ms"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+      - id: AC-271.3
+        description: "Profile match uses exact call-sign first and falls back to fuzzy match if no exact match found"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+      - id: AC-271.4
+        description: "Ambiguous fuzzy match selects the most recently used profile among candidates"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+      - id: AC-271.5
+        description: "Auto-matching can be disabled for the current session via CLI without restarting the service"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+      - id: AC-271.6
+        description: "Each profile match event is logged with the detected aircraft name and selected profile name"
+        tests:
+          - feature:specs/features/req_271_auto_profile_matching.feature
+  - id: REQ-272
+    name: Service applies structured error recovery with retry, fallback, backoff, and logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-272.1
+        description: "Transient HID read error is retried up to 3 times before the device is disconnected"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+      - id: AC-272.2
+        description: "Device reconnect automatically restores the profile binding that was active at disconnect"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+      - id: AC-272.3
+        description: "Simulator disconnect triggers a switch to the idle profile instead of stopping the service"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+      - id: AC-272.4
+        description: "Profile parse error causes the service to fall back to the last successfully loaded profile"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+      - id: AC-272.5
+        description: "Each recovery action is logged with the original error context"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+      - id: AC-272.6
+        description: "Repeated failures on the same device or adapter trigger exponential backoff before retry"
+        tests:
+          - feature:specs/features/req_272_error_recovery_policy.feature
+  - id: REQ-273
+    name: Axis curve validation rejects malformed control points and falls back to linear identity
+    kind: product
+    status: draft
+    ac:
+      - id: AC-273.1
+        description: "Curve with <2 points is rejected on profile load"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+      - id: AC-273.2
+        description: "Non-monotone curve (x values not sorted) is rejected"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+      - id: AC-273.3
+        description: "Control point outside [0.0, 1.0] is rejected"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+      - id: AC-273.4
+        description: "Valid curve passes validation without modification"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+      - id: AC-273.5
+        description: "Validation error includes specific point index and value"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+      - id: AC-273.6
+        description: "Profile with invalid curve falls back to linear identity curve"
+        tests:
+          - feature:specs/features/req_273_axis_curve_validation.feature
+  - id: REQ-274
+    name: Config live reload applies updated profiles atomically without interrupting axis processing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-274.1
+        description: "Service detects profile file change within 2 seconds"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+      - id: AC-274.2
+        description: "New profile is validated before being applied"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+      - id: AC-274.3
+        description: "Invalid new profile does not replace current profile"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+      - id: AC-274.4
+        description: "Live reload can be disabled via config flag"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+      - id: AC-274.5
+        description: "Reload events are emitted on the health stream"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+      - id: AC-274.6
+        description: "Reload does not interrupt running axis processing (atomic swap)"
+        tests:
+          - feature:specs/features/req_274_config_live_reload.feature
+  - id: REQ-275
+    name: Diagnostic snapshot API exposes axis values, devices, active profile, and pipeline stages
+    kind: product
+    status: draft
+    ac:
+      - id: AC-275.1
+        description: "gRPC endpoint returns current axis values snapshot"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+      - id: AC-275.2
+        description: "Snapshot includes connected device list"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+      - id: AC-275.3
+        description: "Snapshot includes active profile name"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+      - id: AC-275.4
+        description: "Snapshot includes axis pipeline stage values (pre/post deadzone, curve, etc.)"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+      - id: AC-275.5
+        description: "Snapshot is idempotent (same state produces same response)"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+      - id: AC-275.6
+        description: "CLI can display snapshot in table format"
+        tests:
+          - feature:specs/features/req_275_diagnostic_snapshot_api.feature
+  - id: REQ-276
+    name: Plug-and-play detection auto-binds known devices and logs all PnP events with VID/PID
+    kind: product
+    status: draft
+    ac:
+      - id: AC-276.1
+        description: "New USB device is detected within 1 second of plug-in"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+      - id: AC-276.2
+        description: "Known device is automatically bound to its last profile"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+      - id: AC-276.3
+        description: "Unknown device appears in diagnostics as unrecognized"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+      - id: AC-276.4
+        description: "Device removal triggers idle axis state within 100ms"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+      - id: AC-276.5
+        description: "Rapid plug/unplug cycle does not crash or leak resources"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+      - id: AC-276.6
+        description: "PnP events are logged with VID/PID and device name"
+        tests:
+          - feature:specs/features/req_276_plug_and_play_detection.feature
+  - id: REQ-277
+    name: Fuzz coverage reporting enforces 70% threshold per target and persists corpus between nightly runs
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-277.1
+        description: "CI nightly reports fuzz coverage percentage per target"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+      - id: AC-277.2
+        description: "Coverage < 70% on a fuzz target fails the nightly gate"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+      - id: AC-277.3
+        description: "Fuzz corpus is persisted between nightly runs"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+      - id: AC-277.4
+        description: "New crash findings are captured as regression tests"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+      - id: AC-277.5
+        description: "Fuzz summary is included in CI run artifacts"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+      - id: AC-277.6
+        description: "Each parser crate has at least one fuzz target"
+        tests:
+          - feature:specs/features/req_277_fuzz_coverage_reporting.feature
+  - id: REQ-278
+    name: Profile export and import preserves all axis configs with schema migration and round-trip fidelity
+    kind: product
+    status: draft
+    ac:
+      - id: AC-278.1
+        description: "Profile can be exported to YAML file via CLI"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature
+      - id: AC-278.2
+        description: "Exported file can be imported back without loss"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature
+      - id: AC-278.3
+        description: "Import validates profile schema before applying"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature
+      - id: AC-278.4
+        description: "Exported profile includes all axis configs and curve points"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature
+      - id: AC-278.5
+        description: "Import handles schema version migration automatically"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature
+      - id: AC-278.6
+        description: "Round-trip export/import produces identical profile"
+        tests:
+          - feature:specs/features/req_278_profile_export_import.feature

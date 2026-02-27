@@ -1,0 +1,43 @@
+# Gravis Stinger Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Gravis), PID 0x4006 — estimated.
+schema_version: "1"
+
+device:
+  name: "Gravis Stinger Gamepad"
+  vendor: "Gravis"
+  usb:
+    vendor_id: 0x0428
+    product_id: 0x4006
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4006 is estimated for this legacy Gravis device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis Stinger compact gamepad. Vintage USB controller. Tier 3.
+    Last reviewed: 2026-02.

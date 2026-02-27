@@ -1,0 +1,65 @@
+# Valve Index HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x28DE confirmed: Valve Corporation (registered USB vendor ID).
+# PID 0x2000 is a community estimate for the Valve Index HMD USB interface.
+# The Valve Index is a PC VR headset with 120/144 Hz LCD panels and external
+# SteamVR Lighthouse 2.0 tracking. USB is used for video signal, audio,
+# and camera feed (inside-out not used; Lighthouse provides 6DOF tracking).
+# 6DOF head pose is consumed via SteamVR; direct HID pose data is not exposed.
+
+schema_version: "1"
+
+device:
+  name: "Valve Index HMD"
+  vendor: "Valve Corporation"
+  usb:
+    vendor_id: 0x28DE    # Valve Corporation (confirmed)
+    product_id: 0x2000   # Community estimate — Index HMD USB; confirm with lsusb
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 144
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2000 is a community estimate for the Valve Index HMD USB
+      descriptor. The Index enumerates multiple USB interfaces (audio,
+      camera, HMD control). Confirm the correct HID PID with lsusb on
+      real Valve Index hardware.
+  - id: STEAMVR_ONLY
+    description: >
+      The Valve Index requires SteamVR and Lighthouse 2.0 base stations for
+      operation. 6DOF head pose tracking is provided via SteamVR; OpenFlight
+      accesses tracking through the SteamVR input bridge. Direct HID access
+      to the pose stream is not supported.
+  - id: LIGHTHOUSE_TRACKING
+    description: >
+      Tracking is provided by Lighthouse 2.0 external base stations, not by
+      internal cameras. At least one SteamVR Lighthouse 2.0 base station is
+      required for 6DOF tracking to function.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Valve Index HMD (SteamVR, Lighthouse 2.0 tracking). VID 0x28DE confirmed
+    (Valve Corp); PID 0x2000 is a community estimate. Requires SteamVR +
+    Lighthouse 2.0. 6DOF tracking via SteamVR bridge. Last reviewed: 2026-06.

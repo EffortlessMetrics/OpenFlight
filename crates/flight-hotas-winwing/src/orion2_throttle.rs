@@ -142,6 +142,86 @@ pub enum Orion2ThrottleParseError {
     UnknownReportId { id: u8 },
 }
 
+// ── Simple API ────────────────────────────────────────────────────────────────
+
+/// USB Product ID for the WinWing Orion 2 Throttle Base (estimated).
+pub const ORION2_THROTTLE_BASE_PID: u16 = 0xB71E;
+
+/// USB Product ID for the WinWing Orion 2 F16EX Throttle (estimated).
+pub const ORION2_F16EX_THROTTLE_PID: u16 = 0xB71F;
+
+/// Minimum byte count for the simple Orion 2 throttle parser.
+///
+/// report_id (1) + 4 axes × 2 bytes (8) + 5 button bytes (5) = 14.
+pub const ORION2_THROTTLE_MIN_REPORT_BYTES: usize = 14;
+
+const ORION2_SIMPLE_AXIS_COUNT: usize = 4;
+const ORION2_SIMPLE_BUTTON_BYTES: usize = 5;
+
+/// Simple parsed state from an Orion 2 throttle HID report.
+///
+/// This is a lightweight alternative to [`Orion2ThrottleInputState`] that
+/// exposes raw 16-bit axis values and a button bitmask without normalization.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Orion2ThrottleState {
+    /// Main throttle 0–65535.
+    pub throttle_main: u16,
+    /// Secondary throttle (differential / right engine), 0–65535.
+    pub throttle_secondary: u16,
+    /// Axis 3 (e.g., radar range), 0–65535.
+    pub axis3: u16,
+    /// Axis 4 (e.g., alt), 0–65535.
+    pub axis4: u16,
+    /// Button bitmask (up to 37 buttons across 5 bytes, LSB = button 1).
+    pub buttons: u64,
+}
+
+/// Parse a raw HID report (≥14 bytes) into [`Orion2ThrottleState`].
+///
+/// # Errors
+///
+/// Returns [`WinWingError::ReportTooShort`] if `report` has fewer than
+/// [`ORION2_THROTTLE_MIN_REPORT_BYTES`] bytes.
+pub fn parse_orion2_throttle(report: &[u8]) -> Result<Orion2ThrottleState, crate::WinWingError> {
+    if report.len() < ORION2_THROTTLE_MIN_REPORT_BYTES {
+        return Err(crate::WinWingError::ReportTooShort {
+            need: ORION2_THROTTLE_MIN_REPORT_BYTES,
+            got: report.len(),
+        });
+    }
+    let payload = &report[1..]; // skip report_id
+    let throttle_main = u16::from_le_bytes([payload[0], payload[1]]);
+    let throttle_secondary = u16::from_le_bytes([payload[2], payload[3]]);
+    let axis3 = u16::from_le_bytes([payload[4], payload[5]]);
+    let axis4 = u16::from_le_bytes([payload[6], payload[7]]);
+
+    let btn_start = 1 + ORION2_SIMPLE_AXIS_COUNT * 2;
+    let mut buttons: u64 = 0;
+    for i in 0..ORION2_SIMPLE_BUTTON_BYTES {
+        buttons |= (report[btn_start + i] as u64) << (i * 8);
+    }
+
+    Ok(Orion2ThrottleState {
+        throttle_main,
+        throttle_secondary,
+        axis3,
+        axis4,
+        buttons,
+    })
+}
+
+/// Normalize a 16-bit bipolar axis (0–65535) to −1.0 … +1.0.
+///
+/// Center (32767/32768) maps to approximately 0.0.
+pub fn normalize_axis_16bit(raw: u16) -> f32 {
+    (raw as f32 / 32767.5) - 1.0
+}
+
+/// Normalize a 16-bit throttle (0–65535) to 0.0 … 1.0.
+pub fn normalize_throttle_16bit(raw: u16) -> f32 {
+    raw as f32 / 65535.0
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 fn read_u16(data: &[u8], offset: usize) -> u16 {

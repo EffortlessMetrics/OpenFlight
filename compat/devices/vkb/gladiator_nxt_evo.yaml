@@ -1,0 +1,60 @@
+# VKB Gladiator NXT EVO (Alternate PID Estimate — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x231D (VKB Sim) is confirmed.
+# PID 0x0127 is a community estimate for the Gladiator NXT EVO standard;
+# note that gladiator-nxt-evo.yaml uses PID 0x0200 as an alternate
+# community estimate — only one of the two PIDs will match on real hardware.
+# This manifest captures the 0x0127 estimate reported in some community
+# threads. Verify with VKBDevCfg → USB Info or lsusb to resolve.
+# Spec: 5 axes (X, Y, Z, RZ, slider), 32 buttons, 1 hat.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO (Alt)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0127      # Community estimate — see notes; verify against real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 15
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0127 is a community estimate for the Gladiator NXT EVO. An
+      alternate estimate (0x0200) appears in gladiator-nxt-evo.yaml.
+      Use VKBDevCfg → USB Info or `lsusb` to identify the actual PID.
+  - id: HALL_EFFECT_GIMBAL
+    description: >
+      VKB Gladiator NXT EVO uses a Hall-effect contactless gimbal.
+      15-bit axis resolution with no mechanical wear.
+  - id: ALT_PID_ESTIMATE
+    description: >
+      If PID 0x0127 does not match, try gladiator-nxt-evo.yaml (PID 0x0200).
+      Both are community estimates pending official confirmation from VKB.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO (alternate PID estimate 0x0127). 5 axes, 32 buttons,
+    1 hat. See gladiator-nxt-evo.yaml for the 0x0200 estimate. Wave-34 addition.
+    Last reviewed: 2026-06.

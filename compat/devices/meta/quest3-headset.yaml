@@ -1,0 +1,64 @@
+# Meta Quest 3 VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2833 confirmed: Oculus VR / Meta Platforms (registered USB vendor ID).
+# PID 0x0137 is a community estimate for the Meta Quest 3 USB interface.
+# The Quest 3 is a standalone mixed-reality headset with color passthrough,
+# used in flight simulation via Air Link, Virtual Desktop, or PCVR link cable.
+# Primary 6DOF tracking is via inside-out cameras; USB is used for charging
+# and PCVR wired link mode.
+
+schema_version: "1"
+
+device:
+  name: "Meta Quest 3 VR HMD"
+  vendor: "Meta Platforms"
+  usb:
+    vendor_id: 0x2833    # Meta Platforms / Oculus VR (confirmed)
+    product_id: 0x0137   # Community estimate — Quest 3 USB; confirm with lsusb
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0137 is a community estimate. Meta Quest devices enumerate with
+      different PIDs depending on the USB mode (charging vs. ADB vs. Link).
+      Confirm with lsusb while connected in PCVR Link mode on Quest 3 hardware.
+  - id: PCVR_LINK_REQUIRED
+    description: >
+      6DOF tracking is only accessible via PCVR (Meta Quest Link cable or
+      Air Link wireless). OpenFlight accesses head tracking via the OpenVR/
+      SteamVR bridge when Quest 3 is in PCVR mode. Direct USB HID tracking
+      data is not exposed.
+  - id: MIXED_REALITY_PASSTHROUGH
+    description: >
+      The Quest 3 includes colour video passthrough for mixed reality. This
+      feature requires the Meta XR SDK; OpenFlight uses only the 6DOF head
+      tracking output via SteamVR.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meta Quest 3 mixed-reality VR HMD. VID 0x2833 confirmed (Meta/Oculus);
+    PID 0x0137 is a community estimate. Requires PCVR Link or Air Link for
+    flight sim use. 6DOF tracking via OpenVR/SteamVR bridge. Last reviewed: 2026-06.

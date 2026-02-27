@@ -1,0 +1,64 @@
+# Sony PlayStation VR2 HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Corporation (registered USB vendor ID).
+# PID 0x0CF6 is a community estimate for the PS VR2 USB HID interface.
+# The PS VR2 connects via USB-C and is supported on PC via a Sony PC adapter
+# (released 2024) enabling SteamVR use. It features inside-out tracking,
+# eye tracking, adaptive trigger controllers, and haptic feedback.
+
+schema_version: "1"
+
+device:
+  name: "Sony PlayStation VR2"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Corporation (confirmed)
+    product_id: 0x0CF6   # Community estimate — PS VR2 HID; confirm with lsusb
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0CF6 is a community estimate for the PS VR2 USB HID interface.
+      Confirm with lsusb or Windows Device Manager while connected via the
+      official Sony PC adapter on PS VR2 hardware.
+  - id: PC_ADAPTER_REQUIRED
+    description: >
+      PC use requires the Sony official PS VR2 PC adapter (USB-C to USB-A,
+      released 2024). Without the adapter the headset is PS5-only.
+      OpenFlight accesses 6DOF tracking via the SteamVR bridge when
+      the PC adapter is connected.
+  - id: EYE_TRACKING
+    description: >
+      The PS VR2 includes eye tracking. On PC via SteamVR the eye tracking
+      data may not be fully exposed depending on driver support.
+      OpenFlight uses only the 6DOF head pose output.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony PlayStation VR2 — PC-compatible via Sony PC adapter (2024).
+    VID 0x054C confirmed (Sony); PID 0x0CF6 is a community estimate.
+    Requires Sony PC adapter + SteamVR for flight sim use.
+    Last reviewed: 2026-06.
