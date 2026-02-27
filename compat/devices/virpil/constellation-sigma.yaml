@@ -1,0 +1,70 @@
+# VIRPIL VPC Constellation Sigma Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x4185 — VPC Constellation Sigma grip.
+# Source: community VIRPIL device tracking (JoystickGremlinEx virpil
+#   device tables, community lsusb reports). Not yet confirmed from
+#   kernel driver source or a direct lsusb hardware probe; verify
+#   against real hardware before deploying.
+#
+# The Constellation Sigma is the military-style right-hand companion
+# grip to the Constellation Alpha. It mounts on any VIRPIL CM2/CM3/
+# WarBRD base and targets fighter-aircraft HOTAS layouts. The Sigma
+# offers a symmetrical mirror layout to the Alpha Prime for dual-stick
+# (HOSAS) setups.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Sigma"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4185   # community-sourced; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; all other values = center.
+      Encoding assumed to match MongoosT-50CM3 (PID 0x4130) family.
+  - id: SHARED_REPORT_FORMAT
+    description: >
+      Report format assumed to match the MongoosT-50CM3/Alpha family
+      (report_id(1) + axes_u16le(10) + buttons_lsb(4), 15 bytes).
+      Verify against hardware before relying on byte offsets.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x4185 is community-sourced (JoystickGremlinEx device tables);
+    not confirmed from kernel driver source or lsusb hardware probe.
+    Report format assumed to match the MongoosT-50CM3/Alpha firmware family.
+    Verify all fields against real hardware before relying on them.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

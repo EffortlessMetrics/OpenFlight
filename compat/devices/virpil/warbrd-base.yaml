@@ -57,6 +57,12 @@ quirks:
       The WarBRD base shares its HID report format with the MongoosT-50CM3 stick
       (PID 0x4130). flight-hotas-virpil::stick_warbrd delegates to
       parse_mongoost_stick_report for both WarBRD variants.
+  - id: ALPHA_R_GRIP_COMPATIBILITY
+    description: >
+      The VIRPIL Alpha-R grip mounts on the WarBRD-D base via the internal
+      connector. The base supplies the USB HID interface; the PID does not
+      change when the Alpha-R grip is attached. Both the MongoosT-50CM3 and
+      Alpha-R grip + WarBRD-D combos report PID 0x43F5.
 
 support:
   tier: 2

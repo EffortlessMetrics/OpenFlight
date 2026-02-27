@@ -1,0 +1,66 @@
+# VIRPIL VPC Helicopter Collective (Collective base / THROTTLE COLLECTIVE)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x8204 — VPC Helicopter Collective.
+# Sources:
+#   charliefoxtwo/Virpil-Communicator (VirpilMonitor.cs,
+#     `CollectivePids = new() { 0x8204 }`).
+#   muchimi/JoystickGremlinEx (gremlin/ui/virpil_device.py,
+#     `COLLECTIVE = [0x8204]`).
+#
+# The VPC Helicopter Collective is VIRPIL's helicopter collective control
+# unit. It provides a primary collective lever (full-range axis), a twist
+# handle for throttle/prop, a friction adjustment slider, and two
+# spring-return thumb-stick axes (SCX/SCY). This product is referred to
+# as both "THROTTLE COLLECTIVE" and "COLLECTIVE base" in VIRPIL
+# marketing materials; both names resolve to the same USB device.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Helicopter Collective"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8204
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, friction, scx, scy]
+    resolution_bits: 14
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return thumb-stick axes; they center at raw 8192.
+      The collective, twist, and friction axes are non-return (full-range).
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings can be changed via the VIRPIL
+      Configurator software. Friction lever behaviour may differ depending
+      on firmware configuration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x8204 confirmed from charliefoxtwo/Virpil-Communicator (CollectivePids)
+    and muchimi/JoystickGremlinEx (virpil_device.py COLLECTIVE entry).
+    Axis count (5) and layout inferred from community HID probe data;
+    verify axis indices against real hardware before relying on them.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.
