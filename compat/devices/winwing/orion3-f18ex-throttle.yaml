@@ -1,0 +1,56 @@
+# WinWing Orion 3 F-18EX Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBD50 is a community estimate. The Orion 3 F-16EX throttle is confirmed
+# at 0xBD48 (linux-hardware.org). The F-18EX throttle is the paired twin-handle
+# variant and is expected to have a nearby PID. No hardware probe has confirmed
+# 0xBD50 — update this manifest when verified.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 F-18EX Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD50    # Community estimate — see note above
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_l, throttle_r, rx, ry]
+    resolution_bits: 12
+  buttons: 36
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD50 is a community estimate inferred from the Orion 3 allocation
+      pattern (F-16EX throttle = 0xBD48). No hardware probe has confirmed this
+      value. Do not use for production device matching until verified with
+      lsusb or USBView on real hardware.
+  - id: DUAL_THROTTLE_HANDLES
+    description: >
+      Exposes separate left and right throttle axes (throttle_l, throttle_r)
+      mirroring the F/A-18 twin-engine layout. Map each to separate sim engine
+      throttle controls rather than a single combined throttle axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Orion 3 generation F-18EX dual-handle throttle. Pairs with the Orion 3
+    F-18EX Stick (PID 0xBD38, see orion3-f18ex-stick.yaml). PID is a
+    community estimate; confirm with hardware probe. Last reviewed: 2026-02.

@@ -1,0 +1,57 @@
+# Saitek X45 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID 0x0243 is the X45 throttle half
+# of the X45 HOTAS, paired with the X45 Stick (PID 0x0241, see x45-stick.yaml).
+# The throttle unit includes a throttle axis, three sliders/rotaries, and a
+# mini-stick for view control. Sold circa 2002–2008.
+schema_version: "1"
+
+device:
+  name: "Saitek X45 Throttle"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0243      # X45 Throttle — paired PID to 0x0241 (X45 Stick)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, rx, ry, slider1, slider2]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_10BIT_AXES
+    description: >
+      Axes are 10-bit resolution. Apply light smoothing if jitter is visible on
+      the slider rotary axes (slider1, slider2).
+  - id: THROTTLE_NOT_CENTERED
+    description: >
+      Throttle axis is unipolar (0 = idle, max = full thrust). Profile should
+      map the [0, 1] range rather than treating it as bipolar.
+  - id: MINIPAD_AS_HAT
+    description: >
+      The front-panel mini-stick (view/pan) reports as a hat switch, not
+      as analogue axes. Map as a 4- or 8-way hat via the rules engine.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Saitek X45 Throttle half (circa 2002–2008). Pair with x45-stick.yaml
+    (PID 0x0241) for the full X45 HOTAS. PID 0x0243 corroborated by Linux
+    kernel hid-ids.h references and community USB device reports.
+    Last reviewed: 2026-02.

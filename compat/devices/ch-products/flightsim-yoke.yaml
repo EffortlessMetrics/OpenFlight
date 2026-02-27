@@ -1,0 +1,55 @@
+# CH Products Flight Sim Yoke USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E confirmed: CH Products (CH Handheld).
+# PID 0x00F4 is community-reported for the original CH Flight Sim Yoke
+# (pre-Eclipse). The Eclipse Yoke uses a different PID (see eclipse-yoke.yaml).
+# The Flight Sim Yoke was the flagship CH yoke sold circa 1997–2008 and
+# is widely documented in vintage flight sim hardware lists.
+schema_version: "1"
+
+device:
+  name: "CH Products Flight Sim Yoke USB"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products
+    product_id: 0x00F4      # Community-reported; confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 8
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F4 is community-reported for the CH Flight Sim Yoke USB
+      (pre-Eclipse). The Eclipse Yoke (eclipse-yoke.yaml) uses a different
+      PID. Verify with lsusb before enabling production device matching.
+  - id: LEGACY_8BIT_AXES
+    description: >
+      Axes are 8-bit resolution (256 steps). Consider applying smoothing for
+      analogue yoke movements; the lower resolution may cause visible stepping
+      on fine pitch/roll corrections.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    CH Products Flight Sim Yoke USB (circa 1997–2008). Predecessor to the
+    Eclipse Yoke. PID 0x00F4 is community-reported; confirm with lsusb.
+    For the newer Eclipse Yoke, see eclipse-yoke.yaml. Last reviewed: 2026-02.

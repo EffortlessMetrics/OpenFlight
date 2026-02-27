@@ -1,0 +1,56 @@
+# GoFlight GF-COMM2 Radio Communication Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed: GoFlight Inc. registered USB vendor ID.
+# PID 0x0010 is a community estimate for the GF-COMM2 dual-radio panel.
+# GoFlight's PID allocation is sequential: GF-MCP = 0x0003, GF-MCP Pro = 0x0004.
+# Communication and navigation panels are believed to use PIDs in the 0x0008–
+# 0x0018 range. No hardware probe has confirmed 0x0010. Update when verified.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-COMM2 Radio Communication Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0010      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 18
+  hats: 0
+  encoders: 4              # COM1 active/standby, NAV1 active/standby rotary knobs
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8          # USB FS panel device
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0010 is a community estimate based on GoFlight's sequential
+      allocation (GF-MCP=0x0003, GF-MCP Pro=0x0004). No hardware probe
+      has confirmed this value. Do not use for production device matching
+      until verified with lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Button and encoder panel with no analogue axes. Use the rules engine
+      to map encoder rotations to COM1/COM2 frequency tuning and NAV
+      radio standby swap events.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-COMM2 dual-radio communication panel. Features COM1/COM2 active
+    and standby rotary knobs plus frequency-swap buttons. PID 0x0010 is a
+    community estimate from GoFlight's sequential PID scheme. Confirm with
+    lsusb. Works with MSFS and X-Plane via the rules engine. Last reviewed: 2026-02.

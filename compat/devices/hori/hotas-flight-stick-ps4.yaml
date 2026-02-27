@@ -1,0 +1,56 @@
+# Hori HOTAS Flight Stick for PlayStation 4 (PS4-099)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd. (registered USB vendor ID).
+# PID 0x0101 is a community estimate for the HOTAS variant (PS4-099 model)
+# which includes a dedicated throttle axis and additional buttons beyond
+# the Flight Stick Alpha. No hardware probe has confirmed 0x0101. Update
+# when verified with lsusb or USBView on real hardware.
+schema_version: "1"
+
+device:
+  name: "Hori HOTAS Flight Stick for PlayStation 4"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0101      # Community estimate — PS4-099 HOTAS variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, throttle, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0101 is a community estimate for the Hori HOTAS Flight Stick
+      (PS4-099). The Flight Stick Alpha (PID 0x00EE) is the lighter single-
+      unit version. No hardware probe has confirmed 0x0101. Verify with
+      lsusb on real hardware before enabling production device matching.
+  - id: THROTTLE_NOT_CENTERED
+    description: >
+      The dedicated throttle axis is unipolar (0 = idle, max = full thrust).
+      Map [0, 1] range in profiles. The z axis is a twist-rudder (bipolar).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori HOTAS Flight Stick for PS4 (PS4-099 model). Adds a separate throttle
+    axis compared to the Flight Stick Alpha. PID 0x0101 is a community estimate;
+    confirm with lsusb. Works on PS4 and PC (DInput). Popular for Ace Combat 7
+    and DCS World. Last reviewed: 2026-02.

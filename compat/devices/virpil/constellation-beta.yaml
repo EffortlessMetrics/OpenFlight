@@ -1,0 +1,58 @@
+# VIRPIL VPC Constellation BETA Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x822C is a community estimate for the Constellation BETA. The
+# Constellation ALPHA Left is 0x8225 and ALPHA Prime variants are nearby.
+# The BETA is a distinct heavier-duty right-hand military-style grip
+# on the WarBRD or T-50CM3 base. No hardware probe has confirmed 0x822C.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation BETA"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x822C      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15     # 15-bit precision on Virpil bases
+  buttons: 20
+  hats: 2
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x822C is a community estimate for the Constellation BETA inferred
+      from the Constellation ALPHA allocation (0x8225). No hardware probe or
+      open-source project has confirmed this value. Update this manifest when
+      a confirmed PID is available from lsusb or USB descriptor capture.
+  - id: BASE_DEPENDENT_AXES
+    description: >
+      Available axes depend on the base (WarBRD-D, T-50CM3, or VPC Base) the
+      BETA grip is mounted on. The 8-axis count assumes a WarBRD-D or
+      T-50CM3 base. Axis names may differ if a simpler base is used.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation BETA — military-style grip for the WarBRD-D or
+    T-50CM3 base. PID 0x822C is a community estimate. Typically used as a
+    right-hand centre-stick for combat sim setups. Pair with cm3-throttle.yaml
+    or vpc-collective.yaml for a complete VIRPIL rig. Last reviewed: 2026-02.

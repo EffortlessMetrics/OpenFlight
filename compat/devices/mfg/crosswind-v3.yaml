@@ -1,0 +1,57 @@
+# MFG Crosswind V3 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551 confirmed: MFG (Motion Fantasy Games) registered USB vendor ID.
+# PID follows a sequential pattern: V1 = 0x0001, V2 = 0x0002 (both confirmed
+# community-reported). V3 = 0x0003 follows the same pattern and is a community
+# estimate. No hardware probe has confirmed 0x0003. The V3 introduced
+# smoother roller bearings and adjustable clamping force. Update when verified.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V3 Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0003      # Community estimate (V1=0x0001, V2=0x0002 confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is inferred from the V1=0x0001 and V2=0x0002 sequential
+      pattern. No hardware probe has confirmed this value. The V3 pedals may
+      share a PID with V2 or use a non-sequential PID. Update when verified
+      with lsusb on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar
+      (0 = released, max = fully depressed). Apply separate
+      curve/deadzone profiles for each axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V3 Rudder Pedals (circa 2020+). Premium aluminium-frame
+    rudder pedals with roller bearings and adjustable clamp force. Successor
+    to the V2 (crosswind-v2.yaml). PID 0x0003 is a community estimate from
+    the sequential MFG allocation; confirm with lsusb. Last reviewed: 2026-02.

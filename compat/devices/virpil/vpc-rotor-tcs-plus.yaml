@@ -1,0 +1,57 @@
+# VIRPIL VPC Rotor TCS Plus Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4190 is a community estimate for the Rotor TCS Plus (enhanced
+# collective with additional twist grip and button panel). The base Rotor TCS
+# is covered by vpc-collective.yaml. No hardware probe has confirmed 0x4190.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS Plus Collective"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4190      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, rx, ry, slider]
+    resolution_bits: 15     # 15-bit precision
+  buttons: 20
+  hats: 1
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4190 is a community estimate for the Rotor TCS Plus (enhanced
+      version with twist axis and extra buttons). The base Rotor TCS is covered
+      by vpc-collective.yaml. No hardware probe has confirmed this PID. Update
+      when verified with lsusb or USB descriptor capture.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      The collective axis is unipolar (0 = full down, max = full up). No spring
+      centering — the collective rests at its physical position. Map unipolar
+      [0, 1] in the helicopter profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS Plus — enhanced helicopter collective with twist grip
+    and additional button panel. PID 0x4190 is a community estimate. Distinct
+    from the base Rotor TCS (vpc-collective.yaml). Intended for DCS helicopter
+    modules (Mi-24P, UH-1H, etc.). Last reviewed: 2026-02.

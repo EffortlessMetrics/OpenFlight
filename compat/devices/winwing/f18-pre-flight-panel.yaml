@@ -1,0 +1,53 @@
+# WinWing F/A-18 Pre-Flight Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBE0C is a community estimate adjacent to the confirmed F/A-18 panel
+# PIDs: Takeoff Panel = 0xBE04, Combat Ready Panel = 0xBE05, Takeoff Panel 2 = 0xBE07.
+# The Pre-Flight Panel covers INS alignment, master arm, and pre-launch checks.
+# No hardware probe has confirmed 0xBE0C — update when verified.
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 Pre-Flight Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE0C    # Community estimate — adjacent to confirmed F-18 panel PIDs
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 24
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE0C is a community estimate based on WinWing's F/A-18 panel
+      PID allocation (0xBE04, 0xBE05, 0xBE07). No hardware probe has confirmed
+      this value. Do not use for production device matching until verified.
+  - id: PANEL_DEVICE
+    description: >
+      Button-only panel device with no analogue axes. Used with the rules
+      engine to map panel switch states to simulator avionics events.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 Pre-Flight Panel. Covers INS alignment, master arm, ECS,
+    and related pre-launch checklist switches. PID is a community estimate;
+    confirm with hardware probe. Typically used alongside the ICP, Takeoff
+    Panel, and Combat Ready Panel. Last reviewed: 2026-02.
