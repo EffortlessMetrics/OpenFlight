@@ -1,0 +1,45 @@
+# Arduino Trim Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino). PID 0x8038 (Leonardo HID).
+# Arduino-based trim controller using rotary encoders.
+schema_version: "1"
+
+device:
+  name: "Arduino Trim Controller"
+  vendor: "Arduino"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8038
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [elevator-trim, aileron-trim]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: ARDUINO_TRIM
+    description: >
+      Arduino-based trim controller using rotary encoders on analog
+      inputs. Common DIY build with 3D-printed trim wheel housing.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Trim Controller. VID/PID are Arduino Leonardo defaults;
+    actual values may vary. Last reviewed: 2026-06.

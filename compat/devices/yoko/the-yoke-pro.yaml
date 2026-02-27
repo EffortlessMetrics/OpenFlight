@@ -1,0 +1,45 @@
+# Yoko The Yoke Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress). PID 0x2751 estimated for The Yoke Pro.
+# Professional variant with metal construction and higher resolution.
+schema_version: "1"
+
+device:
+  name: "Yoko The Yoke Pro"
+  vendor: "Yoko"
+  usb:
+    vendor_id: 0x04B4
+    product_id: 0x2751
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 14
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKE_PRO_METAL
+    description: >
+      Professional yoke with metal yoke horn and shaft. Higher resolution
+      sensors and improved bearing system. Premium trim wheel.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Yoko The Yoke Pro. PID 0x2751 estimated.
+    Last reviewed: 2026-06.

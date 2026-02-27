@@ -1,0 +1,44 @@
+# HPG Helicopter Collective Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xC002 estimated for HPG Collective Pro.
+schema_version: "1"
+
+device:
+  name: "HPG Helicopter Collective Pro"
+  vendor: "HPG"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC002
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, friction, idle-release, governor]
+    resolution_bits: 14
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: HPG_COLLECTIVE_PRO
+    description: >
+      Pro collective with idle-release detent, governor control, and
+      expanded button/hat layout. Full-length lever arm.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG Helicopter Collective Pro. PID 0xC002 estimated.
+    Helicopter Performance Group peripheral. Last reviewed: 2026-06.

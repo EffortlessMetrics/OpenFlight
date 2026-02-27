@@ -1,0 +1,44 @@
+# Virtual Fly Trim Wheel Compact
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress). PID 0x2761 estimated for Trim Wheel Compact.
+schema_version: "1"
+
+device:
+  name: "Virtual Fly Trim Wheel Compact"
+  vendor: "Virtual Fly"
+  usb:
+    vendor_id: 0x04B4
+    product_id: 0x2761
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: COMPACT_TRIM
+    description: >
+      Compact trim wheel for desktop use. Smaller diameter than Pro
+      model with basic potentiometer sensing.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual Fly Trim Wheel Compact. PID 0x2761 estimated.
+    VID 0x04B4 (Cypress-based). Last reviewed: 2026-06.

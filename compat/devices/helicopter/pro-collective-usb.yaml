@@ -1,0 +1,45 @@
+# Pro Collective USB Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xC010 estimated.
+# Generic pro-grade USB collective lever for helicopter simulation.
+schema_version: "1"
+
+device:
+  name: "Pro Collective USB Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC010
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, friction]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: GENERIC_COLLECTIVE
+    description: >
+      Generic pro-grade USB collective lever. Single collective axis
+      with twist throttle and friction wheel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Pro Collective USB Controller. PID 0xC010 estimated.
+    Last reviewed: 2026-06.

@@ -1,0 +1,45 @@
+# USB Analog Collective Lever
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xC011 estimated.
+# Simple analog USB collective lever for helicopter simulation.
+schema_version: "1"
+
+device:
+  name: "USB Analog Collective Lever"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC011
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [collective]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SINGLE_AXIS_COLLECTIVE
+    description: >
+      Simple single-axis USB collective lever. Potentiometer-based
+      with basic button panel. Budget helicopter control option.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    USB Analog Collective Lever. PID 0xC011 estimated.
+    Single-axis budget collective. Last reviewed: 2026-06.

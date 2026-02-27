@@ -1,0 +1,44 @@
+# WinWing Orion Helicopter Collective Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBED1 estimated for Orion Collective Pro.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion Helicopter Collective Pro"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBED1
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [collective, twist, friction, thumbx, thumby, rotary1, rotary2]
+    resolution_bits: 14
+  buttons: 36
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: ORION_COLLECTIVE_PRO
+    description: >
+      Pro collective with dual rotary encoders, dual hat switches,
+      and expanded button layout. Metal lever arm construction.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion Helicopter Collective Pro. PID 0xBED1 estimated.
+    VID 0x4098 (WinWing). Last reviewed: 2026-06.

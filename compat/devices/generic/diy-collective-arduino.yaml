@@ -1,0 +1,46 @@
+# DIY Arduino Collective Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino). PID 0x8037 (Leonardo/Micro HID).
+# DIY helicopter collective built on Arduino Leonardo/Micro platform.
+schema_version: "1"
+
+device:
+  name: "DIY Arduino Collective Controller"
+  vendor: "Arduino"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8037
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, twist]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_COLLECTIVE
+    description: >
+      Arduino-based DIY collective controller using analog potentiometer
+      inputs. Axis resolution depends on ADC configuration. Common in
+      helicopter sim community builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Arduino Collective Controller. VID/PID are Arduino Leonardo
+    defaults; actual values may vary. Last reviewed: 2026-06.

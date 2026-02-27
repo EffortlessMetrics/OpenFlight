@@ -1,0 +1,45 @@
+# Yoko The Yoke Plus
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress). PID 0x2750 estimated for The Yoke Plus.
+# Enhanced version of The Yoke with additional controls.
+schema_version: "1"
+
+device:
+  name: "Yoko The Yoke Plus"
+  vendor: "Yoko"
+  usb:
+    vendor_id: 0x04B4
+    product_id: 0x2750
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKE_PLUS_ENHANCED
+    description: >
+      Enhanced Yoke with integrated trim wheel axis and expanded
+      button layout. Improved shaft bearings for smoother operation.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Yoko The Yoke Plus. PID 0x2750 estimated.
+    Last reviewed: 2026-06.

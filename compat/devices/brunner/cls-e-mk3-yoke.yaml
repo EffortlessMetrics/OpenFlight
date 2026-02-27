@@ -1,0 +1,46 @@
+# Brunner CLS-E Mk3 Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2098 (Brunner). PID 0x5753 estimated for CLS-E Mk3 Yoke.
+# Third-generation CLS-E force feedback yoke with improved motors.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Mk3 Yoke"
+  vendor: "Brunner Elektronik"
+  usb:
+    vendor_id: 0x2098
+    product_id: 0x5753
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 16
+  buttons: 12
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: CLS_E_FFB_MK3
+    description: >
+      Third-generation CLS-E with improved brushless servo motors
+      and higher force output. Requires Brunner CLS2Sim software
+      for force feedback configuration.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E Mk3 Yoke with force feedback. PID 0x5753 estimated.
+    VID 0x2098 (Brunner). Last reviewed: 2026-06.

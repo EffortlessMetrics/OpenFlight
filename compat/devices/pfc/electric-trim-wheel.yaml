@@ -1,0 +1,46 @@
+# PFC Electric Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2635 (PFC). PID 0x0080 estimated for Electric Trim Wheel.
+# Motorized trim wheel with force feedback for realistic trim feel.
+schema_version: "1"
+
+device:
+  name: "PFC Electric Trim Wheel"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x2635
+    product_id: 0x0080
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: MOTORIZED_TRIM
+    description: >
+      Motorized trim wheel that moves with autopilot trim commands.
+      Electric motor drives the wheel to match sim trim position.
+      Provides realistic resistance and back-drive feel.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Electric Trim Wheel with motorized feedback.
+    PID 0x0080 estimated. VID 0x2635 (PFC). Last reviewed: 2026-06.

@@ -81,12 +81,14 @@ pub mod calibration;
 pub mod chain;
 pub mod combine;
 pub mod compiler;
+pub mod conditional_scale;
 pub mod conflict;
 pub mod counters;
 pub mod curve;
 pub mod deadzone;
 pub mod debounce;
 pub mod detent;
+pub mod emergency_stop;
 pub mod engine;
 pub mod frame;
 pub mod freeze_detect;
@@ -96,12 +98,14 @@ pub mod history;
 pub mod input_validator;
 pub mod invert;
 pub mod lag_compensator;
+pub mod mode_switch;
 pub mod nodes;
 pub mod noise_floor;
 pub mod normalize;
 pub mod peak_hold;
 pub mod pid;
 pub mod pipeline;
+pub mod pipeline_bypass;
 pub mod quantize;
 pub mod rate_limit;
 pub mod recording;
@@ -122,6 +126,7 @@ pub use calibration::{AxisCalibration, CalibrationBank};
 pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
+pub use conditional_scale::{ConditionalScale, ScaleCondition, MAX_CONDITIONS};
 pub use conflict::{
     ConflictDetectorConfig, ConflictMetadata, ConflictResolution, ConflictSeverity, ConflictType,
     CurveConflict, CurveConflictDetector, ResolutionType,
@@ -133,6 +138,7 @@ pub use deadzone::{
 };
 pub use debounce::AxisDebounce;
 pub use detent::{Detent, DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor};
+pub use emergency_stop::EmergencyStop;
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
@@ -146,6 +152,7 @@ pub use history::{
 pub use input_validator::InputValidator;
 pub use invert::{AxisInvert, InvertBank};
 pub use lag_compensator::{LagCompensator, LagCompensatorConfig};
+pub use mode_switch::{AxisMode, ModeSwitcher};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
     DetentRole, DetentState, DetentZone, FilterCompiledState, FilterNode, FilterState, MixerConfig,
@@ -156,6 +163,7 @@ pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
+pub use pipeline_bypass::{PipelineStage, StageBypass};
 pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};

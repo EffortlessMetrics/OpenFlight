@@ -1,0 +1,46 @@
+# Saitek Pro Flight Yoke V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek). PID 0x0BAC estimated for Pro Flight Yoke V2.
+# Updated version of the classic Saitek Pro Flight Yoke.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Yoke V2"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0BAC
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [pitch, roll, lever1, lever2, lever3]
+    resolution_bits: 10
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: YOKE_V2_IMPROVED
+    description: >
+      V2 revision with improved potentiometers and reduced dead zone.
+      Same form factor as original. Three throttle levers integrated
+      into the base unit. USB hub on rear.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Yoke V2. PID 0x0BAC estimated.
+    VID 0x06A3 (Saitek/Logitech). Last reviewed: 2026-06.

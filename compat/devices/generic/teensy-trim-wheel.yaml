@@ -1,0 +1,46 @@
+# Teensy USB Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (Teensy). PID 0x0489 (Teensy Joystick HID).
+# Teensy-based trim wheel controller with optical encoder.
+schema_version: "1"
+
+device:
+  name: "Teensy USB Trim Wheel"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0489
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: TEENSY_TRIM_WHEEL
+    description: >
+      Teensy-based trim wheel with high-speed USB polling.
+      Native 12-bit ADC for potentiometer-based trim wheels,
+      or digital encoder interface via GPIO.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Teensy USB Trim Wheel. VID 0x16C0, PID 0x0489 (Teensy defaults).
+    Last reviewed: 2026-06.

@@ -1,0 +1,44 @@
+# K-51 Collective Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xBA52 estimated for K-51 Collective Pro.
+schema_version: "1"
+
+device:
+  name: "K-51 Collective Pro"
+  vendor: "K-51"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xBA52
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [collective, throttle, idle-release, governor]
+    resolution_bits: 14
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PRO_COLLECTIVE
+    description: >
+      Advanced collective with idle-release detent and governor axis.
+      Full-size lever arm with metal construction and adjustable stops.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    K-51 Collective Pro. PID 0xBA52 estimated.
+    Boutique helicopter collective manufacturer. Last reviewed: 2026-06.

@@ -1,0 +1,46 @@
+# Precision Flight Controls Jet Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2635 (PFC). PID 0x0070 estimated for Jet Yoke.
+# Full-size jet transport yoke for airliner simulation.
+schema_version: "1"
+
+device:
+  name: "Precision Flight Controls Jet Yoke"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x2635
+    product_id: 0x0070
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 14
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: JET_TRANSPORT_YOKE
+    description: >
+      Full-size jet transport yoke horn. Heavy-duty construction for
+      professional flight training installations. Boeing-style control
+      column with metal shaft.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Jet Yoke for airliner simulation. PID 0x0070 estimated.
+    VID 0x2635 (PFC). Last reviewed: 2026-06.

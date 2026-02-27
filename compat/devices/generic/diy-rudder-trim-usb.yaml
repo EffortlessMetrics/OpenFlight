@@ -1,0 +1,45 @@
+# DIY USB Rudder Trim Control
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xE012 estimated.
+# DIY USB rudder trim controller, typically a small rotary knob.
+schema_version: "1"
+
+device:
+  name: "DIY USB Rudder Trim Control"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE012
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder-trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: RUDDER_TRIM_KNOB
+    description: >
+      Small rotary knob for rudder trim adjustment. Relative delta
+      encoder for incremental rudder trim control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY USB Rudder Trim Control. PID 0xE012 estimated.
+    Last reviewed: 2026-06.

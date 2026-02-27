@@ -1,0 +1,44 @@
+# HPG Collective Grip Handle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xC003 estimated for HPG Grip Handle.
+schema_version: "1"
+
+device:
+  name: "HPG Collective Grip Handle"
+  vendor: "HPG"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC003
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [twist, thumbwheel]
+    resolution_bits: 12
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: GRIP_ONLY
+    description: >
+      Grip handle only — requires mounting on a separate collective lever
+      or custom bracket. Provides twist throttle axis and thumbwheel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG Collective Grip Handle (grip only, no lever).
+    PID 0xC003 estimated. Last reviewed: 2026-06.

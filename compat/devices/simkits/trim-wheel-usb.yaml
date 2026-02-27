@@ -1,0 +1,44 @@
+# SimKits USB Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF010 estimated for SimKits Trim Wheel.
+schema_version: "1"
+
+device:
+  name: "SimKits USB Trim Wheel"
+  vendor: "SimKits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF010
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: SIMKITS_TRIM
+    description: >
+      SimKits USB trim wheel for home cockpit integration.
+      Compatible with SimKits IOCards ecosystem.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits USB Trim Wheel. PID 0xF010 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

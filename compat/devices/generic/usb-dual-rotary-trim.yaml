@@ -1,0 +1,45 @@
+# USB Dual Rotary Trim Control
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xE002 estimated.
+# Dual rotary encoder USB trim controller for elevator and aileron.
+schema_version: "1"
+
+device:
+  name: "USB Dual Rotary Trim Control"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE002
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [elevator-trim, aileron-trim]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: DUAL_ROTARY_TRIM
+    description: >
+      Dual rotary encoder trim controller. Both axes report relative
+      delta pulses. Common in DIY cockpit trim wheel assemblies.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    USB Dual Rotary Trim Control. PID 0xE002 estimated.
+    Last reviewed: 2026-06.

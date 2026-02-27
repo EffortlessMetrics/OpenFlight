@@ -1,0 +1,45 @@
+# WinWing Orion Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBED0 estimated for Orion Collective.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion Helicopter Collective"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBED0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, friction, thumbx, thumby]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: ORION_COLLECTIVE
+    description: >
+      WinWing Orion platform helicopter collective with full-range lever,
+      twist throttle grip, and friction adjustment. Compatible with
+      Orion mounting system.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion Helicopter Collective. PID 0xBED0 estimated.
+    VID 0x4098 (WinWing). Last reviewed: 2026-06.

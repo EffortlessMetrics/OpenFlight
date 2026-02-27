@@ -1,0 +1,52 @@
+# Saitek X52 Helicopter Collective Mode
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek). PID 0x075C (X52 throttle in collective mode).
+# The X52 throttle axis can be used as a helicopter collective when
+# the centering spring is removed and the mode is set via Saitek driver.
+schema_version: "1"
+
+device:
+  name: "Saitek X52 Helicopter Collective Mode"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x075C
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, rotary1, rotary2]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: X52_COLLECTIVE_MODE
+    description: >
+      X52 throttle unit repurposed as collective. Spring must be physically
+      removed for smooth collective operation. Axis range maps directly
+      to collective pitch.
+  - id: SHARED_PID_WITH_X52
+    description: >
+      Same USB PID as X52 throttle. Mode is determined by Saitek driver
+      profile, not USB descriptor. Identify by checking driver config.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X52 throttle in helicopter collective mode. PID 0x075C.
+    Requires spring removal for smooth collective operation.
+    Last reviewed: 2026-06.

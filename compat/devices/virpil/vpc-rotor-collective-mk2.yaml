@@ -1,0 +1,45 @@
+# VIRPIL VPC Rotor Collective Mk2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x8215 estimated for Rotor Collective Mk2.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor Collective Mk2"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8215
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, friction, scx, scy]
+    resolution_bits: 14
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: ROTOR_COLLECTIVE_MK2
+    description: >
+      Second-generation rotor collective with improved lever mechanics
+      and updated button layout. Compatible with VPC WarBRD and T50
+      mounting systems.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor Collective Mk2 updated helicopter collective.
+    PID 0x8215 estimated. VID 0x3344 confirmed. Last reviewed: 2026-06.

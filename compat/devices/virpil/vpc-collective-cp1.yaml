@@ -1,0 +1,45 @@
+# VIRPIL VPC Collective CP1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x8210 estimated for CP1 variant.
+# The CP1 is the entry-level helicopter collective with single-axis lever.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Collective CP1"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8210
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, friction]
+    resolution_bits: 14
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: ENTRY_LEVEL_COLLECTIVE
+    description: >
+      Entry-level collective with fewer buttons than the full VPC Collective.
+      Single collective lever axis with twist grip and friction adjustment.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Collective CP1 entry-level helicopter collective.
+    PID 0x8210 estimated. VID 0x3344 confirmed. Last reviewed: 2026-06.

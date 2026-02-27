@@ -1,0 +1,44 @@
+# Virtual Fly Yoko Plus Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress). PID 0x2745 estimated for Yoko Plus Pro.
+schema_version: "1"
+
+device:
+  name: "Virtual Fly Yoko Plus Pro"
+  vendor: "Virtual Fly"
+  usb:
+    vendor_id: 0x04B4
+    product_id: 0x2745
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [pitch, roll, slider, trim]
+    resolution_bits: 14
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKO_PRO_FEATURES
+    description: >
+      Pro variant with trim axis and higher resolution sensors.
+      Metal yoke shaft with improved bearing system.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual Fly Yoko Plus Pro yoke. PID 0x2745 estimated.
+    VID 0x04B4 (Cypress-based). Last reviewed: 2026-06.

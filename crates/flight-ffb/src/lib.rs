@@ -33,6 +33,7 @@ use std::time::{Duration, Instant};
 
 pub mod audio;
 pub mod blackbox;
+pub mod crosswind;
 pub mod device_health;
 pub mod dinput_backend;
 #[cfg(windows)]
@@ -40,8 +41,10 @@ pub mod dinput_com;
 pub mod dinput_device;
 #[cfg(windows)]
 pub mod dinput_window;
+pub mod engine_vibration;
 pub mod fault;
 pub mod ffb_pipeline;
+pub mod ground_effect;
 #[cfg(test)]
 pub mod hil_tests;
 #[cfg(test)]
@@ -66,6 +69,7 @@ pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
 pub mod ramp;
+pub mod wheel_shimmy;
 pub mod xinput_rumble;
 
 #[cfg(test)]
@@ -73,11 +77,14 @@ mod tests;
 
 pub use audio::*;
 pub use blackbox::*;
+pub use crosswind::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;
+pub use engine_vibration::*;
 pub use fault::*;
 pub use ffb_pipeline::*;
+pub use ground_effect::*;
 #[cfg(test)]
 pub use hil_tests::*;
 pub use interlock::*;
@@ -96,6 +103,7 @@ pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
 pub use ramp::*;
+pub use wheel_shimmy::*;
 pub use xinput_rumble::*;
 
 // Re-export EmergencyStopReason from blackbox module

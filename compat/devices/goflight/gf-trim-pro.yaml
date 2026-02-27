@@ -1,0 +1,44 @@
+# GoFlight Trim Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight). PID 0x0070 estimated for GF Trim Pro.
+schema_version: "1"
+
+device:
+  name: "GoFlight Trim Pro Controller"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0070
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: GF_TRIM_PRO
+    description: >
+      Professional trim wheel with high-resolution optical encoder.
+      Integrates with GoFlight GF panel ecosystem for cockpit builds.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight Trim Pro Controller. PID 0x0070 estimated.
+    VID 0x0E9F (GoFlight). Last reviewed: 2026-06.

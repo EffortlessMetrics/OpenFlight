@@ -1,0 +1,44 @@
+# Komodo Simulations Cyclic Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF680 estimated for Komodo Cyclic.
+schema_version: "1"
+
+device:
+  name: "Komodo Simulations Cyclic Stick"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF680
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, twist]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: HELICOPTER_CYCLIC
+    description: >
+      Full-length helicopter cyclic stick with pitch and roll axes.
+      Optional twist axis for tail rotor control.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Simulations Cyclic Stick. PID 0xF680 estimated.
+    VID 0x04D8 (Microchip-based controller). Last reviewed: 2026-06.
