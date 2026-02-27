@@ -2559,3 +2559,144 @@ requirements:
           - flight-ipc::ipc_fuzz_tests::test_negotiate_features_fuzz
           - flight-ipc::ipc_fuzz_tests::test_apply_profile_fuzz
           - flight-ipc::ipc_fuzz_tests::test_apply_profile_json_fuzz
+
+  # Product Requirement: Cloud Profile Cache Coherence and Client URL Encoding
+  - id: REQ-67
+    name: Cloud Profile Cache Coherence, Client URL Encoding, and Extended Sanitize
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-67.1
+        description: "WHEN a cache entry is checked within its TTL window THEN is_expired SHALL return false; WHEN checked after expiry THEN is_expired SHALL return true"
+        tests:
+          - flight-cloud-profiles::cache::tests::test_cache_entry_not_expired_when_fresh
+          - flight-cloud-profiles::cache::tests::test_cache_entry_not_expired_within_ttl
+          - flight-cloud-profiles::cache::tests::test_cache_entry_expired_when_old
+      - id: AC-67.2
+        description: "WHEN evict() is called for a key THEN that entry SHALL be removed; WHEN list_cached() is called THEN only fresh entries SHALL be returned"
+        tests:
+          - flight-cloud-profiles::cache::tests::test_cache_evict_removes_entry
+          - flight-cloud-profiles::cache::tests::test_list_cached_returns_fresh_entries
+          - flight-cloud-profiles::cache::tests::test_clear_removes_all_entries
+      - id: AC-67.3
+        description: "WHEN the HTTP client encodes URL parameters THEN safe chars SHALL pass through unchanged and spaces and slashes SHALL be percent-encoded"
+        tests:
+          - flight-cloud-profiles::client::tests::test_urlenc_passthrough_safe_chars
+          - flight-cloud-profiles::client::tests::test_urlenc_encodes_spaces
+          - flight-cloud-profiles::client::tests::test_urlenc_encodes_slash
+      - id: AC-67.4
+        description: "WHEN CloudClient is constructed with default config THEN base_url and timeout fields SHALL be populated and the client SHALL not error on construction"
+        tests:
+          - flight-cloud-profiles::client::tests::test_client_config_defaults
+          - flight-cloud-profiles::client::tests::test_client_constructs_without_error
+      - id: AC-67.5
+        description: "WHEN sanitize_for_upload is called THEN the original profile SHALL not be modified, the sim field SHALL be lowercased, schema version normalised, and axes and aircraft SHALL be preserved"
+        tests:
+          - flight-cloud-profiles::sanitize::tests::test_sanitize_does_not_modify_original
+          - flight-cloud-profiles::sanitize::tests::test_sanitize_lowercases_sim
+          - flight-cloud-profiles::sanitize::tests::test_sanitize_normalizes_schema_version
+          - flight-cloud-profiles::sanitize::tests::test_sanitize_preserves_aircraft
+          - flight-cloud-profiles::sanitize::tests::test_sanitize_preserves_axes
+      - id: AC-67.6
+        description: "WHEN validate_for_publish is called THEN a valid profile SHALL be accepted and empty/whitespace titles, empty axes, and invalid deadzones SHALL each be rejected"
+        tests:
+          - flight-cloud-profiles::sanitize::tests::test_validate_valid_profile_accepted
+          - flight-cloud-profiles::sanitize::tests::test_validate_empty_title_rejected
+          - flight-cloud-profiles::sanitize::tests::test_validate_whitespace_title_rejected
+          - flight-cloud-profiles::sanitize::tests::test_validate_empty_axes_rejected
+          - flight-cloud-profiles::sanitize::tests::test_validate_invalid_deadzone_rejected
+          - flight-cloud-profiles::sanitize::tests::test_validate_title_too_long_rejected
+      - id: AC-67.7
+        description: "WHEN ProfileListing models are constructed THEN score calculations SHALL be correct, JSON round-trips SHALL preserve all fields, and PublishMeta constructors SHALL set all fields"
+        tests:
+          - flight-cloud-profiles::models::tests::test_listing_score_positive
+          - flight-cloud-profiles::models::tests::test_listing_score_negative
+          - flight-cloud-profiles::models::tests::test_listing_round_trip_json
+          - flight-cloud-profiles::models::tests::test_publish_meta_new
+          - flight-cloud-profiles::models::tests::test_publish_meta_with_description
+      - id: AC-67.8
+        description: "WHEN SortOrder and Page models are used THEN display formatting SHALL be correct, last-page detection SHALL work, and vote results SHALL compute the net score"
+        tests:
+          - flight-cloud-profiles::models::tests::test_sort_order_display
+          - flight-cloud-profiles::models::tests::test_vote_result_score
+          - flight-cloud-profiles::models::tests::test_page_last_page_no_next
+          - flight-cloud-profiles::models::tests::test_page_total_pages
+
+  # Product Requirement: Open Hardware Protocol — Extended Report Parsing
+  - id: REQ-68
+    name: Open Hardware Protocol — Extended InputReport, LedReport, and FfbOutputReport Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-68.1
+        description: "WHEN an InputReport is parsed THEN button bitmask, hat-switch position, and FFB-fault flag SHALL each be decoded correctly"
+        tests:
+          - flight-open-hardware::input_report::tests::test_button_bitmask_parsed
+          - flight-open-hardware::input_report::tests::test_hat_position_parsed
+          - flight-open-hardware::input_report::tests::test_ffb_fault_flag_set
+      - id: AC-68.2
+        description: "WHEN an empty slice or a slice shorter than the report size is passed to parse() THEN it SHALL return None"
+        tests:
+          - flight-open-hardware::input_report::tests::test_empty_slice_returns_none
+          - flight-open-hardware::input_report::tests::test_too_short_returns_none
+      - id: AC-68.3
+        description: "WHEN LedReport is parsed THEN the reserved byte SHALL always be zero, LED flag constants SHALL match the spec, and wrong-ID or too-short buffers SHALL return None"
+        tests:
+          - flight-open-hardware::led_report::tests::test_reserved_byte_is_zero
+          - flight-open-hardware::led_report::tests::test_led_flags_constants
+          - flight-open-hardware::led_report::tests::test_wrong_report_id_returns_none
+          - flight-open-hardware::led_report::tests::test_too_short_returns_none
+      - id: AC-68.4
+        description: "WHEN FfbOutputReport is built for every FFB mode THEN serialization SHALL round-trip correctly; invalid mode bytes SHALL return None; byte-field positions SHALL match the spec"
+        tests:
+          - flight-open-hardware::output_report::tests::test_all_ffb_modes_roundtrip
+          - flight-open-hardware::output_report::tests::test_invalid_mode_byte_returns_none
+          - flight-open-hardware::output_report::tests::test_format_byte_positions
+
+  # Product Requirement: VR Overlay — Extended State, Renderer, Service, and Notification Tests
+  - id: REQ-69
+    name: VR Overlay — Extended Config Validation, Notification Queue, Renderer, and Service
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-69.1
+        description: "WHEN OverlayConfig is validated THEN zero max_notifications, out-of-range depth, zero scale, and anchor-point round-trips SHALL all be enforced; serde round-trip SHALL preserve all fields"
+        tests:
+          - flight-vr-overlay::config::tests::test_zero_max_notifications_rejected
+          - flight-vr-overlay::config::tests::test_depth_too_small_rejected
+          - flight-vr-overlay::config::tests::test_zero_scale_rejected
+          - flight-vr-overlay::config::tests::test_anchor_point_round_trip
+          - flight-vr-overlay::config::tests::test_config_serde_round_trip
+      - id: AC-69.2
+        description: "WHEN NotificationQueue operations run THEN push/len SHALL track count, clear() SHALL empty the queue, and acknowledging a non-existent ID SHALL return false"
+        tests:
+          - flight-vr-overlay::notification::tests::test_push_and_len
+          - flight-vr-overlay::notification::tests::test_clear_empties_queue
+          - flight-vr-overlay::notification::tests::test_acknowledge_nonexistent_returns_false
+      - id: AC-69.3
+        description: "WHEN Severity values are used THEN Display formatting SHALL produce the expected strings, ordering SHALL rank Critical above Warning above Info, and max_severity on an empty queue SHALL return None"
+        tests:
+          - flight-vr-overlay::notification::tests::test_severity_display
+          - flight-vr-overlay::notification::tests::test_severity_ordering
+          - flight-vr-overlay::notification::tests::test_max_severity_empty
+      - id: AC-69.4
+        description: "WHEN NullRenderer methods are called THEN backend display SHALL round-trip, opacity SHALL be clamped to [0,1], and show/hide SHALL toggle the renderer's visible flag"
+        tests:
+          - flight-vr-overlay::renderer::tests::test_backend_display
+          - flight-vr-overlay::renderer::tests::test_null_renderer_set_opacity_clamps
+          - flight-vr-overlay::renderer::tests::test_null_renderer_show_hide
+      - id: AC-69.5
+        description: "WHEN OverlayService is spawned THEN it SHALL start and shut down cleanly, toggle_visible SHALL flip visibility, and notify SHALL deliver a command to the service"
+        tests:
+          - flight-vr-overlay::service::tests::test_spawn_and_shutdown
+          - flight-vr-overlay::service::tests::test_toggle_changes_visibility
+          - flight-vr-overlay::service::tests::test_notify_sends_command
+      - id: AC-69.6
+        description: "WHEN OverlayState is constructed and mutated THEN default state SHALL have expected values, set_sim and with_profile SHALL update fields, and serde round-trip SHALL preserve all state"
+        tests:
+          - flight-vr-overlay::state::tests::test_default_state
+          - flight-vr-overlay::state::tests::test_ffb_status_default
+          - flight-vr-overlay::state::tests::test_set_sim
+          - flight-vr-overlay::state::tests::test_sim_connection_display
+          - flight-vr-overlay::state::tests::test_state_serde_round_trip
+          - flight-vr-overlay::state::tests::test_with_profile

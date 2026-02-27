@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 399 |
-| ACs with tests | 399 |
+| Total AC | 417 |
+| ACs with tests | 417 |
 | ACs with Gherkin | 398 |
 | ACs with both tests + Gherkin | 398 |
 | Complete | 398 |
-| Needs Gherkin | 1 |
+| Needs Gherkin | 19 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
 | Microcrates with tests | 62 (92.5%) |
-| Microcrates with Gherkin | 61 (91.0%) |
-| Microcrates fully covered | 61 (91.0%) |
+| Microcrates with Gherkin | 58 (86.6%) |
+| Microcrates fully covered | 58 (86.6%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 99.7% |
-| Test + Gherkin coverage | 99.7% |
+| Gherkin coverage | 95.4% |
+| Test + Gherkin coverage | 95.4% |
 
 ## BDD Microcrate Matrix
 
@@ -46,7 +46,7 @@
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-cloud-profiles | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-cloud-profiles | 17 | 17 | 9 | 9 | 9 | 100.0% | 52.9% | 52.9% |
 | flight-core | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-device-common | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
@@ -73,7 +73,7 @@
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
-| flight-open-hardware | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-open-hardware | 13 | 13 | 9 | 9 | 9 | 100.0% | 69.2% | 69.2% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 3 | 3 | 3 | 100.0% | 75.0% | 75.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -96,7 +96,7 @@
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-vr-overlay | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-vr-overlay | 15 | 15 | 9 | 9 | 9 | 100.0% | 60.0% | 60.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-wingman | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -506,3 +506,21 @@
 | REQ-66 | AC-66.3 | WHEN breaking protocol changes are detected THEN removed RPCs and removed messages SHALL be flagged as breaking | specs/features/req_66_flight_ipc.feature:17 | 4 | ✅ Complete |
 | REQ-66 | AC-66.4 | WHEN feature negotiation runs THEN the intersection of client and server features SHALL be selected and missing required features SHALL be rejected | specs/features/req_66_flight_ipc.feature:24 | 4 | ✅ Complete |
 | REQ-66 | AC-66.5 | WHEN fuzz inputs are applied to IPC message handlers THEN no panics SHALL occur | specs/features/req_66_flight_ipc.feature:30 | 3 | ✅ Complete |
+| REQ-67 | AC-67.1 | WHEN a cache entry is checked within its TTL window THEN is_expired SHALL return false; WHEN checked after expiry THEN is_expired SHALL return true | - | 3 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.2 | WHEN evict() is called for a key THEN that entry SHALL be removed; WHEN list_cached() is called THEN only fresh entries SHALL be returned | - | 3 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.3 | WHEN the HTTP client encodes URL parameters THEN safe chars SHALL pass through unchanged and spaces and slashes SHALL be percent-encoded | - | 3 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.4 | WHEN CloudClient is constructed with default config THEN base_url and timeout fields SHALL be populated and the client SHALL not error on construction | - | 2 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.5 | WHEN sanitize_for_upload is called THEN the original profile SHALL not be modified, the sim field SHALL be lowercased, schema version normalised, and axes and aircraft SHALL be preserved | - | 5 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.6 | WHEN validate_for_publish is called THEN a valid profile SHALL be accepted and empty/whitespace titles, empty axes, and invalid deadzones SHALL each be rejected | - | 6 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.7 | WHEN ProfileListing models are constructed THEN score calculations SHALL be correct, JSON round-trips SHALL preserve all fields, and PublishMeta constructors SHALL set all fields | - | 5 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.8 | WHEN SortOrder and Page models are used THEN display formatting SHALL be correct, last-page detection SHALL work, and vote results SHALL compute the net score | - | 4 | 🟡 Needs Gherkin |
+| REQ-68 | AC-68.1 | WHEN an InputReport is parsed THEN button bitmask, hat-switch position, and FFB-fault flag SHALL each be decoded correctly | - | 3 | 🟡 Needs Gherkin |
+| REQ-68 | AC-68.2 | WHEN an empty slice or a slice shorter than the report size is passed to parse() THEN it SHALL return None | - | 2 | 🟡 Needs Gherkin |
+| REQ-68 | AC-68.3 | WHEN LedReport is parsed THEN the reserved byte SHALL always be zero, LED flag constants SHALL match the spec, and wrong-ID or too-short buffers SHALL return None | - | 4 | 🟡 Needs Gherkin |
+| REQ-68 | AC-68.4 | WHEN FfbOutputReport is built for every FFB mode THEN serialization SHALL round-trip correctly; invalid mode bytes SHALL return None; byte-field positions SHALL match the spec | - | 3 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.1 | WHEN OverlayConfig is validated THEN zero max_notifications, out-of-range depth, zero scale, and anchor-point round-trips SHALL all be enforced; serde round-trip SHALL preserve all fields | - | 5 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.2 | WHEN NotificationQueue operations run THEN push/len SHALL track count, clear() SHALL empty the queue, and acknowledging a non-existent ID SHALL return false | - | 3 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.3 | WHEN Severity values are used THEN Display formatting SHALL produce the expected strings, ordering SHALL rank Critical above Warning above Info, and max_severity on an empty queue SHALL return None | - | 3 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.4 | WHEN NullRenderer methods are called THEN backend display SHALL round-trip, opacity SHALL be clamped to [0,1], and show/hide SHALL toggle the renderer's visible flag | - | 3 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.5 | WHEN OverlayService is spawned THEN it SHALL start and shut down cleanly, toggle_visible SHALL flip visibility, and notify SHALL deliver a command to the service | - | 3 | 🟡 Needs Gherkin |
+| REQ-69 | AC-69.6 | WHEN OverlayState is constructed and mutated THEN default state SHALL have expected values, set_sim and with_profile SHALL update fields, and serde round-trip SHALL preserve all state | - | 6 | 🟡 Needs Gherkin |
