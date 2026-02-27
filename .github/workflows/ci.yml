@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'release/**' ]
   pull_request:
     branches: [ main ]
   schedule:
@@ -850,7 +850,7 @@ jobs:
     name: Code Coverage (Core Crates)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -883,6 +883,17 @@ jobs:
             --html \
             --output-dir coverage-report
 
+      - name: Generate LCOV report
+        run: |
+          cargo llvm-cov \
+            -p flight-core \
+            -p flight-axis \
+            -p flight-bus \
+            -p flight-profile \
+            -p flight-rules \
+            -p flight-session \
+            --lcov --output-path lcov.info
+
       - name: Report coverage summary
         run: |
           cargo llvm-cov \
@@ -894,11 +905,17 @@ jobs:
             -p flight-session \
             --summary-only
 
-      - name: Upload coverage report
+      - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage-report/
+
+      - name: Upload LCOV coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
 
   performance:
     name: Performance Tests

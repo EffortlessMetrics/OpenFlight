@@ -36,6 +36,8 @@ examples-optin = []
 criterion.workspace = true
 proptest.workspace = true
 insta.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 
 [[bench]]
 name = "axis_performance"

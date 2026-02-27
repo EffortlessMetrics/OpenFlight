@@ -106,6 +106,7 @@ pub mod quantize;
 pub mod rate_limit;
 pub mod recording;
 pub mod scale;
+pub mod trace_replay;
 pub mod smoothing;
 pub mod throttle_zone;
 pub mod trim;
@@ -158,6 +159,7 @@ pub use pipeline::{Pipeline, PipelineState};
 pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};
+pub use trace_replay::{AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
 pub use throttle_zone::{

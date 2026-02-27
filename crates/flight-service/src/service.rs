@@ -18,7 +18,6 @@ use flight_axis::{
     AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult,
 };
 use flight_core::{
-    aircraft_switch::AutoSwitchConfig,
     profile::{AxisConfig, Profile},
     watchdog::{WatchdogConfig, WatchdogSystem},
 };
@@ -49,8 +48,8 @@ pub struct FlightServiceConfig {
     pub safe_mode_config: SafeModeConfig,
     /// Axis engine configuration
     pub axis_config: AxisEngineConfig,
-    /// Auto-switch configuration
-    pub auto_switch_config: AutoSwitchConfig,
+    /// Auto-switch service configuration (includes process detection, bus, and adapter settings)
+    pub auto_switch_config: AircraftAutoSwitchServiceConfig,
     /// Watchdog configuration
     #[serde(skip_serializing, skip_deserializing)]
     pub watchdog_config: WatchdogConfig,
@@ -123,7 +122,7 @@ impl Default for FlightServiceConfig {
                 enable_counters: true,
                 enable_conflict_detection: false,
             },
-            auto_switch_config: AutoSwitchConfig::default(),
+            auto_switch_config: AircraftAutoSwitchServiceConfig::default(),
             watchdog_config: WatchdogConfig::default(),
             enable_health_monitoring: true,
             enable_power_checks: true,
@@ -463,12 +462,7 @@ impl FlightService {
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
 
-        let config = AircraftAutoSwitchServiceConfig {
-            auto_switch: self.config.auto_switch_config.clone(),
-            ..Default::default()
-        };
-
-        let auto_switch = AircraftAutoSwitchService::new(config);
+        let auto_switch = AircraftAutoSwitchService::new(self.config.auto_switch_config.clone());
         self.auto_switch = Some(auto_switch);
         self.health
             .info("auto_switch", "Auto-switch service initialized")
