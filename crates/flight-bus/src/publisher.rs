@@ -152,6 +152,8 @@ pub struct BusPublisher {
     subscribers: Arc<Mutex<HashMap<SubscriberId, SubscriberData>>>,
     publish_stats: PublishStats,
     rate_limiter: RateLimiter,
+    /// Atomic counter for messages dropped due to full subscriber channels (backpressure).
+    backpressure_drops: AtomicU64,
 }
 
 /// Publisher statistics
@@ -162,6 +164,8 @@ pub struct PublishStats {
     pub subscribers_count: usize,
     pub average_publish_rate_hz: f32,
     pub last_publish_duration_us: u64,
+    /// Messages dropped because a subscriber channel was full (backpressure).
+    pub backpressure_drops: u64,
 }
 
 /// Rate limiter for controlling publish frequency
@@ -224,6 +228,7 @@ impl BusPublisher {
             subscribers: Arc::new(Mutex::new(HashMap::new())),
             publish_stats: PublishStats::default(),
             rate_limiter: RateLimiter::new(max_publish_rate_hz.clamp(30.0, 60.0)),
+            backpressure_drops: AtomicU64::new(0),
         }
     }
 
@@ -303,9 +308,9 @@ impl BusPublisher {
                     trace!("Sent snapshot to subscriber {}", id.0);
                 }
                 Err(channel::TrySendError::Full(_)) => {
+                    self.backpressure_drops.fetch_add(1, Ordering::Relaxed);
                     if subscriber_data.config.drop_on_full {
                         warn!("Subscriber {} buffer full, dropping message", id.0);
-                        // Note: We can't drop from sender side, this is handled by subscriber
                     } else {
                         warn!("Subscriber {} buffer full, skipping", id.0);
                     }
@@ -326,6 +331,7 @@ impl BusPublisher {
         self.publish_stats.snapshots_published += 1;
         self.publish_stats.last_publish_duration_us = start_time.elapsed().as_micros() as u64;
         self.publish_stats.average_publish_rate_hz = self.rate_limiter.current_rate_hz();
+        self.publish_stats.backpressure_drops = self.backpressure_drops.load(Ordering::Relaxed);
 
         Ok(())
     }
@@ -333,6 +339,11 @@ impl BusPublisher {
     /// Get publisher statistics
     pub fn stats(&self) -> &PublishStats {
         &self.publish_stats
+    }
+
+    /// Total number of messages dropped due to full subscriber channels (backpressure).
+    pub fn drop_count(&self) -> u64 {
+        self.backpressure_drops.load(Ordering::Relaxed)
     }
 
     /// Get number of active subscribers
@@ -497,5 +508,63 @@ mod tests {
             received_count += 1;
         }
         assert!(received_count >= 1);
+    }
+
+    #[test]
+    fn test_drop_count_starts_at_zero() {
+        let publisher = BusPublisher::new(60.0);
+        assert_eq!(publisher.drop_count(), 0);
+        assert_eq!(publisher.stats().backpressure_drops, 0);
+    }
+
+    #[tokio::test]
+    async fn test_drop_count_increments_on_full_channel() {
+        let mut publisher = BusPublisher::new(60.0);
+        let config = SubscriptionConfig {
+            buffer_size: 2,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        };
+        // Hold the subscriber to keep the channel alive but don't drain it
+        let _subscriber = publisher.subscribe(config).unwrap();
+
+        let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+
+        // First two should fit in the buffer
+        publisher.publish(snapshot.clone()).unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        publisher.publish(snapshot.clone()).unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        assert_eq!(publisher.drop_count(), 0);
+
+        // Third should be dropped (buffer is full, nobody is draining)
+        publisher.publish(snapshot.clone()).unwrap();
+        assert_eq!(publisher.drop_count(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_drop_count_accurate_across_multiple_drops() {
+        let mut publisher = BusPublisher::new(60.0);
+        let config = SubscriptionConfig {
+            buffer_size: 1,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        };
+        let _subscriber = publisher.subscribe(config).unwrap();
+
+        let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+
+        // First publish fills the single-slot buffer
+        publisher.publish(snapshot.clone()).unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+
+        // Next 5 publishes should all be dropped
+        for _ in 0..5 {
+            publisher.publish(snapshot.clone()).unwrap();
+            std::thread::sleep(Duration::from_millis(20));
+        }
+
+        assert_eq!(publisher.drop_count(), 5);
+        assert_eq!(publisher.stats().backpressure_drops, 5);
     }
 }

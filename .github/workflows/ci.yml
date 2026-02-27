@@ -53,6 +53,25 @@ jobs:
           fi
           echo "✅ COMPATIBILITY.md is up-to-date"
 
+      - name: Cross-check spec_ledger vs feature files
+        if: always()
+        run: |
+          REQ_COUNT=$(grep -cE '^\s*- id: REQ-' specs/spec_ledger.yaml || echo 0)
+          FEATURE_COUNT=$(find specs/features -name '*.feature' | wc -l)
+          echo "spec_ledger REQ IDs: $REQ_COUNT"
+          echo ".feature files:      $FEATURE_COUNT"
+          if [ "$FEATURE_COUNT" -eq 0 ]; then
+            echo "⚠️  No .feature files found — skipping divergence check"
+          elif [ "$REQ_COUNT" -gt 0 ]; then
+            RATIO=$(( FEATURE_COUNT * 100 / REQ_COUNT ))
+            if [ "$RATIO" -lt 50 ] || [ "$RATIO" -gt 200 ]; then
+              echo "⚠️  Significant divergence: $REQ_COUNT REQ IDs vs $FEATURE_COUNT .feature files (ratio ${RATIO}%)"
+              echo "    Consider reviewing whether spec_ledger.yaml and specs/features/ are in sync."
+            else
+              echo "✅ spec_ledger and feature files are reasonably aligned (ratio ${RATIO}%)"
+            fi
+          fi
+
       - name: Upload validation report
         if: always()
         uses: actions/upload-artifact@v4
