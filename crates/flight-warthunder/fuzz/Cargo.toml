@@ -24,3 +24,9 @@ name = "fuzz_wt_telemetry"
 path = "fuzz_targets/fuzz_wt_telemetry.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_wt_convert"
+path = "fuzz_targets/fuzz_wt_convert.rs"
+test = false
+doc = false

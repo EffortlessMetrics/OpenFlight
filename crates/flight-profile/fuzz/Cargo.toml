@@ -31,3 +31,9 @@ name = "fuzz_profile_merge"
 path = "fuzz_targets/fuzz_profile_merge.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_profile_yaml"
+path = "fuzz_targets/fuzz_profile_yaml.rs"
+test = false
+doc = false
