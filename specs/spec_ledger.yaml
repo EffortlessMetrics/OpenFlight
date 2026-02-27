@@ -23898,3 +23898,1128 @@ requirements:
         description: "AC4: User can view exactly what telemetry data would be sent before opting in"
         tests:
           - feature:specs/features/req_950_telemetry_opt_in.feature
+
+  # ============================================================================
+  # HARDWARE INTEGRATION DEPTH (REQ-951 to REQ-960)
+  # ============================================================================
+
+  # Product Requirement: Force Feedback Effect Library
+  - id: REQ-951
+    name: Force Feedback Effect Library
+    kind: product
+    status: draft
+    ac:
+      - id: AC-951.1
+        description: "AC1: Predefined FFB effects are available for common flight scenarios like turbulence and ground roll"
+        tests:
+          - feature:specs/features/req_951_ffb_effect_library.feature
+      - id: AC-951.2
+        description: "AC2: Effects are parameterized allowing intensity and frequency customization"
+        tests:
+          - feature:specs/features/req_951_ffb_effect_library.feature
+      - id: AC-951.3
+        description: "AC3: Effect library supports chaining multiple effects for composite feedback"
+        tests:
+          - feature:specs/features/req_951_ffb_effect_library.feature
+      - id: AC-951.4
+        description: "AC4: Custom user-defined effects can be added to the library"
+        tests:
+          - feature:specs/features/req_951_ffb_effect_library.feature
+  # Product Requirement: Multi-Device Coordination
+  - id: REQ-952
+    name: Multi-Device Coordination
+    kind: product
+    status: draft
+    ac:
+      - id: AC-952.1
+        description: "AC1: Synchronized output is delivered across multiple connected devices simultaneously"
+        tests:
+          - feature:specs/features/req_952_multi_device_coordination.feature
+      - id: AC-952.2
+        description: "AC2: Device coordination maintains sub-millisecond timing alignment"
+        tests:
+          - feature:specs/features/req_952_multi_device_coordination.feature
+      - id: AC-952.3
+        description: "AC3: Failure of one device does not disrupt coordination of remaining devices"
+        tests:
+          - feature:specs/features/req_952_multi_device_coordination.feature
+      - id: AC-952.4
+        description: "AC4: Coordination groups are configurable per profile"
+        tests:
+          - feature:specs/features/req_952_multi_device_coordination.feature
+  # Product Requirement: Device Firmware Update
+  - id: REQ-953
+    name: Device Firmware Update
+    kind: product
+    status: draft
+    ac:
+      - id: AC-953.1
+        description: "AC1: Firmware update files can be flashed to supported devices through OpenFlight"
+        tests:
+          - feature:specs/features/req_953_device_firmware_update.feature
+      - id: AC-953.2
+        description: "AC2: Firmware update process validates file integrity before flashing"
+        tests:
+          - feature:specs/features/req_953_device_firmware_update.feature
+      - id: AC-953.3
+        description: "AC3: Update progress is reported with percentage and estimated time remaining"
+        tests:
+          - feature:specs/features/req_953_device_firmware_update.feature
+      - id: AC-953.4
+        description: "AC4: Failed firmware update triggers automatic rollback to previous version"
+        tests:
+          - feature:specs/features/req_953_device_firmware_update.feature
+  # Product Requirement: Custom Device Profiles
+  - id: REQ-954
+    name: Custom Device Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-954.1
+        description: "AC1: Users can create custom device definitions for unsupported hardware"
+        tests:
+          - feature:specs/features/req_954_custom_device_profiles.feature
+      - id: AC-954.2
+        description: "AC2: Custom profiles define axis mappings and button assignments"
+        tests:
+          - feature:specs/features/req_954_custom_device_profiles.feature
+      - id: AC-954.3
+        description: "AC3: Custom device profiles are validated against the device profile schema"
+        tests:
+          - feature:specs/features/req_954_custom_device_profiles.feature
+      - id: AC-954.4
+        description: "AC4: Custom profiles can be shared and imported from community repositories"
+        tests:
+          - feature:specs/features/req_954_custom_device_profiles.feature
+  # Product Requirement: HID Descriptor Parsing
+  - id: REQ-955
+    name: HID Descriptor Parsing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-955.1
+        description: "AC1: Device capabilities are automatically detected from HID descriptors"
+        tests:
+          - feature:specs/features/req_955_hid_descriptor_parsing.feature
+      - id: AC-955.2
+        description: "AC2: Parsed descriptors identify axis count, button count, and hat switches"
+        tests:
+          - feature:specs/features/req_955_hid_descriptor_parsing.feature
+      - id: AC-955.3
+        description: "AC3: Descriptor parsing handles vendor-specific usage pages gracefully"
+        tests:
+          - feature:specs/features/req_955_hid_descriptor_parsing.feature
+      - id: AC-955.4
+        description: "AC4: Parsed capabilities are cached to avoid repeated descriptor reads"
+        tests:
+          - feature:specs/features/req_955_hid_descriptor_parsing.feature
+  # Product Requirement: Device Input Visualization
+  - id: REQ-956
+    name: Device Input Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-956.1
+        description: "AC1: Real-time input display shows current axis positions for all connected devices"
+        tests:
+          - feature:specs/features/req_956_device_input_visualization.feature
+      - id: AC-956.2
+        description: "AC2: Visualization updates at display refresh rate without impacting RT processing"
+        tests:
+          - feature:specs/features/req_956_device_input_visualization.feature
+      - id: AC-956.3
+        description: "AC3: Button press states are displayed with visual indicators"
+        tests:
+          - feature:specs/features/req_956_device_input_visualization.feature
+      - id: AC-956.4
+        description: "AC4: Input visualization supports multiple simultaneous device views"
+        tests:
+          - feature:specs/features/req_956_device_input_visualization.feature
+  # Product Requirement: Axis Curve Visualization
+  - id: REQ-957
+    name: Axis Curve Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-957.1
+        description: "AC1: Visual curve editor data provides input-output mapping preview"
+        tests:
+          - feature:specs/features/req_957_axis_curve_visualization.feature
+      - id: AC-957.2
+        description: "AC2: Curve visualization reflects current profile settings in real time"
+        tests:
+          - feature:specs/features/req_957_axis_curve_visualization.feature
+      - id: AC-957.3
+        description: "AC3: Multiple curve types are rendered including linear, exponential, and custom"
+        tests:
+          - feature:specs/features/req_957_axis_curve_visualization.feature
+      - id: AC-957.4
+        description: "AC4: Curve preview shows current input position on the curve graph"
+        tests:
+          - feature:specs/features/req_957_axis_curve_visualization.feature
+  # Product Requirement: Button Mapping Persistence
+  - id: REQ-958
+    name: Button Mapping Persistence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-958.1
+        description: "AC1: Button assignments are saved per game and per device combination"
+        tests:
+          - feature:specs/features/req_958_button_mapping_persistence.feature
+      - id: AC-958.2
+        description: "AC2: Persisted mappings survive service restarts and device reconnection"
+        tests:
+          - feature:specs/features/req_958_button_mapping_persistence.feature
+      - id: AC-958.3
+        description: "AC3: Button mapping conflicts are detected and reported to the user"
+        tests:
+          - feature:specs/features/req_958_button_mapping_persistence.feature
+      - id: AC-958.4
+        description: "AC4: Bulk import and export of button mappings is supported"
+        tests:
+          - feature:specs/features/req_958_button_mapping_persistence.feature
+  # Product Requirement: Hat Switch Configuration
+  - id: REQ-959
+    name: Hat Switch Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-959.1
+        description: "AC1: Hat switch behaviors are configurable between 4-way and 8-way modes"
+        tests:
+          - feature:specs/features/req_959_hat_switch_configuration.feature
+      - id: AC-959.2
+        description: "AC2: Hat positions can be mapped to arbitrary button or axis outputs"
+        tests:
+          - feature:specs/features/req_959_hat_switch_configuration.feature
+      - id: AC-959.3
+        description: "AC3: Hat switch dead zone is configurable for diagonal rejection"
+        tests:
+          - feature:specs/features/req_959_hat_switch_configuration.feature
+      - id: AC-959.4
+        description: "AC4: Multiple hat switches on a single device are independently configurable"
+        tests:
+          - feature:specs/features/req_959_hat_switch_configuration.feature
+  # Product Requirement: Analog Precision Optimization
+  - id: REQ-960
+    name: Analog Precision Optimization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-960.1
+        description: "AC1: Effective axis resolution is maximized through noise floor detection"
+        tests:
+          - feature:specs/features/req_960_analog_precision_optimization.feature
+      - id: AC-960.2
+        description: "AC2: Precision optimization adapts to the hardware resolution of each axis"
+        tests:
+          - feature:specs/features/req_960_analog_precision_optimization.feature
+      - id: AC-960.3
+        description: "AC3: Sub-bit interpolation improves effective resolution beyond hardware limits"
+        tests:
+          - feature:specs/features/req_960_analog_precision_optimization.feature
+      - id: AC-960.4
+        description: "AC4: Precision statistics are reported per axis for diagnostic review"
+        tests:
+          - feature:specs/features/req_960_analog_precision_optimization.feature
+
+  # ============================================================================
+  # SIM INTEGRATION DEPTH (REQ-961 to REQ-970)
+  # ============================================================================
+
+  # Product Requirement: MSFS Variable Subscription
+  - id: REQ-961
+    name: MSFS Variable Subscription
+    kind: product
+    status: draft
+    ac:
+      - id: AC-961.1
+        description: "AC1: Efficient SimVar polling subscribes only to variables required by active profile"
+        tests:
+          - feature:specs/features/req_961_msfs_variable_subscription.feature
+      - id: AC-961.2
+        description: "AC2: Variable subscription updates when profile or aircraft changes"
+        tests:
+          - feature:specs/features/req_961_msfs_variable_subscription.feature
+      - id: AC-961.3
+        description: "AC3: Subscription batching reduces SimConnect round trips for performance"
+        tests:
+          - feature:specs/features/req_961_msfs_variable_subscription.feature
+      - id: AC-961.4
+        description: "AC4: Unsubscribed variables are automatically cleaned up on profile switch"
+        tests:
+          - feature:specs/features/req_961_msfs_variable_subscription.feature
+  # Product Requirement: X-Plane Dataref Caching
+  - id: REQ-962
+    name: X-Plane Dataref Caching
+    kind: product
+    status: draft
+    ac:
+      - id: AC-962.1
+        description: "AC1: Local dataref cache stores values with configurable time-to-live"
+        tests:
+          - feature:specs/features/req_962_xplane_dataref_caching.feature
+      - id: AC-962.2
+        description: "AC2: Cache invalidation occurs on dataref write or TTL expiry"
+        tests:
+          - feature:specs/features/req_962_xplane_dataref_caching.feature
+      - id: AC-962.3
+        description: "AC3: Cache hit rate is tracked and reported via metrics endpoint"
+        tests:
+          - feature:specs/features/req_962_xplane_dataref_caching.feature
+      - id: AC-962.4
+        description: "AC4: Cache size is bounded to prevent unbounded memory growth"
+        tests:
+          - feature:specs/features/req_962_xplane_dataref_caching.feature
+  # Product Requirement: DCS Cockpit Argument Binding
+  - id: REQ-963
+    name: DCS Cockpit Argument Binding
+    kind: product
+    status: draft
+    ac:
+      - id: AC-963.1
+        description: "AC1: Cockpit arguments are mapped to device outputs for panel synchronization"
+        tests:
+          - feature:specs/features/req_963_dcs_cockpit_argument_binding.feature
+      - id: AC-963.2
+        description: "AC2: Argument bindings support per-aircraft module configurations"
+        tests:
+          - feature:specs/features/req_963_dcs_cockpit_argument_binding.feature
+      - id: AC-963.3
+        description: "AC3: Binding updates are delivered within one processing tick of argument change"
+        tests:
+          - feature:specs/features/req_963_dcs_cockpit_argument_binding.feature
+      - id: AC-963.4
+        description: "AC4: Invalid cockpit argument references are reported as configuration warnings"
+        tests:
+          - feature:specs/features/req_963_dcs_cockpit_argument_binding.feature
+  # Product Requirement: Multi-Sim Simultaneous Operation
+  - id: REQ-964
+    name: Multi-Sim Simultaneous Operation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-964.1
+        description: "AC1: Multiple simulator adapters can be active simultaneously without conflict"
+        tests:
+          - feature:specs/features/req_964_multi_sim_simultaneous.feature
+      - id: AC-964.2
+        description: "AC2: Device routing rules determine which sim receives input from each device"
+        tests:
+          - feature:specs/features/req_964_multi_sim_simultaneous.feature
+      - id: AC-964.3
+        description: "AC3: Sim priority ordering resolves conflicts when multiple sims claim same device"
+        tests:
+          - feature:specs/features/req_964_multi_sim_simultaneous.feature
+      - id: AC-964.4
+        description: "AC4: Adding or removing a sim adapter does not disrupt other active connections"
+        tests:
+          - feature:specs/features/req_964_multi_sim_simultaneous.feature
+  # Product Requirement: Sim Event Injection
+  - id: REQ-965
+    name: Sim Event Injection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-965.1
+        description: "AC1: Commands can be sent to simulators through the event injection API"
+        tests:
+          - feature:specs/features/req_965_sim_event_injection.feature
+      - id: AC-965.2
+        description: "AC2: Event injection supports all three simulator platforms with unified interface"
+        tests:
+          - feature:specs/features/req_965_sim_event_injection.feature
+      - id: AC-965.3
+        description: "AC3: Injected events are queued and delivered in order with confirmation"
+        tests:
+          - feature:specs/features/req_965_sim_event_injection.feature
+      - id: AC-965.4
+        description: "AC4: Rate limiting prevents event flooding that could destabilize the simulator"
+        tests:
+          - feature:specs/features/req_965_sim_event_injection.feature
+  # Product Requirement: Weather Data Extraction
+  - id: REQ-966
+    name: Weather Data Extraction
+    kind: product
+    status: draft
+    ac:
+      - id: AC-966.1
+        description: "AC1: Wind speed and direction are extracted from simulator for FFB wind effects"
+        tests:
+          - feature:specs/features/req_966_weather_data_extraction.feature
+      - id: AC-966.2
+        description: "AC2: Turbulence intensity data drives force feedback vibration parameters"
+        tests:
+          - feature:specs/features/req_966_weather_data_extraction.feature
+      - id: AC-966.3
+        description: "AC3: Weather data updates at minimum 4Hz for responsive force feedback"
+        tests:
+          - feature:specs/features/req_966_weather_data_extraction.feature
+      - id: AC-966.4
+        description: "AC4: Missing weather data gracefully falls back to neutral force feedback state"
+        tests:
+          - feature:specs/features/req_966_weather_data_extraction.feature
+  # Product Requirement: Camera Control Integration
+  - id: REQ-967
+    name: Camera Control Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-967.1
+        description: "AC1: Head tracker input is forwarded to simulator camera control system"
+        tests:
+          - feature:specs/features/req_967_camera_control_integration.feature
+      - id: AC-967.2
+        description: "AC2: Camera integration supports TrackIR, OpenTrack, and OpenXR protocols"
+        tests:
+          - feature:specs/features/req_967_camera_control_integration.feature
+      - id: AC-967.3
+        description: "AC3: Camera smoothing parameters are configurable per simulator"
+        tests:
+          - feature:specs/features/req_967_camera_control_integration.feature
+      - id: AC-967.4
+        description: "AC4: Camera control does not interfere with normal axis processing pipeline"
+        tests:
+          - feature:specs/features/req_967_camera_control_integration.feature
+  # Product Requirement: Radio Panel Integration
+  - id: REQ-968
+    name: Radio Panel Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-968.1
+        description: "AC1: Radio frequency management synchronizes physical panel with sim radios"
+        tests:
+          - feature:specs/features/req_968_radio_panel_integration.feature
+      - id: AC-968.2
+        description: "AC2: Active and standby frequencies are displayed on panel LCD or LEDs"
+        tests:
+          - feature:specs/features/req_968_radio_panel_integration.feature
+      - id: AC-968.3
+        description: "AC3: Frequency swap operation on panel triggers corresponding sim event"
+        tests:
+          - feature:specs/features/req_968_radio_panel_integration.feature
+      - id: AC-968.4
+        description: "AC4: Radio panel integration supports COM, NAV, and ADF frequency bands"
+        tests:
+          - feature:specs/features/req_968_radio_panel_integration.feature
+  # Product Requirement: Autopilot Integration
+  - id: REQ-969
+    name: Autopilot Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-969.1
+        description: "AC1: Autopilot state is read from simulator for panel LED indication"
+        tests:
+          - feature:specs/features/req_969_autopilot_integration.feature
+      - id: AC-969.2
+        description: "AC2: AP mode changes update panel indicators within 100ms of sim state change"
+        tests:
+          - feature:specs/features/req_969_autopilot_integration.feature
+      - id: AC-969.3
+        description: "AC3: Panel buttons can engage and disengage autopilot modes in the simulator"
+        tests:
+          - feature:specs/features/req_969_autopilot_integration.feature
+      - id: AC-969.4
+        description: "AC4: Autopilot altitude, heading, and speed settings are displayed on panels"
+        tests:
+          - feature:specs/features/req_969_autopilot_integration.feature
+  # Product Requirement: Navigation Data Feed
+  - id: REQ-970
+    name: Navigation Data Feed
+    kind: product
+    status: draft
+    ac:
+      - id: AC-970.1
+        description: "AC1: Navigation data from simulator is available for instrument panel display"
+        tests:
+          - feature:specs/features/req_970_navigation_data_feed.feature
+      - id: AC-970.2
+        description: "AC2: Data feed includes heading, altitude, airspeed, and vertical speed"
+        tests:
+          - feature:specs/features/req_970_navigation_data_feed.feature
+      - id: AC-970.3
+        description: "AC3: Navigation data update rate is configurable per instrument requirement"
+        tests:
+          - feature:specs/features/req_970_navigation_data_feed.feature
+      - id: AC-970.4
+        description: "AC4: Data feed handles simulator pause and time acceleration gracefully"
+        tests:
+          - feature:specs/features/req_970_navigation_data_feed.feature
+
+  # ============================================================================
+  # RUNTIME RELIABILITY (REQ-971 to REQ-980)
+  # ============================================================================
+
+  # Operational Requirement: Graceful Degradation
+  - id: REQ-971
+    name: Graceful Degradation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-971.1
+        description: "AC1: System continues operating with reduced functionality when non-critical errors occur"
+        tests:
+          - feature:specs/features/req_971_graceful_degradation.feature
+      - id: AC-971.2
+        description: "AC2: Degraded components are identified and reported via health status API"
+        tests:
+          - feature:specs/features/req_971_graceful_degradation.feature
+      - id: AC-971.3
+        description: "AC3: Recovery is attempted automatically when degraded component becomes available"
+        tests:
+          - feature:specs/features/req_971_graceful_degradation.feature
+      - id: AC-971.4
+        description: "AC4: Critical path components are isolated from non-critical failure propagation"
+        tests:
+          - feature:specs/features/req_971_graceful_degradation.feature
+  # Operational Requirement: Memory Leak Detection
+  - id: REQ-972
+    name: Memory Leak Detection
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-972.1
+        description: "AC1: Memory growth is monitored over time with configurable sampling intervals"
+        tests:
+          - feature:specs/features/req_972_memory_leak_detection.feature
+      - id: AC-972.2
+        description: "AC2: Alerts are raised when memory usage exceeds expected growth thresholds"
+        tests:
+          - feature:specs/features/req_972_memory_leak_detection.feature
+      - id: AC-972.3
+        description: "AC3: Memory usage per component is tracked for leak source identification"
+        tests:
+          - feature:specs/features/req_972_memory_leak_detection.feature
+      - id: AC-972.4
+        description: "AC4: Memory statistics are available via diagnostic commands and metrics API"
+        tests:
+          - feature:specs/features/req_972_memory_leak_detection.feature
+  # Operational Requirement: Thread Deadlock Detection
+  - id: REQ-973
+    name: Thread Deadlock Detection
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-973.1
+        description: "AC1: Thread progress is monitored to detect potential deadlock conditions"
+        tests:
+          - feature:specs/features/req_973_thread_deadlock_detection.feature
+      - id: AC-973.2
+        description: "AC2: Deadlock detection reports involved threads and held resources"
+        tests:
+          - feature:specs/features/req_973_thread_deadlock_detection.feature
+      - id: AC-973.3
+        description: "AC3: Watchdog timer triggers recovery action when thread becomes unresponsive"
+        tests:
+          - feature:specs/features/req_973_thread_deadlock_detection.feature
+      - id: AC-973.4
+        description: "AC4: Deadlock events are logged with full stack trace for post-mortem analysis"
+        tests:
+          - feature:specs/features/req_973_thread_deadlock_detection.feature
+  # Operational Requirement: Resource Cleanup
+  - id: REQ-974
+    name: Resource Cleanup
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-974.1
+        description: "AC1: All system resources are properly released during graceful shutdown"
+        tests:
+          - feature:specs/features/req_974_resource_cleanup.feature
+      - id: AC-974.2
+        description: "AC2: Device handles are closed and force feedback effects are cleared on exit"
+        tests:
+          - feature:specs/features/req_974_resource_cleanup.feature
+      - id: AC-974.3
+        description: "AC3: Temporary files and IPC channels are cleaned up during shutdown"
+        tests:
+          - feature:specs/features/req_974_resource_cleanup.feature
+      - id: AC-974.4
+        description: "AC4: Cleanup timeout ensures shutdown completes within configurable time limit"
+        tests:
+          - feature:specs/features/req_974_resource_cleanup.feature
+  # Operational Requirement: Crash Recovery
+  - id: REQ-975
+    name: Crash Recovery
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-975.1
+        description: "AC1: Service auto-restarts after unexpected termination with state restoration"
+        tests:
+          - feature:specs/features/req_975_crash_recovery.feature
+      - id: AC-975.2
+        description: "AC2: Previous session state is recovered from persistent checkpoint data"
+        tests:
+          - feature:specs/features/req_975_crash_recovery.feature
+      - id: AC-975.3
+        description: "AC3: Crash count tracking prevents restart loops with exponential backoff"
+        tests:
+          - feature:specs/features/req_975_crash_recovery.feature
+      - id: AC-975.4
+        description: "AC4: Crash dump is captured and stored for diagnostic analysis"
+        tests:
+          - feature:specs/features/req_975_crash_recovery.feature
+  # Operational Requirement: Data Corruption Prevention
+  - id: REQ-976
+    name: Data Corruption Prevention
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-976.1
+        description: "AC1: Configuration writes use transactional semantics with atomic file replacement"
+        tests:
+          - feature:specs/features/req_976_data_corruption_prevention.feature
+      - id: AC-976.2
+        description: "AC2: Write operations create backup before modifying existing configuration"
+        tests:
+          - feature:specs/features/req_976_data_corruption_prevention.feature
+      - id: AC-976.3
+        description: "AC3: Corrupted configuration files are detected and replaced with last known good"
+        tests:
+          - feature:specs/features/req_976_data_corruption_prevention.feature
+      - id: AC-976.4
+        description: "AC4: File integrity checksums are validated on every configuration load"
+        tests:
+          - feature:specs/features/req_976_data_corruption_prevention.feature
+  # Operational Requirement: Timeout Handling
+  - id: REQ-977
+    name: Timeout Handling
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-977.1
+        description: "AC1: All external operations have configurable timeout limits"
+        tests:
+          - feature:specs/features/req_977_timeout_handling.feature
+      - id: AC-977.2
+        description: "AC2: Timeout expiry triggers appropriate error handling and resource cleanup"
+        tests:
+          - feature:specs/features/req_977_timeout_handling.feature
+      - id: AC-977.3
+        description: "AC3: Timeout values are tunable per operation type via configuration"
+        tests:
+          - feature:specs/features/req_977_timeout_handling.feature
+      - id: AC-977.4
+        description: "AC4: Timeout events are logged with operation context for debugging"
+        tests:
+          - feature:specs/features/req_977_timeout_handling.feature
+  # Operational Requirement: Circuit Breaker Pattern
+  - id: REQ-978
+    name: Circuit Breaker Pattern
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-978.1
+        description: "AC1: Circuit breakers prevent cascading failures between system components"
+        tests:
+          - feature:specs/features/req_978_circuit_breaker_pattern.feature
+      - id: AC-978.2
+        description: "AC2: Circuit state transitions through closed, open, and half-open states"
+        tests:
+          - feature:specs/features/req_978_circuit_breaker_pattern.feature
+      - id: AC-978.3
+        description: "AC3: Failure threshold and recovery timeout are configurable per circuit"
+        tests:
+          - feature:specs/features/req_978_circuit_breaker_pattern.feature
+      - id: AC-978.4
+        description: "AC4: Circuit breaker state changes are emitted as events on the system bus"
+        tests:
+          - feature:specs/features/req_978_circuit_breaker_pattern.feature
+  # Operational Requirement: Retry with Backoff
+  - id: REQ-979
+    name: Retry with Backoff
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-979.1
+        description: "AC1: Transient failures trigger automatic retry with exponential backoff"
+        tests:
+          - feature:specs/features/req_979_retry_with_backoff.feature
+      - id: AC-979.2
+        description: "AC2: Maximum retry count and backoff ceiling are configurable per operation"
+        tests:
+          - feature:specs/features/req_979_retry_with_backoff.feature
+      - id: AC-979.3
+        description: "AC3: Retry attempts are logged with attempt number and delay duration"
+        tests:
+          - feature:specs/features/req_979_retry_with_backoff.feature
+      - id: AC-979.4
+        description: "AC4: Jitter is added to backoff delay to prevent thundering herd effects"
+        tests:
+          - feature:specs/features/req_979_retry_with_backoff.feature
+  # Operational Requirement: Health Dashboard
+  - id: REQ-980
+    name: Health Dashboard
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-980.1
+        description: "AC1: Web-based health overview displays system status in real time"
+        tests:
+          - feature:specs/features/req_980_health_dashboard.feature
+      - id: AC-980.2
+        description: "AC2: Dashboard shows component health, device status, and sim connections"
+        tests:
+          - feature:specs/features/req_980_health_dashboard.feature
+      - id: AC-980.3
+        description: "AC3: Historical health data is charted with configurable time window"
+        tests:
+          - feature:specs/features/req_980_health_dashboard.feature
+      - id: AC-980.4
+        description: "AC4: Dashboard is accessible on configurable local port without authentication"
+        tests:
+          - feature:specs/features/req_980_health_dashboard.feature
+
+  # ============================================================================
+  # DEVELOPER EXPERIENCE (REQ-981 to REQ-990)
+  # ============================================================================
+
+  # Operational Requirement: Plugin SDK Documentation
+  - id: REQ-981
+    name: Plugin SDK Documentation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-981.1
+        description: "AC1: Comprehensive plugin development guide covers all three plugin tiers"
+        tests:
+          - feature:specs/features/req_981_plugin_sdk_documentation.feature
+      - id: AC-981.2
+        description: "AC2: Documentation includes API reference with type signatures and examples"
+        tests:
+          - feature:specs/features/req_981_plugin_sdk_documentation.feature
+      - id: AC-981.3
+        description: "AC3: Getting started tutorial enables first plugin creation within 30 minutes"
+        tests:
+          - feature:specs/features/req_981_plugin_sdk_documentation.feature
+      - id: AC-981.4
+        description: "AC4: Documentation is versioned and published alongside each SDK release"
+        tests:
+          - feature:specs/features/req_981_plugin_sdk_documentation.feature
+  # Operational Requirement: Example Plugins
+  - id: REQ-982
+    name: Example Plugins
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-982.1
+        description: "AC1: Reference implementations exist for WASM, native fast-path, and service tiers"
+        tests:
+          - feature:specs/features/req_982_example_plugins.feature
+      - id: AC-982.2
+        description: "AC2: Each example plugin includes build instructions and test harness"
+        tests:
+          - feature:specs/features/req_982_example_plugins.feature
+      - id: AC-982.3
+        description: "AC3: Example plugins demonstrate common patterns like axis modification and event handling"
+        tests:
+          - feature:specs/features/req_982_example_plugins.feature
+      - id: AC-982.4
+        description: "AC4: Examples are validated in CI to ensure they compile against current SDK"
+        tests:
+          - feature:specs/features/req_982_example_plugins.feature
+  # Operational Requirement: Development Mode
+  - id: REQ-983
+    name: Development Mode
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-983.1
+        description: "AC1: Verbose logging mode provides detailed trace output for all system operations"
+        tests:
+          - feature:specs/features/req_983_development_mode.feature
+      - id: AC-983.2
+        description: "AC2: Hot-reload enables profile and plugin changes without service restart"
+        tests:
+          - feature:specs/features/req_983_development_mode.feature
+      - id: AC-983.3
+        description: "AC3: Development mode disables RT priority to allow debugging without elevated privileges"
+        tests:
+          - feature:specs/features/req_983_development_mode.feature
+      - id: AC-983.4
+        description: "AC4: Mock simulator connections are available for testing without running sims"
+        tests:
+          - feature:specs/features/req_983_development_mode.feature
+  # Operational Requirement: Mock Device Driver
+  - id: REQ-984
+    name: Mock Device Driver
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-984.1
+        description: "AC1: Virtual devices simulate HID input for testing without physical hardware"
+        tests:
+          - feature:specs/features/req_984_mock_device_driver.feature
+      - id: AC-984.2
+        description: "AC2: Mock devices support configurable axis count, button count, and FFB capabilities"
+        tests:
+          - feature:specs/features/req_984_mock_device_driver.feature
+      - id: AC-984.3
+        description: "AC3: Scripted input sequences can be replayed through mock devices"
+        tests:
+          - feature:specs/features/req_984_mock_device_driver.feature
+      - id: AC-984.4
+        description: "AC4: Mock device behavior is deterministic for reproducible test results"
+        tests:
+          - feature:specs/features/req_984_mock_device_driver.feature
+  # Operational Requirement: Trace Replay Tool
+  - id: REQ-985
+    name: Trace Replay Tool
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-985.1
+        description: "AC1: Captured blackbox traces can be replayed for offline debugging"
+        tests:
+          - feature:specs/features/req_985_trace_replay_tool.feature
+      - id: AC-985.2
+        description: "AC2: Replay supports variable speed playback including pause and step modes"
+        tests:
+          - feature:specs/features/req_985_trace_replay_tool.feature
+      - id: AC-985.3
+        description: "AC3: Replayed traces produce identical output given identical configuration"
+        tests:
+          - feature:specs/features/req_985_trace_replay_tool.feature
+      - id: AC-985.4
+        description: "AC4: Trace replay tool outputs diagnostic annotations at configurable detail levels"
+        tests:
+          - feature:specs/features/req_985_trace_replay_tool.feature
+  # Operational Requirement: Profile Linter
+  - id: REQ-986
+    name: Profile Linter
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-986.1
+        description: "AC1: Static analysis detects common configuration errors in profile files"
+        tests:
+          - feature:specs/features/req_986_profile_linter.feature
+      - id: AC-986.2
+        description: "AC2: Linter checks include unused axis mappings, invalid references, and type mismatches"
+        tests:
+          - feature:specs/features/req_986_profile_linter.feature
+      - id: AC-986.3
+        description: "AC3: Lint warnings include suggested fixes with actionable guidance"
+        tests:
+          - feature:specs/features/req_986_profile_linter.feature
+      - id: AC-986.4
+        description: "AC4: Profile linter integrates with CI pipeline for automated validation"
+        tests:
+          - feature:specs/features/req_986_profile_linter.feature
+  # Operational Requirement: API Playground
+  - id: REQ-987
+    name: API Playground
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-987.1
+        description: "AC1: Interactive API exploration tool allows testing gRPC endpoints"
+        tests:
+          - feature:specs/features/req_987_api_playground.feature
+      - id: AC-987.2
+        description: "AC2: Playground provides request templates for all available API methods"
+        tests:
+          - feature:specs/features/req_987_api_playground.feature
+      - id: AC-987.3
+        description: "AC3: Response data is formatted and syntax-highlighted for readability"
+        tests:
+          - feature:specs/features/req_987_api_playground.feature
+      - id: AC-987.4
+        description: "AC4: Playground maintains request history for iterative testing sessions"
+        tests:
+          - feature:specs/features/req_987_api_playground.feature
+  # Quality Requirement: Benchmark Harness
+  - id: REQ-988
+    name: Benchmark Harness
+    kind: quality
+    status: draft
+    ac:
+      - id: AC-988.1
+        description: "AC1: Standardized performance benchmarks cover axis processing and FFB synthesis"
+        tests:
+          - feature:specs/features/req_988_benchmark_harness.feature
+      - id: AC-988.2
+        description: "AC2: Benchmark results are comparable across runs with statistical analysis"
+        tests:
+          - feature:specs/features/req_988_benchmark_harness.feature
+      - id: AC-988.3
+        description: "AC3: Regression detection alerts when performance degrades beyond threshold"
+        tests:
+          - feature:specs/features/req_988_benchmark_harness.feature
+      - id: AC-988.4
+        description: "AC4: Benchmark harness supports custom scenarios defined in configuration files"
+        tests:
+          - feature:specs/features/req_988_benchmark_harness.feature
+  # Quality Requirement: Integration Test Framework
+  - id: REQ-989
+    name: Integration Test Framework
+    kind: quality
+    status: draft
+    ac:
+      - id: AC-989.1
+        description: "AC1: Test harness enables end-to-end sim integration testing with mock adapters"
+        tests:
+          - feature:specs/features/req_989_integration_test_framework.feature
+      - id: AC-989.2
+        description: "AC2: Framework supports parallel test execution with isolated device contexts"
+        tests:
+          - feature:specs/features/req_989_integration_test_framework.feature
+      - id: AC-989.3
+        description: "AC3: Test fixtures provide preconfigured device and profile combinations"
+        tests:
+          - feature:specs/features/req_989_integration_test_framework.feature
+      - id: AC-989.4
+        description: "AC4: Integration test results include timing data and resource usage metrics"
+        tests:
+          - feature:specs/features/req_989_integration_test_framework.feature
+  # Operational Requirement: Error Catalog
+  - id: REQ-990
+    name: Error Catalog
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-990.1
+        description: "AC1: Comprehensive error code reference documents all system error conditions"
+        tests:
+          - feature:specs/features/req_990_error_catalog.feature
+      - id: AC-990.2
+        description: "AC2: Each error code includes description, cause, and recommended resolution"
+        tests:
+          - feature:specs/features/req_990_error_catalog.feature
+      - id: AC-990.3
+        description: "AC3: Error catalog is generated from source code annotations automatically"
+        tests:
+          - feature:specs/features/req_990_error_catalog.feature
+      - id: AC-990.4
+        description: "AC4: Error codes follow hierarchical naming convention by subsystem"
+        tests:
+          - feature:specs/features/req_990_error_catalog.feature
+
+  # ============================================================================
+  # RELEASE AND DISTRIBUTION (REQ-991 to REQ-1000)
+  # ============================================================================
+
+  # Operational Requirement: Changelog Generation
+  - id: REQ-991
+    name: Changelog Generation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-991.1
+        description: "AC1: Automated changelog is generated from conventional commit messages"
+        tests:
+          - feature:specs/features/req_991_changelog_generation.feature
+      - id: AC-991.2
+        description: "AC2: Changelog entries are categorized by type including features, fixes, and breaking changes"
+        tests:
+          - feature:specs/features/req_991_changelog_generation.feature
+      - id: AC-991.3
+        description: "AC3: Generated changelog includes links to relevant pull requests and issues"
+        tests:
+          - feature:specs/features/req_991_changelog_generation.feature
+      - id: AC-991.4
+        description: "AC4: Changelog generation is integrated into the release pipeline"
+        tests:
+          - feature:specs/features/req_991_changelog_generation.feature
+  # Operational Requirement: Release Automation
+  - id: REQ-992
+    name: Release Automation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-992.1
+        description: "AC1: Automated release pipeline builds, tests, and publishes release artifacts"
+        tests:
+          - feature:specs/features/req_992_release_automation.feature
+      - id: AC-992.2
+        description: "AC2: Release pipeline enforces all quality gates before artifact publication"
+        tests:
+          - feature:specs/features/req_992_release_automation.feature
+      - id: AC-992.3
+        description: "AC3: Semantic versioning is automatically determined from commit history"
+        tests:
+          - feature:specs/features/req_992_release_automation.feature
+      - id: AC-992.4
+        description: "AC4: Release artifacts are published to configured distribution channels"
+        tests:
+          - feature:specs/features/req_992_release_automation.feature
+  # Security Requirement: Binary Signing
+  - id: REQ-993
+    name: Binary Signing
+    kind: security
+    status: draft
+    ac:
+      - id: AC-993.1
+        description: "AC1: All distributed binaries are code-signed with verified certificates"
+        tests:
+          - feature:specs/features/req_993_binary_signing.feature
+      - id: AC-993.2
+        description: "AC2: Signature verification is performed during installation and update"
+        tests:
+          - feature:specs/features/req_993_binary_signing.feature
+      - id: AC-993.3
+        description: "AC3: Signing key rotation is supported without breaking existing installations"
+        tests:
+          - feature:specs/features/req_993_binary_signing.feature
+      - id: AC-993.4
+        description: "AC4: Unsigned or tampered binaries are rejected with clear error messaging"
+        tests:
+          - feature:specs/features/req_993_binary_signing.feature
+  # Operational Requirement: License Compliance
+  - id: REQ-994
+    name: License Compliance
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-994.1
+        description: "AC1: SPDX license tracking covers all direct and transitive dependencies"
+        tests:
+          - feature:specs/features/req_994_license_compliance.feature
+      - id: AC-994.2
+        description: "AC2: License compatibility is validated against project license requirements"
+        tests:
+          - feature:specs/features/req_994_license_compliance.feature
+      - id: AC-994.3
+        description: "AC3: License report is generated and included in distribution artifacts"
+        tests:
+          - feature:specs/features/req_994_license_compliance.feature
+      - id: AC-994.4
+        description: "AC4: New dependency additions trigger automatic license review in CI"
+        tests:
+          - feature:specs/features/req_994_license_compliance.feature
+  # Security Requirement: Dependency Auditing
+  - id: REQ-995
+    name: Dependency Auditing
+    kind: security
+    status: draft
+    ac:
+      - id: AC-995.1
+        description: "AC1: Automated vulnerability scanning checks all dependencies on every build"
+        tests:
+          - feature:specs/features/req_995_dependency_auditing.feature
+      - id: AC-995.2
+        description: "AC2: Known vulnerabilities are flagged with severity level and remediation guidance"
+        tests:
+          - feature:specs/features/req_995_dependency_auditing.feature
+      - id: AC-995.3
+        description: "AC3: Audit results block release when critical or high severity issues are found"
+        tests:
+          - feature:specs/features/req_995_dependency_auditing.feature
+      - id: AC-995.4
+        description: "AC4: Dependency audit history is retained for compliance reporting"
+        tests:
+          - feature:specs/features/req_995_dependency_auditing.feature
+  # Operational Requirement: Compatibility Matrix Generation
+  - id: REQ-996
+    name: Compatibility Matrix Generation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-996.1
+        description: "AC1: Compatibility matrix is auto-generated from device and simulator manifests"
+        tests:
+          - feature:specs/features/req_996_compatibility_matrix_generation.feature
+      - id: AC-996.2
+        description: "AC2: Matrix includes supported OS versions, simulator versions, and device models"
+        tests:
+          - feature:specs/features/req_996_compatibility_matrix_generation.feature
+      - id: AC-996.3
+        description: "AC3: Generated matrix is published as part of release documentation"
+        tests:
+          - feature:specs/features/req_996_compatibility_matrix_generation.feature
+      - id: AC-996.4
+        description: "AC4: Matrix validation runs against actual test results in CI pipeline"
+        tests:
+          - feature:specs/features/req_996_compatibility_matrix_generation.feature
+  # Operational Requirement: Documentation Site
+  - id: REQ-997
+    name: Documentation Site
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-997.1
+        description: "AC1: Generated documentation site includes API reference and user guides"
+        tests:
+          - feature:specs/features/req_997_documentation_site.feature
+      - id: AC-997.2
+        description: "AC2: Documentation is built from source and published on every release"
+        tests:
+          - feature:specs/features/req_997_documentation_site.feature
+      - id: AC-997.3
+        description: "AC3: Site search enables finding content across all documentation sections"
+        tests:
+          - feature:specs/features/req_997_documentation_site.feature
+      - id: AC-997.4
+        description: "AC4: Documentation site supports versioned content for multiple releases"
+        tests:
+          - feature:specs/features/req_997_documentation_site.feature
+  # Operational Requirement: Community Templates
+  - id: REQ-998
+    name: Community Templates
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-998.1
+        description: "AC1: Issue templates guide reporters through structured bug and feature submissions"
+        tests:
+          - feature:specs/features/req_998_community_templates.feature
+      - id: AC-998.2
+        description: "AC2: Pull request template includes checklist for quality gate compliance"
+        tests:
+          - feature:specs/features/req_998_community_templates.feature
+      - id: AC-998.3
+        description: "AC3: Discussion templates support categorized community conversations"
+        tests:
+          - feature:specs/features/req_998_community_templates.feature
+      - id: AC-998.4
+        description: "AC4: Templates are validated for completeness and updated with project evolution"
+        tests:
+          - feature:specs/features/req_998_community_templates.feature
+  # Operational Requirement: Contribution Guide
+  - id: REQ-999
+    name: Contribution Guide
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-999.1
+        description: "AC1: Comprehensive contributor onboarding guide covers setup, build, and test workflows"
+        tests:
+          - feature:specs/features/req_999_contribution_guide.feature
+      - id: AC-999.2
+        description: "AC2: Guide documents coding conventions, commit message format, and PR process"
+        tests:
+          - feature:specs/features/req_999_contribution_guide.feature
+      - id: AC-999.3
+        description: "AC3: Architecture overview section orients new contributors to codebase structure"
+        tests:
+          - feature:specs/features/req_999_contribution_guide.feature
+      - id: AC-999.4
+        description: "AC4: Contribution guide is linked from repository README and issue templates"
+        tests:
+          - feature:specs/features/req_999_contribution_guide.feature
+  # Product Requirement: Milestone 1000 Requirements
+  - id: REQ-1000
+    name: Milestone 1000 Requirements
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1000.1
+        description: "AC1: All 1000 requirements are tracked in the specification ledger"
+        tests:
+          - feature:specs/features/req_1000_milestone_1000.feature
+      - id: AC-1000.2
+        description: "AC2: Coverage report confirms feature files exist for every requirement"
+        tests:
+          - feature:specs/features/req_1000_milestone_1000.feature
+      - id: AC-1000.3
+        description: "AC3: Milestone review validates traceability from requirements to tests"
+        tests:
+          - feature:specs/features/req_1000_milestone_1000.feature
+      - id: AC-1000.4
+        description: "AC4: Specification ledger passes schema validation without errors"
+        tests:
+          - feature:specs/features/req_1000_milestone_1000.feature
