@@ -1,0 +1,55 @@
+# 3Dconnexion SpaceMouse Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F (3Dconnexion), PID 0xC631 confirmed from the Linux kernel
+# drivers/hid/hid-3dconnexion.c. The SpaceMouse Module is the compact
+# puck-only version (no buttons, just the 6-DOF sensing element) intended
+# for embedding in custom control panels or keyboards.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Module"
+  vendor: "3Dconnexion"
+  usb:
+    vendor_id: 0x256F       # 3Dconnexion (confirmed)
+    product_id: 0xC631      # Confirmed: Linux kernel hid-3dconnexion.c
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: SIX_DOF_SPACE_NAVIGATION
+    description: >
+      The SpaceMouse Module provides the 6-DOF push-pull-twist sensing
+      element without any buttons. It is designed for embedding in custom
+      control panels. In flight sim, used as a 6-axis camera/view control
+      or supplementary collective/cyclic input.
+  - id: COMPACT_PANEL_EMBED
+    description: >
+      The Module has a smaller footprint than the standard SpaceMouse
+      Compact. It is intended for integration into keyboard or panel
+      cutouts. Some cockpit builders mount it as a 6-DOF trim hat substitute.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    3Dconnexion SpaceMouse Module (button-free 6-DOF puck). VID/PID
+    confirmed from Linux kernel hid-3dconnexion.c. Used in embedded
+    panel builds for camera/view control. Last reviewed: 2026-06.

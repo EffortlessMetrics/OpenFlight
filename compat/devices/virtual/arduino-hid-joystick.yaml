@@ -1,0 +1,65 @@
+# Arduino-Based HID Joystick (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Arduino microcontrollers flashed with Joystick2 / ArduinoJoystickLibrary
+# (github.com/MHeironimus/ArduinoJoystickLibrary) present as generic HID
+# joystick devices. The VID/PID depends on the Arduino board type and
+# may be overridden via the ATmega32U4 bootloader. Common community values:
+#   Leonardo/Micro: VID 0x2341, PID 0x8036 (official Arduino HID mode)
+#   Pro Micro clone: VID 0x1B4F, PID 0x9206 (SparkFun Pro Micro)
+schema_version: "1"
+
+device:
+  name: "Arduino HID Joystick (Generic)"
+  vendor: "Arduino / Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (official Leonardo/Micro in HID mode)
+    product_id: 0x8036      # Arduino Leonardo HID Joystick profile
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 10
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID and PID vary by board manufacturer and firmware. Common variants:
+        - Arduino Leonardo/Micro (official): VID 0x2341 / PID 0x8036
+        - SparkFun Pro Micro 3.3V: VID 0x1B4F / PID 0x9206
+        - SparkFun Pro Micro 5V: VID 0x1B4F / PID 0x9205
+        - Chinese Pro Micro clone: VID 0x1B4F / PID 0x9204
+      OpenFlight profiles should match by device name string for DIY boards.
+  - id: AXIS_RESOLUTION_10BIT
+    description: >
+      ArduinoJoystickLibrary defaults to 10-bit axis resolution (1024 steps).
+      Some builds configure 12-bit resolution. Check the firmware source.
+  - id: CUSTOM_AXIS_COUNT
+    description: >
+      The axis/button count is set at compile time. Values here represent a
+      typical DIY flight panel build (8 axes, 32 buttons, 2 hats). Actual
+      hardware may differ; update the profile to match the specific build.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic Arduino HID joystick using ArduinoJoystickLibrary. VID/PID varies
+    by board. Popular for DIY flight panels, button boxes, and custom axis
+    controllers. Profile should be cloned and customised per build.
+    Last reviewed: 2026-06.

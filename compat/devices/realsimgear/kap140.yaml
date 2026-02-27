@@ -1,0 +1,63 @@
+# RealSimGear KAP 140 Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear). The RealSimGear KAP 140
+# is a replica bezel for the Bendix/King KAP 140 two-axis autopilot found
+# in most single-engine GA aircraft. It exposes autopilot mode buttons and
+# altitude/vertical-speed encoder knobs as HID events. PID is a community
+# estimate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear KAP 140 Autopilot Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF250      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF250 is a community estimate. RealSimGear uses Microchip VID
+      (0x04D8) with product-specific PIDs in the 0xF2xx range. Confirm with
+      lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      The altitude preselect (outer knob) and vertical speed (inner knob)
+      are rotary encoders reporting increment/decrement button pairs.
+      Map each to the MSFS/X-Plane KAP 140 altitude-select and VS
+      bindings.
+  - id: KAP140_MODE_BUTTONS
+    description: >
+      12 buttons cover: AP, HDG, NAV, APR, REV, ALT, VS, ARM, BARO, and
+      the test/auto-level functions. Map each to the corresponding KAP 140
+      autopilot binding in the aircraft profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear KAP 140 Autopilot Panel replica bezel. VID 0x04D8 confirmed;
+    PID 0xF250 is a community estimate. 12 buttons + 2 encoders. Designed for
+    GA aircraft (C172, PA28) autopilot simulation in MSFS/X-Plane.
+    Last reviewed: 2026-06.

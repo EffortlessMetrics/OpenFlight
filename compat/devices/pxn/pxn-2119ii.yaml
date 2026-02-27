@@ -1,0 +1,62 @@
+# PXN 2119II Wireless Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (PXN / Shenzhen JMD Technology). The 2119II is the second-
+# generation wireless variant of the PXN 2119 joystick (see pxn-2119.yaml).
+# It adds a 2.4 GHz wireless USB receiver while retaining the same
+# 8-axis, 20-button HID layout as the wired version. PID is a community
+# estimate; confirm with lsusb or HID Inspector on the USB receiver dongle.
+schema_version: "1"
+
+device:
+  name: "PXN 2119II Wireless Joystick"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416       # PXN / Shenzhen JMD Technology (confirmed)
+    product_id: 0x0301      # Community estimate — wireless USB receiver; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 62
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0301 is a community estimate. The wired PXN 2119 uses a
+      different PID (see pxn-2119.yaml). The wireless receiver dongle may
+      enumerate with a distinct PID from the wired joystick. Verify with
+      lsusb on the USB receiver dongle.
+  - id: WIRELESS_LATENCY
+    description: >
+      2.4 GHz wireless adds ~8–16 ms of additional latency compared to
+      the wired PXN 2119. Not recommended for RT-critical axis inputs;
+      consider wired connection or a dedicated HID device for rudder/throttle.
+  - id: POLLING_RATE_REDUCED
+    description: >
+      Wireless HID polling is limited to ~62 Hz (half the standard 125 Hz).
+      This produces visible quantisation in axis transitions. Apply smoothing
+      in the axis profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN 2119II wireless joystick. VID 0x3416 confirmed; PID 0x0301 is a
+    community estimate for the wireless receiver. ~62 Hz polling, ~8–16 ms
+    wireless latency. Second-gen wireless variant of pxn-2119.yaml.
+    Last reviewed: 2026-06.

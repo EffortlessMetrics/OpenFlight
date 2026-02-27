@@ -1,0 +1,64 @@
+# Thrustmaster T300 RS Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB66E confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_THRUSTMASTER_RACING_WHEEL) and
+# independently from SDL2 gamecontrollerdb. The T300 RS is a belt-driven
+# servo wheel with true force feedback; widely used as a rudder axis input
+# in flight simulators, particularly for ground steering in MSFS and X-Plane.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 RS Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB66E      # Confirmed: Linux kernel hid-ids.h + SDL2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (900° range); Z = accelerator pedal (unipolar);
+      Rz = brake pedal (unipolar). When used in flight sim, X is typically
+      mapped to rudder and Z/Rz to throttle/toe-brake axes.
+  - id: FFB_SERVO_BELT
+    description: >
+      T300 RS uses a servo-motor + belt-drive system. FFB fidelity is
+      significantly higher than the basic TMX (rubber-band motor). DirectInput
+      constant-force, spring, and sine-wave effects are fully supported.
+  - id: AXIS_COUNTS_COMMUNITY
+    description: >
+      Button count includes 15 face buttons + 2 paddle shifters + 7 wheel-rim
+      buttons. Community-sourced; HIL verification pending.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T300 RS — servo belt-drive FFB racing wheel.
+    VID/PID confirmed from Linux kernel hid-ids.h and SDL2. Widely used in
+    flight sim for rudder/nose-wheel steering axis. FFB effects (spring,
+    damper) can provide realistic centering force when mapped to rudder.
+    Last reviewed: 2026-06.

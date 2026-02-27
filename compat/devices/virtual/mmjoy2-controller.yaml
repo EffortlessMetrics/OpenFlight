@@ -1,0 +1,63 @@
+# MMJoy2 DIY USB HID Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MMJoy2 (github.com/MMjoy/mmjoy) is a popular open-source firmware for
+# ATmega32U4-based DIY joystick/button-box controllers. It is widely used
+# in Eastern European flight sim communities for building panel controllers,
+# collective grips, and rudder pedals. VID 0x1209 (InterBiometrics /
+# pid.codes community VID) / PID 0xBEAA is a common MMJoy2 community PID.
+schema_version: "1"
+
+device:
+  name: "MMJoy2 DIY USB HID Controller"
+  vendor: "MMJoy2 / Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1209       # pid.codes community VID (used by MMJoy2 builds)
+    product_id: 0xBEAA      # Community MMJoy2 default PID (some builds use 0x8081)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 12
+  buttons: 128
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID/PID varies widely across MMJoy2 builds. Common values:
+        - Official pid.codes: VID 0x1209 / PID 0xBEAA
+        - Older builds: VID 0x0483 (STMicro) with custom PID
+        - Some builds use Arduino Leonardo VID 0x2341
+      Match by USB product string "MMJoy2" when VID/PID is ambiguous.
+  - id: LARGE_BUTTON_COUNT
+    description: >
+      MMJoy2 supports up to 128 buttons via a button matrix. Most builds
+      use 32–64 buttons. The axis count (up to 8) and button matrix size
+      are configured in the MMJoy2 Configurator application.
+  - id: ENCODER_SUPPORT
+    description: >
+      MMJoy2 supports rotary encoders mapped to button pairs
+      (increment/decrement), useful for avionics panel knobs. Encoder
+      events are reported as button presses, not axis movements.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    MMJoy2 DIY HID controller. VID 0x1209 / PID 0xBEAA are community
+    defaults; actual values vary by build. Up to 8 axes and 128 buttons.
+    Popular for DIY cockpit panel builds. Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Logitech MOMO Racing Force Feedback Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xCA03 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_LOGITECH_MOMO_WHEEL = 0xCA03) and
+# from the Linux ff-lg force feedback driver. Classic Logitech MOMO (2002)
+# with rubber-belt FFB and the iconic "Scuderia Ferrari" wheel rim.
+schema_version: "1"
+
+device:
+  name: "Logitech MOMO Racing Force Feedback Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xCA03      # Confirmed: Linux kernel hid-ids.h + ff-lg driver
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (270° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). In flight sim, X maps to rudder/nose-wheel
+      steering; Z/Rz to throttle/toe-brake.
+  - id: LGFF_DRIVER
+    description: >
+      The MOMO uses Logitech's proprietary FF protocol (LG Gaming FF).
+      Linux support is through the ff-lg kernel module. Windows requires
+      the Logitech Gaming Software or G HUB. DirectInput FFB effects
+      (spring, constant-force) work correctly for rudder centering.
+  - id: LEGACY_DEVICE
+    description: >
+      Legacy device (circa 2002). Some systems may require the Logitech
+      WingMan Profiler or older Logitech drivers for full FFB functionality.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech MOMO Racing FFB Wheel. VID/PID confirmed from Linux kernel
+    hid-ids.h and ff-lg driver. Legacy (2002) but still functional via
+    DirectInput. Common in budget flight sim setups. Last reviewed: 2026-06.

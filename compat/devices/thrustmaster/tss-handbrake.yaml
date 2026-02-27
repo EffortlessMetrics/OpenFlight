@@ -1,0 +1,57 @@
+# Thrustmaster TSS Handbrake Sparco Mod+
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID is a community estimate (0xB695); the
+# TSS Handbrake Sparco Mod+ was released in 2019 and does not appear in
+# the Linux kernel hid-ids.h at time of writing. Confirm PID with lsusb.
+# In flight simulation, the handbrake axis can be mapped to spoilers,
+# speed brakes, or collective friction for helicopter operations.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TSS Handbrake Sparco Mod+"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB695      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [rz]
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB695 is a community estimate for the TSS Handbrake. Thrustmaster
+      wheel PIDs cluster around 0xB660–0xB699; the TSS follows the TH8A
+      (0xB664) in the product line. Verify with lsusb or USBDeview.
+  - id: SINGLE_AXIS_HANDBRAKE
+    description: >
+      The TSS reports a single Rz axis (handbrake pull). Full pull = max;
+      released = min. In flight sim, map to spoilers (0–100%) or speed-
+      brake axis. The integrated button triggers when the handbrake
+      mechanism clicks at the top of travel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TSS Handbrake Sparco Mod+. VID 0x044F confirmed; PID
+    0xB695 is a community estimate — verify before production use.
+    Useful in flight sim for spoiler or speed-brake axis input.
+    Last reviewed: 2026-06.

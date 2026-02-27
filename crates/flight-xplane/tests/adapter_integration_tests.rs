@@ -367,3 +367,198 @@ fn default_config_plugin_disabled() {
     let cfg = XPlaneAdapterConfig::default();
     assert!(!cfg.enable_plugin);
 }
+
+// ---------------------------------------------------------------------------
+// 8. convert_raw_to_snapshot — autopilot state extraction
+// ---------------------------------------------------------------------------
+
+/// Helper: critical datarefs plus the supplied extras, converted to a snapshot.
+fn snapshot_from(
+    extra: impl IntoIterator<Item = (String, DataRefValue)>,
+) -> flight_bus::snapshot::BusSnapshot {
+    let mut datarefs = make_critical_datarefs();
+    datarefs.extend(extra);
+    let raw = make_raw_data(datarefs);
+    XPlaneAdapter::convert_raw_to_snapshot(raw, std::time::Instant::now())
+        .expect("snapshot conversion must succeed")
+}
+
+/// Autopilot mode 0 → `AutopilotState::Off`.
+#[test]
+fn convert_snapshot_autopilot_mode_off() {
+    use flight_bus::types::AutopilotState;
+    let snapshot = snapshot_from([(
+        "sim/cockpit/autopilot/autopilot_mode".to_string(),
+        DataRefValue::Int(0),
+    )]);
+    assert_eq!(snapshot.config.ap_state, AutopilotState::Off);
+}
+
+/// Autopilot mode 1 → `AutopilotState::Armed`.
+#[test]
+fn convert_snapshot_autopilot_mode_armed() {
+    use flight_bus::types::AutopilotState;
+    let snapshot = snapshot_from([(
+        "sim/cockpit/autopilot/autopilot_mode".to_string(),
+        DataRefValue::Int(1),
+    )]);
+    assert_eq!(snapshot.config.ap_state, AutopilotState::Armed);
+}
+
+/// Autopilot mode ≥ 2 → `AutopilotState::Engaged`.
+#[test]
+fn convert_snapshot_autopilot_mode_engaged() {
+    use flight_bus::types::AutopilotState;
+    let snapshot = snapshot_from([(
+        "sim/cockpit/autopilot/autopilot_mode".to_string(),
+        DataRefValue::Int(2),
+    )]);
+    assert_eq!(snapshot.config.ap_state, AutopilotState::Engaged);
+}
+
+// ---------------------------------------------------------------------------
+// 9. convert_raw_to_snapshot — flaps position
+// ---------------------------------------------------------------------------
+
+/// Flap deploy ratio 0.5 → 50 % flaps.
+#[test]
+fn convert_snapshot_flaps_half_deployed() {
+    let snapshot = snapshot_from([(
+        "sim/aircraft/parts/acf_flap_deploy".to_string(),
+        DataRefValue::Float(0.5),
+    )]);
+    let pct = snapshot.config.flaps.value();
+    assert!((pct - 50.0).abs() < 0.1, "expected 50 % flaps, got {pct}");
+}
+
+/// Flap deploy ratio 1.0 → 100 % flaps.
+#[test]
+fn convert_snapshot_flaps_fully_deployed() {
+    let snapshot = snapshot_from([(
+        "sim/aircraft/parts/acf_flap_deploy".to_string(),
+        DataRefValue::Float(1.0),
+    )]);
+    let pct = snapshot.config.flaps.value();
+    assert!((pct - 100.0).abs() < 0.1, "expected 100 % flaps, got {pct}");
+}
+
+// ---------------------------------------------------------------------------
+// 10. convert_raw_to_snapshot — landing gear state
+// ---------------------------------------------------------------------------
+
+/// Gear deploy value > 0.9 → `GearPosition::Down` on all three legs.
+#[test]
+fn convert_snapshot_gear_down() {
+    use flight_bus::types::GearPosition;
+    let snapshot = snapshot_from([(
+        "sim/aircraft/parts/acf_gear_deploy".to_string(),
+        DataRefValue::Float(1.0),
+    )]);
+    assert_eq!(snapshot.config.gear.nose, GearPosition::Down);
+    assert_eq!(snapshot.config.gear.left, GearPosition::Down);
+    assert_eq!(snapshot.config.gear.right, GearPosition::Down);
+}
+
+/// Gear deploy value < 0.1 → `GearPosition::Up` on all three legs.
+#[test]
+fn convert_snapshot_gear_up() {
+    use flight_bus::types::GearPosition;
+    let snapshot = snapshot_from([(
+        "sim/aircraft/parts/acf_gear_deploy".to_string(),
+        DataRefValue::Float(0.0),
+    )]);
+    assert_eq!(snapshot.config.gear.nose, GearPosition::Up);
+    assert_eq!(snapshot.config.gear.left, GearPosition::Up);
+    assert_eq!(snapshot.config.gear.right, GearPosition::Up);
+}
+
+/// Gear deploy value between 0.1 and 0.9 → `GearPosition::Transitioning`.
+#[test]
+fn convert_snapshot_gear_transitioning() {
+    use flight_bus::types::GearPosition;
+    let snapshot = snapshot_from([(
+        "sim/aircraft/parts/acf_gear_deploy".to_string(),
+        DataRefValue::Float(0.5),
+    )]);
+    assert_eq!(snapshot.config.gear.nose, GearPosition::Transitioning);
+}
+
+// ---------------------------------------------------------------------------
+// 11. convert_raw_to_snapshot — multi-engine N1 extraction
+// ---------------------------------------------------------------------------
+
+/// Two engines with distinct N1 values are both present in the snapshot.
+///
+/// X-Plane DataRef layout: `sim/flightmodel/engine/ENGN_running[i]` (Int) and
+/// `sim/flightmodel/engine/ENGN_N1_[i]` (Float, percent).
+#[test]
+fn convert_snapshot_multi_engine_distinct_n1() {
+    let extras = [
+        (
+            "sim/flightmodel/engine/ENGN_running[0]".to_string(),
+            DataRefValue::Int(1),
+        ),
+        (
+            "sim/flightmodel/engine/ENGN_N1_[0]".to_string(),
+            DataRefValue::Float(75.0),
+        ),
+        (
+            "sim/flightmodel/engine/ENGN_running[1]".to_string(),
+            DataRefValue::Int(1),
+        ),
+        (
+            "sim/flightmodel/engine/ENGN_N1_[1]".to_string(),
+            DataRefValue::Float(80.0),
+        ),
+    ];
+    let snapshot = snapshot_from(extras);
+
+    assert_eq!(
+        snapshot.engines.len(),
+        2,
+        "expected two engines in snapshot"
+    );
+
+    let eng0 = snapshot
+        .engines
+        .iter()
+        .find(|e| e.index == 0)
+        .expect("engine 0 missing");
+    let eng1 = snapshot
+        .engines
+        .iter()
+        .find(|e| e.index == 1)
+        .expect("engine 1 missing");
+
+    assert!(
+        (eng0.rpm.value() - 75.0).abs() < 0.5,
+        "engine 0 N1 should be ~75 %, got {}",
+        eng0.rpm.value()
+    );
+    assert!(
+        (eng1.rpm.value() - 80.0).abs() < 0.5,
+        "engine 1 N1 should be ~80 %, got {}",
+        eng1.rpm.value()
+    );
+    assert!(eng0.running, "engine 0 must be marked running");
+    assert!(eng1.running, "engine 1 must be marked running");
+}
+
+// ---------------------------------------------------------------------------
+// 12. convert_raw_to_snapshot — AoA / alpha dataref (XP11 + XP12)
+// ---------------------------------------------------------------------------
+
+/// `sim/flightmodel/position/alpha` (XP11 primary path, also valid in XP12) is
+/// correctly extracted as the angle-of-attack in the kinematics sub-struct.
+#[test]
+fn convert_snapshot_aoa_from_alpha_dataref() {
+    let snapshot = snapshot_from([(
+        "sim/flightmodel/position/alpha".to_string(),
+        DataRefValue::Float(8.0), // 8 degrees AoA
+    )]);
+    let aoa_deg = snapshot.kinematics.aoa.to_degrees();
+    assert!(
+        (aoa_deg - 8.0).abs() < 0.1,
+        "expected AoA 8°, got {aoa_deg}°"
+    );
+}

@@ -4274,3 +4274,221 @@ requirements:
         description: "The quarantined component count SHALL never exceed the total registered component count"
         tests:
           - feature:specs/features/req_122_watchdog_health.feature
+
+  # Product Requirement: Aerofly FS binary telemetry and AeroWinx PSX adapter
+  - id: REQ-123
+    name: Aerofly FS binary telemetry and AeroWinx PSX adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-123.1
+        description: "Aerofly UDP binary telemetry SHALL parse pitch, roll, and heading to the correct values"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.2
+        description: "Aerofly JSON telemetry SHALL parse flap ratio in the range [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.3
+        description: "A malformed Aerofly packet SHALL return a ParseError without emitting telemetry state"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.4
+        description: "A PSX line in valid format SHALL be parsed into a variable identifier and integer value"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.5
+        description: "The PSX adapter SHALL accumulate multiple variables from a line stream and make each retrievable"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.6
+        description: "An unknown PSX variable identifier SHALL be silently ignored without error"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.7
+        description: "A PSX variable value set and then read back SHALL equal the original value"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+      - id: AC-123.8
+        description: "The PSX Boeing 744 FCU speed variable SHALL decode correctly to the expected airspeed in knots"
+        tests:
+          - feature:specs/features/req_123_aerofly_psx_adapters.feature
+
+  # Product Requirement: MOZA R9 FFB base integration
+  - id: REQ-124
+    name: MOZA R9 FFB base integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-124.1
+        description: "A MOZA R9 HID report with axes at midpoint SHALL produce 0.0 for both axes"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.2
+        description: "A MOZA R9 HID report with X-axis at maximum raw value SHALL produce approximately 1.0"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.3
+        description: "A MOZA FFB constant force effect SHALL produce torque in the direction and magnitude of the input"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.4
+        description: "A MOZA FFB spring effect SHALL produce a restoring force proportional to displacement × stiffness"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.5
+        description: "A MOZA FFB friction effect SHALL oppose the direction of motion and produce zero force at zero velocity"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.6
+        description: "A HID report shorter than the expected MOZA R9 length SHALL be rejected with a short-buffer error"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.7
+        description: "Axis values SHALL be clamped to [-1.0, 1.0] regardless of raw byte encoding"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+      - id: AC-124.8
+        description: "A device with MOZA R9 VID/PID SHALL be identified and registered with the FFB engine"
+        tests:
+          - feature:specs/features/req_124_moza_ffb_integration.feature
+
+  # Product Requirement: VPForce Rhino FFB joystick
+  - id: REQ-125
+    name: VPForce Rhino FFB joystick
+    kind: product
+    status: draft
+    ac:
+      - id: AC-125.1
+        description: "A Rhino HID report with axes at midpoint SHALL produce 0.0 for both axes"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.2
+        description: "A Rhino HID report with X-axis at maximum SHALL produce approximately 1.0 with Y-axis at 0.0"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.3
+        description: "A Rhino HID report with Y-axis at maximum SHALL produce approximately 1.0 with X-axis at 0.0"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.4
+        description: "A Rhino sine wave effect SHALL oscillate between ±amplitude at the configured frequency"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.5
+        description: "A Rhino constant force effect SHALL encode the correct proportional magnitude and direction"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.6
+        description: "Combined spring and friction effects SHALL sum without mutual interference"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.7
+        description: "The Rhino HID parser SHALL never panic on arbitrary byte input"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+      - id: AC-125.8
+        description: "Parsed Rhino axis values SHALL always be within [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_125_vpforce_rhino_ffb.feature
+
+  # Infrastructure Requirement: IPC protocol negotiation full pipeline
+  - id: REQ-126
+    name: IPC protocol negotiation full pipeline
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-126.1
+        description: "A client and service with matching protocol versions SHALL negotiate a connection successfully"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+      - id: AC-126.2
+        description: "A client with a higher minor version SHALL be accepted with the service's version applied"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+      - id: AC-126.3
+        description: "A client with an incompatible major version SHALL be rejected with a version-mismatch error"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+      - id: AC-126.4
+        description: "NegotiateFeatures without a filter SHALL return all available service capabilities"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+      - id: AC-126.5
+        description: "A NegotiateFeatures request for a subset SHALL return only the requested capabilities"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+      - id: AC-126.6
+        description: "Connection state SHALL transition new → negotiating → established with no backward transitions"
+        tests:
+          - feature:specs/features/req_126_ipc_proto_negotiation.feature
+
+  # Product Requirement: Profile cascade full pipeline
+  - id: REQ-127
+    name: Profile cascade full pipeline
+    kind: product
+    status: draft
+    ac:
+      - id: AC-127.1
+        description: "Global profile settings SHALL apply to all axes when no more specific profile is active"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.2
+        description: "Simulator profile SHALL override global profile deadzone"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.3
+        description: "Aircraft profile SHALL override simulator profile expo"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.4
+        description: "Phase-of-flight profile SHALL override aircraft profile settings during the active phase"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.5
+        description: "The most specific level in the cascade SHALL always take precedence over less specific levels"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.6
+        description: "Deactivating a phase-of-flight profile SHALL restore the aircraft profile settings"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.7
+        description: "Profile swap SHALL be atomic: no tick SHALL observe a mix of old and new profile settings"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+      - id: AC-127.8
+        description: "Switching simulators SHALL apply the new simulator's profile without corrupting other simulator profiles"
+        tests:
+          - feature:specs/features/req_127_profile_cascade_pipeline.feature
+
+  # Infrastructure Requirement: Bus snapshot consistency
+  - id: REQ-128
+    name: Bus snapshot consistency
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-128.1
+        description: "Consecutive bus snapshot timestamps SHALL be monotonically non-decreasing"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature
+      - id: AC-128.2
+        description: "A DCS export snapshot SHALL contain pitch, roll, heading, and airspeed fields with the correct source identifier"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature
+      - id: AC-128.3
+        description: "A War Thunder snapshot SHALL contain pitch, roll, heading, and indicated airspeed fields with the correct source identifier"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature
+      - id: AC-128.4
+        description: "A snapshot older than the configured staleness timeout SHALL be marked invalid and subscribers notified"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature
+      - id: AC-128.5
+        description: "A registered subscriber SHALL receive each snapshot within one 4 ms tick period"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature
+      - id: AC-128.6
+        description: "All subscribers SHALL receive identical copies of the same snapshot with no divergent field values"
+        tests:
+          - feature:specs/features/req_128_bus_snapshot_consistency.feature

@@ -1,0 +1,62 @@
+# VKB Gunfighter Mk.IV MCG Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim). The Gunfighter Mk.IV with MCG Pro grip is a
+# mid-tier combination of the Gunfighter Mk.IV cam/gimbal base and the
+# Modular Combat Grip Pro. The MCG Pro adds a 4-way + push thumbstick
+# and additional hat vs the standard MCG grip. PID is a community estimate;
+# the base PID may be shared with gunfighter-mk4.yaml. Confirm with
+# VKBDevCfg or lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.IV MCG Pro"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x021A      # Community estimate — GF Mk.IV + MCG Pro combination
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 35
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x021A is a community estimate for the Mk.IV + MCG Pro combination.
+      VKB grips are modular; the PID corresponds to the base+grip combination
+      as reported by VKBDevCfg. The MCG Ultimate (gunfighter-mk4-mcg-ultimate.yaml)
+      uses a different PID. Confirm with VKBDevCfg → USB Info.
+  - id: MCG_PRO_LAYOUT
+    description: >
+      The MCG Pro adds a 4-way + push thumbstick (4 buttons + push = 5),
+      a ministick for pan/view, and extra hat switches compared to the
+      standard MCG grip. Button 35 is the ministick click.
+  - id: MODULAR_GRIP
+    description: >
+      The Gunfighter base is grip-agnostic. Swapping to MCG Ultimate or
+      other compatible VKB grips will change the PID and button layout.
+      Maintain separate manifests per base+grip configuration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gunfighter Mk.IV + MCG Pro grip combination. VID 0x231D confirmed;
+    PID 0x021A is a community estimate. 15-bit Hall-effect, 8 axes, 35 buttons.
+    Mid-tier between Mk.IV standard and MCG Ultimate. Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# CH Products Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products), PID 0x00F4 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_CH_THROTTLE_QUADRANT). The CH
+# Throttle Quadrant provides three independent levers for throttle,
+# propeller, and mixture (or any three analogue axes in flight sim).
+schema_version: "1"
+
+device:
+  name: "CH Products Throttle Quadrant"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00F4      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, propeller, mixture]
+    resolution_bits: 8
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: OS_MEDIATED_HID
+    description: >
+      CH Products devices use OS-mediated HID parsing with no raw report ID.
+      Windows and Linux both enumerate the Throttle Quadrant identically as
+      a three-axis joystick with 6 buttons at the lever bases.
+  - id: LEVER_FRICTION
+    description: >
+      All three levers use a friction-detent mechanism. Levers are positional
+      (no spring return). Map throttle lever to throttle axis, prop lever to
+      propeller RPM, mixture lever to mixture ratio in aircraft profiles.
+  - id: PAIRS_WITH_CH_STICK
+    description: >
+      Designed to be paired with the CH Fighterstick or Combat Stick (see
+      fighterstick.yaml, combat-stick.yaml). The CH Control Manager software
+      can combine VID axes across multiple CH devices into one virtual device.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Throttle Quadrant. VID/PID confirmed from Linux kernel
+    hid-ids.h. Three friction-lever axes for throttle/prop/mixture.
+    Popular for GA aircraft in MSFS and X-Plane. Last reviewed: 2026-06.

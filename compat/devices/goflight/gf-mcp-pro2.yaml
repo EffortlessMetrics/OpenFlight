@@ -1,0 +1,65 @@
+# GoFlight GF-MCP Pro2 Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.). PID is a community estimate (distinct from
+# the GF-MCP Pro at gf-mcp-pro.yaml). The GF-MCP Pro2 is a second-
+# generation MCP panel with an expanded button set and larger display
+# compared to the original GF-MCP Pro, targeting Boeing 737 autopilot
+# simulation.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-MCP Pro2 Autopilot Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc. (confirmed)
+    product_id: 0x0019      # Community estimate — GF-MCP Pro2 (distinct from Pro)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 42
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0019 is a community estimate for the GF-MCP Pro2. The GF-MCP
+      Pro (gf-mcp-pro.yaml) uses a different PID. Confirm with lsusb on
+      real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary encoders (heading, altitude, vertical speed, course, IAS/MACH,
+      bank) report increment/decrement as button pairs. Map each encoder to the
+      corresponding autopilot binding in MSFS/X-Plane profiles.
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      The Pro2 includes a larger 7-segment LED display panel for altitude,
+      vertical speed, and IAS readouts. Display updates require USB HID
+      output reports via the GoFlight SDK or FSUIPC plugin.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight proprietary HID panel protocol shared across the GF
+      avionics panel family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-MCP Pro2 autopilot panel (second generation). VID 0x0E9F
+    confirmed; PID 0x0019 is a community estimate. 42 buttons + 6 encoders.
+    Targets Boeing 737 MCP simulation. Last reviewed: 2026-06.

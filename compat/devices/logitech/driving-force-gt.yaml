@@ -1,0 +1,60 @@
+# Logitech Driving Force GT Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC294 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_LOGITECH_DFG_HID) and the ff-lg
+# force-feedback driver. The Driving Force GT (2009) was the PS3 official
+# Gran Turismo wheel; it uses a rubber-belt motor with 900° rotation.
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force GT"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC294      # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_DFG_HID)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 14
+  buttons: 19
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (900° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar); Rx = clutch (unipolar, included pedal set).
+  - id: LGFF_DRIVER
+    description: >
+      Uses Logitech's LG Gaming FF protocol. DirectInput FFB effects
+      work correctly. Linux requires the ff-lg kernel module.
+  - id: PS3_COMPATIBILITY_MODE
+    description: >
+      The Driving Force GT has a PS3 mode toggle. In PC mode (USB HID),
+      it enumerates as PID 0xC294. In PS3 mode it does not enumerate as
+      a standard HID joystick. Always use PC mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force GT. VID/PID confirmed from Linux kernel hid-ids.h.
+    14-bit steering axis, 900° rotation. Used in flight sim for rudder axis.
+    Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# 3Dconnexion SpaceMouse Enterprise
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F (3Dconnexion), PID 0xC633 confirmed from the Linux kernel
+# drivers/hid/hid-3dconnexion.c and the spacenav daemon source. The
+# SpaceMouse Enterprise is the professional flagship 6-DOF mouse with
+# 31 programmable keys and a premium machined metal body.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Enterprise"
+  vendor: "3Dconnexion"
+  usb:
+    vendor_id: 0x256F       # 3Dconnexion (confirmed)
+    product_id: 0xC633      # Confirmed: Linux kernel hid-3dconnexion.c
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 31
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: SIX_DOF_SPACE_NAVIGATION
+    description: >
+      The SpaceMouse Enterprise reports 6-DOF force/torque on the central
+      knob (push/pull/twist in X, Y, Z and Rx, Ry, Rz). In flight sim,
+      map all 6 axes to camera/view control, or use as a supplementary
+      input for 6-axis helicopter collective simulation.
+  - id: SPACENAV_DAEMON_RECOMMENDED
+    description: >
+      On Linux, the spacenavd daemon (libspnav) provides cleaner axis
+      event delivery than raw HID. The daemon translates 3Dconnexion's
+      USB HID protocol to standard SpaceNav events consumed by the
+      spacenav plugin.
+  - id: BUTTON_SET_ENTERPRISE
+    description: >
+      The Enterprise model adds 31 programmable shortcut keys beyond the
+      standard SpaceMouse Pro (15 keys). In flight sim, the extra keys
+      are convenient for avionics mode changes, landing gear, and view
+      preset selection.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    3Dconnexion SpaceMouse Enterprise. VID/PID confirmed from Linux kernel
+    hid-3dconnexion.c. 6-DOF input with 31 buttons. Used in flight sim for
+    6-axis camera control or helicopter collective axis. Last reviewed: 2026-06.

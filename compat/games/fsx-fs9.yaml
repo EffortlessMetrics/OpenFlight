@@ -1,0 +1,73 @@
+# Microsoft Flight Simulator X / FS 2004 — SimConnect & FSUIPC Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Microsoft Flight Simulator X / FS 2004"
+  id: fsx-fs9
+  developer: "Microsoft"
+
+integration:
+  mechanism: "SimConnect (FSX) / FSUIPC (FS9)"
+  crate: flight-simconnect
+  sdk_version: "10.0"       # FSX SimConnect SDK 10.0.61259.0
+
+supported_versions:
+  - "FSX (SP2 / Acceleration)"
+  - "FSX Steam Edition"
+  - "FS2004 / FS9 (9.1)"
+
+version_notes:
+  fsx:
+    simconnect_sdk: "10.0.61259.0"
+    notes: >
+      FSX ships the original SimConnect SDK 10.0 that predates the MSFS 2020 lineage.
+      Standard SimVars and client events are supported. The SDK does not include
+      SimConnect_SetInputEvent (B-var/H-var) or any MSFS 2020/2024 additions.
+      SimConnect.dll is bundled with the FSX installation; FSX Steam Edition ships
+      a compatible build. Tested with Prepar3D-patched SimConnect.dll as a drop-in.
+  fsx_steam:
+    simconnect_sdk: "10.0.61637.0"
+    notes: >
+      FSX Steam Edition carries a slightly newer SimConnect build (10.0.61637.0) but
+      the API surface is identical to original FSX. All flight-simconnect features
+      available under FSX apply equally to FSX:SE.
+  fs9:
+    notes: >
+      FS2004 (FS9) does not ship SimConnect. Integration requires FSUIPC 4.x (payware)
+      which exposes an offset-based memory-mapped API. OpenFlight does not implement
+      a native FSUIPC driver; FS9 support requires a community plugin adapter that
+      translates FSUIPC offsets to the flight-ipc gRPC interface.
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false        # Not available in FSX SDK 10.0
+  force_feedback_translation: false
+  aircraft_detection: true     # Via SimConnect AIRCRAFT_LOADED event (FSX only)
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 3
+
+known_issues:
+  - id: FSUIPC_NOT_NATIVE
+    description: >
+      FS9 support requires the third-party FSUIPC 4.x library (payware) and a
+      community bridge plugin. There is no native FS9 driver in flight-simconnect.
+    workaround: "Use a community FSUIPC→gRPC bridge adapter."
+  - id: FSX_SIMCONNECT_ANCIENT_SDK
+    description: >
+      FSX SimConnect SDK 10.0 lacks several features used in the MSFS lineage.
+      Notably: no SimConnect_SetInputEvent, no EFB-style B-var/H-var injection,
+      and no FS2020+ weather SimVars. The flight-simconnect crate targets MSFS 2020+
+      headers; linking against FSX's SimConnect.dll requires a separate build target
+      with the FSX SDK headers.
+    workaround: "Maintain a separate build configuration with the FSX SDK include path."

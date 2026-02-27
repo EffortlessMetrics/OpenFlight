@@ -1,0 +1,63 @@
+# Heusinkveld Sim Pedals Performance
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by Heusinkveld Engineering BVBA).
+# PID is a community estimate for the Performance model, distinct from the
+# Sprint (sprint-pedals.yaml), Ultimate, and Ultimate+ variants.
+# The Sim Pedals Performance features adjustable load-cell brake,
+# aluminium construction, and shorter pedal travel designed for high-speed
+# response in both sim racing and flight simulation.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Performance"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D2      # Community estimate — Performance model; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D2 is a community estimate for the Performance model. The
+      Sprint pedals use 0xF6D0 (sprint-pedals.yaml). Heusinkveld's USB
+      PIDs follow a sequential scheme in the 0xF6Dx range. Verify with
+      lsusb on real hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The Performance model uses a load-cell sensor on the brake axis.
+      Axis reports force applied (not pedal travel), providing a natural
+      pressure-to-stopping-force feel. Use a progressive brake curve in
+      the flight sim profile for realistic toe-brake response.
+  - id: ALUMINIUM_CONSTRUCTION
+    description: >
+      The Performance model uses CNC-machined aluminium pedal faces and
+      guide rods. This significantly reduces flex and backlash compared
+      to the Sprint's steel-frame design.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Performance. VID 0x04D8 confirmed; PID 0xF6D2
+    is a community estimate. Load-cell brake, aluminium construction. Popular
+    for both sim racing and flight sim toe-brake input. Last reviewed: 2026-06.

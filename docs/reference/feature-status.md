@@ -16,14 +16,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 670 |
-| ACs with tests | 670 |
-| ACs with Gherkin | 670 |
-| ACs with both tests + Gherkin | 670 |
+| Total AC | 714 |
+| ACs with tests | 714 |
+| ACs with Gherkin | 714 |
+| ACs with both tests + Gherkin | 714 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 73 |
+| Draft | 117 |
 | Incomplete | 0 |
 | Microcrates | 71 |
 | Microcrates with tests | 65 (91.5%) |
@@ -781,3 +781,47 @@
 | REQ-122 | AC-122.6 | Disabling fault injection for a component SHALL allow subsequent heartbeats to be processed normally | specs/features/req_122_watchdog_health.feature:40 | 1 | ⚪ Draft |
 | REQ-122 | AC-122.7 | The health summary SHALL accurately reflect total, quarantined, and healthy component counts | specs/features/req_122_watchdog_health.feature:47 | 1 | ⚪ Draft |
 | REQ-122 | AC-122.8 | The quarantined component count SHALL never exceed the total registered component count | specs/features/req_122_watchdog_health.feature:55 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.1 | Aerofly UDP binary telemetry SHALL parse pitch, roll, and heading to the correct values | specs/features/req_123_aerofly_psx_adapters.feature:5 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.2 | Aerofly JSON telemetry SHALL parse flap ratio in the range [0.0, 1.0] | specs/features/req_123_aerofly_psx_adapters.feature:13 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.3 | A malformed Aerofly packet SHALL return a ParseError without emitting telemetry state | specs/features/req_123_aerofly_psx_adapters.feature:21 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.4 | A PSX line in valid format SHALL be parsed into a variable identifier and integer value | specs/features/req_123_aerofly_psx_adapters.feature:29 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.5 | The PSX adapter SHALL accumulate multiple variables from a line stream and make each retrievable | specs/features/req_123_aerofly_psx_adapters.feature:36 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.6 | An unknown PSX variable identifier SHALL be silently ignored without error | specs/features/req_123_aerofly_psx_adapters.feature:43 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.7 | A PSX variable value set and then read back SHALL equal the original value | specs/features/req_123_aerofly_psx_adapters.feature:51 | 1 | ⚪ Draft |
+| REQ-123 | AC-123.8 | The PSX Boeing 744 FCU speed variable SHALL decode correctly to the expected airspeed in knots | specs/features/req_123_aerofly_psx_adapters.feature:57 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.1 | A MOZA R9 HID report with axes at midpoint SHALL produce 0.0 for both axes | specs/features/req_124_moza_ffb_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.2 | A MOZA R9 HID report with X-axis at maximum raw value SHALL produce approximately 1.0 | specs/features/req_124_moza_ffb_integration.feature:12 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.3 | A MOZA FFB constant force effect SHALL produce torque in the direction and magnitude of the input | specs/features/req_124_moza_ffb_integration.feature:18 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.4 | A MOZA FFB spring effect SHALL produce a restoring force proportional to displacement × stiffness | specs/features/req_124_moza_ffb_integration.feature:25 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.5 | A MOZA FFB friction effect SHALL oppose the direction of motion and produce zero force at zero velocity | specs/features/req_124_moza_ffb_integration.feature:32 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.6 | A HID report shorter than the expected MOZA R9 length SHALL be rejected with a short-buffer error | specs/features/req_124_moza_ffb_integration.feature:39 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.7 | Axis values SHALL be clamped to [-1.0, 1.0] regardless of raw byte encoding | specs/features/req_124_moza_ffb_integration.feature:46 | 1 | ⚪ Draft |
+| REQ-124 | AC-124.8 | A device with MOZA R9 VID/PID SHALL be identified and registered with the FFB engine | specs/features/req_124_moza_ffb_integration.feature:52 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.1 | A Rhino HID report with axes at midpoint SHALL produce 0.0 for both axes | specs/features/req_125_vpforce_rhino_ffb.feature:5 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.2 | A Rhino HID report with X-axis at maximum SHALL produce approximately 1.0 with Y-axis at 0.0 | specs/features/req_125_vpforce_rhino_ffb.feature:12 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.3 | A Rhino HID report with Y-axis at maximum SHALL produce approximately 1.0 with X-axis at 0.0 | specs/features/req_125_vpforce_rhino_ffb.feature:19 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.4 | A Rhino sine wave effect SHALL oscillate between ±amplitude at the configured frequency | specs/features/req_125_vpforce_rhino_ffb.feature:26 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.5 | A Rhino constant force effect SHALL encode the correct proportional magnitude and direction | specs/features/req_125_vpforce_rhino_ffb.feature:33 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.6 | Combined spring and friction effects SHALL sum without mutual interference | specs/features/req_125_vpforce_rhino_ffb.feature:40 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.7 | The Rhino HID parser SHALL never panic on arbitrary byte input | specs/features/req_125_vpforce_rhino_ffb.feature:47 | 1 | ⚪ Draft |
+| REQ-125 | AC-125.8 | Parsed Rhino axis values SHALL always be within [-1.0, 1.0] | specs/features/req_125_vpforce_rhino_ffb.feature:54 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.1 | A client and service with matching protocol versions SHALL negotiate a connection successfully | specs/features/req_126_ipc_proto_negotiation.feature:5 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.2 | A client with a higher minor version SHALL be accepted with the service's version applied | specs/features/req_126_ipc_proto_negotiation.feature:12 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.3 | A client with an incompatible major version SHALL be rejected with a version-mismatch error | specs/features/req_126_ipc_proto_negotiation.feature:19 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.4 | NegotiateFeatures without a filter SHALL return all available service capabilities | specs/features/req_126_ipc_proto_negotiation.feature:26 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.5 | A NegotiateFeatures request for a subset SHALL return only the requested capabilities | specs/features/req_126_ipc_proto_negotiation.feature:32 | 1 | ⚪ Draft |
+| REQ-126 | AC-126.6 | Connection state SHALL transition new → negotiating → established with no backward transitions | specs/features/req_126_ipc_proto_negotiation.feature:39 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.1 | Global profile settings SHALL apply to all axes when no more specific profile is active | specs/features/req_127_profile_cascade_pipeline.feature:5 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.2 | Simulator profile SHALL override global profile deadzone | specs/features/req_127_profile_cascade_pipeline.feature:13 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.3 | Aircraft profile SHALL override simulator profile expo | specs/features/req_127_profile_cascade_pipeline.feature:20 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.4 | Phase-of-flight profile SHALL override aircraft profile settings during the active phase | specs/features/req_127_profile_cascade_pipeline.feature:27 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.5 | The most specific level in the cascade SHALL always take precedence over less specific levels | specs/features/req_127_profile_cascade_pipeline.feature:34 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.6 | Deactivating a phase-of-flight profile SHALL restore the aircraft profile settings | specs/features/req_127_profile_cascade_pipeline.feature:41 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.7 | Profile swap SHALL be atomic: no tick SHALL observe a mix of old and new profile settings | specs/features/req_127_profile_cascade_pipeline.feature:48 | 1 | ⚪ Draft |
+| REQ-127 | AC-127.8 | Switching simulators SHALL apply the new simulator's profile without corrupting other simulator profiles | specs/features/req_127_profile_cascade_pipeline.feature:55 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.1 | Consecutive bus snapshot timestamps SHALL be monotonically non-decreasing | specs/features/req_128_bus_snapshot_consistency.feature:5 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.2 | A DCS export snapshot SHALL contain pitch, roll, heading, and airspeed fields with the correct source identifier | specs/features/req_128_bus_snapshot_consistency.feature:12 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.3 | A War Thunder snapshot SHALL contain pitch, roll, heading, and indicated airspeed fields with the correct source identifier | specs/features/req_128_bus_snapshot_consistency.feature:20 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.4 | A snapshot older than the configured staleness timeout SHALL be marked invalid and subscribers notified | specs/features/req_128_bus_snapshot_consistency.feature:28 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.5 | A registered subscriber SHALL receive each snapshot within one 4 ms tick period | specs/features/req_128_bus_snapshot_consistency.feature:35 | 1 | ⚪ Draft |
+| REQ-128 | AC-128.6 | All subscribers SHALL receive identical copies of the same snapshot with no divergent field values | specs/features/req_128_bus_snapshot_consistency.feature:41 | 1 | ⚪ Draft |

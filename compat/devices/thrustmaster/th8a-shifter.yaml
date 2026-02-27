@@ -1,0 +1,55 @@
+# Thrustmaster TH8A Add-On Shifter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB664 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h. The TH8A is a 7+1 sequential/H-pattern gearbox
+# add-on. In flight simulation it is sometimes used as a flap-lever axis
+# or as a multi-position switch for power lever positions.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TH8A Add-On Shifter"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB664      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SHIFTER_XY_GATE
+    description: >
+      The H-pattern gate position is reported as X/Y axis coordinates.
+      Gear selection is determined by the quadrant of the X/Y space combined
+      with the Z-axis button (gear engaged). In sequential mode the lever
+      reports button presses. In flight sim, map the gear 1-6 positions to
+      flap notches, propeller pitch detents, or power lever gates.
+  - id: SEQUENTIAL_BUTTON_MODE
+    description: >
+      Sequential mode (via rear toggle) reports increment/decrement buttons
+      rather than axis data. This is useful for flap-lever step control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TH8A H-pattern / sequential shifter. VID/PID confirmed from
+    Linux kernel hid-ids.h. Niche use in flight sim as a flap-lever or
+    power-lever gate input. Last reviewed: 2026-06.

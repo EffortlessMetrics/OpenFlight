@@ -1,0 +1,55 @@
+# Hori PS4 Flight Stick (PS4-113E)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd. (registered USB vendor ID).
+# PID 0x00F6 is a community estimate for the PS4-113E model (the compact
+# single-stick version without a separate throttle, distinct from the
+# HOTAS variant at PID 0x0101 in hotas-flight-stick-ps4.yaml).
+schema_version: "1"
+
+device:
+  name: "Hori PS4 Flight Stick (PS4-113E)"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd. (confirmed)
+    product_id: 0x00F6      # Community estimate — PS4-113E single-stick variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, throttle]
+    resolution_bits: 12
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F6 is a community estimate for the PS4-113E. The Hori Flight
+      Stick Alpha is PID 0x00EE; the HOTAS variant is estimated at 0x0101
+      (hotas-flight-stick-ps4.yaml). Confirm 0x00F6 via lsusb on real
+      hardware before enabling production device matching.
+  - id: THROTTLE_AXIS_UNIPOLAR
+    description: >
+      The integrated throttle lever is unipolar [0, max]. Map to throttle
+      axis with 0 = idle, max = full thrust. Z is the twist-rudder (bipolar).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori PS4 Flight Stick (PS4-113E compact model). VID 0x0F0D confirmed;
+    PID 0x00F6 is a community estimate — verify with lsusb. Distinct from
+    the HOTAS variant (hotas-flight-stick-ps4.yaml). Works on PS4 and PC
+    (DInput). Last reviewed: 2026-06.

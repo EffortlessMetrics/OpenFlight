@@ -1,0 +1,69 @@
+# Teensy-Based HID Controller (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PJRC Teensy boards (Teensy 2.0 / 3.x / 4.x) running Teensyduino with
+# the "Joystick" USB type present as HID joystick/gamepad devices.
+# VID 0x16C0 (Van Ooijen Technische Informatica / PJRC) is the Teensy VID.
+# PID varies by Teensy model and USB personality:
+#   Teensy 2.0 Joystick: 0x0486
+#   Teensy 3.x/4.x Joystick: 0x04D0 (common community value)
+schema_version: "1"
+
+device:
+  name: "Teensy HID Controller (Generic)"
+  vendor: "PJRC / Teensyduino"
+  is_virtual: true
+  usb:
+    vendor_id: 0x16C0       # PJRC (Teensy) confirmed VID
+    product_id: 0x04D0      # Teensy 3.x/4.x Joystick USB type (community value)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 64
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      PID varies by Teensy model and Teensyduino USB type configuration:
+        - Teensy 2.0 Joystick: PID 0x0486
+        - Teensy LC/3.x/4.x Joystick: PID 0x04D0 (common)
+        - MIDI+Joystick combo: different PID
+      Match by device name string for Teensy builds that customise the
+      USB product string.
+  - id: HIGH_POLLING_RATE
+    description: >
+      Teensy with Teensyduino defaults to 1000 Hz USB HID polling (1 ms),
+      giving excellent RT input latency suitable for the 250 Hz spine.
+  - id: AXIS_RESOLUTION_16BIT
+    description: >
+      Teensyduino Joystick library uses 16-bit axis resolution by default,
+      providing 65536 steps per axis — significantly higher than typical
+      Arduino (10-bit) builds. Apply light smoothing only.
+  - id: CUSTOM_AXIS_COUNT
+    description: >
+      Axis and button counts are set in firmware. Values here are typical
+      for a 6-axis flight sim build. Actual hardware may expose more or fewer
+      axes/buttons. Clone and customise the profile per build.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic Teensy HID joystick via Teensyduino. VID 0x16C0 confirmed (PJRC).
+    PID 0x04D0 is common for Teensy 3.x/4.x joystick builds. 1000 Hz polling.
+    Popular for high-resolution DIY flight panels. Last reviewed: 2026-06.

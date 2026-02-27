@@ -1,0 +1,59 @@
+# Leo Bodnar BRD-N Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Electronics). PID is a community estimate.
+# The BRD-N is Leo Bodnar's compact single-axis rudder pedal design,
+# providing yaw (rudder) as a single axis without independent toe brakes,
+# intended as an entry-level premium rudder option. Distinct from the
+# BRD-4 (four-axis version with toe brakes). Confirm PID with lsusb.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BRD-N Rudder Pedals"
+  vendor: "Leo Bodnar Electronics"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Electronics (confirmed VID)
+    product_id: 0x1060      # Community estimate — BRD-N; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1060 is a community estimate for the BRD-N. Leo Bodnar's BU0836
+      interface cards use PIDs in the 0x1006–0x100E range; the BRD series
+      likely uses adjacent PIDs. Confirm with lsusb.
+  - id: SINGLE_AXIS_RUDDER
+    description: >
+      The BRD-N provides only a single rudder axis without toe-brake axes.
+      For toe-brake input, use the BRD-4 (brd4-rudder.yaml) instead.
+  - id: HIGH_POLLING_RATE
+    description: >
+      Leo Bodnar devices are known for USB full-speed HID polling at 1000 Hz
+      (1 ms interval) via firmware configuration. This gives sub-millisecond
+      input latency for RT spine integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BRD-N compact rudder pedals. VID 0x1DD2 confirmed; PID 0x1060
+    is a community estimate. Single rudder axis, 1000 Hz polling. Entry-level
+    option before the BRD-4 with toe brakes. Last reviewed: 2026-06.
