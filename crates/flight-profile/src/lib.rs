@@ -71,6 +71,7 @@
 //! ```
 
 pub mod profile_compare;
+pub mod profile_linter;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

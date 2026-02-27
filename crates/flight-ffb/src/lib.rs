@@ -70,6 +70,7 @@ pub mod trim_hil_tests;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
+pub mod weather_ffb;
 pub mod wheel_shimmy;
 pub mod xinput_rumble;
 

@@ -23,6 +23,7 @@ pub mod capability_service;
 pub mod config_watcher;
 pub mod crash_report;
 pub mod curve_conflict_service;
+pub mod degradation_manager;
 pub mod diagnostic_bundle;
 pub mod error_taxonomy;
 pub mod event_journal;
