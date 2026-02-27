@@ -4052,3 +4052,225 @@ requirements:
         description: "The profile cascade fires on aircraft type change and reverts to global profile for generic aircraft"
         tests:
           - feature:specs/features/req_116_simconnect_aircraft_detection.feature
+
+  # Product Requirement: Falcon BMS adapter
+  - id: REQ-117
+    name: Falcon BMS adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-117.1
+        description: "F-16C cockpit state SHALL be parsed from shared memory without error"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.2
+        description: "Aircraft variant (F-16A vs F-16C) SHALL be detected from the aircraft ID field"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.3
+        description: "Gear down state SHALL be correctly decoded from the gear bitmask"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.4
+        description: "Flap state SHALL be correctly decoded from the shared memory flap position field"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.5
+        description: "Airspeed SHALL be expressed in knots and within [0.0, 1500.0]"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.6
+        description: "Heading SHALL be in the range [0, 359] degrees and 360 SHALL normalise to 0"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.7
+        description: "A short shared memory buffer SHALL return a ShortBuffer error with no state emitted"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+      - id: AC-117.8
+        description: "Aircraft state parsed from shared memory SHALL round-trip through the profile pipeline without loss"
+        tests:
+          - feature:specs/features/req_117_falcon_bms_adapter.feature
+
+  # Product Requirement: IL-2 Great Battles adapter
+  - id: REQ-118
+    name: IL-2 Great Battles adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-118.1
+        description: "A valid UDP telemetry frame for the Spitfire SHALL be parsed without error"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.2
+        description: "A valid UDP telemetry frame for the Bf 109 SHALL be parsed without error"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.3
+        description: "Aircraft type SHALL be detected from the aircraft name string in the telemetry frame"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.4
+        description: "Gear state transitions SHALL be decoded and the correct GearDown/GearUp event SHALL be emitted"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.5
+        description: "Throttle output SHALL be clamped to [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.6
+        description: "A UDP frame with an incorrect magic number SHALL be discarded and a MalformedFrame error recorded"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.7
+        description: "A UDP frame with an unsupported protocol version SHALL be discarded and an UnsupportedVersion error recorded"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+      - id: AC-118.8
+        description: "A valid telemetry frame SHALL produce a TelemetryUpdate event on the flight bus with matching payload"
+        tests:
+          - feature:specs/features/req_118_il2_adapter.feature
+
+  # Product Requirement: Aerofly FS adapter
+  - id: REQ-119
+    name: Aerofly FS adapter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-119.1
+        description: "A valid Aerofly FS 4 UDP JSON telemetry packet SHALL be parsed without error"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.2
+        description: "Aircraft type SHALL be detected from the aircraft name field in the JSON payload"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.3
+        description: "Pitch, roll, and heading SHALL be extracted correctly from the JSON telemetry"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.4
+        description: "Gear state SHALL be decoded from the JSON gear_down boolean field"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.5
+        description: "Flap ratio SHALL be in [0.0, 1.0] with out-of-range values clamped"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.6
+        description: "The adapter SHALL bind to UDP port 49002 on startup"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+      - id: AC-119.7
+        description: "Malformed JSON SHALL be discarded, a ParseError recorded, and subsequent packets processed"
+        tests:
+          - feature:specs/features/req_119_aerofly_adapter.feature
+
+  # Product Requirement: Profile migration
+  - id: REQ-120
+    name: Profile migration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-120.1
+        description: "A v1 profile SHALL migrate to v2 with no data loss"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+      - id: AC-120.2
+        description: "Custom axis curve definitions SHALL be preserved through migration"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+      - id: AC-120.3
+        description: "Deadzone settings SHALL be preserved through migration"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+      - id: AC-120.4
+        description: "A profile with an unrecognised schema version SHALL be rejected with InvalidSchemaVersion"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+      - id: AC-120.5
+        description: "Applying migration twice SHALL produce the same result as applying it once (idempotent)"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+      - id: AC-120.6
+        description: "The migrated profile SHALL match the pre-approved golden snapshot exactly"
+        tests:
+          - feature:specs/features/req_120_profile_migration.feature
+
+  # Product Requirement: Updater channel management
+  - id: REQ-121
+    name: Updater channel management
+    kind: product
+    status: draft
+    ac:
+      - id: AC-121.1
+        description: "The stable channel SHALL only return non-prerelease versions"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.2
+        description: "The beta channel SHALL include stable and beta versions but not alpha or canary"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.3
+        description: "The canary channel SHALL include stable, beta, and canary versions"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.4
+        description: "Version 1.2.3 SHALL compare as greater than 1.2.2"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.5
+        description: "Manifest checksum verification SHALL pass for an unmodified downloaded file"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.6
+        description: "Manifest checksum verification SHALL fail for a tampered downloaded file"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.7
+        description: "Rollback SHALL restore the previous installed version without error"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+      - id: AC-121.8
+        description: "A delta patch SHALL produce an installation functionally equivalent to a clean install of the target version"
+        tests:
+          - feature:specs/features/req_121_updater_channels.feature
+
+  # Infrastructure Requirement: Watchdog health monitoring
+  - id: REQ-122
+    name: Watchdog health monitoring
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-122.1
+        description: "A component that sends a heartbeat within the expected interval SHALL be reported as healthy"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.2
+        description: "A component that misses the threshold number of consecutive heartbeats SHALL be quarantined and a ComponentQuarantined event emitted"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.3
+        description: "A quarantined component that responds to a recovery probe SHALL be cleared and reported healthy"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.4
+        description: "Re-registering a component after unregister SHALL start tracking from a clean state with no stale quarantine"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.5
+        description: "Quarantining one component SHALL NOT affect the health state of other registered components"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.6
+        description: "Disabling fault injection for a component SHALL allow subsequent heartbeats to be processed normally"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.7
+        description: "The health summary SHALL accurately reflect total, quarantined, and healthy component counts"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature
+      - id: AC-122.8
+        description: "The quarantined component count SHALL never exceed the total registered component count"
+        tests:
+          - feature:specs/features/req_122_watchdog_health.feature

@@ -16,14 +16,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 625 |
-| ACs with tests | 625 |
-| ACs with Gherkin | 625 |
-| ACs with both tests + Gherkin | 625 |
+| Total AC | 670 |
+| ACs with tests | 670 |
+| ACs with Gherkin | 670 |
+| ACs with both tests + Gherkin | 670 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 28 |
+| Draft | 73 |
 | Incomplete | 0 |
 | Microcrates | 71 |
 | Microcrates with tests | 65 (91.5%) |
@@ -736,3 +736,48 @@
 | REQ-116 | AC-116.3 | An unrecognised aircraft title returns the Generic aircraft type and the generic fallback profile | specs/features/req_116_simconnect_aircraft_detection.feature:17 | 1 | ⚪ Draft |
 | REQ-116 | AC-116.4 | An aircraft change event is published on the bus with the new aircraft title | specs/features/req_116_simconnect_aircraft_detection.feature:24 | 1 | ⚪ Draft |
 | REQ-116 | AC-116.5 | The profile cascade fires on aircraft type change and reverts to global profile for generic aircraft | specs/features/req_116_simconnect_aircraft_detection.feature:31<br>specs/features/req_116_simconnect_aircraft_detection.feature:38 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.1 | F-16C cockpit state SHALL be parsed from shared memory without error | specs/features/req_117_falcon_bms_adapter.feature:5 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.2 | Aircraft variant (F-16A vs F-16C) SHALL be detected from the aircraft ID field | specs/features/req_117_falcon_bms_adapter.feature:12 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.3 | Gear down state SHALL be correctly decoded from the gear bitmask | specs/features/req_117_falcon_bms_adapter.feature:20 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.4 | Flap state SHALL be correctly decoded from the shared memory flap position field | specs/features/req_117_falcon_bms_adapter.feature:28 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.5 | Airspeed SHALL be expressed in knots and within [0.0, 1500.0] | specs/features/req_117_falcon_bms_adapter.feature:36 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.6 | Heading SHALL be in the range [0, 359] degrees and 360 SHALL normalise to 0 | specs/features/req_117_falcon_bms_adapter.feature:43 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.7 | A short shared memory buffer SHALL return a ShortBuffer error with no state emitted | specs/features/req_117_falcon_bms_adapter.feature:50 | 1 | ⚪ Draft |
+| REQ-117 | AC-117.8 | Aircraft state parsed from shared memory SHALL round-trip through the profile pipeline without loss | specs/features/req_117_falcon_bms_adapter.feature:57 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.1 | A valid UDP telemetry frame for the Spitfire SHALL be parsed without error | specs/features/req_118_il2_adapter.feature:5 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.2 | A valid UDP telemetry frame for the Bf 109 SHALL be parsed without error | specs/features/req_118_il2_adapter.feature:12 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.3 | Aircraft type SHALL be detected from the aircraft name string in the telemetry frame | specs/features/req_118_il2_adapter.feature:19 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.4 | Gear state transitions SHALL be decoded and the correct GearDown/GearUp event SHALL be emitted | specs/features/req_118_il2_adapter.feature:27 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.5 | Throttle output SHALL be clamped to [0.0, 1.0] | specs/features/req_118_il2_adapter.feature:35 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.6 | A UDP frame with an incorrect magic number SHALL be discarded and a MalformedFrame error recorded | specs/features/req_118_il2_adapter.feature:43 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.7 | A UDP frame with an unsupported protocol version SHALL be discarded and an UnsupportedVersion error recorded | specs/features/req_118_il2_adapter.feature:50 | 1 | ⚪ Draft |
+| REQ-118 | AC-118.8 | A valid telemetry frame SHALL produce a TelemetryUpdate event on the flight bus with matching payload | specs/features/req_118_il2_adapter.feature:57 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.1 | A valid Aerofly FS 4 UDP JSON telemetry packet SHALL be parsed without error | specs/features/req_119_aerofly_adapter.feature:5 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.2 | Aircraft type SHALL be detected from the aircraft name field in the JSON payload | specs/features/req_119_aerofly_adapter.feature:12 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.3 | Pitch, roll, and heading SHALL be extracted correctly from the JSON telemetry | specs/features/req_119_aerofly_adapter.feature:20 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.4 | Gear state SHALL be decoded from the JSON gear_down boolean field | specs/features/req_119_aerofly_adapter.feature:28 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.5 | Flap ratio SHALL be in [0.0, 1.0] with out-of-range values clamped | specs/features/req_119_aerofly_adapter.feature:36 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.6 | The adapter SHALL bind to UDP port 49002 on startup | specs/features/req_119_aerofly_adapter.feature:43 | 1 | ⚪ Draft |
+| REQ-119 | AC-119.7 | Malformed JSON SHALL be discarded, a ParseError recorded, and subsequent packets processed | specs/features/req_119_aerofly_adapter.feature:50 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.1 | A v1 profile SHALL migrate to v2 with no data loss | specs/features/req_120_profile_migration.feature:5 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.2 | Custom axis curve definitions SHALL be preserved through migration | specs/features/req_120_profile_migration.feature:12 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.3 | Deadzone settings SHALL be preserved through migration | specs/features/req_120_profile_migration.feature:19 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.4 | A profile with an unrecognised schema version SHALL be rejected with InvalidSchemaVersion | specs/features/req_120_profile_migration.feature:26 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.5 | Applying migration twice SHALL produce the same result as applying it once (idempotent) | specs/features/req_120_profile_migration.feature:33 | 1 | ⚪ Draft |
+| REQ-120 | AC-120.6 | The migrated profile SHALL match the pre-approved golden snapshot exactly | specs/features/req_120_profile_migration.feature:40 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.1 | The stable channel SHALL only return non-prerelease versions | specs/features/req_121_updater_channels.feature:5 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.2 | The beta channel SHALL include stable and beta versions but not alpha or canary | specs/features/req_121_updater_channels.feature:12 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.3 | The canary channel SHALL include stable, beta, and canary versions | specs/features/req_121_updater_channels.feature:20 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.4 | Version 1.2.3 SHALL compare as greater than 1.2.2 | specs/features/req_121_updater_channels.feature:26 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.5 | Manifest checksum verification SHALL pass for an unmodified downloaded file | specs/features/req_121_updater_channels.feature:33 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.6 | Manifest checksum verification SHALL fail for a tampered downloaded file | specs/features/req_121_updater_channels.feature:40 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.7 | Rollback SHALL restore the previous installed version without error | specs/features/req_121_updater_channels.feature:47 | 1 | ⚪ Draft |
+| REQ-121 | AC-121.8 | A delta patch SHALL produce an installation functionally equivalent to a clean install of the target version | specs/features/req_121_updater_channels.feature:54 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.1 | A component that sends a heartbeat within the expected interval SHALL be reported as healthy | specs/features/req_122_watchdog_health.feature:5 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.2 | A component that misses the threshold number of consecutive heartbeats SHALL be quarantined and a ComponentQuarantined event emitted | specs/features/req_122_watchdog_health.feature:11 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.3 | A quarantined component that responds to a recovery probe SHALL be cleared and reported healthy | specs/features/req_122_watchdog_health.feature:18 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.4 | Re-registering a component after unregister SHALL start tracking from a clean state with no stale quarantine | specs/features/req_122_watchdog_health.feature:25 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.5 | Quarantining one component SHALL NOT affect the health state of other registered components | specs/features/req_122_watchdog_health.feature:33 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.6 | Disabling fault injection for a component SHALL allow subsequent heartbeats to be processed normally | specs/features/req_122_watchdog_health.feature:40 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.7 | The health summary SHALL accurately reflect total, quarantined, and healthy component counts | specs/features/req_122_watchdog_health.feature:47 | 1 | ⚪ Draft |
+| REQ-122 | AC-122.8 | The quarantined component count SHALL never exceed the total registered component count | specs/features/req_122_watchdog_health.feature:55 | 1 | ⚪ Draft |
