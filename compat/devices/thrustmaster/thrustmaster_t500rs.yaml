@@ -1,0 +1,64 @@
+# Thrustmaster T500 RS Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB654 is reported for the T500 RS in community USB capture databases and
+# SDL2 GameControllerDB forks; distinct from PID 0xB65D found in some kernel
+# entries. The T500 RS is Thrustmaster's flagship GT/F1 wheel with large-format
+# brushless servo motor, ~4 Nm peak torque, and H-pattern + paddle shifters.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T500 RS Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB654   # Community-reported — T500 RS; see also 0xB65D
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 30
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 4.0
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      Two PIDs are reported for the T500 RS in the community: 0xB654 and
+      0xB65D. Hardware variants or firmware revisions may explain the
+      difference. Confirm from lsusb on real hardware.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (1080° physical rotation); Z = accelerator; Rz = brake.
+      Map X to rudder when using in flight sim.
+  - id: LARGE_SERVO_FFB
+    description: >
+      T500 RS uses a large-format brushless servo with ~4 Nm peak torque.
+      Constant-force effects can produce strong centering in flight sim rudder
+      configurations; apply torque scaling in the OpenFlight FFB envelope.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T500 RS. VID 0x044F confirmed; PID 0xB654 community-reported
+    (variant PID 0xB65D also seen). Large-format brushless servo FFB; flagship
+    GT/F1 wheel. Last reviewed: 2026-06.

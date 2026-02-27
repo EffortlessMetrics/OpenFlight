@@ -1,0 +1,59 @@
+# Fanatec McLaren GT3 Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0011 is a community estimate for the original McLaren GT3 steering wheel
+# rim; distinct from the McLaren GT3 V2 (PID 0x0030 in mclaren-gt3-v2.yaml).
+# The McLaren GT3 rim is a licensed replica of the McLaren Senna GT3 race wheel,
+# with carbon-fibre look, OLED display, and Fanatec ClubSport Quick Release.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec McLaren GT3 Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: 0x0011   # Community estimate — McLaren GT3 (v1); see also V2 at 0x0030
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate for the original McLaren GT3 rim.
+      The V2 revision uses 0x0030 (mclaren-gt3-v2.yaml). Confirm from lsusb
+      on real hardware.
+  - id: RIM_ONLY_NO_AXIS
+    description: >
+      The McLaren GT3 rim provides buttons and hats only; steering axis comes
+      from the wheel base (ClubSport or Podium series).
+  - id: OLED_DISPLAY
+    description: >
+      The rim includes a small OLED display driven via Fanatec's proprietary
+      protocol through the wheel base USB connection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec McLaren GT3 Steering Wheel (v1). VID 0x0EB7 confirmed; PID 0x0011
+    community estimate (V2 is at 0x0030). Licensed McLaren Senna GT3 rim replica
+    with OLED display. Last reviewed: 2026-06.

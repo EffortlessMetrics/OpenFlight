@@ -1,0 +1,53 @@
+# ASP Controls Aerobatic Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 is the PJRC/Teensy shared USB VID commonly used by small
+# manufacturers and DIY devices, including some Advanced Simulation Products
+# (ASP) custom controller units. PID assignment varies per unit; 0x0480
+# is a community estimate. Confirm with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "ASP Controls Aerobatic Joystick"
+  vendor: "Advanced Simulation Products (ASP)"
+  usb:
+    vendor_id: 0x16C0       # PJRC/Teensy shared VID (community estimate for ASP)
+    product_id: 0x0480      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_SHARED
+    description: >
+      VID 0x16C0 is the PJRC/Teensy shared VID. Multiple unrelated devices
+      may share this VID; disambiguate by PID and/or HID string descriptors.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0480 is a community estimate for ASP aerobatic joystick units.
+      Confirm with lsusb and update this manifest when a confirmed PID is
+      available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ASP Controls aerobatic joystick. Uses PJRC/Teensy shared VID 0x16C0;
+    PID 0x0480 is a community estimate. Confirm VID/PID with lsusb.
+    Last reviewed: 2026-06.

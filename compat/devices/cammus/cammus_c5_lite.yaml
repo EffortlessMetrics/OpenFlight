@@ -1,0 +1,63 @@
+# Cammus C5 Lite Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416: Cammus (community-reported estimate).
+# PID 0x0010 is a community estimate for the C5 Lite; distinct from the C5
+# direct-drive base at 0x0301 in c5-direct-drive.yaml. The C5 Lite is the
+# budget entry-level variant of the Cammus C5 DD family, with reduced torque
+# output compared to the full C5.
+
+schema_version: "1"
+
+device:
+  name: "Cammus C5 Lite Direct Drive Wheel Base"
+  vendor: "Cammus"
+  usb:
+    vendor_id: 0x3416
+    product_id: 0x0010   # Community estimate — C5 Lite; see full C5 at 0x0301
+  hid:
+    usage_page: 0x01
+    usage: 0x08   # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 3.5
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x3416 and PID 0x0010 are community estimates for the C5 Lite.
+      Confirm from lsusb or Windows Device Manager on real hardware.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      Flight sim use requires a compatible grip adapter. The base provides
+      only the wheel rotation axis; buttons come from the attached grip.
+  - id: REDUCED_TORQUE_LITE_VARIANT
+    description: >
+      The C5 Lite has reduced peak torque (approx 3.5 Nm) compared to the
+      full C5 (5 Nm). Apply appropriate torque-limit settings in the FFB
+      envelope.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cammus C5 Lite direct drive wheel base. VID 0x3416, PID 0x0010 community
+    estimates. Budget DD entry-level; reduced torque vs full C5.
+    Last reviewed: 2026-06.

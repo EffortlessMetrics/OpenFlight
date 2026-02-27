@@ -10259,3 +10259,543 @@ requirements:
         description: "CLI can display live metrics via flightctl metrics"
         tests:
           - feature:specs/features/req_318_streaming_metrics_export.feature
+  # Product Requirement: Input Combination Logic
+  - id: REQ-319
+    name: Input Combination Logic
+    kind: product
+    status: draft
+    ac:
+      - id: AC-319.1
+        description: "Two axis inputs can be combined with configurable blend (0-100%)"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+      - id: AC-319.2
+        description: "Sum and differential combination modes are both supported"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+      - id: AC-319.3
+        description: "Combined axis value is properly normalized after blend"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+      - id: AC-319.4
+        description: "Combination config is per-profile and per-axis"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+      - id: AC-319.5
+        description: "Zero blend produces passthrough of primary axis"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+      - id: AC-319.6
+        description: "Combined axis is listed as virtual in device enumeration"
+        tests:
+          - feature:specs/features/req_319_input_combination_logic.feature
+  # Product Requirement: Sim Racing Force Feedback
+  - id: REQ-320
+    name: Sim Racing Force Feedback
+    kind: product
+    status: draft
+    ac:
+      - id: AC-320.1
+        description: "Service translates racing sim FFB forces to wheel effects"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+      - id: AC-320.2
+        description: "Force feedback strength is proportional to lateral G-force"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+      - id: AC-320.3
+        description: "Road texture effects are mapped from telemetry vibration data"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+      - id: AC-320.4
+        description: "Wheel centering spring strength is configurable"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+      - id: AC-320.5
+        description: "FFB effects are disabled when car is parked (speed < 1 m/s)"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+      - id: AC-320.6
+        description: "Racing sim profiles are separate from flight profiles"
+        tests:
+          - feature:specs/features/req_320_sim_racing_force_feedback.feature
+  # Product Requirement: OpenXR Head Tracking
+  - id: REQ-321
+    name: OpenXR Head Tracking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-321.1
+        description: "Service polls OpenXR runtime for head pose at 90Hz"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+      - id: AC-321.2
+        description: "Head pose (yaw/pitch) is exposed as virtual axis pair"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+      - id: AC-321.3
+        description: "OpenXR session lifecycle is managed (create/destroy on demand)"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+      - id: AC-321.4
+        description: "Head tracking works without a VR headset (OpenXR simulator mode)"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+      - id: AC-321.5
+        description: "Pose data is filtered with EMA to reduce jitter"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+      - id: AC-321.6
+        description: "OpenXR is feature-gated (requires --features vr)"
+        tests:
+          - feature:specs/features/req_321_openxr_head_tracking.feature
+  # Product Requirement: Multi-Device Calibration
+  - id: REQ-322
+    name: Multi-Device Calibration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-322.1
+        description: "Calibration can be run for all connected axes simultaneously"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+      - id: AC-322.2
+        description: "Calibration procedure guides user through min/max/center positions"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+      - id: AC-322.3
+        description: "Results are stored per device (VID/PID) in calibration store"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+      - id: AC-322.4
+        description: "Stored calibration is applied automatically on device connect"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+      - id: AC-322.5
+        description: "CLI command: flightctl calibrate [device]"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+      - id: AC-322.6
+        description: "Calibration timeout: 30 seconds per axis, with progress display"
+        tests:
+          - feature:specs/features/req_322_multi_device_calibration.feature
+  # Product Requirement: Device Configuration Profiles
+  - id: REQ-323
+    name: Device Configuration Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-323.1
+        description: "Each device can have a device-level config (independent of aircraft profile)"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+      - id: AC-323.2
+        description: "Device config specifies: polling rate, report format, calibration"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+      - id: AC-323.3
+        description: "Device configs survive aircraft profile switches"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+      - id: AC-323.4
+        description: "Device config is exported in flightctl export --devices output"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+      - id: AC-323.5
+        description: "Device config supports per-axis polarity override"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+      - id: AC-323.6
+        description: "Device config changes take effect without service restart"
+        tests:
+          - feature:specs/features/req_323_device_configuration_profiles.feature
+  # Product Requirement: Emergency Stop
+  - id: REQ-324
+    name: Emergency Stop
+    kind: product
+    status: draft
+    ac:
+      - id: AC-324.1
+        description: "Service supports a hardware emergency stop button mapping"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+      - id: AC-324.2
+        description: "When E-stop is triggered, all axes are forced to neutral"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+      - id: AC-324.3
+        description: "E-stop state is maintained until explicitly cleared"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+      - id: AC-324.4
+        description: "E-stop event is logged with timestamp and triggering button"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+      - id: AC-324.5
+        description: "E-stop clears all active FFB effects immediately"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+      - id: AC-324.6
+        description: "CLI can trigger and clear E-stop: flightctl estop [--clear]"
+        tests:
+          - feature:specs/features/req_324_emergency_stop.feature
+  # Product Requirement: Axis Calibration Persistence
+  - id: REQ-325
+    name: Axis Calibration Persistence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-325.1
+        description: "Calibration data is stored in a per-device JSON file"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+      - id: AC-325.2
+        description: "Calibration file is named by VID/PID (e.g., calibration_046D_C24F.json)"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+      - id: AC-325.3
+        description: "Calibration is applied automatically on device connect"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+      - id: AC-325.4
+        description: "Manual calibration override is supported per-profile"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+      - id: AC-325.5
+        description: "Expired calibration (> 30 days) generates a reminder log"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+      - id: AC-325.6
+        description: "Calibration store path is configurable (default: ~/.config/openflight/)"
+        tests:
+          - feature:specs/features/req_325_axis_calibration_persistence.feature
+  # Product Requirement: Rich Device Metadata
+  - id: REQ-326
+    name: Rich Device Metadata
+    kind: product
+    status: draft
+    ac:
+      - id: AC-326.1
+        description: "Service queries device manufacturer string via USB descriptor"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+      - id: AC-326.2
+        description: "Product name and serial number are logged on connect"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+      - id: AC-326.3
+        description: "Metadata is included in device enumeration API response"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+      - id: AC-326.4
+        description: "Metadata is included in diagnostic bundle"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+      - id: AC-326.5
+        description: "Devices without USB descriptor strings use VID/PID as identifier"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+      - id: AC-326.6
+        description: "Metadata is cached per-session (no repeated USB queries)"
+        tests:
+          - feature:specs/features/req_326_rich_device_metadata.feature
+  # Product Requirement: Conditional Axis Mapping
+  - id: REQ-327
+    name: Conditional Axis Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-327.1
+        description: "Axis mapping can be conditional on flight phase or gear state"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+      - id: AC-327.2
+        description: "Profile rules can switch axis assignments based on sim variable"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+      - id: AC-327.3
+        description: "Conditional mappings have priority order (first-match wins)"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+      - id: AC-327.4
+        description: "Conditions are evaluated on each tick without allocation"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+      - id: AC-327.5
+        description: "Default (unconditional) mapping is always present"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+      - id: AC-327.6
+        description: "Condition evaluation errors fall back to default mapping"
+        tests:
+          - feature:specs/features/req_327_conditional_axis_mapping.feature
+  # Product Requirement: Multi-Seat Support
+  - id: REQ-328
+    name: Multi-Seat Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-328.1
+        description: "Service can connect two sets of controls (pilot + co-pilot)"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+      - id: AC-328.2
+        description: "Each seat has independent device bindings"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+      - id: AC-328.3
+        description: "Active seat can be switched at runtime"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+      - id: AC-328.4
+        description: "Both seats share the same profile (but can use different slots)"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+      - id: AC-328.5
+        description: "Seat switch event is emitted on the bus"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+      - id: AC-328.6
+        description: "Co-pilot devices are listed separately in diagnostics"
+        tests:
+          - feature:specs/features/req_328_multi_seat_support.feature
+  # Product Requirement: Profile Template System
+  - id: REQ-329
+    name: Profile Template System
+    kind: product
+    status: draft
+    ac:
+      - id: AC-329.1
+        description: "Users can create profile templates for common aircraft types"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+      - id: AC-329.2
+        description: "Templates are applied as starting points for new profiles"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+      - id: AC-329.3
+        description: "Templates can include suggested axis curves and deadzones"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+      - id: AC-329.4
+        description: "OpenFlight ships with default templates for common sim types"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+      - id: AC-329.5
+        description: "Templates are listed via flightctl template list"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+      - id: AC-329.6
+        description: "Custom templates are stored in user config directory"
+        tests:
+          - feature:specs/features/req_329_profile_template_system.feature
+  # Product Requirement: USB Composite Device Support
+  - id: REQ-330
+    name: USB Composite Device Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-330.1
+        description: "Service correctly handles composite HID devices (multiple interfaces)"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+      - id: AC-330.2
+        description: "Each interface is exposed as a separate logical device"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+      - id: AC-330.3
+        description: "Interface selection is configurable in device config"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+      - id: AC-330.4
+        description: "Composite device disconnect removes all its logical devices"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+      - id: AC-330.5
+        description: "VID/PID plus interface number is used as device identifier"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+      - id: AC-330.6
+        description: "Composite device is documented in compatibility matrix"
+        tests:
+          - feature:specs/features/req_330_usb_composite_device_support.feature
+  # Product Requirement: Real-Time Jitter Monitoring
+  - id: REQ-331
+    name: Real-Time Jitter Monitoring
+    kind: product
+    status: draft
+    ac:
+      - id: AC-331.1
+        description: "Service measures tick timing jitter at 250Hz"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+      - id: AC-331.2
+        description: "p99 jitter metric is exposed via Prometheus"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+      - id: AC-331.3
+        description: "If p99 jitter exceeds 0.5ms, a warning is logged"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+      - id: AC-331.4
+        description: "Jitter history is kept for the last 1000 ticks (ring buffer)"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+      - id: AC-331.5
+        description: "CLI can display jitter histogram: flightctl jitter"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+      - id: AC-331.6
+        description: "Jitter monitoring has negligible overhead (< 1µs per measurement)"
+        tests:
+          - feature:specs/features/req_331_realtime_jitter_monitoring.feature
+  # Product Requirement: Connection State Machine
+  - id: REQ-332
+    name: Connection State Machine
+    kind: product
+    status: draft
+    ac:
+      - id: AC-332.1
+        description: "Adapter connections follow a defined state machine (Disconnected → Connecting → Connected → Active → Disconnected)"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+      - id: AC-332.2
+        description: "State transitions are logged with timestamps"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+      - id: AC-332.3
+        description: "Invalid state transitions produce a warning and no-op"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+      - id: AC-332.4
+        description: "State machine is unit-tested with all valid transitions"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+      - id: AC-332.5
+        description: "Pending state prevents duplicate connection attempts"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+      - id: AC-332.6
+        description: "State changes trigger events on the internal bus"
+        tests:
+          - feature:specs/features/req_332_connection_state_machine.feature
+  # Product Requirement: Profile Schema v2
+  - id: REQ-333
+    name: Profile Schema v2
+    kind: product
+    status: draft
+    ac:
+      - id: AC-333.1
+        description: "Profile schema v2 adds support for device-level configs"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+      - id: AC-333.2
+        description: "v2 adds per-axis filter chain configuration"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+      - id: AC-333.3
+        description: "v2 adds inheritance parent field"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+      - id: AC-333.4
+        description: "v1 profiles are automatically migrated to v2 on load"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+      - id: AC-333.5
+        description: "v2 validation checks new fields for correctness"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+      - id: AC-333.6
+        description: "Schema version is embedded in profile YAML header"
+        tests:
+          - feature:specs/features/req_333_profile_schema_v2.feature
+  # Product Requirement: Device Reconnect Tolerance
+  - id: REQ-334
+    name: Device Reconnect Tolerance
+    kind: product
+    status: draft
+    ac:
+      - id: AC-334.1
+        description: "Service attempts device reconnection 5 times before giving up"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+      - id: AC-334.2
+        description: "Each reconnect attempt waits 2× the previous interval (exponential backoff)"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+      - id: AC-334.3
+        description: "Maximum reconnect interval is 30 seconds"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+      - id: AC-334.4
+        description: "Successful reconnect resets the attempt counter"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+      - id: AC-334.5
+        description: "Reconnect attempts are logged with device details"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+      - id: AC-334.6
+        description: "Final failure triggers graceful degradation (not service stop)"
+        tests:
+          - feature:specs/features/req_334_device_reconnect_tolerance.feature
+  # Product Requirement: Touchscreen Panel Support
+  - id: REQ-335
+    name: Touchscreen Panel Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-335.1
+        description: "Service can send button state to StreamDeck XL and similar touchscreens"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+      - id: AC-335.2
+        description: "Button labels are configurable per profile"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+      - id: AC-335.3
+        description: "Button colors/icons reflect axis state (e.g., green when gear up)"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+      - id: AC-335.4
+        description: "Panel updates are batched to avoid USB saturation (max 30fps)"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+      - id: AC-335.5
+        description: "Panel config is part of the aircraft profile"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+      - id: AC-335.6
+        description: "Panel errors do not affect axis processing"
+        tests:
+          - feature:specs/features/req_335_touchscreen_panel_support.feature
+  # Product Requirement: Telemetry Rate Adaptation
+  - id: REQ-336
+    name: Telemetry Rate Adaptation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-336.1
+        description: "Service detects telemetry rate from simulator (10-200Hz)"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature
+      - id: AC-336.2
+        description: "Internal processing upsamples/downsamples to 250Hz"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature
+      - id: AC-336.3
+        description: "Interpolation preserves axis accuracy (linear interpolation)"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature
+      - id: AC-336.4
+        description: "Rate mismatch is logged once on connect"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature
+      - id: AC-336.5
+        description: "Adaptation is per-simulator (different adapters have different rates)"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature
+      - id: AC-336.6
+        description: "Zero-rate (disconnected) clears to idle state"
+        tests:
+          - feature:specs/features/req_336_telemetry_rate_adaptation.feature

@@ -1,0 +1,62 @@
+# Thrustmaster T300 RS GT Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB66D is the community-reported PID for the T300 RS GT Edition,
+# distinct from the base T300 RS (0xB66E). The GT Edition ships with a
+# leather-trimmed GT wheel rim and the T3PA three-pedal add-on. Servo
+# belt-drive FFB; widely used in flight sim for rudder/nose-wheel steering.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 RS GT Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB66D   # Community-reported — T300 RS GT Edition
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (900° range); Z = accelerator; Rz = brake.
+      For flight sim use, X typically maps to rudder axis.
+  - id: PID_COMMUNITY_REPORTED
+    description: >
+      PID 0xB66D is community-reported for the GT Edition variant. The base
+      T300 RS uses 0xB66E. Confirm from lsusb or Windows Device Manager on
+      physical hardware.
+  - id: T3PA_PEDALS_BUNDLED
+    description: >
+      GT Edition bundles the T3PA three-pedal set. The third pedal (clutch)
+      reports on the Rx or Ry axis depending on firmware version.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T300 RS GT Edition. VID 0x044F confirmed; PID 0xB66D
+    community-reported (distinct from base T300 RS at 0xB66E). Servo belt-drive
+    FFB wheel; useful as rudder input in flight sim. Last reviewed: 2026-06.

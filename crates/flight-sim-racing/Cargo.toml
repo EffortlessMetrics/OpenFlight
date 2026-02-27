@@ -1,0 +1,21 @@
+[package]
+homepage.workspace = true
+name = "flight-sim-racing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Sim racing game adapter for OpenFlight - racing telemetry and FFB"
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "sim-racing", "telemetry"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dependencies]
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

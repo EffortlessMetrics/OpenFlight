@@ -1,0 +1,63 @@
+# TrackHat Clip Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 is the Arduino LLC VID (community estimate for this device).
+# PID 0x0042 is a community estimate; the TrackHat Clip uses an Arduino-
+# compatible microcontroller to emulate a standard HID device, relaying
+# IR LED positions for head tracking with OpenTrack or FaceTrackNoIR.
+# The TrackHat Clip is an affordable IR LED clip that attaches to a headset.
+
+schema_version: "1"
+
+device:
+  name: "TrackHat Clip Head Tracker"
+  vendor: "TrackHat"
+  type: other
+  usb:
+    vendor_id: 0x2341   # Arduino LLC (community estimate for TrackHat Clip)
+    product_id: 0x0042  # Community estimate — varies by firmware build
+  hid:
+    usage_page: 0x01
+    usage: 0x00   # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2341 (Arduino LLC) and PID 0x0042 are community estimates.
+      The TrackHat Clip firmware is open-source; users may build with
+      varying VID/PID values. Confirm from lsusb on your specific unit.
+  - id: OPENTRACK_REQUIRED
+    description: >
+      The TrackHat Clip does not expose head-pose data as standard HID axes.
+      It outputs an IR LED pattern captured by a camera; OpenTrack processes
+      the video feed to produce 6DOF pose data. Relay to flight sim via
+      OpenTrack's UDP output.
+  - id: CAMERA_REQUIRED
+    description: >
+      Requires a separate IR-filtered camera (e.g., PS3 Eye with IR pass
+      filter). The Clip provides 3 IR LEDs; the camera and OpenTrack do
+      the head-pose computation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    TrackHat Clip IR LED head tracker. VID 0x2341 / PID 0x0042 community
+    estimates; Arduino-based firmware. Works with OpenTrack for 6DOF head
+    tracking. Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# MOZA ES Electromagnetic Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: MOZA Racing (Gudsen Technology).
+# PID 0x0020 is a community estimate for the ES steering wheel rim; distinct
+# from the ES Electromagnetic Handbrake (0x0030) in es-handbrake.yaml.
+# The MOZA ES steering wheel is a compact round rim for the MOZA R series bases,
+# with real leather wrap and quick-release mount.
+
+schema_version: "1"
+
+device:
+  name: "MOZA ES Steering Wheel"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0020   # Community estimate — ES steering wheel rim
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate for the MOZA ES steering wheel rim.
+      Confirm from lsusb or Windows Device Manager on real hardware before
+      enabling production device matching.
+  - id: RIM_ONLY_NO_AXIS
+    description: >
+      The ES rim provides buttons and a D-pad only; the steering axis is
+      provided by the attached MOZA R series base.
+  - id: QUICK_RELEASE
+    description: >
+      The MOZA ES rim uses MOZA's proprietary quick-release system. Steering
+      data passes through the base; the rim communicates via the base's USB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA ES Steering Wheel rim. VID 0x346E confirmed; PID 0x0020 community
+    estimate. Compact round rim for MOZA R series bases; buttons via HID through
+    the wheel base. Last reviewed: 2026-06.

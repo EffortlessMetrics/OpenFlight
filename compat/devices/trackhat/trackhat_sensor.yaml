@@ -1,0 +1,62 @@
+# TrackHat Sensor IMU Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 is the Arduino LLC VID (community estimate). PID 0x8036 is a
+# community estimate for the TrackHat Sensor, which uses an IMU (inertial
+# measurement unit) on an Arduino-compatible board for head tracking.
+# Unlike the Clip (camera-based), the Sensor derives head orientation from
+# accelerometer/gyroscope data directly, relayed via OpenTrack.
+
+schema_version: "1"
+
+device:
+  name: "TrackHat Sensor IMU Head Tracker"
+  vendor: "TrackHat"
+  type: other
+  usb:
+    vendor_id: 0x2341   # Arduino LLC (community estimate)
+    product_id: 0x8036  # Community estimate — Arduino Micro-based Sensor
+  hid:
+    usage_page: 0x01
+    usage: 0x00   # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2341 / PID 0x8036 are community estimates; Arduino-based firmware
+      may use different VID/PID values depending on the build. Confirm with
+      lsusb on your specific unit.
+  - id: IMU_DRIFT
+    description: >
+      IMU-based head tracking is subject to gyroscope drift over time.
+      OpenTrack's filter settings should include drift correction. The Sensor
+      lacks the absolute reference of camera-based trackers.
+  - id: OPENTRACK_REQUIRED
+    description: >
+      Head-pose data is consumed by OpenTrack via a custom plugin for the
+      TrackHat Sensor. OpenTrack relays 6DOF output to the simulator via
+      its UDP or FreeTrack protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    TrackHat Sensor IMU head tracker. VID 0x2341 / PID 0x8036 community
+    estimates; Arduino-based IMU for 6DOF head tracking via OpenTrack.
+    Last reviewed: 2026-06.

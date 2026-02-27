@@ -1,0 +1,56 @@
+# P1 SimVibe / SimCommander Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# P1 SimVibe (also known as SimCommander by P1 Sim) is a tactile feedback
+# and motion seat controller. It drives bass shakers and motion actuators
+# via audio or USB output based on telemetry data from the simulator.
+# Not a standard HID input device; tracked for sim-rig compatibility.
+schema_version: "1"
+
+device:
+  name: "P1 SimVibe / SimCommander Controller"
+  vendor: "P1 Sim"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0000  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined — audio or proprietary output, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID are unconfirmed. Verify with lsusb on real hardware."
+  - id: AUDIO_OR_SERIAL_OUTPUT
+    description: >
+      P1 SimVibe drives tactile transducers and motion actuators via audio
+      channels or a serial/USB interface. The P1 SimCommander software
+      handles telemetry parsing and output routing.
+  - id: OUTPUT_ONLY
+    description: >
+      This controller generates no HID flight control input events. Tracked
+      for sim-rig accessory compatibility documentation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    P1 SimVibe / SimCommander tactile and motion controller. Output-only;
+    not an HID input device. Controlled by P1 SimCommander software.
+    Last reviewed: 2026-06.

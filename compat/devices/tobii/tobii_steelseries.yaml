@@ -1,0 +1,61 @@
+# SteelSeries Tobii Bundle Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2104: Tobii Technology AB. PID 0x0C02 is a community estimate for the
+# Tobii Eye Tracker 5 sold in the SteelSeries bundle (marketed as "SteelSeries
+# Tobii Eye Tracker 5 for PC"). Hardware is identical to the standalone Tobii
+# ET5; only packaging and marketing differ. SteelSeries bundled the device
+# with their gaming peripherals line.
+
+schema_version: "1"
+
+device:
+  name: "SteelSeries Tobii Eye Tracker 5"
+  vendor: "SteelSeries / Tobii Technology AB"
+  type: other
+  usb:
+    vendor_id: 0x2104    # Tobii Technology AB (confirmed)
+    product_id: 0x0C02   # Community estimate — SteelSeries-branded ET5
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C02 is a community estimate for the SteelSeries-branded ET5.
+      Hardware is identical to standalone Tobii ET5; PID may be the same
+      or differ by firmware. Confirm from lsusb on real hardware.
+  - id: HARDWARE_IDENTICAL_TO_ET5
+    description: >
+      The SteelSeries Tobii bundle uses the same Tobii ET5 hardware.
+      OpenFlight treats it identically to the standalone ET5; use the Tobii
+      Gaming SDK or opentrack for data access.
+  - id: EYE_TRACKING_SDK
+    description: >
+      Eye-gaze and head-pose data are not raw HID axes; consumed via Tobii
+      Gaming SDK or opentrack plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SteelSeries Tobii Eye Tracker 5 bundle. VID 0x2104 confirmed; PID 0x0C02
+    community estimate. Identical hardware to standalone ET5; SteelSeries
+    branding only. Last reviewed: 2026-06.

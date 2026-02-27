@@ -1,0 +1,61 @@
+# Simagic FX Pro Steering Wheel Rim
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483: STMicroelectronics (used by several sim-racing manufacturers
+# running STM32 MCUs). PID 0x5760 is a community estimate for the Simagic
+# FX Pro steering wheel rim. The FX Pro is a high-end formula-style rim with
+# Alcantara wrap, carbon-fibre look, dual clutch paddles, and an LCD display.
+
+schema_version: "1"
+
+device:
+  name: "Simagic FX Pro Steering Wheel"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0x5760   # Community estimate — FX Pro rim
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [rx, ry]   # Dual clutch paddles
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5760 is a community estimate for the FX Pro rim under STM32 USB VID.
+      Confirm from lsusb or Windows Device Manager on real hardware.
+  - id: RIM_ONLY_NO_WHEEL_AXIS
+    description: >
+      The FX Pro rim provides buttons, hats, and clutch paddle axes only;
+      the steering axis is provided by the connected Simagic Alpha/GT series base.
+  - id: STM32_VID
+    description: >
+      VID 0x0483 is the generic STMicroelectronics USB VID. Multiple unrelated
+      devices share this VID; rely on PID for device identification.
+  - id: LCD_DISPLAY
+    description: >
+      The FX Pro includes an LCD display driven via proprietary Simagic protocol
+      through the base USB connection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic FX Pro steering wheel rim. VID 0x0483 (STM32 USB), PID 0x5760
+    community estimate. Formula-style rim with dual clutch paddles and LCD.
+    Last reviewed: 2026-06.

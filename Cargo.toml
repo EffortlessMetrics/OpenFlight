@@ -26,6 +26,7 @@ members = [
     "crates/flight-psx",
     "crates/flight-falcon-bms",
     "crates/flight-il2",
+    "crates/flight-sim-racing",
     "crates/flight-opentrack",
     "crates/flight-ac7-protocol",
     "crates/flight-ac7-telemetry",

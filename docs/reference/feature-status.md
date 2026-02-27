@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1904 |
-| ACs with tests | 1904 |
+| Total AC | 2012 |
+| ACs with tests | 2012 |
 | ACs with Gherkin | 941 |
 | ACs with both tests + Gherkin | 941 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 1307 |
+| Draft | 1415 |
 | Incomplete | 0 |
-| Microcrates | 80 |
-| Microcrates with tests | 65 (81.2%) |
-| Microcrates with Gherkin | 65 (81.2%) |
-| Microcrates fully covered | 65 (81.2%) |
+| Microcrates | 81 |
+| Microcrates with tests | 65 (80.2%) |
+| Microcrates with Gherkin | 65 (80.2%) |
+| Microcrates fully covered | 65 (80.2%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 49.4% |
-| Test + Gherkin coverage | 49.4% |
+| Gherkin coverage | 46.8% |
+| Test + Gherkin coverage | 46.8% |
 
 ## BDD Microcrate Matrix
 
@@ -97,6 +97,7 @@
 | flight-security | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-service | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-session | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-sim-racing | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-simconnect | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect-sys | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-streamdeck | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
@@ -2024,3 +2025,111 @@
 | REQ-318 | AC-318.4 | Authentication for metrics endpoint is optional (bearer token) | - | 1 | ⚪ Draft |
 | REQ-318 | AC-318.5 | Metrics are updated every 100ms at most (rate-limited writes) | - | 1 | ⚪ Draft |
 | REQ-318 | AC-318.6 | CLI can display live metrics via flightctl metrics | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.1 | Two axis inputs can be combined with configurable blend (0-100%) | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.2 | Sum and differential combination modes are both supported | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.3 | Combined axis value is properly normalized after blend | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.4 | Combination config is per-profile and per-axis | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.5 | Zero blend produces passthrough of primary axis | - | 1 | ⚪ Draft |
+| REQ-319 | AC-319.6 | Combined axis is listed as virtual in device enumeration | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.1 | Service translates racing sim FFB forces to wheel effects | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.2 | Force feedback strength is proportional to lateral G-force | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.3 | Road texture effects are mapped from telemetry vibration data | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.4 | Wheel centering spring strength is configurable | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.5 | FFB effects are disabled when car is parked (speed < 1 m/s) | - | 1 | ⚪ Draft |
+| REQ-320 | AC-320.6 | Racing sim profiles are separate from flight profiles | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.1 | Service polls OpenXR runtime for head pose at 90Hz | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.2 | Head pose (yaw/pitch) is exposed as virtual axis pair | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.3 | OpenXR session lifecycle is managed (create/destroy on demand) | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.4 | Head tracking works without a VR headset (OpenXR simulator mode) | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.5 | Pose data is filtered with EMA to reduce jitter | - | 1 | ⚪ Draft |
+| REQ-321 | AC-321.6 | OpenXR is feature-gated (requires --features vr) | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.1 | Calibration can be run for all connected axes simultaneously | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.2 | Calibration procedure guides user through min/max/center positions | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.3 | Results are stored per device (VID/PID) in calibration store | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.4 | Stored calibration is applied automatically on device connect | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.5 | CLI command: flightctl calibrate [device] | - | 1 | ⚪ Draft |
+| REQ-322 | AC-322.6 | Calibration timeout: 30 seconds per axis, with progress display | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.1 | Each device can have a device-level config (independent of aircraft profile) | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.2 | Device config specifies: polling rate, report format, calibration | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.3 | Device configs survive aircraft profile switches | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.4 | Device config is exported in flightctl export --devices output | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.5 | Device config supports per-axis polarity override | - | 1 | ⚪ Draft |
+| REQ-323 | AC-323.6 | Device config changes take effect without service restart | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.1 | Service supports a hardware emergency stop button mapping | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.2 | When E-stop is triggered, all axes are forced to neutral | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.3 | E-stop state is maintained until explicitly cleared | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.4 | E-stop event is logged with timestamp and triggering button | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.5 | E-stop clears all active FFB effects immediately | - | 1 | ⚪ Draft |
+| REQ-324 | AC-324.6 | CLI can trigger and clear E-stop: flightctl estop [--clear] | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.1 | Calibration data is stored in a per-device JSON file | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.2 | Calibration file is named by VID/PID (e.g., calibration_046D_C24F.json) | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.3 | Calibration is applied automatically on device connect | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.4 | Manual calibration override is supported per-profile | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.5 | Expired calibration (> 30 days) generates a reminder log | - | 1 | ⚪ Draft |
+| REQ-325 | AC-325.6 | Calibration store path is configurable (default: ~/.config/openflight/) | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.1 | Service queries device manufacturer string via USB descriptor | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.2 | Product name and serial number are logged on connect | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.3 | Metadata is included in device enumeration API response | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.4 | Metadata is included in diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.5 | Devices without USB descriptor strings use VID/PID as identifier | - | 1 | ⚪ Draft |
+| REQ-326 | AC-326.6 | Metadata is cached per-session (no repeated USB queries) | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.1 | Axis mapping can be conditional on flight phase or gear state | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.2 | Profile rules can switch axis assignments based on sim variable | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.3 | Conditional mappings have priority order (first-match wins) | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.4 | Conditions are evaluated on each tick without allocation | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.5 | Default (unconditional) mapping is always present | - | 1 | ⚪ Draft |
+| REQ-327 | AC-327.6 | Condition evaluation errors fall back to default mapping | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.1 | Service can connect two sets of controls (pilot + co-pilot) | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.2 | Each seat has independent device bindings | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.3 | Active seat can be switched at runtime | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.4 | Both seats share the same profile (but can use different slots) | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.5 | Seat switch event is emitted on the bus | - | 1 | ⚪ Draft |
+| REQ-328 | AC-328.6 | Co-pilot devices are listed separately in diagnostics | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.1 | Users can create profile templates for common aircraft types | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.2 | Templates are applied as starting points for new profiles | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.3 | Templates can include suggested axis curves and deadzones | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.4 | OpenFlight ships with default templates for common sim types | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.5 | Templates are listed via flightctl template list | - | 1 | ⚪ Draft |
+| REQ-329 | AC-329.6 | Custom templates are stored in user config directory | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.1 | Service correctly handles composite HID devices (multiple interfaces) | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.2 | Each interface is exposed as a separate logical device | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.3 | Interface selection is configurable in device config | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.4 | Composite device disconnect removes all its logical devices | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.5 | VID/PID plus interface number is used as device identifier | - | 1 | ⚪ Draft |
+| REQ-330 | AC-330.6 | Composite device is documented in compatibility matrix | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.1 | Service measures tick timing jitter at 250Hz | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.2 | p99 jitter metric is exposed via Prometheus | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.3 | If p99 jitter exceeds 0.5ms, a warning is logged | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.4 | Jitter history is kept for the last 1000 ticks (ring buffer) | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.5 | CLI can display jitter histogram: flightctl jitter | - | 1 | ⚪ Draft |
+| REQ-331 | AC-331.6 | Jitter monitoring has negligible overhead (< 1µs per measurement) | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.1 | Adapter connections follow a defined state machine (Disconnected → Connecting → Connected → Active → Disconnected) | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.2 | State transitions are logged with timestamps | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.3 | Invalid state transitions produce a warning and no-op | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.4 | State machine is unit-tested with all valid transitions | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.5 | Pending state prevents duplicate connection attempts | - | 1 | ⚪ Draft |
+| REQ-332 | AC-332.6 | State changes trigger events on the internal bus | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.1 | Profile schema v2 adds support for device-level configs | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.2 | v2 adds per-axis filter chain configuration | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.3 | v2 adds inheritance parent field | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.4 | v1 profiles are automatically migrated to v2 on load | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.5 | v2 validation checks new fields for correctness | - | 1 | ⚪ Draft |
+| REQ-333 | AC-333.6 | Schema version is embedded in profile YAML header | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.1 | Service attempts device reconnection 5 times before giving up | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.2 | Each reconnect attempt waits 2× the previous interval (exponential backoff) | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.3 | Maximum reconnect interval is 30 seconds | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.4 | Successful reconnect resets the attempt counter | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.5 | Reconnect attempts are logged with device details | - | 1 | ⚪ Draft |
+| REQ-334 | AC-334.6 | Final failure triggers graceful degradation (not service stop) | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.1 | Service can send button state to StreamDeck XL and similar touchscreens | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.2 | Button labels are configurable per profile | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.3 | Button colors/icons reflect axis state (e.g., green when gear up) | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.4 | Panel updates are batched to avoid USB saturation (max 30fps) | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.5 | Panel config is part of the aircraft profile | - | 1 | ⚪ Draft |
+| REQ-335 | AC-335.6 | Panel errors do not affect axis processing | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.1 | Service detects telemetry rate from simulator (10-200Hz) | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.2 | Internal processing upsamples/downsamples to 250Hz | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.3 | Interpolation preserves axis accuracy (linear interpolation) | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.4 | Rate mismatch is logged once on connect | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.5 | Adaptation is per-simulator (different adapters have different rates) | - | 1 | ⚪ Draft |
+| REQ-336 | AC-336.6 | Zero-rate (disconnected) clears to idle state | - | 1 | ⚪ Draft |
