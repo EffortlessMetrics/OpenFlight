@@ -21,6 +21,7 @@ default = []
 [dependencies]
 flight-hid-support = { path = "../flight-hid-support" }
 thiserror.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

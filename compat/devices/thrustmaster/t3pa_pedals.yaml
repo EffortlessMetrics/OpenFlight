@@ -1,0 +1,59 @@
+# Thrustmaster T3PA Add-On Pedals (Standard)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T3PA is Thrustmaster's standard 3-pedal upgrade set compatible with the
+# T300RS, T-GT, T150, TMX, and TX Racing Wheel families. Unlike the T3PA-Pro
+# (t3pa-pro-pedals.yaml), the standard T3PA uses a rubber-cone brake mechanism
+# rather than a conical metal mod brake. Connects via RJ12 to the wheel base.
+# VID 0x044F (Thrustmaster), PID 0xB60B is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T3PA Add-On Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB60B      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB60B is a community estimate for the standard T3PA. The Pro
+      variant uses PID 0xB677. Confirm with lsusb on real hardware.
+  - id: RJ12_PASSTHROUGH
+    description: >
+      The T3PA connects to the wheel base via RJ12 cable. Axes appear as
+      additional inputs on the wheel base HID descriptor, not as a
+      separate USB device.
+  - id: RUBBER_CONE_BRAKE
+    description: >
+      Standard brake uses a rubber-cone resistance mechanism. Load cell
+      response differs from the Pro variant's conical metal mod.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T3PA standard pedals — rubber-cone brake. VID 0x044F;
+    PID 0xB60B is a community estimate. Distinct from T3PA-Pro (0xB677).
+    Confirm PID before marking tier 1. Last reviewed: 2026-06.

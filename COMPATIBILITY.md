@@ -22,8 +22,10 @@
 | 8BitDo Ultimate 2C (USB Wired) | 0x2DC8 | 0x6004 | 6 | 17 | ✓ | 3 |
 | 8BitDo Ultimate (USB) | 0x2DC8 | 0x6001 | 6 | 19 | ✓ | 2 |
 | 8BitDo Zero 2 | 0x2DC8 | 0x9018 | 0 | 10 | ✗ | 3 |
+| Asetek SimSports Entry Level Pedals | 0x2735 | 0x0010 | 3 | 0 | ✗ | 3 |
 | Asetek SimSports Forte Wheel Base | 0x2341 | 0x8037 | 1 | 0 | ✓ | 3 |
 | Asetek SimSports Invicta Pedals | 0x2341 | 0x8036 | 3 | 0 | ✗ | 3 |
+| Asetek SimSports LA-1 Wheel Base | 0x2735 | 0x0001 | 6 | 32 | ✓ | 3 |
 | Belkin Nostromo n52 SpeedPad | 0x04F2 | 0x0602 | 1 | 14 | ✗ | 3 |
 | Brunner BRT Alpha Force Feedback Joystick | 0x25BB | 0x0075 | 3 | 12 | ✓ | 3 |
 | Brunner CLS-E Compact Force Feedback Yoke | 0x25BB | 0x0065 | 2 | 6 | ✓ | 3 |
@@ -109,7 +111,9 @@
 | Fanatec CSL Pedals Load Cell Kit | 0x0EB7 | 0x0030 | 3 | 0 | ✗ | 3 |
 | Fanatec CSL Pedals | 0x0EB7 | 0x0014 | 3 | 0 | ✗ | 3 |
 | Fanatec CSL Steering Wheel R300 V2 | 0x0EB7 | 0x020C | 1 | 10 | ✗ | 3 |
+| Fanatec CSL Elite Wheel Base (PS4 Edition) | 0x0EB7 | 0x0002 | 5 | 24 | ✓ | 3 |
 | Fanatec ClubSport Wheel V2.5 Base | 0x0EB7 | 0x0005 | 3 | 0 | ✓ | 3 |
+| Fanatec ClubSport Wheel V2 Base | 0x0EB7 | 0x0004 | 3 | 0 | ✓ | 3 |
 | Fanatec Gran Turismo DD Pro Wheel Base | 0x0EB7 | 0x0031 | 5 | 24 | ✓ | 3 |
 | Fanatec McLaren GT3 V2 Steering Wheel | 0x0EB7 | 0x0030 | 0 | 14 | ✗ | 3 |
 | Fanatec Podium DD1 | 0x0EB7 | 0x0040 | 1 | 0 | ✓ | 3 |
@@ -196,6 +200,7 @@
 | Generic USB Helicopter Collective | 0x1209 | 0x5740 | 3 | 8 | ✗ | 3 |
 | Generic USB Helicopter Cyclic | 0x1209 | 0x5741 | 3 | 12 | ✗ | 3 |
 | Generic USB Anti-Torque Pedals | ? | ? | 1 | 0 | ✗ | 3 |
+| Heusinkveld Sim Handbrake | 0x04D8 | 0xE2C4 | 1 | 0 | ✗ | 3 |
 | Heusinkveld Sim Pedals Endurance | 0x04D8 | 0xF6D4 | 3 | 0 | ✗ | 2 |
 | Heusinkveld Sim Pedals Handbrake | 0x04D8 | 0xF6D5 | 1 | 0 | ✗ | 3 |
 | Heusinkveld Sim Pedals Performance | 0x04D8 | 0xF6D2 | 3 | 0 | ✗ | 2 |
@@ -216,6 +221,7 @@
 | Honeycomb Charlie Rudder Pedals | 0x294B | 0x1902 | 3 | 0 | ✗ | 3 |
 | Honeycomb Echelon Throttle Quadrant | 0x294B | 0x1905 | 8 | 72 | ✗ | 3 |
 | Honeycomb Echo Gyroplane Controller | 0x294B | 0x1904 | 4 | 12 | ✗ | 3 |
+| Honeycomb Bravo Airlines Pack | 0x294B | ? | 7 | 64 | ✗ | 2 |
 | Honeycomb Charlie Throttle Quadrant | 0x294B | 0x1939 | 6 | 6 | ✗ | 2 |
 | Hori Ace Combat 7 HOTAS Flight Stick | 0x0F0D | 0x0103 | 6 | 20 | ✗ | 2 |
 | HORI Ace Combat HOTAS (PS5) | 0x0F0D | 0x0152 | 5 | 16 | ✗ | 3 |
@@ -291,6 +297,8 @@
 | Logitech G502 X Gaming Mouse (Wired) | 0x046D | 0xC080 | 2 | 13 | ✗ | 3 |
 | Logitech G920 Racing Wheel | 0x046D | 0xC262 | 5 | 16 | ✓ | 3 |
 | Logitech G923 Racing Wheel | 0x046D | 0xC29B | 3 | 24 | ✓ | 3 |
+| Logitech G923 Racing Wheel (PS4/PS5) | 0x046D | 0xC266 | 6 | 20 | ✓ | 2 |
+| Logitech G923 Racing Wheel (Xbox/PC) | 0x046D | 0xC267 | 6 | 20 | ✓ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
 | Logitech 3D Pro Plus | 0x046D | 0xC215 | 6 | 12 | ✗ | 2 |
 | Logitech MOMO Racing Force Feedback Wheel | 0x046D | 0xCA03 | 3 | 10 | ✓ | 3 |
@@ -397,6 +405,7 @@
 | NaturalPoint TrackIR 5 | 0x131D | 0x0155 | 6 | 3 | ✗ | 2 |
 | Next Level Racing Flight Simulator Seat | ? | ? | 0 | 0 | ✗ | 3 |
 | Next Level Racing GT Track Cockpit | ? | ? | 0 | 0 | ✗ | 3 |
+| Next Level Racing GT Seat | ? | ? | 0 | 0 | ✗ | 3 |
 | Next Level Racing Motion Platform V3 | 0x0403 | 0x6001 | 0 | 0 | ✗ | 3 |
 | Next Level Racing Wheel Stand Pro | ? | ? | 0 | 0 | ✗ | 3 |
 | Nintendo Switch Joy-Con (L) | 0x057E | 0x2006 | 2 | 11 | ✓ | 3 |
@@ -421,6 +430,7 @@
 | OpenHornet Radar Altimeter Panel | 0x2341 | 0x803A | 1 | 8 | ✗ | 3 |
 | OpenHornet UFCD Panel | 0x2341 | 0x803B | 0 | 16 | ✗ | 3 |
 | OpenHornet WSO Rear Cockpit Panel | 0x2341 | 0x8041 | 2 | 16 | ✗ | 3 |
+| Generic USB GPIO Expander (Button Box) | 0x16C0 | 0x27DC | 0 | 32 | ✗ | 3 |
 | Opencockpits IOCard USB | 0x1000 | 0x0001 | 0 | 64 | ✗ | 3 |
 | Opencockpits MCP Boeing 737 Card | 0x1000 | 0x0001 | 0 | 48 | ✗ | 3 |
 | Opencockpits Rotary Encoder Card | 0x1000 | 0x0004 | 0 | 32 | ✗ | 3 |
@@ -557,13 +567,18 @@
 | Simagic Alpha Mini S Wheel Base | 0x0483 | 0x0009 | 3 | 0 | ✓ | 3 |
 | Simagic Alpha Ultimate Direct Drive Wheel Base | 0x0EBC | 0x1020 | 1 | 0 | ✓ | 3 |
 | Simagic Alpha-U Direct Drive Base | 0x0EBC | 0x1021 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha Mini R (Racing) | 0x0483 | 0x5743 | 6 | 32 | ✓ | 3 |
 | Simagic GT4 Steering Wheel Accessory | 0x0EBC | 0x3041 | 0 | 13 | ✗ | 3 |
 | Simagic GT4 Steering Wheel | 0x0EBC | 0x3040 | 0 | 13 | ✗ | 3 |
+| Simagic M10 Direct Drive Wheel Base | 0x0483 | 0x5741 | 6 | 32 | ✓ | 2 |
+| Simagic M5 Direct Drive Wheel Base | 0x0483 | 0x5742 | 6 | 32 | ✓ | 3 |
 | Simagic P1000 Pedals | 0x10C4 | 0xEA60 | 3 | 0 | ✗ | 3 |
 | Simagic P2000 Sim Pedals | 0x0EBC | 0x2000 | 3 | 0 | ✗ | 3 |
 | Simagic Q1 Mini Pedals | 0x0EBC | 0x1020 | 3 | 0 | ✗ | 3 |
 | Simagic QR Quick-Release Adapter | ? | ? | 0 | 0 | ✗ | 3 |
 | Simucube Active Pedal | 0x16D0 | 0x0D65 | 3 | 0 | ✓ | 3 |
+| Simucube Active Pedals Left Module | 0x16D0 | 0x0D61 | 1 | 2 | ✓ | 3 |
+| Simucube Active Pedals Right Module | 0x16D0 | 0x0D62 | 1 | 2 | ✓ | 3 |
 | Simucube 1 Pro | 0x16D0 | 0x0D5E | 1 | 0 | ✓ | 3 |
 | Simucube 1 Sport | 0x16D0 | 0x0D5D | 1 | 0 | ✓ | 3 |
 | Simucube 1 Ultimate | 0x16D0 | 0x0D5F | 1 | 0 | ✓ | 3 |
@@ -636,6 +651,7 @@
 | Thrustmaster T300 RS GT Edition | 0x044F | 0xB66F | 5 | 24 | ✓ | 2 |
 | Thrustmaster T300 RS Racing Wheel | 0x044F | 0xB66E | 5 | 24 | ✓ | 2 |
 | Thrustmaster T3PA-Pro Add-On Pedals | 0x044F | 0xB677 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T3PA Add-On Pedals | 0x044F | 0xB60B | 3 | 0 | ✗ | 2 |
 | Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB65D | 5 | 24 | ✓ | 3 |
 | Thrustmaster T.A320 Pack (Virtual Bundle) | 0x044F | ? | 8 | 36 | ✗ | 3 |
 | Thrustmaster T.A.R.G.E.T Virtual Device | 0x044F | 0x0402 | 8 | 120 | ✗ | 3 |

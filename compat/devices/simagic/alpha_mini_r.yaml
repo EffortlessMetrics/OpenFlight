@@ -1,0 +1,57 @@
+# Simagic Alpha Mini R (Racing Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Simagic Alpha Mini R is a racing-focused variant of the Alpha Mini
+# direct-drive wheel base. It features revised motor tuning and a dedicated
+# racing firmware profile compared to the standard Alpha Mini
+# (alpha-mini-base.yaml). VID 0x0483 (STM MCU); PID 0x5743 est.
+
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Mini R (Racing)"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics USB MCU
+    product_id: 0x5743      # Community estimate — Alpha Mini R; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5743 is a community estimate for the Alpha Mini R variant.
+      The standard Alpha Mini uses PID different from this. Confirm with
+      lsusb or Simagic Alpha Manager.
+  - id: RACING_FIRMWARE_PROFILE
+    description: >
+      The R variant ships with a racing-optimised firmware profile featuring
+      reduced damping and increased high-frequency FFB responsiveness compared
+      to the base Alpha Mini.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Mini R racing variant. VID 0x0483 (STM MCU); PID 0x5743 est.
+    Distinct firmware profile from alpha-mini-base.yaml. Last reviewed: 2026-06.

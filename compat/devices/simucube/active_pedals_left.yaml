@@ -1,0 +1,64 @@
+# Simucube Active Pedals — Left Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Simucube Active Pedals left module (clutch/throttle) is one of the
+# individual pedal units in the Simucube Active Pedals system. Each pedal
+# is an independent USB device with its own servo motor providing active
+# force feedback resistance. VID 0x16D0 (MCS Electronics / Granite Devices).
+# PID 0x0D61 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Simucube Active Pedals Left Module"
+  vendor: "Simucube / Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # MCS Electronics / Granite Devices (confirmed for Simucube family)
+    product_id: 0x0D61      # Community estimate — Active Pedals Left; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [clutch]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D61 is a community estimate. The Active Pedals system may assign
+      sequential PIDs to left/right modules. Confirm with lsusb. The combined
+      Active Pedals bundle is tracked in true-drive-active-pedals.yaml.
+  - id: ACTIVE_FEEDBACK_RESISTANCE
+    description: >
+      Each pedal module has an independent servo motor that provides variable
+      resistance force feedback. Resistance profile is configured via Simucube
+      True Drive software and can simulate different pedal feel characteristics.
+  - id: INDEPENDENT_USB_DEVICE
+    description: >
+      The left module connects as an independent USB HID device, distinct from
+      the right module (active_pedals_right.yaml). Both must be configured
+      individually in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube Active Pedals — left individual module. VID 0x16D0; PID 0x0D61 est.
+    Active servo resistance per pedal. See also active_pedals_right.yaml and
+    true-drive-active-pedals.yaml. Last reviewed: 2026-06.

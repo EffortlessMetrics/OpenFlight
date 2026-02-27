@@ -9072,3 +9072,526 @@ requirements:
         description: "Round-trip export/import produces identical profile"
         tests:
           - feature:specs/features/req_278_profile_export_import.feature
+  - id: REQ-279
+    name: Throttle zone implementation with cut zone saturation, military power and afterburner zone events
+    kind: product
+    status: draft
+    ac:
+      - id: AC-279.1
+        description: "Cut zone threshold mapping raw throttle to 0.0"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+      - id: AC-279.2
+        description: "Max zone saturation to 1.0 above threshold"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+      - id: AC-279.3
+        description: "Military power zone emits ZoneEntered event"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+      - id: AC-279.4
+        description: "Afterburner zone emits ZoneEntered event with zone name"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+      - id: AC-279.5
+        description: "Zone configurations are validated on profile load"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+      - id: AC-279.6
+        description: "Zones can be independently enabled or disabled"
+        tests:
+          - feature:specs/features/req_279_throttle_zone_implementation.feature
+  - id: REQ-280
+    name: Windows service integration with MSI install, user context, recovery policy, and CLI control
+    kind: product
+    status: draft
+    ac:
+      - id: AC-280.1
+        description: "flightd installs as a Windows service via MSI"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+      - id: AC-280.2
+        description: "Service starts automatically on user login"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+      - id: AC-280.3
+        description: "Service stops cleanly on Windows shutdown"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+      - id: AC-280.4
+        description: "Service recovery policy restarts on crash"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+      - id: AC-280.5
+        description: "Service runs in user context (not SYSTEM)"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+      - id: AC-280.6
+        description: "Service can be controlled via flightctl start/stop/status"
+        tests:
+          - feature:specs/features/req_280_windows_service_integration.feature
+  - id: REQ-281
+    name: Linux systemd integration with user unit, notify readiness, udev rules, and journal logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-281.1
+        description: "flightd ships with a systemd user unit file"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+      - id: AC-281.2
+        description: "Unit file specifies Type=notify for readiness signaling"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+      - id: AC-281.3
+        description: "Service enables on user login via systemctl --user enable"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+      - id: AC-281.4
+        description: "udev rules are installed for device access"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+      - id: AC-281.5
+        description: "Group membership is configured in postinst"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+      - id: AC-281.6
+        description: "Journal logging works via tracing subscriber"
+        tests:
+          - feature:specs/features/req_281_linux_systemd_integration.feature
+  - id: REQ-282
+    name: Axis pipeline observability with per-stage latency counters and Prometheus metrics endpoint
+    kind: product
+    status: draft
+    ac:
+      - id: AC-282.1
+        description: "Each pipeline stage emits per-axis latency counter"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+      - id: AC-282.2
+        description: "Stage counters are accessible via Prometheus metrics endpoint"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+      - id: AC-282.3
+        description: "Counter names follow flight_axis_stage_{stage_name}_ns format"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+      - id: AC-282.4
+        description: "Metrics are updated every tick without allocation"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+      - id: AC-282.5
+        description: "Metrics endpoint is served on configurable port (default 9090)"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+      - id: AC-282.6
+        description: "CLI can display pipeline stage timing summary"
+        tests:
+          - feature:specs/features/req_282_axis_pipeline_observability.feature
+  - id: REQ-283
+    name: Multi-profile slots with atomic switching, slot persistence, and StreamDeck integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-283.1
+        description: "User can define up to 8 named profile slots"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+      - id: AC-283.2
+        description: "Active slot can be switched via CLI in <50ms"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+      - id: AC-283.3
+        description: "Slot switch is atomic (no partial application)"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+      - id: AC-283.4
+        description: "Each slot stores independent axis curves and deadzones"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+      - id: AC-283.5
+        description: "Slot assignments are persisted across service restarts"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+      - id: AC-283.6
+        description: "StreamDeck button can trigger slot switch"
+        tests:
+          - feature:specs/features/req_283_multi_profile_slots.feature
+  - id: REQ-284
+    name: Graceful degradation with offline device marking, binding preservation, and health stream notification
+    kind: product
+    status: draft
+    ac:
+      - id: AC-284.1
+        description: "Service continues operating with fewer axes if one device fails"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+      - id: AC-284.2
+        description: "Failed device is marked as offline in diagnostics"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+      - id: AC-284.3
+        description: "Profile bindings for failed device are preserved"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+      - id: AC-284.4
+        description: "When device reconnects, bindings are restored automatically"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+      - id: AC-284.5
+        description: "Degraded operation is logged with device details"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+      - id: AC-284.6
+        description: "User is notified of degraded state via health stream"
+        tests:
+          - feature:specs/features/req_284_graceful_degradation.feature
+
+  - id: REQ-285
+    name: Input latency budget enforcement with per-stage measurement, Prometheus metric, and CI benchmark
+    kind: product
+    status: draft
+    ac:
+      - id: AC-285.1
+        description: "Input latency from HID read to axis output < 5ms p99"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+      - id: AC-285.2
+        description: "Pipeline stage contribution is measured per-tick"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+      - id: AC-285.3
+        description: "Latency exceeding budget generates a warning log"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+      - id: AC-285.4
+        description: "p99 latency metric is exposed via Prometheus"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+      - id: AC-285.5
+        description: "Latency budget is configurable per device class"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+      - id: AC-285.6
+        description: "CI has a benchmark test validating < 5ms simulation"
+        tests:
+          - feature:specs/features/req_285_input_latency_budget.feature
+  - id: REQ-286
+    name: Axis filter chain with ordered stages, skippable steps, O(n) allocation-free application, and validation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-286.1
+        description: "Multiple filters can be chained in configurable order"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+      - id: AC-286.2
+        description: "Chain order is: deadzone → curve → EMA smoothing → rate limiter → trim"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+      - id: AC-286.3
+        description: "Chain can skip stages via profile config"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+      - id: AC-286.4
+        description: "Chain is applied in O(n) time with no allocation"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+      - id: AC-286.5
+        description: "Chain configuration is validated on load"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+      - id: AC-286.6
+        description: "Partial chain produces expected output given each stage's effect"
+        tests:
+          - feature:specs/features/req_286_axis_filter_chain.feature
+  - id: REQ-287
+    name: Device hotplug callbacks with 200ms latency, multi-listener support, VID/PID payload, and auto-cleanup
+    kind: product
+    status: draft
+    ac:
+      - id: AC-287.1
+        description: "Service registers a hotplug callback via HID API"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+      - id: AC-287.2
+        description: "Callback fires within 200ms of USB plug/unplug"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+      - id: AC-287.3
+        description: "Multiple listeners can register for hotplug events"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+      - id: AC-287.4
+        description: "Callback includes device VID/PID and event type (connected/disconnected)"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+      - id: AC-287.5
+        description: "Callbacks are invoked from a dedicated thread (not RT spine)"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+      - id: AC-287.6
+        description: "Stale callbacks are automatically cleaned up"
+        tests:
+          - feature:specs/features/req_287_device_hotplug_callbacks.feature
+  - id: REQ-288
+    name: Profile schema migrations with ordered version steps, setting preservation, error messages, and logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-288.1
+        description: "Profile v1 schema can be automatically upgraded to v2"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+      - id: AC-288.2
+        description: "Migration preserves all axis settings"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+      - id: AC-288.3
+        description: "Migration failures produce descriptive error messages"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+      - id: AC-288.4
+        description: "Old schema version is recorded in migrated profile"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+      - id: AC-288.5
+        description: "Migrations are applied in version order (v1→v2→v3)"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+      - id: AC-288.6
+        description: "Migration results are logged with source and target version"
+        tests:
+          - feature:specs/features/req_288_profile_schema_migrations.feature
+  - id: REQ-289
+    name: CLI tab completion for bash, zsh, and fish with dynamic device and profile name suggestions
+    kind: product
+    status: draft
+    ac:
+      - id: AC-289.1
+        description: "flightctl completion bash outputs valid bash completion script"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+      - id: AC-289.2
+        description: "flightctl completion zsh outputs valid zsh completion"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+      - id: AC-289.3
+        description: "flightctl completion fish outputs valid fish completion"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+      - id: AC-289.4
+        description: "Completion covers all subcommands and flags"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+      - id: AC-289.5
+        description: "Device names and profile names are dynamic completions"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+      - id: AC-289.6
+        description: "Generated completions pass shell syntax validation"
+        tests:
+          - feature:specs/features/req_289_cli_tab_completion.feature
+  - id: REQ-290
+    name: Kernel driver compatibility with hid-generic detection, udev rules, permission error guidance, and rootless operation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-290.1
+        description: "Service correctly identifies devices using kernel hid-generic driver"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+      - id: AC-290.2
+        description: "usbhid and hid-generic coexist without conflicts"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+      - id: AC-290.3
+        description: "Devices requiring custom kernel modules are documented in compat matrix"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+      - id: AC-290.4
+        description: "Service detects permission errors and provides actionable message"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+      - id: AC-290.5
+        description: "udev rules grant read/write access to flight group"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+      - id: AC-290.6
+        description: "Service works without root privileges on Linux"
+        tests:
+          - feature:specs/features/req_290_kernel_driver_compatibility.feature
+  - id: REQ-291
+    name: Cursor/Mouse Input Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-291.1
+        description: "Service can expose a virtual mouse cursor controlled by joystick axes"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+      - id: AC-291.2
+        description: "Joystick axis to mouse movement mapping is configurable (sensitivity, acceleration)"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+      - id: AC-291.3
+        description: "Virtual cursor can be toggled on/off per profile"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+      - id: AC-291.4
+        description: "Mouse click can be mapped to joystick button"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+      - id: AC-291.5
+        description: "Virtual mouse does not conflict with real mouse input"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+      - id: AC-291.6
+        description: "Virtual mouse is available only on Windows (RawInput) and Linux (uinput)"
+        tests:
+          - feature:specs/features/req_291_cursor_mouse_input.feature
+  - id: REQ-292
+    name: Keyboard Emulation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-292.1
+        description: "Service can emit virtual keystrokes via profile action"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+      - id: AC-292.2
+        description: "Keystroke actions are triggered by axis threshold or button press"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+      - id: AC-292.3
+        description: "Key mappings use standard key names (e.g., ctrl+shift+b)"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+      - id: AC-292.4
+        description: "Keystrokes do not repeat unless explicitly configured"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+      - id: AC-292.5
+        description: "Virtual keyboard is disabled by default (opt-in per profile)"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+      - id: AC-292.6
+        description: "Key emit does not block axis processing (async queue)"
+        tests:
+          - feature:specs/features/req_292_keyboard_emulation.feature
+  - id: REQ-293
+    name: Device Enumeration API
+    kind: product
+    status: draft
+    ac:
+      - id: AC-293.1
+        description: "gRPC endpoint returns list of all connected HID devices"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+      - id: AC-293.2
+        description: "Device list includes VID/PID, product name, serial number"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+      - id: AC-293.3
+        description: "Device list includes current connection status (active/idle/error)"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+      - id: AC-293.4
+        description: "API supports filtering by device type (joystick/throttle/etc.)"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+      - id: AC-293.5
+        description: "Enumeration is available without any profile loaded"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+      - id: AC-293.6
+        description: "CLI can display device list in table format"
+        tests:
+          - feature:specs/features/req_293_device_enumeration_api.feature
+  - id: REQ-294
+    name: FFB Effect Library
+    kind: product
+    status: draft
+    ac:
+      - id: AC-294.1
+        description: "Service includes a built-in library of named FFB effects"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+      - id: AC-294.2
+        description: "Effects include: spring centering, friction, rumble, constant force"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+      - id: AC-294.3
+        description: "Effects can be triggered by profile actions"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+      - id: AC-294.4
+        description: "Effect strength is configurable 0-100%"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+      - id: AC-294.5
+        description: "Multiple effects can be blended simultaneously (up to 4)"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+      - id: AC-294.6
+        description: "FFB library is independent of simulator telemetry"
+        tests:
+          - feature:specs/features/req_294_ffb_effect_library.feature
+  - id: REQ-295
+    name: Haptic Feedback Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-295.1
+        description: "Service supports tactile feedback devices (D-BOX, ButtKicker)"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+      - id: AC-295.2
+        description: "Haptic intensity is proportional to simulated g-force or event severity"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+      - id: AC-295.3
+        description: "Haptic cues can be triggered by zone crossings (e.g., landing gear)"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+      - id: AC-295.4
+        description: "Haptic can be configured independently of FFB"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+      - id: AC-295.5
+        description: "Haptic devices are enumerated separately from flight controls"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+      - id: AC-295.6
+        description: "Haptic is disabled when simulator disconnects"
+        tests:
+          - feature:specs/features/req_295_haptic_feedback_integration.feature
+  - id: REQ-296
+    name: Streaming Telemetry Log
+    kind: product
+    status: draft
+    ac:
+      - id: AC-296.1
+        description: "Service can write axis values to rolling binary log at 10Hz"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature
+      - id: AC-296.2
+        description: "Log format is versioned and documented"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature
+      - id: AC-296.3
+        description: "Log includes timestamps, device IDs, and raw + processed values"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature
+      - id: AC-296.4
+        description: "CLI can tail the log in real-time (like flightctl log -f)"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature
+      - id: AC-296.5
+        description: "Log retention is configurable (default: 5 minutes rolling)"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature
+      - id: AC-296.6
+        description: "Log can be exported to CSV for analysis"
+        tests:
+          - feature:specs/features/req_296_streaming_telemetry_log.feature

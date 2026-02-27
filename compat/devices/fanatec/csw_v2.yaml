@@ -1,0 +1,62 @@
+# Fanatec ClubSport Wheel V2 Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Fanatec ClubSport Wheel V2 is the predecessor to the V2.5
+# (csw-v2-5.yaml). Both are belt-driven servo wheel bases. The V2 has
+# slightly different motor tuning and firmware behaviour compared to the V2.5.
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0004 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Wheel V2 Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0004      # Community estimate — CSW V2; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0004 is a community estimate for the CSW V2. The V2.5 uses
+      PID 0x0005. Both may share the same USB descriptor in some firmware
+      revisions. Confirm with lsusb.
+  - id: BELT_DRIVE_SERVO
+    description: >
+      The CSW V2 uses a belt-driven brushless servo motor. Force feedback
+      resolution is 16-bit on the steering axis.
+  - id: FANATEC_FANALAB_RECOMMENDED
+    description: >
+      Full FFB effect configuration requires Fanatec Wheel Property Page
+      or Fanalab software. DirectInput effects work without additional software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSW V2 belt-drive wheel base. VID 0x0EB7 confirmed; PID 0x0004
+    is a community estimate. Predecessor to CSW V2.5 (csw-v2-5.yaml).
+    Confirm PID before marking tier 2. Last reviewed: 2026-06.

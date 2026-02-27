@@ -93,6 +93,7 @@ pub mod pipeline;
 pub mod rate_limit;
 pub mod scale;
 pub mod smoothing;
+pub mod throttle_zone;
 pub mod trim;
 
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
@@ -126,4 +127,7 @@ pub use pipeline::{Pipeline, PipelineState};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
+pub use throttle_zone::{
+    ThrottleZoneConfig, ThrottleZoneProcessor, ZoneError, ZoneEvent, ZoneName,
+};
 pub use trim::{AxisTrim, AxisTrimBank};

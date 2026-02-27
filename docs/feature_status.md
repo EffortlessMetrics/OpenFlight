@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1664 |
-| ACs with tests | 1664 |
+| Total AC | 1772 |
+| ACs with tests | 1772 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 1067 |
+| Draft | 1175 |
 | Incomplete | 0 |
 | Microcrates | 79 |
 | Microcrates with tests | 65 (82.3%) |
 | Microcrates with Gherkin | 65 (82.3%) |
 | Microcrates fully covered | 65 (82.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 52.2% |
-| Test + Gherkin coverage | 52.2% |
+| Gherkin coverage | 49.0% |
+| Test + Gherkin coverage | 49.0% |
 
 ## BDD Microcrate Matrix
 
@@ -1783,3 +1783,111 @@
 | REQ-278 | AC-278.4 | Exported profile includes all axis configs and curve points | - | 1 | ⚪ Draft |
 | REQ-278 | AC-278.5 | Import handles schema version migration automatically | - | 1 | ⚪ Draft |
 | REQ-278 | AC-278.6 | Round-trip export/import produces identical profile | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.1 | Cut zone threshold mapping raw throttle to 0.0 | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.2 | Max zone saturation to 1.0 above threshold | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.3 | Military power zone emits ZoneEntered event | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.4 | Afterburner zone emits ZoneEntered event with zone name | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.5 | Zone configurations are validated on profile load | - | 1 | ⚪ Draft |
+| REQ-279 | AC-279.6 | Zones can be independently enabled or disabled | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.1 | flightd installs as a Windows service via MSI | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.2 | Service starts automatically on user login | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.3 | Service stops cleanly on Windows shutdown | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.4 | Service recovery policy restarts on crash | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.5 | Service runs in user context (not SYSTEM) | - | 1 | ⚪ Draft |
+| REQ-280 | AC-280.6 | Service can be controlled via flightctl start/stop/status | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.1 | flightd ships with a systemd user unit file | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.2 | Unit file specifies Type=notify for readiness signaling | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.3 | Service enables on user login via systemctl --user enable | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.4 | udev rules are installed for device access | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.5 | Group membership is configured in postinst | - | 1 | ⚪ Draft |
+| REQ-281 | AC-281.6 | Journal logging works via tracing subscriber | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.1 | Each pipeline stage emits per-axis latency counter | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.2 | Stage counters are accessible via Prometheus metrics endpoint | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.3 | Counter names follow flight_axis_stage_{stage_name}_ns format | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.4 | Metrics are updated every tick without allocation | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.5 | Metrics endpoint is served on configurable port (default 9090) | - | 1 | ⚪ Draft |
+| REQ-282 | AC-282.6 | CLI can display pipeline stage timing summary | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.1 | User can define up to 8 named profile slots | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.2 | Active slot can be switched via CLI in <50ms | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.3 | Slot switch is atomic (no partial application) | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.4 | Each slot stores independent axis curves and deadzones | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.5 | Slot assignments are persisted across service restarts | - | 1 | ⚪ Draft |
+| REQ-283 | AC-283.6 | StreamDeck button can trigger slot switch | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.1 | Service continues operating with fewer axes if one device fails | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.2 | Failed device is marked as offline in diagnostics | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.3 | Profile bindings for failed device are preserved | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.4 | When device reconnects, bindings are restored automatically | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.5 | Degraded operation is logged with device details | - | 1 | ⚪ Draft |
+| REQ-284 | AC-284.6 | User is notified of degraded state via health stream | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.1 | Input latency from HID read to axis output < 5ms p99 | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.2 | Pipeline stage contribution is measured per-tick | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.3 | Latency exceeding budget generates a warning log | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.4 | p99 latency metric is exposed via Prometheus | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.5 | Latency budget is configurable per device class | - | 1 | ⚪ Draft |
+| REQ-285 | AC-285.6 | CI has a benchmark test validating < 5ms simulation | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.1 | Multiple filters can be chained in configurable order | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.2 | Chain order is: deadzone → curve → EMA smoothing → rate limiter → trim | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.3 | Chain can skip stages via profile config | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.4 | Chain is applied in O(n) time with no allocation | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.5 | Chain configuration is validated on load | - | 1 | ⚪ Draft |
+| REQ-286 | AC-286.6 | Partial chain produces expected output given each stage's effect | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.1 | Service registers a hotplug callback via HID API | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.2 | Callback fires within 200ms of USB plug/unplug | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.3 | Multiple listeners can register for hotplug events | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.4 | Callback includes device VID/PID and event type (connected/disconnected) | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.5 | Callbacks are invoked from a dedicated thread (not RT spine) | - | 1 | ⚪ Draft |
+| REQ-287 | AC-287.6 | Stale callbacks are automatically cleaned up | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.1 | Profile v1 schema can be automatically upgraded to v2 | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.2 | Migration preserves all axis settings | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.3 | Migration failures produce descriptive error messages | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.4 | Old schema version is recorded in migrated profile | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.5 | Migrations are applied in version order (v1→v2→v3) | - | 1 | ⚪ Draft |
+| REQ-288 | AC-288.6 | Migration results are logged with source and target version | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.1 | flightctl completion bash outputs valid bash completion script | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.2 | flightctl completion zsh outputs valid zsh completion | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.3 | flightctl completion fish outputs valid fish completion | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.4 | Completion covers all subcommands and flags | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.5 | Device names and profile names are dynamic completions | - | 1 | ⚪ Draft |
+| REQ-289 | AC-289.6 | Generated completions pass shell syntax validation | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.1 | Service correctly identifies devices using kernel hid-generic driver | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.2 | usbhid and hid-generic coexist without conflicts | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.3 | Devices requiring custom kernel modules are documented in compat matrix | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.4 | Service detects permission errors and provides actionable message | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.5 | udev rules grant read/write access to flight group | - | 1 | ⚪ Draft |
+| REQ-290 | AC-290.6 | Service works without root privileges on Linux | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.1 | Service can expose a virtual mouse cursor controlled by joystick axes | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.2 | Joystick axis to mouse movement mapping is configurable (sensitivity, acceleration) | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.3 | Virtual cursor can be toggled on/off per profile | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.4 | Mouse click can be mapped to joystick button | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.5 | Virtual mouse does not conflict with real mouse input | - | 1 | ⚪ Draft |
+| REQ-291 | AC-291.6 | Virtual mouse is available only on Windows (RawInput) and Linux (uinput) | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.1 | Service can emit virtual keystrokes via profile action | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.2 | Keystroke actions are triggered by axis threshold or button press | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.3 | Key mappings use standard key names (e.g., ctrl+shift+b) | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.4 | Keystrokes do not repeat unless explicitly configured | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.5 | Virtual keyboard is disabled by default (opt-in per profile) | - | 1 | ⚪ Draft |
+| REQ-292 | AC-292.6 | Key emit does not block axis processing (async queue) | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.1 | gRPC endpoint returns list of all connected HID devices | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.2 | Device list includes VID/PID, product name, serial number | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.3 | Device list includes current connection status (active/idle/error) | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.4 | API supports filtering by device type (joystick/throttle/etc.) | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.5 | Enumeration is available without any profile loaded | - | 1 | ⚪ Draft |
+| REQ-293 | AC-293.6 | CLI can display device list in table format | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.1 | Service includes a built-in library of named FFB effects | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.2 | Effects include: spring centering, friction, rumble, constant force | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.3 | Effects can be triggered by profile actions | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.4 | Effect strength is configurable 0-100% | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.5 | Multiple effects can be blended simultaneously (up to 4) | - | 1 | ⚪ Draft |
+| REQ-294 | AC-294.6 | FFB library is independent of simulator telemetry | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.1 | Service supports tactile feedback devices (D-BOX, ButtKicker) | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.2 | Haptic intensity is proportional to simulated g-force or event severity | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.3 | Haptic cues can be triggered by zone crossings (e.g., landing gear) | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.4 | Haptic can be configured independently of FFB | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.5 | Haptic devices are enumerated separately from flight controls | - | 1 | ⚪ Draft |
+| REQ-295 | AC-295.6 | Haptic is disabled when simulator disconnects | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.1 | Service can write axis values to rolling binary log at 10Hz | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.2 | Log format is versioned and documented | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.3 | Log includes timestamps, device IDs, and raw + processed values | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.4 | CLI can tail the log in real-time (like flightctl log -f) | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.5 | Log retention is configurable (default: 5 minutes rolling) | - | 1 | ⚪ Draft |
+| REQ-296 | AC-296.6 | Log can be exported to CSV for analysis | - | 1 | ⚪ Draft |

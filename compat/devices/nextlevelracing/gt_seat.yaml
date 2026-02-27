@@ -1,0 +1,55 @@
+# Next Level Racing GT Seat (Tilt / Recline)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Next Level Racing GT Seat is a sim-racing / flight-sim seat with
+# adjustable tilt and recline. It is a mechanical accessory with no USB
+# interface — this manifest exists for sim-rig configuration and ergonomics
+# compatibility tracking. Different from the GT Track cockpit frame
+# (gt-track.yaml).
+
+schema_version: "1"
+
+device:
+  name: "Next Level Racing GT Seat"
+  vendor: "Next Level Racing"
+  usb:
+    vendor_id: ~        # Not a USB device — mechanical seat
+    product_id: ~
+  hid:
+    usage_page: ~
+    usage: ~
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: NO_USB_INTERFACE
+    description: >
+      The GT Seat is a passive mechanical accessory. No HID input; manifest
+      is for rig configuration compatibility tracking only.
+  - id: TILT_RECLINE_ADJUSTABLE
+    description: >
+      Seat backrest and base tilt are manually adjustable. Some variants
+      include a motorised recline actuator; that optional add-on is also
+      not a USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Next Level Racing GT Seat — adjustable tilt/recline sim seat.
+    No USB interface; mechanical accessory tracked for rig configuration.
+    Distinct from gt-track.yaml (cockpit frame). Last reviewed: 2026-06.
