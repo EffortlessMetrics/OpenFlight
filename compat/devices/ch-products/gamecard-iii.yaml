@@ -1,0 +1,43 @@
+# CH Products Gamecard III
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "CH Products Gamecard III"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # Confirmed
+    product_id: 0x0050      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 4
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x068E confirmed (CH Products). PID 0x0050 estimated for Gamecard III. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Gamecard III — gameport-to-USB adapter for legacy joysticks. Reports 4 analog axes and 4 buttons.
+    Wave-99 addition. Last reviewed: 2026-07.

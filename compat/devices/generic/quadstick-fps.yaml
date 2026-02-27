@@ -1,0 +1,43 @@
+# QuadStick FPS Game Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "QuadStick FPS Game Controller"
+  vendor: "QuadStick"
+  usb:
+    vendor_id: 0x0483       # Confirmed
+    product_id: 0xA0F0      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 (STMicroelectronics). PID 0xA0F0 estimated for QuadStick FPS. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    QuadStick FPS Game Controller — mouth-operated joystick for quadriplegic users. Sip/puff and lip position sensors.
+    Wave-98 addition. Last reviewed: 2026-07.

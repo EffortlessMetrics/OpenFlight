@@ -1,0 +1,43 @@
+# Thrustmaster HOTAS Cougar (Original)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar (Original)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Confirmed
+    product_id: 0xB351      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x044F confirmed (Thrustmaster). PID 0xB351 estimated for original HOTAS Cougar (early 2000s). Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster HOTAS Cougar (original) — metal-bodied F-16 replica HOTAS from 2002. Full-metal construction with programmable firmware.
+    Wave-99 addition. Last reviewed: 2026-07.

@@ -1,0 +1,43 @@
+# QuickShot QS-201 Python 3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "QuickShot QS-201 Python 3"
+  vendor: "QuickShot"
+  usb:
+    vendor_id: 0xFF02       # Community estimate
+    product_id: 0x0001      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF02 / PID 0x0001 are placeholders for QuickShot Python 3. Gameport device needs USB adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    QuickShot QS-201 Python 3 — classic budget joystick from early 1990s. 2-axis with 3 buttons, requires gameport adapter.
+    Wave-99 addition. Last reviewed: 2026-07.

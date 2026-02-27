@@ -1,0 +1,43 @@
+# Logitech WingMan Formula Force USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Formula Force USB"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Confirmed
+    product_id: 0xC293      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 6
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x046D confirmed (Logitech). PID 0xC293 estimated for WingMan Formula Force USB. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Formula Force USB — force feedback racing wheel from late 1990s. Used as rudder pedal substitute in sims.
+    Wave-99 addition. Last reviewed: 2026-07.

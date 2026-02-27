@@ -1,0 +1,43 @@
+# Virpil VPC Flightstick WarBRD Space Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "Virpil VPC Flightstick WarBRD Space Edition"
+  vendor: "Virpil"
+  usb:
+    vendor_id: 0x3344       # Confirmed
+    product_id: 0x8320      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 13
+  buttons: 32
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x3344 confirmed (Virpil). PID 0x8320 estimated for WarBRD Space Edition. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virpil VPC WarBRD Space Edition — base with extended throw and space sim-specific cam profiles.
+    Wave-96 addition. Last reviewed: 2026-07.

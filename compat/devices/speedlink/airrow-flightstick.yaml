@@ -1,0 +1,43 @@
+# Speedlink AIRROW Flightstick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "Speedlink AIRROW Flightstick"
+  vendor: "Speedlink"
+  usb:
+    vendor_id: 0x0E8F       # Confirmed
+    product_id: 0x0028      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0E8F (GreenAsia OEM for Speedlink). PID 0x0028 estimated for AIRROW Flightstick. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink AIRROW Flightstick — budget 4-axis stick with twist rudder and throttle slider.
+    Wave-96 addition. Last reviewed: 2026-07.

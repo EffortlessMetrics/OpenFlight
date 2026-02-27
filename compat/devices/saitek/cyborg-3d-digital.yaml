@@ -1,0 +1,43 @@
+# Saitek Cyborg 3D Digital
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg 3D Digital"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Confirmed
+    product_id: 0x0162      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x06A3 confirmed (Saitek). PID 0x0162 estimated for Cyborg 3D Digital. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg 3D Digital — adjustable USB joystick from early 2000s with unique modular hand rest.
+    Wave-99 addition. Last reviewed: 2026-07.

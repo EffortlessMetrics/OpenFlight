@@ -1,0 +1,43 @@
+# VKB Gladiator EVO SCG Premium Left
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO SCG Premium Left"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # Confirmed
+    product_id: 0x0145      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 13
+  buttons: 40
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x231D confirmed (VKB-Sim). PID 0x0145 estimated for Gladiator EVO + SCG Premium left-hand. Verify with VKBDevCfg.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator EVO with SCG Premium grip, left-hand variant for HOSAS space sim setups.
+    Wave-96 addition. Last reviewed: 2026-07.

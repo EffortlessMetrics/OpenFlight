@@ -1,0 +1,43 @@
+# Microsoft SideWinder Force Feedback Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback Pro"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Confirmed
+    product_id: 0x001C      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 9
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x045E confirmed (Microsoft). PID 0x001C estimated for SideWinder FFB Pro. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Force Feedback Pro — USB force feedback joystick from late 1990s. One of the first consumer FFB sticks.
+    Wave-99 addition. Last reviewed: 2026-07.

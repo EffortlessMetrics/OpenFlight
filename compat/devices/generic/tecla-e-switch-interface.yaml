@@ -1,0 +1,43 @@
+# Tecla-e Switch Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "Tecla-e Switch Interface"
+  vendor: "Tecla"
+  usb:
+    vendor_id: 0xFF01       # Community estimate
+    product_id: 0x0002      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x5             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF01 / PID 0x0002 are placeholders. Tecla-e uses Bluetooth HID. Verify BT HID descriptor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tecla-e switch interface — connects up to 4 external switches to USB/BT HID for accessible sim control.
+    Wave-98 addition. Last reviewed: 2026-07.

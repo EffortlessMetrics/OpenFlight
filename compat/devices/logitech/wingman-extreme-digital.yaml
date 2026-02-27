@@ -1,0 +1,43 @@
+# Logitech WingMan Extreme Digital
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Extreme Digital"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Confirmed
+    product_id: 0xC20B      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x046D confirmed (Logitech). PID 0xC20B estimated for WingMan Extreme Digital. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Extreme Digital — USB variant of the classic WingMan Extreme with digital hat switch and throttle lever.
+    Wave-96 addition. Last reviewed: 2026-07.
