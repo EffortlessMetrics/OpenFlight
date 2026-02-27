@@ -1,0 +1,54 @@
+# Simagic Alpha Mini S Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic Alpha Mini S — updated version of the Alpha Mini direct-drive
+# wheel base (2024). Increased peak torque over original Alpha Mini while
+# retaining the compact form factor. USB HID. Simagic commonly uses
+# Silicon Labs CP210x or STM32 USB bridge; VID/PID unconfirmed for S variant.
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Mini S Wheel Base"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483   # STMicroelectronics USB MCU (VID_UNCONFIRMED for Alpha Mini S)
+    product_id: 0x0009  # Placeholder — PID_UNCONFIRMED; distinct from original Alpha Mini
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [steering, pedal_combined, handbrake]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x0483 / PID 0x0009 are unconfirmed; verify with lsusb on Alpha Mini S."
+  - id: DISTINCT_FROM_ALPHA_MINI
+    description: >
+      The Alpha Mini S has higher peak torque than the original Alpha Mini
+      (alpha-mini-base.yaml). USB PID may differ; do not assume same PID.
+  - id: SIMAGIC_MOTION_CONTROL
+    description: >
+      Full FFB profile and torque management requires Simagic Motion Control
+      software. Basic DirectInput FFB is available without Simagic software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Mini S wheel base (2024). Updated Alpha Mini with higher
+    torque. VID/PID require field verification. Distinct from alpha-mini-base.yaml.
+    Last reviewed: 2026-02.

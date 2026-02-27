@@ -15,7 +15,7 @@ For simulator integration boundaries and compliance notes, see `docs/product-pos
 - Real-time spine: `flight-axis`, `flight-scheduler`, `flight-bus`
 - Service surface: `flight-service`, `flight-cli`, `flight-ipc`, `flight-ui`
 - Core domain: `flight-core`, `flight-profile`, `flight-rules`, `flight-units`, `flight-session`
-- Simulator adapters: `flight-simconnect`, `flight-simconnect-sys`, `flight-xplane`, `flight-dcs-export`, `flight-ac7-protocol`, `flight-ac7-telemetry`, `flight-ac7-input`, `flight-adapter-common`
+- Simulator adapters: `flight-simconnect`, `flight-simconnect-sys`, `flight-xplane`, `flight-dcs-export`, `flight-ac7-protocol`, `flight-ac7-telemetry`, `flight-ac7-input`, `flight-adapter-common`, `flight-sim-racing`
 - Device and hardware: `flight-hid`, `flight-hid-support`, `flight-hid-types`, `flight-virtual`
 - Panel and control hardware: `flight-panels`, `flight-panels-core`, `flight-panels-saitek`, `flight-panels-cougar`, `flight-hotas-saitek`, `flight-hotas-thrustmaster`, `flight-streamdeck`
 - Safety, diagnostics, and observability: `flight-ffb`, `flight-watchdog`, `flight-blackbox`, `flight-tracing`, `flight-metrics`, `flight-tactile`

@@ -1,0 +1,46 @@
+# VIRPIL VPC Control Panel #1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls), PID 0x8200 — estimated.
+# VIRPIL VPC Control Panel #1 — desk-mounted button/switch panel.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC Control Panel #1"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls (confirmed)
+    product_id: 0x8200      # Community estimate — VPC Control Panel #1; confirm with VPC Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8200 is a community estimate for the VPC Control Panel #1.
+      VIRPIL uses 0x82xx range for standalone panel units. Confirm with
+      VPC Configurator or lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      Standalone switch and button panel. Not a joystick or throttle.
+      Designed for cockpit builder use alongside VPC joystick+throttle sets.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel #1 — VID 0x3344 / PID 0x8200 (est).
+    Desk-mounted button/switch panel for cockpit building. Wave-59 addition.
+    Last reviewed: 2026-07.

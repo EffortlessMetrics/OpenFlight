@@ -1,0 +1,45 @@
+# Seeed Studio XIAO SAMD21 HID Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2886 (Seeed Studio), PID 0x002F — XIAO SAMD21 native USB.
+schema_version: "1"
+
+device:
+  name: "Seeed Studio XIAO SAMD21 HID Controller"
+  vendor: "Seeed Studio"
+  usb:
+    vendor_id: 0x2886
+    product_id: 0x002F
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: DIY_FIRMWARE
+    description: >
+      Capabilities depend on firmware. XIAO SAMD21 supports native USB HID
+      via ArduinoCore-samd or TinyUSB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Seeed XIAO SAMD21 (ARM Cortex-M0+) compact board for DIY HID builds.
+    Ultra-small form factor. PID 0x002F confirmed for XIAO SAMD21.
+    Tier 3. Last reviewed: 2026-02.

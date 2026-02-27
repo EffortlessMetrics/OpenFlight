@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-simucube"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Simucube 2 FFB wheel/stick driver for OpenFlight — encoder parsing, torque command builder, and model detection."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "simucube", "ffb", "direct-drive"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }

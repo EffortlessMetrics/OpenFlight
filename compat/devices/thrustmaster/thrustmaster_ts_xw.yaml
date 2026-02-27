@@ -1,0 +1,63 @@
+# Thrustmaster TS-XW Racer Sparco P310
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB698 is a community estimate for the TS-XW Racer Sparco P310;
+# distinct from the SDL2-confirmed PID 0xB676 in ts-xw-racer.yaml.
+# The TS-XW is a brushless servo belt-drive wheel designed for Xbox and PC;
+# the Sparco P310 Competition rim is modular (interchangeable).
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TS-XW Racer Sparco P310"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB698   # Community estimate — TS-XW Racer Sparco P310
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 26
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB698 is a community estimate. The SDL2 GameControllerDB lists the
+      TS-XW Racer at 0xB676; this manifest covers a reported variant PID.
+      Verify with lsusb or Windows Device Manager on real hardware.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (1080° range); Z = accelerator; Rz = brake.
+      Map X to rudder for flight sim ground-steering use.
+  - id: MODULAR_RIM
+    description: >
+      The TS-XW rim is interchangeable via the Thrustmaster quick-release
+      system. Other rims paired with the TS-XW base may present a different
+      button layout.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TS-XW Racer Sparco P310. VID 0x044F confirmed; PID 0xB698
+    community estimate (see also 0xB676 in ts-xw-racer.yaml). Brushless servo
+    belt-drive wheel for Xbox/PC. Last reviewed: 2026-06.

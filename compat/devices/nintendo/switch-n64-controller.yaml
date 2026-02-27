@@ -1,0 +1,62 @@
+# Nintendo Switch N64 Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x057E (Nintendo Co., Ltd.) confirmed.
+# PID 0x2019 confirmed: Linux kernel drivers/hid/hid-nintendo.c (kernel 5.16+),
+#   "Nintendo Switch Online N64 Controller".
+# The N64 NSO controller connects via Bluetooth to the Switch but can be
+# paired to PC. Features a single analog stick, C-buttons, L/R/Z triggers.
+# Occasionally used in flight sim for novelty or secondary input.
+
+schema_version: "1"
+
+device:
+  name: "Nintendo Switch Online N64 Controller"
+  vendor: "Nintendo Co., Ltd."
+  usb:
+    vendor_id: 0x057E    # Nintendo Co., Ltd. (confirmed)
+    product_id: 0x2019   # Switch N64 Controller — confirmed Linux kernel 5.16+
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 2
+    names: [stick_x, stick_y]    # N64's single analog stick
+    resolution_bits: 8
+  buttons: 14             # A, B, Start, L, R, Z, C-up, C-down, C-left, C-right, d-pad ×4
+  hats: 1                 # D-pad
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: BLUETOOTH_ONLY
+    description: >
+      The N64 NSO controller connects over Bluetooth only; no wired USB mode.
+      The VID/PID enumerate over BT-HID (Bluetooth HID profile, not USB).
+      A Bluetooth adapter with BT-HID support is required on PC.
+  - id: SINGLE_ANALOG_STICK
+    description: >
+      Unlike modern gamepads, the N64 controller has only one analog stick.
+      Map stick_x and stick_y to the primary flight axis pair in the profile.
+  - id: C_BUTTONS_NOT_AXIS
+    description: >
+      C-buttons (up/down/left/right) are digital buttons, not an analog stick.
+      They can be mapped to secondary flight controls (trim, view, etc.).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo N64 NSO controller. VID 0x057E / PID 0x2019 confirmed from
+    Linux kernel 5.16+ hid-nintendo.c. Bluetooth only. Last reviewed: 2026-06.

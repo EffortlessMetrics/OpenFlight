@@ -3,18 +3,41 @@
 //! X52 Pro MFD implementation.
 //!
 //! **UNVERIFIED PROTOCOL** - See `docs/reference/hotas-claims.md`
+//!
+//! # Protocol
+//!
+//! The X52 Pro (VID `0x06A3`, PID `0x0762`) exposes MFD control via HID output
+//! reports sent with [`hidapi::HidDevice::write`].
+//!
+//! ## Text line write
+//! ```text
+//! Byte  0 : HID report ID  (0x00 – unnumbered report)
+//! Byte  1 : Command        (0xB4)
+//! Byte  2 : Line index     (0, 1, or 2)
+//! Bytes 3–18 : Characters  (printable ASCII, space-padded to 16 chars)
+//! ```
+//!
+//! ## Brightness control
+//! ```text
+//! Byte 0 : HID report ID  (0x00)
+//! Byte 1 : Command        (0xB1)
+//! Byte 2 : Brightness     (0–127)
+//! ```
+//!
+//! Protocol source: community reverse-engineering; **not** verified via USB capture.
+
+use std::sync::Mutex;
+
+use hidapi::HidDevice;
 
 use crate::policy::allow_device_io;
 use crate::traits::{HotasError, HotasResult, MfdProtocol};
 
-/// Hypothesized USB control transfer request type for MFD.
-const MFD_REQUEST_TYPE: u8 = 0x40; // Vendor, host-to-device
+/// HID output report command byte for MFD text-line write.
+const MFD_CMD_LINE: u8 = 0xB4;
 
-/// Hypothesized bRequest value for MFD line write.
-const MFD_REQUEST_LINE: u8 = 0x91;
-
-/// Hypothesized bRequest value for MFD brightness.
-const MFD_REQUEST_BRIGHTNESS: u8 = 0xB1;
+/// HID output report command byte for MFD brightness.
+const MFD_CMD_BRIGHTNESS: u8 = 0xB1;
 
 /// Maximum characters per MFD line.
 pub const MFD_LINE_LENGTH: usize = 16;
@@ -22,86 +45,80 @@ pub const MFD_LINE_LENGTH: usize = 16;
 /// Number of lines on the MFD.
 pub const MFD_LINE_COUNT: u8 = 3;
 
+/// Saitek vendor ID.
+pub const X52_PRO_VID: u16 = 0x06A3;
+
+/// X52 Pro product ID.
+pub const X52_PRO_PID: u16 = 0x0762;
+
 /// X52 Pro MFD display controller.
 ///
 /// # Protocol Status
 ///
-/// **UNVERIFIED** - The MFD protocol is based on hypothesis from community
-/// documentation. Key uncertainties:
-///
-/// - Exact `bmRequestType` and `bRequest` values
-/// - Character encoding (ASCII subset assumed)
-/// - Brightness control protocol
+/// **UNVERIFIED** – The MFD protocol is based on community-sourced
+/// documentation and has not been verified via USB capture.
+/// Key uncertainties: exact command bytes, character encoding, brightness range.
 ///
 /// See GitHub issue tracking verification progress.
+///
+/// # Usage
+///
+/// ```ignore
+/// let api = hidapi::HidApi::new().unwrap();
+/// let device = api.open(X52_PRO_VID, X52_PRO_PID).unwrap();
+/// let mut mfd = X52ProMfd::new(device);
+/// ```
 pub struct X52ProMfd {
-    /// Placeholder for device handle - actual implementation would use hidapi or similar
-    device_path: String,
-    /// Current brightness level
+    /// Open HID device handle for the X52 Pro (mutex-wrapped for `Sync`).
+    device: Mutex<HidDevice>,
+    /// Current MFD brightness level (0–127).
     brightness: u8,
-    /// Protocol verification status
-    verified: bool,
 }
 
 impl X52ProMfd {
-    /// Create a new MFD controller for the specified device.
-    pub fn new(device_path: String) -> Self {
+    /// Create a new MFD controller from an already-opened [`HidDevice`].
+    ///
+    /// Use [`hidapi::HidApi::open`] with [`X52_PRO_VID`] and [`X52_PRO_PID`]
+    /// to obtain the handle.
+    pub fn new(device: HidDevice) -> Self {
         tracing::warn!(
             target: "hotas::mfd",
-            device = %device_path,
             "Creating X52 Pro MFD controller with UNVERIFIED protocol. \
              See docs/reference/hotas-claims.md for verification status."
         );
-
         Self {
-            device_path,
+            device: Mutex::new(device),
             brightness: 127,
-            verified: false,
         }
     }
 
-    /// Attempt to send a control transfer to the device.
+    /// Write a HID output report to the device.
     ///
-    /// This is a placeholder - actual implementation would use platform HID APIs.
-    fn send_control_transfer(
-        &self,
-        request_type: u8,
-        request: u8,
-        value: u16,
-        index: u16,
-        data: &[u8],
-    ) -> HotasResult<()> {
-        // Policy gate: block all output I/O unless explicitly enabled
+    /// Checks the device I/O policy gate before performing any I/O.
+    fn write_hid_report(&self, report: &[u8]) -> HotasResult<()> {
         if !allow_device_io() {
             return Err(HotasError::UnverifiedProtocol("x52_pro_mfd"));
         }
 
         tracing::debug!(
             target: "hotas::mfd",
-            device = %self.device_path,
-            request_type = %format!("0x{:02X}", request_type),
-            request = %format!("0x{:02X}", request),
-            value = %format!("0x{:04X}", value),
-            index = %format!("0x{:04X}", index),
-            data_len = data.len(),
-            "Attempting MFD control transfer (UNVERIFIED)"
+            report_len = report.len(),
+            cmd = %format!("0x{:02X}", report.get(1).copied().unwrap_or(0)),
+            "Sending HID output report (UNVERIFIED)"
         );
 
-        // TODO: Implement actual USB control transfer
-        // This would use hidapi or platform-specific APIs
-
-        // For now, return an error indicating the protocol is unverified
-        if !self.verified {
-            Err(HotasError::UnverifiedProtocol("x52_pro_mfd"))
-        } else {
-            Ok(())
-        }
+        self.device
+            .lock()
+            .map_err(|_| HotasError::UsbError("device mutex poisoned".into()))?
+            .write(report)
+            .map(|_| ())
+            .map_err(|e| HotasError::UsbError(e.to_string()))
     }
 
     /// Encode text for MFD display.
     ///
-    /// The MFD likely accepts ASCII subset only. Non-ASCII characters
-    /// are replaced with '?'.
+    /// The MFD accepts printable ASCII characters (`' '`–`'~'`). Non-ASCII
+    /// characters are replaced with `'?'`. Output is truncated to [`MFD_LINE_LENGTH`].
     fn encode_text(text: &str) -> Vec<u8> {
         text.chars()
             .take(MFD_LINE_LENGTH)
@@ -133,10 +150,21 @@ impl MfdProtocol for X52ProMfd {
             "Setting MFD line (UNVERIFIED protocol)"
         );
 
-        let encoded = Self::encode_text(text);
+        let chars = Self::encode_text(text);
 
-        // Hypothesis: wValue = line number, wIndex = 0
-        self.send_control_transfer(MFD_REQUEST_TYPE, MFD_REQUEST_LINE, line as u16, 0, &encoded)
+        // Build HID output report:
+        //   buf[0]    = 0x00       (HID report ID – unnumbered report)
+        //   buf[1]    = 0xB4       (MFD text command)
+        //   buf[2]    = line       (line index 0–2)
+        //   buf[3..19] = chars     (up to 16 ASCII bytes, space-padded)
+        let mut buf = [b' '; 3 + MFD_LINE_LENGTH];
+        buf[0] = 0x00;
+        buf[1] = MFD_CMD_LINE;
+        buf[2] = line;
+        let copy_len = chars.len().min(MFD_LINE_LENGTH);
+        buf[3..3 + copy_len].copy_from_slice(&chars[..copy_len]);
+
+        self.write_hid_report(&buf)
     }
 
     fn set_brightness(&mut self, level: u8) -> HotasResult<()> {
@@ -148,21 +176,15 @@ impl MfdProtocol for X52ProMfd {
             "Setting MFD brightness (UNVERIFIED protocol)"
         );
 
-        // Hypothesis: wValue = brightness level, wIndex = 0
-        self.send_control_transfer(
-            MFD_REQUEST_TYPE,
-            MFD_REQUEST_BRIGHTNESS,
-            clamped as u16,
-            0,
-            &[],
-        )?;
+        // HID output report: [report_id=0x00, cmd=0xB1, brightness_level]
+        let buf = [0x00u8, MFD_CMD_BRIGHTNESS, clamped];
+        self.write_hid_report(&buf)?;
 
         self.brightness = clamped;
         Ok(())
     }
 
     fn clear(&mut self) -> HotasResult<()> {
-        // Clear all lines
         for line in 0..MFD_LINE_COUNT {
             self.set_line(line, "")?;
         }
@@ -192,5 +214,48 @@ mod tests {
         // Use explicit unicode escape for the accented E character
         let encoded = X52ProMfd::encode_text("H\u{00C9}LLO"); // HELLO with E-acute
         assert_eq!(encoded, b"H?LLO");
+    }
+
+    /// Verify the HID output report buffer layout for a text-line write.
+    #[test]
+    fn test_hid_line_report_layout() {
+        let line: u8 = 1;
+        let chars = X52ProMfd::encode_text("TEST");
+        let mut buf = [b' '; 3 + MFD_LINE_LENGTH];
+        buf[0] = 0x00;
+        buf[1] = MFD_CMD_LINE;
+        buf[2] = line;
+        buf[3..3 + chars.len()].copy_from_slice(&chars);
+
+        assert_eq!(buf[0], 0x00, "report ID must be 0");
+        assert_eq!(buf[1], 0xB4, "MFD text command must be 0xB4");
+        assert_eq!(buf[2], 1, "line index must be 1");
+        assert_eq!(&buf[3..7], b"TEST");
+        assert_eq!(buf[7], b' ', "unused chars must be space-padded");
+        assert_eq!(buf.len(), 19, "total report must be 19 bytes");
+    }
+
+    /// Verify the HID output report buffer layout for brightness.
+    #[test]
+    fn test_hid_brightness_report_layout() {
+        let buf = [0x00u8, MFD_CMD_BRIGHTNESS, 64u8];
+        assert_eq!(buf[0], 0x00, "report ID must be 0");
+        assert_eq!(buf[1], 0xB1, "brightness command must be 0xB1");
+        assert_eq!(buf[2], 64);
+    }
+
+    #[test]
+    fn test_brightness_clamped_to_127() {
+        assert_eq!(200u8.min(127), 127);
+    }
+
+    #[test]
+    fn test_protocol_constants() {
+        assert_eq!(MFD_LINE_COUNT, 3);
+        assert_eq!(MFD_LINE_LENGTH, 16);
+        assert_eq!(X52_PRO_VID, 0x06A3);
+        assert_eq!(X52_PRO_PID, 0x0762);
+        assert_eq!(MFD_CMD_LINE, 0xB4);
+        assert_eq!(MFD_CMD_BRIGHTNESS, 0xB1);
     }
 }

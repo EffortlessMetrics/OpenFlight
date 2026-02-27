@@ -1,0 +1,55 @@
+# VIRPIL VPC Constellation BETA on T-50CM3 Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB — the-sz.com USB ID database).
+# PID 0x0253 is a community estimate following the VPC Constellation series PID
+# pattern: ALPHA=0x0251, ALPHA-R=0x0252, BETA=0x0253 (estimated).
+# The Constellation BETA grip features a forward-staggered design for wide-reach
+# buttons and a distinctive 4-way castle hat arrangement.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation BETA on T-50CM3 Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x0253      # Community estimate — Constellation BETA
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 15
+  buttons: 24
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0253 is a community estimate. The Constellation series uses
+      sequential PIDs (0x0251+ range). Confirm with lsusb when hardware
+      is available. ALPHA confirmed at 0x0251.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping is configurable via VPC Configurator software.
+      OpenFlight reads raw HID axis reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation BETA grip on T-50CM3 base. PID 0x0253 is a
+    community estimate. Forward-staggered grip design for wide-reach buttons.
+    Last reviewed: 2026-06.

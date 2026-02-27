@@ -1,0 +1,48 @@
+# Genovation ControlPad CP680
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06CD (Genovation). PID 0x0680 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "Genovation ControlPad CP680"
+  vendor: "Genovation"
+  usb:
+    vendor_id: 0x06CD       # Genovation Inc.
+    product_id: 0x0680      # Community estimate — ControlPad CP680
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x01             # Generic Desktop
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 68
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Genovation ControlPad CP680 68-key programmable keypad. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Genovation ControlPad CP680 — 68-key USB keypad. PID 0x0680 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,54 @@
+# Microsoft Sidewinder Precision 2 (Wave-34 Alias Entry)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x045E (Microsoft), PID 0x0038.
+# NOTE: sidewinder-precision2.yaml covers the same VID/PID with full quirk
+# documentation. This manifest is an alternate named entry for search
+# compatibility under the "Precision 2" naming convention used in some
+# community references (vs "Sidewinder Precision 2" in the primary manifest).
+schema_version: "1"
+
+device:
+  name: "Microsoft Precision 2 Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x0038      # Sidewinder Precision 2 — confirmed via USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: ALIAS_FOR_SIDEWINDER_PRECISION2
+    description: >
+      This manifest shares VID/PID with sidewinder-precision2.yaml. Both
+      refer to the same Microsoft Sidewinder Precision 2 hardware. The
+      primary manifest is sidewinder-precision2.yaml.
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      Handled by the built-in HID joystick driver on Windows 10/11.
+      No additional drivers required.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Microsoft Precision 2 / Sidewinder Precision 2. VID 0x045E, PID 0x0038.
+    See sidewinder-precision2.yaml for primary manifest. Wave-34 addition.
+    Last reviewed: 2026-06.

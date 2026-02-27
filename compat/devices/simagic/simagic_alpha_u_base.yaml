@@ -1,0 +1,62 @@
+# Simagic Alpha Ultimate Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483: STMicroelectronics (used by several sim-racing base manufacturers
+# running STM32 MCUs). PID 0x5744 is a community estimate for the Simagic
+# Alpha Ultimate base; distinct from the 0x1020 estimate in alpha-u-base.yaml.
+# The Alpha Ultimate is a high-torque direct-drive wheel base (up to 25 Nm).
+
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Ultimate Wheel Base"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0x5744   # Community estimate — Alpha Ultimate; see also 0x1020
+  hid:
+    usage_page: 0x01
+    usage: 0x08   # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, friction, inertia]
+    max_update_rate_hz: 2000
+    torque_limit_nm: 25.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5744 is a community estimate for the Alpha Ultimate under the STM32
+      USB VID. Another estimate (0x1020) exists in alpha-u-base.yaml.
+      Confirm from lsusb on real hardware before enabling production matching.
+  - id: HIGH_TORQUE_FFB
+    description: >
+      25 Nm peak torque from a direct-drive motor. Apply strict torque-limiting
+      in the OpenFlight FFB envelope before mapping to flight controls; sustained
+      max torque can cause physical injury.
+  - id: STM32_VID
+    description: >
+      VID 0x0483 is the generic STMicroelectronics USB VID used by devices
+      running STM32 MCUs. Multiple unrelated devices share this VID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Ultimate wheel base (25 Nm DD). VID 0x0483 (STM32 USB),
+    PID 0x5744 community estimate (see also 0x1020). Last reviewed: 2026-06.

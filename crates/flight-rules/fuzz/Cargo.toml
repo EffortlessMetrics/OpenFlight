@@ -24,3 +24,21 @@ name = "fuzz_rules_parser"
 path = "fuzz_targets/fuzz_rules_parser.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_condition"
+path = "fuzz_targets/fuzz_condition.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_action"
+path = "fuzz_targets/fuzz_action.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_rule_schema"
+path = "fuzz_targets/fuzz_rule_schema.rs"
+test = false
+doc = false

@@ -1,0 +1,59 @@
+# AuraSound Shaker Tactile Transducer — 0x04D8 / 0xF301
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x04D8 (Microchip Technology), PID 0xF301 (estimated).
+# The AuraSound Shaker is a tactile transducer used in motion simulator cockpits
+# and flight sim seats for rumble/vibration feedback (engine, touchdown, turbulence).
+# When equipped with a USB control interface the OS sees Microchip VID 0x04D8.
+# PID 0xF301 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "AuraSound Shaker"
+  vendor: "AuraSound"
+  type: tactile_transducer
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by AuraSound USB interface)
+    product_id: 0xF301      # Community estimate — AuraSound Shaker; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (tactile output device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF301 is a community estimate for AuraSound Shaker USB interface.
+      AuraSound devices may present as USB audio devices without a HID interface.
+      Verify with lsusb on target hardware.
+  - id: TACTILE_OUTPUT_ONLY
+    description: >
+      The AuraSound Shaker is a tactile output device. OpenFlight communicates
+      via the audio or haptic output path, not the HID joystick path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    AuraSound Shaker tactile transducer (0x04D8/0xF301). PID community estimate.
+    Bass shaker for cockpit seat vibration feedback. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

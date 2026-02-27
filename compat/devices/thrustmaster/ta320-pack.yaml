@@ -1,0 +1,63 @@
+# Thrustmaster T.A320 Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device entry for the Thrustmaster T.A320 Pack —
+# a bundle containing the TCA Sidestick Airbus, TCA Quadrant Airbus, and
+# TCA Quadrant Airbus Addon, sold as a comprehensive A320 civil sim bundle.
+# Component manifests:
+#   - tca-sidestick-airbus.yaml        (captain sidestick)
+#   - tca-quadrant-airbus.yaml         (throttle quadrant)
+#   - tca-quadrant-airbus-addon.yaml   (addon levers)
+#
+# Note: This bundle differs from the TCA Officer Pack Airbus (tca-officer-pack-airbus.yaml)
+# in that it includes the Addon levers as a standard bundle component.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.A320 Pack (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~        # Virtual bundle — three independent USB devices
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8             # Combined: sidestick (2) + quadrant (4) + addon (2)
+    names: [x, y, throttle, spoiler, flap, toga, fadec_l, fadec_r]
+    resolution_bits: 12
+  buttons: 36            # Combined across all three components
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      T.A320 Pack bundles three independent USB HID devices: TCA Sidestick
+      Airbus, TCA Quadrant Airbus, and TCA Quadrant Airbus Addon. Each device
+      has its own USB PID and enumerates separately. OpenFlight merges all three
+      into a single logical A320 cockpit device in the active profile.
+  - id: ADDON_INCLUDED
+    description: >
+      Unlike the TCA Officer Pack (tca-officer-pack-airbus.yaml), this bundle
+      includes the Addon levers as standard. The Addon adds FADEC and
+      differential thrust levers not present in the base quadrant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle for Thrustmaster T.A320 Pack (sidestick + quadrant + addon).
+    Components enumerate independently. See tca-sidestick-airbus.yaml,
+    tca-quadrant-airbus.yaml, and tca-quadrant-airbus-addon.yaml.
+    Last reviewed: 2026-06.

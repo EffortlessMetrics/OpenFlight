@@ -1,0 +1,60 @@
+# RealSimGear GI 275 Electronic Instrument Trainer (0x2B67 variant) — 0x2B67 / 0x0023
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x2B67 (community HID VID), PID 0x0023 (estimated).
+# Second known USB VID/PID combination for the RealSimGear GI 275 Electronic
+# Instrument Trainer. The primary entry (gi275.yaml) uses VID 0x04D8 (Microchip),
+# PID 0xF250. This variant uses the community HID VID 0x2B67 shared with
+# Desktop Aviator and other sim hardware manufacturers.
+# PID 0x0023 is a community estimate — confirm with lsusb or RealSimGear docs.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GI 275 Electronic Instrument Trainer"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2B67       # Community HID VID (shared by RealSimGear, Desktop Aviator, others)
+    product_id: 0x0023      # Community estimate — GI 275 variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0023 is a community estimate. The primary GI 275 entry (gi275.yaml)
+      uses VID 0x04D8, PID 0xF250 (Microchip). This manifest covers a second
+      VID variant reported by community members. Verify with lsusb.
+  - id: DUAL_VID_VARIANTS
+    description: >
+      RealSimGear has shipped GI 275 units with at least two different USB VID/PID
+      combinations across production runs. Both gi275.yaml (0x04D8/0xF250) and
+      this manifest should be considered when profiling.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GI 275 (0x2B67/0x0023) — alternate VID variant. PID community estimate.
+    See also gi275.yaml (0x04D8/0xF250). Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

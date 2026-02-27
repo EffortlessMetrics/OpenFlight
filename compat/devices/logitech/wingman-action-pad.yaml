@@ -1,0 +1,41 @@
+# Logitech WingMan Action Pad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC20B from USB IF database.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Action Pad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC20B
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Compact Logitech USB gamepad. VID/PID confirmed from USB IF registry.
+    Last reviewed: 2026-06.

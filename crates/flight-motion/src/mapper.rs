@@ -214,4 +214,41 @@ mod tests {
         assert!(frame.roll.abs() < 0.01);
         assert!(frame.pitch.abs() < 0.01);
     }
+
+    proptest::proptest! {
+        /// MotionMapper::process() must never produce outputs outside [-1, 1]
+        /// regardless of the input snapshot values, as long as intensity > 0.
+        #[test]
+        fn prop_process_output_always_in_bounds(
+            g_force in -20.0_f32..=20.0_f32,
+            g_lat   in -20.0_f32..=20.0_f32,
+            g_lon   in -20.0_f32..=20.0_f32,
+            bank_deg  in -180.0_f32..=180.0_f32,
+            pitch_deg in -180.0_f32..=180.0_f32,
+            intensity in 0.01_f32..=1.0_f32,
+        ) {
+            use flight_bus::types::{GForce, ValidatedAngle};
+
+            let mut snapshot = BusSnapshot::default();
+            snapshot.kinematics.g_force = GForce::new(g_force).unwrap();
+            snapshot.kinematics.g_lateral = GForce::new(g_lat).unwrap();
+            snapshot.kinematics.g_longitudinal = GForce::new(g_lon).unwrap();
+            snapshot.kinematics.bank = ValidatedAngle::new_degrees(bank_deg).unwrap();
+            snapshot.kinematics.pitch = ValidatedAngle::new_degrees(pitch_deg).unwrap();
+
+            let mut config = MotionConfig::default();
+            config.intensity = intensity;
+            let mut mapper = MotionMapper::new(config, 1.0 / 250.0);
+
+            for _ in 0..5 {
+                let frame = mapper.process(&snapshot);
+                proptest::prop_assert!(frame.surge.abs() <= 1.0, "surge OOB: {}", frame.surge);
+                proptest::prop_assert!(frame.sway.abs()  <= 1.0, "sway OOB: {}",  frame.sway);
+                proptest::prop_assert!(frame.heave.abs() <= 1.0, "heave OOB: {}", frame.heave);
+                proptest::prop_assert!(frame.roll.abs()  <= 1.0, "roll OOB: {}",  frame.roll);
+                proptest::prop_assert!(frame.pitch.abs() <= 1.0, "pitch OOB: {}", frame.pitch);
+                proptest::prop_assert!(frame.yaw.abs()   <= 1.0, "yaw OOB: {}",   frame.yaw);
+            }
+        }
+    }
 }

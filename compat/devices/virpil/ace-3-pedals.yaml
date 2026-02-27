@@ -1,0 +1,63 @@
+# VIRPIL VPC ACE-3 Interceptor Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x0202 — VPC ACE-3 Interceptor Rudder Pedals.
+# Community-inferred from the ACE product family numbering:
+#   ACE-1 Interceptor Pedals: 0x0200 (see ace-1-pedals.yaml)
+#   ACE-2 Torque Pedals:      0x0201 (see ace-2-pedals.yaml)
+#   ACE-3 Interceptor Pedals: 0x0202 (this manifest)
+# Not confirmed from lsusb hardware probe or official VIRPIL docs.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-3 Interceptor Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0202   # Community-inferred; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [left_pedal, right_pedal, rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0202 is community-inferred from the ACE-1 (0x0200) and ACE-2 (0x0201)
+      family numbering. Not confirmed from lsusb probe or official VIRPIL docs.
+      Verify against real hardware before relying on this PID.
+  - id: RUDDER_COMBINED
+    description: >
+      The rudder axis is the combined differential of left_pedal and right_pedal.
+      Bind rudder for standard flight controls.
+  - id: TOE_BRAKE_AXES
+    description: >
+      left_toe_brake and right_toe_brake are independent analog axes for
+      differential braking. They rest at 0 and travel to 16383 (14-bit max).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0202 is community-inferred from the ACE-1/ACE-2 family.
+    ACE-3 Interceptor Pedals are the third-generation VIRPIL rudder pedal set
+    with independent toe brakes and hall-effect sensors.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

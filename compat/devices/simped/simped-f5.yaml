@@ -1,0 +1,48 @@
+# SimPed F5 Combat Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (SimPed). PID 0x2123 — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "SimPed F5 Combat Rudder Pedals"
+  vendor: "SimPed"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x2123      # Community estimate — SimPed F5
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. SimPed F5 combat-style pedals. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimPed F5 — combat-style rudder pedals. PID 0x2123 community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs
+  - xplane

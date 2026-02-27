@@ -1,0 +1,72 @@
+# Logitech X52 Pro Flight Control System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 is shared by Saitek and Logitech (Logitech acquired Saitek in 2016).
+# PID 0x0762 is the Logitech-era X52 Pro (stick + throttle composite).
+# The same PID is also documented under Saitek branding in
+# compat/devices/saitek/x52-pro.yaml — both manifests describe the same
+# physical hardware; this file carries the Logitech vendor identity.
+
+schema_version: "1"
+
+device:
+  name: "Logitech X52 Pro Flight Control System"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0762      # X52 Pro — Logitech branding (stick + throttle composite)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 10
+  buttons: 39
+  hats: 3
+  force_feedback: false
+  mfd:
+    lines: 2
+    chars_per_line: 16
+    backlight: true
+  leds:
+    count: 6
+    rgb: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: MFD_BRIGHTNESS
+    description: >
+      MFD backlight brightness is controlled via a USB control transfer
+      (report ID 0xB1), not a standard HID output report.
+  - id: LED_RGB
+    description: >
+      The X52 Pro exposes six user-programmable RGB LEDs via HID output
+      reports. Colour is expressed as 3-bit R/G/B per LED.
+  - id: CLUTCH_LEVER
+    description: >
+      The X52 Pro adds a clutch lever on the throttle body compared to the
+      standard X52. The clutch is enumerated as an additional digital button
+      and is not present on the non-Pro variant (PID 0x0255 / 0x075C).
+  - id: SAITEK_ALIAS
+    description: >
+      PID 0x0762 was originally released under Saitek branding before the
+      Logitech acquisition in 2016. Both vendor names refer to the same
+      physical product. See also compat/devices/saitek/x52-pro.yaml.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech-era X52 Pro (PID 0x0762). Full-featured HOTAS with MFD, RGB LEDs,
+    and clutch lever. The X52 (non-Pro, PID 0x0255) is in x52.yaml.
+    The Saitek-branded variant of this PID is in compat/devices/saitek/x52-pro.yaml.
+    Last validated: 2026-02.

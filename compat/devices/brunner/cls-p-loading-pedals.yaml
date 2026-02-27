@@ -1,0 +1,57 @@
+# Brunner CLS-P Control Loading Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLS-P Control Loading Pedals — force-feedback rudder pedal system
+# with active load feedback on the rudder axis. Uses an alternate VID 0x1781
+# (community estimate; confirmed Brunner VID is 0x25BB, see cls-p-pedals.yaml).
+# PID 0x0A8C is a community estimate for this variant.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P Control Loading Pedals"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781       # Alternate community estimate — confirmed VID is 0x25BB
+    product_id: 0x0A8C      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A8C is a community estimate. The confirmed Brunner VID is 0x25BB
+      (cls-p-pedals.yaml). VID 0x1781 is an alternate estimate — verify both.
+  - id: CLS2SIM_COMPANION
+    description: >
+      Requires Brunner CLS2SIM companion software for FFB configuration and
+      pedal calibration. OpenFlight reads axis data via HID; FFB effects must
+      be sent via the CLS2SIM API or USB HID output reports.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Brunner CLS-P Control Loading Pedals — active load feedback rudder pedals.
+    Alt VID 0x1781, PID 0x0A8C community estimate. Confirmed VID is 0x25BB.
+    Requires CLS2SIM for FFB. Last reviewed: 2026-06.

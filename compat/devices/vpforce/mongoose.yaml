@@ -1,0 +1,59 @@
+# VPforce Mongoose FFB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 belongs to STMicroelectronics (the MCU manufacturer); this is
+# normal for VPforce devices — see rhino.yaml for the same pattern.
+# PID 0xA1C2 community-reported for the Mongoose; follows the Rhino sequence
+# (0xA1C0 = Rhino v2, 0xA1C1 = Rhino v3, 0xA1C2 = Mongoose).
+
+schema_version: "1"
+
+device:
+  name: "VPforce Mongoose FFB Joystick"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (device MCU vendor)
+    product_id: 0xA1C2      # Mongoose (community-reported)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, sine, square, triangle, sawtooth_up, sawtooth_down, constant]
+    max_update_rate_hz: 500
+    torque_limit_nm: null   # Configured via VPforce companion app
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: STM_VID
+    description: >
+      VID 0x0483 belongs to STMicroelectronics (the MCU manufacturer).
+      This is normal for VPforce devices and does not indicate a generic device.
+      See rhino.yaml for the same pattern across the Rhino v2 and v3.
+  - id: UNVERIFIED_PID
+    description: >
+      PID 0xA1C2 is community-reported and has not yet been confirmed from a
+      captured USB descriptor. Verify with lsusb or USBPcap when hardware is
+      available and update this manifest accordingly.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    HID report format expected to match the Rhino (VPforce uses a consistent
+    report layout across products). PID 0xA1C2 community-reported; confirm
+    from lsusb / USB descriptor when hardware becomes available.

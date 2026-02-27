@@ -1,0 +1,14 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+G29State {
+    wheel: 1.0,
+    accelerator: 0.0,
+    brake: 0.0,
+    clutch: 0.0,
+    shift_up: false,
+    shift_down: false,
+    buttons: 0,
+    dpad: 8,
+}

@@ -1,0 +1,67 @@
+# VIRPIL VPC FlightAssistant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID is community-estimated. The VPC FlightAssistant is a compact USB panel
+# device providing additional buttons, encoders, and hat switches for
+# supplementary cockpit control inputs without a dedicated throttle.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC FlightAssistant"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0052   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [scx, scy]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0052 is a community estimate. Confirm from lsusb or VPC Configurator
+      USB descriptor capture when hardware is available.
+  - id: PANEL_DEVICE
+    description: >
+      The FlightAssistant is a panel/button-box device rather than a primary
+      flight control. It provides supplementary inputs: additional hat switches,
+      encoder wheels (reported as paired button events), and push-buttons.
+      Typically used alongside a throttle for extra cockpit control bindings.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY axes (mini thumb-sticks) center at raw 8192; spring-return.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC FlightAssistant compact button panel. Supplements a throttle
+    with additional inputs. PID 0x0052 community-estimated.
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-02.
+
+driver:
+  type: virpil_vpc
+  notes: >
+    VPC Config Tool allows remapping buttons and encoder wheel direction.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Supplementary panel for additional DCS cockpit binding coverage."

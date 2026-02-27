@@ -1,0 +1,41 @@
+# Thrustmaster T500RS F1 Wheel Add-On
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB662 — F1 replica wheel add-on for T500RS base.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T500RS F1 Wheel Add-On"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB662
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [left_paddle, right_paddle]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    F1 wheel add-on for T500RS base. PID 0xB662 from USB databases.
+    Last reviewed: 2026-06.

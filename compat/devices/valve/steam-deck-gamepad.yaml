@@ -1,0 +1,60 @@
+# Valve Steam Deck Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Steam Deck is a handheld PC gaming device (2022) featuring dual analog
+# sticks, dual trackpads, dual-stage triggers, back paddles, and gyroscope.
+# When docked or used in Desktop Mode it enumerates as a standard USB HID gamepad.
+# VID 0x28DE confirmed: Valve Corporation.
+# PID 0x1205 confirmed: Steam Deck gamepad input device.
+
+schema_version: "1"
+
+device:
+  name: "Valve Steam Deck Gamepad"
+  vendor: "Valve Corporation"
+  usb:
+    vendor_id: 0x28DE
+    product_id: 0x1205   # Confirmed: Steam Deck
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 8
+    names: [lx, ly, rx, ry, lt, rt, left_pad_x, left_pad_y]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  gyro: true
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: STEAM_INPUT_PREFERRED
+    description: >
+      Full Steam Deck input features (trackpads, gyro, back paddles,
+      haptics) require Steam Input API. Raw HID exposes a standard
+      gamepad layout with reduced axis/button count.
+  - id: INTERNAL_DEVICE
+    description: >
+      The Steam Deck's gamepad enumerates as an internal USB device.
+      When used as an external controller via USB OTG, the same PID applies.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Valve Steam Deck gamepad. VID 0x28DE / PID 0x1205 confirmed.
+    Used for flight sim profiles when Steam Deck is docked or in Desktop Mode.
+    Last reviewed: 2026-06.

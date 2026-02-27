@@ -33,12 +33,16 @@
 
 pub mod adapter;
 pub mod aircraft;
+pub mod camera;
 pub mod events;
 pub mod fixtures;
+pub mod injection;
 pub mod mapping;
 pub mod sanity_gate;
 pub mod session;
+pub mod subscription;
 pub mod transport;
+pub mod weather;
 
 // Re-export main types
 pub use adapter::{MsfsAdapter, MsfsAdapterConfig, MsfsAdapterError};
@@ -46,6 +50,12 @@ pub use aircraft::{AircraftDetector, AircraftInfo, DetectionError};
 pub use events::{EventManager, InputEvent, SimEvent};
 pub use fixtures::{FixturePlayer, FixtureRecorder, SessionFixture};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
+pub use injection::{AxisInjectionConfig, AxisInjector};
 pub use mapping::{MappingConfig, MappingError, VariableMapping};
 pub use sanity_gate::{SanityGate, SanityGateConfig, SanityState};
 pub use session::{SessionConfig, SessionError, SimConnectSession};
+pub use subscription::{
+    CORE_SUBSCRIPTION_VARS, DataSubscription, DataSubscriptionConfig, SubscriptionVariable,
+};
+pub use camera::{CameraChannel, CameraConfig, format_camera_simvar};
+pub use weather::{WeatherConfig, WeatherData, parse_weather_simvars};

@@ -1,0 +1,45 @@
+# Logitech/Saitek X55 Rhino HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Logitech / Saitek X55 Rhino HOTAS"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek/Logitech PLC
+    product_id: 0x0CD1      # X55 Stick; throttle: 0x0CD2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 12
+  buttons: 25
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SPLIT_COMPOSITE
+    description: >
+      Stick (0x0CD1) and throttle (0x0CD2) are separate USB HID devices.
+      Both must be enumerated for full axis coverage.
+  - id: MINISTICK_DEADZONE
+    description: >
+      Built-in mini-stick exhibits pronounced hardware deadzone (≈8%).
+      OpenFlight applies the x55_x56_ministick ghost filter preset.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Tested via parser unit tests; no HIL rig available."

@@ -1,0 +1,65 @@
+# VKB Gunfighter Mk.IV MCG Ultimate
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim).
+# PID 0x0220 — community estimate for Gunfighter Mk.IV + MCG Ultimate.
+# The MCG Ultimate is VKB's premium modular grip, featuring a 4-way side
+# hat, an additional full-deflection thumb axis, and a higher button count
+# than the MCG Pro. Designed for the Gunfighter Mk.IV cam mechanism base.
+# The base + grip combination enumerates as a single USB HID device.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.IV MCG Ultimate"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0220    # Community estimate — confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 48
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0220 is a community estimate for the Gunfighter Mk.IV + MCG
+      Ultimate combination. VKB assigns PIDs per base+grip combo. Confirm
+      with VKBDevCfg or lsusb. Compare with gunfighter-mk4.yaml for the
+      Mk.IV with default grip.
+  - id: MODULAR_GRIP_MCG_ULTIMATE
+    description: >
+      The MCG Ultimate grip adds a 4-way side hat, a full-deflection thumb
+      axis (can be mapped to slider2), and a pinky lever compared to the
+      standard Mk.IV grip. Button numbering and axis mapping depend on the
+      VKBDevCfg profile loaded on the device.
+  - id: CAM_MECHANISM
+    description: >
+      The Gunfighter Mk.IV uses VKB's interchangeable cam mechanism.
+      The active cam (linear, soft, hard) affects axis feel but does not
+      change the USB HID descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gunfighter Mk.IV with MCG Ultimate grip. Highest button count in the
+    VKB Gunfighter line. PID 0x0220 is a community estimate; confirm with
+    VKBDevCfg or lsusb. For base Mk.IV, see gunfighter-mk4.yaml.
+    Last reviewed: 2026-02.

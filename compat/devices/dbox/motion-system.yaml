@@ -1,0 +1,63 @@
+# D-BOX Motion System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# D-BOX motion platform systems — actuator-based motion rigs used in
+# professional flight training and high-end consumer simulation. D-BOX
+# actuators connect to the host via USB or Ethernet; motion commands are
+# sent from D-BOX haptic software over a proprietary protocol.
+# USB HID enumeration is not standard; connection is via D-BOX USB interface
+# card or Ethernet gateway.
+schema_version: "1"
+
+device:
+  name: "D-BOX Motion System"
+  vendor: "D-BOX Technologies"
+  usb:
+    vendor_id: 0x25B6   # Placeholder — D-BOX USB interface (VID_UNCONFIRMED)
+    product_id: 0x0001  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — proprietary USB protocol, not standard HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false   # Motion platform output; not HID force-feedback
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x25B6 / PID 0x0001 are unconfirmed placeholders; verify with lsusb."
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      D-BOX motion platforms communicate over a proprietary USB or Ethernet
+      protocol, not standard HID. Integration requires the D-BOX SDK or the
+      D-BOX Haptics Creation Tool plugin for the target simulator.
+  - id: OUTPUT_ONLY
+    description: >
+      The D-BOX system generates no flight control input events. It is an
+      output-only motion platform. Tracked for compatibility documentation
+      of sim-rig configurations.
+  - id: VIRTUAL_BUNDLE
+    description: >
+      May appear as a composite USB device (actuator controller + USB audio
+      for audio-haptic sync) depending on the interface card version.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    D-BOX motion platform — actuator-based motion rig for professional and
+    consumer flight simulation. Output-only; not an HID input device.
+    Integration via D-BOX SDK or sim plugin. Tracked for rig compatibility.
+    Last reviewed: 2026-02.

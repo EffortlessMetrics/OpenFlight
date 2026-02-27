@@ -1,0 +1,41 @@
+# Razer Raion Fightpad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0A18 — fighting game optimized gamepad.
+schema_version: "1"
+
+device:
+  name: "Razer Raion Fightpad"
+  vendor: "Razer"
+  usb:
+    vendor_id: 0x1532
+    product_id: 0x0A18
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fighting game optimized controller. PID 0x0A18 from USB databases.
+    Last reviewed: 2026-06.

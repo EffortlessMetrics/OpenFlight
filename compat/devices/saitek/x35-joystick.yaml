@@ -1,0 +1,52 @@
+# Saitek X35 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC — confirmed). PID 0x0256 — community
+# estimate for the Saitek X35 standalone joystick. The X35 was an entry-level
+# HOTAS joystick sold as a companion to the X35T throttle (PID 0x010C).
+schema_version: "1"
+
+device:
+  name: "Saitek X35 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC (confirmed)
+    product_id: 0x0256      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0256 is a community estimate for the Saitek X35 joystick.
+      The X35T throttle uses 0x010C. Verify with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X35 entry-level HOTAS joystick. Often paired with the X35T throttle.
+    PID 0x0256 is a community estimate; verify with lsusb.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

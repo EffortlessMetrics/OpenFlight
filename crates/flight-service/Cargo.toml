@@ -51,6 +51,7 @@ parking_lot.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 clap.workspace = true
+axum.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 flight-simconnect = { path = "../flight-simconnect" }
@@ -59,5 +60,8 @@ flight-simconnect = { path = "../flight-simconnect" }
 libc = { workspace = true }
 
 [dev-dependencies]
+serde_yaml.workspace = true
 tempfile.workspace = true
 tokio-test.workspace = true
+flight-bus = { path = "../flight-bus" }
+axum-test.workspace = true

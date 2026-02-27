@@ -1,0 +1,43 @@
+# iPega PG-9083 Retractable Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x5501 — retractable wireless gamepad.
+schema_version: "1"
+
+device:
+  name: "iPega PG-9083 Retractable Gamepad"
+  vendor: "iPega"
+  usb:
+    vendor_id: 0x1BAD
+    product_id: 0x5501
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      iPega uses various VID/PIDs. 0x1BAD/0x5501 is commonly reported. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Retractable wireless gamepad. VID/PID from community reports.
+    Last reviewed: 2026-06.

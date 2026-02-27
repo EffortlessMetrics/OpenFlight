@@ -1,0 +1,59 @@
+# WinWing F-16 MFD Combo Panel (Left + Right Bundle, Virtual)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device note for the WinWing F-16 MFD combo
+# product bundle (left + right DDI panels sold together). Each panel
+# enumerates as an independent USB HID device.
+# Component manifests:
+#   - f16-ddi-l-panel.yaml  (PID 0xBD30, community estimate)
+#   - f16-ddi-r-panel.yaml  (PID 0xBD31, community estimate)
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 MFD Combo Panel (Virtual Bundle)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: ~        # Virtual bundle — see f16-ddi-l-panel.yaml and f16-ddi-r-panel.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40            # Combined: 20 left + 20 right OSB buttons
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The F-16 MFD Combo is sold as a paired left+right bundle; each panel
+      enumerates as a separate USB device. OpenFlight binds both via the
+      combined-device entry in the active profile.
+      Individual manifests: f16-ddi-l-panel.yaml and f16-ddi-r-panel.yaml.
+  - id: OSB_BUTTON_MAPPING
+    description: >
+      Each panel has 20 OSB (On-Screen Button) keys arranged around the MFD
+      bezel. Button indices in the combined namespace are 0–19 (left) and
+      20–39 (right). Binding to DCS F-16 MFD OSBs is 1:1.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle entry for the WinWing F-16 MFD Combo Panel.
+    Components enumerate independently as separate USB HID devices.
+    See f16-ddi-l-panel.yaml and f16-ddi-r-panel.yaml for individual manifests.
+    Last reviewed: 2026-06.

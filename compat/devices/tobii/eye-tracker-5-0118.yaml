@@ -1,0 +1,59 @@
+# Tobii Eye Tracker 5 (PID 0x0118 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2104 confirmed: Tobii Technology AB.
+# PID 0x0118 is a community estimate for the Eye Tracker 5; distinct from
+# estimates 0x0408 (eye-tracker-5.yaml) and 0x0202 (tobii_eye_tracker_5.yaml).
+# The ET5 is a composite USB device and the HID component PID may vary by
+# firmware revision and USB hub configuration.
+
+schema_version: "1"
+
+device:
+  name: "Tobii Eye Tracker 5"
+  vendor: "Tobii Technology AB"
+  usb:
+    vendor_id: 0x2104    # Tobii Technology AB (confirmed)
+    product_id: 0x0118   # Community estimate — ET5 variant; see also 0x0408, 0x0202
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0118 is a community estimate for the ET5. Other estimates are
+      0x0408 (eye-tracker-5.yaml) and 0x0202 (tobii_eye_tracker_5.yaml).
+      The ET5 is composite; HID PID varies by firmware. Confirm from lsusb.
+  - id: EYE_TRACKING_SDK
+    description: >
+      Gaze data is not exposed as standard HID axes. OpenFlight reads eye and
+      head position via the Tobii Gaming SDK or opentrack eye-tracking plugin.
+  - id: COMBINED_GAZE_HEAD_TRACKING
+    description: >
+      The ET5 provides eye-gaze (90 Hz) and head-pose data. Head-pose is
+      typically used for view control in flight sim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii Eye Tracker 5 — PID 0x0118 community estimate variant.
+    See eye-tracker-5.yaml (0x0408) and tobii_eye_tracker_5.yaml (0x0202).
+    VID 0x2104 confirmed for Tobii. Last reviewed: 2026-07.

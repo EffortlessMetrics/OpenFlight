@@ -1,0 +1,54 @@
+# WinWing Mig-29 Fighter Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing Mig-29 Fighter Joystick is a replica of the Mikoyan MiG-29
+# (Fulcrum) side-mounted fighter stick. Designed for DCS MiG-29 and
+# Su-27 family aircraft modules.
+# PID 0xBED0 is a community estimate — confirm with lsusb.
+# VID 0x4098 confirmed: WinWing.
+schema_version: "1"
+
+device:
+  name: "WinWing Mig-29 Fighter Joystick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBED0   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 19
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBED0 is a community estimate for the WinWing Mig-29 stick.
+      Confirm with lsusb on hardware.
+  - id: SOVIET_GRIP_LAYOUT
+    description: >
+      Grip replicates the MiG-29 / Su-27 side-mounted stick layout, including
+      the distinctive thumb-top hat-switch arrangement. Button IDs differ from
+      Western HOTAS conventions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Mig-29 Fighter Joystick — MiG-29/Su-27 replica stick for DCS.
+    PID 0xBED0 unconfirmed. VID 0x4098 = WinWing.
+    Last reviewed: 2026-06.

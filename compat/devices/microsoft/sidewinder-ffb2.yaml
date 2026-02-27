@@ -1,0 +1,64 @@
+# Microsoft Sidewinder Force Feedback 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x045E (Microsoft), PID 0x001C — widely documented in USB ID databases,
+# linux-hardware.org, and the Linux kernel HID driver source (hid-microsoft.c).
+# One of the most popular consumer FFB joysticks ever made; sold 1998–2003.
+schema_version: "1"
+
+device:
+  name: "Microsoft Sidewinder Force Feedback 2"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x001C  # Sidewinder Force Feedback 2 — confirmed via linux-hardware.org and HID ID database
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant, periodic]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: DIRECTINPUT_FFB
+    description: >
+      Uses DirectInput force-feedback via USB. Supports spring, damper, friction,
+      constant-force, and periodic (sine/square/sawtooth/triangle) effects.
+      FFB is active on the X and Y axes only; the twist (Rz) axis has no FFB.
+  - id: TWIST_AXIS_RZ
+    description: >
+      The twist grip provides the Rz axis used as rudder. There is no separate
+      throttle; Z axis is absent. A separate throttle device or keyboard mapping
+      is required for throttle control.
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      On Windows 10/11 the Sidewinder FFB2 is handled by the built-in HID
+      joystick driver rather than any Sidewinder-specific driver. Force feedback
+      works without installing any additional software. Some FFB effect types
+      may be silently ignored on newer Windows versions.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x001C confirmed from multiple sources: linux-hardware.org, USB ID database
+    (usb-ids.gowdy.us), and the Linux kernel hid-microsoft.c driver.
+    Very popular legacy FFB joystick; still widely used for classic simulators and DCS.
+    Supports DirectInput FFB spring/damper/friction effects on X and Y axes.
+    Last validated: 2026-02.

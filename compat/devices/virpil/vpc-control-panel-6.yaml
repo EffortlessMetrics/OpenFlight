@@ -1,0 +1,55 @@
+# VIRPIL VPC Control Panel 6
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VIRPIL VPC Control Panel 6 is the sixth revision of VIRPIL's
+# modular button panel series, adding a larger encoder count and revised
+# toggle switch layout compared to Control Panel 5 (vpc-control-panel-5.yaml).
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0260 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel 6"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0260      # Community estimate — Control Panel 6
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — button panel
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 30
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0260 is a community estimate. Confirm with VIRPIL VPC Config Tool.
+  - id: ENCODERS_AS_BUTTONS
+    description: >
+      Rotary encoders report CW/CCW turns as button presses (not analogue axes).
+      Each encoder uses two adjacent button IDs. Use the encoder_step binding
+      in OpenFlight rules to drive sim variables.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel 6 — button/encoder panel. VID 0x3344 confirmed; PID est.
+    Follows vpc-control-panel-5.yaml in the series. See vpc-control-panel-1.yaml
+    through vpc-control-panel-5.yaml for earlier revisions.
+    Last reviewed: 2026-06.

@@ -1,0 +1,44 @@
+# VKB THQ Collective Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB-Sim). PID 0x0181 estimated for THQ Collective Pro variant.
+schema_version: "1"
+
+device:
+  name: "VKB THQ Collective Pro"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0181
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, thumbx, thumby, slider]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: THQ_COLLECTIVE_PRO_GRIP
+    description: >
+      Pro variant with additional slider axis and extra hat switch.
+      Higher resolution sensors and improved mechanical friction system.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB THQ Collective Pro helicopter lever. PID 0x0181 estimated.
+    VID 0x231D confirmed (VKB-Sim). Last reviewed: 2026-06.

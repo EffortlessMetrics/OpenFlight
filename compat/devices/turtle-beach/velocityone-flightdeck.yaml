@@ -1,0 +1,63 @@
+# Turtle Beach VelocityOne Flightdeck (GA Yoke + Throttle Quadrant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 is Turtle Beach Corporation's registered USB vendor ID.
+# PID 0x1050 community-reported for the VelocityOne Flightdeck combined unit.
+# Not yet confirmed via linux-hardware.org probe database; verify with
+# lsusb / USBView on real hardware before enabling production device matching.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Flightdeck"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x1050    # Community-reported; not yet confirmed in probe databases
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, rudder, throttle, prop_rpm, mixture]
+    resolution_bits: 12
+  buttons: 63             # AP panel, flap lever detents, trim switches, gear lever, lighting
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4        # USB FS device
+
+quirks:
+  - id: COMBINED_YOKE_THROTTLE
+    description: >
+      The Flightdeck is a single combined USB HID device exposing both yoke axes
+      (roll, pitch, rudder) and throttle-quadrant axes (throttle, prop_rpm, mixture)
+      in one report. There is no separate device enumeration for yoke vs. quadrant.
+  - id: GEAR_LEVER_AS_BUTTON
+    description: >
+      The landing gear lever is reported as discrete buttons (up/down), not as an axis.
+      OpenFlight rule engine should map gear-up and gear-down button events accordingly.
+  - id: FLAP_DETENTS_AS_BUTTONS
+    description: >
+      Flap lever detent positions are reported as discrete buttons rather than a
+      continuous axis. Map each detent position to a sim flap setting via the rules engine.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1050 is community-reported for the VelocityOne Flightdeck. No independent
+      hardware probe or open-source USB enumeration has confirmed this value.
+      Verify with lsusb / USBView on real hardware before enabling production matching.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Formerly Microsoft-endorsed Xbox-compatible controller. VID 0x10F5 is Turtle
+    Beach's registered USB vendor ID. PID 0x1050 community-reported; awaiting
+    hardware-probe confirmation. HID report layout not independently validated.
+    Last reviewed: 2026-02.

@@ -1,0 +1,52 @@
+# SimPed Advanced Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimPed Advanced — upgraded variant of the SimPed USB rudder pedal line with
+# higher-resolution sensors and additional configurable axes. Czech/Slovak
+# boutique manufacturer. VID 0x1209 (pid.codes). PID 0x2121 community estimate.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "SimPed Advanced Rudder Pedals"
+  vendor: "SimPed"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x2121      # Community estimate — Advanced variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [rudder, left_brake, right_brake, slider]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2121 are community estimates for the SimPed Advanced.
+      Confirm with lsusb. See also simped/usb-rudder.yaml (PID 0x2120).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimPed Advanced — Czech/Slovak high-resolution rudder pedals. VID 0x1209 /
+    PID 0x2121 community estimate. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

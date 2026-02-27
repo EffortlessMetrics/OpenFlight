@@ -1,0 +1,58 @@
+# Leo Bodnar USB Button Box Controller — 0x1DD2 / 0x1005
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x1DD2 (Leo Bodnar Ltd), PID 0x1005.
+# Leo Bodnar USB Button Box Controller — a compact HID interface board for
+# building custom button boxes and cockpit panels. Supports up to 32 buttons
+# and rotary encoders via a simple USB HID joystick profile.
+# PID 0x1005 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar USB Button Box Controller"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x1005      # Community estimate — Button Box Controller
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1005 is a community estimate for the Leo Bodnar Button Box Controller.
+      Verify with lsusb on target hardware.
+  - id: ENCODER_SUPPORT
+    description: >
+      Rotary encoders connected to the board generate button-increment and
+      button-decrement events. Map to stepped axis inputs in the OpenFlight profile
+      (heading bug, altitude, radio frequency).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar USB Button Box Controller (0x1DD2/0x1005). PID community estimate.
+    32-button interface board. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

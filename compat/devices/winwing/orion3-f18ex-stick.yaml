@@ -1,0 +1,51 @@
+# WinWing Orion 3 F-18EX Stick (JGRIP-F18EX on Orion 3 Base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBD50 — community estimate.
+# Orion 3 family uses the 0xBD3x–0xBD5x PID range for joystick bases.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 F-18EX Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD50    # Community estimate — Orion 3 F-15EX uses 0xBD38
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD50 is a community estimate. Orion 3 F-15EX stick uses 0xBD38,
+      F-16EX estimated at 0xBD40; F-18EX continues the pattern.
+      Not confirmed from linux-hardware.org or USB descriptor capture.
+      Update this manifest when a confirmed PID is available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Orion 3 generation F-18EX joystick (Hornet grip). Third-generation WinWing
+    joystick base featuring an F/A-18 replica grip with dual concentric grip
+    twist. PID 0xBD50 is a community estimate — confirm with lsusb before deployment.
+    The Orion 2 F-18C variant uses PID 0xBE63 (see orion2-f18c-stick.yaml).

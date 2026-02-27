@@ -1,0 +1,69 @@
+# Logitech G Flight Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 is shared by Saitek and Logitech (Logitech acquired Saitek in 2016).
+# PID 0x0D67 — G Flight Switch Panel (master power, avionics, gear, lights).
+# Originally released under Saitek branding; sold as Logitech post-2016
+# with the same VID/PID.
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Switch Panel"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D67      # G Flight Switch Panel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: MAGNETO_SELECTOR
+    description: >
+      The 5-position magneto/starter rotary switch (OFF / R / L / BOTH / START)
+      reports as five mutually exclusive button states. Only one position can
+      be active at a time; transitions produce a button-release on the old
+      position followed by a button-press on the new position.
+  - id: TOGGLE_SWITCH_STATES
+    description: >
+      All toggle switches (master battery, alternator, avionics master, fuel
+      pump, de-ice, pitot heat, lights) report their physical position as a
+      latched button state: ON = button held, OFF = button released. There is
+      no separate "changed" event; the driver must track state transitions.
+  - id: GEAR_ANNUNCIATORS
+    description: >
+      The landing gear switch reports as a button. The three gear annunciator
+      LEDs (nose / left / right — green/red/off) are driven by HID output
+      reports. OpenFlight writes gear state from the simulator telemetry to
+      the annunciators using the vendor-specific output report format.
+  - id: SAITEK_ALIAS
+    description: >
+      PID 0x0D67 / VID 0x06A3 was originally released under Saitek branding.
+      Logitech re-released it with identical USB identifiers after the 2016
+      acquisition. Both vendor names refer to the same physical product.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x06A3 / PID 0x0D67. Switch panel covering master power, avionics,
+    magnetos, lights, and gear with annunciator LED outputs. Popular in GA
+    home cockpit setups.
+    Button count and LED output format are community-documented.
+    HIL verification pending.
+    Last validated: 2026-02.

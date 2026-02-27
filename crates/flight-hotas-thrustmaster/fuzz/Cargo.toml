@@ -1,0 +1,38 @@
+[package]
+name = "flight-hotas-thrustmaster-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-thrustmaster]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_thrustmaster_parsers"
+path = "fuzz_targets/fuzz_thrustmaster_parsers.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_warthog_stick"
+path = "fuzz_targets/fuzz_warthog_stick.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_t16000m"
+path = "fuzz_targets/fuzz_t16000m.rs"
+test = false
+doc = false

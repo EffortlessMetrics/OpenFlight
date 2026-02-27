@@ -1,0 +1,54 @@
+# RealSimGear GFC 500 Autopilot Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear GFC 500 is a replica bezel for the Garmin GFC 500
+# autopilot system — an affordable autopilot for piston aircraft.
+# Exposes AP mode selector buttons and the flight director knob as USB HID.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF260 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GFC 500 Autopilot Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF260   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF260 is a community estimate for the GFC 500 autopilot trainer.
+      RealSimGear uses VID 0x04D8 (Microchip); confirm PID with lsusb.
+  - id: AUTOPILOT_BUTTONS
+    description: >
+      AP, HDG, NAV, APR, VS, ALT, and FLC mode buttons map to standard
+      Garmin autopilot commands. Bind each to the corresponding sim autopilot
+      event in the OpenFlight profile or MSFS/X-Plane input mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GFC 500 — Garmin GFC 500 autopilot replica bezel.
+    VID 0x04D8 / PID 0xF260 are community estimates. Last reviewed: 2026-06.

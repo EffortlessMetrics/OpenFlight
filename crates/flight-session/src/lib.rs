@@ -912,6 +912,7 @@ impl AircraftAutoSwitch {
             SimId::EliteDangerous => "elite",
             SimId::Ksp => "ksp",
             SimId::Wingman => "wingman",
+            SimId::Il2 => "il2",
             SimId::Unknown => "unknown",
         };
 
@@ -1955,10 +1956,18 @@ async fn test_metrics_tracking() {
     };
 
     auto_switch.on_aircraft_detected(aircraft).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(100)).await;
 
-    let updated_metrics = auto_switch.get_metrics().await;
-    assert!(updated_metrics.total_switches > initial_metrics.total_switches);
+    // Poll until metrics update (up to 1 second) to avoid timing flakiness.
+    let mut total_switches = 0u64;
+    for _ in 0..20 {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        total_switches = auto_switch.get_metrics().await.total_switches;
+        if total_switches > 0 {
+            break;
+        }
+    }
+
+    assert!(total_switches > 0, "total_switches should have incremented");
 }
 
 #[tokio::test]

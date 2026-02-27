@@ -8,10 +8,12 @@
 
 pub mod health;
 pub mod input;
+pub mod stecs_modern;
 
 pub use flight_hid_support::device_support::{
     VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_STECS_LEFT_SPACE_MINI_PID,
     VKB_STECS_LEFT_SPACE_MINI_PLUS_PID, VKB_STECS_LEFT_SPACE_STANDARD_PID,
+    VKB_STECS_MODERN_THROTTLE_MAX_PID, VKB_STECS_MODERN_THROTTLE_MINI_PID,
     VKB_STECS_RIGHT_SPACE_MINI_PID, VKB_STECS_RIGHT_SPACE_MINI_PLUS_PID,
     VKB_STECS_RIGHT_SPACE_STANDARD_PID, VKB_VENDOR_ID, VkbGladiatorInterfaceMetadata,
     VkbGladiatorVariant, VkbStecsInterfaceMetadata, VkbStecsVariant, is_vkb_gladiator_device,
@@ -26,4 +28,8 @@ pub use input::{
     GladiatorInputState, GladiatorParseError, HatDirection, STECS_BUTTONS_PER_VIRTUAL_CONTROLLER,
     STECS_MAX_BUTTONS, STECS_MAX_VIRTUAL_CONTROLLERS, StecsAxes, StecsInputAggregator,
     StecsInputHandler, StecsInputState, StecsInterfaceState, StecsParseError,
+};
+pub use stecs_modern::{
+    StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
+    VkcStecsMtAxes, VkcStecsMtButtons, VkcStecsMtInputState, parse_stecs_mt_report,
 };

@@ -1,0 +1,41 @@
+# Saitek P380 USB Gamepad v2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x000A — variant of the P380 gamepad.
+schema_version: "1"
+
+device:
+  name: "Saitek P380 USB Gamepad v2"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x000A
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Budget USB gamepad variant. PID 0x000A from USB databases.
+    Last reviewed: 2026-06.

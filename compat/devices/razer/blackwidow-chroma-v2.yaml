@@ -1,0 +1,56 @@
+# Razer BlackWidow Chroma V2 Keyboard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 confirmed: Razer Inc.
+# PID 0x0221 sourced from Razer device listing and community USB captures
+# for the BlackWidow Chroma V2 mechanical gaming keyboard.
+# The BlackWidow Chroma V2 features 5 dedicated macro keys on the left side
+# and an ergonomic wrist rest. Macro keys are used by some flight sim pilots
+# for cockpit panel shortcuts and radio frequency management.
+schema_version: "1"
+
+device:
+  name: "Razer BlackWidow Chroma V2 Keyboard"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532    # Razer Inc. (confirmed)
+    product_id: 0x0221   # BlackWidow Chroma V2 — community USB capture
+  hid:
+    usage_page: 0x01
+    usage: 0x06          # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 5
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: MACRO_KEYS_ONLY
+    description: >
+      OpenFlight binds to the 5 dedicated macro keys (M1–M5) on the left
+      edge. Full keyboard input is handled by the OS; only macro key HID
+      reports are intercepted by OpenFlight for cockpit panel control.
+  - id: RAZER_SYNAPSE_CONFLICT
+    description: >
+      Razer Synapse may intercept macro key events before OpenFlight.
+      Disable Synapse macro assignment for M1–M5 or use OpenFlight's
+      Synapse passthrough mode to avoid double-firing.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer BlackWidow Chroma V2 — 5 macro keys for cockpit shortcuts.
+    VID 0x1532 confirmed; PID 0x0221 from community captures.
+    Last reviewed: 2026-06.

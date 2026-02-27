@@ -1,0 +1,48 @@
+# VKB SEM Throttle Control System Mini
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB). PID 0x020D — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "VKB SEM Throttle Control System Mini"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB
+    product_id: 0x020D      # Community estimate — STECS Mini
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, slider]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. VKB STECS Mini compact throttle. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB STECS Mini — compact single-lever throttle with slider. PID 0x020D community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs
+  - xplane

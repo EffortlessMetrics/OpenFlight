@@ -1,0 +1,54 @@
+# CPFlight MCDU Pro (Boeing 737 Multi-Purpose Control and Display Unit)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight MCDU Pro replicates the Boeing 737 NG FMC keyboard interface with
+# a full alphanumeric keypad and scratchpad display. Used with PMDG 737 in
+# MSFS and X-Plane for realistic FMC data entry.
+# VID/PID unconfirmed — same CPFlight USB hardware platform as mcp-pro.yaml.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight MCDU Pro Boeing 737 FMC Keyboard"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0DC3       # Placeholder — community estimate
+    product_id: 0x0801      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 65               # Full FMC keypad: alpha, numeric, function, LSK 1-6 per side
+  hats: 0
+  force_feedback: false
+  display:
+    type: lcd_character
+    digits: 14              # Scratchpad display line
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. Same CPFlight USB platform as MCP Pro.
+      Verify with USBView on real hardware.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      May use CPFlight proprietary serial-over-USB; see mcp-pro.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight MCDU Pro — Boeing 737 FMC keyboard replica. VID/PID unconfirmed.
+    Requires CPFlight adapter for full FMC integration. Last reviewed: 2026-06.

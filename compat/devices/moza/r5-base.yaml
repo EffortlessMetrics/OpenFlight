@@ -1,0 +1,64 @@
+# Moza R5 Direct Drive Racing/Sim Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology, shared by all Moza products).
+# PID is community-estimated. The Moza R5 is an entry-level direct-drive
+# FFB base designed primarily for sim racing; occasionally used in combined
+# race+flight sim setups with joystick grip adapters.
+schema_version: "1"
+
+device:
+  name: "Moza R5 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology)
+    product_id: 0x0009    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 5.5    # R5 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0009 is a community estimate following the Moza PID sequence
+      (AB9 = 0x0005, AB12 series). Confirm from lsusb capture.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R5 accepts raw torque commands (report ID 0x20) rather than
+      DirectInput effect types. OpenFlight synthesises the desired effect
+      waveform and sends the result as a torque value. Same protocol as
+      the Moza AB series.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R5 base exposes only the rotation axis. A flight grip adapter or
+      steering wheel is required for full input. When used for flight, map
+      the rotation axis to the primary control axis in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R5: entry-level direct-drive base (5.5 Nm). Primarily a racing base
+    but usable in combined race+flight setups with a grip adapter. PID 0x0009
+    community-estimated. VID 0x346E = Moza (Gudsen Technology).
+    Last reviewed: 2026-02.

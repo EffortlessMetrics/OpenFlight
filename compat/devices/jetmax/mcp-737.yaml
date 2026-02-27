@@ -1,0 +1,57 @@
+# JetMax Boeing 737 MCP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Budget B737 Mode Control Panel (MCP/FCU) replica from JetMax.
+# Connects via USB HID or CDC; exact VID/PID vary by batch.
+schema_version: "1"
+
+device:
+  name: "JetMax Boeing 737 MCP Panel"
+  vendor: "JetMax"
+  usb:
+    vendor_id: 0x1A86   # Placeholder — CH340 USB-Serial (VID_UNCONFIRMED)
+    product_id: 0x7522  # Placeholder — PID_UNCONFIRMED; varies by batch
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard (panel buttons + encoders)
+
+capabilities:
+  axes:
+    count: 5
+    names: [course_l, course_r, heading, altitude, vertical_speed]
+    resolution_bits: 12   # Encoder pulse counts accumulated on-device
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 15
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x1A86 / PID 0x7522 is a CH340 placeholder; verify against actual device."
+  - id: ENCODER_RELATIVE
+    description: >
+      Rotary encoders (heading, altitude, VS, course L/R) report relative
+      pulse counts, not absolute positions. The host must accumulate and
+      clamp encoder values. Some firmware versions report encoders as
+      keyboard HID events rather than analog axes.
+  - id: ANNUNCIATOR_OUTPUT_UNSUPPORTED
+    description: >
+      The MCP panel has LED annunciators (AT, FD, APP, etc.) but the USB
+      firmware may not support HID output reports for LED control on all
+      firmware versions. LED state may only be set via proprietary serial
+      commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Budget B737 MCP panel. VID/PID require field verification. Encoder
+    reporting mode (axis vs. keyboard) varies between firmware versions.
+    No public USB descriptor documentation available.
+    Last reviewed: 2026-02.

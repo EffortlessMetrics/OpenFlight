@@ -1,0 +1,14 @@
+{
+  "schema": "flight.profile/1",
+  "sim": null,
+  "aircraft": null,
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "expo": 0.1,
+      "slew_rate": 5.0,
+      "detents": []
+    }
+  },
+  "pof_overrides": null
+}

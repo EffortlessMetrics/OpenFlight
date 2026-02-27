@@ -1,0 +1,61 @@
+# VIRPIL VPC Delta R Right-Hand Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VIRPIL VPC Delta R is a right-hand throttle unit designed to complement
+# the VPC Delta L panel or as a standalone single-engine throttle for right-hand
+# operation. Distinct from the CM3 twin-throttle (cm3-throttle.yaml).
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0210 is a community estimate — confirm with VIRPIL VPC Config Tool.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Delta R Right-Hand Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0210      # Community estimate — Delta R throttle
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, flap, slider_l, slider_r]
+    resolution_bits: 14
+  buttons: 42
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(8) + buttons_lsb(6)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0210 is a community estimate. Confirm with VIRPIL VPC Config Tool
+      or lsusb. Adjacent to VPC Delta L panel (0x020F est).
+  - id: RIGHT_HAND_LAYOUT
+    description: >
+      Delta R is optimised for right-hand (single throttle) operation.
+      Button labels and layout differ from the CM3 and Mongoost throttles.
+      The flap axis is a detented lever; map to discrete flap settings.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Delta R — single right-hand throttle. VID 0x3344 confirmed; PID 0x0210 est.
+    For twin-engine throttle see cm3-throttle.yaml. For full CM3 package see
+    vpc-mongoost-50cm3-throttle.yaml.
+    Last reviewed: 2026-06.

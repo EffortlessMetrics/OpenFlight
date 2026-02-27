@@ -1,0 +1,63 @@
+# Nintendo Switch Joy-Con L
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x057E (Nintendo Co., Ltd.) confirmed.
+# PID 0x2006 confirmed: Linux kernel drivers/hid/hid-nintendo.c,
+#   "Nintendo Switch Joy-Con (L)" (hid_device_id table).
+# The Joy-Con L provides a left analog stick, ZL/L shoulder buttons, and
+# directional pad over Bluetooth or, with an adapter, USB. Occasionally
+# used in casual MSFS/X-Plane setups as a secondary input device.
+
+schema_version: "1"
+
+device:
+  name: "Nintendo Switch Joy-Con (L)"
+  vendor: "Nintendo Co., Ltd."
+  usb:
+    vendor_id: 0x057E    # Nintendo Co., Ltd. (confirmed)
+    product_id: 0x2006   # Joy-Con (L) — confirmed from Linux kernel hid-nintendo.c
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 2
+    names: [left_x, left_y]
+    resolution_bits: 12
+  buttons: 11             # L, ZL, Minus, Capture, SL, SR, up, down, left, right, stick
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [rumble_hd]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: BLUETOOTH_PRIMARY
+    description: >
+      The Joy-Con (L) connects primarily over Bluetooth. USB enumeration
+      at VID/PID 0x057E:0x2006 occurs only when used with an adapter or
+      via the Nintendo Switch dock in wired mode.
+  - id: HD_RUMBLE
+    description: >
+      Joy-Con HD Rumble (linear resonant actuators) uses Nintendo's proprietary
+      vibration protocol, not standard DirectInput FFB. Requires the
+      joy-con-driver (hid-nintendo kernel module or libhidapi) for support.
+  - id: SIDEWAYS_HOLD_MODE
+    description: >
+      When held sideways solo, the Joy-Con L uses its side buttons as a
+      virtual d-pad and shoulder as A/B. HID report layout changes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo Switch Joy-Con (L). VID 0x057E / PID 0x2006 confirmed from Linux
+    kernel hid-nintendo.c. Bluetooth input only under typical use. Last reviewed: 2026-06.

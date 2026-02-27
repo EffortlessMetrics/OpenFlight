@@ -1,10 +1,13 @@
 ---
-doc_id: REF-KSP-MAPPING
+doc_id: DOC-REF-KSP-MAPPING
 kind: reference
 area: ksp
-status: current
+status: active
 links:
-  - REQ-41
+  requirements:
+    - REQ-41
+  tasks: []
+  adrs: []
 ---
 
 # KSP kRPC → BusSnapshot Mapping

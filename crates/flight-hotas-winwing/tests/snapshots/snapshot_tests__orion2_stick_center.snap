@@ -1,0 +1,15 @@
+---
+source: crates/flight-hotas-winwing/tests/snapshot_tests.rs
+expression: state
+---
+Orion2StickInputState {
+    axes: Orion2StickAxes {
+        roll: 0.0,
+        pitch: 0.0,
+    },
+    buttons: Orion2StickButtons {
+        mask: 0,
+        hat_a: 15,
+        hat_b: 15,
+    },
+}

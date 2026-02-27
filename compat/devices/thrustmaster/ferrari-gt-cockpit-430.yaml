@@ -1,0 +1,63 @@
+# Thrustmaster Ferrari GT Cockpit 430 Scuderia Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot. PID 0xB651 is from the
+# SDL2 GameControllerDB community database. The Ferrari GT Cockpit 430
+# Scuderia Edition was a mid-range belt-drive FFB wheel released circa
+# 2009–2013, officially licensed by Ferrari. 270° rotation, metal paddle
+# shifters, and an integrated LCD display.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Ferrari GT Cockpit 430 Scuderia Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot (confirmed)
+    product_id: 0xB651      # Community estimate — SDL2 GameControllerDB
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 200
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB651 is from the SDL2 GameControllerDB community database.
+      No independent linux-hardware.org hardware probe is available.
+      Verify with lsusb on real hardware.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (270°, 12-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Map X to rudder in flight sim profiles.
+  - id: LCD_DISPLAY
+    description: >
+      The 430 Scuderia Edition includes a small LCD for RPM/gear display.
+      The display is driven by the Thrustmaster driver on Windows; no
+      OpenFlight integration is available for the LCD.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Ferrari GT Cockpit 430 Scuderia (circa 2009–2013). VID 0x044F
+    confirmed; PID 0xB651 from SDL2 community database. Mid-range FFB wheel
+    with Ferrari licensing. Last reviewed: 2026-06.

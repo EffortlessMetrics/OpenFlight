@@ -1,0 +1,63 @@
+# Wacom Intuos Pro M Graphics Tablet
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x056A confirmed: Wacom Co., Ltd. (registered USB vendor ID).
+# PID 0x0357 sourced from community USB device databases and linux kernel
+# wacom driver (drivers/hid/wacom_wac.c) for the Intuos Pro Medium tablet.
+# The Intuos Pro M features an active stylus with tilt sensing, a touch-
+# sensitive surface, and 8 customizable ExpressKeys + Touch Ring dial.
+# In flight sim the tablet surface is used as a 2-axis input device
+# (X/Y pen position), and the Touch Ring maps to heading/course knobs.
+schema_version: "1"
+
+device:
+  name: "Wacom Intuos Pro M"
+  vendor: "Wacom Co., Ltd."
+  type: other
+  usb:
+    vendor_id: 0x056A    # Wacom Co., Ltd. (confirmed)
+    product_id: 0x0357   # Intuos Pro M — community database / kernel driver
+  hid:
+    usage_page: 0x0D     # Digitizer
+    usage: 0x02          # Pen
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, pressure, tilt_x, tilt_y]
+    resolution_bits: 16
+  buttons: 9
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 133
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIGITIZER_HID
+    description: >
+      The Intuos Pro enumerates on HID usage page 0x0D (Digitizer), not
+      the standard joystick page. OpenFlight must use the digitizer input
+      subsystem. X/Y axes report pen position; map to aileron/elevator
+      for touch-based flight controls.
+  - id: TOUCH_RING_ENCODER
+    description: >
+      The Touch Ring sends HID reports as a relative encoder. Map to
+      heading or course knob in the OpenFlight MIDI/HID profile.
+      Supports 4 configurable modes switchable via the center button.
+  - id: WACOM_DRIVER_REQUIRED
+    description: >
+      Full axis resolution (16-bit) requires the Wacom tablet driver.
+      Without the driver, Windows may expose limited 8-bit HID reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Wacom Intuos Pro M — pen tablet as 2-axis input + Touch Ring encoder.
+    VID 0x056A confirmed; PID 0x0357 from kernel driver. Digitizer HID;
+    requires Wacom driver for full resolution. Last reviewed: 2026-06.

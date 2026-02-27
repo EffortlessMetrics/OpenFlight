@@ -1,0 +1,57 @@
+# WinWing SimApp Pro VSD (Vertical Situation Display) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBC40 — community estimate (SimApp Pro panel range 0xBC3x–0xBC4x).
+# The SimApp Pro VSD replicates the F/A-18C Vertical Situation Display
+# bezel controls: mode selector, range, and declutter buttons.
+# Pairs with other SimApp Pro panels (FCU, EFIS) for airliner cockpit builds.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimApp Pro VSD Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBC40    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBC40 is a community estimate in the SimApp Pro panel PID range.
+      Existing SimApp Pro panels (FCU, EFIS L/R) use 0xBC3x PIDs.
+      Confirm with lsusb on real hardware before deployment.
+  - id: SIMAPP_PANEL_FAMILY
+    description: >
+      The SimApp Pro VSD is part of the WinWing SimApp Pro panel ecosystem.
+      All SimApp Pro panels enumerate as individual USB HID devices and can
+      be used in any combination.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro VSD (Vertical Situation Display) bezel panel.
+    Companion to simapp-pro-fcu.yaml, simapp-pro-fcu-efis-l.yaml, and
+    simapp-pro-fcu-efis-r.yaml. PID 0xBC40 is a community estimate.
+    Last reviewed: 2026-02.

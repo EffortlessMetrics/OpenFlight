@@ -1,0 +1,63 @@
+# Thrustmaster T248 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB696 sourced from SDL2 gamecontrollerdb
+# and community USB captures. The T248 (released 2022) is Thrustmaster's
+# hybrid racing wheel with a magnetic paddock and HYBRID DRIVE (belt + gear
+# motor). Available in T248 PC/PS4/PS5 and T248X (Xbox) editions; both
+# enumerate with PID 0xB696 on USB.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T248 Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB696      # Community-confirmed from SDL2 + USB captures
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 25
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (900° range); Z = accelerator; Rz = brake.
+      Rx/Ry are clutch and handbrake on the T3PM pedal set (optional add-on).
+  - id: HYBRID_DRIVE_FFB
+    description: >
+      The T248 uses Thrustmaster HYBRID DRIVE — a combination of belt drive
+      and helical gear motor. This provides stronger peak force than the T150
+      but less refinement than the T300 RS servo. FFB works correctly via
+      DirectInput / SDL_HAPTIC on Windows and Linux.
+  - id: MAGNETIC_PADDLE_SHIFTERS
+    description: >
+      T248 uses contactless magnetic paddle shifters rather than micro-
+      switches. This affects the paddle-click button bounce characteristics
+      vs earlier Thrustmaster wheels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T248 hybrid-drive FFB wheel (2022). VID 0x044F confirmed;
+    PID 0xB696 community-confirmed from SDL2 and USB captures. Used in
+    flight sim for rudder axis with FFB centering force. Last reviewed: 2026-06.

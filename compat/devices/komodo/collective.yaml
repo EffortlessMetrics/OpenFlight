@@ -1,0 +1,54 @@
+# Komodo Sim Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1234 and PID 0x5001 are placeholder estimates; Komodo Sim uses
+# custom USB HID firmware and specific IDs are unconfirmed from public sources.
+# The Komodo Sim Collective is a professional-grade helicopter collective
+# controller with a realistic friction system and throttle twist grip.
+schema_version: "1"
+
+device:
+  name: "Komodo Sim Collective"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x1234       # Placeholder — VID_UNCONFIRMED for Komodo Sim
+    product_id: 0x5001      # Placeholder — PID_UNCONFIRMED; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, slider]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x1234 and PID 0x5001 are placeholder estimates. Komodo Sim uses
+      custom HID firmware; specific identifiers are not confirmed from public
+      USB ID databases. Confirm with lsusb before deploying profiles.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Collective axis is unipolar (0 = full down, max = full up).
+      The twist grip maps to engine throttle. No spring return — collective
+      rests at its physical position. Map with unipolar [0, 1] curve.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim Collective — professional helicopter collective controller.
+    VID/PID are unconfirmed placeholders; update when hardware USB descriptor
+    is captured. Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Thrustmaster T.Flight Stick 4 (standalone PS4/PC joystick)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster/ThrustMaster Inc.).
+# PID 0xB108 is a community estimate for the standalone T.Flight Stick 4.
+# The T.Flight Stick 4 is the standalone joystick component for PS4/PC;
+# it is distinct from the T.Flight HOTAS 4 combo (PID 0xB67B) which includes
+# a separate throttle unit. The standalone stick may share the HOTAS 4 PID
+# or have its own — confirm with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Stick 4"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # Thrustmaster (ThrustMaster Inc.)
+    product_id: 0xB108    # Community estimate — may match HOTAS 4 PID; confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB108 is a community estimate for the standalone T.Flight Stick 4.
+      The standalone stick may enumerate under the same PID as the HOTAS 4
+      combo (0xB67B/0xB67C) or under a distinct PID. Confirm with lsusb before
+      enabling production matching. See also tflight-hotas4.yaml.
+  - id: STANDALONE_STICK_NO_THROTTLE
+    description: >
+      The T.Flight Stick 4 is sold as a standalone joystick without a separate
+      throttle unit. It differs from the T.Flight HOTAS 4 (which bundles a
+      throttle). Some variants may share a PID with the HOTAS 4 stick component.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip (Rz axis) provides rudder control. The Z axis is a throttle
+      mini-lever on the grip; slider is an additional control on the base.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Standalone PS4/PC joystick from the T.Flight line. PID 0xB108 is unconfirmed.
+    The T.Flight HOTAS 4 combo (tflight-hotas4.yaml, PID 0xB67B) is the related
+    full HOTAS set. Verify PID distinction on hardware before relying on this manifest.
+    Last reviewed: 2026-02.

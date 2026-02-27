@@ -1,0 +1,59 @@
+# Generic Chinese OEM HOTAS (Joystick Gamer / No-Brand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# A broad class of low-cost HOTAS sets sold under various Chinese OEM brand
+# names (Joystick Gamer, Thrustfighter, TCA clone, various unbranded sets on
+# AliExpress/Amazon). These typically share identical USB firmware with VID
+# 0x0079 (DragonRise Inc.) or 0x2563, and enumerate as basic HID joysticks
+# with 8-bit axes and button arrays.
+
+schema_version: "1"
+
+device:
+  name: "Generic Chinese OEM HOTAS (DragonRise / No-Brand)"
+  vendor: "Generic OEM"
+  usb:
+    vendor_id: 0x0079       # DragonRise Inc. — common OEM USB VID for Chinese peripherals
+    product_id: 0x0006      # Generic HOTAS / Joystick (community estimate, DragonRise range)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, throttle]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_VARIES
+    description: >
+      Chinese OEM HOTAS sets use many different PIDs within the DragonRise
+      (0x0079) range. PID 0x0006 is a common joystick PID; throttle units
+      in the same set often use 0x0011. Match by axis/button count.
+  - id: LOW_RESOLUTION_AXES
+    description: >
+      8-bit axes require larger deadzones and smoothing curves to be usable
+      in flight simulation. Apply aggressive curve filtering in profile.
+  - id: SHARED_VID_MULTIPLE_DEVICES
+    description: >
+      Many unrelated devices share DragonRise VID 0x0079. Differentiate by
+      product string or USB address when multiple devices are connected.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Chinese OEM HOTAS — best-effort support for DragonRise-based
+    entry-level joystick/throttle sets. Low-resolution axes require profile tuning.
+    Last reviewed: 2026-06.

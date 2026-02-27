@@ -1,0 +1,51 @@
+# Sismo Soluciones Boeing 737 EFIS Captain Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Sismo EFIS Captain side panel replicates the Boeing 737 NG EFIS control
+# panel for the captain (left seat) position. Provides BARO setting,
+# ND mode/range selectors, and FD/CTRINC/VORILS pushbuttons.
+# VID 0x04D8 / PID 0xF5D1: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones Boeing 737 EFIS Captain"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF5D1      # Community estimate — Sismo EFIS captain
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro, minimums]
+    resolution_bits: 8
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF5D1 is a community estimate. Confirm with Sismo SIOC documentation.
+  - id: SISMO_SIOC_PROTOCOL
+    description: >
+      Typically driven via SIOC. OpenFlight reads EFIS inputs via HID path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo EFIS captain panel. VID 0x04D8 / PID 0xF5D1 est.
+    See sismo-efis-fo.yaml for first officer side; sismo-b737-mcp.yaml for MCP.
+    Last reviewed: 2026-06.

@@ -1,0 +1,40 @@
+# VIRPIL VPC Shark Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# PID confirmed: Buzzec/virpil open-source Rust LED control library
+# (src/shark_panel.rs, `const PID: u16 = 0x825D`)
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Shark Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x825D
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [right_outer, right_inner, left_inner, left_outer]
+    resolution_bits: 14
+  buttons: 45
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x825D confirmed from Buzzec/virpil Rust LED library (src/shark_panel.rs).
+    Panel has 4 throttle-style axes (RightOuter, RightInner, LeftInner, LeftOuter)
+    and 45 buttons including encoders and guarded switches.
+    Last validated: 2026-02.

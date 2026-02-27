@@ -1,0 +1,59 @@
+# Logitech Freedom 2.4 Cordless Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID 0xC214 is documented in community USB ID
+# databases for the Freedom 2.4 wireless receiver dongle. The Freedom 2.4
+# was a 2.4 GHz cordless joystick sold circa 2003–2006 and was popular for
+# MSFS and IL-2 Sturmovik. PID confirmed via usb.ids community project.
+schema_version: "1"
+
+device:
+  name: "Logitech Freedom 2.4 Cordless Joystick"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc.
+    product_id: 0xC214      # USB wireless receiver; from usb.ids community database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100    # Wireless polling, slightly lower than wired
+  max_jitter_ms: 6         # Additional wireless latency / retransmit jitter
+
+quirks:
+  - id: WIRELESS_RECEIVER
+    description: >
+      The USB HID device is a 2.4 GHz wireless dongle, not the joystick
+      itself. Latency is slightly higher than wired devices; the polling
+      rate is capped at 100 Hz by the RF link. Battery state is not
+      exposed via USB HID.
+  - id: LEGACY_10BIT_AXES
+    description: >
+      Axes are 10-bit resolution. Apply light smoothing if the wireless
+      link introduces additional jitter on the analogue values.
+  - id: THROTTLE_NOT_CENTERED
+    description: >
+      The Z axis (throttle lever) is unipolar (0 = idle). Profile should
+      map [0, 1] range.
+
+support:
+  tier: 3            # Legacy wireless device; no simulated or HIL coverage
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Freedom 2.4 Cordless Joystick (circa 2003–2006). 2.4 GHz
+    wireless receiver reports as a standard USB HID joystick. PID 0xC214
+    from usb.ids community database. Legacy device; firmware updates not
+    available. Last reviewed: 2026-02.

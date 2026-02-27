@@ -1,0 +1,56 @@
+# Saitek AV8R-01 Joystick (helicopter / VTOL style)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek), PID 0x0460 — community-reported.
+# The AV8R-01 is a specialty helicopter/VTOL joystick with a distinctive
+# rotor-collective style handle design.
+# Not confirmed from linux-hardware.org probe database.
+
+schema_version: "1"
+
+device:
+  name: "Saitek AV8R-01 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0460      # Community-reported; verify against hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0460 is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: ROTOR_COLLECTIVE_AXIS
+    description: >
+      The Z axis on the AV8R-01 is a twist-grip style axis suited to rotor
+      collective / throttle input in helicopter simulation. The grip shape
+      differs from standard fighter joysticks.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek AV8R-01: specialty helicopter and VTOL joystick with distinctive
+    dual-twist grip design. Suited to DCS Ka-50, Mi-8, and similar rotary-wing
+    aircraft. PID 0x0460 is community-reported — confirm with lsusb before deployment.
+    Last reviewed: 2026-02.

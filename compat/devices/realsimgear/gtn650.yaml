@@ -1,0 +1,59 @@
+# RealSimGear GTN 650 Touchscreen Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology Inc. — used by RealSimGear firmware).
+# PID 0xF240 — community estimate for GTN 650 bezel.
+# The RealSimGear GTN 650 replicates the Garmin GTN 650 integrated
+# GPS/Nav/Com touchscreen bezel controls: the outer/inner large/small
+# knobs, direct-to, flight plan, and procedure buttons. Pairs with the
+# GTN 750 bezel (gtn750.yaml) for dual-stack Garmin avionics setups.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTN 650 Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF240    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 32
+  hats: 0
+  encoders: 3             # Outer/inner COM + outer/inner NAV + outer/inner selector
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF240 is a community estimate for the GTN 650. RealSimGear uses
+      Microchip VID 0x04D8. GNS430 uses 0xF230; GTN 650 is estimated in the
+      0xF24x range. Confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary knobs (outer/inner tuning for COM and NAV) encode as
+      button-press events (increment/decrement), not analogue axes.
+  - id: PAIRS_WITH_GTN750
+    description: >
+      The GTN 650 is commonly used alongside the GTN 750 (gtn750.yaml)
+      as a dual-stack avionics setup in complex GA cockpits.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTN 650 Garmin replica bezel. PID 0xF240 is a community
+    estimate. All controls are HID buttons/encoders; no analogue axes.
+    Companion to gtn750.yaml. Last reviewed: 2026-02.

@@ -1,0 +1,42 @@
+# VIRPIL VPC WarBRD-D Base (Alt PID 0x01CD)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x01CD is a community estimate for an alternate WarBRD-D base variant.
+# Known WarBRD-D variants: 0x8101 (vpc-warbrd-d.yaml), 0x0173 (vpc-warbrd-d-0173.yaml),
+# 0x43F5 (warbrd-base.yaml). 0x01CD may correspond to a firmware revision.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC WarBRD-D Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB (confirmed)
+    product_id: 0x01CD      # Community estimate — WarBRD-D alt variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 14
+  buttons: 2
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x01CD is a community estimate. Primary WarBRD-D variants use
+      0x8101, 0x0173, and 0x43F5. Confirm with VIRPIL Configurator or lsusb.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-D Base — PID 0x01CD (est). Desktop spring/cam joystick base.
+    Accepts all VPC grips. Wave-55 addition. Last reviewed: 2026-07.

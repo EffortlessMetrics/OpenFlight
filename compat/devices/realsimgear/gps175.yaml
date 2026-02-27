@@ -1,0 +1,56 @@
+# RealSimGear GPS 175 Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed: RealSimGear (Microchip Technology licensed VID).
+# PID 0xF260 is a community estimate for the GPS 175 navigator bezel.
+# The Garmin GPS 175 is a WAAS-certified GPS navigator for GA aircraft.
+# The RealSimGear bezel replicates the front panel with DIRECT/PROC/FPL
+# page keys and inner/outer concentric knob encoders.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GPS 175 Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF260   # Community estimate — GPS 175
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  encoders: 2            # Inner and outer concentric knobs (large/small)
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF260 is a community estimate for the GPS 175 bezel. GNS 430 uses
+      0xF204 (see gns430.yaml). Confirm with lsusb on real hardware.
+  - id: ENCODER_DUAL_CONCENTRIC
+    description: >
+      The GPS 175 bezel has inner+outer concentric knobs for waypoint/page
+      selection. Each knob reports independent encoder increment/decrement events.
+      OpenFlight maps these to GPS cursor and page navigation commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GPS 175 Bezel — Garmin GPS 175 navigator replica panel.
+    VID 0x04D8 confirmed; PID 0xF260 is a community estimate.
+    Used for WAAS navigation in GA flight sim cockpits. Last reviewed: 2026-06.

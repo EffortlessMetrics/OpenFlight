@@ -1,0 +1,64 @@
+# DIY Load Cell Rudder Pedals (Arduino/RP2040)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Load cell rudder pedals use strain gauge (load cell) sensors for toe brake
+# and rudder axis measurement, providing higher precision than potentiometers.
+# Popular DIY builds use Arduino Pro Micro, RP2040, or STM32 microcontrollers
+# with HX711 or INA125 load cell amplifiers and present as USB HID joysticks.
+# VID/PID are firmware-dependent; no fixed identifiers.
+
+schema_version: "1"
+
+device:
+  name: "DIY Load Cell Rudder Pedals"
+  vendor: "Community DIY"
+  usb:
+    vendor_id: 0x1209   # pid.codes open-source VID (common for DIY HID)
+    product_id: 0x0000  # Firmware-defined — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      Load cell pedal DIY builds use various VIDs. VID 0x1209 (pid.codes
+      open-source VID) is common for openly published HID firmware.
+      Arduino VID 0x2341, STM32 VID 0x0483, and RP2040 VID 0x2E8A are
+      also widely used. Match by USB product string (e.g., "LoadCell Pedals").
+  - id: LOAD_CELL_CALIBRATION
+    description: >
+      Load cell outputs require per-unit calibration for linearity and
+      zero-offset. Calibrate axes in OpenFlight before use in profiles.
+  - id: HIGH_RESOLUTION
+    description: >
+      Load cells with 24-bit ADC (HX711) can provide 16-bit effective
+      resolution. Configure axis sensitivity carefully to avoid noise amplification.
+  - id: DIY_HARDWARE
+    description: >
+      Build quality, max load, and mechanical travel vary by implementation.
+      Popular designs: DIY-Sim-Racing-FFB-Pedal, OpenFFBoard Pedals, RP2040 builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic DIY load cell rudder pedals. VID/PID firmware-dependent.
+    High-resolution pedals for precise rudder and toe brake control.
+    Last reviewed: 2026-06.

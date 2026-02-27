@@ -1,0 +1,58 @@
+# VIRPIL VPC WarBRD-D Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x8101 is a community estimate for the VPC WarBRD-D (dual-centering
+# spring) base. The WarBRD-D variant adds a second centering spring for
+# a firmer centre feel; it is mechanically different from the standard
+# WarBRD Base (warbrd-base.yaml) and may have a distinct PID.
+# Confirm via lsusb or VIRPIL Configurator before production deployment.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC WarBRD-D Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344    # VIRPIL Controls UAB
+    product_id: 0x8101   # Community estimate — confirm via lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]        # Gimbal provides X/Y only; Z comes from attached grip
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8101 is a community estimate for the WarBRD-D variant.
+      The standard WarBRD base uses a different PID (warbrd-base.yaml).
+      Confirm via lsusb before production deployment.
+  - id: BASE_ONLY_AXES
+    description: >
+      The WarBRD-D base itself provides only X and Y gimbal axes.
+      Additional axes (Z, buttons, hats) come from the attached grip
+      which enumerates as a separate USB HID device.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: "Spring preload and cam profile configurable via VIRPIL Configurator."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-D (dual-centering spring base). PID 0x8101 unconfirmed.
+    Distinct from the standard WarBRD Base (warbrd-base.yaml).
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-06.

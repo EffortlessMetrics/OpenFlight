@@ -1,0 +1,55 @@
+# NaturalPoint TrackClip Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D (NaturalPoint Inc.). PID 0x015A is a community estimate for the
+# TrackClip Pro LED clip assembly. The TrackClip Pro does not enumerate as an
+# independent joystick or input device; it is part of the TrackIR optical
+# system and is powered via the headset cable.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackClip Pro"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc.
+    product_id: 0x015A   # Community estimate -- TrackClip Pro
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: NOT_A_JOYSTICK
+    description: >
+      The TrackClip Pro is an LED clip assembly for the TrackIR camera system.
+      It does not enumerate as a joystick or input device independently. The
+      host TrackIR camera (trackir-5.yaml or trackir-4-pro.yaml) provides the
+      HID input.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x015A is a community estimate. The TrackClip Pro may not enumerate
+      as a USB device at all; it is typically powered directly via the TrackIR
+      camera unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackClip Pro. LED clip assembly for the TrackIR system.
+    Does not enumerate as a standalone HID input device. PID 0x015A is a
+    community estimate. Last reviewed: 2026-06.

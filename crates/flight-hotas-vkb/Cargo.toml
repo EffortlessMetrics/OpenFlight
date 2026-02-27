@@ -21,3 +21,7 @@ default = []
 [dependencies]
 flight-hid-support = { path = "../flight-hid-support" }
 thiserror.workspace = true
+
+[dev-dependencies]
+insta = { workspace = true }
+proptest = { workspace = true }

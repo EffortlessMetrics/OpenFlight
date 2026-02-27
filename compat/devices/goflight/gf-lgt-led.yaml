@@ -1,0 +1,50 @@
+# GoFlight GF-LGT-LED Overhead Panel (estimated VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0006 — both estimated. GoFlight's confirmed VID is 0x0E9F
+# with PID 0x0006 (see gf-lgt.yaml). This entry covers an alternate enumeration.
+# LED-equipped overhead panel variant with gear lever and annunciators.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-LGT-LED Overhead Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — GoFlight alt; confirmed VID is 0x0E9F
+    product_id: 0x0006      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  force_feedback: false
+  display:
+    type: led_array
+    digits: 8
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0006 are community estimates. GoFlight's confirmed
+      VID is 0x0E9F with the same PID 0x0006. See goflight/gf-lgt.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-LGT-LED Overhead Panel — LED variant, alt VID 0x1551 (est).
+    Last reviewed: 2026-06.

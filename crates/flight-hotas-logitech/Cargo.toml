@@ -1,0 +1,27 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-logitech"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Logitech Extreme 3D Pro and related joystick driver for OpenFlight."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "logitech", "joystick", "extreme3dpro"]
+categories = ["hardware-support"]
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+flight-hid-support = { path = "../flight-hid-support" }
+
+[dev-dependencies]
+insta = { workspace = true }
+proptest = { workspace = true }

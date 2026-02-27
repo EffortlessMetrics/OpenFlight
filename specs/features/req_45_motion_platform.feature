@@ -28,12 +28,14 @@ Feature: REQ-45 Motion Platform 6DOF Support
   # ── AC-45.2 SimTools UDP format ─────────────────────────────────────────────
 
   @unit @simtools
+  @AC-45.2
   Scenario: SimTools string format is correct
     Given a motion frame with surge=0.5, sway=-0.25, heave=1.0, roll=0.0, pitch=0.0, yaw=-0.5
     When the SimTools string is generated
     Then the output is "A50B-25C100D0E0F-50\n"
 
   @unit @simtools
+  @AC-45.2
   Scenario: Neutral frame produces all-zero SimTools string
     Given a neutral motion frame (all channels = 0.0)
     When the SimTools string is generated
@@ -42,18 +44,21 @@ Feature: REQ-45 Motion Platform 6DOF Support
   # ── AC-45.3 Washout filter — translational channels ─────────────────────────
 
   @unit @washout
+  @AC-45.3
   Scenario: High-pass filter passes acceleration onset cue
     Given a high-pass filter with corner frequency 0.5 Hz and sample dt 1/250 s
     When a step input of 1.0 is applied on the first tick
     Then the output is greater than 0.9
 
   @unit @washout
+  @AC-45.3
   Scenario: High-pass filter washes out sustained acceleration
     Given a high-pass filter with corner frequency 0.5 Hz and sample dt 1/60 s
     When 600 ticks of constant input 1.0 are applied
     Then the output is less than 0.02 in absolute value
 
   @unit @washout
+  @AC-45.1
   Scenario: Low-pass filter converges to steady-state input
     Given a low-pass filter with corner frequency 5.0 Hz and sample dt 1/250 s
     When 5000 ticks of constant input 1.0 are applied
@@ -62,18 +67,21 @@ Feature: REQ-45 Motion Platform 6DOF Support
   # ── AC-45.4 MotionMapper — BusSnapshot mapping ─────────────────────────────
 
   @integration @mapper
+  @AC-45.4
   Scenario: Neutral BusSnapshot washes out all channels
     Given a MotionMapper with default configuration at 60 Hz
     When 2000 ticks of a neutral BusSnapshot are processed
     Then all motion frame channels are within 0.01 of zero
 
   @integration @mapper
+  @AC-45.4
   Scenario: Zero intensity produces neutral output
     Given a MotionMapper with intensity = 0.0
     When any BusSnapshot is processed
     Then the output is a neutral motion frame
 
   @integration @mapper
+  @AC-45.7
   Scenario: Disabled channel always outputs zero
     Given a MotionMapper with the roll channel disabled
     When any BusSnapshot (including high bank angle) is processed
@@ -82,6 +90,7 @@ Feature: REQ-45 Motion Platform 6DOF Support
   # ── AC-45.5 SimTools UDP output ─────────────────────────────────────────────
 
   @integration @udp
+  @AC-45.5
   Scenario: SimToolsUdpOutput sends correctly formatted datagrams
     Given a local UDP listener on an ephemeral port
     And a SimToolsUdpOutput connected to that port
@@ -91,6 +100,7 @@ Feature: REQ-45 Motion Platform 6DOF Support
   # ── AC-45.6 Configuration ───────────────────────────────────────────────────
 
   @unit @config
+  @AC-45.6
   Scenario: Default MotionConfig has safe production values
     When the default MotionConfig is created
     Then intensity is 0.8
@@ -99,12 +109,14 @@ Feature: REQ-45 Motion Platform 6DOF Support
     And all channels are enabled with gain 1.0
 
   @unit @config
+  @AC-45.8
   Scenario: Per-channel gain scales output proportionally
     Given a MotionMapper with roll gain = 2.0 and intensity = 1.0
     When a sustained 15-degree bank angle is applied (half of max_angle_deg=30)
     Then the roll output converges to approximately 1.0 (clamped)
 
   @unit @config
+  @AC-45.9
   Scenario: Inverted channel flips sign
     Given a MotionMapper with the heave channel inverted
     When a positive g-force is applied

@@ -1,0 +1,54 @@
+# Thrustmaster VIPER MK.II Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Viper MK.II is Thrustmaster's premium F-16 Viper replica joystick,
+# designed to pair with the Viper TQS throttle (viper-tqs.yaml).
+# Features 16-bit hall-effect main-axis sensors and metal construction.
+# VID 0x044F confirmed: Thrustmaster.
+# PID 0xB689 is a community estimate — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster VIPER MK.II Flight Stick"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB689   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 16   # Hall-effect sensors
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB689 is a community estimate for the Viper MK.II stick. Confirm
+      with lsusb on real hardware. May differ from the Viper TQS throttle PID
+      (see viper-tqs.yaml).
+  - id: PAIRS_WITH_VIPER_TQS
+    description: >
+      Designed to pair with the Thrustmaster Viper TQS throttle (viper-tqs.yaml).
+      Both replicate the F-16 Viper HOTAS layout for DCS and MSFS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster VIPER MK.II — premium F-16 replica joystick with 16-bit hall sensors.
+    PID 0xB689 unconfirmed. Companion throttle: viper-tqs.yaml.
+    Last reviewed: 2026-06.

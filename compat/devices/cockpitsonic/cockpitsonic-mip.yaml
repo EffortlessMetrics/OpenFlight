@@ -1,0 +1,53 @@
+# CockpitSonic MIP (Main Instrument Panel) Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CockpitSonic MIP is a modular main instrument panel interface controller
+# for Boeing 737 NG cockpit replica builds. Provides button/switch interfacing
+# for the main instrument panel area (FD, AT, IAS/MACH, etc.).
+# VID 0x16C0 / PID 0x0600: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "CockpitSonic MIP Controller"
+  vendor: "CockpitSonic"
+  usb:
+    vendor_id: 0x16C0       # V-USB / community estimate for CockpitSonic
+    product_id: 0x0600      # Community estimate — MIP module
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x0600 are community estimates. Confirm with CockpitSonic
+      panel utility.
+  - id: LED_OUTPUTS
+    description: >
+      MIP module has captain and F/O annunciator LED outputs (AT arm, FD, speed
+      reference lights) driven via USB HID output reports from the sim adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CockpitSonic MIP controller. VID 0x16C0 / PID 0x0600 est.
+    For EFIS see cockpitsonic-efis.yaml; for autopilot see cockpitsonic-autopilot.yaml.
+    Last reviewed: 2026-06.

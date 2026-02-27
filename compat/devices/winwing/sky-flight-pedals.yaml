@@ -1,0 +1,56 @@
+# WinWing Sky Flight Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing Space Equipment Co., Ltd.
+# PID 0xB722 is a community estimate for the WinWing Sky Flight Pedals.
+# The Sky Flight Pedals are designed for helicopter and fixed-wing flight sim
+# use. Related WinWing pedal PIDs: TFRP Rudder = 0xBE64 (tfrp-rudder.yaml),
+# TFRP T-Rudder = 0xBE66, Skywalker Rudder = 0xBEF0.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Sky Flight Pedals"
+  vendor: "WinWing Space Equipment Co., Ltd."
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB722   # Community estimate — Sky Flight Pedals; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB722 is a community estimate for the WinWing Sky Flight Pedals.
+      Confirm with lsusb or WinWing SimApp Pro. Related WinWing pedal manifests:
+      tfrp-rudder.yaml (0xBE64), skywalker-rudder.yaml (0xBEF0).
+  - id: RUDDER_BIPOLAR_BRAKES_UNIPOLAR
+    description: >
+      Rudder axis is bipolar (centred). Left and right toe-brake axes are
+      unipolar (0 = released, max = fully pressed). Apply separate curve
+      profiles for rudder and brake axes in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Sky Flight Pedals. VID 0x4098 confirmed for WinWing.
+    PID 0xB722 community estimate. Designed for flight sim rudder and
+    toe-brake use. Last reviewed: 2026-07.

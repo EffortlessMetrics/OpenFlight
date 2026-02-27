@@ -1,0 +1,63 @@
+# 3Dconnexion SpaceNavigator
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed (3Dconnexion GmbH — registered USB vendor ID).
+# PID 0xC635 confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_3DCONNEXION_SPACENAVIGATOR),
+# spacenavd daemon (FreeSpacenav/spacenavd), and usb-ids.gowdy.us.
+# The SpaceNavigator is a 6-DOF (6 degrees of freedom) motion controller
+# providing X/Y/Z translation and Rx/Ry/Rz rotation axes. Used with MSFS
+# for camera control and cockpit navigation. Logitech-era variant uses 0x046D:0xC626.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceNavigator"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion GmbH
+    product_id: 0xC635  # SpaceNavigator — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      The SpaceNavigator provides 6 simultaneous degrees of freedom via a
+      spring-loaded puck: push/pull/slide for translation (Tx/Ty/Tz) and
+      tilt/twist for rotation (Rx/Ry/Rz). All axes are spring-centred.
+      Report format is two 3-axis packets per HID report.
+  - id: LOGITECH_ERA_VARIANT
+    description: >
+      The Logitech-branded SpaceNavigator (sold during Logitech's ownership of
+      3Dconnexion) uses VID 0x046D, PID 0xC626. See logitech/space-navigator.yaml.
+      The 3Dconnexion-independent era device (0x256F:0xC635) is this manifest.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      The SpaceNavigator is not a dedicated flight controller but is commonly
+      used with MSFS for free-camera and drone camera control. Map Tz to sim
+      elevation and Rx/Ry to camera pan/tilt for best results.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC635 confirmed from Linux kernel hid-ids.h, spacenavd daemon, and usb-ids.
+    6-DOF spring-centred puck controller. Used with MSFS camera/drone control.
+    Logitech-era variant (VID 0x046D, PID 0xC626) in logitech/space-navigator.yaml.
+    Last reviewed: 2026-02.

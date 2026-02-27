@@ -1,0 +1,58 @@
+# Thrustmaster TCA Boeing Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual combined-device entry for the Thrustmaster TCA Boeing Pack.
+# Bundles the TCA Yoke Boeing (yoke unit) and TCA Boeing Throttle Quadrant
+# as a matched set. Both devices enumerate independently on USB.
+# Component manifests:
+#   - tca-yoke-boeing.yaml     (TCA Yoke Boeing with trim/flap buttons)
+#   - tca-boeing-throttle.yaml (TCA Boeing Throttle Quadrant, 2 levers)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Boeing Pack (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~    # Virtual bundle — see component manifests
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6          # Combined: yoke (3 axes) + throttle quadrant (3 axes)
+    names: [x, y, z, throttle_l, throttle_r, spoiler]
+    resolution_bits: 12
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The TCA Boeing Pack bundles yoke and throttle quadrant as a single retail
+      SKU. Both enumerate as independent USB HID devices; OpenFlight merges
+      them via the combined-device binding in the active profile.
+  - id: YOKE_TWIST_AXIS
+    description: >
+      The TCA Yoke Boeing provides a twist (Z) axis for rudder trim, distinct
+      from a full rudder axis. Recommended to combine with t-rudder.yaml for
+      authentic Boeing rudder pedal simulation.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle for the Thrustmaster TCA Boeing Pack.
+    Components: tca-yoke-boeing.yaml + tca-boeing-throttle.yaml.
+    See also tca-captain-kit.yaml (Airbus equivalent).
+    Last reviewed: 2026-06.

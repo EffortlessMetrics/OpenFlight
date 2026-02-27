@@ -1,0 +1,54 @@
+# MFG Crosswind V4 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The MFG Crosswind V4 is the fourth generation of MFG's premium aluminium
+# rudder pedals, introducing magnetic hall-effect position sensors on all three
+# axes for improved durability and resolution compared to the V3 potentiometers.
+# VID 0x1551 confirmed: MFG (Motion Fantasy Games).
+# PID 0x0004 follows the sequential MFG pattern (V1=0x0001, V2=0x0002, V3=0x0003).
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V4 Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0004   # Community estimate (sequential V1=0x0001…V3=0x0003)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 16   # Hall-effect sensors
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0004 follows the MFG sequential allocation pattern. No hardware
+      probe has confirmed this value. May not follow the pattern if MFG changed
+      firmware for V4. Confirm with lsusb on real hardware.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      V4 replaced potentiometers with hall-effect magnetic sensors on all axes,
+      increasing resolution to 16-bit and eliminating wear-related drift.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V4 — hall-effect rudder pedals. VID 0x1551 = MFG.
+    PID 0x0004 is a community estimate. Predecessor: crosswind-v3.yaml.
+    Last reviewed: 2026-06.

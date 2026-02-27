@@ -1,0 +1,59 @@
+# Native Instruments Traktor Kontrol S2 MK3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x17CC confirmed: Native Instruments GmbH (registered USB vendor ID).
+# PID 0x1710 sourced from community USB captures and linux-hardware.org
+# entries for the Traktor Kontrol S2 MK3 DJ controller.
+# The S2 MK3 is a 2-deck Traktor-centric controller with 16 RGB pads per deck,
+# two large jog wheels, channel faders, EQ, and transport controls.
+# Repurposed in flight sim as a high-density knob/fader panel for avionics,
+# throttle quadrant, and radio management.
+schema_version: "1"
+
+device:
+  name: "Native Instruments Traktor Kontrol S2 MK3"
+  vendor: "Native Instruments"
+  usb:
+    vendor_id: 0x17CC    # Native Instruments GmbH (confirmed)
+    product_id: 0x1710   # Traktor Kontrol S2 MK3 — community USB captures
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 12
+    names: [jog_left, jog_right, ch1_fader, ch2_fader, crossfader,
+            ch1_eq_hi, ch1_eq_mid, ch1_eq_lo, ch2_eq_hi, ch2_eq_mid,
+            ch2_eq_lo, master_level]
+    resolution_bits: 12
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The S2 MK3 enumerates as USB MIDI + HID composite. Control messages
+      are delivered via MIDI CC. OpenFlight requires the MIDI binding profile.
+      HID consumer page reports transport buttons.
+  - id: NATIVE_ACCESS_REQUIRED
+    description: >
+      NI Native Access may lock the device to Traktor. Ensure Traktor is not
+      running when using the S2 MK3 with OpenFlight to avoid HID/MIDI
+      ownership conflicts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Native Instruments Traktor Kontrol S2 MK3 — 2-deck DJ controller repurposed
+    for avionics panel. VID 0x17CC confirmed; PID 0x1710 from community captures.
+    MIDI composite device. Last reviewed: 2026-06.

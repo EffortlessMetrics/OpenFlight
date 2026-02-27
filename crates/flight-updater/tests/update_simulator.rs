@@ -94,6 +94,15 @@ async fn test_rollback_manager_version_tracking() {
 
     manager.initialize().await.unwrap();
 
+    // Create real install directories so create_backup succeeds.
+    for i in 1..=3 {
+        let dir = temp_dir.path().join(format!("v{}", i));
+        fs::create_dir_all(&dir).await.unwrap();
+        fs::write(dir.join("app.exe"), format!("v{}", i).as_bytes())
+            .await
+            .unwrap();
+    }
+
     // Record multiple versions
     let versions = vec![
         VersionInfo::new(
@@ -184,13 +193,19 @@ async fn test_version_cleanup() {
 
     manager.initialize().await.unwrap();
 
-    // Add 4 versions
+    // Add 4 versions — create real install directories for each.
     for i in 1..=4 {
+        let dir = temp_dir.path().join(format!("v{}", i));
+        fs::create_dir_all(&dir).await.unwrap();
+        fs::write(dir.join("app.exe"), format!("v{}", i).as_bytes())
+            .await
+            .unwrap();
+
         let version = VersionInfo::new(
             format!("1.{}.0", i),
             format!("hash{}", i),
             Channel::Stable,
-            temp_dir.path().join(format!("v{}", i)),
+            dir,
         );
         manager.record_version(version).await.unwrap();
     }

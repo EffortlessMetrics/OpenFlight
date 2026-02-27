@@ -1,0 +1,27 @@
+---
+source: crates/flight-writers/tests/golden_tables.rs
+expression: value
+---
+{
+  "description": "Disable DCS control curves via options.lua",
+  "diffs": [
+    {
+      "changes": {
+        "useLinearCurves": "true"
+      },
+      "file": "DCS World/Config/options.lua",
+      "operation": "Set",
+      "section": "options = {"
+    }
+  ],
+  "sim": "dcs",
+  "verification_tests": [
+    {
+      "description": "Verify DCS uses linear curves",
+      "expected_result": "useLinearCurves = true",
+      "name": "check_dcs_linear",
+      "test_type": "FileContains"
+    }
+  ],
+  "version": "2.9"
+}

@@ -1,0 +1,58 @@
+# Saitek Cyborg Graphite Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Mad Catz) / PID 0xFF0C — community-reported PID for the
+# Cyborg Graphite. The Graphite is a mid-range adjustable joystick with
+# interchangeable grip panels and configurable weight system, sold circa
+# 2010-2014. Note: PID may differ between hardware revisions; verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Graphite Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Mad Catz (confirmed VID)
+    product_id: 0xFF0C      # Cyborg Graphite — community-reported PID
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xFF0C is community-reported for the Cyborg Graphite. Saitek's
+      high-end custom PID range (0xFF0x) is used for several Cyborg models;
+      verify with lsusb on real hardware.
+  - id: ADJUSTABLE_GRIP
+    description: >
+      The Cyborg Graphite features interchangeable grip panels and configurable
+      internal weight cartridges. Hardware configuration does not affect USB
+      enumeration or axis mapping.
+  - id: TWIST_RUDDER
+    description: >
+      Twist-rudder axis reported as Rz. A small deadzone at center is recommended
+      to compensate for mechanical friction in the twist mechanism.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg Graphite. VID 0x06A3 confirmed; PID 0xFF0C community-reported.
+    Mid-range adjustable joystick with configurable grip and weight system.
+    Wave-42 addition. Last reviewed: 2026-07.

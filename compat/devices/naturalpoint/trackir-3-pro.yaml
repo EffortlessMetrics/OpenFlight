@@ -1,0 +1,58 @@
+# NaturalPoint TrackIR 3 Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D (NaturalPoint Inc.). PID 0x0100 is a community estimate for the
+# TrackIR 3 Pro head-tracking camera; not confirmed from lsusb captures.
+# The TrackIR 3 Pro uses NaturalPoint's proprietary USB protocol. Head pose
+# data is not exposed as standard HID axes.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 3 Pro"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc.
+    product_id: 0x0100   # Community estimate -- TrackIR 3 Pro
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 1
+    names: [head_pose]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 4
+
+quirks:
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      The TrackIR 3 Pro uses NaturalPoint's proprietary USB protocol. Head
+      orientation data is not exposed as standard HID axes. OpenFlight reads
+      head-tracking data via the TrackIR SDK or via opentrack's UDP protocol.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0100 is a community estimate for the TrackIR 3 Pro. Confirm with
+      lsusb on real hardware before enabling production device matching.
+  - id: NOT_A_JOYSTICK
+    description: >
+      The TrackIR 3 Pro does not enumerate as a HID joystick. The device
+      reports a single conceptual head-pose axis via NaturalPoint's proprietary
+      USB protocol, not as a standard HID input report.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 3 Pro. PID 0x0100 is a community estimate.
+    Head-tracking camera with proprietary protocol; no standard HID axis output.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# VKB Gunfighter Mk.III Modern Combat Grip (MCG, PID 0x0225)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB-Sim — confirmed). PID 0x0225 — community estimate for the
+# Gunfighter Mk.III base with Modern Combat Grip (MCG) attached. This is
+# distinct from gunfighter-modern-combat-pro.yaml (PID 0x0125, MCG Pro) and
+# gf3-mcg-pro.yaml (PID 0x0210). The MCG standard grip is the entry-level
+# combat grip for the Gunfighter base.
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.III Modern Combat Grip"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim Europe (confirmed)
+    product_id: 0x0225      # Community estimate — PID_UNCONFIRMED; verify with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0225 is a community estimate for the Gunfighter Mk.III + MCG combo.
+      The MCG Pro uses 0x0125 (gunfighter-modern-combat-pro.yaml).
+      Confirm with VKBDevCfg or lsusb on real hardware.
+  - id: MODULAR_GRIP
+    description: >
+      The Gunfighter Mk.III uses a modular grip system. The MCG (Modern Combat
+      Grip) is the standard entry-level combat grip. Axis and button layout
+      depend on the attached grip and VKBDevCfg firmware profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gunfighter Mk.III with Modern Combat Grip (standard, not Pro).
+    PID 0x0225 is a community estimate.
+    For Gunfighter + MCG Pro, see gunfighter-modern-combat-pro.yaml (0x0125).
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

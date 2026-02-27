@@ -1,0 +1,53 @@
+# GoFlight GF-EFIS (VID 0x0BCA, PID 0x0032)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0BCA is used by OpenCockpits/Engravity hardware; the primary GoFlight
+# VID is 0x0E9F. PID 0x0032 with VID 0x0BCA is a community estimate.
+# The primary GF-EFIS manifest uses VID 0x0E9F, PID 0x000C (gf-efis.yaml).
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-EFIS"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — primary GoFlight VID is 0x0E9F
+    product_id: 0x0032      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 24
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA and PID 0x0032 are community estimates. The primary GoFlight
+      VID is 0x0E9F; the GF-EFIS with that VID uses PID 0x000C (gf-efis.yaml).
+      VID 0x0BCA is shared with OpenCockpits/Engravity hardware. Verify with
+      lsusb on real hardware.
+  - id: AVIONICS_PANEL
+    description: >
+      EFIS (Electronic Flight Instrument System) control panel with rotary
+      encoders for baro setting, minimums, range, and display mode. Encoders
+      report as paired button events per detent.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-EFIS — VID 0x0BCA, PID 0x0032 community estimate. Primary
+    manifest: gf-efis.yaml (VID 0x0E9F, PID 0x000C). Wave-47 addition.
+    Last reviewed: 2026-07.

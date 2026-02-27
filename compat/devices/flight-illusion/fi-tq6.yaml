@@ -1,0 +1,61 @@
+# Flight Illusion TQ6 Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Flight Illusion TQ6 is a 6-lever throttle quadrant for commercial airliner
+# cockpit replica builds. Provides independent throttle axes for quad-engine
+# configurations or combined throttle/prop/mixture for twin-engine GA.
+# VID 0x04B4 (Cypress Semiconductor) / PID 0xF250: community estimate.
+# Note: other Flight Illusion devices use VID 0x1F4D.
+
+schema_version: "1"
+
+device:
+  name: "Flight Illusion TQ6 Throttle Quadrant"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x04B4       # PID estimated — other FI units use VID 0x1F4D
+    product_id: 0xF250      # Community estimate — TQ6 throttle quadrant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_1, throttle_2, throttle_3, throttle_4, throttle_5, throttle_6]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 (Cypress) / PID 0xF250 are community estimates. Other Flight
+      Illusion products use VID 0x1F4D. See fi-gau57.yaml, fi-comms-panel.yaml.
+      Verify with lsusb on real hardware.
+  - id: SIX_INDEPENDENT_LEVERS
+    description: >
+      All six levers are fully independent axes. For quad-engine jets, bind
+      four throttles; remaining two can be used for speed brake/spoiler or
+      left unused.
+  - id: LEVER_GATES
+    description: >
+      Some TQ6 variants include physical detent gates for idle and full-thrust
+      positions. Gate positions may require calibration in the OpenFlight profile
+      axis mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion TQ6 throttle quadrant — 6 levers. VID 0x04B4 / PID 0xF250 est.
+    Other FI devices use VID 0x1F4D. See gxp-simulator.yaml for GXP variant.
+    Last reviewed: 2026-06.

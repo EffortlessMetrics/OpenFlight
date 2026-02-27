@@ -1,0 +1,54 @@
+# HORI Flight Stick for Xbox Series X|S (HFS-030)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x00F6 is a community estimate for the HFS-030 (Hotas Flight Stick
+# for Xbox Series X|S). Microsoft Flight Simulator Xbox native; also
+# PC-compatible in DirectInput mode. Distinct from the older Xbox One variant
+# (see hotas-xbox-one.yaml).
+
+schema_version: "1"
+
+device:
+  name: "HORI HOTAS Flight Stick for Xbox Series X|S"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x00F6      # Community estimate — HFS-030 Xbox Series X|S
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, throttle, rudder]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F6 is a community estimate for the Xbox Series X|S variant.
+      Confirm with lsusb or USBDeview on real hardware.
+  - id: XINPUT_XBOX_MODE
+    description: >
+      Xbox Series X|S variant uses XInput on console; PC DirectInput/HID is
+      available via the secondary USB interface. OpenFlight reads HID path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI HOTAS Flight Stick for Xbox Series X|S. PID 0x00F6 unconfirmed.
+    Microsoft Flight Simulator Xbox/PC native. Distinct from Xbox One variant.
+    Last reviewed: 2026-06.

@@ -1,0 +1,60 @@
+# Nintendo Switch Joy-Con Charging Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Joy-Con Charging Grip (model HAC-012) combines left and right Joy-Cons
+# into a single gamepad-style controller while charging them. When attached,
+# the pair enumerates as a single HID gamepad device.
+# VID 0x057E confirmed: Nintendo Co., Ltd.
+# PID 0x200E confirmed: Joy-Con Charging Grip composite device.
+
+schema_version: "1"
+
+device:
+  name: "Nintendo Switch Joy-Con Charging Grip"
+  vendor: "Nintendo Co., Ltd."
+  usb:
+    vendor_id: 0x057E
+    product_id: 0x200E   # Confirmed: Joy-Con Charging Grip (HAC-012)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: COMPOSITE_DEVICE
+    description: >
+      The Charging Grip combines left and right Joy-Cons into a single
+      HID gamepad. Individual Joy-Con features (IR camera, NFC) are not
+      accessible in this mode. See joy-con-l.yaml and joy-con-r.yaml for
+      standalone Joy-Con manifests.
+  - id: AXIS_ORIENTATION
+    description: >
+      Left stick Y-axis is inverted relative to DirectInput convention on
+      some host drivers. Calibrate in-app if pitch control is reversed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo Switch Joy-Con Charging Grip. VID 0x057E / PID 0x200E confirmed.
+    Occasionally used for button/axis assignments in flight sim profiles.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# Fanatec CSL Elite Wheel Base (PS4 Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Fanatec CSL Elite Wheel Base PS4 Edition is a Sony-licensed variant of
+# the CSL Elite Wheel Base featuring PS4 compatibility. It uses the same
+# belt-drive FFB mechanism as the standard CSL Elite. On PC, it presents as a
+# standard HID joystick. VID 0x0EB7 confirmed; PID 0x0002 is a community
+# estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Wheel Base (PS4 Edition)"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0002      # Community estimate — CSL Elite PS4; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0002 is a community estimate for the CSL Elite PS4 Edition.
+      May share PID with CSL Elite v1 PC variant. Confirm with lsusb.
+  - id: PS4_CONSOLE_MODE
+    description: >
+      Includes Sony PS4 licence chip. On PC, presents as standard HID
+      wheel. Console-specific rumble feedback not available on PC HID stack.
+  - id: FANATEC_FANALAB_RECOMMENDED
+    description: >
+      Full FFB tuning requires Fanatec Wheel Property Page or Fanalab software.
+      DirectInput FFB effects work without additional software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Wheel Base PS4 Edition. VID 0x0EB7 confirmed; PID 0x0002
+    is a community estimate. Belt-drive FFB; PS4 licensed variant. Used in flight
+    sim for rudder axis with FFB. Last reviewed: 2026-06.

@@ -1,0 +1,55 @@
+# Speedlink Thunderstrike Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (GreenAsia Inc.) / PID 0x3010 — community estimate. Speedlink
+# (JÖLLENBECK GmbH) Thunderstrike is a budget USB dual-stick gamepad aimed at
+# PC gaming. OEM-manufactured by GreenAsia Inc. Occasionally used in flight
+# sim as a low-cost gamepad alternative to dedicated HOTAS.
+schema_version: "1"
+
+device:
+  name: "Speedlink Thunderstrike Gamepad"
+  vendor: "Speedlink"
+  type: other
+  usb:
+    vendor_id: 0x0E8F       # GreenAsia Inc. (OEM manufacturer for Speedlink)
+    product_id: 0x3010      # Thunderstrike — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3010 is a community estimate. GreenAsia VID 0x0E8F is confirmed
+      as the OEM manufacturer. Verify with lsusb.
+  - id: BUDGET_RUMBLE
+    description: >
+      Dual rumble motors (left/right) accessible via HID output reports.
+      Motor balance and intensity control is limited compared to DualShock-class devices.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Thunderstrike Gamepad. VID 0x0E8F (GreenAsia); PID 0x3010 estimated.
+    Budget dual-stick pad with rumble. Wave-42 addition. Last reviewed: 2026-07.

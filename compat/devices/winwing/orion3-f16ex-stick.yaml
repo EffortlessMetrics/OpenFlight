@@ -1,0 +1,50 @@
+# WinWing Orion 3 F-16EX Stick (JGRIP-F16EX on Orion 3 Base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBD40 — community estimate.
+# Orion 3 F-15EX stick uses 0xBD38; F-16EX variant estimated adjacent.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 F-16EX Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD40    # Community estimate — Orion 3 F-15EX uses 0xBD38
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD40 is a community estimate adjacent to the Orion 3 F-15EX stick
+      (0xBD38). Not confirmed from linux-hardware.org probes or USB descriptor
+      capture. Update this manifest when a confirmed PID is available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Orion 3 generation F-16EX joystick (Viper grip). Typically paired with the
+    Orion 3 F-16EX Throttle (PID 0xBD48, see orion3-f16ex-throttle.yaml).
+    Also available as a combined kit (see orion3-f16ex-combined-kit.yaml).
+    PID 0xBD40 is a community estimate — confirm with lsusb before deployment.

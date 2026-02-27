@@ -1,0 +1,64 @@
+# CPFlight MCP737 Mode Control Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight MCP737 — a Boeing 737 NG Mode Control Panel (autopilot) replica
+# for home cockpit builders. Full-size glareshield MCP with IAS, HDG, ALT,
+# V/S and course knobs plus all AP mode pushbuttons.
+# VID 0x0EB7 is a community estimate for CPFlight (Italy).
+# PID 0x0201 is a community estimate. Confirm with USBView or lsusb.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight MCP737 Mode Control Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0EB7       # Community estimate — CPFlight VID
+    product_id: 0x0201      # Community estimate — MCP737
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40
+  hats: 0
+  encoders: 8
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 24
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0EB7 / PID 0x0201 are community estimates. The CPFlight MCP Pro
+      is covered separately in mcp-pro.yaml (VID 0x0DC3). This entry covers
+      the newer MCP737 with PID 0x0201 from USB probe reports.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels use a proprietary serial-over-USB protocol. OpenFlight
+      translates panel events to standard axis/button events via the CPFlight
+      adapter.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      7-segment displays for IAS, HDG, ALT, V/S readouts require HID output
+      reports from sim telemetry.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight MCP737 — VID 0x0EB7 / PID 0x0201 (est).
+    Boeing 737 NG Mode Control Panel replica; 40 buttons, 8 encoders, displays.
+    Wave-46 addition. Last reviewed: 2026-07.

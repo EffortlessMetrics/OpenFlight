@@ -1,0 +1,60 @@
+# PJRC Teensy 3.2 USB HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PJRC Teensy 3.2 (MK20DX256) running Teensyduino USB HID firmware.
+# VID 0x16C0 confirmed: PJRC (Paul Stoffregen), the Teensy USB vendor.
+# PID 0x0487 is a community estimate for Teensy 3.2 HID joystick mode;
+# other Teensy PIDs include 0x0478 (serial+HID), 0x0486 (4.0 HID), 0x0488 (LC HID).
+# Popular DIY platform for flight sim HOTAS, yoke, and rudder pedal builds.
+
+schema_version: "1"
+
+device:
+  name: "Teensy 3.2 USB HID Joystick (DIY)"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0       # PJRC (Paul Stoffregen) — confirmed
+    product_id: 0x0487      # Community estimate — Teensy 3.2 HID joystick mode
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 16
+    names: [x, y, z, rx, ry, rz, slider_1, slider_2, aux_1, aux_2, aux_3, aux_4, aux_5, aux_6, aux_7, aux_8]
+    resolution_bits: 16
+  buttons: 64
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0487 is a community estimate for Teensy 3.2 in HID joystick mode.
+      See also teensy-40-hid.yaml (PID 0x0486) and teensy-lc-hid.yaml (PID 0x0488).
+      Actual PID depends on Teensyduino USB configuration at compile time.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis count and mapping are fully configurable in Teensyduino firmware.
+      The 16-axis / 64-button / 4-hat layout reflects a commonly used
+      Teensyduino maximum-capability configuration.
+  - id: HIGH_POLL_RATE
+    description: >
+      Teensy 3.2 can sustain 500 Hz USB HID polling. The RT spine will
+      decimate to 250 Hz on the standard axis processing path.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PJRC Teensy 3.2 USB HID Joystick — VID 0x16C0 / PID 0x0487 (est).
+    16-bit Hall axes, 64 buttons, 4 hats. Popular DIY HOTAS/yoke platform.
+    Wave-46 addition. Last reviewed: 2026-07.

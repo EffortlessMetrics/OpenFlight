@@ -1,0 +1,59 @@
+# IPEGA PG-9099 Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x05AC and PID 0x055B are community estimates for the IPEGA PG-9099
+# wireless gamepad. Note: VID 0x05AC is commonly associated with Apple Inc.;
+# some IPEGA devices present under Apple-adjacent VIDs when using their
+# iOS compatibility mode. The actual USB VID may vary by firmware version
+# and connection mode. Verify with lsusb in PC/HID mode.
+# The PG-9099 is a retractable Android/iOS/PC gamepad with dual analog
+# sticks and a standard button layout, occasionally used in flight sim for
+# secondary panel control or menu navigation.
+schema_version: "1"
+
+device:
+  name: "IPEGA PG-9099 Gamepad"
+  vendor: "IPEGA"
+  usb:
+    vendor_id: 0x05AC    # Community estimate — VID may vary; verify with lsusb
+    product_id: 0x055B   # PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x05AC / PID 0x055B are community estimates and may not be accurate.
+      VID 0x05AC is primarily Apple Inc.; IPEGA may use different VIDs per
+      firmware or operating mode (Android, iOS, PC). Verify with lsusb in
+      X-Input or Direct Input PC mode.
+  - id: MODE_DEPENDENT_VID
+    description: >
+      Some IPEGA devices present different VID/PIDs depending on the selected
+      mode (Home button long-press cycle). Ensure the device is in PC/Direct
+      Input mode before connecting for consistent HID enumeration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    IPEGA PG-9099 gamepad — dual analog sticks + standard buttons.
+    VID 0x05AC / PID 0x055B are community estimates; actual VID may differ
+    by firmware mode. Verify with lsusb in PC mode. Last reviewed: 2026-06.

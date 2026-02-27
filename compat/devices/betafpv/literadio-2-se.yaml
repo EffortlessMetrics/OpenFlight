@@ -1,0 +1,62 @@
+# BETAFPV LiteRadio 2 SE
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 (Multiple Vendors / community HID VID). PID 0x0898 is a
+# community estimate for the BETAFPV LiteRadio 2 SE in USB joystick mode.
+# The LiteRadio 2 SE is a compact FPV RC transmitter that enumerates as a
+# USB HID joystick when connected via USB, popular in DCS World for FPV
+# drone simulation and light aircraft control.
+
+schema_version: "1"
+
+device:
+  name: "BETAFPV LiteRadio 2 SE"
+  vendor: "BETAFPV"
+  usb:
+    vendor_id: 0x1781    # Community HID VID (VID_UNCONFIRMED — estimate)
+    product_id: 0x0898   # Community estimate — LiteRadio 2 SE USB joystick mode
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]     # Roll, Pitch, Throttle, Yaw (RC mode 2 layout)
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 / PID 0x0898 are community estimates. The LiteRadio 2 SE
+      uses a custom USB HID stack; confirm both IDs with lsusb when the radio
+      is connected in joystick mode (hold bind button on power-up).
+  - id: RC_AXIS_LAYOUT
+    description: >
+      Axes follow Mode 2 RC transmitter layout: left stick = throttle (Z) +
+      yaw (Rz), right stick = roll (X) + pitch (Y). The stick axis polarity
+      may differ from standard flight sim conventions — apply axis inversion
+      in the OpenFlight profile as needed.
+  - id: USB_JOYSTICK_MODE
+    description: >
+      The LiteRadio 2 SE must be powered on while connected to USB to enter
+      joystick mode. In this mode the transmitter RF output is disabled; the
+      device acts as a pure HID joystick for sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BETAFPV LiteRadio 2 SE — compact FPV RC transmitter used as sim input device.
+    VID 0x1781 / PID 0x0898 are community estimates. USB joystick mode used in
+    DCS World for FPV and light aircraft inputs. Last reviewed: 2026-07.

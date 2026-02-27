@@ -1,0 +1,60 @@
+# Sony PlayStation Move Motion Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C (Sony Interactive Entertainment). PID 0x03D5 confirmed from
+# linux kernel drivers/hid/hid-sony.c (USB_DEVICE_ID_SONY_MOTION_CONTROLLER)
+# and libsdl-org/SDL source. Wand-style motion controller with IMU; commonly
+# used with the PlayStation Eye camera for positional tracking.
+schema_version: "1"
+
+device:
+  name: "Sony PlayStation Move Motion Controller"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment (confirmed)
+    product_id: 0x03D5   # PlayStation Move Motion Controller -- linux kernel hid-sony.c
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DS3_REQUIRES_DRIVER
+    description: >
+      On Windows, the Move Motion Controller requires DsHidMini or an equivalent
+      HID translation layer (same requirement as the DualShock 3) for correct
+      axis and button enumeration. Without a translation driver, the device may
+      not enumerate as a standard HID gamepad.
+  - id: IMU_ONLY
+    description: >
+      Positional tracking requires the PlayStation Eye camera or opentrack.
+      USB HID alone provides only button and IMU (accelerometer/gyroscope)
+      data. 3D position is computed externally and is not available via HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony PlayStation Move Motion Controller. PID 0x03D5 confirmed from linux
+    kernel hid-sony.c and SDL source. Wand controller with IMU; buttons and
+    rumble work via standard HID. Positional tracking requires Eye camera.
+    Last reviewed: 2026-06.

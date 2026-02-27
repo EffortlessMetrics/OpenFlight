@@ -1,0 +1,56 @@
+# Hori Flight Stick Alpha (PS4/PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd. (registered USB vendor ID).
+# PID 0x00EE is community-reported for the Hori Flight Stick Alpha / HOTAS
+# Type Stick for PS4. Multiple Linux HID driver issues and forum reports
+# document this PID. No linux-hardware.org hardware probe found; confirm
+# with lsusb on real hardware before enabling production device matching.
+schema_version: "1"
+
+device:
+  name: "Hori Flight Stick Alpha"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x00EE      # Community-reported; HOTAS type stick for PS4/PC
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00EE is community-reported for the Hori Flight Stick Alpha /
+      HOTAS type stick. Multiple Linux HID driver discussion threads
+      document this PID but no hardware probe database entry has been
+      found. Verify with lsusb on real hardware before production use.
+  - id: THROTTLE_SLIDER
+    description: >
+      The throttle lever maps to the slider axis (not z). The z axis is
+      a twist-rudder. Map slider unipolar [0, 1] and z bipolar in profiles.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori Flight Stick Alpha — compatible with PlayStation 4 and PC (DInput).
+    Budget-friendly joystick with throttle slider. VID 0x0F0D confirmed;
+    PID 0x00EE is community-reported. Hori flight sticks are popular for
+    Ace Combat and DCS console/PC crossplay. Last reviewed: 2026-02.

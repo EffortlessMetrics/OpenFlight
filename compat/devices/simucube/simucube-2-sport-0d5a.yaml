@@ -1,0 +1,76 @@
+# Simucube 2 Sport Direct Drive Base (Alt PID 0x0D5A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: usb.ids lists as "MCS Electronics" (Granite Devices).
+# PID 0x0D5A is a community-reported alternate PID for the Simucube 2 Sport.
+# The primary manifest uses PID 0x0D60 (simucube-2-sport.yaml). PID 0x0D5A
+# may correspond to an earlier firmware or pre-production variant.
+# Confirm with lsusb or Simucube True Drive USB enumeration.
+
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Sport"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D5A      # Community estimate — alt PID; primary is 0x0D60 (simucube-2-sport.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 24     # BISS-C high-resolution encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 17.0   # Sport rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5A is a community estimate. The primary Simucube 2 Sport manifest
+      uses 0x0D60 (simucube-2-sport.yaml). Confirm with lsusb or Simucube True
+      Drive USB descriptor capture before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types. The flight-ffb Simucube2 adapter
+      synthesises waveforms and sends results as torque values.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Simucube 2 Sport base exposes the rotation axis only. A flight grip
+      adapter (e.g. VKB MCG, VIRPIL Alpha-R) mounts on the shaft and enumerates
+      as a separate USB HID device for buttons.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Sport alternate PID 0x0D5A. Primary manifest is simucube-2-sport.yaml
+    (PID 0x0D60). VID 0x16D0 = Granite Devices. 17 Nm peak direct-drive FFB base.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+driver:
+  type: simucube2_torque
+  notes: >
+    Requires Simucube True Drive for initial calibration and firmware updates.
+    After setup, operates as a standard HID torque actuator.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

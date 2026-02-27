@@ -1,0 +1,73 @@
+# Thrustmaster T-LCM Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster / Guillemot Corp). The T-LCM is Thrustmaster's
+# 2021 premium rudder pedal set featuring Hall sensors on the pedal axes and
+# load-cell brake resistance (progressive resistance without spring return).
+# Distinct from the T.Flight Rudder Pedals (TFRP) and T-Pendular Rudder (TPR).
+# PID is community-estimated; not yet confirmed from linux-hardware.org.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-LCM Rudder Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # Thrustmaster / Guillemot Corp
+    product_id: 0xB687    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder_left, rudder_right, toe_brakes]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB687 is a community estimate and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: HALL_SENSOR_AXES
+    description: >
+      The rudder left/right axes use Hall sensors rather than potentiometers.
+      This eliminates the mechanical deadband common to pot-based pedals.
+      No smoothing required at the driver level.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The toe brake axis uses a load-cell sensor providing progressive
+      resistance without spring return. The toe brake raw value is proportional
+      to applied force, not pedal displacement. Map toe_brakes as a unipolar
+      [0, 1] axis in the profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster T-LCM Rudder Pedals (2021). Hall-sensor rudder + load-cell
+    toe brakes. Distinct from TFRP (tflight-rudder-pedals.yaml) and
+    T-Pendular Rudder (tpr-pendular-rudder.yaml). PID 0xB687 community-
+    estimated — confirm from lsusb capture. Last reviewed: 2026-02.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Plug and play; Hall sensors provide smooth, deadband-free rudder control."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; load-cell toe brakes map well to differential braking."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."

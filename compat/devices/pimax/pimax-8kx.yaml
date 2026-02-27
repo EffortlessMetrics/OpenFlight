@@ -1,0 +1,53 @@
+# Pimax 8KX VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x34B2 (Pimax Technology, community-reported estimate). PID 0x0100 is a
+# community estimate for the Pimax 8KX HMD. The 8KX is a dual-4K VR headset
+# with wide field-of-view, used in flight simulation for head tracking / view
+# control via OpenVR / SteamVR. It does not include built-in eye tracking.
+schema_version: "1"
+
+device:
+  name: "Pimax 8KX VR HMD"
+  vendor: "Pimax Technology"
+  usb:
+    vendor_id: 0x34B2    # Pimax Technology (community-reported estimate)
+    product_id: 0x0100   # Community estimate — Pimax 8KX
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x34B2 and PID 0x0100 are community estimates. Confirm with lsusb
+      on Pimax 8KX hardware before enabling production device matching.
+  - id: OPENVR_PRIMARY_INTERFACE
+    description: >
+      Head tracking data is consumed via OpenVR/SteamVR, not directly via HID.
+      OpenFlight accesses head tracking through the SteamVR input bridge.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pimax 8KX VR HMD (dual 4K, wide FOV). VID 0x34B2 / PID 0x0100 are community
+    estimates. Primary interface is OpenVR/SteamVR. Used in high-end flight sim
+    rigs for immersive head tracking. Last reviewed: 2026-06.

@@ -1,0 +1,41 @@
+# Thrustmaster T-LCM Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB672 — load cell brake pedals.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-LCM Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB672
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Load cell brake pedals with 3 axes. PID 0xB672 from community reports.
+    Last reviewed: 2026-06.

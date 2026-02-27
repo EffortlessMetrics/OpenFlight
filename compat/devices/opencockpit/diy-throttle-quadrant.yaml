@@ -1,0 +1,54 @@
+# OpenCockpit DIY Throttle Quadrant (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic DIY throttle quadrant entry for open-source cockpit builder community
+# devices. Covers throttle quadrant builds using Arduino, STM32, or RP2040 MCUs
+# with analog axis inputs (potentiometers or hall sensors) and lever buttons.
+# VID/PID varies by the underlying MCU board and firmware configuration.
+schema_version: "1"
+
+device:
+  name: "DIY Throttle Quadrant (Generic OpenCockpit)"
+  vendor: "OpenCockpit / Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (common base board)
+    product_id: 0x8036   # Arduino Leonardo HID mode (common DIY base)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, prop, mixture]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID and PID vary by MCU board. Match by device name string in OpenFlight
+      profiles.
+  - id: AXIS_COUNT_VARIES
+    description: >
+      Axis count and resolution are determined at firmware compile time. 4 axes
+      at 10-bit resolution is a typical DIY throttle quadrant build; adjust the
+      profile to match the specific hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic DIY throttle quadrant for open-source cockpit builders. VID/PID
+    varies; match by device name in OpenFlight profiles. Typical use: GA and
+    airliner multi-lever throttle replication. Last reviewed: 2026-06.

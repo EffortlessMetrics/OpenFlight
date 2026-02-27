@@ -1,0 +1,44 @@
+# Komodo Trim Wheel Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF695 estimated for Komodo Trim Wheel Pro.
+schema_version: "1"
+
+device:
+  name: "Komodo Trim Wheel Pro"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF695
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: KOMODO_TRIM_PRO
+    description: >
+      Pro-grade trim wheel with metal construction and smooth bearing
+      system. Higher resolution than the standard Komodo trim wheel.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Trim Wheel Pro. PID 0xF695 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

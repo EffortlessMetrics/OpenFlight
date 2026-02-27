@@ -1,0 +1,45 @@
+# K-51 Collective Pitch Lever
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xBA51 estimated for K-51 Collective.
+# K-51 is a boutique helicopter collective manufacturer.
+schema_version: "1"
+
+device:
+  name: "K-51 Collective Pitch Lever"
+  vendor: "K-51"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xBA51
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, throttle]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIMPLE_COLLECTIVE
+    description: >
+      Basic two-axis collective with main lever and twist throttle.
+      Compact desktop form factor with adjustable friction.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    K-51 Collective Pitch Lever. PID 0xBA51 estimated.
+    Boutique helicopter collective manufacturer. Last reviewed: 2026-06.

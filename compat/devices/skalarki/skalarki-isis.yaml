@@ -1,0 +1,53 @@
+# Skalarki Electronics ISIS Airbus Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki ISIS (Integrated Standby Instrument System) replicates the
+# Airbus A320/A330 standby instrument display and brightness/reference
+# controls. Used as a backup attitude and airspeed reference in cockpit builds.
+# VID 0x16C0 / PID 0x05E1: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Electronics ISIS Airbus Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x05E1      # Community estimate — Skalarki ISIS
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2                # Brightness and reference-set rotaries
+    names: [brightness, ref_set]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x05E1 is a community estimate. Confirm with Skalarki Panel Config.
+  - id: DISPLAY_DRIVEN_BY_SIM
+    description: >
+      The ISIS display is a small LCD/TFT updated via USB output reports.
+      Brightness and reference rotary inputs adjust the standby instrument
+      display content; the panel does not render independently.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki ISIS Airbus panel (standby instruments). VID 0x16C0 / PID 0x05E1 est.
+    Requires sim-side ISIS display rendering integration.
+    Last reviewed: 2026-06.

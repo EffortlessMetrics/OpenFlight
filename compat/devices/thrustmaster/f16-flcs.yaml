@@ -1,0 +1,54 @@
+# Thrustmaster F-16 FLCS (Flight Control System)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Vintage Thrustmaster F-16 FLCS stick. Originally a game port device (late 1990s);
+# VID 0x044F / PID 0x0200 reflects the rare USB-capable revision or USB adapter.
+# PID 0x0200 is unconfirmed — derived from Thrustmaster legacy USB product range.
+# See also: f16c-grip.yaml for the modern TCA F-16C Viper grip.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F-16 FLCS"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0x0200  # PID estimated — legacy/USB-adapter variant; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 8
+  buttons: 4
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_GAME_PORT
+    description: >
+      The F-16 FLCS was originally designed as a game port (15-pin DA)
+      joystick. USB enumeration requires either a native USB revision of
+      the hardware or a game-port-to-USB adapter. Axis resolution and
+      count may vary with adapter hardware.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0200 is unconfirmed for the F-16 FLCS. Verify with lsusb
+      on physical hardware. No USB probe data found for this device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster F-16 FLCS — vintage stick (late 1990s). Originally game port
+    only; USB variant PID unconfirmed. Tier 3: legacy with no current test
+    coverage. Last reviewed: 2026-06.

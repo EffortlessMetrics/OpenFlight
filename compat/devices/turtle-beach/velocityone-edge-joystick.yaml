@@ -1,0 +1,63 @@
+# Turtle Beach VelocityOne Edge Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1432 is a community estimate for this product; existing VelocityOne
+# devices (velocityone-flightstick.yaml) use VID 0x10F5 (Turtle Beach Corp).
+# PID 0xB305 is a community estimate for the VelocityOne Edge Joystick.
+# The Edge Joystick is a PC/Xbox joystick with integrated twist-rudder and a
+# modular trigger system, marketed for flight and space simulation.
+
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Edge Joystick"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x1432    # Community estimate — verify with lsusb (cf. 0x10F5 on other VO models)
+    product_id: 0xB305   # Community estimate — confirm with USBView/lsusb on hardware
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1432 is a community estimate. Other VelocityOne products use
+      VID 0x10F5 (Turtle Beach Corp registered VID). Verify both VID and PID
+      with lsusb or Windows Device Manager on real Edge Joystick hardware before
+      enabling production device matching.
+  - id: RUDDER_CAPABLE
+    description: >
+      The Rz axis provides twist-rudder functionality. The Edge Joystick
+      does not include a separate rudder pedal connector; all axes are
+      integrated into the joystick body.
+  - id: MODULAR_TRIGGER
+    description: >
+      The Edge features a modular trigger mechanism. Different trigger
+      inserts change the pull weight; the HID axis report is identical
+      regardless of which insert is installed.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Edge Joystick. Community-confirmed working.
+    VID 0x1432 / PID 0xB305 are community estimates; note that other
+    VelocityOne devices use VID 0x10F5. Field verification required.
+    Last reviewed: 2026-06.

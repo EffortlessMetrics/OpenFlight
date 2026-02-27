@@ -1,0 +1,54 @@
+# Logitech G Saitek Pro Flight Rudder Pedals (PID 0xC2D1)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC2D1 is a community estimate for the Logitech G Saitek Pro Flight
+# Rudder Pedals. The G Pro Rudder Pedals use PID 0xC263 (g-pro-rudder.yaml).
+# The Saitek Pro Flight line was rebranded to Logitech G.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Pro Flight Rudder Pedals"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech Inc.
+    product_id: 0xC2D1  # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC2D1 is a community estimate for the Logitech G Saitek Pro Flight
+      Rudder Pedals. The G Pro Rudder uses PID 0xC263 (g-pro-rudder.yaml).
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each
+      axis in the flight control profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Saitek Pro Flight Rudder Pedals — PID 0xC2D1 community estimate.
+    VID 0x046D (Logitech). Saitek-branded repackage of the Pro Flight Rudder.
+    See also g-pro-rudder.yaml (PID 0xC263). Wave-47 addition. Last reviewed: 2026-07.

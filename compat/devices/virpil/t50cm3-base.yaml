@@ -1,0 +1,57 @@
+# VIRPIL VPC T-50CM3 Joystick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4500 is a community estimate for the T-50CM3 stick base.
+# The VPC T-50CM3 throttle (0x0194) is distinct from this base unit.
+# No hardware probe has confirmed 0x4500 — update when verified.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC T-50CM3 Joystick Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4500      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15     # 15-bit precision
+  buttons: 24
+  hats: 2
+  encoders: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4500 is a community estimate for the T-50CM3 stick base.
+      No hardware probe or open-source project has confirmed this value.
+      The VPC T-50CM3 Throttle uses PID 0x0194 (confirmed). Update this
+      manifest when a confirmed PID for the base is available.
+  - id: GRIP_MODULAR
+    description: >
+      The T-50CM3 base accepts various VIRPIL grip modules (Constellation
+      ALPHA, BETA, MongoosT, etc.). The PID reported is for the base;
+      the grip module does not enumerate as a separate USB device.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC T-50CM3 Joystick Base (centre-mount stick base). Distinct from
+    the VPC T-50CM3 Throttle (0x0194, cm3-throttle.yaml). PID 0x4500 is a
+    community estimate; confirm with lsusb. Accepts VIRPIL grip modules.
+    Last reviewed: 2026-02.

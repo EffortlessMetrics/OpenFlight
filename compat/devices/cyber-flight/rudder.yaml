@@ -1,0 +1,45 @@
+# Cyber Flight Rudder
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cyber Flight Rudder — 3-axis rudder pedal set from Cyber Flight.
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2080 community estimate.
+schema_version: "1"
+
+device:
+  name: "Cyber Flight Rudder"
+  vendor: "Cyber Flight"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2080      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2080 are community estimates for the Cyber Flight
+      Rudder. Verify with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cyber Flight Rudder — 3-axis rudder pedals. VID 0x1209 / PID 0x2080
+    community estimate. Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# Logitech / 3Dconnexion SpaceNavigator (Logitech era)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed (Logitech International SA).
+# PID 0xC626 confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_3DCONNEXION_SPACENAVIGATOR
+# under Logitech VID), spacenavd daemon, and usb-ids.gowdy.us.
+# 3Dconnexion was owned by Logitech from 1998 to 2007; products sold during this
+# period use VID 0x046D. Post-2007 SpaceNavigators use VID 0x256F:0xC635
+# (see 3dconnexion/space-navigator.yaml).
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceNavigator (Logitech era)"
+  vendor: "Logitech / 3Dconnexion"
+  usb:
+    vendor_id: 0x046D   # Logitech International SA (3Dconnexion division, pre-2007)
+    product_id: 0xC626  # SpaceNavigator — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck; same functional design as the post-2007 model.
+      HID report format is compatible with the later 0x256F:0xC635 device.
+  - id: LOGITECH_VID_LEGACY
+    description: >
+      3Dconnexion products sold before mid-2007 use Logitech VID 0x046D. After
+      3Dconnexion regained independence the VID changed to 0x256F. The newer
+      SpaceNavigator is documented in 3dconnexion/space-navigator.yaml.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      Used with MSFS for camera and drone control. Map Tz to elevation and
+      Rx/Ry to camera pan/tilt.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC626 confirmed from Linux kernel hid-ids.h and spacenavd daemon.
+    Logitech-era SpaceNavigator (pre-2007). Post-2007 version: 3dconnexion/space-navigator.yaml.
+    HID report format is identical to the newer device. Last reviewed: 2026-02.

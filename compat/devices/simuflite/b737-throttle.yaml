@@ -1,0 +1,56 @@
+# SimuFlite B737 Throttle Unit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimuFlite B737 Throttle Unit — professional-grade throttle quadrant replicating
+# the Boeing 737 throttle layout, used in professional training environments and
+# advanced home cockpit builds. VID 0x1055 (community estimate). PID 0x0010
+# community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "SimuFlite B737 Throttle Unit"
+  vendor: "SimuFlite"
+  usb:
+    vendor_id: 0x1055       # Community estimate — SimuFlite USB; confirm with lsusb
+    product_id: 0x0010      # Community estimate — B737 throttle; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_l, throttle_r, flap, speed_brake]
+    resolution_bits: 12
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      Both VID 0x1055 and PID 0x0010 are community estimates for the SimuFlite
+      B737 throttle. Professional training hardware may use proprietary USB
+      descriptors. Verify with lsusb or Windows Device Manager.
+  - id: B737_LAYOUT
+    description: >
+      Throttle layout follows Boeing 737 specification with forward-thrust and
+      reverse-thrust detents. The speed brake lever is separate from throttle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimuFlite B737 Throttle Unit. VID 0x1055 / PID 0x0010 community estimates.
+    Professional training hardware. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

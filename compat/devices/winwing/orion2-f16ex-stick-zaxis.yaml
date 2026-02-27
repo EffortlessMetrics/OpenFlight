@@ -1,0 +1,46 @@
+# WinWing Orion 2 F-16EX Stick with Z-Axis Twist Module (JGRIP-F16 + ZAXIS)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBEA9 — linux-hardware.org (USB string
+# "Orion Joystick Base 2 + ZAXIS + JGRIP-F16").
+device:
+  name: "WinWing Orion 2 F-16EX Stick + Z-Axis"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEA9
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: TWIST_Z_AXIS
+    description: >
+      The optional ZAXIS twist module adds a Z-rotation axis for rudder input
+      directly from the stick. When installed, axis 3 (z) carries the twist
+      value in [-1.0, 1.0]. Without the module this axis is absent.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Same JGRIP-F16 grip as PID 0xBEA8 but with the Z-axis twist module
+    installed. PID differs because the device descriptor changes.

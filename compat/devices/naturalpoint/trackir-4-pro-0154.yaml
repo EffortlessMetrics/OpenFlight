@@ -1,0 +1,62 @@
+# NaturalPoint TrackIR 4 Pro (Alt PID 0x0154)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed (NaturalPoint, Inc.).
+# PID 0x0154 is a community-reported alternate PID for the TrackIR 4 Pro.
+# The primary TrackIR 4 Pro PID is 0x0150. The TrackIR 4 Pro introduced
+# 6DOF tracking via the TrackClip Pro active LED accessory and significantly
+# improved tracking frequency to 120Hz.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 4 Pro (Alt PID)"
+  vendor: "NaturalPoint, Inc."
+  usb:
+    vendor_id: 0x131D       # NaturalPoint, Inc.
+    product_id: 0x0154      # Community-reported alt PID; primary is 0x0150
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0154 is a community-reported alternate PID for the TrackIR 4 Pro.
+      Primary PID is 0x0150. Confirm with lsusb on real hardware.
+  - id: TRACKIR_PROPRIETARY_PROTOCOL
+    description: >
+      TrackIR devices use a proprietary USB protocol; head-tracking data is
+      delivered via the NaturalPoint TrackIR software. OpenFlight receives
+      virtual axis data via the opentrack UDP bridge or NPClient.dll injection.
+  - id: TRACKCLIP_PRO_REQUIRED
+    description: >
+      Full 6DOF tracking requires the TrackClip Pro active LED accessory.
+      The passive TrackClip provides 3DOF (pitch, yaw, roll) only.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 4 Pro — 6DOF IR head tracker at 120Hz. PID 0x0154
+    is a community-reported alt PID. Primary is 0x0150. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

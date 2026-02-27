@@ -1,0 +1,51 @@
+# WinWing F-18 Attack Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing).
+# PID 0xBF30 is a community estimate. The F-18 Attack Panel is WinWing's
+# dedicated replica of the F/A-18C stores/weapons management panel, providing
+# master arm, weapon select, delivery mode, and attack radar mode switches.
+# Primary use case: DCS World F/A-18C Hornet.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-18 Attack Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF30      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24               # Master arm, weapon select, delivery mode, radar modes
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF30 is a community estimate. Confirm with lsusb on real hardware.
+  - id: GUARDED_SWITCHES
+    description: >
+      Master Arm and Emergency Jettison switches have guard covers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-18 Attack Panel — stores/weapons management replica. PID 0xBF30
+    unconfirmed. DCS F/A-18C primary use case. Last reviewed: 2026-06.

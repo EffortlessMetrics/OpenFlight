@@ -1,0 +1,56 @@
+# Saitek Cyborg 3D Platinum Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Mad Catz) / PID 0x022E — community estimate for the
+# Cyborg 3D Platinum. The Platinum is an enhanced version of the Cyborg 3D USB
+# (PID 0x0255) with metal accents and additional programmable buttons.
+# Distinct from the Cyborg 3D Gold (different PID). Sold circa 2003-2008.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg 3D Platinum Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Mad Catz (confirmed VID)
+    product_id: 0x022E      # Cyborg 3D Platinum — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 10
+  buttons: 15
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x022E is a community estimate. The Cyborg 3D USB (0x0255) and
+      Cyborg 3D Gold have different PIDs. Verify with lsusb on real hardware.
+  - id: DISTINCT_FROM_3D_USB_AND_GOLD
+    description: >
+      The Cyborg 3D Platinum is distinct from the Cyborg 3D USB (cyborg-3d-usb.yaml)
+      and the Cyborg 3D Gold (cyborg-3d-gold.yaml). Each has separate USB PIDs.
+  - id: METAL_TRIM
+    description: >
+      Metal trigger guard and base trim are cosmetic only; hardware and axis
+      layout match the Cyborg 3D USB family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg 3D Platinum. VID 0x06A3 confirmed; PID 0x022E estimated.
+    Enhanced metal-trim variant of the Cyborg 3D USB family. Discontinued.
+    Wave-42 addition. Last reviewed: 2026-07.

@@ -1,0 +1,60 @@
+# WinWing PCA FCU (Airbus Primary Control Area — Flight Control Unit Combo)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing PCA FCU is a high-fidelity replica of the Airbus Primary Control
+# Area Flight Control Unit. Combines the FCU rotaries and push-buttons in a
+# single hardware unit, distinct from the SimApp Pro FCU+EFIS combo panels.
+# VID 0x4098: WinWing (community-confirmed).
+# PID 0xB610 is a community estimate — confirm with device descriptor.
+
+schema_version: "1"
+
+device:
+  name: "WinWing PCA FCU (Airbus Flight Control Unit)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing — community-confirmed
+    product_id: 0xB610      # Community estimate — PCA FCU
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 4                # SPD/HDG/ALT/VS rotary encoders as analogue axes
+    names: [spd_rot, hdg_rot, alt_rot, vs_rot]
+    resolution_bits: 8
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB610 is a community estimate. Confirm with lsusb or WinWing
+      SimApp Desktop Device Manager.
+  - id: ROTARIES_DUAL_MODE
+    description: >
+      FCU rotaries (SPD/HDG/ALT/VS) encode both rotation (delta axis) and
+      push (button). Pull action on ALT/VS selector sends a separate button
+      event for managed vs. selected mode switch.
+  - id: DISPLAY_OUTPUTS
+    description: >
+      The PCA FCU has 7-segment LED displays for SPD/HDG/ALT/VS values.
+      Display content is driven by USB HID output reports from the host.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing PCA FCU — Airbus FCU replica. VID 0x4098 confirmed; PID 0xB610 est.
+    For EFIS-integrated variant see simapp-pro-fcu-efis-combo.yaml.
+    Display output requires SimApp Pro or custom HID output implementation.
+    Last reviewed: 2026-06.

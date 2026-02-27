@@ -1,0 +1,54 @@
+# Speedlink PHANTOM Hawk Flightstick (PID 0xC030 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Speedlink PHANTOM Hawk is a budget flight stick for PC simulation. This entry
+# covers the VID 0x1781 / PID 0xC030 variant. See phantom-hawk-1781.yaml
+# (PID 0x0A8A) for another variant with the same VID. VID 0x1781 is a
+# community-reported VID for this Speedlink product line.
+schema_version: "1"
+
+device:
+  name: "Speedlink PHANTOM Hawk Flightstick (PID 0xC030 variant)"
+  vendor: "Speedlink"
+  type: joystick
+  usb:
+    vendor_id: 0x1781   # Community-reported VID for this Speedlink variant
+    product_id: 0xC030  # Community estimate — PHANTOM Hawk variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, throttle, rudder]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0xC030 is a community estimate for a Speedlink PHANTOM Hawk variant.
+      See phantom-hawk-1781.yaml (PID 0x0A8A) for another variant with the
+      same VID. Verify with lsusb on real hardware.
+  - id: BUDGET_STICK
+    description: >
+      The PHANTOM Hawk is a budget flight stick with lower axis resolution
+      (10-bit) compared to premium sticks. Suitable for casual flight sim use.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Speedlink PHANTOM Hawk flight stick — PID 0xC030 community estimate variant.
+    VID 0x1781 community-reported. 4 axes, 12 buttons.
+    PID estimated from community sources. Last reviewed: 2026-07.

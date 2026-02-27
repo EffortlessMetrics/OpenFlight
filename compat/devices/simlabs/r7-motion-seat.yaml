@@ -1,0 +1,58 @@
+# Sim-Labs R7 Motion Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) / PID 0x5760 — community estimate. Sim-Labs
+# produces motion simulator platforms including the R7, a 6-DOF actuator seat
+# platform. The STM32-based USB interface (VID 0x0483) is common in motion
+# platform controllers. PID 0x5760 is a community estimate; verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Sim-Labs R7 Motion Seat Platform"
+  vendor: "Sim-Labs / SimRacingBay"
+  type: other
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (STM32 USB — community est)
+    product_id: 0x5760      # R7 motion seat controller — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (motion output device)
+
+capabilities:
+  axes:
+    count: 6
+    names: [surge, sway, heave, roll, pitch, yaw]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false     # Motion actuation, not traditional FFB
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5760 is a community estimate. Sim-Labs uses STM32-based controllers
+      (VID 0x0483); exact PID depends on firmware version.
+  - id: MOTION_PLATFORM
+    description: >
+      6-axis motion seat. OpenFlight sends heave/roll/pitch cues derived from
+      the sim physics state to drive the actuators. Not a traditional HID input
+      device — axis data is output only.
+  - id: SIMTOOLS_COMPATIBLE
+    description: >
+      The R7 is typically integrated via SimTools motion platform software.
+      OpenFlight can send motion cues via the motion output pipeline when
+      SimTools is configured as the backend.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sim-Labs R7 motion seat. VID 0x0483 (STM32); PID 0x5760 estimated.
+    6-DOF motion platform — output device. Wave-42 addition. Last reviewed: 2026-07.

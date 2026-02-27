@@ -1,0 +1,57 @@
+# Logitech G13 Advanced Gameboard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC21C confirmed from:
+#   1. Linux kernel: drivers/hid/hid-logitech-hidpp.c — 0xc21c "Logitech G13"
+#   2. SDL GameControllerDB community entries
+# The G13 is a programmable gaming keypad with a left-hand analog thumbstick
+# and 22 programmable keys. Flight simmers use it for cockpit button panels,
+# systems bindings, and view control.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G13 Advanced Gameboard"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech Inc.
+    product_id: 0xC21C   # G13 Gameboard (confirmed Linux kernel + community)
+  hid:
+    usage_page: 0xFF00   # Vendor-defined (Logitech G-series protocol)
+    usage: 0x01
+
+capabilities:
+  axes:
+    count: 2
+    names: [thumbstick_x, thumbstick_y]
+    resolution_bits: 8
+  buttons: 22            # G1–G22 programmable keys
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      The G13 uses Logitech's vendor-defined HID usage page (0xFF00). Standard
+      HID drivers may not expose all buttons. Use libusb or the Logitech Gaming
+      Software driver for full access. OpenFlight reads the vendor HID reports.
+  - id: LCD_NOT_EXPOSED
+    description: >
+      The G13 includes a small monochrome LCD display, but it is not accessible
+      via standard HID; it requires the Logitech Gaming Software API.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G13 gameboard — 22 programmable keys + thumbstick. PID 0xC21C
+    confirmed from Linux kernel. Used by flight simmers for systems bindings
+    and panel shortcuts. Last reviewed: 2026-06.

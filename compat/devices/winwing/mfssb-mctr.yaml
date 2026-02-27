@@ -1,0 +1,61 @@
+# WinWing MFSSB MCTR (Multi-Function Stick Shaker Base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBD90 — community estimate; WinWing FFB base range.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing MFSSB MCTR Force Feedback Base"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD90    # Community estimate — unconfirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD90 is a community estimate and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture.
+      Update this manifest when a confirmed PID becomes available.
+  - id: FFB_ACTIVE_TRIM
+    description: >
+      The MFSSB MCTR implements active force trim (trim release and hold)
+      via its force feedback motor. OpenFlight sends FFB constant-force
+      and spring effects to maintain trim position. Safety interlock
+      applies: see flight-ffb safety envelope documentation.
+  - id: FFB_SAFETY_INTERLOCK
+    description: >
+      Maximum force output is capped by the OpenFlight FFB safety envelope
+      (see ADR-009). Do not bypass the envelope limits. Force commands
+      exceeding the configured maximum are silently clamped.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MFSSB MCTR force feedback joystick base supporting active force
+    trim simulation. Compatible with WinWing Orion grip series. Force feedback
+    implementation uses DirectInput/SDL FFB API; requires OpenFlight FFB crate
+    (flight-ffb) for full feature support.
+    PID 0xBD90 is a community estimate — confirm with lsusb before deployment.

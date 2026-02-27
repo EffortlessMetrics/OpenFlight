@@ -1,0 +1,58 @@
+# Moza R16 Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology / Moza.
+# PID 0x0010 is a community estimate for the Moza R16.
+# The R16 sits between the R9 (r9-base.yaml) and R21 (r21-base.yaml) in
+# Moza's lineup. 16 Nm peak torque; mid-range DD base used in flight sim
+# with grip adapters.
+
+schema_version: "1"
+
+device:
+  name: "Moza R16 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0010    # Community estimate — R16
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 16.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0010 is a community estimate adjacent to the R9 (0x000C) and
+      below the R21 (estimated 0x0014). Confirm with lsusb before deployment.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      R16 exposes only the rotation axis. A flight grip adapter is needed
+      for buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R16 — 16 Nm mid-range direct-drive base. VID 0x346E confirmed;
+    PID 0x0010 is a community estimate. Between R9 (r9-base.yaml) and
+    R21 (r21-base.yaml). Last reviewed: 2026-06.

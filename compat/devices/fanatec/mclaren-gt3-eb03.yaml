@@ -1,0 +1,54 @@
+# Fanatec McLaren GT3 Wheel (Alt VID 0xEB03)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0xEB03 is a community-reported alternate VID seen on some Fanatec
+# hardware. The primary confirmed Fanatec VID is 0x0EB7. PID 0x0420 is a
+# community estimate for the McLaren GT3 V2 wheel under alternate VID 0xEB03.
+# See fanatec_mclaren_wheel.yaml (PID 0x0011) and mclaren-gt3-v2.yaml for
+# primary manifests under VID 0x0EB7.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec McLaren GT3 V2 Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0xEB03    # Community-reported alt VID — primary Fanatec VID is 0x0EB7
+    product_id: 0x0420   # Community estimate — McLaren GT3 alt VID variant; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 1
+  force_feedback: false   # FFB from wheel base
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xEB03 is a community-reported alternate; primary Fanatec VID is
+      0x0EB7. PID 0x0420 is a community estimate. See fanatec_mclaren_wheel.yaml
+      and mclaren-gt3-v2.yaml for primary manifests under VID 0x0EB7.
+  - id: RIM_ADDON
+    description: >
+      Requires a Fanatec wheel base. All inputs relay through the base.
+      Compatible with CSL DD, DD Pro, and Podium series.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec McLaren GT3 V2 Wheel — alternate VID 0xEB03 / PID 0x0420.
+    See fanatec_mclaren_wheel.yaml and mclaren-gt3-v2.yaml. Last reviewed: 2026-07.

@@ -1,0 +1,55 @@
+# WinWing Orion 2 Joystick F-16EX (Generic Grip, Estimated PID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. Represents the Orion 2 base with F-16EX grip in
+# joystick-mode HID reporting. Distinct from orion2-f16ex-stick.yaml
+# (PID 0xBEA8, JGRIP-F16 with extended Z-axis) — this manifest covers the
+# standard F-16EX grip without the extra Z-axis module.
+# PID 0xBE70 is an estimate; verify with SimAppPro or lsusb.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 F-16EX Joystick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed VID)
+    product_id: 0xBE70      # Estimated — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE70 is estimated within the WinWing PID range. Compare with
+      orion2-f16ex-stick.yaml (PID 0xBEA8, JGRIP-F16 extended) and
+      orion2-f16ex-throttle.yaml (PID 0xBE6A).
+  - id: HALL_EFFECT_GIMBAL
+    description: >
+      Orion 2 base uses a Hall-effect gimbal providing contactless 12-bit
+      resolution on X and Y axes with no mechanical wear.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 F-16EX Joystick (standard grip, no Z-module). 3 axes,
+    28 buttons, 1 hat. VID 0x4098 confirmed; PID 0xBE70 estimated.
+    Distinct from JGRIP-F16 extended stick (orion2-f16ex-stick.yaml PID 0xBEA8).
+    Asian-market brand, wave-34 addition. Last reviewed: 2026-06.

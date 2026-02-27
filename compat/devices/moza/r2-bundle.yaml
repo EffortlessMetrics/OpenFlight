@@ -1,0 +1,49 @@
+# Moza R2 Racing Sim Bundle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Composite bundle: R2 base + ES steering wheel + SR-P pedals.
+# VID 0x346E (Moza), PID 0x0002 — estimated bundle composite PID.
+schema_version: "1"
+
+device:
+  name: "Moza R2 Racing Sim Bundle"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0002
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, brake, throttle]
+    resolution_bits: 16
+  buttons: 20
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Bundle PID 0x0002 is estimated. Individual components may enumerate
+      as separate USB devices.
+  - id: FORCE_FEEDBACK_PROPRIETARY
+    description: >
+      Moza proprietary FFB protocol. Full effect fidelity requires Pit House.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R2 bundle including R2 direct drive base, ES steering wheel, and
+    SR-P Lite pedals. Entry-level Moza sim racing package. Tier 2.
+    Last reviewed: 2026-02.

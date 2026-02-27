@@ -1,0 +1,41 @@
+# Logitech Freedom 2.4 Cordless Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC213 from USB IF database.
+schema_version: "1"
+
+device:
+  name: "Logitech Freedom 2.4 Cordless Joystick"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC213
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, twist, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Wireless joystick with twist axis. VID/PID confirmed from USB IF registry.
+    Last reviewed: 2026-06.

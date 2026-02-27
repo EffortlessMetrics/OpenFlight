@@ -1,0 +1,59 @@
+# GoFlight GF-100 VHF Radio Panel (VID 0x0738 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight GF-100 VHF Radio panel replicates a COM1/COM2 radio frequency
+# tuning panel for cockpit builds. This manifest covers the VID 0x0738 /
+# PID 0x7112 variant (community estimate). The primary manifest (gf-100.yaml)
+# uses VID 0x0E9F (confirmed GoFlight VID).
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-100 VHF Radio Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0738       # PID estimated — confirmed GoFlight VID is 0x0E9F
+    product_id: 0x7112      # Community estimate — GF-100 VHF (0x0738 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0738 / PID 0x7112 are community estimates. Confirmed GoFlight VID
+      is 0x0E9F (see gf-100.yaml). VID 0x0738 is unverified for GoFlight
+      hardware. Confirm with lsusb on real hardware.
+  - id: CONCENTRIC_TUNING_ENCODERS
+    description: >
+      Dual concentric encoders provide MHz (outer) and KHz (inner) tuning for
+      COM/NAV frequency selection. Map outer encoder to whole MHz steps and
+      inner to 25/50 KHz fractional steps.
+  - id: FREQ_DISPLAY_OUTPUT
+    description: >
+      7-segment frequency display requires HID output reports for active and
+      standby frequency readout. Use GoFlight SDK or FSUIPC plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-100 VHF radio panel — VID 0x0738 / PID 0x7112 est (alternate batch).
+    Primary manifest: gf-100.yaml (VID 0x0E9F). Last reviewed: 2026-06.

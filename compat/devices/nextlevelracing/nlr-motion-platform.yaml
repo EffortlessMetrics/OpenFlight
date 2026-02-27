@@ -1,0 +1,54 @@
+# Next Level Racing Motion Platform (USB HID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Next Level Racing Motion Platform is a 2-DOF (pitch + roll) seat mover for
+# simulation rigs. This entry covers the USB HID interface variant.
+# VID 0x1209 (pid.codes) and PID 0x3005 are community estimates.
+# See motion-platform-v3.yaml for the FTDI-bridged variant.
+schema_version: "1"
+
+device:
+  name: "Next Level Racing Motion Platform"
+  vendor: "Next Level Racing"
+  type: platform
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3005  # Community estimate — NLR motion platform USB HID
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 and PID 0x3005 are community estimates. Verify with lsusb.
+      See also motion-platform-v3.yaml for the FTDI-bridged communication
+      variant of the NLR Motion Platform V3.
+  - id: MOTION_OUTPUT_ONLY
+    description: >
+      This platform receives motion commands from the PC and does not generate
+      HID input events. Driven via NLR Motion software or SimTools.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Next Level Racing Motion Platform USB HID variant. VID 0x1209 / PID 0x3005
+    community estimate. PID estimated from community sources.
+    Last reviewed: 2026-07.

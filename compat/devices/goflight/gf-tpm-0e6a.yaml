@@ -1,0 +1,56 @@
+# GoFlight GF-TPM Throttle/Prop/Mixture Panel (VID 0x0E6A variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E6A (GoFlight Inc. — community-reported alternate VID), PID 0x0205 (est).
+# The GF-TPM is a throttle, propeller, and mixture lever panel for GA simulation.
+# Three analogue axes map to throttle, prop RPM, and mixture controls.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-TPM Throttle Prop Mixture"
+  vendor: "GoFlight"
+  type: panel
+  usb:
+    vendor_id: 0x0E6A       # GoFlight Inc. — community-reported alternate VID
+    product_id: 0x0205      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, prop, mixture]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0E6A / PID 0x0205 are community estimates. Confirm with lsusb or
+      Windows Device Manager on real hardware.
+  - id: LEVER_UNIPOLAR
+    description: >
+      All three levers (throttle, prop, mixture) are unipolar axes (0 = idle/lean,
+      max = full/rich). Map each to the corresponding sim axis in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-TPM Throttle/Prop/Mixture — VID 0x0E6A / PID 0x0205 (est). 3 axes
+    for GA engine management controls. PID estimated from community sources.
+    Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

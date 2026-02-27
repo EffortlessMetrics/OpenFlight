@@ -1,0 +1,58 @@
+# KAB AudioPipe TI-6 Tactile Transducer Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# KAB AudioPipe TI-6 bass shaker / tactile transducer. Audio-driven via line-
+# level amplifier; no USB HID interface. Tracked for sim-rig accessory compatibility.
+schema_version: "1"
+
+device:
+  name: "KAB AudioPipe TI-6 Tactile Transducer"
+  vendor: "KAB"
+  usb:
+    vendor_id: 0x0000   # No USB interface — audio-driven transducer
+    product_id: 0x0000  # No USB interface — audio-driven transducer
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — audio output only, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: NO_USB_INTERFACE
+    description: >
+      The TI-6 is a passive tactile transducer. It has no USB connection;
+      it is driven by a dedicated audio amplifier. VID/PID fields are
+      placeholders only.
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: >
+      Haptic output is driven by a line-level audio signal routed to the
+      amplifier. OpenFlight does not directly control this device; audio
+      routing is handled by the OS or a companion application (e.g.,
+      SimShaker, SimHub, NLT). Frequency response: 10–200 Hz nominal.
+  - id: NO_HID_INPUT
+    description: >
+      Generates no HID input events. Tracked for sim-rig accessory and
+      tactile feedback compatibility documentation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    KAB AudioPipe TI-6 tactile transducer. Audio-driven, no USB HID.
+    Used in sim rigs for low-frequency haptic feedback (engine, landing gear,
+    weapons). Audio routing via SimShaker/SimHub recommended.
+    Last reviewed: 2026-06.

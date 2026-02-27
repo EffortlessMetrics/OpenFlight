@@ -477,6 +477,279 @@ fn test_verify_test_result_analysis() {
     assert!(!test_result.success);
 }
 
+/// LED OFF state should produce zero-brightness bytes for all brightness-based panel reports.
+#[test]
+fn test_led_off_encoding() {
+    let hid_adapter = create_test_hid_adapter();
+    let writer = SaitekPanelWriter::new(hid_adapter);
+
+    let off = PanelLedState {
+        led_index: 0,
+        brightness: 1.0, // brightness field irrelevant when is_on=false
+        is_on: false,
+        blink_rate: None,
+        last_blink_toggle: Instant::now(),
+        last_write: Instant::now(),
+    };
+
+    let radio = writer.build_radio_panel_report(&off).unwrap();
+    assert_eq!(
+        radio[1], 0,
+        "radio: LED OFF must produce zero brightness byte"
+    );
+
+    let multi = writer.build_multi_panel_report(&off).unwrap();
+    assert_eq!(
+        multi[1], 0,
+        "multi: LED OFF must produce zero brightness byte"
+    );
+
+    let bip = writer.build_bip_report(&off).unwrap();
+    assert_eq!(bip[1], 0, "bip: LED OFF must produce zero brightness byte");
+
+    let fip = writer.build_fip_report(&off).unwrap();
+    assert_eq!(fip[1], 0, "fip: LED OFF must produce zero brightness byte");
+}
+
+/// Switch panel uses bit-packing; verify each LED index maps to the correct bit.
+#[test]
+fn test_switch_panel_bit_packing_all_indices() {
+    let hid_adapter = create_test_hid_adapter();
+    let writer = SaitekPanelWriter::new(hid_adapter);
+
+    for led_index in 0u8..8 {
+        let led_state = PanelLedState {
+            led_index,
+            brightness: 1.0,
+            is_on: true,
+            blink_rate: None,
+            last_blink_toggle: Instant::now(),
+            last_write: Instant::now(),
+        };
+        let report = writer.build_switch_panel_report(&led_state).unwrap();
+        assert_eq!(report.len(), 8);
+
+        let byte_idx = 1 + (led_index / 8) as usize;
+        let bit = led_index % 8;
+        assert_ne!(
+            report[byte_idx] & (1 << bit),
+            0,
+            "led_index={led_index}: expected bit {bit} set in byte {byte_idx}"
+        );
+    }
+}
+
+/// Switch panel: LED OFF must leave all report bytes as zero.
+#[test]
+fn test_switch_panel_led_off_no_bits_set() {
+    let hid_adapter = create_test_hid_adapter();
+    let writer = SaitekPanelWriter::new(hid_adapter);
+
+    for led_index in 0u8..8 {
+        let off = PanelLedState {
+            led_index,
+            brightness: 1.0,
+            is_on: false,
+            blink_rate: None,
+            last_blink_toggle: Instant::now(),
+            last_write: Instant::now(),
+        };
+        let report = writer.build_switch_panel_report(&off).unwrap();
+        assert_eq!(
+            report[1], 0,
+            "led_index={led_index}: LED OFF must not set any bits"
+        );
+    }
+}
+
+/// Brightness float values must encode to the expected u8 byte values.
+#[test]
+fn test_brightness_encoding_levels() {
+    let hid_adapter = create_test_hid_adapter();
+    let writer = SaitekPanelWriter::new(hid_adapter);
+
+    // (input brightness, expected encoded byte via `(b * 255.0) as u8`)
+    let cases: &[(f32, u8)] = &[
+        (0.0, 0),
+        (0.25, 63),  // floor(0.25 * 255) = 63
+        (0.5, 127),  // floor(0.5  * 255) = 127
+        (0.75, 191), // floor(0.75 * 255) = 191
+        (1.0, 255),
+    ];
+
+    for &(brightness, expected) in cases {
+        let state = PanelLedState {
+            led_index: 0,
+            brightness,
+            is_on: true,
+            blink_rate: None,
+            last_blink_toggle: Instant::now(),
+            last_write: Instant::now(),
+        };
+        let report = writer.build_radio_panel_report(&state).unwrap();
+        assert_eq!(
+            report[1], expected,
+            "brightness {brightness:.2} should encode to {expected}"
+        );
+    }
+}
+
+/// Every panel type should expose a non-empty LED mapping with no duplicate names.
+#[test]
+fn test_all_panel_types_led_mapping_counts_and_names() {
+    assert_eq!(PanelType::RadioPanel.led_mapping().len(), 7);
+    assert_eq!(PanelType::MultiPanel.led_mapping().len(), 8);
+    assert_eq!(PanelType::SwitchPanel.led_mapping().len(), 8);
+    assert_eq!(PanelType::BIP.led_mapping().len(), 8);
+    assert_eq!(PanelType::FIP.led_mapping().len(), 8);
+
+    // MultiPanel LEDs
+    let multi = PanelType::MultiPanel.led_mapping();
+    assert!(multi.contains(&"ALT"));
+    assert!(multi.contains(&"VS"));
+    assert!(multi.contains(&"AUTOTHROTTLE"));
+
+    // BIP LEDs
+    let bip = PanelType::BIP.led_mapping();
+    assert!(bip.contains(&"GEAR_L"));
+    assert!(bip.contains(&"GEAR_N"));
+    assert!(bip.contains(&"GEAR_R"));
+    assert!(bip.contains(&"MASTER_WARNING"));
+    assert!(bip.contains(&"FIRE_WARNING"));
+
+    // FIP LEDs
+    let fip = PanelType::FIP.led_mapping();
+    assert!(fip.contains(&"ATTITUDE"));
+    assert!(fip.contains(&"HSI"));
+    assert!(fip.contains(&"ADF"));
+}
+
+/// VerifyTestResult: all steps pass, latency methods return correct values.
+#[test]
+fn test_verify_test_result_all_pass() {
+    let step_results = vec![
+        VerifyStepResult {
+            step_index: 0,
+            expected_latency: Duration::from_millis(20),
+            actual_latency: Duration::from_millis(4),
+            success: true,
+            error: None,
+        },
+        VerifyStepResult {
+            step_index: 1,
+            expected_latency: Duration::from_millis(20),
+            actual_latency: Duration::from_millis(8),
+            success: true,
+            error: None,
+        },
+    ];
+
+    let result = VerifyTestResult {
+        panel_path: "/dev/test_all_pass".to_string(),
+        total_duration: Duration::from_millis(50),
+        step_results,
+        success: true,
+    };
+
+    assert!(result.meets_latency_requirement());
+    assert_eq!(result.max_latency(), Duration::from_millis(8));
+    // (4_000_000 + 8_000_000) / 2 = 6_000_000 ns = 6 ms
+    assert_eq!(result.avg_latency(), Duration::from_millis(6));
+    assert!(result.success);
+}
+
+/// VerifyTestResult: empty step list should not panic and return sensible defaults.
+#[test]
+fn test_verify_test_result_empty_steps() {
+    let result = VerifyTestResult {
+        panel_path: "/dev/test_empty".to_string(),
+        total_duration: Duration::from_millis(10),
+        step_results: vec![],
+        success: true,
+    };
+
+    assert!(result.meets_latency_requirement()); // vacuously true
+    assert_eq!(result.max_latency(), Duration::ZERO);
+    assert_eq!(result.avg_latency(), Duration::ZERO);
+}
+
+/// LED state transitions (OFF → ON → OFF) must update the internal LED map correctly.
+#[test]
+fn test_multiple_led_state_transitions() {
+    let hid_adapter = create_test_hid_adapter();
+    let mut writer = SaitekPanelWriter::new(hid_adapter);
+
+    let device_info = create_test_device_info(PanelType::MultiPanel);
+    let device_path = device_info.device_path.clone();
+    writer.register_panel(device_info).unwrap();
+    writer.min_write_interval = Duration::from_millis(0);
+
+    let target = LedTarget::Panel("ALT".to_string());
+    let off = LedState {
+        on: false,
+        brightness: 0.0,
+        blink_rate: None,
+        last_update: Instant::now(),
+    };
+    let on = LedState {
+        on: true,
+        brightness: 1.0,
+        blink_rate: None,
+        last_update: Instant::now(),
+    };
+
+    // Initial state after registration: OFF
+    assert!(!writer.led_states[&device_path]["ALT"].is_on);
+
+    // OFF → ON
+    writer.set_led(&device_path, "ALT", &target, &on).unwrap();
+    assert!(writer.led_states[&device_path]["ALT"].is_on);
+    assert_eq!(writer.led_states[&device_path]["ALT"].brightness, 1.0);
+
+    // ON → OFF
+    writer.set_led(&device_path, "ALT", &target, &off).unwrap();
+    assert!(!writer.led_states[&device_path]["ALT"].is_on);
+    assert_eq!(writer.led_states[&device_path]["ALT"].brightness, 0.0);
+
+    // OFF → ON again
+    writer.set_led(&device_path, "ALT", &target, &on).unwrap();
+    assert!(writer.led_states[&device_path]["ALT"].is_on);
+}
+
+/// Setting one LED must not affect neighbouring LEDs.
+#[test]
+fn test_independent_led_states() {
+    let hid_adapter = create_test_hid_adapter();
+    let mut writer = SaitekPanelWriter::new(hid_adapter);
+
+    let device_info = create_test_device_info(PanelType::SwitchPanel);
+    let device_path = device_info.device_path.clone();
+    writer.register_panel(device_info).unwrap();
+    writer.min_write_interval = Duration::from_millis(0);
+
+    let on = LedState {
+        on: true,
+        brightness: 1.0,
+        blink_rate: None,
+        last_update: Instant::now(),
+    };
+    let target = LedTarget::Panel("GEAR".to_string());
+    writer.set_led(&device_path, "GEAR", &target, &on).unwrap();
+
+    assert!(
+        writer.led_states[&device_path]["GEAR"].is_on,
+        "GEAR should be ON"
+    );
+    assert!(
+        !writer.led_states[&device_path]["MASTER_BAT"].is_on,
+        "MASTER_BAT must remain OFF"
+    );
+    assert!(
+        !writer.led_states[&device_path]["AVIONICS"].is_on,
+        "AVIONICS must remain OFF"
+    );
+}
+
 #[test]
 fn test_min_interval_enforcement() {
     let hid_adapter = create_test_hid_adapter();

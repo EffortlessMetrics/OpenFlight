@@ -1,0 +1,47 @@
+# WinWing F-16 DDI Panel (Right)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F-16 DDI (Digital Data Indicator) panel — right-side MFD surround.
+# Mirror of the left DDI panel (f16-ddi-l-panel.yaml).
+# PID 0xBD31 is a community estimate — verify via lsusb.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 DDI Panel (Right)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD31   # Community estimate — F-16 DDI Right (Left = 0xBD30)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD31 is a community estimate for the F-16 DDI Right panel.
+      Update when confirmed via linux-hardware.org or WinWing community sources.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 DDI right panel. PID 0xBD31 is unconfirmed.
+    Pairs with f16-ddi-l-panel.yaml. Last reviewed: 2026-02.

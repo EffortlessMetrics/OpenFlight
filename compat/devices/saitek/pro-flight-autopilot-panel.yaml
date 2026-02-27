@@ -1,0 +1,44 @@
+# Saitek Pro Flight Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech), PID 0x0C2F — estimated.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Autopilot Panel"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0C2F
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C2F is estimated. Confirm against lsusb probe data.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Autopilot Panel — dedicated autopilot control surface
+    with altitude, heading, vertical speed, and IAS selectors. Part of the
+    Pro Flight series. Tier 2. Last reviewed: 2026-02.

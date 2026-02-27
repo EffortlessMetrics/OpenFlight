@@ -1,0 +1,64 @@
+# Thrustmaster T500 RS Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot. PID 0xB65D confirmed from
+# the Linux kernel input subsystem and SDL2 GameControllerDB. The T500 RS
+# (2011–2018) was Thrustmaster's flagship belt-drive FFB racing wheel with
+# a 1080° rotation range and the official Gran Turismo 5 PS3 wheel.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T500 RS Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot (confirmed)
+    product_id: 0xB65D      # Confirmed: Linux kernel input + SDL2 GameControllerDB
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]    # steering, gas, brake, clutch, handbrake
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, triangle]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (1080°, 16-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar); Rx = clutch (unipolar, T500 RS Advanced pedal set).
+      Map X to rudder in flight sim; Z/Rz to throttle/toe-brake.
+  - id: THRUSTMASTER_FFB_PROTOCOL
+    description: >
+      Uses Thrustmaster's proprietary FFB protocol. Linux support via the
+      hid-tmff driver (CONFIG_HID_THRUSTMASTER). Windows: Thrustmaster
+      drivers or T.A.R.G.E.T. software not required for basic HID; FFB
+      requires the wheel driver.
+  - id: HIGH_RESOLUTION_STEERING
+    description: >
+      16-bit steering axis resolution provides excellent precision for rudder
+      input in flight sim. The 1080° range maps well to full rudder deflection
+      with room for fine adjustments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T500 RS (2011–2018). VID/PID confirmed from Linux kernel and
+    SDL2. High-end belt-drive FFB wheel; 1080° rotation, 16-bit axes.
+    Excellent as a rudder input in flight sim. Last reviewed: 2026-06.

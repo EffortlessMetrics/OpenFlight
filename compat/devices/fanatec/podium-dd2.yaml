@@ -1,0 +1,62 @@
+# Fanatec Podium DD2 Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0042 is a community estimate for the Podium DD2.
+# The Podium DD2 is Fanatec's top-of-the-range direct-drive base (25 Nm peak),
+# positioned above the Podium DD1 (podium-dd1.yaml, 20 Nm). Used in
+# high-end combined sim rigs with flight grip adapters.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium DD2"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0042   # Community estimate — Podium DD2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 25.0  # Podium DD2 peak Nm
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0042 is a community estimate adjacent to the Podium DD1 (0x0040).
+      Confirm with lsusb or Fanatec software capture before deployment.
+  - id: TORQUE_ONLY_FFB
+    description: >
+      The Podium DD2 uses Fanatec's vendor torque-command protocol.
+      25 Nm peak — higher than the DD1 (20 Nm) and substantially above the
+      CSL DD (8 Nm with Boost Kit).
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      Exposes only the rotation axis. A flight grip adapter adds button inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium DD2 — flagship 25 Nm direct-drive base.
+    VID 0x0EB7 confirmed; PID 0x0042 is a community estimate.
+    See csl-dd.yaml (entry) and podium-dd1.yaml (mid-range). Last reviewed: 2026-06.

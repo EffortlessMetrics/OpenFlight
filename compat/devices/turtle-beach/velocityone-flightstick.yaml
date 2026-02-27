@@ -1,0 +1,60 @@
+# Turtle Beach VelocityOne Flightstick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 is Turtle Beach Corporation's registered USB vendor ID.
+# PID 0x1052 is a community estimate for the VelocityOne Flightstick (2022).
+# The Flightstick is a standalone Xbox/PC joystick distinct from the
+# VelocityOne FlightDeck yoke (PID 0x1050). Marketed for GA and combat
+# flight sims on Xbox Series X/S and PC.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Flightstick"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x1052    # Community estimate — confirm with lsusb or USBView
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, throttle]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1052 is a community estimate. The VelocityOne Flightstick was
+      released in 2022. No independent hardware probe has confirmed this PID.
+      Confirm with lsusb / USBView on real hardware. See velocityone-flightdeck.yaml
+      (PID 0x1050) for the separate yoke+quadrant combo device.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. The throttle lever is integrated
+      into the grip base. Both are exposed as separate HID axes.
+  - id: XBOX_COMPATIBLE
+    description: >
+      The VelocityOne Flightstick is Xbox Series X/S compatible. On Windows it
+      enumerates as a standard HID joystick. Xbox-specific input features (rumble)
+      are not used in flight sim mode.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Flightstick (2022). Standalone joystick, distinct from
+    the VelocityOne FlightDeck yoke (velocityone-flightdeck.yaml). VID 0x10F5 is
+    Turtle Beach's registered VID. PID 0x1052 is unconfirmed. Last reviewed: 2026-02.

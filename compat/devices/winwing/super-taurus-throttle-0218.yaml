@@ -1,0 +1,56 @@
+# WinWing SuperTaurus Throttle (PID 0x0218 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (SimFlight Technology).
+# PID 0x0218 is a community estimate for this SuperTaurus throttle variant.
+# The primary SuperTaurus throttle (super-taurus-throttle.yaml) uses 0xBD64.
+# 0x0218 is in the low-range WinWing PID block seen in SimAppPro USB logs.
+schema_version: "1"
+
+device:
+  name: "WinWing SuperTaurus Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0218   # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad (WinWing convention)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 48
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0218 is a community estimate in the low-range WinWing PID block.
+      The confirmed SuperTaurus throttle (super-taurus-throttle.yaml) uses
+      0xBD64. Verify 0x0218 with SimAppPro USB info or lsusb before enabling
+      production device matching.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers reported as separate axes. OpenFlight
+      exposes them individually and optionally as a combined virtual axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SuperTaurus Throttle, PID 0x0218 variant. VID 0x4098 confirmed.
+    PID community estimate — cross-check with super-taurus-throttle.yaml
+    (0xBD64) and super-taurus-throttle-pro.yaml (0xBD65).
+    Last reviewed: 2026-06.

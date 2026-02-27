@@ -1,0 +1,59 @@
+# Moza CRP Pedals (STM32 / 0x0483 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Moza CRP Pedals are an active hydraulic sim racing pedal set with hall-effect
+# sensors and load-cell brake. This manifest covers an STM32-based firmware
+# variant with VID 0x0483 / PID 0xA430 (community estimate). The primary Moza
+# CRP manifest (crp-pedals.yaml) uses VID 0x346E (Gudsen Technology).
+
+schema_version: "1"
+
+device:
+  name: "Moza CRP Pedals (STM32 variant)"
+  vendor: "Moza Racing"
+  usb:
+    vendor_id: 0x0483       # PID estimated — STMicroelectronics; primary Moza VID is 0x346E
+    product_id: 0xA430      # Community estimate — CRP Pedals STM32 firmware variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0483 (STM32) / PID 0xA430 are community estimates for a specific
+      firmware variant. The primary Moza CRP pedals manifest (crp-pedals.yaml)
+      uses VID 0x346E. Verify with lsusb on real hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The brake axis uses a load cell for pressure measurement rather than a
+      position sensor. Brake sensitivity is configurable via Moza Pit House
+      software.
+  - id: HALL_EFFECT_THROTTLE_CLUTCH
+    description: >
+      Throttle and clutch axes use contactless Hall-effect sensors providing
+      smooth, wear-free operation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza CRP Pedals — STM32 firmware variant. VID 0x0483 / PID 0xA430 est.
+    Primary manifest with VID 0x346E: crp-pedals.yaml. Load-cell brake.
+    Last reviewed: 2026-06.

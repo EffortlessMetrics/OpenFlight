@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID/PID from Linux kernel drivers/hid/hid-ids.h (USB_DEVICE_ID_CH_COMBATSTICK)
+schema_version: "1"
+
+device:
+  name: "CH Combat Stick"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00F4
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: OS_MEDIATED_HID
+    description: "CH Products devices use OS-mediated HID parsing (no raw report ID)."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "VID/PID confirmed from Linux kernel hid-ids.h. Same OS-mediated HID approach as Fighterstick."

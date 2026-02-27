@@ -1,0 +1,42 @@
+# WinWing HOTAS F-18 Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBEC2 — estimated.
+# WinWing HOTAS F-18 Orion series stick for F/A-18C simulation.
+schema_version: "1"
+device:
+  name: "WinWing HOTAS F-18 Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBEC2      # Community estimate — HOTAS F-18 Stick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC2 is a community estimate for the WinWing HOTAS F-18 Stick.
+      WinWing's 0xBExx PID range covers Orion series variants. Confirm with
+      lsusb or Windows Device Manager on real hardware.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing HOTAS F-18 Stick — VID 0x4098 / PID 0xBEC2 (est).
+    F/A-18C Hornet HOTAS stick replica in WinWing Orion series.
+    Wave-59 addition. Last reviewed: 2026-07.

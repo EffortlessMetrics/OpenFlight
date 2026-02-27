@@ -1,0 +1,59 @@
+# VIRPIL VPC MongoosT-50 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x0140 is a community estimate for the original MongoosT-50 throttle unit;
+# later revisions (CM2, CM3) use separate PIDs. Confirm with lsusb before
+# deploying in production profiles.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x0140      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, scx, scy, slider_left, slider_right]
+    resolution_bits: 14
+  buttons: 64
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0140 is a community estimate for the original MT-50 throttle.
+      The MT-50CM2 and MT-50CM3 variants enumerate under different PIDs
+      (see mongoost-50cm2-throttle.yaml, cm3-throttle.yaml). Confirm with
+      lsusb before deploying.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return analog mini-sticks; they center at raw 8192.
+      Apply a deadzone around center in the profile.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Rotary encoders report increment/decrement as button pairs rather than
+      an absolute axis value.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50 Throttle (original revision). PID 0x0140 is a
+    community estimate; later CM2/CM3 revisions have separate manifests.
+    14-bit axes, 64 buttons, dual-grip layout. Last reviewed: 2026-06.

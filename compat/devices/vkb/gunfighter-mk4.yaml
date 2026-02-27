@@ -1,0 +1,83 @@
+# VKB Gunfighter Mk.IV (base model, 4th generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Community-reported: VID 0x231D (VKB), PID 0x0129 — Gunfighter Mk.IV base.
+# The Mk.IV succeeded the Mk.III (PID 0x0127) with revised gimbal geometry,
+# updated electronics, and firmware. Like Mk.III, it uses VKB's modular grip
+# system; the base enumerates as its own HID device.
+# PID 0x0129 is community-reported and not yet independently confirmed via
+# linux-hardware.org at time of writing.
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.IV"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0129  # Gunfighter Mk.IV base — community-reported
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 13   # 13-bit effective on Mk.IV; higher with cam-follower upgrade
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MODULAR_GRIP
+    description: >
+      The Gunfighter Mk.IV uses VKB's modular grip system. Compatible grips
+      include MCG, MCG Pro, T-Stick, SCG, and SEM. Axis count and button layout
+      depend on the attached grip and the active VKBDevCfg firmware profile.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+  - id: CAM_FOLLOWER_GEOMETRY
+    description: >
+      Mk.IV features a redesigned cam-follower gimbal vs Mk.III's crossed-roller
+      design. Resolution and centre-feel are affected by the installed cam profile
+      (soft, medium, hard). VKBDevCfg reports the active cam setting.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0129 is community-reported for the Gunfighter Mk.IV base (unverified
+    via linux-hardware.org). Successor to Mk.III (PID 0x0127). Axis count
+    reflects the base model without an attached grip; grips that expose
+    additional axes will report them via VKBDevCfg remapping.
+    For the Mk.III, see gunfighter-mk3.yaml (PID 0x0127).
+    For the Gunfighter + MCG Pro combo, see gunfighter-modern-combat-pro.yaml
+    (PID 0x0125). Last reviewed: 2026-02.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software required for firmware updates, axis calibration, grip
+    configuration, and firmware profile selection. Device enumerates as standard
+    HID after configuration; vendor software is optional for basic use.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. VKBDevCfg used for axis and button tuning."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; axes and buttons recognised automatically. MCG/T-Stick grips add extra buttons."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Plug and play. 13-bit resolution provides smooth warbird axis response."

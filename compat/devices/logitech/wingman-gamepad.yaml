@@ -1,0 +1,51 @@
+# Logitech WingMan Gamepad (original USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID 0xC204 is listed in the community usb.ids
+# database as "WingMan Gamepad". Dual-axis gamepad circa 1999-2002. PID
+# unconfirmed; usb.ids assignment may reflect community estimate only.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech Inc.
+    product_id: 0xC204   # WingMan Gamepad -- usb.ids community database
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [lx, ly]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_GAMEPAD
+    description: >
+      Original USB WingMan Gamepad (circa 1999-2002). Single analogue stick
+      with 8-bit resolution; digital d-pad, 10 buttons. Enumerates as standard
+      HID gamepad on modern Windows.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC204 is listed in the community usb.ids database but is not
+      independently confirmed. Confirm with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Gamepad original USB (circa 1999-2002). 2 axes, 10 buttons.
+    PID 0xC204 from usb.ids community database; unconfirmed. Last reviewed: 2026-06.

@@ -1,0 +1,57 @@
+# GoFlight GF-T8 Plus Avionics Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The GoFlight GF-T8+ (T8 Plus) is an enhanced 8-toggle-switch panel with
+# indicator LEDs, building on the GF-T8 (gf-t8.yaml). Adds LED feedback
+# on each switch position — useful for gear, lights, and fuel cutoffs.
+# VID 0x0E9F confirmed: GoFlight Inc.
+# PID 0x0009 is a community estimate (GF-T8 = 0x0008 estimate) — confirm.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-T8 Plus Switch Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0009   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0009 is a community estimate for the GF-T8+. GF-T8 uses 0x0008
+      (estimate). Confirm with lsusb. LED output requires separate HID output
+      report handling.
+  - id: LED_OUTPUT
+    description: >
+      Each switch position has an associated LED. LED state requires USB HID
+      output reports from the host; state is not automatic.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the GF family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-T8 Plus — 8-switch panel with LED indicators. VID 0x0E9F = GoFlight.
+    PID 0x0009 unconfirmed. Predecessor: gf-t8.yaml.
+    Last reviewed: 2026-06.

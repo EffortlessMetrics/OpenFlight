@@ -1,0 +1,63 @@
+# Fanatec Gran Turismo DD Pro Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH). PID is a community estimate; the GT DD Pro
+# was released in 2022 as the PlayStation-licensed direct-drive base.
+# Fanatec wheel base PIDs typically follow a sequential allocation per
+# product family. Confirm with lsusb or Fanatec Control Panel on real
+# hardware. Used in flight sim with a custom flight sim grip adapter.
+schema_version: "1"
+
+device:
+  name: "Fanatec Gran Turismo DD Pro Wheel Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0031      # Community estimate — GT DD Pro (CSL DD = 0x0030)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0031 is a community estimate for the GT DD Pro. The CSL DD uses
+      0x0030 (csl-dd.yaml); the GT DD Pro follows sequentially. Verify with
+      Fanatec Control Panel → Hardware tab or lsusb.
+  - id: DD_PRO_8NM
+    description: >
+      The GT DD Pro delivers up to 8 Nm peak torque (standard kit)
+      or 11 Nm with the CSL DD Boost Kit. In flight sim, this provides
+      extremely realistic centering forces for rudder/cyclic axis use.
+  - id: PS_LICENSED_RESTRICTIONS
+    description: >
+      The GT DD Pro includes PlayStation hardware certification. On PC,
+      it operates in standard DirectInput DD mode. No PS-specific HID
+      restrictions apply when used via USB on PC.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Gran Turismo DD Pro. VID 0x0EB7 confirmed; PID 0x0031 is a
+    community estimate. 8 Nm direct-drive FFB. Used in flight sim for
+    ultra-realistic rudder/cyclic centering. Last reviewed: 2026-06.

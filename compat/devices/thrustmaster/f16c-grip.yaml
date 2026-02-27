@@ -1,0 +1,63 @@
+# Thrustmaster F-16C Viper HOTAS Add-On Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB113 — community-documented; not confirmed on physical hardware.
+# Source: DCS World forums, Thrustmaster community HID capture logs.
+# Designed to work with the Viper TQS (0xB380) or compatible throttle base.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F-16C Viper HOTAS Add-On Grip"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB113   # Community-documented; HIL confirmation pending
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [mini_stick_x, mini_stick_y]
+    resolution_bits: 16
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: F16C_GRIP_MINI_STICK_BIPOLAR
+    description: >
+      The mini-stick (X/Y) axes are bipolar 16-bit channels centered at
+      approximately 32768. Normalize as 0→-1.0, 32768→0.0, 65535→+1.0.
+  - id: F16C_GRIP_NWS_BUTTON
+    description: >
+      The NWS (Nose Wheel Steering) / Dogfight override button on the grip
+      thumb is a momentary pushbutton reported as a standard HID button.
+      DCS World maps it as a dedicated NWS toggle by default.
+  - id: F16C_GRIP_PADDLE_SWITCH
+    description: >
+      A 4-way hat switch (TDC) and a pinky paddle are present. The paddle
+      is typically mapped as a modifier or speedbrake in DCS F-16C profiles.
+  - id: F16C_GRIP_BASE_DEPENDENT
+    description: >
+      The F-16C grip requires a compatible throttle base (Viper TQS preferred;
+      see viper-tqs.yaml). It does not enumerate independently over USB without
+      a base unit.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout, HIL pending)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The F-16C Viper HOTAS Add-On Grip is primarily used in DCS World F-16C Viper
+    module. Input layout derived from community DCS forum posts and T.A.R.G.E.T
+    scripting analysis. PID 0xB113 is community-documented and has not been
+    confirmed against physical hardware. Byte offsets unvalidated.
+    Last reviewed: 2026-06.

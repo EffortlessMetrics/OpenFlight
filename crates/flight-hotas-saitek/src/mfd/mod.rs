@@ -11,4 +11,4 @@
 
 mod x52_pro;
 
-pub use x52_pro::X52ProMfd;
+pub use x52_pro::{X52_PRO_PID, X52_PRO_VID, X52ProMfd};

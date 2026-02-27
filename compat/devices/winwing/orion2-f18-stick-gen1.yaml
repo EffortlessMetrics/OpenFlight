@@ -1,0 +1,60 @@
+# WinWing Orion 2 F/A-18 Stick (Gen1, hardware revision A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# The Orion 2 F/A-18C Stick (Gen2, PID 0xBE63) is documented in
+# orion2-f18c-stick.yaml. Gen1 refers to the earlier hardware revision of the
+# Orion 2 base paired with the F/A-18 grip, which shipped before the Gen2 board
+# revision that changed the PID. PID 0xBE60 is a community estimate.
+#
+# Note: This is distinct from the Orion 1 F/A-18 Stick (PID 0xBE11,
+# see orion1-f18-stick.yaml) which used the first-generation Orion base.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 F/A-18 Stick (Gen1)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE60   # Community estimate — Gen1 hardware revision
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 18
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE60 is a community estimate for the Orion 2 F/A-18 Gen1 hardware
+      revision. The Gen2 uses PID 0xBE63 (orion2-f18c-stick.yaml). Not confirmed
+      from linux-hardware.org or USB descriptor capture. Update when confirmed.
+  - id: GEN1_BUTTON_DIFF
+    description: >
+      Gen1 hardware has 18 buttons (2 fewer than Gen2's 20). Button mapping may
+      differ from Gen2; verify against the WinWing HOTAS Setup software layout
+      for Gen1 F/A-18 grip before assigning profile bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 F/A-18 Stick — first hardware revision (Gen1).
+    PID 0xBE60 is a community estimate. Gen2 (PID 0xBE63) is in orion2-f18c-stick.yaml;
+    the original Orion 1 + F/A-18 (PID 0xBE11) is in orion1-f18-stick.yaml.
+    Typically paired with the Orion 2 F/A-18C Throttle. Last reviewed: 2026-06.

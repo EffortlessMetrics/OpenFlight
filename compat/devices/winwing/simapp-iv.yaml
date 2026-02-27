@@ -1,0 +1,51 @@
+# WinWing HOTAS SimApp IV
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (SimFlight Technology).
+# PID 0x021C is a community estimate for the HOTAS SimApp IV combined unit.
+# SimApp IV is WinWing's civil aviation HOTAS set for GA/airliner simulation.
+schema_version: "1"
+
+device:
+  name: "WinWing HOTAS SimApp IV"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x021C   # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 36
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x021C is a community estimate in the WinWing low-range PID block.
+      Verify via SimAppPro USB info page or lsusb before production matching.
+  - id: CIVIL_AVIATION_PROFILE
+    description: >
+      SimApp IV is tuned for GA and airliner simulation. Axis ranges and button
+      assignments differ from military HOTAS variants. Use a civil aviation profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing HOTAS SimApp IV civil-aviation HOTAS. VID 0x4098 confirmed.
+    PID 0x021C community estimate — verify against hardware.
+    Last reviewed: 2026-06.

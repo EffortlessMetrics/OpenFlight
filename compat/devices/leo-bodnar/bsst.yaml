@@ -1,0 +1,62 @@
+# Leo Bodnar Button Switch Throttle (BSST)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 confirmed: Leo Bodnar Electronics Ltd (registered USB vendor;
+#   same VID used by BBI-16, BBI-32, BBI-64, BU0836 series).
+# PID 0x100A is a community estimate for the BSST.
+# The BSST (Button Switch Slider Throttle) is a compact single-axis USB HID
+# controller by Leo Bodnar used as a standalone throttle axis or trim wheel
+# input in custom cockpit builds. Popular for DIY GA and helicopter setups.
+
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar Button Switch Throttle (BSST)"
+  vendor: "Leo Bodnar Electronics"
+  usb:
+    vendor_id: 0x1DD2    # Leo Bodnar Electronics Ltd (confirmed)
+    product_id: 0x100A   # Community estimate — BSST
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [slider]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x100A is a community estimate. Leo Bodnar VID 0x1DD2 is confirmed.
+      Confirm PID with lsusb on real BSST hardware before deployment.
+  - id: SINGLE_AXIS_THROTTLE
+    description: >
+      The BSST provides a single slider/throttle axis and a small set of
+      push-button inputs. Used in custom cockpits as a collective/throttle
+      axis or trim input. No FFB.
+  - id: DIY_COCKPIT_USE
+    description: >
+      Popular in DIY flight sim cockpit builds alongside other Leo Bodnar
+      button boards (bbi-16.yaml, bbi-32.yaml). The compact form factor
+      fits in narrow cockpit console cutouts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BSST — compact single-axis throttle/slider controller.
+    VID 0x1DD2 confirmed; PID 0x100A is a community estimate.
+    Used in DIY cockpit builds for throttle, collective, or trim inputs.
+    Last reviewed: 2026-06.

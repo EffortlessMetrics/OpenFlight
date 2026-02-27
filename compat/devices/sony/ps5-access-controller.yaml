@@ -1,0 +1,50 @@
+# Sony PlayStation Access Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment (registered USB vendor).
+# PID 0x0E5F: confirmed from linux-hardware.org probes for PlayStation Access
+# Controller (accessibility gamepad). Large customisable button layout used
+# in some cockpit accessibility setups.
+
+schema_version: "1"
+
+device:
+  name: "Sony PlayStation Access Controller"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C   # Sony Interactive Entertainment (confirmed)
+    product_id: 0x0E5F  # PS Access Controller — confirmed from linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: ACCESSIBILITY_DEVICE
+    description: >
+      Designed for players with disabilities. Layout is highly configurable
+      via the PlayStation Access controller app. All button positions are
+      programmable, so default mapping may vary.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Sony PlayStation Access Controller. VID 0x054C, PID 0x0E5F confirmed.
+    Accessibility-focused controller with customisable button layout.
+    Last reviewed: 2026-06.

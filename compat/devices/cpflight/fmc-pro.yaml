@@ -1,0 +1,58 @@
+# CPFlight FMC Pro (Flight Management Computer) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight FMC Pro is a Boeing 737 FMC (CDU/MCDU) replica keyboard panel
+# for flight management system input simulation. Complements the MCP Pro
+# (mcp-pro.yaml) and EFIS (efis.yaml) panels in a 737 NG cockpit build.
+# VID 0x1FD3 is a community estimate for CPFlight; PID 0x0004 is also an est.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight FMC Pro Boeing 737"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1FD3       # Community estimate — CPFlight
+    product_id: 0x0004      # Community estimate — FMC Pro
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64               # Full MCDU keyboard (LSK, function keys, alpha/numeric)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1FD3 / PID 0x0004 are community estimates. Confirm with CPFlight
+      USB utilities or lsusb on real hardware.
+  - id: SCRATCHPAD_DISPLAY
+    description: >
+      The FMC Pro has an integrated LCD scratchpad display. Display content
+      is updated via USB HID output reports. Requires CPFlight or compatible
+      FSUIPC-based output driver.
+  - id: LSK_BUTTONS
+    description: >
+      Line Select Key (LSK) buttons L1–L6 and R1–R6 map to button IDs
+      0–11. Function keys (DIR, PROG, PERF, INIT, etc.) follow sequentially.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight FMC Pro — Boeing 737 MCDU replica. VID 0x1FD3 / PID 0x0004 est.
+    Pairs with mcp-pro.yaml and efis.yaml for a full 737 NG overhead/pedestal build.
+    Last reviewed: 2026-06.

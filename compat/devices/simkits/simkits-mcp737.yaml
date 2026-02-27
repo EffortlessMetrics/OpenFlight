@@ -1,0 +1,57 @@
+# SimKits Boeing 737 MCP Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimKits (Netherlands) produces the IOCards platform and pre-built panel
+# modules for Boeing 737 NG cockpit builds. The SimKits MCP737 interfaces
+# the Boeing 737 NG Mode Control Panel including LED displays and rotaries.
+# VID 0x1C31 / PID 0x3000: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "SimKits Boeing 737 MCP Interface"
+  vendor: "SimKits"
+  usb:
+    vendor_id: 0x1C31       # Community estimate — SimKits
+    product_id: 0x3000      # Community estimate — MCP737
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4
+    names: [speed, heading, altitude, vs]
+    resolution_bits: 8
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1C31 / PID 0x3000 are community estimates. Confirm with SimKits
+      IOCards configuration software.
+  - id: IOCARDS_PROTOCOL
+    description: >
+      SimKits hardware typically uses the IOCards USB protocol compatible with
+      SIOC and FSUIPC. OpenFlight can interoperate via the generic HID path.
+  - id: DISPLAY_OUTPUTS
+    description: >
+      All LED 7-segment displays are output-driven. Requires sim telemetry
+      bridged via SIOC offsets or direct HID output report writes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits Boeing 737 MCP. VID 0x1C31 / PID 0x3000 est.
+    IOCards protocol. For EFIS see simkits-efis.yaml; for expansion see simkits-iocards-master.yaml.
+    Last reviewed: 2026-06.

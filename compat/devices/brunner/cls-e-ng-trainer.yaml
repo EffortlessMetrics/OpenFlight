@@ -1,0 +1,57 @@
+# Brunner CLS-E Next Generation (NG) Trainer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2BA1 (Brunner Elektronik AG). PID 0x000A is a community estimate
+# for the CLS-E Next Generation Trainer variant, a training-specific
+# configuration of the CLS-E FFB joystick. Distinct from the standard
+# CLS-E (cls-e.yaml) and the Mk.II (cls-e-mk2.yaml). The Trainer includes
+# a simplified control interface for aviation training environments.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E NG Trainer"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x2BA1    # Brunner Elektronik AG
+    product_id: 0x000A   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, friction, inertia]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000A is a community estimate. Confirm via Brunner SDK or lsusb.
+      See cls-e.yaml and cls-e-mk2.yaml for related manifests.
+  - id: FFB_BRUNNER_PROTOCOL
+    description: >
+      Brunner CLS devices use the Brunner FFB protocol over USB HID.
+      OpenFlight Brunner adapter translates standard FFB effects into
+      Brunner vendor commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E NG Trainer variant. PID 0x000A unconfirmed.
+    VID 0x2BA1 = Brunner Elektronik AG. Aviation training FFB joystick.
+    Last reviewed: 2026-06.

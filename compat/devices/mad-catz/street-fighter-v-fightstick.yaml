@@ -1,0 +1,57 @@
+# Mad Catz Street Fighter V Arcade FightStick TE2+
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0738 confirmed: Mad Catz Interactive Inc. (registered USB vendor ID).
+# PID 0x8250 sourced from community USB captures and SDL2 gamecontrollerdb
+# entries for the Mad Catz Street Fighter V Arcade FightStick TE2+ (PS4/PC).
+# The TE2+ features a Sanwa JLF joystick (8-way), 8 Sanwa OBSF-30 action
+# buttons, start/select/home, and 3 additional top-panel buttons.
+# In flight sim it is occasionally used for helicopter cyclic (8-way stick)
+# and radio/panel button assignments on the 8-button layout.
+schema_version: "1"
+
+device:
+  name: "Mad Catz Street Fighter V Arcade FightStick TE2+"
+  vendor: "Mad Catz Interactive"
+  usb:
+    vendor_id: 0x0738    # Mad Catz Interactive Inc. (confirmed)
+    product_id: 0x8250   # SF V FightStick TE2+ — community captures / SDL2
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SANWA_JLF_8WAY
+    description: >
+      The Sanwa JLF joystick reports 8-way directions as hat switch + axis.
+      In flight sim the 8-way restrictor gate can be swapped for a 4-way
+      or circular gate for smoother cyclic axis movement.
+  - id: NO_ANALOG_STICK
+    description: >
+      The joystick is a digital 8-way microswitch mechanism, not an analog
+      potentiometer. Axis reports are step-quantized to ±1 per direction.
+      Not suitable for fine analog throttle or rudder control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mad Catz SF V Arcade FightStick TE2+ — Sanwa JLF joystick + 8 buttons.
+    VID 0x0738 confirmed; PID 0x8250 from SDL2 gamecontrollerdb.
+    Digital 8-way stick; limited analog precision. Last reviewed: 2026-06.

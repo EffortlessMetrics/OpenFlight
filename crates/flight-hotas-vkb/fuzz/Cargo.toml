@@ -1,0 +1,38 @@
+[package]
+name = "flight-hotas-vkb-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-vkb]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_vkb_gladiator_report"
+path = "fuzz_targets/fuzz_vkb_gladiator_report.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_gladiator_nxt_evo"
+path = "fuzz_targets/fuzz_gladiator_nxt_evo.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_stecs"
+path = "fuzz_targets/fuzz_stecs.rs"
+test = false
+doc = false

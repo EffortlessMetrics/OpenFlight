@@ -1,0 +1,64 @@
+# Nintendo Switch Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x057E (Nintendo Co., Ltd.) confirmed.
+# PID 0x2009 confirmed: Linux kernel drivers/hid/hid-nintendo.c,
+#   "Nintendo Switch Pro Controller" (hid_device_id table).
+# Also confirmed from SDL2 gamecontrollerdb: MAKE_VIDPID(0x057e, 0x2009).
+# Full-featured gamepad with dual analog sticks, full shoulder buttons,
+# D-pad, and NFC reader. Supports wired USB and Bluetooth. Popular for
+# casual flight sim use (MSFS 2020/2024) on PC via USB.
+
+schema_version: "1"
+
+device:
+  name: "Nintendo Switch Pro Controller"
+  vendor: "Nintendo Co., Ltd."
+  usb:
+    vendor_id: 0x057E    # Nintendo Co., Ltd. (confirmed)
+    product_id: 0x2009   # Switch Pro Controller — confirmed Linux kernel + SDL2
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 12
+  buttons: 16             # A, B, X, Y, L, R, ZL, ZR, +, -, Home, Capture, L3, R3, SL, SR
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_hd]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125   # USB wired mode
+  max_jitter_ms: 4
+
+quirks:
+  - id: WIRED_USB_SUPPORTED
+    description: >
+      The Switch Pro Controller supports wired USB at full polling rate.
+      VID/PID 0x057E:0x2009 enumerate in both wired and Bluetooth modes.
+      Wired mode recommended for flight sim use (lower latency, stable poll rate).
+  - id: HD_RUMBLE
+    description: >
+      HD Rumble (LRA actuators, Nintendo proprietary protocol) is available
+      via the hid-nintendo kernel module or native Nintendo HID reports.
+  - id: GYRO_ACCELEROMETER
+    description: >
+      Built-in 6-axis IMU (gyroscope + accelerometer). Motion data is not
+      exposed via standard HID axes; requires vendor-specific report parsing.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo Switch Pro Controller. VID 0x057E / PID 0x2009 confirmed from
+    Linux kernel hid-nintendo.c and SDL2. Wired USB supported; recommended
+    for flight sim. Last reviewed: 2026-06.

@@ -1,0 +1,53 @@
+# PointCtrl FCU Input Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PointCtrl FCU (Flight Computer Unit) Input Panel — a dedicated button/switch
+# panel companion to the PointCtrl VR input system. Designed for European flight
+# sim builders using MSFS Airbus workflows. VID 0x04D8 (Microchip PIC USB MCU).
+# PID 0xEB50 is a community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "PointCtrl FCU Input Panel"
+  vendor: "PointCtrl"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (PIC USB MCU)
+    product_id: 0xEB50      # Community estimate — FCU panel; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEB50 is a community estimate. VID 0x04D8 / Microchip Technology is
+      used by multiple PointCtrl products. Verify with lsusb before deployment.
+      See also pointctrl/fcuv4.yaml (PID 0x0058) for the FCU v4 controller.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PointCtrl FCU Input Panel. VID 0x04D8 / PID 0xEB50 community estimate.
+    Panel companion for the PointCtrl VR input ecosystem. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs

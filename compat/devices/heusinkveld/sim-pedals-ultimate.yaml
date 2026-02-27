@@ -1,0 +1,57 @@
+# Heusinkveld Sim Pedals Ultimate
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Heusinkveld Sim Pedals Ultimate is the high-end entry in Heusinkveld's
+# pedal lineup, positioned above the Sim Pedals Pro (sim-pedals-pro.yaml) but
+# below the Sim Pedals Ultimate+ (ultimate-plus-pedals.yaml). Features load-cell
+# brake and high-resolution encoders on all three axes.
+# VID 0x04D8 (Microchip Technology) is a community estimate for Heusinkveld.
+# PID 0xF6D2 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Ultimate"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D2   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D2 is a community estimate. See sprint-pedals.yaml (0xF6D0) and
+      sim-pedals-pro.yaml for sibling devices. Confirm with lsusb.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake axis uses a load-cell for pressure-based input.
+      Apply a non-linear pressure curve in the OpenFlight profile.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim use: throttle → engine throttle or combined rudder,
+      brake → toe brakes (split via profile), clutch → differential brake.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Ultimate — high-end load-cell pedals (below Ultimate+).
+    VID 0x04D8/PID 0xF6D2 are community estimates. Last reviewed: 2026-06.

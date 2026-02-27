@@ -1,0 +1,55 @@
+# Microsoft SideWinder Freestyle Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation. PID 0x001A confirmed from the
+# usb.ids community database ("Microsoft Corp. SideWinder Freestyle Pro").
+# The Freestyle Pro (1998–2002) was notable for its tilt-sensing capability —
+# tilting the gamepad controlled additional axes via internal accelerometers.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Freestyle Pro"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation (confirmed)
+    product_id: 0x001A   # SideWinder Freestyle Pro — usb.ids community database
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, tilt_x, tilt_y]   # sticks + tilt accelerometer axes
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: TILT_SENSING
+    description: >
+      The Freestyle Pro includes internal accelerometers that expose tilt_x
+      and tilt_y axes (roll and pitch of the controller body). In flight sim
+      these can be mapped to banking or pitch input for casual use.
+  - id: LEGACY_DRIVER
+    description: >
+      The tilt-sensing axes may require the legacy Microsoft SideWinder driver
+      to function on modern Windows. Without it, only standard gamepad axes
+      and buttons are exposed via HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Freestyle Pro (1998–2002). VID/PID from usb.ids.
+    Tilt-sensing gamepad; novel use of accelerometers for casual flight input.
+    Legacy driver required for full axis exposure. Last reviewed: 2026-06.

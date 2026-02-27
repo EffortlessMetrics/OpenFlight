@@ -1,0 +1,68 @@
+# USB Accelerometer / Motion Cue Device (Cypress HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 confirmed: Cypress Semiconductor Corporation (registered USB VID).
+# PID 0x0002 is a community estimate for a Cypress CY7C63xxx-based USB HID
+# accelerometer used as a motion-cue axis source in flight simulation rigs.
+# These devices present 3 axes (X/Y/Z acceleration) as a standard HID joystick,
+# allowing them to drive head-slaving or motion-platform cue channels in
+# OpenFlight profiles. Marketed by third parties as "joywarping" or motion-cue
+# USB accelerometers.
+
+schema_version: "1"
+
+device:
+  name: "USB Accelerometer Motion Cue Device (Cypress HID)"
+  vendor: "Cypress Semiconductor"
+  usb:
+    vendor_id: 0x04B4    # Cypress Semiconductor Corporation (confirmed)
+    product_id: 0x0002   # Community estimate — CY7C63xxx HID; confirm with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0002 is a community estimate for a Cypress CY7C63xxx-based USB
+      HID accelerometer device. Cypress PID 0x0002 is widely reused across
+      many Cypress reference designs; confirm with lsusb and the product's
+      USB string descriptor on real hardware to distinguish from other devices.
+  - id: ACCELERATION_AXES
+    description: >
+      Axis values represent linear acceleration (not position or angle).
+      Apply a low-pass filter and integration in the OpenFlight profile when
+      using this device for head-slaving or motion-cue position control.
+      Raw acceleration data requires conditioning before use as a flight
+      control axis input.
+  - id: MOTION_CUE_USE_CASE
+    description: >
+      Primary use case is as a motion cue feedback source for DIY motion
+      platforms or as an inclinometer for cockpit tilt sensing. Map axes
+      to custom motion-cue channels in the OpenFlight profile rather than
+      to primary flight control axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cypress USB HID accelerometer for motion-cue / joywarping use.
+    VID 0x04B4 confirmed (Cypress Semiconductor); PID 0x0002 is a community
+    estimate. Apply low-pass filter + integration for position use.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# Moza RS V2 Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology / Moza (shared by all Moza products).
+# PID 0x0100 is a community estimate for the Moza RS V2 steering wheel.
+# The RS V2 is a premium quick-release steering wheel designed for use with
+# Moza R-series direct-drive bases. It connects via the Moza quick-release
+# mechanism and enumerates as a separate USB HID device providing buttons
+# and paddle shifters. Used in combined sim setups with flight grip adapters.
+schema_version: "1"
+
+device:
+  name: "Moza RS V2 Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology) — confirmed
+    product_id: 0x0100      # Community estimate — RS V2 wheel; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0100 is a community estimate for the RS V2 wheel peripheral.
+      The wheel connects to Moza R-series bases via quick-release connector.
+      Confirm with lsusb or Moza Pit House USB capture.
+  - id: WHEEL_PERIPHERAL_ONLY
+    description: >
+      The RS V2 is a steering wheel that attaches to a Moza R-series base.
+      It provides buttons and paddles only; axis data comes from the base
+      (e.g., r9-base.yaml, r16-base.yaml). Pair with a base manifest for
+      full control surface coverage.
+  - id: QUICK_RELEASE
+    description: >
+      The RS V2 uses Moza's magnetic quick-release mechanism. Reconnection
+      may cause a USB re-enumeration; use stable VID/PID matching in profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza RS V2 steering wheel peripheral. VID 0x346E confirmed; PID 0x0100
+    community estimate. Provides buttons and paddles; pair with a Moza R-series
+    base manifest for axes. Wave-49 addition. Last reviewed: 2026-07.

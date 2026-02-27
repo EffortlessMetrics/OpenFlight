@@ -1,0 +1,43 @@
+# GameSir X2 Type-C Mobile Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0403 — USB-C mobile gaming controller.
+schema_version: "1"
+
+device:
+  name: "GameSir X2 Type-C Mobile Controller"
+  vendor: "GameSir"
+  usb:
+    vendor_id: 0x1949
+    product_id: 0x0403
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1949 / PID 0x0403 are community estimates. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    USB-C mobile clip-on gaming controller.
+    Last reviewed: 2026-06.

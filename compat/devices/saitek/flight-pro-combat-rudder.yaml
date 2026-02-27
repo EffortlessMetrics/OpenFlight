@@ -1,0 +1,50 @@
+# Saitek Flight Pro Combat Rudder
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: linux-hardware.org reports "Flight Pro Combat Rudder" at
+# USB 06A3:0764 (2 probes). Pre-Pro Flight era gaming-class rudder pedals.
+schema_version: "1"
+
+device:
+  name: "Saitek Flight Pro Combat Rudder"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0764      # Confirmed via linux-hardware.org (2 probes)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 15
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Brake axes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each.
+  - id: NO_FORCE_TRIM
+    description: >
+      Pedals provide no force-trim or spring-loading adjustment via software;
+      physical tension is set via a hardware knob on the unit.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Older Saitek gaming-class rudder pedals (pre-Pro Flight era).
+    PID 0x0764 confirmed via linux-hardware.org (2 probes, Ubuntu 18.04).
+    No HIL rig data available. Last reviewed: 2026-02.

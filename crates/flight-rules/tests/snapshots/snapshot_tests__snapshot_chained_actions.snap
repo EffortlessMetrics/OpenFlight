@@ -1,0 +1,24 @@
+---
+source: crates/flight-rules/tests/snapshot_tests.rs
+expression: snap
+---
+instructions:
+  - LoadVar: 0
+  - LoadConst: 0
+  - Compare: NotEqual
+  - JumpFalse: 5
+  - Action: 0
+  - LoadVar: 0
+  - LoadConst: 0
+  - Compare: NotEqual
+  - Not
+  - JumpFalse: 11
+  - Action: 1
+variable_map:
+  gear_down: 0
+actions:
+  - LedOn:
+      target: GEAR
+  - LedOff:
+      target: GEAR
+stack_size: 8

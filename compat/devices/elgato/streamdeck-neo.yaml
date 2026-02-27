@@ -1,0 +1,58 @@
+# Elgato Stream Deck Neo (8-key, budget model)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 confirmed: Elgato Systems / Corsair.
+# PID 0x009A is a community-reported value for the Stream Deck Neo; confirmed
+#   in python-elgato-streamdeck issue tracker (Elgato Neo support PR, 2024).
+# The Neo is the 2024 entry-level Stream Deck — 8 keys + info strip — aimed at
+# sim hobbyists and content creators at a reduced price point.
+
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Neo"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9    # Elgato Systems / Corsair (confirmed)
+    product_id: 0x009A   # Stream Deck Neo — community-confirmed from driver PRs
+  hid:
+    usage_page: 0xFF00
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+  lcd_keys: true
+  touchstrip: true       # Small info/touch strip at bottom
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      Stream Deck Neo uses the same vendor HID protocol family as MK.2 / Plus
+      but with an 8-key report layout. The info strip at the bottom is an
+      additional output-only display segment.
+  - id: PANEL_DEVICE
+    description: >
+      Budget entry-level panel controller with 8 LCD keys and an info strip.
+      Suitable for single-aircraft cockpit modules or overlay shortcuts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elgato Stream Deck Neo — 2024 entry-level 8-key variant with info strip.
+    VID 0x0FD9 / PID 0x009A community-confirmed from python-elgato-streamdeck
+    driver PRs. Good value for simple cockpit panel setups in MSFS / X-Plane.
+    Last reviewed: 2026-06.

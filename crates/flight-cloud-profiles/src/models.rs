@@ -236,8 +236,6 @@ impl<T> Page<T> {
 mod tests {
     use super::*;
     use chrono::TimeZone;
-    use flight_profile::{AircraftId, Profile};
-    use std::collections::HashMap;
 
     fn make_listing(upvotes: u32, downvotes: u32) -> ProfileListing {
         ProfileListing {

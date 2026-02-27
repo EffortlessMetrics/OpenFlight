@@ -1,0 +1,42 @@
+# VKB STEC3 EVO Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim), PID 0x0232 — estimated.
+# VKB STEC3 EVO throttle unit used as a standalone stick/axis controller.
+schema_version: "1"
+device:
+  name: "VKB Stec3 EVO Stick"
+  vendor: "VKB Sim"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0232      # Community estimate — STEC3 EVO Stick; confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0232 is a community estimate for the VKB STEC3 EVO Stick.
+      VKB assigns PIDs per base+grip combination. Confirm with VKBDevCfg
+      or lsusb on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Stec3 EVO Stick — VID 0x231D / PID 0x0232 (est).
+    EVO variant of the STEC3 throttle/stick controller. Multi-axis support.
+    Wave-59 addition. Last reviewed: 2026-07.

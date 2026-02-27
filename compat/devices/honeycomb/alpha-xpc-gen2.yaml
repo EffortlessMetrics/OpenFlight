@@ -1,0 +1,45 @@
+# Honeycomb Alpha XPC Gen2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb). PID 0x1907 estimated for Alpha XPC Gen2.
+# Second-generation XPC yoke with improved Hall-effect sensors.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Alpha XPC Gen2"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1907
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, left-brake]
+    resolution_bits: 14
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: HALL_EFFECT_SENSORS_V2
+    description: >
+      Gen2 Hall-effect sensors with improved linearity and reduced dead zone.
+      Backwards compatible with original Alpha XPC mounting.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Alpha XPC Gen2 yoke. PID 0x1907 estimated.
+    VID 0x294B (Honeycomb). Last reviewed: 2026-06.

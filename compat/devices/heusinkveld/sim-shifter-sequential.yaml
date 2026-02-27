@@ -1,0 +1,61 @@
+# Heusinkveld Sim Shifter Sequential
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by Heusinkveld Engineering BVBA).
+# The Sim Shifter Sequential is Heusinkveld's load-cell sequential shift lever.
+# In flight simulation it can be used as a step-lever input for flap position,
+# speedbrake steps, or propeller pitch detents via the sequential lever action.
+# PID is a community estimate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Shifter Sequential"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6E0      # Community estimate — Sequential Shifter; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [shifter]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6E0 is a community estimate. Heusinkveld's USB PID range is
+      0xF6Dx. The Shifter Sequential may use a separate PID from the pedal
+      products. Verify with lsusb.
+  - id: SEQUENTIAL_LEVER_AXIS
+    description: >
+      The lever reports a single axis value. The UP click (pull) and DOWN
+      click (push) are also exposed as buttons 1 and 2. In flight sim, map
+      the lever axis to flap steps or use the button events for
+      increment/decrement bindings.
+  - id: LOAD_CELL_DETENT
+    description: >
+      The sequential shifter uses a load-cell detent mechanism. The required
+      actuation force is configurable via the included software. In flight sim,
+      a higher force requirement reduces inadvertent actuation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Shifter Sequential. VID 0x04D8 confirmed; PID 0xF6E0
+    is a community estimate. Load-cell sequential lever. Used in flight sim
+    for flap-step or propeller-pitch control. Last reviewed: 2026-06.

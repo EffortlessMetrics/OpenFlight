@@ -1,0 +1,57 @@
+# RealSimGear G1000 NXi Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear). The G1000 MFD bezel uses
+# PID 0xF235 (see g1000-mfd.yaml); the G1000 PFD uses 0xF234 (g1000-pfd.yaml).
+# The NXi variant ships with updated firmware for the Garmin G1000 NXi avionics
+# suite and uses PID 0xF240 (community-reported, adjacent to the classic G1000
+# allocation). No hardware probe has confirmed 0xF240 — update when verified.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 NXi Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF240      # Community-reported NXi variant; G1000 MFD = 0xF235
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 38               # Full MFD/PFD softkey row, FMS knob, MENU/FPL/PROC/NRST buttons
+  hats: 0
+  encoders: 4               # FMS inner/outer, range, baro/heading
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8          # USB FS panel device
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF240 is community-reported for the G1000 NXi variant. The classic
+      G1000 MFD uses 0xF235 (g1000-mfd.yaml). The NXi firmware update may
+      reuse the same PID as the classic unit; disambiguate via USB product
+      string if both PIDs report the same value. Verify with lsusb on real
+      hardware before enabling production device matching.
+  - id: PANEL_DEVICE
+    description: >
+      Button and encoder panel with no analogue axes. Use the rules engine
+      to map encoder rotations to avionics frequency, altitude, and heading
+      events in MSFS or X-Plane.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 NXi bezel — updated firmware for the Garmin G1000 NXi
+    avionics suite used in the Cessna 172 Sky Hawk (NXi) in MSFS 2020/2024.
+    PID 0xF240 is community-reported. The classic G1000 MFD and PFD bezels
+    use different PIDs (g1000-mfd.yaml, g1000-pfd.yaml). Last reviewed: 2026-02.

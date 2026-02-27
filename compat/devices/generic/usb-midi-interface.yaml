@@ -1,0 +1,62 @@
+# Generic USB MIDI Interface (panel/encoder use)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Many home cockpit builders re-purpose generic USB MIDI interfaces
+# (e.g. Behringer U-Control, Korg nanoKONTROL2, or bare USB-MIDI boards)
+# as input devices for rotary encoders and faders. MIDI CC messages from
+# knobs and sliders are translated to axis/button events by OpenFlight's
+# MIDI bridge layer. VID/PID vary widely by manufacturer — this manifest
+# describes the generic class rather than a specific product.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB MIDI Interface"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1235       # Placeholder — VID varies (Focusrite example)
+    product_id: 0x0001      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 8                # Typical fader/knob count on generic MIDI controllers
+    names: [cc1, cc2, cc3, cc4, cc5, cc6, cc7, cc8]
+    resolution_bits: 7      # MIDI CC is 7-bit (0–127)
+  buttons: 16               # Typical pad/button count
+  hats: 0
+  encoders: 8
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1235 (Focusrite) is an example placeholder. Actual VID/PID depends
+      entirely on the specific USB-MIDI device used. Match by USB audio class
+      (bInterfaceClass 0x01) and MIDI subclass (bInterfaceSubClass 0x03).
+  - id: MIDI_BRIDGE_REQUIRED
+    description: >
+      USB MIDI interfaces enumerate as USB Audio class devices, not HID.
+      OpenFlight's MIDI bridge layer (flight-midi-bridge) is required to
+      translate MIDI CC / Note-On messages to axis and button events.
+  - id: SEVEN_BIT_RESOLUTION
+    description: >
+      Standard MIDI CC resolution is 7-bit (128 steps). High-resolution MIDI
+      (14-bit using CC pairs) is supported by some controllers and the bridge.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB MIDI interface. VID/PID unconfirmed — varies by device.
+    Requires OpenFlight MIDI bridge. Common controllers: Behringer X-TOUCH MINI,
+    Korg nanoKONTROL2, Arturia BeatStep. Last reviewed: 2026-06.

@@ -1,0 +1,55 @@
+# Sim-Labs P1X Load Cell Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC / community USB HID VID), PID 0x05DD — community estimate.
+# Sim-Labs (also marketed as SimRacingBay) produces the P1X, a set of
+# entry-level sim pedals featuring load-cell brake sensing. Designed primarily
+# for sim racing but widely used in flight simulation setups for rudder pedal
+# and toe-brake control. Enumerates as a standard USB HID joystick.
+schema_version: "1"
+
+device:
+  name: "Sim-Labs P1X Load Cell Pedals"
+  vendor: "Sim-Labs / SimRacingBay"
+  usb:
+    vendor_id: 0x16C0       # PJRC / community HID VID (est — varies by firmware)
+    product_id: 0x05DD      # Community estimate — Sim-Labs P1X
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x05DD are community estimates. Sim-Labs does not
+      publish USB descriptor data publicly. Verify with lsusb or Windows
+      Device Manager on target hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake axis uses a strain-gauge load cell. Reported value is
+      proportional to applied pedal force, not physical travel distance.
+      Requires load-cell calibration for optimal brake modulation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sim-Labs P1X load cell pedals — 3 axes, 1000 Hz poll rate.
+    VID 0x16C0 / PID 0x05DD (est). Load-cell brake; sim racing and flight use.
+    Wave-40 addition. Last reviewed: 2026-07.

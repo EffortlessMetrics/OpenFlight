@@ -1,0 +1,67 @@
+# VKB Gladiator NXT Premium (Right)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim (VKB Game Controllers LLC).
+# PID 0x0204 is a community estimate for the NXT Premium Right-hand variant.
+# The Gladiator NXT Premium is an upgrade over the base Gladiator NXT (0x0200)
+# with a more refined gimbal mechanism (CAM-40 vs CAM-20), improved centering,
+# and a premium grip with additional hat switches. Distinct from the NXT EVO
+# PRO Premium (gladiator-nxt-evo-pro-premium.yaml) which uses a different
+# gimbal and has higher axis resolution.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT Premium (Right)"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0204   # Community estimate — NXT Premium R
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0204 is a community estimate adjacent to the NXT EVO R (0x0200)
+      and NXT Left (0x0201). Confirm with lsusb or VKBDevCfg device enumeration.
+  - id: DISTINCT_FROM_NXT_BASE
+    description: >
+      The NXT Premium uses the CAM-40 gimbal mechanism vs the base NXT's
+      CAM-20. The Premium also includes additional hat switches and improved
+      grip ergonomics. Not to be confused with the NXT EVO PRO Premium
+      (gladiator-nxt-evo-pro-premium.yaml) which has a different gimbal.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed via VKBDevCfg. OpenFlight reads the HID
+      report as configured; align VKB config with OpenFlight axis assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT Premium Right. VID 0x231D confirmed; PID 0x0204 is
+    a community estimate. See gladiator-nxt.yaml (base) and
+    gladiator-nxt-evo-pro-premium.yaml (EVO PRO). Last reviewed: 2026-06.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software recommended for calibration and axis configuration.

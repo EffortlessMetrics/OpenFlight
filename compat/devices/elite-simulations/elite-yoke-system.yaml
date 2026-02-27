@@ -1,0 +1,49 @@
+# Elite Simulations Yoke System (Commercial ATD Grade)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions full commercial yoke system — heavier column
+# and wheel construction than the entry-level E-Yoke, with pitch/roll/aileron
+# axes and panel switches for FAA ATD certification. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations Yoke System"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0205      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, aileron_trim]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID are placeholders. Verify against actual ESS hardware descriptor."
+  - id: DUAL_YOKE_SUPPORT
+    description: >
+      Some ESS ATD setups include captain and co-pilot yokes enumerated as
+      separate USB devices with the same VID/PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations commercial-grade yoke system for FAA ATD use. Heavier
+    build than e-yoke.yaml. VID/PID unconfirmed. Last reviewed: 2026-06.

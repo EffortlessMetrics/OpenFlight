@@ -36,6 +36,8 @@ examples-optin = []
 criterion.workspace = true
 proptest.workspace = true
 insta.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 
 [[bench]]
 name = "axis_performance"
@@ -44,6 +46,11 @@ required-features = ["benches-optin"]
 
 [[bench]]
 name = "detent_performance"
+harness = false
+required-features = ["benches-optin"]
+
+[[bench]]
+name = "pipeline_throughput"
 harness = false
 required-features = ["benches-optin"]
 
@@ -60,11 +67,27 @@ name = "integration_tests"
 required-features = ["tests-optin"]
 
 [[test]]
+name = "filter_tests"
+required-features = ["tests-optin"]
+
+[[test]]
 name = "mixer_tests"
 required-features = ["tests-optin"]
 
 [[test]]
 name = "performance_validation"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "rt_timing_test"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "pipeline_composition_tests"
+required-features = ["tests-optin"]
+
+[[test]]
+name = "snapshot_tests"
 required-features = ["tests-optin"]
 
 [[example]]

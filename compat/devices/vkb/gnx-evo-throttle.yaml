@@ -1,0 +1,62 @@
+# VKB GNX-EVO Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKBsim (registered USB vendor for VKB controllers).
+# PID 0x0240 is a community estimate for the GNX-EVO Throttle.
+# The GNX-EVO Throttle is VKB's newer throttle system (distinct from the
+# STECS series), designed for dual-grip throttle setups with per-axis
+# resolution improvements and updated grip modules.
+
+schema_version: "1"
+
+device:
+  name: "VKB GNX-EVO Throttle"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0240   # Community estimate — GNX-EVO Throttle
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, throttle2, slider, rx, ry]
+    resolution_bits: 15  # 15-bit precision, VKB standard
+  buttons: 24
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0240 is a community estimate for the GNX-EVO Throttle.
+      VID 0x231D is confirmed for VKBsim. Confirm PID with lsusb on real hardware
+      or VKB community forums before deployment.
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      The GNX-EVO Throttle exposes two independent throttle axes (throttle and
+      throttle2) for twin-engine aircraft. Each axis can be decoupled for
+      differential thrust operations in the active OpenFlight profile.
+  - id: VKB_CONFIGURATOR
+    description: >
+      Axis resolution, button assignments, and curve shapes can be adjusted
+      via the VKB Gladiator/GNX Configurator software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB GNX-EVO Throttle — VKB's newer throttle system with dual-axis and
+    improved encoder resolution. PID 0x0240 is a community estimate.
+    Distinct from the STECS throttle series (stecs*.yaml). VID 0x231D confirmed.
+    Last reviewed: 2026-06.

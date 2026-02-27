@@ -1,0 +1,45 @@
+# Elite Simulations E-Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions E-Yoke — Cessna-style column-and-wheel yoke
+# for FAA-approved aviation training devices.
+# VID/PID unconfirmed; see e-rudder-pedals.yaml for vendor context.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations E-Yoke"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0201  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 10
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a plausible placeholder; verify against real ESS hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0201 is a placeholder; must be verified before production use."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Elite Simulations E-Yoke. VID/PID unconfirmed. Last reviewed: 2026-02."

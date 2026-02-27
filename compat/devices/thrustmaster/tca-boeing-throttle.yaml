@@ -1,0 +1,64 @@
+# Thrustmaster TCA Boeing Throttle (standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster / Guillemot Corp.)
+# PID 0xB68C — community estimate.
+# The TCA Boeing Throttle is the throttle component of the TCA Boeing Yoke Pack
+# and is also available as a standalone accessory.
+# Not confirmed from linux-hardware.org probe database.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Boeing Throttle"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB68C   # Community estimate — unconfirmed
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, prop_left, prop_right]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB68C is a community estimate. TCA Sidestick Airbus uses PIDs in
+      the 0xB687–0xB690 range; the Boeing Throttle is estimated adjacent.
+      Not confirmed from linux-hardware.org probes or USB descriptor capture.
+      Update when a confirmed PID becomes available.
+  - id: SPLIT_THROTTLE_TWIN
+    description: >
+      The TCA Boeing Throttle provides independent left and right throttle
+      levers replicating the Boeing 737 thrust lever design. When operated
+      in autothrottle mode, both levers move together. OpenFlight exposes
+      both as independent axes and provides an optional combined virtual axis.
+  - id: BOEING_YOKE_COMPANION
+    description: >
+      Designed as a companion to the TCA Boeing Yoke (see tca-yoke-boeing.yaml).
+      The throttle can also be used standalone or with third-party yokes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    TCA Boeing Throttle: twin-engine throttle unit replicating Boeing 737
+    thrust levers. Part of the TCA Boeing Yoke Pack; also sold standalone.
+    PID 0xB68C is a community estimate — confirm with lsusb before deployment.
+    TCA Boeing Yoke is documented in tca-yoke-boeing.yaml.
+    Last reviewed: 2026-02.

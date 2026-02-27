@@ -1,0 +1,45 @@
+# WinWing Combat Ready Panel (PID 0x0238)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0x0238 — estimated.
+# Distinct from f18-combat-ready-panel.yaml (0xBE05) and combat-ready-collar.yaml (0xBE06).
+# This entry is for the newer SimAppPro-era Combat Ready Panel with updated PID range.
+schema_version: "1"
+device:
+  name: "WinWing Combat Ready Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0x0238      # Community estimate — newer Combat Ready Panel; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0238 is a community estimate. Earlier Combat Ready Panel variants
+      use 0xBE05 (F-18) and 0xBE06 (collar). Confirm with SimAppPro or lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      Panel device with arming switches, covers, and action buttons typical
+      of combat aircraft pre-flight panel layouts.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Combat Ready Panel — PID 0x0238 (est). Combat pre-flight panel.
+    Wave-55 addition. Last reviewed: 2026-07.

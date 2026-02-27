@@ -1,0 +1,65 @@
+# Fanatec ClubSport Shifter SQ (Alt PID 0x0201)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0201 is a community estimate for an alternate ClubSport Shifter SQ
+# variant. The primary Fanatec Shifter SQ V1.5 manifest uses PID 0x0005
+# (clubsport-shifter-sq-v15.yaml). PID 0x0201 may represent a newer revision
+# or firmware update. Confirm with lsusb or Fanatec Control Panel.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Shifter SQ"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0201      # Community estimate — alt Shifter SQ PID; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 7
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0201 is a community estimate for the ClubSport Shifter SQ.
+      The V1.5 manifest (clubsport-shifter-sq-v15.yaml) uses PID 0x0005.
+      Verify with lsusb or Fanatec Control Panel before production use.
+  - id: SEQUENTIAL_H_PATTERN
+    description: >
+      The ClubSport Shifter SQ supports both H-pattern and sequential shifting
+      modes, switchable via a physical lever on the unit. In flight sim, use
+      sequential mode for throttle lever detent positions or gear/condition
+      levers.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim, H-pattern positions map well to condition lever positions
+      (cutoff, low, high, flight). Sequential buttons can be used for gear
+      selection or fuel control.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Shifter SQ alternate PID 0x0201. Primary manifest is
+    clubsport-shifter-sq-v15.yaml (PID 0x0005). VID 0x0EB7 confirmed.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

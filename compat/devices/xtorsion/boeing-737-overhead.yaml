@@ -1,0 +1,58 @@
+# Xtorsion 3D Boeing 737 Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Xtorsion 3D Boeing 737 Overhead Panel — a replica overhead panel for Boeing
+# 737 NG home cockpit builders. Covers electrical, fuel, hydraulic, and pressurisation
+# systems. VID 0x04B4 (Cypress Semiconductor) / PID 0xF270 are community
+# estimates. Confirm with lsusb or Windows Device Manager on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "Xtorsion 3D Boeing 737 Overhead Panel"
+  vendor: "Xtorsion 3D"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate
+    product_id: 0xF270      # Community estimate — 737 Overhead Panel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 80
+  hats: 0
+  force_feedback: false
+  led_outputs: 48
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF270 are community estimates. Cypress VID is
+      shared across many embedded controllers; verify PID with lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      80 digital switch inputs and 48 LED outputs covering the 737 overhead
+      bay. Illuminated switches use paired button/LED mappings.
+  - id: BOEING_737_OVERHEAD
+    description: >
+      Covers electrical, fuel, hydraulic, pressurisation, and environmental
+      panels. Designed for PMDG 737 and MSFS Boeing 737 addon cockpit builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Xtorsion 3D Boeing 737 Overhead — VID 0x04B4 / PID 0xF270 (est).
+    80 buttons, 48 LED outputs; 737 NG overhead systems panel replica.
+    Wave-46 addition. Last reviewed: 2026-07.

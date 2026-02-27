@@ -1,0 +1,58 @@
+# VIRPIL VPC ACE-TORQ Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC ACE-TORQ — a torque-sensing joystick grip for helicopter and
+# fixed-wing aircraft. Includes a twist-grip axis for torque input used in
+# helicopter collective and rotary-wing sim profiles.
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x4196 is a community estimate. Confirm with VPC Configurator.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-TORQ Joystick"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB — confirmed
+    product_id: 0x4196      # Community estimate — ACE-TORQ grip
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, torque]
+    resolution_bits: 16
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4196 is a community estimate for the ACE-TORQ grip.
+      Confirm via VPC Configurator → USB Info tab.
+  - id: TORQUE_AXIS
+    description: >
+      The dedicated torque axis is used for helicopter collective twist and
+      rotary-wing throttle inputs. Map to collective or throttle axis in
+      the helicopter profile.
+  - id: VIRPIL_250HZ_POLLING
+    description: >
+      VIRPIL devices poll at 250 Hz matching the OpenFlight RT spine.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC ACE-TORQ — VID 0x3344 / PID 0x4196 (est).
+    Torque-sensing grip for helicopter/rotary-wing sim profiles.
+    Wave-46 addition. Last reviewed: 2026-07.

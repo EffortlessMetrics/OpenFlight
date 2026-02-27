@@ -1,0 +1,22 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcMongoostInputState {
+    axes: VpcMongoostAxes {
+        x: 0.5,
+        y: 0.5,
+        z: 0.5,
+        sz: 0.5,
+        sl: 0.5,
+    },
+    buttons: VpcMongoostButtons {
+        raw: [
+            0,
+            0,
+            0,
+            240,
+        ],
+        hat: Center,
+    },
+}

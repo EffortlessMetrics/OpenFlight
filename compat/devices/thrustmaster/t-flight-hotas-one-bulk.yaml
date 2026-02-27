@@ -1,0 +1,41 @@
+# Thrustmaster T.Flight HOTAS One (Bulk Endpoint)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB68B — bulk endpoint variant of HOTAS One.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS One (Bulk Endpoint)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB68B
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Bulk endpoint variant of T.Flight HOTAS One. PID 0xB68B from linux-hardware.org.
+    Last reviewed: 2026-06.

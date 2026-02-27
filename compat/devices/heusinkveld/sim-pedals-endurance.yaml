@@ -1,0 +1,61 @@
+# Heusinkveld Sim Pedals Endurance
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by Heusinkveld Engineering BVBA).
+# The Sim Pedals Endurance is Heusinkveld's long-stroke, high-pedal-force
+# variant designed for endurance racing simulation. In flight simulation,
+# the longer stroke and higher load cell force range make it suitable for
+# realistic rudder-pedal toe-brake pressure profiles.
+# PID is a community estimate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Endurance"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D4      # Community estimate — Endurance model; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D4 is a community estimate for the Endurance model. Heusinkveld
+      USB PIDs follow the 0xF6Dx pattern; Sprint = 0xF6D0, Performance = 0xF6D2,
+      Endurance may follow sequentially. Verify with lsusb.
+  - id: LONG_STROKE_GEOMETRY
+    description: >
+      The Endurance pedal set has longer pedal stroke (~75 mm brake) compared
+      to the Sprint (~50 mm). Apply a progressive brake curve to match the
+      longer throw to realistic toe-brake pressure response.
+  - id: HIGH_FORCE_BRAKE
+    description: >
+      The brake load cell on the Endurance model is calibrated for 100–150 kg
+      peak force (vs ~65 kg on the Sprint). Scale the pedal profile force
+      curve to match the user's preferred pedal stiffness.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Endurance. VID 0x04D8 confirmed; PID 0xF6D4 is
+    a community estimate. Long-stroke, high-force load-cell pedals. Good for
+    realistic toe-brake force simulation in flight sim. Last reviewed: 2026-06.

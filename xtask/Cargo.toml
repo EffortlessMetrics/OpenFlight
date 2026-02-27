@@ -31,3 +31,5 @@ optional = true
 tempfile = "3.24.0"
 proptest = "1.9.0"
 cargo-lock = "11.0.1"
+insta = { workspace = true }
+serde_yaml = { workspace = true }

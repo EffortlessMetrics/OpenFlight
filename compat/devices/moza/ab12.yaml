@@ -1,0 +1,54 @@
+# Moza AB12 Force Feedback Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology, shared by all Moza products).
+# PID 0x0006 community-reported for the AB12 Air Base 12 (12 Nm FFB flight base);
+# follows sequentially from AB9 (0x0005). Not yet confirmed via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "Moza AB12 Force Feedback Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology)
+    product_id: 0x0006      # AB12 FFB base (community-reported); AB9 uses 0x0005
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 250
+    torque_limit_nm: 12.0   # AB12 rated maximum (vs AB9's 9 Nm)
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: TORQUE_ONLY
+    description: >
+      Moza AB12 accepts raw torque commands (report ID 0x20) rather than
+      DirectInput effect types. OpenFlight synthesises the desired effect
+      waveform and sends the result as a torque value. Protocol is identical
+      to the AB9 — only the torque limit differs.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    HID report format expected to match AB9 (PID 0x0005); same torque-only
+    protocol, higher 12 Nm torque limit. PID 0x0006 community-reported.
+    Confirm with captured lsusb / USB descriptor when hardware is available.

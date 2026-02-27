@@ -1,0 +1,63 @@
+# Fanatec CSL Elite Wheel Base v1.5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH). The CSL Elite Wheel Base v1.5 is Fanatec's
+# legacy belt-drive wheel base (superseded by the CSL DD). It supports
+# ClubSport and CSL rim quick-release adapters. PID is a community estimate;
+# CSL Elite v1 and v1.5 likely share the same PID. Confirm with Fanatec
+# Control Panel on real hardware.
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Wheel Base v1.5"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0006      # Community estimate — CSL Elite v1.5; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0006 is a community estimate. Fanatec CSL Elite Wheel Base v1
+      and v1.5 may share the same USB descriptor. Verify with Fanatec
+      Control Panel → Hardware tab or lsusb.
+  - id: FANATEC_FANALAB_RECOMMENDED
+    description: >
+      Full FFB effect support (including tuning the FFB frequency response)
+      requires Fanatec's Fanalab software. DirectInput FFB effects work
+      without Fanalab but with reduced fidelity.
+  - id: BELT_DRIVE_LEGACY
+    description: >
+      The CSL Elite v1.5 uses a belt-drive motor (not direct-drive like the
+      CSL DD). In flight sim use, the belt adds a small amount of mechanical
+      compliance that reduces perceived jitter in FFB output.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Wheel Base v1.5. VID 0x0EB7 confirmed; PID 0x0006 is
+    a community estimate. Belt-drive FFB; superseded by CSL DD. Used in flight
+    sim for rudder axis with full FFB. Last reviewed: 2026-06.

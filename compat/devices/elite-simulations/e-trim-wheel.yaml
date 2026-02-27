@@ -1,0 +1,49 @@
+# Elite Simulations E-Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions E-Trim Wheel — elevator trim wheel replica
+# for Cessna-style cockpit builds.
+# VID/PID unconfirmed; see e-rudder-pedals.yaml for vendor context.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations E-Trim Wheel"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0202  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a plausible placeholder; verify against real ESS hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0202 is a placeholder; must be verified before production use."
+  - id: ENCODER_AS_AXIS
+    description: >
+      Trim wheel may report as a rotary encoder (button events) or as a
+      continuous axis depending on firmware variant. Verify HID descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Elite Simulations E-Trim Wheel. VID/PID unconfirmed. Last reviewed: 2026-02."

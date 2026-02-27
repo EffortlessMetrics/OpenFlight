@@ -1,0 +1,60 @@
+# ESP32-based USB HID Joystick / Panel Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ESP32-S2/S3 microcontrollers support native USB HID, making them popular
+# for DIY flight sim panels, custom joystick grips, and button boxes.
+# Common firmware: ESP32-HID-Joystick (GitHub), Espressif USB HID examples.
+# The Espressif VID 0x303A covers most ESP32-based HID devices; specific
+# PIDs are assigned by the firmware or host-side driver.
+
+schema_version: "1"
+
+device:
+  name: "ESP32 USB HID Joystick"
+  vendor: "Espressif (DIY firmware)"
+  usb:
+    vendor_id: 0x303A       # Espressif Systems (confirmed for ESP32-S2/S3 native USB)
+    product_id: 0x4001      # Example PID — varies by firmware build
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      VID 0x303A is Espressif's USB VID used by ESP32-S2/S3 native USB.
+      PID 0x4001 is a common example; actual PID is set in firmware. Builders
+      may use TinyUSB's default test PID or request a custom PID from Espressif.
+  - id: FIRMWARE_CONFIGURABLE
+    description: >
+      Axis count, button count, and HID report layout are defined by the
+      firmware. This manifest reflects a typical 6-axis / 32-button layout.
+      Adjust axis_names and button counts to match specific firmware builds.
+  - id: DIY_HARDWARE
+    description: >
+      Build quality, axis resolution, and polling rate depend entirely on the
+      hardware build (ADC quality, MCU clock, firmware).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ESP32-S2/S3 USB HID joystick — popular DIY platform for custom flight sim
+    peripherals. VID 0x303A (Espressif) confirmed; PID firmware-dependent.
+    Last reviewed: 2026-06.

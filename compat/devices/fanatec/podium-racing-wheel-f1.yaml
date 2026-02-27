@@ -1,0 +1,62 @@
+# Fanatec Podium Racing Wheel F1 (PS4/PS5)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH, confirmed). PID 0x0055 is a community estimate
+# for the Fanatec Podium Racing Wheel F1 PS4/PS5 edition. The Podium F1 is a
+# direct-drive wheel with F1-style carbon fiber rim and dual analogue clutch
+# paddles. Confirm PID with lsusb on Podium F1 hardware.
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Racing Wheel F1"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0055   # Community estimate -- Podium F1 base
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 16
+  hats: 2
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 20.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0055 is a community estimate. Confirm with lsusb on Podium F1
+      hardware before enabling production device matching.
+  - id: FANATEC_PROPRIETARY_FFB
+    description: >
+      Fanatec Podium series uses vendor-specific torque commands, not standard
+      DirectInput effect types. OpenFlight uses native torque commands via the
+      Fanatec HID output report protocol where available.
+  - id: WHEEL_CLUTCH_PADDLES
+    description: >
+      The Podium F1 includes dual analogue clutch paddles reported as additional
+      axes in the HID descriptor. Map to differential clutch or additional
+      flight controls in the OpenFlight profile as appropriate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium Racing Wheel F1 PS4/PS5 -- direct-drive 20 Nm wheel with
+    F1 rim and dual clutch paddles. VID 0x0EB7 confirmed; PID 0x0055 is a
+    community estimate. Last reviewed: 2026-06.

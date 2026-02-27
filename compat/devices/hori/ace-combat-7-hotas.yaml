@@ -1,0 +1,58 @@
+# Hori Ace Combat 7 HOTAS Flight Stick (PS4/PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd. (registered USB vendor ID).
+# PID 0x0103 is a community estimate for the officially licensed Ace Combat 7
+# co-branded HOTAS bundle released alongside the game in January 2019.
+# No hardware probe has confirmed 0x0103 — the device may share a PID with
+# the standard PS4 HOTAS. Update when verified.
+schema_version: "1"
+
+device:
+  name: "Hori Ace Combat 7 HOTAS Flight Stick"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0103      # Community estimate — AC7 co-branded HOTAS; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, throttle, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0103 is a community estimate for the Ace Combat 7 co-branded HOTAS.
+      This may share a PID with the standard Hori PS4 HOTAS (0x0101). No
+      hardware probe has confirmed 0x0103. If both manifests match the same
+      device, disambiguate using the USB product string ("ACE COMBAT 7").
+      Update this manifest when verified with lsusb on real hardware.
+  - id: COSMETIC_BRANDING_ONLY
+    description: >
+      The Ace Combat 7 HOTAS is functionally identical to the standard Hori
+      PS4 HOTAS (hotas-flight-stick-ps4.yaml) with different cosmetic livery.
+      Capabilities, axis layout, and button mapping are the same.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori Ace Combat 7 officially licensed HOTAS (2019). Functionally the same
+    hardware as the PS4 HOTAS with Ace Combat livery. PID 0x0103 is a community
+    estimate; device may share PID 0x0101 with the standard model. Confirm with
+    lsusb. Works on PS4 and PC (DInput). Last reviewed: 2026-02.

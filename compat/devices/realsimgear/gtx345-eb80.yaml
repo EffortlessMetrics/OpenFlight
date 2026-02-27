@@ -1,0 +1,58 @@
+# RealSimGear GTX345 Transponder (VID 0xEB80 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear GTX345 replicates the Garmin GTX 345 ADS-B transponder panel
+# for GA aircraft simulation. This manifest covers the VID 0xEB80 / PID 0x000A
+# variant (community estimate). The primary manifest (gtx345.yaml) uses VID 0x04D8
+# (confirmed RealSimGear VID on most units).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTX345 Transponder"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0xEB80       # PID estimated — confirmed RealSimGear VID is 0x04D8
+    product_id: 0x000A      # Community estimate — GTX345 (0xEB80 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0xEB80 / PID 0x000A are community estimates. Confirmed RealSimGear
+      VID on other units is 0x04D8 (see gtx345.yaml). Verify with lsusb.
+  - id: SQUAWK_CODE_ENCODER
+    description: >
+      Rotary encoder with push-click selects and confirms the transponder
+      squawk code digit-by-digit. Map encoder to squawk code input in the
+      MSFS/X-Plane transponder panel profile.
+  - id: MODE_BUTTONS
+    description: >
+      ALT, GROUND, STDBY, and ON mode pushbuttons map to transponder mode
+      selectors. Bind to the appropriate sim transponder state variable.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTX345 transponder — VID 0xEB80 / PID 0x000A est (alternate batch).
+    Primary manifest: gtx345.yaml (VID 0x04D8). Last reviewed: 2026-06.

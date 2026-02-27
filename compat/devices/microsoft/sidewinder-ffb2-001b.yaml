@@ -1,0 +1,61 @@
+# Microsoft SideWinder Force Feedback 2 (Alt PID 0x001B)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x045E (Microsoft Corporation).
+# PID 0x001B is a community-reported alternate PID for the SideWinder
+# Force Feedback 2. The confirmed primary PID is 0x001C
+# (sidewinder-ffb2.yaml, confirmed via linux-hardware.org).
+# PID 0x001B may represent an early production run or pre-release firmware.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback 2 (Alt PID)"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x001B      # Community-reported alt PID — confirmed primary is 0x001C
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, slider]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic]
+    max_update_rate_hz: 100
+    torque_limit_nm: 1.5
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001B is a community-reported alternate for the SideWinder FFB2.
+      The confirmed primary PID is 0x001C (sidewinder-ffb2.yaml). Verify with
+      lsusb before production use.
+  - id: VINTAGE_FFB
+    description: >
+      Vintage DirectInput force feedback stick from circa 2001. FFB effects
+      require legacy DirectInput driver; not compatible with XInput.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. Throttle slider is on the left grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Force Feedback 2 alternate PID 0x001B.
+    Confirmed primary PID is 0x001C (sidewinder-ffb2.yaml). Wave-41 addition.
+    Last reviewed: 2026-07.

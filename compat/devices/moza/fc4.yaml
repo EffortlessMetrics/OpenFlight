@@ -1,0 +1,66 @@
+# Moza FC4 Flight Controller (HOTAS joystick base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology / Moza, shared by all Moza products).
+# PID 0x000C community-reported for the FC4 flight joystick base; not yet confirmed
+# via linux-hardware.org or a primary USB descriptor capture. Verify with lsusb /
+# USBView on real hardware before enabling device matching.
+schema_version: "1"
+
+device:
+  name: "Moza FC4 Flight Controller"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology)
+    product_id: 0x000C      # FC4 flight base — community-reported; verify with lsusb on hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 250
+    torque_limit_nm: 4.0    # FC4 rated maximum (direct-drive on stick axes)
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: FC4_PID_COMMUNITY_REPORTED
+    description: >
+      The FC4 PID (0x000C) is community-reported and has not been independently
+      confirmed via linux-hardware.org or a captured USB descriptor. Do not use
+      for production device matching until verified. Submit confirmed PID via PR.
+  - id: TORQUE_ONLY
+    description: >
+      Like the AB9/AB12 sim-racing bases, the FC4 accepts raw torque commands
+      (report ID 0x20) rather than DirectInput effect types. OpenFlight synthesises
+      the desired waveform (spring, damper, shake) and sends the result as a
+      per-tick torque value.
+  - id: COMBINED_HOTAS
+    description: >
+      The FC4 is a combined HOTAS base unit that accepts interchangeable grip and
+      throttle attachments. Axis and button counts depend on the attached grip/throttle
+      module. Values here reflect the base unit with a standard grip.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID confirmed (0x346E, shared Moza/Gudsen vendor ID).
+    PID 0x000C community-reported; not hardware-confirmed. Do not use for
+    production device matching until verified with lsusb / USBView.
+    Direct-drive FFB on stick axes (roll/pitch); torque-only protocol matching AB9/AB12.
+    Last reviewed: 2026-02.

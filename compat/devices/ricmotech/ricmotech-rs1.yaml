@@ -1,0 +1,55 @@
+# Ricmotech RS-1 Motion Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Ricmotech RS-1 is a single-actuator motion seat (seat mover) that provides
+# pitch and roll motion for simulation rigs. Motion commands are sent via USB
+# using the SimTools or Ricmotech software interface. Not a standard HID input
+# device; tracked for sim-rig compatibility documentation.
+schema_version: "1"
+
+device:
+  name: "Ricmotech RS-1 Motion Seat"
+  vendor: "Ricmotech"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0000  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined — proprietary or SimTools protocol, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID are unconfirmed. Verify with lsusb on real hardware."
+  - id: SEAT_MOVER
+    description: >
+      The RS-1 is a single-actuator seat mover providing pitch and/or roll
+      motion. Two-degree-of-freedom motion is achieved by pairing two RS-1
+      units. Motion is driven by SimTools or the Ricmotech control interface.
+  - id: OUTPUT_ONLY
+    description: >
+      The RS-1 generates no HID input events. Tracked for sim-rig
+      compatibility documentation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Ricmotech RS-1 motion seat mover. Output-only; not an HID input device.
+    Controlled via SimTools or Ricmotech software. Last reviewed: 2026-06.

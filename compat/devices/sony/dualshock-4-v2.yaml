@@ -1,0 +1,57 @@
+# Sony DualShock 4 V2 (CUH-ZCT2x)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment.
+# PID 0x09CC confirmed from:
+#   1. Linux kernel drivers/hid/hid-sony.c: USB_DEVICE_ID_SONY_PS4_CONTROLLER_2
+#   2. libsdl-org/SDL: MAKE_VIDPID(0x054c, 0x09cc) — "PS4 Controller V2"
+#   3. linux-hardware.org: 89 independent probes
+# Second-generation DualShock 4 (CUH-ZCT2x, 2016–2020). Distinct from
+# first-gen CUH-ZCT1x (dualshock-4.yaml, PID 0x05C4). Minor hardware revision;
+# functionally identical in flight sim use.
+schema_version: "1"
+
+device:
+  name: "Sony DualShock 4 V2 (CUH-ZCT2)"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment
+    product_id: 0x09CC   # DualShock 4 CUH-ZCT2x (confirmed from kernel and SDL)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: DS4_V2_LIGHTBAR
+    description: >
+      DS4 V2 has a lightbar visible through the front touchpad and slightly
+      improved light sensor. Functionally identical to V1 for flight sim use.
+  - id: DS4_TOUCHPAD_AS_BUTTON
+    description: "Touchpad click is exposed as a button."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Sony DualShock 4 V2 (CUH-ZCT2). PID 0x09CC confirmed from kernel and SDL.
+    Functionally identical to V1 for flight sim purposes.
+    Last reviewed: 2026-06.

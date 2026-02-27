@@ -1,0 +1,55 @@
+# GoFlight GF-46 Rotary Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed: GoFlight Inc. (registered USB vendor ID).
+# PID 0x2900 is a community estimate for the GF-46 Rotary Panel variant,
+# distinct from the GF-46 MCP/NAV (0x0004) and GF-46 COM/NAV (0x0106).
+# The GF-46 Rotary is a 12-rotary-encoder avionics input panel.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-46 Rotary Panel"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc. (confirmed registered VID)
+    product_id: 0x2900      # Community estimate — GF-46 Rotary; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 12
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2900 is a community estimate for the GF-46 Rotary variant.
+      GoFlight VID 0x0E9F is confirmed. Compare with GF-46 MCP/NAV (0x0004)
+      and GF-46 COM/NAV (0x0106). Confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders report as HID button pairs (clockwise/counter-clockwise).
+      Map encoder steps to sim nav/comm frequency adjustments or autopilot
+      inputs in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-46 Rotary Panel — 12-encoder avionics input panel. VID 0x0E9F
+    confirmed; PID 0x2900 is a community estimate. See also gf-46.yaml and
+    gf-46-comnav.yaml for other GF-46 variants. Last reviewed: 2026-06.

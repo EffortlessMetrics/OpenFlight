@@ -1,0 +1,47 @@
+# RealSimGear GNS-430 (alternate PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xEF73 — community
+# estimate for a newer GNS-430 firmware revision. The earlier variant uses
+# PID 0xF230 (see gns430.yaml).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS-430"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xEF73      # Community estimate — GNS-430 alternate revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF73 is a community estimate. The earlier GNS-430 variant uses
+      PID 0xF230 (see realsimgear/gns430.yaml). Confirm with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNS-430 — Garmin GNS 430 GPS/NAV/COM replica.
+    PID 0xEF73 community estimate (alt revision). Last reviewed: 2026-06.

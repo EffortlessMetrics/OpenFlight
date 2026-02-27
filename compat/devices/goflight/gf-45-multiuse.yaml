@@ -1,0 +1,47 @@
+# GoFlight GF-45 Multi-Use Rotary Panel (estimated VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0003 — both estimated. GoFlight's confirmed VID is 0x0E9F;
+# this entry covers a reported alternate enumeration (possibly a USB hub variant
+# or older firmware revision). See gf-45.yaml for the 0x0E9F variant.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-45 Multi-Use Rotary Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — GoFlight alt; confirmed VID is 0x0E9F
+    product_id: 0x0003      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 1
+    names: [knob]
+    resolution_bits: 8
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0003 are community estimates. GoFlight's confirmed
+      VID is 0x0E9F. See goflight/gf-45.yaml for the confirmed VID variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-45 Multi-Use Rotary Panel — alternate VID/PID entry.
+    VID 0x1551 and PID 0x0003 unconfirmed. Last reviewed: 2026-06.

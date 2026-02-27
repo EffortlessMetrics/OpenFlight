@@ -1,0 +1,54 @@
+# Skalarki EFIS Panel (VID 0x0BCA variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki EFIS panel replicates the Airbus A320 EFIS control unit found on
+# the captain and first officer sides. This manifest covers the VID 0x0BCA /
+# PID 0x0051 variant (community estimate). See skalarki-efis.yaml for the
+# V-USB/16C0 variant.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki EFIS Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x0BCA       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0051      # Community estimate — Skalarki EFIS (0x0BCA batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0051 are community estimates. See skalarki-efis.yaml
+      for the V-USB (0x16C0) variant. Confirm with lsusb on real hardware.
+  - id: BARO_SELECTOR_ENCODER
+    description: >
+      The barometric selector (QNH/STD) uses a rotary encoder with push button.
+      Map encoder delta to the baro setting variable and push to STD/QNH toggle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki EFIS Panel — VID 0x0BCA / PID 0x0051 estimated batch variant.
+    See also skalarki-efis.yaml (0x16C0 VID). Used for A320 EFIS simulation.
+    Last reviewed: 2026-06.

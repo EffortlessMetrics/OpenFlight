@@ -1,0 +1,53 @@
+# Logitech WingMan Attack 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC20A confirmed from the usb.ids community
+# database ("Logitech WingMan Attack 2"). Budget 4-axis joystick with twist
+# rudder, throttle slider, and 8 buttons; released circa 1998–2002. Widely
+# used for entry-level flight simulation.
+
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Attack 2"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D     # Logitech Inc. (confirmed)
+    product_id: 0xC20A    # WingMan Attack 2 — usb.ids community database
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_10BIT_AXES
+    description: >
+      10-bit axis resolution (1024 steps). Apply light smoothing to reduce
+      steppy axis response in modern simulators.
+  - id: THROTTLE_SLIDER
+    description: >
+      The Z axis is a throttle slider on the stick base. Rz is the twist-grip
+      rudder. Map Z unipolar [0, 1] for throttle; Rz bipolar [-1, +1] for yaw.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Attack 2 (circa 1998–2002). Budget 4-axis flight joystick.
+    PID 0xC20A from usb.ids community database. Standard HID; works on modern
+    Windows without drivers. Last reviewed: 2026-06.

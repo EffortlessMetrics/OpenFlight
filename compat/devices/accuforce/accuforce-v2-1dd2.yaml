@@ -1,0 +1,56 @@
+# SimXperience AccuForce V2 (Alt VID 0x1DD2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimXperience AccuForce V2 brushless direct-drive wheel base.
+# Alternate VID 0x1DD2 (community estimate for SimXperience own registered VID).
+# Primary manifest uses VID 0x16D0 PID 0x0D5E (accuforce-v2.yaml).
+# PID 0x2002 community estimate for this VID variant.
+schema_version: "1"
+
+device:
+  name: "SimXperience AccuForce V2 (Alt VID)"
+  vendor: "SimXperience"
+  usb:
+    vendor_id: 0x1DD2     # Community estimate — alternate VID for SimXperience
+    product_id: 0x2002    # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [wheel, brake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant_force, periodic]
+    max_update_rate_hz: 1000
+    torque_limit_nm: null   # Configured in AccuForce Manager software
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1DD2 / PID 0x2002 are community estimates for an alternate firmware
+      variant. Primary manifest is accuforce-v2.yaml (VID 0x16D0, PID 0x0D5E).
+      Verify with lsusb on physical hardware.
+  - id: SIMXPERIENCE_MANAGER_REQUIRED
+    description: >
+      Full FFB configuration requires SimXperience AccuForce Manager software.
+      OpenFlight uses standard HID/DirectInput FFB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience AccuForce V2 — alt VID 0x1DD2. Primary: accuforce-v2.yaml.
+    PID 0x2002 community estimate. Last reviewed: 2026-06.

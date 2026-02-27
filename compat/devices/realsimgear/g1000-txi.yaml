@@ -1,0 +1,58 @@
+# RealSimGear G1000 TXi Display Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by RealSimGear, confirmed).
+# PID 0xEF62 — community estimate for the RealSimGear G1000 TXi glass cockpit
+# bezel/controller. Provides softkey and knob inputs for Garmin G1000 NXi/TXi
+# simulation in MSFS and X-Plane.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 TXi Display Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (confirmed VID for RealSimGear)
+    product_id: 0xEF62      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad (panel-style device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [rx, ry, rz, slider]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF62 is a community estimate for the RealSimGear G1000 TXi.
+      Verify with lsusb or Windows Device Manager.
+  - id: PANEL_DEVICE
+    description: >
+      This is a display/panel controller, not a traditional flight stick.
+      Rotary encoders report as axis increments; softkeys report as buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 TXi glass cockpit display controller.
+    VID 0x04D8 (Microchip) confirmed for RealSimGear products.
+    PID 0xEF62 is a community estimate; verify with lsusb.
+    See also g1000-bezel.yaml, g1000-bezel-left.yaml, g1000-bezel-right.yaml.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

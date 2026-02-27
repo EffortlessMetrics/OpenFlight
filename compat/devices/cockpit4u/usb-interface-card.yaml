@@ -1,0 +1,47 @@
+# Cockpit4U USB Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology), PID 0xEB00 — estimated.
+# Cockpit4U USB interface card for home cockpit builders — 64-input capacity.
+schema_version: "1"
+device:
+  name: "Cockpit4U USB Interface Card"
+  vendor: "Cockpit4U"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by many USB HID builders)
+    product_id: 0xEB00      # Community estimate — Cockpit4U card; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel/interface device
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 64
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEB00 is a community estimate for the Cockpit4U USB Interface Card.
+      Microchip VID 0x04D8 is shared by many USB HID device builders.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Generic USB interface card for home cockpit builders. Maps physical
+      switches, buttons, and rotary encoders to HID button/axis reports.
+      Up to 64 discrete inputs supported.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cockpit4U USB Interface Card — VID 0x04D8 / PID 0xEB00 (est).
+    Home cockpit builder USB card with 64-input capacity.
+    Wave-59 addition. Last reviewed: 2026-07.

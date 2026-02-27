@@ -1,0 +1,59 @@
+# WinWing Super Taurus Throttle (Alt PID 0xBEC7)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing. PID 0xBEC7 is a community estimate for an
+# alternate hardware revision of the Super Taurus throttle. The primary PID
+# is 0xBD64 (super-taurus-throttle.yaml); 0xBEC7 may correspond to a later
+# production batch or a different firmware variant.
+schema_version: "1"
+
+device:
+  name: "WinWing Super Taurus Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEC7      # Community estimate — alt PID; primary is 0xBD64
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 50
+  hats: 0
+  encoders: 5
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC7 is a community estimate for an alternate Super Taurus revision.
+      The confirmed primary PID is 0xBD64 (super-taurus-throttle.yaml).
+      Confirm 0xBEC7 with lsusb before relying on this manifest.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers are reported as separate axes.
+      OpenFlight exposes them individually and provides an optional
+      combined-throttle virtual axis.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      Map encoder steps to axis positions or discrete sim commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Super Taurus Throttle — dual-engine F-15EX–style throttle.
+    PID 0xBEC7 is a community estimate for an alternate batch or firmware
+    revision; primary confirmed PID is 0xBD64. Last reviewed: 2026-06.

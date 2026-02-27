@@ -1,0 +1,43 @@
+# Saitek Cyborg Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek), PID 0x0C2D — estimated.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Stick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0C2D
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C2D is estimated. Confirm with lsusb or USB descriptor capture.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg Stick — mid-range joystick with adjustable ergonomics.
+    16 buttons and 12-bit axis resolution. Tier 3. Last reviewed: 2026-02.

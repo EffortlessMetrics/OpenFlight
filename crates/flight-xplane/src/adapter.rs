@@ -1737,7 +1737,6 @@ mod tests {
     #[tokio::test]
     async fn test_timeout_publishes_stale_snapshot() {
         use flight_bus::{BusPublisher, SubscriptionConfig};
-        use tokio::time::Duration;
 
         let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
         let mut subscriber = bus_publisher

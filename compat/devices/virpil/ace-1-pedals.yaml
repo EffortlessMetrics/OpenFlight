@@ -1,0 +1,62 @@
+# VIRPIL VPC ACE-1 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x0200 — VPC ACE-1 Rudder Pedals.
+# Source: community VIRPIL device tracking (DCS World forums, SIMHQ, and
+#   USB ID database entries for VIRPIL UAB). Cross-referenced with
+#   multiple community HID probe reports listing VID:0x3344 PID:0x0200
+#   for the ACE-1.
+#
+# The ACE-1 is VIRPIL's entry-level rudder pedal set. It provides two
+# independent pedal position axes and a combined rudder differential
+# axis. It does not include differential toe brakes; for that, see
+# the ACE-2 Torque (ace-2-pedals.yaml).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-1 Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0200
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [left_pedal, right_pedal, rudder]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: RUDDER_COMBINED
+    description: >
+      The rudder axis is the combined differential of left_pedal and
+      right_pedal. Bind to rudder for standard flight controls.
+      left_pedal and right_pedal expose the raw independent values.
+  - id: NO_TOE_BRAKES
+    description: >
+      The ACE-1 does not have differential toe brakes. For toe-brake
+      functionality see the ACE-2 Torque (ace-2-pedals.yaml).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0200 from community device tracking (DCS forums, SIMHQ, USB ID DB).
+    Axis layout (left_pedal, right_pedal, combined rudder) matches the
+    standard VIRPIL pedal HID report pattern. No toe-brake axes present.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

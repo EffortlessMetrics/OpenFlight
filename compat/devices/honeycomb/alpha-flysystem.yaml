@@ -1,0 +1,56 @@
+# Honeycomb Alpha FlySystem Bundle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb Aeronautical). PID 0x1902 is a community estimate
+# for the Alpha FlySystem bundle variant. The Alpha FlySystem is marketed as
+# a bundle that includes the Alpha yoke (PID 0x1900, alpha-yoke.yaml) plus
+# additional software/accessories. The FlySystem name may indicate a bundle
+# with a different firmware revision and distinct PID.
+# Confirm PID via lsusb before production deployment.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Alpha FlySystem"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B    # Honeycomb Aeronautical
+    product_id: 0x1902   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 36
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1902 is a community estimate for the FlySystem bundle variant.
+      The Alpha Yoke (PID 0x1900) and Alpha XPC (PID 0x0C01, alpha-xpc.yaml)
+      are distinct products. Confirm with lsusb.
+  - id: FUNCTIONALLY_IDENTICAL_TO_ALPHA
+    description: >
+      The FlySystem bundle yoke unit is functionally identical to the standard
+      Alpha yoke (alpha-yoke.yaml). If this device does not enumerate as 0x1902,
+      use the alpha-yoke.yaml manifest (PID 0x1900).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Alpha FlySystem bundle variant. PID 0x1902 unconfirmed.
+    Functionally similar to the Alpha Yoke (PID 0x1900). VID 0x294B confirmed.
+    Last reviewed: 2026-06.

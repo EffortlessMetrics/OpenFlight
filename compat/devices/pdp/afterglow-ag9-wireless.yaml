@@ -1,0 +1,64 @@
+# PDP Afterglow AG 9 Wireless Headset Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The PDP Afterglow AG 9 is a wireless gamepad for Xbox One/Series/PC.
+# It connects via a USB wireless receiver dongle and presents as an
+# XInput-compatible HID gamepad on PC.
+# VID 0x0E6F confirmed: Logic3 / Performance Designed Products LLC.
+# PID 0x02A1 is an estimate for the Afterglow AG 9 — PID_UNCONFIRMED.
+
+schema_version: "1"
+
+device:
+  name: "PDP Afterglow AG 9 Wireless"
+  vendor: "Performance Designed Products LLC"
+  usb:
+    vendor_id: 0x0E6F
+    product_id: 0x02A1   # Estimate: PDP Afterglow AG 9 — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x02A1 is an estimate. PDP uses VID 0x0E6F across many products.
+      Match by USB string descriptor containing "Afterglow" or "AG 9"
+      if the PID does not match.
+  - id: XINPUT_PREFERRED
+    description: >
+      The AG 9 is XInput-compatible. DirectInput/HID axis layout may
+      differ from XInput mapping. Prefer XInput path in Windows; OpenFlight
+      uses HID mode — configure axes accordingly.
+  - id: WIRELESS_DONGLE
+    description: >
+      Requires the included USB wireless receiver dongle. Direct USB
+      connection for charging does not provide controller input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PDP Afterglow AG 9 Wireless. VID 0x0E6F / PID 0x02A1 estimated.
+    Used for button and axis assignments in flight sim profiles.
+    Last reviewed: 2026-06.

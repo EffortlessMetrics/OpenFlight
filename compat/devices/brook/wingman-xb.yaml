@@ -1,0 +1,50 @@
+# Brook Wingman XB Controller Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C12 (Zeroplus Technology), PID 0x0030 — estimated.
+# Adapter enabling PS4/Switch/PC controllers to work on Xbox One/Series X|S.
+# Enumerates as Xbox-compatible HID device on PC.
+schema_version: "1"
+device:
+  name: "Brook Wingman XB"
+  vendor: "Brook Accessory"
+  usb:
+    vendor_id: 0x0C12       # Zeroplus Technology Co., Ltd. (Brook accessory OEM VID)
+    product_id: 0x0030      # Community estimate — Wingman XB; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate for the Wingman XB adapter.
+      Confirm with lsusb — firmware updates may change the PID.
+  - id: ADAPTER_DEVICE
+    description: >
+      Controller adapter — enumerates the connected source controller
+      through the XInput/HID translation layer. Actual capabilities
+      depend on the source controller.
+  - id: XINPUT_TRANSLATION
+    description: >
+      Translates DInput/Switch input to XInput-compatible HID reports.
+      Triggers appear as axes z and rz (range 0–255 unipolar).
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brook Wingman XB — VID 0x0C12 / PID 0x0030 (est). Cross-console adapter.
+    Popular in Asian gaming market. Wave-55 addition. Last reviewed: 2026-07.

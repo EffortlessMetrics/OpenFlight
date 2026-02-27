@@ -1159,3 +1159,105 @@ mod prop_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod unit_tests {
+    use super::*;
+    use crate::AxisFrame;
+
+    // ── DetentZone ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn detent_zone_contains_entry_inside() {
+        let zone = DetentZone::new(0.0, 0.1, 0.05, DetentRole::Idle);
+        assert!(zone.contains_entry(0.0));
+        assert!(zone.contains_entry(0.09));
+        assert!(!zone.contains_entry(0.15));
+    }
+
+    #[test]
+    fn detent_zone_contains_exit_with_hysteresis() {
+        let zone = DetentZone::new(0.0, 0.1, 0.05, DetentRole::Idle);
+        // Inside entry → definitely inside exit
+        assert!(zone.contains_exit(0.0));
+        // Between entry and exit (hysteresis band)
+        assert!(zone.contains_exit(0.12));
+        // Outside exit
+        assert!(!zone.contains_exit(0.20));
+    }
+
+    #[test]
+    fn detent_zone_no_snap_flag() {
+        let zone = DetentZone::new(0.0, 0.1, 0.05, DetentRole::Idle);
+        assert!(zone.snap_to_center, "new() should have snap_to_center=true");
+
+        let no_snap = DetentZone::no_snap(0.0, 0.1, 0.05, DetentRole::Idle);
+        assert!(
+            !no_snap.snap_to_center,
+            "no_snap() should have snap_to_center=false"
+        );
+    }
+
+    #[test]
+    fn detent_zone_entry_bounds_clamped() {
+        // Zone near edge — bounds should be clamped to [-1, 1]
+        let zone = DetentZone::new(0.95, 0.2, 0.05, DetentRole::Takeoff);
+        let (lo, hi) = zone.entry_bounds();
+        assert!(lo >= -1.0 && lo <= 1.0);
+        assert!(hi >= -1.0 && hi <= 1.0);
+        assert!(lo <= hi);
+    }
+
+    #[test]
+    fn detent_zone_exit_bounds_wider_than_entry() {
+        let zone = DetentZone::new(0.0, 0.1, 0.05, DetentRole::Idle);
+        let (elo, ehi) = zone.entry_bounds();
+        let (xlo, xhi) = zone.exit_bounds();
+        assert!(xlo <= elo, "exit lower bound should be ≤ entry lower bound");
+        assert!(xhi >= ehi, "exit upper bound should be ≥ entry upper bound");
+    }
+
+    // ── CurveNode ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn curve_node_exponential_zero_expo_is_linear() {
+        let mut node = CurveNode::exponential(0.0).expect("valid expo");
+        let mut frame = AxisFrame::new(0.5, 1000);
+        frame.out = 0.5;
+        node.step(&mut frame);
+        // expo=0 → linear, output ≈ input
+        assert!((frame.out - 0.5).abs() < 0.01);
+    }
+
+    // ── MixerConfig helpers ──────────────────────────────────────────────────
+
+    #[test]
+    fn mixer_config_add_scaled_input_creates_entry() {
+        let config = MixerConfig::new("pitch").add_scaled_input("aileron", 0.5);
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn mixer_config_no_clamp_disables_clamping() {
+        let config = MixerConfig::new("test")
+            .add_scaled_input("a", 1.0)
+            .no_clamp();
+        assert!(
+            !config.clamp_output,
+            "no_clamp should disable output clamping"
+        );
+    }
+
+    #[test]
+    fn mixer_node_helicopter_anti_torque() {
+        let node = MixerNode::helicopter_anti_torque(1.0);
+        // Should compile without error and produce a valid mixer
+        assert!(node.is_ok());
+    }
+
+    #[test]
+    fn mixer_node_aileron_rudder_coordination() {
+        let node = MixerNode::aileron_rudder_coordination(0.2);
+        assert!(node.is_ok());
+    }
+}

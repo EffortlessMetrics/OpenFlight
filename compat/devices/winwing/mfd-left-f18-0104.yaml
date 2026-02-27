@@ -1,0 +1,51 @@
+# WinWing MFD Left F-18 (PID 0x0104)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0104 is a community estimate for the WinWing F/A-18C left MFD
+# (Multi-Function Display) panel. Related panels: mfd1-l.yaml (PID 0xBEE1),
+# fa18-ddi-left-panel.yaml (PID 0xBEE0).
+schema_version: "1"
+
+device:
+  name: "WinWing MFD Left (F-18)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0104      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (panel devices)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0104 is a community estimate for the WinWing F/A-18C left MFD panel.
+      Related confirmed panels: mfd1-l.yaml (PID 0xBEE1), fa18-ddi-left-panel.yaml
+      (PID 0xBEE0). Verify with SimAppPro or lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Button-only panel device replicating the F/A-18C left MFD surround buttons.
+      Designed for DCS F/A-18C Hornet module.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C MFD Left panel — alternate PID 0x0104 community estimate.
+    VID 0x4098 (WinWing). See also mfd1-l.yaml (PID 0xBEE1).
+    Wave-47 addition. Last reviewed: 2026-07.

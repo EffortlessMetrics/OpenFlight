@@ -1,0 +1,54 @@
+# Cammus C5 Direct Drive (Alt PID 0x0001)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cammus C5 direct-drive racing wheel base — alternate PID estimate 0x0001.
+# Primary manifest uses PID 0x0301 (c5-direct-drive.yaml). Some community
+# sources report PID 0x0001 for early firmware. VID 0x2433 (Cammus).
+schema_version: "1"
+
+device:
+  name: "Cammus C5 Direct Drive (Alt PID)"
+  vendor: "Cammus"
+  usb:
+    vendor_id: 0x2433     # Cammus (community-confirmed VID)
+    product_id: 0x0001    # Alternate community estimate — see c5-direct-drive.yaml (0x0301)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 5.0    # C5 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0001 is an alternate community estimate for the C5. Primary estimate
+      is 0x0301 (c5-direct-drive.yaml). Verify with lsusb on hardware.
+  - id: TORQUE_PROTOCOL
+    description: >
+      Cammus C5 uses a proprietary torque command protocol. OpenFlight synthesises
+      the desired FFB effect and sends it as a raw torque value.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cammus C5 Direct Drive (5 Nm). Alt PID 0x0001; primary estimate 0x0301.
+    VID 0x2433 = Cammus. Last reviewed: 2026-06.

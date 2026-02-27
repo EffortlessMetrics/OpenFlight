@@ -1,0 +1,47 @@
+# Tripp Lite USB Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2100 — estimated.
+# Tripp Lite USB helicopter collective control for rotary-wing simulation.
+schema_version: "1"
+device:
+  name: "Tripp Lite USB Helicopter Collective"
+  vendor: "Tripp Lite"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2100      # Community estimate — helicopter collective; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 2
+    names: [collective, twist]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2100 is a community estimate for the Tripp Lite helicopter
+      collective. VID 0x1209 is a shared pid.codes VID. Confirm with lsusb
+      or Windows Device Manager on real hardware.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Linear collective axis with optional twist grip for tail rotor control.
+      Primary axis maps to collective pitch; twist maps to anti-torque pedal
+      input when used without dedicated tail rotor pedals.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tripp Lite USB Helicopter Collective — VID 0x1209 / PID 0x2100 (est).
+    USB helicopter collective for MSFS/DCS rotary-wing simulation.
+    Wave-59 addition. Last reviewed: 2026-07.

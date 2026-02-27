@@ -1,0 +1,66 @@
+# Logitech Pro Racing Wheel (Servo Motor DD)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech International.
+# PID 0xC29C is a community estimate for the Logitech Pro Racing Wheel.
+# The Pro Racing Wheel is Logitech's top-tier consumer direct-drive wheel,
+# positioned above the G923 TrueForce (g923-racing-wheel.yaml). It uses a
+# permanent-magnet servo motor for higher-bandwidth torque feedback.
+# Used in combined sim setups as a high-fidelity flight control axis with
+# FFB feedback for turbulence and surface effects.
+
+schema_version: "1"
+
+device:
+  name: "Logitech Pro Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech International (confirmed)
+    product_id: 0xC29C   # Community estimate — Pro Racing Wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, throttle, brake]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 11.0  # Pro Racing Wheel rated peak Nm
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC29C is a community estimate. G923 is 0xC29B (g923-racing-wheel.yaml).
+      Confirm with lsusb on real Pro Racing Wheel hardware.
+  - id: DD_HIGH_BANDWIDTH_FFB
+    description: >
+      The servo-motor DD base has higher bandwidth than the G923 TrueForce.
+      In flight sim, map FFB to runway surface, turbulence, and stall onset.
+      OpenFlight sends standard DirectInput effects to the Logitech driver.
+  - id: RACING_WHEEL_IN_FLIGHT_SIM
+    description: >
+      Wheel axis → roll/aileron; pedal throttle → engine throttle; pedal brake
+      → toe brakes (split via OpenFlight profile). Combines well with a joystick
+      for pitch control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Pro Racing Wheel — top-tier Logitech DD wheel (11 Nm servo motor).
+    VID 0x046D confirmed; PID 0xC29C is a community estimate.
+    See g923-racing-wheel.yaml for the TrueForce G923. Last reviewed: 2026-06.

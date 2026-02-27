@@ -1,0 +1,55 @@
+# Fanatec BMW M3 GT2 Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0003 is a community estimate for the BMW M3 GT2 licensed wheel add-on.
+# This wheel rim was sold as an accessory for Fanatec wheel bases (CSR, GT2).
+# Distinct from bme-wheel.yaml (PID 0x0038) and clubsport-wheel-v2.yaml.
+# In flight sim this rim is occasionally used with a CSR/GT3 base for
+# helicopter cyclic or helicopter collective via the thumb paddle buttons.
+schema_version: "1"
+
+device:
+  name: "Fanatec BMW M3 GT2 Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0003   # Community estimate — BMW M3 GT2 Wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the BMW M3 GT2 Wheel rim.
+      Verify with lsusb before deployment. The CSL Elite PS4 also uses
+      VID 0x0EB7 with PID 0x0002; ensure no collision on shared hubs.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim: wheel axis → rudder or cyclic, paddles → toe brakes
+      or collective fine-tune. Thumb buttons → panel switches.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec BMW M3 GT2 Wheel rim. VID 0x0EB7 confirmed; PID 0x0003 is a
+    community estimate — verify with lsusb. Used with Fanatec wheel bases.
+    Last reviewed: 2026-06.

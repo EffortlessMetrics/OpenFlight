@@ -1,0 +1,58 @@
+# Thrustmaster TCA Quadrant Airbus Edition (Alt PID 0xB68F)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB68F is a community estimate for an alternate/early-production PID
+# of the TCA Quadrant Airbus Edition. The confirmed primary PID is 0x0407
+# (tca-quadrant-airbus.yaml, confirmed via linux-hardware.org).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Quadrant Airbus Edition (Alt PID)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (Guillemot Corp.)
+    product_id: 0xB68F      # Community estimate — primary confirmed PID is 0x0407
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_1, throttle_2, flaps, spoiler]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB68F is a community estimate. The confirmed primary PID is 0x0407
+      (tca-quadrant-airbus.yaml). Verify with lsusb or Windows Device Manager
+      before relying on this manifest.
+  - id: TCA_QUADRANT_REVERSE_DETENT
+    description: >
+      The thrust levers have a physical TOGA/CLB/MCT/IDLE detent system.
+      The idle detent is at the low end of axis travel and TOGA at the high end.
+  - id: AIRBUS_SOLD_SEPARATELY
+    description: >
+      TCA Sidestick and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Quadrant Airbus Edition alternate PID 0xB68F. Community
+    estimate; primary confirmed PID is 0x0407 (tca-quadrant-airbus.yaml).
+    4 axes (dual throttle, flaps, spoiler), 12 buttons. Wave-41 addition.
+    Last reviewed: 2026-07.

@@ -1,0 +1,43 @@
+# Thrustmaster Top Gun Afterburner
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB10D — community-reported estimate.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Top Gun Afterburner"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB10D
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB10D is a community-reported estimate; verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Top Gun Afterburner joystick. Vintage USB flight stick.
+    Tier 3 — community-reported. Last reviewed: 2026-02.

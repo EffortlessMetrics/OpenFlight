@@ -1,0 +1,53 @@
+# WinWing F/A-18C Hornet HOTAS (PID 0xB71C)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x4098 (WinWing).
+# PID 0xB71C is a community estimate for the WinWing F/A-18C Hornet HOTAS
+# combined device. Related manifests for Orion2 F18C use PIDs 0xBE63 (stick)
+# and 0xBE6A (throttle). This manifest covers PID 0xB71C as reported in
+# community sources for an integrated HOTAS bundle variant.
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18C Hornet HOTAS"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB71C      # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 40
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB71C is a community estimate. Orion2 F18C stick uses 0xBE63,
+      throttle uses 0xBE6A. Verify with SimAppPro USB enumeration or lsusb.
+  - id: FA18_LAYOUT
+    description: >
+      F/A-18C replica layout with authentic grip geometry. The throttle twin
+      levers appear as split left/right axes in some firmware variants.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C Hornet HOTAS PID 0xB71C community estimate. VID 0x4098
+    (WinWing). See also orion2-f18c-stick.yaml and orion2-f18c-throttle.yaml.
+    Wave-41 addition. Last reviewed: 2026-07.

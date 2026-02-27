@@ -1,0 +1,63 @@
+# WinWing SimApp Pro WSO Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing). PID is community-estimated. The SimApp Pro
+# WSO (Weapons Systems Officer) panel supplements the pilot's SimApp Pro FCU
+# setup with rear-seat WSO controls for two-seat aircraft like the F-4E, F-14,
+# and similar. Button-box style device with dedicated WSO instrument switches.
+schema_version: "1"
+
+device:
+  name: "WinWing SimApp Pro WSO Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD14   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD14 is a community estimate. Confirm from lsusb or USB descriptor
+      capture when hardware is available.
+  - id: BUTTON_BOX_ONLY
+    description: >
+      The WSO Panel is a pure button-box device; it reports no analogue axes.
+      All inputs are discrete switch/button states. Map buttons to WSO cockpit
+      functions in the OpenFlight panel-rules layer.
+  - id: SIMAPP_PRO_ECOSYSTEM
+    description: >
+      Designed for use alongside the WinWing SimApp Pro FCU/EFIS panels
+      (see simapp-pro-fcu.yaml, simapp-pro-fcu-efis-l.yaml, etc.). Connects
+      via USB independently from other SimApp Pro units.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro WSO Panel. Rear-seat WSO controls for two-seat aircraft.
+    PID 0xBD14 community-estimated. VID 0x4098 = WinWing.
+    Part of the SimApp Pro ecosystem. Last reviewed: 2026-02.
+
+driver: standard_hid
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "WSO controls for DCS F-4E, F-14 Tomcat (RIO seat), and similar two-seat modules."

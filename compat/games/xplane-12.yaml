@@ -1,0 +1,64 @@
+# X-Plane 12 — Supplementary DataRef Compatibility Notes
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Full adapter documentation (including XP11 baseline) is in xplane.yaml.
+# This file captures X-Plane 12 specific datarefs and behavioural differences
+# that are relevant when targeting XP12-only deployments.
+
+schema_version: "1"
+
+game:
+  name: "X-Plane 12"
+  id: xplane-12
+  developer: "Laminar Research"
+
+integration:
+  mechanism: "UDP DataRef + Web API"
+  crate: flight-xplane
+  protocol_version: "XPlane12"
+
+supported_versions:
+  - "12.0.x"
+  - "12.1.x"
+
+version_notes:
+  xplane12_datarefs:
+    notes: >
+      X-Plane 12 reorganised several position and performance datarefs relative to XP11.
+      OpenFlight's adapter detects the simulator version from the VERS dataref at runtime
+      and prefers XP12 paths where they exist:
+        • Vertical speed: sim/flightmodel2/position/vh_ind_fpm2
+          (supersedes sim/flightmodel/position/vh_ind_fpm from XP11)
+        • Acceleration axes: sim/flightmodel2/position/Nrot_{roll,pitch,yaw}
+          (replaces sim/flightmodel/position/local_ax/ay/az)
+        • Airspeed (cockpit): sim/cockpit2/gauges/indicators/airspeed_kts_pilot
+          (preferred over sim/flightmodel/position/indicated_airspeed for display reads)
+        • Engine failure ratio (XP12-only): sim/aircraft/engine/acf_en_failratio
+          exposed per-engine for failure injection; no equivalent in XP11.
+      XP11 dataref names are always tried first so that a single profile works on both
+      simulator versions without user configuration.
+
+features:
+  telemetry_read: true
+  control_injection:
+    dataref_write: true
+    commands: true
+  force_feedback_translation: false
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false     # Planned
+  integration_tests: true # adapter_integration_tests.rs covers XP12 dataref paths
+  fuzz_coverage: true     # crates/flight-xplane/fuzz/fuzz_targets/
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: XP12_VERT_SPEED_FALLBACK
+    description: >
+      sim/flightmodel2/position/vh_ind_fpm2 is preferred in XP12 but the adapter
+      currently reads sim/flightmodel/position/vh_ind (m/s path) for both versions.
+      The XP12 preferred path is tracked for a future adapter update.
+    workaround: "Vertical speed data is still accurate via the XP11 dataref on XP12."

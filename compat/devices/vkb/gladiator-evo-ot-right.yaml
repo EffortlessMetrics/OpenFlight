@@ -1,0 +1,59 @@
+# VKB Gladiator EVO OT R (Omni-Throttle grip, right-hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x3200 follows VKB's established R/L pairing convention:
+# Right = even (0x3200), Left = odd (0x3201) — mirrors the 0x0200/0x0201 pattern
+# used by the standard Gladiator NXT EVO line.
+# Community-reported; the paired left variant (0x3201) is confirmed via
+# linux-hardware.org (2 probes, USB string "VKBsim Gladiator EVO OT L").
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO OT R"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D   # VKB-Sim (C) Alex Oz 2023
+    product_id: 0x3200  # Right-hand OT variant; 0x3201 = left-hand (confirmed)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RIGHT_HAND_GRIP
+    description: >
+      Right-hand (starboard) grip variant of the Gladiator EVO OT family.
+      "OT" designates the Omni-Throttle grip configuration, which differs from
+      the standard Gladiator EVO grip in stick-top button layout and grip shape.
+  - id: VKB_FIRMWARE_CONFIGURABLE
+    description: >
+      VKB sticks are highly configurable via VKBDevCfg firmware tool.
+      Axis count and button mappings can be remapped by the user; defaults are
+      listed here (firmware v3.x with standard profile).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x3200 inferred from VKB's documented R/L pairing (Right=even, Left=odd)
+    consistent with the 0x0200/0x0201 and 0x3200/0x3201 patterns.
+    The paired left variant (0x3201, "VKBsim Gladiator EVO OT L") is confirmed
+    via linux-hardware.org (2 probes). PID 0x3200 is community-reported; not yet
+    independently verified via linux-hardware.org dump.
+    Axis/button counts mirror the left variant; verify with VKBDevCfg or HID
+    descriptor dump. Last validated: 2026-02.

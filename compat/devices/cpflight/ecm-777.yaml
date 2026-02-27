@@ -1,0 +1,54 @@
+# CPFlight Boeing 777 Engine Control Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0DC3 (community estimate for CPFlight) / PID 0x0804 — community
+# estimate. CPFlight (Italy) produces Boeing cockpit panel replicas. The ECM-777
+# is an Engine Control Module for Boeing 777 simulation, covering engine start
+# rotary switches, fire handles, and fuel cutoff switches.
+schema_version: "1"
+
+device:
+  name: "CPFlight Boeing 777 Engine Control Module"
+  vendor: "CPFlight"
+  type: panel
+  usb:
+    vendor_id: 0x0DC3       # Community estimate — CPFlight USB HID VID
+    product_id: 0x0804      # ECM-777 — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Both VID 0x0DC3 and PID 0x0804 are community estimates for CPFlight.
+      Verify with lsusb on real hardware.
+  - id: BOEING_777_SYSTEMS
+    description: >
+      Covers B777 engine start selector (2-position), fire-handle
+      pull/rotate switches (×3 for eng1/eng2/APU), fuel-cutoff switches, and
+      engine vibration/EGT selector. All inputs are digital.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight B777 Engine Control Module. VID 0x0DC3 / PID 0x0804 estimated.
+    Italian B777 cockpit replica panel. Wave-42 addition. Last reviewed: 2026-07.

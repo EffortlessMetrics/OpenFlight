@@ -593,8 +593,8 @@ impl SafeModeManager {
         use std::collections::HashMap;
         let mut axes = HashMap::new();
 
-        // Standard flight axes with conservative safe defaults
-        for name in &["pitch", "roll", "yaw"] {
+        // Pitch & roll: mild expo for precision near centre
+        for name in &["pitch", "roll"] {
             axes.insert(
                 name.to_string(),
                 AxisConfig {
@@ -607,12 +607,24 @@ impl SafeModeManager {
                 },
             );
         }
-        // Throttle needs a smaller deadzone near zero
+        // Yaw (rudder): wider deadzone and less expo — pedals are less precise
+        axes.insert(
+            "yaw".to_string(),
+            AxisConfig {
+                deadzone: Some(0.05),
+                expo: Some(0.15),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        // Throttle: tiny deadzone, linear response (no expo)
         axes.insert(
             "throttle".to_string(),
             AxisConfig {
                 deadzone: Some(0.01),
-                expo: Some(0.1),
+                expo: None,
                 slew_rate: None,
                 detents: vec![],
                 curve: None,
@@ -694,6 +706,44 @@ mod tests {
         let profile = manager.create_basic_profile();
         // Profile should be created successfully
         assert_eq!(profile.schema, "flight.profile/1");
+    }
+
+    #[test]
+    fn test_safe_profile_has_all_axes_with_correct_defaults() {
+        let config = SafeModeConfig::default();
+        let manager = SafeModeManager::new(config);
+        let profile = manager.create_basic_profile();
+
+        // All four primary axes must be present
+        for name in &["pitch", "roll", "yaw", "throttle"] {
+            assert!(
+                profile.axes.contains_key(*name),
+                "missing axis: {name}"
+            );
+        }
+
+        // Pitch
+        let pitch = &profile.axes["pitch"];
+        assert_eq!(pitch.deadzone, Some(0.03));
+        assert_eq!(pitch.expo, Some(0.2));
+
+        // Roll
+        let roll = &profile.axes["roll"];
+        assert_eq!(roll.deadzone, Some(0.03));
+        assert_eq!(roll.expo, Some(0.2));
+
+        // Yaw (rudder) — wider deadzone, less expo
+        let yaw = &profile.axes["yaw"];
+        assert_eq!(yaw.deadzone, Some(0.05));
+        assert_eq!(yaw.expo, Some(0.15));
+
+        // Throttle — linear (no expo)
+        let throttle = &profile.axes["throttle"];
+        assert_eq!(throttle.deadzone, Some(0.01));
+        assert_eq!(throttle.expo, None);
+
+        // Profile passes its own validation
+        profile.validate().expect("safe profile must validate");
     }
 
     #[tokio::test]

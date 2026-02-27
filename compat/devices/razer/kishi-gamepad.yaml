@@ -1,0 +1,55 @@
+# Razer Kishi Mobile Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Razer Kishi is a clip-on mobile gamepad for Android and iOS phones,
+# connecting via USB-C (Android) or Lightning (iOS). When connected to a
+# desktop PC via USB it presents as a standard HID gamepad.
+# VID 0x1532 confirmed: Razer Inc.
+# PID 0x0900 is an estimate for the Razer Kishi — PID_UNCONFIRMED.
+
+schema_version: "1"
+
+device:
+  name: "Razer Kishi Mobile Gamepad"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532
+    product_id: 0x0900   # Estimate: Razer Kishi — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0900 is an estimate. The Kishi family (V1, V2, Ultra) may
+      have different PIDs per version and platform variant. Match by
+      USB string descriptor containing "Kishi" if PID does not match.
+  - id: MOBILE_PRIMARY_USE
+    description: >
+      Primarily designed for mobile gaming. PC HID compatibility may
+      vary by firmware revision and USB-C cable quality.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Kishi mobile gamepad. VID 0x1532 / PID 0x0900 estimated.
+    Occasionally used for button assignments in portable flight sim setups.
+    Last reviewed: 2026-06.

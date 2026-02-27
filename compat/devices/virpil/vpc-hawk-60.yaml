@@ -1,0 +1,74 @@
+# VIRPIL VPC Hawk-60 Dual-Engine Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID is community-estimated for the Hawk-60; the newer throttle released
+# after the MongoosT-50CM3 line targeting jet trainer and light attack profiles.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Hawk-60 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x019C   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, scx, scy, slider1, slider2]
+    resolution_bits: 14
+  buttons: 60
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(12) + buttons_lsb(8)"
+  total_bytes: 21
+  axis_max_raw: 16384
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x019C is a community estimate. Confirm from lsusb or VPC Configurator
+      USB descriptor capture when hardware is available.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return thumb-stick axes; they center at raw 8192.
+      Throttle and slider axes are non-return.
+  - id: DUAL_ENGINE_THROTTLE
+    description: >
+      The left and right throttle levers can be moved independently or joined
+      via a friction lock. Map each lever independently for twin-engine
+      aircraft in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Hawk-60 dual-engine throttle. Designed for jet trainer and
+    light attack aircraft (T-45, L-39, etc.). PID 0x019C community-estimated.
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-02.
+
+driver:
+  type: virpil_vpc
+  notes: >
+    VPC Config Tool required for axis calibration and throttle curve configuration.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Suitable for DCS L-39 Albatros, T-45C, and similar trainer modules."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Dual throttle axes well-suited for warbird twin-engine configuration."

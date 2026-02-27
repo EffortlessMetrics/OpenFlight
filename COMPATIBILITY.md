@@ -6,23 +6,1826 @@
 
 | Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |
 |--------|-----------|------------|------|---------|-----|------|
-| Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1901 | 2 | 36 | ✗ | 2 |
+| 3Dconnexion SpaceMouse Compact | 0x256F | 0xC618 | 6 | 2 | ✗ | 3 |
+| 3Dconnexion SpaceMouse Enterprise | 0x256F | 0xC633 | 6 | 31 | ✗ | 2 |
+| 3Dconnexion SpaceMouse Module | 0x256F | 0xC631 | 6 | 0 | ✗ | 2 |
+| 3Dconnexion SpaceMouse Pro (0xC62B) | 0x256F | 0xC62B | 6 | 15 | ✗ | 3 |
+| 3Dconnexion SpaceMouse Pro Wireless (USB) | 0x256F | 0xC635 | 6 | 15 | ✗ | 2 |
+| 3Dconnexion SpaceMouse Pro | 0x256F | 0xC631 | 6 | 15 | ✗ | 3 |
+| 3Dconnexion SpaceMouse Wireless (Wired USB Mode) | 0x256F | 0xC62E | 6 | 2 | ✗ | 2 |
+| 3Dconnexion SpaceMouse Wireless (USB Receiver) | 0x256F | 0xC652 | 6 | 2 | ✗ | 3 |
+| 3Dconnexion SpaceNavigator | 0x256F | 0xC635 | 6 | 2 | ✗ | 3 |
+| 3Dconnexion SpacePilot Pro | 0x256F | 0xC629 | 6 | 31 | ✗ | 3 |
+| 8BitDo Lite 2 Controller | 0x2DC8 | 0x6101 | 4 | 16 | ✗ | 3 |
+| 8BitDo Lite SE Controller | 0x2DC8 | 0x6102 | 4 | 14 | ✗ | 3 |
+| 8BitDo Lite 2 | 0x2DC8 | 0x6106 | 4 | 14 | ✗ | 2 |
+| 8Bitdo M30 Wireless Controller | 0x2DC8 | 0x2100 | 2 | 10 | ✗ | 3 |
+| 8BitDo Micro Bluetooth Gamepad | 0x2DC8 | 0x6020 | 2 | 10 | ✗ | 3 |
+| 8BitDo Pro 2 Wired Controller | 0x2DC8 | 0x6011 | 6 | 18 | ✗ | 2 |
+| 8BitDo Pro 2 | 0x2DC8 | 0x6003 | 6 | 18 | ✓ | 2 |
+| 8BitDo SN30 Pro | 0x2DC8 | 0x6100 | 6 | 16 | ✓ | 2 |
+| 8BitDo Ultimate Controller 2.4G | 0x2DC8 | 0x6002 | 6 | 19 | ✓ | 2 |
+| 8BitDo Ultimate 2C (USB Wireless Receiver) | 0x2DC8 | 0x6002 | 6 | 17 | ✓ | 3 |
+| 8BitDo Ultimate 2C (USB Wired) | 0x2DC8 | 0x6004 | 6 | 17 | ✓ | 3 |
+| 8BitDo Ultimate Controller | 0x2DC8 | 0x3106 | 6 | 17 | ✓ | 3 |
+| 8BitDo Ultimate Bluetooth Controller | 0x2DC8 | 0x6006 | 6 | 18 | ✗ | 2 |
+| 8BitDo Ultimate (USB) | 0x2DC8 | 0x6001 | 6 | 19 | ✓ | 2 |
+| 8BitDo Zero 2 | 0x2DC8 | 0x9018 | 0 | 10 | ✗ | 3 |
+| SimXperience AccuForce V2 (Alt VID) | 0x1DD2 | 0x2002 | 2 | 0 | ✓ | 3 |
+| AccuForce v2 Direct Drive Wheel Base | 0x16D0 | 0x0D5E | 3 | 8 | ✓ | 3 |
+| ACTU8 Motion Platform | 0x1209 | 0x3004 | 6 | 0 | ✗ | 3 |
+| AeroSim A320 Sidestick | 0x04D8 | 0xEF91 | 3 | 12 | ✗ | 3 |
+| AeroSim B737 Yoke | 0x04D8 | 0xEF90 | 4 | 16 | ✗ | 3 |
+| Akai MPD226 MIDI Pad Controller | 0x09E8 | 0x0077 | 8 | 16 | ✗ | 2 |
+| Akai MPK Mini MIDI Controller | 0x09E8 | 0x0028 | 4 | 17 | ✗ | 2 |
+| Alpha Flight Controls USB Yoke | 0x2B67 | 0x0003 | 3 | 8 | ✗ | 3 |
+| Amkette Evo Gamepad Pro | 0x20D6 | 0x89F3 | 4 | 12 | ✗ | 3 |
+| Arturia BeatStep Pro | 0x1C75 | 0x0288 | 16 | 48 | ✗ | 2 |
+| Asetek SimSports Entry Level Pedals | 0x2735 | 0x0010 | 3 | 0 | ✗ | 3 |
+| Asetek SimSports Forte Wheel Base | 0x2341 | 0x8037 | 1 | 0 | ✓ | 3 |
+| Asetek SimSports Invicta Pedals | 0x2341 | 0x8036 | 3 | 0 | ✗ | 3 |
+| Asetek SimSports LA-1 Wheel Base | 0x2735 | 0x0001 | 6 | 32 | ✓ | 3 |
+| ASP Controls Aerobatic Joystick | 0x16C0 | 0x0480 | 3 | 8 | ✗ | 3 |
+| ASUS ROG Ally (Gamepad Mode) | 0x0B05 | 0x1ABE | 6 | 17 | ✓ | 3 |
+| AuraSound Shaker | 0x04D8 | 0xF301 | 0 | 0 | ✗ | 3 |
+| Axis and Ohs Multi-Axis Flight Sim Controller | 0x16C0 | 0x05DC | 8 | 32 | ✗ | 3 |
+| Baur A-10 Cockpit Panel | 0x0BCA | 0x0063 | 0 | 24 | ✗ | 3 |
+| BAUR F-16 ACS Sidestick | 0x1209 | 0x2090 | 3 | 16 | ✗ | 3 |
+| BAUR F-16 TPOD Panel | 0x1209 | 0x2092 | 2 | 24 | ✗ | 3 |
+| BAUR F-16 VIPER HOTAS Stick | 0x1209 | 0x2060 | 3 | 16 | ✗ | 3 |
+| BAUR F-18 Grip | 0x1209 | 0x2091 | 4 | 32 | ✗ | 3 |
+| BAUR F-18 HORNET HOTAS Stick | 0x1209 | 0x2061 | 3 | 18 | ✗ | 3 |
+| Baur F-4 Phantom Cockpit Panel | 0x0BCA | 0x0065 | 0 | 28 | ✗ | 3 |
+| Baur IL-2 Switch Panel | 0x0BCA | 0x0060 | 0 | 32 | ✗ | 3 |
+| BAUR Military Rudder Pedals | 0x1209 | 0x2062 | 3 | 2 | ✗ | 3 |
+| BAUR WarBRD Replica Grip | 0x1209 | 0x2093 | 3 | 20 | ✗ | 3 |
+| Behringer DDJ-400 DJ Controller | 0x154E | 0x0064 | 16 | 32 | ✗ | 3 |
+| Behringer X-Touch Mini MIDI Controller | 0x1397 | 0x0508 | 9 | 16 | ✗ | 2 |
+| Belkin Nostromo n52 SpeedPad | 0x04F2 | 0x0602 | 1 | 14 | ✗ | 3 |
+| BETAFPV LiteRadio 2 SE | 0x1781 | 0x0898 | 4 | 4 | ✗ | 3 |
+| Betop BTP-2175 Gamepad | 0x20BC | 0x5500 | 4 | 12 | ✗ | 3 |
+| Betop BTP-C100 Gamepad | 0x20BC | 0x5501 | 4 | 12 | ✗ | 3 |
+| Brook Wingman FGC | 0x0C12 | 0x0034 | 2 | 14 | ✗ | 3 |
+| Brook Wingman NS2 | 0x0C12 | 0x0038 | 4 | 14 | ✗ | 3 |
+| Brook Wingman SD | 0x0C12 | 0x0032 | 4 | 12 | ✗ | 3 |
+| Brook Wingman XB | 0x0C12 | 0x0030 | 4 | 14 | ✗ | 3 |
+| Brunner BRT Alpha Force Feedback Joystick | 0x25BB | 0x0075 | 3 | 12 | ✓ | 3 |
+| Brunner CLB-E Rudder Pedals | 0x1294 | 0x1295 | 3 | 0 | ✓ | 3 |
+| Brunner CLS-E Aileron | 0x1781 | 0x0A8D | 1 | 0 | ✓ | 2 |
+| Brunner CLS-E Compact Force Feedback Yoke | 0x25BB | 0x0065 | 2 | 6 | ✓ | 3 |
+| Brunner CLS-E MK II Force Feedback Joystick | 0x25BB | 0x0067 | 2 | 12 | ✓ | 2 |
+| Brunner CLS-E MK II Force Feedback Yoke (STM variant) | 0x0483 | 0x5751 | 2 | 20 | ✓ | 2 |
+| Brunner CLS-E MK II Yoke | 0x1294 | 0x1294 | 2 | 4 | ✓ | 3 |
+| Brunner CLS-E Mk.2 Force Feedback Yoke | 0x25BB | 0x0065 | 2 | 20 | ✓ | 2 |
+| Brunner CLS-E NG Collective | 0x1781 | 0x0A10 | 3 | 8 | ✗ | 3 |
+| Brunner CLS-E NG Joystick | 0x25BB | 0x0075 | 3 | 4 | ✓ | 3 |
+| Brunner CLS-E NG Trainer | 0x2BA1 | 0x000A | 2 | 8 | ✓ | 3 |
+| Brunner CLS-E NG Force Feedback Yoke | 0x25BB | 0x006D | 2 | 12 | ✓ | 3 |
+| Brunner CLS-E MK II Force Feedback Rudder Pedals | 0x25BB | 0x006B | 3 | 0 | ✓ | 3 |
+| Brunner CLS-E Trainer Force Feedback Yoke | 0x25BB | 0x0067 | 2 | 4 | ✓ | 3 |
+| Brunner CLS-E Force Feedback Yoke | 0x25BB | 0x0063 | 2 | 16 | ✓ | 2 |
+| Brunner CLS-P Control Loading Pedals | 0x1781 | 0x0A8C | 3 | 0 | ✓ | 2 |
+| Brunner CLS-P PC Helicopter Collective (STM variant) | 0x0483 | 0x5752 | 1 | 8 | ✓ | 2 |
+| Brunner CLS-P PC Center Joystick | 0x25BB | 0x0090 | 2 | 4 | ✓ | 3 |
+| Brunner CLS-P Force Feedback Rudder Pedals | 0x25BB | 0x0080 | 3 | 0 | ✓ | 3 |
+| Brunner CLS-P Force Feedback Yoke | 0x25BB | 0x0085 | 2 | 8 | ✓ | 3 |
+| Brunner CLS-E Force Feedback Yoke (Alt VID) | 0x1781 | 0x0063 | 3 | 20 | ✓ | 3 |
+| Brunner CLS-P Rudder Pedals (Alt VID) | 0x1781 | 0x0080 | 2 | 0 | ✓ | 3 |
+| Brunner CLX Force Feedback Yoke | 0x25BB | 0x0070 | 3 | 24 | ✓ | 2 |
+| Aura Bass Shaker USB Audio Interface | 0x0D8C | 0x0012 | 0 | 0 | ✗ | 4 |
+| ButtKicker Concert | 0x04D8 | 0xF300 | 0 | 0 | ✗ | 3 |
+| ButtKicker Gamer 2 (USB HID variant) | 0x1209 | 0x3010 | 0 | 0 | ✗ | 3 |
+| ButtKicker Gamer2 | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| ButtKicker Mini Pro | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| CAE SimFinity Control | 0x1055 | 0x0002 | 4 | 12 | ✓ | 3 |
+| Cammus C12 Direct Drive Wheel Base | 0x3416 | 0x0302 | 1 | 0 | ✓ | 3 |
+| Cammus C5 Direct Drive (Alt PID) | 0x2433 | 0x0001 | 1 | 0 | ✓ | 3 |
+| Cammus C5 Direct Drive Wheel Base | 0x3416 | 0x0301 | 1 | 0 | ✓ | 3 |
+| Cammus C12 Direct Drive Wheelbase | 0x3416 | 0x0106 | 5 | 20 | ✓ | 3 |
+| Cammus C15 Direct Drive Wheelbase | 0x3416 | 0x0107 | 5 | 20 | ✓ | 3 |
+| Cammus C5 Direct Drive Wheelbase | 0x3416 | 0x0105 | 5 | 20 | ✓ | 3 |
+| Cammus C5 Lite Direct Drive Wheel Base | 0x3416 | 0x0010 | 1 | 0 | ✓ | 3 |
+| Cammus P1000 Sim Pedals | 0x3416 | 0x0310 | 3 | 0 | ✗ | 3 |
+| CH Products Dual Throttle Controller | 0x068E | 0x00FB | 2 | 8 | ✗ | 3 |
+| CH Products Single Throttle Lever | 0x068E | 0x00F9 | 1 | 6 | ✗ | 3 |
+| CH Products USB Throttle Controller | 0x068E | 0x00FA | 4 | 20 | ✗ | 3 |
+| CH Products Flight Sim Eclipse Yoke | 0x068E | 0x00C1 | 3 | 12 | ✗ | 2 |
+| CH Products Fighterstick | 0x068E | 0x00F0 | 5 | 32 | ✗ | 2 |
+| CH Combat Stick | 0x068E | 0x00F4 | 4 | 24 | ✗ | 2 |
+| CH Flight Sim Eclipse Yoke | 0x068E | 0x0051 | 6 | 32 | ✗ | 2 |
+| CH Fighterstick | 0x068E | 0x00F3 | 4 | 32 | ✗ | 2 |
+| CH Products Flight Sim Yoke USB | 0x068E | 0x00F4 | 6 | 20 | ✗ | 2 |
+| CH FlightStick Pro USB | 0x068E | 0x00F2 | 4 | 16 | ✗ | 3 |
+| CH Products USB GameStick 3D | 0x068E | 0x00F7 | 4 | 14 | ✗ | 3 |
+| CH Joystick | 0x068E | 0x0191 | 3 | 8 | ✗ | 2 |
+| CH Products Multi-Function Panel | 0x068E | 0x00B8 | 4 | 20 | ✗ | 2 |
+| CH Pro Pedals USB | 0x068E | 0x00F3 | 3 | 0 | ✗ | 2 |
+| CH Pro Pedals | 0x068E | 0x00F2 | 3 | 0 | ✗ | 2 |
+| CH Pro Throttle | 0x068E | 0x00F1 | 5 | 32 | ✗ | 2 |
+| CH Products Throttle Quadrant | 0x068E | 0x00F4 | 3 | 6 | ✗ | 2 |
+| CH Products USB Fighter Stick | 0x068E | 0x00F8 | 4 | 16 | ✗ | 3 |
+| CH Products USB Game Stick | 0x068E | 0x00F3 | 4 | 8 | ✗ | 3 |
+| CH Products USB Rudder Pedals | 0x068E | 0x00F6 | 1 | 0 | ✗ | 3 |
+| CH Products USB Throttle Controller | 0x068E | 0x00FF | 4 | 12 | ✗ | 2 |
+| CH Products USB TPM Throttle | 0x068E | 0x00FA | 3 | 20 | ✗ | 3 |
+| CH Products USB Yoke (Alt PID) | 0x068E | 0x00F5 | 6 | 20 | ✗ | 2 |
+| CH Products Virtual Pilot Pro | 0x068E | 0x00EB | 6 | 20 | ✗ | 2 |
+| CH Virtual Pilot | 0x068E | 0x00C0 | 3 | 8 | ✗ | 3 |
+| Clark Synthesis TST239 Tactile Transducer | 0x1209 | 0x3012 | 0 | 0 | ✗ | 3 |
+| Clark Synthesis TST429 Tactile Transducer | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| Cockpit4U USB Interface Card | 0x04D8 | 0xEB00 | 4 | 64 | ✗ | 3 |
+| CockpitSonic Autopilot (MCP) Panel | 0x16C0 | 0x0602 | 4 | 28 | ✗ | 3 |
+| CockpitSonic EFIS Panel | 0x16C0 | 0x0601 | 2 | 14 | ✗ | 3 |
+| CockpitSonic MIP Controller | 0x16C0 | 0x0600 | 0 | 32 | ✗ | 3 |
+| CockpitSonic Overhead Panel Controller | 0x16C0 | 0x0603 | 0 | 48 | ✗ | 3 |
+| CockpitSonic USB Panel | 0x04B4 | 0xF240 | 0 | 32 | ✗ | 3 |
+| Contour Design ShuttlePRO v3 | 0x0B33 | 0x0031 | 2 | 15 | ✗ | 2 |
+| Contour Design ShuttleXpress V2 | 0x0B33 | 0x0021 | 2 | 5 | ✗ | 3 |
+| Contour ShuttlePRO v2 | 0x0B33 | 0x0030 | 2 | 15 | ✗ | 2 |
+| Contour ShuttleXpress | 0x0B33 | 0x0020 | 2 | 5 | ✗ | 2 |
+| Corsair K100 RGB Keyboard | 0x1B1C | 0x1B7C | 1 | 6 | ✗ | 3 |
+| Corsair SCIMITAR PRO RGB | 0x1B1C | 0x1B3C | 2 | 17 | ✗ | 2 |
+| Corsair Vengeance K65 RGB | 0x1B1C | 0x1B17 | 0 | 87 | ✗ | 2 |
+| Corsair VOID RGB Elite USB Headset | 0x1B1C | 0x0A55 | 0 | 4 | ✗ | 3 |
+| CPFlight ATCPRO Radio Panel | 0x0EB7 | 0x0200 | 0 | 16 | ✗ | 3 |
+| CPFlight Boeing 777 Engine Control Module | 0x0DC3 | 0x0804 | 0 | 20 | ✗ | 3 |
+| CPFlight ECM737 Engine Control Module | 0x0DC3 | 0x0810 | 2 | 24 | ✗ | 3 |
+| CPFlight EFIS Panel (Captain) | 0x1781 | 0x0B01 | 2 | 18 | ✗ | 3 |
+| CPFlight EFIS Panel (First Officer) | 0x1781 | 0x0B02 | 2 | 18 | ✗ | 3 |
+| CPFlight EFIS Control Panel | 0x0DC3 | 0x0802 | 0 | 16 | ✗ | 3 |
+| CPFlight EFIS737 PRO | 0x1552 | 0x0002 | 2 | 20 | ✗ | 3 |
+| CPFlight FMC Pro Boeing 737 | 0x1FD3 | 0x0004 | 0 | 64 | ✗ | 3 |
+| CPFlight FMC737 PRO | 0x1552 | 0x0003 | 0 | 60 | ✗ | 3 |
+| CPFlight MCDU Pro Boeing 737 FMC Keyboard | 0x0DC3 | 0x0801 | 0 | 65 | ✗ | 3 |
+| CPFlight MCP Pro Boeing 737 Autopilot Panel | 0x0DC3 | 0x0800 | 0 | 40 | ✗ | 3 |
+| CPFlight MCP737 PRO | 0x1552 | 0x0001 | 4 | 40 | ✗ | 3 |
+| CPFlight MCP737 Mode Control Panel | 0x0EB7 | 0x0201 | 0 | 40 | ✗ | 3 |
+| CPFlight OVH737 Overhead Panel | 0x0DC3 | 0x0820 | 0 | 64 | ✗ | 3 |
+| CPFlight Boeing 737 Radio Panel | 0x0DC3 | 0x0802 | 0 | 24 | ✗ | 3 |
+| Cube Controls Formula CSL Racing Wheel | 0x0483 | 0x5760 | 4 | 20 | ✗ | 3 |
+| Cube Controls GT Pro Racing Wheel Base | 0x0EB7 | 0x0E03 | 3 | 8 | ✓ | 3 |
+| CXC Sim Motion Seat | 0x16C0 | 0x04DA | 3 | 4 | ✗ | 3 |
+| Cyber Flight HOTAS | 0x1209 | 0x2081 | 6 | 20 | ✗ | 3 |
+| Cyber Flight Rudder | 0x1209 | 0x2080 | 3 | 0 | ✗ | 3 |
+| Dayton Audio BST-1 Bass Shaker | 0x1209 | 0x3011 | 0 | 0 | ✗ | 3 |
+| Dayton Audio TT25-8 Puck Tactile Transducer | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| D-BOX Haptic Rig | 0x25B6 | 0x0002 | 0 | 0 | ✗ | 3 |
+| D-BOX Motion System | 0x25B6 | 0x0001 | 0 | 0 | ✗ | 3 |
+| Defender Cobra R4 USB Joystick | 0x3767 | 0x0010 | 4 | 8 | ✗ | 3 |
+| Defender Game Master Wireless Gamepad | 0x3767 | 0x0011 | 4 | 12 | ✗ | 3 |
+| Defender Game Racer Wireless Pro | 0x0079 | 0x0006 | 4 | 12 | ✗ | 3 |
+| Delan Clip Head Tracker | 0x04D8 | 0xEB91 | 6 | 1 | ✗ | 2 |
+| Delanclip Enterprise IR Head Tracker | 0x04D8 | 0xF374 | 3 | 0 | ✗ | 3 |
+| Delanclip Sport IR Head Tracker | 0x04D8 | 0xF373 | 3 | 0 | ✗ | 3 |
+| Delanclip Fusion IR Head Tracker | 0x04D8 | 0xF372 | 6 | 0 | ✗ | 2 |
+| Desktop Aviator A320 FCU | 0x2B67 | 0x0011 | 5 | 20 | ✗ | 3 |
+| Desktop Aviator B747 Overhead Panel | 0x2B67 | 0x0012 | 0 | 64 | ✗ | 3 |
+| Desktop Aviator Boeing 737 MCP Replica | 0x16C0 | 0x0480 | 5 | 24 | ✗ | 3 |
+| Desktop Aviator Airbus A320 FMGC Panel Replica | 0x16C0 | 0x0481 | 4 | 32 | ✗ | 3 |
+| Desktop Aviator MD80 Overhead Panel | 0x2B67 | 0x0013 | 0 | 48 | ✗ | 3 |
+| DHC Rudder Pedals | 0x04D8 | 0xFF21 | 3 | 0 | ✗ | 3 |
+| DHC Yoke System | 0x04D8 | 0xFF20 | 3 | 10 | ✗ | 3 |
+| DJ TechTools MIDI Fighter 64 | 0x2580 | 0x0064 | 0 | 64 | ✗ | 3 |
+| DJ TechTools MIDI Fighter Twister | 0x2580 | 0x0048 | 16 | 16 | ✗ | 3 |
+| DOF Reality H2 Motion Platform | 0x1209 | 0x3001 | 2 | 0 | ✗ | 3 |
+| DOF Reality H3 Motion Platform | 0x1209 | 0x3002 | 3 | 0 | ✗ | 3 |
+| DOF Reality P3 Motion Platform | 0x1209 | 0x3003 | 3 | 0 | ✗ | 3 |
+| DragonRise Arcade Joystick Encoder | 0x0079 | 0x0126 | 2 | 12 | ✗ | 3 |
+| DragonRise USB Gamepad (Alt PID) | 0x0079 | 0x181C | 4 | 10 | ✗ | 3 |
+| DragonRise Generic USB Flight Stick | 0x0079 | 0x0032 | 4 | 8 | ✗ | 3 |
+| DragonRise Twin USB Gamepad | 0x0079 | 0x0003 | 4 | 12 | ✗ | 3 |
+| Elgato 4K X Capture Card | 0x0FD9 | 0x0079 | 0 | 2 | ✗ | 3 |
+| Elgato Facecam Pro | 0x0FD9 | 0x0070 | 0 | 1 | ✗ | 3 |
+| Elgato Stream Deck Pedal | 0x0FD9 | 0x009D | 0 | 3 | ✗ | 3 |
+| Elgato Stream Deck+ V2 | 0x0FD9 | 0x009B | 4 | 8 | ✗ | 2 |
+| Elgato Stream Deck Studio | 0x0FD9 | 0x009C | 4 | 32 | ✗ | 2 |
+| Elgato Stream Deck Mini | 0x0FD9 | 0x0063 | 0 | 6 | ✗ | 3 |
+| Elgato Stream Deck MK.2 | 0x0FD9 | 0x0080 | 0 | 15 | ✗ | 3 |
+| Elgato Stream Deck Neo | 0x0FD9 | 0x009A | 0 | 8 | ✗ | 3 |
+| Elgato Stream Deck Original | 0x0FD9 | 0x0060 | 0 | 15 | ✗ | 3 |
+| Elgato Stream Deck Pedal | 0x0FD9 | 0x0086 | 0 | 3 | ✗ | 2 |
+| Elgato Stream Deck + | 0x0FD9 | 0x0084 | 0 | 8 | ✗ | 3 |
+| Elgato Stream Deck Studio | 0x0FD9 | 0x009A | 0 | 18 | ✗ | 2 |
+| Elgato Stream Deck XL | 0x0FD9 | 0x006C | 0 | 32 | ✗ | 3 |
+| Elgato Wave Link | 0x0FD9 | 0x006B | 0 | 2 | ✗ | 3 |
+| Elite Simulations E-Cessna Throttle Panel | 0x04D8 | 0x0203 | 3 | 4 | ✗ | 3 |
+| Elite Simulations E-Rudder Pedals | 0x04D8 | 0x0200 | 3 | 0 | ✗ | 3 |
+| Elite Simulations E-Trim Wheel | 0x04D8 | 0x0202 | 1 | 0 | ✗ | 3 |
+| Elite Simulations E-Yoke | 0x04D8 | 0x0201 | 2 | 6 | ✗ | 3 |
+| Elite Simulations ILS Approach Panel | 0x04D8 | 0x0215 | 2 | 10 | ✗ | 3 |
+| Elite Simulations Pro MFD | 0x04D8 | 0xEE10 | 2 | 18 | ✗ | 3 |
+| Elite Simulations E-Rudder Pedals Pro | 0x04D8 | 0x0201 | 3 | 0 | ✗ | 3 |
+| Elite Simulations Throttle Quadrant | 0x04D8 | 0x0210 | 3 | 6 | ✗ | 3 |
+| Elite Simulations Yoke System | 0x04D8 | 0x0205 | 3 | 14 | ✗ | 3 |
+| Elite Simulations USB Joystick | 0x2341 | 0x8036 | 4 | 8 | ✗ | 3 |
+| Emotiv EPOC X | 0x1234 | 0x0010 | 0 | 0 | ✗ | 3 |
+| EPOS H3Pro Hybrid | 0x1395 | 0x0310 | 0 | 4 | ✗ | 3 |
+| Eyeware Beam Eye Tracker | 0x2104 | 0x0119 | 6 | 0 | ✗ | 3 |
+| EyeWorks IR Module | 0x0479 | 0x0100 | 0 | 0 | ✗ | 3 |
+| FaceTrackNoIR DIY Arduino Head Tracker | 0x2341 | 0x8037 | 6 | 0 | ✗ | 4 |
+| FaceTrackNoIR Virtual Head Tracker | 0x0000 | 0x0000 | 6 | 0 | ✗ | 2 |
+| Fanatec BMW M4 GT3 (BME) Steering Wheel | 0x0EB7 | 0x0038 | 0 | 20 | ✗ | 3 |
+| Fanatec BMW M3 GT2 Wheel | 0x0EB7 | 0x0003 | 5 | 18 | ✗ | 3 |
+| Fanatec ClubSport Handbrake V1.5 | 0x0EB7 | 0x0006 | 1 | 1 | ✗ | 3 |
+| Fanatec ClubSport Handbrake V1.5 | 0x0EB7 | 0x0011 | 1 | 1 | ✗ | 3 |
+| Fanatec ClubSport Pedals V1 | 0x0EB7 | 0x0006 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Pedals V2 | 0x0EB7 | 0x0012 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport V3 Pedals | 0x0EB7 | 0x0101 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Pedals V3 (Alt VID) | 0xEB03 | 0x0005 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Pedals V3 Metal | 0x0EB7 | 0x0020 | 3 | 1 | ✗ | 3 |
+| Fanatec ClubSport Pedals V3 | 0x0EB7 | 0x0020 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Pedals V4 | 0x0EB7 | 0x0009 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Shifter SQ | 0x0EB7 | 0x0201 | 0 | 7 | ✗ | 2 |
+| Fanatec ClubSport Shifter SQ V1.5 | 0x0EB7 | 0x0005 | 2 | 14 | ✗ | 3 |
+| Fanatec ClubSport Pedals V3 Inverted | 0x0EB7 | 0x0021 | 3 | 0 | ✗ | 3 |
+| Fanatec ClubSport Steering Wheel V2 | 0x0EB7 | 0x0001 | 4 | 25 | ✓ | 2 |
+| Fanatec ClubSport Wheel Base V2.5 (Alt VID) | 0xEB03 | 0x0006 | 3 | 0 | ✓ | 3 |
+| Fanatec CSL DD Bundle | 0x0EB7 | 0x0020 | 4 | 12 | ✓ | 2 |
+| Fanatec CSL DD Pro Bundle | 0x0EB7 | ? | 0 | 0 | ✗ | 3 |
+| Fanatec CSL DD Pro Wheel Base | 0x0EB7 | 0x0011 | 3 | 0 | ✓ | 3 |
+| Fanatec CSL DD | 0x0EB7 | 0x0030 | 1 | 0 | ✓ | 3 |
+| Fanatec CSL Elite Pedals V2 | 0x0EB7 | 0x0016 | 3 | 0 | ✗ | 3 |
+| Fanatec CSL Elite Pedals | 0x0EB7 | 0x0011 | 3 | 0 | ✗ | 3 |
+| Fanatec CSL Elite Wheel Base+ | 0x0EB7 | 0x0013 | 3 | 24 | ✓ | 2 |
+| Fanatec CSL Elite Wheel Base V2 | 0x0EB7 | 0x0020 | 1 | 0 | ✓ | 3 |
+| Fanatec CSL Elite Wheel Base v1.5 | 0x0EB7 | 0x0006 | 5 | 24 | ✓ | 3 |
+| Fanatec CSL Pedals Load Cell | 0x0EB7 | 0x0102 | 3 | 0 | ✗ | 2 |
+| Fanatec CSL Pedals Load Cell Kit | 0x0EB7 | 0x0030 | 3 | 0 | ✗ | 3 |
+| Fanatec CSL Pedals | 0x0EB7 | 0x0014 | 3 | 0 | ✗ | 3 |
+| Fanatec CSL Steering Wheel R300 V2 | 0x0EB7 | 0x020C | 1 | 10 | ✗ | 3 |
+| Fanatec CSL Elite Wheel Base (PS4 Edition) | 0x0EB7 | 0x0002 | 5 | 24 | ✓ | 3 |
+| Fanatec ClubSport Wheel V2.5 Base | 0x0EB7 | 0x0005 | 3 | 0 | ✓ | 3 |
+| Fanatec ClubSport Wheel V2 Base | 0x0EB7 | 0x0004 | 3 | 0 | ✓ | 3 |
+| Fanatec CSL DD+ Wheelbase | 0x0EB7 | 0x0E0B | 5 | 20 | ✓ | 2 |
+| Fanatec Podium DD1 Wheelbase | 0x0EB7 | 0x0E08 | 5 | 20 | ✓ | 2 |
+| Fanatec Podium DD2 Wheelbase | 0x0EB7 | 0x0E09 | 5 | 20 | ✓ | 2 |
+| Fanatec Gran Turismo DD Pro | 0x0EB7 | 0x0E0A | 5 | 24 | ✓ | 2 |
+| Fanatec McLaren GT3 Steering Wheel | 0x0EB7 | 0x0011 | 0 | 20 | ✗ | 3 |
+| Fanatec Podium Hub | 0x0EB7 | 0x0005 | 0 | 6 | ✗ | 3 |
+| Fanatec Gran Turismo DD Pro Wheel Base | 0x0EB7 | 0x0031 | 5 | 24 | ✓ | 3 |
+| Fanatec Gran Turismo DD Pro Wheel Base | 0xEB03 | 0x0008 | 5 | 24 | ✓ | 3 |
+| Fanatec McLaren GT3 V2 Steering Wheel | 0xEB03 | 0x0420 | 0 | 20 | ✗ | 3 |
+| Fanatec McLaren GT3 V2 Steering Wheel | 0x0EB7 | 0x0030 | 0 | 14 | ✗ | 3 |
+| Fanatec Podium DD1 Direct Drive Base | 0x0EB7 | 0x0010 | 1 | 0 | ✓ | 3 |
+| Fanatec Podium Wheel Base DD1 (Alt PID) | 0x0EB7 | 0x6204 | 1 | 0 | ✓ | 2 |
+| Fanatec Podium DD1 | 0x0EB7 | 0x0040 | 1 | 0 | ✓ | 3 |
+| Fanatec Podium Wheel Base DD2 (Alt PID) | 0x0EB7 | 0x6205 | 1 | 0 | ✓ | 2 |
+| Fanatec Podium DD2 | 0x0EB7 | 0x0042 | 1 | 0 | ✓ | 3 |
+| Fanatec Podium Hub (Alt PID) | 0x0EB7 | 0x6206 | 0 | 4 | ✗ | 3 |
+| Fanatec Podium Hub | 0x0EB7 | 0x0050 | 0 | 6 | ✗ | 3 |
+| Fanatec Podium Pedals | 0x0EB7 | 0x0005 | 3 | 0 | ✗ | 3 |
+| Fanatec Podium Racing Wheel F1 | 0x0EB7 | 0x0055 | 3 | 16 | ✓ | 3 |
+| Fanatec WRC Steering Wheel | 0xEB03 | 0x0421 | 0 | 18 | ✗ | 3 |
+| Fanatec WRC Steering Wheel | 0x0EB7 | 0x0035 | 0 | 18 | ✗ | 3 |
+| Flight Illusion Communications Panel | 0x1F4D | 0x0059 | 2 | 12 | ✗ | 3 |
+| Flight Illusion GAU-57 Gauge Card | 0x1F4D | 0x0057 | 5 | 0 | ✗ | 3 |
+| Flight Illusion Master Caution/Warning Panel | 0x1F4D | 0x0058 | 0 | 4 | ✗ | 3 |
+| Flight Illusion TQ6 Throttle Quadrant | 0x04B4 | 0xF250 | 6 | 12 | ✗ | 3 |
+| Flight Illusion FTG-1 Gauge Card | 0x04B4 | 0xF255 | 1 | 0 | ✗ | 3 |
+| Flight Illusion GXP Simulator Panel | 0x04B4 | 0xF232 | 0 | 48 | ✗ | 3 |
+| FlyEngravity A320 EFIS | 0x1551 | 0x0022 | 2 | 24 | ✗ | 3 |
+| FlyEngravity A320 EFIS | 0x0BCA | 0x0080 | 2 | 32 | ✗ | 3 |
+| FlyEngravity Boeing 737 FMC | 0x1551 | 0x0021 | 0 | 64 | ✗ | 3 |
+| FlyEngravity Boeing 737 MCP | 0x1551 | 0x0020 | 4 | 40 | ✗ | 3 |
+| FlySky FS-i6 | 0x1781 | 0x0899 | 4 | 4 | ✗ | 3 |
+| FriendlyPanels Airbus A320 FCU Panel | 0x2341 | 0x8036 | 0 | 24 | ✗ | 3 |
+| FriendlyPanels Airbus A320 MCDU Panel | 0x2341 | 0x8039 | 0 | 60 | ✗ | 3 |
+| FriendlyPanels Airbus A320 Center Pedestal Panel | 0x2341 | 0x803A | 2 | 32 | ✗ | 3 |
+| FriendlyPanels Boeing 737 MCP | 0x2341 | 0x8037 | 0 | 36 | ✗ | 3 |
+| FriendlyPanels Boeing 737 Overhead Panel | 0x2341 | 0x8038 | 0 | 64 | ✗ | 3 |
+| FSSB R3 Force Sensing Sidestick Base | 0xF055 | 0x0003 | 3 | 0 | ✗ | 3 |
+| FSSB R3 Lightning | 0x1209 | 0x2051 | 3 | 4 | ✓ | 2 |
+| FSSB R3 Slim | 0x1209 | 0x2050 | 3 | 2 | ✓ | 2 |
+| Fulcrum One Yoke | 0x1209 | 0x2070 | 5 | 12 | ✓ | 3 |
+| Gamdias Ares P1 Optical Mouse | 0x0F30 | 0x1229 | 3 | 7 | ✗ | 3 |
+| GameSir G7 Wired Controller | 0x1949 | 0x0408 | 6 | 16 | ✗ | 3 |
+| GameSir T3 Wireless Gamepad | 0x1949 | 0x0402 | 6 | 14 | ✗ | 3 |
+| GameSir X2 Type-C Mobile Controller | 0x1949 | 0x0403 | 4 | 14 | ✗ | 3 |
+| GameSir T4 Pro Wireless Gamepad | 0x1949 | 0x0401 | 6 | 16 | ✗ | 3 |
+| Gametrix JetSeat FSL Edition | 0x0483 | 0x5740 | 0 | 0 | ✗ | 3 |
+| Arduino Due USB HID Joystick (DIY) | 0x2341 | 0x003E | 6 | 32 | ✗ | 3 |
+| Arduino Leonardo USB HID Joystick (DIY) | 0x2341 | 0x0036 | 6 | 32 | ✗ | 3 |
+| Arduino Leonardo HID Joystick | 0x2341 | 0x8036 | 4 | 10 | ✗ | 3 |
+| Arduino Mega HID Joystick (DIY) | 0x2341 | 0x0010 | 6 | 32 | ✗ | 3 |
+| Arduino Micro HID Joystick | 0x2341 | 0x8037 | 4 | 10 | ✗ | 3 |
+| Arduino Pro Micro as HID (Runtime Mode) | 0x2341 | 0x0037 | 8 | 32 | ✗ | 3 |
+| Arduino Pro Micro USB Trim Wheel (DIY) | 0x2341 | 0x8037 | 1 | 4 | ✗ | 3 |
+| Blue Pill STM32 HID Joystick (DIY) | 0x1EAF | 0x0024 | 6 | 24 | ✗ | 3 |
+| Generic Chinese OEM HOTAS (DragonRise / No-Brand) | 0x0079 | 0x0006 | 5 | 12 | ✗ | 3 |
+| Copperpipe Knobster | 0x1209 | 0x2080 | 2 | 4 | ✗ | 3 |
+| DIY Polish Cockpit USB Interface Card | 0x04D8 | 0xEB60 | 0 | 48 | ✗ | 3 |
+| DIY Arduino Rudder Pedals | 0x2341 | 0x8049 | 3 | 2 | ✗ | 3 |
+| DIY Single-Lever Throttle | 0x1209 | 0x4F03 | 1 | 4 | ✗ | 3 |
+| DIY 3-Axis Throttle Quadrant | 0x1209 | 0x4F01 | 3 | 8 | ✗ | 3 |
+| DIY 6-Axis Throttle Quadrant | 0x1209 | 0x4F02 | 6 | 16 | ✗ | 3 |
+| DIY Yoke (Arduino HID) | 0x2341 | 0x8036 | 4 | 12 | ✗ | 3 |
+| DSD ButtonBox 32 | 0x16C0 | 0x048F | 0 | 32 | ✗ | 2 |
+| ExpressLRS RC Controller (USB HID Joystick Mode) | 0x303A | 0x1001 | 6 | 16 | ✗ | 3 |
+| ESP32 USB HID Joystick | 0x303A | 0x4001 | 6 | 32 | ✗ | 3 |
+| Generic F-16 VIPER Stick | 0x0079 | 0x0011 | 3 | 12 | ✗ | 3 |
+| Generic F-18 HORNET Stick | 0x0079 | 0x0012 | 3 | 14 | ✗ | 3 |
+| Generic USB Rudder Pedals (3-Axis) | 0x1209 | 0x4F04 | 3 | 0 | ✗ | 3 |
+| Generic USB Rudder Pedals (Single Axis) | 0x1209 | 0x4F05 | 1 | 0 | ✗ | 3 |
+| Gladiator M4 Pro Flight Stick | 0x0079 | 0x1800 | 4 | 12 | ✗ | 3 |
+| Great Planes InterLink USB Controller | 0x0A5C | 0x0E55 | 4 | 8 | ✗ | 3 |
+| Generic USB HID Game Controller | 0x0000 | 0x0000 | 4 | 10 | ✗ | 3 |
+| DIY IR LED Clip Head Tracker (Teensy) | 0x16C0 | 0x0483 | 3 | 0 | ✗ | 3 |
+| vJoy Virtual Joystick (Joystick Gremlin) | 0x1234 | 0xBEAD | 8 | 128 | ✗ | 3 |
+| USB Accelerometer Motion Cue Device (Cypress HID) | 0x04B4 | 0x0002 | 3 | 0 | ✗ | 3 |
+| Knobster | 0x1209 | 0x4853 | 1 | 1 | ✗ | 3 |
+| OpenSimPit DIY Cockpit Controller | 0x1209 | 0x5100 | 8 | 64 | ✗ | 3 |
+| Otto Controls OttoSwitch Mil-Spec HID Panel | 0x03EB | 0x2402 | 0 | 24 | ✗ | 3 |
+| Raspberry Pi Pico SDK HID Joystick (RP2040) | 0x2E8A | 0x000A | 8 | 32 | ✗ | 3 |
+| Raspberry Pi Pico USB HID | 0x2E8A | 0x0004 | 8 | 32 | ✗ | 3 |
+| Raspberry Pi Pico W USB HID | 0x2E8A | 0x000B | 8 | 32 | ✗ | 3 |
+| SparkFun Pro Micro 3.3V HID | 0x1B4F | 0x9206 | 6 | 32 | ✗ | 3 |
+| Arduino Pro Micro HID Button Box (Generic) | 0x1B4F | 0x9205 | 0 | 32 | ✗ | 3 |
+| Raspberry Pi Pico HID Controller (RP2040) | 0x2E8A | 0x0005 | 8 | 32 | ✗ | 3 |
+| RealFlight InterLink DX Controller | 0x0A5C | 0x0E56 | 6 | 8 | ✗ | 3 |
+| RealFlight InterLink Elite Controller | 0x0A5C | 0x0E57 | 6 | 10 | ✗ | 3 |
+| Raspberry Pi Pico / RP2040 USB HID Joystick (DIY) | 0x2E8A | 0x4001 | 6 | 16 | ✗ | 3 |
+| RP2040 USB HID Joystick (PID 0x0003) | 0x2E8A | 0x0003 | 6 | 32 | ✗ | 3 |
+| DIY Load Cell Rudder Pedals | 0x1209 | 0x0000 | 3 | 0 | ✗ | 3 |
+| SimMaxx Button Panel Pro | 0x04D8 | 0x0E1C | 0 | 24 | ✗ | 2 |
+| SparkFun Pro Micro HID Joystick | 0x1B4F | 0x9206 | 8 | 32 | ✗ | 3 |
+| SparkFun QwiicFlight Controller | 0x1B4F | 0x9207 | 6 | 32 | ✗ | 3 |
+| STM32 USB HID Joystick | 0x0483 | 0x5710 | 8 | 32 | ✗ | 3 |
+| STM32-based USB HID Panel Controller (DIY) | 0x0483 | 0x5750 | 0 | 32 | ✗ | 3 |
+| STM32 Nucleo USB HID Joystick (DIY) | 0x0483 | 0x5711 | 8 | 32 | ✗ | 2 |
+| Teensy 3.1/3.2 HID Joystick | 0x16C0 | 0x0489 | 16 | 32 | ✗ | 3 |
+| Teensy 3.2 USB HID Joystick (DIY) | 0x16C0 | 0x0487 | 16 | 64 | ✗ | 2 |
+| Teensy 4.1 USB HID Joystick (DIY) | 0x16C0 | 0x0486 | 8 | 32 | ✗ | 3 |
+| Teensy 4.0 USB HID (Alt PID) | 0x16C0 | 0x0486 | 8 | 32 | ✗ | 3 |
+| Teensy 4.0 HID Joystick | 0x16C0 | 0x048C | 16 | 32 | ✗ | 3 |
+| Teensy 4.0 USB Throttle Controller (DIY) | 0x16C0 | 0x0478 | 2 | 8 | ✗ | 3 |
+| Teensy LC HID Joystick | 0x16C0 | 0x0488 | 6 | 12 | ✗ | 3 |
+| Generic STM32 USB HID Button Matrix (DIY) | 0x0483 | 0x5760 | 0 | 64 | ✗ | 3 |
+| USB Rotary Encoder Panel (Generic DIY) | 0x2341 | 0x8036 | 0 | 48 | ✗ | 3 |
+| Generic USB Foot Pedal Controller | 0x0C45 | 0x7401 | 3 | 3 | ✗ | 3 |
+| Generic USB HID Multi-Axis Card | 0x04D8 | 0x00F1 | 8 | 0 | ✗ | 3 |
+| Generic USB HID Rudder Pedals (OEM) | 0x0079 | 0x0011 | 2 | 0 | ✗ | 3 |
+| Generic USB HID Trim Wheel | 0x2341 | 0x8036 | 1 | 2 | ✗ | 3 |
+| Generic USB MIDI Interface | 0x1235 | 0x0001 | 8 | 16 | ✗ | 3 |
+| Generic USB Numeric Keypad (Button Box) | ? | ? | 0 | 21 | ✗ | 5 |
+| vEncoder Virtual Encoder | 0x1209 | 0x2081 | 8 | 0 | ✗ | 3 |
+| Waveshare RP2040-Zero HID Controller | 0x2E8A | 0x0009 | 4 | 8 | ✗ | 3 |
+| WinWing-Compatible DIY Controller | 0x4098 | 0x0000 | 8 | 32 | ✗ | 3 |
+| Seeed Studio XIAO SAMD21 HID Controller | 0x2886 | 0x002F | 4 | 8 | ✗ | 3 |
+| Generic XInput-to-HID Adapter | ? | ? | 6 | 16 | ✗ | 3 |
+| Genovation ControlPad CP24 | 0x06CD | 0x0024 | 0 | 24 | ✗ | 3 |
+| Genovation ControlPad CP48 | 0x06CD | 0x0048 | 0 | 48 | ✗ | 3 |
+| Genovation ControlPad CP680 | 0x06CD | 0x0680 | 0 | 68 | ✗ | 3 |
+| GoFlight GF-100 VHF Radio Panel | 0x0738 | 0x7112 | 0 | 12 | ✗ | 3 |
+| GoFlight GF-100 Boeing 737 MCP | 0x0E9F | 0x000A | 0 | 48 | ✗ | 3 |
+| GoFlight GF-166 Switch Panel | 0x1551 | 0x0004 | 0 | 16 | ✗ | 3 |
+| GoFlight GF-166 Radio Stack Module | 0x0E9F | 0x0008 | 0 | 20 | ✗ | 2 |
+| GoFlight GF-177 Boeing Autopilot Extended Panel | 0x0E9F | 0x000B | 0 | 36 | ✗ | 3 |
+| GoFlight GF-39 Radio/Comm Panel | 0x0E9F | 0x0002 | 0 | 16 | ✗ | 3 |
+| GoFlight GF-45 Autopilot Panel | 0x0E9F | 0x0105 | 0 | 18 | ✗ | 2 |
+| GoFlight GF-45 Multi-Use Rotary Panel | 0x1551 | 0x0003 | 1 | 20 | ✗ | 3 |
+| GoFlight GF-45 Multi-Function Panel | 0x0E9F | 0x0011 | 1 | 45 | ✗ | 3 |
+| GoFlight GF-46 COM/NAV Radio Panel | 0x0E9F | 0x0106 | 0 | 20 | ✗ | 2 |
+| GoFlight GF-46 Rotary Panel | 0x0E9F | 0x2900 | 0 | 24 | ✗ | 3 |
+| GoFlight GF-46 MCP/NAV Panel | 0x0E9F | 0x0004 | 0 | 24 | ✗ | 3 |
+| GoFlight GF-ADF ADF Radio Panel | 0x0E9F | 0x000D | 2 | 8 | ✗ | 3 |
+| GoFlight GF-CLK Cockpit Clock Panel | 0x0E9F | 0x000C | 0 | 6 | ✗ | 3 |
+| GoFlight GF-COMM2 Radio Communication Panel | 0x0E9F | 0x0010 | 0 | 18 | ✗ | 2 |
+| GoFlight GF-EFIS Panel | 0x0738 | 0x7119 | 0 | 24 | ✗ | 3 |
+| GoFlight GF-EFIS | 0x0BCA | 0x0032 | 0 | 24 | ✗ | 3 |
+| GoFlight GF-EFIS Avionics Panel | 0x0E9F | 0x000C | 0 | 12 | ✗ | 3 |
+| GoFlight GF-EHSI Electronic HSI Panel | 0x0E9F | 0x0007 | 0 | 12 | ✗ | 3 |
+| GoFlight GF-ENGPC Engine Power Control Module | 0x0E9F | 0x0009 | 3 | 4 | ✗ | 2 |
+| GoFlight GF-FMC FMC Panel | 0x0E9F | 0x000B | 0 | 40 | ✗ | 3 |
+| GoFlight GF-GVT Generic Trim Panel | 0x0E9F | 0x0010 | 3 | 8 | ✗ | 3 |
+| GoFlight GF-LGT Landing Gear | 0x0BCA | 0x0031 | 0 | 16 | ✗ | 3 |
+| GoFlight GF-LGT Landing Gear Toggle | 0x0E6A | 0x0222 | 0 | 12 | ✗ | 3 |
+| GoFlight GF-LGT-II Landing Gear Panel | 0x0738 | 0x1041 | 1 | 12 | ✗ | 3 |
+| GoFlight GF-LGT-LED Overhead Panel | 0x1551 | 0x0006 | 0 | 12 | ✗ | 3 |
+| GoFlight GF-LGT Landing Gear & Trim Panel | 0x0E9F | 0x0006 | 2 | 12 | ✗ | 3 |
+| GoFlight GF-MCP Pro | 0x0BCA | 0x0030 | 0 | 40 | ✗ | 3 |
+| GoFlight MCP-PRO Mode Control Panel | 0x1551 | 0x0005 | 2 | 24 | ✗ | 3 |
+| GoFlight GF-MCP Pro | 0x0E9F | 0x0004 | 0 | 48 | ✗ | 3 |
+| GoFlight GF-MCP Pro2 Autopilot Panel | 0x0738 | 0x7118 | 0 | 42 | ✗ | 3 |
+| GoFlight GF-MCP Pro2 Autopilot Panel | 0x0E9F | 0x0019 | 0 | 42 | ✗ | 3 |
+| GoFlight GF-MCP Autopilot Mode Control Panel | 0x0E9F | 0x0003 | 0 | 32 | ✗ | 3 |
+| GoFlight GF-NAV Navigation Radio Panel | 0x0E9F | 0x000E | 3 | 10 | ✗ | 3 |
+| GoFlight GF-P8 Pushbutton Panel | 0x0E6A | 0x0221 | 0 | 8 | ✗ | 3 |
+| GoFlight GF-P8 Avionics Panel | 0x0E9F | 0x0001 | 0 | 16 | ✗ | 3 |
+| GoFlight QPRO Controller | 0x0F7B | 0x0220 | 4 | 24 | ✗ | 3 |
+| GoFlight GF-RP48 Radio Panel | 0x0738 | 0x1040 | 0 | 48 | ✗ | 3 |
+| GoFlight GF-RP48 Radio Panel | 0x0E6A | 0x0220 | 0 | 48 | ✗ | 3 |
+| GoFlight GF-RP48 Rotary Panel | 0x0E9F | 0x0014 | 0 | 48 | ✗ | 3 |
+| GoFlight GF-RPM Engine Panel | 0x0E9F | 0x000F | 3 | 6 | ✗ | 3 |
+| GoFlight GF-T8 Plus Switch Panel | 0x0E9F | 0x0009 | 0 | 8 | ✗ | 3 |
+| GoFlight GF-T8 Throttle Quadrant | 0x0E9F | 0x0002 | 8 | 8 | ✗ | 3 |
+| GoFlight GF-TFRP Rudder Pedals | 0x0E6A | 0x0201 | 3 | 0 | ✗ | 3 |
+| GoFlight GF-TP Transponder Panel | 0x0E9F | 0x0009 | 0 | 16 | ✗ | 3 |
+| GoFlight GF-TP6 Trim Panel | 0x0738 | 0x7120 | 0 | 24 | ✗ | 3 |
+| GoFlight GF-TPM Throttle Prop Mixture | 0x0E6A | 0x0205 | 3 | 0 | ✗ | 3 |
+| GoFlight GF-TQ6 Throttle Quadrant | 0x0E9F | 0x000A | 6 | 8 | ✗ | 2 |
+| GoFlight GF-WCP Weather/COM Panel | 0x0E9F | 0x0120 | 0 | 22 | ✗ | 2 |
+| GoFlight GF-WX Weather Panel | 0x0E9F | 0x000C | 2 | 8 | ✗ | 3 |
+| Google Stadia Controller | 0x18D1 | 0x9400 | 6 | 15 | ✓ | 3 |
+| Gravis Analog Pro Joystick | 0x0428 | 0x4007 | 4 | 10 | ✗ | 3 |
+| Gravis BlackHawk Digital | 0x0428 | 0x4003 | 4 | 8 | ✗ | 3 |
+| Gravis BlackHawk Digital Joystick | 0x0428 | 0x8003 | 3 | 8 | ✗ | 2 |
+| Gravis Eliminator Joystick | 0x0428 | 0x4001 | 4 | 8 | ✗ | 3 |
+| Gravis GamePad Pro USB | 0x0428 | 0x4000 | 4 | 10 | ✗ | 3 |
+| Gravis PC GamePad Pro (Alt PID) | 0x0428 | 0x4001 | 2 | 10 | ✗ | 3 |
+| Gravis PC GamePad | 0x0428 | 0x4001 | 2 | 10 | ✗ | 3 |
+| Gravis Stinger Gamepad | 0x0428 | 0x4006 | 2 | 8 | ✗ | 3 |
+| Gravis Ultrapod II | 0x0428 | 0x8004 | 2 | 4 | ✗ | 3 |
+| Gravis Xterminator Dual Control | 0x0428 | 0x4002 | 5 | 12 | ✗ | 3 |
+| GrayHill HID Encoder Module | 0x4A40 | 0x0001 | 0 | 16 | ✗ | 3 |
+| ? | ? | ? | ? | ? | ✗ | ? |
+| Generic USB Helicopter Collective | 0x1209 | 0x5740 | 3 | 8 | ✗ | 3 |
+| Generic USB Helicopter Cyclic | 0x1209 | 0x5741 | 3 | 12 | ✗ | 3 |
+| Generic USB Anti-Torque Pedals | ? | ? | 1 | 0 | ✗ | 3 |
+| ? | ? | ? | ? | ? | ✗ | ? |
+| Heusinkveld Sim Handbrake | 0x04D8 | 0xE2C4 | 1 | 0 | ✗ | 3 |
+| Heusinkveld Sim Handbrake | 0x04D8 | 0xE2C6 | 1 | 1 | ✗ | 2 |
+| Heusinkveld Sim Shifter | 0x04D8 | 0xE2C5 | 2 | 8 | ✗ | 2 |
+| Heusinkveld Shift Paddles | 0x0EB7 | 0xE2CB | 0 | 2 | ✗ | 3 |
+| Heusinkveld Sim Handbrake | 0x0EB7 | 0xE2CA | 1 | 1 | ✗ | 3 |
+| Heusinkveld Sim Pedals Endurance | 0x04D8 | 0xF6D4 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Sim Pedals Handbrake | 0x04D8 | 0xF6D5 | 1 | 0 | ✗ | 3 |
+| Heusinkveld Sim Pedals Performance | 0x04D8 | 0xF6D2 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Sim Pedals Pro | 0x0EB7 | 0x0242 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Sim Pedals Pro | 0x04D8 | 0xF6D2 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sim Pedals Sprint Pro | 0x04D8 | 0xF6D2 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sim Pedals Ultimate | 0x04D8 | 0xF6D2 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sim Shifter Sequential | 0x04D8 | 0xF6E0 | 1 | 2 | ✗ | 3 |
+| Heusinkveld Sprint Pedals | 0x0EB7 | 0xE2C6 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sprint Pedals | 0x04D8 | 0xF6D0 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sprint+ Sim Pedals | 0x04D8 | 0xF6D1 | 3 | 0 | ✗ | 3 |
+| Heusinkveld Sprint S Sim Pedals | 0x0EB7 | 0x0240 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Sprint Shifter H-Pattern | 0x04D8 | 0xF6D6 | 2 | 7 | ✗ | 3 |
+| Heusinkveld Sprint S Sim Pedals | 0x04D8 | 0xE2C7 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Ultimate Sim Pedals | 0x0EB7 | 0x0241 | 3 | 0 | ✗ | 2 |
+| Heusinkveld Ultimate+ Pedals | 0x04D8 | 0xF6D1 | 3 | 0 | ✗ | 3 |
+| Honey Bee King 3 Collective | 0x04B4 | 0xF280 | 2 | 4 | ✗ | 3 |
+| Honeycomb Alpha FlySystem | 0x294B | 0x1902 | 2 | 36 | ✗ | 3 |
+| Honeycomb Alpha XL Flight Controls | 0x294B | 0x1905 | 2 | 36 | ✗ | 3 |
+| Honeycomb Alpha XPC Flight Controls | 0x294B | 0x0C01 | 4 | 24 | ✗ | 3 |
+| Honeycomb Alpha Flight Controls XPC | 0x294B | 0x1900 | 2 | 36 | ✗ | 2 |
+| Honeycomb Bravo Quadrant Mini | 0x294B | 0x1907 | 2 | 12 | ✗ | 3 |
+| Honeycomb Bravo Throttle Quadrant (Gen 2) | 0x294B | 0x1905 | 7 | 64 | ✗ | 3 |
+| Honeycomb Bravo Throttle Jet Pack | 0x294B | 0x1906 | 4 | 32 | ✗ | 2 |
+| Honeycomb Bravo Throttle Quadrant | 0x294B | 0x1901 | 7 | 64 | ✗ | 2 |
+| Honeycomb Charlie Rudder Pedals (Alt PID) | 0x294B | 0x1903 | 3 | 0 | ✗ | 3 |
+| Honeycomb Charlie Rudder Pedals | 0x294B | 0x1902 | 3 | 0 | ✗ | 3 |
+| Honeycomb Charlie Throttle Pack (Bundle) | 0x294B | ? | 9 | 32 | ✗ | 2 |
+| Honeycomb Echelon Throttle Quadrant | 0x294B | 0x1905 | 8 | 72 | ✗ | 3 |
+| Honeycomb Echo Gyroplane Controller | 0x294B | 0x1904 | 4 | 12 | ✗ | 3 |
+| Honeycomb XPC Expansion Connector | 0x294B | ? | 7 | 64 | ✗ | 3 |
+| Honeycomb Bravo Airlines Pack | 0x294B | ? | 7 | 64 | ✗ | 2 |
+| Honeycomb Charlie Throttle Quadrant | 0x294B | 0x1939 | 6 | 6 | ✗ | 2 |
+| Hori Ace Combat 7 HOTAS Flight Stick | 0x0F0D | 0x0103 | 6 | 20 | ✗ | 2 |
+| HORI Ace Combat HOTAS (PS5) | 0x0F0D | 0x0152 | 5 | 16 | ✗ | 3 |
+| HORI Fight Commander 6 | 0x0F0D | 0x00F6 | 4 | 14 | ✗ | 3 |
+| HORI Fighting Commander OCTA | 0x0F0D | 0x0151 | 4 | 15 | ✗ | 3 |
+| Hori Fighting Stick Alpha | 0x0F0D | 0x0105 | 4 | 16 | ✗ | 3 |
+| HORI Flight Stick Alpha for PS5 | 0x0F0D | 0x0171 | 5 | 19 | ✗ | 3 |
+| HORI Flight Stick Alpha for Xbox/PC | 0x0F0D | 0x0153 | 4 | 12 | ✗ | 3 |
+| Hori Flight Stick Alpha | 0x0F0D | 0x00EE | 5 | 16 | ✗ | 2 |
+| HORI Flight Stick EX3 | 0x0F0D | 0x006A | 5 | 14 | ✗ | 2 |
+| HORI FLIGHTSTICK for PS4/PS5 | 0x0F0D | 0x00FA | 4 | 16 | ✗ | 3 |
+| HORI Commander Controller | 0x0F0D | 0x0090 | 4 | 16 | ✗ | 3 |
+| Hori Fighting Commander OCTA | 0x0F0D | 0x011E | 4 | 14 | ✗ | 3 |
+| Hori HORIPAD FPS Plus | 0x0F0D | 0x011F | 6 | 16 | ✗ | 3 |
+| HORI HORIPAD FPS Plus | 0x0F0D | 0x00C1 | 4 | 14 | ✗ | 3 |
+| HORI HORIPAD for Steam | 0x0F0D | 0x0162 | 6 | 16 | ✗ | 3 |
+| Hori HoriPad Ultimate | 0x0F0D | 0x00EF | 6 | 14 | ✓ | 3 |
+| Hori HOTAS Flight Stick for PlayStation 4 | 0x0F0D | 0x0101 | 6 | 20 | ✗ | 2 |
+| Hori HOTAS Flight Stick for PlayStation 5 | 0x0F0D | 0x0192 | 5 | 16 | ✗ | 2 |
+| HORI HOTAS One (PC) | 0x0F0D | 0x011C | 5 | 16 | ✗ | 3 |
+| HORI HOTAS Flight Stick for Xbox One | 0x0F0D | 0x0084 | 4 | 12 | ✗ | 3 |
+| HORI HOTAS Flight Stick for Xbox Series X|S | 0x0F0D | 0x00F6 | 5 | 14 | ✗ | 3 |
+| Hori Mini Wired Gamepad | 0x0F0D | 0x0092 | 4 | 13 | ✗ | 3 |
+| Hori PS4 Flight Stick (PS4-113E) | 0x0F0D | 0x00F6 | 5 | 17 | ✗ | 3 |
+| HORI Racing Wheel Apex (PS5/PC) | 0x0F0D | 0x0150 | 4 | 12 | ✗ | 2 |
+| HORI Real Arcade Pro 4 Kai | 0x0F0D | 0x0076 | 2 | 14 | ✗ | 3 |
+| HORI Real Arcade Pro Jet | 0x0F0D | 0x006E | 2 | 10 | ✗ | 3 |
+| Hori Real Arcade Pro N Hayabusa | 0x0F0D | 0x00A0 | 2 | 14 | ✗ | 3 |
+| HORI Real Arcade Pro V Kai | 0x0F0D | 0x0063 | 2 | 14 | ✗ | 3 |
+| HORI VF-2 Ace Combat Flight Stick (Legacy) | 0x0F0D | 0x0011 | 3 | 10 | ✗ | 3 |
+| Hori Wired Mini Gamepad | 0x0F0D | 0x0067 | 4 | 12 | ✗ | 3 |
+| iPega PG-9023 Telescopic Gamepad | 0x1BAD | 0x5500 | 4 | 14 | ✗ | 3 |
+| iPega PG-9083 Retractable Gamepad | 0x1BAD | 0x5501 | 4 | 14 | ✗ | 3 |
+| IPEGA PG-9099 Gamepad | 0x05AC | 0x055B | 4 | 14 | ✗ | 3 |
+| Iris Dynamics Pedals | 0x1209 | 0x2023 | 3 | 0 | ✗ | 3 |
+| Iris Dynamics Yoke Pro | 0x1209 | 0x2021 | 3 | 12 | ✓ | 3 |
+| Iris Dynamics Yoke | 0x1209 | 0x2022 | 2 | 8 | ✓ | 3 |
+| JetMax Boeing 737 MCP Panel | 0x1A86 | 0x7522 | 5 | 28 | ✗ | 3 |
+| JetMax A320 Throttle Quadrant | 0x1A86 | 0x7523 | 4 | 12 | ✗ | 3 |
+| Jetmax 4-Engine Throttle Quartet Quadrant | 0x1D50 | 0x6120 | 5 | 12 | ✗ | 3 |
+| Jumper T-Pro | 0x16C0 | 0x0483 | 4 | 6 | ✗ | 3 |
+| KAB AudioPipe TI-6 Tactile Transducer | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| Komodo Sim Autopilot Panel | 0x04D8 | 0x0303 | 3 | 24 | ✗ | 3 |
+| Komodo Sim Collective | 0x1234 | 0x5001 | 3 | 8 | ✗ | 3 |
+| Komodo Sim EFIS Panel | 0x04D8 | 0x0304 | 2 | 16 | ✗ | 3 |
+| Komodo Sim Full Size Yoke | 0x04D8 | 0xEF80 | 6 | 20 | ✗ | 3 |
+| Komodo Sim P1000 Throttle | 0x04D8 | 0x0310 | 4 | 16 | ✗ | 3 |
+| Komodo Sim MCP Panel | 0x04D8 | 0x0300 | 5 | 32 | ✗ | 3 |
+| Komodo Sim P1000 Throttle Mk II | 0x04D8 | 0x0311 | 6 | 20 | ✗ | 3 |
+| Komodo Simulations RMP Center | 0x04D8 | 0xF8C6 | 0 | 18 | ✗ | 3 |
+| Komodo Sim Radio Management Panel Left | 0x04D8 | 0x0301 | 2 | 20 | ✗ | 3 |
+| Komodo Sim Radio Management Panel Right | 0x04D8 | 0x0302 | 2 | 20 | ✗ | 3 |
+| Komodo Sim Rudder Pedals | 0x04D8 | 0xEF82 | 3 | 0 | ✗ | 3 |
+| Komodo Sim Helicopter Collective | 0x04D8 | 0xEF83 | 3 | 12 | ✗ | 3 |
+| Komodo Simulations Transponder Panel | 0x04D8 | 0xF8C5 | 0 | 16 | ✗ | 3 |
+| Komodo Sim Trim Wheel | 0x04D8 | 0xEF81 | 1 | 0 | ✗ | 3 |
+| Korg nanoKONTROL MIDI Controller | 0x0944 | 0x0175 | 18 | 18 | ✗ | 2 |
+| Korg nanoKONTROL2 MIDI Controller | 0x0944 | 0x0117 | 16 | 24 | ✗ | 2 |
+| Lekseecon Boeing 737 FCU | 0x04B4 | 0xF256 | 0 | 32 | ✗ | 3 |
+| Leo Bodnar BBI-128 USB Button Box Interface | 0x1DD2 | 0x0010 | 0 | 128 | ✗ | 2 |
+| Leo Bodnar BBI-16 USB Button Box Interface | 0x1DD2 | 0x000D | 0 | 16 | ✗ | 2 |
+| Leo Bodnar BBI-32 (variant PID 0x1300) | 0x1DD2 | 0x1300 | 0 | 32 | ✗ | 3 |
+| Leo Bodnar BBI-32 USB Button Box Interface | 0x1DD2 | 0x000E | 0 | 32 | ✗ | 2 |
+| Leo Bodnar BBI-64 | 0x1DD2 | 0x1004 | 0 | 64 | ✗ | 3 |
+| Leo Bodnar BBI-64 USB Button Box Interface | 0x1DD2 | 0x000F | 0 | 64 | ✗ | 2 |
+| Leo Bodnar BRD-N Rudder Pedals | 0x1DD2 | 0x1060 | 1 | 0 | ✗ | 2 |
+| Leo Bodnar Button Switch Throttle (BSST) | 0x1DD2 | 0x100A | 1 | 8 | ✗ | 3 |
+| Leo Bodnar BU0836 USB Joystick Interface | 0x1DD2 | 0x000A | 12 | 32 | ✗ | 2 |
+| Leo Bodnar BU0836A 12-Bit USB Joystick Interface | 0x1DD2 | 0x1001 | 12 | 32 | ✗ | 2 |
+| Leo Bodnar BU0836A USB Joystick Interface (Rev A) | 0x1DD2 | 0x000B | 12 | 32 | ✗ | 3 |
+| Leo Bodnar BU0836LC USB Joystick Controller | 0x1DD2 | 0x000C | 8 | 32 | ✗ | 2 |
+| Leo Bodnar BU0836X USB Joystick Interface with LCD | 0x1DD2 | 0x000B | 12 | 32 | ✗ | 2 |
+| Leo Bodnar USB Button Box Controller | 0x1DD2 | 0x1005 | 0 | 32 | ✗ | 3 |
+| Leo Bodnar USB Joystick Interface | 0x1DD2 | 0x0003 | 8 | 32 | ✗ | 3 |
+| Leo Bodnar BT-BBU32 USB Button Box Interface | 0x1DD2 | 0x0005 | 0 | 32 | ✗ | 2 |
+| Leo Bodnar BT-LBU Standalone USB Encoder | 0x1DD2 | 0x0001 | 2 | 1 | ✗ | 2 |
+| Leo Bodnar USB Sim Stepper Motor Controller | 0x1DD2 | 0x0002 | 0 | 0 | ✗ | 3 |
+| Leo Bodnar Load Cell Pedal Interface | 0x1DD2 | 0x1380 | 1 | 0 | ✗ | 3 |
+| Leo Bodnar USB Magnetic Encoder Interface | 0x1DD2 | 0x000C | 2 | 0 | ✗ | 3 |
+| OSW Small MIGE 15Nm Direct Drive Base | 0x1DD2 | 0x1003 | 1 | 0 | ✓ | 3 |
+| OSW Small MIGE 30Nm Direct Drive Base | 0x1DD2 | 0x1002 | 1 | 0 | ✓ | 3 |
+| Leo Bodnar SLI-PRO Shift Light Indicator | 0x1DD2 | 0x1301 | 0 | 0 | ✗ | 3 |
+| Leo Bodnar Smart Switch USB Encoder Board | 0x1DD2 | 0x0012 | 0 | 32 | ✗ | 3 |
+| Leo Bodnar USB Joystick | 0x1DD2 | 0x0009 | 2 | 8 | ✗ | 3 |
+| Logitech Attack 3 | 0x046D | 0xC214 | 4 | 11 | ✗ | 2 |
+| Speedlink Black Widow Joystick | 0x046D | 0xC20A | 3 | 12 | ✗ | 3 |
+| Logitech Chillstream Gamepad | 0x046D | 0xC220 | 6 | 12 | ✓ | 3 |
+| Logitech Cordless Action Gamepad | 0x046D | 0xC21A | 4 | 12 | ✗ | 3 |
+| Logitech Cordless RumblePad 2 | 0x046D | 0xC219 | 4 | 12 | ✗ | 3 |
+| Logitech Driving Force EX | 0x046D | 0xC29A | 3 | 12 | ✗ | 3 |
+| Logitech Driving Force GT | 0x046D | 0xC294 | 4 | 19 | ✓ | 3 |
+| Logitech Driving Force Pro | 0x046D | 0xC298 | 4 | 14 | ✓ | 3 |
+| Logitech Driving Force RX | 0x046D | 0xC24F | 4 | 16 | ✓ | 3 |
+| Logitech Dual Action Gamepad | 0x046D | 0xC216 | 4 | 12 | ✗ | 3 |
+| Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
+| Logitech Extreme 3D Joystick | 0x046D | 0xC212 | 4 | 12 | ✗ | 3 |
+| Logitech F310 Gamepad | 0x046D | 0xC21D | 6 | 12 | ✗ | 3 |
+| Logitech F510 Gamepad | 0x046D | 0xC21E | 6 | 12 | ✓ | 3 |
+| Logitech Wireless Gamepad F710 | 0x046D | 0xC21F | 6 | 12 | ✓ | 3 |
+| Logitech Force 3D Pro | 0x046D | 0xC286 | 6 | 12 | ✓ | 2 |
+| Logitech Formula Force RX | 0x046D | 0xC291 | 3 | 10 | ✓ | 3 |
+| Logitech Freedom 2.4 Cordless Joystick | 0x046D | 0xC214 | 4 | 12 | ✗ | 3 |
+| Logitech Freedom 2.4 Cordless Joystick | 0x046D | 0xC213 | 4 | 12 | ✗ | 3 |
+| Logitech Freedom 2400 Cordless Joystick | 0x046D | 0xC204 | 4 | 10 | ✗ | 3 |
+| Logitech G Cloud Gaming Handheld | 0x046D | 0xC295 | 6 | 14 | ✗ | 3 |
+| Logitech G Flight Console | 0x046D | 0xC232 | 6 | 20 | ✗ | 2 |
+| Logitech G Flight Instrument Panel | 0x06A3 | 0xA2AE | 0 | 7 | ✗ | 2 |
+| Logitech G Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 17 | ✗ | 2 |
+| Logitech G Flight Radio Panel | 0x06A3 | 0x0D05 | 0 | 16 | ✗ | 2 |
+| Logitech G Flight Switch Panel | 0x06A3 | 0x0D67 | 0 | 20 | ✗ | 2 |
+| Logitech G Flight Throttle Quadrant | 0x046D | 0xC25A | 3 | 6 | ✗ | 2 |
+| Logitech G Flight Yoke System | 0x046D | 0xC259 | 6 | 20 | ✗ | 2 |
+| Logitech G Pro Flight Combo Pack | 0x046D | ? | 0 | 0 | ✗ | 2 |
+| Logitech G Pro Flight Multi-Panel | 0x046D | 0xC2D2 | 1 | 18 | ✗ | 3 |
+| Logitech G Pro Flight Radio Panel | 0x046D | 0xC2D3 | 0 | 20 | ✗ | 3 |
+| Logitech G PRO Flight Rudder Pedals | 0x046D | 0xC2A1 | 3 | 0 | ✗ | 2 |
+| Logitech G Pro Flight Throttle Quadrant | 0x046D | 0xC2A8 | 3 | 0 | ✗ | 2 |
+| Logitech G PRO Racing Pedals | 0x046D | 0xC267 | 3 | 0 | ✗ | 3 |
+| Logitech G PRO Racing Wheel | 0x046D | 0xC272 | 5 | 16 | ✓ | 3 |
+| Logitech G Pro Flight Rudder Pedals | 0x046D | 0xC263 | 3 | 0 | ✗ | 2 |
+| Logitech G PRO Racing Wheel | 0x046D | 0xC26D | 5 | 26 | ✓ | 3 |
+| Logitech G Pro X Superlight | 0x046D | 0xC094 | 3 | 5 | ✗ | 3 |
+| Logitech G Saitek Pro Flight Autopilot Panel | 0x046D | 0xC2AF | 0 | 16 | ✗ | 2 |
+| Logitech G Saitek Backlit Information Panel | 0x06A3 | 0x0B4E | 0 | 0 | ✗ | 3 |
+| Logitech G Saitek Flight Instrument Panel | 0x046D | 0xC2AB | 0 | 6 | ✗ | 3 |
+| Logitech G Saitek Pro Flight Quadrant | 0x046D | 0xC2A9 | 3 | 0 | ✗ | 2 |
+| Logitech G Saitek Pro Flight Rudder Pedals | 0x046D | 0xC2D1 | 3 | 0 | ✗ | 2 |
+| Logitech G Saitek Pro Flight Yoke System | 0x046D | 0xC2D0 | 6 | 20 | ✗ | 2 |
+| Logitech G Saitek Pro Flight Switch Panel | 0x046D | 0xC2AD | 0 | 24 | ✗ | 2 |
+| Logitech G13 Advanced Gameboard | 0x046D | 0xC21C | 2 | 22 | ✗ | 3 |
+| Logitech G15 Gaming Keyboard | 0x046D | 0xC223 | 0 | 18 | ✗ | 3 |
+| Logitech G19 Gaming Keyboard | 0x046D | 0xC228 | 0 | 12 | ✗ | 3 |
+| Logitech G25 Racing Wheel | 0x046D | 0xC299 | 5 | 18 | ✓ | 3 |
+| Logitech G27 Racing Wheel | 0x046D | 0xC29B | 5 | 24 | ✓ | 3 |
+| Logitech G29 Racing Wheel | 0x046D | 0xC24F | 5 | 24 | ✓ | 3 |
+| Logitech Driving Force Shifter | 0x046D | 0xC261 | 0 | 8 | ✗ | 3 |
+| Logitech G440 Gaming Mouse | 0x046D | 0xC33F | 3 | 6 | ✗ | 2 |
+| Logitech G502 Hero | 0x046D | 0xC08B | 3 | 11 | ✗ | 2 |
+| Logitech G502 X Gaming Mouse (Wired) | 0x046D | 0xC080 | 2 | 13 | ✗ | 3 |
+| Logitech G613 Wireless Mechanical Keyboard | 0x046D | 0xC548 | 0 | 6 | ✗ | 2 |
+| Logitech G920 Racing Wheel | 0x046D | 0xC262 | 5 | 16 | ✓ | 3 |
+| Logitech G923 Racing Wheel | 0x046D | 0xC29B | 3 | 24 | ✓ | 3 |
+| Logitech G923 Racing Wheel (PS4/PS5) | 0x046D | 0xC266 | 6 | 20 | ✓ | 2 |
+| Logitech G923 Racing Wheel (Xbox/PC) | 0x046D | 0xC267 | 6 | 20 | ✓ | 2 |
+| Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
+| Logitech 3D Pro Plus | 0x046D | 0xC215 | 6 | 12 | ✗ | 2 |
+| Logitech Driving Force GT | 0x046D | 0xC25B | 3 | 10 | ✓ | 2 |
+| Logitech MOMO Racing Force Feedback Wheel | 0x046D | 0xCA03 | 3 | 10 | ✓ | 3 |
+| Logitech MX Keys | 0x046D | 0xB35B | 0 | 110 | ✗ | 3 |
+| Logitech MX Master 3 (PID 0x4082 variant) | 0x046D | 0x4082 | 3 | 7 | ✗ | 2 |
+| Logitech MX Master 3 | 0x046D | 0xB023 | 3 | 7 | ✗ | 3 |
+| Logitech Precision Gamepad | 0x046D | 0xC21D | 2 | 10 | ✗ | 3 |
+| Logitech Pro Racing Wheel | 0x046D | 0xC29C | 3 | 24 | ✓ | 3 |
+| Logitech WingMan RumblePad (v2) | 0x046D | 0xC20F | 4 | 10 | ✗ | 3 |
+| Logitech RumblePad 2 Vibration Feedback Gamepad | 0x046D | 0xC218 | 4 | 12 | ✓ | 3 |
+| Logitech G Saitek Pro Flight Instrument Panel (Alt PID) | 0x06A3 | 0x0C2D | 0 | 7 | ✗ | 3 |
+| Logitech G Saitek Pro Flight Multi Panel (Alt PID) | 0x06A3 | 0xD06D | 0 | 17 | ✗ | 3 |
+| Logitech H265 Space Mouse | 0x046D | 0xC627 | 6 | 2 | ✗ | 3 |
+| 3Dconnexion SpaceNavigator (Logitech era) | 0x046D | 0xC626 | 6 | 2 | ✗ | 3 |
+| Logitech WingMan 3D | 0x046D | 0xC209 | 4 | 8 | ✗ | 3 |
+| Logitech WingMan Action Pad | 0x046D | 0xC20B | 2 | 8 | ✗ | 3 |
+| Logitech WingMan Action Gamepad | 0x046D | 0xC208 | 4 | 10 | ✗ | 3 |
+| Logitech WingMan Attack 2 | 0x046D | 0xC20A | 4 | 8 | ✗ | 3 |
+| Logitech WingMan Precision USB Gamepad | 0x046D | 0xC20D | 2 | 6 | ✗ | 3 |
+| Logitech WingMan Extreme Digital 3D | 0x046D | 0xC20A | 4 | 8 | ✗ | 3 |
+| Logitech WingMan Extreme | 0x046D | 0xC207 | 3 | 6 | ✗ | 3 |
+| Logitech WingMan Force 3D | 0x046D | 0xC283 | 5 | 10 | ✓ | 3 |
+| Logitech WingMan Force | 0x046D | 0xC281 | 3 | 8 | ✓ | 3 |
+| Logitech WingMan Formula Force (Alt PID) | 0x046D | 0xC291 | 3 | 10 | ✓ | 3 |
+| Logitech WingMan Formula Force GP | 0x046D | 0xC293 | 3 | 8 | ✓ | 3 |
+| Logitech WingMan Formula GP USB | 0x046D | 0xC202 | 3 | 6 | ✗ | 3 |
+| Logitech WingMan Gamepad | 0x046D | 0xC204 | 2 | 10 | ✗ | 3 |
+| Logitech WingMan Interceptor | 0x046D | 0xC201 | 2 | 6 | ✗ | 3 |
+| Logitech WingMan RumblePad 2 | 0x046D | 0xC218 | 4 | 12 | ✓ | 3 |
+| Logitech WingMan RumblePad (Alt PID) | 0x046D | 0xC208 | 4 | 12 | ✗ | 3 |
+| Logitech WingMan Rumble Pad | 0x046D | 0xC20C | 4 | 10 | ✓ | 3 |
+| Logitech WingMan Strike Force 3D | 0x046D | 0xC20E | 5 | 12 | ✓ | 2 |
+| Logitech WingMan Warrior | 0x046D | 0xC208 | 4 | 8 | ✗ | 3 |
+| Logitech X52 Pro Flight Control System | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
+| Logitech X52 Flight Control System | 0x06A3 | 0x0255 | 7 | 28 | ✗ | 2 |
+| Logitech G Saitek X56 RGB Stick | 0x06A3 | 0x0C59 | 5 | 24 | ✗ | 2 |
+| Logitech G Saitek X56 RGB Throttle | 0x06A3 | 0x0C5B | 6 | 28 | ✗ | 2 |
+| Logitech X56 Rhino H.O.T.A.S | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
+| Loupedeck CT Console | 0x2EC2 | 0x0005 | 6 | 20 | ✗ | 2 |
+| Loupedeck Live S Console | 0x2EC2 | 0x0006 | 2 | 15 | ✗ | 3 |
+| Loupedeck Live Console | 0x2EC2 | 0x0004 | 6 | 12 | ✗ | 2 |
+| Mad Catz C.T.R.L.R Wireless Gamepad | 0x0738 | 0x5263 | 4 | 14 | ✗ | 3 |
+| Mad Catz FightPad PRO | 0x0738 | 0x4718 | 4 | 12 | ✗ | 3 |
+| Mad Catz Fly 5 Flight Stick | 0x0738 | 0x3020 | 4 | 12 | ✗ | 3 |
+| Mad Catz Cyborg R.A.T. 7 Mouse | 0x0738 | 0x1729 | 3 | 9 | ✗ | 3 |
+| Mad Catz Street Fighter V Arcade FightStick TE2+ | 0x0738 | 0x8250 | 2 | 11 | ✗ | 3 |
+| Mad Catz V.1 Arcade Stick | 0x0738 | 0x4728 | 2 | 10 | ✗ | 3 |
+| Mayflash F500 Arcade Stick | 0x0E8F | 0x0003 | 2 | 14 | ✗ | 3 |
+| Mayflash F500 Elite | 0x0E8F | 0x0A8F | 2 | 14 | ✗ | 3 |
+| Mayflash GameCube Controller Adapter | 0x0E8F | 0x0012 | 4 | 12 | ✗ | 3 |
+| Mayflash Joystick Adapter | 0x0E8F | 0x0014 | 4 | 4 | ✗ | 3 |
+| Mayflash Magic-NS | 0x0E8F | 0x1688 | 4 | 14 | ✗ | 3 |
+| Meca Cup1 Racing Wheel | 0x0EB7 | 0x1A00 | 3 | 6 | ✓ | 3 |
+| Meridian Simulation Rudder Pedals | 0x04D8 | 0x0502 | 3 | 0 | ✗ | 3 |
+| Meridian Simulation Throttle Quadrant | 0x04D8 | 0x0501 | 3 | 6 | ✗ | 3 |
+| Meridian Simulation Yoke | 0x04D8 | 0x0500 | 2 | 8 | ✗ | 3 |
+| Meta Quest Pro VR HMD | 0x2833 | 0x0133 | 6 | 0 | ✗ | 3 |
+| Meta Quest 2 Touch Controllers | 0x2833 | 0x0082 | 6 | 12 | ✗ | 3 |
+| Meta Quest 3 VR HMD | 0x2833 | 0x0137 | 6 | 0 | ✗ | 3 |
+| MFG Crosswind Combat Rudder Pedals | 0x16D0 | 0x0A4A | 3 | 2 | ✗ | 2 |
+| MFG Crosswind Compact Rudder Pedals | 0x16D0 | 0x0A49 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind Complete Edition | 0x1551 | 0x0003 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind Graphite Rudder Pedals | 0x0483 | 0xA354 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind Special Edition Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind Rudder Pedals (Slaw Black Edition) | 0x0483 | 0x5741 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V1 Rudder Pedals | 0x1551 | 0x0001 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V2 Rudder Pedals (STM32 alt PID) | 0x0483 | 0x5738 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V2 Rudder Pedals (STM variant) | 0x0483 | 0xA350 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind V2 Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V3 Black Edition Rudder Pedals | 0x0483 | 0x5739 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V3 Premium Rudder Pedals | 0x0483 | 0xA353 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind V3 Pro Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V3 Rudder Pedals (STM variant) | 0x0483 | 0xA352 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0003 | 3 | 0 | ✗ | 2 |
+| MFG Crosswind V4 Pro Rudder Pedals | 0x1551 | 0x0044 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V4 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 3 |
+| MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 |
+| Micro Innovations USB Panel | 0x04D8 | 0x0E21 | 0 | 48 | ✗ | 3 |
+| HP Reverb G2 Controller | 0x045E | 0x0B21 | 4 | 6 | ✓ | 3 |
+| Microsoft Force Feedback 2 Joystick | 0x045E | 0x001C | 3 | 8 | ✓ | 2 |
+| Microsoft Precision 2 Joystick | 0x045E | 0x0038 | 3 | 8 | ✗ | 2 |
+| Microsoft SideWinder 3D Pro | 0x045E | 0x001A | 4 | 12 | ✗ | 3 |
+| Microsoft SideWinder Dual Strike | 0x045E | 0x0020 | 5 | 10 | ✗ | 3 |
+| Microsoft SideWinder Force Feedback Joystick | 0x045E | 0x001A | 4 | 8 | ✓ | 3 |
+| Microsoft SideWinder Force Feedback Pro | 0x045E | 0x001D | 6 | 8 | ✓ | 3 |
+| Microsoft SideWinder Force Feedback 2 (Alt PID) | 0x045E | 0x001B | 5 | 8 | ✓ | 3 |
+| Microsoft Sidewinder Force Feedback 2 | 0x045E | 0x001C | 3 | 8 | ✓ | 2 |
+| Microsoft SideWinder Force Feedback Wheel | 0x045E | 0x001C | 4 | 8 | ✓ | 3 |
+| Microsoft SideWinder Force Feedback Joystick | 0x045E | 0x001E | 4 | 8 | ✓ | 3 |
+| Microsoft SideWinder Freestyle Pro | 0x045E | 0x001A | 4 | 10 | ✗ | 3 |
+| Microsoft SideWinder Game Voice | 0x045E | 0x003B | 0 | 6 | ✗ | 3 |
+| Microsoft SideWinder Game Pad Pro | 0x045E | 0x0007 | 2 | 10 | ✗ | 3 |
+| Microsoft SideWinder Joystick (Alt PID) | 0x045E | 0x0038 | 4 | 8 | ✗ | 3 |
+| Microsoft SideWinder Standard Joystick | 0x045E | 0x0034 | 3 | 8 | ✗ | 3 |
+| Microsoft SideWinder Precision Pro (Alt PID) | 0x045E | 0x001D | 6 | 9 | ✗ | 3 |
+| Microsoft SideWinder Precision Pro USB | 0x045E | 0x001C | 4 | 9 | ✗ | 3 |
+| Microsoft Sidewinder Precision 2 | 0x045E | 0x0038 | 4 | 8 | ✗ | 2 |
+| Microsoft SideWinder Joystick Plus | 0x045E | 0x001B | 4 | 9 | ✗ | 3 |
+| Microsoft Sidewinder Strategic Commander | 0x045E | 0x0033 | 4 | 13 | ✗ | 3 |
+| Microsoft Surface Dial | 0x045E | 0x091B | 0 | 1 | ✗ | 3 |
+| Microsoft Xbox 360 Wired Controller | 0x045E | 0x028E | 6 | 14 | ✓ | 3 |
+| Microsoft Xbox Adaptive Controller | 0x045E | 0x0B12 | 6 | 21 | ✓ | 2 |
+| Microsoft Xbox Elite Controller Series 1 | 0x045E | 0x02E3 | 6 | 19 | ✓ | 3 |
+| Microsoft Xbox Elite Wireless Controller Series 2 (Alt PID) | 0x045E | 0x0B05 | 6 | 17 | ✗ | 2 |
+| Xbox Elite Series 2 Core Controller | 0x045E | 0x0B05 | 6 | 17 | ✓ | 3 |
+| Xbox Elite Series 2 Controller | 0x045E | 0x0B00 | 6 | 17 | ✓ | 3 |
+| Microsoft Xbox One Controller | 0x045E | 0x02D1 | 6 | 15 | ✓ | 3 |
+| Microsoft Xbox One S Controller (PID 0x02FD variant) | 0x045E | 0x02FD | 6 | 15 | ✓ | 2 |
+| Microsoft Xbox One S Controller | 0x045E | 0x02DD | 6 | 15 | ✓ | 3 |
+| Microsoft Xbox One Controller (Wired) | 0x045E | 0x02FF | 6 | 14 | ✓ | 3 |
+| Microsoft Xbox Series X|S Controller | 0x045E | 0x0B12 | 6 | 17 | ✓ | 3 |
+| Microsoft Xbox Wireless Adapter for Windows | 0x045E | 0x02E6 | 0 | 0 | ✗ | 3 |
+| Monogram Creative Console | 0x2E4A | 0x0001 | 8 | 12 | ✗ | 3 |
+| Monogram Orbiter Module | 0x2E4A | 0x0002 | 1 | 1 | ✗ | 3 |
+| Monogram Slider Module | 0x2E4A | 0x0003 | 1 | 1 | ✗ | 3 |
+| Moog Quickloader II | 0x1055 | 0x0001 | 3 | 16 | ✓ | 3 |
+| Moza AB12 Force Feedback Base | 0x346E | 0x0006 | 4 | 16 | ✓ | 2 |
+| Moza AB9 Pro Force Feedback Base | 0x346E | 0x0008 | 4 | 16 | ✓ | 2 |
+| MOZA AB9 Wheel Base | 0x0483 | 0xA407 | 4 | 16 | ✓ | 3 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| MOZA C1 Steering Wheel | 0x346E | 0x0020 | 0 | 8 | ✗ | 3 |
+| MOZA C2 Steering Wheel | 0x346E | 0x0021 | 0 | 12 | ✗ | 3 |
+| Moza CRP Pedals (STM32 variant) | 0x0483 | 0xA430 | 3 | 0 | ✗ | 3 |
+| Moza CRP Pedal Set | 0x346E | 0x0022 | 3 | 0 | ✗ | 3 |
+| Moza CRP Steering Wheel | 0x346E | 0x0015 | 0 | 12 | ✗ | 3 |
+| Moza CS Steering Wheel | 0x346E | 0x0016 | 0 | 10 | ✗ | 3 |
+| MOZA ES Electromagnetic Handbrake | 0x346E | 0x0030 | 1 | 1 | ✗ | 3 |
+| Moza FC4 Flight Controller | 0x346E | 0x000C | 4 | 16 | ✓ | 2 |
+| Moza FP Rudder Pedals | 0x346E | 0x000D | 3 | 0 | ✗ | 2 |
+| MOZA GS Steering Wheel | 0x346E | 0x0022 | 0 | 15 | ✗ | 3 |
+| Moza HBP Handbrake | 0x346E | 0x0020 | 1 | 1 | ✗ | 3 |
+| MOZA HF8 Force Feedback Flight Yoke | 0x346E | 0x0005 | 3 | 14 | ✓ | 2 |
+| Moza HGP Pedals | 0x346E | 0x0018 | 3 | 0 | ✗ | 3 |
+| Moza KM Steering Wheel | 0x346E | 0x0062 | 1 | 14 | ✗ | 2 |
+| Moza R12 Direct Drive Wheelbase | 0x346E | 0x0019 | 5 | 20 | ✓ | 2 |
+| Moza R16 Direct Drive Wheelbase | 0x346E | 0x001A | 5 | 20 | ✓ | 2 |
+| Moza R21 Direct Drive Wheelbase | 0x346E | 0x001C | 5 | 20 | ✓ | 2 |
+| Moza R5 Direct Drive Wheelbase | 0x346E | 0x0017 | 5 | 20 | ✓ | 2 |
+| Moza R9 V2 Wheelbase Bundle | 0x346E | 0x001B | 5 | 20 | ✓ | 2 |
+| MOZA ES Steering Wheel | 0x346E | 0x0020 | 0 | 12 | ✗ | 3 |
+| MOZA SR-P Lite Pedals | 0x346E | 0x0011 | 3 | 0 | ✗ | 2 |
+| Moza R12 Direct Drive Base | 0x346E | 0x0008 | 1 | 0 | ✓ | 3 |
+| MOZA R12 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| Moza R16 Direct Drive Base (Alt PID) | 0x346E | 0x0004 | 1 | 0 | ✓ | 3 |
+| Moza R16 Direct Drive Base | 0x346E | 0x0010 | 1 | 0 | ✓ | 3 |
+| Moza R16 Direct Drive Bundle | 0x346E | 0x0011 | 4 | 16 | ✓ | 3 |
+| Moza R16 Direct Drive Base | 0x346E | 0x0006 | 4 | 0 | ✓ | 2 |
+| MOZA R16 Direct Drive Base | 0x0483 | 0xA416 | 1 | 0 | ✓ | 3 |
+| Moza R2 Direct Drive Wheel Base | 0x346E | 0x0001 | 1 | 0 | ✓ | 2 |
+| Moza R2 Racing Sim Bundle | 0x346E | 0x0002 | 3 | 20 | ✓ | 2 |
+| Moza R21 Direct Drive Base | 0x346E | 0x0014 | 1 | 0 | ✓ | 3 |
+| MOZA R21 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| MOZA R3 Direct Drive Wheel Base | 0x346E | 0x0005 | 1 | 0 | ✓ | 3 |
+| MOZA R3 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| Moza R5 Direct Drive Base | 0x346E | 0x0009 | 1 | 0 | ✓ | 3 |
+| MOZA R5 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| MOZA R5 Lite Direct Drive Wheel Base | 0x346E | 0x000A | 1 | 0 | ✓ | 3 |
+| Moza R5 Wheel Base (STM32 variant) | 0x0483 | 0xA405 | 1 | 0 | ✓ | 3 |
+| Moza R9 Direct Drive Base | 0x346E | 0x000C | 1 | 0 | ✓ | 3 |
+| MOZA R9 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| Moza R9 Direct Drive Base | 0x346E | 0x0005 | 4 | 0 | ✓ | 2 |
+| MOZA R9 V2 Direct Drive Wheelbase | 0x346E | 0x0005 | 1 | 0 | ✓ | 3 |
+| MOZA R9 V2 Bundle | 0x346E | ? | 0 | 0 | ✗ | 3 |
+| Moza ES Steering Wheel | 0x346E | 0x0030 | 0 | 12 | ✗ | 3 |
+| Moza RS V2 Steering Wheel | 0x346E | 0x0100 | 0 | 24 | ✗ | 3 |
+| MOZA SR-P Lite Pedals | 0x0483 | 0xA423 | 3 | 0 | ✗ | 3 |
+| MOZA SR-P Lite Pedals | 0x346E | 0x0006 | 3 | 0 | ✗ | 3 |
+| MOZA SR-P Pedals | 0x346E | 0x0007 | 3 | 0 | ✗ | 3 |
+| MOZA SR-P Sprint Pedals | 0x346E | 0x0008 | 3 | 0 | ✗ | 3 |
+| Nacon Daija Arcade Stick | 0x146B | 0x0D10 | 4 | 16 | ✗ | 3 |
+| Nacon GC-200XS | 0x146B | 0x0E05 | 4 | 14 | ✗ | 3 |
+| Nacon MG-X Pro Gamepad | 0x146B | 0x0D20 | 6 | 17 | ✗ | 3 |
+| Nacon Revolution 5 Pro Controller | 0x146B | 0x0D19 | 6 | 20 | ✓ | 2 |
+| Nacon Revolution X Pro Controller | 0x146B | 0x0D1A | 6 | 20 | ✗ | 2 |
+| Nacon Revolution 5 Pro | 0x146B | 0x0602 | 6 | 18 | ✓ | 3 |
+| Nacon Revolution Pro Controller 3 | 0x146B | 0x0D13 | 6 | 16 | ✗ | 3 |
+| Nacon Revolution X Pro Controller | 0x146B | 0x0D18 | 6 | 18 | ✗ | 3 |
+| Natec Genesis P58 Gamepad | 0x1D57 | 0xAD01 | 4 | 12 | ✗ | 3 |
+| Native Instruments Traktor Kontrol S2 MK3 | 0x17CC | 0x1710 | 12 | 48 | ✗ | 3 |
+| NaturalPoint Arena 100 | 0x131D | 0x0162 | 6 | 0 | ✗ | 3 |
+| NaturalPoint ClipTrack | 0x131D | 0x0158 | 0 | 0 | ✗ | 3 |
+| NaturalPoint OptiTrack Flex 3 | 0x131D | 0x0159 | 6 | 0 | ✗ | 3 |
+| NaturalPoint OptiTrack | 0x131D | 0x0200 | 6 | 0 | ✗ | 3 |
+| NaturalPoint Slim | 0x131D | 0x0201 | 0 | 0 | ✗ | 3 |
+| NaturalPoint SmartNav 4 | 0x0C10 | 0x0002 | 2 | 0 | ✗ | 3 |
+| NaturalPoint TrackClip Pro | 0x131D | 0x015A | 0 | 0 | ✗ | 3 |
+| NaturalPoint TrackClip | 0x131D | 0x0156 | 0 | 0 | ✗ | 3 |
+| NaturalPoint TrackIR 3 Pro (Alt PID) | 0x131D | 0x0153 | 6 | 0 | ✗ | 2 |
+| NaturalPoint TrackIR 3 Pro | 0x131D | 0x0100 | 1 | 0 | ✗ | 3 |
+| NaturalPoint TrackIR 4 Pro (Alt PID) | 0x131D | 0x0154 | 6 | 0 | ✗ | 2 |
+| NaturalPoint TrackIR 4 Pro | 0x131D | 0x0150 | 6 | 3 | ✗ | 2 |
+| NaturalPoint TrackIR 5 (Alt PID) | 0x131D | 0x0156 | 6 | 0 | ✗ | 2 |
+| NaturalPoint TrackIR 5 Pro | 0x131D | 0x0157 | 6 | 0 | ✗ | 3 |
+| NaturalPoint TrackIR 5 | 0x131D | 0x0155 | 6 | 3 | ✗ | 2 |
+| NaturalPoint TrackIR 3 Pro | 0x131D | 0x0117 | 6 | 0 | ✗ | 3 |
+| NaturalPoint TrackIR 4 | 0x131D | 0x0155 | 6 | 3 | ✗ | 2 |
+| Next Level Racing F-GT Motion Platform | 0x16C0 | 0x048B | 0 | 0 | ✗ | 3 |
+| Next Level Racing Flight Simulator Seat | ? | ? | 0 | 0 | ✗ | 3 |
+| Next Level Racing GT Track Cockpit | ? | ? | 0 | 0 | ✗ | 3 |
+| Next Level Racing GT Seat | ? | ? | 0 | 0 | ✗ | 3 |
+| Next Level Racing Motion Platform V3 | 0x0403 | 0x6001 | 0 | 0 | ✗ | 3 |
+| Next Level Racing Motion Platform | 0x1209 | 0x3005 | 2 | 0 | ✗ | 3 |
+| Next Level Racing Wheel Stand Pro | ? | ? | 0 | 0 | ✗ | 3 |
+| Nintendo GameCube Controller Adapter | 0x057E | 0x0337 | 8 | 32 | ✗ | 3 |
+| Nintendo Switch Joy-Con (L) | 0x057E | 0x2006 | 2 | 11 | ✓ | 3 |
+| Nintendo Switch Joy-Con (R) | 0x057E | 0x2007 | 2 | 12 | ✓ | 3 |
+| Nintendo Switch Joy-Con Charging Grip | 0x057E | 0x200E | 4 | 16 | ✓ | 3 |
+| Nintendo Switch Online N64 Controller | 0x057E | 0x2019 | 2 | 14 | ✓ | 3 |
+| Nintendo Switch Pro Controller | 0x057E | 0x2009 | 4 | 16 | ✓ | 3 |
+| OctaneVR Throttle Controller | 0x04D8 | 0xF503 | 3 | 8 | ✗ | 3 |
+| DIY MFD Panel (Generic OpenCockpit) | 0x2341 | 0x8036 | 0 | 32 | ✗ | 3 |
+| DIY Throttle Quadrant (Generic OpenCockpit) | 0x2341 | 0x8036 | 4 | 8 | ✗ | 3 |
+| OpenHornet AMPCD Panel | 0x2341 | 0x803C | 0 | 20 | ✗ | 3 |
+| OpenHornet CADC Panel | 0x2341 | 0x803F | 0 | 6 | ✗ | 3 |
+| OpenHornet Caution Advisory Panel | 0x2341 | 0x8043 | 0 | 0 | ✗ | 3 |
+| OpenHornet Communications Panel | 0x16C0 | 0x0486 | 0 | 22 | ✗ | 3 |
+| OpenHornet DDI Left Panel | 0x2341 | 0x8038 | 0 | 20 | ✗ | 3 |
+| OpenHornet DDI Right Panel | 0x2341 | 0x8039 | 0 | 20 | ✗ | 3 |
+| OpenHornet EAC Panel | 0x2341 | 0x8040 | 0 | 6 | ✗ | 3 |
+| OpenHornet Electrical Panel | 0x2341 | 0x803F | 0 | 18 | ✗ | 3 |
+| OpenHornet Fuel Panel | 0x2341 | 0x803E | 0 | 16 | ✗ | 3 |
+| OpenHornet HUD Control Panel | 0x2341 | 0x8042 | 0 | 8 | ✗ | 3 |
+| OpenHornet IFEI Panel | 0x2341 | 0x803D | 0 | 12 | ✗ | 3 |
+| OpenHornet Master Arm Panel | 0x2341 | 0x803E | 0 | 8 | ✗ | 3 |
+| OpenHornet ODU (Option Display Unit) | 0x2341 | 0x8042 | 0 | 5 | ✗ | 3 |
+| OpenHornet Radar Altimeter Panel | 0x2341 | 0x803A | 1 | 8 | ✗ | 3 |
+| OpenHornet UFCD Panel | 0x2341 | 0x803B | 0 | 16 | ✗ | 3 |
+| OpenHornet WSO Rear Cockpit Panel | 0x2341 | 0x8041 | 2 | 16 | ✗ | 3 |
+| OpenHornet MIP Center Panel | 0x16C0 | 0x0485 | 0 | 30 | ✗ | 2 |
+| Generic USB GPIO Expander (Button Box) | 0x16C0 | 0x27DC | 0 | 32 | ✗ | 3 |
+| Opencockpits ADC-EFIS Card | 0x0BCA | 0x0006 | 4 | 16 | ✗ | 3 |
+| Engravity A320 MCDU | 0x0BCA | 0x0070 | 0 | 64 | ✗ | 3 |
+| Opencockpits IOCard USB | 0x1000 | 0x0001 | 0 | 64 | ✗ | 3 |
+| Opencockpits IOCards USB | 0x0BCA | 0x0007 | 0 | 64 | ✗ | 3 |
+| Opencockpits MCP Boeing 737 Card | 0x1000 | 0x0001 | 0 | 48 | ✗ | 3 |
+| Opencockpits Rotary Encoder Card | 0x1000 | 0x0004 | 0 | 32 | ✗ | 3 |
+| Opencockpits SIOC 5.2 | 0x0407 | 0xC002 | 0 | 48 | ✗ | 3 |
+| OpenCockpits SIOC I/O Card | 0x0407 | 0xC001 | 0 | 128 | ✗ | 3 |
+| Opencockpits SIOC Mega Card | 0x0BCA | 0x0008 | 8 | 128 | ✗ | 3 |
+| OpenCockpits SIOC USB Card | 0x0BCA | 0x0004 | 0 | 64 | ✗ | 3 |
+| Opencockpits SIOC USB Interface Card | 0x1000 | 0x0002 | 0 | 64 | ✗ | 3 |
+| OpenCockpits USB Expansion Card | 0x0407 | 0xC000 | 0 | 64 | ✗ | 3 |
+| OpenCockpits USB Expansion Card | 0x0BCA | 0x0005 | 0 | 48 | ✗ | 3 |
+| Opencockpits USB Expansion Card | 0x1000 | 0x0003 | 0 | 32 | ✗ | 3 |
+| OpenCockpits USB Keys Card | 0x0BCA | 0x0002 | 0 | 72 | ✗ | 3 |
+| OpenCockpits USB Servos Card | 0x0BCA | 0x0003 | 0 | 0 | ✗ | 3 |
+| AITrack (via OpenTrack UDP) | 0x0000 | 0x0000 | 6 | 0 | ✗ | 2 |
+| OpenTrack UDP Source | 0x0000 | 0x0000 | 6 | 0 | ✗ | 1 |
+| P1 SimVibe / SimCommander Controller | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| PDP Afterglow AG 9 Wireless | 0x0E6F | 0x02A1 | 6 | 14 | ✓ | 3 |
+| PDP Victrix Pro FS Arcade Fight Stick | 0x0E6F | 0x0201 | 2 | 16 | ✗ | 3 |
+| PFC Boeing 737 Control Column | 0x04D8 | 0x0120 | 2 | 8 | ✗ | 3 |
+| PFC Cirrus USB Yoke | 0x2B67 | 0x0004 | 4 | 12 | ✗ | 3 |
+| PFC Cirrus Training Yoke | 0x04D8 | 0x0110 | 2 | 6 | ✗ | 3 |
+| Precision Flight Controls 737 MCP | 0x2B67 | 0x0040 | 4 | 48 | ✗ | 3 |
+| PFC Altitude Alerter Panel | 0x1551 | 0x0011 | 1 | 4 | ✗ | 3 |
+| PFC Beechcraft Baron/Bonanza Yoke | 0x04D8 | 0x0135 | 2 | 10 | ✗ | 3 |
+| PFC Boeing 737 Throttle Quadrant | 0x04D8 | 0x0125 | 4 | 12 | ✗ | 3 |
+| PFC Cessna Training Yoke | 0x04D8 | 0x0103 | 2 | 4 | ✗ | 3 |
+| Precision Flight Controls Cirrus SR20 Throttle | 0x2B67 | 0x0031 | 3 | 4 | ✗ | 3 |
+| PFC Cirrus SR Throttle (3-Lever) | 0x04D8 | 0x0115 | 3 | 4 | ✗ | 3 |
+| PFC Flap Lever | 0x0E8F | 0x0010 | 1 | 0 | ✗ | 3 |
+| Precision Flight Controls Yoke | 0x2B67 | 0x0002 | 2 | 8 | ✗ | 3 |
+| PFC Pro MCP (Mode Control Panel) | 0x1551 | 0x0010 | 3 | 32 | ✗ | 3 |
+| PFC Radio Stack | 0x1551 | 0x0012 | 0 | 16 | ✗ | 3 |
+| PFC Professional Rudder Pedals | 0x04D8 | 0x0101 | 3 | 0 | ✗ | 3 |
+| PFC Throttle Quadrant | 0x04D8 | 0x0102 | 6 | 6 | ✗ | 3 |
+| PFC Cessna Trim Wheel | 0x04D8 | 0x0104 | 1 | 0 | ✗ | 3 |
+| PFC Twin-Engine Throttle Quadrant | 0x04D8 | 0x0130 | 6 | 8 | ✗ | 3 |
+| PFC Weather Radar Panel | 0x1551 | 0x0013 | 2 | 8 | ✗ | 3 |
+| PFC Professional Yoke System | 0x04D8 | 0x0100 | 3 | 12 | ✗ | 3 |
+| Pilotek Rudder V3 Pedals | 0x1209 | 0x2140 | 3 | 0 | ✗ | 3 |
+| Pimax 4K OLED | 0x0483 | 0x0101 | 6 | 2 | ✗ | 3 |
+| Pimax 8K X VR HMD | 0x0483 | 0x0119 | 6 | 0 | ✗ | 3 |
+| Pimax 8KX VR HMD | 0x34B2 | 0x0100 | 6 | 0 | ✗ | 3 |
+| Pimax Crystal Light | 0x0D28 | 0x0006 | 6 | 0 | ✗ | 3 |
+| Pimax Crystal VR HMD | 0x34B2 | 0x0200 | 6 | 0 | ✗ | 3 |
+| Pioneer DDJ-400 DJ Controller | 0x2B73 | 0x000A | 10 | 32 | ✗ | 2 |
+| PointCtrl FCU Input Panel | 0x04D8 | 0xEB50 | 0 | 16 | ✗ | 3 |
+| PointCtrl FCU v4 | 0x04D8 | 0x0058 | 2 | 6 | ✗ | 3 |
+| Pololu Mini Maestro 18-Channel USB Servo Controller | 0x1FFB | 0x008D | 0 | 0 | ✗ | 3 |
+| Pololu Mini Maestro 24-Channel USB Servo Controller | 0x1FFB | 0x008F | 0 | 0 | ✗ | 3 |
+| Pololu Maestro Mini 12-Channel USB Servo Controller | 0x1FFB | 0x0089 | 0 | 0 | ✗ | 3 |
+| PowerA Advantage Wired Controller for Xbox/PC | 0x24C6 | 0x5510 | 6 | 14 | ✗ | 3 |
+| PowerA Enhanced Wired Controller for Xbox | 0x20D6 | 0xA711 | 6 | 16 | ✗ | 3 |
+| PowerA FUSION Pro 2 (Xbox) | 0x24C6 | 0x5B01 | 6 | 20 | ✓ | 3 |
+| PowerA FUSION Pro 3 Wired Controller | 0x24C6 | 0x543A | 6 | 18 | ✗ | 3 |
+| PowerA FUSION Pro (Xbox) | 0x24C6 | 0x5B00 | 6 | 18 | ✓ | 2 |
+| PowerA Fusion Pro 3 Controller | 0x20D6 | 0xA720 | 6 | 18 | ✗ | 3 |
+| PowerA Fusion Pro Wireless Controller | 0x20D6 | 0xA721 | 6 | 18 | ✗ | 3 |
+| PowerA Spectra Infinity Enhanced Wired Controller | 0x24C6 | 0x543B | 6 | 16 | ✗ | 3 |
+| Pro Controls Throttle Quadrant | 0x04D8 | 0xFF10 | 6 | 8 | ✗ | 3 |
+| Pro Controls Yoke System | 0x04D8 | 0xFF11 | 2 | 8 | ✗ | 3 |
+| Pro Flight Simulator MFD | 0x1551 | 0x0030 | 0 | 20 | ✗ | 3 |
+| ProFlight Rudder Pedals | 0x1209 | 0x2111 | 3 | 0 | ✗ | 3 |
+| ProSimU R6 Motion Platform | 0x1ECB | 0x0003 | 6 | 4 | ✗ | 3 |
+| ProSimU T100 Motion Platform | 0x1ECB | 0x0001 | 2 | 4 | ✗ | 3 |
+| ProSimU T200 6DOF Motion Platform | 0x1ECB | 0x0002 | 6 | 4 | ✗ | 3 |
+| ProSimU T300 Advanced 6DOF Motion Platform | 0x1ECB | 0x0004 | 6 | 6 | ✗ | 3 |
+| PT Actuator Sim Seat | 0x04B4 | 0xF260 | 0 | 0 | ✗ | 3 |
+| PXN 0082 HOTAS | 0x3285 | 0x0082 | 6 | 20 | ✗ | 2 |
+| PXN 0082 II Arcade Stick | 0x3416 | 0x0082 | 0 | 12 | ✗ | 3 |
+| PXN-2119 USB Joystick | 0x0E8F | 0x2119 | 5 | 12 | ✗ | 3 |
+| PXN 2119II Wireless Joystick | 0x3416 | 0x0301 | 4 | 20 | ✗ | 3 |
+| PXN A7 Flight Stick | 0x3416 | 0x0700 | 4 | 12 | ✗ | 3 |
+| PXN A9 Flight Stick | 0x3416 | 0x0900 | 4 | 16 | ✗ | 3 |
+| PXN V10 Pro Racing Wheel | 0x3416 | 0x1000 | 4 | 14 | ✓ | 3 |
+| PXN V10 Flight Joystick | 0x3416 | 0x0300 | 5 | 14 | ✗ | 3 |
+| PXN V3 Pro Flight Joystick | 0x0E8F | 0x0003 | 5 | 15 | ✗ | 3 |
+| PXN V9 Racing Wheel | 0x3416 | 0x0200 | 4 | 14 | ✓ | 3 |
+| PXN V900 Racing Wheel | 0x3416 | 0x0100 | 4 | 12 | ✗ | 3 |
+| PXN T3 USB Joystick | 0x0E8F | 0x1003 | 3 | 8 | ✗ | 3 |
+| PXN T6 Pro Joystick | 0x0E8F | 0x1012 | 4 | 12 | ✗ | 3 |
+| PXN V11 Flight Joystick | 0x0079 | 0x0011 | 4 | 12 | ✗ | 3 |
+| PXN V4 Joystick | 0x3820 | 0x0004 | 4 | 12 | ✗ | 3 |
+| Qanba Dragon Arcade Joystick | 0x2C22 | 0x2503 | 2 | 11 | ✗ | 3 |
+| Qanba Drone 2 Arcade Joystick | 0x2C22 | 0x2200 | 0 | 12 | ✗ | 3 |
+| Qanba Obsidian 2 Arcade Joystick | 0x2C22 | 0x2300 | 0 | 14 | ✗ | 3 |
+| Qanba Drone 2 Arcade Stick | 0x2C22 | 0x2602 | 2 | 12 | ✗ | 3 |
+| Qanba Obsidian 2 Arcade Stick | 0x2C22 | 0x2603 | 2 | 14 | ✗ | 3 |
+| Quickshot Defender Joystick | 0x0079 | 0x0006 | 2 | 4 | ✗ | 3 |
+| Quickshot USB Joystick | 0x0F0D | 0x0086 | 2 | 4 | ✗ | 3 |
+| Razer BlackWidow Chroma V2 Keyboard | 0x1532 | 0x0221 | 0 | 5 | ✗ | 3 |
+| Razer Kishi Mobile Gamepad | 0x1532 | 0x0900 | 6 | 14 | ✗ | 3 |
+| Razer Kishi V2 USB-C Mobile Controller | 0x1532 | 0x1100 | 4 | 14 | ✗ | 3 |
+| Razer Naga X | 0x1532 | 0x0053 | 2 | 19 | ✗ | 3 |
+| Razer Raiju Mobile | 0x1532 | 0x0B00 | 6 | 18 | ✓ | 2 |
+| Razer Raiju Tournament Edition | 0x1532 | 0x0B04 | 6 | 19 | ✓ | 2 |
+| Razer Raion Fightpad | 0x1532 | 0x0A18 | 0 | 14 | ✗ | 3 |
+| Razer Raion Fightpad for PS4 | 0x1532 | 0x0401 | 4 | 14 | ✓ | 3 |
+| Razer Kishi Ultra Mobile Controller | 0x1532 | 0x0A2D | 6 | 16 | ✗ | 3 |
+| Razer Wolverine V2 Chroma Controller | 0x1532 | 0x0A2A | 6 | 20 | ✗ | 2 |
+| Razer Wolverine V3 Pro Controller | 0x1532 | 0x0A2B | 6 | 22 | ✓ | 2 |
+| Razer Wolverine V3 Controller | 0x1532 | 0x0A2C | 6 | 20 | ✓ | 2 |
+| Razer Tartarus v2 Gaming Keypad | 0x1532 | 0x0244 | 2 | 32 | ✗ | 3 |
+| Razer Wolverine Ultimate (Alt PID) | 0x1532 | 0x0209 | 6 | 18 | ✗ | 2 |
+| Razer Wolverine Ultimate | 0x1532 | 0x0A21 | 6 | 20 | ✓ | 3 |
+| Razer Wolverine V2 Chroma | 0x1532 | 0x0A29 | 6 | 20 | ✓ | 2 |
+| Razer Wolverine V2 Pro | 0x1532 | 0x0BF6 | 6 | 22 | ✓ | 3 |
+| RealAir Boeing 737 Yoke | 0x2B67 | 0x0030 | 5 | 16 | ✗ | 3 |
+| RealFeel Yoke | 0x1209 | 0x2071 | 5 | 10 | ✗ | 3 |
+| RealSimGear Cessna Rudder Pedals | 0xEB80 | 0x0007 | 3 | 0 | ✗ | 3 |
+| RealSimGear G1000 Bezel Left | 0x2B67 | 0x0020 | 2 | 32 | ✗ | 3 |
+| RealSimGear G1000 Bezel Right | 0x2B67 | 0x0021 | 2 | 32 | ✗ | 3 |
+| RealSimGear G1000 Bezel | 0x04D8 | 0xF230 | 0 | 0 | ✗ | 2 |
+| RealSimGear G1000 MFD Bezel | 0xEB80 | 0x0003 | 0 | 60 | ✗ | 3 |
+| RealSimGear G1000 MFD Bezel | 0x04D8 | 0xF235 | 0 | 60 | ✗ | 2 |
+| RealSimGear G1000 NXi Integration Kit | 0x04D8 | 0xF270 | 0 | 24 | ✗ | 3 |
+| RealSimGear G1000 NXi Bezel | 0x04D8 | 0xF240 | 0 | 38 | ✗ | 2 |
+| RealSimGear G1000 PFD | 0x04D8 | 0xEF70 | 0 | 36 | ✗ | 3 |
+| RealSimGear G1000 PFD Bezel | 0x04D8 | 0xF236 | 0 | 55 | ✗ | 2 |
+| RealSimGear G1000 TXi Display Controller | 0x04D8 | 0xEF62 | 4 | 32 | ✗ | 3 |
+| RealSimGear G1000 GPS Keypad Module | 0x04D8 | 0xEB81 | 0 | 28 | ✗ | 2 |
+| RealSimGear G3000 Avionics Bezel | 0x04D8 | 0xF258 | 2 | 24 | ✗ | 3 |
+| RealSimGear G3X EFIS Panel | 0x04D8 | 0xF242 | 0 | 18 | ✗ | 2 |
+| RealSimGear G3X Touch GPS Unit | 0x04D8 | 0xF290 | 0 | 12 | ✗ | 3 |
+| RealSimGear G3X MFD Bezel | 0x04D8 | 0xF260 | 2 | 18 | ✗ | 3 |
+| RealSimGear G3X Touch PFD Bezel | 0x04D8 | 0xF242 | 0 | 16 | ✗ | 2 |
+| RealSimGear G3X Touch Avionics Panel | 0x04D8 | 0xF237 | 0 | 40 | ✗ | 3 |
+| RealSimGear Garmin G5 ADI Bezel | 0xEB80 | 0x0008 | 0 | 4 | ✗ | 3 |
+| RealSimGear G5 HSI Bezel | 0x04D8 | 0xF270 | 0 | 6 | ✗ | 3 |
+| RealSimGear G500 Avionics Trainer | 0x04D8 | 0xF240 | 0 | 22 | ✗ | 3 |
+| RealSimGear G500H Helicopter Avionics | 0x04D8 | 0xF260 | 0 | 24 | ✗ | 3 |
+| RealSimGear G530 GPS | 0x04D8 | 0xEF71 | 0 | 30 | ✗ | 3 |
+| RealSimGear G530 GPS Panel | 0x04D8 | 0xF250 | 0 | 48 | ✗ | 2 |
+| RealSimGear G600 EFIS Controller | 0x04D8 | 0xF275 | 2 | 20 | ✗ | 3 |
+| RealSimGear GFC500 Autopilot Controller | 0xEB80 | 0x0009 | 0 | 16 | ✗ | 3 |
+| RealSimGear GFC-500 Autopilot Controller | 0x04D8 | 0xEF72 | 0 | 14 | ✗ | 3 |
+| RealSimGear GFC 500 Autopilot Controller | 0x04D8 | 0xF260 | 0 | 14 | ✗ | 3 |
+| RealSimGear GFC 600 Autopilot Controller | 0x04D8 | 0xF261 | 0 | 18 | ✗ | 3 |
+| RealSimGear GI 275 Electronic Instrument Trainer | 0x2B67 | 0x0023 | 0 | 14 | ✗ | 3 |
+| RealSimGear GI 275 Electronic Instrument Trainer | 0x04D8 | 0xF250 | 0 | 10 | ✗ | 3 |
+| RealSimGear GNS-430 | 0x04D8 | 0xEF73 | 0 | 24 | ✗ | 3 |
+| RealSimGear GNS430W Bezel | 0x04D8 | 0xF230 | 0 | 24 | ✗ | 2 |
+| RealSimGear GNS 430W GPS/NAV/COM Panel | 0x04D8 | 0xF265 | 0 | 28 | ✗ | 3 |
+| RealSimGear GNS 480 Bezel | 0x04D8 | 0xF252 | 2 | 20 | ✗ | 3 |
+| RealSimGear GNS530W Bezel | 0x04D8 | 0xF238 | 0 | 40 | ✗ | 3 |
+| RealSimGear GNS 650Xi Trainer | 0x04D8 | 0xF248 | 0 | 28 | ✗ | 3 |
+| RealSimGear GNX 375 GPS/ADS-B Panel | 0x04D8 | 0xF270 | 0 | 20 | ✗ | 3 |
+| RealSimGear GPS 175 Bezel | 0x04D8 | 0xF260 | 0 | 18 | ✗ | 3 |
+| RealSimGear GS500 Radio Panel | 0x04D8 | 0xF260 | 0 | 24 | ✗ | 2 |
+| RealSimGear GTN 750 | 0x2B67 | 0x0022 | 0 | 40 | ✗ | 3 |
+| RealSimGear GTN 650 Bezel | 0x04D8 | 0xF240 | 0 | 32 | ✗ | 2 |
+| RealSimGear GTN 750 Bezel | 0x04D8 | 0xF248 | 0 | 40 | ✗ | 2 |
+| RealSimGear GTX 327 Transponder Bezel | 0x04D8 | 0xF250 | 0 | 14 | ✗ | 3 |
+| RealSimGear GTX 335 Transponder Trainer | 0x04D8 | 0xF270 | 0 | 16 | ✗ | 3 |
+| RealSimGear GTX345 Transponder | 0xEB80 | 0x000A | 0 | 12 | ✗ | 3 |
+| RealSimGear GTX 345 Transponder Bezel | 0x04D8 | 0xF252 | 0 | 16 | ✗ | 3 |
+| RealSimGear KAP 140 Autopilot Panel | 0x04D8 | 0xF250 | 0 | 12 | ✗ | 2 |
+| RealSimGear Cirrus SR22 Yoke | 0x04D8 | 0xEF61 | 5 | 24 | ✗ | 3 |
+| RealSimGear TFRP3G Rudder Pedals | 0x04D8 | 0xEF60 | 3 | 0 | ✗ | 2 |
+| RealSimulator FSSB R1 | 0x20FF | 0x0003 | 2 | 0 | ✗ | 3 |
+| RealSimulator FSSB-R3 Lighting | 0x20FF | 0x0002 | 2 | 0 | ✗ | 3 |
+| RealSimulator FSSB R3 Pro | 0x20FF | 0x0003 | 3 | 0 | ✗ | 3 |
+| FSSB R3 Ultra Force Sensing Sidestick | 0x04B4 | 0xF101 | 2 | 8 | ✗ | 3 |
+| RealSimulator FSSB R3 | 0x20FF | 0x0001 | 2 | 0 | ✗ | 3 |
+| Redbird RAID Yoke | 0x2B67 | 0x0035 | 3 | 8 | ✗ | 3 |
+| Redbird TD3 Yoke | 0x04D8 | 0xEE11 | 4 | 8 | ✗ | 3 |
+| Redgear Pro Series Gamepad | 0x054C | 0x09CB | 4 | 12 | ✓ | 3 |
+| Ricmotech RS-1 Motion Seat | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| Saitek AV8R-01 Joystick | 0x06A3 | 0x0460 | 4 | 20 | ✗ | 3 |
+| Saitek AV8R-02 Joystick | 0x06A3 | 0x0462 | 4 | 20 | ✗ | 3 |
+| Saitek AV8R-03 Joystick | 0x06A3 | 0x0B6A | 5 | 16 | ✗ | 3 |
+| Saitek Aviator Joystick | 0x06A3 | 0x050A | 5 | 12 | ✗ | 3 |
+| Saitek Pro Flight BIP (Backlit Information Panel) | 0x06A3 | 0x0B9E | 0 | 0 | ✗ | 3 |
+| Saitek Pro Flight Cessna Rudder Pedals | 0x06A3 | 0x0765 | 3 | 0 | ✗ | 2 |
+| Saitek Pro Flight Cessna Trim Wheel | 0x06A3 | 0x0BD4 | 1 | 0 | ✗ | 2 |
+| Saitek Pro Flight Cessna Yoke | 0x06A3 | 0x0BD3 | 3 | 8 | ✗ | 2 |
+| Saitek Cyborg 2000 Joystick | 0x06A3 | 0x0001 | 4 | 8 | ✗ | 3 |
+| Saitek Cyborg 3D Gold Joystick | 0x06A3 | 0xFF0C | 4 | 12 | ✗ | 3 |
+| Saitek Cyborg 3D Platinum Joystick | 0x06A3 | 0x022E | 5 | 15 | ✗ | 3 |
+| Saitek Cyborg 3D USB Joystick | 0x06A3 | 0x0412 | 4 | 8 | ✗ | 3 |
+| Saitek Cyborg Command Pad | 0x06A3 | 0x046E | 1 | 24 | ✗ | 3 |
+| Saitek Cyborg Digital II Joystick | 0x06A3 | 0x0458 | 3 | 8 | ✗ | 3 |
+| Saitek Cyborg Evo Force (Alt PID) | 0x06A3 | 0x0427 | 5 | 12 | ✓ | 2 |
+| Saitek Cyborg Evo Force Joystick | 0x06A3 | 0x0462 | 5 | 12 | ✓ | 2 |
+| Saitek Cyborg Evo SE Joystick | 0x06A3 | 0x0467 | 4 | 8 | ✗ | 3 |
+| Saitek Cyborg Evo Joystick | 0x06A3 | 0x0460 | 5 | 12 | ✗ | 2 |
+| Saitek Cyborg FLY5 | 0x06A3 | 0x0764 | 4 | 10 | ✗ | 3 |
+| Saitek Cyborg Fly 9 Wireless Joystick | 0x06A3 | 0x0BAD | 4 | 8 | ✗ | 3 |
+| Saitek Cyborg Graphite Joystick | 0x06A3 | 0xFF0C | 5 | 13 | ✗ | 2 |
+| Saitek Cyborg Rumble Pad | 0x06A3 | 0x040B | 4 | 12 | ✓ | 3 |
+| Saitek Cyborg Stick | 0x06A3 | 0x0C2D | 3 | 16 | ✗ | 3 |
+| Saitek Cyborg V.1 Joystick | 0x06A3 | 0x0755 | 4 | 12 | ✗ | 3 |
+| Saitek Cyborg X Joystick | 0x06A3 | 0x075C | 6 | 13 | ✗ | 3 |
+| Saitek Flight Instrument Panel | 0x06A3 | 0xA2AE | 0 | 7 | ✗ | 2 |
+| Saitek Flight Pro Combat Rudder | 0x06A3 | 0x0764 | 3 | 15 | ✗ | 2 |
+| Saitek P2500 Rumble Force Gamepad | 0x06A3 | 0xF51A | 4 | 14 | ✓ | 2 |
+| Saitek P2600 Rumble Force Pad | 0x06A3 | 0x0475 | 4 | 12 | ✗ | 3 |
+| Saitek P3200 Rumble Pad | 0x06A3 | 0xFF17 | 4 | 12 | ✓ | 3 |
+| Saitek P3600 Cyborg Force Rumble Pad | 0x06A3 | 0x0506 | 4 | 12 | ✗ | 3 |
+| Saitek P380 Gamepad | 0x06A3 | 0x0111 | 4 | 12 | ✗ | 3 |
+| Saitek P380 USB Gamepad v2 | 0x06A3 | 0x000A | 2 | 8 | ✗ | 3 |
+| Saitek PC Dashboard 1 | 0x06A3 | 0x0A00 | 0 | 20 | ✗ | 3 |
+| Saitek PC Dashboard 2 | 0x06A3 | 0x0A01 | 0 | 24 | ✗ | 3 |
+| Saitek Pro Flight Autopilot Panel | 0x06A3 | 0x0D10 | 0 | 30 | ✗ | 2 |
+| Saitek Pro Flight Autopilot Panel | 0x06A3 | 0x0C2F | 0 | 20 | ✗ | 2 |
+| Saitek Pro Flight Combo Pack (Bundle) | 0x06A3 | 0x0000 | 0 | 0 | ✗ | 3 |
+| Saitek Pro Flight Instrument Panel (FIP) | 0x06A3 | 0x0D46 | 0 | 6 | ✗ | 3 |
+| Saitek Pro Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 32 | ✗ | 2 |
+| Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 |
+| Saitek Pro Flight Radio Panel | 0x06A3 | 0x0D05 | 0 | 16 | ✗ | 2 |
+| Saitek Pro Flight Rudder Pedals | 0x06A3 | 0x0763 | 3 | 0 | ✗ | 3 |
+| Saitek Pro Flight Switch Panel | 0x06A3 | 0x0D67 | 0 | 20 | ✗ | 2 |
+| Saitek Pro Flight Trim Panel | 0x06A3 | 0x0763 | 3 | 3 | ✗ | 3 |
+| Saitek Pro Flight Yoke System | 0x06A3 | 0x0BAC | 3 | 14 | ✗ | 2 |
+| Saitek R220 Digital Steering Wheel | 0x06A3 | 0x0201 | 3 | 8 | ✗ | 3 |
+| Saitek R440 Force Feedback Wheel | 0x06A3 | 0x0301 | 3 | 8 | ✓ | 3 |
+| Saitek Aviator Joystick | 0x06A3 | 0x0BAC | 5 | 14 | ✗ | 3 |
+| Saitek Pro Flight Cessna Pedals V2 | 0x06A3 | 0x0767 | 3 | 0 | ✗ | 3 |
+| Saitek Pro Flight Combat Rudder Pedals | 0x06A3 | 0x0766 | 3 | 0 | ✗ | 3 |
+| Saitek USB Throttle Quadrant (Legacy) | 0x06A3 | 0x0C27 | 3 | 6 | ✗ | 3 |
+| Saitek Throttle Quadrant V2 | 0x06A3 | 0x0C28 | 3 | 6 | ✗ | 3 |
+| Saitek Triple Throttle Quadrant | 0x06A3 | 0x0C29 | 6 | 6 | ✗ | 3 |
+| Logitech / Saitek Alpha Flight Yoke | 0x046D | 0x8998 | 3 | 17 | ✗ | 2 |
+| Saitek Pro Flight Cessna Trim Wheel (v2) | 0x06A3 | 0x0C26 | 1 | 0 | ✗ | 2 |
+| Saitek X36 Joystick (Alt PID) | 0x06A3 | 0x0100 | 5 | 14 | ✗ | 3 |
+| Saitek X45 HOTAS | 0x06A3 | 0x0241 | 6 | 27 | ✗ | 2 |
+| Saitek ST290 Pro Joystick | 0x06A3 | 0x0006 | 4 | 8 | ✗ | 3 |
+| Saitek ST50 Joystick | 0x06A3 | 0x0040 | 4 | 6 | ✗ | 3 |
+| Saitek ST90 Joystick | 0x06A3 | 0x0F54 | 4 | 8 | ✗ | 3 |
+| Saitek Pro Flight TPM System | 0x06A3 | 0x0BAF | 1 | 14 | ✗ | 3 |
+| Saitek X35 Joystick | 0x06A3 | 0x0256 | 5 | 17 | ✗ | 3 |
+| Saitek X35T Throttle | 0x06A3 | 0x010C | 2 | 14 | ✗ | 3 |
+| Saitek X36 Joystick | 0x06A3 | 0x0109 | 4 | 15 | ✗ | 3 |
+| Saitek X36 USB Throttle | 0x06A3 | 0x053D | 6 | 8 | ✗ | 3 |
+| Saitek X45 HOTAS (Alt PID) | 0x06A3 | 0x0C2D | 6 | 24 | ✗ | 3 |
+| Saitek X45 2nd Gen Joystick | 0x06A3 | 0x053E | 5 | 12 | ✗ | 3 |
+| Saitek X45 Stick | 0x06A3 | 0x0241 | 3 | 14 | ✗ | 2 |
+| Saitek X45 Throttle | 0x06A3 | 0x0243 | 5 | 16 | ✗ | 2 |
+| Saitek X52 Flight Control System (Alt PID) | 0x06A3 | 0xFF04 | 6 | 36 | ✗ | 3 |
+| Saitek X52 HOTAS (Virtual Bundle) | 0x06A3 | ? | 6 | 36 | ✗ | 3 |
+| Saitek X52 Pro Flight Control System (Alt PID) | 0x06A3 | 0x0255 | 7 | 39 | ✗ | 3 |
 | Logitech / Saitek X52 Pro HOTAS | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
+| Saitek X52 Flight Control System | 0x06A3 | 0x075C | 7 | 28 | ✗ | 2 |
+| Logitech / Saitek X55 Rhino HOTAS | 0x06A3 | 0x0CD1 | 7 | 25 | ✗ | 2 |
+| Saitek Pro Flight X-56 Rhino Stick | 0x0738 | 0x2221 | 5 | 24 | ✗ | 2 |
+| Saitek Pro Flight X-56 Rhino Throttle | 0x0738 | 0xA221 | 6 | 26 | ✗ | 2 |
+| Logitech X56 Rhino HOTAS | 0x06A3 | 0x0C2D | 9 | 50 | ✗ | 2 |
+| Saitek X65F Combat Control System | 0x06A3 | 0x0B6A | 6 | 39 | ✗ | 2 |
+| Saitek X65F Combat Control System Joystick | 0x06A3 | 0x0261 | 4 | 31 | ✗ | 2 |
+| Saitek X65F Combat Control System Throttle | 0x06A3 | 0x0262 | 5 | 32 | ✗ | 2 |
+| SCUF Instinct Pro Controller | 0x0E6F | 0x02DA | 6 | 20 | ✗ | 3 |
+| SCUF Reflex Pro Controller | 0x0E6F | 0x02DB | 6 | 20 | ✓ | 3 |
+| Simagic Alpha Mini (Alt PID A360) | 0x0483 | 0xA360 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha Mini Direct Drive Wheel Base | 0x0EBC | 0x1010 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha Mini S Wheel Base | 0x0483 | 0x0009 | 3 | 0 | ✓ | 3 |
+| Simagic Alpha Mini (STM32 Variant) | 0x0483 | 0x5750 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha Ultimate Direct Drive Wheel Base | 0x0EBC | 0x1020 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha-U Direct Drive Base | 0x0EBC | 0x1021 | 1 | 0 | ✓ | 3 |
+| Simagic Alpha Mini R (Racing) | 0x0483 | 0x5743 | 6 | 32 | ✓ | 3 |
+| Simagic GT1 Steering Wheel | 0x0483 | 0xA361 | 0 | 24 | ✗ | 3 |
+| Simagic GT4 Steering Wheel Accessory | 0x0EBC | 0x3041 | 0 | 13 | ✗ | 3 |
+| Simagic GT4 Steering Wheel | 0x0EBC | 0x3040 | 0 | 13 | ✗ | 3 |
+| Simagic M10 Pedals | 0x0483 | 0xA362 | 3 | 0 | ✗ | 3 |
+| Simagic M10 Direct Drive Wheel Base | 0x0483 | 0x5741 | 6 | 32 | ✓ | 2 |
+| Simagic M5 Steering Wheel Base (STM32 alt) | 0x0483 | 0x5743 | 6 | 16 | ✓ | 3 |
+| Simagic M5 Direct Drive Wheel Base | 0x0483 | 0x5742 | 6 | 32 | ✓ | 3 |
+| Simagic P1000 Pedals | 0x10C4 | 0xEA60 | 3 | 0 | ✗ | 3 |
+| Simagic P2000 Sim Pedals | 0x0EBC | 0x2000 | 3 | 0 | ✗ | 3 |
+| Simagic Q1 Mini Pedals | 0x0EBC | 0x1020 | 3 | 0 | ✗ | 3 |
+| Simagic QR Quick-Release Adapter | ? | ? | 0 | 0 | ✗ | 3 |
+| Simagic Alpha Mini Direct Drive Wheelbase | 0x0483 | 0xA30E | 5 | 20 | ✓ | 2 |
+| Simagic Alpha Ultimate Direct Drive Wheelbase | 0x0483 | 0xA310 | 5 | 20 | ✓ | 2 |
+| Simagic Alpha Direct Drive Wheelbase | 0x0483 | 0xA30F | 5 | 20 | ✓ | 2 |
+| Simagic Alpha Ultimate Wheel Base | 0x0483 | 0x5744 | 1 | 0 | ✓ | 3 |
+| Simagic FX Pro Steering Wheel | 0x0483 | 0x5760 | 2 | 24 | ✗ | 3 |
+| Simcraft APEX Motion Seat | 0x16C0 | 0x04DB | 3 | 4 | ✗ | 3 |
+| SimGauges USB LCD Gauge Interface | 0x04B4 | 0xF271 | 0 | 0 | ✗ | 3 |
+| SimKits Boeing 737 EFIS Panel | 0x1C31 | 0x3001 | 2 | 14 | ✗ | 3 |
+| SimKits IOCards Master USB Interface | 0x1C31 | 0x3002 | 4 | 64 | ✗ | 3 |
+| SimKits Boeing 737 MCP Interface | 0x1C31 | 0x3000 | 4 | 28 | ✗ | 3 |
+| Simkits Multi Indicator Panel | 0x04B4 | 0xF234 | 0 | 16 | ✗ | 3 |
+| SimKits USB Panel Controller | 0x04B4 | 0xF233 | 0 | 32 | ✗ | 3 |
+| Sim-Labs R7 Motion Seat Platform | 0x0483 | 0x5760 | 6 | 0 | ✗ | 3 |
+| Sim-Labs GT Pro Motion Seat | 0x16C0 | 0x05DE | 0 | 0 | ✗ | 3 |
+| Sim-Labs P1X Load Cell Pedals | 0x16C0 | 0x05DD | 3 | 0 | ✗ | 3 |
+| SimPed Advanced Rudder Pedals | 0x1209 | 0x2121 | 4 | 4 | ✗ | 3 |
+| SimPed F5 Combat Rudder Pedals | 0x1209 | 0x2123 | 3 | 0 | ✗ | 3 |
+| SimPed Vario Rudder Pedals | 0x1209 | 0x2122 | 3 | 0 | ✗ | 3 |
+| SimPed USB Rudder Pedals | 0x1209 | 0x2120 | 4 | 0 | ✗ | 3 |
+| Simped Vario Rudder Pedals | 0xF5A0 | 0x0002 | 3 | 0 | ✗ | 3 |
+| Simrace.pl Button Box | 0x1209 | 0x2130 | 0 | 32 | ✗ | 3 |
+| SimShaker Tactile Feedback Interface | 0x1209 | 0x2030 | 0 | 0 | ✗ | 3 |
+| Simucube Active Pedal | 0x16D0 | 0x0D65 | 3 | 0 | ✓ | 3 |
+| Simucube Active Pedals Left Module | 0x16D0 | 0x0D61 | 1 | 2 | ✓ | 3 |
+| Simucube Active Pedals Right Module | 0x16D0 | 0x0D62 | 1 | 2 | ✓ | 3 |
+| Granite Devices Argon Servo Drive | 0x16D0 | 0x0A00 | 1 | 0 | ✓ | 3 |
+| Simucube 1 Pro | 0x16D0 | 0x0D5E | 1 | 0 | ✓ | 3 |
+| Simucube 1 Sport | 0x16D0 | 0x0D5D | 1 | 0 | ✓ | 3 |
+| Simucube 1 Ultimate | 0x16D0 | 0x0D5F | 1 | 0 | ✓ | 3 |
+| Simucube 2 Pro | 0x16D0 | 0x0D5B | 4 | 0 | ✓ | 2 |
+| Simucube 2 Pro (Alt PID) | 0x16D0 | 0x0D60 | 1 | 0 | ✓ | 3 |
+| Simucube 2 Pro | 0x16D0 | 0x0D61 | 1 | 0 | ✓ | 3 |
+| Simucube 2 Sport | 0x16D0 | 0x0D5A | 4 | 0 | ✓ | 2 |
+| Simucube 2 Sport | 0x16D0 | 0x0D60 | 1 | 0 | ✓ | 3 |
+| Simucube 2 Ultimate | 0x16D0 | 0x0D5C | 4 | 0 | ✓ | 2 |
+| Simucube 2 Ultimate | 0x16D0 | 0x0D62 | 1 | 0 | ✓ | 3 |
+| Simucube 3 Pro | 0x16D0 | 0x0D71 | 3 | 0 | ✓ | 3 |
+| Simucube 3 Sport | 0x16D0 | 0x0D70 | 3 | 0 | ✓ | 3 |
+| Simucube 3 Ultimate | 0x16D0 | 0x0D72 | 3 | 0 | ✓ | 3 |
+| Simucube 2 Pro 25Nm | 0x16D0 | 0x0D62 | 1 | 0 | ✓ | 2 |
+| Simucube True Drive Active Pedals | 0x16D0 | 0x0D60 | 3 | 0 | ✓ | 3 |
+| SimuFlite / CAE Generic USB Rudder Pedals | 0x04D8 | 0xFF01 | 3 | 0 | ✗ | 3 |
+| SimuFlite B737 Throttle Unit | 0x1055 | 0x0010 | 4 | 16 | ✗ | 3 |
+| SimXperience AccuForce Motion Seat | 0x1DD2 | 0x2001 | 2 | 2 | ✓ | 3 |
+| SimXperience G6-Gen2 Motion Seat | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| SimXperience Stage 4 6DOF Motion Rig | 0x0000 | 0x0001 | 0 | 0 | ✗ | 3 |
+| Sismo Soluciones Airbus A320 ECAM Panel | 0x04D8 | 0xF5D4 | 0 | 18 | ✗ | 3 |
+| Sismo Soluciones Boeing 737 EICAS Panel | 0x04D8 | 0xF5D2 | 0 | 20 | ✗ | 3 |
+| SISMO B737 MCP | 0x1554 | 0x0002 | 4 | 36 | ✗ | 3 |
+| Sismo Soluciones Boeing 737 Pedestal Panel | 0x04D8 | 0xF5D6 | 2 | 28 | ✗ | 3 |
+| SISMO B747 Overhead Panel | 0x1554 | 0x0001 | 0 | 80 | ✗ | 3 |
+| Sismo Soluciones A320 FCU | 0x0EB7 | 0x0100 | 0 | 32 | ✗ | 3 |
+| Sismo Soluciones Airbus A320 Overhead Panel | 0x04D8 | 0xF5D3 | 0 | 60 | ✗ | 3 |
+| Sismo Boeing 737 COM Panel | 0x04D8 | 0x0056 | 0 | 20 | ✗ | 3 |
+| Sismo Soluciones Boeing 737 MCP | 0x04D8 | 0xF5D0 | 4 | 30 | ✗ | 3 |
+| Sismo Boeing 737 NAV Panel | 0x04D8 | 0x0055 | 0 | 16 | ✗ | 3 |
+| Sismo Soluciones Boeing 737 EFIS Captain | 0x04D8 | 0xF5D1 | 2 | 14 | ✗ | 3 |
+| Sismo Soluciones Boeing 737 EFIS First Officer | 0x04D8 | 0xF5D2 | 2 | 14 | ✗ | 3 |
+| Skalarki Electronics Boeing 737 MCP | 0x16C0 | 0x05E2 | 5 | 24 | ✗ | 3 |
+| Skalarki B737 Overhead Panel — Left Section | 0x04D8 | 0xF100 | 0 | 64 | ✗ | 3 |
+| Skalarki B737 Overhead Panel — Right Section | 0x04D8 | 0xF101 | 0 | 60 | ✗ | 3 |
+| Skalarki A320 FCU | 0x0483 | 0x5740 | 5 | 24 | ✗ | 3 |
+| Skalarki Generic MCP Autopilot Panel | 0x20A0 | 0x416C | 0 | 32 | ✗ | 4 |
+| Skalarki Generic MFD Control Panel | 0x20A0 | 0x416D | 0 | 24 | ✗ | 4 |
+| Skalarki A320 MCDU | 0x0483 | 0x5742 | 0 | 80 | ✗ | 3 |
+| Skalarki A320 Overhead Panel (Section A) | 0x0483 | 0x5741 | 0 | 64 | ✗ | 3 |
+| Skalarki Electronics ATSU Airbus Panel | 0x16C0 | 0x05E2 | 0 | 14 | ✗ | 3 |
+| Skalarki EFIS Panel | 0x0BCA | 0x0051 | 0 | 24 | ✗ | 3 |
+| Skalarki Electronics EFIS Airbus Panel | 0x16C0 | 0x05E0 | 1 | 16 | ✗ | 3 |
+| Skalarki Electronics FCMC Airbus Panel | 0x16C0 | 0x05DF | 0 | 18 | ✗ | 3 |
+| Skalarki FCU Airbus | 0x0BCA | 0x0050 | 0 | 48 | ✗ | 3 |
+| Skalarki Electronics ISIS Airbus Panel | 0x16C0 | 0x05E1 | 2 | 8 | ✗ | 3 |
+| Slaw Device Bf-109 Rudder Pedals | 0x0483 | 0x5745 | 3 | 0 | ✗ | 3 |
+| Slaw Device RX Viper Rudder Pedals (3-axis) | 0x0483 | 0x5747 | 3 | 0 | ✗ | 3 |
+| Slaw Device RX Viper Rudder Pedals | 0x0483 | 0x5746 | 3 | 0 | ✗ | 3 |
+| Slaw Device BF-109 Rudder Pedals | 0x1209 | 0x3202 | 3 | 0 | ✗ | 2 |
+| Slaw Device Helicopter Pedals | 0x1209 | 0x3203 | 2 | 0 | ✗ | 2 |
+| Slaw Device Viper RX Pedals | 0x1209 | 0x3201 | 3 | 0 | ✗ | 2 |
+| SmartNav AT Head Tracker | 0x0C10 | 0x0001 | 2 | 0 | ✗ | 3 |
+| Sony DualSense Edge Wireless Controller | 0x054C | 0x0DF2 | 6 | 21 | ✓ | 2 |
+| Sony DualSense | 0x054C | 0x0CE6 | 6 | 17 | ✓ | 3 |
+| Sony DualShock 3 / SIXAXIS | 0x054C | 0x0268 | 6 | 17 | ✓ | 3 |
+| Sony DualShock 4 V2 (CUH-ZCT2) | 0x054C | 0x09CC | 6 | 14 | ✓ | 3 |
+| Sony DualShock 4 (CUH-ZCT1) | 0x054C | 0x05C4 | 6 | 14 | ✓ | 3 |
+| Sony PlayStation Move Motion Controller | 0x054C | 0x03D5 | 3 | 8 | ✓ | 3 |
+| Sony PlayStation Move Navigation Controller | 0x054C | 0x042F | 2 | 10 | ✓ | 3 |
+| Sony PlayStation VR Aim Controller | 0x054C | 0x0BA0 | 4 | 14 | ✗ | 3 |
+| Sony PlayStation Access Controller | 0x054C | 0x0E5F | 4 | 20 | ✗ | 2 |
+| Sony PlayStation VR2 | 0x054C | 0x0CF6 | 6 | 0 | ✗ | 3 |
+| Speedlink Aerial Flightstick | 0x1781 | 0x0A8B | 4 | 10 | ✗ | 3 |
+| SPEEDLINK Black Widow Gamepad | 0x0E6F | 0x1000 | 4 | 12 | ✓ | 3 |
+| SpeedLink Black Widow Joystick | 0x1781 | 0x0C31 | 4 | 10 | ✗ | 3 |
+| SPEEDLINK Competition Pro USB | 0x04B4 | 0x2412 | 2 | 2 | ✗ | 3 |
+| Speedlink DARK TORNADO Flight Joystick | 0x1781 | 0x0C40 | 4 | 12 | ✗ | 3 |
+| Speedlink Darkfire Racing Wheel | 0x0E8F | 0x3013 | 3 | 10 | ✗ | 4 |
+| Speedlink Phantom Hawk Flightstick | 0x1781 | 0x0A8A | 5 | 12 | ✗ | 3 |
+| Speedlink PHANTOM Hawk Flightstick (PID 0xC030 variant) | 0x1781 | 0xC030 | 4 | 12 | ✗ | 2 |
+| Speedlink Phantom Hawk | 0x0E8F | 0x0020 | 5 | 14 | ✗ | 3 |
+| SpeedLink SL-6560 Turbo Joystick | 0x1781 | 0x0C30 | 4 | 8 | ✗ | 3 |
+| Speedlink Thunderstrike Gamepad | 0x0E8F | 0x3010 | 4 | 12 | ✓ | 4 |
+| SPEEDLINK Torid Gamepad | 0x0E6F | 0x1001 | 4 | 12 | ✗ | 3 |
+| SteelSeries Apex Pro Keyboard | 0x1038 | 0x1610 | 1 | 5 | ✗ | 3 |
+| SteelSeries Nimbus+ Wireless Gamepad | 0x1038 | 0x1420 | 6 | 16 | ✗ | 3 |
+| SteelSeries Nimbus Wireless Controller | 0x1038 | 0x1420 | 4 | 13 | ✗ | 3 |
+| SteelSeries Stratus XL | 0x1038 | 0x1418 | 4 | 11 | ✗ | 3 |
+| SteelSeries Stratus Duo Wireless Controller | 0x1038 | 0x1430 | 4 | 14 | ✗ | 3 |
+| SteelSeries Stratus+ Wireless Controller | 0x1038 | 0x1432 | 6 | 16 | ✗ | 3 |
+| SubPac S2 Tactile Audio Backpack | 0x0000 | 0x0000 | 0 | 0 | ✗ | 3 |
+| Suncom SFS Joystick | 0x0543 | 0x00A1 | 3 | 8 | ✗ | 3 |
+| Suncom SFS Throttle | 0x0543 | 0x00A3 | 3 | 8 | ✗ | 3 |
+| Suncom SFS Throttle | 0x0583 | 0x0001 | 2 | 8 | ✗ | 3 |
+| Suncom F-15 Stick | 0x068E | 0x00A0 | 2 | 8 | ✗ | 3 |
+| Suncom SFS T-Stick | 0x068E | 0x00A1 | 2 | 4 | ✗ | 3 |
+| Thrustmaster Add-On Formula Wheel | 0x044F | 0xB65E | 2 | 24 | ✗ | 3 |
+| Thrustmaster Attack 3 Joystick | 0x044F | 0xB108 | 3 | 8 | ✗ | 3 |
+| Thrustmaster TCA Yoke Boeing Edition | 0x044F | 0xB691 | 6 | 20 | ✗ | 3 |
+| Thrustmaster BT LED Display | 0x044F | 0xB65B | 0 | 6 | ✗ | 3 |
+| Thrustmaster HOTAS Cougar Stick | 0x044F | 0x0400 | 5 | 19 | ✗ | 3 |
+| Thrustmaster HOTAS Cougar Throttle | 0x044F | 0x0404 | 5 | 32 | ✗ | 3 |
+| Thrustmaster Dual Trigger 3-in-1 Rumble Force | 0x044F | 0xB300 | 4 | 12 | ✗ | 3 |
+| Thrustmaster EL Panel Set (HOTAS Cougar) | 0x044F | 0xB108 | 0 | 32 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS Elite Dangerous Edition | 0x044F | 0xB687 | 5 | 12 | ✗ | 3 |
+| Thrustmaster eSwap Pro Controller | 0x044F | 0xD009 | 6 | 17 | ✗ | 3 |
+| Thrustmaster eSwap PRO Controller | 0x044F | 0xB687 | 6 | 17 | ✓ | 3 |
+| Thrustmaster eSwap X Pro Controller | 0x044F | 0x0402 | 4 | 17 | ✗ | 3 |
+| Thrustmaster F-16 Combat Pack (Virtual Bundle) | 0x044F | ? | 7 | 30 | ✗ | 3 |
+| Thrustmaster F-16 FLCS | 0x044F | 0x0200 | 4 | 4 | ✗ | 3 |
+| Thrustmaster F-16 MFD Cougar Panel 1 | 0x044F | 0xB351 | 0 | 19 | ✗ | 3 |
+| Thrustmaster F-16 MFD Cougar Panel 2 | 0x044F | 0xB352 | 0 | 19 | ✗ | 3 |
+| Thrustmaster F-16C Viper HOTAS Add-On Grip | 0x044F | 0xB113 | 2 | 18 | ✗ | 2 |
+| Thrustmaster F/A-18 Hornet HOTAS Add-On Grip | 0x044F | 0x0407 | 4 | 16 | ✗ | 3 |
+| Thrustmaster F/A-18C Hornet HOTAS Add-On Grip | 0x044F | 0xB108 | 4 | 16 | ✗ | 2 |
+| Thrustmaster FCS Flight Stick | 0x044F | 0x0400 | 4 | 12 | ✗ | 3 |
+| Thrustmaster Ferrari 458 Italia Racing Wheel | 0x044F | 0xB65D | 3 | 11 | ✗ | 3 |
+| Thrustmaster Ferrari 458 Spider Racing Wheel | 0x044F | 0xB660 | 3 | 11 | ✗ | 3 |
+| Thrustmaster Ferrari GT Cockpit 430 Scuderia Edition | 0x044F | 0xB651 | 4 | 16 | ✓ | 3 |
+| Thrustmaster Ferrari GT Experience 3-in-1 Racing Wheel | 0x044F | 0xB65A | 3 | 12 | ✗ | 3 |
+| Thrustmaster Firebird HOTAS | 0x044F | 0x0300 | 5 | 12 | ✗ | 3 |
+| Thrustmaster Fire Storm Dual Analog 4 | 0x044F | 0xB301 | 4 | 12 | ✗ | 3 |
+| Thrustmaster GPX PC Gamepad | 0x044F | 0xB313 | 6 | 12 | ✓ | 3 |
+| Thrustmaster GPX LightBack FE | 0x044F | 0xD003 | 6 | 14 | ✗ | 3 |
+| Thrustmaster GPX LightBack Ferrari F1 Edition | 0x044F | 0xB321 | 4 | 14 | ✗ | 3 |
+| Thrustmaster HOTAS Cougar Complete Pack | 0x044F | ? | 0 | 0 | ✗ | 2 |
+| Thrustmaster HOTAS Cougar | 0x044F | 0x0400 | 6 | 32 | ✗ | 2 |
+| Thrustmaster MFD Cougar | 0x044F | 0x0406 | 0 | 19 | ✗ | 3 |
+| Thrustmaster MFD Cougar Pack | 0x044F | ? | 0 | 38 | ✗ | 2 |
+| Thrustmaster Run N Drive Wireless Steering Wheel | 0x044F | 0xB653 | 3 | 12 | ✗ | 3 |
+| Thrustmaster Sim Pedals | 0x044F | 0xB371 | 2 | 0 | ✗ | 2 |
+| Thrustmaster Sparco R383 Mod+ Racing Wheel | 0x044F | 0xB665 | 1 | 13 | ✗ | 3 |
+| Thrustmaster T-Chrono Paddles | 0x044F | 0xB674 | 0 | 2 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS One (Bulk Endpoint) | 0x044F | 0xB68B | 5 | 14 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS X (PS3/PS4) | 0x044F | 0xB109 | 5 | 12 | ✗ | 3 |
+| Thrustmaster T-GT II Racing Wheel | 0x044F | 0xB679 | 5 | 25 | ✓ | 3 |
+| Thrustmaster T-GT Racing Wheel | 0x044F | 0xB66F | 5 | 25 | ✓ | 3 |
+| Thrustmaster T-LCM Pedals | 0x044F | 0xB672 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-LCM Rudder Pedals | 0x044F | 0xB687 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-Mini Wireless Gamepad | 0x044F | 0xB326 | 4 | 10 | ✗ | 3 |
+| Thrustmaster T-Pedals | 0x044F | 0xB682 | 3 | 0 | ✗ | 2 |
+| T-Rudder | 0x044F | 0xB679 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-Wireless Gamepad | 0x044F | 0xB323 | 4 | 14 | ✗ | 3 |
+| Thrustmaster T.128 Flight Stick | 0x044F | 0xB697 | 4 | 12 | ✗ | 3 |
+| Thrustmaster T.128 Throttle Module | 0x044F | 0xB698 | 4 | 16 | ✗ | 3 |
+| Thrustmaster T128 Racing Wheel | 0x044F | 0xB6A2 | 4 | 15 | ✓ | 3 |
+| Thrustmaster T150 Pro Racing Wheel | 0x044F | 0xB67A | 3 | 12 | ✓ | 3 |
+| Thrustmaster T150 Force Feedback Racing Wheel | 0x044F | 0xB677 | 4 | 13 | ✓ | 3 |
+| Thrustmaster T.16000M FCS (Left) | 0x044F | 0xB10B | 6 | 16 | ✗ | 2 |
+| Thrustmaster T.16000M FCS Flight Pack (Bundle) | 0x044F | 0x0000 | 0 | 0 | ✗ | 3 |
 | Thrustmaster T.16000M FCS | 0x044F | 0xB10A | 6 | 16 | ✗ | 2 |
-| VKB Gladiator NXT EVO | 0x231D | 0x0126 | 8 | 32 | ✗ | 2 |
+| Thrustmaster T248 Racing Wheel | 0x044F | 0xB696 | 5 | 25 | ✓ | 3 |
+| Thrustmaster T248X Racing Wheel | 0x044F | 0xB6A4 | 5 | 25 | ✓ | 2 |
+| Thrustmaster T300 Ferrari Integral Racing Wheel Alcantara Edition | 0x044F | 0xB670 | 5 | 24 | ✓ | 2 |
+| Thrustmaster T300 Ferrari GTE Wheel | 0x044F | 0xB66A | 3 | 14 | ✓ | 3 |
+| Thrustmaster T300 RS GT Edition (Alt PID) | 0x044F | 0xB677 | 5 | 24 | ✓ | 2 |
+| Thrustmaster T300 RS GT Edition | 0x044F | 0xB66F | 5 | 24 | ✓ | 2 |
+| Thrustmaster T300 RS Racing Wheel | 0x044F | 0xB66E | 5 | 24 | ✓ | 2 |
+| Thrustmaster T3PA-Pro Add-On Pedals | 0x044F | 0xB677 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T3PA Add-On Pedals | 0x044F | 0xB60B | 3 | 0 | ✗ | 2 |
+| Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB66C | 5 | 24 | ✓ | 3 |
+| Thrustmaster T500RS F1 Wheel Add-On | 0x044F | 0xB662 | 2 | 14 | ✗ | 3 |
+| Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB65D | 5 | 24 | ✓ | 3 |
+| Thrustmaster T80 Racing Wheel | 0x044F | 0xB65E | 3 | 14 | ✗ | 3 |
+| Thrustmaster T818 Direct Drive Wheelbase | 0x044F | 0xB6A1 | 5 | 20 | ✓ | 2 |
+| Thrustmaster T.A320 Pack (Virtual Bundle) | 0x044F | ? | 8 | 36 | ✗ | 3 |
+| Thrustmaster T.A.R.G.E.T Virtual Device | 0x044F | 0x0402 | 8 | 120 | ✗ | 3 |
+| Thrustmaster TCA Boeing Pack (Virtual Bundle) | 0x044F | ? | 6 | 24 | ✗ | 2 |
+| Thrustmaster TCA Boeing Throttle | 0x044F | 0xB68C | 4 | 16 | ✗ | 3 |
+| Thrustmaster TCA Captain Pack Airbus (Virtual Bundle) | 0x044F | ? | 8 | 32 | ✗ | 2 |
+| Thrustmaster TCA Captain Pack Airbus (PID 0xB693) | 0x044F | 0xB693 | 8 | 32 | ✗ | 2 |
+| Thrustmaster TCA Copilot Pack Airbus (Virtual Bundle) | 0x044F | ? | 6 | 28 | ✗ | 2 |
+| Thrustmaster TCA First Officer Pack Airbus | 0x044F | 0xB696 | 6 | 28 | ✗ | 2 |
+| Thrustmaster TCA Jetspeed Pack (Bundle) | 0x044F | 0x0000 | 0 | 0 | ✗ | 3 |
+| Thrustmaster TCA Officer Pack Airbus (Virtual) | 0x044F | ? | 6 | 28 | ✗ | 3 |
+| Thrustmaster TCA Officer Pack Airbus | 0x044F | 0xB688 | 6 | 20 | ✗ | 3 |
+| Thrustmaster TCA Quadrant Add-On V2 | 0x044F | 0xB69B | 4 | 16 | ✗ | 3 |
+| Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4) | 0x044F | 0x0408 | 4 | 12 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Airbus Edition (Alt PID) | 0x044F | 0xB68F | 4 | 12 | ✗ | 3 |
+| Thrustmaster TCA Quadrant Airbus Edition | 0x044F | 0x0407 | 4 | 12 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Boeing Add-On V2 | 0x044F | 0xB69C | 4 | 24 | ✗ | 3 |
+| Thrustmaster TCA Quadrant Boeing Add-On (Eng 3&4) | 0x044F | 0x040B | 4 | 10 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Boeing Edition | 0x044F | 0x040A | 4 | 10 | ✗ | 2 |
+| Thrustmaster TCA Quadrant Pack | 0x044F | 0xB69D | 6 | 32 | ✗ | 3 |
+| Thrustmaster TCA Sidestick Airbus Edition (Copilot) | 0x044F | 0x0406 | 3 | 16 | ✗ | 2 |
+| Thrustmaster TCA Sidestick Airbus Edition (Pilot) | 0x044F | 0x0405 | 3 | 16 | ✗ | 2 |
+| Thrustmaster TCA Sidestick X Airbus Edition | 0x044F | 0xB694 | 3 | 12 | ✗ | 3 |
+| Thrustmaster TCA Throttle Pack Airbus | 0x044F | 0xB697 | 3 | 14 | ✗ | 2 |
+| Thrustmaster TCA Yoke Boeing Edition | 0x044F | 0x0409 | 3 | 10 | ✗ | 2 |
+| Thrustmaster TCA Airbus Joystick (Alt PID) | 0x044F | 0xB6E0 | 3 | 12 | ✗ | 2 |
+| Thrustmaster TCA Airbus Throttle (Alt PID) | 0x044F | 0xB6FF | 4 | 24 | ✗ | 2 |
+| Thrustmaster TF600 Racing Wheel | 0x044F | 0xB651 | 3 | 10 | ✓ | 3 |
+| Thrustmaster T.Flight Full Kit (Virtual Bundle) | 0x044F | ? | 8 | 14 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS Ace Combat 7 Edition | 0x044F | 0xB687 | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight HOTAS One (Alt PID) | 0x044F | 0xB10A | 5 | 14 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS One (Xbox) | 0x044F | 0xB330 | 5 | 15 | ✗ | 3 |
+| Thrustmaster T.Flight HOTAS One | 0x044F | 0xB68D | 5 | 14 | ✗ | 2 |
+| T.Flight HOTAS X | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight HOTAS 4 | 0x044F | 0xB67B | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight Pro Combat Grip | 0x044F | 0xB10A | 4 | 16 | ✗ | 3 |
+| Thrustmaster T.Flight Rudder Pedals | 0x044F | 0xB108 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T.Flight Stick 4 (PS4/PC) | 0x044F | 0xB67E | 4 | 12 | ✗ | 3 |
+| Thrustmaster T.Flight Stick 4 | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight Stick USB | 0x044F | 0xB108 | 4 | 12 | ✗ | 3 |
+| Thrustmaster T.Flight Stick X (Alt PID) | 0x044F | 0xB108 | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight Stick X | 0x044F | 0xB106 | 5 | 12 | ✗ | 2 |
+| Thrustmaster T.Flight HOTAS One (Xbox) | 0x044F | 0xB687 | 5 | 14 | ✗ | 2 |
+| Thrustmaster T.Flight Combat Pedals V2 | 0x044F | 0xB6A3 | 3 | 0 | ✗ | 3 |
+| T.Flight Rudder Pedals (TFRP) | 0x044F | 0xB678 | 3 | 0 | ✗ | 2 |
+| Thrustmaster T.Flight Rudder Pedals V2 | 0x044F | 0xB69E | 3 | 0 | ✗ | 2 |
+| Thrustmaster TH8A Add-On Shifter | 0x044F | 0xB664 | 2 | 1 | ✗ | 3 |
+| Thrustmaster TH8S Shifter Add-On | 0x044F | 0xB675 | 1 | 2 | ✗ | 3 |
+| Thrustmaster T300 RS GT Edition | 0x044F | 0xB66D | 5 | 24 | ✓ | 2 |
+| Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB654 | 5 | 30 | ✓ | 2 |
+| Thrustmaster TS-XW Racer Sparco P310 | 0x044F | 0xB698 | 5 | 26 | ✓ | 2 |
+| Thrustmaster Warthog HOTAS (Virtual Bundle) | 0x044F | ? | 7 | 49 | ✗ | 3 |
+| Thrustmaster TMX Force Feedback Racing Wheel | 0x044F | 0xB66B | 5 | 14 | ✓ | 3 |
+| Thrustmaster TMX PRO | 0x044F | 0xB673 | 3 | 14 | ✓ | 3 |
+| Thrustmaster TMX Force Feedback Racing Wheel | 0x044F | 0xB67F | 3 | 14 | ✓ | 3 |
+| Thrustmaster Top Gun Afterburner | 0x044F | 0xB10D | 3 | 8 | ✗ | 3 |
+| Thrustmaster Top Gun Fox2 Pro | 0x044F | 0x0402 | 5 | 15 | ✗ | 3 |
+| Thrustmaster T.Flight Full Kit X (Top Gun Maverick) | 0x044F | 0xB6A0 | 5 | 14 | ✗ | 3 |
+| Thrustmaster TPR Elite Pendular Rudder | 0x044F | 0xB69F | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-Pendular Rudder Bulk | 0x044F | 0xB68E | 3 | 0 | ✗ | 2 |
+| Thrustmaster T-Pendular Rudder (TPR) | 0x044F | 0xB68F | 3 | 0 | ✗ | 2 |
+| Thrustmaster TS-PC Racer | 0x044F | 0xB668 | 4 | 0 | ✓ | 3 |
+| Thrustmaster TS-XW Racer Racing Wheel | 0x044F | 0xB676 | 5 | 25 | ✓ | 3 |
+| Thrustmaster TSS Handbrake Sparco Mod+ | 0x044F | 0xB695 | 1 | 1 | ✗ | 3 |
+| Thrustmaster TWCS Throttle (Alt PID) | 0x044F | 0xB679 | 4 | 14 | ✗ | 3 |
+| Thrustmaster TWCS Throttle | 0x044F | 0xB687 | 4 | 14 | ✗ | 2 |
+| Thrustmaster TX Racing Wheel | 0x044F | 0xB669 | 5 | 21 | ✓ | 3 |
+| Thrustmaster USB Joystick | 0x044F | 0xB304 | 4 | 8 | ✗ | 3 |
+| Thrustmaster VIPER MK.II Flight Stick | 0x044F | 0xB689 | 4 | 17 | ✗ | 3 |
+| Thrustmaster Viper TQS | 0x044F | 0x0404 | 5 | 32 | ✗ | 3 |
+| Thrustmaster Viper TQS | 0x044F | 0xB671 | 5 | 20 | ✗ | 2 |
+| Thrustmaster Viper TQS | 0x044F | 0xB380 | 5 | 32 | ✗ | 2 |
+| Thrustmaster HOTAS Warthog Joystick | 0x044F | 0x0402 | 3 | 19 | ✗ | 2 |
+| Thrustmaster HOTAS Warthog Throttle | 0x044F | 0x0404 | 5 | 40 | ✗ | 2 |
+| Thrustmaster WRC Rally Wheel Add-On | 0x044F | 0xB66D | 0 | 12 | ✗ | 3 |
+| ThrustPad Mk.I Flight Stick | 0x1209 | 0x2110 | 4 | 12 | ✗ | 3 |
+| Tobii Eye Tracker 4C (PID 0x0190 variant) | 0x2104 | 0x0190 | 6 | 0 | ✗ | 3 |
+| Tobii Eye Tracker 4C | 0x2104 | 0x0118 | 6 | 0 | ✗ | 2 |
+| Tobii Eye Tracker 5 (PID 0x0111 variant) | 0x2104 | 0x0111 | 2 | 0 | ✗ | 3 |
+| Tobii Eye Tracker 5 | 0x2104 | 0x0118 | 2 | 0 | ✗ | 3 |
+| Tobii Eye Tracker 5 | 0x2104 | 0x0408 | 2 | 0 | ✗ | 3 |
+| Tobii EyeX Controller | 0x2104 | 0x0102 | 2 | 0 | ✗ | 3 |
+| Tobii Eye Tracker 5 | 0x2104 | 0x0202 | 2 | 0 | ✗ | 2 |
+| SteelSeries Tobii Eye Tracker 5 | 0x2104 | 0x0C02 | 2 | 0 | ✗ | 3 |
+| TrackHat Clip+ v2 | 0x33DD | 0x0002 | 6 | 0 | ✗ | 3 |
+| TrackHat Sensor v3 IMU Head Tracker | 0x33DD | 0x0003 | 3 | 0 | ✗ | 3 |
+| TrackHat Clip Head Tracker | 0x2341 | 0x0042 | 6 | 0 | ✗ | 3 |
+| TrackHat Sensor IMU Head Tracker | 0x2341 | 0x8036 | 6 | 0 | ✗ | 3 |
+| Tripp Lite USB Helicopter Collective | 0x1209 | 0x2100 | 2 | 8 | ✗ | 3 |
+| Trust GXT 24 Gaming Joystick | 0x145F | 0x01B3 | 4 | 12 | ✗ | 3 |
+| Trust GXT 540 Yula Wired Gamepad | 0x145F | 0x01BB | 4 | 12 | ✗ | 3 |
+| Trust GXT 545 Wireless Gamepad | 0x145F | 0x01BC | 4 | 12 | ✗ | 3 |
+| Trust GXT 590 Bosi Bluetooth Gamepad | 0x145F | 0x01BD | 4 | 14 | ✗ | 3 |
+| Trust GXT 245 Vibra Gamepad | 0x0EFF | 0x0010 | 4 | 12 | ✓ | 4 |
+| Trust GXT 540 Gaming Flight Stick | 0x0EFF | 0x0001 | 4 | 12 | ✗ | 3 |
+| Trust GXT 570 Vigil Flight Stick | 0x145F | 0x0238 | 4 | 12 | ✗ | 3 |
+| Turtle Beach React-R Wired Controller | 0x10F5 | 0x700B | 6 | 14 | ✗ | 3 |
+| Turtle Beach Recon Cloud Controller | 0x10F5 | 0x7009 | 6 | 16 | ✗ | 3 |
+| Turtle Beach Recon Controller | 0x10F5 | 0x7060 | 6 | 16 | ✓ | 3 |
+| Turtle Beach Stealth Ultra Wireless Controller | 0x10F5 | 0x700A | 6 | 18 | ✗ | 3 |
+| Turtle Beach React-R Controller | 0x10F5 | 0x7103 | 6 | 16 | ✗ | 3 |
+| Turtle Beach Stealth Ultra Controller | 0x10F5 | 0x7102 | 6 | 18 | ✗ | 3 |
+| Turtle Beach VelocityOne Edge Joystick | 0x1432 | 0xB305 | 3 | 20 | ✗ | 2 |
+| Turtle Beach VelocityOne Flight Pro | 0x10F5 | 0x0210 | 4 | 18 | ✗ | 3 |
+| Turtle Beach VelocityOne Flight Universal | 0x10F5 | 0x1073 | 6 | 32 | ✗ | 3 |
+| Turtle Beach VelocityOne Flight Yoke | 0x10F5 | 0x3085 | 6 | 18 | ✗ | 2 |
+| Turtle Beach VelocityOne Flightdeck | 0x10F5 | 0x3082 | 6 | 63 | ✗ | 2 |
+| Turtle Beach VelocityOne Flightdeck (Alt PID) | 0x10F5 | 0x8802 | 6 | 63 | ✗ | 3 |
+| Turtle Beach VelocityOne Flightdeck | 0x10F5 | 0x1050 | 6 | 63 | ✗ | 2 |
+| Turtle Beach VelocityOne Flightstick | 0x10F5 | 0x1052 | 5 | 16 | ✗ | 2 |
+| Turtle Beach VelocityOne Race Wheel | 0x10F5 | 0x3083 | 4 | 16 | ✗ | 2 |
+| Turtle Beach VelocityOne Race Wheel (alt PID) | 0x1432 | 0xB401 | 5 | 20 | ✓ | 3 |
+| Turtle Beach VelocityOne Race Wheel | 0x10F5 | 0x7012 | 5 | 14 | ✓ | 3 |
+| Turtle Beach VelocityOne Rudder | 0x10F5 | 0x3083 | 3 | 0 | ✗ | 2 |
+| Turtle Beach VelocityOne Rudder | 0x10F5 | 0x1051 | 3 | 0 | ✗ | 2 |
+| Turtle Beach VelocityOne Signature Edition | 0x10F5 | 0x3086 | 6 | 20 | ✗ | 2 |
+| Turtle Beach VelocityOne Stick | 0x1432 | 0xB301 | 6 | 24 | ✗ | 3 |
+| Valve Index Controller | 0x28DE | 0x2012 | 5 | 5 | ✓ | 3 |
+| Valve Index Controller (Left) | 0x28DE | 0x2300 | 5 | 5 | ✓ | 3 |
+| Valve Index Controller (Right) | 0x28DE | 0x2301 | 5 | 5 | ✓ | 3 |
+| Valve Index HMD | 0x28DE | 0x2000 | 6 | 0 | ✗ | 3 |
+| Valve Steam Controller | 0x28DE | 0x1102 | 6 | 16 | ✗ | 3 |
+| Valve Steam Deck Gamepad | 0x28DE | 0x1205 | 8 | 24 | ✓ | 3 |
+| Varjo Aero Professional VR HMD | 0x0403 | 0x6010 | 6 | 0 | ✗ | 3 |
+| Varjo XR-4 Enterprise VR HMD | 0x0C45 | 0x1B40 | 6 | 0 | ✗ | 3 |
+| Victrix Pro BFG Controller | 0x0E6F | 0x02DC | 6 | 22 | ✗ | 3 |
+| VIRPIL VPC ACE-1 Rudder Pedals | 0x3344 | 0x0200 | 3 | 4 | ✗ | 2 |
+| VIRPIL VPC ACE-2 Torque Rudder Pedals | 0x3344 | 0x8207 | 3 | 0 | ✗ | 2 |
+| VIRPIL VPC ACE-2 Torque Rudder Pedals | 0x3344 | 0x0201 | 5 | 4 | ✗ | 3 |
+| VIRPIL VPC ACE-3 Interceptor Rudder Pedals | 0x3344 | 0x0202 | 5 | 4 | ✗ | 3 |
+| VIRPIL VPC Throttle CM2 | 0x3344 | 0x0184 | 4 | 64 | ✗ | 2 |
+| VIRPIL VPC Throttle CM3 | 0x3344 | 0x0194 | 6 | 78 | ✗ | 2 |
+| VIRPIL VPC Constellation Alpha Left (CM3) | 0x3344 | 0x838F | 5 | 28 | ✗ | 2 |
+| VPC Constellation Alpha Prime Left | 0x3344 | 0x0138 | 5 | 28 | ✗ | 2 |
+| VPC Constellation Alpha Prime Right | 0x3344 | 0x4139 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC Constellation Alpha Right (CM3) | 0x3344 | 0x438F | 5 | 24 | ✗ | 2 |
+| VIRPIL VPC Constellation BETA | 0x3344 | 0x822C | 8 | 20 | ✗ | 2 |
+| VIRPIL VPC Constellation Delta Grip | 0x3344 | 0x831A | 6 | 28 | ✗ | 2 |
+| VIRPIL VPC Constellation GAMMA Grip | 0x3344 | 0x8194 | 5 | 28 | ✗ | 3 |
+| VIRPIL VPC Constellation Sigma | 0x3344 | 0x4185 | 5 | 28 | ✗ | 3 |
+| VIRPIL VPC Control Panel 1 | 0x3344 | 0x025B | 0 | 48 | ✗ | 2 |
+| VIRPIL VPC Control Panel 2 | 0x3344 | 0x0259 | 2 | 47 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50 Stick (Original) | 0x3344 | 0x4100 | 5 | 28 | ✗ | 3 |
+| VIRPIL VPC MongoosT-50CM2 Stick | 0x3344 | 0x4138 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM2 Throttle | 0x3344 | 0x8193 | 6 | 78 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC Shark Panel | 0x3344 | 0x825D | 4 | 45 | ✗ | 2 |
+| VIRPIL VPC T-50CM3 Joystick Base | 0x3344 | 0x4500 | 8 | 24 | ✗ | 2 |
+| VIRPIL VPC VFX Joystick Grip | 0x3344 | 0x4143 | 5 | 28 | ✗ | 3 |
+| VIRPIL VPC ACE Interceptor Rudder Pedals | 0x3344 | 0x80D1 | 3 | 0 | ✗ | 2 |
+| VIRPIL VPC ACE Rudder Pedals | 0x3344 | 0x80D0 | 3 | 0 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM3 Throttle SX | 0x3344 | 0x80C0 | 6 | 64 | ✗ | 2 |
+| VIRPIL VPC ACE-1 Fighter Bundle | 0x3344 | ? | 0 | 0 | ✗ | 2 |
+| VIRPIL VPC ACE-1 Joystick Head | 0x3344 | 0x4141 | 4 | 32 | ✗ | 3 |
+| VIRPIL VPC ACE-2 Bundle | 0x3344 | 0x8105 | 3 | 0 | ✗ | 3 |
+| VIRPIL VPC ACE-2 Rudder Pedals | 0x3344 | 0x8105 | 3 | 0 | ✗ | 3 |
+| VIRPIL VPC ACE-TORQ Joystick | 0x3344 | 0x4196 | 6 | 32 | ✗ | 2 |
+| VIRPIL VPC Constellation Alpha Prime Bundle | 0x3344 | ? | 0 | 0 | ✗ | 2 |
+| VIRPIL VPC Alpha Prime Joystick | 0x3344 | 0x0150 | 3 | 32 | ✗ | 1 |
+| VIRPIL VPC Alpha-R Grip | 0x3344 | 0x4148 | 7 | 30 | ✗ | 3 |
+| VIRPIL VPC Alpha (Center) | 0x3344 | 0x4149 | 4 | 24 | ✗ | 3 |
+| VIRPIL VPC Collective Base | 0x3344 | 0x0172 | 3 | 20 | ✗ | 3 |
+| VIRPIL VPC Helicopter Collective | 0x3344 | 0x8204 | 5 | 32 | ✗ | 2 |
+| VIRPIL VPC Constellation ALPHA | 0x3344 | 0x01C4 | 5 | 30 | ✗ | 2 |
+| VIRPIL VPC Constellation Alpha Premium | 0x3344 | 0x4182 | 3 | 24 | ✗ | 2 |
+| VIRPIL VPC Constellation Alpha Prime T | 0x3344 | 0x4197 | 4 | 28 | ✗ | 3 |
+| VIRPIL VPC Constellation ALPHA T | 0x3344 | 0x4380 | 2 | 24 | ✗ | 3 |
+| VIRPIL VPC Constellation BETA on T-50CM3 Base | 0x3344 | 0x0253 | 5 | 24 | ✗ | 3 |
+| VIRPIL VPC Constellation DELTA | 0x3344 | 0x01C7 | 6 | 36 | ✗ | 2 |
+| VIRPIL VPC Constellation SIGMA T | 0x3344 | 0x4390 | 2 | 20 | ✗ | 3 |
+| VIRPIL VPC Control Panel #1 | 0x3344 | 0x8200 | 0 | 32 | ✗ | 2 |
+| VIRPIL VPC Control Panel #1 | 0x3344 | 0x025B | 0 | 15 | ✗ | 2 |
+| VIRPIL VPC Control Panel #2 | 0x3344 | 0x0259 | 1 | 20 | ✗ | 2 |
+| VIRPIL VPC Control Panel #3 | 0x3344 | 0x0171 | 2 | 48 | ✗ | 3 |
+| VIRPIL VPC Control Panel #3 | 0x3344 | 0x025C | 2 | 48 | ✗ | 3 |
+| VIRPIL VPC Control Panel #4 | 0x3344 | 0x025D | 2 | 48 | ✗ | 3 |
+| VIRPIL VPC Control Panel #5 | 0x3344 | 0x025E | 2 | 56 | ✗ | 3 |
+| VIRPIL VPC Control Panel 6 | 0x3344 | 0x0260 | 0 | 30 | ✗ | 2 |
+| VIRPIL VPC Delta L Panel | 0x3344 | 0x025D | 0 | 48 | ✗ | 3 |
+| VIRPIL VPC Delta R Panel | 0x3344 | 0x025C | 0 | 48 | ✗ | 3 |
+| VIRPIL VPC Delta R Right-Hand Throttle | 0x3344 | 0x0210 | 4 | 42 | ✗ | 2 |
+| VIRPIL VPC FlightAssistant | 0x3344 | 0x0052 | 2 | 32 | ✗ | 3 |
+| VIRPIL VPC Hawk-60 Throttle | 0x3344 | 0x019C | 6 | 60 | ✗ | 3 |
+| VIRPIL VPC MongoosT-50CM2 (0x4181) | 0x3344 | 0x4181 | 5 | 24 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM2 (Left) | 0x3344 | 0x0162 | 5 | 24 | ✗ | 3 |
+| VIRPIL VPC MongoosT-50CM3 (Alt PID) | 0x3344 | 0x4193 | 7 | 24 | ✗ | 3 |
+| VIRPIL VPC MongoosT-50CM3 Left Grip | 0x3344 | 0x800F | 4 | 22 | ✗ | 3 |
+| VIRPIL VPC MongoosT-50CM3 Stick | 0x3344 | 0x4130 | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50CM3 Throttle | 0x3344 | 0x820D | 6 | 32 | ✗ | 3 |
+| VIRPIL VPC Response Kit | 0x3344 | 0x4190 | 0 | 8 | ✗ | 3 |
+| VIRPIL VPC Rotor TCS Plus | 0x3344 | 0x4183 | 5 | 20 | ✗ | 2 |
+| VIRPIL VPC Rotor TCS Plus Collective | 0x3344 | 0x80CC | 5 | 20 | ✗ | 2 |
+| VIRPIL VPC Rotor TCS Plus (Alt PID) | 0x3344 | 0x8194 | 5 | 20 | ✗ | 3 |
+| VIRPIL VPC Rotor TCS Plus Collective | 0x3344 | 0x4190 | 5 | 20 | ✗ | 2 |
+| VIRPIL VPC Rotor TCS v2 Collective | 0x3344 | 0x4192 | 5 | 24 | ✗ | 3 |
+| VIRPIL VPC Rudder Pedals | 0x3344 | 0x0400 | 3 | 6 | ✗ | 2 |
+| VIRPIL VPC SharKa-50 Control Panel | 0x3344 | 0x4184 | 2 | 24 | ✗ | 2 |
+| VIRPIL VPC SharKa-50 Grip | 0x3344 | 0x01D0 | 4 | 28 | ✗ | 2 |
+| VIRPIL VPC SharKa-50 Helicopter Collective | 0x3344 | 0x8205 | 5 | 32 | ✗ | 3 |
+| VIRPIL VPC T-50 Throttle | 0x3344 | 0x40A0 | 6 | 24 | ✗ | 2 |
+| VIRPIL VPC T-50 Throttle (CM3) | 0x3344 | 0x4195 | 6 | 32 | ✗ | 3 |
+| VIRPIL VPC T-50CM2 Stick Base | 0x3344 | 0x0104 | 6 | 40 | ✗ | 2 |
+| VIRPIL VPC T-50CM3 Base (alt PID) | 0x3344 | 0x4501 | 5 | 30 | ✗ | 3 |
+| VIRPIL VPC Throttle MT-50 CM2 | 0x3344 | 0x4180 | 6 | 64 | ✗ | 2 |
+| VIRPIL VPC MongoosT-50 Throttle | 0x3344 | 0x0140 | 6 | 64 | ✗ | 1 |
+| VIRPIL VPC Throttle MT-50CM3 | 0x3344 | 0x40C9 | 7 | 34 | ✗ | 2 |
+| VIRPIL VPC Throttle Panel II | 0x3344 | 0x01A0 | 4 | 48 | ✗ | 3 |
+| VIRPIL VPC Throttle Panel III | 0x3344 | 0x0267 | 4 | 40 | ✗ | 3 |
+| VIRPIL VPC Throttle Panel | 0x3344 | 0x025A | 0 | 40 | ✗ | 3 |
+| VIRPIL VPC WarBRD-D | 0x3344 | 0x0173 | 6 | 12 | ✗ | 3 |
+| VIRPIL VPC WarBRD-D Base | 0x3344 | 0x01CD | 5 | 2 | ✗ | 2 |
+| VIRPIL VPC WarBRD-D Rudder | 0x3344 | 0x8201 | 3 | 0 | ✗ | 2 |
+| VIRPIL VPC WarBRD-D Base | 0x3344 | 0x8101 | 2 | 0 | ✗ | 3 |
+| VIRPIL VPC WarBRD + MT-50CM3 Bundle | 0x3344 | ? | 0 | 0 | ✗ | 2 |
+| VIRPIL VPC WarBRD Joystick Base | 0x3344 | 0x40CC | 5 | 28 | ✗ | 2 |
+| VIRPIL VPC WarBRD-S Joystick Base | 0x3344 | 0x44CC | 5 | 28 | ✗ | 3 |
+| VIRPIL VPC WarBRD-D Joystick Base | 0x3344 | 0x43F5 | 5 | 28 | ✗ | 2 |
+| ActiveSky Weather Engine | ? | ? | 0 | 0 | ✗ | 3 |
+| Arduino HID Joystick (Generic) | 0x2341 | 0x8036 | 8 | 32 | ✗ | 3 |
+| DIY Rudder Pedals (Arduino Pro Micro) | 0x2341 | 0x8037 | 3 | 4 | ✗ | 3 |
+| DIY USB Encoder Panel (Generic) | 0x2341 | 0x8039 | 8 | 16 | ✗ | 3 |
+| DIY USB Button Box (Generic) | 0x2341 | 0x8036 | 4 | 32 | ✗ | 3 |
+| FaceAPI Head Tracker | ? | ? | 6 | 0 | ✗ | 3 |
+| FSUIPC Virtual Joystick | 0x1234 | 0xBEAC | 8 | 64 | ✗ | 3 |
+| Joystick Gremlin Virtual Output Device | 0x1234 | 0xBEAD | 8 | 128 | ✗ | 3 |
+| MMJoy2 DIY USB HID Controller | 0x1209 | 0xBEAA | 8 | 128 | ✗ | 3 |
+| OpenHornet F/A-18C Console Panel | 0x2341 | 0x8040 | 2 | 32 | ✗ | 3 |
+| OpenHornet IFEI (Integrated Fuel/Engine Indicator) | 0x2341 | 0x8042 | 1 | 8 | ✗ | 3 |
+| OpenHornet UFC (Up-Front Controller) | 0x2341 | 0x8041 | 0 | 28 | ✗ | 3 |
+| OpenTrack Virtual Head Tracker | 0x1234 | 0xBEAD | 6 | 0 | ✗ | 3 |
+| SimHub Dashboard Device (Virtual) | 0x1234 | 0xBEAD | 8 | 32 | ✗ | 3 |
+| SPAD.neXt Virtual Joystick | 0x1234 | 0xBEAD | 8 | 128 | ✗ | 3 |
+| Teensy HID Controller (Generic) | 0x16C0 | 0x04D0 | 6 | 64 | ✗ | 3 |
+| ViGEm Virtual DualShock 4 | 0x054C | 0x05C4 | 6 | 14 | ✓ | 3 |
+| ViGEm Virtual Xbox 360 Controller | 0x045E | 0x028E | 6 | 17 | ✓ | 3 |
+| vJoy Virtual Joystick | 0x1234 | 0xBEAD | 8 | 128 | ✗ | 3 |
+| Virtual Avionics A320 FCU | 0x1553 | 0x0002 | 4 | 32 | ✗ | 3 |
+| Virtual Avionics MCP | 0x1553 | 0x0001 | 3 | 28 | ✗ | 3 |
+| VirtualFly FCU1 Panel | 0x2742 | 0x0006 | 0 | 28 | ✗ | 3 |
+| VirtualFly RUDDO+ Rudder Pedals | 0x2742 | 0x0004 | 3 | 0 | ✗ | 3 |
+| VirtualFly Ruddo+ Rudder Pedals | 0x2B67 | 0x0020 | 3 | 0 | ✗ | 3 |
+| VirtualFly TQ3 Throttle Quadrant | 0x2742 | 0x0003 | 3 | 8 | ✗ | 3 |
+| VirtualFly TQ6+ Throttle Quadrant | 0x2B67 | 0x0010 | 6 | 16 | ✗ | 3 |
+| VirtualFly TQ Jet Throttle | 0x04B4 | 0x010B | 2 | 16 | ✗ | 3 |
+| VirtualFly TQ3+ Throttle Quadrant | 0x04B4 | 0x0109 | 3 | 8 | ✗ | 3 |
+| VirtualFly TQ6 Pro Throttle Quadrant | 0x04B4 | 0x010A | 6 | 12 | ✗ | 3 |
+| VirtualFly YOKO THE HONEY Yoke | 0x2742 | 0x0005 | 2 | 16 | ✗ | 3 |
+| VirtualFly Yoko The Throttle | 0x1209 | 0x2017 | 4 | 12 | ✗ | 3 |
+| VirtualFly Yoko XL Yoke | 0x2B67 | 0x0001 | 3 | 14 | ✗ | 3 |
+| VirusAV Autopilot Panel | 0x04D8 | 0x0E20 | 2 | 32 | ✗ | 3 |
+| VKB Black Mamba Mk.III (Left) | 0x231D | 0x0229 | 4 | 20 | ✗ | 3 |
+| VKB Black Mamba MK3 Right-Hand Grip | 0x231D | 0x0127 | 5 | 20 | ✗ | 2 |
+| VKB Black Mamba Mk.III (Right) | 0x231D | 0x0228 | 4 | 20 | ✗ | 3 |
+| VKB BRD-4 Rudder Pedals | 0x231D | 0x020C | 3 | 0 | ✗ | 3 |
+| VKB GF3 MCG Pro | 0x231D | 0x0210 | 8 | 42 | ✗ | 3 |
+| VKB GF3 RH SEM | 0x231D | 0x0231 | 5 | 24 | ✗ | 3 |
+| VKB Gladiator EVO OT L | 0x231D | 0x3201 | 6 | 24 | ✗ | 3 |
+| VKB Gladiator EVO OT R | 0x231D | 0x3200 | 6 | 24 | ✗ | 3 |
+| VKB Gladiator EVO Space Combat Grip | 0x231D | 0x0152 | 5 | 20 | ✗ | 2 |
+| VKB Gladiator EVO SCG (Left) | 0x231D | 0x0216 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator EVO Space Combat Grip Premium | 0x231D | 0x0208 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator EVO SCG (Right) | 0x231D | 0x0215 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator Mk.II | 0x231D | 0x0121 | 6 | 16 | ✗ | 3 |
+| VKB Gladiator Mk.III | 0x231D | 0x0127 | 6 | 16 | ✗ | 3 |
+| VKB Gladiator Modern Combat Pro | 0x231D | 0x0131 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator NXT (legacy PID variant) | 0x231D | 0x012F | 4 | 32 | ✗ | 3 |
+| VKB Gladiator NXT EVO OT Left | 0x231D | 0x3201 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator NXT EVO Premium | 0x231D | 0x0130 | 6 | 26 | ✗ | 2 |
+| VKB Gladiator NXT EVO Pro Left | 0x231D | 0x0203 | 8 | 40 | ✗ | 3 |
+| VKB Gladiator NXT EVO Pro Premium | 0x231D | 0x0212 | 5 | 24 | ✗ | 3 |
+| VKB Gladiator NXT EVO Pro | 0x231D | 0x0202 | 8 | 40 | ✗ | 3 |
+| VKB Gladiator NXT EVO Space Combat Grip | 0x231D | 0x0222 | 5 | 20 | ✗ | 2 |
+| VKB Gladiator NXT EVO | 0x231D | 0x0200 | 6 | 22 | ✗ | 2 |
+| VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
+| VKB Gladiator NXT Premium (Right) | 0x231D | 0x0204 | 6 | 24 | ✗ | 3 |
+| VKB Gladiator NXT SEM THQ | 0x231D | 0x2214 | 4 | 24 | ✗ | 3 |
+| VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
+| VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |
+| VKB Gladiator NXT EVO (Alt) | 0x231D | 0x0127 | 5 | 32 | ✗ | 2 |
+| VKB GNX-EVO Throttle+ | 0x231D | 0x0241 | 6 | 36 | ✗ | 3 |
+| VKB GNX-EVO Throttle | 0x231D | 0x0240 | 5 | 24 | ✗ | 3 |
+| VKB GNX-SCG (Gladiator NXT EVO + SCG Grip) | 0x231D | 0x0214 | 8 | 32 | ✗ | 3 |
+| VKB Gunfighter MCG Premium | 0x231D | 0x012A | 6 | 40 | ✗ | 3 |
+| VKB Gunfighter MK2 | 0x231D | 0x0124 | 8 | 32 | ✗ | 2 |
+| VKB Gunfighter Mk.III Modern Combat Grip | 0x231D | 0x0225 | 6 | 32 | ✗ | 3 |
+| VKB Gunfighter Mk.III | 0x231D | 0x0127 | 6 | 32 | ✗ | 3 |
+| VKB Gunfighter Mk.IV MCG Pro | 0x231D | 0x021A | 8 | 35 | ✗ | 2 |
+| VKB Gunfighter Mk.IV MCG Ultimate | 0x231D | 0x0220 | 8 | 48 | ✗ | 3 |
+| VKB Gunfighter Mk.IV | 0x231D | 0x0129 | 6 | 32 | ✗ | 3 |
+| VKB Gunfighter Modern Combat Pro | 0x231D | 0x0125 | 8 | 32 | ✗ | 3 |
+| VKB Helicopter Cyclic Grip | 0x231D | 0x0270 | 4 | 16 | ✗ | 3 |
+| VKB Kosmosima Helicopter Grip | 0x231D | 0x0140 | 2 | 16 | ✗ | 3 |
+| VKB MCG Enhanced Grip Module | 0x231D | 0x0263 | 3 | 26 | ✗ | 2 |
+| VKB MCG Pro Grip Module | 0x231D | 0x0262 | 3 | 24 | ✗ | 2 |
+| VKB MCG Pro Grip Module | 0x231D | 0x0129 | 2 | 20 | ✗ | 2 |
+| VKB MCG Standard Grip (Alt PID) | 0x231D | 0x0260 | 3 | 16 | ✗ | 2 |
+| VKB MCG Standard Grip Module | 0x231D | 0x0127 | 2 | 14 | ✗ | 3 |
+| VKB MCG Ultimate Grip (Alt PID) | 0x231D | 0x0261 | 3 | 24 | ✗ | 2 |
+| VKB MCG Ultimate Grip | 0x231D | 0x0221 | 8 | 32 | ✗ | 2 |
+| VKB NXT SEM THQ (Throttle Hat Quadrant) | 0x231D | 0x2214 | 1 | 20 | ✗ | 3 |
+| VKB Omni Throttle | 0x231D | 0x0250 | 4 | 24 | ✗ | 2 |
+| VKB Sim Pedals Pro | 0x231D | 0x0060 | 3 | 0 | ✗ | 3 |
+| VKB Sim Pedals Standard | 0x231D | 0x0131 | 1 | 0 | ✗ | 3 |
+| VKB Sim Pedals Ultra | 0x231D | 0x0062 | 3 | 0 | ✗ | 3 |
+| VKB Sim Pedals Pro V3 | 0x231D | 0x0158 | 3 | 0 | ✗ | 3 |
+| VKB Space Gunfighter L | 0x231D | 0x0127 | 8 | 32 | ✗ | 3 |
+| VKB Space Gunfighter | 0x231D | 0x0126 | 8 | 32 | ✗ | 3 |
+| VKB Stec3 EVO Stick | 0x231D | 0x0232 | 4 | 20 | ✗ | 3 |
+| VKB STECS Max | 0x231D | 0x020B | 8 | 40 | ✗ | 3 |
+| VKB STECS Mini Left | 0x231D | 0x0136 | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini+ Left | 0x231D | 0x0137 | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini+ Right | 0x231D | 0x013B | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini Right | 0x231D | 0x013A | 5 | 96 | ✗ | 2 |
+| VKB S-TECS Modern Throttle Max | 0x231D | 0x012E | 5 | 48 | ✗ | 3 |
+| VKB S-TECS Modern Throttle Mini Plus | 0x231D | 0x012C | 5 | 48 | ✗ | 3 |
+| VKB S-TECS Modern Throttle Mini | 0x231D | 0x012B | 5 | 32 | ✗ | 3 |
+| VKB S-TECS Modern Throttle Standard Stem | 0x231D | 0x012D | 5 | 48 | ✗ | 3 |
+| VKB STECS Standard Left | 0x231D | 0x0138 | 5 | 96 | ✗ | 2 |
+| VKB STECS Standard Right | 0x231D | 0x013C | 5 | 96 | ✗ | 2 |
+| VKB STECS Standard | 0x231D | 0x0127 | 5 | 96 | ✗ | 2 |
+| VKB STECS Mini Throttle | 0x231D | 0x0201 | 2 | 20 | ✗ | 2 |
+| VKB STECS Standard Throttle | 0x231D | 0x0209 | 4 | 28 | ✗ | 2 |
+| VKB T-Rudder Mk.IV SE | 0x231D | 0x020A | 2 | 0 | ✗ | 3 |
+| VKB T-Rudder Mk.IV | 0x231D | 0x0126 | 3 | 0 | ✗ | 3 |
+| VKB T-Rudder MK5 | 0x231D | 0x0132 | 3 | 0 | ✗ | 2 |
+| VKB T-Rudder | 0x231D | 0x0300 | 3 | 0 | ✗ | 2 |
+| VKB Modern Combat Grip Standard | 0x231D | 0x0222 | 8 | 32 | ✗ | 3 |
+| VKB SEM Throttle Control System Duo | 0x231D | 0x020E | 4 | 16 | ✗ | 2 |
+| VKB SEM Throttle Control System Mini | 0x231D | 0x020D | 2 | 8 | ✗ | 2 |
+| VPForce-Compatible Brunner Base (speculative) | 0x0483 | 0xA1C5 | 6 | 16 | ✓ | 3 |
+| VPforce Mongoose FFB Joystick (v2) | 0x0483 | 0xA1C3 | 2 | 2 | ✓ | 3 |
+| VPforce Mongoose FFB Joystick | 0x0483 | 0xA1C2 | 6 | 32 | ✓ | 2 |
+| VPforce Rhino FFB Joystick Mk.I | 0x0483 | 0xA1BF | 6 | 32 | ✓ | 3 |
+| VPforce Rhino FFB Joystick Mk.II | 0x0483 | 0xA1C2 | 2 | 2 | ✓ | 2 |
+| VPforce Rhino FFB Joystick Mk.III | 0x0483 | 0xA1C3 | 3 | 32 | ✓ | 3 |
+| VPforce Rhino FFB Joystick Mk.4 | 0x0483 | 0xA1C4 | 6 | 32 | ✓ | 2 |
 | VPforce Rhino FFB Joystick | 0x0483 | 0xA1C0 | 6 | 32 | ✓ | 2 |
+| VRS DirectForce Pro | 0x0483 | 0xA3A4 | 1 | 0 | ✓ | 3 |
+| Wacom Intuos Pro M | 0x056A | 0x0357 | 5 | 9 | ✗ | 3 |
+| Wilco Boeing 737 FMC | 0x04B4 | 0xF285 | 0 | 64 | ✗ | 3 |
+| WinWing A-10 Throttle | 0x4098 | 0xBED7 | 6 | 20 | ✗ | 2 |
+| WinWing A-10 Upfront Control Panel | 0x4098 | 0xB73C | 0 | 26 | ✗ | 3 |
+| WinWing A-10C Throttle | 0x4098 | 0x021A | 5 | 42 | ✗ | 3 |
+| WinWing A-10C Warthog Throttle | 0x4098 | 0xBE63 | 5 | 50 | ✗ | 3 |
+| WinWing AH-64D Apache Upfront Control Panel | 0x4098 | 0xB73B | 0 | 28 | ✗ | 3 |
+| WinWing AH-64D CPG Panel | 0x4098 | 0xBD50 | 0 | 20 | ✗ | 3 |
+| WinWing AH-64D George AI Controller | 0x4098 | 0xBF12 | 0 | 24 | ✗ | 3 |
+| WinWing F-16 Caution/Advisory Panel | 0x4098 | 0xBF20 | 0 | 32 | ✗ | 3 |
+| WinWing F/A-18 Combat Ready Collar | 0x4098 | 0xBE06 | 0 | 8 | ✗ | 3 |
+| WinWing Combat Ready Panel | 0x4098 | 0x0238 | 0 | 32 | ✗ | 2 |
+| WinWing Commander Core HOTAS | 0x4098 | 0xB720 | 6 | 24 | ✗ | 3 |
+| WinWing F-15 Throttle | 0x4098 | 0x0219 | 5 | 40 | ✗ | 3 |
+| WinWing F-15EX ICP Panel | 0x4098 | 0xBE71 | 0 | 36 | ✗ | 3 |
+| WinWing F-15EX MSC Throttle | 0x4098 | 0xBEDA | 6 | 40 | ✗ | 2 |
+| WinWing F-16 DDI Panel (Left) | 0x4098 | 0xBD30 | 0 | 20 | ✗ | 3 |
+| WinWing F-16 DDI Panel (Right) | 0x4098 | 0xBD31 | 0 | 20 | ✗ | 3 |
+| WinWing F-16 Emergency/Landing Panel | 0x4098 | 0xBF10 | 0 | 20 | ✗ | 3 |
+| WinWing F-16 ICP Panel | 0x4098 | 0x0103 | 0 | 24 | ✗ | 3 |
+| WinWing F-16 MFD Combo Panel (Virtual Bundle) | 0x4098 | ? | 0 | 40 | ✗ | 3 |
+| WinWing F-16 Main Interface Panel (MIP) | 0x4098 | 0xBF20 | 0 | 28 | ✗ | 3 |
+| WinWing F-16 UFC Panel | 0x4098 | 0x0235 | 0 | 20 | ✗ | 2 |
+| WinWing F-16EX Viper HOTAS | 0x4098 | 0xB71F | 6 | 36 | ✗ | 3 |
+| WinWing F/A-18 Arming Panel | 0x4098 | 0xBE10 | 0 | 18 | ✗ | 3 |
+| WinWing F-18 Attack Panel | 0x4098 | 0xBF30 | 0 | 24 | ✗ | 3 |
+| WinWing F/A-18 Combat Ready Panel | 0x4098 | 0xBE05 | 0 | 32 | ✗ | 3 |
+| WinWing F/A-18 HUD1 Panel | 0x4098 | 0xBEDF | 1 | 8 | ✗ | 3 |
+| WinWing F-18 IFEI | 0x4098 | 0x0102 | 0 | 16 | ✗ | 3 |
+| WinWing F/A-18 IFEI Panel | 0x4098 | 0xBF08 | 0 | 16 | ✗ | 3 |
+| WinWing F/A-18C Kneeboard Panel | 0x4098 | 0xBE82 | 0 | 24 | ✗ | 3 |
+| WinWing F/A-18 Pre-Flight Panel | 0x4098 | 0xBE0C | 0 | 24 | ✗ | 2 |
+| WinWing F/A-18 Takeoff Panel 2 | 0x4098 | 0xBF05 | 0 | 20 | ✗ | 3 |
+| WinWing F/A-18 Takeoff Panel | 0x4098 | 0xBE04 | 0 | 20 | ✗ | 3 |
+| WinWing F/A-18 Throttle | 0x4098 | 0xB800 | 5 | 48 | ✗ | 2 |
+| WinWing F-18 UFC | 0x4098 | 0x0101 | 0 | 32 | ✗ | 3 |
+| WinWing F/A-18 UFC Panel | 0x4098 | 0x0234 | 0 | 24 | ✗ | 2 |
+| WinWing F-4E Armament/Utility Panel | 0x4098 | 0xBD40 | 0 | 24 | ✗ | 3 |
+| WinWing F-4E Phantom Fighter Stick | 0x4098 | 0xBD40 | 2 | 16 | ✗ | 3 |
+| WinWing F-4E Phantom Fighter Throttle | 0x4098 | 0xBD50 | 3 | 20 | ✗ | 3 |
+| WinWing F/A-18C DDI Left Panel | 0x4098 | 0xBEE0 | 0 | 20 | ✗ | 3 |
+| WinWing F/A-18C DDI Right Panel | 0x4098 | 0xBEE1 | 0 | 20 | ✗ | 3 |
+| WinWing F/A-18 Upfront Control Panel | 0x4098 | 0xB73A | 0 | 30 | ✗ | 3 |
+| WinWing F/A-18C Hornet HOTAS | 0x4098 | 0xB71C | 6 | 40 | ✗ | 3 |
+| WinWing FCU Panel | 0x4098 | 0x0232 | 0 | 28 | ✗ | 3 |
+| WinWing F/A-18C Wing Fold / Hook Panel | 0x4098 | 0xBEA0 | 0 | 12 | ✗ | 3 |
+| WinWing HOTAS F-18 Stick | 0x4098 | 0xBEC2 | 5 | 32 | ✗ | 2 |
+| WinWing ICP (F-16 Integrated Control Panel) | 0x4098 | 0xBF06 | 0 | 32 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (Captain) | 0x4098 | 0xBB36 | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (First Officer) | 0x4098 | 0xBB3E | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro MCDU (Observer) | 0x4098 | 0xBB3A | 0 | 96 | ✗ | 3 |
+| WinWing MCIP AH-64 Mission Computer Interface Panel | 0x4098 | 0xBF10 | 0 | 22 | ✗ | 3 |
+| WinWing Meteor Fighter Throttle (alt PID) | 0x4098 | 0xBF21 | 6 | 40 | ✗ | 3 |
+| WinWing HOTAS METEOR Fighter Throttle | 0x4098 | 0xBF20 | 5 | 44 | ✗ | 2 |
+| WinWing Multi-Function Display | 0x4098 | 0x0236 | 0 | 18 | ✗ | 2 |
+| WinWing MFD Left (F-18) | 0x4098 | 0x0104 | 0 | 20 | ✗ | 3 |
+| WinWing MFD Right (F-18) | 0x4098 | 0x0105 | 0 | 20 | ✗ | 3 |
+| WinWing MFD1 Center Panel | 0x4098 | 0xBEE0 | 0 | 20 | ✗ | 3 |
+| WinWing MFD1 Left Panel | 0x4098 | 0xBEE1 | 0 | 20 | ✗ | 3 |
+| WinWing MFD1 Right Panel | 0x4098 | 0xBEE2 | 0 | 20 | ✗ | 3 |
+| WinWing MFSSB Magnetic Force Sensing Joystick | 0x4098 | 0xBD91 | 4 | 20 | ✗ | 2 |
+| WinWing MFSSB MCTR Force Feedback Base | 0x4098 | 0xBD90 | 3 | 16 | ✓ | 3 |
+| WinWing MFSSB R3 | 0x4098 | 0xB73E | 4 | 20 | ✗ | 3 |
+| WinWing Mig-29 Fighter Joystick | 0x4098 | 0xBED0 | 3 | 19 | ✗ | 3 |
+| WinWing MIP F/A-18 MFD Panel | 0x4098 | 0xBF10 | 0 | 40 | ✗ | 3 |
+| WinWing OpenFlight Panel | 0x4098 | 0x0237 | 2 | 16 | ✗ | 2 |
+| WinWing Orion HOTAS 1 Throttle | 0x4098 | 0xBE62 | 5 | 14 | ✗ | 2 |
+| WinWing HOTAS Orion Stick Base | 0x4098 | 0xBEC1 | 3 | 4 | ✗ | 3 |
+| WinWing Orion Base 1 + F/A-18 Grip | 0x4098 | 0xBE11 | 2 | 20 | ✗ | 3 |
+| WinWing Orion 2 Base | 0x4098 | 0x0206 | 3 | 16 | ✗ | 3 |
+| WinWing Orion 2 Base | 0x4098 | 0xBE50 | 2 | 0 | ✗ | 3 |
+| WinWing Orion 2 Base + F-16 Grip (Gen 1) | 0x4098 | 0xBE48 | 2 | 20 | ✗ | 3 |
+| WinWing Orion Throttle Base II + F-16 Grip | 0x4098 | 0xBE68 | 4 | 40 | ✗ | 3 |
+| WinWing Orion 2 F-16EX Grip | 0x4098 | 0x0208 | 2 | 20 | ✗ | 3 |
+| WinWing HOTAS Orion 2 F-16EX Throttle | 0x4098 | 0xBED5 | 5 | 16 | ✗ | 2 |
+| WinWing Orion 2 F-16EX Stick + Z-Axis | 0x4098 | 0xBEA9 | 3 | 20 | ✗ | 3 |
+| WinWing Orion 2 F-16EX Stick | 0x4098 | 0xBEA8 | 2 | 20 | ✗ | 3 |
+| WinWing Orion2 F-16EX Throttle | 0x4098 | 0xBE6A | 5 | 16 | ✗ | 2 |
+| WinWing Orion 2 F/A-18 Stick (Gen1) | 0x4098 | 0xBE60 | 2 | 18 | ✗ | 3 |
+| WinWing Orion 2 F-18C Grip | 0x4098 | 0x0207 | 2 | 20 | ✗ | 3 |
+| WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 3 |
+| WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE6A | 6 | 40 | ✗ | 3 |
+| WinWing HOTAS Orion 2 F-18EX Throttle | 0x4098 | 0xBED3 | 4 | 44 | ✗ | 3 |
+| WinWing Orion 2 Mini Throttle | 0x4098 | 0xBEDB | 4 | 20 | ✗ | 2 |
 | WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |
+| WinWing Orion 2 TECS Throttle | 0x4098 | 0x0215 | 4 | 30 | ✗ | 3 |
+| WinWing Orion2 Throttle Base | 0x4098 | 0xBE60 | 3 | 10 | ✗ | 2 |
 | WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE62 | 6 | 50 | ✗ | 2 |
+| WinWing Orion 2 F-16EX Joystick | 0x4098 | 0xBE70 | 3 | 28 | ✗ | 2 |
+| WinWing Orion 2 Throttle | 0x4098 | 0xB71E | 6 | 37 | ✗ | 2 |
+| WinWing Orion 3 Apache AH-64 Grip | 0x4098 | 0xBD50 | 2 | 18 | ✗ | 3 |
+| WinWing Orion 3 Base | 0x4098 | 0xBE60 | 2 | 0 | ✗ | 3 |
+| WinWing Orion 3 F-15EX Stick | 0x4098 | 0xBD38 | 2 | 20 | ✗ | 2 |
+| WinWing Orion 3 F-15EX Throttle | 0x4098 | 0xBD42 | 6 | 48 | ✗ | 3 |
+| WinWing Orion 3 F-16EX HOTAS Bundle (Virtual) | 0x4098 | ? | 6 | 52 | ✗ | 3 |
+| WinWing Orion 3 F-16EX Stick | 0x4098 | 0xBD40 | 3 | 20 | ✗ | 3 |
+| WinWing Orion 3 F-16EX Throttle | 0x4098 | 0xBD48 | 4 | 32 | ✗ | 2 |
+| WinWing Orion 3 F-18EX Stick | 0x4098 | 0xBD50 | 2 | 20 | ✗ | 3 |
+| WinWing Orion 3 F-18EX Throttle | 0x4098 | 0xBD50 | 4 | 36 | ✗ | 2 |
+| WinWing Orion 3 Throttle Base + TGRIP-F16 | 0x4098 | 0xBD68 | 4 | 40 | ✗ | 2 |
+| WinWing Orion 3 Throttle Base + F-18 TGRIP | 0x4098 | 0xBD60 | 6 | 50 | ✗ | 3 |
+| WinWing PTO2 Carrier Trap Operations Panel | 0x4098 | 0xBF11 | 0 | 16 | ✗ | 3 |
+| WinWing SCG Fighter Sidestick | 0x4098 | 0xBECC | 3 | 30 | ✗ | 2 |
+| WinWing HOTAS SimApp IV | 0x4098 | 0x021C | 6 | 36 | ✗ | 3 |
+| WinWing SimAppPro ACP Panel | 0x4098 | 0xBF20 | 0 | 28 | ✗ | 3 |
+| WinWing SimAppPro BARO Panel | 0x4098 | 0xBF22 | 0 | 8 | ✗ | 3 |
+| WinWing SimAppPro Communications Panel | 0x4098 | 0xBF08 | 8 | 16 | ✗ | 3 |
+| WinWing SimApp Pro FCU + EFIS-L + EFIS-R | 0x4098 | 0xBA01 | 0 | 96 | ✗ | 3 |
+| WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |
+| WinWing SimApp Pro FCU + EFIS-R | 0x4098 | 0xBC1E | 0 | 64 | ✗ | 3 |
+| WinWing SimApp Pro FCU | 0x4098 | 0xBB10 | 0 | 32 | ✗ | 3 |
+| WinWing SimApp Pro Flaps & Speed Brake Panel | 0x4098 | 0xB611 | 2 | 4 | ✗ | 2 |
+| WinWing SimApp Pro Landing Gear Panel | 0x4098 | 0xB612 | 0 | 8 | ✗ | 2 |
+| WinWing SimAppPro LDU Panel | 0x4098 | 0xBE50 | 0 | 8 | ✗ | 2 |
+| WinWing SIMAPP Pro NAV Panel | 0x4098 | 0xBE90 | 2 | 24 | ✗ | 3 |
+| WinWing SimAppPro Overhead Panel (Left) | 0x4098 | 0xBF30 | 0 | 36 | ✗ | 3 |
+| WinWing SimAppPro Overhead Panel (Right) | 0x4098 | 0xBF31 | 0 | 36 | ✗ | 3 |
+| WinWing SimApp Pro Trim Panel | 0x4098 | 0xB613 | 1 | 10 | ✗ | 2 |
+| WinWing SimApp Pro VSD Panel | 0x4098 | 0xBC40 | 0 | 16 | ✗ | 3 |
+| WinWing SimApp Pro WSO Panel | 0x4098 | 0xBD14 | 0 | 32 | ✗ | 3 |
+| WinWing Sky Flight Pedals | 0x4098 | 0xB722 | 3 | 0 | ✗ | 3 |
+| WinWing Skywalker Collective | 0x4098 | 0xBE48 | 3 | 12 | ✗ | 3 |
+| WinWing SKYWALKER Metal Rudder Pedals | 0x4098 | 0xBEF0 | 3 | 0 | ✗ | 3 |
+| WinWing SKYWALKER Stick | 0x4098 | 0xBEF2 | 3 | 15 | ✗ | 2 |
+| WinWing Super BARD Throttle | 0x4098 | 0xBEC0 | 4 | 32 | ✗ | 3 |
+| WinWing Super Libra Throttle | 0x4098 | 0xBD70 | 4 | 32 | ✗ | 3 |
+| WinWing Super Taurus Throttle (Alt PID) | 0x4098 | 0xB71D | 6 | 32 | ✗ | 3 |
+| WinWing Super Taurus Throttle | 0x4098 | 0xBEC7 | 6 | 50 | ✗ | 3 |
+| WinWing SuperTaurus Throttle | 0x4098 | 0x0218 | 6 | 48 | ✗ | 3 |
+| WinWing SuperTaurus Throttle Pro | 0x4098 | 0xBD65 | 7 | 32 | ✗ | 3 |
+| WinWing SuperTaurus F-15EX Throttle | 0x4098 | 0xBD64 | 6 | 50 | ✗ | 3 |
 | WinWing TFRP Rudder Pedals | 0x4098 | 0xBE64 | 3 | 0 | ✗ | 2 |
+| WinWing TFRP-T Rudder Pedals | 0x4098 | 0xBE66 | 3 | 0 | ✗ | 2 |
+| WinWing Throttle Extension | 0x4098 | 0xBEC4 | 4 | 16 | ✗ | 2 |
+| WinWing UFC1 + HUD1 Panel | 0x4098 | 0xBEDE | 0 | 32 | ✗ | 3 |
+| WinWing UFC2 Upfront Control Panel | 0x4098 | 0xBEF0 | 0 | 24 | ✗ | 3 |
+| WinWing URSA MINOR F-16 Throttle | 0x4098 | 0xBD20 | 3 | 20 | ✗ | 3 |
+| WinWing Ursa Minor F/A-18 Throttle | 0x4098 | 0xBE12 | 4 | 20 | ✗ | 3 |
+| WinWing Ursa Minor Fighter Throttle | 0x4098 | 0xBEC9 | 4 | 40 | ✗ | 3 |
+| WinWing Ursa Minor Left Throttle | 0x4098 | 0x021B | 4 | 32 | ✗ | 3 |
+| WinWing Ursa Minor Left Hand HOTAS | 0x4098 | 0xBEC3 | 5 | 28 | ✗ | 2 |
+| WinWing URSA MINOR Fighter Flight Stick (Left) | 0x4098 | 0xBC29 | 2 | 16 | ✗ | 3 |
+| WinWing URSA MINOR Fighter Flight Stick (Right) | 0x4098 | 0xBC2A | 2 | 16 | ✗ | 3 |
+| WinWing Ursa Minor L Throttle | 0x4098 | 0xBE18 | 2 | 16 | ✗ | 3 |
+| WinWing Weapons Control Board | 0x4098 | 0x0240 | 0 | 32 | ✗ | 2 |
+| WinWing PCA FCU (Airbus Flight Control Unit) | 0x4098 | 0xB610 | 4 | 28 | ✗ | 2 |
+| WinWing Boeing TOTO Throttle Quadrant | 0x4098 | 0xB700 | 6 | 22 | ✗ | 2 |
+| WinWing TQS A-10 Throttle | 0x4098 | 0xBE74 | 4 | 48 | ✗ | 2 |
+| WinWing TQS F-16 Throttle | 0x4098 | 0xBE75 | 3 | 56 | ✗ | 2 |
+| WinWing TQS F/A-18 Throttle | 0x4098 | 0xBE72 | 4 | 64 | ✗ | 2 |
+| WinWing TQS Lite Throttle | 0x4098 | 0xBE73 | 2 | 16 | ✗ | 2 |
+| WinWing CDP (Control Display Panel) | 0x4098 | 0xBE90 | 0 | 32 | ✗ | 2 |
+| WinWing MIP (Mission Interface Panel) | 0x4098 | 0xBE80 | 0 | 82 | ✗ | 2 |
+| X-Keys XK-12 Joystick | 0x05F3 | 0x0469 | 3 | 12 | ✗ | 3 |
+| X-Keys XK-16 Stick | 0x05F3 | 0x0468 | 0 | 16 | ✗ | 3 |
+| X-Keys XK-24 USB Key Matrix | 0x05F3 | 0x0467 | 0 | 24 | ✗ | 2 |
+| X-Keys XK-60 USB Key Matrix | 0x05F3 | 0x0466 | 0 | 60 | ✗ | 2 |
+| X-Keys XK-80 USB Key Matrix | 0x05F3 | 0x0465 | 0 | 80 | ✗ | 2 |
+| X-Keys XKE-128 USB Key Matrix | 0x05F3 | 0x0464 | 0 | 128 | ✗ | 2 |
+| Xtorsion 3D Boeing 737 Overhead Panel | 0x04B4 | 0xF270 | 0 | 80 | ✗ | 3 |
+| Yawman Arrow | 0x054C | 0x0CE6 | 5 | 20 | ✗ | 2 |
+| Yoko The Trim Wheel | 0x1209 | 0x2011 | 1 | 2 | ✗ | 3 |
+| Yoko The Yoke | 0x1209 | 0x2010 | 5 | 12 | ✗ | 3 |
 
 ## Game Integrations
 
 | Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |
 |------|-------------|-----------|-------------------|-----|------------|
+| Ace Combat 7: Skies Unknown | UDP Telemetry Bridge (JSON) | ✓ | ✗ | ✗ | ✗ |
+| Aerofly FS | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
 | DCS World | Lua Export Script + UDP | ✓ | ✗ | ✗ | ✗ |
+| Elite Dangerous | Journal File (NDJSON) | ✓ | ✗ | ✗ | ✗ |
+| Falcon BMS | Shared Memory Export (BMS Data Export) | ✓ | ✗ | ✓ | ✗ |
+| Microsoft Flight Simulator X / FS 2004 | SimConnect (FSX) / FSUIPC (FS9) | ✓ | ✓ | ✗ | ✗ |
+| IL-2 Sturmovik: Great Battles | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
 | Kerbal Space Program | kRPC mod — length-delimited protobuf over TCP | ✓ | ✗ | ✗ | ✗ |
 | Microsoft Flight Simulator | SimConnect | ✓ | ✓ | ✓ | ✗ |
+| Prepar3D v5/v6 | SimConnect | ✓ | ✓ | ✗ | ✗ |
+| Project Wingman | Virtual Controller (ViGEm/vJoy) | ✗ | ✗ | ✗ | ✗ |
+| War Thunder | HTTP Telemetry Feed | ✓ | ✗ | ✓ | ✗ |
+| X-Plane 12 | UDP DataRef + Web API | ✓ | ✓ | ✗ | ✗ |
 | X-Plane 12 | UDP DataRef + Web API | ✓ | ✓ | ✗ | ✗ |
 
 ## Support Tier Legend

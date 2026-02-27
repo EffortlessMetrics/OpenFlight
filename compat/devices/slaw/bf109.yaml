@@ -1,0 +1,57 @@
+# Slaw Device Bf-109 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) is used by Slaw Device products running
+# custom STM32 HID firmware. PID 0x5745 is a community estimate for the
+# Bf-109 variant; confirm with lsusb.
+# The Slaw Device Bf-109 replicates the directional control cross-bar design
+# of the Messerschmitt Bf-109 rudder pedals.
+schema_version: "1"
+
+device:
+  name: "Slaw Device Bf-109 Rudder Pedals"
+  vendor: "Slaw Device"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (shared VID for STM32 HID)
+    product_id: 0x5745      # Community estimate — Bf-109; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5745 is a community estimate for the Bf-109 variant. Slaw Device
+      uses STM32 firmware (VID 0x0483). Confirm with lsusb on real hardware.
+  - id: CROSS_BAR_DESIGN
+    description: >
+      The Bf-109 uses a cross-bar rudder pedal design consistent with WWII-era
+      aircraft. Pedal throw and dead-zone may differ from modern pedal sets.
+      Apply appropriate non-linear response curves for WWII sim use.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brake axes are unipolar.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Slaw Device Bf-109 — WWII-style cross-bar rudder pedals. Designed for
+    DCS WWII and IL-2 Sturmovik. VID 0x0483 / PID 0x5745 are community
+    estimates; confirm with lsusb. Last reviewed: 2026-06.

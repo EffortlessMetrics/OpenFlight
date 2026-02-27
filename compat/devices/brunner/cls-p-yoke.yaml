@@ -1,0 +1,64 @@
+# Brunner CLS-P Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x25BB confirmed: Brunner Elektronik AG (registered USB vendor ID).
+# PID 0x0085 is a community estimate for the CLS-P Yoke variant. The CLS-P
+# family includes rudder pedals (0x0080, cls-p-pedals.yaml) and center
+# joystick (0x0090, cls-p-pc.yaml). 0x0085 is inferred for the yoke variant.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB         # Brunner Elektronik AG (registered VID)
+    product_id: 0x0085        # Community estimate — CLS-P Yoke; confirm with lsusb
+  hid:
+    usage_page: 0x01          # Generic Desktop
+    usage: 0x04               # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 16
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine]
+    max_update_rate_hz: 250
+    torque_limit_nm: null     # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0085 is a community estimate for the CLS-P Yoke, inferred from
+      the CLS-P family pattern (pedals = 0x0080, center stick = 0x0090).
+      Confirm with lsusb on real hardware.
+  - id: CLS2SIM_COMPANION
+    description: >
+      The CLS-P Yoke requires Brunner CLS2SIM companion software for FFB
+      configuration and calibration. OpenFlight reads axis data via HID but
+      FFB effects should be sent via the CLS2SIM API or HID output reports.
+  - id: HIL_NOT_VALIDATED
+    description: >
+      HID report layout inferred from Brunner SDK documentation and the
+      CLS-P family patterns. Hardware-in-the-loop validation not performed.
+      Axis byte order and report ID require confirmation from real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-P Force Feedback Yoke — professional-grade FFB yoke using
+    Brunner's CLS (Closed-Loop System) active feedback technology.
+    VID 0x25BB confirmed; PID 0x0085 is a community estimate. Compare with
+    cls-p-pedals.yaml (0x0080) and cls-p-pc.yaml (0x0090). Last reviewed: 2026-06.

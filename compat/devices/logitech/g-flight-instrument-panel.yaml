@@ -1,0 +1,69 @@
+# Logitech G Flight Instrument Panel (rebadged Saitek Flight Instrument Panel / FIP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC), PID 0xA2AE.
+# Logitech acquired Saitek in 2016 and re-released the Flight Instrument Panel
+# under the Logitech G Flight branding. The hardware and USB identifiers are
+# identical to the original Saitek version (see saitek/flight-instrument-panel.yaml).
+# PID 0xA2AE confirmed from Saitek SDK and OpenFIP open-source project.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Instrument Panel"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC (shared VID)
+    product_id: 0xA2AE      # Confirmed via Saitek SDK and OpenFIP project
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 7                # 6 rotary knob clicks (S1–S6) + 1 PAGE button
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      The FIP features a 320×240 TFT colour LCD driven via USB bulk transfers
+      (not HID output reports). The Saitek/Logitech DirectOutput SDK
+      (DirectOutput.dll) is required for display output on Windows.
+      OpenFlight renders gauge images and pushes 24-bit RGB frames at up to ~20 fps.
+  - id: ROTARY_ENCODERS_AS_BUTTONS
+    description: >
+      The six rotary knobs (S1–S6) are incremental encoders generating HID
+      button-press events (CW = one button, CCW = another). Each knob also
+      has a click function.
+  - id: DAISY_CHAIN
+    description: >
+      Multiple FIP units can be daisy-chained via USB; each enumerates with the
+      same VID/PID. Differentiate by USB port path or serial number.
+  - id: SAITEK_ALIAS
+    description: >
+      VID 0x06A3 / PID 0xA2AE was originally released under Saitek branding.
+      Logitech re-released with identical USB identifiers after the 2016
+      acquisition. The Saitek version is documented in
+      saitek/flight-instrument-panel.yaml.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xA2AE confirmed from Saitek/Logitech DirectOutput SDK and the
+    open-source OpenFIP and saitek-fip community projects.
+    Input (buttons/encoders) works via standard HID. Display output requires
+    the DirectOutput SDK (Windows). Up to 6 units can be chained per host.
+    Last reviewed: 2026-02.

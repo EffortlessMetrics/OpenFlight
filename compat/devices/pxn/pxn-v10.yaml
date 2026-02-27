@@ -1,0 +1,53 @@
+# PXN V10 Flight Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (PXN / Shenzhen JMD Technology) confirmed.
+# PID 0x0300 is a community estimate for the PXN V10 — confirm with lsusb.
+# The PXN V10 is a mid-range USB flight joystick from PXN with a throttle
+# quadrant, twist-rudder axis, programmable buttons, and optional vibration
+# feedback. Positioned above the PXN V9 (racing) in the product line.
+
+schema_version: "1"
+
+device:
+  name: "PXN V10 Flight Joystick"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416       # PXN / Shenzhen JMD Technology (confirmed)
+    product_id: 0x0300      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, z, slider]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0300 is a community estimate for the V10 flight joystick.
+      VID 0x3416 (PXN) is confirmed. Verify exact PID with lsusb.
+  - id: TWIST_RUDDER
+    description: "Twist grip (Rz) provides rudder axis. Z is the throttle lever."
+  - id: THROTTLE_LEVER
+    description: "Z axis (throttle lever) is unipolar; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN V10 flight joystick. VID 0x3416 confirmed; PID 0x0300 community estimate.
+    Mid-range flight stick above the V9 (racing wheel). Last reviewed: 2026-06.

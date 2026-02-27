@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-panels-goflight"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "GoFlight USB HID panel module driver for OpenFlight."
+readme = "README.md"
+categories = ["hardware-support"]
+keywords = ["flight-sim", "openflight", "goflight", "panels", "hid"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

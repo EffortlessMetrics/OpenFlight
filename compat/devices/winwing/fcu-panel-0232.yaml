@@ -1,0 +1,58 @@
+# WinWing FCU Panel (PID 0x0232)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing. PID 0x0232 is a community estimate for the
+# WinWing FCU panel variant. The confirmed SimApp Pro FCU uses 0xBB10; this
+# PID may correspond to a standalone or alternate FCU panel variant.
+schema_version: "1"
+
+device:
+  name: "WinWing FCU Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0232      # Community estimate — FCU Panel; confirm with SimAppPro
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0232 is a community estimate. The SimApp Pro FCU uses 0xBB10
+      (confirmed). PID 0x0232 may correspond to a different FCU variant
+      or firmware version. Confirm with SimAppPro or lsusb.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders (speed, heading, altitude, VS knobs) generate HID button
+      events (increment/decrement). Map encoder steps to sim autopilot commands
+      via OpenFlight profile rules.
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      Depending on variant, the FCU may expose a 7-segment LCD display.
+      Display updates are driven by HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing FCU Panel — Airbus Flight Control Unit replica panel.
+    PID 0x0232 is a community estimate; confirmed SimApp Pro FCU is 0xBB10.
+    Confirm PID with SimAppPro or lsusb. Last reviewed: 2026-06.

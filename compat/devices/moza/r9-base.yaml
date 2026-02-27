@@ -1,0 +1,59 @@
+# Moza R9 Direct Drive Racing/Sim Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology, shared by all Moza products).
+# PID is community-estimated. The Moza R9 is a mid-range direct-drive FFB
+# base (9 Nm) designed primarily for sim racing; occasionally used in combined
+# race+flight sim setups with joystick grip adapters.
+schema_version: "1"
+
+device:
+  name: "Moza R9 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology)
+    product_id: 0x000C    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 9.0    # R9 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000C is a community estimate. Confirm from lsusb capture.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R9 accepts raw torque commands (report ID 0x20) rather than
+      DirectInput effect types. Same protocol as the Moza AB series.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R9 base exposes only the rotation axis. When used for flight, map
+      the rotation axis to the primary control axis in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R9: mid-range direct-drive base (9 Nm). Same torque protocol as the
+    Moza AB9 (PID 0x0005). PID 0x000C community-estimated.
+    VID 0x346E = Moza (Gudsen Technology). Last reviewed: 2026-02.

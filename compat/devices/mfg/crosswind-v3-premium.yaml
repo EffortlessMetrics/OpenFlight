@@ -1,0 +1,72 @@
+# MFG Crosswind V3 Premium Rudder Pedals (STM VID 0x0483, PID 0xA353)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483: STMicroelectronics — used by MFG Crosswind Premium firmware.
+# The primary MFG Crosswind V3 uses VID 0x1551 (crosswind-v3.yaml, PID 0x0003).
+# STM-VID variants include V3 STM (0xA352, crosswind-v3-stm.yaml) and
+# this V3 Premium (0xA353). PID 0xA353 is a community estimate for the
+# premium edition with graphite/carbon fibre foot plates.
+# Confirm PID with lsusb capture from real hardware.
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V3 Premium Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — MFG Crosswind Premium firmware VID
+    product_id: 0xA353      # Community estimate — V3 Premium; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA353 is a community estimate for the MFG Crosswind V3 Premium.
+      V3 STM base variant uses PID 0xA352 (crosswind-v3-stm.yaml). The
+      standard V3 uses VID 0x1551, PID 0x0003 (crosswind-v3.yaml).
+      Confirm with lsusb on real hardware.
+  - id: PREMIUM_PLATES
+    description: >
+      The V3 Premium includes upgraded graphite/carbon fibre foot plates and
+      improved toe brake geometry over the standard V3. The underlying HID
+      descriptor is expected to be functionally identical to the V3 STM variant.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles per axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V3 Premium rudder pedals (STM firmware). VID 0x0483,
+    PID 0xA353 community estimate. Premium foot plate upgrade over V3 STM.
+    See crosswind-v3-stm.yaml (PID 0xA352). Wave-49 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Standard rudder/brake axis mapping; plug and play."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Rudder and differential toe brake axes recognised automatically."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Three-axis pedal set; assign rudder and individual toe brakes."

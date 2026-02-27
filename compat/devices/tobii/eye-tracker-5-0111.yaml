@@ -1,0 +1,53 @@
+# Tobii Eye Tracker 5 (PID 0x0111 community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This entry covers a community-reported PID variant of the Tobii Eye Tracker 5.
+# VID 0x2104 (Tobii Technology AB) is confirmed. PID 0x0111 is a community
+# estimate reported for some hardware revisions of the ET5. See eye-tracker-5.yaml
+# (PID 0x0408) for the primary entry.
+schema_version: "1"
+
+device:
+  name: "Tobii Eye Tracker 5 (PID 0x0111 variant)"
+  vendor: "Tobii Technology AB"
+  type: headtracker
+  usb:
+    vendor_id: 0x2104   # Tobii Technology AB (confirmed)
+    product_id: 0x0111  # Community estimate — ET5 variant; see eye-tracker-5.yaml for 0x0408
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0x0111 is a community estimate for a hardware revision of the Tobii
+      ET5. The primary PID is 0x0408 (eye-tracker-5.yaml). Verify with lsusb.
+  - id: EYE_TRACKING_SDK
+    description: >
+      Full gaze data is exposed via the Tobii Gaming SDK, not raw HID.
+      OpenFlight uses this entry for device detection only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii Eye Tracker 5 — PID 0x0111 community estimate variant. VID 0x2104
+    confirmed. PID estimated from community sources. See eye-tracker-5.yaml.
+    Last reviewed: 2026-07.

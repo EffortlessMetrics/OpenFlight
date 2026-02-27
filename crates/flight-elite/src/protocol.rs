@@ -252,4 +252,69 @@ mod tests {
             r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Music","MusicTrack":"MainMenu"}"#;
         assert!(parse_journal_line(line).is_none());
     }
+
+    #[test]
+    fn load_game_without_commander_still_parses() {
+        // Commander field is optional — should parse with commander = None
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"LoadGame","Ship":"Eagle"}"#;
+        match parse_journal_line(line) {
+            Some(JournalEvent::LoadGame { ship, commander }) => {
+                assert_eq!(ship, "Eagle");
+                assert!(commander.is_none());
+            }
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn touchdown_without_coordinates_still_parses() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Touchdown"}"#;
+        match parse_journal_line(line) {
+            Some(JournalEvent::Touchdown {
+                latitude,
+                longitude,
+            }) => {
+                assert!(latitude.is_none());
+                assert!(longitude.is_none());
+            }
+            other => panic!("unexpected: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn docking_granted_event_returns_none() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"DockingGranted","StationName":"Jameson Memorial","MarketID":128969451}"#;
+        assert!(
+            parse_journal_line(line).is_none(),
+            "DockingGranted is not a tracked event and should be skipped"
+        );
+    }
+
+    #[test]
+    fn docking_denied_event_returns_none() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"DockingDenied","StationName":"Jameson Memorial","Reason":"ActiveFighter"}"#;
+        assert!(
+            parse_journal_line(line).is_none(),
+            "DockingDenied is not a tracked event and should be skipped"
+        );
+    }
+
+    #[test]
+    fn fuel_scoop_event_returns_none() {
+        let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"FuelScoop","Scooped":1.234,"Total":15.5}"#;
+        assert!(
+            parse_journal_line(line).is_none(),
+            "FuelScoop is not a tracked event and should be skipped"
+        );
+    }
+
+    #[test]
+    fn valid_json_non_elite_format_returns_none() {
+        // Valid JSON that has no "event" field or unrecognised object shape
+        assert!(parse_journal_line(r#"{"hello": "world"}"#).is_none());
+        assert!(parse_journal_line(r#"{"key": 42, "other": true}"#).is_none());
+        // Scalar JSON values — should not panic
+        assert!(parse_journal_line("null").is_none());
+        assert!(parse_journal_line("42").is_none());
+    }
 }

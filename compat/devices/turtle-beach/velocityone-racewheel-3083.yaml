@@ -1,0 +1,48 @@
+# Turtle Beach VelocityOne Race Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 (Turtle Beach), PID 0x3083 — estimated.
+# NOTE: PID 0x3083 is also a community estimate for the VelocityOne Rudder Pedals
+# (velocityone-rudder-3083.yaml). Both values are unconfirmed estimates; the
+# true device-specific PIDs must be confirmed with lsusb on real hardware.
+schema_version: "1"
+device:
+  name: "Turtle Beach VelocityOne Race Wheel"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x10F5       # Turtle Beach Corporation (confirmed VID)
+    product_id: 0x3083      # Community estimate — Race Wheel; PID also claimed by Rudder 3083 variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 16
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3083 is a community estimate. The same PID is also estimated for the
+      VelocityOne Rudder Pedals (velocityone-rudder-3083.yaml). Both PIDs are
+      unconfirmed — verify with lsusb to distinguish these devices.
+  - id: PID_CONFLICT
+    description: >
+      Community estimate 0x3083 may conflict with VelocityOne Rudder Pedals.
+      Confirmed VelocityOne Race Wheel PIDs should be sourced from lsusb.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Race Wheel — VID 0x10F5 / PID 0x3083 (est).
+    Racing wheel for PC/Xbox. PID may conflict with Rudder Pedals estimate.
+    Wave-55 addition. Last reviewed: 2026-07.

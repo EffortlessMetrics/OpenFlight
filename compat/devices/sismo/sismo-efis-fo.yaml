@@ -1,0 +1,51 @@
+# Sismo Soluciones Boeing 737 EFIS First Officer Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Sismo EFIS First Officer (right seat) panel. Mirror of the captain-side
+# EFIS panel; same controls and USB report format, different USB PID.
+# VID 0x04D8 / PID 0xF5D2: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones Boeing 737 EFIS First Officer"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF5D2      # Community estimate — Sismo EFIS FO
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro, minimums]
+    resolution_bits: 8
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF5D2 is a community estimate. Confirm with Sismo SIOC documentation.
+  - id: FO_SEAT_BINDING
+    description: >
+      Bind this device to the first_officer seat in the profile to ensure
+      correct ND source switching (FO ND vs captain ND display).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo EFIS first officer panel. VID 0x04D8 / PID 0xF5D2 est.
+    See sismo-efis-capt.yaml for captain side; sismo-b737-mcp.yaml for MCP.
+    Last reviewed: 2026-06.

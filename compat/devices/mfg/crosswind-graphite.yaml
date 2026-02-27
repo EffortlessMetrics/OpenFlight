@@ -1,0 +1,71 @@
+# MFG Crosswind Graphite Rudder Pedals (STM VID 0x0483, PID 0xA354)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483: STMicroelectronics — used by MFG Crosswind Graphite firmware.
+# The MFG Crosswind Graphite is a premium edition with graphite-coloured
+# metal construction and enhanced damping. It uses STM32 USB firmware.
+# PID 0xA354 is a community estimate adjacent to the V3 STM (0xA352) and
+# V3 Premium (0xA353) PIDs. Confirm PID with lsusb capture from real hardware.
+# Primary standard V3 manifest: crosswind-v3.yaml (VID 0x1551, PID 0x0003).
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind Graphite Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — MFG Crosswind Graphite firmware VID
+    product_id: 0xA354      # Community estimate — Graphite edition; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA354 is a community estimate for the Crosswind Graphite edition.
+      Adjacent PIDs: V3 STM (0xA352), V3 Premium (0xA353). Standard V3:
+      VID 0x1551, PID 0x0003 (crosswind-v3.yaml). Confirm with lsusb.
+  - id: GRAPHITE_CONSTRUCTION
+    description: >
+      The Crosswind Graphite edition features all-metal graphite-anodised
+      construction with enhanced damping pads. The HID descriptor is
+      functionally identical to other V3 STM variants.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles per axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind Graphite edition rudder pedals (STM firmware). VID 0x0483,
+    PID 0xA354 community estimate. Premium all-metal graphite variant.
+    See crosswind-v3-stm.yaml (PID 0xA352). Wave-49 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Standard rudder/brake axis mapping; plug and play."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Rudder and differential toe brake axes recognised automatically."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Three-axis pedal set; assign rudder and individual toe brakes."

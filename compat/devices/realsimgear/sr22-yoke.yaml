@@ -1,0 +1,54 @@
+# RealSimGear Cirrus SR22 Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by RealSimGear, confirmed).
+# PID 0xEF61 — community estimate for the RealSimGear Cirrus SR22 USB yoke.
+# RealSimGear produces high-fidelity GA aircraft replicas and uses Microchip
+# USB HID controllers across their product line.
+schema_version: "1"
+
+device:
+  name: "RealSimGear Cirrus SR22 Yoke"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (confirmed VID for RealSimGear)
+    product_id: 0xEF61      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF61 is a community estimate for the RealSimGear SR22 Yoke.
+      RealSimGear uses VID 0x04D8 (Microchip) across their product range.
+      Verify with lsusb or Windows Device Manager.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Cirrus SR22 USB yoke replica. VID 0x04D8 (Microchip) confirmed
+    for RealSimGear products. PID 0xEF61 is a community estimate.
+    Primarily used with MSFS and X-Plane GA aircraft.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

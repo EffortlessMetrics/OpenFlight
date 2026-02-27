@@ -1,0 +1,61 @@
+# VKB MCG Pro Grip (Alt PID 0x0262)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim (Vadim Kotelnikov).
+# PID 0x0262 is a community estimate for a VKB MCG Pro hardware/firmware
+# revision. The primary MCG Pro manifest uses PID 0x0129 (mcg-pro.yaml).
+# PID 0x0262 has been reported in community forums for later production units.
+# Confirm with VKB Joystick Device Config utility on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "VKB MCG Pro Grip Module"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim (confirmed)
+    product_id: 0x0262      # Community estimate — MCG Pro alt PID; confirm with VKB config
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, ministick_y]
+    resolution_bits: 12
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0262 is a community estimate for the MCG Pro alt firmware variant.
+      Primary MCG Pro PID is 0x0129 (see mcg-pro.yaml). Confirm with VKB
+      Joystick Device Config utility on real hardware.
+  - id: COMPOSITE_DEVICE
+    description: >
+      The MCG Pro grip communicates via the Gunfighter/Black Mamba base board.
+      The combined USB descriptor includes base-provided axes in addition to
+      the grip ministick and buttons.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Pro alternate PID variant (0x0262). Primary PID is 0x0129 (mcg-pro.yaml).
+    PID estimated from community sources. VID 0x231D confirmed.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

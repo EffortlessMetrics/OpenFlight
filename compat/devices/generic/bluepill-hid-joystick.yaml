@@ -1,0 +1,61 @@
+# Generic STM32 Blue Pill HID Joystick (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1EAF (LeafLabs LLC). PID 0x0024 is assigned by the Maple/libmaple
+# USB HID joystick firmware for STM32F103-based "Blue Pill" boards.
+# The STM32F103C8T6 (Blue Pill) is a common DIY flight sim input platform
+# when flashed with Maple-compatible or custom STM32 USB HID firmware.
+# Widely used for DIY button boxes, trim wheels, and axis controllers.
+schema_version: "1"
+
+device:
+  name: "Blue Pill STM32 HID Joystick (DIY)"
+  vendor: "LeafLabs"
+  usb:
+    vendor_id: 0x1EAF   # LeafLabs LLC (Maple / libmaple firmware)
+    product_id: 0x0024  # Maple HID joystick PID — assigned by LeafLabs libmaple firmware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      VID 0x1EAF / PID 0x0024 is the LeafLabs Maple libmaple HID joystick
+      class PID. Some Blue Pill builds use a generic STM32 VID (0x0483,
+      PID 0x5750) instead. The axis/button layout is entirely user-defined
+      by the firmware sketch.
+  - id: DIY_HARDWARE
+    description: >
+      Blue Pill (STM32F103C8T6) is a DIY platform. Axis count, resolution,
+      and button count depend on the specific firmware build. Values here
+      represent a typical 6-axis trim/axis controller configuration.
+  - id: MAPLE_BOOT_CONFLICT
+    description: >
+      Some Blue Pill boards enumerate first as a Maple DFU bootloader
+      (PID 0x0003) before switching to the HID joystick PID. Allow 2–3
+      seconds for the device to complete enumeration after plug-in.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Blue Pill (STM32F103) HID joystick via Maple libmaple firmware.
+    VID 0x1EAF / PID 0x0024 confirmed from LeafLabs libmaple source.
+    DIY platform; layout is sketch-defined. Last reviewed: 2026-06.

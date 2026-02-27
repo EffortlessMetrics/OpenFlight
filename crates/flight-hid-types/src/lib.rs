@@ -76,4 +76,40 @@ mod tests {
         };
         assert_eq!(info.report_descriptor.unwrap(), descriptor);
     }
+
+    #[test]
+    fn hid_device_info_debug_format() {
+        let info = HidDeviceInfo {
+            vendor_id: 0x044F,
+            product_id: 0xB679,
+            serial_number: None,
+            manufacturer: Some("Thrustmaster".to_string()),
+            product_name: None,
+            device_path: String::new(),
+            usage_page: 0,
+            usage: 0,
+            report_descriptor: None,
+        };
+        let s = format!("{:?}", info);
+        assert!(s.contains("0x044F") || s.contains("1103")); // vendor_id in some form
+        assert!(s.contains("Thrustmaster"));
+    }
+
+    #[test]
+    fn hid_device_info_max_vid_pid() {
+        let info = HidDeviceInfo {
+            vendor_id: 0xFFFF,
+            product_id: 0xFFFF,
+            serial_number: None,
+            manufacturer: None,
+            product_name: None,
+            device_path: String::new(),
+            usage_page: 0xFFFF,
+            usage: 0xFFFF,
+            report_descriptor: None,
+        };
+        assert_eq!(info.vendor_id, 0xFFFF);
+        assert_eq!(info.product_id, 0xFFFF);
+        assert_eq!(info.usage_page, 0xFFFF);
+    }
 }

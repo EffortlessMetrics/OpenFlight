@@ -1,0 +1,16 @@
+---
+source: crates/flight-rules/tests/snapshot_tests.rs
+expression: snap
+---
+instructions:
+  - LoadVar: 0
+  - LoadConst: 100
+  - Compare: Less
+  - JumpFalse: 5
+  - Action: 0
+variable_map:
+  speed: 0
+actions:
+  - LedOn:
+      target: WARN
+stack_size: 8

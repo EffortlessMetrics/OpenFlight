@@ -1,0 +1,58 @@
+# VIRPIL VPC WarBRD-D (PID 0x0173 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0173 is a community estimate for the VPC WarBRD-D base.
+# Existing manifests: vpc-warbrd-d.yaml (0x8101), warbrd-base.yaml (0x43F5).
+# 0x0173 represents a third community-sourced PID estimate for this base.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC WarBRD-D"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0173   # Community estimate — see also 0x8101 and 0x43F5; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 14
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0173 is a community estimate. See vpc-warbrd-d.yaml (0x8101) and
+      warbrd-base.yaml (0x43F5) for alternative estimates. Verify with VIRPIL
+      Configurator or lsusb before production use.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      Multiple community PID estimates exist: 0x0173 (this file), 0x8101
+      (vpc-warbrd-d.yaml), and 0x43F5 (warbrd-base.yaml). Only one will match
+      real hardware. Use VIRPIL Configurator USB Info to determine the correct PID.
+  - id: HALL_EFFECT_GIMBAL
+    description: >
+      WarBRD-D uses a Hall-effect contactless gimbal with 14-bit axis resolution.
+      Zero mechanical wear; no deadzone compensation required in most setups.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-D, PID 0x0173 community estimate. VID 0x3344 confirmed.
+    See also vpc-warbrd-d.yaml (0x8101) and warbrd-base.yaml (0x43F5).
+    Last reviewed: 2026-06.

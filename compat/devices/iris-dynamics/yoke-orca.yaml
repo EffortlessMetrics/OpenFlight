@@ -1,0 +1,50 @@
+# IRIS Dynamics Orca Series FFB Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 (MCS Electronics). PID 0x0F01 estimated for Orca FFB Yoke.
+# High-end force feedback yoke using IRIS Dynamics Orca linear actuators.
+schema_version: "1"
+
+device:
+  name: "IRIS Dynamics Orca Series FFB Yoke"
+  vendor: "IRIS Dynamics"
+  usb:
+    vendor_id: 0x16D0
+    product_id: 0x0F01
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: ORCA_LINEAR_ACTUATOR_FFB
+    description: >
+      Uses IRIS Dynamics Orca series linear actuators for direct-drive
+      force feedback. Very high bandwidth and low latency FFB response.
+      Requires IRIS Dynamics SDK for FFB effect configuration.
+  - id: HIGH_POLLING_RATE
+    description: >
+      1000 Hz polling rate for minimal FFB latency. USB high-speed
+      connection required for full bandwidth.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    IRIS Dynamics Orca Series FFB Yoke. PID 0x0F01 estimated.
+    High-end direct-drive force feedback yoke. Last reviewed: 2026-06.

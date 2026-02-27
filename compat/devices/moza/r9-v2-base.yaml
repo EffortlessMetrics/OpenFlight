@@ -1,0 +1,48 @@
+# MOZA R9 V2 Direct Drive Wheelbase
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: MOZA Racing / Guangzhou Gudsen Technology (registered).
+# PID 0x0005: community estimate for R9 V2 (updated from R9 original).
+# 9Nm direct drive wheel base with improved cooling and UI. Used in some
+# flight sim setups for yoke column simulation.
+
+schema_version: "1"
+
+device:
+  name: "MOZA R9 V2 Direct Drive Wheelbase"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E   # MOZA Racing / Gudsen Technology (confirmed)
+    product_id: 0x0005  # R9 V2 — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 1
+    names: [steering]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0005 is a community estimate. Verify against actual MOZA R9 V2 hardware."
+  - id: DIRECT_DRIVE
+    description: "9Nm direct-drive motor with 16-bit encoder resolution."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA R9 V2 direct drive wheelbase (9Nm). VID 0x346E confirmed; PID
+    unconfirmed. See r9-base.yaml for original R9. Last reviewed: 2026-06.

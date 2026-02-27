@@ -1,0 +1,59 @@
+# Moza R21 Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology / Moza (shared by all Moza products).
+# PID 0x0014 is a community estimate for the Moza R21.
+# The R21 is Moza's flagship direct-drive base (21 Nm peak), positioned above
+# the R9 (r9-base.yaml) and R16 (r16-base.yaml). Used in high-end combined
+# sim setups with flight grip adapters.
+
+schema_version: "1"
+
+device:
+  name: "Moza R21 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology, confirmed)
+    product_id: 0x0014    # Community estimate — R21
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 21.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0014 is a community estimate. Moza R9 is 0x000C (r9-base.yaml);
+      R16 is estimated at 0x0010 (r16-base.yaml). Confirm R21 PID with lsusb
+      or Moza Pit House software USB capture.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R21 base exposes only the rotation axis. A flight grip adapter is
+      required to add buttons. Adapter enumerates as a separate USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R21 — flagship 21 Nm direct-drive base. VID 0x346E confirmed;
+    PID 0x0014 is a community estimate. Highest-torque Moza base.
+    See also r9-base.yaml, r16-base.yaml. Last reviewed: 2026-06.

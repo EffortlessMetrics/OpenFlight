@@ -1,0 +1,69 @@
+# IL-2 Sturmovik: Great Battles Series — Virtual Controller + UDP Telemetry
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "IL-2 Sturmovik: Great Battles"
+  id: il2-great-battles
+  developer: "1C Game Studios / 777 Studios"
+
+integration:
+  mechanism: "Virtual Controller (ViGEm/vJoy)"
+  crate: flight-virtual
+  protocol_notes: >
+    IL-2 Great Battles reads HOTAS input via DirectInput. OpenFlight maps
+    physical device inputs through its axis pipeline (curves, deadzones,
+    detents) and presents the result as a virtual controller via ViGEm or
+    vJoy, which the game then sees as a standard DirectInput device.
+    The game's custom HOTAS binding files (.actions files in
+    data/input/) map virtual controller axes and buttons to in-game
+    functions. A UDP telemetry feed is available if the user enables
+    addr= in startup.cfg, but OpenFlight does not yet implement a
+    dedicated IL-2 telemetry adapter.
+
+supported_versions:
+  - "IL-2 Sturmovik: Battle of Stalingrad (4.x)"
+  - "IL-2 Sturmovik: Battle of Moscow (4.x)"
+  - "IL-2 Sturmovik: Flying Circus (4.x)"
+  - "IL-2 Sturmovik: Battle of Normandy (4.x)"
+
+requirements:
+  - "ViGEm Bus Driver must be installed separately on Windows"
+  - "In-game controller bindings must be configured to map virtual controller axes"
+
+features:
+  telemetry_read: false
+  control_injection:
+    direct: false
+    virtual_controller: true    # via ViGEm/vJoy bridge
+  force_feedback_translation: false
+  aircraft_detection: false     # No telemetry adapter; aircraft type unavailable
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 3
+
+known_issues:
+  - id: NO_TELEMETRY_ADAPTER
+    description: >
+      OpenFlight does not yet include a dedicated IL-2 telemetry adapter.
+      The game can emit UDP telemetry when addr= is set in startup.cfg,
+      but this feed is not parsed by any current OpenFlight crate.
+      Features such as safe-for-FFB and aircraft auto-switch are therefore
+      unavailable.
+  - id: VIGEM_DEPENDENCY
+    description: >
+      ViGEm Bus Driver must be installed separately on Windows for the
+      virtual controller bridge to function. The installer documents
+      this as an optional dependency.
+  - id: BINDING_FILE_MANUAL_SETUP
+    description: >
+      Users must manually edit IL-2 .actions binding files or use the
+      in-game controller setup UI to map the virtual controller axes
+      exposed by OpenFlight. There is no automatic profile injection.

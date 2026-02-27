@@ -1,0 +1,55 @@
+# CockpitSonic EFIS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CockpitSonic EFIS replicates the Boeing 737 NG EFIS control panel for
+# captain or first officer position. Provides ND mode/range rotaries,
+# BARO selector, and FD/CTRINC/VORILS pushbuttons.
+# VID 0x16C0 / PID 0x0601: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "CockpitSonic EFIS Panel"
+  vendor: "CockpitSonic"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0601      # Community estimate — EFIS
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2                # BARO and minimums selectors as rotaries
+    names: [baro, minimums]
+    resolution_bits: 8
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0601 is a community estimate. Confirm with CockpitSonic panel utility.
+  - id: BARO_QNH_MODE
+    description: >
+      BARO push selects QNH or QFE mode. Report sent as a button event.
+  - id: ND_MODE_RANGE_ROTARIES
+    description: >
+      ND MODE and RANGE selectors are detented rotaries reporting as analogue
+      axes with discrete positions. Use detent_map binding for APP/VOR/MAP/PLN.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CockpitSonic EFIS panel. VID 0x16C0 / PID 0x0601 est.
+    One unit per seat; for MIP see cockpitsonic-mip.yaml.
+    Last reviewed: 2026-06.

@@ -1,0 +1,9 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+G940ThrottleState {
+    left_throttle: 0.0,
+    right_throttle: 0.0,
+    buttons: 0,
+}

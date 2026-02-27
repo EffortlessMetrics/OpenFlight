@@ -1,0 +1,48 @@
+# VIRPIL VPC ACE Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x80D0 — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls
+    product_id: 0x80D0      # Community estimate — VPC ACE Pedals
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. VIRPIL VPC ACE Rudder Pedals. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VIRPIL VPC ACE Rudder Pedals — premium combat pedals. PID 0x80D0 community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs
+  - xplane

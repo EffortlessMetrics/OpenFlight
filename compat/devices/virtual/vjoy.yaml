@@ -1,0 +1,67 @@
+# vJoy Virtual Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1234, PID 0xBEAD confirmed from the vJoy open-source driver
+# (github.com/jshafer817/vJoy, VjdStat.h) and the vJoy SDK source.
+# vJoy is a widely-used Windows kernel driver that exposes up to 16 virtual
+# HID joystick devices. It is used by OpenFlight internally as a virtual
+# output device, and by many community tools (Joystick Gremlin, FreePIE,
+# OpenTrack) to feed processed axis data to simulators.
+schema_version: "1"
+
+device:
+  name: "vJoy Virtual Joystick"
+  vendor: "Shaul Eizikovich / vJoy"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1234    # vJoy USB vendor (from vJoy SDK source)
+    product_id: 0xBEAD   # vJoy virtual device PID (confirmed from vJoy source)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 15  # vJoy default 32768-value range
+  buttons: 128           # Up to 128 virtual buttons per device
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8       # Software timing; jitter higher than hardware HID
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      vJoy creates a software HID device with no physical hardware. The axis
+      and button layout is configurable via the vJoy Control Panel; values
+      listed here represent a typical default configuration. Multiple vJoy
+      devices (up to 16) may be enumerated simultaneously — each shares
+      the same VID 0x1234 / PID 0xBEAD.
+  - id: VJOY_MULTI_INSTANCE
+    description: >
+      Multiple vJoy devices share the same VID/PID. OpenFlight disambiguates
+      them by device instance number reported by the HID layer. Ensure the
+      profile specifies the correct instance index if multiple vJoy devices
+      are active.
+  - id: AXIS_RANGE_15BIT
+    description: >
+      vJoy reports axis values in [1, 32767] (15-bit effective range) by
+      default. OpenFlight normalises to [-1.0, 1.0] using the vJoy
+      value range. Deadzones and curves are applied after normalisation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    vJoy is the de-facto standard virtual joystick driver on Windows.
+    VID 0x1234 / PID 0xBEAD confirmed from vJoy SDK and open-source driver.
+    Used by OpenFlight as a virtual output sink. Axis/button count is
+    configurable; values represent a sensible default.
+    Last reviewed: 2026-06.

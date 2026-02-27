@@ -1,0 +1,57 @@
+# ViGEm Virtual DualShock 4
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ViGEm (Virtual Gamepad Emulation Framework) by Nefarius Software Solutions.
+# DS4 emulation target uses VID 0x054C / PID 0x05C4 — identical to the Sony
+# DualShock 4 (CUH-ZCT1x series). Confirmed from ViGEm Bus driver source
+# (github.com/ViGEm/ViGEmBus, EmulationTargetDS4.cpp).
+schema_version: "1"
+
+device:
+  name: "ViGEm Virtual DualShock 4"
+  vendor: "Nefarius Software Solutions / ViGEm"
+  is_virtual: true
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment
+    product_id: 0x05C4   # DualShock 4 CUH-ZCT1x PID (emulated by ViGEm)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      ViGEm DS4 emulation presents a software device identical to real
+      DualShock 4 hardware. VID/PID (0x054C/0x05C4) is shared with
+      physical DS4 controllers.
+  - id: PID_CONFLICT_REAL_HW
+    description: >
+      Conflicts with real DualShock 4 hardware. Disambiguation requires
+      checking the device instance path or bus type from the HID layer.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    ViGEm DS4 target used for PS4/PC simulators accepting DualShock 4 input.
+    VID/PID confirmed from ViGEm Bus open-source driver.
+    Last reviewed: 2026-06.

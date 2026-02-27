@@ -1,0 +1,61 @@
+# Saitek ST50 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Saitek ST50 was a budget joystick from the early USB era (circa 2000–2004),
+# notable for its distinctive "Y-shaped" throttle-body design. Features a
+# twist-rudder axis and a top-mounted throttle slider. Often used with a USB
+# adapter when the original gameport version is used on modern PCs.
+# VID 0x06A3 (Saitek) confirmed; PID 0x0040 is a community estimate —
+# original ST50 gameport versions may use a Gravis or analog joystick VID
+# when adapted to USB.
+
+schema_version: "1"
+
+device:
+  name: "Saitek ST50 Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC (confirmed)
+    product_id: 0x0040      # Community estimate — PID_UNCONFIRMED for USB variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 8      # Legacy 8-bit ADC
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0040 is a community estimate. The ST50 was primarily a gameport
+      device; USB versions used various adapter chips. Verify with lsusb.
+  - id: LEGACY_8BIT_ADC
+    description: >
+      The ST50 uses 8-bit analog-to-digital converters for axis resolution
+      (256 steps). Apply dead-zone and smoothing in the OpenFlight profile.
+  - id: ADAPTER_DEPENDENT
+    description: >
+      Native USB ST50 variants are rare; many users connect the original
+      gameport version via a generic gameport-to-USB adapter (e.g., Mayflash).
+      These adapters may report different VID/PIDs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek ST50 — budget legacy joystick circa 2000–2004. PID 0x0040
+    unconfirmed; primarily a gameport device. VID 0x06A3 confirmed for Saitek.
+    Last reviewed: 2026-06.

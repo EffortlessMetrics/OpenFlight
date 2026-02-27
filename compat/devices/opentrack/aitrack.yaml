@@ -1,0 +1,58 @@
+# AITrack IR Head Tracker (Virtual via OpenTrack)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# AITrack is open-source software that uses webcam AI-based head pose estimation
+# and outputs head tracking data via OpenTrack's UDP protocol. There is no
+# physical USB HID device — OpenFlight receives 6DOF data through the same
+# OpenTrack UDP endpoint as opentrack_udp_source.yaml.
+schema_version: "1"
+
+device:
+  name: "AITrack (via OpenTrack UDP)"
+  vendor: "AITrack Project"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Virtual device — no physical USB
+    product_id: 0x0000  # Virtual device — no physical USB
+  virtual: true
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, yaw, pitch, roll]
+    resolution_bits: 64   # IEEE 754 double precision
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60    # Typical webcam-limited rate; may be lower on weak hardware
+  max_jitter_ms: 16
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      AITrack is software-only. It outputs 6DOF head pose over OpenTrack's
+      UDP protocol (48-byte double packet). OpenFlight activates this source
+      via the same UDP binding as OpenTrack (opentrack_udp_source.yaml).
+  - id: WEBCAM_ACCURACY
+    description: >
+      AI pose estimation from a standard webcam has higher latency and lower
+      accuracy than IR-LED based trackers (TrackIR, DelanClip). Expect up to
+      16ms additional latency and occasional pose-loss events.
+  - id: NO_USB_MATCHING
+    description: >
+      VID 0x0000 / PID 0x0000 — activated via OpenTrack UDP protocol binding,
+      not USB enumeration. Configure AITrack to output to OpenTrack, then
+      configure OpenTrack UDP output to OpenFlight's listen port (default 4242).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    AITrack webcam-based head tracker, accessed via OpenTrack UDP protocol.
+    No physical USB device. Set AITrack → OpenTrack → OpenFlight UDP chain.
+    See opentrack_udp_source.yaml for protocol details. Last reviewed: 2026-06.

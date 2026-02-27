@@ -1,0 +1,69 @@
+# Thrustmaster F/A-18C Hornet HOTAS Add-On Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB108 — community-documented; not confirmed on physical hardware.
+# Source: DCS World forums, linux-hardware.org community reports.
+# This grip replaces the standard Warthog joystick grip and requires
+# a compatible throttle base (HOTAS Warthog throttle).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F/A-18C Hornet HOTAS Add-On Grip"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB108   # Community-documented; HIL confirmation pending
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [mini_stick_x, mini_stick_y, slew_x, slew_y]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: FA18C_REQUIRES_WARTHOG_BASE
+    description: >
+      The F/A-18C grip is a drop-in replacement for the Warthog joystick grip.
+      It requires a HOTAS Warthog throttle base (PID 0x0404) or another
+      compatible base. The grip does not enumerate as a standalone device
+      without a compatible base unit; it is electrically and logically
+      dependent on the base.
+  - id: FA18C_MINI_STICK_BIPOLAR
+    description: >
+      The mini-stick (X/Y) and slew control (X/Y) axes are bipolar 16-bit
+      channels centered at approximately 32768. Normalize as 0→-1.0,
+      32768→0.0, 65535→+1.0.
+  - id: FA18C_PINKY_LEVER
+    description: >
+      The grip includes a pinky lever (trigger guard) that is reported as a
+      button. Some DCS profiles map this as a modifier. Exact button index
+      varies by report layout version.
+  - id: FA18C_INCOMPATIBLE_BASES
+    description: >
+      This grip is not compatible with all third-party Warthog-compatible
+      bases. Thrustmaster officially supports only the HOTAS Warthog throttle
+      base. Compatibility with VKB, Virpil, or other bases is untested and
+      may require adapter hardware.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout, HIL pending)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The F/A-18C Hornet HOTAS Add-On Grip is primarily used in DCS World F/A-18C
+    Hornet module. Layout is derived from community DCS forum documentation and
+    T.A.R.G.E.T scripting references. PID 0xB108 is community-documented and
+    has not been confirmed against physical hardware. Byte offsets unvalidated.
+    Last reviewed: 2026-06.

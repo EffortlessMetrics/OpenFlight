@@ -1,0 +1,58 @@
+# CockpitSonic Overhead Panel Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CockpitSonic Overhead Panel module covers the Boeing 737 NG overhead
+# panel upper section (electrical, fuel, hydraulic, anti-ice systems).
+# VID 0x16C0 / PID 0x0603: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "CockpitSonic Overhead Panel Controller"
+  vendor: "CockpitSonic"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0603      # Community estimate — Overhead
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0603 is a community estimate. Confirm with CockpitSonic panel utility.
+  - id: GUARDED_SWITCHES
+    description: >
+      Several critical switches (hydraulic, fuel crossfeed) have plastic guards
+      that each send a button event when opened before the underlying switch
+      can be actuated. Guard events precede the switch state event.
+  - id: MULTIPLE_MODULES
+    description: >
+      Full 737 NG overhead typically requires multiple CockpitSonic modules.
+      Each module enumerates as a separate USB HID device. Bind all modules
+      in the overhead panel profile group.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CockpitSonic overhead panel controller. VID 0x16C0 / PID 0x0603 est.
+    Covers Boeing 737 NG overhead upper section.
+    See cockpitsonic-mip.yaml and cockpitsonic-autopilot.yaml for other modules.
+    Last reviewed: 2026-06.

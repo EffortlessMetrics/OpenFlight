@@ -1,0 +1,53 @@
+# Fanatec CSL DD Pro Bundle (virtual bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual bundle combining the Fanatec CSL DD Pro base (csl-dd-pro.yaml) with
+# compatible steering wheel and pedals as the recommended CSL DD Pro setup.
+# No single USB product_id -- components enumerate separately.
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL DD Pro Bundle"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: ~          # Virtual bundle -- no single PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest represents the common pairing of the Fanatec CSL DD Pro
+      base (csl-dd-pro.yaml) with a compatible steering wheel and pedal set.
+      Each component enumerates separately. Configure each via its individual
+      manifest; use this entry only for profile-level bundle documentation.
+  - id: TWO_USB_DEVICES
+    description: >
+      The bundle occupies two or more USB HID entries. Axis count and button
+      count are the sum of the individual components. See component manifests
+      for accurate capability details.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL DD Pro Bundle -- virtual bundle documentation entry.
+    Component manifest: csl-dd-pro.yaml. Last reviewed: 2026-06.

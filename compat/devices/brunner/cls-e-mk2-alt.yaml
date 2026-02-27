@@ -1,0 +1,59 @@
+# Brunner CLS-E MK II Yoke (alternate VID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLS-E MK II is the second-generation CLS-E active force feedback yoke.
+# This manifest covers a community-estimated VID 0x1294 / PID 0x1294 variant.
+# The primary manifest (cls-e-mk2.yaml) uses the confirmed Brunner VID 0x25BB.
+# VID 0x1294 (Texas Instruments MSP430) has been reported by some users; treat
+# this as unconfirmed until verified with lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E MK II Yoke"
+  vendor: "Brunner Elektronik"
+  usb:
+    vendor_id: 0x1294       # PID estimated — confirmed Brunner VID is 0x25BB
+    product_id: 0x1294      # Community estimate — CLS-E MK II (alternate batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 16
+  buttons: 4
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x1294 (TI MSP430) / PID 0x1294 are community estimates and may be
+      incorrect. Confirmed Brunner VID is 0x25BB (see cls-e-mk2.yaml, cls-e.yaml).
+      Verify with lsusb on real hardware before using this manifest.
+  - id: ACTIVE_FFB_YOKE
+    description: >
+      CLS-E MK II provides active force feedback on both pitch and roll axes
+      via Brunner's proprietary FFB protocol. Requires CLS2SIM integration.
+  - id: DISTINCT_FROM_MKVII
+    description: >
+      MK II designates the second hardware revision. See cls-e.yaml for the
+      original CLS-E yoke variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E MK II yoke — VID 0x1294 / PID 0x1294 est (alternate/unconfirmed).
+    Primary manifest: cls-e-mk2.yaml (VID 0x25BB). Requires Brunner CLS2SIM.
+    Last reviewed: 2026-06.

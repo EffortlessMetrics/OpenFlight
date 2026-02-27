@@ -1,0 +1,54 @@
+# SimKits USB Cockpit Panel Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress Semiconductor) / PID 0xF233 — community estimate.
+# SimKits (Netherlands) produces USB cockpit panels for FSX/MSFS/X-Plane
+# home cockpit builders. Their USB panels use Cypress USB MCUs for HID
+# connectivity. Product line includes MCP737, EFIS panels, and IOCards master.
+schema_version: "1"
+
+device:
+  name: "SimKits USB Panel Controller"
+  vendor: "SimKits"
+  type: panel
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor (community estimate for SimKits)
+    product_id: 0xF233      # SimKits USB Panel — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel/cockpit device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF233 is a community estimate. SimKits uses Cypress FX2LP (VID 0x04B4)
+      for USB; the actual PID depends on panel type and firmware version.
+      Verify with lsusb. Other SimKits panels (MCP737, EFIS) have separate
+      manifest entries.
+  - id: IOCARDS_COMPATIBLE
+    description: >
+      SimKits panels are designed for use with the IOCards/SIOC software stack.
+      OpenFlight reads button states via standard HID input reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits USB Panel Controller (generic). VID 0x04B4; PID 0xF233 estimated.
+    Dutch cockpit panel builder; SIOC/IOCards compatible. Wave-42 addition. Last reviewed: 2026-07.

@@ -1,0 +1,63 @@
+# Honeycomb Alpha XPC Flight Controls (Xbox + PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb Aeronautical).
+# PID 0x0C01 — community estimate for Alpha XPC (dual Xbox/PC mode).
+# The Honeycomb Alpha XPC is a dual-mode variant of the Alpha yoke that
+# supports both Xbox Series X/S and PC (USB HID) simultaneously. In PC
+# mode it is functionally identical to the Alpha (alpha-yoke.yaml) but
+# enumerates under a different PID. The XPC edition has USB-C instead of
+# USB-A.
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Alpha XPC Flight Controls"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B       # Honeycomb Aeronautical
+    product_id: 0x0C01      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, throttle_left, throttle_right]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C01 is a community estimate for the Alpha XPC PC mode. The
+      original Alpha yoke (alpha-yoke.yaml) uses a different PID. Confirm
+      with lsusb on real hardware.
+  - id: XBOX_PC_DUAL_MODE
+    description: >
+      The Alpha XPC supports Xbox Series X/S via the Xbox Wireless protocol
+      and PC via USB HID simultaneously. Only the USB HID path is supported
+      by OpenFlight; Xbox wireless mode is not accessible as a standard HID
+      device.
+  - id: USB_C_CONNECTOR
+    description: >
+      The Alpha XPC uses USB-C (vs USB-A on the standard Alpha). Behaviour
+      is identical in PC HID mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Alpha XPC: dual Xbox/PC yoke. PC-mode PID 0x0C01 is a community
+    estimate. In PC HID mode behaviour matches alpha-yoke.yaml. USB-C connector.
+    Last reviewed: 2026-02.

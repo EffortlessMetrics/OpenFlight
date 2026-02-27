@@ -1,0 +1,45 @@
+# DIY Teensy Yoke Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (Teensy). PID 0x0488 (Teensy Joystick HID).
+# DIY yoke built on Teensy microcontroller platform.
+schema_version: "1"
+
+device:
+  name: "DIY Teensy Yoke Controller"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x0488
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: TEENSY_YOKE
+    description: >
+      Teensy-based yoke with USB joystick HID. Native 12-bit ADC
+      resolution. Common platform for 3D-printed yoke builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Teensy Yoke Controller. VID 0x16C0, PID 0x0488 (Teensy
+    joystick defaults). Last reviewed: 2026-06.

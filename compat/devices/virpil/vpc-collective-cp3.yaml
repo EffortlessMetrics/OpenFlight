@@ -1,0 +1,46 @@
+# VIRPIL VPC Collective CP3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x8212 estimated for CP3 variant.
+# The CP3 is the advanced helicopter collective with extended axis layout.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Collective CP3"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8212
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [collective, twist, friction, thumbx, thumby, slider]
+    resolution_bits: 14
+  buttons: 36
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: EXTENDED_COLLECTIVE
+    description: >
+      Advanced collective with additional thumb-stick axes and hat switch.
+      Full-range collective lever with twist throttle grip and friction
+      adjustment. Slider axis for prop/condition lever.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Collective CP3 advanced helicopter collective.
+    PID 0x8212 estimated. VID 0x3344 confirmed. Last reviewed: 2026-06.

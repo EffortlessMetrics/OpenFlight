@@ -1,0 +1,58 @@
+# Thrustmaster T.Flight Stick X
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x044F (ThrustMaster), PID 0xB106 — linux-hardware.org (28 probes, "T.Flight Stick X").
+# Also confirmed: PID 0xB107 — alternate firmware/mode variant (same product name).
+# Popular entry-level budget flight stick with twist rudder axis.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Stick X"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # Thrustmaster (ThrustMaster Inc.)
+    product_id: 0xB106    # Confirmed via linux-hardware.org (28 probes, "T.Flight Stick X")
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DUAL_PID
+    description: >
+      Two PIDs observed in the wild: 0xB106 (more common, 28 probes) and 0xB107
+      (3 probes). Both represent the same T.Flight Stick X hardware; the difference
+      is likely a firmware revision or regional variant. Both should be handled.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. The Z axis is a throttle slider on
+      the base. Slider is a second throttle-ish control on the throttle mini-stick.
+  - id: NOT_HOTAS_X
+    description: >
+      The T.Flight Stick X is a standalone joystick (no separate throttle unit).
+      It is distinct from the T.Flight Hotas X (PID 0xB108), which is a two-piece
+      HOTAS set. Do not confuse the two products.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xB106 confirmed from linux-hardware.org (28 probes). 0xB107 is also "T.Flight Stick X"
+    at the same site. Popular budget stick used in MSFS, X-Plane, DCS.
+    Alternate PID 0xB107 should be registered as a secondary alias.
+    Last reviewed: 2026-02.

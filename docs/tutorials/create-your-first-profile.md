@@ -4,7 +4,8 @@ kind: tutorial
 area: profile
 status: active
 links:
-  requirements: ["CORE-REQ-1", "CORE-REQ-2"]
+  requirements:
+    - REQ-23
   tasks: []
   adrs: []
 ---

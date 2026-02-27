@@ -1,0 +1,45 @@
+# RP2040 USB Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A (Raspberry Pi). PID 0x000B (RP2040 HID).
+# RP2040-based trim wheel controller.
+schema_version: "1"
+
+device:
+  name: "RP2040 USB Trim Wheel"
+  vendor: "Raspberry Pi"
+  usb:
+    vendor_id: 0x2E8A
+    product_id: 0x000B
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RP2040_TRIM
+    description: >
+      RP2040-based trim wheel using TinyUSB HID stack. Low-cost
+      microcontroller option for DIY trim wheel builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RP2040 USB Trim Wheel. VID/PID are RP2040 defaults;
+    actual values may vary by firmware. Last reviewed: 2026-06.

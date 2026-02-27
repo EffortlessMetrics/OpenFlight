@@ -1,0 +1,41 @@
+# Logitech WingMan RumblePad (v2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC20F — second revision of the WingMan RumblePad.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan RumblePad (v2)"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC20F
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Second revision WingMan RumblePad. PID 0xC20F from linux-usb.org.
+    Last reviewed: 2026-06.

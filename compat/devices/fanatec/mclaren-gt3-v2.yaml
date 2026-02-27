@@ -1,0 +1,60 @@
+# Fanatec McLaren GT3 V2 Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0030 is a community estimate for the McLaren GT3 V2 wheel rim.
+# The McLaren GT3 V2 is a GT3-specification carbon fibre steering wheel
+# for Fanatec wheel bases (CSL DD, DD Pro, Podium series). Second generation
+# with improved paddle shifters and a Fanatec Quick Release adapter.
+# Exposes buttons and paddle inputs via the wheel base HID device.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec McLaren GT3 V2 Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0030   # Community estimate — McLaren GT3 V2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14             # Paddles (×4), FunkySwitch (×1 = 8 directions + click), buttons (×5)
+  hats: 1
+  force_feedback: false   # FFB from wheel base, not rim
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate. The McLaren GT3 V2 rim exposes its
+      inputs via the Fanatec wheel base USB device; PID is the base's PID
+      and may vary. Confirm with lsusb or Fanatec software capture.
+  - id: RIM_ADDON
+    description: >
+      This is a wheel rim add-on requiring a Fanatec wheel base (CSL DD,
+      DD Pro, or Podium series). The rim connects via Fanatec Quick Release (QR1).
+      All button inputs are relayed through the base's USB HID report.
+  - id: FUNKYSWITCH
+    description: >
+      The McLaren GT3 V2 includes a FunkySwitch (8-way rotary encoder + push).
+      It reports as a hat switch (directions) plus a button (press).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec McLaren GT3 V2 wheel rim. VID 0x0EB7 confirmed; PID 0x0030
+    community estimate. Requires Fanatec wheel base. Last reviewed: 2026-06.

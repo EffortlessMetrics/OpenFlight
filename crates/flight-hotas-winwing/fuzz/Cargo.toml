@@ -1,0 +1,56 @@
+[package]
+name = "flight-hotas-winwing-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-winwing]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_winwing_report"
+path = "fuzz_targets/fuzz_winwing_report.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_orion2_stick"
+path = "fuzz_targets/fuzz_orion2_stick.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_orion2_throttle"
+path = "fuzz_targets/fuzz_orion2_throttle.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_tfrp_rudder"
+path = "fuzz_targets/fuzz_tfrp_rudder.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_winwing_throttle"
+path = "fuzz_targets/fuzz_winwing_throttle.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_winwing_joystick"
+path = "fuzz_targets/fuzz_winwing_joystick.rs"
+test = false
+doc = false

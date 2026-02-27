@@ -1,0 +1,58 @@
+# VIRPIL VPC SharKa-50 Control Panel (PID 0x4184)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB (the-sz.com USB ID DB).
+# PID 0x4184 is a community estimate for the VPC SharKa-50 Control Panel
+# (button/switch panel accessory for the SharKa-50 throttle). The SharKa-50
+# throttle grip uses PID 0x8205 (vpc-sharka-50.yaml) and the shark panel
+# 0x825D (shark-panel.yaml). No hardware probe has confirmed 0x4184.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC SharKa-50 Control Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4184      # Community estimate — confirm with VPC Configurator or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [rx, ry]
+    resolution_bits: 15     # 15-bit precision
+  buttons: 24
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4184 is a community estimate for the VPC SharKa-50 Control Panel.
+      The SharKa-50 throttle grip uses PID 0x8205 (vpc-sharka-50.yaml) and the
+      shark panel uses PID 0x825D (shark-panel.yaml). Verify with VPC Configurator
+      or lsusb on real hardware.
+  - id: PANEL_WITH_AXES
+    description: >
+      Panel device with mini-stick axes (rx, ry) for radar/sensor slew
+      plus multiple toggle switches and encoders. Designed for DCS Su-25T
+      and similar aircraft modules.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC SharKa-50 Control Panel — PID 0x4184 community estimate.
+    VID 0x3344 (VIRPIL Controls UAB). Panel accessory for the VPC SharKa-50
+    throttle system. See also vpc-sharka-50.yaml (PID 0x8205) and
+    shark-panel.yaml (PID 0x825D). Wave-47 addition. Last reviewed: 2026-07.

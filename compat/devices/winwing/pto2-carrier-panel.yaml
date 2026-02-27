@@ -1,0 +1,52 @@
+# WinWing PTO2 Carrier Trap Operations Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing).
+# PID is unconfirmed — the PTO2 (Power Take-Off / Carrier Operations Panel)
+# replicates the F/A-18C carrier-landing checklist panel with arresting-gear,
+# launch-bar, flap/slat, and hook controls. Primary use case: DCS F/A-18C.
+
+schema_version: "1"
+
+device:
+  name: "WinWing PTO2 Carrier Trap Operations Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF11      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16               # Arresting hook, launch bar, flap lever, NWS, more
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF11 is a community estimate. Confirm with lsusb on real hardware.
+  - id: GUARDED_SWITCHES
+    description: >
+      Several switches have physical guards that must be lifted before actuation.
+      OpenFlight treats these as single-action buttons on the guard-open state.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing PTO2 carrier trap and launch operations panel for F/A-18C cockpit
+    builds. PID 0xBF11 unconfirmed. DCS F/A-18C primary use case.
+    Last reviewed: 2026-06.

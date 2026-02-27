@@ -1,0 +1,67 @@
+# GoFlight GF-100 Boeing 737 Mode Control Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed (GoFlight Inc.).
+# PID 0x000A is a community estimate; GoFlight uses sequential PIDs starting at
+# 0x0003. Confirmed products: GF-MCP=0x0003, GF-46=0x0004. The GF-100 is a
+# full-size Boeing 737 NG-style MCP with 7-segment displays for IAS, HDG, ALT,
+# VS/FPA, CRS, and integrated FD/AT/LNAV/VNAV/APP/VOR annunciators.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-100 Boeing 737 MCP"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x000A      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48               # All mode annunciators + rotary encoder push buttons
+  hats: 0
+  encoders: 10              # IAS, HDG, ALT, VS, CRS L, CRS R, outer/inner knobs
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 24              # IAS (3), HDG (3), ALT (5), VS (4), CRS1 (3), CRS2 (3) + spares
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000A is a community estimate. GoFlight uses sequential PIDs; known
+      PIDs: 0x0003 (GF-MCP), 0x0004 (GF-46), 0x0008 (GF-166). The GF-100 is
+      a larger, more capable MCP than the standard GF-MCP. Confirm with lsusb
+      or USBView on real hardware.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      7-segment displays require USB HID output reports driven by sim telemetry.
+      Without active output writes displays show static or blank values.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary encoders report as increment/decrement button-pair events.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary bidirectional HID panel protocol. Compatible
+      with the FSUIPC GoFlight plugin and community open-source drivers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-100 full-size Boeing 737 MCP with 7-segment displays and
+    AP annunciators. PID 0x000A is a community estimate — confirm with lsusb.
+    Bidirectional HID required for display output. Last reviewed: 2026-06.

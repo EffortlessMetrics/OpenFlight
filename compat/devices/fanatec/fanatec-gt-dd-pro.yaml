@@ -1,0 +1,47 @@
+# Fanatec Gran Turismo DD Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec). PID 0x0E0A — community estimate.
+# Wave-73 addition.
+schema_version: "1"
+
+device:
+  name: "Fanatec Gran Turismo DD Pro"
+  vendor: "Fanatec"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec (Endor AG)
+    product_id: 0x0E0A      # Community estimate — GT DD Pro
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [steering, throttle, brake, clutch, slider]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Fanatec GT DD Pro direct drive wheelbase. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Fanatec Gran Turismo DD Pro — 8Nm direct drive. PID 0x0E0A community estimate. Wave-73. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

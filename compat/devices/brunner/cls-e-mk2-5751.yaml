@@ -1,0 +1,65 @@
+# Brunner CLS-E MK II Force Feedback Yoke (STM variant, PID 0x5751)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) — alternate firmware variant for the
+# Brunner CLS-E MK II. The primary CLS-E Mk.2 uses VID 0x25BB (Brunner's
+# registered USB vendor ID); some production batches ship with STM32 USB
+# firmware that enumerates under VID 0x0483.
+# PID 0x5751 is a community estimate for this STM variant of the CLS-E MK II.
+# See cls-e-mk2.yaml (VID 0x25BB, PID 0x0065) for the primary manifest.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E MK II Force Feedback Yoke (STM variant)"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — alternate CLS-E MK II firmware VID
+    product_id: 0x5751      # Community estimate — STM variant; primary is 0x25BB:0x0065
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 16
+  buttons: 20
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured via CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5751 with VID 0x0483 (STM) is a community estimate for the
+      Brunner CLS-E MK II alternate firmware. The primary manifest is
+      cls-e-mk2.yaml (VID 0x25BB, PID 0x0065). Confirm with lsusb.
+  - id: STM_FIRMWARE_VARIANT
+    description: >
+      This manifest covers CLS-E MK II units that ship with STM32-based
+      USB firmware (VID 0x0483). Functionally identical to the 0x25BB
+      variant but may require a separate profile entry for device matching.
+  - id: CLS2SIM_COMPANION
+    description: >
+      Requires Brunner CLS2SIM companion software for FFB configuration and
+      yoke calibration. OpenFlight reads axis data directly via HID but FFB
+      effects must be sent via the CLS2SIM API or USB HID output reports.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E MK II STM variant (VID 0x0483, PID 0x5751 est).
+    Alternate firmware variant of the CLS-E MK II. Primary manifest:
+    cls-e-mk2.yaml. Wave-49 addition. Last reviewed: 2026-07.

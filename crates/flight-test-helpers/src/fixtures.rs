@@ -106,6 +106,23 @@ mod tests {
     }
 
     #[test]
+    fn test_config_builder_customization() {
+        let config = TestConfigBuilder::default()
+            .with_timeout(Duration::from_millis(500))
+            .with_poll_interval(Duration::from_millis(25))
+            .build();
+        assert_eq!(config.timeout, Duration::from_millis(500));
+        assert_eq!(config.poll_interval, Duration::from_millis(25));
+    }
+
+    #[test]
+    fn test_device_builder_default_vid_pid() {
+        let id = TestDeviceBuilder::default().build();
+        assert_eq!(id.vendor_id, 0x1234);
+        assert_eq!(id.product_id, 0x5678);
+    }
+
+    #[test]
     fn test_device_builder_customization() {
         let id = TestDeviceBuilder::default()
             .with_vid_pid(0x06a3, 0x0762)

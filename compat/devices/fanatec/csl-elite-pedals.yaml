@@ -1,0 +1,53 @@
+# Fanatec CSL Elite Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0011 is a community estimate for the CSL Elite Pedals (PC / Xbox
+# compatible edition). The CSL Elite Pedals are Fanatec's mid-range pedal
+# set, often used as rudder/brake controls in flight sim setups.
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Pedals"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH
+    product_id: 0x0011   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+  - id: LOAD_CELL_BRAKE_OPTIONAL
+    description: >
+      The CSL Elite Pedals can be upgraded with an optional load cell brake
+      kit (LC kit). When the LC kit is installed the brake axis uses load
+      cell sensing and the response profile differs from the stock sensor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Pedals. VID 0x0EB7 = Fanatec GmbH. PID unconfirmed.
+    Mid-range pedal set used in combined race/flight setups.
+    Last reviewed: 2026-06.

@@ -1,0 +1,57 @@
+# CH Products Multi-Function Panel (MFP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products), PID 0x00B8 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_CH_MFP). The CH Multi-Function
+# Panel provides 20 programmable buttons and 4 rotary selectors for
+# avionics and systems management in flight simulation.
+schema_version: "1"
+
+device:
+  name: "CH Products Multi-Function Panel"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00B8      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [rotary1, rotary2, rotary3, rotary4]
+    resolution_bits: 8
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: OS_MEDIATED_HID
+    description: >
+      Follows CH Products OS-mediated HID convention — no raw report ID byte.
+  - id: ROTARY_SELECTOR_AXES
+    description: >
+      The four rotary selectors report as 8-bit axis values rather than
+      button events. Each selector has between 10 and 16 positions; map
+      the axis range to the corresponding selector position count in the
+      profile's axis-to-button mapping.
+  - id: CH_MANAGER_RECOMMENDED
+    description: >
+      CH Control Manager software can remap buttons and rotaries across all
+      connected CH devices into a single virtual HID device for MSFS/X-Plane.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Multi-Function Panel (MFP). VID/PID confirmed from Linux
+    kernel hid-ids.h. 20 buttons + 4 rotary selectors. Popular for autopilot
+    and avionics panel control in GA simulation. Last reviewed: 2026-06.

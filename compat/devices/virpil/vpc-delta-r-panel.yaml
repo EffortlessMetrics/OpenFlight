@@ -1,0 +1,59 @@
+# VIRPIL VPC Delta R Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x025C — VPC Delta R Panel.
+# Source: community VIRPIL USB ID tracking (panel PID range 0x025x).
+# Not confirmed from a lsusb hardware probe or official VIRPIL docs;
+# verify against real hardware before deploying.
+#
+# The VPC Delta R Panel is a right-hand desk-mount button box featuring
+# rotary encoders, guarded toggle switches, and push buttons. It is
+# designed as a companion to the CM2/CM3 throttle or as a standalone
+# panel for cockpit builders.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Delta R Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025C   # community-sourced; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: NO_AXES
+    description: "The VPC Delta R Panel is a pure button/encoder panel with no analog axes."
+  - id: ROTARY_AS_BUTTONS
+    description: >
+      Rotary encoders are reported as pairs of momentary button presses:
+      clockwise = button N, counter-clockwise = button N+1. They do not
+      expose a continuous analog axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x025C is community-sourced from VIRPIL panel PID range (0x025x);
+    not confirmed from lsusb probe or official VIRPIL documentation.
+    Button count (48) estimated from product description; verify against
+    hardware. VIRPIL VID=0x3344. Last reviewed: 2026-02.

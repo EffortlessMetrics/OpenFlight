@@ -59,4 +59,34 @@ mod tests {
             .is_operational()
         );
     }
+
+    #[test]
+    fn test_reason_healthy_is_none() {
+        assert!(DeviceHealth::Healthy.reason().is_none());
+    }
+
+    #[test]
+    fn test_reason_degraded() {
+        let h = DeviceHealth::Degraded {
+            reason: "high latency".to_string(),
+        };
+        assert_eq!(h.reason(), Some("high latency"));
+    }
+
+    #[test]
+    fn test_reason_quarantined() {
+        let h = DeviceHealth::Quarantined {
+            since: Instant::now(),
+            reason: "too many errors".to_string(),
+        };
+        assert_eq!(h.reason(), Some("too many errors"));
+    }
+
+    #[test]
+    fn test_reason_failed() {
+        let h = DeviceHealth::Failed {
+            error: "USB disconnect".to_string(),
+        };
+        assert_eq!(h.reason(), Some("USB disconnect"));
+    }
 }

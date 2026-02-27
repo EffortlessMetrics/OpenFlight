@@ -1,0 +1,77 @@
+# Thrustmaster T.A.R.G.E.T Virtual Combined Device
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0402 — this is the PID used by the T.A.R.G.E.T virtual HID device
+# when T.A.R.G.E.T software merges multiple Thrustmaster devices into a single
+# combined virtual joystick. This PID overlaps with the physical HOTAS Warthog
+# Joystick (see warthog-joystick.yaml); when T.A.R.G.E.T is active, the virtual
+# device replaces the physical Warthog device in the HID device tree.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.A.R.G.E.T Virtual Device"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0402   # Virtual combined device PID (T.A.R.G.E.T software)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8              # Typical combined count; varies by T.A.R.G.E.T config
+    names: [x, y, rz, throttle_left, throttle_right, scx, scy, slider]
+    resolution_bits: 16
+  buttons: 120            # Maximum merged button count; varies by config
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: TARGET_VIRTUAL_DEVICE
+    description: >
+      This device is created by Thrustmaster T.A.R.G.E.T (Target Advanced
+      pRogramming Graphical EdiTor) software. T.A.R.G.E.T merges all connected
+      Thrustmaster HID devices (Warthog stick, throttle, rudder pedals, etc.)
+      into a single virtual DirectInput/HID device. The axis and button layout
+      VARIES by the T.A.R.G.E.T script loaded by the user. Values listed in
+      `capabilities` represent the default Warthog+Throttle combined profile;
+      actual axis/button count depends on T.A.R.G.E.T configuration.
+  - id: TARGET_PID_CONFLICT
+    description: >
+      PID 0x0402 is shared between the physical HOTAS Warthog Joystick and the
+      T.A.R.G.E.T virtual device. When T.A.R.G.E.T software is running, the
+      virtual device appears under this PID and the physical Warthog stick may
+      be hidden from other applications. Detection must check whether T.A.R.G.E.T
+      is running to disambiguate. The recommended approach is to check for the
+      presence of T.A.R.G.E.T.exe in the process list.
+  - id: TARGET_AXIS_REMAPPING
+    description: >
+      T.A.R.G.E.T can remap, combine, or invert axes. The axis order in the
+      virtual device report may not match the physical hardware axis layout.
+      Users are expected to provide or reference a T.A.R.G.E.T script for
+      their specific configuration.
+  - id: TARGET_BUTTON_REMAPPING
+    description: >
+      T.A.R.G.E.T can assign any physical button from any connected device to
+      any virtual button index. The virtual button layout is entirely determined
+      by the loaded script. No fixed canonical button mapping exists.
+
+support:
+  tier: 3              # Community-supported; layout config-dependent
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    The T.A.R.G.E.T virtual device is a software-defined HID device. Its
+    capabilities are not fixed and vary by user configuration. OpenFlight
+    detects this device by VID/PID but cannot guarantee a stable axis/button
+    layout without a known T.A.R.G.E.T script. Users should export their
+    T.A.R.G.E.T script layout and configure their OpenFlight profile accordingly.
+    Not suitable for use with auto-detected default profiles.
+    Last reviewed: 2026-06.

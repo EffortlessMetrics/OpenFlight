@@ -1,0 +1,53 @@
+# VIRPIL VPC Rotor TCS Plus (Alt PID 0x8194)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x8194 is a community estimate for the VPC Rotor TCS Plus collective.
+# An alternate estimate of 0x4190 is covered by vpc-rotor-tcs-plus.yaml.
+# Only one PID will match on real hardware. Verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS Plus (Alt PID)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x8194      # Community estimate — see also vpc-rotor-tcs-plus.yaml (0x4190)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, rx, ry, slider]
+    resolution_bits: 15
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8194 is a community estimate for the Rotor TCS Plus. An alternate
+      estimate (0x4190) is in vpc-rotor-tcs-plus.yaml. Only one PID will match;
+      confirm with lsusb on real hardware.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Collective axis is unipolar (0 = full down, max = full up). No spring
+      centering — collective rests at its physical position.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS Plus alternate PID 0x8194 estimate. See also
+    vpc-rotor-tcs-plus.yaml (PID 0x4190). VID 0x3344 confirmed.
+    Wave-41 addition. Last reviewed: 2026-07.

@@ -1,0 +1,6 @@
+---
+source: crates/flight-profile/src/lib.rs
+assertion_line: 942
+expression: err.to_string()
+---
+missing field `schema`

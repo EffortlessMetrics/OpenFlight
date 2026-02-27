@@ -1,0 +1,60 @@
+# Simucube Active Pedals — Right Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Simucube Active Pedals right module (brake) is one of the individual
+# pedal units in the Simucube Active Pedals system. Each pedal is an
+# independent USB device with its own servo providing active force feedback
+# resistance. VID 0x16D0 (MCS Electronics / Granite Devices).
+# PID 0x0D62 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Simucube Active Pedals Right Module"
+  vendor: "Simucube / Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # MCS Electronics / Granite Devices (confirmed for Simucube family)
+    product_id: 0x0D62      # Community estimate — Active Pedals Right; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [brake]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D62 is a community estimate for the right/brake module. See
+      active_pedals_left.yaml for system overview. Confirm with lsusb.
+  - id: ACTIVE_FEEDBACK_RESISTANCE
+    description: >
+      Brake pedal module uses servo motor for active resistance feedback.
+      Simulates load-cell feel; resistance curve configurable via True Drive.
+  - id: INDEPENDENT_USB_DEVICE
+    description: >
+      The right module connects as an independent USB HID device. Configure
+      alongside active_pedals_left.yaml for a full pedal set.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube Active Pedals — right/brake individual module. VID 0x16D0;
+    PID 0x0D62 est. See also active_pedals_left.yaml. Last reviewed: 2026-06.

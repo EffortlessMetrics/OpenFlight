@@ -1,0 +1,54 @@
+# Saitek X36 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID 0x0109 is community-reported for the
+# X36 from USB ID databases and vintage driver archives. The X36 predated the X45
+# and used a 10-bit axis controller over USB HID. Sold circa 2000–2003.
+schema_version: "1"
+
+device:
+  name: "Saitek X36 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0109      # Community-reported from USB ID databases; legacy device
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 15
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0109 is from legacy USB ID community databases for the Saitek X36.
+      Original Saitek driver archives and forum reports corroborate this value
+      but no recent linux-hardware.org hardware probe is available.
+      Verify with lsusb on real hardware before enabling production matching.
+  - id: LEGACY_10BIT_AXES
+    description: >
+      Axes are 10-bit resolution — significantly lower than modern 12-16 bit
+      controllers. Apply smoothing or filtering in the axis pipeline if jitter
+      is visible. No hardware deadzone trimming is available on this device.
+
+support:
+  tier: 3            # Legacy; no simulated or HIL test coverage
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X36 (circa 2000–2003). Predecessor to the X45 HOTAS. Features a
+    twist-rudder Z axis and two 8-way hat switches. PID 0x0109 from community
+    USB ID databases; hardware probe confirmation needed. Last reviewed: 2026-02.

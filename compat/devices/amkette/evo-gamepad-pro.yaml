@@ -1,0 +1,45 @@
+# Amkette Evo Gamepad Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x20D6 (MOGA / PDPA), PID 0x89F3 — estimated.
+# Indian market gamepad by Amkette, using a common OEM USB VID.
+# Popular budget controller in India and South Asia.
+schema_version: "1"
+device:
+  name: "Amkette Evo Gamepad Pro"
+  vendor: "Amkette"
+  usb:
+    vendor_id: 0x20D6       # MOGA / PDPA — common OEM VID used by Amkette products
+    product_id: 0x89F3      # Community estimate — Evo Gamepad Pro; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x20D6 / PID 0x89F3 are community estimates for this Amkette model.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: OEM_VID
+    description: >
+      VID 0x20D6 is shared with MOGA/PDPA OEM products. Multiple unrelated
+      devices may share this VID. Differentiate by PID and HID descriptor.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Amkette Evo Gamepad Pro — VID 0x20D6 / PID 0x89F3 (est).
+    Indian market budget gamepad. Wave-55 addition. Last reviewed: 2026-07.

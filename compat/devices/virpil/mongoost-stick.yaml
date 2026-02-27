@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID confirmed: the-sz.com USB ID DB (VIRPIL, UAB)
+# PIDs confirmed: Buzzec/virpil open-source Rust LED control library
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 Stick"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4130
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: "Hat switch is encoded in the high nibble (bits 4–7) of button byte 4. Values 0–7 = N/NE/E/SE/S/SW/W/NW; others = center."
+  - id: PID_FAMILY
+    description: "PID 0x4130 covers MongoosT-50CM2/CM3 and Alpha grip series right sticks."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Buttons 29-32 are hat bits; use hat field, not button array."

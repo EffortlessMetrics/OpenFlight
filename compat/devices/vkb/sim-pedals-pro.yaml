@@ -1,0 +1,60 @@
+# VKB Sim Pedals Pro (USB rudder pedals with toe brakes)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Community-reported: VID 0x231D (VKB), PID 0x0060 — VKB Sim Pedals Pro.
+# Hall-effect sensor rudder pedals with independent differential toe brakes.
+# Not confirmed from linux-hardware.org probe database.
+
+schema_version: "1"
+
+device:
+  name: "VKB Sim Pedals Pro"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0060   # Community-reported; verify against hardware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0060 is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three axes use contactless Hall effect sensors with no mechanical
+      wear. The rudder axis has an adjustable centering spring; toe brakes
+      have no return spring (resting at minimum position).
+  - id: NO_SPRING_TOE_BRAKES
+    description: >
+      Toe brake axes rest at 0 (fully released). Apply a small deadzone
+      if resting position drifts. Differential toe brakes are independent
+      analog axes — bind each separately for differential wheel braking.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Sim Pedals Pro: compact rudder pedal set with independent differential
+    toe brakes and hall-effect sensors. Distinct from the VKB T-Rudder Mk.IV
+    (PID 0x0126, see t-rudder-mk4.yaml) which is a different product line.
+    PID 0x0060 is community-reported — confirm with lsusb or VKBDevCfg.

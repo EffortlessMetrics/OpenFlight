@@ -1,0 +1,60 @@
+# Microsoft Xbox 360 Wired Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation.
+# PID 0x028E confirmed from:
+#   1. libsdl-org/SDL: MAKE_VIDPID(0x045e, 0x028e) — "Xbox 360 Wired Controller"
+#   2. Linux kernel xpad driver (drivers/input/joystick/xpad.c)
+#   3. linux-hardware.org: 847 independent probes
+# The Xbox 360 wired controller is widely used in MSFS and DCS on PC,
+# especially for initial learning and casual flight.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox 360 Wired Controller"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation
+    product_id: 0x028E   # Xbox 360 Wired Controller (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16  # XInput 16-bit axes
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_PREFERRED
+    description: >
+      The Xbox 360 controller is best used via XInput on Windows, which
+      provides 16-bit axis resolution. DirectInput mode still works but
+      exposes 8-bit axis resolution. OpenFlight uses XInput when available.
+  - id: VIGEM_PID_CONFLICT
+    description: >
+      VID/PID shared with ViGEm virtual Xbox 360 devices. Disambiguate
+      using the device instance path reported by the HID layer.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Xbox 360 Wired Controller. VID/PID confirmed from SDL, Linux kernel,
+    and hardware probes. Used in MSFS and DCS as a beginner/casual
+    flight controller. XInput preferred over DInput for full resolution.
+    Last reviewed: 2026-06.

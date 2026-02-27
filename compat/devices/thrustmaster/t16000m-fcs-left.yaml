@@ -1,0 +1,63 @@
+# Thrustmaster T.16000M FCS (Left-Hand Version)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T.16000M FCS Left is the left-hand/ambidextrous variant of the T.16000M
+# FCS joystick, intended for use as a left-hand throttle replica or for
+# left-handed pilots in the "FCS Space Simulator Duo Pack".
+# Right-hand T.16000M FCS uses PID 0xB10A (see t16000m.yaml).
+# PID 0xB10B is a community estimate for the left-hand variant — the one-up
+# PID pattern from the right-hand version is plausible but unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.16000M FCS (Left)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB10B   # Community estimate; right-hand = 0xB10A
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, slider]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB10B is a community estimate for the left-hand T.16000M FCS.
+      The right-hand version uses 0xB10A (see t16000m.yaml). Update when
+      confirmed via linux-hardware.org or Thrustmaster USB enumeration.
+  - id: STICK_DEADZONE_SMALL
+    description: >
+      Hardware center deadzone is approximately ±1%; software deadzone not
+      needed on most setups.
+  - id: THROTTLE_NOT_CENTERED
+    description: "Z axis (throttle slider) reports [0, max]; map to [0.0, 1.0]."
+  - id: LEFT_HAND_MIRROR
+    description: >
+      The left-hand variant has a mirrored grip shape; X-axis polarity may be
+      inverted relative to the right-hand version. Apply axis inversion in
+      the OpenFlight profile if needed.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster T.16000M FCS Left — left-hand variant for dual-stick or
+    HOSAS setups. PID 0xB10B is a community estimate.
+    VID/right-hand PID confirmed. Last reviewed: 2026-02.

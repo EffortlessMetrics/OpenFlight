@@ -1,0 +1,53 @@
+# Thrustmaster T.Flight Rudder Pedals (original / legacy model)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB108 is the first-generation T.Flight Rudder Pedals (~2011-2015).
+# The second-generation TFRP (PID 0xB678) ships with revised firmware and uses
+# an updated HID descriptor; see tfrp-rudder-pedals.yaml for that variant.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Rudder Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB108   # Original / legacy model; confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rz, z, rx]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: AXIS_LAYOUT
+    description: >
+      Rz = combined rudder deflection (left pedal push = negative, right = positive).
+      Z = right toe-brake axis (0 = released, 65535 = fully depressed).
+      Rx = left toe-brake axis (same polarity as Z).
+  - id: TOE_BRAKE_UNIPOLAR
+    description: >
+      Both toe-brake axes (Z, Rx) are unipolar: 0x0000 = fully released,
+      0xFFFF = fully depressed. Map to [0, 1] in the profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Original T.Flight Rudder Pedals (PID 0xB108). Axis layout is consistent with
+    the second-generation TFRP (PID 0xB678) and shares the same parser.
+    Very common companion to the T.16000M FCS joystick. Hardware validation
+    recommended before production deployment.

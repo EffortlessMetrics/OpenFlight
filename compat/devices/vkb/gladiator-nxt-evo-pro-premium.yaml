@@ -1,0 +1,56 @@
+# VKB Gladiator NXT EVO Pro Premium
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VKB Gladiator NXT EVO Pro Premium is the top-tier variant of the
+# NXT EVO Pro series, adding metal construction elements and a premium
+# cartridge system for adjustable spring profiles. Distinct from the
+# standard NXT EVO Pro (gladiator-nxt-evo-pro.yaml).
+# VID 0x231D confirmed: VKB-Sim.
+# PID 0x0212 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Pro Premium"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0212   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0212 is a community estimate for the NXT EVO Pro Premium. VKB
+      PID ranges increment by model tier; confirm with lsusb on real hardware.
+      Standard NXT EVO Pro uses a different PID (see gladiator-nxt-evo-pro.yaml).
+  - id: PREMIUM_CARTRIDGE
+    description: >
+      The Premium variant includes a metal cam ring and adjustable spring
+      cartridge for customisable centre feel. Mechanically distinct from the
+      standard Pro but identical HID report structure.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO Pro Premium — top-tier NXT EVO variant.
+    16-bit sensors. PID 0x0212 unconfirmed.
+    Standard Pro: gladiator-nxt-evo-pro.yaml. Last reviewed: 2026-06.

@@ -11,6 +11,7 @@
 
 use crate::{
     connection::KrpcConnection,
+    controls::{KspControls, apply_controls},
     error::KspError,
     mapping::{KspRawTelemetry, apply_telemetry, situation},
     protocol::{
@@ -41,8 +42,10 @@ pub struct KspConfig {
     pub poll_rate_hz: f32,
     /// TCP connection timeout
     pub connection_timeout: Duration,
-    /// Delay between reconnection attempts
+    /// Initial delay between reconnection attempts (doubles on each retry up to `max_reconnect_delay`)
     pub reconnect_delay: Duration,
+    /// Maximum reconnect backoff delay
+    pub max_reconnect_delay: Duration,
 }
 
 impl Default for KspConfig {
@@ -53,6 +56,7 @@ impl Default for KspConfig {
             poll_rate_hz: 20.0,
             connection_timeout: Duration::from_secs(5),
             reconnect_delay: Duration::from_secs(2),
+            max_reconnect_delay: Duration::from_secs(60),
         }
     }
 }
@@ -65,6 +69,7 @@ pub struct KspAdapter {
     config: KspConfig,
     state: Arc<RwLock<AdapterState>>,
     snapshot: Arc<RwLock<Option<BusSnapshot>>>,
+    pending_controls: Arc<RwLock<Option<KspControls>>>,
     shutdown_tx: tokio::sync::broadcast::Sender<()>,
     #[allow(dead_code)]
     metrics: Arc<RwLock<AdapterMetrics>>,
@@ -78,6 +83,7 @@ impl KspAdapter {
             config,
             state: Arc::new(RwLock::new(AdapterState::Disconnected)),
             snapshot: Arc::new(RwLock::new(None)),
+            pending_controls: Arc::new(RwLock::new(None)),
             shutdown_tx,
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
         }
@@ -93,16 +99,18 @@ impl KspAdapter {
         let config = self.config.clone();
         let state = Arc::clone(&self.state);
         let snapshot = Arc::clone(&self.snapshot);
+        let pending_controls = Arc::clone(&self.pending_controls);
         let mut shutdown_rx = self.shutdown_tx.subscribe();
 
         tokio::spawn(async move {
+            let mut current_delay = config.reconnect_delay;
             loop {
                 tokio::select! {
                     _ = shutdown_rx.recv() => {
                         info!("KSP adapter shutting down");
                         break;
                     }
-                    _ = run_connection_loop(&config, &state, &snapshot) => {
+                    _ = run_connection_loop(&config, &state, &snapshot, &pending_controls) => {
                         // run_connection_loop only returns on error; reconnect
                     }
                 }
@@ -112,9 +120,12 @@ impl KspAdapter {
 
                 info!(
                     "KSP adapter disconnected, retrying in {}s",
-                    config.reconnect_delay.as_secs()
+                    current_delay.as_secs()
                 );
-                sleep(config.reconnect_delay).await;
+                sleep(current_delay).await;
+
+                // Exponential backoff: double delay up to configured maximum
+                current_delay = (current_delay * 2).min(config.max_reconnect_delay);
             }
         });
     }
@@ -136,6 +147,15 @@ impl KspAdapter {
     pub async fn state(&self) -> AdapterState {
         *self.state.read().await
     }
+
+    /// Queue control outputs to be sent to KSP on the next poll cycle.
+    ///
+    /// The controls are applied once per poll cycle and then cleared.
+    /// Values are clamped to valid ranges before transmission.
+    /// This is a no-op when the adapter is not connected to an active vessel.
+    pub async fn write_controls(&self, controls: KspControls) {
+        *self.pending_controls.write().await = Some(controls);
+    }
 }
 
 // ── Connection loop ───────────────────────────────────────────────────────────
@@ -144,6 +164,7 @@ async fn run_connection_loop(
     config: &KspConfig,
     state: &Arc<RwLock<AdapterState>>,
     snapshot: &Arc<RwLock<Option<BusSnapshot>>>,
+    pending_controls: &Arc<RwLock<Option<KspControls>>>,
 ) {
     *state.write().await = AdapterState::Connecting;
 
@@ -183,7 +204,7 @@ async fn run_connection_loop(
         last_poll = Instant::now();
 
         match poll_telemetry(&mut conn).await {
-            Ok(raw) => {
+            Ok((raw, vessel_id)) => {
                 *state.write().await = AdapterState::Active;
                 let current = snapshot.read().await.clone().unwrap_or_else(|| {
                     BusSnapshot::new(SimId::Ksp, AircraftId::new(&raw.vessel_name))
@@ -195,6 +216,15 @@ async fn run_connection_loop(
                     "KSP poll ok: sit={} pitch={:.1}",
                     raw.situation, raw.pitch_deg
                 );
+
+                // Apply queued controls if any
+                let controls = pending_controls.write().await.take();
+                if let Some(ctrl) = controls
+                    && let Err(e) = apply_controls(&mut conn, vessel_id, &ctrl).await
+                {
+                    warn!("kRPC control write error: {e}");
+                    return; // trigger reconnect
+                }
             }
             Err(KspError::NoActiveVessel) => {
                 *state.write().await = AdapterState::Connected;
@@ -211,7 +241,7 @@ async fn run_connection_loop(
 
 // ── Telemetry polling ─────────────────────────────────────────────────────────
 
-async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<KspRawTelemetry, KspError> {
+async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<(KspRawTelemetry, u64), KspError> {
     // 1. Get active vessel handle
     let vessel_bytes = conn.call("SpaceCenter", "get_ActiveVessel", vec![]).await?;
     let vessel_id = decode_object(&vessel_bytes).unwrap_or(0);
@@ -313,20 +343,23 @@ async fn poll_telemetry(conn: &mut KrpcConnection) -> Result<KspRawTelemetry, Ks
     let vertical_speed_mps = decode_double(&step4[5]).unwrap_or(0.0);
     let g_force = decode_double(&step4[6]).unwrap_or(1.0);
 
-    Ok(KspRawTelemetry {
-        vessel_name,
-        situation,
-        pitch_deg,
-        roll_deg,
-        heading_deg,
-        speed_mps,
-        ias_mps,
-        vertical_speed_mps,
-        g_force,
-        altitude_m,
-        latitude_deg,
-        longitude_deg,
-    })
+    Ok((
+        KspRawTelemetry {
+            vessel_name,
+            situation,
+            pitch_deg,
+            roll_deg,
+            heading_deg,
+            speed_mps,
+            ias_mps,
+            vertical_speed_mps,
+            g_force,
+            altitude_m,
+            latitude_deg,
+            longitude_deg,
+        },
+        vessel_id,
+    ))
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -357,5 +390,77 @@ mod tests {
         assert_eq!(cfg.krpc_host, "127.0.0.1");
         assert_eq!(cfg.krpc_port, 50000);
         assert_eq!(cfg.poll_rate_hz, 20.0);
+        assert_eq!(cfg.connection_timeout, Duration::from_secs(5));
+        assert_eq!(cfg.reconnect_delay, Duration::from_secs(2));
+        assert_eq!(cfg.max_reconnect_delay, Duration::from_secs(60));
+    }
+
+    #[test]
+    fn test_config_custom_values() {
+        let cfg = KspConfig {
+            krpc_host: "192.168.1.10".to_string(),
+            krpc_port: 50001,
+            poll_rate_hz: 10.0,
+            connection_timeout: Duration::from_secs(10),
+            reconnect_delay: Duration::from_secs(5),
+            max_reconnect_delay: Duration::from_secs(120),
+        };
+        assert_eq!(cfg.krpc_host, "192.168.1.10");
+        assert_eq!(cfg.krpc_port, 50001);
+        assert_eq!(cfg.poll_rate_hz, 10.0);
+        assert_eq!(cfg.max_reconnect_delay, Duration::from_secs(120));
+    }
+
+    #[tokio::test]
+    async fn test_write_controls_before_start_does_not_panic() {
+        let adapter = KspAdapter::new(KspConfig::default());
+        // write_controls stores to pending — must not panic
+        adapter.write_controls(KspControls::default()).await;
+    }
+
+    #[tokio::test]
+    async fn test_write_controls_pending_is_cleared_on_next_write() {
+        let adapter = KspAdapter::new(KspConfig::default());
+        adapter
+            .write_controls(KspControls::from_axes(0.5, -0.5, 0.0, 0.8))
+            .await;
+        // Second write overwrites the first
+        adapter.write_controls(KspControls::default()).await;
+        // Adapter is not connected so no assertion on output; just verify no panic
+    }
+
+    #[tokio::test]
+    async fn test_snapshot_initially_none() {
+        let adapter = KspAdapter::new(KspConfig::default());
+        assert!(adapter.current_snapshot().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_state_initially_disconnected() {
+        let adapter = KspAdapter::new(KspConfig::default());
+        assert_eq!(adapter.state().await, AdapterState::Disconnected);
+    }
+
+    #[tokio::test]
+    async fn test_double_stop_does_not_panic() {
+        let adapter = KspAdapter::new(KspConfig::default());
+        adapter.stop().await;
+        adapter.stop().await;
+        assert_eq!(adapter.state().await, AdapterState::Disconnected);
+    }
+
+    #[test]
+    fn test_backoff_doubles_up_to_max() {
+        // Simulate the backoff logic directly
+        let max = Duration::from_secs(60);
+        let mut delay = Duration::from_secs(2);
+        let sequence: Vec<u64> = (0..8)
+            .map(|_| {
+                let d = delay.as_secs();
+                delay = (delay * 2).min(max);
+                d
+            })
+            .collect();
+        assert_eq!(sequence, vec![2, 4, 8, 16, 32, 60, 60, 60]);
     }
 }

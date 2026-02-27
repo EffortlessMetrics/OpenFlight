@@ -1,0 +1,52 @@
+# WinWing Orion 2 F-18C Grip (PID 0x0207)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0207 is a community estimate for the Orion 2 F/A-18C Hornet grip.
+# The alternate confirmed variant is covered by orion2-f18c-stick.yaml (PID 0xBE63).
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 F-18C Grip"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0207      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0207 is a community estimate for the Orion 2 F/A-18C Hornet grip.
+      The confirmed variant uses PID 0xBE63 (orion2-f18c-stick.yaml). Verify
+      with SimAppPro USB enumeration or lsusb on real hardware.
+  - id: FA18_LAYOUT
+    description: >
+      F/A-18C replica grip with authentic button placement. Designed primarily
+      for DCS F/A-18C Hornet module.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 F/A-18C Hornet grip — alternate PID 0x0207 community estimate.
+    VID 0x4098 (WinWing). See also orion2-f18c-stick.yaml (PID 0xBE63).
+    Wave-47 addition. Last reviewed: 2026-07.

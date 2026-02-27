@@ -117,7 +117,13 @@ impl RollbackManager {
 
         // Create backup of current version if it exists
         if let Some(current) = &self.current_version {
-            self.create_backup(current).await?;
+            let backup_path = self.create_backup(current).await?;
+            // Store the backup path on the version in history so rollback can find it.
+            if let Some(entry) = self.version_history.iter_mut().find(|v| {
+                v.version == current.version && v.install_timestamp == current.install_timestamp
+            }) {
+                entry.backup_path = Some(backup_path);
+            }
         }
 
         // Add to history (newest first)
@@ -207,8 +213,8 @@ impl RollbackManager {
         }
     }
 
-    /// Create a backup of the specified version
-    async fn create_backup(&self, version: &VersionInfo) -> crate::Result<()> {
+    /// Create a backup of the specified version. Returns the backup path on success.
+    async fn create_backup(&self, version: &VersionInfo) -> crate::Result<PathBuf> {
         let backup_name = format!("backup_{}_{}", version.version, version.install_timestamp);
         let backup_path = self.backups_dir.join(&backup_name);
 
@@ -218,6 +224,17 @@ impl RollbackManager {
             backup_path.display()
         );
 
+        // Fail if the install path doesn't exist — a missing source directory means
+        // we cannot create a valid backup, which would make a future rollback silently
+        // restore nothing.
+        if !version.install_path.exists() {
+            return Err(crate::UpdateError::Rollback(format!(
+                "Cannot create backup for version {} — install path does not exist: {}",
+                version.version,
+                version.install_path.display()
+            )));
+        }
+
         // Create backup directory
         fs::create_dir_all(&backup_path).await?;
 
@@ -225,7 +242,7 @@ impl RollbackManager {
         self.copy_directory(&version.install_path, &backup_path)
             .await?;
 
-        Ok(())
+        Ok(backup_path)
     }
 
     /// Restore from backup
@@ -247,7 +264,7 @@ impl RollbackManager {
                 .await?;
         } else {
             return Err(crate::UpdateError::Rollback(format!(
-                "No backup available for version {}",
+                "No backup available for version {} — cannot restore files",
                 version.version
             )));
         }
@@ -347,12 +364,12 @@ impl StartupCrashDetector {
 
     /// Mark startup attempt
     pub async fn mark_startup_attempt(&self) -> crate::Result<()> {
-        let timestamp = std::time::SystemTime::now()
+        let timestamp_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis();
 
-        fs::write(&self.startup_file, timestamp.to_string()).await?;
+        fs::write(&self.startup_file, timestamp_ms.to_string()).await?;
         Ok(())
     }
 
@@ -371,16 +388,18 @@ impl StartupCrashDetector {
         }
 
         let content = fs::read_to_string(&self.startup_file).await?;
-        let startup_timestamp: u64 = content.parse().map_err(|e| {
+        let startup_timestamp_ms: u128 = content.parse().map_err(|e| {
             crate::UpdateError::Rollback(format!("Invalid startup timestamp: {}", e))
         })?;
 
-        let now = std::time::SystemTime::now()
+        let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs();
+            .as_millis();
 
-        let elapsed = std::time::Duration::from_secs(now - startup_timestamp);
+        let elapsed_ms = now_ms.saturating_sub(startup_timestamp_ms);
+        let elapsed_ms_u64: u64 = elapsed_ms.try_into().unwrap_or(u64::MAX);
+        let elapsed = std::time::Duration::from_millis(elapsed_ms_u64);
 
         if elapsed > self.startup_timeout {
             tracing::warn!("Previous startup crash detected (elapsed: {:?})", elapsed);
@@ -395,6 +414,7 @@ impl StartupCrashDetector {
 mod tests {
     use super::*;
     use tempfile::TempDir;
+    use tokio::fs;
 
     #[tokio::test]
     async fn test_rollback_manager_initialization() {
@@ -442,5 +462,218 @@ mod tests {
         // Mark success
         detector.mark_startup_success().await.unwrap();
         assert!(!detector.check_previous_crash().await.unwrap());
+    }
+
+    /// Recording two versions and rolling back should return (and activate) the
+    /// previous version, removing the failed one from history.
+    #[tokio::test]
+    async fn test_rollback_to_previous_selects_correct_version() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        // Create real install directories so create_backup succeeds.
+        let install_v1 = temp_dir.path().join("install_v1");
+        let install_v2 = temp_dir.path().join("install_v2");
+        fs::create_dir_all(&install_v1).await.unwrap();
+        fs::write(install_v1.join("bin.exe"), b"v1-binary")
+            .await
+            .unwrap();
+        fs::create_dir_all(&install_v2).await.unwrap();
+        fs::write(install_v2.join("bin.exe"), b"v2-binary")
+            .await
+            .unwrap();
+
+        let v1 = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            install_v1,
+        );
+        manager.record_version(v1).await.unwrap();
+
+        let v2 = VersionInfo::new(
+            "1.1.0".to_string(),
+            "def456".to_string(),
+            crate::Channel::Stable,
+            install_v2,
+        );
+        manager.record_version(v2).await.unwrap();
+
+        assert_eq!(manager.current_version().unwrap().version, "1.1.0");
+        assert_eq!(manager.version_history().len(), 2);
+
+        // The previous version (index 1) must have a backup_path set by record_version.
+        assert!(
+            manager.version_history[1].backup_path.is_some(),
+            "previous version must have a backup_path after create_backup"
+        );
+
+        let rolled_back = manager.rollback_to_previous().await.unwrap();
+        assert_eq!(
+            rolled_back.version, "1.0.0",
+            "rollback must select the previous version"
+        );
+        assert_eq!(
+            manager.current_version().unwrap().version,
+            "1.0.0",
+            "current version must be updated after rollback"
+        );
+        assert_eq!(
+            manager.version_history().len(),
+            1,
+            "failed version must be removed from history"
+        );
+    }
+
+    /// Requesting rollback when there is only one recorded version must return an error.
+    #[tokio::test]
+    async fn test_rollback_with_single_version_returns_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        // First record_version has no current_version, so create_backup is not called.
+        // The install path need not exist.
+        let v1 = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("install"),
+        );
+        manager.record_version(v1).await.unwrap();
+
+        let result = manager.rollback_to_previous().await;
+        assert!(
+            result.is_err(),
+            "rollback with no previous version must fail"
+        );
+    }
+
+    /// Rollback on an empty manager (no versions recorded) must also return an error.
+    #[tokio::test]
+    async fn test_rollback_with_no_versions_returns_error() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        let result = manager.rollback_to_previous().await;
+        assert!(result.is_err(), "rollback with no versions must fail");
+    }
+
+    /// check_startup_crash respects the timeout threshold:
+    /// - A very large timeout treats a just-installed version as a potential crash.
+    /// - A zero-second timeout never triggers (install always happened at or after "now").
+    #[tokio::test]
+    async fn test_crash_count_threshold_respected() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        // First record_version — no current_version, so create_backup is not called.
+        let install_path = temp_dir.path().join("install");
+        let version = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            install_path,
+        );
+        manager.record_version(version).await.unwrap();
+
+        // Version was just installed → time_since_install < u64::MAX/2 → returns true
+        assert!(
+            manager.check_startup_crash(u64::MAX / 2).await,
+            "very long timeout must trigger for a just-installed version"
+        );
+
+        // Zero-second timeout means time_since_install (≥0) is never < 0 → returns false
+        assert!(
+            !manager.check_startup_crash(0).await,
+            "zero timeout must never trigger"
+        );
+    }
+
+    /// StartupCrashDetector reports a crash once the startup file is older than the timeout.
+    #[tokio::test]
+    async fn test_startup_crash_detector_detects_stale_startup_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let startup_file = temp_dir.path().join("startup");
+
+        // Write a timestamp far in the past (Unix epoch)
+        fs::write(&startup_file, "1000").await.unwrap();
+
+        let detector = StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(30));
+
+        // The timestamp is ancient → elapsed >> 30 s → crash detected
+        assert!(
+            detector.check_previous_crash().await.unwrap(),
+            "stale startup file must be detected as a crash"
+        );
+    }
+
+    /// restore_from_backup must return an error when backup_path is None.
+    #[tokio::test]
+    async fn test_restore_from_backup_errors_when_no_backup_path() {
+        let temp_dir = TempDir::new().unwrap();
+        let manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+
+        let version = VersionInfo {
+            version: "1.0.0".to_string(),
+            build_timestamp: 0,
+            commit_hash: "abc".to_string(),
+            channel: crate::Channel::Stable,
+            install_timestamp: 0,
+            install_path: temp_dir.path().join("install"),
+            backup_path: None,
+        };
+
+        let result = manager.restore_from_backup(&version).await;
+        assert!(
+            result.is_err(),
+            "restore_from_backup must fail when backup_path is None"
+        );
+    }
+
+    /// create_backup must return an error when the install path doesn't exist.
+    #[tokio::test]
+    async fn test_create_backup_errors_when_install_path_missing() {
+        let temp_dir = TempDir::new().unwrap();
+        let mut manager = RollbackManager::new(temp_dir.path(), 5).unwrap();
+        manager.initialize().await.unwrap();
+
+        let version = VersionInfo::new(
+            "1.0.0".to_string(),
+            "abc123".to_string(),
+            crate::Channel::Stable,
+            temp_dir.path().join("nonexistent"),
+        );
+
+        let result = manager.create_backup(&version).await;
+        assert!(
+            result.is_err(),
+            "create_backup must fail when install path does not exist"
+        );
+    }
+
+    /// check_previous_crash must safely handle u128→u64 conversion without
+    /// silent truncation. We verify the fix by checking that a timestamp of 0
+    /// correctly produces a large elapsed duration that exceeds a normal timeout.
+    #[tokio::test]
+    async fn test_check_previous_crash_handles_large_timestamp_difference() {
+        let temp_dir = TempDir::new().unwrap();
+        let startup_file = temp_dir.path().join("startup");
+
+        // Write a timestamp of 0 — elapsed time from epoch to now is ~55 years.
+        fs::write(&startup_file, "0").await.unwrap();
+
+        // Use a 1-second timeout; elapsed (~55 years) easily exceeds it.
+        let detector =
+            StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(1));
+
+        let result = detector.check_previous_crash().await.unwrap();
+        assert!(
+            result,
+            "timestamp 0 must produce a large elapsed duration that exceeds timeout"
+        );
     }
 }

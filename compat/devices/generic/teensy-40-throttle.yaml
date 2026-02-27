@@ -1,0 +1,57 @@
+# Generic Teensy 4.0 USB Throttle Controller (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC). PID 0x0478 confirmed as the PJRC Teensyduino HID joystick
+# class PID from pjrc.com USB usage documentation. Popular DIY single-axis or
+# dual-axis throttle controller. USB full-speed polling supports up to 1000 Hz;
+# actual host rate depends on OS and USB host controller.
+schema_version: "1"
+
+device:
+  name: "Teensy 4.0 USB Throttle Controller (DIY)"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0    # PJRC (confirmed)
+    product_id: 0x0478   # Teensyduino HID joystick -- confirmed from pjrc.com
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, mixture]
+    resolution_bits: 14
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      PJRC VID 0x16C0 / PID 0x0478 is the standard Teensyduino USB
+      serial+joystick class. Layout depends on the Teensyduino sketch loaded.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Axis count, button count, and report
+      layout vary by builder. The values listed represent a typical dual-axis
+      throttle/mixture configuration.
+  - id: HIGH_POLL_RATE
+    description: >
+      Teensy 4.0 supports USB full-speed 1000 Hz polling; some host systems
+      may throttle to 125 Hz depending on the USB host controller and OS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Teensy 4.0 DIY throttle controller. VID 0x16C0 / PID 0x0478
+    confirmed from PJRC. Report layout builder-defined; 1000 Hz USB polling
+    capable. Last reviewed: 2026-06.

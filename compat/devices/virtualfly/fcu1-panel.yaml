@@ -1,0 +1,59 @@
+# VirtualFly FCU1 Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly FCU1 is a dedicated Flight Control Unit panel replicating
+# the Airbus A320 FCU for use in full cockpit replica builds.
+# Provides SPD, HDG, ALT, and V/S rotary selectors with push-button
+# engagement and illuminated pushbuttons.
+# VID 0x2742 / PID 0x0006: community estimate.
+# Note: confirmed VirtualFly VID on other units is 0x2B67.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly FCU1 Panel"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2742       # PID estimated — confirmed VirtualFly VID is 0x2B67
+    product_id: 0x0006      # Community estimate — FCU1
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2742 / PID 0x0006 are community estimates. Confirmed VirtualFly
+      VID on other units is 0x2B67. Verify with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      SPD, HDG, ALT, and V/S encoders report as button pairs (CW/CCW) per detent.
+      Map each encoder to the corresponding Airbus autopilot variable.
+  - id: ANNUNCIATOR_OUTPUTS
+    description: >
+      Illuminated pushbuttons require HID output reports for annunciator feedback.
+      Bind sim telemetry to button LED states via OpenFlight output mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly FCU1 panel — Airbus A320 FCU replica. VID 0x2742 / PID 0x0006 est.
+    Confirmed VirtualFly VID is 0x2B67 on other units. Last reviewed: 2026-06.

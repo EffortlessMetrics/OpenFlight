@@ -1,0 +1,52 @@
+# VKB NXT SEM THQ (Throttle Hat Quadrant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x231D (VKB), PID 0x2214 — linux-hardware.org (1 probe,
+# USB string "VKBSim NXT SEM THQ", vendor "VKB-Sim Alex Oz 2021").
+# THQ = Throttle Hat Quadrant — a button-panel accessory for the NXT SEM module.
+schema_version: "1"
+
+device:
+  name: "VKB NXT SEM THQ (Throttle Hat Quadrant)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D   # VKB-Sim (C) Alex Oz 2021
+    product_id: 0x2214  # VKBSim NXT SEM THQ — confirmed via linux-hardware.org (1 probe)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [slider]
+    resolution_bits: 15
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: BUTTON_PANEL_ACCESSORY
+    description: >
+      The NXT SEM THQ is primarily a button panel accessory for the NXT stick base.
+      It exposes a throttle-style slider axis plus multiple hat switches and buttons.
+  - id: VKB_SEM_MODULE
+    description: >
+      SEM (Sensor Encoder Module) provides the NXT stick with its high-resolution
+      Hall-effect sensors. The THQ connects to the SEM and appears as a separate
+      HID device in the OS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x2214 confirmed from linux-hardware.org ("VKBSim NXT SEM THQ", 1 probe).
+    Button/axis counts are estimates; verify with HID descriptor dump.
+    Last validated: 2026-02.

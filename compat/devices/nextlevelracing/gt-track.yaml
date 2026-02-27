@@ -1,0 +1,52 @@
+# Next Level Racing GT Track Cockpit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Next Level Racing GT Track — aluminum profile racing/flight sim cockpit
+# frame. Not a USB input device; this manifest tracks the cockpit for
+# sim-rig configuration compatibility (ergonomics, mounting, accessory fit).
+# No USB VID/PID — this is a mechanical accessory, not a HID device.
+schema_version: "1"
+
+device:
+  name: "Next Level Racing GT Track Cockpit"
+  vendor: "Next Level Racing"
+  usb:
+    vendor_id: ~        # Not a USB device — mechanical cockpit frame
+    product_id: ~
+  hid:
+    usage_page: ~
+    usage: ~
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: NOT_A_USB_DEVICE
+    description: >
+      The GT Track is a mechanical cockpit frame with no USB or HID interface.
+      Tracked for sim-rig configuration and accessory mounting compatibility.
+  - id: UNIVERSAL_MOUNT
+    description: >
+      Compatible with most direct-drive wheel bases, pedal sets, and flight
+      sim peripherals via adjustable mounting brackets.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Next Level Racing GT Track cockpit frame. Mechanical accessory; no USB
+    interface. Tracked for sim-rig configuration compatibility.
+    Last reviewed: 2026-02.

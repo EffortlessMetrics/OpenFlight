@@ -1,0 +1,70 @@
+# Saitek Flight Instrument Panel (FIP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0xA2AE — documented in the Saitek SDK,
+# FSUIPC community resources, and open-source FIP driver projects (e.g., OpenFIP).
+# Multi-LCD instrument panel with six rotary knobs and a 3.5" colour display.
+schema_version: "1"
+
+device:
+  name: "Saitek Flight Instrument Panel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0xA2AE      # Flight Instrument Panel — confirmed via Saitek SDK and OpenFIP project
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 7                # 6 rotary knob clicks (S1–S6) + 1 push button (PAGE)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      The FIP features a 320x240 (240x320 portrait) TFT colour LCD driven via
+      USB bulk transfers, not HID output reports. The Saitek/Logitech Flight SDK
+      (DirectOutput.dll) is the official interface. OpenFlight can render gauge
+      images and push 24-bit RGB frames to the display at up to ~20 fps.
+      Requires Windows-only DirectOutput SDK; Linux support is community-sourced.
+  - id: ROTARY_ENCODERS_AS_BUTTONS
+    description: >
+      The six rotary knobs (S1–S6) are incremental encoders that generate HID
+      button-press events (clockwise = one button, counter-clockwise = another).
+      Each knob also has a click (press) function. OpenFlight maps encoder detents
+      as encoder-delta inputs for smooth parameter adjustment.
+  - id: DAISY_CHAIN
+    description: >
+      Multiple FIP units can be daisy-chained via USB and will each enumerate
+      with the same VID/PID. Differentiate individual panels by USB port path
+      or serial number when configuring multi-FIP cockpit layouts.
+  - id: DIRECTOUTPUT_SDK_REQUIRED
+    description: >
+      The DirectOutput SDK (DirectOutput.dll shipped with the Logitech Flight
+      System software) must be present for display output. Input (button/encoder)
+      events work without the SDK via standard HID. Install the Logitech Gaming
+      Software or the standalone DirectOutput redistributable for display support.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xA2AE confirmed from the Saitek/Logitech DirectOutput SDK documentation
+    and the open-source OpenFIP and saitek-fip community projects.
+    Input path (buttons/encoders) works via standard HID. Display output requires
+    the DirectOutput SDK (Windows). Up to 6 units can be chained per USB host.
+    Primarily used with MSFS and FSX for GA instrument displays.
+    Last reviewed: 2026-02.

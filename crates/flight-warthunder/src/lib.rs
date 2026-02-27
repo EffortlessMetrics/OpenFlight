@@ -39,7 +39,7 @@ use flight_adapter_common::{AdapterConfig, AdapterError, AdapterMetrics, Adapter
 use flight_bus::{
     BusPublisher, BusSnapshot, PublisherError,
     types::{
-        AircraftId, GForce, GearPosition, GearState, Percentage, SimId, ValidatedAngle,
+        AircraftId, GForce, GearPosition, GearState, Mach, Percentage, SimId, ValidatedAngle,
         ValidatedSpeed,
     },
 };
@@ -51,7 +51,7 @@ use flight_metrics::{
         ADAPTER_UPDATES_TOTAL,
     },
 };
-use protocol::WtIndicators;
+use protocol::{WtIndicators, WtState};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -314,6 +314,59 @@ impl WarThunderAdapter {
         Ok(snapshot)
     }
 
+    /// Apply `/state` endpoint data to an existing [`BusSnapshot`].
+    ///
+    /// Call after [`convert_indicators`](Self::convert_indicators) to augment
+    /// the snapshot with AoA, sideslip, Mach, and per-axis G-load from the
+    /// `/state` endpoint. Fields absent from `state` are left unchanged.
+    pub fn apply_state(
+        &self,
+        state: &WtState,
+        snapshot: &mut BusSnapshot,
+    ) -> Result<(), WarThunderError> {
+        if let Some(aoa) = state.aoa_deg {
+            snapshot.kinematics.aoa = ValidatedAngle::new_degrees(aoa)
+                .map_err(|_| WarThunderError::InvalidField { field: "AoA, deg" })?;
+            snapshot.validity.aero_valid = true;
+        }
+
+        if let Some(aos) = state.aos_deg {
+            snapshot.kinematics.sideslip = ValidatedAngle::new_degrees(aos)
+                .map_err(|_| WarThunderError::InvalidField { field: "AoS, deg" })?;
+        }
+
+        if let Some(spd) = state.speed_mps {
+            snapshot.kinematics.tas =
+                ValidatedSpeed::new_mps(spd).map_err(|_| WarThunderError::InvalidField {
+                    field: "speed, m/s",
+                })?;
+            snapshot.validity.velocities_valid = true;
+        }
+
+        if let Some(mach) = state.mach {
+            snapshot.kinematics.mach =
+                Mach::new(mach).map_err(|_| WarThunderError::InvalidField { field: "Mach" })?;
+        }
+
+        if let Some(ny) = state.ny {
+            snapshot.kinematics.g_force =
+                GForce::new(ny).map_err(|_| WarThunderError::InvalidField { field: "Ny" })?;
+            snapshot.validity.kinematics_valid = true;
+        }
+
+        if let Some(nx) = state.nx {
+            snapshot.kinematics.g_longitudinal =
+                GForce::new(nx).map_err(|_| WarThunderError::InvalidField { field: "Nx" })?;
+        }
+
+        if let Some(nz) = state.nz {
+            snapshot.kinematics.g_lateral =
+                GForce::new(nz).map_err(|_| WarThunderError::InvalidField { field: "Nz" })?;
+        }
+
+        Ok(())
+    }
+
     /// Return current adapter state.
     pub fn state(&self) -> AdapterState {
         self.state
@@ -346,7 +399,7 @@ impl WarThunderAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::WtIndicators;
+    use protocol::{WtIndicators, WtState};
 
     fn full_indicators() -> WtIndicators {
         WtIndicators {
@@ -409,5 +462,278 @@ mod tests {
         assert_eq!(adapter.state(), AdapterState::Connected);
         adapter.stop();
         assert_eq!(adapter.state(), AdapterState::Disconnected);
+    }
+
+    #[test]
+    fn gear_below_half_is_up() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            valid: Some(true),
+            gear: Some(0.3),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert_eq!(snapshot.config.gear.nose, GearPosition::Up);
+    }
+
+    #[test]
+    fn gear_at_half_is_down() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            valid: Some(true),
+            gear: Some(0.5),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert_eq!(snapshot.config.gear.nose, GearPosition::Down);
+    }
+
+    #[test]
+    fn flaps_clamped_to_percentage() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind_max = WtIndicators {
+            valid: Some(true),
+            flaps: Some(1.0),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind_max).unwrap();
+        assert!((snapshot.config.flaps.value() - 100.0).abs() < 0.01);
+
+        let ind_zero = WtIndicators {
+            valid: Some(true),
+            flaps: Some(0.0),
+            ..Default::default()
+        };
+        let snap2 = adapter.convert_indicators(&ind_zero).unwrap();
+        assert!(snap2.config.flaps.value() < 0.01);
+    }
+
+    #[test]
+    fn no_valid_field_treats_as_valid() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // When `valid` is absent (None), the adapter should default to treating
+        // the snapshot as valid (unwrap_or(true) behaviour).
+        let ind = WtIndicators {
+            valid: None,
+            altitude: Some(1000.0),
+            pitch: Some(0.0),
+            roll: Some(0.0),
+            ias_kmh: Some(200.0),
+            ..Default::default()
+        };
+        let snapshot = adapter.convert_indicators(&ind).unwrap();
+        assert!(snapshot.validity.position_valid);
+    }
+
+    #[test]
+    fn default_config_has_sensible_defaults() {
+        let cfg = WarThunderConfig::default();
+        assert_eq!(cfg.base_url, "http://localhost:8111");
+        assert!(cfg.poll_rate_hz > 0.0);
+        assert!(cfg.request_timeout.as_millis() > 0);
+    }
+
+    #[test]
+    fn time_since_last_packet_is_none_before_poll() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        assert!(adapter.time_since_last_packet().is_none());
+    }
+
+    #[test]
+    fn all_none_indicators_all_validity_false() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        assert!(!snapshot.validity.attitude_valid);
+        assert!(!snapshot.validity.velocities_valid);
+        assert!(!snapshot.validity.position_valid);
+        assert!(!snapshot.validity.kinematics_valid);
+        assert!(!snapshot.validity.safe_for_ffb);
+    }
+
+    #[test]
+    fn various_airframe_names_reflected_in_snapshot_aircraft_id() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        for name in &["F-86F Sabre", "Me 262 A-1a", "Su-27"] {
+            let ind = WtIndicators {
+                airframe: Some(name.to_string()),
+                ..Default::default()
+            };
+            let snap = adapter.convert_indicators(&ind).unwrap();
+            assert_eq!(
+                snap.aircraft.icao, *name,
+                "airframe name should appear in snapshot"
+            );
+        }
+    }
+
+    #[test]
+    fn vertical_speed_mps_to_fpm_conversion() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // 1 m/s = 196.85 ft/min
+        let ind = WtIndicators {
+            vert_speed: Some(1.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            (snap.kinematics.vertical_speed - 196.85).abs() < 0.5,
+            "1 m/s → ~196.85 ft/min, got {}",
+            snap.kinematics.vertical_speed
+        );
+    }
+
+    #[test]
+    fn large_altitude_above_fl400_handled_correctly() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // FL400 = 40,000 ft; 15,000 m ≈ 49,212.6 ft
+        let ind = WtIndicators {
+            altitude: Some(15_000.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            (snap.environment.altitude - 49_212.6).abs() < 5.0,
+            "15000 m should be ~49212.6 ft, got {}",
+            snap.environment.altitude
+        );
+    }
+
+    #[test]
+    fn heading_360_normalises_to_zero() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            heading: Some(360.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        // normalize_degrees_signed(360.0) → 0.0
+        assert!(
+            snap.kinematics.heading.to_degrees().abs() < 0.01,
+            "heading 360° should normalise to 0°, got {}",
+            snap.kinematics.heading.to_degrees()
+        );
+    }
+
+    #[test]
+    fn negative_vertical_speed_produces_negative_fpm() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // -5 m/s means descending
+        let ind = WtIndicators {
+            vert_speed: Some(-5.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            snap.kinematics.vertical_speed < 0.0,
+            "descending should give negative ft/min, got {}",
+            snap.kinematics.vertical_speed
+        );
+    }
+
+    #[test]
+    fn apply_state_maps_aoa() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter.convert_indicators(&full_indicators()).unwrap();
+        let state = WtState {
+            aoa_deg: Some(5.0),
+            ..Default::default()
+        };
+        adapter.apply_state(&state, &mut snapshot).unwrap();
+        assert!(
+            (snapshot.kinematics.aoa.to_degrees() - 5.0).abs() < 0.01,
+            "AoA should be 5.0°, got {}",
+            snapshot.kinematics.aoa.to_degrees()
+        );
+        assert!(snapshot.validity.aero_valid, "aero_valid should be set");
+    }
+
+    #[test]
+    fn apply_state_maps_mach() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        let state = WtState {
+            mach: Some(0.5),
+            ..Default::default()
+        };
+        adapter.apply_state(&state, &mut snapshot).unwrap();
+        assert!(
+            (snapshot.kinematics.mach.value() - 0.5).abs() < 0.01,
+            "Mach should be 0.5, got {}",
+            snapshot.kinematics.mach.value()
+        );
+    }
+
+    #[test]
+    fn apply_state_maps_g_load_components() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        let state = WtState {
+            ny: Some(3.0),
+            nx: Some(0.2),
+            nz: Some(-0.5),
+            ..Default::default()
+        };
+        adapter.apply_state(&state, &mut snapshot).unwrap();
+        assert!((snapshot.kinematics.g_force.value() - 3.0).abs() < 0.01);
+        assert!((snapshot.kinematics.g_longitudinal.value() - 0.2).abs() < 0.01);
+        assert!((snapshot.kinematics.g_lateral.value() - (-0.5)).abs() < 0.01);
+        assert!(snapshot.validity.kinematics_valid);
+    }
+
+    #[test]
+    fn apply_state_empty_leaves_snapshot_unchanged() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter.convert_indicators(&full_indicators()).unwrap();
+        let orig_aoa = snapshot.kinematics.aoa.to_degrees();
+        adapter
+            .apply_state(&WtState::default(), &mut snapshot)
+            .unwrap();
+        assert!(
+            (snapshot.kinematics.aoa.to_degrees() - orig_aoa).abs() < 0.01,
+            "AoA should be unchanged after empty apply_state"
+        );
+    }
+
+    #[test]
+    fn apply_state_maps_sideslip() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        let state = WtState {
+            aos_deg: Some(2.0),
+            ..Default::default()
+        };
+        adapter.apply_state(&state, &mut snapshot).unwrap();
+        assert!(
+            (snapshot.kinematics.sideslip.to_degrees() - 2.0).abs() < 0.01,
+            "sideslip should be 2.0°, got {}",
+            snapshot.kinematics.sideslip.to_degrees()
+        );
+    }
+
+    #[test]
+    fn apply_state_speed_mps_updates_tas_and_validity() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let mut snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        let state = WtState {
+            speed_mps: Some(150.0),
+            ..Default::default()
+        };
+        adapter.apply_state(&state, &mut snapshot).unwrap();
+        assert!(
+            (snapshot.kinematics.tas.to_mps() - 150.0).abs() < 0.1,
+            "TAS should be 150 m/s, got {}",
+            snapshot.kinematics.tas.to_mps()
+        );
+        assert!(snapshot.validity.velocities_valid);
     }
 }

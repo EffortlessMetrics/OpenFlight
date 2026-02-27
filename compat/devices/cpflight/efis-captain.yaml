@@ -1,0 +1,48 @@
+# CPFlight EFIS Panel (Captain Side)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight (Italy) Boeing 737 EFIS panel — captain side with range
+# selector, mode selector, and auto-flight display options. Separate
+# product from the CPFlight MCP-Pro (mcp-pro.yaml). VID/PID from
+# CPFlight USB HID documentation.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight EFIS Panel (Captain)"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1781   # CPFlight / community estimate — VID_UNCONFIRMED
+    product_id: 0x0B01  # EFIS Captain — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [range_selector, mins_knob]
+    resolution_bits: 8
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against CPFlight hardware documentation."
+  - id: PANEL_DEVICE
+    description: "EFIS panel with rotary selectors and mode pushbuttons."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight B737 EFIS captain panel. VID/PID unconfirmed. Pairs with
+    mcp-pro.yaml for Boeing 737 cockpit builds. Last reviewed: 2026-06.

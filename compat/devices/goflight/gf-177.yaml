@@ -1,0 +1,57 @@
+# GoFlight GF-177 Boeing Autopilot Extended Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed (GoFlight Inc.).
+# PID 0x000B is a community estimate following GoFlight's sequential PID scheme.
+# The GF-177 is an extended Boeing-style autopilot panel that complements the
+# GF-100 MCP, adding VNAV, LNAV, ILS intercept, and speed-intervention
+# controls beyond the standard GF-MCP feature set.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-177 Boeing Autopilot Extended Panel"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x000B      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36               # Extended AP function buttons + toggle switches
+  hats: 0
+  encoders: 4               # Speed intervention, altitude reference, additional selectors
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000B is a community estimate. Confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Rotary encoders report as increment/decrement button pairs.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight proprietary HID panel protocol. Compatible with FSUIPC
+      GoFlight plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-177 extended Boeing autopilot panel. PID 0x000B is a community
+    estimate — confirm with lsusb. Typically paired with GF-100 (gf-100.yaml).
+    Last reviewed: 2026-06.

@@ -1,0 +1,53 @@
+# DOF Reality P3 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DOF Reality P3 is a 3-degrees-of-freedom professional motion platform for
+# flight simulation. The P-series uses professional-grade actuators for higher
+# load capacity. VID 0x1209 is the pid.codes open VID; PID 0x3003 is a
+# community estimate — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "DOF Reality P3 Motion Platform"
+  vendor: "DOF Reality"
+  type: platform
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3003  # Community estimate — P3; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, heave]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 and PID 0x3003 are community estimates for the P3 platform.
+      Verify with lsusb on real hardware.
+  - id: MOTION_OUTPUT_ONLY
+    description: >
+      The P3 is an output device for motion cues; it does not generate HID
+      input events. Driven via SimTools or similar software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DOF Reality P3 3-DOF professional motion platform. VID 0x1209 / PID 0x3003
+    community estimate. PID estimated from community sources.
+    Last reviewed: 2026-07.

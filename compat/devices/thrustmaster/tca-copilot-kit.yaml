@@ -1,0 +1,59 @@
+# Thrustmaster TCA Copilot Pack Airbus (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual combined-device entry for the Thrustmaster TCA Copilot Pack Airbus.
+# Mirrors the TCA Officer Pack but with the right-hand (copilot) sidestick.
+# Intended for dual-seat Airbus cockpit setups alongside a captain-side stick.
+# Component manifests:
+#   - tca-sidestick-airbus-copilot.yaml  (copilot/F.O. right-hand sidestick)
+#   - tca-quadrant-airbus.yaml           (shared Airbus throttle quadrant)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Copilot Pack Airbus (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~    # Virtual bundle — see component manifests
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6          # Combined: copilot sidestick (2) + quadrant (4)
+    names: [x, y, throttle, flap, spoiler, toga]
+    resolution_bits: 12
+  buttons: 28
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The TCA Copilot Pack uses the right-hand sidestick variant. Axis
+      assignments mirror the captain-side pack. For dual-seat setups both
+      packs can be active simultaneously; OpenFlight maps them to separate
+      logical seats using the seat-binding profile key.
+  - id: COPILOT_AXIS_INVERSION
+    description: >
+      The copilot sidestick X/Y axes may require software inversion
+      depending on aircraft geometry and user preference. Use the profile
+      axis_invert flag on the copilot seat binding.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle for the Thrustmaster TCA Copilot Pack Airbus.
+    Components: tca-sidestick-airbus-copilot.yaml + tca-quadrant-airbus.yaml.
+    Designed for co-pilot (F.O.) seat in dual-stick cockpit builds.
+    Last reviewed: 2026-06.

@@ -1,0 +1,60 @@
+# Saitek X65F Combat Control System — Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0262 is a community estimate for the X65F throttle component.
+# The X65F throttle includes dual throttle axes, rudder mini-axis, and
+# a large number of buttons and toggles. Enumerates as a separate USB HID
+# device from the stick (see x65f-stick.yaml, estimated PID 0x0261).
+schema_version: "1"
+
+device:
+  name: "Saitek X65F Combat Control System Throttle"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0262      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle_left, throttle_right, rudder_mini, scx, scy]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0262 is a community estimate for the X65F throttle component.
+      No independent hardware probe has confirmed this value. Confirm with
+      lsusb or USBView on real hardware. The joystick uses a separate PID
+      (see x65f-stick.yaml).
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      The X65F throttle provides independent left and right throttle levers,
+      each with its own axis. For single-engine use, either lever can be mapped
+      to the sim throttle; for multi-engine, map both independently.
+  - id: METAL_CONSTRUCTION
+    description: >
+      Full metal construction with precise detents. Throttle axes have very
+      low hysteresis; no software deadzone is typically needed at idle/full positions.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    X65F throttle unit — companion to x65f-stick.yaml. PID 0x0262 is unconfirmed.
+    Dual throttle axes, mini rudder axis, and extensive button layout. Verify PID
+    with lsusb before enabling production matching. Last reviewed: 2026-02.

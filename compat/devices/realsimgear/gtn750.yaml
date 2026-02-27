@@ -1,0 +1,62 @@
+# RealSimGear GTN 750 Touchscreen Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology Inc. — used by RealSimGear firmware).
+# PID 0xF248 — community estimate for GTN 750 bezel.
+# The RealSimGear GTN 750 replicates the Garmin GTN 750 integrated
+# GPS/Nav/Com touchscreen bezel controls: it adds a dedicated FMS joystick
+# (cursor control), additional soft keys, and a larger panel area compared
+# to the GTN 650 (gtn650.yaml). Pairs with GTN 650 in two-stack cockpits.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTN 750 Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF248    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 40
+  hats: 0
+  encoders: 4             # Outer/inner tuning knobs + selector + FMS joystick
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF248 is a community estimate for the GTN 750. RealSimGear uses
+      Microchip VID 0x04D8. GTN 650 is estimated at 0xF240 (gtn650.yaml);
+      GTN 750 is estimated higher. Confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary knobs and the FMS joystick are encoded as button events
+      (increment/decrement / directional). No analogue axes.
+  - id: LARGER_BUTTON_COUNT
+    description: >
+      The GTN 750 adds additional soft-key buttons and a dedicated FMS
+      cursor joystick (encoded as 4 directional + push) over the GTN 650.
+  - id: PAIRS_WITH_GTN650
+    description: >
+      Commonly paired with gtn650.yaml in dual-stack Garmin avionics setups.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTN 750 Garmin replica bezel. PID 0xF248 is a community
+    estimate. All controls are HID buttons/encoders. Companion to gtn650.yaml.
+    Last reviewed: 2026-02.

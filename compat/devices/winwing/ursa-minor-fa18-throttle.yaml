@@ -1,0 +1,63 @@
+# WinWing Ursa Minor F/A-18 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing Ursa Minor F/A-18 Throttle — compact single-engine throttle replica
+# with F/A-18C Hornet grip geometry. Sibling to the Ursa Minor F-16 Throttle
+# but with different grip shape, detent positions, and button layout matching
+# the F/A-18C. Released 2024.
+# VID/PID are unconfirmed; WinWing uses a custom vendor ID for their products.
+schema_version: "1"
+
+device:
+  name: "WinWing Ursa Minor F/A-18 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing custom VID (community-reported, VID_UNCONFIRMED for this model)
+    product_id: 0xBE12  # Placeholder — PID_UNCONFIRMED; verify against linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, speedbrake, hmcs_x, hmcs_y]
+    resolution_bits: 16
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x4098 is community-reported for WinWing; PID 0xBE12 is unconfirmed for this model."
+  - id: PID_UNCONFIRMED
+    description: "PID must be verified against physical hardware or linux-hardware.org probe data."
+  - id: FA18_SPEEDBRAKE_DETENT
+    description: >
+      Speedbrake lever has an RET (retract) detent at the forward position.
+      The detent is physical only; no separate electrical signal.
+  - id: THROTTLE_UNIPOLAR
+    description: >
+      Main throttle axis is unipolar (0x0000 = idle cut-off, 0xFFFF = full
+      afterburner). The IDLE detent position is approximately mid-range.
+  - id: DISTINCT_FROM_F16
+    description: >
+      This throttle has a different grip geometry, detent positions, and
+      button layout than the Ursa Minor F-16 Throttle (ursa-minor-f-16-throttle.yaml).
+      Do not share profile bindings between the two models without review.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Ursa Minor F/A-18 Throttle (2024). Compact single-engine throttle
+    with F/A-18C grip. Distinct from Ursa Minor F-16 variant. VID/PID require
+    field verification.
+    Last reviewed: 2026-02.

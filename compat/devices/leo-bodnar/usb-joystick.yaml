@@ -1,0 +1,52 @@
+# Leo Bodnar USB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x0009 — USB ID database / devicehunt.com
+# Simple 2-axis USB joystick. A minimal joystick device intended for basic
+# X/Y stick emulation from potentiometer inputs.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar USB Joystick"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x0009      # USB Joystick — USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: MINIMAL_AXIS_COUNT
+    description: >
+      Only two analogue axes (X, Y). Suitable for simple stick input or
+      a two-axis rotary panel. No twist, throttle, or rudder channels.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz USB poll rate despite the minimal axis count,
+      consistent with other Leo Bodnar HID devices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x1DD2 / PID 0x0009 confirmed via USB ID database (Leo Bodnar USB Joystick).
+    Minimal device; users with complex axis requirements should use BU0836 (PID 0x000A)
+    or BU0836X (PID 0x000B) instead.
+    Last reviewed: 2026-02.

@@ -1,0 +1,61 @@
+# Valve Steam Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Valve Steam Controller (2015) features two trackpads, a single analog
+# stick, dual-stage triggers, and gyroscope. It uses Steam Input for advanced
+# configuration. When used outside Steam in HID mode it presents a simplified
+# gamepad report.
+# VID 0x28DE confirmed: Valve Corporation.
+# PID 0x1102 confirmed: Steam Controller (first-gen).
+
+schema_version: "1"
+
+device:
+  name: "Valve Steam Controller"
+  vendor: "Valve Corporation"
+  usb:
+    vendor_id: 0x28DE
+    product_id: 0x1102   # Confirmed: Steam Controller
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, right_pad_x, right_pad_y, lt, rt]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  gyro: true
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: STEAM_INPUT_PREFERRED
+    description: >
+      Valve designed this controller around Steam Input API. Direct HID
+      access presents a reduced feature set. Full trackpad, gyro, and
+      haptic features require Steam Input. OpenFlight uses HID mode only.
+  - id: TRACKPAD_NOT_ANALOG_STICK
+    description: >
+      The right trackpad reports as RX/RY axes but is a capacitive surface,
+      not an analog stick. Haptic feedback is not accessible via raw HID.
+  - id: DISCONTINUED
+    description: >
+      Production ended 2019. Limited unit availability but widely used
+      in the flight sim community. Wireless dongle (PID 0x1101) also exists.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Valve Steam Controller. VID 0x28DE / PID 0x1102 confirmed.
+    Occasionally used for button and axis assignments in flight sim profiles.
+    Last reviewed: 2026-06.

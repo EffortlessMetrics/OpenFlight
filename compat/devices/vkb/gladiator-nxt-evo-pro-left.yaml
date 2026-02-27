@@ -1,0 +1,56 @@
+# VKB Gladiator NXT EVO Pro Left-hand
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim).
+# PID 0x0203 — community estimate for Gladiator NXT EVO Pro L.
+# Left-hand mirror of the NXT EVO Pro (right-hand PID 0x0202).
+# Used in dual-stick HOTAS setups alongside STECS throttle or a
+# right-hand EVO Pro.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Pro Left"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0203    # Community estimate — confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 40
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: LEFT_HAND
+    description: >
+      Left-handed stick for dual-stick setups. X/Y axis orientation is
+      mirrored from the right-hand Pro variant (PID 0x0202).
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0203 is a community estimate. Confirm with VKBDevCfg or lsusb.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis assignment is configurable in VKBDevCfg.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO Pro Left-hand. Mirror of NXT EVO Pro R (0x0202).
+    Typically paired with NXT EVO Pro R or STECS throttle in dual-stick builds.
+    PID 0x0203 is a community estimate. Last reviewed: 2026-02.

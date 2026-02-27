@@ -1,0 +1,54 @@
+# PXN V11 Flight Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PXN V11 — mid-range flight joystick with throttle slider. Budget-to-mid
+# market product; USB HID. Features twist rudder axis and 8-way hat switch.
+# VID 0x0079 is PXN's registered USB vendor ID (community-confirmed for
+# other PXN products). PID for V11 is unconfirmed.
+schema_version: "1"
+
+device:
+  name: "PXN V11 Flight Joystick"
+  vendor: "PXN"
+  usb:
+    vendor_id: 0x0079   # PXN registered VID (community-confirmed)
+    product_id: 0x0011  # Placeholder — PID_UNCONFIRMED for V11
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, twist, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0011 is a placeholder; verify with lsusb on the V11 unit."
+  - id: BUDGET_10BIT_AXES
+    description: >
+      All axes use 10-bit potentiometers. Deadzone and noise filtering
+      recommended especially for the twist axis which may exhibit drift.
+  - id: THROTTLE_UNIPOLAR_FULL_RANGE
+    description: >
+      Throttle slider axis uses the full 10-bit range (0–1023). No physical
+      detent; configure idle/full positions in axis calibration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN V11 budget flight joystick. VID 0x0079 confirmed for PXN products;
+    PID requires field verification for the V11 specifically.
+    Last reviewed: 2026-02.

@@ -1,0 +1,59 @@
+# Pimax 8K X VR HMD (PID 0x0119 / VID 0x0483 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Alternative USB enumeration for the Pimax 8KX HMD using STMicroelectronics
+# VID 0x0483 (commonly used by Pimax for firmware/data interfaces).
+# PID 0x0119 is a community estimate for the 8KX USB data endpoint.
+# The primary pimax-8kx.yaml uses VID 0x34B2 / PID 0x0100.
+schema_version: "1"
+
+device:
+  name: "Pimax 8K X VR HMD"
+  vendor: "Pimax Technology"
+  type: tracker
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics VID — used by Pimax for firmware interface
+    product_id: 0x0119   # Community estimate — Pimax 8KX data endpoint; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 (STMicro) is used by Pimax for USB firmware/data interfaces;
+      PID 0x0119 is a community estimate. See pimax-8kx.yaml (VID 0x34B2 /
+      PID 0x0100) for the primary estimate. Verify with lsusb on real hardware.
+  - id: ALTERNATE_VID_EXISTS
+    description: >
+      See pimax-8kx.yaml (VID 0x34B2) for the alternative Pimax-specific VID
+      estimate. The STMicro VID (0x0483) is used for the firmware update and
+      secondary data interface; primary head-tracking goes via OpenVR/SteamVR.
+  - id: OPENVR_PRIMARY_INTERFACE
+    description: >
+      Head tracking data is consumed via OpenVR/SteamVR, not directly via HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pimax 8KX VR HMD, VID 0x0483 / PID 0x0119 community estimates.
+    STMicro VID used for Pimax firmware/data endpoint. Primary tracking via
+    OpenVR/SteamVR. See also pimax-8kx.yaml (0x34B2/0x0100).
+    Last reviewed: 2026-06.

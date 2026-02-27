@@ -1,0 +1,55 @@
+# WinWing SimApp Pro MCDU (Airbus MCDU panel — Observer / third seat)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBB3A — schenlap/winwing_mcdu.py ("MCDU - Observer").
+# Identical hardware to Captain (0xBB36) and FO (0xBB3E) MCDUs; PID
+# differentiates the seating position for triple-MCDU simulator setups.
+device:
+  name: "WinWing SimApp Pro MCDU (Observer)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBB3A
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 96
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: OUTPUT_COLOR_LCD
+    description: >
+      Full-colour alphanumeric LCD (14 lines × 24 characters). Display updates
+      require USB SET_REPORT control transfers; interrupt OUT is ignored.
+  - id: SET_REPORT_REQUIRED
+    description: >
+      WinWing MCDU firmware requires USB control transfer SET_REPORT for all
+      display output. Standard HID interrupt OUT is ignored on Linux.
+  - id: ANNUNCIATOR_LEDS
+    description: >
+      Dedicated annunciator LEDs (FAIL, FM, MCDU, MENU, FM1, IND, RDY,
+      STATUS, FM2) controllable via HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro MCDU for the observer/third-seat position. PID 0xBB3A
+    confirmed from schenlap/winwing_mcdu.py. Captain variant is 0xBB36;
+    First Officer variant is 0xBB3E.

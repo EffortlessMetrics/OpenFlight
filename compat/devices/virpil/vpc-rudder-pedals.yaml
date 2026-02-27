@@ -1,0 +1,57 @@
+# VIRPIL VPC Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x0400 is a community estimate for the VPC Rudder Pedals.
+# The VPC Rudder Pedals use contactless Hall-effect sensors on all axes.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x0400      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, brake_left, brake_right]
+    resolution_bits: 12
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0400 is a community estimate. Confirm with lsusb on real hardware
+      and update this manifest when a confirmed PID becomes available.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All axes use contactless Hall-effect sensors for durability. No
+      mechanical deadzone is applied in firmware; configure deadzones in
+      the OpenFlight profile if needed.
+  - id: ADJUSTABLE_TOE_BRAKES
+    description: >
+      Toe-brake travel and tension are mechanically adjustable. Axis max
+      raw value may vary per-unit depending on adjustment; calibrate
+      per-profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rudder Pedals. PID 0x0400 is a community estimate.
+    Hall-effect sensors on all three axes; adjustable toe-brake travel.
+    Last reviewed: 2026-06.

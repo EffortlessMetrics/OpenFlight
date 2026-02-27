@@ -1,0 +1,58 @@
+# Pimax Crystal VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x34B2 (Pimax Technology, community-reported estimate). PID 0x0200 is a
+# community estimate for the Pimax Crystal HMD. The Crystal is a high-resolution
+# VR headset (2880×2880 per eye) with built-in eye tracking, used in flight
+# simulation for head tracking / view control input via OpenVR / SteamVR.
+schema_version: "1"
+
+device:
+  name: "Pimax Crystal VR HMD"
+  vendor: "Pimax Technology"
+  usb:
+    vendor_id: 0x34B2    # Pimax Technology (community-reported estimate)
+    product_id: 0x0200   # Community estimate — Pimax Crystal
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick (reported as HID joystick via SteamVR driver)
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x34B2 and PID 0x0200 are community estimates. The Crystal communicates
+      primarily via OpenVR/SteamVR; USB HID is used for the audio/eye-tracking
+      subsystem. Confirm PID with lsusb on Crystal hardware.
+  - id: OPENVR_PRIMARY_INTERFACE
+    description: >
+      Head tracking data is consumed via OpenVR/SteamVR, not directly via HID.
+      OpenFlight accesses head tracking through the SteamVR input bridge.
+  - id: EYE_TRACKING
+    description: >
+      The Crystal includes built-in eye tracking (foveated rendering). OpenFlight
+      can optionally consume eye-gaze data for view direction input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pimax Crystal VR HMD with eye tracking. VID 0x34B2 / PID 0x0200 are community
+    estimates. Primary interface is OpenVR/SteamVR. Used in high-end flight sim
+    rigs for immersive head tracking. Last reviewed: 2026-06.

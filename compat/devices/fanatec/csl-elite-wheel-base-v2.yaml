@@ -1,0 +1,63 @@
+# Fanatec CSL Elite Wheel Base V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0020 is a community estimate for the CSL Elite Wheel Base V2.
+# The CSL Elite V2 is a revised belt-drive wheel base with improved motor
+# efficiency and updated firmware over the original CSL Elite. Positioned
+# between the CSL DD (direct drive) and the original CSL Elite in Fanatec's
+# lineup. Supports all CSL Elite / ClubSport wheel rims.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Elite Wheel Base V2"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0020   # Community estimate — CSL Elite WB V2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 6.0    # CSL Elite V2 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate adjacent to the original CSL Elite.
+      Confirm with lsusb or Fanatec software capture before deployment.
+  - id: DISTINCT_FROM_CSL_ELITE_V1
+    description: >
+      The CSL Elite V2 has updated motor firmware and PCB revision vs V1.
+      DirectInput FFB behaviour is identical; PID may differ from V1.
+  - id: BELT_DRIVE
+    description: >
+      Belt-drive mechanism (not direct drive). Lower peak torque than CSL DD
+      (8 Nm) or Podium series. Suited for casual to intermediate sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Elite Wheel Base V2. VID 0x0EB7 confirmed; PID 0x0020
+    community estimate. Belt-drive, 6 Nm peak. See csl-elite-wheel-base.yaml
+    for V1 and csl-dd.yaml for direct-drive successor. Last reviewed: 2026-06.

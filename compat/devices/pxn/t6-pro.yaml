@@ -1,0 +1,47 @@
+# PXN T6 Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (PXN / Gaoyi Electronics Technology Co., Ltd.).
+# PID 0x1012 is a community estimate for the PXN T6 Pro joystick.
+# The T6 Pro is a budget USB joystick in the PXN lineup with rudder twist,
+# integrated throttle, and RGB lighting. Popular in emerging markets.
+schema_version: "1"
+
+device:
+  name: "PXN T6 Pro Joystick"
+  vendor: "PXN (Gaoyi Electronics)"
+  usb:
+    vendor_id: 0x0E8F    # PXN (Gaoyi Electronics Technology Co., Ltd.)
+    product_id: 0x1012   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1012 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN T6 Pro Joystick. PID 0x1012 unconfirmed. VID 0x0E8F = PXN.
+    Budget entry-level joystick. Last reviewed: 2026-06.

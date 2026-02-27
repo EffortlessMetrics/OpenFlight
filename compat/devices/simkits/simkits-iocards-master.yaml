@@ -1,0 +1,58 @@
+# SimKits IOCards Master USB Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The SimKits / IOCards Master USB is a generic input/output expansion card
+# that provides digital inputs (switches, buttons, encoders) and LED output
+# channels for custom cockpit panel wiring. Used as a backbone for DIY
+# 737/A320 cockpit builds with custom wiring looms.
+# VID 0x1C31 / PID 0x3002: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "SimKits IOCards Master USB Interface"
+  vendor: "SimKits"
+  usb:
+    vendor_id: 0x1C31
+    product_id: 0x3002      # Community estimate — IOCards Master
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4                # Analogue inputs (potentiometers)
+    names: [axis_1, axis_2, axis_3, axis_4]
+    resolution_bits: 10
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3002 is a community estimate. Confirm with SimKits IOCards config.
+  - id: EXPANSION_DAISY_CHAIN
+    description: >
+      Multiple IOCards Master units can be daisy-chained; each enumerates as
+      a separate USB HID device with sequential bus addresses.
+  - id: OUTPUT_CHANNELS
+    description: >
+      IOCards Master provides 64 LED/relay output channels driven via USB HID
+      output reports. Inputs and outputs are independent in the HID report.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits IOCards Master — 64-button expansion card with 4 analogue inputs.
+    VID 0x1C31 / PID 0x3002 est.
+    Generic I/O backbone for DIY cockpit builds.
+    Last reviewed: 2026-06.

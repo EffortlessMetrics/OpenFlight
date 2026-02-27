@@ -125,6 +125,26 @@ pub fn encode_object(handle: u64) -> Vec<u8> {
     Wrap { v: handle }.encode_to_vec()
 }
 
+/// Encode a `f32` scalar as a procedure argument value.
+pub fn encode_float(v: f32) -> Vec<u8> {
+    #[derive(Message)]
+    struct Wrap {
+        #[prost(float, tag = "1")]
+        v: f32,
+    }
+    Wrap { v }.encode_to_vec()
+}
+
+/// Encode a `bool` as a procedure argument value.
+pub fn encode_bool(v: bool) -> Vec<u8> {
+    #[derive(Message)]
+    struct Wrap {
+        #[prost(bool, tag = "1")]
+        v: bool,
+    }
+    Wrap { v }.encode_to_vec()
+}
+
 /// Decode a `u64` remote-object handle from procedure result bytes.
 pub fn decode_object(bytes: &[u8]) -> Result<u64, prost::DecodeError> {
     #[derive(Message)]
@@ -183,4 +203,56 @@ pub fn decode_int32(bytes: &[u8]) -> Result<i32, prost::DecodeError> {
         v: i32,
     }
     Ok(Wrap::decode(bytes)?.v)
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encode_decode_object_roundtrip() {
+        let handle = 0xDEAD_BEEF_1234_5678u64;
+        let encoded = encode_object(handle);
+        let decoded = decode_object(&encoded).unwrap();
+        assert_eq!(decoded, handle);
+    }
+
+    #[test]
+    fn encode_decode_float_roundtrip() {
+        let v = std::f32::consts::PI;
+        let encoded = encode_float(v);
+        let decoded = decode_float(&encoded).unwrap();
+        assert!((decoded - v).abs() < 1e-6, "expected {v}, got {decoded}");
+    }
+
+    #[test]
+    fn encode_decode_bool_true_roundtrip() {
+        let encoded = encode_bool(true);
+        let decoded = decode_bool(&encoded).unwrap();
+        assert!(decoded);
+    }
+
+    #[test]
+    fn encode_decode_bool_false_roundtrip() {
+        let encoded = encode_bool(false);
+        let decoded = decode_bool(&encoded).unwrap();
+        assert!(!decoded);
+    }
+
+    #[test]
+    fn decode_object_zero_handle() {
+        let encoded = encode_object(0);
+        let decoded = decode_object(&encoded).unwrap();
+        assert_eq!(decoded, 0);
+    }
+
+    #[test]
+    fn decode_float_negative_value() {
+        let v = -1.5f32;
+        let encoded = encode_float(v);
+        let decoded = decode_float(&encoded).unwrap();
+        assert!((decoded - v).abs() < 1e-6);
+    }
 }

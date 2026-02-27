@@ -1,0 +1,69 @@
+# Honeycomb Charlie Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID confirmed: 0x294B (same as Alpha and Bravo, from BetterBravoLights and SPAD.neXt).
+# PID unconfirmed: Charlie Rudder Pedals launched late 2024; PID not yet found in any
+# open-source project or USB ID database. Confirm with lsusb / USBView on real hardware.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Charlie Rudder Pedals"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1902    # Community-inferred (sequential: Alpha=0x1900, Bravo=0x1901 → Charlie=0x1902).
+                          # No independent hardware probe or open-source project has confirmed this value.
+                          # Verify with lsusb / USBView on real hardware before enabling device matching.
+  hid:
+    usage_page: 0x01          # Generic Desktop
+    usage: 0x04               # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: CHARLIE_PID_COMMUNITY_INFERRED
+    description: >
+      The Charlie Rudder Pedals PID (0x1902) is community-inferred from the sequential
+      Honeycomb numbering scheme (Alpha=0x1900 confirmed, Bravo=0x1901 confirmed,
+      Charlie=0x1902 inferred). No hardware probe data or open-source project
+      has confirmed this value. Do not use for production device matching until
+      verified with lsusb / USBView on real hardware. Submit confirmed PID via PR.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID confirmed (0x294B). PID community-inferred as 0x1902 (sequential pattern:
+    Alpha=0x1900, Bravo=0x1901). Not hardware-confirmed; do not use for production
+    device matching. Last reviewed: 2026-02.
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; rudder and toe-brake axes recognised automatically."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Rudder and toe brakes map to DCS rudder/wheel-brake axes via DCS input controls."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."

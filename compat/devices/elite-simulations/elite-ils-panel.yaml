@@ -1,0 +1,47 @@
+# Elite Simulations ILS Approach Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations ILS/VOR approach panel replica. Provides course/frequency
+# knobs and flag-indicator outputs for ILS training scenarios. Panel device
+# only — no analog axes. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations ILS Approach Panel"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0215      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [course_knob, frequency_inner]
+    resolution_bits: 8
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against hardware before production use."
+  - id: PANEL_DEVICE
+    description: "Panel controller with encoders and switches; no flight axes."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations ILS approach training panel. Encoder-based course and
+    frequency selection. VID/PID unconfirmed. Last reviewed: 2026-06.

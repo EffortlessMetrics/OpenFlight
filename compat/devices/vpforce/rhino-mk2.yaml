@@ -1,0 +1,60 @@
+# VPforce Rhino FFB Joystick Mk.II
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VPforce Rhino Mk.II — second major hardware revision of the Rhino direct
+# drive FFB joystick with improved motor power and updated gimbal geometry.
+# The current Rhino uses PIDs 0xA1C0 (v2) / 0xA1C1 (v3) (see rhino.yaml).
+# Rhino Mk.II likely uses a PID in the 0xA1Cxx range.
+# VID 0x0483 confirmed (STMicroelectronics). PID 0xA1C2 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "VPforce Rhino FFB Joystick Mk.II"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0xA1C2   # Community estimate — Rhino Mk.II
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA1C2 is a community estimate for the Rhino Mk.II.
+      Rhino v2 uses 0xA1C0, v3 uses 0xA1C1. Update when confirmed via
+      VPforce community or lsusb on real hardware.
+  - id: FFB_DIRECT_DRIVE
+    description: >
+      Direct-drive force feedback via VPforce's Rhino firmware. Uses
+      USB HID FFB protocol; OpenFlight sends forces via standard FFB channel.
+  - id: GRIP_ONLY
+    description: >
+      The Rhino base itself exposes 2 axes and a configurable button count.
+      All additional buttons come from the attached grip via a pass-through
+      connector. Grip button count varies by grip model.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VPforce Rhino Mk.II — direct drive FFB joystick base, second major revision.
+    PID 0xA1C2 is unconfirmed. VID 0x0483 confirmed. Rhino v2/v3 in rhino.yaml.
+    Last reviewed: 2026-02.

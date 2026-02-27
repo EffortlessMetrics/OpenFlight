@@ -9,7 +9,7 @@ device:
   vendor: "Honeycomb Aeronautical"
   usb:
     vendor_id: 0x294B
-    product_id: 0x1901
+    product_id: 0x1900   # Confirmed: linux-hardware.org hardware probe data (8 probes, "Alpha Flight Controls")
   hid:
     usage_page: 0x01      # Generic Desktop
     usage: 0x04           # Joystick
@@ -28,6 +28,11 @@ polling:
   max_jitter_ms: 4       # USB FS device; slightly higher jitter budget
 
 quirks:
+  - id: ALPHA_PID_CONFIRMED
+    description: >
+      The Alpha Yoke PID (0x1900) is confirmed by linux-hardware.org hardware probe
+      data (8 independent system probes, device string "Alpha Flight Controls").
+      Previously community-reported as 0x0102; updated based on hardware evidence.
   - id: MAGNETO_AS_BUTTONS
     description: >
       Magneto switch positions are reported as discrete buttons (not an axis).
@@ -40,3 +45,16 @@ support:
   test_coverage:
     simulated: true
     hil: false
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; yoke axes and all buttons recognised automatically."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Button mapping via DCS input controls. Trim wheel maps to manual trim axis."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."

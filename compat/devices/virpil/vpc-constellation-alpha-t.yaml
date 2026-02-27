@@ -1,0 +1,62 @@
+# VIRPIL VPC Constellation ALPHA T (Throttle Grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4380 — community estimate for Constellation ALPHA T grip when
+# mounted on a VIRPIL throttle base.
+# The Constellation ALPHA T is a grip module designed for throttle use:
+# it provides a horizontal hat and a set of push buttons optimised for
+# throttle position (as opposed to the stick-oriented ALPHA/ALPHA Prime).
+# Mounts on VPC CM2/CM3 throttle bases.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation ALPHA T"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4380    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [z, slider1]   # Throttle axis + optional secondary lever
+    resolution_bits: 14
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4380 is a community estimate. VIRPIL grip+base combos have PIDs
+      in the 0x43xx range. Confirm with lsusb on real hardware. Compare with
+      constellation-alpha-right.yaml (stick-oriented ALPHA grip).
+  - id: THROTTLE_GRIP_ORIENTATION
+    description: >
+      The ALPHA T is oriented for throttle use — horizontal button layout
+      and hat placement optimised for left-hand throttle operation. Button
+      numbering differs from the stick-oriented ALPHA/ALPHA Prime grips.
+  - id: THROTTLE_BASE_PAIRING
+    description: >
+      Designed for the VPC CM2 or CM3 throttle base. The base supplies
+      the USB HID interface; the grip does not enumerate independently.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation ALPHA T: throttle-optimised grip module for CM2/CM3
+    bases. PID 0x4380 is a community estimate. VIRPIL VID=0x3344.
+    Last reviewed: 2026-02.

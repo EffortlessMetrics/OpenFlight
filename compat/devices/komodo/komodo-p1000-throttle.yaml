@@ -1,0 +1,50 @@
+# Komodo Sim P1000 Throttle System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim (UK) P1000 programmable throttle unit — multi-lever
+# throttle quadrant for airliner home cockpit builds. Separate product
+# from the Komodo panel devices (autopilot-panel.yaml, mcp-panel.yaml).
+# VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim P1000 Throttle"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0310      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_l, throttle_r, speed_brake, flap_lever]
+    resolution_bits: 12
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against real Komodo Sim P1000 hardware."
+  - id: REVERSE_THRUST_GATE
+    description: "Throttle levers include a reverse-thrust gate mechanism."
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes are unipolar."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim P1000 programmable throttle quadrant for airliner cockpit
+    builds. VID/PID unconfirmed. Last reviewed: 2026-06.

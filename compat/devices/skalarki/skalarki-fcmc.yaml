@@ -1,0 +1,59 @@
+# Skalarki Electronics FCMC Airbus Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics FCMC (Flight Control & Monitoring Computer) panel
+# replicates the Airbus A320/A330 FCMC overhead selector and status lights.
+# Skalarki panels communicate via USB HID using the Skalarki USB-HID protocol.
+# VID 0x16C0 is commonly used by Skalarki for custom USB HID devices (VUSB).
+# PID 0x05DF is a community estimate — confirm with Skalarki device utility.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Electronics FCMC Airbus Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x16C0       # V-USB / Skalarki custom HID (est)
+    product_id: 0x05DF      # Community estimate — Skalarki FCMC
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x05DF are community estimates for Skalarki V-USB
+      HID devices. Confirm with Skalarki Panel Config software on real hardware.
+  - id: SKALARKI_HID_PROTOCOL
+    description: >
+      Skalarki panels use a proprietary HID report format for output (LED/annunciator
+      state). Input reports follow standard HID button encoding. LED state
+      must be driven by HID output reports from the sim adapter.
+  - id: FAULT_LIGHT_FEEDBACK
+    description: >
+      FCMC fault lights require FADEC telemetry from the sim to update
+      correctly. The panel does not auto-illuminate on power-on.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki FCMC Airbus panel. VID 0x16C0 / PID 0x05DF est.
+    For MCP see generic-mcp.yaml; for FCU see fcu-airbus.yaml.
+    Last reviewed: 2026-06.

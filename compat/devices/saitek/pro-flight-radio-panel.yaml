@@ -1,0 +1,55 @@
+# Saitek Pro Flight Radio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0D05 — linux-hardware.org ("Pro Flight Radio Panel").
+# Dual-screen nav/com radio simulation panel. Partner to the Multi Panel and Switch Panel.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Radio Panel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D05      # Confirmed via linux-hardware.org ("Pro Flight Radio Panel")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: DUAL_7SEG_DISPLAY
+    description: >
+      Has two 5-digit 7-segment displays (active/standby frequencies). Display
+      updates require USB HID output reports targeting the radio active/standby fields.
+  - id: ROTARY_ENCODERS_RADIO
+    description: >
+      Outer and inner frequency knobs are rotary encoders (relative delta). The
+      flip button swaps active/standby. Protocol mirrors the Multi Panel encoder scheme.
+  - id: SAITEK_PANEL_PROTOCOL
+    description: >
+      Uses the same Saitek proprietary HID panel protocol as the Multi Panel
+      (0x0D06) and Switch Panel (0x0D67). All three can be daisy-chained.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0D05 confirmed via linux-hardware.org ("Pro Flight Radio Panel").
+    Often used alongside Multi Panel (0x0D06) and Switch Panel (0x0D67)
+    in home cockpit setups.
+    Last reviewed: 2026-02.

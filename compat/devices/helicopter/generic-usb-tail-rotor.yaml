@@ -1,0 +1,68 @@
+# Generic USB Tail Rotor / Anti-Torque Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic entry for USB HID tail rotor / anti-torque pedal devices used in
+# helicopter simulation. Many manufacturers supply helicopter-specific pedal
+# sets that differ from fixed-wing rudder pedals in travel, centering, and
+# axis profile. This entry represents the base class for unidentified or
+# proprietary USB anti-torque pedal hardware.
+# No confirmed VID/PID — use this as a template when the specific hardware
+# VID/PID has not yet been catalogued.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB Anti-Torque Pedals"
+  vendor: "Unknown"
+  usb:
+    vendor_id: ~         # Unidentified — update with confirmed VID
+    product_id: ~        # Unidentified — update with confirmed PID
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder]      # Anti-torque / tail rotor control axis
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: NO_CENTERING_SPRING
+    description: >
+      Helicopter anti-torque pedals typically have no centering spring —
+      they rest at the position the pilot leaves them. In the OpenFlight
+      helicopter profile, configure rudder axis as non-return (full range,
+      no spring-centered deadzone). Deadzones around centre may still help
+      for null trim trim position.
+  - id: UNIPOLAR_OPTIONAL
+    description: >
+      Some anti-torque pedal designs use a unipolar [0, 1] axis mapping
+      (full left to full right without true centre), especially on collective-
+      style tail rotor designs for single-pilot setups. Map as bilateral
+      [-1, 1] unless the specific hardware documentation states otherwise.
+  - id: GENERIC_TEMPLATE
+    description: >
+      This is a generic template entry. Replace the VID/PID with confirmed
+      values from lsusb when the specific hardware is identified. Use
+      helicopter/generic-usb-cyclic.yaml and helicopter/generic-usb-collective.yaml
+      for the cyclic stick and collective lever respectively.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB anti-torque / tail rotor pedal template. VID/PID unknown.
+    Update when specific hardware is identified. For confirmed helicopter pedals
+    see: virpil/ace-1-pedals.yaml, mfg/*.yaml, and vkb/sim-pedals-*.yaml.
+    Last reviewed: 2026-06.

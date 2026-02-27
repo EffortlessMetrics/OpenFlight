@@ -1,0 +1,51 @@
+# Elite Simulations Pro MFD
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology), PID 0xEE10 — community estimate.
+# Elite Simulations Pro MFD is a professional multi-function display panel
+# with programmable LCD keys and rotary encoders for advanced sim training.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations Pro MFD"
+  vendor: "Elite Simulations"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by Elite Simulations)
+    product_id: 0xEE10      # Community estimate — Elite Pro MFD
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel/display device)
+
+capabilities:
+  axes:
+    count: 2
+    names: [left_encoder, right_encoder]
+    resolution_bits: 8
+  buttons: 18
+  hats: 0
+  force_feedback: false
+  display:
+    type: lcd
+    digits: 0
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEE10 is a community estimate for the Elite Pro MFD.
+      VID 0x04D8 is confirmed as Microchip Technology, used by Elite Simulations.
+      Confirm product ID with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations Pro MFD — programmable LCD MFD panel for professional
+    training setups. PID 0xEE10 unconfirmed. Last reviewed: 2026-06.

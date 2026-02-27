@@ -1,0 +1,38 @@
+[package]
+name = "flight-hotas-virpil-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-virpil]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_virpil_parsers"
+path = "fuzz_targets/fuzz_virpil_parsers.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_alpha"
+path = "fuzz_targets/fuzz_alpha.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_mongoost"
+path = "fuzz_targets/fuzz_mongoost.rs"
+test = false
+doc = false

@@ -1,0 +1,59 @@
+# Akai MPK Mini MIDI Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Akai MPK Mini is a compact USB MIDI keyboard controller with 25 mini keys,
+# 8 velocity-sensitive pads, 4 knobs, and a joystick. Commonly used as a
+# general-purpose panel controller for simulator cockpit builds.
+# VID 0x09E8 (Akai / inMusic) / PID 0x0028: confirmed from USB device database.
+
+schema_version: "1"
+
+device:
+  name: "Akai MPK Mini MIDI Controller"
+  vendor: "Akai"
+  usb:
+    vendor_id: 0x09E8       # Akai Professional / inMusic Brands Inc.
+    product_id: 0x0028      # MPK Mini — confirmed from USB device database
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4
+    names: [knob_1, knob_2, knob_3, knob_4]
+    resolution_bits: 7
+  buttons: 17
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_COMPOSITE
+    description: >
+      The MPK Mini enumerates as both a USB MIDI device and a USB HID device.
+      For OpenFlight integration, bind the HID interface for knob/pad/joystick
+      access, or use the MIDI interface for note/CC mapping.
+  - id: JOYSTICK_AXES
+    description: >
+      The built-in joystick provides X/Y axes in addition to the four knobs.
+      Total axis count including joystick is 6. Joystick may require calibration
+      for null-zone stability.
+  - id: VELOCITY_PADS
+    description: >
+      The 8 drum pads are velocity-sensitive via MIDI but report only on/off
+      state over the HID interface. Use MIDI binding for velocity-sensitive input.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Akai MPK Mini MIDI controller. VID 0x09E8 / PID 0x0028 confirmed.
+    Used as a versatile panel controller in cockpit replica builds.
+    Supports MSFS, X-Plane, DCS via HID or MIDI binding. Last reviewed: 2026-06.

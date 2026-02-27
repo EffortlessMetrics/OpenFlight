@@ -1,0 +1,58 @@
+# WinWing Orion 3 F-16EX HOTAS Bundle (virtual combined-device note)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device note documenting the Orion 3 F-16EX
+# HOTAS bundle sold by WinWing. It is NOT a real USB device — the stick
+# and throttle enumerate as two independent USB HID devices on the host.
+# Component manifests:
+#   - orion2-f16ex-stick.yaml      (stick, PID 0xBEA8)
+#   - orion3-f16ex-throttle.yaml   (throttle, PID 0xBD48)
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 F-16EX HOTAS Bundle (Virtual)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: ~    # Virtual bundle entry — no real USB product ID; see notes for component PIDs
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6    # Combined: 2 stick axes (x/y) + 4 throttle axes
+    names: [x, y, throttle, antitorque, thumbwheel_1, thumbwheel_2]
+    resolution_bits: 12
+  buttons: 52   # ~20 stick + 32 throttle
+  hats: 2
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest documents the Orion 3 F-16EX HOTAS bundle as sold by
+      WinWing. The stick and throttle enumerate as separate USB HID devices.
+      OpenFlight merges their axis and button namespaces into a single logical
+      HOTAS device in the active profile using the combined-device binding.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle entry for the WinWing Orion 3 F-16EX HOTAS kit.
+    Component devices enumerate independently: Orion 2 F-16EX Stick
+    (PID 0xBEA8, orion2-f16ex-stick.yaml) and Orion 3 F-16EX Throttle
+    (PID 0xBD48, orion3-f16ex-throttle.yaml; community-reported PID).
+    This manifest exists to document the recommended bundle pairing and
+    the combined axis namespace used by OpenFlight's multi-device binding.
+    Axis counts are the combined total across both physical devices.

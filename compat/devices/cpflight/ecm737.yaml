@@ -1,0 +1,59 @@
+# CPFlight ECM737 Engine Control Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight (Italy) ECM737 — Boeing 737 Engine Control Module replica for home
+# cockpit builders. Replicates the 737 NG centre pedestal engine controls
+# including throttle levers, fuel control switches, ignition selectors, and
+# engine start levers. Uses CPFlight's proprietary serial-over-USB protocol.
+# VID/PID unconfirmed — CPFlight firmware varies by model generation.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight ECM737 Engine Control Module"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0DC3       # Placeholder — community estimate for CPFlight USB VID
+    product_id: 0x0810      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle_l, throttle_r]
+    resolution_bits: 10
+  buttons: 24               # Fuel control, ignition, start levers, fire handles
+  hats: 0
+  encoders: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0DC3 and PID 0x0810 are community estimates. CPFlight uses a
+      proprietary USB protocol; some models use virtual COM port (VCP) rather
+      than HID. Verify with USBView on real hardware.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels may use a proprietary serial-over-USB protocol rather
+      than standard HID. OpenFlight's CPFlight adapter translates panel
+      protocol to standard axis/button events.
+  - id: THROTTLE_NOT_CENTERED
+    description: "Throttle levers report [0, max]; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight ECM737 — Boeing 737 engine control module replica. VID/PID unconfirmed.
+    May use VCP serial rather than HID. See mcp-pro.yaml for the companion
+    autopilot panel. Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# Thrustmaster TX Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB669 sourced from SDL2 game controller
+# database (libsdl-org/SDL, db entry "Thrustmaster TX Racing Wheel") and
+# cross-referenced against community USB captures. Not yet in the Linux
+# kernel hid-ids.h at time of writing; treat as community-confirmed.
+# The TX is a servo-motor direct-drive wheel designed for Xbox One / PC.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TX Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB669      # Community-confirmed from SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 21
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (900° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). In flight sim, X is typically mapped to
+      rudder/nose-wheel steering and Z/Rz to throttle/toe-brake axes.
+  - id: XBOX_USB_PROFILE
+    description: >
+      The TX uses Xbox protocol on the wireless receiver but presents as
+      standard DirectInput HID when connected via USB to PC. Ensure USB
+      (not wireless) connection for reliable HID enumeration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TX Racing Wheel (Xbox One edition). VID 0x044F confirmed;
+    PID 0xB669 from SDL2 gamecontrollerdb — community value, not yet in
+    Linux kernel. Servo-motor FFB. Used in flight sim for rudder axis.
+    Last reviewed: 2026-06.

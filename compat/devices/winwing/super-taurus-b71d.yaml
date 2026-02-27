@@ -1,0 +1,53 @@
+# WinWing Super Taurus Throttle (Alt PID 0xB71D)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x4098 (WinWing).
+# PID 0xB71D is a community estimate for the WinWing Super Taurus throttle.
+# The primary Super Taurus manifest (super-taurus-throttle.yaml) uses PID 0xBD64.
+# PID 0xB71D appears in some community PID tables as an alternate or early
+# production variant. Verify with SimAppPro or lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "WinWing Super Taurus Throttle (Alt PID)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB71D      # Community estimate — primary is 0xBD64 (super-taurus-throttle.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB71D is a community estimate. The primary Super Taurus manifest uses
+      PID 0xBD64. Verify with SimAppPro or lsusb before production deployment.
+  - id: DUAL_THROTTLE
+    description: >
+      The Super Taurus features dual throttle levers — useful for twin-engine
+      aircraft profiles with independent engine management.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Super Taurus alternate PID 0xB71D. Primary PID is 0xBD64
+    (super-taurus-throttle.yaml). VID 0x4098. Wave-41 addition.
+    Last reviewed: 2026-07.

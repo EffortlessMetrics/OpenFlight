@@ -1,0 +1,55 @@
+# Turtle Beach VelocityOne Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 is Turtle Beach Corporation's registered USB vendor ID.
+# PID 0x1051 community-reported for the VelocityOne Rudder pedals.
+# Not yet confirmed via linux-hardware.org probe database; verify with
+# lsusb / USBView on real hardware before enabling production device matching.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Rudder"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x1051    # Community-reported; not yet confirmed in probe databases
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4        # USB FS device
+
+quirks:
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve and deadzone profiles for each axis.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1051 is community-reported for the VelocityOne Rudder pedals (sequential
+      from Flightdeck PID 0x1050). No independent hardware probe or open-source USB
+      enumeration has confirmed this value. Verify with lsusb / USBView on real hardware
+      before enabling production device matching.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Companion rudder pedals for the VelocityOne Flightdeck. VID 0x10F5 is Turtle
+    Beach's registered USB vendor ID. PID 0x1051 community-reported (sequential
+    from Flightdeck 0x1050); awaiting hardware-probe confirmation.
+    Last reviewed: 2026-02.

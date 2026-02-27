@@ -1,0 +1,53 @@
+# EPOS H3Pro Hybrid Headset
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# EPOS H3Pro Hybrid gaming headset — the H3Pro Hybrid includes a USB HID
+# interface for its 4-button inline remote control (volume, mute, ANC toggle,
+# source switching). Input device, not audio controller.
+# VID 0x1395 (EPOS / Sennheiser Communications). PID 0x0310 community estimate.
+schema_version: "1"
+
+device:
+  name: "EPOS H3Pro Hybrid"
+  vendor: "EPOS"
+  usb:
+    vendor_id: 0x1395       # EPOS (Sennheiser Communications A/S)
+    product_id: 0x0310      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x0C        # Consumer Device
+    usage: 0x01             # Consumer Control
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0310 is a community estimate for the H3Pro Hybrid. EPOS products
+      use multiple HID interfaces (audio + control). This manifest targets only
+      the button/remote control HID interface. Verify with lsusb.
+  - id: CONSUMER_DEVICE
+    description: >
+      The H3Pro Hybrid remote enumerates under HID Usage Page 0x0C (Consumer
+      Device) rather than Generic Desktop (0x01). Map buttons as supplemental
+      sim controls, not primary flight axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    EPOS H3Pro Hybrid — 4-button HID remote control interface only.
+    PID 0x0310 community estimate. VID 0x1395 = EPOS. Last reviewed: 2026-06.

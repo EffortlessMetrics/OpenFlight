@@ -1,0 +1,57 @@
+# SimuFlite / CAE Generic USB Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimuFlite (now a CAE brand) produces professional Level D full-flight
+# simulators. Their USB rudder pedal assemblies are used in reconfigurable
+# training devices and occasionally surplus to desktop sim builders.
+# VID/PID unconfirmed — CAE uses proprietary hardware with varied USB bridges.
+# Tier 3: best-effort support for any SimuFlite/CAE USB pedal that exposes
+# a standard HID joystick interface.
+
+schema_version: "1"
+
+device:
+  name: "SimuFlite / CAE Generic USB Rudder Pedals"
+  vendor: "SimuFlite / CAE Inc."
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip common in aviation HW)
+    product_id: 0xFF01      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. SimuFlite/CAE hardware is proprietary; the USB
+      bridge chip and descriptor vary by unit. If the pedals enumerate as a
+      standard HID joystick, map rudder+toe-brake axes. Otherwise a custom
+      USB driver may be required.
+  - id: PROFESSIONAL_AVIATION_HARDWARE
+    description: >
+      Designed for professional flight training devices. May require calibration
+      via CAE's own software before use with consumer sim software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimuFlite/CAE generic USB rudder pedals — surplus professional aviation
+    hardware. VID/PID unconfirmed; best-effort HID joystick mapping.
+    Last reviewed: 2026-06.

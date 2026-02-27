@@ -1,0 +1,58 @@
+# JetMax A320 Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Budget A320-style throttle quadrant from JetMax (Chinese OEM brand).
+# USB CDC or HID device using a CH340/CP2102 bridge chip; VID/PID vary
+# across manufacturing batches and are unconfirmed.
+schema_version: "1"
+
+device:
+  name: "JetMax A320 Throttle Quadrant"
+  vendor: "JetMax"
+  usb:
+    vendor_id: 0x1A86   # Placeholder — CH340 USB-Serial (VID_UNCONFIRMED; may vary by batch)
+    product_id: 0x7523  # Placeholder — CH340 generic serial PID (PID_UNCONFIRMED)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, speedbrake, flap_lever]
+    resolution_bits: 10
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x1A86 / PID 0x7523 is the CH340 placeholder; verify against actual device."
+  - id: PID_UNCONFIRMED
+    description: "PID varies between manufacturing batches. Some units use CP2102 (VID 0x10C4)."
+  - id: LEVER_DETENTS_PHYSICAL
+    description: >
+      Throttle levers have plastic detent notches for IDLE, CLIMB, FLEX/MCT,
+      and TO/GA positions. No electrical detent sensing; all positions report
+      as continuous analog values.
+  - id: SPEEDBRAKE_ARMED_DETENT
+    description: >
+      Speedbrake lever has an ARMED detent notch. The armed position is not
+      electrically distinguishable from adjacent analog values without
+      calibration. Recommend deadzone around expected armed value.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Budget A320-style throttle. VID/PID require field verification — CH340
+    serial bridge is commonly used but some batches use CP2102. No public
+    USB descriptor documentation available. Community-sourced information only.
+    Last reviewed: 2026-02.

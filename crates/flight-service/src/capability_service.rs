@@ -327,7 +327,7 @@ impl Default for CapabilityService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flight_axis::AxisEngine;
+    use flight_axis::{AxisEngine, AxisFrame};
 
     #[test]
     fn test_capability_service_creation() {
@@ -468,5 +468,92 @@ mod tests {
         assert_eq!(restricted.len(), 1);
         assert_eq!(restricted[0].0, "axis1");
         assert_eq!(restricted[0].1, CapabilityMode::Kid);
+    }
+
+    #[test]
+    fn axis_capability_status_defaults_are_reasonable() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        service.register_axis("pitch".to_string(), engine).unwrap();
+
+        let status_list = service.get_capability_status(None).unwrap();
+        assert_eq!(status_list.len(), 1);
+        let status = &status_list[0];
+        assert_eq!(status.axis_name, "pitch");
+        assert_eq!(status.mode, CapabilityMode::Full);
+        assert_eq!(status.clamp_events_count, 0);
+        assert!(status.last_clamp_timestamp.is_none());
+        assert_eq!(status.limits.max_axis_output, 1.0);
+        assert_eq!(status.limits.max_ffb_torque, 50.0);
+    }
+
+    #[test]
+    fn clamp_counter_increments_when_axis_clamped() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("throttle".to_string()));
+        service
+            .register_axis("throttle".to_string(), engine.clone())
+            .unwrap();
+
+        // Engage kid mode (max 50% output)
+        service.set_kid_mode(true).unwrap();
+
+        // Process a frame whose output exceeds the kid-mode limit
+        let mut frame = AxisFrame::new(0.9, 1000);
+        frame.out = 0.9;
+        engine.process(&mut frame).unwrap();
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].clamp_events_count, 1);
+        assert!(status[0].last_clamp_timestamp.is_some());
+    }
+
+    #[test]
+    fn demo_mode_reports_restricted_axes() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service.register_axis("roll".to_string(), engine).unwrap();
+
+        service.set_demo_mode(true).unwrap();
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].mode, CapabilityMode::Demo);
+        assert_eq!(status[0].limits.max_axis_output, 0.8);
+        assert!(service.has_restricted_axes().unwrap());
+    }
+
+    #[test]
+    fn kid_mode_reports_restricted_axes() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("yaw".to_string()));
+        service.register_axis("yaw".to_string(), engine).unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].mode, CapabilityMode::Kid);
+        assert_eq!(status[0].limits.max_axis_output, 0.5);
+        assert!(service.has_restricted_axes().unwrap());
+    }
+
+    #[test]
+    fn demo_mode_clamp_counter_increments_when_axis_clamped() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("roll".to_string(), engine.clone())
+            .unwrap();
+
+        // Engage demo mode (max 80% output)
+        service.set_demo_mode(true).unwrap();
+
+        // Process a frame whose output exceeds the demo-mode limit
+        let mut frame = AxisFrame::new(0.9, 1000);
+        frame.out = 0.9;
+        engine.process(&mut frame).unwrap();
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].clamp_events_count, 1);
+        assert!(status[0].last_clamp_timestamp.is_some());
     }
 }

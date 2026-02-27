@@ -1,0 +1,41 @@
+# BAUR F-16 VIPER HOTAS Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2060 — estimated.
+# Baur F-16 Viper HOTAS stick — Chinese market replica of F-16 sidestick grip.
+schema_version: "1"
+device:
+  name: "BAUR F-16 VIPER HOTAS Stick"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2060      # Community estimate — BAUR F-16 stick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 16
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2060 is a community estimate for the BAUR F-16 VIPER stick.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR F-16 VIPER HOTAS Stick — VID 0x1209 / PID 0x2060 (est).
+    Chinese market F-16 sidestick replica. Popular in Asian DCS community.
+    Wave-55 addition. Last reviewed: 2026-07.

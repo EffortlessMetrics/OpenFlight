@@ -1,0 +1,56 @@
+# Saitek Cyborg Evo Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0460 reported via linux-hardware.org (multiple probes, "Cyborg Evo").
+# The Cyborg Evo is a mid-range adjustable joystick released c. 2004, popular
+# for flight sims. Distinct from the force-feedback Cyborg Evo Force (0x0462).
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Evo Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0460      # Cyborg Evo — linux-hardware.org probes
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: ADJUSTABLE_HANDLE
+    description: >
+      The Cyborg Evo features an adjustable handle angle (left/right-hand
+      orientation). The HID report layout is identical in both orientations.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. The Z axis is a throttle slider
+      on the base of the stick.
+  - id: CYBORG_EVO_FORCE_DISTINCT
+    description: >
+      The Cyborg Evo Force (FFB variant) uses PID 0x0462 and should not be
+      confused with this standard (non-FFB) variant (0x0460).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0460 confirmed via linux-hardware.org (Cyborg Evo, multiple Ubuntu/Debian
+    probes). Popular mid-range joystick; widely used in FSX, X-Plane, and early
+    DCS. The force-feedback Evo Force variant uses PID 0x0462. Last reviewed: 2026-02.

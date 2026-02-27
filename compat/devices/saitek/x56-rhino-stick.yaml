@@ -1,0 +1,64 @@
+# Saitek Pro Flight X-56 Rhino Stick (Mad Catz era)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID/PID confirmed from two independent sources:
+#   1. libsdl-org/SDL SDL2 branch: initial_flightstick_devices[]
+#      MAKE_VIDPID(0x0738, 0x2221), /* Saitek Pro Flight X-56 Rhino Stick */
+#   2. linux-hardware.org: usb:0738:2221 "Saitek Pro Flight X-56 Rhino Stick"
+#      (Mad Catz vendor, 26 independent system probes)
+#
+# Note: A separate manifest (x56.yaml) covers the Saitek/Logitech VID 0x06A3
+# variant. This file covers the Mad Catz VID 0x0738 units produced during
+# and after the Mad Catz acquisition of Saitek in 2007.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight X-56 Rhino Stick"
+  vendor: "Mad Catz / Logitech"
+  usb:
+    vendor_id: 0x0738       # Mad Catz, Inc.
+    product_id: 0x2221      # Confirmed: linux-hardware.org (26 probes) + SDL2 source
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, rx, ry]
+    resolution_bits: 12
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SPLIT_COMPOSITE
+    description: >
+      Stick (0x2221) and throttle (0xA221) are separate USB HID devices.
+      Both must be enumerated for full axis coverage.
+  - id: MINISTICK_DEADZONE
+    description: >
+      Built-in mini-stick (Rx/Ry) exhibits pronounced hardware deadzone
+      (≈8%). OpenFlight applies the x55_x56_ministick ghost filter preset.
+  - id: AXIS_COUNTS_UNVERIFIED
+    description: >
+      Axis count and names are derived from community documentation and
+      Linux evtest captures; they have not been validated on physical
+      hardware. HIL verification is recommended.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Mad Catz era X-56 Rhino Stick. VID/PID confirmed from SDL2 source and
+    linux-hardware.org (26 probes). The paired throttle uses PID 0xA221
+    (see x56-rhino-throttle.yaml). Axis layout derived from community
+    reports; HIL verification pending. Last validated: 2026-02.

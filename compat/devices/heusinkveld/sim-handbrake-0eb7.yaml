@@ -1,0 +1,56 @@
+# Heusinkveld Sim Handbrake (Fanatec VID 0x0EB7 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7, PID 0xE2CA — community estimate from community sources.
+# Note: VID 0x0EB7 is registered to Fanatec GmbH. This community-reported
+# VID/PID for Heusinkveld Sim Handbrake may reflect misidentification or
+# shared silicon. The primary Sim Handbrake manifests are handbrake.yaml and
+# heusinkveld_sim_handbrake.yaml (both with VID 0x04D8). Added per community
+# request; verify from lsusb before use.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Handbrake"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x0EB7    # Community estimate — PID estimated from community sources
+    product_id: 0xE2CA   # Community estimate; see also heusinkveld_sim_handbrake.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [rx]
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0EB7 / PID 0xE2CA are community estimates. VID 0x0EB7 is Fanatec;
+      this attribution for Heusinkveld may be incorrect. Primary manifests:
+      heusinkveld_sim_handbrake.yaml (VID 0x04D8 / PID 0xE2C6). Confirm lsusb.
+  - id: HALL_EFFECT_SENSOR
+    description: >
+      Contactless Hall effect sensor for the pull axis. Map to spoiler or
+      airbrake channel in flight sim profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Handbrake — community VID 0x0EB7 / PID 0xE2CA variant.
+    Note: VID 0x0EB7 is Fanatec; estimate may be incorrect. Primary manifest:
+    heusinkveld_sim_handbrake.yaml. Last reviewed: 2026-07.

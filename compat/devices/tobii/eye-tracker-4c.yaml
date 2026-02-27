@@ -1,0 +1,59 @@
+# Tobii Eye Tracker 4C
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2104 (Tobii Technology AB) / PID 0x0118 — confirmed from multiple
+# community USB captures and lsusb reports. The Tobii Eye Tracker 4C is a
+# wide-FoV eye tracker with head tracking (via Tobii IS4 sensor). Supports
+# head and gaze tracking for view control in flight simulation via Tobii Ghost
+# software or direct SDK access.
+schema_version: "1"
+
+device:
+  name: "Tobii Eye Tracker 4C"
+  vendor: "Tobii Technology AB"
+  type: headtracker
+  usb:
+    vendor_id: 0x2104       # Tobii Technology AB (confirmed)
+    product_id: 0x0118      # Eye Tracker 4C — confirmed from community lsusb reports
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (gaze/head pose via Tobii SDK)
+
+capabilities:
+  axes:
+    count: 6
+    names: [gaze_x, gaze_y, head_x, head_y, head_yaw, head_pitch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 12
+
+quirks:
+  - id: COMPOSITE_DEVICE
+    description: >
+      The Eye Tracker 4C is a composite USB device with multiple interfaces
+      including a proprietary Tobii IS4 protocol interface. The HID interface
+      is used for standard gaze-as-joystick output.
+  - id: SDK_RECOMMENDED
+    description: >
+      For full-fidelity head tracking and gaze data, use the Tobii Pro SDK or
+      Tobii Gaming SDK rather than the raw HID path. OpenFlight falls back to
+      HID joystick mode when the SDK is unavailable.
+  - id: DISTINCT_FROM_ET5
+    description: >
+      The ET 4C (PID 0x0118) is distinct from the Eye Tracker 5 (eye-tracker-5.yaml).
+      The 4C uses the IS4 sensor; the ET5 uses a wider-FoV IS5 sensor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii Eye Tracker 4C. VID 0x2104 / PID 0x0118 confirmed from community lsusb.
+    IS4 sensor; 90 Hz gaze + 6DOF head. Wave-42 addition. Last reviewed: 2026-07.

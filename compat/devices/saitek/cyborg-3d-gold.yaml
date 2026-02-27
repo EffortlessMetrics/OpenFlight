@@ -1,0 +1,56 @@
+# Saitek Cyborg 3D Gold Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Mad Catz). PID 0xFF0C is a community estimate for
+# the Cyborg 3D Gold based on USB capture reports. The Cyborg 3D Gold was
+# Saitek's premium entry-level joystick from the early 2000s with a twist-
+# rudder axis, throttle slider, 8-way hat, and 8 fire buttons. Confirm PID
+# with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg 3D Gold Joystick"
+  vendor: "Saitek / Mad Catz"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Mad Catz (confirmed)
+    product_id: 0xFF0C      # Community estimate — Cyborg 3D Gold; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xFF0C is a community estimate. Saitek Cyborg 3D USB (the non-Gold)
+      uses different PIDs. The Gold model had a slightly different PCB. Verify
+      with lsusb on real hardware; Cyborg Gold PCBs from different production
+      runs may use different PIDs.
+  - id: LEGACY_DEVICE
+    description: >
+      Legacy device (circa 2001). Works without additional drivers on modern
+      Windows and Linux as standard HID. Saitek SST programming software
+      is optional (may not run on Windows 10/11 without compatibility mode).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg 3D Gold. VID 0x06A3 confirmed; PID 0xFF0C is a community
+    estimate. Legacy joystick (2001) with twist rudder and throttle slider.
+    Last reviewed: 2026-06.

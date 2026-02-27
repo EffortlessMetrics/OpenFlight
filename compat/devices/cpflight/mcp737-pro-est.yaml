@@ -1,0 +1,48 @@
+# CPFlight MCP737 PRO (alternate VID/PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1552, PID 0x0001 — community estimates for CPFlight. CPFlight's
+# confirmed VID is 0x0DC3. The MCP737 PRO is CPFlight's flagship Boeing 737
+# mode control panel with motorized knobs and backlighting.
+# See cpflight/mcp737.yaml for the confirmed VID variant.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight MCP737 PRO"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1552       # VID_UNCONFIRMED — CPFlight alt; confirmed VID is 0x0DC3
+    product_id: 0x0001      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob]
+    resolution_bits: 10
+  buttons: 40
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1552 and PID 0x0001 are community estimates. CPFlight's confirmed
+      VID is 0x0DC3. See cpflight/mcp737.yaml for the confirmed VID variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight MCP737 PRO — Boeing 737 MCP with motorized knobs.
+    VID 0x1552 and PID 0x0001 unconfirmed. Last reviewed: 2026-06.

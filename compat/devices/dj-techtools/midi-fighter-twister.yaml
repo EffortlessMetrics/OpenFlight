@@ -1,0 +1,48 @@
+# DJ TechTools MIDI Fighter Twister
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2580 (DJ TechTools). PID 0x0048 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "DJ TechTools MIDI Fighter Twister"
+  vendor: "DJ TechTools"
+  usb:
+    vendor_id: 0x2580       # DJ TechTools
+    product_id: 0x0048      # Community estimate — MIDI Fighter Twister
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x08             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 16
+    names: [enc1, enc2, enc3, enc4, enc5, enc6, enc7, enc8, enc9, enc10, enc11, enc12, enc13, enc14, enc15, enc16]
+    resolution_bits: 7
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. MIDI Fighter Twister 16-encoder MIDI controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DJ TechTools MIDI Fighter Twister — 16 push-encoders as axis/button input. PID 0x0048 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

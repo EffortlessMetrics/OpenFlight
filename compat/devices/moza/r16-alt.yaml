@@ -1,0 +1,58 @@
+# Moza R16 Racing Wheel Base (Alt PID 0x0004)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Moza R16 direct-drive racing wheel base — alternate PID estimate.
+# The primary manifest (r16-base.yaml) uses community estimate PID 0x0010.
+# Some community sources suggest PID 0x0004 for the R16; this manifest
+# captures that alternate report. VID 0x346E confirmed (Gudsen Technology).
+schema_version: "1"
+
+device:
+  name: "Moza R16 Direct Drive Base (Alt PID)"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology) — confirmed
+    product_id: 0x0004    # Alternate community estimate — see also r16-base.yaml (0x0010)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 16.0   # R16 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0004 is an alternate community estimate for the R16. The primary
+      estimate is 0x0010 (r16-base.yaml). Both are unconfirmed. Verify with
+      lsusb on physical hardware.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R16 accepts raw torque commands (report ID 0x20) rather than
+      standard DirectInput effect types. OpenFlight synthesises the effect
+      waveform and sends it as a torque value.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R16: high-torque direct-drive base (16 Nm). Alternate PID 0x0004;
+    primary estimate is 0x0010 (r16-base.yaml). VID 0x346E = Moza.
+    Last reviewed: 2026-06.

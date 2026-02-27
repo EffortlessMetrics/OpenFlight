@@ -1,0 +1,59 @@
+# Teensy 4.0 USB HID (PID 0x0486)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x16C0 (PJRC, confirmed).
+# PID 0x0486 is a community-reported PID for the Teensy 4.0 in a specific
+# USB HID-only configuration. The existing teensy-40-throttle.yaml uses PID
+# 0x0478 (confirmed from pjrc.com as the Teensyduino serial+HID class PID).
+# PID 0x0486 appears in some community firmware configurations as an alternate
+# HID-only PID variant.
+schema_version: "1"
+
+device:
+  name: "Teensy 4.0 USB HID (Alt PID)"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0       # PJRC (confirmed)
+    product_id: 0x0486      # Community-reported alt HID PID — primary is 0x0478 (teensy-40-throttle.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_ALT_VARIANT
+    description: >
+      PID 0x0486 is a community-reported alternate for Teensy 4.0 HID mode.
+      The confirmed Teensyduino PID is 0x0478 (teensy-40-throttle.yaml).
+      Verify with lsusb on your specific firmware build.
+  - id: DIY_HARDWARE
+    description: >
+      Teensy 4.0 is a DIY hardware platform. Axis count, button count, and
+      report layout vary by Teensyduino sketch.
+  - id: HIGH_POLL_RATE
+    description: >
+      Teensy 4.0 supports USB full-speed 1000 Hz polling; some host systems
+      may throttle to 125 Hz depending on the USB host controller and OS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Teensy 4.0 USB HID alternate PID 0x0486. Primary confirmed PID is 0x0478
+    (teensy-40-throttle.yaml). VID 0x16C0 = PJRC. DIY platform; layout is
+    builder-defined. Wave-41 addition. Last reviewed: 2026-07.

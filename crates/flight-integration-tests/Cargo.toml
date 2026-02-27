@@ -1,0 +1,32 @@
+[package]
+homepage.workspace = true
+name = "flight-integration-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "End-to-end integration tests for hardware parsing through the bus pipeline."
+publish = false
+readme = "README.md"
+keywords = ["flight-simulation", "testing", "integration"]
+categories = ["development-tools::testing"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dev-dependencies]
+flight-bus = { path = "../flight-bus" }
+flight-hotas-virpil = { path = "../flight-hotas-virpil" }
+flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
+flight-hotas-winwing = { path = "../flight-hotas-winwing" }
+flight-hotas-vpforce = { path = "../flight-hotas-vpforce" }
+flight-hotas-vkb = { path = "../flight-hotas-vkb" }
+flight-hotas-saitek = { path = "../flight-hotas-saitek" }
+flight-hotas-brunner = { path = "../flight-hotas-brunner" }
+flight-hotas-logitech = { path = "../flight-hotas-logitech" }
+flight-hotas-honeycomb = { path = "../flight-hotas-honeycomb" }
+flight-hotas-ch = { path = "../flight-hotas-ch" }
+flight-hid-support = { path = "../flight-hid-support" }
+serde_yaml.workspace = true
+walkdir.workspace = true

@@ -1,0 +1,57 @@
+# Thrustmaster T150 Force Feedback Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB677 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h. The T150 is Thrustmaster's entry-level force-feedback
+# wheel (rubber-belt drive, ~2.5 Nm peak). It includes a 3-pedal set and
+# supports full DirectInput FFB effects on Windows and Linux.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T150 Force Feedback Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB677      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 16
+  buttons: 13
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (1080° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar); Rx = clutch (unipolar). In flight sim use,
+      X maps to rudder and Z/Rz to throttle/toe-brake.
+  - id: FFB_BELT_BASIC
+    description: >
+      T150 uses rubber-belt FFB — strong enough for centering forces but
+      less refined than the servo system on the T300 RS. DirectInput
+      spring and constant-force effects work correctly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T150 entry-level FFB wheel. VID/PID confirmed from Linux
+    kernel hid-ids.h. Useful in flight sim as a rudder axis with spring-
+    centering force feedback. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# Moza R5 Wheel Base (STM32 / 0x0483 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Moza R5 Wheel Base is a direct-drive force feedback steering wheel base
+# targeted at sim racing. This manifest covers an STM32-based firmware variant
+# with VID 0x0483 / PID 0xA405 (community estimate). The primary Moza R5
+# manifest (r5-base.yaml) uses VID 0x346E (Gudsen Technology).
+
+schema_version: "1"
+
+device:
+  name: "Moza R5 Wheel Base (STM32 variant)"
+  vendor: "Moza Racing"
+  usb:
+    vendor_id: 0x0483       # PID estimated — STMicroelectronics; primary Moza VID is 0x346E
+    product_id: 0xA405      # Community estimate — R5 STM32 firmware variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [steering]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0483 (STM32) / PID 0xA405 are community estimates for a specific
+      firmware variant. The primary Moza R5 manifest (r5-base.yaml) uses
+      VID 0x346E (Gudsen Technology). Verify with lsusb on real hardware.
+  - id: DIRECT_DRIVE_FFB
+    description: >
+      The R5 uses a direct-drive brushless servo motor. FFB force limits should
+      be calibrated carefully to avoid mechanical damage or injury.
+  - id: MOZA_PITMAN_ARM_REQUIRED
+    description: >
+      The R5 base requires a compatible steering wheel rim with Moza quick-
+      release. Button inputs come from the attached rim, not the base itself.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R5 wheel base — STM32 firmware variant. VID 0x0483 / PID 0xA405 est.
+    Primary manifest with VID 0x346E: r5-base.yaml. Direct-drive FFB.
+    Last reviewed: 2026-06.

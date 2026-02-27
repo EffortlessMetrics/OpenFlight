@@ -3,16 +3,14 @@
 
 //! Replay validation suite
 
-use std::collections::HashMap;
 use std::path::Path;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 
-use crate::comparison::ComparisonResult;
 use crate::harness::{ReplayHarness, ReplayResult};
 use crate::replay_config::{ReplayConfig, ReplayMode, ToleranceConfig};
 
@@ -263,17 +261,13 @@ impl ReplayValidator {
 
         // Calculate accuracy scores based on comparison statistics
         let axis_accuracy_score = if comparison.axis_stats.count > 0 {
-            let accuracy_ratio =
-                comparison.axis_stats.within_tolerance as f32 / comparison.axis_stats.count as f32;
-            accuracy_ratio
+            comparison.axis_stats.within_tolerance as f32 / comparison.axis_stats.count as f32
         } else {
             1.0
         };
 
         let ffb_accuracy_score = if comparison.ffb_stats.count > 0 {
-            let accuracy_ratio =
-                comparison.ffb_stats.within_tolerance as f32 / comparison.ffb_stats.count as f32;
-            accuracy_ratio
+            comparison.ffb_stats.within_tolerance as f32 / comparison.ffb_stats.count as f32
         } else {
             1.0
         };
@@ -353,7 +347,7 @@ impl ReplayValidator {
         let memory_score = details.performance.memory_efficiency_score;
 
         // Weighted average of all scores
-        (output_score * 0.4 + performance_score * 0.3 + timing_score * 0.2 + memory_score * 0.1)
+        output_score * 0.4 + performance_score * 0.3 + timing_score * 0.2 + memory_score * 0.1
     }
 }
 

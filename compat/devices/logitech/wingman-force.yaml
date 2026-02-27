@@ -1,0 +1,63 @@
+# Logitech WingMan Force (original)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID 0xC281 is listed in the community usb.ids
+# database as "WingMan Force". Released circa 1998–2001; one of the first
+# USB force-feedback joysticks. Distinct from the later Force 3D Pro (0xC286).
+# 2-axis FFB stick with throttle lever and 8 buttons.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Force"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D     # Logitech Inc.
+    product_id: 0xC281    # WingMan Force — usb.ids community database
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_10BIT_AXES
+    description: >
+      10-bit axis resolution (1024 steps). Apply light smoothing for smooth
+      analogue axis response in modern simulators.
+  - id: DIRECTINPUT_FFB
+    description: >
+      FFB on X and Y axes via DirectInput spring, damper, constant-force, and
+      periodic effects. The Z axis (throttle lever on base) has no FFB.
+  - id: NO_TWIST_RUDDER
+    description: >
+      The original WingMan Force has no twist-grip rudder. Use external rudder
+      pedals or assign rudder to a profile axis if needed.
+  - id: DISCONTINUED
+    description: >
+      Discontinued circa 2001. Legacy device; standard HID FFB continues to
+      function on modern Windows via the WDM HID minidriver.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Force original (circa 1998–2001). Early USB FFB joystick,
+    predecessor to the Force 3D Pro (PID 0xC286). PID 0xC281 from usb.ids
+    community database. Last reviewed: 2026-02.

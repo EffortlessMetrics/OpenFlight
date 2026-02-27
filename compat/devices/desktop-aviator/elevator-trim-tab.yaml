@@ -1,0 +1,44 @@
+# Desktop Aviator Elevator Trim Tab
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0015 estimated for DAV Elevator Trim Tab.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator Elevator Trim Tab"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0015
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: TRIM_TAB_LEVER
+    description: >
+      Small lever-style trim tab control. Toggle or slide lever
+      for elevator trim. Compact form factor for panel mounting.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator Elevator Trim Tab. PID 0x0015 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

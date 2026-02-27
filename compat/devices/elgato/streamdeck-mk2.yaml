@@ -1,0 +1,59 @@
+# Elgato Stream Deck MK.2 (15-key, second generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 confirmed: Elgato Systems / Corsair.
+# PID 0x0080 confirmed: documented in open-source Stream Deck drivers
+#   (python-elgato-streamdeck v0.9+).
+# The MK.2 succeeds the Original; same 15-key layout with revised casing,
+# detachable USB-C cable, and slightly revised HID report format.
+
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck MK.2"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9    # Elgato Systems / Corsair (confirmed)
+    product_id: 0x0080   # Stream Deck MK.2 — confirmed from open-source drivers
+  hid:
+    usage_page: 0xFF00
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 15
+  hats: 0
+  force_feedback: false
+  lcd_keys: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      MK.2 uses a revised vendor HID protocol compared to the Original (PID 0x0060).
+      The input report format changed slightly; OpenFlight uses the MK.2 report
+      layout when this PID is detected. See streamdeck-original.yaml for the
+      first-generation protocol.
+  - id: PANEL_DEVICE
+    description: >
+      Same 3x5 key layout as the Original. Functionally identical to the
+      Original from a flight sim usage perspective; differences are cosmetic
+      and cabling (USB-C vs Micro-USB).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck MK.2 — second-generation 15-key variant (USB-C).
+    VID 0x0FD9 / PID 0x0080 confirmed from open-source drivers.
+    Functionally equivalent to Original (streamdeck-original.yaml) but uses
+    a different PID and slightly revised HID report format. Last reviewed: 2026-06.

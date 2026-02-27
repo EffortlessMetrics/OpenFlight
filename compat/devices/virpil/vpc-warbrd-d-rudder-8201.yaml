@@ -1,0 +1,42 @@
+# VIRPIL VPC WarBRD-D Rudder
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls), PID 0x8201 — estimated.
+# VIRPIL VPC WarBRD-D Rudder pedals — dual-spring centering rudder system.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC WarBRD-D Rudder"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls (confirmed)
+    product_id: 0x8201      # Community estimate — WarBRD-D Rudder; confirm with VPC Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_l, toe_r]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8201 is a community estimate for the VPC WarBRD-D Rudder pedals.
+      VIRPIL's confirmed rudder pedals use a different PID range. Confirm
+      with VPC Configurator or lsusb on real hardware.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-D Rudder — VID 0x3344 / PID 0x8201 (est).
+    Dual-centering spring rudder pedals with toe brake axes.
+    Wave-59 addition. Last reviewed: 2026-07.

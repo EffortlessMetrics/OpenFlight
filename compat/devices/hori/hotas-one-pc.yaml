@@ -1,0 +1,49 @@
+# HORI HOTAS One (PC USB edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd.
+# PID 0x011C is a community estimate for the HORI HOTAS One PC (USB) edition.
+# The HORI HOTAS One was designed primarily for Xbox One but a PC-compatible
+# USB HID variant exists. PID may differ from the Xbox-compatible model.
+# Confirm with lsusb before production deployment.
+schema_version: "1"
+
+device:
+  name: "HORI HOTAS One (PC)"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D    # Hori Co., Ltd.
+    product_id: 0x011C   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x011C is a community estimate for the PC edition. The Xbox One
+      variant has a different PID. Confirm with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI HOTAS One (PC USB edition). PID 0x011C unconfirmed. VID 0x0F0D = HORI.
+    Affordable HOTAS for entry-level flight sim use.
+    Last reviewed: 2026-06.

@@ -1,0 +1,47 @@
+# CH Products Dual Throttle Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products). PID 0x00FB — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "CH Products Dual Throttle Controller"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00FB      # Community estimate — Dual Throttle
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle1, throttle2]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. CH Products Dual Throttle Controller. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Dual Throttle — twin-engine throttle. PID 0x00FB community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

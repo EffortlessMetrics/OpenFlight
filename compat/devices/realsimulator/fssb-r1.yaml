@@ -1,0 +1,63 @@
+# RealSimulator FSSB R1 (original Force Sensing Stick Base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x20FF (RealSimulator — registered USB vendor ID).
+# PID 0x0003 — community estimate for FSSB R1 (pre-dates R3).
+# The FSSB R1 was RealSimulator's first production force-sensing base.
+# It uses Hall-effect strain gauges for XY force measurement with no
+# physical deflection. Unlike the R3 (PID 0x0001, fssb-r3.yaml) the R1
+# has a lower force sensitivity range and uses an older USB report format.
+
+schema_version: "1"
+
+device:
+  name: "RealSimulator FSSB R1"
+  vendor: "RealSimulator"
+  usb:
+    vendor_id: 0x20FF
+    product_id: 0x0003    # Community estimate for FSSB R1 — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12   # Lower resolution than R3 (16-bit)
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the FSSB R1. The R3 and R3
+      Lightning share PID 0x0001 (fssb-r3.yaml). Confirm with lsusb on
+      real hardware. PID 0x0002 may correspond to the FSSB R2 (if released).
+  - id: FORCE_SENSING_NO_SPRINGS
+    description: >
+      The FSSB R1 uses Hall-effect strain gauges. There is no physical
+      stick travel; applied force is measured directly. Do not apply
+      deadzone or curve settings intended for displacement joysticks.
+  - id: OLDER_SENSITIVITY_RANGE
+    description: >
+      The R1 has a narrower force sensitivity range than the R3. Sensitivity
+      is configured in the RealSimulator Windows utility; no in-device
+      calibration is available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimulator FSSB R1: original production force-sensing base. Lower
+    resolution (12-bit) and sensitivity than the R3. PID 0x0003 is a
+    community estimate. For current model, see fssb-r3.yaml.
+    Last reviewed: 2026-02.

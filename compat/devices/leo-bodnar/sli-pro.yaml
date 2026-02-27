@@ -1,0 +1,59 @@
+# Leo Bodnar SLI-PRO USB Display Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd) / PID 0x1301 — community estimate from USB ID
+# database entries and sim racing community reports. The Leo Bodnar SLI-PRO is
+# a USB shift light indicator display with 8-segment LED digits and a configurable
+# LED bar graph. Widely used in sim racing but also in flight sim cockpits as an
+# RPM/engine parameter display.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar SLI-PRO Shift Light Indicator"
+  vendor: "Leo Bodnar"
+  type: panel
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x1301      # SLI-PRO — community estimate; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (output-only display)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1301 is a community estimate for the SLI-PRO. Leo Bodnar VID 0x1DD2
+      is confirmed. Verify exact PID with lsusb or the SLI-PRO SDK documentation.
+  - id: OUTPUT_DISPLAY_ONLY
+    description: >
+      The SLI-PRO is an output-only display device. The host sends data via USB
+      HID output reports to drive the LED digit displays and bar-graph LEDs.
+      There are no HID axis or button inputs to read back.
+  - id: SIMHUB_COMPATIBLE
+    description: >
+      The SLI-PRO is natively supported by SimHub and the Leo Bodnar SLI
+      driver. OpenFlight sends engine RPM and parameter data via the HID
+      output path for sim pit display.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar SLI-PRO shift light display. VID 0x1DD2 confirmed; PID 0x1301 estimated.
+    Output-only LED display for RPM/engine data. Wave-42 addition. Last reviewed: 2026-07.

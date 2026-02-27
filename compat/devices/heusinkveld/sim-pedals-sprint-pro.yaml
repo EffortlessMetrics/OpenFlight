@@ -1,0 +1,62 @@
+# Heusinkveld Sim Pedals Sprint Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology, Heusinkveld community estimate). PID 0xF6D2
+# is a community estimate for the Sprint Pro; uses a slightly revised load-cell
+# layout compared to the Sprint (0xF6D0) and Sprint+ (0xF6D1). Confirm VID/PID
+# with lsusb on real Sprint Pro hardware before deployment.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Sprint Pro"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D2   # Community estimate -- Sprint Pro; confirm with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D2 is a community estimate for the Sprint Pro. VID 0x04D8
+      (Microchip Technology) is used by Heusinkveld on community-reported
+      hardware but not independently confirmed. Confirm with lsusb on real
+      Sprint Pro hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Sprint Pro pedals use load-cell sensors on the brake axis for
+      pressure-based input. The response curve is adjustable via Heusinkveld
+      Sim Pedals setup software. In flight sim use, map brake to toe-brake
+      inputs or differential braking in the OpenFlight profile.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim setups: throttle -> engine throttle (or rudder), brake ->
+      toe brakes (left/right via profile splitter), clutch -> differential brake
+      or rudder. Map per-aircraft in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Sprint Pro -- professional load-cell sim pedals.
+    VID 0x04D8 / PID 0xF6D2 are community estimates; confirm with lsusb.
+    Used in combined racing + flight sim setups as rudder/brake inputs.
+    Last reviewed: 2026-06.

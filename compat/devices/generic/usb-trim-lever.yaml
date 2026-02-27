@@ -1,0 +1,45 @@
+# USB Trim Lever Single Axis
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xE013 estimated.
+# Single-axis USB trim lever for linear trim adjustment.
+schema_version: "1"
+
+device:
+  name: "USB Trim Lever Single Axis"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE013
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: TRIM_LEVER
+    description: >
+      Linear trim lever rather than rotary wheel. Slide-potentiometer
+      based single axis with center detent.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    USB Trim Lever Single Axis. PID 0xE013 estimated.
+    Last reviewed: 2026-06.

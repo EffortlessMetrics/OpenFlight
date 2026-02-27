@@ -1,0 +1,43 @@
+# WinWing Orion HOTAS 1 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBE62 — estimated.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion HOTAS 1 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE62
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 14
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE62 is estimated. Confirm with SimAppPro device scan or lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion HOTAS 1 first-generation throttle. Entry point to the Orion
+    ecosystem. Compatible with Orion 1/2 bases. Tier 2. Last reviewed: 2026-02.

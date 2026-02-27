@@ -1,0 +1,53 @@
+# Speedlink Darkfire Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (GreenAsia Inc.) / PID 0x3013 — community estimate. Speedlink
+# (JÖLLENBECK GmbH) sources entry-level gaming peripherals from GreenAsia
+# Inc. The Darkfire is a budget USB racing wheel with spring-centering
+# and a 270° steering range. Occasionally used in flight simulation as
+# a bank axis input.
+schema_version: "1"
+
+device:
+  name: "Speedlink Darkfire Racing Wheel"
+  vendor: "Speedlink"
+  type: wheel
+  usb:
+    vendor_id: 0x0E8F       # GreenAsia Inc. (OEM manufacturer for Speedlink)
+    product_id: 0x3013      # Darkfire — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3013 is a community estimate. GreenAsia VID 0x0E8F confirmed as OEM
+      manufacturer for multiple Speedlink products. Verify with lsusb.
+  - id: BUDGET_SPRING_CENTERING
+    description: >
+      Passive spring centering only — no force feedback motor. The spring
+      resistance is fixed and cannot be adjusted by software.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Darkfire Racing Wheel. VID 0x0E8F (GreenAsia); PID 0x3013 estimated.
+    Budget entry-level racing wheel, no FFB. Wave-42 addition. Last reviewed: 2026-07.

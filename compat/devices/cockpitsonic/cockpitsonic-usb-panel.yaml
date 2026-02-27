@@ -1,0 +1,55 @@
+# CockpitSonic USB Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CockpitSonic USB Panel is a generic USB HID panel interface module used in
+# cockpit replica builds. Provides buttons, encoders, and display output via
+# HID reports. VID 0x04B4 (Cypress Semiconductor) / PID 0xF240: community
+# estimate. Note: other CockpitSonic panels use VID 0x16C0.
+
+schema_version: "1"
+
+device:
+  name: "CockpitSonic USB Panel"
+  vendor: "CockpitSonic"
+  usb:
+    vendor_id: 0x04B4       # PID estimated — other CockpitSonic units use 0x16C0
+    product_id: 0xF240      # Community estimate — CockpitSonic USB panel module
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 (Cypress) / PID 0xF240 are community estimates. Other
+      CockpitSonic panels use VID 0x16C0. See cockpitsonic-autopilot.yaml,
+      cockpitsonic-efis.yaml, etc. for other variants. Confirm with lsusb.
+  - id: FIRMWARE_VARIANT
+    description: >
+      Some CockpitSonic units ship with Cypress FX2LP firmware (VID 0x04B4)
+      rather than V-USB (0x16C0). Button count and encoder layout may vary
+      by firmware revision.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CockpitSonic USB panel — VID 0x04B4 / PID 0xF240 est (Cypress FX2LP variant).
+    Other CockpitSonic panels use VID 0x16C0. Last reviewed: 2026-06.

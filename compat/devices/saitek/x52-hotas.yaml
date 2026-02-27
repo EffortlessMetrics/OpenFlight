@@ -1,0 +1,61 @@
+# Saitek X52 HOTAS (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device entry for the Saitek X52 HOTAS bundle.
+# The stick and throttle enumerate as a single USB composite device (same PID).
+# This virtual entry documents the combined axis/button namespace for profile
+# authoring purposes.
+# Component manifests:
+#   - x52.yaml  (stick + throttle composite device, PID 0x075C)
+#
+# Note: Unlike most HOTAS systems, the X52 stick and throttle share a single
+# USB descriptor (composite device). This virtual entry provides a convenience
+# reference for profiles expecting a named bundle.
+
+schema_version: "1"
+
+device:
+  name: "Saitek X52 HOTAS (Virtual Bundle)"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3    # Saitek (pre-Logitech acquisition)
+    product_id: ~        # Virtual bundle — see x52.yaml for the composite device
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 12
+  buttons: 36
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The X52 stick and throttle are a composite USB device; both appear under
+      the same VID/PID (see x52.yaml). This virtual bundle entry provides a
+      named HOTAS reference for profiles; no additional binding is needed
+      beyond x52.yaml.
+  - id: COMPOSITE_DEVICE_NOTE
+    description: >
+      Unlike the X52 Pro, the base X52 stick and throttle share one USB
+      descriptor. Profile authors should reference x52.yaml directly rather
+      than this virtual bundle entry for device matching.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle reference for the Saitek X52 HOTAS. The X52 composite device
+    is documented in x52.yaml. See also x52-pro.yaml. Last reviewed: 2026-06.

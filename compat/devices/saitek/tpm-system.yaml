@@ -1,0 +1,55 @@
+# Saitek Pro Flight TPM System (Throttle Panel Module)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek / Logitech PLC).
+# PID 0x0BAF is a community estimate for the TPM System. The TPM is a small
+# supplemental panel designed to attach to the Pro Flight Yoke System column,
+# adding 3 3-position rocker switches, 3 push buttons, and a rotary knob
+# for systems not covered by the main yoke buttons.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight TPM System"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0BAF      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [knob]
+    resolution_bits: 8
+  buttons: 14               # 3×3-pos rockers (×2 states each) + 3 push + rotary push
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0BAF is a community estimate adjacent to the confirmed Pro Flight
+      Yoke PID (0x0BAC). Confirm with lsusb on real hardware.
+  - id: ROCKER_3POS
+    description: >
+      3-position rocker switches report two separate button bits (up/down).
+      Center position = both buttons released. OpenFlight maps each rocker to a
+      3-state axis enum (up/neutral/down) in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek TPM System — yoke column add-on panel with rockers, buttons, and
+    a rotary knob. PID 0x0BAF is a community estimate. Attaches to Pro Flight
+    Yoke (pfc-yoke.yaml family). Last reviewed: 2026-06.

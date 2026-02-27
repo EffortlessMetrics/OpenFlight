@@ -13,6 +13,7 @@ use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
 use flight_adapter_common::{AdapterMetrics, AdapterState};
 use flight_bus::adapters::SimAdapter;
+use flight_bus::publisher::BusPublisher;
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, BusTypeError, SimId};
 use flight_metrics::{
@@ -24,7 +25,7 @@ use flight_metrics::{
 };
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::{RwLock, mpsc, mpsc::error::TryRecvError};
@@ -107,6 +108,8 @@ pub struct MsfsAdapter {
     snapshot_sender: mpsc::UnboundedSender<BusSnapshot>,
     /// Snapshot receiver for external consumers
     snapshot_receiver: Arc<RwLock<mpsc::UnboundedReceiver<BusSnapshot>>>,
+    /// Bus publisher for delivering snapshots to subscribers
+    bus_publisher: Option<Arc<Mutex<BusPublisher>>>,
     /// Last telemetry update time
     last_update: Instant,
     /// Connection attempt count
@@ -142,6 +145,7 @@ impl MsfsAdapter {
             current_snapshot: Arc::new(RwLock::new(None)),
             snapshot_sender,
             snapshot_receiver: Arc::new(RwLock::new(snapshot_receiver)),
+            bus_publisher: None,
             last_update: Instant::now(),
             connection_attempts: 0,
             last_connection_attempt: None,
@@ -151,6 +155,12 @@ impl MsfsAdapter {
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
             metrics_registry: Arc::new(MetricsRegistry::new()),
         })
+    }
+
+    /// Attach a bus publisher so snapshots are delivered to subscribers.
+    pub fn with_bus_publisher(mut self, publisher: Arc<Mutex<BusPublisher>>) -> Self {
+        self.bus_publisher = Some(publisher);
+        self
     }
 
     /// Start the adapter
@@ -625,6 +635,15 @@ impl MsfsAdapter {
                 update_start.elapsed().as_secs_f64() * 1000.0,
             );
 
+            // Publish to bus subscribers
+            if let Some(ref publisher) = self.bus_publisher
+                && let Ok(mut pub_guard) = publisher.lock()
+                && let Err(e) = pub_guard.publish(snapshot_to_publish.clone())
+            {
+                warn!("Failed to publish snapshot to bus: {}", e);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
+            }
+
             if let Err(e) = self.snapshot_sender.send(snapshot_to_publish) {
                 warn!("Failed to publish snapshot: {}", e);
                 self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
@@ -641,6 +660,17 @@ impl MsfsAdapter {
         // Clean up session
         if let Some(mut session) = self.session.take() {
             let _ = session.disconnect();
+        }
+
+        // Publish a stale snapshot so subscribers know data is no longer valid.
+        // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
+        if let Some(ref publisher) = self.bus_publisher {
+            let stale = BusSnapshot::new(self.sim_id(), AircraftId::new("unknown"));
+            if let Ok(mut pub_guard) = publisher.lock()
+                && let Err(e) = pub_guard.publish(stale)
+            {
+                warn!("Failed to publish stale snapshot on connection loss: {}", e);
+            }
         }
 
         // Clear current state
@@ -718,6 +748,7 @@ impl SimAdapter for MsfsAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flight_bus::publisher::SubscriptionConfig;
 
     #[tokio::test]
     async fn test_adapter_creation() {
@@ -999,5 +1030,70 @@ mod tests {
                 panic!("Unexpected error: {}", e);
             }
         }
+    }
+
+    /// Test that update_telemetry publishes a snapshot to an attached BusPublisher.
+    /// Requirements: MSFS-INT-01.6
+    #[tokio::test]
+    async fn test_adapter_publishes_snapshot_to_bus() {
+        let publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+        let mut subscriber = publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .unwrap();
+
+        let config = MsfsAdapterConfig::default();
+        let mut adapter = MsfsAdapter::new(config)
+            .expect("MsfsAdapter::new must not fail")
+            .with_bus_publisher(publisher);
+
+        // Prime the adapter with a valid snapshot and force the rate-limit window open.
+        let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+        *adapter.current_snapshot.write().await = Some(snapshot);
+        *adapter.state.write().await = AdapterState::Active;
+        adapter.last_update = Instant::now() - Duration::from_secs(1);
+
+        adapter
+            .update_telemetry()
+            .await
+            .expect("update_telemetry must succeed");
+
+        let received = subscriber.try_recv().expect("try_recv must not error");
+        assert!(
+            received.is_some(),
+            "BusPublisher subscriber should have received a snapshot"
+        );
+        assert_eq!(received.unwrap().sim, SimId::Msfs);
+    }
+
+    /// Test that handle_connection_loss publishes a stale snapshot (validity all-false)
+    /// so downstream FFB and other consumers know the data is no longer trustworthy.
+    /// Requirements: MSFS-INT-01.19
+    #[tokio::test]
+    async fn test_adapter_publishes_stale_snapshot_on_connection_loss() {
+        let publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+        let mut subscriber = publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .unwrap();
+
+        let config = MsfsAdapterConfig::default();
+        let mut adapter = MsfsAdapter::new(config)
+            .expect("MsfsAdapter::new must not fail")
+            .with_bus_publisher(publisher);
+
+        adapter.handle_connection_loss().await;
+
+        let received = subscriber.try_recv().expect("try_recv must not error");
+        assert!(
+            received.is_some(),
+            "A stale snapshot should be published on connection loss"
+        );
+        let snap = received.unwrap();
+        // Validity flags must all be false — safe_for_ffb=false ensures FFB is disabled.
+        assert!(!snap.validity.safe_for_ffb);
+        assert!(!snap.validity.attitude_valid);
     }
 }

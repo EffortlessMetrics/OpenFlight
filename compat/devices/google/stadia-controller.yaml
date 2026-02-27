@@ -1,0 +1,55 @@
+# Google Stadia Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Google Stadia Controller — USB-C gamepad produced by Google for the Stadia
+# cloud gaming platform (discontinued). VID 0x18D1 confirmed: Google LLC.
+# PID 0x9400 confirmed from linux-hardware.org and kernel USB ID database.
+# Enumerates as a standard HID gamepad. Occasionally used for flight sim
+# secondary controls (view axes, menu navigation).
+
+schema_version: "1"
+
+device:
+  name: "Google Stadia Controller"
+  vendor: "Google LLC"
+  usb:
+    vendor_id: 0x18D1       # Google LLC — confirmed
+    product_id: 0x9400      # Stadia Controller USB mode — confirmed
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 15
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: USB_C_REQUIRED
+    description: >
+      Stadia Controller must be connected via USB-C cable to enumerate in
+      USB HID mode; Bluetooth mode uses a different protocol path not
+      handled by this manifest.
+  - id: FFB_LIMITED
+    description: >
+      Rumble motors provide coarse haptic feedback only; no position/force
+      feedback suitable for FFB joystick use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Google Stadia Controller — VID 0x18D1 / PID 0x9400. USB-C HID gamepad.
+    Platform discontinued; hardware remains functional as a standard gamepad.
+    Wave-46 addition. Last reviewed: 2026-07.

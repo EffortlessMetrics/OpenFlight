@@ -1,0 +1,41 @@
+# Saitek Cyborg Command Pad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x046E — programmable command pad.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Command Pad"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x046E
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [scroll]
+    resolution_bits: 8
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Programmable command pad with backlit keys. PID 0x046E from USB databases.
+    Last reviewed: 2026-06.

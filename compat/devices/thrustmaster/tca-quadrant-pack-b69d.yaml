@@ -1,0 +1,47 @@
+# Thrustmaster TCA Quadrant Pack
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB69D — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Quadrant Pack"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB69D      # Community estimate — Quadrant Pack bundle PID
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, throttle3, prop1, mixture1, spoiler]
+    resolution_bits: 16
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. TCA Quadrant Pack bundle may enumerate as separate devices. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Quadrant Pack — bundle of quadrant modules. PID 0xB69D community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

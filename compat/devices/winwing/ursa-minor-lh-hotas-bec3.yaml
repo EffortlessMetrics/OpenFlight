@@ -1,0 +1,41 @@
+# WinWing Ursa Minor Left Hand HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBEC3 — estimated.
+# WinWing Ursa Minor left-hand throttle/HOTAS controller.
+schema_version: "1"
+device:
+  name: "WinWing Ursa Minor Left Hand HOTAS"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBEC3      # Community estimate — Ursa Minor LH HOTAS; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad / Throttle
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, x, y, z, rz]
+    resolution_bits: 12
+  buttons: 28
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC3 is a community estimate for the WinWing Ursa Minor LH HOTAS.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Ursa Minor Left Hand HOTAS — VID 0x4098 / PID 0xBEC3 (est).
+    Left-hand throttle unit for WinWing Ursa Minor series. DCS and MSFS use.
+    Wave-59 addition. Last reviewed: 2026-07.

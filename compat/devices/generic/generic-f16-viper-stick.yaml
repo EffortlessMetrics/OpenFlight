@@ -1,0 +1,47 @@
+# Generic F-16 VIPER Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0079 (DragonRise/generic USB game controller), PID 0x0011 — estimated.
+# Generic Chinese OEM F-16 Viper-style joystick commonly sold under various
+# brand names including GVL224/GVL229-style controllers.
+schema_version: "1"
+device:
+  name: "Generic F-16 VIPER Stick"
+  vendor: "Generic (DragonRise OEM)"
+  usb:
+    vendor_id: 0x0079       # DragonRise Inc. (generic USB game controllers)
+    product_id: 0x0011      # Community estimate — generic F-16 stick; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate for the generic F-16 VIPER stick.
+      VID 0x0079 is shared by many DragonRise-based OEM products. Confirm
+      with lsusb. Multiple products may share this VID/PID.
+  - id: SHARED_VID
+    description: >
+      VID 0x0079 (DragonRise Inc.) is used by many unrelated OEM products.
+      Match on product string or HID report descriptor for disambiguation.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic F-16 VIPER Stick — VID 0x0079 / PID 0x0011 (est).
+    GVL224/GVL229-style generic F-16 sidestick. Low-cost entry-level device.
+    Wave-59 addition. Last reviewed: 2026-07.

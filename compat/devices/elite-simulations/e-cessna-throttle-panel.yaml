@@ -1,0 +1,50 @@
+# Elite Simulations E-Throttle Panel (Cessna Single-Engine)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions single-engine Cessna throttle panel with
+# throttle, mixture, and carb-heat levers for FAA-approved ATD use.
+# VID/PID unconfirmed; see e-rudder-pedals.yaml for vendor context.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations E-Cessna Throttle Panel"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0203  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, mixture, carb_heat]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a plausible placeholder; verify against real ESS hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0203 is a placeholder; must be verified before production use."
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes report [0, max]; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations single-engine Cessna throttle panel.
+    VID/PID unconfirmed. Typically paired with e-yoke.yaml and e-rudder-pedals.yaml.
+    Last reviewed: 2026-02.

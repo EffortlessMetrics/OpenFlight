@@ -1,0 +1,57 @@
+# Fanatec ClubSport Wheel Base V2.5 (Alt VID 0xEB03)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0xEB03 is a community-reported alternate VID seen
+# in some Fanatec USB captures. The primary confirmed Fanatec VID is 0x0EB7
+# (csw-v2-5.yaml). Some community sources list 0xEB03 as an alternate USB
+# identifier observed with older firmware or specific regional variants.
+# PID 0x0006 is a community estimate for the ClubSport Wheel Base V2.5.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Wheel Base V2.5 (Alt VID)"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0xEB03       # Community-reported alt VID — primary Fanatec VID is 0x0EB7
+    product_id: 0x0006      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 8
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0xEB03 is a community-reported alternate. The primary confirmed Fanatec
+      VID is 0x0EB7 (csw-v2-5.yaml). Verify with lsusb before use.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      When used as a flight yoke, the wheel axis maps to roll. Axis scaling
+      profile required to restrict effective travel to ~±60° rotation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Wheel Base V2.5 with alternate VID 0xEB03 / PID 0x0006.
+    Primary manifest is csw-v2-5.yaml (VID 0x0EB7). Wave-41 addition.
+    Last reviewed: 2026-07.

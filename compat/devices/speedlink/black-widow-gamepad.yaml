@@ -1,0 +1,43 @@
+# SPEEDLINK Black Widow Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E6F (Logic3 / OEM), PID 0x1000 — estimated.
+schema_version: "1"
+
+device:
+  name: "SPEEDLINK Black Widow Gamepad"
+  vendor: "SPEEDLINK"
+  usb:
+    vendor_id: 0x0E6F
+    product_id: 0x1000
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID are estimated. SPEEDLINK uses multiple OEM USB vendors.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SPEEDLINK Black Widow budget gamepad. Dual-analog with vibration feedback.
+    Tier 3 — community-reported. Last reviewed: 2026-02.

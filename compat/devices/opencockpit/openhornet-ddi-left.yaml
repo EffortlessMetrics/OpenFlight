@@ -1,0 +1,49 @@
+# OpenHornet DDI (Digital Display Indicator) Left Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY F/A-18C Hornet cockpit module. VID 0x2341 (Arduino), PID 0x8038 — estimated.
+schema_version: "1"
+
+device:
+  name: "OpenHornet DDI Left Panel"
+  vendor: "OpenHornet"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8038
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID varies by OpenHornet firmware release. Check the OpenHornet
+      project repository for the canonical USB descriptor configuration.
+  - id: DIY_FIRMWARE
+    description: >
+      OpenHornet is an open-source DIY project. Capabilities may differ
+      between community builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet DIY F/A-18C left Digital Display Indicator panel. Replicates
+    the 20 OSB (On-Screen Button) bezel around the left DDI screen.
+    See https://github.com/jrsteensen/OpenHornet. Tier 3. Last reviewed: 2026-02.

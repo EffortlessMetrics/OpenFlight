@@ -1,0 +1,56 @@
+# USB Rotary Encoder Panel (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic USB rotary encoder panel, commonly built with a Pro Micro, RP2040, or
+# STM32 microcontroller and a bank of rotary encoders plus buttons. These panels
+# are popular for avionics replication (COM/NAV/AP tuning) in home cockpits.
+# VID/PID varies by the underlying MCU board used in the build.
+schema_version: "1"
+
+device:
+  name: "USB Rotary Encoder Panel (Generic DIY)"
+  vendor: "Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (common base board)
+    product_id: 0x8036   # Arduino Leonardo HID mode (common DIY base)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID and PID vary by MCU board. Common bases include Arduino Leonardo/Micro
+      (0x2341/0x8036), RP2040 TinyUSB, and STM32 HID. Match by device name
+      string in OpenFlight profiles.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Each encoder detent fires a pair of button events (CW / CCW). A panel
+      with 8 encoders typically exposes 16 encoder-direction buttons plus
+      additional push-button inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic USB rotary encoder panel for home cockpit avionics replication.
+    VID/PID varies; match by device name in OpenFlight profiles. Pair with
+    OpenFlight rules engine for per-encoder sim action mapping.
+    Last reviewed: 2026-06.

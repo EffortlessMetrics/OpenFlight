@@ -1,0 +1,58 @@
+# Raspberry Pi Pico HID Controller (RP2040)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A confirmed: Raspberry Pi Foundation. PID 0x0005 is the official
+# assignment for Raspberry Pi Pico running TinyUSB CDC+HID composite firmware.
+# The RP2040 microcontroller is widely used in DIY flight sim builders for
+# custom button boxes, axis controllers, and panel interfaces. Firmware
+# examples include PicoHID, PicoJoystick, and custom TinyUSB builds.
+
+schema_version: "1"
+
+device:
+  name: "Raspberry Pi Pico HID Controller (RP2040)"
+  vendor: "Raspberry Pi Foundation"
+  usb:
+    vendor_id: 0x2E8A    # Raspberry Pi Foundation (confirmed)
+    product_id: 0x0005   # Official TinyUSB CDC+HID composite PID (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Axis count, button count, and HID report layout depend entirely on the
+      firmware flashed to the Pico. The capability values above represent a
+      typical PicoHID firmware configuration. Adjust the profile to match
+      the specific firmware used by this build.
+  - id: CUSTOM_BUILD
+    description: >
+      RP2040-based DIY controllers vary widely in hardware configuration.
+      Use the OpenFlight device inspector to enumerate the actual HID report
+      descriptor and set axis mappings accordingly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Raspberry Pi Pico (RP2040) running TinyUSB HID firmware. VID 0x2E8A /
+    PID 0x0005 confirmed (official RPi Foundation TinyUSB assignment).
+    Widely used for DIY flight sim button boxes and axis controllers.
+    Last reviewed: 2026-06.

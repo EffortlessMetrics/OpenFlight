@@ -1,0 +1,56 @@
+# MOZA Racing SR-P Lite Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MOZA Racing SR-P Lite — entry-level 3-pedal set from the SR-P series (2023).
+# Features hall-effect sensors on all three pedals. Lighter construction
+# and smaller force range than SR-P and SR-P Sprint. USB HID connection.
+# VID 0x346E is the registered MOZA Racing USB vendor ID.
+# PID is unconfirmed for the SR-P Lite.
+schema_version: "1"
+
+device:
+  name: "MOZA SR-P Lite Pedals"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E   # MOZA Racing registered VID (community-confirmed)
+    product_id: 0x0006  # Placeholder — PID_UNCONFIRMED for SR-P Lite
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0006 is a placeholder; verify with lsusb or MOZA Pit House software."
+  - id: HALL_EFFECT_ALL_AXES
+    description: >
+      All three pedals use hall-effect sensors for non-contact sensing.
+      No potentiometer wear; sensor output is linear across travel.
+  - id: SRPLITE_NO_LOAD_CELL
+    description: >
+      Unlike the SR-P and SR-P Sprint, the SR-P Lite does not include a
+      load-cell brake option. Brake sensing is purely displacement-based.
+      Do not apply load-cell brake curves to this model.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA SR-P Lite pedals (2023). Entry-level SR-P series; hall-effect sensors,
+    no load cell. VID 0x346E confirmed for MOZA; PID requires verification.
+    Last reviewed: 2026-02.

@@ -1,0 +1,62 @@
+# Elgato Stream Deck Studio
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 (Elgato Systems / Corsair). The Stream Deck Studio is
+# Elgato's professional 18-button panel with 6 encoder dials and a
+# large display. PID 0x009A is sourced from the open-source
+# python-elgato-streamdeck library and linux-hardware.org captures.
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Studio"
+  vendor: "Elgato Systems (Corsair)"
+  usb:
+    vendor_id: 0x0FD9       # Elgato Systems / Corsair (confirmed)
+    product_id: 0x009A      # Community-confirmed from python-elgato-streamdeck library
+  hid:
+    usage_page: 0xFF00      # Vendor-defined (Elgato protocol)
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: ELGATO_HID_PROTOCOL
+    description: >
+      Stream Deck devices use a vendor-defined HID protocol on usage page
+      0xFF00. Button presses are reported as HID Feature/Output reports,
+      not standard Input reports. Use the Elgato StreamDeck SDK or the
+      open-source python-elgato-streamdeck library for event parsing.
+  - id: LCD_BUTTON_TILES
+    description: >
+      Each of the 18 buttons has an LCD tile that can display custom images.
+      Tile updates require USB HID output reports via the StreamDeck protocol.
+      OpenFlight can push simulation state icons (gear, flaps, etc.) to tiles.
+  - id: ENCODER_DIALS
+    description: >
+      The 6 encoder dials report touch events, rotation deltas, and press
+      events as separate button/encoder HID messages. Each encoder can be
+      mapped to an avionics tuning knob or brightness/volume control.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck Studio — 18-button LCD panel with 6 encoder dials.
+    VID 0x0FD9 confirmed; PID 0x009A from python-elgato-streamdeck library.
+    Popular for MSFS/X-Plane avionics and system panel control.
+    Last reviewed: 2026-06.

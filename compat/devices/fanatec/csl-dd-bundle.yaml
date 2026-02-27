@@ -1,0 +1,68 @@
+# Fanatec CSL DD Bundle (virtual bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual bundle combining the Fanatec CSL DD base (csl-dd.yaml) with a
+# compatible steering wheel (e.g., Clubsport RS) and CSL Pedals as the common
+# entry CSL DD bundle configuration. PID 0x0020 is a community estimate for
+# a Fanatec bundle SKU; components enumerate as separate USB devices.
+# Distinct from the CSL DD Pro bundle (csl-dd-pro-bundle.yaml).
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL DD Bundle"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0020   # Community estimate — CSL DD bundle SKU; components enumerate separately
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 8.0  # CSL DD with Boost Kit 180
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest represents the common pairing of the CSL DD base with a
+      compatible steering wheel and the CSL Pedals set. Each component
+      enumerates separately. Configure each via its individual manifest
+      (csl-dd.yaml, csl-pedals.yaml); use this entry for profile-level
+      bundle documentation only.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate for a Fanatec bundle SKU.
+      Confirm with lsusb or Fanatec Control Panel on real CSL DD hardware.
+      The CSL DD base itself is documented in csl-dd.yaml (PID 0x0030 est).
+  - id: TWO_USB_DEVICES
+    description: >
+      The bundle occupies two or more USB HID entries (wheel base + pedals).
+      Axis and button counts reflect the combined typical configuration.
+      See component manifests for accurate per-device capability details.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL DD Bundle — entry-level direct-drive bundle (CSL DD base +
+    wheel + CSL Pedals). Community confirmed working. VID 0x0EB7 confirmed
+    (Fanatec GmbH); PID 0x0020 is a community estimate. Distinct from
+    CSL DD Pro bundle (csl-dd-pro-bundle.yaml). Last reviewed: 2026-06.

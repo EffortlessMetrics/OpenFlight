@@ -1,0 +1,55 @@
+# VIRPIL Controls VPC ACE-2 Bundle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC ACE-2 Bundle — ACE-2 rudder pedals bundled with the VIRPIL
+# ACE mounting frame and heel rest accessory. Electrically identical to
+# the standalone ACE-2 (vpc-ace-2.yaml); this manifest documents the
+# bundle-level packaging and included accessories.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-2 Bundle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344   # Community-reported VIRPIL VID (VID_UNCONFIRMED)
+    product_id: 0x8105  # Same PID as standalone ACE-2 — bundle is electrically identical
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 15
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x3344 / PID 0x8105 shared with standalone ACE-2; both unconfirmed."
+  - id: BUNDLE_ELECTRICALLY_IDENTICAL
+    description: >
+      The bundle includes the ACE-2 pedals, mounting frame, and heel rest.
+      The USB device enumerates identically to the standalone vpc-ace-2.yaml.
+      This manifest is for bundle-level configuration tracking only.
+  - id: VIRPIL_15BIT_AXES
+    description: >
+      VIRPIL axes use 15-bit resolution (0–32767). Mid-point is 16384.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC ACE-2 Bundle. Electrically identical to standalone ACE-2;
+    bundle includes mounting frame and heel rest. Tracked separately for
+    bundle-level configuration.
+    Last reviewed: 2026-02.

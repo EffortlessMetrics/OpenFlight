@@ -1,0 +1,60 @@
+# VIRPIL VPC Control Panel #5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x025E is a community estimate for Control Panel #5, following the
+# confirmed series: CP#1=0x025B, CP#2=0x0259, CP#3=0x025C (estimated),
+# CP#4=0x025D (estimated). CP#5=0x025E extrapolates from the range.
+# The VPC Control Panel #5 is a later-generation panel with updated switch
+# layout and additional rotary encoders compared to the CP#4.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel #5"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025E   # Community estimate — CP#5 (CP#4=0x025D)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [a1, a2]
+    resolution_bits: 14
+  buttons: 56
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x025E is a community estimate extrapolating from the CP#1–CP#4 range.
+      Not independently confirmed from lsusb or VIRPIL Configurator. Update when
+      confirmed via hardware probe.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button increment/decrement events.
+      OpenFlight maps encoder steps to profile commands or axis slews.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Switch assignments and encoder mapping can be changed via VIRPIL Configurator.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel #5 — updated panel with additional encoders.
+    VID 0x3344 confirmed; PID 0x025E is a community estimate.
+    See vpc-control-panel-4.yaml for the preceding model. Last reviewed: 2026-06.

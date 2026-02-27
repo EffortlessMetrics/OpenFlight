@@ -1,0 +1,59 @@
+# VIRPIL VPC Throttle MT-50 CM2 (PID 0x4180)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC Throttle MT-50 CM2 — second-generation MongoosT-50 throttle unit.
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x4180 is a community estimate for the CM2 throttle; the CM3 throttle
+# uses a different PID. Confirm with VPC Configurator → USB Info tab.
+# Distinct from mongoost-50cm2-throttle.yaml which covers PID 0x4138 area.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle MT-50 CM2"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB — confirmed
+    product_id: 0x4180      # Community estimate — MT-50 CM2 throttle variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, scx, scy, slider_left, slider_right]
+    resolution_bits: 14
+  buttons: 64
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4180 is a community estimate for the MT-50 CM2 throttle.
+      Confirm via VPC Configurator → USB Info tab. See also
+      mongoost-50cm2-throttle.yaml for an alternative CM2 PID mapping.
+  - id: VIRPIL_250HZ_POLLING
+    description: >
+      VIRPIL devices poll at 250 Hz matching the OpenFlight RT spine.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY mini-sticks are spring-return; apply a deadzone at raw center
+      value (8192) in the profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Throttle MT-50 CM2 — VID 0x3344 / PID 0x4180 (est).
+    14-bit Hall-effect axes, 64 buttons, dual-grip throttle layout.
+    Wave-46 addition. Last reviewed: 2026-07.

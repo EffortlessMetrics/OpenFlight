@@ -1,0 +1,62 @@
+# Microsoft Sidewinder Strategic Commander
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E (Microsoft Corp.), PID 0x0033 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_SIDEWINDER_STRATEGIC_CMDR). The
+# Strategic Commander is a 6-button macro pad with a thumb joystick,
+# analogue grip squeeze, and tilt/rotate motion sensing. In flight sim it
+# provides a left-hand panel controller with macro buttons and a small
+# analogue stick for trim or view control.
+schema_version: "1"
+
+device:
+  name: "Microsoft Sidewinder Strategic Commander"
+  vendor: "Microsoft Corp."
+  usb:
+    vendor_id: 0x045E       # Microsoft Corp. (confirmed)
+    product_id: 0x0033      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [thumb_x, thumb_y, grip_squeeze, rotate]
+    resolution_bits: 8
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_DEVICE
+    description: >
+      Legacy device (circa 2000). May require Sidewinder software or an
+      XP-era USB HID driver for full button/axis access on modern Windows.
+      On Linux, raw HID access works without additional drivers.
+  - id: MOTION_AXES
+    description: >
+      The "rotate" axis is produced by grip rotation (twist). The
+      "grip_squeeze" axis is an analogue pressure sensor in the grip.
+      In flight sim, map rotate to rudder/yaw trim and grip_squeeze to
+      throttle micro-trim or radio PTT pressure.
+  - id: MACRO_BUTTON_GRID
+    description: >
+      The 6 large top buttons (A–F) plus 7 smaller buttons give 13 total.
+      In flight sim, the 6 A–F macro buttons are ideal for system
+      presets, view positions, or avionics mode changes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Sidewinder Strategic Commander. VID/PID confirmed from Linux
+    kernel hid-ids.h. Analogue thumb stick + squeeze + rotate + 13 buttons.
+    Useful as a left-hand flight sim panel controller. Last reviewed: 2026-06.

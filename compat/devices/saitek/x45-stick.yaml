@@ -1,0 +1,53 @@
+# Saitek X45 Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID 0x0241 is the X45 joystick half
+# of the X45 HOTAS, corresponding to USB_DEVICE_ID_SAITEK_X45_JOYSTICK in
+# the Linux kernel hid-ids.h. Distinct USB device from the paired X45 Throttle
+# (PID 0x0243, see x45-throttle.yaml). Sold circa 2002–2008.
+schema_version: "1"
+
+device:
+  name: "Saitek X45 Stick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0241      # USB_DEVICE_ID_SAITEK_X45_JOYSTICK (Linux hid-ids.h)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_10BIT_AXES
+    description: >
+      Axes are 10-bit resolution. Apply light smoothing if jitter is visible.
+      The Z axis (rz) is a twist-rudder with mechanical spring centering.
+  - id: PAIRED_THROTTLE
+    description: >
+      The X45 Throttle (PID 0x0243, x45-throttle.yaml) is a separate USB HID
+      device. Both must be bound independently. The stick does not carry throttle
+      axes — all throttle and slider inputs are on the paired throttle unit.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Saitek X45 Stick half (circa 2002–2008). Part of the X45 HOTAS set.
+    PID 0x0241 from Linux kernel hid-ids.h. Pair with x45-throttle.yaml
+    (PID 0x0243) for the full HOTAS experience. Last reviewed: 2026-02.

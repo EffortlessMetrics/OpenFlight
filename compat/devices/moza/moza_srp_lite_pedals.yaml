@@ -1,0 +1,60 @@
+# MOZA SR-P Lite Sim Racing Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: MOZA Racing (Gudsen Technology).
+# PID 0x0011 is a community estimate for the SR-P Lite pedals; distinct from
+# the placeholder PID 0x0006 used in srp-pedals-lite.yaml. The SR-P Lite is
+# the entry-level three-pedal set in MOZA's SR-P lineup, with 16-bit Hall
+# effect sensors on all three pedals.
+
+schema_version: "1"
+
+device:
+  name: "MOZA SR-P Lite Pedals"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0011   # Community estimate — SR-P Lite pedals
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [z, rz, rx]   # Throttle, brake, clutch
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate for SR-P Lite; the existing placeholder
+      manifest (srp-pedals-lite.yaml) uses 0x0006. Confirm from lsusb on real
+      hardware before enabling production device matching.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three pedals use 16-bit Hall effect sensors, providing contactless
+      position sensing. In flight sim use, Rz (brake) and Z (throttle) are
+      typically mapped to toe-brake axes.
+  - id: FLIGHT_SIM_USE
+    description: >
+      Pedal axes can be repurposed as rudder and toe-brake inputs in flight sim.
+      Use axis scaling and dead-zone settings to match pedal travel to desired
+      rudder authority.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA SR-P Lite pedals. VID 0x346E confirmed; PID 0x0011 community estimate.
+    Entry-level three-pedal set with Hall effect sensors. Last reviewed: 2026-06.

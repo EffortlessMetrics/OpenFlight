@@ -1,0 +1,60 @@
+# Heusinkveld Sim Handbrake
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Heusinkveld Sim Handbrake uses a contactless Hall-effect sensor for
+# precise, wear-free axis input. Connects via USB and presents as a single-
+# axis HID device. Used in sim-rig setups for differential braking or
+# flap/spoiler control in flight sims.
+# VID 0x04D8 (Microchip Technology — commonly used by Heusinkveld USB MCU).
+# PID 0xE2C4 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Handbrake"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology USB MCU (used by Heusinkveld)
+    product_id: 0xE2C4      # Community estimate — Sim Handbrake; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [z]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xE2C4 is a community estimate. The Heusinkveld Sprint pedals use
+      VID 0x04D8 with various PIDs. Confirm with lsusb.
+  - id: HALL_SENSOR_NO_DEADBAND
+    description: >
+      Contactless Hall-effect sensor provides minimal hysteresis and no
+      mechanical deadband. Apply a small software deadband at the fully-
+      released position to prevent axis noise at rest.
+  - id: SINGLE_AXIS_DEVICE
+    description: >
+      The handbrake reports a single axis only. In flight sim, map to
+      spoiler, speedbrake, or differential brake pedal as needed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Handbrake — Hall-sensor single-axis device. VID 0x04D8;
+    PID 0xE2C4 est. Pairs well with Heusinkveld Sprint or Ultimate+ pedals.
+    Last reviewed: 2026-06.

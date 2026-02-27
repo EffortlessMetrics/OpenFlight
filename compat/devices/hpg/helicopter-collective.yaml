@@ -1,0 +1,45 @@
+# HPG Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xC001 estimated for HPG Collective.
+# HPG (Helicopter Performance Group) produces sim helicopter peripherals.
+schema_version: "1"
+
+device:
+  name: "HPG Helicopter Collective"
+  vendor: "HPG"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC001
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, friction]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: HPG_COLLECTIVE
+    description: >
+      Desktop helicopter collective with three axes. Main lever with
+      twist throttle grip and friction adjustment wheel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG Helicopter Collective. PID 0xC001 estimated.
+    Helicopter Performance Group peripheral. Last reviewed: 2026-06.

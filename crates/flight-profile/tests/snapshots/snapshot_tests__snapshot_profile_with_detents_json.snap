@@ -1,0 +1,38 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "msfs",
+  "aircraft": {
+    "icao": "A320"
+  },
+  "axes": {
+    "throttle": {
+      "deadzone": 0.02,
+      "expo": null,
+      "slew_rate": 50.0,
+      "detents": [
+        {
+          "position": -1.0,
+          "width": 0.05,
+          "role": "cutoff"
+        },
+        {
+          "position": 0.0,
+          "width": 0.05,
+          "role": "idle"
+        },
+        {
+          "position": 1.0,
+          "width": 0.05,
+          "role": "toga"
+        }
+      ],
+      "curve": null,
+      "filter": null
+    }
+  },
+  "pof_overrides": null
+}

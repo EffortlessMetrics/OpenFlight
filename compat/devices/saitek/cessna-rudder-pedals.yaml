@@ -1,0 +1,57 @@
+# Saitek Pro Flight Cessna Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0765 — linux-hardware.org (4 probes,
+# "Pro Flight Cessna Rudder Pedals"). Cessna-branded variant of the Pro Flight
+# Rudder Pedals (PID 0x0763). Functionally identical; differs in chassis styling.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Rudder Pedals"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0765      # Confirmed via linux-hardware.org (4 probes, "Pro Flight Cessna Rudder Pedals")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each.
+  - id: NO_FORCE_TRIM
+    description: >
+      Pedals provide no force-trim or spring-loading adjustment via software;
+      physical tension is set via a hardware knob on the unit.
+  - id: CESSNA_BRANDED
+    description: >
+      Cessna-branded cosmetic variant of the Saitek Pro Flight Rudder Pedals
+      (PID 0x0763). Both variants share the same HID report format; profile
+      data created for 0x0763 can be reused for 0x0765 without modification.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0765 confirmed as "Pro Flight Cessna Rudder Pedals" via linux-hardware.org
+    (4 probes). Cessna-branded cosmetic variant of the standard Pro Flight Rudder
+    Pedals (PID 0x0763). Part of the Saitek Cessna simulation line.
+    Last reviewed: 2026-02.

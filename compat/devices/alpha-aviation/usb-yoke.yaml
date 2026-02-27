@@ -1,0 +1,55 @@
+# Alpha Flight Controls USB Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Alpha Flight Controls USB Yoke — a budget USB yoke aimed at X-Plane
+# and MSFS training use. VID 0x2B67 and PID 0x0003 are community estimates
+# from USB probe reports; note that 0x2B67 also appears in VirtualFly product
+# probes, so verify PID before deploying. Likely uses a standard USB HID
+# joystick class with 3 axes and at least 8 buttons.
+
+schema_version: "1"
+
+device:
+  name: "Alpha Flight Controls USB Yoke"
+  vendor: "Alpha Flight Controls"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — verify (also used by VirtualFly)
+    product_id: 0x0003      # Community estimate — Alpha USB Yoke
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0003 are community estimates. VID 0x2B67 is also
+      reported for VirtualFly products; verify with lsusb on the target hardware
+      before deploying in production profiles.
+  - id: XPLANE_PRIMARY
+    description: >
+      Primarily targeted at X-Plane training use; axis ranges and button
+      assignments optimised for X-Plane default mappings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Alpha Flight Controls USB Yoke — VID 0x2B67 / PID 0x0003 (est).
+    3 axes, 8 buttons, 1 hat. Budget training yoke for X-Plane / MSFS.
+    Wave-46 addition. Last reviewed: 2026-07.

@@ -1,0 +1,59 @@
+# Generic USB GPIO Expander (Button Box)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# A generic USB GPIO expander / button box based on common community firmware
+# (e.g., V-USB, LUFA, or similar HID-compatible USB stack). Commonly built
+# using ATmega32U4 or similar microcontrollers. VID 0x16C0 (Van Ooijen
+# Technische Informatica — V-USB open-source HID stack), PID 0x27DC (generic
+# HID button device). Used by sim-pit builders for DIY panel inputs.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB GPIO Expander (Button Box)"
+  vendor: "Community DIY / V-USB"
+  usb:
+    vendor_id: 0x16C0       # Van Ooijen Technische Informatica — V-USB (confirmed)
+    product_id: 0x27DC      # Community estimate — generic HID button device
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_SHARED_V_USB
+    description: >
+      VID 0x16C0 is shared among many V-USB devices and is not uniquely
+      assigned to this product. PID 0x27DC identifies this as a generic HID
+      button device. Device matching should rely on both VID+PID+usage.
+  - id: BUTTON_COUNT_VARIES
+    description: >
+      Actual button count depends on the specific firmware and PCB design.
+      32 buttons is a common configuration; some designs expose 8, 16, or 64.
+  - id: DIY_NO_AXES
+    description: >
+      Basic GPIO expander designs report buttons only. For axis-capable DIY
+      devices, see virtual/arduino-hid-joystick.yaml or virtual/teensy-hid.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic V-USB GPIO expander / button box. VID 0x16C0 confirmed (V-USB);
+    PID 0x27DC is a generic community estimate. Suitable for DIY sim pit button
+    panels. Last reviewed: 2026-06.

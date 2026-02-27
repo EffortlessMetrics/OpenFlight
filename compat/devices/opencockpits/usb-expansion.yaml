@@ -1,0 +1,52 @@
+# Opencockpits USB Expansion Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1000 (community estimate — Opencockpits/Engravity).
+# PID 0x0003 is a community estimate for the USB Expansion card.
+# The USB Expansion card extends an existing Opencockpits system with
+# additional I/O lines (digital inputs, LED outputs) bridged over a
+# secondary USB connection.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits USB Expansion Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x1000       # Opencockpits/Engravity — VID_UNCONFIRMED
+    product_id: 0x0003      # Expansion card — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32               # Additional digital input lines
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed — community estimates only. Verify with USBView.
+  - id: SIOC_PROTOCOL
+    description: >
+      Communicates via SIOC protocol. Functions as an I/O expander for
+      existing Opencockpits SIOC installations.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits USB Expansion Card — I/O expander for SIOC installations.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

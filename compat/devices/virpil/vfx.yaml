@@ -1,0 +1,67 @@
+# VIRPIL VPC VFX Joystick Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x4143 — VPC VFX grip.
+# Source: community VIRPIL device tracking (JoystickGremlinEx virpil_device.py,
+#   community HID probe reports). PID not yet confirmed from official VIRPIL
+#   documentation or kernel driver source; verify against hardware.
+#
+# The VFX is a civilian/airliner-optimised right-hand grip with softer
+# detents and spring tension suited to general aviation profiles.
+# It mounts on any VIRPIL CM2/CM3/WarBRD base.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC VFX Joystick Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4143     # community-sourced; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; all other values = center.
+      Encoding matches MongoosT-50CM3 (PID 0x4130) family.
+  - id: SOFT_DETENTS
+    description: >
+      VFX grip ships with softer spring/detent tension than the MongoosT or
+      Alpha series. Axis calibration curves should account for the reduced
+      centre-detent force; default civil aviation profiles are recommended.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x4143 is community-sourced (JoystickGremlinEx virpil_device.py);
+    not yet confirmed from kernel driver or lsusb hardware probe.
+    Report format assumed to match MongoosT-50CM3 family (same VIRPIL firmware);
+    verify axis count, button count, and byte layout against real hardware.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

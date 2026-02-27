@@ -1,0 +1,49 @@
+# Logitech G502 Hero Gaming Mouse
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech International SA (registered USB vendor).
+# PID 0xC08B: confirmed from linux-hardware.org probes for G502 Hero.
+# High-precision gaming mouse sometimes mapped to view/camera axes
+# in flight simulators, or used for sim menu navigation.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G502 Hero"
+  vendor: "Logitech International"
+  usb:
+    vendor_id: 0x046D   # Logitech International SA (confirmed)
+    product_id: 0xC08B  # G502 Hero — confirmed from linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x02         # Mouse
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, scroll]
+    resolution_bits: 16
+  buttons: 11
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: MOUSE_DEVICE
+    description: >
+      Standard HID mouse. Relative motion axes, not absolute. Profile bindings
+      should use mouse-relative mode for view/pan operations.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G502 Hero gaming mouse. VID 0x046D, PID 0xC08B confirmed.
+    Used for sim view/camera control. See g502x.yaml for newer G502 X.
+    Last reviewed: 2026-06.

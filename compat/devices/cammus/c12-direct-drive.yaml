@@ -1,0 +1,57 @@
+# Cammus C12 Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (Cammus, community-reported estimate). PID 0x0302 is a community
+# estimate for the C12 direct-drive base. The Cammus C12 provides 12 Nm
+# continuous torque, positioned as a mid-range direct-drive base suitable for
+# both sim racing and flight simulation with an appropriate grip adapter.
+schema_version: "1"
+
+device:
+  name: "Cammus C12 Direct Drive Wheel Base"
+  vendor: "Cammus"
+  usb:
+    vendor_id: 0x3416    # Cammus (community-reported estimate)
+    product_id: 0x0302   # Community estimate — C12 direct-drive base
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x08          # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 12.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x3416 and PID 0x0302 are community estimates. Confirm with lsusb or
+      Windows Device Manager on Cammus C12 hardware before enabling production
+      device matching.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      Flight sim use requires a compatible grip adapter. The base provides only
+      the wheel rotation axis; buttons come from the attached grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cammus C12 direct drive wheel base (12 Nm). VID 0x3416 and PID 0x0302 are
+    community estimates. Mid-range DD base; requires flight grip adapter for
+    flight sim use. Last reviewed: 2026-06.

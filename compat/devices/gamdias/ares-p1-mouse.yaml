@@ -1,0 +1,53 @@
+# Gamdias Ares P1 Optical Gaming Mouse
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Gamdias Ares P1 optical gaming mouse. VID 0x0F30 confirmed in USB ID
+# databases for Jess Technology Co., Ltd (which manufactures Gamdias-branded
+# peripherals). PID 0x1229 confirmed from community lsusb probes.
+# Occasionally mapped to turret/gunner view axes in War Thunder and IL-2.
+
+schema_version: "1"
+
+device:
+  name: "Gamdias Ares P1 Optical Mouse"
+  vendor: "Gamdias (Jess Technology)"
+  usb:
+    vendor_id: 0x0F30       # Jess Technology Co., Ltd — confirmed
+    product_id: 0x1229      # Ares P1 — confirmed from community USB probes
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x02             # Mouse
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, scroll]
+    resolution_bits: 16
+  buttons: 7
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: MOUSE_AS_AUX_INPUT
+    description: >
+      Used as an auxiliary input device in War Thunder for turret/gunner
+      rotation axes. Map X/Y axes to view axes in the OpenFlight profile.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at up to 1000 Hz; the RT spine will decimating to 250 Hz
+      using the standard mouse-to-axis adapter path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gamdias Ares P1 — VID 0x0F30 / PID 0x1229. Gaming mouse used as
+    auxiliary gunner/view axis input in War Thunder. Wave-46 addition.
+    Last reviewed: 2026-07.

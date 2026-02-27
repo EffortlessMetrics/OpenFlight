@@ -1,0 +1,64 @@
+# Elgato Stream Deck + (8 keys + 4 dials + touchstrip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 confirmed: Elgato Systems / Corsair.
+# PID 0x0084 confirmed: documented in open-source Stream Deck drivers
+#   (python-elgato-streamdeck v0.9.4+).
+# The Stream Deck + adds 4 rotary encoders with press-click and a touchstrip
+# display below the key grid — well-suited for frequency tuning and MFD knobs.
+
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck +"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9    # Elgato Systems / Corsair (confirmed)
+    product_id: 0x0084   # Stream Deck + — confirmed from open-source drivers
+  hid:
+    usage_page: 0xFF00
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8             # 8 LCD keys
+  hats: 0
+  encoders: 4            # 4 rotary encoders with press-click
+  force_feedback: false
+  lcd_keys: true
+  touchstrip: true       # LCD touchstrip below key grid
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      Stream Deck + uses an extended vendor HID report format covering both
+      key states and encoder delta values. Encoder events report relative
+      rotation counts. Touchstrip touch coordinates are also in the report.
+  - id: ENCODER_RELATIVE
+    description: >
+      The 4 rotary encoders report relative rotation (delta ticks, ±1 per detent)
+      rather than absolute position. OpenFlight converts encoder events to
+      discrete increment/decrement commands or axis slew depending on binding.
+  - id: PANEL_DEVICE
+    description: >
+      Primarily a panel controller. Encoders make this well-suited for COM/NAV
+      frequency tuning, autopilot heading/altitude selectors, and MFD brightness.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck + — 8 LCD keys + 4 rotary encoders + touchstrip LCD.
+    VID 0x0FD9 / PID 0x0084 confirmed from open-source drivers.
+    Encoders are ideal for avionics knobs (COM, NAV, altitude, heading).
+    Last reviewed: 2026-06.

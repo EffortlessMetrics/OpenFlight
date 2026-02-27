@@ -1,0 +1,58 @@
+# VKB Black Mamba Mk.III Joystick (Right Hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VKB Black Mamba Mk.III is VKB's premium combat-oriented joystick grip,
+# inspired by the F-4 Phantom family of aircraft. Mounts on the VKB Gunfighter
+# base series. Features 16-bit hall-effect sensors on X/Y, metal construction.
+# VID 0x231D confirmed: VKB-Sim / VKB.
+# PID 0x0228 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB Black Mamba Mk.III (Right)"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0228   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 16
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0228 is a community estimate for the Black Mamba Mk.III right-hand
+      variant. VKB PIDs increment by grip model and hand; confirm with lsusb.
+  - id: REQUIRES_GUNFIGHTER_BASE
+    description: >
+      The Black Mamba Mk.III grip is not standalone — it requires a VKB
+      Gunfighter Mk.II, Mk.III, or Mk.IV base. The base provides USB connectivity;
+      the grip ID is exposed by the base firmware when the grip is attached.
+  - id: LEFT_HAND_VARIANT
+    description: >
+      A left-hand version exists (black-mamba-mk3-left.yaml, PID 0x0229 estimate).
+      Left and right grips enumerate differently.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Black Mamba Mk.III (right) — F-4 Phantom inspired combat grip.
+    16-bit sensors. Requires Gunfighter base. PID 0x0228 unconfirmed.
+    Last reviewed: 2026-06.

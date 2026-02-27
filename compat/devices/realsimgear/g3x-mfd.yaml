@@ -1,0 +1,50 @@
+# RealSimGear G3X MFD Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear G3X MFD — replica bezel for the Garmin G3X MFD (Multi-Function
+# Display) panel, separate from the G3X PFD (g3x-pfd.yaml) and G3X Touch
+# (g3x-touch.yaml). The MFD bezel adds dedicated map/traffic/weather function
+# buttons not present on the PFD bezel.
+# VID 0x04D8 confirmed for RealSimGear. PID 0xF260 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3X MFD Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF260   # Community estimate — G3X MFD
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [outer_knob, inner_knob]
+    resolution_bits: 12
+  buttons: 18
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF260 is a community estimate. G3X PFD uses a different PID
+      (g3x-pfd.yaml). Update when confirmed via lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G3X MFD bezel. PID 0xF260 unconfirmed. VID 0x04D8 confirmed.
+    Companion to g3x-pfd.yaml and g3x-touch.yaml. Last reviewed: 2026-02.

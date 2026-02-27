@@ -1,0 +1,78 @@
+# VKB Gunfighter MCG Premium (VID 0x231D, PID 0x012A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed (VKB-Sim). PID 0x012A is a community-reported PID
+# for the VKB Gunfighter with MCG Premium grip installed. The MCG Premium
+# is the enhanced version of the MCG (Modern Combat Grip) with additional
+# triggers, hat switches, and a higher-quality thumb grip.
+# The MCG Pro uses PID 0x0129 (gunfighter-mk4-mcg-pro.yaml); the MCG Premium
+# adds an extra trigger and a multi-position selector switch.
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter MCG Premium"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim — confirmed
+    product_id: 0x012A      # Community-reported — Gunfighter + MCG Premium grip
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 13
+  buttons: 40
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x012A is community-reported for the Gunfighter + MCG Premium
+      combination. The MCG Pro uses 0x0129 (gunfighter-mk4-mcg-pro.yaml).
+      Confirm with lsusb or VKBDevCfg USB descriptor capture.
+  - id: MODULAR_GRIP
+    description: >
+      The Gunfighter base uses VKB's modular grip system. The MCG Premium
+      adds an extra trigger stage and multi-position mode selector over the
+      MCG Pro. Axis count and button layout depend on the VKBDevCfg profile.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKBDevCfg software. OpenFlight reads
+      whatever the device reports; align VKB config with OpenFlight assignments.
+  - id: CAM_FOLLOWER_GEOMETRY
+    description: >
+      Gunfighter gimbal uses cam-follower design. Resolution and centre-feel
+      depend on the installed cam profile (soft/medium/hard) set in VKBDevCfg.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gunfighter + MCG Premium grip. PID 0x012A community-reported.
+    Enhanced MCG with extra trigger and selector switch. See gunfighter-mk4-mcg-pro.yaml
+    for MCG Pro (PID 0x0129). Wave-49 addition. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg required for firmware updates, calibration, and grip
+    profile configuration.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; MCG Premium extra trigger used for weapons employment."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Axes and buttons recognised automatically. MCG Premium hat for view control."

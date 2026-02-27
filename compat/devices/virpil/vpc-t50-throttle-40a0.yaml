@@ -1,0 +1,42 @@
+# VIRPIL VPC T-50 Throttle (Alt PID 0x40A0)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x40A0 is a community estimate for an alternate/earlier T-50 Throttle variant.
+# Primary T-50 throttle entries: vpc-t50-throttle-4195.yaml (0x4195).
+schema_version: "1"
+device:
+  name: "VIRPIL VPC T-50 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB (confirmed)
+    product_id: 0x40A0      # Community estimate — T-50 throttle alt variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, scx, scy, slider1, slider2]
+    resolution_bits: 14
+  buttons: 24
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x40A0 is a community estimate. Known T-50 throttle variants use
+      0x4195 and 0x0140. Confirm with VIRPIL Configurator or lsusb.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC T-50 Throttle — PID 0x40A0 (est). Dual-grip throttle with
+    extensive hat and button layout for Russian/Soviet aircraft profiles.
+    Wave-55 addition. Last reviewed: 2026-07.

@@ -1,0 +1,53 @@
+# Cammus P1000 Sim Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (Cammus, community-reported estimate). PID 0x0310 is a community
+# estimate for the Cammus P1000 pedal unit. The P1000 provides three pedal axes
+# (throttle, brake, clutch) with load-cell brake for high-precision braking,
+# intended to complement the C5 or C12 direct-drive base.
+schema_version: "1"
+
+device:
+  name: "Cammus P1000 Sim Pedals"
+  vendor: "Cammus"
+  usb:
+    vendor_id: 0x3416    # Cammus (community-reported estimate)
+    product_id: 0x0310   # Community estimate — P1000 pedal unit
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x3416 and PID 0x0310 are community estimates. Confirm with lsusb or
+      Windows Device Manager on Cammus P1000 hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The brake axis uses a load-cell sensor for pressure-based input. In flight
+      sim use map the brake axis to differential toe brakes in the OpenFlight
+      profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cammus P1000 sim pedals with load-cell brake. VID 0x3416 and PID 0x0310 are
+    community estimates. Designed to pair with Cammus C5/C12 direct-drive bases.
+    Last reviewed: 2026-06.

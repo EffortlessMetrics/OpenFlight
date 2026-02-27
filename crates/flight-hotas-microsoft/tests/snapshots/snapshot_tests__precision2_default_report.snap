@@ -1,0 +1,16 @@
+---
+source: crates/flight-hotas-microsoft/tests/snapshot_tests.rs
+expression: state
+---
+SidewinderP2InputState {
+    axes: SidewinderP2Axes {
+        x: 0.0009775171,
+        y: 0.0009775171,
+        rz: 0.003921569,
+        throttle: 0.0,
+    },
+    buttons: SidewinderP2Buttons {
+        buttons: 0,
+        hat: Center,
+    },
+}

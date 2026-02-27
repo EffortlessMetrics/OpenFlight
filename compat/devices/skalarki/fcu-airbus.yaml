@@ -1,0 +1,55 @@
+# Skalarki Electronics A320 FCU (Flight Control Unit)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics (Poland) A320 FCU replica — high-fidelity airline
+# cockpit flight control unit with rotary encoders for SPD, HDG, ALT, V/S,
+# auto-pilot pushbuttons, and LCD segment displays. VID/PID unconfirmed;
+# Skalarki uses HID-class firmware on STM32 MCUs.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki A320 FCU"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x0483   # STMicroelectronics (placeholder — VID_UNCONFIRMED)
+    product_id: 0x5740  # STM32 VCP/HID — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 5
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob, baro_knob]
+    resolution_bits: 12
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      Skalarki uses STM32-based MCUs. VID 0x0483 (STMicroelectronics) is
+      a plausible placeholder; actual VID may be a custom assignment.
+  - id: PANEL_DEVICE
+    description: "FCU panel device with encoders, pushbuttons, and LCD output."
+  - id: LCD_OUTPUT
+    description: >
+      The FCU drives LCD segment displays for SPD/ALT/HDG/V-S readouts.
+      Display updates are sent via HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki Electronics A320 FCU replica. High-fidelity airline cockpit panel.
+    VID/PID unconfirmed. Contact Skalarki for USB descriptor details.
+    Last reviewed: 2026-06.

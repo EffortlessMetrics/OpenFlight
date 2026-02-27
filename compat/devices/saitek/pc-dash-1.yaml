@@ -1,0 +1,54 @@
+# Saitek PC Dashboard 1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Saitek PC Dashboard 1 is a USB button/display panel from the original
+# Saitek PC Dashboard series, providing backlit buttons and a small LCD for
+# sim data readouts. Used in MSFS/FSX home cockpit builds.
+# VID 0x06A3 confirmed: Saitek (now Logitech).
+# PID 0x0A00 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Saitek PC Dashboard 1"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0A00   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A00 is a community estimate. Saitek PC Dashboard products use
+      VID 0x06A3 (Saitek); the exact PID should be confirmed with lsusb.
+  - id: LCD_OUTPUT
+    description: >
+      The panel includes a small LCD for displaying sim data (airspeed, altitude,
+      heading). LCD updates require USB HID output reports; the host must push
+      data from sim telemetry.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek PC Dashboard 1 — button panel with LCD. VID 0x06A3 = Saitek.
+    PID 0x0A00 unconfirmed. Successor: saitek/pc-dash-2.yaml.
+    Last reviewed: 2026-06.

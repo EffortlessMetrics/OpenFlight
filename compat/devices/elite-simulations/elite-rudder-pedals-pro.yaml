@@ -1,0 +1,62 @@
+# Elite Simulations E-Rudder Pedals Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions E-Rudder Pedals Pro — enhanced version of the
+# standard E-Rudder Pedals with load-cell toe brakes and higher-resolution
+# hall-effect sensors. Used in FAA-approved ATDs and FTDs.
+# Distinct from the standard e-rudder-pedals.yaml (10-bit hall-effect, no LC).
+# VID/PID are unconfirmed; Microchip VID is a plausible placeholder.
+schema_version: "1"
+
+device:
+  name: "Elite Simulations E-Rudder Pedals Pro"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — Microchip Technology (VID_UNCONFIRMED)
+    product_id: 0x0201  # Placeholder — PID_UNCONFIRMED (adjacent to standard model)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12   # Higher-resolution load cells vs. 10-bit standard model
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 / PID 0x0201 are unconfirmed placeholders; verify with lsusb."
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0201 is assumed adjacent to the standard model (0x0200) —
+      both are unconfirmed. The Pro model may share the same PID.
+  - id: LOAD_CELL_TOE_BRAKES
+    description: >
+      Left and right toe brakes use load cells rather than potentiometers.
+      Brake force (not displacement) is measured. Do not apply deadzone
+      settings calibrated for potentiometer-based brakes; the force response
+      curve may require separate tuning.
+  - id: DIFFERENTIAL_TOE_BRAKES
+    description: >
+      Left and right toe brakes are independent axes. Both report [0, max]
+      with full brake pressure at maximum value.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations Solutions E-Rudder Pedals Pro — Cessna 172 replica with
+    load-cell toe brakes. Distinct from standard model (higher resolution,
+    different sensing technology). VID/PID require field verification.
+    Last reviewed: 2026-02.

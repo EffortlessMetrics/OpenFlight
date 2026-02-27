@@ -1,0 +1,57 @@
+# Saitek ST290 Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0006 is a community estimate from USB ID databases for the ST290 Pro.
+# The ST290 Pro is an entry-level joystick released c. 2002, notable for its
+# ergonomic design and low price. Popular for FSX and flight training use.
+schema_version: "1"
+
+device:
+  name: "Saitek ST290 Pro Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0006      # ST290 Pro — USB ID database estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0006 is a USB ID database estimate for the ST290 Pro. Multiple
+      early Saitek devices share low PID values; confirm with lsusb on real
+      hardware to differentiate from other Saitek products in this range.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. The Z axis is a throttle mini-lever.
+  - id: ENTRY_LEVEL
+    description: >
+      Entry-level device; 10-bit ADC resolution. Some units exhibit a small
+      centre deadzone caused by the spring mechanism. A 3–5% software deadzone
+      is recommended for precise axis control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek ST290 Pro — early 2000s entry-level joystick. PID 0x0006 is a
+    community estimate; update when verified on hardware. Low-resolution ADC;
+    apply software deadzone for best results. Last reviewed: 2026-02.

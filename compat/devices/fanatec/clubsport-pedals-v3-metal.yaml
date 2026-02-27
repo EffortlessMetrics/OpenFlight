@@ -1,0 +1,62 @@
+# Fanatec ClubSport Pedals V3 Metal
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH). The ClubSport Pedals V3 Metal is the premium
+# edition of the V3 pedals with an all-aluminium face plate and adjustable
+# load cell brake. PID is a community estimate; functionally similar to
+# the standard V3 (clubsport-pedals-v3.yaml) but with different pedal
+# geometry and load-cell configuration. Confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V3 Metal"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0020      # Community estimate — CSP V3 Metal variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate for the ClubSport Pedals V3 Metal.
+      The standard V3 (clubsport-pedals-v3.yaml) may use the same PID if
+      the USB interface board is identical. Confirm with lsusb.
+  - id: LOAD_CELL_BRAKE_METAL
+    description: >
+      The V3 Metal uses an upgraded load-cell sensor on the brake pedal
+      with configurable progressive spring stacks. Axis resolution at
+      brake peak is higher than the plastic V3. Use a brake curve with
+      progressive mapping in the flight sim profile.
+  - id: VIBRATION_MOTOR
+    description: >
+      The ClubSport Pedals V3 Metal includes a vibration motor in the
+      brake pedal for ABS rumble simulation. This is enabled via Fanatec's
+      proprietary USB output report — not exposed as standard DirectInput FFB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V3 Metal — all-aluminium premium pedal set.
+    VID 0x0EB7 confirmed; PID 0x0020 is a community estimate. Load-cell
+    brake with vibration motor. Used in flight sim for toe-brake axes.
+    Last reviewed: 2026-06.

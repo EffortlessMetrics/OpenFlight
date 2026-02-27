@@ -1,0 +1,61 @@
+# SteelSeries Stratus XL Wireless Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1038 confirmed: SteelSeries ApS.
+# PID 0x1418 is confirmed for the Stratus XL from multiple community USB
+# captures and the SDL2 GameControllerDB. The Stratus XL is a Windows/Android
+# wireless gamepad with a 2.4 GHz USB dongle, full dual-stick layout, and
+# Xbox-style button arrangement.
+
+schema_version: "1"
+
+device:
+  name: "SteelSeries Stratus XL"
+  vendor: "SteelSeries ApS"
+  type: other
+  usb:
+    vendor_id: 0x1038
+    product_id: 0x1418   # Confirmed: community USB captures + SDL2 GameControllerDB
+  hid:
+    usage_page: 0x01
+    usage: 0x05   # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: WIRELESS_LATENCY
+    description: >
+      The Stratus XL uses a 2.4 GHz wireless dongle. Wireless latency is
+      typically 1-4 ms; adequate for non-RT axis input but not suitable for
+      the RT 250 Hz spine without buffering.
+  - id: AXIS_RESOLUTION
+    description: >
+      Stick axes report at 8-bit resolution (256 steps). For flight sim use
+      apply response curves to reduce stick sensitivity at centre.
+  - id: GAMEPAD_FOR_SECONDARY_AXES
+    description: >
+      The Stratus XL is best suited for secondary control inputs (camera slew,
+      view control, panel shortcuts) rather than primary flight axes due to
+      its 8-bit resolution.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SteelSeries Stratus XL wireless gamepad. VID 0x1038 / PID 0x1418 confirmed
+    from community captures and SDL2. Wireless 2.4 GHz dongle; 8-bit stick axes.
+    Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# Pololu Mini Maestro 24-Channel USB Servo Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1FFB (Pololu Corporation) / PID 0x008F — confirmed from Pololu product
+# documentation (native USB mode). The Mini Maestro 24 is a 24-channel servo
+# controller — the largest in the Maestro family. Used in complex DIY cockpit
+# builds to simultaneously drive multiple servo gauge needles and animated
+# cockpit actuators.
+schema_version: "1"
+
+device:
+  name: "Pololu Mini Maestro 24-Channel USB Servo Controller"
+  vendor: "Pololu Corporation"
+  type: other
+  usb:
+    vendor_id: 0x1FFB       # Pololu Corporation (confirmed, usb.ids)
+    product_id: 0x008F      # Mini Maestro 24 native mode — Pololu docs
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (custom Pololu protocol)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: NON_STANDARD_PROTOCOL
+    description: >
+      Uses Pololu's native USB protocol, not standard HID. Accessed via the
+      pololu-maestro driver adapter in OpenFlight.
+  - id: OUTPUT_ONLY_SERVO_DRIVER
+    description: >
+      Output-only servo position controller — 24 independent servo channels.
+      No HID inputs to read back.
+  - id: LARGEST_MAESTRO_FAMILY
+    description: >
+      The 24-channel Mini Maestro is the highest-capacity Maestro board.
+      Suitable for cockpit builds needing many simultaneous servo outputs
+      (e.g., complete instrument panel with multiple needle gauges).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pololu Mini Maestro 24 USB servo controller — 24 channels. VID 0x1FFB / PID 0x008F (Pololu docs).
+    Largest Maestro; output-only custom protocol. Wave-42 addition. Last reviewed: 2026-07.

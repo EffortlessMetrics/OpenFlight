@@ -1,0 +1,62 @@
+# Microsoft Xbox Elite Series 2 Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Xbox Elite Series 2 is Microsoft's premium gamepad with adjustable
+# hair-trigger locks, swappable components, and longer-travel thumbsticks.
+# Sometimes used in flight sims for button-heavy panel assignments.
+# VID 0x045E confirmed: Microsoft Corporation.
+# PID 0x0B00 confirmed: Xbox Elite Wireless Controller Series 2.
+schema_version: "1"
+
+device:
+  name: "Xbox Elite Series 2 Controller"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x0B00   # Confirmed: Xbox Elite Wireless Controller Series 2
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 125
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_PREFERRED
+    description: >
+      The Elite Series 2 is primarily designed for XInput; DirectInput/HID
+      axis layout may differ from the XInput mapping. OpenFlight uses HID
+      mode; configure axes accordingly.
+  - id: HAIR_TRIGGER_LOCKS
+    description: >
+      Hardware hair-trigger locks reduce trigger travel. If LT/RT axes have
+      reduced range, check the physical lock switches on the back of the controller.
+  - id: WIRELESS_CAPABLE
+    description: >
+      The Series 2 supports Xbox wireless protocol; PID 0x0B00 is the USB-wired
+      descriptor. Wireless mode uses a different enumeration path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Xbox Elite Series 2 — premium gamepad. VID 0x045E / PID 0x0B00 confirmed.
+    Primarily used for button/trigger assignments in flight sim profiles.
+    Last reviewed: 2026-06.

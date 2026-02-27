@@ -1,0 +1,62 @@
+# VIRPIL VPC Control Panel #3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x025C — community estimate.
+# VPC Control Panel #1: 0x025B (confirmed, see control-panel-1.yaml)
+# VPC Control Panel #2: 0x0259 (confirmed, see control-panel-2.yaml)
+# VPC Control Panel #3: 0x025C (estimated — pattern follows CP1/CP2 range)
+# Not confirmed from lsusb hardware probe or official VIRPIL docs.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel #3"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025C   # Community estimate; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [a1, a2]
+    resolution_bits: 14
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x025C is a community estimate in the VPC Control Panel family range.
+      CP #1 uses 0x025B and CP #2 uses 0x0259. Update this manifest when a
+      confirmed PID becomes available via lsusb or VIRPIL Configurator.
+  - id: NO_AXES_ALTERNATIVE
+    description: >
+      Some firmware versions of the Control Panel #3 report 0 axes and 48
+      pure button inputs. The 2-axis variant (a1, a2 as rotary encoder axes)
+      reflects the hardware variant with analog mini-sticks. Verify with
+      VIRPIL Configurator which mode is active on your unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VPC Control Panel #3 button/encoder panel. May expose 2 analogue axes
+    alongside toggle switches, push buttons, and encoders (48 buttons total).
+    Intended to be used alongside CP #1 (0x025B) and CP #2 (0x0259) for
+    expanded cockpit button panel coverage.
+    PID 0x025C is a community estimate — verify before deployment.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

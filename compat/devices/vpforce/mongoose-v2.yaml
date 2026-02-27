@@ -1,0 +1,51 @@
+# VPforce Mongoose FFB Joystick (v2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VPforce Mongoose v2 — updated version of the Mongoose FFB joystick
+# (mongoose.yaml) with revised gimbal and firmware improvements.
+# VID 0x0483 confirmed (STMicroelectronics). PID is a community estimate.
+# Mongoose v1 PID is in the VPforce range; v2 likely adjacent.
+# PID 0xA1C3 is an estimate — verify via VPforce community or lsusb.
+
+schema_version: "1"
+
+device:
+  name: "VPforce Mongoose FFB Joystick (v2)"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0xA1C3   # Community estimate — Mongoose v2
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA1C3 is a community estimate for the Mongoose v2.
+      Update when confirmed via VPforce community or lsusb.
+  - id: FFB_DIRECT_DRIVE
+    description: "Direct-drive FFB via VPforce firmware; uses USB HID FFB protocol."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VPforce Mongoose v2 — updated Mongoose FFB base. PID 0xA1C3 is unconfirmed.
+    VID 0x0483 confirmed. Mongoose v1 in mongoose.yaml. Last reviewed: 2026-02.

@@ -1,0 +1,64 @@
+# Behringer X-Touch Mini USB MIDI Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Behringer X-Touch Mini is a compact USB MIDI surface with 8 rotary encoders
+# (with push-click), 16 buttons, and 1 fader. Widely used in cockpit replica
+# builds for avionics knob and button panel simulation.
+# VID 0x1397 (Behringer/Music Tribe) / PID 0x0508: confirmed from USB database.
+
+schema_version: "1"
+
+device:
+  name: "Behringer X-Touch Mini MIDI Controller"
+  vendor: "Behringer"
+  usb:
+    vendor_id: 0x1397       # BEHRINGER International GmbH / Music Tribe
+    product_id: 0x0508      # X-Touch Mini — confirmed from USB device database
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 9
+    names: [encoder_1, encoder_2, encoder_3, encoder_4, encoder_5, encoder_6,
+            encoder_7, encoder_8, fader]
+    resolution_bits: 7
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      X-Touch Mini is a pure USB MIDI device — it does NOT enumerate as a
+      USB HID joystick. OpenFlight must use the MIDI input subsystem to receive
+      CC messages from encoders, fader, and buttons.
+  - id: ENCODER_RELATIVE_MODE
+    description: >
+      Rotary encoders operate in relative mode (increment/decrement CC) by default.
+      Some firmware versions support absolute mode. For flight sim use, relative
+      mode maps naturally to avionics knob rotation.
+  - id: LED_RING_FEEDBACK
+    description: >
+      Each encoder has an LED ring that can be set via MIDI output. Bind sim
+      variables to LED ring position for visual feedback on knob state.
+  - id: TWO_LAYERS
+    description: >
+      X-Touch Mini has two button layers (A and B) selectable via the MC button.
+      Profile binding should account for layer state to avoid mis-mapping.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Behringer X-Touch Mini — 8 encoders + fader + 16 buttons. VID 0x1397 / PID 0x0508.
+    Pure MIDI device with LED ring feedback. Popular for avionics panel builds.
+    Last reviewed: 2026-06.

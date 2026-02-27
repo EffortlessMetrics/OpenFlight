@@ -1,0 +1,57 @@
+# Elgato Stream Deck XL (32-key)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 confirmed: Elgato Systems / Corsair.
+# PID 0x006C confirmed: documented in open-source Stream Deck drivers
+#   (python-elgato-streamdeck, node-elgato-stream-deck).
+# The XL has 32 keys (8x4 grid) — preferred for large-format cockpit panels.
+
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck XL"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9    # Elgato Systems / Corsair (confirmed)
+    product_id: 0x006C   # Stream Deck XL — confirmed from open-source drivers
+  hid:
+    usage_page: 0xFF00   # Vendor-defined usage page
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+  lcd_keys: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      Stream Deck XL uses the same vendor HID protocol as the Original but
+      with a wider 32-byte input report to cover 32 keys. Output reports
+      are per-key LCD bitmaps (72x72 pixels per key on the XL).
+  - id: PANEL_DEVICE
+    description: >
+      Panel controller only. 32 keys across an 8x4 grid make the XL
+      popular for comprehensive cockpit overlays (full overhead panel,
+      MFD button bezels, etc.). No axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck XL — 32-key (8x4) variant. Largest standard Stream Deck.
+    VID 0x0FD9 / PID 0x006C confirmed from open-source drivers.
+    Preferred for full-overhead-panel or combined avionics cockpit setups.
+    Last reviewed: 2026-06.

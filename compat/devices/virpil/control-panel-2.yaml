@@ -1,0 +1,39 @@
+# VIRPIL VPC Control Panel 2 (Right Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# PID confirmed: Buzzec/virpil open-source Rust LED control library
+# (src/right_panel.rs, `const PID: u16 = 0x0259`)
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel 2"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0259
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [a1, a2]
+    resolution_bits: 14
+  buttons: 47
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0259 confirmed from Buzzec/virpil Rust LED library (src/right_panel.rs).
+    Panel exposes 2 analogue axes (A1/A2) and 47 buttons including encoders and toggles.
+    Last validated: 2026-02.

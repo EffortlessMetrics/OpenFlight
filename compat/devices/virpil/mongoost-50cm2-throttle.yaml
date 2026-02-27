@@ -1,0 +1,58 @@
+# VIRPIL VPC MongoosT-50CM2 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x8193 — VPC MongoosT-50CM2 Throttle.
+# Sources:
+#   charliefoxtwo/Virpil-Communicator (VirpilMonitor.cs,
+#     `ThrottleCM2Pids = new() { 0x8193 }`).
+#   muchimi/JoystickGremlinEx (gremlin/ui/virpil_device.py,
+#     `CM2 = [0x8193] # CM2 throttle`).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM2 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8193
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, flaps, scx, scy, slider]
+    resolution_bits: 14
+  buttons: 78
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return axes; they center at raw 8192.
+      All other axes are non-return (throttle-style).
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings can be changed via the VIRPIL
+      Configurator software.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x8193 confirmed from charliefoxtwo/Virpil-Communicator (ThrottleCM2Pids)
+    and muchimi/JoystickGremlinEx (virpil_device.py CM2 entry).
+    Axis count and button layout inferred from CM3 throttle family;
+    verify against hardware before relying on byte offsets.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

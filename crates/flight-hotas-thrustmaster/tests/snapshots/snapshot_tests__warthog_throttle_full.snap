@@ -1,0 +1,21 @@
+---
+source: crates/flight-hotas-thrustmaster/tests/snapshot_tests.rs
+expression: state
+---
+WarthogThrottleInputState {
+    axes: WarthogThrottleAxes {
+        slew_x: 1.5259022e-5,
+        slew_y: 1.5259022e-5,
+        throttle_left: 1.0,
+        throttle_right: 1.0,
+        throttle_combined: 1.0,
+    },
+    buttons: WarthogThrottleButtons {
+        buttons_low: 65535,
+        buttons_mid: 65535,
+        buttons_high: 255,
+        toggles: 255,
+        hat_dms: North,
+        hat_csl: South,
+    },
+}

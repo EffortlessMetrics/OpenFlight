@@ -274,8 +274,33 @@ impl WriterApplier {
                 }
             }
             JsonPatchOpType::Move | JsonPatchOpType::Copy => {
-                // These operations are more complex and less commonly used
-                anyhow::bail!("JSON patch operations Move and Copy are not yet implemented");
+                let from_path = patch.from.as_deref().ok_or_else(|| {
+                    anyhow::anyhow!("JSON patch Move/Copy requires a 'from' field")
+                })?;
+
+                if matches!(patch.op, JsonPatchOpType::Move) {
+                    // RFC 6902 §4.4: the "from" location MUST NOT be a proper prefix of "path".
+                    if patch.path.len() > from_path.len()
+                        && patch.path.starts_with(from_path)
+                        && patch.path.as_bytes().get(from_path.len()) == Some(&b'/')
+                    {
+                        anyhow::bail!(
+                            "JSON patch Move: 'from' location ('{}') cannot be a proper prefix of 'path' ('{}')",
+                            from_path,
+                            patch.path
+                        );
+                    }
+                }
+
+                // Retrieve the value at the source path
+                let source_value = self.json_get_path(json, from_path)?;
+
+                if matches!(patch.op, JsonPatchOpType::Move) {
+                    // Remove the source before setting the destination
+                    self.json_remove_path(json, from_path)?;
+                }
+
+                self.json_set_path(json, &patch.path, source_value)?;
             }
         }
         Ok(())
@@ -401,6 +426,79 @@ impl WriterApplier {
             .unwrap()
             .as_secs();
         format!("backup_{}", timestamp)
+    }
+}
+
+#[cfg(test)]
+mod patch_tests {
+    use super::*;
+    use crate::types::{JsonPatchOp, JsonPatchOpType};
+    use serde_json::json;
+
+    fn applier() -> WriterApplier {
+        WriterApplier::new(std::env::temp_dir())
+    }
+
+    #[test]
+    fn test_json_patch_copy_duplicates_value() {
+        let a = applier();
+        let mut json = json!({ "a": { "x": 42 }, "b": {} });
+        let patch = JsonPatchOp {
+            op: JsonPatchOpType::Copy,
+            path: "/b/y".to_string(),
+            value: None,
+            from: Some("/a/x".to_string()),
+        };
+        a.apply_json_patch(&mut json, &patch).unwrap();
+        assert_eq!(json["a"]["x"], 42, "source preserved");
+        assert_eq!(json["b"]["y"], 42, "copy created");
+    }
+
+    #[test]
+    fn test_json_patch_move_relocates_value() {
+        let a = applier();
+        let mut json = json!({ "src": "hello", "dst": {} });
+        let patch = JsonPatchOp {
+            op: JsonPatchOpType::Move,
+            path: "/dst/val".to_string(),
+            value: None,
+            from: Some("/src".to_string()),
+        };
+        a.apply_json_patch(&mut json, &patch).unwrap();
+        assert_eq!(json["dst"]["val"], "hello", "value moved to destination");
+        assert!(
+            json.get("src").is_none() || json["src"].is_null(),
+            "source must be removed after move"
+        );
+    }
+
+    #[test]
+    fn test_json_patch_move_to_child_errors() {
+        let a = applier();
+        let mut json = json!({ "a": { "b": 1 } });
+        let patch = JsonPatchOp {
+            op: JsonPatchOpType::Move,
+            path: "/a/b/c".to_string(),
+            value: None,
+            from: Some("/a".to_string()),
+        };
+        assert!(
+            a.apply_json_patch(&mut json, &patch).is_err(),
+            "RFC 6902 §4.4: move to child must error"
+        );
+    }
+
+    #[test]
+    fn test_json_patch_move_missing_from_errors() {
+        let a = applier();
+        let mut json = json!({ "a": 1 });
+        let patch = JsonPatchOp {
+            op: JsonPatchOpType::Move,
+            path: "/b".to_string(),
+            value: None,
+            from: None,
+        };
+        assert!(a.apply_json_patch(&mut json, &patch).is_err());
     }
 }
 

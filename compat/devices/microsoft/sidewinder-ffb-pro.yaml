@@ -1,0 +1,72 @@
+# Microsoft SideWinder Force Feedback Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation.
+# The SideWinder Force Feedback 2 (FFB2) uses PID 0x001C (see sidewinder-ffb2.yaml).
+# The Force Feedback Pro used a gameport interface in early revisions; later
+# the USB Plus edition used PID 0x001D (community-reported, from usb.ids and
+# vintage flight sim community archives). Sold circa 1997–2002.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback Pro"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x001D  # USB "Plus" edition; community-reported from usb.ids
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+force_feedback:
+  backend: directinput    # Legacy DirectInput FFB; no FFB2 backend support
+  effects:
+    - spring
+    - damper
+    - constant_force
+    - sine
+    - triangle
+    - ramp
+  max_force_n: 2.5        # Approximate; varies by firmware revision
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001D is community-reported for the SideWinder FFB Pro USB Plus
+      edition. The SideWinder FFB 2 uses 0x001C (sidewinder-ffb2.yaml).
+      Early gameport-only revisions have no USB PID. Verify 0x001D with
+      lsusb before enabling production device matching.
+  - id: LEGACY_DIRECTINPUT_FFB
+    description: >
+      Force feedback is exposed as legacy DirectInput FFB. OpenFlight's
+      FFB engine maps its effects to DirectInput API calls on Windows.
+      Linux FFB support via evdev requires additional udev rules for this
+      vintage device.
+  - id: LEGACY_10BIT_AXES
+    description: >
+      10-bit axis resolution. Apply light smoothing for smooth response.
+
+support:
+  tier: 3            # Legacy FFB device; limited test coverage
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Force Feedback Pro USB Plus (circa 1997–2002).
+    Predecessor to the SideWinder FFB 2. PID 0x001D from usb.ids community
+    database. Legacy DirectInput FFB only. For the FFB 2 (PID 0x001C),
+    see sidewinder-ffb2.yaml. Last reviewed: 2026-02.

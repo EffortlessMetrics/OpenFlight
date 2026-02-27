@@ -1,0 +1,53 @@
+# ProSimU R6 Racing/Flight Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ProSimU R6 is a compact 6DOF motion seat platform designed for both racing
+# and flight simulation. Smaller form factor than the T200/T300 series;
+# optimised for a single-seat enclosed cockpit.
+# VID 0x1ECB / PID 0x0003: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "ProSimU R6 Motion Platform"
+  vendor: "ProSimU"
+  usb:
+    vendor_id: 0x1ECB
+    product_id: 0x0003      # Community estimate — R6
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [surge, sway, heave, pitch, roll, yaw]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate. Confirm with ProSimU USB diagnostic.
+  - id: COMBINED_RACING_FLIGHT
+    description: >
+      The R6 is marketed for both racing and flight sim use. Motion profile
+      washout parameters differ significantly between disciplines; use the
+      ProSimU Motion Manager preset for the active sim type.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ProSimU R6 compact 6DOF motion platform. VID 0x1ECB / PID 0x0003 est.
+    For larger flight-only platforms see prosimu-t200.yaml and prosimu-t300.yaml.
+    Last reviewed: 2026-06.

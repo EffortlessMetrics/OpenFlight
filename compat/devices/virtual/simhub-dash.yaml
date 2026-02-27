@@ -1,0 +1,54 @@
+# SimHub Dashboard Device
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimHub (simhubdash.com) virtual HID device — SimHub creates a virtual
+# USB HID joystick exposing sim variables as axis/button events for use
+# in profile bindings. Primarily sim-racing focused but used in flight sim
+# setups for secondary gauge panels and Arduino LED/servo outputs.
+# VID/PID are the vJoy/SimHub virtual device identifiers.
+
+schema_version: "1"
+
+device:
+  name: "SimHub Dashboard Device (Virtual)"
+  vendor: "SimHub / DIY"
+  usb:
+    vendor_id: 0x1234   # SimHub virtual device — VID_UNCONFIRMED
+    product_id: 0xBEAD  # SimHub virtual joystick — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+    resolution_bits: 16
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      SimHub virtual device VID/PID depends on the underlying virtual
+      joystick driver (vJoy, ViGEm, or SimHub native). Confirm via device
+      manager or OpenFlight device scan.
+  - id: VIRTUAL_DEVICE
+    description: >
+      SimHub creates virtual HID axes from sim data. Axis values reflect
+      in-sim quantities (RPM, speed, etc.) not physical input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    SimHub virtual HID device for dashboard/LED/servo output. VID/PID
+    depend on virtual joystick backend. Last reviewed: 2026-06.

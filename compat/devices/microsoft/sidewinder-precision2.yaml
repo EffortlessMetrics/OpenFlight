@@ -1,0 +1,52 @@
+# Microsoft Sidewinder Precision 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x045E (Microsoft), PID 0x0038 — documented in USB ID databases
+# and linux-hardware.org. Popular entry-level joystick sold 1998–2003.
+schema_version: "1"
+
+device:
+  name: "Microsoft Sidewinder Precision 2"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x0038  # Sidewinder Precision 2 — confirmed via USB ID database
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: Z_AXIS_THROTTLE
+    description: >
+      The Z axis is the throttle lever on the base of the joystick (unipolar,
+      0 = idle, max = full throttle). The Rz axis is the twist grip used as rudder.
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      On Windows 10/11 the Sidewinder Precision 2 is handled by the built-in
+      HID joystick driver. No additional drivers are required. The device
+      enumerates correctly on all modern Windows versions.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x0038 confirmed from USB ID database (usb-ids.gowdy.us) and
+    linux-hardware.org. Non-FFB companion to the Sidewinder Force Feedback 2.
+    Very popular entry-level HOTAS-style joystick; widely used in classic sims.
+    Last validated: 2026-02.

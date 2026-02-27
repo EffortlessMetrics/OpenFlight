@@ -1,0 +1,55 @@
+# OpenCockpit DIY MFD Panel (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic DIY multi-function display (MFD) panel entry for open-source cockpit
+# builder community devices. This covers MFD panel builds based on common MCU
+# boards (Arduino, STM32, RP2040) flashed with button-box / USB-HID firmware.
+# VID/PID varies by the underlying MCU board and firmware configuration.
+schema_version: "1"
+
+device:
+  name: "DIY MFD Panel (Generic OpenCockpit)"
+  vendor: "OpenCockpit / Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (common base board)
+    product_id: 0x8036   # Arduino Leonardo HID mode (common DIY base)
+  type: panel
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID and PID vary by underlying MCU board. Common bases include Arduino
+      Leonardo/Micro, RP2040 TinyUSB, and STM32 HID. Match by device name
+      string in OpenFlight profiles for DIY panels.
+  - id: BUTTON_COUNT_VARIES
+    description: >
+      Button count is determined at firmware compile time. 32 is a typical
+      MFD panel build; actual hardware may differ.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic DIY MFD panel for open-source cockpit builders. VID/PID varies;
+    match by device name in OpenFlight profiles. Typical use: DCS and MSFS
+    multi-function panel replication. Last reviewed: 2026-06.

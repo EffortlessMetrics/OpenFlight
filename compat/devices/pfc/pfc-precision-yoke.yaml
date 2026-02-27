@@ -1,0 +1,57 @@
+# Precision Flight Controls Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Precision Flight Controls (PFC) offers professional-grade flight simulation
+# yokes used in FAA-certified flight training devices. The USB yoke interface
+# provides high-resolution pitch and roll axes with authentic aircraft-feel
+# column/wheel design.
+# VID 0x2B67 / PID 0x0002: community estimate.
+# Note: other PFC units use VID 0x04D8. VID 0x2B67 may be unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Precision Flight Controls Yoke"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x2B67       # PID estimated — other PFC units use VID 0x04D8
+    product_id: 0x0002      # Community estimate — PFC USB yoke
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0002 are community estimates. Confirmed PFC units
+      typically use VID 0x04D8 (Microchip) or VID 0x0E8F. See pfc-yoke-system.yaml
+      and pfc-cessna-yoke.yaml for other variants. Verify with lsusb.
+  - id: PROFESSIONAL_GRADE_CALIBRATION
+    description: >
+      PFC yokes are designed for FTD/ATD use and have precise calibration
+      requirements. Null zone and gain settings should be set conservatively
+      for training use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Precision Flight Controls USB yoke. VID 0x2B67 / PID 0x0002 est.
+    Professional-grade FTD yoke. Other PFC units use VID 0x04D8 or 0x0E8F.
+    Last reviewed: 2026-06.

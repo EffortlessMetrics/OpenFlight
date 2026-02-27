@@ -1,0 +1,54 @@
+# Logitech F310 Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC21D confirmed from:
+#   1. libsdl-org/SDL: MAKE_VIDPID(0x046d, 0xc21d) — "Logitech F310 Gamepad"
+#   2. linux-hardware.org: usb:046d:c21d (multiple probes)
+# The Logitech F310 is an entry-level USB gamepad used in some MSFS setups
+# as a second controller for camera or autopilot axis control.
+schema_version: "1"
+
+device:
+  name: "Logitech F310 Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech Inc.
+    product_id: 0xC21D   # F310 Gamepad (confirmed from SDL and linux-hardware.org)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DINPUT_XINPUT_SWITCH
+    description: >
+      The F310 has a physical switch to toggle between DirectInput (D) and
+      XInput (X) modes. In DirectInput mode it enumerates as 0xC21D. In
+      XInput mode it presents as a standard Xbox 360 controller with
+      VID 0x045E / PID 0x028E. OpenFlight manifests cover the DInput mode.
+  - id: NO_RUMBLE
+    description: "F310 does not have force feedback / rumble motors."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech F310 Gamepad. PID 0xC21D confirmed from SDL and hardware probes.
+    Budget gamepad sometimes used as a secondary flight sim controller.
+    Last reviewed: 2026-06.

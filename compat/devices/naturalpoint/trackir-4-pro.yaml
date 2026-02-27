@@ -1,0 +1,53 @@
+# NaturalPoint TrackIR 4 Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D (NaturalPoint Inc.). PID 0x0150 is noted in community USB captures
+# and Linux hid-ntrig community references for the TrackIR 4 Pro. The TrackIR 4
+# Pro provides 6DOF head tracking via NaturalPoint's proprietary USB protocol.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 4 Pro"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc.
+    product_id: 0x0150   # TrackIR 4 Pro -- community USB captures
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 2
+
+quirks:
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      The TrackIR 4 Pro uses NaturalPoint's proprietary USB protocol. 6DOF
+      head orientation data is not exposed as standard HID axes. OpenFlight
+      reads data via the TrackIR SDK or via opentrack's UDP protocol.
+  - id: OPENTRACK_ALTERNATIVE
+    description: >
+      opentrack (see opentrack.yaml) can receive TrackIR 4 Pro output and relay
+      it to simulators via freetrack or UDP protocols, removing dependency on
+      the NaturalPoint software.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 4 Pro. PID 0x0150 from community USB captures.
+    6DOF head tracking with proprietary protocol. Integration via TrackIR SDK
+    or opentrack. Last reviewed: 2026-06.

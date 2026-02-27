@@ -1,0 +1,59 @@
+# Desktop Aviator A320 FCU
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Desktop Aviator A320 FCU (Flight Control Unit) replica — an Airbus A320
+# autopilot panel for home cockpit builders. Includes SPD/MACH, HDG/TRK,
+# ALT, V/S, and FPA knobs plus AP/A-THR mode pushbuttons.
+# VID 0x2B67 / PID 0x0011 are community estimates from USB probe reports.
+# Note: VID 0x2B67 is also seen in VirtualFly probes; confirm PID with
+# Windows Device Manager before deploying.
+
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator A320 FCU"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — also seen in VirtualFly probes
+    product_id: 0x0011      # Community estimate — Desktop Aviator A320 FCU
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob, fpa_knob]
+    resolution_bits: 10
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0011 are community estimates. VID 0x2B67 also appears
+      in VirtualFly product probes; verify exact PID with Windows Device Manager.
+  - id: ENCODER_AXES
+    description: >
+      FCU knobs are relative rotary encoders presented as axis increments.
+      Treat as delta values rather than absolute positions in the profile.
+  - id: A320_FCU_LAYOUT
+    description: >
+      A320 FCU layout includes managed/selected mode push-pulls on SPD, HDG,
+      and ALT knobs. Push-pull actions map to dedicated button events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator A320 FCU — VID 0x2B67 / PID 0x0011 (est).
+    5 encoder axes, 20 buttons; A320 autopilot FCU replica for Airbus cockpits.
+    Wave-46 addition. Last reviewed: 2026-07.

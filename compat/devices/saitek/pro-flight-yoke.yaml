@@ -1,0 +1,57 @@
+# Saitek Pro Flight Yoke System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: linux-hardware.org reports "Pro Flight Yoke" at USB 06A3:0BAC
+# (23 probes, human-interface class). This is the standalone yoke; the
+# system bundle includes the Pro Flight Quadrant (PID 0x0C2D, separate device).
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Yoke System"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0BAC      # Confirmed via linux-hardware.org (23 probes, "Pro Flight Yoke")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 14
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKE_BIPOLAR_XY
+    description: >
+      X (aileron) and Y (elevator) axes are bipolar (centred). The Z axis
+      (throttle/twist handle) is unipolar (0 = idle, max = full). Apply
+      separate curve and deadzone profiles for the centred and unipolar axes.
+  - id: SEPARATE_QUADRANT
+    description: >
+      The Pro Flight Yoke System bundle includes a Pro Flight Quadrant throttle
+      unit (PID 0x0C2D) as a second independent USB HID device. Both must be
+      enumerated separately for full throttle-lever coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0BAC confirmed as "Pro Flight Yoke" via linux-hardware.org (23 probes).
+    Capabilities based on Saitek product specification and community reports.
+    The system bundle pairs this yoke with the Pro Flight Quadrant (0x0C2D).
+    The Logitech G-branded reissue (sold post-2016 under the Logitech name) is the same
+    hardware and uses the same USB IDs (VID 0x06A3, PID 0x0BAC); no separate
+    Logitech VID (0x046D) entry has been confirmed in any USB hardware database.
+    Last reviewed: 2026-02.

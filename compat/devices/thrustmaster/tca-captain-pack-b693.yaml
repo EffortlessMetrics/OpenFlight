@@ -1,0 +1,59 @@
+# Thrustmaster TCA Captain Pack Airbus (PID 0xB693)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster TCA Captain Pack Airbus Edition — bundle including TCA Sidestick
+# Airbus X (captain), TCA Quadrant Airbus, and T.Rudder Pedals. See also
+# tca-captain-kit.yaml (virtual bundle with product_id: ~).
+# PID 0xB693 is a community estimate for this bundle enumeration.
+# VID 0x044F confirmed (Thrustmaster). Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Captain Pack Airbus (PID 0xB693)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (GUILLEMOT) — confirmed
+    product_id: 0xB693      # Community estimate — TCA Captain Pack; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, throttle_l, throttle_r, flap, spoiler, toga, rudder]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB693 is a community estimate. Verify with lsusb. The virtual bundle
+      manifest tca-captain-kit.yaml uses product_id: ~ (null). The TCA sidestick
+      and throttle typically enumerate as separate USB HID devices.
+  - id: CAPTAIN_AIRBUS_SIDESTICK
+    description: >
+      The Airbus-style sidestick uses a side-grip geometry (not centred). The
+      x/y axes represent roll/pitch. Apply Airbus-profile response curves.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster TCA Captain Pack Airbus (PID 0xB693) community estimate.
+    See tca-captain-kit.yaml for virtual bundle. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,58 @@
+# Generic STM32-based USB HID Panel Controller (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0x5750 is a community estimate for
+# STM32 HID custom panel firmware. Note: VID 0x0483 is also used by VPForce
+# devices (see vpforce manifests); the STM32 HID panel is distinguished by
+# PID 0x5750. Common DIY button box / MFD panel controller.
+schema_version: "1"
+
+device:
+  name: "STM32-based USB HID Panel Controller (DIY)"
+  vendor: "STMicroelectronics"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (confirmed)
+    product_id: 0x5750   # Community estimate -- STM32 HID custom panel
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Generic (button box / panel, not a joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: STM_VID
+    description: >
+      VID 0x0483 is the STMicroelectronics VID used by STM32 USB devices.
+      This is the same VID as VPForce devices -- see vpforce manifests. The
+      STM32 HID panel is not a VPForce device; it is identified by PID 0x5750.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Button count and report layout vary by
+      builder firmware. The values listed represent a typical 32-button panel.
+  - id: FIRMWARE_CONFIGURABLE
+    description: >
+      Button count and HID report layout are defined by the STM32 firmware
+      loaded by the builder. Verify actual capabilities against the specific
+      firmware before mapping in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic STM32 DIY HID panel controller. VID 0x0483 confirmed (STM32 USB);
+    PID 0x5750 is a community estimate. Button layout firmware-defined.
+    Last reviewed: 2026-06.

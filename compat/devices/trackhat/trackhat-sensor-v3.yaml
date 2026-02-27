@@ -1,0 +1,58 @@
+# TrackHat Sensor v3 IMU Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x33DD (community estimate for TrackHat Ltd) / PID 0x0003 — community
+# estimate. The TrackHat Sensor v3 is an IMU-based head tracker using a
+# custom USB descriptor (distinct from the Arduino-VID-based v1/v2 revisions).
+# Provides 3DOF (yaw/pitch/roll) via onboard MEMS IMU; used with OpenTrack.
+schema_version: "1"
+
+device:
+  name: "TrackHat Sensor v3 IMU Head Tracker"
+  vendor: "TrackHat"
+  type: headtracker
+  usb:
+    vendor_id: 0x33DD       # Community estimate — TrackHat Ltd (UK)
+    product_id: 0x0003      # Community estimate — Sensor v3 custom descriptor
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [yaw, pitch, roll]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the Sensor v3. TrackHat VID 0x33DD
+      is also community-estimated. Earlier Sensor revisions use VID 0x2341
+      (Arduino). Verify with lsusb on hardware.
+  - id: IMU_6DOF_OUTPUT
+    description: >
+      Onboard MEMS IMU (typically ICM-20948 or similar) provides 3DOF orientation
+      at 250 Hz. Position (X/Y/Z) is not provided — this is a rotation-only
+      device.
+  - id: DISTINCT_FROM_CLIP_PLUS_V2
+    description: >
+      The Sensor (IMU-based) is distinct from the Clip+ v2 (trackhat-clip-plus-v2.yaml)
+      which is an IR LED clip for camera-based tracking.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    TrackHat Sensor v3 IMU head tracker. VID 0x33DD / PID 0x0003 estimated.
+    3DOF IMU rotation-only; 250 Hz. Wave-42 addition. Last reviewed: 2026-07.

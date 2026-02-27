@@ -1,0 +1,64 @@
+# VIRPIL VPC Throttle Panel III
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0267 is a community estimate for the Throttle Panel III.
+# The VPC Throttle Panel (vpc-throttle-panel.yaml) and Throttle Panel II
+# (vpc-throttle-panel-ii.yaml) are confirmed VIRPIL products. The Throttle
+# Panel III is an updated revision with revised switch layout and added
+# dual-axis mini-sticks. PID estimated adjacent to Throttle Panel II range.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle Panel III"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0267   # Community estimate — Throttle Panel III
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [slider1, slider2, mini_x, mini_y]
+    resolution_bits: 14
+  buttons: 40
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0267 is a community estimate for the Throttle Panel III.
+      VPC Throttle Panel I and II use different PIDs (see vpc-throttle-panel.yaml
+      and vpc-throttle-panel-ii.yaml). Confirm with VIRPIL Configurator or lsusb
+      on real hardware.
+  - id: DUAL_MINI_STICK
+    description: >
+      The Throttle Panel III adds a pair of mini-stick axes (mini_x, mini_y) not
+      present in earlier Throttle Panel revisions. These map to CURSOR or
+      slew-control inputs in the active profile.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Switch positions, encoder mapping, and mini-stick calibration are all
+      configurable in VIRPIL Configurator.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Throttle Panel III — updated revision with dual mini-sticks.
+    VID 0x3344 confirmed; PID 0x0267 is a community estimate.
+    See vpc-throttle-panel.yaml and vpc-throttle-panel-ii.yaml for earlier revisions.
+    Last reviewed: 2026-06.

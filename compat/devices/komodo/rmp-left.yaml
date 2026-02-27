@@ -1,0 +1,48 @@
+# Komodo Sim Radio Management Panel (Left)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim Radio Management Panel Left (RMP-L) — replicates the Airbus
+# A320/A330 left-seat RMP with COM1/NAV1/ADF frequency selectors and
+# transfer/monitor buttons. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim Radio Management Panel Left"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0301  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 2
+    names: [freq_mhz, freq_khz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for Komodo Sim; verify with lsusb."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0301 is a placeholder; must be verified before production use."
+  - id: ENCODER_AS_AXIS
+    description: "Frequency MHz and kHz selectors may report as encoders or axes."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Komodo Sim RMP Left. VID/PID unconfirmed. Pairs with rmp-right.yaml. Last reviewed: 2026-02."

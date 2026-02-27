@@ -1,0 +1,51 @@
+# Speedlink DARK TORNADO Flight Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Speedlink DARK TORNADO — an entry-level to mid-range flight joystick sold
+# across European retail markets. Provides 4 axes and 12 buttons with hat switch.
+# VID 0x1781 (community estimate). PID 0x0C40 community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Speedlink DARK TORNADO Flight Joystick"
+  vendor: "Speedlink"
+  usb:
+    vendor_id: 0x1781       # Community estimate — Speedlink variant; confirm with lsusb
+    product_id: 0x0C40      # Community estimate — DARK TORNADO; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 / PID 0x0C40 are community estimates for the DARK TORNADO.
+      Other Speedlink products use GreenAsia (0x0E8F) or Cypress (0x04B4) as
+      OEM chipset VIDs. Confirm with lsusb. See also speedlink/phantom-hawk-1781.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink DARK TORNADO flight joystick. VID 0x1781 / PID 0x0C40 community
+    estimates. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

@@ -48,3 +48,34 @@ support:
     simulated: true
     hil: false
   notes: "HID report format validated by property tests and fuzz target."
+
+firmware:
+  min_version: "4.0"
+  max_version: null
+  notes: >
+    VPforce companion app required for firmware updates and FFB torque tuning.
+    Rhino v2 and v3 share the same firmware line. Ensure the companion app
+    version matches the installed firmware. FFB effect set is identical across
+    v2 (0xA1C0) and v3 (0xA1C1) hardware revisions.
+
+driver:
+  type: vpforce_companion
+  notes: >
+    VPforce companion app required for firmware updates, torque limit
+    configuration, and centre-spring calibration. Device enumerates as standard
+    HID; the companion app communicates over the same USB HID interface using
+    vendor-defined reports.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary FFB use case. Spring and damper effects driven by DCS FFB API; constant force for G-loading."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "FFB effects supported via SimConnect force feedback translation. Spring/damper mapped to control feel."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "No native X-Plane FFB API; OpenFlight synthesises spring/damper from flight model data."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Native FFB support in IL-2. Spring, damper, and constant effects all active."

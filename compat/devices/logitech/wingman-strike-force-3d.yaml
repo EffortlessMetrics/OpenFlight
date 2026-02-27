@@ -1,0 +1,61 @@
+# Logitech Wingman Strike Force 3D Joystick (Force Feedback)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed (Logitech International SA).
+# PID 0xC20E confirmed: usb-ids.gowdy.us ("Logitech WingMan Strike Force 3D"),
+# linux-hardware.org (multiple probes), and the Linux kernel FF driver.
+# The WingMan Strike Force 3D is a force-feedback joystick released c. 2002,
+# featuring 6-axis FFB, twist rudder, and throttle. Popular for CFS and early DCS.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Strike Force 3D"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech International SA
+    product_id: 0xC20E  # WingMan Strike Force 3D — confirmed via usb-ids.gowdy.us
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, triangle]
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: FFB_LOGITECH_FORCE
+    description: >
+      Force feedback is implemented via the Logitech HID FF protocol (not the
+      Windows DirectInput FFB path). Linux uses the hid-logitech-hidpp or
+      legacy hid-logitech driver. On Windows, Logitech Gaming Software or
+      G HUB may be required for FFB to function in older games.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. Z axis is the throttle lever
+      integrated into the stick base.
+  - id: FFB_REQUIRES_DRIVER
+    description: >
+      Force feedback requires the Logitech gaming driver on Windows. Without
+      the driver, the stick functions as a standard HID joystick with no FFB.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC20E confirmed from usb-ids.gowdy.us and linux-hardware.org (multiple
+    probes). Logitech force-feedback joystick, popular in early 2000s flight sims.
+    FFB requires Logitech driver on Windows. Linux FFB via hid-logitech. Last reviewed: 2026-02.

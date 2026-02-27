@@ -1,0 +1,52 @@
+# Skalarki Electronics Boeing 737 Overhead Panel — Right Section
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Right-section companion to boeing-737-overhead-l.yaml.
+# Covers fire detection, anti-ice, lighting, and maintenance panels on the
+# right side of the Boeing 737 NG overhead panel replica.
+# VID/PID unconfirmed; same hardware family as the left section.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki B737 Overhead Panel — Right Section"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — Microchip VID
+    product_id: 0xF101      # Placeholder — PID_UNCONFIRMED (Skalarki right overhead)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 60               # Fire, anti-ice, lighting, nav/comm, maintenance panels
+  hats: 0
+  encoders: 2               # Air conditioning flow selectors
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. Companion to boeing-737-overhead-l.yaml. Contact
+      Skalarki or inspect with USBView for actual descriptor values.
+  - id: GUARDED_SWITCHES
+    description: >
+      Fire-handle and engine start switches have physical guards.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki B737 Overhead Panel right section. VID/PID unconfirmed.
+    Pairs with boeing-737-overhead-l.yaml. Last reviewed: 2026-06.

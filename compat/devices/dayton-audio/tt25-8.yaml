@@ -1,0 +1,63 @@
+# Dayton Audio TT25-8 Puck Tactile Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Dayton Audio TT25-8 "Puck" — compact tactile transducer widely used in DIY
+# sim rig builds. Audio-driven via amplifier; no USB HID interface.
+# Tracked for sim-rig accessory compatibility documentation.
+schema_version: "1"
+
+device:
+  name: "Dayton Audio TT25-8 Puck Tactile Transducer"
+  vendor: "Dayton Audio"
+  usb:
+    vendor_id: 0x0000   # No USB interface — audio-driven transducer
+    product_id: 0x0000  # No USB interface — audio-driven transducer
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — audio output only, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: NO_USB_INTERFACE
+    description: >
+      The TT25-8 is a passive tactile transducer ("puck"). It has no USB
+      connection; it is driven by a dedicated audio amplifier. VID/PID
+      fields are placeholders only.
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: >
+      Haptic output is driven by a line-level audio signal. OpenFlight does
+      not directly control this device; audio routing is handled by the OS or
+      a companion application (e.g., SimShaker, SimHub, NLT, ButtKicker
+      software). Frequency response: 20–200 Hz nominal; 8 Ω impedance.
+  - id: NO_HID_INPUT
+    description: >
+      Generates no HID input events. Tracked for sim-rig accessory and
+      tactile feedback compatibility documentation only.
+  - id: DIY_MULTI_UNIT
+    description: >
+      The TT25-8 is commonly used in sets of 4–8 units per rig, distributed
+      under the seat, rudder pedal plate, and stick base. Multiple units share
+      a single amplifier output (series/parallel wiring to match impedance).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Dayton Audio TT25-8 "Puck" tactile transducer. Audio-driven, no USB HID.
+    Popular DIY option for sim rig haptic feedback at 25 W RMS per unit (8 Ω).
+    Audio routing via SimShaker/SimHub recommended. Last reviewed: 2026-06.

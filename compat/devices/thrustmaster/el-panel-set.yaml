@@ -1,0 +1,53 @@
+# Thrustmaster EL Panel Set (HOTAS Cougar)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Thrustmaster EL Panel Set is an electroluminescent overlay and button
+# panel accessory for the HOTAS Cougar, providing illuminated panel legends
+# for the Cougar MFDs (f16-mfd-1.yaml, f16-mfd-2.yaml). The EL Panel Set
+# itself connects via USB as a separate HID device for button inputs.
+# PID is a community estimate in the Cougar accessories range.
+# PID 0xB108 is an estimate — verify via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster EL Panel Set (HOTAS Cougar)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB108   # Community estimate — EL Panel Set accessory
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB108 is a community estimate. The HOTAS Cougar joystick uses
+      0xB10E and throttle uses 0xB10F (see hotas-cougar.yaml). Update when
+      the EL Panel Set PID is confirmed from lsusb or vintage community archives.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster EL Panel Set — electroluminescent Cougar MFD button panel.
+    Intended for use alongside the HOTAS Cougar (hotas-cougar.yaml) and the
+    Cougar MFD panels (f16-mfd-1.yaml, f16-mfd-2.yaml, mfd-cougar-pack.yaml).
+    PID 0xB108 is unconfirmed. Last reviewed: 2026-02.

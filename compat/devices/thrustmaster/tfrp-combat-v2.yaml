@@ -1,0 +1,47 @@
+# Thrustmaster T.Flight Combat Pedals V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB6A3 — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Combat Pedals V2"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB6A3      # Community estimate — TFRP Combat V2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Thrustmaster T.Flight Combat Pedals V2. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TFRP Combat V2 — updated military pedals. PID 0xB6A3 community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs

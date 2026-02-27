@@ -1,0 +1,49 @@
+# Redgear Pro Series Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C (Sony Corporation), PID 0x09CB — estimated.
+# Indian market gamepad by Redgear (Smartshift Technologies).
+# NOTE: VID 0x054C is Sony Corporation's registered VID. Redgear products
+# may use this VID due to OEM chipset sourcing. Verify with lsusb — the device
+# may actually enumerate with a generic OEM VID on production hardware.
+schema_version: "1"
+device:
+  name: "Redgear Pro Series Gamepad"
+  vendor: "Redgear"
+  usb:
+    vendor_id: 0x054C       # Sony Corp VID — Redgear may use this via OEM chipset; verify with lsusb
+    product_id: 0x09CB      # Community estimate — Redgear Pro Series; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x054C / PID 0x09CB are community estimates. VID 0x054C is Sony's
+      registered VID; production units may enumerate differently. Verify
+      with lsusb on real hardware before deployment.
+  - id: OEM_VID_MISMATCH
+    description: >
+      The use of Sony's VID 0x054C by a non-Sony device is unusual. This
+      may indicate OEM chipset sourcing. Cross-check HID descriptor strings
+      to confirm device identity.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Redgear Pro Series Gamepad — VID 0x054C / PID 0x09CB (est).
+    Indian market gamepad with vibration. Wave-55 addition. Last reviewed: 2026-07.

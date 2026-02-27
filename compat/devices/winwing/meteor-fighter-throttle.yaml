@@ -1,0 +1,53 @@
+# WinWing HOTAS METEOR Fighter Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBF20 is a community estimate based on WinWing's PID allocation pattern
+# for the Orion 3 generation (0xBD00–0xBF00 range). The METEOR Fighter Throttle
+# was announced in 2024 and no hardware probe or USB descriptor capture has
+# confirmed the PID. Update this manifest when a confirmed PID is available.
+schema_version: "1"
+
+device:
+  name: "WinWing HOTAS METEOR Fighter Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF20    # Community estimate — unconfirmed; confirm with lsusb or USBView
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, z, rx, ry, slider]
+    resolution_bits: 12
+  buttons: 44
+  hats: 1
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF20 is a community estimate for the METEOR Fighter Throttle inferred
+      from WinWing's allocation pattern. No hardware probe or open-source project
+      has confirmed this value. Do not use for production device matching until
+      verified with lsusb or USBView on real hardware. Submit confirmed PID via PR.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing METEOR Fighter Throttle (2024 announcement). Designed for DCS
+    and MSFS combat aircraft. Features dual-zone throttle handles, AFCS
+    modes, and an extensive button array. PID is a community estimate;
+    confirm with hardware probe. VID 0x4098 is confirmed for all WinWing
+    products. Last reviewed: 2026-02.

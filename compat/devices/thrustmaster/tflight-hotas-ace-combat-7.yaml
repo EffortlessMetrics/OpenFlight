@@ -1,0 +1,43 @@
+# Thrustmaster T.Flight HOTAS Ace Combat 7 Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB687 — community-reported estimate.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS Ace Combat 7 Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB687
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB687 is a community-reported estimate. Confirm with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Special Ace Combat 7 branded T.Flight HOTAS. Same mechanical design as
+    T.Flight HOTAS X with co-branded livery. Tier 2. Last reviewed: 2026-02.

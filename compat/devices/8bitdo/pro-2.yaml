@@ -1,0 +1,50 @@
+# 8BitDo Pro 2 USB Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd (registered USB vendor).
+# PID 0x6003 confirmed: kernel HID tables and linux-hardware.org.
+# Modern gamepad with back paddles and customisable profiles. Used by
+# some sim pilots for secondary cockpit panel control.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Pro 2"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6003  # Pro 2 — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 18
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_MODE_AVAILABLE
+    description: >
+      Pro 2 supports XInput and HID modes. This manifest covers HID mode.
+  - id: BACK_PADDLES
+    description: "Four back paddles report as additional buttons (B17-B20)."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Pro 2 gamepad. VID 0x2DC8, PID 0x6003 confirmed from kernel
+    HID tables. Back paddles useful for cockpit shortcuts.
+    Last reviewed: 2026-06.

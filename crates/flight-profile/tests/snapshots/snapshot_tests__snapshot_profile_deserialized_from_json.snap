@@ -1,0 +1,17 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+schema: flight.profile/1
+sim: msfs
+aircraft:
+  icao: C172
+axes:
+  pitch:
+    deadzone: 0.03
+    expo: 0.2
+    slew_rate: 1.2
+    detents: []
+    curve: ~
+    filter: ~
+pof_overrides: ~

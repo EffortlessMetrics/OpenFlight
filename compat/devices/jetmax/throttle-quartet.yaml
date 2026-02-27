@@ -1,0 +1,57 @@
+# Jetmax 4-Engine Throttle Quartet Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Jetmax Throttle Quartet is a four-engine throttle quadrant designed
+# for Boeing 747/777/787 and Airbus A340/A380 simulation. Provides four
+# independent throttle levers with autothrottle disengage triggers.
+# VID 0x1D50 is used by some Jetmax/Flightsim.io open-source hardware projects.
+# PID 0x6120 is a community estimate — confirm on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "Jetmax 4-Engine Throttle Quartet Quadrant"
+  vendor: "Jetmax (ELMO)"
+  usb:
+    vendor_id: 0x1D50       # OpenMoko / Flightsim.io (community-used VID)
+    product_id: 0x6120      # Community estimate
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle_1, throttle_2, throttle_3, throttle_4, speed_brake]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6120 is a community estimate. Confirm via lsusb on real hardware.
+  - id: FOUR_LEVER_DETENTS
+    description: >
+      Each throttle lever has mechanical detents at IDLE and MAX thrust gates.
+      Use the detent_map binding to distinguish idle-stop from reverse-idle.
+  - id: AT_DISENGAGE_TRIGGERS
+    description: >
+      Each lever has an AT (autothrottle) disengage trigger that reports as
+      individual buttons. Map to sim autothrottle_disconnect events per engine.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Jetmax 4-engine throttle quadrant. VID 0x1D50 / PID 0x6120 est.
+    For single-engine A320 throttle see throttle-a320.yaml; for 737 see mcp-737.yaml.
+    Last reviewed: 2026-06.

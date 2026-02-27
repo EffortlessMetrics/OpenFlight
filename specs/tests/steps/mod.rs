@@ -6,6 +6,7 @@
 pub mod axis_processing;
 pub mod coverage;
 pub mod documentation;
+pub mod new_adapters;
 pub mod tflight_hotas4;
 
 use crate::FlightWorld;
@@ -15,6 +16,7 @@ use cucumber::given;
 pub use axis_processing::*;
 pub use coverage::*;
 pub use documentation::*;
+pub use new_adapters::*;
 pub use tflight_hotas4::*;
 
 #[given("the blackbox recording system is available")]

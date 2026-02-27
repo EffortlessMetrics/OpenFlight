@@ -1,0 +1,64 @@
+# OpenSimPit DIY Cockpit Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes — open-source USB VID for community projects).
+# PID 0x5100 — community estimate for OpenSimPit, an open-source DIY cockpit
+# project popular in the DCS and MSFS communities. OpenSimPit uses Arduino/
+# Teensy-based hardware with custom HID firmware to expose cockpit switches,
+# buttons, and analogue inputs. See https://opensimpit.com for details.
+schema_version: "1"
+
+device:
+  name: "OpenSimPit DIY Cockpit Controller"
+  vendor: "OpenSimPit (community)"
+  usb:
+    vendor_id: 0x1209       # pid.codes — open-source community USB VID
+    product_id: 0x5100      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 10
+  buttons: 64
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5100 is a community estimate for OpenSimPit. The actual PID
+      depends on the firmware version and builder configuration.
+      Verify with lsusb on real hardware.
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Axis and button counts depend heavily on the OpenSimPit firmware
+      configuration. The values above represent a typical full-cockpit build.
+  - id: SHARED_VID
+    description: >
+      VID 0x1209 (pid.codes) is shared across many open-source USB projects.
+      Multiple different devices may enumerate with this VID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenSimPit open-source DIY cockpit controller.
+    VID 0x1209 is the pid.codes open-source community VID.
+    PID 0x5100 is a community estimate; verify with lsusb.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

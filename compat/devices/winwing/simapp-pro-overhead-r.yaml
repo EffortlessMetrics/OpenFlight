@@ -1,0 +1,60 @@
+# WinWing SimAppPro Overhead Panel (Right Section)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBF31 is a community estimate for the SimAppPro Overhead Right panel.
+# Pairs with the Overhead Left section (simapp-pro-overhead-l.yaml) to form
+# the complete A320 overhead panel replica. Right section covers anti-ice,
+# lighting, air bleed, and conditioning system controls.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro Overhead Panel (Right)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF31   # Community estimate — SimAppPro Overhead Right
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF31 is a community estimate for the Overhead Right panel section.
+      The Overhead Left is estimated at 0xBF30 (simapp-pro-overhead-l.yaml).
+      Confirm with lsusb before deployment.
+  - id: A320_OVERHEAD_SPECIFIC
+    description: >
+      Right section covers A320 overhead: anti-ice, probe heat, window heat,
+      wiper selectors, exterior lighting, interior lighting, air conditioning
+      packs, and bleed air management. Button assignments follow A320 layout.
+  - id: OVERHEAD_PAIR
+    description: >
+      Pairs with SimAppPro Overhead Left (simapp-pro-overhead-l.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro Overhead Panel (Right) — A320 overhead right section.
+    PID 0xBF31 is a community estimate. Pairs with Overhead Left
+    (simapp-pro-overhead-l.yaml). Last reviewed: 2026-06.

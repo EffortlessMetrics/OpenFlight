@@ -1,0 +1,58 @@
+# VKB T-Rudder (Base Model)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed (VKB-Sim Europe).
+# PID 0x0300 is a community estimate for the base-generation VKB T-Rudder.
+# The Mk.IV (PID 0x0126) and Mk.V variants have separate manifests.
+# This manifest covers the base/original T-Rudder unit without the
+# Mk designation. Confirm the PID with lsusb before deploying.
+schema_version: "1"
+
+device:
+  name: "VKB T-Rudder"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim Europe
+    product_id: 0x0300      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, brake_left, brake_right]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0300 is a community estimate for the base T-Rudder unit.
+      The T-Rudder Mk.IV uses PID 0x0126 (t-rudder-mk4.yaml).
+      Confirm with lsusb and update this manifest accordingly.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      Rudder and toe-brake axes use contactless Hall-effect sensors.
+      No firmware curve is applied; configure deadzones in the profile.
+  - id: NO_BUTTON_INPUTS
+    description: >
+      The base T-Rudder has no physical buttons or hats. Only three analog
+      axes are exposed via USB HID.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB T-Rudder (base model). PID 0x0300 is a community estimate.
+    See t-rudder-mk4.yaml (PID 0x0126) for the Mk.IV revision.
+    Last reviewed: 2026-06.

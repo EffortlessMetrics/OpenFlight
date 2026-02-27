@@ -1,0 +1,57 @@
+# OpenHornet F/A-18C Console Panel (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenHornet is a community open-source F/A-18C full-scale cockpit project.
+# Individual panels (UFC, DDI bezels, overhead) enumerate as HID devices
+# via custom Arduino firmware. VID varies by board; listed as community
+# VID_UNCONFIRMED. Tier 3 support — community-tested only.
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet F/A-18C Console Panel"
+  vendor: "OpenHornet Project (DIY)"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder — board-dependent)
+    product_id: 0x8040  # OpenHornet custom firmware — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [bingo_knob, radar_alt_knob]
+    resolution_bits: 8
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      OpenHornet panels use various Arduino-compatible boards. VID/PID depend
+      on the specific board and firmware build. Profile matching should use
+      USB string descriptor "OpenHornet" if available.
+  - id: PANEL_DEVICE
+    description: "Panel controller with switches, encoders, and indicator LEDs."
+  - id: MULTI_PANEL_SYSTEM
+    description: >
+      A full OpenHornet cockpit may include 10-20 separate USB panels.
+      Each panel enumerates independently. Apply this manifest to each panel
+      and differentiate by USB port or device index.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet open-source F/A-18C DIY cockpit panel. Community project at
+    github.com/OpenHornet. VID/PID board/firmware dependent. Tier 3.
+    Last reviewed: 2026-06.

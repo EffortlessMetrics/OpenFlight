@@ -1,0 +1,57 @@
+# RealSimGear G3X Touch GPS Unit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed: RealSimGear (Microchip Technology licensed VID).
+# PID 0xF290 is a community estimate for the G3X Touch GPS unit bezel.
+# The Garmin G3X Touch GPS is the panel-mounted navigator/EFB for the G3X
+# Touch EFIS suite. Distinct from the G3X MFD/PFD displays (g3x-mfd.yaml,
+# g3x-pfd.yaml) and the G3X Touch integrated display (g3x-touch.yaml).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3X Touch GPS Unit"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF290   # Community estimate — G3X Touch GPS bezel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  encoders: 2            # Inner/outer cursor knobs
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF290 is a community estimate for the G3X Touch GPS bezel.
+      Confirm with lsusb on real hardware. See also g3x-touch.yaml,
+      g3x-mfd.yaml, g3x-pfd.yaml for related G3X Touch display bezels.
+  - id: TOUCH_SCREEN_PROXY
+    description: >
+      The G3X Touch GPS unit bezel provides physical button proxies for
+      the touchscreen GPS interface. Page, FPL, DIRECT, PROC, and cursor
+      knobs replicate the most-used hardware controls of the G3X GPS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G3X Touch GPS Unit Bezel — physical controls for the Garmin
+    G3X Touch GPS navigator. VID 0x04D8 confirmed; PID 0xF290 is a community
+    estimate. See g3x-touch.yaml for the display bezel. Last reviewed: 2026-06.

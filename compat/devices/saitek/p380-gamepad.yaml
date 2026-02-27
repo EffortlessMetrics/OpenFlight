@@ -1,0 +1,54 @@
+# Saitek P380 Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Saitek P380 is a budget USB gamepad from the mid-2000s era with a
+# dual analog stick layout and a compact form factor. Occasionally used in
+# flight sim setups as a secondary input for view control or autopilot mode
+# selection. VID 0x06A3 (Saitek) confirmed. PID 0x0111 sourced from
+# kernel community reports.
+
+schema_version: "1"
+
+device:
+  name: "Saitek P380 Gamepad"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC (confirmed)
+    product_id: 0x0111      # Community-reported PID for the P380
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0111 is from community USB captures. Cross-reference with
+      linux-hardware.org or Saitek community archives to confirm.
+  - id: GAMEPAD_USE
+    description: >
+      The P380 is a standard gamepad, not a flight-specific device. Used
+      in flight sim for secondary controls (view, camera, autopilot modes)
+      or as a budget joystick substitute with axis scaling.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek P380 Gamepad. VID 0x06A3 confirmed; PID 0x0111 community-reported.
+    Legacy mid-2000s budget gamepad. Last reviewed: 2026-06.

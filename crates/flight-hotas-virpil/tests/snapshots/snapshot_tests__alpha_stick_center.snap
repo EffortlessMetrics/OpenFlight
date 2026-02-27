@@ -1,0 +1,22 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcAlphaInputState {
+    axes: VpcAlphaAxes {
+        x: 0.5,
+        y: 0.5,
+        z: 0.5,
+        sz: 0.5,
+        sl: 0.5,
+    },
+    buttons: VpcAlphaButtons {
+        raw: [
+            0,
+            0,
+            0,
+            240,
+        ],
+        hat: Center,
+    },
+}

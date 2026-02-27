@@ -1,0 +1,60 @@
+# Sim-Labs GT Pro Motion Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC / community USB HID VID), PID 0x05DE — community estimate.
+# The Sim-Labs GT Pro is a motion seat / haptic feedback platform designed for
+# sim racing cockpits. Some configurations expose motion telemetry feedback
+# as a USB HID device for software integration. Primarily used in racing sim
+# setups but compatible with flight sim motion profiles via telemetry bridges.
+schema_version: "1"
+
+device:
+  name: "Sim-Labs GT Pro Motion Seat"
+  vendor: "Sim-Labs / SimRacingBay"
+  type: other
+  usb:
+    vendor_id: 0x16C0       # PJRC / community HID VID (est — varies by firmware)
+    product_id: 0x05DE      # Community estimate — Sim-Labs GT Pro motion seat
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (motion/haptic platform)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x05DE are community estimates. Verify with lsusb or
+      Windows Device Manager on target hardware.
+  - id: MOTION_PLATFORM
+    description: >
+      This device is a motion seat platform, not an input controller.
+      USB HID interface is used for motion command output from the host.
+      OpenFlight communicates motion cues via telemetry output rather than
+      reading HID input reports.
+  - id: RACING_PRIMARY_USE
+    description: >
+      The GT Pro is designed for sim racing; flight sim motion profiles
+      require custom telemetry mapping via a bridge plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sim-Labs GT Pro motion seat — output-only motion platform.
+    VID 0x16C0 / PID 0x05DE (est). Racing primary; flight use via telemetry bridge.
+    Wave-40 addition. Last reviewed: 2026-07.

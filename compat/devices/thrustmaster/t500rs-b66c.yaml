@@ -1,0 +1,69 @@
+# Thrustmaster T500 RS Racing Wheel (Alt PID 0xB66C)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB66C is a community-reported alternate PID for the T500 RS.
+# The primary confirmed T500 RS manifest uses PID 0xB65D (t500rs.yaml).
+# PID 0xB66C may correspond to a regional firmware variant or production run.
+# Verify with lsusb before production use.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T500 RS Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot (confirmed)
+    product_id: 0xB66C      # Community-reported alt PID — primary is 0xB65D (t500rs.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, triangle]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB66C is a community-reported alternate for the T500 RS.
+      The confirmed primary PID is 0xB65D (t500rs.yaml). If 0xB66C does not
+      enumerate, fall back to t500rs.yaml. Verify with lsusb on real hardware.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (1080°, 16-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar); Rx = clutch (T500 RS Advanced pedal set).
+      Map X to rudder in flight sim; Z/Rz to throttle/toe-brake.
+  - id: BELT_DRIVE_FFB
+    description: >
+      Belt-drive servo motor with high-fidelity DirectInput FFB.
+      Spring and damper effects provide realistic rudder centering in flight sim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T500 RS alternate PID 0xB66C. Primary manifest is t500rs.yaml
+    (PID 0xB65D). VID 0x044F confirmed. Belt-drive belt-servo FFB wheel;
+    1080° rotation. PID estimated from community sources. Wave-63 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

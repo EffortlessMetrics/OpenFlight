@@ -1,0 +1,59 @@
+# NaturalPoint Slim — 0x131D / 0x0201
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x131D (NaturalPoint Inc.), PID 0x0201 (estimated).
+# NaturalPoint Slim is a compact head tracking clip accessory in the TrackIR
+# ecosystem, designed for use with flight simulation headsets and VR adapters.
+# PID 0x0201 is a community estimate adjacent to OptiTrack (0x0200).
+# Confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint Slim"
+  vendor: "NaturalPoint Inc."
+  type: head_tracker_accessory
+  usb:
+    vendor_id: 0x131D       # NaturalPoint Inc. (confirmed)
+    product_id: 0x0201      # Community estimate — NaturalPoint Slim; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (accessory)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0201 is a community estimate adjacent to NaturalPoint OptiTrack (0x0200).
+      Verify with lsusb on target hardware.
+  - id: ACCESSORY_ONLY
+    description: >
+      The NaturalPoint Slim is a passive clip accessory and does not transmit
+      HID input data independently. It operates in conjunction with a TrackIR
+      camera for head tracking.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint Slim (0x131D/0x0201). PID community estimate.
+    Compact head tracking clip accessory. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

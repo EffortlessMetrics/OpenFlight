@@ -1,0 +1,52 @@
+# WinWing F-15 Throttle (PID 0x0219)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (SimFlight Technology).
+# PID 0x0219 is a community estimate for the WinWing F-15 throttle unit.
+# The Orion 3 F-15EX throttle (orion3-f15ex-throttle.yaml) uses 0xBD42.
+# 0x0219 is adjacent to the SimAppPro low-range PID block.
+schema_version: "1"
+
+device:
+  name: "WinWing F-15 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0219   # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 5
+    names: [left_throttle, right_throttle, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 40
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0219 is a community estimate. The confirmed Orion 3 F-15EX throttle
+      uses 0xBD42. Verify 0x0219 via SimAppPro USB info or lsusb on real hardware.
+  - id: SPLIT_THROTTLE
+    description: >
+      Dual-handle F-15 throttle with independent left and right lever axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-15 Throttle, PID 0x0219 community estimate. VID 0x4098 confirmed.
+    See also orion3-f15ex-throttle.yaml (0xBD42) for the confirmed Orion 3 variant.
+    Last reviewed: 2026-06.

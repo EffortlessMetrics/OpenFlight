@@ -1,0 +1,59 @@
+# Pimax 4K OLED VR Headset — 0x0483 / 0x0101
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x0483 (STMicroelectronics), PID 0x0101 (estimated).
+# The Pimax 4K is a single-panel OLED VR headset (3840×2160 per eye) using
+# STMicro VID for its firmware/HID interface, consistent with other Pimax
+# headsets documented in this directory.
+# PID 0x0101 is a community estimate — confirm with lsusb on target hardware.
+# Adjacent Pimax PIDs: 0x0100 (8KX, pimax-8kx.yaml), 0x0119 (pimax-8kx-0483.yaml).
+schema_version: "1"
+
+device:
+  name: "Pimax 4K OLED"
+  vendor: "Pimax"
+  type: vr_headset
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — used by Pimax for firmware interface
+    product_id: 0x0101      # Community estimate — Pimax 4K; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (HMD/tracker, not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0101 is a community estimate. Adjacent Pimax STMicro PIDs are
+      0x0100 (Pimax 8KX) and 0x0119 (Pimax 8KX alternate endpoint).
+      Verify with lsusb on target hardware.
+  - id: PIMAX_LIGHTHOUSE_TRACKING
+    description: >
+      Pimax 4K uses inside-out tracking. Pose data is delivered via the Pimax
+      runtime rather than directly through this HID endpoint.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pimax 4K OLED VR headset (0x0483/0x0101). PID community estimate.
+    Single-panel OLED HMD. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - dcs

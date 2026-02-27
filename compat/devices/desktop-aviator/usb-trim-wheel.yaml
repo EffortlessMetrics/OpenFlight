@@ -1,0 +1,44 @@
+# Desktop Aviator USB Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0011 estimated for DAV Trim Wheel.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator USB Trim Wheel"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0011
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 10
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: DAV_TRIM_WHEEL
+    description: >
+      Single-axis USB trim wheel from Desktop Aviator product line.
+      Standard rotary encoder for elevator trim control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator USB Trim Wheel. PID 0x0011 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

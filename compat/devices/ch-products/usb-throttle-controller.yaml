@@ -1,0 +1,57 @@
+# CH Products USB Throttle Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E confirmed: CH Products (CH Handheld).
+# PID 0x00FF is community-reported for the standalone USB Throttle Controller
+# (distinct from the Pro Throttle at 0x00F1 and the Eclipse Yoke/throttle
+# combination). The USB Throttle Controller is a four-lever throttle quadrant
+# for GA and airliner use. Confirm PID with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "CH Products USB Throttle Controller"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products
+    product_id: 0x00FF      # Community-reported; distinct from Pro Throttle (0x00F1)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, throttle3, throttle4]
+    resolution_bits: 8
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00FF is community-reported for the USB Throttle Controller.
+      Verify with lsusb before enabling production device matching. The
+      CH Pro Throttle uses 0x00F1; this is a different product in the
+      CH Products line-up.
+  - id: FOUR_LEVER_UNIPOLAR
+    description: >
+      All four throttle levers are unipolar (0 = closed, max = full thrust).
+      Map each lever to a separate engine throttle in multi-engine profiles.
+      No spring-return centering on any lever.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    CH Products USB Throttle Controller — four-lever GA/airliner throttle
+    quadrant. PID 0x00FF is community-reported; confirm with lsusb.
+    Distinct from the CH Pro Throttle (0x00F1, pro-throttle.yaml).
+    Last reviewed: 2026-02.

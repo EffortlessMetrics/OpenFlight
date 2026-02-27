@@ -1,0 +1,48 @@
+# HORI Ace Combat HOTAS (PS5 edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: Hori Co., Ltd.
+# PID 0x0152 is a community estimate for the HORI Ace Combat HOTAS Flight
+# Stick PS5 edition (released alongside Ace Combat 7 / PS5 updates).
+# Distinct from the PS4 edition (ace-combat-7-hotas.yaml, PID 0x0103).
+schema_version: "1"
+
+device:
+  name: "HORI Ace Combat HOTAS (PS5)"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D    # Hori Co., Ltd.
+    product_id: 0x0152   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0152 is a community estimate for the PS5 edition. The PS4 edition
+      uses PID 0x0103 (ace-combat-7-hotas.yaml). Confirm with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI Ace Combat HOTAS PS5 edition. PID 0x0152 unconfirmed. VID 0x0F0D = HORI.
+    Used with PS5 and PC via USB HID. See ace-combat-7-hotas.yaml for PS4 edition.
+    Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# Thrustmaster MFD Cougar (PID 0x0406 single-panel variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (ThrustMaster GmbH). PID 0x0406 is a community estimate for
+# the Thrustmaster MFD Cougar as a single standalone panel. The pack-level
+# manifest (two panels + USB hub, PIDs 0xB351 and 0xB352) is in
+# mfd-cougar-pack.yaml / f16-mfd-1.yaml / f16-mfd-2.yaml. PID 0x0406 may
+# represent an earlier revision or a different USB enumeration path.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster MFD Cougar"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0406   # Community estimate — see also 0xB351/0xB352 panel PIDs
+  hid:
+    usage_page: 0x01
+    usage: 0x06           # Keyboard (buttons only)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 19
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0406 is a community estimate for a standalone MFD Cougar panel.
+      Current confirmed PIDs are 0xB351 (panel 1) and 0xB352 (panel 2) — see
+      f16-mfd-1.yaml and f16-mfd-2.yaml. Confirm from lsusb on real hardware.
+  - id: PANEL_BUTTONS_ONLY
+    description: >
+      The MFD Cougar has no analog axes — only 19 digital buttons arranged
+      around the F-16 MFD bezel. All buttons map to HID keyboard-class usages.
+  - id: DCS_PRIMARY
+    description: >
+      Primarily used in DCS World for MFD/MFCD page navigation and OSB button
+      functions. Each button can be independently bound via DCS input bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster MFD Cougar — PID 0x0406 community estimate variant. See
+    f16-mfd-1.yaml (0xB351) and f16-mfd-2.yaml (0xB352) for confirmed panel PIDs.
+    VID 0x044F confirmed for Thrustmaster. Last reviewed: 2026-07.

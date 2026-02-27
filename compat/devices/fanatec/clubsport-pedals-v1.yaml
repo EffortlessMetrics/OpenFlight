@@ -1,0 +1,52 @@
+# Fanatec ClubSport Pedals V1
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0006 is a community estimate for the original ClubSport Pedals V1.
+# The V1 was Fanatec's first ClubSport pedal set (circa 2009–2011), featuring
+# three analogue pedal axes with adjustable resistances.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V1"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH
+    product_id: 0x0006   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0006 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+  - id: LEGACY_ANALOGUE_PEDALS
+    description: >
+      10-bit potentiometer sensors on all three pedals. Older units may
+      develop sensor drift; apply a small deadzone on brake and clutch axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V1 (circa 2009–2011). PID unconfirmed.
+    Predecessor to the V2 and V3; sometimes still in use in older setups.
+    Last reviewed: 2026-06.

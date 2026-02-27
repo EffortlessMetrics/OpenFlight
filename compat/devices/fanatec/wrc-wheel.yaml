@@ -1,0 +1,59 @@
+# Fanatec WRC Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0035 is a community estimate for the Fanatec WRC wheel.
+# The Fanatec WRC Steering Wheel is the official World Rally Championship
+# licensed wheel rim with a compact 28cm diameter, designed for rally
+# sim racing. Features Fanatec FunkySwitch encoders, paddle shifters,
+# and LED rev indicator strip. Requires a Fanatec wheel base.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec WRC Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0035   # Community estimate — Fanatec WRC Wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18             # Paddles, FunkySwitches, face buttons, mode
+  hats: 2                 # Two FunkySwitch encoders report direction as hat
+  force_feedback: false   # FFB from wheel base
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0035 is a community estimate. Confirm with lsusb or Fanatec
+      software. Inputs are relayed through the Fanatec wheel base HID device.
+  - id: RIM_ADDON
+    description: >
+      Requires a Fanatec wheel base (CSL DD, DD Pro, Podium series) with
+      Fanatec Quick Release (QR1 or QR2). All inputs relay through the base.
+  - id: LED_REV_STRIP
+    description: >
+      The WRC wheel includes an LED rev indicator strip. LED state is driven
+      by HID output reports from the sim telemetry layer via the Fanatec base.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec WRC Steering Wheel — official WRC licensed rally rim.
+    VID 0x0EB7 confirmed; PID 0x0035 community estimate. Requires Fanatec base.
+    Last reviewed: 2026-06.

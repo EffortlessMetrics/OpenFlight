@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# RealSimulator FSSB R3 (Force Sensing Stick Base).
+# VID 0x20FF is RealSimulator's registered USB vendor ID.
+# PID 0x0001 community-reported for FSSB R3 / R3 Lite / R3 Lightning.
+# Not found in linux-hardware.org probe database (niche device).
+schema_version: "1"
+
+device:
+  name: "RealSimulator FSSB R3"
+  vendor: "RealSimulator"
+  usb:
+    vendor_id: 0x20FF
+    product_id: 0x0001
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16   # Hall-effect strain gauges; high-resolution force sensing
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: FORCE_SENSING_NO_SPRINGS
+    description: >
+      The FSSB R3 uses Hall-effect strain gauges rather than a traditional
+      spring/gimbal mechanism. There is no physical travel; the applied force is
+      measured, not displacement. Do not apply deadzone or curve settings
+      intended for displacement joysticks.
+  - id: SENSITIVITY_IN_DEVICE_SOFTWARE
+    description: >
+      Force-to-output gain is configured in the RealSimulator Windows utility,
+      not in OpenFlight. Adjust sensitivity there before applying OpenFlight
+      axis curves.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x20FF community-confirmed as RealSimulator's vendor ID. PID 0x0001
+    community-reported; shared by FSSB R3, R3 Lite, and R3 Lightning (all use
+    the same USB descriptor). Not found in linux-hardware.org probe database.

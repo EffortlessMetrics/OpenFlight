@@ -1,0 +1,58 @@
+# Komodo Sim P1000 Throttle System Mk II
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim (UK) P1000 Mk II — second-generation programmable multi-lever
+# throttle quadrant for airliner home cockpit builds. Updated version of the
+# P1000 (komodo-p1000-throttle.yaml) with improved potentiometer quality,
+# USB controller upgrade, and revised lever detent mechanism. VID/PID
+# unconfirmed; Komodo uses Microchip HID firmware on their controllers.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim P1000 Throttle Mk II"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0311      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, speed_brake, flap_lever, fuel_l, fuel_r]
+    resolution_bits: 12
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. VID 0x04D8 (Microchip) is a placeholder based on
+      Komodo's known firmware vendor. Verify against real hardware.
+  - id: DISTINCT_FROM_P1000_MK1
+    description: >
+      The Mk II adds two additional lever axes (fuel_l, fuel_r) and four
+      additional buttons over the original P1000 (komodo-p1000-throttle.yaml).
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes are unipolar. Map to [0.0, 1.0] range in profile."
+  - id: REVERSE_THRUST_GATE
+    description: "Main throttle levers include a reverse-thrust gate below idle."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim P1000 Mk II — updated airliner throttle quadrant.
+    VID/PID unconfirmed. See komodo-p1000-throttle.yaml for Mk I.
+    Last reviewed: 2026-06.

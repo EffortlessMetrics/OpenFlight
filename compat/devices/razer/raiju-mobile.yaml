@@ -1,0 +1,50 @@
+# Razer Raiju Mobile (USB Wired Mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 confirmed: Razer Inc (registered USB vendor).
+# PID 0x0B00: confirmed from linux-hardware.org probes and Razer HID tables
+# for Raiju Mobile. Mobile-optimised gamepad with detachable phone mount;
+# used in sim setups as secondary cockpit controller.
+
+schema_version: "1"
+
+device:
+  name: "Razer Raiju Mobile"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532   # Razer Inc. (confirmed)
+    product_id: 0x0B00  # Raiju Mobile — confirmed from linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 18
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      Razer Raiju uses a vendor-defined HID protocol for advanced features
+      (hair-trigger mode, button remapping). Standard HID axes/buttons work
+      without vendor protocol.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Razer Raiju Mobile gamepad (USB wired mode). VID 0x1532 confirmed;
+    PID 0x0B00 confirmed from linux-hardware.org. 1000Hz polling.
+    Last reviewed: 2026-06.

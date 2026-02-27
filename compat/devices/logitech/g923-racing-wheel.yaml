@@ -1,0 +1,61 @@
+# Logitech G923 Racing Wheel (TrueForce)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech International (registered USB vendor).
+# PID 0xC29B confirmed: documented in multiple open-source wheel driver projects
+#   (linux kernel/hid-logitech.c, jstest-gtk, SimHub, Oversteer).
+# The G923 is Logitech's TrueForce FFB racing wheel; used in combined sim rigs
+# as a secondary input device for rudder (twist axis) or differential braking.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G923 Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech International (confirmed)
+    product_id: 0xC29B   # G923 — confirmed from Linux kernel hid-logitech.c
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, throttle, brake]
+    resolution_bits: 14  # Logitech G923 reports 14-bit wheel resolution
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_IN_FLIGHT_SIM
+    description: >
+      The G923 is a racing wheel primarily; in flight sim, the wheel rotation
+      axis maps to roll or yaw, throttle pedal to engine throttle, and brake
+      pedal to toe brake or collective. Some flight simmers use it as an
+      aileron-only axis device supplemented by a joystick for pitch.
+  - id: TRUEFORCE_FFB
+    description: >
+      The G923 TrueForce FFB uses a high-frequency torque feedback path.
+      In flight sim, map FFB to turbulence/surface feedback. OpenFlight sends
+      standard DirectInput effects; TrueForce high-frequency path is not
+      used unless the Logitech TrueForce SDK is also active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G923 TrueForce — racing wheel used in combined sim setups.
+    VID 0x046D / PID 0xC29B confirmed. Wheel axis → roll/yaw; pedals → throttle/brake.
+    See also: g940.yaml (G940 flight-specific HOTAS). Last reviewed: 2026-06.

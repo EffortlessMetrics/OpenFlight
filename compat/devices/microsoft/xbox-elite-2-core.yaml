@@ -1,0 +1,57 @@
+# Microsoft Xbox Elite Series 2 Core Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Xbox Elite Series 2 Core is the base model of the Elite Series 2,
+# sold without the carry case and full component set but with the same
+# electronics and adjustable features as the full Elite Series 2.
+# VID 0x045E confirmed: Microsoft Corporation.
+# PID 0x0B05 is a community estimate for the Core variant — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Xbox Elite Series 2 Core Controller"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x0B05   # Community estimate for Core variant — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 125
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B05 is a community estimate for the Core variant. May share
+      PID with the full Elite Series 2 (0x0B00). Confirm with lsusb.
+  - id: XINPUT_PREFERRED
+    description: >
+      Primarily designed for XInput. OpenFlight uses HID mode; confirm axis
+      layout matches the full Elite Series 2 (xbox-elite-2.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Xbox Elite Series 2 Core — base Elite S2 without carry case/extra components.
+    VID 0x045E / PID 0x0B05 unconfirmed. See xbox-elite-2.yaml for full variant.
+    Last reviewed: 2026-06.

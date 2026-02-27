@@ -1,0 +1,48 @@
+# VIRPIL VPC MongoosT-50CM3 Throttle SX
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x80C0 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 Throttle SX"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls
+    product_id: 0x80C0      # Community estimate — MongoosT-50CM3 SX
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_left, throttle_right, slider1, slider2, ministick_x, ministick_y]
+    resolution_bits: 16
+  buttons: 64
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. VIRPIL VPC MongoosT-50CM3 Throttle SX model. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VIRPIL MongoosT-50CM3 Throttle SX — premium HOTAS throttle. PID 0x80C0 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs
+  - xplane

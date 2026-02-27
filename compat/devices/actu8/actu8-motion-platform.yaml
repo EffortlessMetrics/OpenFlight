@@ -1,0 +1,54 @@
+# ACTU8 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ACTU8 is an 8-actuator full-motion platform for high-end flight and driving
+# simulation. The platform uses USB HID output to receive motion commands from
+# simulation software (e.g., SimTools). VID 0x1209 is the pid.codes open VID;
+# PID 0x3004 is a community estimate — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "ACTU8 Motion Platform"
+  vendor: "ACTU8"
+  type: platform
+  usb:
+    vendor_id: 0x1209   # pid.codes open VID (community estimate)
+    product_id: 0x3004  # Community estimate — ACTU8; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 6
+    names: [surge, sway, heave, pitch, roll, yaw]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 and PID 0x3004 are community estimates for the ACTU8 platform.
+      The ACTU8 uses 8 electric actuators for 6DOF motion. Verify VID/PID with
+      lsusb on real hardware.
+  - id: MOTION_OUTPUT_ONLY
+    description: >
+      The ACTU8 is a motion output device. It does not generate HID input
+      events. Motion commands are sent from SimTools or compatible software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ACTU8 8-actuator 6-DOF motion platform. VID 0x1209 / PID 0x3004 community
+    estimate. PID estimated from community sources.
+    Last reviewed: 2026-07.

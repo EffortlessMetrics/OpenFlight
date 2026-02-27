@@ -1,0 +1,64 @@
+# OpenHornet IFEI (Integrated Fuel/Engine Indicator) — DIY F/A-18C Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenHornet is a community open-source F/A-18C full-scale cockpit project.
+# The IFEI (Integrated Fuel/Engine Indicator) panel provides fuel quantity
+# displays, engine RPM/temp readouts, bingo fuel setting, and master arm
+# controls. Outputs to LED 7-segment displays driven by DCS-BIOS/OpenFlight
+# telemetry. Input controls include bingo knob and master arm switch.
+# VID/PID board-dependent (Arduino SA VID 0x2341 is common).
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet IFEI (Integrated Fuel/Engine Indicator)"
+  vendor: "OpenHornet Project (DIY)"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder — board-dependent)
+    product_id: 0x8042  # OpenHornet IFEI firmware — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 1
+    names: [bingo_fuel_knob]
+    resolution_bits: 8
+  buttons: 8              # Master arm, gun arm, master mode, CATM, A/G, A/A, NAV, emergency
+  hats: 0
+  encoders: 1             # Bingo fuel rotary
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 20            # Fuel quantity (L/R/total), RPM, temp, FF readouts
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x2341 (Arduino SA) is a placeholder. Actual VID/PID is firmware
+      and board dependent. Match by USB string "OpenHornet IFEI" if available.
+  - id: DISPLAY_OUTPUT_REQUIRED
+    description: >
+      The IFEI drives 7-segment fuel/engine displays via HID output reports.
+      Display updates require integration with DCS-BIOS or OpenFlight
+      telemetry output pipeline.
+  - id: MULTI_PANEL_SYSTEM
+    description: >
+      Part of the OpenHornet pit system. See openhornet-console.yaml and
+      openhornet-ufc.yaml for companion panels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet IFEI open-source F/A-18C DIY panel. Board/firmware dependent VID/PID.
+    See github.com/OpenHornet. Companion: openhornet-console.yaml, openhornet-ufc.yaml.
+    Last reviewed: 2026-06.

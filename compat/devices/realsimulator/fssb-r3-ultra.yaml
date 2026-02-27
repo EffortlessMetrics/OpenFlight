@@ -1,0 +1,61 @@
+# FSSB R3 Ultra Force Sensing Sidestick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The FSSB R3 Ultra is a force-sensing (isometric) sidestick base by RealSimulator.
+# It measures force/torque via strain gauges rather than physical displacement,
+# providing zero-deflection active resistance. Designed for Airbus-style sidestick
+# simulation with optional tactile feedback.
+# VID 0x04B4 / PID 0xF101: community estimate.
+# Note: other RealSimulator FSSB units use VID 0x20FF (see realsimulator/fssb-r3.yaml).
+
+schema_version: "1"
+
+device:
+  name: "FSSB R3 Ultra Force Sensing Sidestick"
+  vendor: "RealSimulator"
+  usb:
+    vendor_id: 0x04B4       # PID estimated — other FSSB units use VID 0x20FF
+    product_id: 0xF101      # Community estimate — FSSB R3 Ultra
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch_force, roll_force]
+    resolution_bits: 16
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 (Cypress) / PID 0xF101 are community estimates. Other FSSB
+      units (R3, R3 Pro, R3 Lighting) use VID 0x20FF. See realsimulator/fssb-r3.yaml.
+      Verify with lsusb on real hardware.
+  - id: FORCE_SENSING_NOT_DEFLECTION
+    description: >
+      R3 Ultra measures applied force/torque, not physical deflection. Axis output
+      represents force magnitude in both directions. Sensitivity calibration is
+      critical for realistic feel — adjust force sensitivity in OpenFlight profile.
+  - id: ISOMETRIC_OPERATION
+    description: >
+      Zero mechanical deflection means no physical dead zone at the neutral
+      position. Set software null zone to ~5% to prevent jitter at rest.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R3 Ultra isometric sidestick. VID 0x04B4 / PID 0xF101 est.
+    Other FSSB units use VID 0x20FF (fssb-r3.yaml, fssb-r3-pro.yaml).
+    Designed for Airbus sidestick simulation. Last reviewed: 2026-06.

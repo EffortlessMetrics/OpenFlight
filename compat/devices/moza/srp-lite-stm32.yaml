@@ -1,0 +1,54 @@
+# MOZA SR-P Lite Pedals (STM32 firmware variant, VID 0x0483)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0xA423 is a community estimate for the
+# MOZA SR-P Lite Pedals in a firmware variant exposing the STM32 USB VID.
+# The primary MOZA SR-P Lite manifest (VID 0x346E / PID 0x0006) is in
+# srp-pedals-lite.yaml. Hall-effect 3-pedal set without load cell.
+
+schema_version: "1"
+
+device:
+  name: "MOZA SR-P Lite Pedals"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (community estimate — alt firmware VID)
+    product_id: 0xA423   # Community estimate from community sources; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 / PID 0xA423 are community estimates. Primary SR-P Lite
+      manifest is srp-pedals-lite.yaml (VID 0x346E / PID 0x0006). STM32
+      VID may appear with alternate firmware or in DFU mode.
+  - id: HALL_EFFECT_ALL_AXES
+    description: >
+      All three pedals use hall-effect sensors for contactless sensing.
+      No load-cell brake; brake sensing is displacement-based.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA SR-P Lite Pedals — STM32 VID variant (0x0483/0xA423).
+    Primary manifest: srp-pedals-lite.yaml (VID 0x346E / PID 0x0006).
+    Hall-effect 3-pedal set; no load cell. Last reviewed: 2026-07.

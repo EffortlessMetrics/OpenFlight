@@ -1,0 +1,58 @@
+# Saitek X45 HOTAS (Combined Manifest, Estimated PID — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x06A3 (Saitek / Logitech PLC).
+# PID 0x0241 is the confirmed X45 stick PID (Linux kernel hid-ids.h).
+# This manifest covers the X45 HOTAS as a combined unit (stick + throttle).
+# Separate manifests:
+#   x45-stick.yaml — joystick half (PID 0x0241, confirmed)
+#   x45-throttle.yaml — throttle half (PID 0x0243, confirmed)
+# PID 0x0241 is reused here for the combined entry; refer to individual
+# manifests for per-device details.
+schema_version: "1"
+
+device:
+  name: "Saitek X45 HOTAS"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0241      # X45 Joystick PID (confirmed); throttle uses 0x0243
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, rx, slider]
+    resolution_bits: 10
+  buttons: 27
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: TWO_USB_DEVICES
+    description: >
+      The X45 HOTAS presents as two separate USB HID devices — the stick
+      (PID 0x0241) and the throttle (PID 0x0243). This manifest documents
+      the combined capability; use x45-stick.yaml and x45-throttle.yaml
+      for individual device profiles.
+  - id: VINTAGE_HARDWARE
+    description: >
+      Saitek X45 sold circa 2002-2008. Potentiometer-based axes; expect
+      axis drift. Apply calibration before use.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X45 HOTAS combined entry. 6 axes, 27 buttons. Enumerates as two
+    USB devices (x45-stick.yaml PID 0x0241, x45-throttle.yaml PID 0x0243).
+    Wave-34 addition. Last reviewed: 2026-06.

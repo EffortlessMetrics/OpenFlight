@@ -1,0 +1,57 @@
+# Heusinkveld Sprint+ Sim Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology) — used by Heusinkveld on their USB HID
+# firmware (same VID as Sprint Pedals). PID 0xF6D1 is a community estimate;
+# the Sprint+ is an updated Sprint variant with a higher-performance load-cell
+# on the brake pedal and improved pedal face geometry. PID may differ from the
+# Sprint (0xF6D0) or may match it if firmware is shared — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sprint+ Sim Pedals"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by Heusinkveld firmware)
+    product_id: 0xF6D1      # Community estimate for Sprint+ — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D1 is a community estimate. The Sprint+ may share PID 0xF6D0
+      with the standard Sprint Pedals if the firmware is identical. Confirm
+      with lsusb on real hardware; use sprint-pedals.yaml if PID matches.
+  - id: LOADCELL_BRAKE
+    description: >
+      Brake pedal uses a load-cell sensor (force-to-position). The USB HID
+      axis reports brake force as a 0–100% position value. No separate
+      calibration quirk required in OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sprint+ Sim Pedals — upgraded Sprint with enhanced load-cell
+    brake. PID 0xF6D1 is a community estimate. May share 0xF6D0 with standard
+    Sprint. Used in flight sim setups as high-precision rudder + toe brakes.
+    Last reviewed: 2026-06.

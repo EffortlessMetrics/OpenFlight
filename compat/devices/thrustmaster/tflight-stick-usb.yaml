@@ -1,0 +1,57 @@
+# Thrustmaster T.Flight Stick USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed: Thrustmaster / Guillemot.
+# PID 0xB108 is the T.Flight Stick USB as reported in the Linux kernel HID
+# driver table (hid-ids.h) and multiple community lsusb captures.
+# The T.Flight Stick USB is Thrustmaster's entry-level standalone flight
+# stick with a basic 4-axis, 12-button layout — no integrated throttle.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Stick USB"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB108   # T.Flight Stick USB — Linux hid-ids.h confirmed
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle_slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LOW_RESOLUTION_AXES
+    description: >
+      The T.Flight Stick USB reports 10-bit axis resolution — lower than most
+      modern HOTAS. Apply modest deadzones and smoothing in the OpenFlight
+      profile to compensate for lower precision.
+  - id: NO_THROTTLE_AXIS
+    description: >
+      The throttle_slider is a small slider on the stick body, not a separate
+      throttle grip. For aircraft needing precise throttle, supplement with a
+      standalone throttle device and use the combined-device profile binding.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster T.Flight Stick USB — entry-level standalone flight stick.
+    VID 0x044F / PID 0xB108 confirmed from Linux kernel hid-ids.h.
+    No integrated throttle body; the twist axis (rz) serves as rudder.
+    Suitable for beginners or as a secondary device. Last reviewed: 2026-06.

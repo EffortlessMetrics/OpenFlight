@@ -1,0 +1,57 @@
+# MOZA ES Electromagnetic Handbrake
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Gudsen Technology / MOZA Racing, confirmed). PID 0x0030 is a
+# community estimate for the MOZA ES Electromagnetic Handbrake. The ES uses
+# an electromagnetic load-cell mechanism providing force-proportional input
+# at 16-bit resolution. Calibration via MOZA Pit House is recommended.
+schema_version: "1"
+
+device:
+  name: "MOZA ES Electromagnetic Handbrake"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E    # Moza (Gudsen Technology)
+    product_id: 0x0030   # Community estimate -- MOZA ES handbrake
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [brake]
+    resolution_bits: 16
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate. Confirm with lsusb on MOZA ES
+      hardware before enabling production device matching.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The ES handbrake uses an electromagnetic load-cell mechanism. The brake
+      axis is force-proportional, not position-based. Calibration via MOZA
+      Pit House software is recommended before use in OpenFlight.
+  - id: FLIGHT_USE
+    description: >
+      In flight sim use, map the handbrake axis to differential braking or
+      wheel brakes in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA ES Electromagnetic Handbrake -- 16-bit load-cell, 1 axis, 1 button.
+    VID 0x346E confirmed; PID 0x0030 is a community estimate.
+    Last reviewed: 2026-06.

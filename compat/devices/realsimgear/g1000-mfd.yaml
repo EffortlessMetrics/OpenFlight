@@ -1,0 +1,60 @@
+# RealSimGear G1000 MFD Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xF235 (approximate).
+# G1000 Multi-Function Display panel bezel replica. Provides the full set of
+# MFD softkeys, range knob, FMS inner/outer knobs, and navigation buttons
+# for GA aircraft simulation (Cessna 172/182, Beechcraft, Piper, etc.).
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 MFD Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF235      # G1000 MFD — approximate; varies by firmware revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 60               # Softkeys (12), FMS/range knob clicks, NAV/COM buttons
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: ROTARY_ENCODERS_FMS
+    description: >
+      FMS cursor inner/outer knobs and range knob are incremental rotary encoders.
+      Each detent produces a button press event (CW or CCW). OpenFlight maps these
+      to encoder-delta inputs rather than axis values.
+  - id: PID_VARIES_BY_FIRMWARE
+    description: >
+      RealSimGear ships multiple G1000 MFD variants with different USB PIDs
+      depending on firmware version and hardware revision. PID 0xF235 is the
+      most common; verify with lsusb or Windows Device Manager on the target unit.
+  - id: SOFTKEY_LAYOUT
+    description: >
+      Twelve softkeys along the top and bottom bezels map to G1000 page/function
+      selections. Require per-aircraft profile binding for meaningful sim integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x04D8 (Microchip Technology) confirmed as RealSimGear's USB vendor.
+    PID 0xF235 is approximate — verify with Device Manager on individual units.
+    Designed to pair with the G1000 PFD bezel for a full dual-panel G1000 setup.
+    Primarily used with MSFS Cessna 172/182 G1000 variants and X-Plane.
+    Last reviewed: 2026-02.

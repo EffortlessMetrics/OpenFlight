@@ -1,0 +1,56 @@
+# Thrustmaster T80 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB65E is a community estimate for the T80
+# Racing Wheel; the closely related Ferrari 458 Italia uses 0xB65D (confirmed
+# SDL2), and the T80 is the budget companion. Verify with lsusb on real hardware.
+# The T80 is occasionally used in flight simulation as a bank/pitch input due
+# to its low cost and wide availability.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T80 Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB65E      # Community estimate — T80; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB65E is a community estimate for the T80 Racing Wheel. Verify with
+      lsusb before enabling production device matching.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (270° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). No force feedback motor; elastomer centering only.
+  - id: NO_FORCE_FEEDBACK
+    description: >
+      The T80 uses passive elastomer centering. No active FFB motor is present.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T80 Racing Wheel. VID 0x044F confirmed; PID 0xB65E estimated.
+    Budget racing wheel occasionally used for bank/pitch in flight sim. No FFB.
+    Wave-42 addition. Last reviewed: 2026-07.

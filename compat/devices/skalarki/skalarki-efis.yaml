@@ -1,0 +1,55 @@
+# Skalarki Electronics EFIS Airbus Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki EFIS (Electronic Flight Instrument System) panel replicates the
+# Airbus A320 captain-side or first-officer-side EFIS control unit, including
+# the BARO setting, ND mode/range selectors, and FD/LS pushbuttons.
+# VID 0x16C0 / PID 0x05E0: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Electronics EFIS Airbus Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x05E0      # Community estimate — Skalarki EFIS
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 1                # BARO rotary
+    names: [baro]
+    resolution_bits: 8
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x05E0 is a community estimate. Confirm with Skalarki Panel Config.
+  - id: SKALARKI_HID_PROTOCOL
+    description: >
+      Uses Skalarki proprietary HID output reports for annunciator LEDs.
+  - id: BARO_QNH_QFE_TOGGLE
+    description: >
+      QNH/QFE selector button toggles BARO reference mode. Some builds expose
+      this as a separate button event; others encode it in the BARO axis range.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki EFIS Airbus panel. VID 0x16C0 / PID 0x05E0 est.
+    One panel per seat; for dual-seat builds use two units with distinct USB addresses.
+    Last reviewed: 2026-06.

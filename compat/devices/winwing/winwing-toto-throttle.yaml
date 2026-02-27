@@ -1,0 +1,65 @@
+# WinWing Boeing TOTO Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing TOTO (Two-One-Two Throttle Operations) throttle is a
+# Boeing-style four-engine throttle quadrant replica for the 737/747/777
+# product families. Provides twin-lever mechanics with autothrottle
+# disconnect triggers and reverse thrust levers.
+# VID 0x4098: WinWing — community-confirmed.
+# PID 0xB700 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Boeing TOTO Throttle Quadrant"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB700      # Community estimate — TOTO throttle
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_1, throttle_2, throttle_3, throttle_4, flap, speed_brake]
+    resolution_bits: 14
+  buttons: 22
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB700 is a community estimate. Confirm with lsusb or WinWing
+      SimApp Desktop Device Manager.
+  - id: FOUR_ENGINE_LEVERS
+    description: >
+      Provides four independent throttle axes for quad-engine Boeing aircraft
+      (747, 777). For twin-engine 737 operation bind only throttle_1 and
+      throttle_2.
+  - id: REVERSE_BUCKETS
+    description: >
+      Reverse thrust bucket triggers report as buttons; the reverse range on
+      each throttle axis is 0 to ~15% of full travel. OpenFlight uses a
+      deadzone gate to separate forward/reverse zones.
+  - id: AUTOTHROTTLE_DISCONNECT
+    description: >
+      AT disconnect buttons (one per lever) are discrete momentary switches.
+      Use the at_disconnect event binding in the SimConnect adapter.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Boeing TOTO throttle — quad-engine Boeing replica. VID 0x4098 confirmed;
+    PID 0xB700 est. For Airbus throttle see simapp-pro-fcu.yaml or tca-quadrant-airbus.yaml.
+    Last reviewed: 2026-06.

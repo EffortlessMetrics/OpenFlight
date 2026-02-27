@@ -1,0 +1,59 @@
+# Clark Synthesis TST429 Tactile Sound Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Clark Synthesis TST429 "Silver" tactile transducer — a high-excursion bass
+# shaker designed for simulation rigs. Audio-driven via amplifier; no USB HID
+# interface. Tracked for sim-rig accessory compatibility documentation.
+schema_version: "1"
+
+device:
+  name: "Clark Synthesis TST429 Tactile Transducer"
+  vendor: "Clark Synthesis"
+  usb:
+    vendor_id: 0x0000   # No USB interface — audio-driven transducer
+    product_id: 0x0000  # No USB interface — audio-driven transducer
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — audio output only, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: NO_USB_INTERFACE
+    description: >
+      The TST429 is a passive tactile transducer. It has no USB connection;
+      it is driven by a dedicated amplifier receiving a line-level audio
+      signal. VID/PID fields are placeholders only.
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: >
+      Haptic output is driven by an audio amplifier (typically 25–150 W into
+      4–8 Ω). OpenFlight does not directly control this device; audio routing
+      is handled by the OS or a companion application (e.g., SimShaker, SimHub,
+      NLT). Frequency response: 5–200 Hz nominal.
+  - id: NO_HID_INPUT
+    description: >
+      Generates no HID input events. Tracked for sim-rig accessory and tactile
+      feedback compatibility documentation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Clark Synthesis TST429 "Silver" tactile transducer. Audio-driven, no USB HID.
+    Frequency response 5–200 Hz; 50 W RMS at 4 Ω. Used in sim rigs for low-freq
+    vibration (engine rumble, gear, weapons). Audio routing via SimShaker/SimHub.
+    Last reviewed: 2026-06.

@@ -1,0 +1,57 @@
+# Logitech Driving Force Pro Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC298 confirmed from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_LOGITECH_DFP_WHEEL) and the ff-lg
+# driver. The Driving Force Pro (2003) was the first Logitech wheel to offer
+# 900° rotation and was the official Gran Turismo 4 PS2 wheel. 14-bit steering.
+
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force Pro"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC298      # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_DFP_WHEEL)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 14
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (900°, 14-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Map X to rudder in flight profiles.
+  - id: LGFF_DRIVER
+    description: >
+      Uses Logitech LG Gaming FF protocol. Linux: ff-lg kernel module required.
+      Windows: Logitech Gaming Software or G HUB. First Logitech wheel with
+      900° rotation and 14-bit steering precision.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force Pro (2003). VID/PID confirmed from Linux kernel
+    hid-ids.h. First Logitech wheel with 900° rotation; classic GT4 wheel.
+    Used as rudder axis in flight sim. Last reviewed: 2026-06.

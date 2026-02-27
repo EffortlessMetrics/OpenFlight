@@ -1,0 +1,59 @@
+# WinWing SuperTaurus F-15EX Throttle (dual-handle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBD64 — linux-hardware.org (2 probes,
+# USB string "Orion Throttle Base II + F15EX HANDLE L + F15EX HANDLE R").
+device:
+  name: "WinWing SuperTaurus F-15EX Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD64
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 50
+  hats: 0
+  encoders: 5
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers are reported as separate axes.
+      OpenFlight exposes them as individual axes and provides an optional
+      "combined throttle" virtual axis that averages them.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands
+      based on the active profile.
+  - id: DUAL_F15EX_HANDLES
+    description: >
+      The F-15EX handle set (L + R) ships as a single USB device with
+      both grip button arrays multiplexed. Button numbering starts at
+      1 on the left handle and continues on the right handle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    F-15EX dual-handle variant of the Orion Throttle Base II.
+    Identical base hardware to the F/A-18C variant (PID 0xBE62) but
+    different grip assemblies and higher button count.
+    Typically paired with the Orion 2 F-16EX or F/A-18C stick.

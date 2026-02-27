@@ -1,0 +1,58 @@
+# Arduino Pro Micro HID Button Box (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Arduino Pro Micro (ATmega32U4) boards flashed with button-box firmware present
+# as generic HID joystick devices. Common VID/PID depends on the board brand:
+#   SparkFun Pro Micro 5V:  VID 0x1B4F / PID 0x9205
+#   SparkFun Pro Micro 3.3V: VID 0x1B4F / PID 0x9206
+#   Chinese clone (QMK):   VID 0x1B4F / PID 0x9204
+# Widely used in DIY flight sim button boxes and encoder panels.
+schema_version: "1"
+
+device:
+  name: "Arduino Pro Micro HID Button Box (Generic)"
+  vendor: "Arduino / Community DIY"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1B4F    # SparkFun Electronics (Pro Micro)
+    product_id: 0x9205   # SparkFun Pro Micro 5V (most common clone variant)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: DIY_VID_PID_VARIES
+    description: >
+      VID and PID vary by board manufacturer. Common variants:
+        - SparkFun Pro Micro 5V: VID 0x1B4F / PID 0x9205
+        - SparkFun Pro Micro 3.3V: VID 0x1B4F / PID 0x9206
+        - Chinese clone: VID 0x1B4F / PID 0x9204
+      Match by device name string in OpenFlight profiles for DIY boards.
+  - id: BUTTON_COUNT_VARIES
+    description: >
+      Button count is set at firmware compile time. 32 buttons is a typical
+      button-box build. Actual hardware may expose fewer or more buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic Arduino Pro Micro HID button box. VID/PID varies by clone vendor;
+    0x1B4F/0x9205 is the most common. Match by device name in OpenFlight
+    profiles. See also arduino-mega-hid.yaml. Last reviewed: 2026-06.

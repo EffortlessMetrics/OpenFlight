@@ -1,0 +1,74 @@
+# Logitech X56 Rhino H.O.T.A.S
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 / PID 0x0C2D — Logitech (Saitek) X56 Rhino composite HOTAS.
+# The X56 Rhino was manufactured by Mad Catz under Saitek branding, then
+# re-released under Logitech branding after the 2016 acquisition.
+# Mad Catz VID variants (0x0738) are covered in:
+#   compat/devices/saitek/x56-rhino-stick.yaml   (PID 0x2221)
+#   compat/devices/saitek/x56-rhino-throttle.yaml (PID 0xA221)
+# The Saitek/Logitech composite manifest is at compat/devices/saitek/x56.yaml.
+
+schema_version: "1"
+
+device:
+  name: "Logitech X56 Rhino H.O.T.A.S"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C2D      # X56 Rhino composite — Logitech branding
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 9
+    names: [x, y, rz, rx, ry, z, slider1, slider2, throttle2]
+    resolution_bits: 12
+  buttons: 50
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DUAL_THROTTLE
+    description: >
+      Left and right throttle halves appear as separate axes (Z and Rz).
+      Combined-throttle mode presents a single Z axis; split mode exposes both.
+  - id: ANALOG_SWITCHES
+    description: >
+      The throttle body exposes 8 analog mini-switches (SLD/TGL type) that
+      report as digital buttons in the HID report. These are distinct from the
+      29 standard buttons on the throttle.
+  - id: MULTIFUNCTION_RING
+    description: >
+      The stick includes a multifunction rotary ring around the base (POV-style
+      ring with push-to-select). It reports as an additional hat or as Rx/Ry
+      depending on firmware mode.
+  - id: MINISTICK_DEADZONE
+    description: >
+      Built-in mini-stick exhibits pronounced hardware deadzone (≈8%).
+      OpenFlight applies the x55_x56_ministick ghost filter preset.
+  - id: PID_VARIANTS
+    description: >
+      PID 0x0C2D covers the Saitek/Logitech VID branding. Mad Catz VID variants
+      (0x0738) use PIDs 0x2221 (stick) and 0xA221 (throttle); see
+      compat/devices/saitek/x56-rhino-stick.yaml and x56-rhino-throttle.yaml.
+      Logitech reissues may also enumerate as 0x046D/0xC2FF on some systems.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech X56 Rhino H.O.T.A.S (VID 0x06A3 / PID 0x0C2D). Modern modular
+    grey HOTAS with dual throttle and extensive button layout. Axis count and
+    names are derived from community documentation; HIL verification pending.
+    The same VID/PID is also documented in compat/devices/saitek/x56.yaml.
+    Last validated: 2026-02.

@@ -1,0 +1,60 @@
+# NaturalPoint ClipTrack — 0x131D / 0x0158
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x131D (NaturalPoint Inc.), PID 0x0158 (estimated).
+# The NaturalPoint ClipTrack is a clip-on retroreflector accessory for TrackIR
+# head tracking cameras. When paired with TrackIR 4/5 it clips onto a hat or
+# headset and reflects the camera's IR illumination.
+# PID 0x0158 is a community estimate; see also trackclip.yaml (0x0156) and
+# trackclip-pro.yaml (0x015A). Confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint ClipTrack"
+  vendor: "NaturalPoint Inc."
+  type: head_tracker_accessory
+  usb:
+    vendor_id: 0x131D       # NaturalPoint Inc. (confirmed)
+    product_id: 0x0158      # Community estimate — ClipTrack variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Generic (not a standalone input device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0158 is a community estimate. Adjacent NaturalPoint ClipTrack PIDs:
+      0x0156 (trackclip.yaml, passive), 0x015A (trackclip-pro.yaml, active IR LEDs).
+      Verify with lsusb on target hardware.
+  - id: PASSIVE_REFLECTOR
+    description: >
+      The ClipTrack uses passive retroreflectors and relies entirely on the TrackIR
+      camera for illumination. No active USB HID data is transmitted by this accessory.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint ClipTrack (0x131D/0x0158). PID community estimate.
+    Passive retroreflector accessory for TrackIR cameras. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

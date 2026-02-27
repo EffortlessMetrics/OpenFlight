@@ -1,0 +1,59 @@
+# Eyeware Beam Eye Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2104 and PID 0x0119 are community estimates for the Eyeware Beam
+# head/eye tracker (Eyeware Technologies). Eyeware Beam is a software-based
+# head tracking solution that uses webcams or iPhone TrueDepth cameras to
+# provide 6-DOF head pose data for flight simulation. The USB interface
+# is used when the Eyeware Beam Bridge app streams pose data to OpenTrack
+# or directly to supported sim adapters.
+# NOTE: VID 0x2104 / PID 0x0119 are community estimates — verify with lsusb.
+schema_version: "1"
+
+device:
+  name: "Eyeware Beam Eye Tracker"
+  vendor: "Eyeware Technologies"
+  type: tracker
+  usb:
+    vendor_id: 0x2104    # Community estimate — verify with lsusb
+    product_id: 0x0119   # PID estimated from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 6
+    names: [yaw, pitch, roll, x, y, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2104 / PID 0x0119 are community estimates. Verify with lsusb.
+      Eyeware Beam may present as a virtual HID via OpenTrack bridge or as
+      a named pipe, not a physical USB device — actual USB VID/PID depends
+      on the camera hardware used (webcam, iPhone cable).
+  - id: OPENTRACK_BRIDGE
+    description: >
+      Eyeware Beam typically delivers head pose via the OpenTrack UDP protocol
+      or the Freetrack/TrackIR emulation interface rather than raw USB HID.
+      Configure OpenFlight to use the OpenTrack UDP input plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Eyeware Beam — software head/eye tracker for webcam or iPhone.
+    VID 0x2104 / PID 0x0119 are community estimates; verify with lsusb.
+    Typically used via OpenTrack UDP bridge. Last reviewed: 2026-06.

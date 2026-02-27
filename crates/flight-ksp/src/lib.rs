@@ -29,9 +29,11 @@
 
 pub mod adapter;
 pub mod connection;
+pub mod controls;
 pub mod error;
 pub mod mapping;
 pub mod protocol;
 
 pub use adapter::{KspAdapter, KspConfig};
+pub use controls::KspControls;
 pub use error::KspError;

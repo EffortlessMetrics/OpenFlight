@@ -1,0 +1,63 @@
+# Sony DualSense Edge Wireless Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C (Sony Interactive Entertainment), PID 0x0DF2 confirmed from
+# the Linux kernel drivers/hid/hid-sony.c and linux-hardware.org USB captures.
+# The DualSense Edge is the professional/esports variant of the DualSense,
+# adding back paddles, swappable trigger stops, and hardware deadzone control.
+schema_version: "1"
+
+device:
+  name: "Sony DualSense Edge Wireless Controller"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C       # Sony Interactive Entertainment (confirmed)
+    product_id: 0x0DF2      # Confirmed: Linux kernel hid-sony.c + linux-hardware.org
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, l2, r2]
+    resolution_bits: 8
+  buttons: 21
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [haptic_feedback, adaptive_trigger]
+    max_update_rate_hz: 250
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: DUALSENSE_HAPTICS
+    description: >
+      The DualSense Edge inherits the DualSense's adaptive triggers (L2/R2
+      with variable resistance) and haptic actuators. These are exposed via
+      Sony's proprietary HID output report format, not standard DirectInput
+      FFB. OpenFlight can use the adaptive triggers for throttle/brake
+      resistance simulation.
+  - id: BACK_PADDLE_BUTTONS
+    description: >
+      The Edge adds two back paddles (P1/P2) mappable to any existing button.
+      These are exposed as additional buttons 19 and 20 in the HID report.
+  - id: SWAPPABLE_TRIGGER_STOPS
+    description: >
+      Trigger stops limit L2/R2 travel to ~50% of full throw. When stops are
+      installed, the effective axis range is halved; calibrate the axis range
+      in the OpenFlight profile accordingly.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony DualSense Edge — professional DualSense variant. VID/PID confirmed
+    from Linux kernel hid-sony.c. Adaptive triggers and haptics usable for
+    throttle resistance and FFB in flight sim. Last reviewed: 2026-06.

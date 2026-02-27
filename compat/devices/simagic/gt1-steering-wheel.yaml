@@ -1,0 +1,52 @@
+# Simagic GT1 Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Simagic GT1 steering wheel rim — premium button cluster for Simagic bases.
+# VID 0x0483 (STMicroelectronics shared VID used by Simagic).
+# PID 0xA361 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "Simagic GT1 Steering Wheel"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483     # STMicroelectronics shared VID (used by Simagic)
+    product_id: 0xA361    # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA361 is a community estimate adjacent to Alpha Mini alt (0xA360).
+      Verify with lsusb on real hardware. Simagic wheel rims may enumerate
+      via the base's HID report or as a separate interface.
+  - id: RIM_ENUMERATION
+    description: >
+      Simagic GT-series rims may enumerate through the base unit rather than
+      as a standalone USB device. Confirm independent HID enumeration before
+      creating dedicated profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic GT1 Steering Wheel rim. PID 0xA361 community estimate.
+    VID 0x0483 = STMicroelectronics (Simagic). Last reviewed: 2026-06.

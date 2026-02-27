@@ -1,0 +1,54 @@
+# VKB Gladiator NXT SEM THQ
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x231D (VKB), PID 0x2214 — linux-hardware.org (1 probe,
+# USB string "VKBSim NXT SEM THQ", vendor "VKB-Sim Alex Oz 2021").
+# THQ = Throttle/Hand Quadrant. SEM = Space/Enhanced/Modern firmware.
+# This is a throttle-quadrant companion to the NXT SEM joystick family.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT SEM THQ"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x2214  # VKBSim NXT SEM THQ — confirmed via linux-hardware.org (1 probe)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software. OpenFlight reads
+      whatever the device reports; user must align VKB config with OpenFlight
+      axis assignments.
+  - id: SEM_FIRMWARE
+    description: >
+      Runs SEM (Space/Enhanced/Modern) firmware. Programmable via VKBDevCfg;
+      button layout and axis assignments may differ from factory defaults.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x2214 confirmed via linux-hardware.org (1 probe, "VKBSim NXT SEM THQ").
+    Throttle/quadrant companion device to the NXT SEM joystick family (SEM firmware).
+    Axis count and button count are estimated from the NXT family; verify on hardware.
+    Last reviewed: 2026-02.

@@ -1,0 +1,55 @@
+# HORI Real Arcade Pro Jet (Fighting Stick / Sim Hybrid)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x006E is a community estimate. The RAP Jet is a fighting-arcade-style
+# joystick with a flight-themed aesthetic (jet cockpit styling). It features a
+# gate-guided 8-way stick and button array. Some flight simmers use it for
+# low-fidelity sim navigation and helicopter control.
+
+schema_version: "1"
+
+device:
+  name: "HORI Real Arcade Pro Jet"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x006E      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x006E is a community estimate. HORI arcade sticks use 0x0060–0x0080
+      range; confirm with lsusb on real hardware.
+  - id: GATE_RESTRICTOR
+    description: >
+      Arcade-style gate restrictor limits stick travel to 8 discrete directions
+      rather than continuous analog range. Axis resolution is effectively 3
+      positions per axis in 8-way mode. Replace gate for sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI RAP Jet arcade/sim hybrid stick. PID 0x006E is a community estimate.
+    Gate restrictor limits analog precision; best suited for low-fidelity sim
+    or menu navigation. Last reviewed: 2026-06.

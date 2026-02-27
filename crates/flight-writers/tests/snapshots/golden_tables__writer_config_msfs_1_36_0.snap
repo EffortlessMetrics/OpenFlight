@@ -1,0 +1,23 @@
+---
+source: crates/flight-writers/tests/golden_tables.rs
+expression: config
+---
+{
+  "schema": "flight.writer/1",
+  "sim": "msfs",
+  "version": "1.36.0",
+  "description": "Disable MSFS built-in control curves",
+  "diffs": [
+    {
+      "backup": true,
+      "changes": {
+        "DisableNonLinearControls": "1",
+        "UseLinearCurves": "1"
+      },
+      "file": "MSFS/UserCfg.opt",
+      "section": "CONTROLS",
+      "type": "ini_section"
+    }
+  ],
+  "verify_scripts": []
+}

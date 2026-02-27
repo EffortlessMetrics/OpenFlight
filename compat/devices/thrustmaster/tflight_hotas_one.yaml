@@ -1,0 +1,57 @@
+# Thrustmaster T.Flight HOTAS One (Xbox Switchable, PID 0xB687 Estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB687 is a community estimate for the T.Flight HOTAS One designed
+# for Xbox. Related manifests:
+#   tflight-hotas-one.yaml — primary PC model (PID 0xB68D, confirmed)
+#   tflight-hotas-one-xbox.yaml — Xbox edition alternate estimate (PID 0xB330)
+# The T.Flight HOTAS One Xbox edition can operate in PC/HID mode when
+# connected via USB to a PC. The enumerated PID may differ from the Xbox mode PID.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS One (Xbox)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (Guillemot Corp.)
+    product_id: 0xB687      # Community estimate for Xbox variant in PC mode
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB687 is a community estimate. The confirmed PC model uses 0xB68D
+      (tflight-hotas-one.yaml). Another Xbox estimate (0xB330) is in
+      tflight-hotas-one-xbox.yaml. Verify with lsusb or Windows Device Manager.
+  - id: XBOX_PC_DUAL_MODE
+    description: >
+      The Xbox edition can operate in both Xbox (XInput) and PC (HID) modes.
+      The PID may differ between modes. Ensure the device is in PC/HID mode
+      when using with OpenFlight.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight HOTAS One (Xbox variant, PID 0xB687 estimate).
+    5 axes, 14 buttons, 1 hat. See tflight-hotas-one.yaml (PC, PID 0xB68D).
+    Wave-34 addition. Last reviewed: 2026-06.

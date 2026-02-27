@@ -1,0 +1,54 @@
+# Opencockpits ADC-EFIS Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Opencockpits ADC-EFIS Card — an Air Data Computer / EFIS interface card
+# for custom cockpit builds. Provides analogue gauge outputs and switch inputs
+# for EFIS-related controls. Part of the Opencockpits modular I/O ecosystem.
+# VID 0x0BCA / PID 0x0006 are community estimates. Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits ADC-EFIS Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Opencockpits/Engravity VID
+    product_id: 0x0006      # Community estimate — ADC-EFIS Card
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel I/O card
+
+capabilities:
+  axes:
+    count: 4
+    names: [baro_knob, course_knob, heading_knob, alt_knob]
+    resolution_bits: 10
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0006 are community estimates. Verify with lsusb.
+      See iocard.yaml (VID 0x1000) and iocards-usb.yaml (VID 0x0BCA:0x0007)
+      for related Opencockpits I/O cards.
+  - id: ENCODER_AXES
+    description: >
+      Rotary encoder knobs (baro, course, heading, alt) present as relative
+      axis increments. Treat as delta values in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits ADC-EFIS Card — VID 0x0BCA / PID 0x0006 (est).
+    EFIS I/O card with encoder axes and digital inputs.
+    Wave-46 addition. Last reviewed: 2026-07.

@@ -246,4 +246,80 @@ mod tests {
         assert!(manager.validate_config(Channel::Beta).is_ok());
         assert!(manager.validate_config(Channel::Canary).is_ok());
     }
+
+    /// An unrecognised channel name must return a ChannelNotFound error with the
+    /// offending name preserved in the payload.
+    #[test]
+    fn test_unknown_channel_name_returns_channel_not_found_error() {
+        let result = "nightly".parse::<Channel>();
+        assert!(result.is_err(), "unknown channel must be an error");
+        match result.unwrap_err() {
+            crate::UpdateError::ChannelNotFound(name) => {
+                assert_eq!(name, "nightly");
+            }
+            e => panic!("expected ChannelNotFound, got: {:?}", e),
+        }
+    }
+
+    /// Stable channel must point at the stable update endpoint and have
+    /// conservative settings (no pre-release, 24-hour check frequency).
+    #[test]
+    fn test_stable_channel_has_correct_url_and_metadata() {
+        let manager = ChannelManager::new();
+        let config = manager.get_config(Channel::Stable).unwrap();
+        assert_eq!(config.update_url, "https://updates.flight-hub.dev/stable");
+        assert!(
+            !config.accept_prerelease,
+            "stable must not accept pre-releases"
+        );
+        assert_eq!(config.check_frequency_hours, 24);
+    }
+
+    /// Beta channel must point at the beta endpoint and accept pre-release builds,
+    /// with a more frequent check interval than stable.
+    #[test]
+    fn test_beta_channel_has_correct_url_and_metadata() {
+        let manager = ChannelManager::new();
+        let config = manager.get_config(Channel::Beta).unwrap();
+        assert_eq!(config.update_url, "https://updates.flight-hub.dev/beta");
+        assert!(config.accept_prerelease, "beta must accept pre-releases");
+        assert_eq!(config.check_frequency_hours, 12);
+    }
+
+    /// Canary channel must have the most aggressive check frequency and accept
+    /// pre-release builds.
+    #[test]
+    fn test_canary_channel_has_correct_url_and_metadata() {
+        let manager = ChannelManager::new();
+        let config = manager.get_config(Channel::Canary).unwrap();
+        assert_eq!(config.update_url, "https://updates.flight-hub.dev/canary");
+        assert!(config.accept_prerelease, "canary must accept pre-releases");
+        assert_eq!(config.check_frequency_hours, 6);
+    }
+
+    /// validate_config must reject a configuration with check_frequency_hours == 0.
+    #[test]
+    fn test_validate_config_rejects_zero_check_frequency() {
+        let mut manager = ChannelManager::new();
+        let mut config = manager.get_config(Channel::Stable).unwrap().clone();
+        config.check_frequency_hours = 0;
+        manager.update_config(Channel::Stable, config);
+        assert!(
+            manager.validate_config(Channel::Stable).is_err(),
+            "zero check frequency must be rejected"
+        );
+    }
+
+    /// validate_config must reject a configuration with an empty update URL.
+    #[test]
+    fn test_validate_config_rejects_empty_url() {
+        let mut manager = ChannelManager::new();
+        let mut config = manager.get_config(Channel::Stable).unwrap().clone();
+        config.update_url = String::new();
+        manager.update_config(Channel::Stable, config);
+        assert!(
+            manager.validate_config(Channel::Stable).is_err(),
+            "empty update URL must be rejected"
+        );
+    }
 }

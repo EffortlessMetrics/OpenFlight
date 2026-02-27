@@ -1,0 +1,45 @@
+# VIRPIL VPC Throttle MT-50CM3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls), PID 0x40C9 — community estimate.
+# VIRPIL VPC Throttle MT-50CM3 dual throttle unit.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC Throttle MT-50CM3"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls (confirmed)
+    product_id: 0x40C9      # Community estimate — MT-50CM3 throttle; confirm with VPC Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad / Throttle
+capabilities:
+  axes:
+    count: 7
+    names: [throttle_l, throttle_r, x, y, z, rx, ry]
+    resolution_bits: 14
+  buttons: 34
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x40C9 is a community estimate for the VPC Throttle MT-50CM3.
+      Confirm with VPC Configurator or lsusb on real hardware.
+  - id: DUAL_THROTTLE
+    description: >
+      Left and right throttle levers report independent axes. MSFS throttle
+      assignment may require axis splitting via joystick software.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Throttle MT-50CM3 — VID 0x3344 / PID 0x40C9 (est).
+    Third-generation MongoosT-50 throttle. Dual levers, encoder rings, panels.
+    Wave-59 addition. Last reviewed: 2026-07.

@@ -1,0 +1,54 @@
+# VIRPIL VPC MongoosT-50CM2 (Left Hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Left-hand variant of the VIRPIL VPC MongoosT-50CM2 joystick.
+# Mirror image of the right-hand version (mongoost-50cm2-stick.yaml),
+# designed for dual-stick cockpit setups (e.g., Su-27 family, F-15).
+# VID 0x3344 confirmed: VIRPIL Controls.
+# PID 0x0162 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM2 (Left)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0162   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0162 is a community estimate for the left-hand CM2 variant.
+      VIRPIL typically uses adjacent PID values for left/right pairs.
+      Confirm with lsusb. Right-hand version: mongoost-50cm2-stick.yaml.
+  - id: DUAL_STICK_USE
+    description: >
+      Designed for dual-stick setups alongside the right-hand MongoosT-50CM2
+      (mongoost-50cm2-stick.yaml) or paired with the CM2 throttle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM2 left-hand stick. 16-bit resolution.
+    PID 0x0162 unconfirmed. Right-hand: mongoost-50cm2-stick.yaml.
+    Last reviewed: 2026-06.

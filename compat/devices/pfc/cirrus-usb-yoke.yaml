@@ -1,0 +1,55 @@
+# PFC Cirrus USB Yoke (0x2B67 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Precision Flight Controls (PFC) Cirrus-licensed USB yoke variant.
+# VID 0x2B67 / PID 0x0004 are community estimates from USB probe reports.
+# Distinct from the existing cirrus-yoke.yaml (which uses 0x04D8 VID);
+# this entry covers the 0x2B67 enumeration seen in some field reports.
+# Confirm with Windows Device Manager before deploying.
+
+schema_version: "1"
+
+device:
+  name: "PFC Cirrus USB Yoke"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — PFC Cirrus USB variant
+    product_id: 0x0004      # Community estimate — confirm with Windows Device Manager
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, throttle]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0004 are community estimates. This entry is distinct
+      from cirrus-yoke.yaml (VID 0x04D8) which covers the Microchip-bridge
+      variant. See also alpha-aviation/usb-yoke.yaml for 0x2B67:0x0003.
+  - id: FAA_ATD_LINEAGE
+    description: >
+      PFC produces controls for FAA-certified Aviation Training Devices; USB HID
+      enumeration may differ between ATD-grade and consumer-grade variants.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Cirrus USB Yoke — VID 0x2B67 / PID 0x0004 (est).
+    Alternative enumeration to cirrus-yoke.yaml (0x04D8 variant).
+    Wave-46 addition. Last reviewed: 2026-07.

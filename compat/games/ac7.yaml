@@ -1,0 +1,57 @@
+# Ace Combat 7: Skies Unknown — UDP Telemetry Bridge
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Ace Combat 7: Skies Unknown"
+  id: ac7
+  developer: "Bandai Namco Entertainment / Project Aces"
+
+integration:
+  mechanism: "UDP Telemetry Bridge (JSON)"
+  crate: flight-ac7-telemetry
+  protocol_version: "flight.ac7.telemetry/1"
+  protocol_notes: >
+    Ace Combat 7 does not expose a native telemetry API. An external bridge
+    captures game state and relays it as newline-delimited JSON packets over
+    UDP. OpenFlight binds a local UDP socket (default: 127.0.0.1:7779) and
+    processes incoming packets via flight-ac7-protocol.
+
+supported_versions:
+  - "Ace Combat 7: Skies Unknown (Steam / PS4 / Xbox, 1.x)"
+
+requirements:
+  - "External AC7 telemetry bridge must be running and sending to the configured UDP address"
+  - "Firewall must allow localhost UDP on the configured port (default 7779)"
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false         # No native control injection API
+  force_feedback_translation: false
+  aircraft_detection: false   # AC7 bridge does not expose aircraft model strings
+
+test_coverage:
+  trace_replay: false
+  integration_tests: true   # UDP roundtrip + snapshot mapping tests in flight-ac7-telemetry
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 3
+
+known_issues:
+  - id: REQUIRES_BRIDGE
+    description: >
+      AC7 telemetry requires a separate bridge process to extract game state.
+      OpenFlight does not ship the bridge; users must obtain or build one
+      compatible with the flight.ac7.telemetry/1 protocol.
+  - id: NO_AIRCRAFT_DETECTION
+    description: >
+      The AC7 telemetry bridge does not report aircraft model names, so
+      automatic aircraft profile switching is not supported for this adapter.
+  - id: NO_FFB
+    description: >
+      No force-feedback translation is implemented. The AC7 game engine does
+      not expose stick force data suitable for FFB synthesis.

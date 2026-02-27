@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# VID confirmed: the-sz.com USB ID DB (VIRPIL, UAB)
+# PIDs confirmed: Buzzec/virpil open-source Rust LED control library
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle CM3"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0194
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, flaps, scx, scy, slider]
+    resolution_bits: 14
+  buttons: 78
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(12) + buttons_lsb(10)"
+  total_bytes: 23
+  axis_max_raw: 16384
+
+quirks:
+  - id: REPORT_ID_BYTE
+    description: "First byte is always 0x01 (report ID). Skip when parsing axis data."
+  - id: SCX_SCY_CENTER
+    description: "SCX/SCY are spring-return; they center at raw 8192. All other axes are non-return."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: "Axis max 16384 (14-bit) confirmed from Buzzec/virpil source. 78 buttons across 10 bytes LSB-first."

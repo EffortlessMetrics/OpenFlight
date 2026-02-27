@@ -1,0 +1,38 @@
+[package]
+name = "flight-hotas-ch-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-ch]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_fighterstick"
+path = "fuzz_targets/fuzz_fighterstick.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_pro_throttle"
+path = "fuzz_targets/fuzz_pro_throttle.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_pro_pedals"
+path = "fuzz_targets/fuzz_pro_pedals.rs"
+test = false
+doc = false

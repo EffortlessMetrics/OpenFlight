@@ -1,0 +1,59 @@
+# Heusinkveld Sim Handbrake
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8: Microchip Technology (used by Heusinkveld for PIC/USB devices).
+# PID 0xE2C6 is a community estimate for the Heusinkveld Sim Handbrake;
+# distinct from the 0xF6D5 estimate in sim-pedals-handbrake.yaml.
+# The Heusinkveld Sim Handbrake uses a Hall effect sensor for contactless
+# position sensing with adjustable pull force.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Handbrake"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xE2C6   # Community estimate — Sim Handbrake; see also 0xF6D5
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [rx]   # Handbrake pull axis
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xE2C6 is a community estimate; another estimate (0xF6D5) is in
+      sim-pedals-handbrake.yaml. Confirm from lsusb on real hardware.
+  - id: HALL_EFFECT_SENSOR
+    description: >
+      The Sim Handbrake uses a contactless Hall effect sensor for the pull
+      axis. In flight sim use, the axis can be mapped to a spoiler or airbrake
+      channel.
+  - id: MICROCHIP_VID
+    description: >
+      VID 0x04D8 is the Microchip Technology USB VID shared by many HID
+      devices. Rely on PID for device identification.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Handbrake. VID 0x04D8 (Microchip), PID 0xE2C6 community
+    estimate (see also 0xF6D5). Hall-effect handbrake; maps to spoiler/airbrake
+    in flight sim. Last reviewed: 2026-06.

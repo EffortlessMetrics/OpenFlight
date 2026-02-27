@@ -9,6 +9,7 @@
 use crate::device_support::{
     LOGITECH_VENDOR_ID, MAD_CATZ_VENDOR_ID, SAITEK_VENDOR_ID, X52_PID, X52_PRO_PID, X55_STICK_PID,
     X55_THROTTLE_PID, X56_LOGITECH_STICK_PID, X56_MADCATZ_STICK_PID, X56_MADCATZ_THROTTLE_PID,
+    X65F_PID,
 };
 
 /// Saitek/Logitech HOTAS device types.
@@ -18,6 +19,8 @@ pub enum SaitekHotasType {
     X52,
     /// X52 Pro Flight Control System
     X52Pro,
+    /// X65F F-22 Raptor HOTAS
+    X65F,
     /// X55 Rhino H.O.T.A.S. - Stick component
     X55Stick,
     /// X55 Rhino H.O.T.A.S. - Throttle component
@@ -64,6 +67,7 @@ impl SaitekHotasType {
             return match pid {
                 X52_PID => Some(Self::X52),
                 X52_PRO_PID => Some(Self::X52Pro),
+                X65F_PID => Some(Self::X65F),
                 // X55 may also appear under Saitek VID on some units
                 X55_STICK_PID => Some(Self::X55Stick),
                 X55_THROTTLE_PID => Some(Self::X55Throttle),
@@ -76,7 +80,7 @@ impl SaitekHotasType {
 
     /// Returns `true` if this device uses unified USB topology (stick + throttle on one cable).
     pub fn is_unified_topology(&self) -> bool {
-        matches!(self, Self::X52 | Self::X52Pro)
+        matches!(self, Self::X52 | Self::X52Pro | Self::X65F)
     }
 
     /// Returns `true` if this device uses split USB topology (separate cables).
@@ -88,7 +92,7 @@ impl SaitekHotasType {
     pub fn is_stick(&self) -> bool {
         matches!(
             self,
-            Self::X52 | Self::X52Pro | Self::X55Stick | Self::X56Stick
+            Self::X52 | Self::X52Pro | Self::X65F | Self::X55Stick | Self::X56Stick
         )
     }
 
@@ -106,7 +110,7 @@ impl SaitekHotasType {
 
     /// Returns `true` if this device has LED indicators.
     pub fn has_leds(&self) -> bool {
-        matches!(self, Self::X52 | Self::X52Pro)
+        matches!(self, Self::X52 | Self::X52Pro | Self::X65F)
     }
 
     /// Returns `true` if this device has RGB lighting.
@@ -121,6 +125,7 @@ impl SaitekHotasType {
         match self {
             Self::X52 => "Saitek X52 Flight Control System",
             Self::X52Pro => "Saitek X52 Pro Flight Control System",
+            Self::X65F => "Saitek X65F F-22 Raptor HOTAS",
             Self::X55Stick => "Saitek X55 Rhino Stick",
             Self::X55Throttle => "Saitek X55 Rhino Throttle",
             Self::X56Stick => "Saitek/Logitech X56 Rhino Stick",
@@ -133,6 +138,7 @@ impl SaitekHotasType {
         match self {
             Self::X52 => "X52",
             Self::X52Pro => "X52 Pro",
+            Self::X65F => "X65F",
             Self::X55Stick => "X55 Stick",
             Self::X55Throttle => "X55 Throttle",
             Self::X56Stick => "X56 Stick",
@@ -144,6 +150,7 @@ impl SaitekHotasType {
     pub fn family(&self) -> SaitekHotasFamily {
         match self {
             Self::X52 | Self::X52Pro => SaitekHotasFamily::X52,
+            Self::X65F => SaitekHotasFamily::X65,
             Self::X55Stick | Self::X55Throttle => SaitekHotasFamily::X55,
             Self::X56Stick | Self::X56Throttle => SaitekHotasFamily::X56,
         }
@@ -155,6 +162,8 @@ impl SaitekHotasType {
 pub enum SaitekHotasFamily {
     /// X52 and X52 Pro
     X52,
+    /// X65F F-22 Raptor
+    X65,
     /// X55 Rhino
     X55,
     /// X56 Rhino
@@ -166,6 +175,7 @@ impl SaitekHotasFamily {
     pub fn name(&self) -> &'static str {
         match self {
             Self::X52 => "X52 Series",
+            Self::X65 => "X65F",
             Self::X55 => "X55 Rhino",
             Self::X56 => "X56 Rhino",
         }

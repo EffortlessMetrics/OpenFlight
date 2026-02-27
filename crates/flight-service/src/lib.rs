@@ -18,15 +18,25 @@
 //! axis processing, curve conflict detection, and simulator integration.
 
 pub mod aircraft_auto_switch_service;
+pub mod audit_log;
 pub mod capability_service;
+pub mod config_watcher;
+pub mod crash_report;
 pub mod curve_conflict_service;
+pub mod diagnostic_bundle;
 pub mod error_taxonomy;
+pub mod first_run;
+pub mod graceful_drain;
 pub mod health;
+pub mod health_http;
 pub mod input_runtime;
+pub mod instance_lock;
+pub mod metrics_server;
 pub mod one_click_resolver;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
+pub mod startup_sequence;
 pub mod stecs_runtime;
 
 #[cfg(feature = "tflight-hidapi")]
@@ -46,8 +56,8 @@ mod integration_tests;
 mod test_service;
 
 pub use aircraft_auto_switch_service::{
-    AdapterConfigs, AdapterMetrics, AircraftAutoSwitchService, AircraftAutoSwitchServiceConfig,
-    BusSubscriptionConfig, ServiceMetrics,
+    AdapterConfigs, AdapterMetrics, AdapterState, AircraftAutoSwitchService,
+    AircraftAutoSwitchServiceConfig, BusSubscriptionConfig, ServiceMetrics,
 };
 pub use capability_service::{
     AxisCapabilityStatus, CapabilityService, CapabilityServiceConfig, SetCapabilityResult,

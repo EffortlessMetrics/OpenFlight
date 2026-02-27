@@ -1,0 +1,63 @@
+# WinWing SimAppPro Overhead Panel (Left Section)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBF30 is a community estimate for the SimAppPro Overhead Left panel.
+# The SimAppPro Overhead panel series replicates the A320 overhead control
+# panel. Left and right sections enumerate as separate USB HID devices.
+# Complements the SimAppPro FCU (simapp-pro-fcu.yaml) for full A320
+# overhead management in MSFS / X-Plane.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro Overhead Panel (Left)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF30   # Community estimate — SimAppPro Overhead Left
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF30 is a community estimate for the Overhead Left panel section.
+      The Overhead Right is estimated at 0xBF31. Confirm with lsusb before deployment.
+  - id: A320_OVERHEAD_SPECIFIC
+    description: >
+      This panel covers the left section of the A320 overhead panel: fuel pump
+      switches, hydraulic system controls, electrical bus management, and pack
+      flow selectors. Button assignments follow the A320 overhead left layout.
+  - id: OVERHEAD_PAIR
+    description: >
+      This left-section panel pairs with the SimAppPro Overhead Right panel
+      (simapp-pro-overhead-r.yaml) to form the complete A320 overhead. Both
+      are required for full overhead coverage.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro Overhead Panel (Left) — A320 overhead left section.
+    PID 0xBF30 is a community estimate. Pairs with Overhead Right
+    (simapp-pro-overhead-r.yaml) and SimAppPro FCU (simapp-pro-fcu.yaml).
+    Last reviewed: 2026-06.

@@ -1,0 +1,51 @@
+# CH Products USB Yoke (Alt PID 0x00F5)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E confirmed (CH Products).
+# PID 0x00F5 is a community-reported alternate PID for the CH USB Yoke / Eclipse Yoke.
+# The primary Flight Sim Yoke PID is 0x00F4 (flightsim-yoke.yaml).
+# This PID may correspond to a specific revision of the CH USB Yoke product line.
+schema_version: "1"
+
+device:
+  name: "CH Products USB Yoke (Alt PID)"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products
+    product_id: 0x00F5      # Community-reported alt PID; primary is 0x00F4
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F5 is community-reported for a CH USB Yoke revision.
+      Confirm with lsusb. The primary yoke PID is 0x00F4 (flightsim-yoke.yaml).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products USB Yoke alternate PID (0x00F5). See flightsim-yoke.yaml for
+    the primary variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

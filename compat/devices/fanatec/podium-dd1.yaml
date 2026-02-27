@@ -1,0 +1,63 @@
+# Fanatec Podium DD1 Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0040 is a community estimate for the Podium DD1.
+# The Podium DD1 is Fanatec's mid-range enthusiast direct-drive base (20 Nm peak).
+# Used in combined sim setups with flight grip adapters where higher torque than
+# the CSL DD (csl-dd.yaml) or ClubSport DD (podium-pedals.yaml sibling) is needed.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium DD1"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0040   # Community estimate — Podium DD1
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 20.0  # Podium DD1 peak Nm
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0040 is a community estimate for the Podium DD1. Confirm with lsusb
+      or Fanatec wheel property page USB capture before deployment.
+  - id: TORQUE_ONLY_FFB
+    description: >
+      The Podium DD1 uses Fanatec's vendor torque-command protocol. Similar to
+      the CSL DD but with higher torque envelope (20 Nm vs 8 Nm).
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      Flight grip adapters mount on the Podium DD1 shaft and enumerate separately.
+      The DD1 base itself exposes only the single rotation axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium DD1 — 20 Nm direct-drive enthusiast base.
+    VID 0x0EB7 confirmed; PID 0x0040 is a community estimate.
+    Higher torque than CSL DD (csl-dd.yaml). Used in combined sim setups.
+    Last reviewed: 2026-06.

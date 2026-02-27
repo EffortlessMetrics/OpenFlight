@@ -1,0 +1,50 @@
+# Saitek Pro Flight Combo Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Saitek Pro Flight Combo Pack is a retail bundle combining the Pro Flight
+# Yoke System and Pro Flight Rudder Pedals. Each component is an independent
+# USB device with its own VID/PID. This manifest is a VIRTUAL BUNDLE descriptor.
+# Components:
+#   - Pro Flight Yoke System   (VID 0x06A3, PID 0x0BAC — see pro-flight-yoke.yaml)
+#   - Pro Flight Rudder Pedals (VID 0x06A3 — see pro-flight-rudder-pedals.yaml)
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Combo Pack (Bundle)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0000      # Virtual bundle — no real USB device
+  hid:
+    usage_page: 0x00
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      No physical USB device. Components enumerate independently.
+      See pro-flight-yoke.yaml and pro-flight-rudder-pedals.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle for Saitek Pro Flight Combo Pack. References
+    pro-flight-yoke.yaml + pro-flight-rudder-pedals.yaml. Last reviewed: 2026-06.

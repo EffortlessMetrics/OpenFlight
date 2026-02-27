@@ -1,0 +1,53 @@
+# Speedlink Black Widow Joystick (Logitech rebrand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC20A from the community USB capture
+# reports identifying this as a rebranded Logitech joystick sold under
+# the Speedlink Black Widow name. Logitech OEM-licensed the design;
+# the device enumerates identically to early Logitech Attack-series sticks.
+schema_version: "1"
+
+device:
+  name: "Speedlink Black Widow Joystick"
+  vendor: "Speedlink / Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (OEM VID used by Speedlink rebrand)
+    product_id: 0xC20A      # Community-confirmed: Speedlink Black Widow rebranded Logitech
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: REBRANDED_LOGITECH
+    description: >
+      The Speedlink Black Widow is a rebrand of a Logitech Extreme 3D-
+      generation joystick. It uses Logitech's VID (0x046D) unchanged.
+      Functionally identical to the Logitech Extreme 3D Pro predecessor.
+  - id: AXIS_RESOLUTION_8BIT
+    description: >
+      All axes are 8-bit (256 steps). Deadzone and curve correction is
+      recommended to mask quantisation noise at low-speed inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Speedlink Black Widow — rebranded Logitech entry-level joystick.
+    VID 0x046D (Logitech); PID 0xC20A from community USB captures.
+    Budget stick; common in Europe. Last reviewed: 2026-06.

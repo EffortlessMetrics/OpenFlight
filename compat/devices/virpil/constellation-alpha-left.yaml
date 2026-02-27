@@ -1,0 +1,57 @@
+# VIRPIL VPC Constellation Alpha (left grip on CM3 base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID confirmed: the-sz.com USB ID DB (VIRPIL, UAB)
+# PID confirmed: VID 0x3344, PID 0x838F — linux-hardware.org probe data
+#   ("L-VPC Stick MT-50CM3", 1 probe). Cross-referenced with community Lua
+#   script FwlDynamicJoystickMapper/virpil_cm3_aprime_l.lua.
+#
+# Note: The right Alpha grip on a CM3/WarBRD base shares PID 0x4130 with the
+# MongoosT-50CM3 stick; see mongoost-stick.yaml. The standalone Alpha Prime
+# HOSAS configuration uses PIDs 0x0138 (left) and 0x4139 (right).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Alpha Left (CM3)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x838F  # L-VPC Stick MT-50CM3 — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: "Hat switch is encoded in the high nibble (bits 4–7) of button byte 4. Values 0–7 = N/NE/E/SE/S/SW/W/NW; others = center."
+  - id: LEFT_HAND_STICK
+    description: "This is the left-hand stick in a HOSAS configuration mounted on a CM3 base. The right stick uses PID 0x4130 (see mongoost-stick.yaml)."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x838F confirmed from linux-hardware.org (1 probe, "L-VPC Stick MT-50CM3").
+    HID report format assumed to match MongoosT-50CM3 (same VIRPIL firmware family);
+    verify against hardware before relying on byte offsets.

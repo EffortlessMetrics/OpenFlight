@@ -1,0 +1,52 @@
+# Asetek SimSports Entry Level Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Asetek SimSports entry-level 3-pedal set. Positioned below the Sprint and
+# Invicta pedals in the Asetek lineup. Potentiometer-based axes; no load cell.
+# VID and PID are community estimates — confirm with lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "Asetek SimSports Entry Level Pedals"
+  vendor: "Asetek SimSports"
+  usb:
+    vendor_id: 0x2735       # Community estimate — Asetek SimSports
+    product_id: 0x0010      # Community estimate — entry pedals; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2735 and PID 0x0010 are community estimates. Confirm with lsusb.
+      Asetek SimSports may assign a different PID than other models in the lineup.
+  - id: POTENTIOMETER_AXES
+    description: >
+      Entry-level pedals use standard potentiometer sensors. Resolution is
+      12-bit; no load cell or Hall sensor on this variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Asetek SimSports entry pedals. VID/PID unconfirmed — community estimate.
+    Potentiometer-based; compare with invicta-pedals.yaml for higher-tier option.
+    Last reviewed: 2026-06.

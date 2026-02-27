@@ -1,0 +1,68 @@
+# Moza R16 Direct Drive Base (Alt PID 0x0006)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology (Moza).
+# PID 0x0006 is a community-reported alternate PID for the Moza R16.
+# The primary manifest uses PID 0x0010 (r16-base.yaml). PID 0x0006 may
+# correspond to an earlier firmware revision or production batch.
+# Confirm with lsusb or Moza Pit House software before production deployment.
+
+schema_version: "1"
+
+device:
+  name: "Moza R16 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology) — confirmed
+    product_id: 0x0006      # Community estimate — alt PID; primary is 0x0010 (r16-base.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 17     # Moza proprietary encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 16.0   # R16 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0006 is a community estimate. The primary Moza R16 manifest uses
+      PID 0x0010 (r16-base.yaml). Verify with lsusb or Moza Pit House software
+      before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R16 accepts raw torque commands rather than DirectInput effect types.
+      Same protocol as the Moza R9 and AB series.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R16 base exposes only the rotation axis. A flight grip adapter is
+      needed to provide button inputs for flight sim use.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R16 Direct Drive alternate PID 0x0006. Primary manifest is r16-base.yaml
+    (PID 0x0010). VID 0x346E = Moza (Gudsen Technology). 16 Nm peak.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

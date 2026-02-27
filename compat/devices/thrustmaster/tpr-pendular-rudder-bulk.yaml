@@ -1,0 +1,55 @@
+# Thrustmaster T-Pendular Rudder Bulk (TPR Bulk)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Bulk-endpoint variant of the T-Pendular Rudder (TPR).
+# PID confirmed via linux-hardware.org ("TPR Rudder Bulk").
+# See also: tpr-pendular-rudder.yaml for the standard HID variant (0xB68F).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-Pendular Rudder Bulk"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0xB68E  # TPR Rudder Bulk — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rz, z, rx]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+hid_report:
+  format: "Rz(u16le) + Z(u16le) + Rx(u16le)"
+  total_bytes: 6
+  note: >
+    Same axis layout as the standard TPR variant (0xB68F).
+    Rz = combined differential rudder, Z = right toe brake, Rx = left toe brake.
+
+quirks:
+  - id: BULK_ENDPOINT
+    description: >
+      Uses USB Bulk transfer endpoints instead of interrupt, which gives higher
+      throughput but identical latency in practice. The HID descriptor and report
+      format are identical to the standard interrupt-mode variant (0xB68F).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xB68E confirmed from linux-hardware.org ("TPR Rudder Bulk").
+    Shares the same axis layout and range as the standard TPR (0xB68F).
+    Last validated: 2026-02.

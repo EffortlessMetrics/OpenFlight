@@ -1,0 +1,53 @@
+# Defender Game Racer Wireless Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0079 is a DragonRise Inc. VID commonly used by Defender-branded
+# and other Eastern European / Chinese OEM peripherals.
+# PID 0x0006 is a community estimate for the Defender Game Racer Wireless Pro.
+# Defender is a peripheral brand popular in Eastern Europe and Russia.
+schema_version: "1"
+
+device:
+  name: "Defender Game Racer Wireless Pro"
+  vendor: "Defender (DragonRise OEM)"
+  usb:
+    vendor_id: 0x0079       # DragonRise Inc. — common OEM VID for Defender brand
+    product_id: 0x0006      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0079 / PID 0x0006 are community estimates for the Defender Game Racer
+      Wireless. DragonRise VID 0x0079 is shared across many OEM gamepad products;
+      confirm the exact PID with lsusb.
+  - id: SHARED_OEM_VID
+    description: >
+      VID 0x0079 (DragonRise Inc.) is used by many unrelated gamepad products.
+      If enumeration conflicts occur, disambiguate by serial number or product string.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Defender Game Racer Wireless Pro — Eastern European market gamepad.
+    VID 0x0079 / PID 0x0006 are community estimates; verify with lsusb.
+    Last reviewed: 2026-06.

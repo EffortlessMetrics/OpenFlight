@@ -1,0 +1,63 @@
+# Asetek SimSports Invicta Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 is the Arduino LLC registered USB vendor ID; Asetek SimSports
+# Invicta Pedals are community-reported to use an Arduino-based HID firmware.
+# PID 0x8036 is a community estimate corresponding to an Arduino Leonardo HID
+# composite device — confirm with lsusb before deployment.
+# The Invicta Pedals are Asetek SimSports' precision load-cell pedal set
+# with adjustable angle and force profiles via companion software.
+
+schema_version: "1"
+
+device:
+  name: "Asetek SimSports Invicta Pedals"
+  vendor: "Asetek SimSports"
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (community-reported for Invicta firmware)
+    product_id: 0x8036   # Community estimate — Arduino Leonardo HID; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: ARDUINO_BASED_HID
+    description: >
+      The Invicta Pedals use an Arduino-based HID firmware (community report).
+      VID 0x2341 (Arduino LLC) / PID 0x8036 (Leonardo HID) are community
+      estimates. Confirm with lsusb on Invicta Pedal hardware before
+      enabling production device matching.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake pedal uses a load cell for pressure-based input. The brake axis
+      represents applied force rather than pedal travel. Calibrate brake
+      pressure curves independently from throttle and clutch.
+  - id: COMPANION_SOFTWARE
+    description: >
+      Asetek SimSports companion software provides calibration, axis scaling,
+      and force profile adjustment. Settings are stored in firmware; the
+      HID report reflects calibrated axis values.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Asetek SimSports Invicta Pedals — Arduino-based HID load-cell pedal set.
+    VID 0x2341 / PID 0x8036 are community estimates (Arduino Leonardo HID).
+    Verify with lsusb on real hardware. Last reviewed: 2026-06.

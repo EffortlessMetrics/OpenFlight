@@ -1,0 +1,56 @@
+# Wilco Publishing Boeing 737 FMC USB Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wilco Publishing produced hardware panels for their Boeing 737 simulation
+# software. VID 0x04B4 is Cypress Semiconductor (common custom USB HID VID).
+# PID 0xF285 is a community estimate for the 737 FMC USB interface.
+schema_version: "1"
+
+device:
+  name: "Wilco Boeing 737 FMC"
+  vendor: "Wilco Publishing"
+  usb:
+    vendor_id: 0x04B4    # Cypress Semiconductor — common custom USB HID VID
+    product_id: 0xF285   # Community estimate — PID from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x06          # Keyboard (FMC uses keyboard-style HID report)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 (Cypress) and PID 0xF285 are community estimates.
+      Verify with lsusb or Windows Device Manager on real Wilco 737 FMC hardware.
+  - id: FMC_BUTTON_PANEL
+    description: >
+      The FMC is a button-only panel (CDU keyboard). No analogue axes.
+      All inputs are discrete key presses mapped to sim FMC functions via
+      the rules engine.
+  - id: KEYBOARD_HID_CLASS
+    description: >
+      Wilco FMC panels typically use the HID Keyboard Usage Page (0x01 / 0x06)
+      rather than Joystick Usage Page for button input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Wilco Publishing Boeing 737 FMC hardware panel. VID 0x04B4 (Cypress) and
+    PID 0xF285 are community estimates. Button-only CDU keyboard interface.
+    Last reviewed: 2026-06.

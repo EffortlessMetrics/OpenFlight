@@ -1,0 +1,51 @@
+# WinWing Orion Throttle Base II + F-16 Throttle Grip (TGRIP-F16)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBE68 — linux-hardware.org (3 probes, USB string
+# "Orion Throttle Base II + TGRIP-F16", vendor "Winwing").
+# Observed alongside F18 COMBAT READY PANEL (0xBE05), F18 TAKEOFF PANEL
+# (0xBE04) and ICP (0xBF06) on the same ASUSTek system.
+device:
+  name: "WinWing Orion Throttle Base II + F-16 Grip"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE68
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, z, rx, ry]
+    resolution_bits: 12
+  buttons: 40
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands
+      based on the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Orion Throttle Base II fitted with the F-16 single-engine throttle grip
+    (TGRIP-F16). PID 0xBE68 confirmed from linux-hardware.org (3 probes).
+    Single throttle lever contrasts with the split-throttle F/A-18C variant
+    (PID 0xBE62) and dual-handle F-15EX variant (PID 0xBD64).

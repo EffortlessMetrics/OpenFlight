@@ -1,0 +1,65 @@
+# Skalarki Electronics Generic MCP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics (UK) produces USB-based cockpit panel replicas for
+# home simulator builders. This manifest covers the generic MCP (Mode Control
+# Panel / autopilot panel) product — a general-purpose autopilot controller
+# not tied to a specific aircraft type.
+# VID/PID: Skalarki uses a custom USB HID firmware; specific IDs unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Generic MCP Autopilot Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x20A0       # Community estimate for Skalarki (openmoko VID range)
+    product_id: 0x416C      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32               # Autopilot mode buttons (A/P, FD, AT, LNAV, VNAV, etc.)
+  hats: 0
+  encoders: 6               # Speed, heading, altitude, VS, course L/R
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 20
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x20A0 and PID 0x416C are community estimates for Skalarki panels.
+      Skalarki uses a custom HID firmware; verify VID/PID with USBView on
+      real hardware before deployment.
+  - id: SKALARKI_HID_PROTOCOL
+    description: >
+      Skalarki panels use a USB HID protocol with custom report descriptors.
+      Button and encoder events are mapped via the OpenFlight Skalarki adapter
+      layer which normalises them to standard axis/button events.
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      Speed, heading, altitude, and VS displays use 7-segment outputs driven
+      by HID output reports from the sim telemetry pipeline.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki generic MCP — USB HID autopilot panel for cockpit builders.
+    VID/PID unconfirmed; community estimates only. See boeing-737-overhead-l.yaml
+    and fcu-airbus.yaml for aircraft-specific Skalarki panels.
+    Last reviewed: 2026-06.

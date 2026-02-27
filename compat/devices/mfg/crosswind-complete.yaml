@@ -1,0 +1,58 @@
+# MFG Crosswind Complete Edition Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551 confirmed (MFG — Motion Fantasy Games). The Crosswind Complete
+# Edition bundles the standard Crosswind V3/V4 base with the toe-brake
+# extension kit included at the factory. Electrically identical to the
+# standard Crosswind V3 or V4 depending on generation; the USB enumeration
+# is the same. This manifest documents the Complete Edition capability
+# profile (all 3 axes active by default including both toe brakes).
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind Complete Edition"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551       # MFG (confirmed)
+    product_id: 0x0003      # Same as V3 base (Complete = V3 base + toe brakes included)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: COMPLETE_EDITION_SAME_PID
+    description: >
+      The Crosswind Complete Edition uses the same PCB and firmware as the
+      standard V3 (PID 0x0003). The "Complete Edition" is a bundle label,
+      not a hardware variant. Buyers who add the toe-brake kit later have
+      functionally identical hardware.
+  - id: TOE_BRAKES_ALWAYS_ACTIVE
+    description: >
+      Unlike the base Crosswind (single-axis rudder only), the Complete
+      Edition ships with both toe-brake axes connected and calibrated at
+      the factory. All 3 axes are always reported in the HID report.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind Complete Edition. VID 0x1551 confirmed; PID 0x0003 is
+    the same as the standard V3 base. 3-axis (rudder + 2 toe brakes).
+    Electrically identical to crosswind-v3.yaml with toe brakes included.
+    Last reviewed: 2026-06.

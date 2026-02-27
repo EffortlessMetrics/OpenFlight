@@ -1,0 +1,63 @@
+# Meta Quest Pro VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2833 confirmed: Meta Platforms / Oculus VR (registered USB vendor ID).
+# PID 0x0133 is a community estimate for the Meta Quest Pro USB interface.
+# The Quest Pro is Meta's professional-grade standalone VR headset featuring
+# eye tracking, face tracking, and mixed-reality colour passthrough.
+# Used in professional flight simulation via PCVR Link or Air Link.
+
+schema_version: "1"
+
+device:
+  name: "Meta Quest Pro VR HMD"
+  vendor: "Meta Platforms"
+  usb:
+    vendor_id: 0x2833    # Meta Platforms / Oculus VR (confirmed)
+    product_id: 0x0133   # Community estimate — Quest Pro USB; confirm with lsusb
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0133 is a community estimate. Meta Quest devices may enumerate
+      with different PIDs depending on USB mode (charging / ADB / Link).
+      Confirm with lsusb while connected in PCVR Link mode on Quest Pro hardware.
+  - id: PCVR_LINK_REQUIRED
+    description: >
+      6DOF tracking is accessible via Meta Quest Link cable or Air Link
+      wireless PCVR mode. OpenFlight accesses head tracking via OpenVR/SteamVR
+      bridge. Direct USB HID tracking access is not exposed.
+  - id: EYE_AND_FACE_TRACKING
+    description: >
+      The Quest Pro includes eye tracking and face tracking via Meta XR SDK.
+      These features are not accessible via the standard HID interface or
+      SteamVR bridge and require the Meta XR SDK for direct access.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meta Quest Pro professional VR HMD (eye + face tracking). VID 0x2833
+    confirmed (Meta/Oculus); PID 0x0133 is a community estimate. Requires
+    PCVR Link or Air Link for flight sim use. 6DOF tracking via OpenVR/
+    SteamVR bridge. Last reviewed: 2026-06.

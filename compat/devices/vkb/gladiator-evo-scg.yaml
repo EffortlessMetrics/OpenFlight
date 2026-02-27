@@ -1,0 +1,52 @@
+# VKB Gladiator EVO SCG (Right-Hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKBsim.
+# The Gladiator EVO SCG is a variant of the Gladiator EVO Omni Throttle (OT)
+# fitted with an SCG (Space Combat Grip) instead of the standard grip.
+# Right-hand variant. PID is a community estimate based on the EVO OT range.
+# PID 0x0215 is an estimate — verify via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO SCG (Right)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0215   # Community estimate — EVO SCG right
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0215 is a community estimate. Left variant expected at 0x0216.
+      Verify via linux-hardware.org USB string "VKBsim Gladiator EVO SCG".
+  - id: CONFIGURABLE_AXES
+    description: "Axis mapping changeable in VKBDevCfg; aligns with OpenFlight assignments."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator EVO SCG right-hand variant. PID 0x0215 is unconfirmed.
+    VID 0x231D confirmed. Left variant: gladiator-evo-scg-left.yaml.
+    Last reviewed: 2026-02.

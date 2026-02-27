@@ -1,0 +1,44 @@
+# WinWing OpenFlight Panel (PID 0x0237)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0x0237 — estimated.
+# OpenFlight generic panel — configurable panel module for civil aviation.
+schema_version: "1"
+device:
+  name: "WinWing OpenFlight Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0x0237      # Community estimate — OpenFlight panel; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+capabilities:
+  axes:
+    count: 2
+    names: [dial_l, dial_r]
+    resolution_bits: 10
+  buttons: 16
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0237 is a community estimate for this civil aviation panel.
+      Confirm with SimAppPro or lsusb before production deployment.
+  - id: PANEL_DEVICE
+    description: >
+      Mixed panel device with rotary dials (axes) and pushbutton switches.
+      Optimised for MSFS civil aviation use cases.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing OpenFlight Panel — PID 0x0237 (est). Civil aviation configurable panel.
+    Rotary dials plus pushbuttons. Wave-55 addition. Last reviewed: 2026-07.

@@ -1,0 +1,52 @@
+# Moza CS Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Moza (Gudsen Technology). PID 0x0016 is a community
+# estimate. The Moza CS is a compact sport-style steering wheel rim for Moza
+# R-series direct-drive bases, targeting entry-level racing setups.
+# Inputs are relayed through the base USB HID device.
+
+schema_version: "1"
+
+device:
+  name: "Moza CS Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology — confirmed)
+    product_id: 0x0016    # Community estimate — CS rim; confirm from lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 10
+  hats: 1
+  force_feedback: false   # FFB from base, not rim
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0016 is a community estimate. Confirm from lsusb on real hardware.
+      The CS rim inputs are relayed through the Moza base PID, which may differ.
+  - id: RIM_ADDON
+    description: >
+      The CS is a wheel rim requiring a Moza R-series base. All inputs are
+      relayed via the base's USB HID device. No standalone USB enumeration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza CS Steering Wheel rim. VID 0x346E confirmed; PID 0x0016 community
+    estimate. Compact sport rim for Moza R-series bases. Last reviewed: 2026-06.

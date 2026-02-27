@@ -1,0 +1,52 @@
+# PFC Boeing 737 Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC Boeing 737-style throttle quadrant with two thrust levers, speed-brake
+# lever, and flap lever. Separate from the PFC B737 control column
+# (boeing-737-column.yaml). Intended for FAA-approved ATD use. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Boeing 737 Throttle Quadrant"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0125      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_l, throttle_r, speed_brake, flap]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Contact PFC for exact USB descriptor."
+  - id: REVERSE_THRUST_GATE
+    description: >
+      Thrust levers include a reverse-thrust gate. Axis values below the
+      gate threshold should be mapped to reverse-thrust range in profile.
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes are unipolar; use forward-only mapping."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC B737 throttle quadrant (2x thrust + speed-brake + flap). Pairs with
+    boeing-737-column.yaml for full B737 ATD setup. VID/PID unconfirmed.
+    Last reviewed: 2026-06.

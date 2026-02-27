@@ -1,0 +1,78 @@
+# Thrustmaster HOTAS Warthog Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Warthog Throttle"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0404   # Confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [scx, scy, throttle_left, throttle_right, throttle_combined]
+    resolution_bits: 16
+  buttons: 40
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: WARTHOG_THROTTLE_DUAL_INDEPENDENT
+    description: >
+      Left and right throttle levers move independently but can be locked
+      together with the friction interlock. When locked, `throttle_combined`
+      reflects the combined lever position; the individual axes still report.
+  - id: WARTHOG_THROTTLE_UNIPOLAR
+    description: >
+      Throttle axes (left, right, combined) are unipolar 16-bit channels:
+      0x0000 = idle (full back), 0xFFFF = full throttle (full forward).
+  - id: WARTHOG_SCX_SCY_BIPOLAR
+    description: >
+      Slew control axes (SCX/SCY) are bipolar 16-bit channels centered at
+      approximately 32768.
+  - id: WARTHOG_TOGGLE_SWITCHES
+    description: >
+      Physical toggle switches (FL, SPD, BOAT, CHINA, EAC, RDR, AUTOPILOT)
+      are reported as buttons and as a separate toggle-state byte. The toggle
+      byte preserves physical switch state independent of button edge events.
+  - id: WARTHOG_REPORT_LENGTH
+    description: >
+      The throttle report is approximately 20 bytes. Byte positions 18-19 are
+      reserved/padding and should be ignored. Exact layout has not been
+      validated on hardware; HIL verification recommended.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout, HIL pending)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The HOTAS Warthog Throttle is typically used with the Warthog Joystick
+    (0x0402) but functions as an independent USB device. Input report layout
+    is derived from community DCS TARGET scripting analysis and Linux evtest
+    captures. Byte offsets have not been validated on physical hardware.
+    Last validated: 2026-02.
+
+driver: standard_hid   # No vendor software required. TARGET scripting software is optional.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. Toggle switch state preserved across sessions."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; dual throttle levers and slew control recognised as generic axes."
+  - game: "Falcon BMS"
+    integration: direct_input
+    notes: "Standard DirectInput binding. TARGET macros commonly used for BMS throttle detents."

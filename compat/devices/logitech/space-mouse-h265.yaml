@@ -1,0 +1,51 @@
+# Logitech H265 Space Mouse
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech/3Dconnexion), PID 0xC627 — community estimate.
+# Logitech-branded H265 SpaceMouse (3Dconnexion product, Logitech-era VID).
+# The SpaceNavigator uses PID 0xC626 (confirmed). 0xC627 is adjacent estimate.
+schema_version: "1"
+device:
+  name: "Logitech H265 Space Mouse"
+  vendor: "Logitech / 3Dconnexion"
+  usb:
+    vendor_id: 0x046D       # Logitech International SA (3Dconnexion division, pre-2007)
+    product_id: 0xC627      # Community estimate — adjacent to SpaceNavigator (0xC626)
+  hid:
+    usage_page: 0x01
+    usage: 0x08             # Multi-axis Controller
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 2
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC627 is a community estimate adjacent to the SpaceNavigator
+      (PID 0xC626, confirmed). The H265 designation is a Logitech SKU name.
+      Confirm with lsusb; device may enumerate as SpaceNavigator variant.
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck provides simultaneous translation (Tx/Ty/Tz)
+      and rotation (Rx/Ry/Rz). All axes return to zero when released.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      General-purpose 6-DOF controller. Use for MSFS/X-Plane camera panning,
+      cockpit navigation, and external view control.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech H265 Space Mouse — VID 0x046D / PID 0xC627 (est).
+    Logitech-era 3Dconnexion 6-DOF space mouse. Adjacent to SpaceNavigator.
+    Wave-59 addition. Last reviewed: 2026-07.

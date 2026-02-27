@@ -1,0 +1,60 @@
+# Raspberry Pi Pico as USB HID (PID 0x0004)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x2E8A (Raspberry Pi Foundation, confirmed).
+# PID 0x0004 is the official Raspberry Pi Pico USB HID device PID as
+# documented at raspberrypi.com/documentation. The existing pico-sdk-joystick.yaml
+# uses PID 0x000A (community-reported). PID 0x0004 is the canonical Pico
+# USB HID PID from the official Pico USB product ID table.
+schema_version: "1"
+
+device:
+  name: "Raspberry Pi Pico USB HID"
+  vendor: "Raspberry Pi Foundation"
+  usb:
+    vendor_id: 0x2E8A       # Raspberry Pi Foundation (confirmed)
+    product_id: 0x0004      # Official Pico USB HID PID (raspberrypi.com USB product IDs)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_OFFICIAL_PICO
+    description: >
+      PID 0x0004 is the official Raspberry Pi Pico USB HID PID. The existing
+      pico-sdk-joystick.yaml uses PID 0x000A (community-reported SDK default).
+      The actual PID depends on the firmware: official MicroPython/CircuitPython
+      builds may use 0x0004; custom TinyUSB builds may vary.
+  - id: DIY_HARDWARE
+    description: >
+      The RP2040 Pico is a DIY hardware platform. Axis count, button count,
+      and HID report descriptor vary entirely by firmware/sketch.
+  - id: HIGH_POLL_RATE
+    description: >
+      The RP2040 supports USB full-speed 1000 Hz polling via TinyUSB.
+      MicroPython and CircuitPython default to lower rates.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Raspberry Pi Pico USB HID PID 0x0004 (official Raspberry Pi USB product ID).
+    See pico-sdk-joystick.yaml for PID 0x000A (SDK community default). VID 0x2E8A
+    confirmed = Raspberry Pi Foundation. DIY platform; layout is firmware-defined.
+    Wave-41 addition. Last reviewed: 2026-07.

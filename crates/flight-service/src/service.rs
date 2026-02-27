@@ -14,9 +14,10 @@ use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, info, warn};
 
-use flight_axis::{AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult};
+use flight_axis::{
+    AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult,
+};
 use flight_core::{
-    aircraft_switch::AutoSwitchConfig,
     profile::{AxisConfig, Profile},
     watchdog::{WatchdogConfig, WatchdogSystem},
 };
@@ -47,8 +48,8 @@ pub struct FlightServiceConfig {
     pub safe_mode_config: SafeModeConfig,
     /// Axis engine configuration
     pub axis_config: AxisEngineConfig,
-    /// Auto-switch configuration
-    pub auto_switch_config: AutoSwitchConfig,
+    /// Auto-switch service configuration (includes process detection, bus, and adapter settings)
+    pub auto_switch_config: AircraftAutoSwitchServiceConfig,
     /// Watchdog configuration
     #[serde(skip_serializing, skip_deserializing)]
     pub watchdog_config: WatchdogConfig,
@@ -121,7 +122,7 @@ impl Default for FlightServiceConfig {
                 enable_counters: true,
                 enable_conflict_detection: false,
             },
-            auto_switch_config: AutoSwitchConfig::default(),
+            auto_switch_config: AircraftAutoSwitchServiceConfig::default(),
             watchdog_config: WatchdogConfig::default(),
             enable_health_monitoring: true,
             enable_power_checks: true,
@@ -461,12 +462,7 @@ impl FlightService {
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
 
-        let config = AircraftAutoSwitchServiceConfig {
-            auto_switch: self.config.auto_switch_config.clone(),
-            ..Default::default()
-        };
-
-        let auto_switch = AircraftAutoSwitchService::new(config);
+        let auto_switch = AircraftAutoSwitchService::new(self.config.auto_switch_config.clone());
         self.auto_switch = Some(auto_switch);
         self.health
             .info("auto_switch", "Auto-switch service initialized")
@@ -905,7 +901,11 @@ mod tests {
         };
         // Should still compile (adds identity deadzone internally)
         let pipeline = build_pipeline_for_axis("roll", &config);
-        assert!(pipeline.is_ok(), "expected Ok for empty config, got {:?}", pipeline.err());
+        assert!(
+            pipeline.is_ok(),
+            "expected Ok for empty config, got {:?}",
+            pipeline.err()
+        );
     }
 
     #[tokio::test]
@@ -939,7 +939,11 @@ mod tests {
         };
 
         let result = service.apply_profile(&profile).await;
-        assert!(result.is_ok(), "apply_profile should succeed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "apply_profile should succeed: {:?}",
+            result.err()
+        );
 
         // Engine should now have a pending pipeline
         let engine = service.axis_engine.as_ref().expect("axis engine present");

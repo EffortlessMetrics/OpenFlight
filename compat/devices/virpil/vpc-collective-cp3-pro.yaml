@@ -1,0 +1,44 @@
+# VIRPIL VPC Collective CP3 Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls). PID 0x8213 estimated for CP3 Pro variant.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Collective CP3 Pro"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8213
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [collective, twist, friction, thumbx, thumby, slider, rotary]
+    resolution_bits: 14
+  buttons: 42
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PRO_COLLECTIVE
+    description: >
+      Pro variant adds additional rotary axis and extra hat switch.
+      Premium materials with metal collective lever arm.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Collective CP3 Pro premium helicopter collective.
+    PID 0x8213 estimated. VID 0x3344 confirmed. Last reviewed: 2026-06.

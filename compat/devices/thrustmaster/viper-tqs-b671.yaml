@@ -1,0 +1,54 @@
+# Thrustmaster Viper TQS (PID 0xB671 community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster Viper TQS (Throttle and Quadrant System) is a replica of the
+# F-16 Viper throttle quadrant. VID 0x044F (ThrustMaster GmbH) is confirmed.
+# PID 0xB671 is a community estimate for this throttle variant; see also
+# viper-tqs.yaml (0xB380) and viper-tqs-0404.yaml for other PID variants.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Viper TQS"
+  vendor: "Thrustmaster"
+  type: joystick
+  usb:
+    vendor_id: 0x044F   # ThrustMaster GmbH (confirmed)
+    product_id: 0xB671  # Community estimate — Viper TQS variant; see also 0xB380
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, x, y, rudder, friction]
+    resolution_bits: 16
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_VARIANT
+    description: >
+      PID 0xB671 is a community estimate for a Viper TQS firmware or hardware
+      variant. The primary community-documented PID is 0xB380 (viper-tqs.yaml).
+      Verify with lsusb on real hardware.
+  - id: TARGET_SOFTWARE
+    description: >
+      Full functionality of the Viper TQS requires Thrustmaster T.A.R.G.E.T.
+      software for axis calibration and button mapping.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster Viper TQS — PID 0xB671 community estimate variant.
+    5 axes, 20 buttons. PID estimated from community sources.
+    Last reviewed: 2026-07.

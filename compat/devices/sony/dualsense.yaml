@@ -1,0 +1,63 @@
+# Sony DualSense (PS5 Controller)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment.
+# PID 0x0CE6 confirmed from:
+#   1. Linux kernel drivers/hid/hid-playstation.c
+#   2. libsdl-org/SDL: MAKE_VIDPID(0x054c, 0x0ce6) — DualSense
+#   3. linux-hardware.org: 112 independent probes
+# The DualSense features adaptive triggers (piezo-electric haptic feedback)
+# and a built-in speaker, used in MSFS 2024 PC setups via Steam Input or
+# direct DInput mapping.
+schema_version: "1"
+
+device:
+  name: "Sony DualSense"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment
+    product_id: 0x0CE6   # DualSense (confirmed from kernel and SDL)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right, adaptive_trigger_l, adaptive_trigger_r]
+    max_update_rate_hz: 120
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: DUALSENSE_ADAPTIVE_TRIGGERS
+    description: >
+      DualSense adaptive triggers accept vendor-specific HID output reports
+      to vary trigger resistance. Standard FFB rumble is available via the
+      standard report; adaptive trigger control requires the DualSense
+      output report format (report ID 0x02 over USB).
+  - id: DUALSENSE_HAPTICS
+    description: >
+      The DualSense includes a built-in speaker and haptic actuators in the
+      grip areas. These are not accessible via standard DirectInput FFB;
+      they require the Sony SDK or open-source DualSense libraries.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Sony DualSense (PS5). VID/PID confirmed from Linux kernel, SDL, and
+    hardware probes. Used in MSFS 2020/2024 and DCS via Steam Input.
+    Adaptive trigger and haptic features require vendor reports.
+    Last reviewed: 2026-06.

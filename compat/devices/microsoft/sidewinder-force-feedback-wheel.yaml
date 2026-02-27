@@ -1,0 +1,59 @@
+# Microsoft SideWinder Force Feedback Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation. PID 0x001C confirmed from the
+# usb.ids community database ("Microsoft Corp. SideWinder Force Feedback
+# Wheel"). The SideWinder FF Wheel (1999–2002) was Microsoft's racing FFB
+# wheel; it uses the SideWinder force feedback protocol and includes a 3-pedal
+# set. Used in some flight sim setups as a rudder axis input.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback Wheel"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation (confirmed)
+    product_id: 0x001C   # SideWinder FF Wheel — usb.ids community database
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]    # steering, gas, brake, clutch
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine]
+    max_update_rate_hz: 200
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIDEWINDER_FFB_PROTOCOL
+    description: >
+      Uses Microsoft's SideWinder Force Feedback protocol rather than standard
+      DirectInput FFB. The Windows SideWinder driver wraps DirectInput FFB
+      calls to the proprietary protocol. Linux support via the hid-microsoft
+      driver is limited.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (270°, 10-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Map X to rudder in flight sim profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Force Feedback Wheel (1999–2002). VID/PID from
+    usb.ids. Proprietary FFB protocol. Used as rudder input in legacy flight
+    sim setups. Last reviewed: 2026-06.

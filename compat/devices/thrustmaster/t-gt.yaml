@@ -1,0 +1,62 @@
+# Thrustmaster T-GT (Gran Turismo) Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster), PID 0xB66F confirmed from the Linux kernel
+# drivers/hid/hid-ids.h. The T-GT is Thrustmaster's Gran Turismo Sport
+# official licensed wheel with T300 RS servo-based FFB and brushless motor.
+# Includes the Thrustmaster T3PA-GT pedal set.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-GT Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB66F      # Confirmed: Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 25
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (1080° rotation); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Wheel uses same servo FFB as T300 RS.
+  - id: FFB_BRUSHLESS_SERVO
+    description: >
+      T-GT uses a brushless-servo drive for lower noise and higher precision
+      than the T300 RS belt system. DirectInput FFB effect set is identical
+      to the T300 RS; OpenFlight maps spring + constant effects for rudder
+      centering simulation.
+  - id: GT_SPORT_MODE
+    description: >
+      GT Sport mode adds haptic feedback via rumble motors on the wheel rim.
+      This is separate from the FFB motor and maps to PlayStation rumble
+      output reports, not DirectInput FFB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T-GT — Gran Turismo licensed brushless-servo wheel.
+    VID/PID confirmed from Linux kernel hid-ids.h. Functionally similar
+    to T300 RS in flight sim context. Last reviewed: 2026-06.

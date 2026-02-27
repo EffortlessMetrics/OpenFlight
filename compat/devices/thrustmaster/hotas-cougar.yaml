@@ -1,0 +1,51 @@
+# Thrustmaster HOTAS Cougar (combined stick + throttle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# PID confirmed via USB ID database and Linux HID driver (usb:044f:0400)
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar"
+  vendor: "Thrustmaster (Guillemot)"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0400   # Confirmed via USB ID database and Linux HID driver
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    resolution_bits: 16
+    names: [x, y, throttle, rz, toe_left, toe_right]
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: COUGAR_COMBINED_USB_NODE
+    description: >
+      Stick and throttle share a single USB interface and enumerate as one
+      HID device. There is no separate throttle PID.
+  - id: COUGAR_16BIT_AXES
+    description: >
+      All axes use 16-bit resolution, giving higher precision than most
+      contemporaries. Community drivers (e.g. Foxy, HOTAS CCP) add extended
+      calibration support not available via generic HID.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Classic F-16 HOTAS released 2001, discontinued 2009. Known for high-precision
+    16-bit axes and full analog pedal simulation. PID 0x0400 confirmed via the
+    Linux HID driver and USB ID database. Input report layout derived from
+    community analysis and flight-hotas-thrustmaster::cougar parser tests.
+    Last validated: 2026-02.

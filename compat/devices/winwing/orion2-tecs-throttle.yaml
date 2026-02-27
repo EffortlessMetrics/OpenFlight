@@ -1,0 +1,54 @@
+# WinWing Orion 2 TECS Throttle (PID 0x0215)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0215 is a community estimate for the Orion 2 TECS (Twin Engine
+# Control System) Throttle unit. The F/A-18C throttle variant uses PID
+# 0xBE6A (orion2-f18c-throttle.yaml) and the F-16 variant 0xBE68.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 TECS Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0215      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [z, rz, slider, slider2]
+    resolution_bits: 12
+  buttons: 30
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0215 is a community estimate for the Orion 2 TECS (Twin Engine
+      Control System) Throttle. The F/A-18C throttle uses PID 0xBE6A and
+      the F-16 variant uses PID 0xBE68. Verify with SimAppPro or lsusb.
+  - id: TWIN_THROTTLE
+    description: >
+      Twin-engine throttle with separate left and right levers. Each lever
+      appears as an independent axis. Typically used with DCS F/A-18C or
+      F-15E modules requiring twin throttle input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 TECS Throttle — PID 0x0215 community estimate. VID 0x4098
+    (WinWing). Twin-engine throttle unit for DCS multi-engine aircraft modules.
+    Wave-47 addition. Last reviewed: 2026-07.

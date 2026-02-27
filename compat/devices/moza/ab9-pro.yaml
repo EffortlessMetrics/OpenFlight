@@ -1,0 +1,61 @@
+# Moza AB9 Pro Force Feedback Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology, shared by all Moza products).
+# PID 0x0008 community-reported for the AB9 Pro (higher-powered AB9 variant);
+# follows sequentially from AB12 (0x0006). Not yet confirmed via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "Moza AB9 Pro Force Feedback Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology)
+    product_id: 0x0008      # AB9 Pro FFB base (community-reported); AB9 uses 0x0005
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 250
+    torque_limit_nm: 12.0   # AB9 Pro rated maximum (higher than AB9's 9 Nm)
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0008 is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: TORQUE_ONLY
+    description: >
+      Moza AB9 Pro accepts raw torque commands (report ID 0x20) rather than
+      DirectInput effect types. OpenFlight synthesises the desired effect
+      waveform and sends the result as a torque value. Protocol expected to
+      match the AB9 (PID 0x0005).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Higher-powered variant of the Moza AB9 FFB base with increased torque
+    output. HID protocol expected to match AB9 (PID 0x0005); same torque-only
+    interface (report ID 0x20), higher torque limit. PID 0x0008 community-
+    reported — confirm with captured lsusb / USB descriptor when hardware is
+    available.

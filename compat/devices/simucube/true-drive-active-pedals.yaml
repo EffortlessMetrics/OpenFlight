@@ -1,0 +1,71 @@
+# Simucube True Drive Active Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: Granite Devices (usb.ids "MCS Electronics").
+# PID 0x0D60 is a community estimate for the Simucube True Drive Active Pedals
+# interface endpoint. The True Drive Active Pedals provide per-pedal haptic
+# feedback with programmable resistance profiles via the True Drive software.
+# Distinct from the Simucube Active Pedal (active-pedal.yaml, PID 0x0D65 est).
+# Simucube 2 wheel base series uses PIDs 0x0D60–0x0D62 (Sport/Pro/Ultimate);
+# verify which endpoint corresponds to the True Drive Active Pedals hardware.
+
+schema_version: "1"
+
+device:
+  name: "Simucube True Drive Active Pedals"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (confirmed)
+    product_id: 0x0D60   # Community estimate — confirm with lsusb or True Drive capture
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 24  # High-resolution encoder feedback
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque, haptic_pulse]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 30.0  # Per-pedal peak force
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D60 is a community estimate. The Simucube 2 Sport wheel base
+      also reports PID 0x0D60; the True Drive Active Pedals may share or
+      differ from this PID. Confirm from lsusb or True Drive software
+      device capture on Active Pedal hardware specifically.
+  - id: HAPTIC_PER_PEDAL
+    description: >
+      Each pedal axis (brake and clutch) has an independent haptic actuator
+      providing programmable force profiles via True Drive software. Throttle
+      axis is passive (no haptic on throttle). OpenFlight maps haptic effects
+      to brake axis for ABS / runway surface simulation.
+  - id: DISTINCT_FROM_ACTIVE_PEDAL
+    description: >
+      This manifest covers the True Drive Active Pedals entry point
+      (PID 0x0D60 est). See active-pedal.yaml (PID 0x0D65 est) for the
+      separately documented Simucube Active Pedal variant. Do not share
+      calibration profiles between the two manifests until PIDs are confirmed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube True Drive Active Pedals — haptic force-feedback pedal system.
+    VID 0x16D0 confirmed (Granite Devices); PID 0x0D60 is a community estimate.
+    Per-pedal haptic actuators programmable via True Drive software.
+    See also active-pedal.yaml. Last reviewed: 2026-06.

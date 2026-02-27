@@ -1,0 +1,56 @@
+# ProSimU T300 Advanced 6DOF Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ProSimU T300 is the flagship 6DOF motion platform in the ProSimU range,
+# with higher actuator force and faster response than the T200. Designed
+# for professional-grade home flight simulators and light FNPT I/II builds.
+# VID 0x1ECB / PID 0x0004: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "ProSimU T300 Advanced 6DOF Motion Platform"
+  vendor: "ProSimU"
+  usb:
+    vendor_id: 0x1ECB
+    product_id: 0x0004      # Community estimate — T300
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [surge, sway, heave, pitch, roll, yaw]
+    resolution_bits: 14
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1ECB / PID 0x0004 are community estimates.
+  - id: HIGHER_UPDATE_RATE
+    description: >
+      T300 supports 100 Hz motion command update rate vs 60 Hz on T100/T200,
+      reducing motion lag in aggressive manoeuvres.
+  - id: DUAL_USB_ENDPOINTS
+    description: >
+      T300 may enumerate with two USB endpoints: one for motion command output
+      and one for position sensor input. Enumerate both and map accordingly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ProSimU T300 — advanced 6DOF platform. VID 0x1ECB / PID 0x0004 est.
+    See prosimu-t200.yaml (standard 6DOF) and prosimu-r6.yaml (racing variant).
+    Last reviewed: 2026-06.

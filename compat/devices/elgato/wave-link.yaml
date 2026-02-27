@@ -1,0 +1,62 @@
+# Elgato Wave Link (Audio Mixer)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 (Elgato Systems / Corsair). The Wave Link is a software-
+# controlled audio mixer companion to the Elgato Wave microphone series.
+# It exposes a USB HID control interface used by the Wave Link software
+# for physical knob/button input. In cockpit setups, the Wave Link dial
+# can be repurposed as a rotary axis input for avionics or volume control.
+schema_version: "1"
+
+device:
+  name: "Elgato Wave Link"
+  vendor: "Elgato Systems (Corsair)"
+  usb:
+    vendor_id: 0x0FD9       # Elgato Systems / Corsair (confirmed)
+    product_id: 0x006B      # Community estimate — Wave Link USB HID interface
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (audio control device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x006B is a community estimate. The Wave Link USB interface PID
+      may differ across hardware revisions. Verify with lsusb or HID
+      Inspector on real hardware.
+  - id: AUDIO_CONTROL_DEVICE
+    description: >
+      The Wave Link is primarily an audio control device. Its HID interface
+      exposes the physical input dial (up/down events as buttons) and mute
+      button. Axis data is not available directly; the dial reports relative
+      increment/decrement events.
+  - id: SOFTWARE_COMPANION_REQUIRED
+    description: >
+      Full functionality requires the Elgato Wave Link software. When used
+      standalone, only the physical button/dial events are accessible via
+      raw HID. Consider mapping the dial to simulation volume or a custom
+      panel action.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elgato Wave Link audio mixer. VID 0x0FD9 confirmed; PID 0x006B is a
+    community estimate. Limited HID input (dial + mute button). Niche use
+    in cockpit audio management. Last reviewed: 2026-06.

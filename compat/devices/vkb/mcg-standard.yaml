@@ -1,0 +1,55 @@
+# VKB MCG Standard Grip Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VKB MCG Standard (Modern Combat Grip Standard) is VKB's entry-level
+# combat grip module. Fewer hat switches and buttons than the MCG Pro/Ultimate;
+# intended for cost-conscious sim pilots stepping up from consumer sticks.
+# Compatible with Gunfighter Mk3/Mk4 and Black Mamba Mk3 bases.
+# VID 0x231D confirmed: VKB-Sim.
+# PID 0x0127 is a community estimate — confirm with VKB config utility.
+
+schema_version: "1"
+
+device:
+  name: "VKB MCG Standard Grip Module"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim
+    product_id: 0x0127      # Community estimate — MCG Standard
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2                # Thumb ministick; base provides main axes
+    names: [ministick_x, ministick_y]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0127 is a community estimate below the MCG Pro (0x0129). Confirm
+      with VKB Joystick Device Config on real hardware.
+  - id: COMPOSITE_DEVICE
+    description: >
+      Grip communicates via the Gunfighter/Black Mamba base board. Full axis
+      set (X/Y/Z/Rx/Ry/Rz + throttle) is provided by the base.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Standard grip — entry combat grip. VID 0x231D confirmed; PID 0x0127 est.
+    See mcg-pro.yaml (mid-range) and mcg-ultimate.yaml (premium) for upgrades.
+    Last reviewed: 2026-06.

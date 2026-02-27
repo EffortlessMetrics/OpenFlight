@@ -27,6 +27,13 @@ flight-bus = { path = "../crates/flight-bus" }
 flight-hotas-thrustmaster = { path = "../crates/flight-hotas-thrustmaster" }
 flight-hid-support = { path = "../crates/flight-hid-support" }
 
+# Dependencies for new adapter BDD tests (REQ-50, REQ-51)
+flight-open-hardware = { path = "../crates/flight-open-hardware" }
+flight-macos-hid = { path = "../crates/flight-macos-hid" }
+
+# Dependencies for vendor partnership BDD tests (REQ-49)
+flight-hotas-winwing = { path = "../crates/flight-hotas-winwing" }
+
 # Dependencies for documentation validation tests
 serde = { workspace = true }
 serde_yaml = { workspace = true }

@@ -1,0 +1,62 @@
+# NaturalPoint TrackIR 3 Pro (PID variant 0x0117)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D: NaturalPoint Inc.
+# PID 0x0117 is a community estimate for the TrackIR 3 Pro; distinct from the
+# 0x0100 community estimate in trackir-3-pro.yaml. The TrackIR 3 Pro was a
+# popular 6DOF head tracker in the mid-2000s, still used by long-time flight
+# sim pilots. Uses NaturalPoint's proprietary USB protocol.
+
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 3 Pro"
+  vendor: "NaturalPoint Inc."
+  type: other
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc.
+    product_id: 0x0117   # Community estimate — TrackIR 3 Pro; see also 0x0100
+  hid:
+    usage_page: 0x01
+    usage: 0x00   # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0117 is a community estimate; another estimate (0x0100) is used in
+      trackir-3-pro.yaml. The TrackIR 3 Pro hardware predates consistent PID
+      documentation. Confirm from lsusb on real hardware.
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      TrackIR 3 Pro uses NaturalPoint's proprietary USB protocol. Head-pose
+      data is not exposed as standard HID axes; consumed via TrackIR SDK or
+      opentrack.
+  - id: LEGACY_DEVICE
+    description: >
+      The TrackIR 3 Pro is a legacy device (circa 2004-2006). Modern TrackIR
+      software still supports it via the NaturalPoint SDK. opentrack provides
+      an open-source alternative integration path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 3 Pro. VID 0x131D confirmed; PID 0x0117 community
+    estimate (see also 0x0100 in trackir-3-pro.yaml). Legacy 6DOF optical
+    head tracker. Last reviewed: 2026-06.

@@ -1,0 +1,41 @@
+# HORI HORIPAD FPS Plus
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x00C1 — FPS-focused wired gamepad.
+schema_version: "1"
+
+device:
+  name: "HORI HORIPAD FPS Plus"
+  vendor: "HORI"
+  usb:
+    vendor_id: 0x0F0D
+    product_id: 0x00C1
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FPS-optimized wired gamepad. PID 0x00C1 from USB databases.
+    Last reviewed: 2026-06.

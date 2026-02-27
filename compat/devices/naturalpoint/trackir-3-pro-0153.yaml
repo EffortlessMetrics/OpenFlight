@@ -1,0 +1,64 @@
+# NaturalPoint TrackIR 3 Pro (Alt PID 0x0153)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed (NaturalPoint, Inc.).
+# PID 0x0153 is a community-reported alternate PID for the TrackIR 3 Pro.
+# Other documented TrackIR 3 Pro PIDs include 0x0100 and 0x0117.
+# The TrackIR 3 Pro added reflective dot tracking to the TrackIR 3 base unit
+# and was popular in DCS, IL-2, and early MSFS installations.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 3 Pro (Alt PID)"
+  vendor: "NaturalPoint, Inc."
+  usb:
+    vendor_id: 0x131D       # NaturalPoint, Inc.
+    product_id: 0x0153      # Community-reported alt PID; see also 0x0100, 0x0117
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0153 is a community-reported alternate PID for the TrackIR 3 Pro.
+      Other TrackIR 3 Pro PIDs: 0x0100, 0x0117. Confirm with lsusb.
+  - id: TRACKIR_PROPRIETARY_PROTOCOL
+    description: >
+      TrackIR devices use a proprietary USB protocol; head-tracking data is
+      delivered via the NaturalPoint TrackIR software (NPTrackIR.dll / opentrack).
+      OpenFlight receives virtual axis data from the TrackIR client process via
+      the opentrack UDP bridge or NPClient.dll injection.
+  - id: INFRARED_TRACKING
+    description: >
+      The TrackIR 3 Pro uses a retroreflective cap clip or TrackClip accessory.
+      Ensure clear line-of-sight between the camera and the clip in cockpit setups.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 3 Pro — 6DOF IR head tracker. PID 0x0153 is a
+    community-reported alt PID. See trackir-3-pro.yaml variants for other PIDs.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

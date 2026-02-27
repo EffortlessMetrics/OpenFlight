@@ -1,0 +1,54 @@
+# WinWing Super BARD Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing Super BARD (Broad Area Radar Detection) is a mid-range dual-engine
+# throttle targeting F-15 and F-16 style cockpits. Features independent throttle
+# lanes, a friction slider, and integrated button console.
+# PID 0xBEC0 is a community estimate — confirm with lsusb.
+# VID 0x4098 confirmed: WinWing.
+schema_version: "1"
+
+device:
+  name: "WinWing Super BARD Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEC0   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, slider, rz]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC0 is a community estimate for the Super BARD. Confirm with lsusb.
+      May be superseded by a confirmed PID from WinWing's USB descriptor list.
+  - id: DUAL_THROTTLE_LANES
+    description: >
+      Left and right throttle lanes operate independently. A linking clip is
+      included to lock both lanes for single-engine aircraft. OpenFlight
+      profiles should handle both linked and split modes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Super BARD Throttle — mid-range dual-engine throttle for F-15/F-16 style setups.
+    PID 0xBEC0 unconfirmed. VID 0x4098 = WinWing.
+    Last reviewed: 2026-06.

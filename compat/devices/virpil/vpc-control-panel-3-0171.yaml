@@ -1,0 +1,55 @@
+# VIRPIL VPC Control Panel #3 (PID 0x0171 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x0171 is a community estimate from a different source than the existing
+# vpc-control-panel-3.yaml which uses 0x025C. Multiple community PID estimates
+# exist for this panel family; both are documented here for cross-reference.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel #3"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0171   # Community estimate — alternative to 0x025C; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [a1, a2]
+    resolution_bits: 14
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0171 is a community estimate. An alternative community estimate
+      0x025C is documented in vpc-control-panel-3.yaml. Only one of these
+      PIDs will match real hardware. Verify with VIRPIL Configurator or lsusb.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      See vpc-control-panel-3.yaml (0x025C) for the other community-estimated
+      PID for this device. Use lsusb or VIRPIL Configurator to determine which
+      PID your hardware reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel #3, PID 0x0171 community estimate. VID 0x3344
+    confirmed. See also vpc-control-panel-3.yaml (PID 0x025C) — only one of
+    these PIDs will be correct for a given hardware revision.
+    Last reviewed: 2026-06.

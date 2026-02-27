@@ -1,0 +1,61 @@
+# GrayHill HID Encoder Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GrayHill produces industrial-grade rotary encoders and HID-compatible
+# encoder modules for professional simulation and industrial applications.
+# VID 0x4A40 is a community estimate for GrayHill USB HID products; confirm
+# with lsusb on real hardware. Encoder input is reported as button events
+# (increment/decrement pairs) per standard HID encoder usage.
+schema_version: "1"
+
+device:
+  name: "GrayHill HID Encoder Module"
+  vendor: "GrayHill"
+  type: other
+  usb:
+    vendor_id: 0x4A40       # Community estimate — confirm with lsusb
+    product_id: 0x0001      # Community estimate — PID varies by module configuration
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (encoder events reported via HID)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 16               # Encoder increment/decrement pairs (up to 8 encoders × 2)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x4A40 is a community estimate. Confirm with lsusb and update this
+      manifest when a verified VID/PID is available.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Each rotary encoder position change generates a momentary button event:
+      clockwise = button N, counter-clockwise = button N+1. OpenFlight maps
+      encoder steps to axis positions or discrete commands per the active
+      profile.
+  - id: MODULE_CONFIGURATION_VARIES
+    description: >
+      GrayHill encoder modules are available in 1, 2, 4, and 8-encoder
+      configurations. The button count above assumes an 8-encoder module.
+      Adjust the profile binding based on the actual module fitted.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GrayHill HID encoder module — industrial-grade rotary encoders for
+    professional simulation and cockpit builders. VID 0x4A40 and button count
+    are community estimates; confirm with lsusb. Last reviewed: 2026-06.

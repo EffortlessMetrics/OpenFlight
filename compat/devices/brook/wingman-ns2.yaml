@@ -1,0 +1,45 @@
+# Brook Wingman NS2 Controller Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C12 (Zeroplus Technology), PID 0x0038 — estimated.
+# Adapter allowing PS4/Xbox controllers to work on Nintendo Switch.
+# Enumerates as standard HID gamepad on PC.
+schema_version: "1"
+device:
+  name: "Brook Wingman NS2"
+  vendor: "Brook Accessory"
+  usb:
+    vendor_id: 0x0C12       # Zeroplus Technology Co., Ltd.
+    product_id: 0x0038      # Community estimate — Wingman NS2; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0038 is a community estimate for the Wingman NS2.
+      Wingman FGC uses 0x0034, Wingman SD uses 0x0032. Confirm with lsusb.
+  - id: ADAPTER_DEVICE
+    description: >
+      Controller adapter for Nintendo Switch. Actual capabilities depend
+      on connected source controller.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brook Wingman NS2 — VID 0x0C12 / PID 0x0038 (est).
+    Nintendo Switch controller adapter. Wave-55 addition. Last reviewed: 2026-07.

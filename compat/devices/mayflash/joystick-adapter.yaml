@@ -1,0 +1,51 @@
+# Mayflash Joystick Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (Mayflash / GreenAsia Inc.), PID 0x0014 — estimated.
+# USB adapter for connecting legacy 15-pin D-sub joysticks (PC game port) to USB.
+schema_version: "1"
+device:
+  name: "Mayflash Joystick Adapter"
+  vendor: "Mayflash"
+  usb:
+    vendor_id: 0x0E8F       # Mayflash / GreenAsia Inc.
+    product_id: 0x0014      # Community estimate — joystick adapter; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 4
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 62
+  max_jitter_ms: 8
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0014 is a community estimate. Confirm with lsusb on real hardware.
+  - id: ADAPTER_DEVICE
+    description: >
+      Translates legacy 15-pin game port joystick signals to USB HID.
+      Resolution is limited by the 8-bit ADC in game port era joysticks.
+  - id: LOW_POLL_RATE
+    description: >
+      Game port protocol limits effective poll rate to ~62Hz. Not suitable
+      for RT-critical axis processing; use for button mapping only.
+  - id: LEGACY_DEVICE
+    description: >
+      Intended for retro joystick compatibility. Actual capabilities depend on
+      the legacy joystick connected via the 15-pin D-sub connector.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mayflash Joystick Adapter — VID 0x0E8F / PID 0x0014 (est).
+    Legacy game port to USB adapter. Wave-55 addition. Last reviewed: 2026-07.

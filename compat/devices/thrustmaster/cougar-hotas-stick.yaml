@@ -1,0 +1,46 @@
+# Thrustmaster HOTAS Cougar Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+# PID confirmed: linux-hardware.org probe data (usb:044f:0400, "ThrustMaster HOTAS Cougar")
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar Stick"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0400   # Confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, toe_brake]
+    resolution_bits: 12
+  buttons: 19
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: COUGAR_OLDER_DEVICE
+    description: >
+      The HOTAS Cougar is a legacy device (released 2003). Some units require the
+      Thrustmaster HOTAS Cougar driver on Windows to expose full axis functionality.
+      Under generic HID the axis count and resolution may be reduced.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tier 3: legacy device with no current HIL rig or simulated test coverage.
+    PID 0x0400 confirmed from linux-hardware.org probe database.
+    Axis layout derived from community documentation; byte offsets not validated
+    on physical hardware. Last validated: 2026-02.

@@ -1,0 +1,53 @@
+# Micro Innovations USB Cockpit Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Micro Innovations produces USB cockpit panels for flight simulation builders.
+# VID 0x04D8 is Microchip Technology Inc (PIC USB), commonly used for custom
+# sim hardware. PID 0x0E21 is a community estimate, sequential to the
+# VirusAV Autopilot Panel estimate (0x0E20).
+schema_version: "1"
+
+device:
+  name: "Micro Innovations USB Panel"
+  vendor: "Micro Innovations"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (PIC USB) — common sim hardware VID
+    product_id: 0x0E21   # Community estimate — PID from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 (Microchip PIC USB) is shared by many custom sim hardware
+      vendors. PID 0x0E21 is a community estimate sequential to 0x0E20.
+      Verify with lsusb or Windows Device Manager on real hardware.
+  - id: SHARED_VID
+    description: >
+      VID 0x04D8 is Microchip Technology and is used by many independent
+      cockpit hardware builders. Device matching must rely on both VID and PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Micro Innovations USB cockpit panel. VID 0x04D8 (Microchip PIC USB) and
+    PID 0x0E21 are community estimates. Button-only panel interface.
+    Last reviewed: 2026-06.

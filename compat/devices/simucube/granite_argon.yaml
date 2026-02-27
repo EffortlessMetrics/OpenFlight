@@ -1,0 +1,62 @@
+# Granite Devices Argon Servo Drive
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 (Granite Devices / MCS Electronics), PID 0x0A00 — community
+# estimate. The Granite Devices Argon is an older servo drive platform
+# predating the Simucube product line. Used in early DIY sim hardware and
+# professional motion platform actuators. The Argon connects via USB for
+# configuration and telemetry; axis output is via analogue or EtherCAT.
+# Some sim builders adapted the Argon to expose HID joystick output for
+# direct-drive force feedback wheels and sim yoke setups.
+schema_version: "1"
+
+device:
+  name: "Granite Devices Argon Servo Drive"
+  vendor: "Granite Devices"
+  type: other
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0A00      # Community estimate — Argon servo drive
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 20
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A00 is a community estimate for the Granite Devices Argon.
+      Granite Devices documentation may list a different PID. Confirm with
+      lsusb or the Granity configuration software.
+  - id: LEGACY_PLATFORM
+    description: >
+      The Argon is a legacy platform; Granite Devices now produces the
+      Simucube product line. Argon units in sim use are typically older
+      custom builds. Driver and firmware support may be limited on modern OS.
+  - id: DIRECT_DRIVE_SERVO
+    description: >
+      High-performance servo drive with encoder feedback. FFB is delivered
+      via Granite Devices IONI/Granity protocol, not standard USB HID FFB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Granite Devices Argon servo drive — legacy platform, 1 axis, FFB.
+    VID 0x16D0 / PID 0x0A00 (est). Predates Simucube; DIY sim use only.
+    Wave-40 addition. Last reviewed: 2026-07.

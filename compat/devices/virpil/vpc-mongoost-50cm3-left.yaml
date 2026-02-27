@@ -1,0 +1,54 @@
+# VIRPIL VPC MongoosT-50CM3 Left Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x800F is a community estimate for the CM3 Left variant, following the
+# VPC MongoosT-50CM3 PID pattern (right stick uses 0x8008, throttle uses 0x800A).
+# The Left grip is the left-hand companion to the CM3 right stick for
+# two-stick (dual-HOTAS) setups.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 Left Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x800F      # Community estimate — CM3 left grip
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, slider]
+    resolution_bits: 15
+  buttons: 22
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x800F is a community estimate. The CM3 series uses 0x800x range;
+      right stick confirmed at 0x8008. Confirm left with lsusb on real hardware.
+  - id: LEFT_HAND_LAYOUT
+    description: >
+      Thumb hat and primary triggers are mirrored for left-hand operation.
+      Axis direction inversion may be required in OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM3 Left Grip for dual-HOTAS setups. PID 0x800F is
+    a community estimate. Pairs with vpc-mongoost-50cm3-stick.yaml (right).
+    Last reviewed: 2026-06.

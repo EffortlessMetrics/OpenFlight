@@ -1,0 +1,21 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-logitech-wheel"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Logitech racing wheel parsers for OpenFlight"
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "logitech", "wheel", "racing"]
+categories = ["hardware-support"]
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true

@@ -1,0 +1,59 @@
+# WinWing MFSSB R3 Magnetic Force Sensing Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing Space Equipment Co., Ltd.
+# PID 0xB73E is a community estimate for the MFSSB R3 variant.
+# The MFSSB line uses magnetic force sensing instead of traditional springs.
+# Related PIDs: MFSSB Joystick = 0xBD91 (mfssb-joystick.yaml),
+#               MFSSB MCTR = 0xBD90 (mfssb-mctr.yaml).
+
+schema_version: "1"
+
+device:
+  name: "WinWing MFSSB R3"
+  vendor: "WinWing Space Equipment Co., Ltd."
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB73E   # Community estimate — MFSSB R3; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 16
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB73E is a community estimate for the MFSSB R3. Confirm with lsusb
+      or WinWing SimApp Pro. Related MFSSB PIDs: 0xBD91 (joystick), 0xBD90 (MCTR).
+  - id: MAGNETIC_FORCE_SENSING
+    description: >
+      MFSSB uses magnetic force sensing — senses applied force rather than
+      physical deflection in isometric mode. Apply a 2–3% software deadzone
+      to suppress resting noise.
+  - id: SIMAPP_PRO_INTEGRATION
+    description: >
+      WinWing SimApp Pro software provides advanced button mapping and LED
+      control. Standard HID joystick enumeration is available without SimApp Pro.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MFSSB R3 magnetic force sensing joystick. VID 0x4098 confirmed
+    for WinWing. PID 0xB73E is a community estimate; see also mfssb-joystick.yaml
+    (0xBD91) and mfssb-mctr.yaml (0xBD90). Last reviewed: 2026-07.

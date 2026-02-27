@@ -1,0 +1,47 @@
+# Honeycomb Bravo Throttle Jet Pack
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb Aeronautical). PID 0x1906 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Bravo Throttle Jet Pack"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B       # Honeycomb Aeronautical
+    product_id: 0x1906      # Community estimate — Bravo Jet Pack
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle1, throttle2, reverser1, reverser2]
+    resolution_bits: 16
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Honeycomb Bravo Jet Pack throttle module. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Honeycomb Bravo Throttle Jet Pack — jet engine lever pack. PID 0x1906 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

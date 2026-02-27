@@ -1,0 +1,68 @@
+# Logitech X52 Flight Control System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 is shared by Saitek and Logitech (Logitech acquired Saitek in 2016).
+# PID 0x0255 identifies the X52 joystick enumeration (non-Pro).
+# A composite variant (PID 0x075C) is covered in compat/devices/saitek/x52.yaml.
+
+schema_version: "1"
+
+device:
+  name: "Logitech X52 Flight Control System"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0255      # X52 joystick enumeration (non-Pro)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 10
+  buttons: 28
+  hats: 3
+  force_feedback: false
+  leds:
+    count: 2
+    rgb: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: X52_PID_VARIANTS
+    description: >
+      The X52 (non-Pro) was produced with multiple PIDs across Saitek and Logitech
+      branding eras. PID 0x0255 is the joystick enumeration; a composite variant
+      (PID 0x075C) is documented in compat/devices/saitek/x52.yaml. The X52 Pro
+      adds a clutch lever, more programmable buttons (39 total), an MFD display,
+      and RGB LEDs (see x52-pro.yaml).
+  - id: LED_MONOCHROME
+    description: >
+      The X52 (non-Pro) exposes two user-programmable monochrome LEDs.
+      Unlike the X52 Pro, colours cannot be adjusted — LEDs are on/off only.
+  - id: NO_MFD
+    description: >
+      The X52 (non-Pro) does not include the MFD display found on the X52 Pro.
+      Use x52-pro.yaml for MFD-equipped variants (PID 0x0762).
+  - id: ROCKER_AS_BUTTON
+    description: >
+      The rocker switch on the throttle body is enumerated as a pair of digital
+      buttons rather than an axis. Users expecting an analog rocker should map
+      the two buttons to an axis via a profile rule.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech-era X52 (PID 0x0255). The X52 is one of the most popular
+    entry-to-mid-range HOTAS sets and shares its HID axis/button layout with
+    the X52 Pro. The composite-device PID (0x075C) is covered in
+    compat/devices/saitek/x52.yaml. Last validated: 2026-02.

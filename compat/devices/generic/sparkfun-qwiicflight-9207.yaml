@@ -1,0 +1,58 @@
+# SparkFun QwiicFlight Controller — 0x1B4F / 0x9207
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x1B4F (SparkFun Electronics), PID 0x9207 (estimated).
+# The SparkFun QwiicFlight is a community project / development board targeting
+# flight simulator DIY builders. It combines a Pro Micro base with Qwiic I2C
+# expansion for additional sensors and controls.
+# PID 0x9207 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "SparkFun QwiicFlight Controller"
+  vendor: "SparkFun Electronics"
+  usb:
+    vendor_id: 0x1B4F       # SparkFun Electronics (confirmed)
+    product_id: 0x9207      # Community estimate — QwiicFlight PID; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x9207 is a community estimate for the QwiicFlight project.
+      Verify with lsusb on target hardware. The Qwiic I2C bus allows attachment
+      of additional sensor modules; axis count depends on firmware configuration.
+  - id: DIY_FIRMWARE
+    description: >
+      Axis/button count depends on the HID firmware flashed by the builder.
+      Values reflect a typical Arduino joystick library configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SparkFun QwiicFlight Controller (0x1B4F/0x9207). PID community estimate.
+    DIY Qwiic-based flight sim controller. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

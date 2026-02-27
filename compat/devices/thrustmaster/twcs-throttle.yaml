@@ -1,0 +1,50 @@
+# Thrustmaster TWCS Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TWCS Throttle"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB687   # Confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MINI_STICK_CENTERED_AXES
+    description: >
+      Rx/Ry mini-stick axes are bipolar (centered at ~32768 = 0.0). The main
+      throttle axis (slider) is unipolar (0 = idle, 65535 = full).
+  - id: THROTTLE_UNIPOLAR
+    description: >
+      The main throttle axis is unipolar: 0x0000 = idle (pulled back),
+      0xFFFF = full throttle (pushed forward). No inversion is applied by
+      default; configure the profile if reversal is needed.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Sold standalone and as part of the T.16000M FCS HOTAS combo (VID 0x044F,
+    PID 0xB687). Input report layout is community-documented; hardware
+    validation is recommended before production deployment.
+    Last validated: 2026-02.

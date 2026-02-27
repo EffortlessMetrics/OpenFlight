@@ -1,0 +1,55 @@
+# HORI VF-2 Ace Combat Flight Stick (Legacy)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x0011 is a community estimate for the VF-2. The HORI VF-2 was a
+# PlayStation 2-era flight stick released alongside Ace Combat 04/5, featuring
+# a distinctive Variable Fighter (Macross VF) inspired design. A USB PC adapter
+# version was produced for use with Ace Combat on PC.
+
+schema_version: "1"
+
+device:
+  name: "HORI VF-2 Ace Combat Flight Stick (Legacy)"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd. (confirmed USB vendor ID)
+    product_id: 0x0011      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, throttle]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate for the VF-2 PC USB variant.
+      The VF-2 was primarily a PS2 peripheral; the PC USB version is rare.
+      Confirm with lsusb on real hardware if available.
+  - id: LEGACY_DEVICE
+    description: >
+      Released circa 2001–2004. Low-resolution 8-bit axes are expected.
+      Device may require legacy HID compatibility mode on modern systems.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI VF-2 Ace Combat legacy flight stick (circa 2001–2004). PID 0x0011
+    is a community estimate. Low-resolution axes; legacy HID compatibility
+    may be needed. Last reviewed: 2026-06.

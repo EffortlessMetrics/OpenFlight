@@ -1,0 +1,54 @@
+# Sismo Soluciones Airbus A320 ECAM Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology) / PID 0xF5D4 — community estimate.
+# Sismo Soluciones (Spain) produces Airbus A320 cockpit panel replicas.
+# The ECAM (Electronic Centralized Aircraft Monitor) control panel provides
+# the display page selection switches for the lower SD ECAM display,
+# including the engine, bleed, press, elec, hyd, fuel, apu, cond, and door pages.
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones Airbus A320 ECAM Panel"
+  vendor: "Sismo Soluciones"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (common for custom USB HID)
+    product_id: 0xF5D4      # Community estimate — Sismo A320 ECAM
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF5D4 is a community estimate. Sismo panels use Microchip VID 0x04D8.
+      Verify with lsusb. Distinct from the A320 overhead panel (sismo-a320-overhead.yaml).
+  - id: ECAM_SD_PAGE_SELECTORS
+    description: >
+      18 illuminated pushbuttons for ECAM SD system page selection: ENG, BLEED,
+      PRESS, ELEC, HYD, FUEL, APU, COND, DOOR/OXY, WHEEL, F-CTL, STS, RCL.
+      LED annunciators for each button are driven via USB output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo A320 ECAM Panel. VID 0x04D8 (Microchip); PID 0xF5D4 estimated.
+    Spanish Airbus A320 cockpit panel builder. Wave-42 addition. Last reviewed: 2026-07.

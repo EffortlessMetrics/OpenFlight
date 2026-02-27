@@ -1,0 +1,59 @@
+# WinWing F/A-18 Upfront Control Panel (UFC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F/A-18-specific Upfront Control Panel replicating the UFC of the
+# F/A-18C Hornet. PID 0xB73A is a community estimate; the generic UFC1/UFC2
+# panels use PIDs 0xBEDE/0xBEF0 respectively.
+# See also: ufc1-hud1-panel.yaml, ufc2-panel.yaml, fa18c-hornet-hotas.yaml.
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 Upfront Control Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing Space Simulation Technology (confirmed)
+    product_id: 0xB73A  # PID estimated — F/A-18 UFC; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 30
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB73A is a community estimate for the F/A-18-specific UFC.
+      Generic WinWing UFC panels use 0xBEDE (UFC1) and 0xBEF0 (UFC2).
+      Confirm with lsusb or WinWing SimApp Pro device list.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement steps).
+      OpenFlight maps encoder steps to discrete sim commands or axis slews.
+  - id: DISPLAY_OUTPUT
+    description: >
+      The UFC panel includes a scratchpad display accepting HID output reports
+      for frequency, waypoint, and UFC text data.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 Upfront Control Panel. Replicates F/A-18C Hornet UFC.
+    PID 0xB73A is a community estimate — confirm with lsusb.
+    For generic UFC variants see ufc1-hud1-panel.yaml and ufc2-panel.yaml.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# WinWing F-15EX ICP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing Space). The WinWing F-15EX ICP (Integrated Control
+# Panel) is the F-15EX variant of WinWing's ICP panel family, providing
+# specific keyset and legend layout for the F-15EX Strike Eagle. Distinct
+# from the F-16C ICP (icp-panel.yaml) in button labeling and layout.
+# PID is a community estimate; confirm with WinWing Device Manager or lsusb.
+schema_version: "1"
+
+device:
+  name: "WinWing F-15EX ICP Panel"
+  vendor: "WinWing Space"
+  usb:
+    vendor_id: 0x4098       # WinWing Space (confirmed)
+    product_id: 0xBE71      # Community estimate — F-15EX ICP; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE71 is a community estimate. WinWing Orion3 F-15EX series uses
+      the 0xBE7x range. Confirm with WinWing HOTAS Device Manager → Device
+      Info. See orion3-f15ex-stick.yaml for the F-15EX stick.
+  - id: F15EX_ICP_LAYOUT
+    description: >
+      The F-15EX ICP layout differs from the F-16C ICP (icp-panel.yaml).
+      Key differences include: no DRIFT C/O switch (F-16 specific), different
+      UFC function key layout, and additional M/G (Main/Guard) radio button.
+      Use DCS F-15E/Eagle Dynamics F-15EX module bindings.
+  - id: UFC_AND_KEYPAD
+    description: >
+      The panel includes the full UFC keypad (0–9, dot, enter, clear) plus
+      function buttons (A1–A5, M, PB). In DCS World, bind each button
+      to the F-15EX UFC keyboard input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-15EX ICP Panel. VID 0x4098 confirmed; PID 0xBE71 is a
+    community estimate. 36 buttons for F-15EX strike fighter cockpit.
+    DCS F-15E primary use case. Last reviewed: 2026-06.

@@ -1,10 +1,13 @@
 ---
-doc_id: HT-XPLANE-01
+doc_id: DOC-HOWTO-XPLANE
 kind: how-to
 area: integration
-status: current
+status: active
 links:
-  - REQ-42
+  requirements:
+    - REQ-42
+  tasks: []
+  adrs: []
 ---
 
 # How to Set Up X-Plane Integration

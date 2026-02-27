@@ -1,0 +1,47 @@
+# Komodo Sim Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology), PID 0xEF83 — estimated.
+# Komodo Sim helicopter collective for realistic rotary-wing simulation.
+schema_version: "1"
+device:
+  name: "Komodo Sim Helicopter Collective"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by Komodo Sim USB HID products)
+    product_id: 0xEF83      # Community estimate — Komodo helicopter collective; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [collective, twist, friction]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF83 is a community estimate for the Komodo Sim helicopter
+      collective. Microchip VID 0x04D8 is shared by many USB HID builders.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Collective pitch lever with twist grip and friction control axis.
+      Friction axis may report as a discrete axis or require calibration
+      in MSFS/DCS helicopter modules.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim Helicopter Collective — VID 0x04D8 / PID 0xEF83 (est).
+    Three-axis helicopter collective for MSFS, DCS, and X-Plane rotary-wing.
+    Wave-59 addition. Last reviewed: 2026-07.

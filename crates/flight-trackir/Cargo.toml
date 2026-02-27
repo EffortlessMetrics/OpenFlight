@@ -1,0 +1,26 @@
+[package]
+homepage.workspace = true
+name = "flight-trackir"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "TrackIR / head tracking adapter for OpenFlight via OpenTrack bridge protocol"
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "trackir", "head-tracking"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }

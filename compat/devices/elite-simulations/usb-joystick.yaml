@@ -1,0 +1,54 @@
+# Elite Simulations USB Joystick (Standard)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino SA) is commonly used by Elite Simulations USB devices
+# built on Arduino/ATmega firmware. PID 0x8036 is a community estimate for
+# the Elite Simulations USB Joystick Standard edition.
+# Elite Simulations produces affordable USB flight controls (yoke, rudder,
+# throttle, joystick) designed for Microsoft Flight Simulator and X-Plane.
+schema_version: "1"
+
+device:
+  name: "Elite Simulations USB Joystick"
+  vendor: "Elite Simulations"
+  usb:
+    vendor_id: 0x2341    # Arduino SA (used by Elite Simulations firmware)
+    product_id: 0x8036   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8036 is a community estimate. Confirm with lsusb. Elite Simulations
+      products may use various Arduino or STM32-based PIDs depending on the
+      firmware version.
+  - id: ARDUINO_USB_HID
+    description: >
+      Built on Arduino USB HID stack. USB polling rate may be limited to
+      125 Hz due to Arduino firmware constraints.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations USB Joystick. PID 0x8036 unconfirmed. Affordable USB
+    joystick for MSFS and X-Plane. See e-yoke.yaml for the yoke variant.
+    Last reviewed: 2026-06.

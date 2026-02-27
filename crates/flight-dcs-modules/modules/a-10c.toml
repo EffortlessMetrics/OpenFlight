@@ -1,0 +1,5 @@
+aircraft = "A-10C"
+axis_count = 7
+throttle_range = [0.0, 1.0]
+stick_throw = 50.0
+quirks = ["twin-throttle", "gun-trigger"]

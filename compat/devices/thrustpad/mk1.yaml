@@ -1,0 +1,51 @@
+# ThrustPad Mk.I Budget Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ThrustPad Mk.I — a budget entry-level flight joystick marketed to UK and
+# European flight sim beginners. Uses VID 0x1209 (pid.codes open VID).
+# PID 0x2110 is a community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "ThrustPad Mk.I Flight Stick"
+  vendor: "ThrustPad"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x2110      # Community estimate — Mk.I; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2110 are community estimates for the ThrustPad Mk.I.
+      Confirm with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ThrustPad Mk.I — budget UK flight joystick. VID 0x1209 / PID 0x2110
+    community estimate. PID estimated from community sources. Wave-60 addition.
+    Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

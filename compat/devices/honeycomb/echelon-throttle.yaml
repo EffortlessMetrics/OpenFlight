@@ -1,0 +1,60 @@
+# Honeycomb Echelon Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Honeycomb Echelon is a premium multi-engine throttle quadrant released in
+# 2024, featuring up to 4 independently configurable lever positions, an
+# integrated trim wheel, and a large button console. Successor to the Bravo
+# Throttle Quadrant (bravo-throttle.yaml / bravo-throttle-gen2.yaml).
+# VID 0x294B confirmed: Honeycomb Aeronautical.
+# PID 0x1905 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Echelon Throttle Quadrant"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1905   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [throttle1, throttle2, throttle3, throttle4, prop1, prop2, mixture1, trim_wheel]
+    resolution_bits: 12
+  buttons: 72
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1905 is a community estimate for the Echelon. Honeycomb Alpha
+      uses 0x1900, Bravo uses 0x1901 — Echelon may follow a similar sequence.
+      Confirm with lsusb on real hardware.
+  - id: CONFIGURABLE_LEVERS
+    description: >
+      The Echelon supports multiple lever configurations (twin, quad, turboprop).
+      Lever count and axis assignments change based on the active configuration.
+      OpenFlight profiles should accommodate variable lever layouts.
+  - id: AUTOPILOT_BUTTONS
+    description: >
+      Like the Bravo, the Echelon includes an integrated autopilot button console
+      with HDG, NAV, ALT, VS, IAS, and AP buttons as discrete HID buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Echelon Throttle Quadrant (~2024). VID 0x294B = Honeycomb.
+    PID 0x1905 unconfirmed. Successor to bravo-throttle-gen2.yaml.
+    Last reviewed: 2026-06.

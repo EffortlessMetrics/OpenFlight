@@ -1,0 +1,55 @@
+# Elgato Stream Deck Mini (6-key)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0FD9 confirmed: Elgato Systems / Corsair.
+# PID 0x0063 confirmed: documented in open-source Stream Deck drivers
+#   (python-elgato-streamdeck, node-elgato-stream-deck).
+# The Mini has 6 keys (3x2 grid) — compact form factor for small cockpit areas.
+
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Mini"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9    # Elgato Systems / Corsair (confirmed)
+    product_id: 0x0063   # Stream Deck Mini — confirmed from open-source drivers
+  hid:
+    usage_page: 0xFF00
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+  lcd_keys: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      Stream Deck Mini uses the same vendor HID protocol as the Original.
+      6-key input/output layout. Per-key LCD is 80x80 pixels (BMP format).
+  - id: PANEL_DEVICE
+    description: >
+      Compact 6-key panel controller; suitable for single-system cockpit
+      modules (e.g., autopilot engage, COM radio toggle, view select).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck Mini — 6-key (3x2) compact variant. Smallest Stream Deck.
+    VID 0x0FD9 / PID 0x0063 confirmed from open-source drivers.
+    Used for small auxiliary control panels in flight sim cockpits.
+    Last reviewed: 2026-06.

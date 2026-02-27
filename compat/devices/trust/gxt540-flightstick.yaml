@@ -1,0 +1,54 @@
+# Trust GXT 540 Gaming Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EFF is associated with Trust Gaming International in community
+# documentation; not independently verified from the official USB vendor list.
+# PID is unconfirmed. The GXT 540 is a budget USB flight stick with a
+# twist-rudder axis and 12 programmable buttons, aimed at entry-level
+# flight simulation (MSFS, X-Plane beginner setups).
+
+schema_version: "1"
+
+device:
+  name: "Trust GXT 540 Gaming Flight Stick"
+  vendor: "Trust Gaming"
+  usb:
+    vendor_id: 0x0EFF       # Trust Gaming — VID_UNCONFIRMED (community)
+    product_id: 0x0001      # GXT 540 — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, throttle]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0EFF and PID 0x0001 are community estimates. Trust Gaming uses
+      HID-compliant firmware; verify with lsusb or USBView on real hardware.
+  - id: LOW_RESOLUTION_AXES
+    description: >
+      8-bit axes provide 256-step resolution. Apply appropriate deadzone and
+      curve in OpenFlight profile to compensate.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Trust GXT 540 budget entry-level flight stick. VID/PID unconfirmed.
+    8-bit axis resolution; suitable for beginner MSFS setups only.
+    Last reviewed: 2026-06.

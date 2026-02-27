@@ -1,0 +1,64 @@
+# Brunner CLS-P Force Feedback Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Brunner CLS-P is Brunner's Professional-grade force feedback rudder
+# pedal set, complementing the CLS-E yoke family. Provides active FFB
+# resistance simulation for realistic aerodynamic rudder feel.
+# VID 0x25BB confirmed: Brunner Elektronik AG.
+# PID 0x0080 is a community estimate — confirm with lsusb or Brunner SDK.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P Force Feedback Rudder Pedals"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0080   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder_left, rudder_right, combined_rudder]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0080 is a community estimate for the CLS-P. Brunner VID 0x25BB
+      is confirmed; PID should be verified with lsusb on real hardware or
+      from the Brunner SDK device enumeration documentation.
+  - id: CLS2SIM_COMPANION
+    description: >
+      FFB configuration requires the Brunner CLS2SIM companion software.
+      OpenFlight reads axis data directly via HID; FFB effects should be
+      sent via CLS2SIM API or raw USB output reports.
+  - id: DISTINCT_FROM_CLS_E_RUDDER
+    description: >
+      The CLS-P is distinct from the CLS-E MK II Rudder Pedals (cls-e-rudder.yaml).
+      CLS-P targets the professional training segment with higher build quality
+      and stronger FFB motors.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-P Force Feedback Rudder Pedals. VID 0x25BB = Brunner.
+    PID 0x0080 unconfirmed. See cls-e-rudder.yaml for the consumer CLS-E rudder.
+    Last reviewed: 2026-06.

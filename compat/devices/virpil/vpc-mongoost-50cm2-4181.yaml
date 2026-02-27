@@ -1,0 +1,58 @@
+# VIRPIL VPC MongoosT-50CM2 (PID 0x4181)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VIRPIL VPC MongoosT-50CM2 stick base — second-generation CM2 joystick base.
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x4181 is a community estimate from field USB probes; see also
+# mongoost-50cm2-stick.yaml for the PID 0x4138 variant. Confirm with
+# VPC Configurator → USB Info tab before deploying in production profiles.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM2 (0x4181)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB — confirmed
+    product_id: 0x4181      # Community estimate — MongoosT-50CM2 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4181 is a community estimate. The primary MongoosT-50CM2 manifest
+      (mongoost-50cm2-stick.yaml) uses PID 0x4138; this entry covers the
+      alternate PID reported by some units. Confirm via VPC Configurator.
+  - id: VIRPIL_250HZ_POLLING
+    description: >
+      VIRPIL devices poll at 250 Hz matching the OpenFlight RT spine.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      CM2 base uses Hall-effect sensors providing 16-bit axis resolution
+      and zero mechanical wear.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM2 — VID 0x3344 / PID 0x4181 (est).
+    Alternate PID variant; primary CM2 manifest is mongoost-50cm2-stick.yaml.
+    Wave-46 addition. Last reviewed: 2026-07.

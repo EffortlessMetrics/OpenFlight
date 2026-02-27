@@ -1,0 +1,56 @@
+# RealSimGear GTX 345 Transponder Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed: RealSimGear uses Microchip Technology USB VID
+#   (same as GTX 327 at PID 0xF250; see gtx327.yaml).
+# PID 0xF252 is a community estimate for the GTX 345 — adjacent to GTX 327.
+# The GTX 345 is the ADS-B In/Out capable transponder, succeeding the GTX 327.
+# Adds ADS-B traffic and weather display inputs beyond the basic squawk entry.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTX 345 Transponder Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF252   # Community estimate — GTX 345 (GTX 327 is 0xF250)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF252 is a community estimate adjacent to the GTX 327 (0xF250).
+      Confirm with lsusb on real GTX 345 hardware before deployment.
+  - id: ADS_B_DISPLAY
+    description: >
+      The GTX 345 bezel includes additional button rows for ADS-B In/Out
+      control and traffic alert acknowledgement beyond the GTX 327's squawk
+      entry. Display shows active transponder mode and ADS-B status.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTX 345 Transponder Bezel — ADS-B In/Out variant of GTX 327.
+    VID 0x04D8 confirmed for RealSimGear; PID 0xF252 is a community estimate.
+    Adds ADS-B traffic/weather controls over the GTX 327 (gtx327.yaml).
+    Last reviewed: 2026-06.

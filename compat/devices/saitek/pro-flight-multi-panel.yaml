@@ -1,0 +1,58 @@
+# Saitek Pro Flight Multi Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0D06 — linux-hardware.org (11 probes, "Flight Pro Multi Panel").
+# Autopilot / FCU-style panel with LCD display. Widely used in home cockpit builds.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Multi Panel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D06      # Confirmed via linux-hardware.org (11 probes, "Flight Pro Multi Panel")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel, not joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: LCD_DISPLAY_OUTPUT
+    description: >
+      Panel has a 2×6-character LCD for autopilot readouts (ALT, VS, HDG, CRS, IAS).
+      Display updates require USB HID output reports. The driver must implement
+      bidirectional HID communication, not just input reading.
+  - id: ROTARY_ENCODERS
+    description: >
+      The ALT, VS, HDG, CRS, and IAS knobs are rotary encoders sending relative
+      position (delta) values, not absolute axis values. Polling rate affects
+      the granularity of rotation detection.
+  - id: SAITEK_PANEL_PROTOCOL
+    description: >
+      Uses Saitek's proprietary HID panel protocol (also used by Radio Panel and
+      Switch Panel). Open-source drivers exist in the linux-simaernek project
+      and community reverse-engineering efforts.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0D06 confirmed via linux-hardware.org (11 probes, "Flight Pro Multi Panel").
+    Popular for home cockpit MSFS/X-Plane autopilot replication.
+    Supports open-source drivers (saitek-pro-flight-dashboard etc.).
+    Last reviewed: 2026-02.

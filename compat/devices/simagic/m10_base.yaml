@@ -1,0 +1,62 @@
+# Simagic M10 Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Simagic M10 is a 10Nm direct-drive servo wheel base. It uses a
+# brushless servo motor with integrated encoder and torque sensor.
+# VID 0x0483 (STMicroelectronics — commonly used by Simagic for USB MCU).
+# PID 0x5741 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Simagic M10 Direct Drive Wheel Base"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics USB MCU (used by Simagic)
+    product_id: 0x5741      # Community estimate — M10; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine, square, ramp]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5741 is a community estimate for the Simagic M10. Simagic uses
+      STM32-based USB MCU (VID 0x0483). Confirm actual PID with lsusb or
+      Simagic Alpha Manager software.
+  - id: DIRECT_DRIVE_10NM
+    description: >
+      The M10 delivers up to 10Nm continuous torque via direct-drive motor.
+      No belt or gear reduction; very low latency FFB. Ensure FFB strength
+      limits are configured to avoid hardware damage.
+  - id: SIMAGIC_ALPHA_MANAGER
+    description: >
+      Simagic Alpha Manager software required for advanced FFB configuration,
+      wheel angle, and damper/friction curve tuning.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic M10 — 10Nm direct-drive. VID 0x0483 (STM MCU); PID 0x5741 est.
+    High-resolution FFB at up to 1000Hz update rate. Confirm PID before
+    marking tier 1. Last reviewed: 2026-06.

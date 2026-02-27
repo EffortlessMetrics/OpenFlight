@@ -1,0 +1,61 @@
+# ButtKicker Mini Pro Tactile Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The ButtKicker Mini Pro is a compact tactile transducer and amplifier kit
+# for simulation rigs. Like the Gamer2, haptic output is driven by a line-level
+# audio signal routed to the amplifier. The Mini Pro is intended for chair
+# mounting in smaller rig setups. USB presence varies by revision; not a
+# standard HID input device.
+schema_version: "1"
+
+device:
+  name: "ButtKicker Mini Pro"
+  vendor: "ButtKicker (Guitammer)"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Placeholder — VID_UNCONFIRMED; USB presence varies by revision
+    product_id: 0x0000  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined — USB for power/firmware only, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false   # Output-only audio transducer, not HID force-feedback
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      The Mini Pro amplifier may not enumerate as a USB HID device on all
+      revisions. VID/PID are unconfirmed; some units have no USB interface.
+      Verify with lsusb whether a USB device appears.
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: >
+      Haptic output is driven by a line-level audio signal routed to the
+      amplifier's input. OpenFlight does not directly control the Mini Pro;
+      audio routing must be handled by the OS or a companion application
+      (e.g., SimShaker, SimHub).
+  - id: NO_HID_INPUT
+    description: >
+      The Mini Pro generates no HID input events. Tracked for sim-rig
+      accessory compatibility documentation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ButtKicker Mini Pro tactile transducer amplifier. Compact chair-mount
+    version of the Gamer2. Audio-driven haptic output; not a USB HID input
+    device. Tracked for accessory/rig compatibility. Last reviewed: 2026-06.

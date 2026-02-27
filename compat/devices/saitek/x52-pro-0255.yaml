@@ -1,0 +1,49 @@
+# Saitek X52 Pro Flight Control System (Alt PID 0x0255)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0255 is a community-reported alternate PID for the X52 Pro
+# (distinct from the primary PID 0x0762 in x52-pro.yaml).
+# The X52 Pro is the premium variant with illuminated buttons and metal
+# throttle detents. Some units or firmware versions enumerate under this PID.
+schema_version: "1"
+
+device:
+  name: "Saitek X52 Pro Flight Control System (Alt PID)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0255      # Community-reported alt PID; primary is 0x0762 (x52-pro.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, rz, throttle, slider, rx, ry]
+    resolution_bits: 12
+  buttons: 39
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0255 is a community-reported alternate PID for the X52 Pro.
+      Confirm with lsusb on real hardware. The primary X52 Pro PID is 0x0762
+      (see x52-pro.yaml). Both PIDs share identical capabilities.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X52 Pro alternate PID variant (0x0255). Functionally identical to
+    x52-pro.yaml. Seen on some firmware revisions. Last reviewed: 2026-06.

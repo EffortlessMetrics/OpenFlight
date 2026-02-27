@@ -1,0 +1,52 @@
+# WinWing F-16 Main Interface Panel (MIP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing).
+# PID is unconfirmed — the F-16 MIP (Main Interface Panel) replicates the
+# F-16C front panel with IFF, landing gear, avionics master, and master-caution
+# controls. Part of WinWing's F-16 simpit expansion. Primary use: DCS F-16C.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 Main Interface Panel (MIP)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF20      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28               # Landing gear, IFF master, avionics, master caution, more
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF20 is a community estimate. Confirm with lsusb on real hardware.
+  - id: ANNUNCIATOR_LEDS
+    description: >
+      Master caution and master arm annunciators driven by HID output reports
+      written from sim caution/warning state.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 MIP — front panel with landing gear, IFF, and caution controls.
+    PID 0xBF20 unconfirmed. DCS F-16C primary use case.
+    Last reviewed: 2026-06.

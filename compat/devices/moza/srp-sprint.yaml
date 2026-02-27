@@ -1,0 +1,56 @@
+# MOZA Racing SR-P Sprint Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MOZA Racing SR-P Sprint — high-performance variant of the SR-P (2023/2024).
+# Features dual load-cell pedals (brake + clutch), ultra-stiff pedal faces,
+# and shorter pedal travel optimised for motorsport/competition simulation.
+# VID 0x346E is the registered MOZA Racing USB vendor ID.
+# PID is unconfirmed for the SR-P Sprint.
+schema_version: "1"
+
+device:
+  name: "MOZA SR-P Sprint Pedals"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x346E   # MOZA Racing registered VID (community-confirmed)
+    product_id: 0x0008  # Placeholder — PID_UNCONFIRMED for SR-P Sprint
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0008 is a placeholder; verify with lsusb or MOZA Pit House software."
+  - id: DUAL_LOAD_CELL
+    description: >
+      Both brake and clutch pedals use load cells (force sensing). Brake and
+      clutch axes represent applied force, not travel distance. Throttle axis
+      remains displacement-based (hall-effect).
+  - id: SHORT_THROW_OPTIMISED
+    description: >
+      Pedal travel is shorter than standard SR-P. Do not use SR-P or SR-P Lite
+      calibration data — the force-to-axis mapping differs significantly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA SR-P Sprint pedals (2023/2024). High-performance dual load-cell variant.
+    VID 0x346E confirmed for MOZA; PID requires verification.
+    Last reviewed: 2026-02.

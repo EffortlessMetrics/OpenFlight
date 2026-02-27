@@ -1,0 +1,57 @@
+# Leo Bodnar BT-BBU32 USB Button Box Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x0005 — community estimate.
+# The BT-BBU32 is a compact 32-button USB interface distinct from the
+# BBI-32 (PID 0x000E, confirmed). The BT prefix indicates a later/variant
+# product line with updated firmware and PCB layout. Used in DIY cockpit
+# panels and button boxes requiring up to 32 discrete inputs.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BT-BBU32 USB Button Box Interface"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x0005      # Community estimate — BT-BBU32 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is a community estimate for the BT-BBU32. The confirmed
+      BBI-32 PID is 0x000E (see bbi-32.yaml). Verify with lsusb or Leo Bodnar
+      product documentation before deployment.
+  - id: BUTTON_ONLY_NO_AXES
+    description: >
+      Pure 32-button interface with no analogue axes. All inputs are discrete
+      active-low digital signals with internal pull-ups.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz USB poll rate for sub-millisecond button latency.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BT-BBU32 USB button box — 32 buttons, VID 0x1DD2 / PID 0x0005 (est).
+    Distinct from BBI-32 (PID 0x000E). 1000 Hz poll rate.
+    Wave-40 addition. Last reviewed: 2026-07.

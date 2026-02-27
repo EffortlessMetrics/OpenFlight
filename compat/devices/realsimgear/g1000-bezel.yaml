@@ -1,0 +1,53 @@
+# RealSimGear G1000 Bezel Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xF230 — community
+# estimate. The G1000 Bezel entry covers the generic bezel frame accessory that
+# holds the G1000 PFD/MFD screens in a physical cockpit mount. As a bezel-only
+# panel (no independent USB HID enumeration), it is modelled as a virtual_bundle
+# pairing entry in OpenFlight. Some variants include an integrated USB hub that
+# does enumerate; PID 0xF230 covers that hub variant.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 Bezel"
+  vendor: "RealSimGear"
+  is_virtual: true
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (used by RealSimGear)
+    product_id: 0xF230   # Community estimate — G1000 bezel hub variant
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF230 is a community estimate for the bezel USB hub variant.
+      Bezel-only units (no hub) do not enumerate at all. Confirm with
+      lsusb or Windows Device Manager on target hardware.
+  - id: BEZEL_ONLY_NO_HID
+    description: >
+      In most configurations the G1000 bezel is a mechanical mounting frame
+      with no independent HID interface. Pair with g1000-pfd.yaml and/or
+      g1000-mfd.yaml for full panel coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 Bezel — mechanical frame / optional hub. PID 0xF230 is a
+    community estimate for the hub-equipped variant; bezel-only units have no USB
+    interface. Pair with g1000-pfd.yaml / g1000-mfd.yaml. Last reviewed: 2026-06.

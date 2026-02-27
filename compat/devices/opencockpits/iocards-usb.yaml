@@ -1,0 +1,57 @@
+# Opencockpits IOCards USB (0x0BCA variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Opencockpits IOCards USB — digital I/O card for custom cockpit switch panels.
+# VID 0x0BCA / PID 0x0007 are community estimates from field USB probes.
+# Distinct from iocard.yaml (VID 0x1000:0x0001) which covers an older variant.
+# Part of the Opencockpits modular I/O ecosystem (SIOC-compatible).
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits IOCards USB"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Opencockpits/Engravity VID
+    product_id: 0x0007      # Community estimate — IOCards USB (0x0BCA variant)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel I/O card
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+  led_outputs: 36
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0007 are community estimates. This entry is distinct
+      from iocard.yaml (VID 0x1000:0x0001). Confirm with lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      64 digital inputs and 36 LED outputs via packed bit-field HID reports.
+  - id: SIOC_COMPATIBLE
+    description: >
+      Compatible with the Opencockpits SIOC scripting system for complex
+      panel logic. OpenFlight wraps SIOC-style I/O through the panel adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Opencockpits IOCards USB — VID 0x0BCA / PID 0x0007 (est).
+    64 inputs + 36 LED outputs; 0x0BCA variant (see also iocard.yaml).
+    Wave-46 addition. Last reviewed: 2026-07.

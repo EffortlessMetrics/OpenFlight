@@ -1,0 +1,59 @@
+# Arduino Leonardo HID Joystick — Runtime Mode
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x2341 (Arduino LLC, confirmed).
+# PID 0x0036 is the Arduino Leonardo runtime/application mode PID.
+# The bootloader mode uses PID 0x8036 (arduino-leonardo-trim-wheel.yaml).
+# When a sketch using ArduinoJoystickLibrary or similar is loaded, the
+# Leonardo enumerates as a composite USB device with HID joystick interface
+# at PID 0x0036. Popular for DIY trim wheels, rudder pedals, and panels.
+schema_version: "1"
+
+device:
+  name: "Arduino Leonardo USB HID Joystick (DIY)"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (confirmed)
+    product_id: 0x0036      # Leonardo runtime mode (confirmed arduino.cc)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: RUNTIME_VS_BOOTLOADER
+    description: >
+      PID 0x0036 is the Leonardo runtime (sketch) mode. Bootloader mode uses
+      PID 0x8036 (documented in arduino-leonardo-trim-wheel.yaml). Windows may
+      briefly show 0x8036 during upload before transitioning to 0x0036.
+  - id: DIY_HARDWARE
+    description: >
+      Arduino Leonardo is a popular ATmega32U4 DIY controller for flight panels,
+      trim wheels, and rudder pedals. Axis/button layout is user-defined.
+  - id: VIRTUAL_COMPORT_COMPOSITE
+    description: >
+      The Leonardo runtime firmware presents a composite USB device: HID joystick
+      plus a CDC virtual COM port. The COM port may appear in Device Manager.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Leonardo HID joystick runtime mode (PID 0x0036). Bootloader uses
+    0x8036. VID 0x2341 confirmed. Axis/button layout user-defined.
+    Wave-41 addition. Last reviewed: 2026-07.

@@ -1,0 +1,40 @@
+[package]
+name = "flight-axis-fuzz"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1"
+
+[dependencies.flight-axis]
+path = ".."
+features = ["serde"]
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_axis_config"
+path = "fuzz_targets/fuzz_axis_config.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_axis_pipeline"
+path = "fuzz_targets/fuzz_axis_pipeline.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_cal_smooth_trim"
+path = "fuzz_targets/fuzz_cal_smooth_trim.rs"
+test = false
+doc = false

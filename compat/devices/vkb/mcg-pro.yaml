@@ -1,0 +1,61 @@
+# VKB MCG Pro Grip Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VKB MCG Pro (Modern Combat Grip Pro) is VKB's mid-range military grip module.
+# Positioned between the MCG Standard and MCG Ultimate in VKB's grip line-up.
+# Compatible with Gunfighter Mk3/Mk4 and Black Mamba bases.
+# VID 0x231D confirmed: VKB-Sim (Vadim Kotelnikov).
+# PID 0x0129 is a community estimate — confirm with VKB Joystick Device Config.
+
+schema_version: "1"
+
+device:
+  name: "VKB MCG Pro Grip Module"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim
+    product_id: 0x0129      # Community estimate — MCG Pro variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2                # Thumb ministick X/Y; base provides remaining axes
+    names: [ministick_x, ministick_y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0129 is a community estimate derived from sequential allocation
+      around the confirmed MCG Ultimate (0x0128). Confirm with VKB Joystick
+      Device Config utility on real hardware.
+  - id: COMPOSITE_DEVICE
+    description: >
+      The MCG Pro grip communicates via the Gunfighter/Black Mamba base board.
+      The combined USB descriptor includes base-provided axes (X/Y/Z/Rx/Ry/Rz
+      plus throttle) in addition to the ministick reported by the grip itself.
+  - id: FIRE_BUTTON_MODES
+    description: >
+      The primary trigger (B1) supports single-stage and two-stage fire modes
+      selectable via the VKB config utility. Multi-stage mode maps to B1/B2.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Pro grip — mid-range combat grip. VID 0x231D confirmed; PID 0x0129 est.
+    Pairs with Gunfighter Mk3/Mk4 or Black Mamba Mk3 base.
+    See mcg-ultimate.yaml (premium) and mcg-standard.yaml (entry) for sibling grips.
+    Last reviewed: 2026-06.

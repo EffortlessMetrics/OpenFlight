@@ -1,0 +1,59 @@
+# Heusinkveld Sim Shifter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8: Microchip Technology (used by Heusinkveld for their PIC/USB
+# devices). PID 0xE2C5 is a community estimate for the Heusinkveld Sim Shifter;
+# distinct from the 0xF6E0 estimate in sim-shifter-sequential.yaml.
+# The Heusinkveld Sim Shifter is a precision H-pattern/sequential shifter
+# with Hall effect position sensing and adjustable shift forces.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Shifter"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xE2C5   # Community estimate — Sim Shifter; see also 0xF6E0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]   # Shift lever X/Y position
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xE2C5 is a community estimate; another estimate (0xF6E0) is used in
+      sim-shifter-sequential.yaml. Confirm from lsusb on real hardware.
+  - id: H_PATTERN_AXES
+    description: >
+      In H-pattern mode the X/Y axes report gate position; individual gear
+      selections are reported as button presses. In sequential mode only
+      up/down buttons are active.
+  - id: MICROCHIP_VID
+    description: >
+      VID 0x04D8 is the Microchip Technology USB VID shared by many HID
+      devices. Rely on PID for device identification.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Shifter. VID 0x04D8 (Microchip), PID 0xE2C5 community
+    estimate (see also 0xF6E0). Hall-effect H-pattern/sequential shifter.
+    Last reviewed: 2026-06.

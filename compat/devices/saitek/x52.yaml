@@ -1,0 +1,52 @@
+# Saitek X52 Flight Control System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Saitek X52 Flight Control System"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x075C      # X52 (non-Pro, composite stick + throttle)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 10
+  buttons: 28
+  hats: 3
+  force_feedback: false
+  leds:
+    count: 2
+    rgb: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LED_MONOCHROME
+    description: >
+      The X52 (non-Pro) exposes two user-programmable monochrome LEDs.
+      Unlike the X52 Pro, colours cannot be adjusted — LEDs are on/off only.
+  - id: NO_MFD
+    description: >
+      The X52 (non-Pro) does not include the MFD display found on the X52 Pro.
+      Use the X52 Pro manifest for MFD-equipped variants (PID 0x0762).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    X52 (non-Pro, PID 0x075C) uses the same HID axis/button path as the X52 Pro
+    but with fewer buttons (28 vs 39) and no MFD. The X52 Pro manifest
+    (x52-pro.yaml) covers PID 0x0762 with the full feature set.
+    Last validated: 2026-02.

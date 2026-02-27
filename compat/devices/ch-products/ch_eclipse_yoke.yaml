@@ -1,0 +1,56 @@
+# CH Products Eclipse Yoke (Alternate PID Estimate — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x068E (CH Products). PID 0x00C1 is an estimate;
+# the confirmed CH Eclipse Yoke PID is 0x0051 (eclipse-yoke.yaml from the
+# Linux kernel hid-ids.h). PID 0x00C1 corresponds to a revision reported in
+# some community databases for a later production variant.
+# Verify with Windows Device Manager or lsusb.
+schema_version: "1"
+
+device:
+  name: "CH Products Flight Sim Eclipse Yoke"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E       # CH Products (confirmed)
+    product_id: 0x00C1      # Estimated — confirmed PID is 0x0051 in eclipse-yoke.yaml
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00C1 is an estimate. The confirmed CH Eclipse Yoke PID is 0x0051
+      (see eclipse-yoke.yaml). If 0x00C1 does not enumerate, use eclipse-yoke.yaml.
+  - id: OS_MEDIATED_HID
+    description: >
+      CH Products devices use OS-mediated HID parsing. No raw report parser needed.
+  - id: YOKE_FORM_FACTOR
+    description: >
+      X/Y axes are the yoke (roll/pitch); Z is the throttle knob on the yoke base.
+      Suitable for GA and transport simulation.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Eclipse Yoke (alternate PID 0x00C1 estimate). 3 axes, 12 buttons.
+    See eclipse-yoke.yaml (PID 0x0051) for confirmed primary entry. Wave-34 addition.
+    Last reviewed: 2026-06.

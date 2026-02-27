@@ -1,0 +1,51 @@
+# DIY USB Encoder Panel (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic DIY USB encoder panel — rotary encoders (for radio tuning,
+# altitude selector, heading bug, etc.) connected to an Arduino or Teensy
+# and exposed as a HID joystick/gamepad with axis or button events.
+# Very common in GA and airliner cockpit builds. VID/PID board-dependent.
+
+schema_version: "1"
+
+device:
+  name: "DIY USB Encoder Panel (Generic)"
+  vendor: "DIY / Community"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder)
+    product_id: 0x8039  # Encoder panel firmware — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [enc_1, enc_2, enc_3, enc_4, enc_5, enc_6, enc_7, enc_8]
+    resolution_bits: 8
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID board/firmware dependent."
+  - id: ENCODER_AXIS_OR_BUTTON
+    description: >
+      Encoders may report as axis (absolute) or button pairs (relative
+      CW/CCW pulses), depending on firmware. Profile should handle both.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic DIY USB encoder panel for avionics knob simulation. VID/PID
+    board-dependent. See also mmjoy2-controller.yaml, teensy-hid.yaml.
+    Last reviewed: 2026-06.

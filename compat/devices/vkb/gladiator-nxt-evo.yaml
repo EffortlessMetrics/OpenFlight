@@ -1,0 +1,59 @@
+# VKB Gladiator NXT EVO (Standard, Right-Hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim). PID 0x0200 is a community estimate for the standard
+# Gladiator NXT EVO (non-Pro) right-hand version. The NXT EVO Pro uses
+# PID 0x0202 (gladiator-nxt-evo-pro.yaml). The base EVO has fewer hats and
+# buttons than the Pro variant. Confirm with VKBDevCfg or lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0200      # Community estimate — NXT EVO (non-Pro)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 22
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0200 is a community estimate for the NXT EVO base (non-Pro).
+      The EVO Pro (gladiator-nxt-evo-pro.yaml) uses 0x0202. VKB sequential
+      PID allocation places the base EVO below the Pro. Confirm with
+      VKBDevCfg → USB Info or lsusb.
+  - id: HALL_EFFECT_GIMBAL
+    description: >
+      Like all Gladiator NXT variants, the EVO uses VKB's Hall-effect
+      contactless gimbal. 15-bit axis resolution with no mechanical wear.
+  - id: UPGRADE_PATH
+    description: >
+      The NXT EVO is the same gimbal as the NXT EVO Pro but with a fewer-
+      feature grip. The grip is user-replaceable — the base can be upgraded
+      to an EVO Pro grip without replacing the gimbal unit.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO (standard, right-hand). VID 0x231D confirmed;
+    PID 0x0200 is a community estimate. 15-bit Hall-effect gimbal, 22 buttons.
+    Entry-level VKB NXT EVO variant below the Pro. Last reviewed: 2026-06.

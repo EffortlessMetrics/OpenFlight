@@ -1,0 +1,59 @@
+# WinWing SimAppPro BARO Panel (Barometric Altimeter Setting)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech.
+# PID 0xBF22 is a community estimate in the SimAppPro panel range.
+# The SimAppPro BARO panel provides a dedicated barometric altimeter setting
+# knob and display for the A320 FCU. Used with simapp-pro-fcu.yaml in
+# full A320 cockpit setups to replicate separate BARO selector units.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro BARO Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF22   # Community estimate — SimAppPro BARO panel
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  encoders: 1            # BARO setting rotary encoder
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF22 is a community estimate for the SimAppPro BARO panel.
+      Confirm with lsusb on real hardware before enabling device matching.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      The BARO rotary encoder reports increment/decrement as HID button events.
+      STD/QNH/QFE selector buttons generate discrete button press events.
+  - id: BARO_DISPLAY_OUTPUT
+    description: >
+      The panel includes an altimeter setting display (hPa/inHg). Display
+      updates are sent via HID output reports from the active sim data bus.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro BARO Panel — A320 barometric setting control with display.
+    PID 0xBF22 is a community estimate. Used alongside SimAppPro FCU for
+    full A320 altimeter/BARO management. Last reviewed: 2026-06.

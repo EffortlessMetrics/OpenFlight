@@ -1,0 +1,61 @@
+# WinWing Orion 2 Throttle (Gen 2 Base — Estimated PID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x4098 is confirmed for all WinWing products.
+# PID 0xB71E is an estimate from the known WinWing PID range; the
+# production PID should be verified with SimAppPro device scan or lsusb.
+# The Orion 2 throttle family also includes sim-specific variants
+# (FA-18C: orion2-throttle.yaml PID 0xBE62; F-16EX: orion2-f16ex-throttle.yaml).
+# This manifest targets the generic Orion 2 throttle base shipped with
+# dual-engine split-throttle design independent of a specific grip.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (all products)
+    product_id: 0xB71E      # Estimated — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 37
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB71E is an estimate from the WinWing product PID range.
+      Confirm with SimAppPro → Device Scan or lsusb on Linux before
+      relying on this value for profile matching.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers are separate axes. OpenFlight exposes
+      them individually and can optionally synthesise a combined virtual axis.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement pairs).
+      Map to axis positions or discrete commands via profile rules.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 Throttle (generic dual-engine base). VID 0x4098 confirmed;
+    PID 0xB71E is an estimate — must be verified on hardware. 6 axes, 37 buttons,
+    4 encoders. Asian-market brand, wave-34 addition. Last reviewed: 2026-06.

@@ -1,0 +1,52 @@
+# OpenCockpits USB Expansion Card (VID 0x0BCA variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenCockpits USB Expansion Card extends the SIOC/IOCard ecosystem with
+# additional I/O for buttons, LEDs, and servo outputs. This manifest covers
+# the VID 0x0BCA / PID 0x0005 variant (community estimate). See opencockpits/
+# usb-expansion.yaml for the 0x1000/0x0003 variant.
+
+schema_version: "1"
+
+device:
+  name: "OpenCockpits USB Expansion Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x0BCA       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0005      # Community estimate — USB expansion (0x0BCA batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0005 are community estimates. See usb-expansion.yaml
+      (VID 0x1000 / PID 0x0003) for the alternative variant. Confirm with lsusb.
+  - id: EXPANSION_IO
+    description: >
+      Expansion card provides additional digital I/O lines beyond the base card.
+      All I/O is accessible as HID button/output reports via the SIOC protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits USB Expansion Card — VID 0x0BCA / PID 0x0005 est (alternate batch).
+    See opencockpits/usb-expansion.yaml for VID 0x1000 variant. Last reviewed: 2026-06.

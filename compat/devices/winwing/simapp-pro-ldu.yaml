@@ -1,0 +1,44 @@
+# WinWing SimAppPro LDU (Left Display Unit) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBE50 — estimated panel PID.
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro LDU Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE50
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE50 is estimated. Confirm with SimAppPro device scan.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro Left Display Unit panel for airliner simulation.
+    Rotary encoders and push buttons. Part of the SimAppPro A320/737 cockpit
+    ecosystem. Tier 2. Last reviewed: 2026-02.

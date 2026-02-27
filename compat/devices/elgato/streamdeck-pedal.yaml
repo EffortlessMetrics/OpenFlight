@@ -1,0 +1,55 @@
+# Elgato Stream Deck Pedal
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Elgato Stream Deck Pedal is a 3-button USB foot pedal designed for
+# hands-free macro triggering. In flight sim use, typically mapped to PTT
+# (push-to-talk), pause, or panel command shortcuts.
+# VID 0x0FD9 confirmed: Elgato Systems (Corsair).
+# PID 0x0086 confirmed: Stream Deck Pedal (linux-hardware.org probes).
+schema_version: "1"
+
+device:
+  name: "Elgato Stream Deck Pedal"
+  vendor: "Elgato Systems (Corsair)"
+  usb:
+    vendor_id: 0x0FD9
+    product_id: 0x0086   # Confirmed: Stream Deck Pedal
+  hid:
+    usage_page: 0x01
+    usage: 0x06          # Keyboard (HID keyboard usage)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 10
+
+quirks:
+  - id: HID_KEYBOARD_USAGE
+    description: >
+      The Stream Deck Pedal reports as a HID keyboard device (Usage Page 0x01,
+      Usage 0x06) rather than a gamepad/joystick. OpenFlight maps keyboard
+      events to sim commands via the rules engine.
+  - id: THREE_FOOT_BUTTONS
+    description: >
+      Three independent foot pedals (left, center, right). No axis output.
+      In flight sim use, map to PTT, pause, or any command that benefits
+      from hands-free triggering.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato Stream Deck Pedal — 3-button USB foot pedal. VID 0x0FD9 / PID 0x0086 confirmed.
+    Maps as HID keyboard device. Useful for PTT and panel shortcuts.
+    Last reviewed: 2026-06.

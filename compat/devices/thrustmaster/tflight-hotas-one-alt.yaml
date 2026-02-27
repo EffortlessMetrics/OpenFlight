@@ -1,0 +1,55 @@
+# Thrustmaster T.Flight HOTAS One (Alt PID 0xB10A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB10A is a community-reported alternate PID for the T.Flight HOTAS One
+# Xbox/PC variant. The confirmed PC-mode PID is 0xB68D (tflight-hotas-one.yaml).
+# PID 0xB10A has been observed in some linux-hardware probes and community reports
+# as an early firmware revision or regional variant.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS One (Alt PID)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (Guillemot Corp.)
+    product_id: 0xB10A      # Community-reported alternate PID — see tflight-hotas-one.yaml for 0xB68D
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_ALT_VARIANT
+    description: >
+      PID 0xB10A is a community-reported alternate PID for the T.Flight HOTAS One.
+      The primary confirmed PID is 0xB68D (tflight-hotas-one.yaml). If this PID
+      does not match, try the primary manifest. Verify with lsusb or Windows
+      Device Manager.
+  - id: STICK_THROTTLE_SINGLE_USB
+    description: >
+      Stick and throttle share a single USB device (same HID interface). No
+      separate enumeration needed. The throttle axis appears as the Z axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight HOTAS One alternate PID 0xB10A. Community-reported;
+    primary confirmed PID is 0xB68D (see tflight-hotas-one.yaml). 5 axes,
+    14 buttons, 1 hat. Wave-41 addition. Last reviewed: 2026-07.

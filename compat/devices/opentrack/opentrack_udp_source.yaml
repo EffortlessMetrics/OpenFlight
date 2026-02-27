@@ -1,0 +1,58 @@
+# OpenTrack UDP Head-Tracking Source (Virtual Device)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenTrack is open-source head-tracking software that aggregates input from
+# physical trackers (TrackIR, SteamVR, IR clips, webcams, IMUs) and outputs
+# 6DOF head-pose data over UDP to simulators. This manifest represents the
+# virtual UDP receive endpoint in OpenFlight rather than a physical USB device.
+# Protocol: 48-byte 6DOF UDP packet (6× double: x, y, z, yaw, pitch, roll).
+
+schema_version: "1"
+
+device:
+  name: "OpenTrack UDP Source"
+  vendor: "OpenTrack Project"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Virtual device — no physical USB
+    product_id: 0x0000  # Virtual device — no physical USB
+  virtual: true
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, yaw, pitch, roll]
+    resolution_bits: 64   # IEEE 754 double precision
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      This is a virtual device manifest representing the OpenTrack UDP receive
+      protocol. No physical USB device is associated. OpenFlight listens on a
+      configurable UDP port (default 4242) for 48-byte 6DOF packets.
+  - id: UDP_PROTOCOL
+    description: >
+      OpenTrack sends 48 bytes per packet: six IEEE 754 doubles in order
+      x, y, z (mm), yaw, pitch, roll (degrees). Little-endian byte order.
+  - id: NO_USB_MATCHING
+    description: >
+      VID 0x0000 / PID 0x0000 — OpenFlight activates this source via protocol
+      binding, not USB enumeration.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    OpenTrack UDP virtual source. No physical USB device; 6DOF head-pose
+    received via 48-byte UDP protocol (default port 4242). Tier 1: fully
+    supported and simulated. Last reviewed: 2026-06.

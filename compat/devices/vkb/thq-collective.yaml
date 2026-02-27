@@ -1,0 +1,46 @@
+# VKB THQ Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB-Sim). PID 0x0180 estimated for THQ Collective variant.
+# The THQ Collective is VKB's helicopter collective lever based on the
+# SEM THQ throttle platform with helicopter-specific grip and axis layout.
+schema_version: "1"
+
+device:
+  name: "VKB THQ Collective"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0180
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [collective, twist, thumbx, thumby]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: THQ_COLLECTIVE_GRIP
+    description: >
+      Based on VKB SEM THQ throttle platform with helicopter collective grip.
+      Collective axis has adjustable friction via mechanical detent system.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB THQ Collective helicopter lever. PID 0x0180 estimated.
+    VID 0x231D confirmed (VKB-Sim). Last reviewed: 2026-06.

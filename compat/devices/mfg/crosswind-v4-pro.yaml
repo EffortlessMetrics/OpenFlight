@@ -1,0 +1,58 @@
+# MFG Crosswind V4 Pro Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The MFG Crosswind V4 Pro is a premium variant of the V4 with upgraded
+# adjustable spring centering mechanism and toe-brake calibration knobs.
+# Shares the hall-effect sensor design of the standard V4 (crosswind-v4.yaml).
+# VID 0x1551 confirmed: MFG (Motion Fantasy Games).
+# PID 0x0044 is a community estimate for the V4 Pro variant.
+
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V4 Pro Rudder Pedals"
+  vendor: "MFG (Motion Fantasy Games)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0044      # Community estimate — V4 Pro
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0044 is a community estimate for the V4 Pro variant. The standard
+      V4 uses 0x0004; the Pro may use a different firmware PID. Confirm with
+      lsusb on real hardware.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three axes use hall-effect sensors — same as V4 standard.
+  - id: ADJUSTABLE_CENTERING_PRO
+    description: >
+      The V4 Pro adds a tool-free spring centering adjustment knob compared
+      to the standard V4 hex-key procedure. No effect on HID report format.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V4 Pro. VID 0x1551 confirmed; PID 0x0044 est.
+    For standard V4 see crosswind-v4.yaml. Identical HID report format expected.
+    Last reviewed: 2026-06.

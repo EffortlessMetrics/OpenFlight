@@ -1,0 +1,65 @@
+# Generic Teensy 4.1 USB HID Joystick Controller (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC). PID 0x0486 confirmed from PJRC Teensyduino USB
+# documentation as the HID joystick class PID for Teensy 4.1.
+# The Teensy 4.1 (NXP iMXRT1062, 600 MHz) is a popular DIY platform for
+# high-resolution multi-axis HOTAS, yoke, and rudder pedal builds.
+# Supports up to 64 axes, 128 buttons, and 4 hat switches via Teensyduino.
+schema_version: "1"
+
+device:
+  name: "Teensy 4.1 USB HID Joystick (DIY)"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0    # PJRC (confirmed)
+    product_id: 0x0486   # Teensyduino HID joystick — confirmed from pjrc.com USB documentation
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      PJRC VID 0x16C0 / PID 0x0486 is the standard Teensyduino USB HID
+      joystick class PID for Teensy 4.x. The Teensy 4.0 uses PID 0x0478
+      (see teensy-40-throttle.yaml). Layout depends entirely on the
+      Teensyduino sketch; values here represent a typical 8-axis HOTAS build.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Axis count (up to 64), button count
+      (up to 128), and report layout vary by builder sketch. The values
+      listed are representative defaults.
+  - id: HIGH_POLL_RATE
+    description: >
+      Teensy 4.1 supports USB full-speed 1000 Hz polling with appropriate
+      Teensyduino USB interval settings. Some host controllers and OS
+      configurations may limit to 125 Hz regardless.
+  - id: IMXRT1062_PLATFORM
+    description: >
+      The iMXRT1062 ARM Cortex-M7 core allows deterministic USB HID report
+      generation with sub-100 µs latency from sensor read to USB packet.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Teensy 4.1 DIY HID joystick. VID 0x16C0 / PID 0x0486 confirmed
+    from PJRC Teensyduino docs. Report layout is builder-defined. Common
+    high-end DIY HOTAS/yoke platform. Last reviewed: 2026-06.

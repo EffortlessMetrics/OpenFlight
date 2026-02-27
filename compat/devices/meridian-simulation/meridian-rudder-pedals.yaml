@@ -1,0 +1,44 @@
+# Meridian Simulation Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Meridian Simulation (UK) rudder pedals with differential toe brakes.
+# USB HID device for home cockpit and semi-pro builds. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Meridian Simulation Rudder Pedals"
+  vendor: "Meridian Simulation"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0502      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against real Meridian Simulation hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meridian Simulation rudder pedals with differential toe brakes.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

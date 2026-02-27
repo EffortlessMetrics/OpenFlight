@@ -1,0 +1,56 @@
+# Logitech 3D Pro Plus (Enhanced Extreme 3D — Wave 34)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x046D (Logitech), PID 0xC215.
+# NOTE: extreme-3d-pro.yaml covers the same VID/PID. The "3D Pro Plus" name
+# appears on some regional/OEM packaging for the Extreme 3D Pro. This manifest
+# captures the alternate branding with extended axis capability spec (6 axes
+# claimed by some regional spec sheets vs 4 axes in the standard Extreme 3D Pro).
+# If both files match the same physical device, prefer extreme-3d-pro.yaml
+# which has more complete quirk documentation and test coverage.
+schema_version: "1"
+
+device:
+  name: "Logitech 3D Pro Plus"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech
+    product_id: 0xC215      # Confirmed for Extreme 3D Pro / 3D Pro Plus regional variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, z, rx, ry]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: SHARED_PID_WITH_EXTREME3DPRO
+    description: >
+      PID 0xC215 is also used by the Logitech Extreme 3D Pro (extreme-3d-pro.yaml).
+      The 3D Pro Plus is a regional variant with additional reported axes.
+      If profiles conflict, prefer extreme-3d-pro.yaml which has richer quirk data.
+  - id: MIXED_RESOLUTION_AXES
+    description: >
+      Axes use 10-bit resolution on X/Y; lower resolution on twist and throttle.
+      OpenFlight normalises all axes to the same range.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech 3D Pro Plus (regional variant of Extreme 3D Pro). VID 0x046D,
+    PID 0xC215. See extreme-3d-pro.yaml for primary coverage. Wave-34 addition.
+    Last reviewed: 2026-06.

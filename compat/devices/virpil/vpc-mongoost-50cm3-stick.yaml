@@ -1,0 +1,68 @@
+# VIRPIL VPC MongoosT-50CM3 Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4130 — referenced in vpc-warbrd-original.yaml notes:
+#   "parse_mongoost_stick_report for [...] MongoosT-50CM3 (PID 0x4130)".
+# The MongoosT-50CM3 is the third-generation MongoosT stick (CM3 camber
+# mechanism). It uses the same 15-byte HID report format as the WarBRD
+# and WarBRD-D bases. The T-50CM3 stick base (t50cm3-base.yaml) uses an
+# estimated PID 0x4500 for the centre-mount variant.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 Stick"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4130    # Referenced in vpc-warbrd-original.yaml parser notes
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: SHARED_REPORT_FORMAT_WARBRD
+    description: >
+      The MongoosT-50CM3 shares its 15-byte HID report format with the
+      WarBRD (PID 0x40CC) and WarBRD-D (PID 0x43F5). The same parser
+      (parse_mongoost_stick_report) handles all three PIDs.
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; all other values = center.
+  - id: CM3_MECHANISM
+    description: >
+      The CM3 cam mechanism provides adjustable centring force and can be
+      configured without tools. The mechanism does not change the USB HID
+      descriptor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x4130 referenced in vpc-warbrd-original.yaml (parse_mongoost_stick_report
+    covers WarBRD 0x40CC, WarBRD-D 0x43F5, and MongoosT-50CM3 0x4130).
+    Shares 15-byte report format with WarBRD family. VIRPIL VID=0x3344.
+    Last reviewed: 2026-02.

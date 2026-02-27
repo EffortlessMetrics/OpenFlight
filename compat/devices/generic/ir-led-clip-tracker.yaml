@@ -1,0 +1,61 @@
+# DIY IR LED Clip Head Tracker (Teensy HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY IR LED clip head trackers built on Teensy microcontrollers are a
+# common community alternative to commercial TrackIR clips. The Teensy
+# enumerates as a USB HID joystick and transmits 3DOF IR LED position data.
+# VID 0x16C0 (PJRC) / PID 0x0483: community estimate for this specific
+# Teensyduino HID configuration. See also generic/teensy-40-hid.yaml.
+
+schema_version: "1"
+
+device:
+  name: "DIY IR LED Clip Head Tracker (Teensy)"
+  vendor: "PJRC"
+  usb:
+    vendor_id: 0x16C0       # PJRC (confirmed Teensy VID)
+    product_id: 0x0483      # Community estimate — Teensy HID IR tracker firmware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 75
+  max_jitter_ms: 13
+
+quirks:
+  - id: PID_VARIES_BY_FIRMWARE
+    description: >
+      Teensyduino HID PID depends on the firmware configuration. Common PIDs
+      include 0x0478 (teensy-40-throttle.yaml), 0x0486 (teensy-40-hid.yaml).
+      PID 0x0483 is used by some IR tracker sketches. Verify with lsusb.
+  - id: OPENTRACK_COMPATIBLE
+    description: >
+      This device class is designed to work with OpenTrack's Joystick input
+      source. Configure OpenTrack to read axes from this device for 3DOF or
+      6DOF (with appropriate firmware) head tracking.
+  - id: REQUIRES_IR_CAMERA
+    description: >
+      The Teensy emits or processes IR LED signals. Requires either a
+      PS3 Eye camera with IR filter removed or a dedicated IR camera for
+      position tracking.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Teensy-based IR LED clip head tracker. VID 0x16C0 / PID 0x0483 est.
+    Works with OpenTrack for 3/6DOF head tracking. See teensy-40-hid.yaml.
+    Last reviewed: 2026-06.

@@ -1,0 +1,48 @@
+# VKB T-Rudder Mk.IV SE
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB). PID 0x020A — community estimate.
+# Wave-72 addition.
+schema_version: "1"
+
+device:
+  name: "VKB T-Rudder Mk.IV SE"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB
+    product_id: 0x020A      # Community estimate — T-Rudder Mk.IV SE
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [rudder_left, rudder_right]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. VKB T-Rudder Mk.IV Special Edition. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB T-Rudder Mk.IV SE — special edition rocker pedals. PID 0x020A community estimate. Wave-72. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs
+  - xplane

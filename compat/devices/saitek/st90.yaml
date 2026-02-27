@@ -1,0 +1,48 @@
+# Saitek ST90 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0F54 is a community-reported PID for the ST90 USB joystick.
+# The Saitek ST90 was a compact, symmetrical joystick with a twist-rudder
+# axis, targeting beginner and casual sim users. Successor to the ST50.
+schema_version: "1"
+
+device:
+  name: "Saitek ST90 Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0F54      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0F54 is a community estimate for the ST90 USB variant.
+      Confirm with lsusb on real hardware. The ST90 succeeded the ST50 as
+      Saitek's entry-level joystick.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek ST90 entry-level joystick. PID 0x0F54 is a community estimate;
+    verify with lsusb. Successor to the ST50. Last reviewed: 2026-06.

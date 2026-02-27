@@ -309,4 +309,140 @@ mod tests {
         assert_eq!(retrieved.signature, signature.signature);
         assert_eq!(retrieved.content_hash, signature.content_hash);
     }
+
+    /// Flipping one byte of the content must cause verify_content to return false
+    /// (the Ed25519 signature no longer matches the modified message).
+    #[tokio::test]
+    async fn test_tampered_content_fails_verification() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let content = b"authentic update payload";
+        let signature_bytes = signing_key.sign(content);
+        let signature_hex = hex::encode(signature_bytes.to_bytes());
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content_hash = verifier.hash_content(content);
+        let update_sig = UpdateSignature::new(signature_hex, content_hash, "test".to_string());
+
+        let mut tampered = content.to_vec();
+        tampered[0] ^= 0xFF; // flip one byte
+
+        let result = verifier
+            .verify_content(&tampered, &update_sig)
+            .await
+            .unwrap();
+        assert!(!result, "tampered content must not verify");
+    }
+
+    /// Flipping one byte of the signature itself must also fail verification.
+    #[tokio::test]
+    async fn test_tampered_signature_bytes_fails_verification() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let content = b"authentic update payload";
+        let mut sig_bytes = signing_key.sign(content).to_bytes();
+        sig_bytes[0] ^= 0xFF; // corrupt the first byte
+        let tampered_sig_hex = hex::encode(sig_bytes);
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content_hash = verifier.hash_content(content);
+        let update_sig = UpdateSignature::new(tampered_sig_hex, content_hash, "test".to_string());
+
+        let result = verifier.verify_content(content, &update_sig).await.unwrap();
+        assert!(!result, "corrupted signature must not verify");
+    }
+
+    /// verify_content with an empty payload must succeed when the signature is valid
+    /// (i.e. it must not panic or return an unexpected error).
+    #[tokio::test]
+    async fn test_empty_payload_verifies_gracefully() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let signature_bytes = signing_key.sign(b"");
+        let signature_hex = hex::encode(signature_bytes.to_bytes());
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content_hash = verifier.hash_content(b"");
+        let update_sig = UpdateSignature::new(signature_hex, content_hash, "test".to_string());
+
+        let result = verifier.verify_content(b"", &update_sig).await.unwrap();
+        assert!(result, "valid signature for empty payload must verify");
+    }
+
+    /// A signature produced by a *different* key must not verify against an empty payload.
+    #[tokio::test]
+    async fn test_wrong_key_rejects_empty_payload() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let wrong_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let signature_bytes = wrong_key.sign(b"");
+        let signature_hex = hex::encode(signature_bytes.to_bytes());
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content_hash = verifier.hash_content(b"");
+        let update_sig = UpdateSignature::new(signature_hex, content_hash, "test".to_string());
+
+        let result = verifier.verify_content(b"", &update_sig).await.unwrap();
+        assert!(!result, "signature from wrong key must not verify");
+    }
+
+    /// An unsupported algorithm field must cause verify_content to return an Err.
+    #[tokio::test]
+    async fn test_unsupported_algorithm_returns_error() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content = b"some content";
+        let sig_bytes = signing_key.sign(content);
+        let mut update_sig = UpdateSignature::new(
+            hex::encode(sig_bytes.to_bytes()),
+            verifier.hash_content(content),
+            "test".to_string(),
+        );
+        update_sig.algorithm = "RSA".to_string();
+
+        let result = verifier.verify_content(content, &update_sig).await;
+        assert!(
+            result.is_err(),
+            "unsupported algorithm must return an error"
+        );
+    }
+
+    /// Passing non-hex characters as the signature must return an Err rather than panic.
+    #[tokio::test]
+    async fn test_invalid_hex_signature_returns_error() {
+        let signing_key = SigningKey::generate(&mut OsRng);
+        let verifying_key = signing_key.verifying_key();
+
+        let public_key_hex = hex::encode(verifying_key.to_bytes());
+        let verifier = SignatureVerifier::new(&public_key_hex).unwrap();
+
+        let content = b"some content";
+        let update_sig = UpdateSignature::new(
+            "not-valid-hex!!!".to_string(),
+            verifier.hash_content(content),
+            "test".to_string(),
+        );
+
+        let result = verifier.verify_content(content, &update_sig).await;
+        assert!(
+            result.is_err(),
+            "invalid hex signature must return an error"
+        );
+    }
 }

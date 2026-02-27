@@ -1,0 +1,60 @@
+# SimXperience Stage 4 6DOF Motion Rig
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimXperience Stage 4 is a full 6-degrees-of-freedom motion rig using
+# electric linear actuators. Motion commands are sent from SimCommander
+# software via USB or Ethernet using a proprietary protocol. Not a standard
+# HID input device; tracked for sim-rig compatibility documentation.
+schema_version: "1"
+
+device:
+  name: "SimXperience Stage 4 6DOF Motion Rig"
+  vendor: "SimXperience"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0001  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined — proprietary protocol, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID are unconfirmed. Verify with lsusb on real hardware."
+  - id: SIX_DOF
+    description: >
+      The Stage 4 provides surge, sway, heave, roll, pitch, and yaw via
+      six independent linear actuators. Motion fidelity exceeds seat-mover
+      designs; actuator resolution and travel vary per axis.
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      Controlled by SimCommander software over a proprietary USB/Ethernet
+      protocol. Standard HID input is not used.
+  - id: OUTPUT_ONLY
+    description: >
+      The Stage 4 is an output-only motion platform. No HID input events
+      are generated. Tracked for sim-rig compatibility documentation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience Stage 4 6DOF motion rig with six electric linear actuators.
+    Output-only; not an HID input device. Controlled by SimCommander software.
+    Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Heusinkveld Sim Pedals Pro (Fanatec USB VID 0x0EB7, PID 0x0242)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 (Fanatec GmbH USB vendor ID, shared by some Heusinkveld hardware).
+# The primary Heusinkveld Sim Pedals Pro manifest (sim-pedals-pro.yaml) uses
+# VID 0x04D8, PID 0xF6D2. PID 0x0242 with VID 0x0EB7 is a community estimate
+# for a variant that enumerates under the 0x0EB7 VID.
+# The Sim Pedals Pro is Heusinkveld's mid-range three-pedal set positioned
+# between the Sprint and Ultimate lines.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Pro"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec VID — shared with some Heusinkveld products
+    product_id: 0x0242      # Community estimate — Sim Pedals Pro 0x0EB7 variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0242 with VID 0x0EB7 is a community estimate for the Sim Pedals
+      Pro 0x0EB7 variant. Primary manifest: sim-pedals-pro.yaml (VID 0x04D8,
+      PID 0xF6D2). Confirm with lsusb on real hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake axis uses a load cell sensor (force-based). Throttle and clutch
+      use high-quality potentiometers. Apply load-cell calibration profile.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz for minimal input latency.
+  - id: VID_SHARED_WITH_FANATEC
+    description: >
+      VID 0x0EB7 is shared between Fanatec and some Heusinkveld products.
+      Verify device identity when matching profiles to avoid false matches.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Pro (VID 0x0EB7 variant). PID 0x0242 community
+    estimate. Load-cell brake, 1000 Hz poll. Primary: sim-pedals-pro.yaml.
+    Wave-49 addition. Last reviewed: 2026-07.

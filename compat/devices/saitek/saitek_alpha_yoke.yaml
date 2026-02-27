@@ -1,0 +1,55 @@
+# Saitek / Logitech Alpha Flight Yoke (Logitech VID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech International), PID 0x8998 — community estimate.
+# After Logitech's acquisition of Saitek (2016), later production runs of some
+# devices enumerate under Logitech's parent VID 0x046D rather than the original
+# Saitek VID 0x06A3. This manifest covers the Logitech-branded Alpha yoke
+# variant. Functionally equivalent to the Saitek Pro Flight Yoke (0x06A3/0x0BAC).
+schema_version: "1"
+
+device:
+  name: "Logitech / Saitek Alpha Flight Yoke"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech International SA
+    product_id: 0x8998      # Community estimate — Logitech-branded alpha yoke
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, throttle]
+    resolution_bits: 12
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8998 is a community estimate for the Logitech-era VID 0x046D variant.
+      Original Saitek units use VID 0x06A3 / PID 0x0BAC (see pro-flight-yoke.yaml).
+      Confirm with lsusb or Windows Device Manager before deployment.
+  - id: LOGITECH_VID_REBRAND
+    description: >
+      Post-acquisition Logitech production may enumerate under VID 0x046D.
+      If the device is not found at 0x046D/0x8998, try pro-flight-yoke.yaml
+      (0x06A3/0x0BAC) as a fallback.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech-branded Alpha flight yoke — Logitech VID 0x046D, PID 0x8998 (est).
+    Post-acquisition variant; functionally equivalent to Saitek 0x06A3/0x0BAC.
+    3 axes, 17 buttons, 1 hat. Wave-40 addition. Last reviewed: 2026-07.

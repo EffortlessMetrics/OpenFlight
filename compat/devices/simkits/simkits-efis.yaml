@@ -1,0 +1,51 @@
+# SimKits EFIS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimKits EFIS panel for Boeing 737 NG cockpit builds. Provides BARO setting,
+# ND mode/range selectors, and FD/CTRINC/VORILS pushbuttons. Compatible
+# with the SimKits MCP737 (simkits-mcp737.yaml) for a full autopilot glareshield.
+# VID 0x1C31 / PID 0x3001: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "SimKits Boeing 737 EFIS Panel"
+  vendor: "SimKits"
+  usb:
+    vendor_id: 0x1C31
+    product_id: 0x3001      # Community estimate — EFIS
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro, minimums]
+    resolution_bits: 8
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3001 is a community estimate. Confirm with SimKits IOCards config.
+  - id: IOCARDS_PROTOCOL
+    description: >
+      Uses IOCards USB protocol; compatible with SIOC/FSUIPC bridge.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits EFIS panel. VID 0x1C31 / PID 0x3001 est.
+    Pairs with simkits-mcp737.yaml. See simkits-iocards-master.yaml for expansion.
+    Last reviewed: 2026-06.

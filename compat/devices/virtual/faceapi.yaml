@@ -1,0 +1,54 @@
+# FaceAPI Head Tracker (Virtual)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FaceAPI is a software-based face tracking solution that uses a standard
+# webcam to track head position and orientation. It is a virtual/software
+# device with no physical USB HID interface. Outputs 6DOF head pose data
+# for flight simulation look-around and view control.
+
+schema_version: "1"
+
+device:
+  name: "FaceAPI Head Tracker"
+  vendor: "Seeing Machines"
+  type: "other"
+  usb: ~
+
+capabilities:
+  axes:
+    count: 6
+    names: [yaw, pitch, roll, x, y, z]
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 33
+
+quirks:
+  - id: VIRTUAL_NO_USB
+    description: >
+      FaceAPI has no physical USB HID device. Head pose data is delivered via
+      a software API (TrackIR protocol emulation or proprietary SDK). No HID
+      input reports are generated.
+  - id: WEBCAM_DEPENDENCY
+    description: >
+      Requires a USB webcam with minimum 640x480 resolution at 30 fps.
+      Tracking quality depends on lighting conditions and face visibility.
+      Not affected by head accessories (hats, headsets).
+  - id: SIM_INTEGRATION
+    description: >
+      FaceAPI outputs 6DOF head tracking data via the SimConnect FaceTrackNoIR
+      or FreePIE interface. Bind yaw/pitch to view axis in simulator profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FaceAPI software head tracker — virtual, no USB device. 6DOF via webcam.
+    Requires webcam and FaceAPI software runtime. Last reviewed: 2026-06.

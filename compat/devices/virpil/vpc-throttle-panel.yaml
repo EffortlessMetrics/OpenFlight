@@ -1,0 +1,59 @@
+# VIRPIL VPC Throttle Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x025A — VPC Throttle Panel.
+# Source: community VIRPIL USB ID tracking (panel PID range 0x025x).
+# Not confirmed from a lsusb hardware probe or official VIRPIL docs;
+# verify against real hardware before deploying.
+#
+# The VPC Throttle Panel is an add-on button/encoder panel designed to
+# mount alongside the CM2/CM3 throttle units. It expands the throttle's
+# input capacity with additional toggle switches, push buttons, and
+# rotary encoders.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025A   # community-sourced; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: NO_AXES
+    description: "The VPC Throttle Panel is a pure button/encoder panel with no analog axes."
+  - id: ROTARY_AS_BUTTONS
+    description: >
+      Rotary encoders are reported as pairs of momentary button presses:
+      clockwise = button N, counter-clockwise = button N+1. They do not
+      expose a continuous analog axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x025A is community-sourced from VIRPIL panel PID range (0x025x);
+    not confirmed from lsusb probe or official VIRPIL documentation.
+    Button count (40) estimated from product description; verify against
+    hardware. VIRPIL VID=0x3344. Last reviewed: 2026-02.

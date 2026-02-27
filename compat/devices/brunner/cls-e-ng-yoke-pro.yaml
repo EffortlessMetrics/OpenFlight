@@ -1,0 +1,46 @@
+# Brunner CLS-E NG Yoke Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2098 (Brunner). PID 0x5754 estimated for CLS-E NG Yoke Pro.
+# Professional-grade next-generation force feedback yoke.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E NG Yoke Pro"
+  vendor: "Brunner Elektronik"
+  usb:
+    vendor_id: 0x2098
+    product_id: 0x5754
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: CLS_E_NG_PRO
+    description: >
+      Professional NG yoke with trim axis and force feedback on both
+      pitch and roll. Intended for professional flight training
+      device (FSTD) installations.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E NG Yoke Pro with FFB. PID 0x5754 estimated.
+    VID 0x2098 (Brunner). Last reviewed: 2026-06.

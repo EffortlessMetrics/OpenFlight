@@ -1,0 +1,61 @@
+# Logitech G29 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Logitech G29 is a force-feedback racing wheel for PS3/PS4/PC.
+# Sometimes used in flight sim setups as a yoke-style input device.
+# VID 0x046D confirmed: Logitech.
+# PID 0xC24F confirmed: G29 Racing Wheel (linux-hardware.org, multiple probes).
+schema_version: "1"
+
+device:
+  name: "Logitech G29 Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC24F   # Confirmed: G29 Racing Wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16   # 900° wheel rotation mapped to full range
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 2.1
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      Wheel X axis spans 900° of physical rotation mapped to the full HID
+      axis range. Flight yoke use typically requires a scaling profile
+      to restrict effective travel to ±60° or similar.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      When used as a flight yoke: X axis → roll (aileron), Y/pedal axes →
+      pitch (elevator), Z/pedal → rudder or toe brakes. A profile is needed.
+  - id: PS4_MODE
+    description: >
+      On PS4 the G29 uses a different HID descriptor; the PID 0xC24F is the
+      PC/DirectInput mode descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G29 Racing Wheel. VID 0x046D / PID 0xC24F confirmed.
+    900° rotation; occasionally used as a flight yoke with axis scaling.
+    Last reviewed: 2026-06.

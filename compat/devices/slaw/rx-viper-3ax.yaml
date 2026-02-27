@@ -1,0 +1,59 @@
+# Slaw Device RX Viper Rudder Pedals (3-axis variant, PID 0x5747)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics) is used by Slaw Device products running
+# custom STM32 HID firmware. PID 0x5747 is a community estimate for the
+# RX Viper 3-axis variant; confirm with lsusb.
+# Note: PID 0x5745 is taken by slaw/bf109.yaml; PID 0x5746 by rx-viper.yaml.
+# Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Slaw Device RX Viper Rudder Pedals (3-axis)"
+  vendor: "Slaw Device"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (shared VID for STM32 HID)
+    product_id: 0x5747      # Community estimate — 3-axis variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5747 is a community estimate for this 3-axis RX Viper variant.
+      Slaw Device uses STM32 firmware (VID 0x0483 / STMicroelectronics).
+      Multiple Slaw products share this VID; confirm with lsusb. PID 0x5745
+      is the Bf-109 pedals; PID 0x5746 is the standard RX Viper.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar.
+      Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Slaw Device RX Viper 3-axis rudder pedals. VID 0x0483 / PID 0x5747
+    community estimate; confirm with lsusb. Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

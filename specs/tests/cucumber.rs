@@ -31,6 +31,33 @@ pub struct FlightWorld {
     pub hotas4_report: Option<Vec<u8>>,
     pub hotas4_parsed_state: Option<flight_hotas_thrustmaster::TFlightInputState>,
     pub hotas4_yaw_resolution: Option<flight_hotas_thrustmaster::TFlightYawResolution>,
+
+    // macOS HID BDD state (REQ-50)
+    pub macos_hid_manager: Option<flight_macos_hid::HidManager>,
+    pub macos_hid_result: Option<Result<flight_macos_hid::HidManager, flight_macos_hid::HidError>>,
+    pub macos_open_error: Option<Option<flight_macos_hid::HidError>>,
+    pub macos_device_error: Option<Option<flight_macos_hid::HidError>>,
+    pub macos_clock: Option<flight_macos_hid::MacosClock>,
+    pub macos_clock_samples: Vec<u64>,
+    pub macos_error_string: Option<String>,
+
+    // Open Hardware BDD state (REQ-51)
+    pub open_hw_input_buf: Option<Vec<u8>>,
+    pub open_hw_input_report: Option<flight_open_hardware::InputReport>,
+    pub open_hw_input_parsed: Option<flight_open_hardware::InputReport>,
+    pub open_hw_input_roundtrip: Option<flight_open_hardware::InputReport>,
+    pub open_hw_ffb_report: Option<flight_open_hardware::FfbOutputReport>,
+    pub open_hw_ffb_parsed: Option<flight_open_hardware::FfbOutputReport>,
+    pub open_hw_ffb_roundtrip: Option<flight_open_hardware::FfbOutputReport>,
+    pub open_hw_ffb_stop: Option<flight_open_hardware::FfbOutputReport>,
+    pub open_hw_led_report: Option<flight_open_hardware::LedReport>,
+    pub open_hw_led_roundtrip: Option<flight_open_hardware::LedReport>,
+    pub open_hw_led_all_off: Option<flight_open_hardware::LedReport>,
+    pub open_hw_firmware_report: Option<flight_open_hardware::FirmwareVersionReport>,
+    pub open_hw_firmware_roundtrip: Option<flight_open_hardware::FirmwareVersionReport>,
+    pub open_hw_firmware_parsed: Option<flight_open_hardware::FirmwareVersionReport>,
+    pub open_hw_norms: Option<(f32, f32, f32)>,
+    pub open_hw_checked_vendor_id: bool,
 }
 
 #[derive(Debug)]

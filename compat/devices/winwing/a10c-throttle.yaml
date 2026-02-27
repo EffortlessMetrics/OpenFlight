@@ -1,0 +1,60 @@
+# WinWing A-10C Warthog Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing Space). The WinWing A-10C throttle is a replica
+# of the A-10C Warthog twin-throttle unit with realistic gate and
+# detent positions. PID is a community estimate; WinWing uses sequential
+# PIDs similar to their Orion series. Confirm with WinWing HOTAS Device
+# Manager or lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "WinWing A-10C Warthog Throttle"
+  vendor: "WinWing Space"
+  usb:
+    vendor_id: 0x4098       # WinWing Space (confirmed)
+    product_id: 0xBE63      # Community estimate — A-10C throttle; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [left_throttle, right_throttle, slew_x, slew_y, antenna_elev]
+    resolution_bits: 12
+  buttons: 50
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE63 is a community estimate. WinWing Orion series PIDs follow
+      the 0xBE6x pattern; the A-10C throttle was announced in 2024 and may
+      use a PID in the adjacent range. Confirm with WinWing Device Manager.
+  - id: TWIN_THROTTLE_AXES
+    description: >
+      Left and right throttle levers are independent axes. The left lever
+      controls engine 1 (port TF34); the right controls engine 2 (starboard).
+      Both can be yoked or split via the profile throttle mixer.
+  - id: A10C_GATE_DETENTS
+    description: >
+      The A-10C throttle includes realistic spring-loaded idle-detent and
+      cut-off gate mechanisms. The idle detent activates a tactile stop
+      at ~10% throttle. Profile must account for the dead zone below idle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing A-10C Warthog Throttle replica. VID 0x4098 confirmed; PID
+    0xBE63 is a community estimate. Twin-throttle with idle detent and cut-off
+    gate. DCS A-10C primary use case. Last reviewed: 2026-06.

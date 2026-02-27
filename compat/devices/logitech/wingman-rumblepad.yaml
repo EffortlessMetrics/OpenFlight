@@ -1,0 +1,57 @@
+# Logitech WingMan Rumble Pad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC20C confirmed from the usb.ids community
+# database ("Logitech WingMan Rumble Pad"). One of Logitech's first dual-analogue
+# vibration gamepads, released circa 1999–2003. Occasionally used in flight sim
+# setups as an auxiliary gamepad for panel inputs.
+
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Rumble Pad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D     # Logitech Inc. (confirmed)
+    product_id: 0xC20C    # WingMan Rumble Pad — usb.ids community database
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_8BIT_AXES
+    description: >
+      8-bit analogue stick resolution. Apply a small software deadzone (3–5%)
+      to compensate for stick drift on worn potentiometers.
+  - id: LOGITECH_RUMBLE_PROTOCOL
+    description: >
+      Uses an early Logitech vibration protocol. Rumble works via a proprietary
+      HID output report. DirectInput FFB effects are mapped to the rumble
+      protocol by the Logitech driver on Windows.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Rumble Pad (circa 1999–2003). PID 0xC20C from usb.ids.
+    Dual analogue, basic vibration feedback. Used for aux panel inputs in
+    some flight sim setups. Last reviewed: 2026-06.

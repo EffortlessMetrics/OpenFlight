@@ -1,0 +1,61 @@
+# FaceTrackNoIR DIY Arduino Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC) / PID 0x8037 — Arduino Micro bootloader PID.
+# This represents DIY head tracker builds using Arduino Micro or Arduino Pro
+# Micro boards programmed with head-tracking firmware for use with
+# FaceTrackNoIR or OpenTrack. Common in the flight sim community as a
+# low-cost alternative to commercial head trackers.
+schema_version: "1"
+
+device:
+  name: "FaceTrackNoIR DIY Arduino Head Tracker"
+  vendor: "DIY (Arduino-based)"
+  type: headtracker
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (confirmed)
+    product_id: 0x8037      # Arduino Micro — confirmed USB ID
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (typical for HID-joystick firmware)
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MANY_FIRMWARE_VARIANTS
+    description: >
+      Arduino Micro (PID 0x8037) is used by many different DIY head tracker
+      firmware projects. The axis layout and resolution depend on the specific
+      firmware installed. A 6DOF inertial tracking firmware (using MPU-6050 or
+      similar IMU) is the most common FaceTrackNoIR/OpenTrack build.
+  - id: OPENTRACK_INTEGRATION
+    description: >
+      Typically configured to output 6DOF pose data (yaw/pitch/roll + X/Y/Z
+      position) as HID joystick axes. OpenTrack consumes this data and forwards
+      it to the simulator via its output plugin.
+  - id: DISTINCT_FROM_FACETRACKNOIR_VIRTUAL
+    description: >
+      This manifest covers physical Arduino-based DIY builds. The FaceTrackNoIR
+      virtual joystick (facetracknoir_virtual.yaml) is a software-only virtual
+      device.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY Arduino Micro head tracker for FaceTrackNoIR / OpenTrack. VID 0x2341 / PID 0x8037
+    confirmed (Arduino Micro). Firmware-dependent axis layout. Wave-42 addition. Last reviewed: 2026-07.

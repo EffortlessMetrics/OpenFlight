@@ -1,0 +1,51 @@
+# Natec Genesis P58 Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1D57 is associated with Xenta / Natec-related OEM USB peripherals.
+# PID 0xAD01 is a community estimate for the Natec Genesis P58 gamepad.
+# Natec is a Polish peripheral brand; the Genesis P58 is a budget dual-analog
+# gamepad popular in Central and Eastern Europe.
+schema_version: "1"
+
+device:
+  name: "Natec Genesis P58 Gamepad"
+  vendor: "Natec / Genesis"
+  usb:
+    vendor_id: 0x1D57       # Xenta / Natec OEM VID — community-reported
+    product_id: 0xAD01      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1D57 / PID 0xAD01 are community estimates for the Genesis P58.
+      Confirm with lsusb on real hardware.
+  - id: BUDGET_ADC
+    description: >
+      The P58 uses a budget 8-bit ADC for analog sticks. Apply software
+      deadzone and smoothing in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Natec Genesis P58 — budget dual-analog gamepad. Both VID and PID are
+    community estimates; verify with lsusb. Last reviewed: 2026-06.

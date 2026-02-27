@@ -1,0 +1,48 @@
+# VKB MCG Ultimate Grip (Alt PID 0x0261)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VKB MCG (Metal Combat Grip) Ultimate — premium joystick grip with expanded
+# button count for VKB Gunfighter and compatible bases.
+# Alternate PID 0x0261 community estimate. Primary manifest mcg-ultimate.yaml
+# uses PID 0x0221. VID 0x231D confirmed (VKBsim / VKB Sim).
+schema_version: "1"
+
+device:
+  name: "VKB MCG Ultimate Grip (Alt PID)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D     # VKBsim (VKB Sim) — confirmed registered VID
+    product_id: 0x0261    # Alternate community estimate — see mcg-ultimate.yaml (0x0221)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, twist]
+    resolution_bits: 14
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0261 is an alternate community estimate for the MCG Ultimate.
+      Primary manifest mcg-ultimate.yaml uses PID 0x0221. Verify with
+      VKBDevCfg or lsusb on real hardware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Ultimate Grip — alt PID 0x0261. Primary: mcg-ultimate.yaml (0x0221).
+    VID 0x231D confirmed. Last reviewed: 2026-06.

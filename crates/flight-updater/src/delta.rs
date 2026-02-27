@@ -576,4 +576,181 @@ mod tests {
         assert_eq!(data, decompressed.as_slice());
         assert!(compressed.len() < data.len() + 50); // Should be compressed or similar size
     }
+
+    /// generate_patch → apply_patch round-trips binary content (≥ min_delta_size so a
+    /// FileDelta is created) and also propagates brand-new files.
+    #[tokio::test]
+    async fn test_generate_patch_and_apply_round_trips_binary_content() {
+        let temp = TempDir::new().unwrap();
+        let source_dir = temp.path().join("source");
+        let target_dir = temp.path().join("target");
+        let output_dir = temp.path().join("output");
+        let work_dir = temp.path().join("work");
+
+        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&target_dir).await.unwrap();
+        fs::create_dir_all(&output_dir).await.unwrap();
+
+        // > min_delta_size (1024) so create_file_delta produces a FileDelta
+        let source_content: Vec<u8> = (0u16..2048).map(|i| (i & 0xFF) as u8).collect();
+        let target_content: Vec<u8> = (0u16..2048)
+            .map(|i| (i.wrapping_mul(3) & 0xFF) as u8)
+            .collect();
+
+        fs::write(source_dir.join("data.bin"), &source_content)
+            .await
+            .unwrap();
+        fs::write(target_dir.join("data.bin"), &target_content)
+            .await
+            .unwrap();
+
+        // A new file only present in target exercises the new_files path
+        let new_content = b"brand-new file content";
+        fs::write(target_dir.join("new.bin"), new_content)
+            .await
+            .unwrap();
+
+        let generator = DeltaGenerator::new();
+        let patch = generator
+            .generate_patch(
+                &source_dir,
+                &target_dir,
+                "1.0.0".to_string(),
+                "1.1.0".to_string(),
+            )
+            .await
+            .unwrap();
+
+        let applier = DeltaApplier::new(&work_dir).unwrap();
+        applier
+            .apply_patch(&patch, &source_dir, &output_dir)
+            .await
+            .unwrap();
+
+        let patched = fs::read(output_dir.join("data.bin")).await.unwrap();
+        assert_eq!(
+            patched, target_content,
+            "patched file must equal target content"
+        );
+
+        let new_out = fs::read(output_dir.join("new.bin")).await.unwrap();
+        assert_eq!(
+            new_out.as_slice(),
+            new_content,
+            "new file must be propagated"
+        );
+    }
+
+    /// Copy operation extracts the exact byte range from the source.
+    #[tokio::test]
+    async fn test_apply_patch_copy_operation_extracts_correct_bytes() {
+        let temp = TempDir::new().unwrap();
+        let source_dir = temp.path().join("src");
+        let output_dir = temp.path().join("out");
+        let work_dir = temp.path().join("work");
+
+        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&output_dir).await.unwrap();
+
+        let source_content = b"ABCDEFGHIJ";
+        fs::write(source_dir.join("file.bin"), source_content)
+            .await
+            .unwrap();
+
+        let applier = DeltaApplier::new(&work_dir).unwrap();
+        let source_hash = applier.calculate_hash(source_content);
+
+        // Copy bytes at offset 2, length 3 → "CDE"
+        let expected: &[u8] = b"CDE";
+        let target_hash = applier.calculate_hash(expected);
+
+        let file_delta = FileDelta {
+            source_path: "file.bin".to_string(),
+            target_path: "file.bin".to_string(),
+            source_hash,
+            target_hash,
+            operations: vec![DeltaOperation::Copy {
+                src_offset: 2,
+                length: 3,
+            }],
+            compression: "none".to_string(),
+        };
+
+        let mut patch = DeltaPatch::new("1.0.0".to_string(), "1.1.0".to_string());
+        patch.add_file_delta(file_delta);
+        applier
+            .apply_patch(&patch, &source_dir, &output_dir)
+            .await
+            .unwrap();
+
+        let result = fs::read(output_dir.join("file.bin")).await.unwrap();
+        assert_eq!(result, expected);
+    }
+
+    /// deleted_files entries cause the file to be removed from the target directory.
+    #[tokio::test]
+    async fn test_apply_patch_removes_deleted_files() {
+        let temp = TempDir::new().unwrap();
+        let source_dir = temp.path().join("src");
+        let output_dir = temp.path().join("out");
+        let work_dir = temp.path().join("work");
+
+        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&output_dir).await.unwrap();
+
+        // Pre-create the file in the output directory
+        fs::write(output_dir.join("obsolete.bin"), b"old content")
+            .await
+            .unwrap();
+
+        let mut patch = DeltaPatch::new("1.0.0".to_string(), "1.1.0".to_string());
+        patch.add_deleted_file("obsolete.bin".to_string());
+
+        let applier = DeltaApplier::new(&work_dir).unwrap();
+        applier
+            .apply_patch(&patch, &source_dir, &output_dir)
+            .await
+            .unwrap();
+
+        assert!(
+            !output_dir.join("obsolete.bin").exists(),
+            "deleted file must be removed"
+        );
+    }
+
+    /// A source-hash mismatch causes apply_patch to return an error.
+    #[tokio::test]
+    async fn test_apply_patch_source_hash_mismatch_returns_error() {
+        let temp = TempDir::new().unwrap();
+        let source_dir = temp.path().join("src");
+        let output_dir = temp.path().join("out");
+        let work_dir = temp.path().join("work");
+
+        fs::create_dir_all(&source_dir).await.unwrap();
+        fs::create_dir_all(&output_dir).await.unwrap();
+        fs::write(source_dir.join("file.bin"), b"actual_content")
+            .await
+            .unwrap();
+
+        let applier = DeltaApplier::new(&work_dir).unwrap();
+        let wrong_source_hash = applier.calculate_hash(b"completely_different");
+        let target_hash = applier.calculate_hash(b"result");
+
+        let file_delta = FileDelta {
+            source_path: "file.bin".to_string(),
+            target_path: "file.bin".to_string(),
+            source_hash: wrong_source_hash,
+            target_hash,
+            operations: vec![DeltaOperation::Insert {
+                data: b"result".to_vec(),
+            }],
+            compression: "none".to_string(),
+        };
+
+        let mut patch = DeltaPatch::new("1.0.0".to_string(), "1.1.0".to_string());
+        patch.add_file_delta(file_delta);
+
+        let result = applier.apply_patch(&patch, &source_dir, &output_dir).await;
+        assert!(result.is_err(), "mismatched source hash must return error");
+    }
 }

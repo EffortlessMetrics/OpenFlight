@@ -1,0 +1,56 @@
+# Logitech G613 Wireless Mechanical Keyboard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Logitech G613 is a wireless mechanical gaming keyboard with G-keys (macro
+# keys) on the left side. In simulation contexts the G-keys are programmed for
+# cockpit function binding via Logitech G HUB or LGS software.
+# VID 0x046D (Logitech) is confirmed; PID 0xC548 is community-reported.
+schema_version: "1"
+
+device:
+  name: "Logitech G613 Wireless Mechanical Keyboard"
+  vendor: "Logitech International SA"
+  type: keyboard
+  usb:
+    vendor_id: 0x046D   # Logitech International SA (confirmed)
+    product_id: 0xC548  # Community-reported — G613; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x06
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: G_KEYS_ONLY
+    description: >
+      In flight simulation contexts, only the 6 G-keys are typically bound
+      to cockpit functions. The keyboard itself uses standard HID keyboard
+      protocol; G-key events are reported as standard HID button presses
+      on the dedicated G-key HID interface.
+  - id: WIRELESS_LIGHTSPEED
+    description: >
+      The G613 uses Logitech LIGHTSPEED 2.4 GHz wireless. The USB Unifying
+      receiver enumerates at PID 0xC548 for this keyboard. Wired mode is
+      also supported.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G613 wireless mechanical keyboard — 6 G-keys for sim binding.
+    VID 0x046D confirmed; PID 0xC548 community-reported.
+    Last reviewed: 2026-07.

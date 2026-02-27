@@ -1,0 +1,57 @@
+# Microsoft SideWinder 3D Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E (Microsoft Corp.), PID 0x001A.
+# The SideWinder 3D Pro is a classic Microsoft USB joystick with 4 axes,
+# 8 buttons, and 1 hat. Well-documented in USB ID databases and Linux kernel
+# hid-ids.h (USB_DEVICE_ID_MICROSOFT_SIDEWINDER_3DP).
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder 3D Pro"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corp.
+    product_id: 0x001A      # SideWinder 3D Pro — USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_USB_DEVICE
+    description: >
+      The SideWinder 3D Pro was released in 1997 and uses early USB HID
+      conventions. The throttle axis is unipolar (0 = idle, max = full).
+      Rz is the twist/rudder axis, useful for yaw without separate pedals.
+  - id: LOW_AXIS_RESOLUTION
+    description: >
+      Axes report 10-bit precision (1024 steps). Apply smoothing if fine
+      precision is required, as the coarser resolution may produce visible
+      stepping at low input rates.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x001A from USB ID database (usb.ids / linux-usb.org).
+    Classic Microsoft flight joystick popular in the late 1990s / early 2000s.
+    Twist rudder axis removes need for separate pedals in entry-level setups.
+    Distinct from SideWinder FFB2 (0x0034) and Precision 2 (see
+    sidewinder-precision2.yaml). Last reviewed: 2026-02.

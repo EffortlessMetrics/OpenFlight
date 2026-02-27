@@ -1,0 +1,60 @@
+# WinWing F-4E Phantom Fighter Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing). PID is community-estimated for the F-4E
+# Phantom stick released as part of the WinWing F-4E product line in 2024,
+# targeting the DCS F-4E Phantom II module.
+schema_version: "1"
+
+device:
+  name: "WinWing F-4E Phantom Fighter Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD40   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 16
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD40 is a community estimate following the Orion 3 PID sequence
+      (0xBD3x–0xBD5x range). Confirm from lsusb or USB descriptor capture
+      when hardware is available.
+  - id: F4E_GRIP_LAYOUT
+    description: >
+      The grip replicates the F-4E Phantom II control column layout.
+      Button assignments match DCS F-4E Phantom II default bindings.
+      Typically paired with the WinWing F-4E throttle (see f4e-fighter-throttle.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-4E Phantom fighter stick (2024 release). Designed for the
+    DCS F-4E Phantom II module. PID 0xBD40 community-estimated.
+    VID 0x4098 = WinWing. Last reviewed: 2026-02.
+
+driver: standard_hid
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; designed for DCS F-4E Phantom II module."

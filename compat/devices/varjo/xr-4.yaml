@@ -1,0 +1,60 @@
+# Varjo XR-4 Enterprise VR HMD (Head Tracker)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C45 (Varjo Technologies, community-reported estimate). PID 0x1B40 is a
+# community estimate for the Varjo XR-4. The Varjo XR-4 is an enterprise-grade
+# mixed-reality / VR headset with human-eye resolution displays, used in
+# professional flight simulation and training environments. It communicates
+# primarily via the Varjo Base software stack and OpenVR/SteamVR.
+schema_version: "1"
+
+device:
+  name: "Varjo XR-4 Enterprise VR HMD"
+  vendor: "Varjo Technologies"
+  usb:
+    vendor_id: 0x0C45    # Varjo Technologies (community-reported estimate)
+    product_id: 0x1B40   # Community estimate — Varjo XR-4
+  type: tracker
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0C45 and PID 0x1B40 are community estimates. Varjo hardware uses
+      a proprietary driver stack. Confirm with lsusb or Windows Device Manager
+      on XR-4 hardware before enabling production device matching.
+  - id: VARJO_BASE_REQUIRED
+    description: >
+      Requires Varjo Base software for operation. Head tracking is exposed via
+      OpenVR/SteamVR; OpenFlight accesses tracking through the SteamVR bridge.
+  - id: ENTERPRISE_GRADE
+    description: >
+      The XR-4 is an enterprise product. Typical deployment is in Level D-class
+      flight simulators and high-end professional training rigs rather than
+      consumer home cockpit use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Varjo XR-4 enterprise mixed-reality HMD. VID 0x0C45 / PID 0x1B40 are
+    community estimates. Requires Varjo Base + OpenVR/SteamVR. Used in
+    professional flight simulation training environments. Last reviewed: 2026-06.

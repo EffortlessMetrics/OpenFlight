@@ -1,0 +1,58 @@
+# Moza HGP (High-Grade Pedals)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Gudsen Technology / Moza.
+# PID 0x0018 is a community estimate for the Moza HGP pedals.
+# The HGP (High-Grade Pedals) are Moza's top-tier sim pedals with load-cell
+# brake, hydraulic damper on throttle, and hall-effect sensors. Used in
+# combined sim rigs for high-fidelity toe-brake and rudder inputs.
+
+schema_version: "1"
+
+device:
+  name: "Moza HGP Pedals"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0018    # Community estimate — HGP pedals
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0018 is a community estimate. Moza FP Rudder Pedals use 0x000D
+      (fp-rudder-pedals.yaml). Confirm HGP PID with lsusb before deployment.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      HGP brake uses a load-cell sensor — non-linear pressure response.
+      Apply a pressure curve in the OpenFlight profile or via Moza Pit House.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      Throttle → engine throttle or rudder, brake → toe brakes (split via profile),
+      clutch → differential brake. Hydraulic throttle damper may affect axis feel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza HGP — top-tier Moza pedals with load-cell brake and hydraulic damper.
+    VID 0x346E confirmed; PID 0x0018 is a community estimate.
+    See also: fp-rudder-pedals.yaml (flight-specific Moza pedals). Last reviewed: 2026-06.

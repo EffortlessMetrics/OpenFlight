@@ -22,4 +22,11 @@ fuzz_target!(|data: &[u8]| {
         let _ = profile.canonicalize();
         let _ = profile.effective_hash();
     }
+
+    // Fuzz YAML deserialization — must never panic
+    if let Ok(profile) = serde_yaml::from_str::<Profile>(input) {
+        let _ = profile.validate();
+        let _ = profile.canonicalize();
+        let _ = profile.effective_hash();
+    }
 });

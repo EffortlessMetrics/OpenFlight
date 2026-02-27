@@ -1,0 +1,51 @@
+# Nacon MG-X Pro Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Nacon MG-X Pro — cloud gaming and mobile gamepad with 6 axes, popular in
+# European markets for casual flight sim use. VID 0x146B confirmed (Nacon /
+# Bigben Interactive). PID 0x0D20 is a community estimate. Wave-60 addition.
+schema_version: "1"
+
+device:
+  name: "Nacon MG-X Pro Gamepad"
+  vendor: "Nacon"
+  usb:
+    vendor_id: 0x146B       # Nacon / Bigben Interactive (confirmed)
+    product_id: 0x0D20      # Community estimate — MG-X Pro; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, rx, ry]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D20 is a community estimate for the MG-X Pro. Nacon VID 0x146B
+      is confirmed. Confirm PID with lsusb. See also nacon/daija-arcade-stick.yaml
+      (PID 0x0D10) and nacon/gc-200xs.yaml (PID 0x0E05).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nacon MG-X Pro Gamepad. VID 0x146B confirmed; PID 0x0D20 community estimate.
+    Wave-60 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

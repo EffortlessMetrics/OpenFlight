@@ -1,0 +1,48 @@
+# X-Keys XK-12 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x05F3 (P.I. Engineering). PID 0x0469 — community estimate.
+# Wave-75 addition.
+schema_version: "1"
+
+device:
+  name: "X-Keys XK-12 Joystick"
+  vendor: "P.I. Engineering"
+  usb:
+    vendor_id: 0x05F3       # P.I. Engineering
+    product_id: 0x0469      # Community estimate — XK-12 Joystick
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. X-Keys XK-12 Joystick input device. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    X-Keys XK-12 Joystick — programmable USB joystick. PID 0x0469 community estimate. Wave-75. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

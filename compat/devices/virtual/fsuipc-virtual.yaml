@@ -1,0 +1,59 @@
+# FSUIPC Virtual Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1234, PID 0xBEAC -- community estimate; FSUIPC uses its own virtual
+# joystick scheme distinct from vJoy (0xBEAD). FSUIPC (Flight Simulator
+# Universal Inter-Process Communication) by Peter Dowson provides virtual
+# joystick capabilities for MSFS/P3D/FSX via FSUIPC7 or FSUIPC6 plugins.
+schema_version: "1"
+
+device:
+  name: "FSUIPC Virtual Joystick"
+  vendor: "Peter Dowson / FSUIPC"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1234    # Virtual joystick VID
+    product_id: 0xBEAC   # Community estimate -- FSUIPC virtual joystick
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 15
+  buttons: 64
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      FSUIPC Virtual Joystick is a software-only device created by the FSUIPC
+      module. Axis/button layout is configured via FSUIPC's joystick calibration
+      dialogs.
+  - id: FSUIPC_REQUIRED
+    description: >
+      Requires FSUIPC7 (MSFS) or FSUIPC6 (P3D/FSX) plugin to be active.
+      The virtual joystick is only available while the sim is running and
+      FSUIPC is loaded.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEAC is a community estimate for the FSUIPC virtual joystick.
+      Confirm with lsusb or HID device monitor while FSUIPC is active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    FSUIPC Virtual Joystick. VID 0x1234 / PID 0xBEAC community estimate.
+    Requires FSUIPC7 (MSFS) or FSUIPC6 (P3D/FSX). Axis/button layout
+    FSUIPC-configured. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# SparkFun Pro Micro 3.3V — 0x1B4F / 0x9206
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x1B4F (SparkFun Electronics), PID 0x9206.
+# SparkFun Pro Micro 3.3V/8MHz variant running Arduino HID joystick firmware.
+# Widely used for DIY flight sim button boxes, yoke interfaces, and control
+# panel builds. The 5V/16MHz variant uses PID 0x9205 (pro-micro-hid-buttons.yaml).
+# PID 0x9206 confirmed from SparkFun product documentation.
+schema_version: "1"
+
+device:
+  name: "SparkFun Pro Micro 3.3V HID"
+  vendor: "SparkFun Electronics"
+  usb:
+    vendor_id: 0x1B4F       # SparkFun Electronics (confirmed)
+    product_id: 0x9206      # Pro Micro 3.3V/8MHz — SparkFun documentation
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (when running joystick firmware)
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIY_FIRMWARE
+    description: >
+      Axis/button count depends entirely on the HID firmware flashed by the builder.
+      Values here reflect a typical Arduino joystick library configuration.
+      The OpenFlight profile should be tuned to the specific firmware used.
+  - id: VARIANT_3V3
+    description: >
+      PID 0x9206 identifies the 3.3V/8MHz Pro Micro variant. The 5V/16MHz variant
+      (PID 0x9205) is documented in generic/pro-micro-hid-buttons.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SparkFun Pro Micro 3.3V (0x1B4F/0x9206) running Arduino HID joystick firmware.
+    DIY device — capabilities vary by builder firmware. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

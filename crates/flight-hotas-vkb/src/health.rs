@@ -139,4 +139,47 @@ mod tests {
         let status = monitor.status(true, 3, 2);
         assert!(status.is_healthy());
     }
+
+    #[test]
+    fn test_health_status_unhealthy_when_not_connected() {
+        let monitor = StecsHealthMonitor::new(VkbStecsVariant::LeftSpaceThrottleGripMini);
+        let status = monitor.status(false, 0, 0);
+        assert!(!status.is_healthy());
+    }
+
+    #[test]
+    fn test_should_check_health_initially_true() {
+        let monitor = StecsHealthMonitor::new(VkbStecsVariant::RightSpaceThrottleGripMini);
+        assert!(monitor.should_check_health(), "should be true initially");
+    }
+
+    #[test]
+    fn test_mark_health_checked_suppresses_immediate_recheck() {
+        let mut monitor = StecsHealthMonitor::new(VkbStecsVariant::RightSpaceThrottleGripMini);
+        monitor.mark_health_checked();
+        // Just after marking, the interval hasn't passed yet
+        assert!(
+            !monitor.should_check_health(),
+            "should not recheck immediately after mark"
+        );
+    }
+
+    #[test]
+    fn test_reset_clears_all_state() {
+        let mut monitor = StecsHealthMonitor::new(VkbStecsVariant::RightSpaceThrottleGripMiniPlus);
+        monitor.record_failure();
+        monitor.record_failure();
+        monitor.record_success();
+        monitor.mark_health_checked();
+
+        monitor.reset();
+        assert!(
+            !monitor.is_failed(),
+            "is_failed should be false after reset"
+        );
+        assert!(
+            monitor.should_check_health(),
+            "should_check_health should be true after reset"
+        );
+    }
 }

@@ -1,0 +1,57 @@
+# Logitech F710 Wireless Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC21F confirmed from:
+#   1. SDL GameControllerDB: MAKE_VIDPID(0x046d, 0xc21f) — "Logitech Wireless Gamepad F710"
+#   2. linux-hardware.org: usb:046d:c21f (multiple probes, "Wireless Gamepad F710")
+# The F710 is a wireless gamepad (2.4 GHz USB dongle) with dual analog sticks,
+# rumble, and DirectInput/XInput switch. Used as a secondary controller in
+# some MSFS setups for camera control or autopilot axis input.
+
+schema_version: "1"
+
+device:
+  name: "Logitech Wireless Gamepad F710"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech Inc.
+    product_id: 0xC21F   # F710 Wireless Gamepad (confirmed SDL + linux-hardware.org)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DINPUT_XINPUT_SWITCH
+    description: >
+      Physical D/X switch on the back toggles between DirectInput (0xC21F) and
+      XInput mode (presents as Xbox 360 controller, VID 0x045E/PID 0x028E).
+      OpenFlight manifests cover DirectInput mode.
+  - id: WIRELESS_DONGLE
+    description: >
+      USB dongle (VID 0x046D / PID 0xC21F) enumerates when the gamepad is
+      powered on. Connection loss causes immediate button-release events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech F710 Wireless Gamepad. PID 0xC21F confirmed from SDL GameControllerDB
+    and linux-hardware.org. Secondary flight sim controller for camera/trim.
+    Last reviewed: 2026-06.

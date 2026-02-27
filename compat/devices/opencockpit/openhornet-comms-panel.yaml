@@ -1,0 +1,59 @@
+# OpenHornet Communications Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenHornet F/A-18C Communications Panel — open-source replica of the
+# F/A-18C Hornet communications panel (COMM1/COMM2 radio select, UFC integration).
+# Built on Arduino/Teensy USB HID firmware; USB descriptor and PID vary by
+# builder's firmware configuration. Companion to openhornet-caution-panel.yaml.
+schema_version: "1"
+
+device:
+  name: "OpenHornet Communications Panel"
+  vendor: "OpenHornet (community)"
+  usb:
+    vendor_id: 0x16C0   # PJRC Teensy / community HID VID (VID_UNCONFIRMED; varies by builder)
+    product_id: 0x0486  # Placeholder — Teensy HID PID (PID_UNCONFIRMED; builder-specific)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard (panel buttons)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 22
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID/PID vary by builder's firmware (Teensy, Arduino Pro Micro, etc.).
+      Common VIDs: 0x16C0 (PJRC), 0x2341 (Arduino), 0x1B4F (SparkFun).
+  - id: BUILDER_FIRMWARE_VARIES
+    description: >
+      OpenHornet is an open-source project; each builder compiles their own
+      firmware. USB descriptor, PID, and button mapping may differ between builds.
+      Coordinate button assignments with the specific builder's configuration.
+  - id: DCS_F18_PRIMARY
+    description: >
+      Designed for DCS F/A-18C Hornet cockpit simulation. Panel layout
+      follows the real F/A-18C communications panel with COMM1/COMM2
+      guard switches, radio select, and ICS controls.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet Communications Panel (community/open-source). VID/PID are
+    builder-specific; verify against the actual Teensy/Arduino firmware used.
+    Companion to openhornet-caution-panel.yaml.
+    Last reviewed: 2026-02.

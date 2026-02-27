@@ -1,0 +1,5 @@
+aircraft = "F-16C"
+axis_count = 5
+throttle_range = [0.0, 1.0]
+stick_throw = 30.0
+quirks = ["side-stick", "fbw"]

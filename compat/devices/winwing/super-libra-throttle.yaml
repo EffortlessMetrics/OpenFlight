@@ -1,0 +1,61 @@
+# WinWing Super Libra Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBD70 — community estimate.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Super Libra Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD70    # Community estimate — unconfirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, friction, collective]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD70 is a community estimate and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture.
+      Update this manifest when a confirmed PID becomes available.
+  - id: TWIN_THROTTLE_LAYOUT
+    description: >
+      The Super Libra Throttle provides independent left and right throttle
+      levers suited to light twin-engine and helicopter collective input.
+      The collective axis maps to helicopter rotor collective in helicopter
+      profile mode.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands
+      based on the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Super Libra Throttle designed for light twin-engine and helicopter
+    simulation. Separate from the Super Taurus F-15EX throttle
+    (PID 0xBD64, see super-taurus-throttle.yaml).
+    PID 0xBD70 is a community estimate — confirm with lsusb before deployment.

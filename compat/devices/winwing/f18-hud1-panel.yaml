@@ -1,0 +1,62 @@
+# WinWing F/A-18 HUD1 Panel (standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing SimTech (usb.ids community entry).
+# PID 0xBEDF is a community estimate for the standalone HUD1 panel.
+# The HUD1 panel is also available as part of the UFC1+HUD1 combo (PID 0xBEDE,
+# see ufc1-hud1-panel.yaml). When sold standalone, it uses a different PID.
+# The standalone HUD1 replicates the F/A-18 Hornet HUD brightness/mode controls
+# used during carrier operations (CVS, BRT, DEPR, etc.).
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 HUD1 Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEDF   # Community estimate — standalone HUD1 (UFC1+HUD1 combo is 0xBEDE)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 1
+    names: [brightness]
+    resolution_bits: 8   # HUD brightness rotary dial
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEDF is a community estimate for the standalone HUD1 panel.
+      The UFC1+HUD1 combo uses 0xBEDE (ufc1-hud1-panel.yaml). Update when
+      confirmed via linux-hardware.org or lsusb on real hardware.
+  - id: BRIGHTNESS_AXIS
+    description: >
+      The HUD brightness rotary control reports as a single 8-bit axis.
+      Map this to the HUD brightness output channel in the active aircraft profile.
+  - id: OUTPUT_DISPLAY
+    description: >
+      The HUD1 display accepts USB HID output reports for brightness level and
+      HUD mode indicator. Display output is handled separately from the button/axis
+      input path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 HUD1 Panel (standalone). Replicates the Hornet HUD control
+    panel: brightness, CVS, BRT, DEPR selector, and day/night mode.
+    PID 0xBEDF is a community estimate — distinct from the UFC1+HUD1 combo
+    (PID 0xBEDE, see ufc1-hud1-panel.yaml). Last reviewed: 2026-06.

@@ -1,0 +1,53 @@
+# Thrustmaster T-Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster T-Pedals are entry-level rudder pedals designed for PC flight
+# simulation. Provides left/right rudder with differential toe brake axes.
+# VID 0x044F (Thrustmaster) / PID 0xB682: confirmed from USB capture data.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0xB682      # T-Pedals — confirmed from USB capture data
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIFFERENTIAL_BRAKES
+    description: >
+      Left and right toe brake axes are independent. For aircraft without
+      differential braking, map both to a combined brake axis or bind only
+      the rudder axis.
+  - id: NO_SPRING_CENTERING
+    description: >
+      T-Pedals use friction-based centering rather than a return spring.
+      Deadzone calibration recommended for null position stability.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T-Pedals — entry-level rudder pedals. VID 0x044F / PID 0xB682.
+    3-axis (rudder + differential toe brakes). See also tfrp-rudder-pedals.yaml.
+    Last reviewed: 2026-06.

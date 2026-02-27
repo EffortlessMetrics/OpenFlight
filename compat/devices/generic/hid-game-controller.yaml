@@ -1,0 +1,56 @@
+# Generic HID Game Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Template manifest for generic USB HID game controllers that enumerate
+# with standard HID usage pages but do not match any known vendor manifest.
+# Covers no-name gamepads, clone controllers, and unidentified USB joysticks
+# that present as HID Usage Page 0x01 / Usage 0x04 or 0x05.
+# This manifest is a fallback; device-specific manifests should be preferred.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB HID Game Controller"
+  vendor: "Unknown / OEM"
+  usb:
+    vendor_id: 0x0000   # Wildcard — matches via HID usage only when VID is unknown
+    product_id: 0x0000  # Wildcard — see quirk OEM_GENERIC
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: OEM_GENERIC
+    description: >
+      This manifest is a wildcard template for unidentified HID game controllers.
+      Matching is performed by HID usage page/usage, not VID/PID. If a specific
+      vendor manifest exists, it takes priority via the manifest priority system.
+  - id: AXIS_CALIBRATION_REQUIRED
+    description: >
+      Generic OEM controllers often have poor factory axis calibration.
+      Apply a 5–10% software deadzone and run the OpenFlight axis calibration
+      wizard before use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB HID game controller template. Fallback manifest for unidentified
+    HID Usage 0x05 devices. Device-specific manifests take priority.
+    Last reviewed: 2026-06.

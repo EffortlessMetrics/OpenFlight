@@ -1,0 +1,46 @@
+# Hori Real Arcade Pro N Hayabusa
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D (Hori Co., Ltd.), PID 0x00A0 — estimated.
+# Premium arcade stick with Hayabusa joystick and Kuro buttons.
+# Primarily a fighting game peripheral but usable for button-box style sim inputs.
+schema_version: "1"
+device:
+  name: "Hori Real Arcade Pro N Hayabusa"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd. (confirmed VID)
+    product_id: 0x00A0      # Community estimate — RAP N Hayabusa; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00A0 is a community estimate for the RAP N Hayabusa.
+      Confirm with lsusb or USBView on real hardware.
+  - id: FIGHTING_STICK
+    description: >
+      Square gate 8-way joystick with digital movement. Arcade stick form
+      factor. Useful for sim button boxes but not for analog axis control.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori Real Arcade Pro N Hayabusa — VID 0x0F0D / PID 0x00A0 (est).
+    Premium Japanese arcade stick with Hayabusa mechanical components.
+    Wave-55 addition. Last reviewed: 2026-07.

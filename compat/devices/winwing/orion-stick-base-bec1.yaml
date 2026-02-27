@@ -1,0 +1,54 @@
+# WinWing HOTAS Orion Stick Base (Alt PID 0xBEC1)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing. PID 0xBEC1 is a community estimate for the
+# Orion stick base standalone. Related base PIDs: Orion 2 base = 0xBE50,
+# Orion 3 base = 0xBE60. The 0xBEC1 PID may represent a specific
+# grip-less base variant or a later revision.
+schema_version: "1"
+
+device:
+  name: "WinWing HOTAS Orion Stick Base"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEC1      # Community estimate — Orion Stick Base; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC1 is a community estimate for the standalone Orion stick base.
+      Confirmed base PIDs are 0xBE50 (Orion 2) and 0xBE60 (Orion 3).
+      Confirm with lsusb or SimAppPro before deploying profiles.
+  - id: BASE_WITHOUT_GRIP
+    description: >
+      The standalone base enumerates with minimal axes and buttons.
+      When a grip is attached, the combined assembly typically enumerates
+      under a different PID (see orion2-f18c-stick.yaml etc.).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing HOTAS Orion Stick Base — base unit for Orion HOTAS family.
+    PID 0xBEC1 is a community estimate. See also orion2-base.yaml (0xBE50)
+    and orion3-base.yaml (0xBE60). Last reviewed: 2026-06.

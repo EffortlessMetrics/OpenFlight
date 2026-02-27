@@ -126,7 +126,7 @@ async fn test_golden_file_testing() {
     fs::create_dir_all(&expected_dir).unwrap();
     fs::write(
         expected_dir.join("autopilot.cfg"),
-        "[AUTOPILOT]\nenabled=1\naltitude_hold=1\n",
+        "[AUTOPILOT]\naltitude_hold=1\nenabled=1\n",
     )
     .unwrap();
 

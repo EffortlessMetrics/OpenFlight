@@ -1,0 +1,45 @@
+# Arduino Micro HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC), PID 0x8037 — confirmed ATmega32u4 Arduino Micro PID.
+schema_version: "1"
+
+device:
+  name: "Arduino Micro HID Joystick"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0x8037
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIY_FIRMWARE
+    description: >
+      Actual capabilities depend on user firmware. Arduino Micro uses the same
+      ATmega32u4 as Leonardo but has a smaller form factor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Micro (ATmega32u4) running HID joystick firmware. Compact board
+    suited to panel button boxes. PID 0x8037 is the standard Arduino Micro
+    application PID. Tier 3. Last reviewed: 2026-02.

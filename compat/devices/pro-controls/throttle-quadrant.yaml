@@ -1,0 +1,54 @@
+# Pro Controls Throttle Quadrant (Cockpit Builder OEM)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Pro Controls is an OEM supplier of throttle quadrant assemblies for home
+# cockpit builders. Their units use standard USB HID and are commonly found
+# in Boeing 737 and Airbus A320 home cockpit builds.
+# VID/PID unconfirmed — Pro Controls uses various USB bridge chips.
+
+schema_version: "1"
+
+device:
+  name: "Pro Controls Throttle Quadrant"
+  vendor: "Pro Controls"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip common in OEM HW)
+    product_id: 0xFF10      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, throttle3, flap, spoiler, reverser]
+    resolution_bits: 10
+  buttons: 8               # Detent buttons, TO/GA, reverse thrust interlock
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. Pro Controls OEM hardware varies; verify with
+      lsusb or USBView. If no specific PID is found, use a generic HID
+      joystick mapping.
+  - id: DETENT_SWITCHES
+    description: >
+      Throttle detent positions (IDLE, CL, MCT, TOGA) fire button events
+      at specific lever positions. Map these in the OpenFlight profile for
+      autothrottle mode transitions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pro Controls OEM throttle quadrant for home cockpit builds. VID/PID
+    unconfirmed. Common in 737/A320 home cockpit setups. Last reviewed: 2026-06.

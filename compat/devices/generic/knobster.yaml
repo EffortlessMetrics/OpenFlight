@@ -1,0 +1,62 @@
+# Knobster USB HID Knob Device
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes open-source hardware VID namespace).
+# PID 0x4853 is assigned to the Knobster project in the pid.codes registry.
+# The Knobster is a single USB rotary encoder (knob) device designed for
+# air manager / virtual cockpit use, providing a tactile knob input for
+# radio and navigation panel controls in MSFS and X-Plane.
+
+schema_version: "1"
+
+device:
+  name: "Knobster"
+  vendor: "OpenHW (pid.codes)"
+  usb:
+    vendor_id: 0x1209    # pid.codes open-source hardware VID namespace
+    product_id: 0x4853   # Assigned to Knobster in pid.codes registry
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [dial]        # Rotary encoder — relative or absolute position
+    resolution_bits: 8
+  buttons: 1             # Encoder push-button
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: ROTARY_ENCODER
+    description: >
+      The Knobster exposes a single rotary encoder axis. Depending on firmware,
+      the axis may report relative delta values (incremental) or an accumulated
+      absolute position. Configure the axis type in the OpenFlight device profile.
+  - id: AIR_MANAGER_PRIMARY
+    description: >
+      Primarily used with Air Manager software for virtual cockpit rotary
+      controls (COM/NAV frequency tuning, altimeter baro knob, heading bug, etc.).
+      In OpenFlight, can be bound to any rotary axis in a profile.
+  - id: PID_CODES_VID
+    description: >
+      VID 0x1209 is the pid.codes community open-source hardware VID namespace.
+      PID 0x4853 is the specific Knobster project allocation. Multiple unrelated
+      open-hardware devices share VID 0x1209; differentiate by PID and product string.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Knobster USB rotary encoder (knob) for air manager / virtual cockpit.
+    VID 0x1209 (pid.codes) / PID 0x4853 (registered Knobster allocation).
+    Used for frequency tuning and rotary panel controls in MSFS and X-Plane.
+    Last reviewed: 2026-07.

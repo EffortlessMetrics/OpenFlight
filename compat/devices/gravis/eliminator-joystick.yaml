@@ -1,0 +1,53 @@
+# Gravis Eliminator Joystick (USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Advanced Gravis Computer Technology Ltd / Kensington).
+# PID 0x4001 is a community estimate for the Gravis Eliminator USB joystick.
+# The Gravis Eliminator was a budget 4-axis USB joystick popular in the late
+# 1990s and early 2000s. Still seen in legacy sim setups.
+# Source: usb.ids community database (partial, unverified entry).
+schema_version: "1"
+
+device:
+  name: "Gravis Eliminator Joystick"
+  vendor: "Advanced Gravis / Kensington"
+  usb:
+    vendor_id: 0x0428    # Advanced Gravis Computer Technology Ltd
+    product_id: 0x4001   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4001 is a community estimate. Confirm with lsusb before enabling
+      production device matching. May conflict with other Gravis USB devices.
+  - id: LEGACY_8BIT_AXES
+    description: >
+      8-bit axis resolution typical of late-1990s budget joysticks.
+      Apply smoothing to reduce stairstepping on analogue axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis Eliminator — late-1990s budget USB joystick. PID is unconfirmed;
+    verify from lsusb before production use. VID 0x0428 = Advanced Gravis.
+    Still seen in legacy flight sim setups. Last reviewed: 2026-06.

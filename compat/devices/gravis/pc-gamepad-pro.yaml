@@ -1,0 +1,52 @@
+# Gravis PC GamePad Pro (USB, VID 0x0428 PID 0x4001)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x0428 (Advanced Gravis Computer Technology Ltd).
+# PID 0x4001 is reported in community USB ID databases for the Gravis PC
+# GamePad Pro USB version. The existing gamepad-pro.yaml uses PID 0x4000.
+# PID 0x4001 may represent a revised hardware revision or firmware update.
+schema_version: "1"
+
+device:
+  name: "Gravis PC GamePad Pro (Alt PID)"
+  vendor: "Gravis"
+  usb:
+    vendor_id: 0x0428       # Advanced Gravis Computer Technology Ltd
+    product_id: 0x4001      # Community-reported alt PID — see gamepad-pro.yaml (0x4000)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_ALT_REVISION
+    description: >
+      PID 0x4001 is a community-reported alternate revision of the PC GamePad Pro.
+      The primary manifest uses PID 0x4000 (gamepad-pro.yaml). Verify with lsusb.
+  - id: VINTAGE_DEVICE
+    description: >
+      Vintage USB gamepad from the late 1990s / early 2000s. Limited to 8-bit
+      axis resolution and basic HID gamepad descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis PC GamePad Pro alternate PID 0x4001. Primary manifest is
+    gamepad-pro.yaml (PID 0x4000). Vintage USB gamepad, 2-axis, 10-button.
+    Wave-41 addition. Last reviewed: 2026-07.

@@ -1,0 +1,56 @@
+# Thrustmaster TWCS Throttle (Alt PID 0xB679)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB679 is a community-reported alternate PID for the TWCS Throttle,
+# observed in early production units and some regional variants. The primary
+# confirmed PID is 0xB687 (twcs-throttle.yaml, confirmed via linux-hardware.org).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TWCS Throttle (Alt PID)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB679      # Community-reported alt PID — primary is 0xB687 (twcs-throttle.yaml)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_ALT_VARIANT
+    description: >
+      PID 0xB679 is a community-reported alternate PID for the TWCS Throttle.
+      The primary confirmed PID is 0xB687 (twcs-throttle.yaml). Early production
+      or regional units may enumerate with 0xB679. Verify with lsusb.
+  - id: MINI_STICK_CENTERED_AXES
+    description: >
+      Rx/Ry mini-stick axes are bipolar (centered at ~32768 = 0.0). The main
+      throttle axis is unipolar (0 = idle, 65535 = full).
+  - id: THROTTLE_UNIPOLAR
+    description: >
+      Main throttle axis is unipolar: 0x0000 = idle, 0xFFFF = full throttle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TWCS Throttle alternate PID 0xB679. Community-reported;
+    primary confirmed PID is 0xB687. Sold standalone and as part of the
+    T.16000M FCS HOTAS combo. Wave-41 addition. Last reviewed: 2026-07.

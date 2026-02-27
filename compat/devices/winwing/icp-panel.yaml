@@ -1,0 +1,51 @@
+# WinWing ICP (F-16 Integrated Control Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBF06 — linux-hardware.org (1 probe on ASUSTek
+# TUF Gaming, USB string "ICP", vendor "Winwing").
+# Observed alongside F18 COMBAT READY PANEL (0xBE05), F18 TAKEOFF PANEL (0xBE04)
+# and Orion Throttle TGRIP-F16 (0xBE68) on the same system.
+device:
+  name: "WinWing ICP (F-16 Integrated Control Panel)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF06
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands
+      based on the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    F-16 ICP replica panel: numeric keypad, function keys (COM1/COM2, IFF,
+    LIST, AA, AG, FCR, WPN), and rotary encoders for brightness/volume.
+    The ICP serves the same UFC role in F-16 that UFC1 (PID 0xBEDE) serves
+    for F/A-18. PID 0xBF06 confirmed from linux-hardware.org (1 probe).

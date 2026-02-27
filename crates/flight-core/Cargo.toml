@@ -18,7 +18,9 @@ keywords = ["flight-sim", "openflight", "core", "facade"]
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
+serde.workspace = true
 serde_json.workspace = true
+toml.workspace = true
 flight-units = { path = "../flight-units" }
 flight-rules = { path = "../flight-rules" }
 flight-profile = { path = "../flight-profile" }
@@ -33,3 +35,4 @@ flight-metrics = { path = "../flight-metrics" }
 [dev-dependencies]
 proptest.workspace = true
 tempfile.workspace = true
+serde_yaml.workspace = true

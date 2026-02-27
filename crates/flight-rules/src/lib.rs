@@ -46,7 +46,7 @@ pub struct CompiledRule {
     pub hysteresis_key: Option<String>,
 }
 
-/// Rule condition (stub implementation)
+/// Rule condition parsed from DSL string
 #[derive(Debug, Clone)]
 pub enum Condition {
     /// Variable comparison: var op value
@@ -64,7 +64,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,
@@ -74,8 +74,8 @@ pub enum CompareOp {
     LessEqual,
 }
 
-/// Rule action (stub implementation)
-#[derive(Debug, Clone)]
+/// Rule action parsed from DSL string
+#[derive(Debug, Clone, Serialize)]
 pub enum Action {
     /// Turn LED on
     LedOn { target: String },
@@ -87,13 +87,13 @@ pub enum Action {
     LedBrightness { target: String, brightness: f32 },
 }
 
-/// Rules compiler (stub implementation)
+/// Rules compiler: parses conditions and actions, produces bytecode
 pub struct RulesCompiler {
     hysteresis_defaults: HashMap<String, f32>,
 }
 
 /// Bytecode instruction for rules evaluation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum BytecodeOp {
     /// Load variable value onto stack: LOAD var_index
     LoadVar(u16),
@@ -120,7 +120,7 @@ pub enum BytecodeOp {
 }
 
 /// Compiled bytecode program
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct BytecodeProgram {
     /// Bytecode instructions
     pub instructions: Vec<BytecodeOp>,
@@ -685,6 +685,52 @@ impl CompiledRules {
     }
 }
 
+/// Result of a conflict check — two or more rules targeting the same LED output.
+#[derive(Debug, Clone)]
+pub struct BindingConflict {
+    /// The conflicting output name (LED target, e.g. `"GEAR"`, `"indexer"`).
+    pub output: String,
+    /// The `when` condition strings of every rule that targets this output.
+    pub sources: Vec<String>,
+}
+
+fn action_target(action: &Action) -> &str {
+    match action {
+        Action::LedOn { target }
+        | Action::LedOff { target }
+        | Action::LedBlink { target, .. }
+        | Action::LedBrightness { target, .. } => target,
+    }
+}
+
+/// Check a slice of rules for binding conflicts.
+///
+/// A conflict is reported whenever two or more rules map to the same logical
+/// output (LED target). The returned vec is sorted by output name for
+/// deterministic ordering.
+pub fn check_conflicts(rules: &[Rule]) -> Vec<BindingConflict> {
+    let compiler = RulesCompiler::new(HashMap::new());
+    let mut target_map: HashMap<String, Vec<String>> = HashMap::new();
+
+    for rule in rules {
+        if let Ok(action) = compiler.parse_action(&rule.action) {
+            let target = action_target(&action).to_string();
+            target_map
+                .entry(target)
+                .or_default()
+                .push(rule.when.clone());
+        }
+    }
+
+    let mut conflicts: Vec<BindingConflict> = target_map
+        .into_iter()
+        .filter(|(_, sources)| sources.len() > 1)
+        .map(|(output, sources)| BindingConflict { output, sources })
+        .collect();
+    conflicts.sort_by(|a, b| a.output.cmp(&b.output));
+    conflicts
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -723,7 +769,7 @@ mod tests {
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![Rule {
-                when: "aoa > alpha_warn".to_string(),
+                when: "aoa > 12.5".to_string(),
                 do_action: "led.indexer.blink(rate_hz=6)".to_string(),
                 action: "led.indexer.blink(rate_hz=6)".to_string(),
             }],
@@ -732,8 +778,19 @@ mod tests {
             }),
         };
 
-        // This will fail with current stub implementation, but structure is correct
-        let _result = rules.compile();
+        // Compilation should succeed — the compiler is fully implemented
+        let result = rules.compile();
+        assert!(
+            result.is_ok(),
+            "compile() should succeed: {:?}",
+            result.err()
+        );
+        let compiled = result.unwrap();
+        // Should have produced bytecode instructions
+        assert!(
+            !compiled.bytecode.instructions.is_empty(),
+            "compiled bytecode should not be empty"
+        );
     }
 
     #[test]
@@ -972,6 +1029,229 @@ mod tests {
                  prop_assert!(false, "Failed to parse valid LED OFF action: {}", expr);
             }
         }
+
+        // Prop: a valid schema rule (boolean condition) compiles to non-empty bytecode
+        #[test]
+        fn prop_valid_rule_compiles_to_bytecode(
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
+            val in -1000.0f32..1000.0f32,
+            target in "[A-Z][A-Z0-9_]*",
+        ) {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: format!("{} > {}", var_name, val),
+                    do_action: format!("led.panel('{}').on()", target),
+                    action: format!("led.panel('{}').on()", target),
+                }],
+                defaults: None,
+            };
+            prop_assert!(schema.validate().is_ok());
+            let result = schema.compile();
+            prop_assert!(result.is_ok(), "compile failed: {:?}", result.err());
+            prop_assert!(!result.unwrap().bytecode.instructions.is_empty());
+        }
+
+        // Prop: a condition string that parses successfully also passes rule validation
+        #[test]
+        fn prop_parse_implies_validate(var_name in "[a-zA-Z_][a-zA-Z0-9_]*") {
+            let compiler = RulesCompiler::new(HashMap::new());
+            if compiler.parse_condition(&var_name).is_ok() {
+                let schema = RulesSchema {
+                    schema: "flight.ledmap/1".to_string(),
+                    rules: vec![Rule {
+                        when: var_name,
+                        do_action: "led.indexer.on()".to_string(),
+                        action: "led.indexer.on()".to_string(),
+                    }],
+                    defaults: None,
+                };
+                prop_assert!(schema.validate().is_ok());
+            }
+        }
+
+        // Prop: bytecode compilation is deterministic — same input always yields identical instructions
+        #[test]
+        fn prop_compilation_is_deterministic(
+            var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
+            val in -1000.0f32..1000.0f32,
+        ) {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: format!("{} > {}", var_name, val),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                }],
+                defaults: None,
+            };
+            let compiled1 = schema.compile().unwrap();
+            let compiled2 = schema.compile().unwrap();
+            // Use Debug representation of the instructions Vec (deterministic for ordered collections)
+            let instructions1 = format!("{:?}", compiled1.bytecode.instructions);
+            let instructions2 = format!("{:?}", compiled2.bytecode.instructions);
+            prop_assert_eq!(instructions1, instructions2);
+        }
+    }
+
+    // Error-path tests
+    #[test]
+    fn parse_condition_invalid_number_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let res = compiler.parse_condition("ias > notanumber");
+        assert!(res.is_err(), "expected error, got: {:?}", res);
+        let msg = res.unwrap_err().to_string();
+        assert!(msg.contains("Invalid number"), "unexpected error: {msg}");
+    }
+
+    #[test]
+    fn parse_condition_unsupported_syntax_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        // A condition with `>=` but no spaces is not valid (the parser requires spaces around ops)
+        let res = compiler.parse_condition("ias>=200");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn parse_action_unsupported_syntax_returns_error() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let res = compiler.parse_action("this.is.not.valid()");
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn validate_rule_empty_when_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_empty_action_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "".to_string(),
+                action: "".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_invalid_condition_syntax_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "ias > notanumber".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_invalid_action_syntax_returns_error() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "this.is.not.valid()".to_string(),
+                action: "this.is.not.valid()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rule_valid_rule_passes() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        assert!(schema.validate().is_ok());
+    }
+
+    // ── check_conflicts tests ─────────────────────────────────────────────────
+
+    fn make_rule(when: &str, action: &str) -> Rule {
+        Rule {
+            when: when.to_string(),
+            do_action: action.to_string(),
+            action: action.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_empty_rule_set_no_conflicts() {
+        let conflicts = check_conflicts(&[]);
+        assert!(conflicts.is_empty());
+    }
+
+    #[test]
+    fn test_no_conflicts_for_unique_outputs() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("flaps > 0.5", "led.panel('FLAPS').on()"),
+            make_rule("ias > 200", "led.indexer.on()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert!(
+            conflicts.is_empty(),
+            "expected no conflicts, got: {:?}",
+            conflicts
+        );
+    }
+
+    #[test]
+    fn test_detects_duplicate_output_target() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("!gear_down", "led.panel('GEAR').off()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert_eq!(conflicts.len(), 1);
+        assert_eq!(conflicts[0].output, "GEAR");
+        assert_eq!(conflicts[0].sources.len(), 2);
+        assert!(conflicts[0].sources.contains(&"gear_down".to_string()));
+        assert!(conflicts[0].sources.contains(&"!gear_down".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_conflicts_reported() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("!gear_down", "led.panel('GEAR').off()"),
+            make_rule("ias > 200", "led.indexer.blink(rate_hz=4)"),
+            make_rule("ias < 100", "led.indexer.on()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert_eq!(
+            conflicts.len(),
+            2,
+            "expected 2 conflicts, got: {:?}",
+            conflicts
+        );
+        // sorted by output name: "GEAR" < "indexer"
+        assert_eq!(conflicts[0].output, "GEAR");
+        assert_eq!(conflicts[1].output, "indexer");
     }
 }
 
@@ -1035,5 +1315,89 @@ mod snapshot_tests {
 
         let compiled = rules.compile().expect("AND rule should compile");
         insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
+    }
+
+    /// Snapshot the error message for a malformed condition (invalid number).
+    #[test]
+    fn snapshot_error_malformed_condition() {
+        let compiler = RulesCompiler::new(HashMap::new());
+        let err = compiler.parse_condition("ias > notanumber").unwrap_err();
+        insta::assert_debug_snapshot!("error_malformed_condition", err);
+    }
+
+    /// Snapshot the validation error when the `when` condition is empty.
+    #[test]
+    fn snapshot_error_empty_when() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_empty_when", err);
+    }
+
+    /// Snapshot the validation error when the action is empty.
+    #[test]
+    fn snapshot_error_empty_action() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "".to_string(),
+                action: "".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_empty_action", err);
+    }
+
+    /// Snapshot the YAML representation of a multi-rule RulesSchema (DSL input shape).
+    #[test]
+    fn snapshot_rules_schema_yaml() {
+        let mut hysteresis = HashMap::new();
+        hysteresis.insert("aoa".to_string(), 0.5_f32);
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear == DOWN".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "aoa > 14.5".to_string(),
+                    do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                    action: "led.indexer.blink(rate_hz=6)".to_string(),
+                },
+            ],
+            defaults: Some(RuleDefaults {
+                hysteresis: Some(hysteresis),
+            }),
+        };
+        insta::assert_yaml_snapshot!("rules_schema_yaml", schema);
+    }
+
+    /// Snapshot the compiled bytecode program in YAML — catches structural regressions
+    /// in the compiler output without requiring Debug format text diffs.
+    #[test]
+    fn snapshot_compiled_bytecode_yaml() {
+        // Single-variable rule: deterministic variable_map ordering.
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear == DOWN".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled = rules.compile().expect("gear-down rule should compile");
+        insta::assert_yaml_snapshot!("compiled_bytecode_yaml", compiled.bytecode);
     }
 }

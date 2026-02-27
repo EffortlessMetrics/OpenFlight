@@ -1,0 +1,62 @@
+# NaturalPoint Arena 100 Motion Capture System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed: NaturalPoint Inc.
+# PID 0x0162 is a community estimate for the NaturalPoint Arena 100 motion
+# capture system. The Arena 100 is an active infrared motion capture system
+# used in professional and prosumer VR / simulation applications. In flight
+# sim contexts it may be used for high-fidelity head and body pose tracking.
+
+schema_version: "1"
+
+device:
+  name: "NaturalPoint Arena 100"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc. (confirmed)
+    product_id: 0x0162   # Community estimate — Arena 100; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]    # 6DoF position and orientation
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0162 is a community estimate for the Arena 100. VID 0x131D is
+      confirmed for NaturalPoint. Verify from lsusb or NaturalPoint Motive
+      software on real hardware.
+  - id: MOTIVE_SOFTWARE
+    description: >
+      The Arena 100 requires NaturalPoint Motive software for camera
+      calibration and streaming. Head pose data is typically consumed via the
+      NatNet SDK or opentrack NatNet plugin rather than raw HID axes.
+  - id: PROFESSIONAL_MOTION_CAPTURE
+    description: >
+      The Arena 100 is a professional-grade multi-camera IR motion capture
+      system. In flight sim, it can track a reflective hat or clip for
+      sub-millimetre head pose accuracy. Significantly higher precision than
+      consumer trackers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint Arena 100 motion capture system. VID 0x131D confirmed
+    (NaturalPoint); PID 0x0162 community estimate. Professional IR motion cap
+    for head tracking in flight sim via NatNet/opentrack. Last reviewed: 2026-07.

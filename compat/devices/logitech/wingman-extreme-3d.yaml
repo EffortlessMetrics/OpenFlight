@@ -1,0 +1,54 @@
+# Logitech WingMan Extreme Digital 3D
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID 0xC20A is documented in community USB ID
+# databases and the Linux kernel usb-ids as the WingMan Extreme Digital 3D.
+# Sold circa 1999–2004 and widely used for early PC flight simulators.
+# 3-axis joystick with twist rudder and a throttle wheel on the base.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Extreme Digital 3D"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc.
+    product_id: 0xC20A      # WingMan Extreme Digital 3D — usb.ids community database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEGACY_10BIT_AXES
+    description: >
+      10-bit axis resolution. Apply light smoothing for smooth analogue
+      axis response in simulators.
+  - id: THROTTLE_ON_BASE
+    description: >
+      The Z axis is a twist-rudder on the stick body. The throttle wheel
+      is on the base and reported as the rz axis (slider). Map rz
+      unipolar [0, 1] in the profile.
+
+support:
+  tier: 3            # Legacy; no simulated or HIL test coverage
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Extreme Digital 3D (circa 1999–2004). Entry-level
+    4-axis joystick. PID 0xC20A from usb.ids community database.
+    One of the most common legacy joysticks still appearing in sim setups.
+    Last reviewed: 2026-02.

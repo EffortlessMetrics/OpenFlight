@@ -1,0 +1,44 @@
+# Moza KM Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Moza), PID 0x0062 — estimated.
+schema_version: "1"
+
+device:
+  name: "Moza KM Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0062
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0062 is estimated. Confirm with Moza Pit House or lsusb probe.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza KM steering wheel — formula/open-wheel style 300mm rim with
+    integrated shift paddles and 14 buttons. Mounts via Moza quick-release.
+    Tier 2. Last reviewed: 2026-02.

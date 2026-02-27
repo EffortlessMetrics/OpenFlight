@@ -1,0 +1,52 @@
+# WinWing MIP F/A-18 MFD Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBF10 is a community estimate for the MIP
+# (Multi-function Instrument Panel) F/A-18 MFD combo panel. Provides two
+# MFD bezels (left and right) with OSB (Option Select Button) rows replicating
+# the F/A-18C cockpit layout, used with DCS World.
+schema_version: "1"
+
+device:
+  name: "WinWing MIP F/A-18 MFD Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098    # WinWing
+    product_id: 0xBF10   # Community estimate — MIP F/A-18 MFD combo
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF10 is a community estimate. Confirm with lsusb or Windows Device
+      Manager on hardware before enabling production device matching.
+  - id: DUAL_MFD_OSB_ROWS
+    description: >
+      Panel provides two sets of 20 OSB buttons (left + right MFD). Physical
+      layout mirrors DCS F/A-18C MFD bezels; assign per DCS input bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MIP F/A-18 MFD panel. VID 0x4098 confirmed WinWing; PID 0xBF10 is
+    a community estimate. Designed for DCS F/A-18C cockpit builds.
+    Last reviewed: 2026-06.

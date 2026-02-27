@@ -1,0 +1,57 @@
+# Leo Bodnar BBI-16 USB Button Box Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 confirmed (Leo Bodnar Ltd — leobodnar.com).
+# PID 0x000D is a community estimate for the BBI-16.
+# The BBI-16 is a 16-button USB HID interface for building custom button boxes
+# and cockpit panels. A smaller variant of the BBI-32 (PID 0x000E) and
+# BBI-64 (PID 0x000F). Popular for DIY flight simulator builders.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BBI-16 USB Button Box Interface"
+  vendor: "Leo Bodnar Ltd."
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd.
+    product_id: 0x000D      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000D is a community estimate for the BBI-16. Leo Bodnar BBI-32 uses
+      PID 0x000E and BBI-64 uses 0x000F; the BBI-16 may use 0x000D or a different
+      value. Confirm with lsusb or the Leo Bodnar utility on real hardware.
+  - id: DIY_BUTTON_BOX
+    description: >
+      The BBI-16 is a bare PCB interface; it has no fixed physical form. Users
+      connect their own panel switches, rotaries (via debounce circuits), and
+      LEDs. The HID descriptor reports 16 plain buttons.
+  - id: NO_AXES
+    description: >
+      This device exposes no analogue axes. It is a pure button-input interface.
+      For axes, use the BU0836 or BU0836X (bu0836.yaml, bu0836x.yaml).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BBI-16 — 16-button USB HID interface for DIY cockpit panels.
+    PID 0x000D is unconfirmed. Smaller sibling of the BBI-32 (bbi-32.yaml).
+    Popular in home cockpit building. Last reviewed: 2026-02.

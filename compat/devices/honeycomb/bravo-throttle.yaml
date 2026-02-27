@@ -1,0 +1,65 @@
+# Honeycomb Bravo Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Bravo Throttle Quadrant"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1901   # Confirmed: BetterBravoLights, SPAD.neXt, linux-hardware.org
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [throttle1, throttle2, throttle3, throttle4, throttle5, flap_lever, spoiler]
+    resolution_bits: 12
+  buttons: 64               # Includes AP panel, lights, landing gear lever
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: GEAR_LEVER_AS_BUTTON
+    description: >
+      Landing gear lever is reported as a button pair (up/down), not an axis.
+      OpenFlight maps gear-up and gear-down events via the rules engine.
+  - id: AUTOPILOT_BUTTONS
+    description: >
+      Autopilot panel switches (HDG, NAV, APR, REV, ALT, VS, IAS, AP, YD) are
+      discrete buttons. Binding requires explicit per-sim mapping.
+  - id: LEVER_COUNT_VARIES
+    description: >
+      Lever positions are reported on axes 1–5; unused levers read as 0.
+      Users with fewer throttle levers should ignore inactive axes.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Commonly paired with the Honeycomb Alpha yoke (VID 0x294B / PID 0x1900).
+    Bravo-only axis configuration supported; no dedicated crate yet.
+    Last validated: 2026-02.
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; throttle levers, AP panel, and gear lever all recognised."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Button mapping via DCS input controls. Autopilot panel buttons map to DCS AP commands."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support. Flap and spoiler axes usable as generic axes."

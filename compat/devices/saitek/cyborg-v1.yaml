@@ -1,0 +1,52 @@
+# Saitek Cyborg V.1 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID 0x0755 is community-reported for
+# the Cyborg V.1 Joystick. The Cyborg series used distinctive ergonomic
+# rubberised grips with individually lit buttons. Entry-level flight/sim stick.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg V.1 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3     # Saitek / Logitech PLC
+    product_id: 0x0755    # Cyborg V.1 — community-reported
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0755 is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: TWIST_AXIS_RZ
+    description: >
+      The rz axis is a twist-grip rudder on the stick body. The Z axis is
+      a throttle lever on the base. Map Z unipolar [0, 1] for throttle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg V.1: entry-level flight joystick with distinctive lit buttons
+    and ergonomic rubberised grip. PID 0x0755 community-reported.
+    Common on Windows XP–7 era sim setups. Last reviewed: 2026-02.

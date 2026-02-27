@@ -1,0 +1,58 @@
+# Microsoft Surface Dial
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x091B confirmed from:
+#   1. Windows USB compatibility database — "Microsoft Surface Dial"
+#   2. Community linux-hardware.org probes: usb:045e:091b
+# The Surface Dial is a Bluetooth-connected rotary input device. When used with
+# a USB dongle adapter it presents as VID 0x045E / PID 0x091B. Flight simmers
+# use it for altitude/heading encoder input or zoom control.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft Surface Dial"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x091B      # Surface Dial (confirmed Windows USB DB + linux-hardware.org)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x0E             # System Control
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 1               # Single click button (press the dial)
+  hats: 0
+  encoders: 1              # Rotation encoder (relative delta)
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: RELATIVE_ENCODER
+    description: >
+      The Surface Dial reports rotation as a relative HID usage (Usage 0x37,
+      Wheel). OpenFlight accumulates relative deltas and maps them to
+      encoder bindings in the active profile.
+  - id: BLUETOOTH_DONGLE_VID
+    description: >
+      PID 0x091B corresponds to the USB-Bluetooth dongle/receiver pairing.
+      Direct Bluetooth HID may enumerate differently depending on OS BT stack.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Surface Dial — rotary encoder + click. PID 0x091B confirmed.
+    Used in sim setups for altitude, heading, or zoom encoder input.
+    Last reviewed: 2026-06.

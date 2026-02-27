@@ -385,7 +385,10 @@ impl TestApplier {
                 DiffOperation::IniSection { section, changes } => {
                     let mut content = String::new();
                     content.push_str(&format!("[{}]\n", section));
-                    for (key, value) in changes {
+                    // Sort keys for deterministic output (HashMap order is random).
+                    let mut sorted: Vec<(&String, &String)> = changes.iter().collect();
+                    sorted.sort_by_key(|(k, _)| k.as_str());
+                    for (key, value) in sorted {
                         content.push_str(&format!("{}={}\n", key, value));
                     }
                     fs::write(&output_file, content)?;

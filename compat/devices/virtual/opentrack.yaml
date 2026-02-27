@@ -1,0 +1,65 @@
+# OpenTrack Virtual Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenTrack (github.com/opentrack/opentrack) is an open-source head-tracking
+# application that outputs virtual axis data via several protocols. When
+# configured to output via the "vJoy output" or "joystick" output plugin,
+# it enumerates as a virtual HID joystick. The VID/PID depends on the chosen
+# virtual output backend (vJoy: 0x1234/0xBEAD; dedicated mode: varies).
+schema_version: "1"
+
+device:
+  name: "OpenTrack Virtual Head Tracker"
+  vendor: "OpenTrack (open source)"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1234       # Default when using vJoy backend (see vjoy.yaml)
+    product_id: 0xBEAD      # Default vJoy PID — changes with other output plugins
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, yaw, pitch, roll]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 8
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      OpenTrack outputs head position and orientation as a virtual joystick.
+      Axes correspond to 6-DOF head pose: X/Y/Z (translation) and
+      Yaw/Pitch/Roll (rotation). In flight sim, Yaw is typically mapped
+      to TrackIR-compatible view axis or to head tracking view input.
+  - id: BACKEND_DEPENDENT_PID
+    description: >
+      The VID/PID seen by OpenFlight depends on the OpenTrack output plugin:
+        - vJoy plugin: VID 0x1234 / PID 0xBEAD (matches vjoy.yaml)
+        - FreePIE plugin: uses FreePIE's VID/PID
+        - UDP/Pipe output: not HID, requires custom bridge
+      Configure OpenTrack to use the vJoy output plugin for HID enumeration.
+  - id: AXIS_SCALE_OPENTRACK
+    description: >
+      OpenTrack normalises head-pose output to [-1.0, 1.0] mapped across the
+      vJoy 15-bit range [1, 32767]. Apply a 1:1 linear curve with zero
+      deadzone; curves and smoothing should be configured in OpenTrack itself.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    OpenTrack virtual head tracker (via vJoy backend). VID/PID matches
+    vjoy.yaml when the vJoy output plugin is selected. 6-DOF pose axes.
+    Used in flight sim for look-around and padlock view control.
+    Last reviewed: 2026-06.

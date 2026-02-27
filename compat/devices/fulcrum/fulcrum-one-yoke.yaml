@@ -1,0 +1,51 @@
+# Fulcrum One Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fulcrum One Yoke — consumer-grade force feedback yoke for flight simulation.
+# Uses active FFB to simulate aerodynamic control loading.
+# VID 0x1209 (pid.codes shared open-source VID). PID 0x2070 community estimate.
+schema_version: "1"
+
+device:
+  name: "Fulcrum One Yoke"
+  vendor: "Fulcrum"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared VID (community estimate)
+    product_id: 0x2070      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [roll, pitch, throttle_l, throttle_r, toe_brake]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, friction]
+    max_update_rate_hz: 200
+    torque_limit_nm: null   # Varies by model configuration
+
+polling:
+  expected_rate_hz: 200
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1209 / PID 0x2070 are community estimates for the Fulcrum One Yoke.
+      VID 0x1209 is the pid.codes shared namespace; Fulcrum may use their own
+      registered VID on production hardware. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fulcrum One Yoke — consumer FFB yoke (5 axes). VID 0x1209 / PID 0x2070
+    community estimate. Last reviewed: 2026-06.

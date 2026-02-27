@@ -1,0 +1,41 @@
+# Corsair VOID RGB Elite USB Headset
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0A55 — USB gaming headset with HID controls.
+schema_version: "1"
+
+device:
+  name: "Corsair VOID RGB Elite USB Headset"
+  vendor: "Corsair"
+  usb:
+    vendor_id: 0x1B1C
+    product_id: 0x0A55
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    USB headset with HID volume/mute buttons. PID 0x0A55 community report.
+    Last reviewed: 2026-06.

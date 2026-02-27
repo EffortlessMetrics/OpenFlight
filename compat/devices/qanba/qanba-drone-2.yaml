@@ -1,0 +1,46 @@
+# Qanba Drone 2 Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2C22 (Qanba). PID 0x2602 — community estimate.
+# Wave-74 addition.
+schema_version: "1"
+
+device:
+  name: "Qanba Drone 2 Arcade Stick"
+  vendor: "Qanba"
+  usb:
+    vendor_id: 0x2C22       # Qanba
+    product_id: 0x2602      # Community estimate — Drone 2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [stick_x, stick_y]
+    resolution_bits: 8
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Qanba Drone 2 entry-level arcade stick. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Qanba Drone 2 — entry-level arcade stick usable as axis input. PID 0x2602 community estimate. Wave-74. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs

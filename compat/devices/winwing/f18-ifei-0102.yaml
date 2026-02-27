@@ -1,0 +1,50 @@
+# WinWing F-18 IFEI (PID 0x0102)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0102 is a community estimate for the WinWing F/A-18C IFEI (In-Flight
+# Engine Indicator) panel. The alternate variant is f18-ifei-panel.yaml (PID 0xBF08).
+schema_version: "1"
+
+device:
+  name: "WinWing F-18 IFEI"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0102      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (panel devices)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0102 is a community estimate for the WinWing F/A-18C IFEI panel.
+      The alternate variant uses PID 0xBF08 (f18-ifei-panel.yaml). Verify with
+      SimAppPro USB enumeration or lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Button-only panel device replicating the F/A-18C IFEI. All inputs
+      report as HID button events. Designed for DCS F/A-18C module.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C IFEI panel — alternate PID 0x0102 community estimate.
+    VID 0x4098 (WinWing). See also f18-ifei-panel.yaml (PID 0xBF08).
+    Designed for DCS F/A-18C IFEI input bindings. Wave-47 addition. Last reviewed: 2026-07.

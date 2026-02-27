@@ -1,0 +1,66 @@
+# GoFlight GF-MCP Pro (Professional Mode Control Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0004 (estimated; GF-MCP = 0x0003).
+# Extended Boeing 737-style MCP with additional autopilot controls and
+# a larger button complement than the standard GF-MCP.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-MCP Pro"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0004      # Estimated — adjacent to GF-MCP (0x0003)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0004 is estimated adjacent to the GF-MCP (0x0003). Not confirmed
+      from linux-hardware.org probes or USB descriptor capture.
+      Update when a confirmed PID becomes available.
+  - id: ROTARY_ENCODERS_MCP
+    description: >
+      SPD, HDG, ALT, VS, and CRS selectors are rotary encoders sending
+      relative-delta button events. The host must accumulate deltas.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      Panel has 7-segment displays for SPD, HDG, ALT, and VS readouts.
+      Display updates require USB HID output reports driven by sim telemetry.
+  - id: AP_ANNUNCIATOR_LEDS
+    description: >
+      Autopilot mode annunciators (FD, AT, APP, LOC, VS, ALT, LNAV, VNAV)
+      are driven by HID output reports.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol. Compatible with the
+      FSUIPC GoFlight plugin and community open-source drivers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Extended professional MCP panel with more buttons than the standard GF-MCP
+    (see gf-mcp.yaml). Bidirectional HID (input + display output) required for
+    full functionality. PID 0x0004 is estimated — confirm before deployment.
+    Last reviewed: 2026-02.

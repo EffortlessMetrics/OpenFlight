@@ -1,0 +1,60 @@
+# WinWing SimApp Pro FCU + EFIS-L + EFIS-R (full Airbus FCU/EFIS set)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBA01 — schenlap/winwing_fcu (two repos) lists
+# this as "FCU + EFIS-L + EFIS-R" (full three-panel combo). Also referenced as
+# "PFP 7" in schenlap/winwing_mcdu.py.
+device:
+  name: "WinWing SimApp Pro FCU + EFIS-L + EFIS-R"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBA01
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 96
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      All three panels (FCU, EFIS-L, EFIS-R) feature 7-segment LCD displays.
+      Display updates are driven by HID output reports. OpenFlight writes speed,
+      heading, altitude, VS, and barometer values from the simulator to each
+      panel independently.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders on all three panels generate HID button events
+      (increment/decrement). OpenFlight maps encoder steps to discrete sim
+      commands based on the active profile.
+  - id: MULTIPLEXED_PANELS
+    description: >
+      All three panels enumerate as a single USB HID device. Button numbering
+      is multiplexed: FCU buttons first, then EFIS-L, then EFIS-R.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro full FCU+EFIS-L+EFIS-R combo (also called "PFP 7").
+    PID 0xBA01 confirmed from schenlap/winwing_fcu (two repos) and
+    schenlap/winwing_mcdu.py. This is the complete three-panel Airbus
+    autopilot/EFIS suite. Partial sets: FCU only (0xBB10),
+    FCU+EFIS-L (0xBC1D), FCU+EFIS-R (0xBC1E).

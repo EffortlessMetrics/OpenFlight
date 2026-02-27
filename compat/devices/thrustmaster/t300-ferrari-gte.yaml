@@ -1,0 +1,41 @@
+# Thrustmaster T300 Ferrari GTE Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB66A — T300 with Ferrari GTE rim.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 Ferrari GTE Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB66A
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 14
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    T300 servo base with Ferrari GTE wheel rim. PID 0xB66A from USB databases.
+    Last reviewed: 2026-06.

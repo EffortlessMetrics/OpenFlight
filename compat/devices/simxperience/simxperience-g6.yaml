@@ -1,0 +1,54 @@
+# SimXperience G6-Gen2 Motion Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimXperience G6-Gen2 is a multi-axis motion seat for racing and flight
+# simulation rigs. Motion commands are sent from SimXperience SimCommander
+# software over USB using a proprietary protocol. Not a standard HID input
+# device; tracked for sim-rig compatibility documentation.
+schema_version: "1"
+
+device:
+  name: "SimXperience G6-Gen2 Motion Seat"
+  vendor: "SimXperience"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0000  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00         # Undefined — proprietary protocol, not HID
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID are unconfirmed. Verify with lsusb on real hardware."
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      The G6-Gen2 communicates via SimXperience's proprietary USB protocol
+      managed by SimCommander software. Standard HID input is not used.
+  - id: OUTPUT_ONLY
+    description: >
+      The G6-Gen2 is an output-only motion platform. No HID input events
+      are generated. Tracked for sim-rig compatibility documentation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience G6-Gen2 motion seat. Output-only; not an HID input device.
+    Controlled by SimCommander software. Last reviewed: 2026-06.

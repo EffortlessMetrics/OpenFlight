@@ -1,0 +1,56 @@
+# Delan Clip Head Tracker (PID 0xEB91 community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Delan Clip is an LED clip-based head tracking device used with OpenTrack or
+# FaceTrackNoIR in flight simulation. VID 0x04D8 (Microchip Technology) is the
+# PIC-USB MCU used in Delan Clip hardware. PID 0xEB91 is a community estimate
+# for this variant — see also delanclip-enterprise.yaml (0xF374) and
+# delanclip-sport.yaml (0xF373).
+schema_version: "1"
+
+device:
+  name: "Delan Clip Head Tracker"
+  vendor: "Delan Clip"
+  type: headtracker
+  usb:
+    vendor_id: 0x04D8   # Microchip Technology (PIC-USB MCU — community est)
+    product_id: 0xEB91  # Community estimate — Delan Clip; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 75
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEB91 is a community estimate. Delan Clip variants use sequential
+      PIDs in the Microchip 0x04D8 range. See delanclip-enterprise.yaml
+      (0xF374) and delanclip-sport.yaml (0xF373) for other variants.
+  - id: OPENTRACK_REQUIRED
+    description: >
+      The Delan Clip sends IR LED head pose data that is processed by
+      OpenTrack or FaceTrackNoIR. OpenFlight reads head pose via the opentrack
+      UDP relay rather than directly from the Delan Clip HID interface.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Delan Clip head tracker — PID 0xEB91 community estimate. VID 0x04D8
+    (Microchip). PID estimated from community sources.
+    Last reviewed: 2026-07.

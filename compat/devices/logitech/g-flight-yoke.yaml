@@ -1,0 +1,65 @@
+# Logitech G Flight Yoke System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC259 — linux-hardware.org.
+# The G Flight Yoke is sold as a complete system bundled with a throttle
+# quadrant module (PID 0xC25A). Both enumerate as separate USB HID devices.
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Yoke System"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (Logitech Inc.)
+    product_id: 0xC259  # G Flight Yoke — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, slider, slider2]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: YOKE_AXIS_MAPPING
+    description: >
+      Axis mapping: X = yoke roll (lateral), Y = yoke pitch (fore/aft),
+      Z = throttle lever, Rz = propeller pitch, Slider = mixture,
+      Slider2 = carburetor heat. When the throttle quadrant add-on
+      (PID 0xC25A) is also connected, its axes enumerate on a separate
+      HID node; map each device independently in the profile.
+  - id: ROTARY_ENCODERS
+    description: >
+      Two rotary encoders on the yoke body (typically CRS and HDG trim
+      wheels) report as paired momentary button events: each clockwise
+      or counter-clockwise detent fires a dedicated button press.
+      They do not report as analog axes.
+  - id: YOKE_TRAVEL_DEADZONE
+    description: >
+      The yoke mechanism has a small mechanical deadzone near centre on
+      both roll and pitch axes due to the U-shaped yoke rail design.
+      Apply a 1–2% software deadzone in OpenFlight to mask residual
+      jitter at the neutral position.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC259 confirmed from linux-hardware.org.
+    The G Flight Yoke is commonly paired with the throttle quadrant
+    (PID 0xC25A, see g-flight-throttle-quadrant.yaml) and/or the
+    G Pro Flight Rudder Pedals (PID 0xC263, see g-pro-rudder.yaml).
+    Axis names and resolution are community-documented; HIL pending.
+    Last validated: 2026-02.

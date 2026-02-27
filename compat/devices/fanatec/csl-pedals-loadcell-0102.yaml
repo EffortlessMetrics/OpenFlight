@@ -1,0 +1,65 @@
+# Fanatec CSL Pedals Load Cell (Alt PID 0x0102)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0102 is a community estimate for a CSL Pedals Load Cell variant.
+# The primary CSL Pedals LC manifest uses PID 0x0030 (csl-pedals-loadcell.yaml).
+# PID 0x0102 may correspond to a firmware revision or production batch.
+# Confirm with lsusb or Fanatec Wheel Property Page before production use.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Pedals Load Cell"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH (confirmed)
+    product_id: 0x0102      # Community estimate — alt CSL Pedals LC PID; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0102 is a community estimate. The primary CSL Pedals LC manifest
+      uses PID 0x0030 (csl-pedals-loadcell.yaml). Verify with lsusb before
+      enabling production device matching.
+  - id: BRAKE_LOAD_CELL
+    description: >
+      Brake axis uses a load cell sensor for pressure-based input. The response
+      curve is non-linear by default; apply a pressure curve in the OpenFlight
+      profile or via Fanatec Wheel Property Page.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim: throttle → engine throttle, brake → toe brakes,
+      clutch → rudder or differential brake. Configure axis mapping in profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Pedals Load Cell alternate PID 0x0102. Primary manifest is
+    csl-pedals-loadcell.yaml (PID 0x0030). VID 0x0EB7 confirmed.
+    PID estimated from community sources. Wave-63 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

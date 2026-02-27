@@ -1,0 +1,63 @@
+# ExpressLRS RC Controller in USB HID Joystick Mode
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x303A (Espressif Systems), PID 0x1001 — community estimate.
+# ExpressLRS (ELRS) is an open-source RC link system. Some ELRS transmitters
+# (TX modules and full radios running EdgeTX / OpenTX firmware) support a
+# "USB Joystick" mode where the radio enumerates as a USB HID gamepad/joystick,
+# exposing all stick and switch channels as axes and buttons. This allows the
+# radio hardware to be used directly as a PC sim controller without a separate
+# USB dongle.
+schema_version: "1"
+
+device:
+  name: "ExpressLRS RC Controller (USB HID Joystick Mode)"
+  vendor: "ExpressLRS / EdgeTX (community)"
+  type: other
+  usb:
+    vendor_id: 0x303A       # Espressif Systems (ESP32 USB VID — est for ELRS)
+    product_id: 0x1001      # Community estimate — ELRS/EdgeTX HID joystick mode
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [aileron, elevator, throttle, rudder, aux1, aux2]
+    resolution_bits: 11
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x303A / PID 0x1001 are community estimates for ESP32-based ELRS
+      hardware in HID mode. Actual VID/PID depend on the radio hardware and
+      EdgeTX firmware version. Verify with lsusb or Windows Device Manager.
+  - id: EDGETX_FIRMWARE_DEPENDENT
+    description: >
+      USB HID mode must be enabled in EdgeTX/OpenTX radio firmware settings.
+      The number of axes and buttons exposed depends on the firmware
+      configuration and radio model.
+  - id: RC_RADIO_DUAL_USE
+    description: >
+      This device is primarily an RC radio transmitter. USB HID joystick mode
+      is a secondary function. RC link output is disabled when in USB HID mode
+      on most radios.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ExpressLRS RC controller in USB HID joystick mode — 6 axes, 16 buttons, 1 hat.
+    VID 0x303A / PID 0x1001 (est). Requires EdgeTX USB joystick mode enabled.
+    Wave-40 addition. Last reviewed: 2026-07.

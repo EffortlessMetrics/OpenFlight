@@ -1,0 +1,44 @@
+# GoFlight Trim Dual Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight). PID 0x0071 estimated for GF Trim Dual.
+schema_version: "1"
+
+device:
+  name: "GoFlight Trim Dual Controller"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0071
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [elevator-trim, aileron-trim]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: GF_TRIM_DUAL
+    description: >
+      Dual-axis trim controller for elevator and aileron trim.
+      Two independent optical encoder wheels in GoFlight module format.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight Trim Dual Controller. PID 0x0071 estimated.
+    VID 0x0E9F (GoFlight). Last reviewed: 2026-06.

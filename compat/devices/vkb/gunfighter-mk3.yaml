@@ -1,0 +1,58 @@
+# VKB Gunfighter Mk.III (base model, no grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Community-reported: VID 0x231D (VKB), PID 0x0127 — Gunfighter Mk.III base
+# without grip attached. The Gunfighter line uses a modular grip system;
+# the base enumerates as its own HID device when no grip is detected or when
+# used with a grip that delegates all HID reporting to the base.
+# Distinct from gunfighter-modern-combat-pro.yaml (PID 0x0125), which is the
+# Gunfighter base + MCG Pro grip combo.
+device:
+  name: "VKB Gunfighter Mk.III"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0127
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12   # 12-bit effective (256-position resolution per axis)
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MODULAR_GRIP
+    description: >
+      The Gunfighter Mk.III uses a modular grip system. Accepted grips include
+      MCG, MCG Pro, T-Stick, and others. Axis count and button layout depend on
+      the attached grip and VKBDevCfg firmware profile.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKB's VKBDevCfg software.
+      OpenFlight reads whatever the device reports; user must align VKB config
+      with OpenFlight axis assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0127 community-reported for the Gunfighter Mk.III base.
+    Axis count reflects the base model; grips that add axes (e.g. MCG Pro
+    throttle lever) will report additional axes via VKBDevCfg remapping.
+    For the Gunfighter + MCG Pro grip combo, see gunfighter-modern-combat-pro.yaml
+    (PID 0x0125).

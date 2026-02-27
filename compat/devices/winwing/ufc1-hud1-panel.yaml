@@ -1,0 +1,47 @@
+# WinWing UFC1 + HUD1 Panel Combo
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBEDE — linux-hardware.org (1 probe,
+# USB string "UFC1 + HUD1", vendor "Winwing").
+device:
+  name: "WinWing UFC1 + HUD1 Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEDE
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PANEL_COMBO_DEVICE
+    description: >
+      The UFC1 (Universal Flight Controller panel) and HUD1 display are
+      enumerated as a single USB composite device. Button indices cover
+      both sub-panels. The HUD1 display accepts output reports for
+      brightness and text but these are handled outside the standard
+      HID button path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    UFC-style button/encoder panel for fighter aircraft cockpit simulation.
+    Includes ICP (Integrated Control Panel) replica buttons and a secondary
+    HUD brightness controller. No analogue axes.

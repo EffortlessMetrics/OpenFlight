@@ -1,0 +1,57 @@
+# Saitek Pro Flight Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x06A3 (Saitek), PID 0x0D67 — linux-hardware.org ("Pro Flight Switch Panel").
+# Startup-sequence and systems switch panel (magnetos, battery, alternator, lights, gear).
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Switch Panel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D67      # Confirmed via linux-hardware.org ("Pro Flight Switch Panel")
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: GEAR_LEVER_LED
+    description: >
+      Has a three-position gear lever (up/neutral/down) and red/green gear LEDs
+      that must be driven by USB HID output reports. LEDs do not update automatically;
+      the host must write gear state based on sim telemetry.
+  - id: ROCKER_SWITCHES
+    description: >
+      Battery, alternator, avionics, fuel pump, de-ice, pitot heat, and lights
+      use rocker switches (on/off). Each sends a button press on each state change
+      (not a held button state).
+  - id: SAITEK_PANEL_PROTOCOL
+    description: >
+      Uses the same Saitek proprietary HID panel protocol as the Multi Panel
+      (0x0D06) and Radio Panel (0x0D05).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0D67 confirmed via linux-hardware.org ("Pro Flight Switch Panel").
+    Frequently bundled with Multi Panel and Radio Panel in cockpit kits.
+    Gear lever LED feedback requires sim integration to be meaningful.
+    Last reviewed: 2026-02.

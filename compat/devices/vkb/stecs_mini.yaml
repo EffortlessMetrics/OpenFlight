@@ -1,0 +1,56 @@
+# VKB STECS Mini Throttle (Combined / Generic Manifest)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-34 addition. VID 0x231D (VKB Sim) is confirmed.
+# PID 0x0201 is estimated for the STECS Mini combined unit.
+# Left-hand (stecs-mini-left.yaml) and right-hand (stecs-mini-right.yaml)
+# split manifests exist separately. This manifest targets the compact STECS Mini
+# as a single USB device. 2 axes, 20 buttons — reduced feature set vs STECS Standard.
+# Verify PID with VKBDevCfg or lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB STECS Mini Throttle"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0201      # Estimated — verify with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, rx]
+    resolution_bits: 12
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0201 is a community estimate for the STECS Mini combined unit.
+      Confirm with VKBDevCfg → USB Info or lsusb. See stecs-mini-left.yaml
+      and stecs-mini-right.yaml for split-USB half manifests.
+  - id: COMPACT_FORM_FACTOR
+    description: >
+      The STECS Mini is a reduced-size STECS designed for smaller desks or
+      side-mount configurations. Fewer axes and buttons than the STECS Standard.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB STECS Mini Throttle (combined single-USB variant). 2 axes, 20 buttons.
+    VID 0x231D confirmed; PID 0x0201 estimated. See stecs-mini-left.yaml and
+    stecs-mini-right.yaml for split-USB variants. Wave-34 addition.
+    Last reviewed: 2026-06.

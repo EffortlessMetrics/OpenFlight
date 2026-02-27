@@ -1,0 +1,58 @@
+# MOZA R16 Direct Drive Base (STM32 firmware variant, VID 0x0483)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0xA416 is a community estimate for the
+# MOZA R16 in a firmware variant that exposes the STM32 USB VID. The primary
+# MOZA R16 manifest (VID 0x346E / PID 0x0010) is in r16-base.yaml. The R16 is
+# a 16 Nm mid-range direct drive base used in flight sim with grip adapters.
+
+schema_version: "1"
+
+device:
+  name: "MOZA R16 Direct Drive Base"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (community estimate — alt firmware VID)
+    product_id: 0xA416   # Community estimate from community sources; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 16.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 / PID 0xA416 are community estimates. Primary R16 manifest is
+      r16-base.yaml (VID 0x346E / PID 0x0010). STM32 VID may appear with
+      alternate firmware or in DFU mode.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      R16 base exposes only the rotation axis. A flight grip adapter is required
+      for buttons and additional axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA R16 Direct Drive Base — STM32 VID variant (0x0483/0xA416).
+    Primary manifest: r16-base.yaml (VID 0x346E / PID 0x0010). 16 Nm mid-range
+    direct-drive FFB. Last reviewed: 2026-07.

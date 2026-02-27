@@ -1,0 +1,53 @@
+# MOZA R12 Bundle (virtual bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual bundle combining the MOZA R12 base (r12-base.yaml) with the CS V2
+# steering wheel and SR-P Pro pedals as the standard R12 bundle configuration.
+# No single USB product_id -- components enumerate separately.
+schema_version: "1"
+
+device:
+  name: "MOZA R12 Bundle"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: ~          # Virtual bundle -- no single PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest represents the MOZA R12 bundle combining the R12 base
+      (r12-base.yaml) with the CS V2 steering wheel and SR-P Pro pedals. Each
+      component enumerates separately. Configure each via its individual manifest;
+      use this entry only for profile-level bundle documentation.
+  - id: TWO_USB_DEVICES
+    description: >
+      The bundle occupies two or more USB HID entries. Axis count and button
+      count are the sum of the individual components. See component manifests
+      for accurate capability details.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA R12 Bundle -- virtual bundle documentation entry.
+    Component manifest: r12-base.yaml. Last reviewed: 2026-06.

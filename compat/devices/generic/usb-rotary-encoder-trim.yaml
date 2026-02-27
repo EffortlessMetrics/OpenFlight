@@ -1,0 +1,46 @@
+# USB Rotary Encoder Trim Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xE001 estimated.
+# Generic USB rotary encoder configured as trim wheel controller.
+schema_version: "1"
+
+device:
+  name: "USB Rotary Encoder Trim Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE001
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [elevator-trim]
+    resolution_bits: 8
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: ROTARY_ENCODER_TRIM
+    description: >
+      Generic USB rotary encoder used as trim wheel. Reports relative
+      delta pulses rather than absolute position. Software must
+      accumulate deltas for trim state tracking.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB Rotary Encoder Trim Controller. PID 0xE001 estimated.
+    Last reviewed: 2026-06.

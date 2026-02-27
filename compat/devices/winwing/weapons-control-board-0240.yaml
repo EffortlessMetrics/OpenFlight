@@ -1,0 +1,45 @@
+# WinWing Weapons Control Board
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0x0240 — estimated.
+# WinWing weapons and stores control panel board for military sim cockpits.
+schema_version: "1"
+device:
+  name: "WinWing Weapons Control Board"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0x0240      # Community estimate — Weapons Control Board; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0240 is a community estimate for the WinWing Weapons Control Board.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Weapons stores and arming panel. Switches and buttons map to HID button
+      reports. Designed for DCS F-16C and F/A-18C weapons management.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Weapons Control Board — VID 0x4098 / PID 0x0240 (est).
+    Military sim weapons/stores control panel. DCS primary use.
+    Wave-59 addition. Last reviewed: 2026-07.

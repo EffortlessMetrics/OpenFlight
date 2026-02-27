@@ -1,0 +1,48 @@
+# CPFlight EFIS737 PRO (alternate VID/PID variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1552, PID 0x0002 — community estimates for CPFlight. CPFlight's
+# confirmed VID is 0x0DC3. The EFIS737 PRO provides captain and FO EFIS
+# selector panels for 737NG simulation setups.
+# See cpflight/efis.yaml for the confirmed VID variant.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight EFIS737 PRO"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1552       # VID_UNCONFIRMED — CPFlight alt; confirmed VID is 0x0DC3
+    product_id: 0x0002      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro_knob, nd_mode_knob]
+    resolution_bits: 8
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1552 and PID 0x0002 are community estimates. CPFlight's confirmed
+      VID is 0x0DC3. See cpflight/efis.yaml for the confirmed VID variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight EFIS737 PRO — 737NG EFIS selector panel replica.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

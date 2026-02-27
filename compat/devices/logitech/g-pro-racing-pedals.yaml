@@ -1,0 +1,56 @@
+# Logitech G PRO Racing Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.). PID is not yet confirmed from the Linux kernel
+# or SDL2 at time of writing — this is a newer product (2023). Community
+# USB captures report a PID in the 0xC267–0xC26F range. Confirm with lsusb
+# before production device matching. The G PRO Racing Pedals use load-cell
+# brake sensors and are commonly used in flight sim as toe-brake axes.
+schema_version: "1"
+
+device:
+  name: "Logitech G PRO Racing Pedals"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC267      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC267 is a community estimate for the G PRO Racing Pedals (2023).
+      Logitech G29 / G920 pedals use different PIDs (integrated with the
+      wheel). The standalone G PRO pedals have a distinct USB enumeration.
+      Verify with lsusb or HID Inspector on real hardware.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The brake axis uses a load-cell sensor rather than a potentiometer.
+      Axis resolution at the high end is effectively non-linear; OpenFlight's
+      brake curve mapping should use a progressive curve profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G PRO Racing Pedals (2023). VID 0x046D confirmed; PID 0xC267
+    is a community estimate — verify before production use. Load-cell brake.
+    Used in flight sim for throttle and toe-brake axes. Last reviewed: 2026-06.

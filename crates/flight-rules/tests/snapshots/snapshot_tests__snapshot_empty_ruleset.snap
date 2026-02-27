@@ -1,0 +1,8 @@
+---
+source: crates/flight-rules/tests/snapshot_tests.rs
+expression: snap
+---
+instructions: []
+variable_map: {}
+actions: []
+stack_size: 8

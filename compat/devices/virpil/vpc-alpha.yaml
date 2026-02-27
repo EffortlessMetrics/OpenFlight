@@ -1,0 +1,55 @@
+# VIRPIL VPC Alpha (Center-Mounted Grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# The VPC Alpha is a symmetrical center-mounted joystick grip designed for
+# use on a center stick installation, distinct from the VPC Alpha-R which is
+# a right-hand grip (vpc-alpha-r.yaml, PID 0x4148).
+# PID for the center Alpha is a community estimate in the 0x41xx range.
+# PID 0x4149 is an estimate — verify via lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Alpha (Center)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4149   # Community estimate (Alpha-R = 0x4148)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, sl]
+    resolution_bits: 14
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4149 is a community estimate; Alpha-R uses 0x4148.
+      Update when confirmed from lsusb or VIRPIL community sources.
+  - id: GRIP_ONLY_NO_BASE
+    description: >
+      The VPC Alpha grip is purchased separately and mounts on a compatible
+      VIRPIL base (WarBRD-D, T-50CM3). The base provides the USB HID interface;
+      the grip PID matches the base PID, not the grip model.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Alpha center grip. PID 0x4149 is unconfirmed.
+    VID 0x3344 confirmed. Last reviewed: 2026-02.

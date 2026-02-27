@@ -1,0 +1,59 @@
+# RealSimGear GNS 430W GPS/NAV/COM Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology) / PID 0xF265 — community estimate.
+# The RealSimGear GNS 430W replicates the Garmin GNS 430W WAAS GPS/NAV/COM
+# unit — the WAAS-enabled successor to the GNS 430 (gns430.yaml). The 430W
+# adds WAAS precision approach capability and is the variant currently
+# installed in most modern GA aircraft.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS 430W GPS/NAV/COM Panel"
+  vendor: "RealSimGear"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF265      # GNS 430W — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF265 is a community estimate. Verify with lsusb. Distinct from
+      the GNS 430 non-WAAS variant (gns430.yaml).
+  - id: WAAS_VARIANT
+    description: >
+      The GNS 430W adds WAAS capability over the GNS 430. In simulation the
+      hardware is functionally identical; the difference is GPS precision
+      approach data availability from the simulator.
+  - id: DUAL_CONCENTRIC_KNOBS
+    description: >
+      Large/small concentric tuning knobs for COM/NAV frequency and GPS
+      cursor movement — each knob reports as a pair of encoder events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNS 430W. VID 0x04D8 (Microchip); PID 0xF265 estimated.
+    WAAS GPS/NAV/COM panel replica. Wave-42 addition. Last reviewed: 2026-07.

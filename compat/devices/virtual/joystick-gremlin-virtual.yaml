@@ -1,0 +1,59 @@
+# Joystick Gremlin Virtual Output Device
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1234, PID 0xBEAD -- Joystick Gremlin uses vJoy as its virtual output
+# backend, sharing VID/PID with vJoy (vjoy.yaml) and SPAD.neXt (spad-next.yaml).
+# Joystick Gremlin is an open-source input remapper; physical device inputs are
+# mapped through Gremlin profiles and output to vJoy virtual devices.
+schema_version: "1"
+
+device:
+  name: "Joystick Gremlin Virtual Output Device"
+  vendor: "Joystick Gremlin"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1234    # vJoy USB vendor (Joystick Gremlin uses vJoy backend)
+    product_id: 0xBEAD   # vJoy virtual device PID
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 15
+  buttons: 128
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      Joystick Gremlin is a software remapping layer. The virtual output
+      device's axis/button layout mirrors vJoy's configuration.
+  - id: VJOY_DEPENDENCY
+    description: >
+      Joystick Gremlin virtual joystick output requires vJoy (vjoy.yaml) to
+      be installed as the underlying virtual HID driver.
+  - id: JG_MERGE_CONFLICT
+    description: >
+      Joystick Gremlin and SPAD.neXt share VID/PID with vJoy. OpenFlight
+      disambiguates by checking the process responsible for the device instance.
+      If multiple virtual devices are active simultaneously, manually assign
+      device instance indexes in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Joystick Gremlin Virtual Output Device. VID 0x1234 / PID 0xBEAD shared
+    with vJoy. Open-source input remapper; requires vJoy. Disambiguate from
+    other vJoy consumers via device instance index. Last reviewed: 2026-06.

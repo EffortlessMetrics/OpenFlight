@@ -1,0 +1,57 @@
+# WinWing SimAppPro Communications Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing SimAppPro Communications Panel — dedicated comms/radio panel in the
+# SimAppPro civilian avionics panel series. Includes COM1/COM2/NAV1/NAV2
+# frequency tuning rotaries and an interphone/push-to-talk button.
+# Companion to simapp-pro-nav.yaml and simapp-pro-fcu.yaml.
+# VID 0x4098 is community-reported for WinWing. PID unconfirmed.
+schema_version: "1"
+
+device:
+  name: "WinWing SimAppPro Communications Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing custom VID (community-reported, VID_UNCONFIRMED)
+    product_id: 0xBF08  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard (panel buttons + encoders)
+
+capabilities:
+  axes:
+    count: 8
+    names: [com1_mhz, com1_khz, com2_mhz, com2_khz, nav1_mhz, nav1_khz, nav2_mhz, nav2_khz]
+    resolution_bits: ~   # Relative encoder counts
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x4098 is community-reported for WinWing; PID 0xBF08 is unconfirmed."
+  - id: ENCODER_RELATIVE
+    description: >
+      All frequency tuning rotaries report relative pulse increments (inner and
+      outer rings for MHz/kHz). The host must accumulate values and apply
+      frequency wrapping (e.g., COM MHz wraps at 118–136 range).
+  - id: SIMAPPPRO_SERIES
+    description: >
+      Part of the WinWing SimAppPro civilian panel series. Intended to be
+      used with simapp-pro-fcu.yaml, simapp-pro-nav.yaml, and related panels
+      for a full Airbus/Boeing-style avionics stack.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimAppPro Communications Panel. Part of SimAppPro series.
+    VID/PID require field verification.
+    Last reviewed: 2026-02.

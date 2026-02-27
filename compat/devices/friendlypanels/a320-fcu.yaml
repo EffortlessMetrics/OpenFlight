@@ -1,0 +1,59 @@
+# FriendlyPanels Airbus A320 FCU Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FriendlyPanels (Spain) produces Airbus A320/A321 cockpit panel replicas for
+# home cockpit builders. The FCU (Flight Control Unit) panel replicates the
+# Airbus autoflight panel with SPD/MACH, HDG/TRK, ALT, and V/S/FPA selectors.
+# VID/PID unconfirmed — FriendlyPanels uses Arduino-compatible USB HID boards.
+
+schema_version: "1"
+
+device:
+  name: "FriendlyPanels Airbus A320 FCU Panel"
+  vendor: "FriendlyPanels"
+  usb:
+    vendor_id: 0x2341       # Placeholder — Arduino LLC VID (common in FriendlyPanels HW)
+    product_id: 0x8036      # Placeholder — Arduino Leonardo PID (common HID base)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24               # SPD/MACH, HDG/TRK, ALT, V/S/FPA mode buttons + EXPED
+  hats: 0
+  encoders: 6               # SPD, HDG, ALT, V/S, BARO 1, BARO 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      FriendlyPanels kits often use Arduino Leonardo (VID 0x2341, PID 0x8036)
+      as the USB HID interface. Actual PID may differ depending on the installed
+      firmware. Verify with lsusb on assembled hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      FCU selector encoders report CW/CCW as button pairs. OpenFlight accumulates
+      deltas for SPD/HDG/ALT/VS target values.
+  - id: ARDUINO_HID_BASE
+    description: >
+      Arduino-based FCU panels use the Arduino HID library. The device enumerates
+      as a standard HID joystick; no special driver needed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FriendlyPanels A320 FCU — Airbus autoflight panel replica. VID/PID likely
+    Arduino Leonardo base (unconfirmed). Common in A320 home cockpit builds.
+    Last reviewed: 2026-06.

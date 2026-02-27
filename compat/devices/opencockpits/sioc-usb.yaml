@@ -1,0 +1,55 @@
+# Opencockpits SIOC USB Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1000 (community estimate — Opencockpits/Engravity).
+# PID 0x0002 is a community estimate for the generic SIOC USB card.
+# The SIOC USB card is the base interface board for Opencockpits cockpit
+# systems — it provides a USB-HID bridge for custom panel switch matrices,
+# encoders, and LED outputs via the SIOC protocol.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits SIOC USB Interface Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x1000       # Opencockpits/Engravity — VID_UNCONFIRMED
+    product_id: 0x0002      # SIOC USB card — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64               # Configurable switch matrix (up to 64 inputs)
+  hats: 0
+  encoders: 8               # Up to 8 rotary encoders
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed — community estimates only. Check with USBView on
+      real hardware.
+  - id: SIOC_PROTOCOL
+    description: >
+      Generic SIOC USB card. Panel wiring is user-defined; OpenFlight maps
+      SIOC inputs to sim bindings via the Opencockpits adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits SIOC USB interface card. VID/PID unconfirmed. Generic board
+    for custom cockpit switch/encoder/LED wiring. SIOC protocol required.
+    Last reviewed: 2026-06.

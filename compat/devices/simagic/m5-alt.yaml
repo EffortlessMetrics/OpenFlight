@@ -1,0 +1,56 @@
+# Simagic M5 Steering Wheel Base Alt PID (STM32 firmware)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x0483 (STMicroelectronics, confirmed).
+# PID 0x5743 is a community estimate for an alternate STM32-based firmware
+# variant of the Simagic M5 Steering Wheel Base. The primary Simagic VID
+# is 0x0EBC; however, some units have been reported enumerating via the
+# STMicro VID 0x0483 during DFU/firmware updates or with earlier firmware.
+# The m5_base.yaml uses STM32 PID 0x5742; PID 0x5743 is estimated for an
+# alternate firmware or PCB revision.
+schema_version: "1"
+
+device:
+  name: "Simagic M5 Steering Wheel Base (STM32 alt)"
+  vendor: "Simagic"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (STM32-based firmware variant)
+    product_id: 0x5743      # Community estimate; M5 STM32 primary is 0x5742
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [steering, throttle, brake, clutch, rx, ry]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5743 is a community estimate for an alternate STM32 firmware
+      variant. The confirmed STM32 firmware PID is 0x5742 (m5_base.yaml).
+      Primary Simagic VID is 0x0EBC. Verify with lsusb.
+  - id: FORCE_FEEDBACK_HIGH_TORQUE
+    description: >
+      The M5 is a direct-drive FFB servo wheel base. FFB implementation
+      uses the OpenFFBoard protocol or proprietary Simagic firmware interface.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic M5 STM32 alt firmware community estimate (PID 0x5743).
+    Primary M5 STM32 uses 0x5742 (m5_base.yaml). VID 0x0483 (STMicro).
+    Wave-41 addition. Last reviewed: 2026-07.

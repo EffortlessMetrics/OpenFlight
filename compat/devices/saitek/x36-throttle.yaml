@@ -1,0 +1,41 @@
+# Saitek X36 USB Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x053D — separate throttle unit of the X36 system.
+schema_version: "1"
+
+device:
+  name: "Saitek X36 USB Throttle"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x053D
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle, rotary_1, rotary_2, rotary_3, slider_1, slider_2]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Separate throttle component of the X36 HOTAS system. PID 0x053D from USB databases.
+    Last reviewed: 2026-06.

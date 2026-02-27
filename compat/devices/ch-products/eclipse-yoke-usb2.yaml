@@ -1,0 +1,46 @@
+# CH Eclipse Yoke USB2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products). PID 0x00F6 estimated for Eclipse Yoke USB2.
+# Updated USB 2.0 version of the classic CH Eclipse Yoke.
+schema_version: "1"
+
+device:
+  name: "CH Eclipse Yoke USB2"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00F6
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [pitch, roll, left-lever, center-lever, right-lever]
+    resolution_bits: 8
+  buttons: 41
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 8
+
+quirks:
+  - id: ECLIPSE_YOKE_USB2
+    description: >
+      USB 2.0 revision of the CH Eclipse Yoke. Same axis and button
+      layout as the original but with improved USB bus compatibility
+      and firmware. Three-lever throttle quadrant integrated.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Eclipse Yoke USB2 revision. PID 0x00F6 estimated.
+    VID 0x068E (CH Products). Last reviewed: 2026-06.

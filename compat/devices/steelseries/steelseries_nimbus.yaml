@@ -1,0 +1,60 @@
+# SteelSeries Nimbus Wireless Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1038: SteelSeries ApS. PID 0x1420 is a community estimate for the
+# SteelSeries Nimbus MFi controller (iOS/Mac). On PC the Nimbus connects via
+# Bluetooth and enumerates as a HID gamepad in macOS/iPadOS; Windows support
+# requires third-party drivers. PID may differ on PC vs Mac.
+
+schema_version: "1"
+
+device:
+  name: "SteelSeries Nimbus Wireless Controller"
+  vendor: "SteelSeries ApS"
+  type: other
+  usb:
+    vendor_id: 0x1038
+    product_id: 0x1420   # Community estimate — Nimbus; confirm per platform
+  hid:
+    usage_page: 0x01
+    usage: 0x05   # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1420 is a community estimate. The Nimbus is a Bluetooth MFi device;
+      its USB HID enumeration PID varies by Bluetooth host adapter and OS.
+      Confirm from lsusb / Windows Device Manager.
+  - id: BLUETOOTH_DEVICE
+    description: >
+      The Nimbus connects via Bluetooth LE. On Windows it requires the Bluetooth
+      HID profile and may need third-party drivers for full axis support.
+  - id: PRIMARY_PLATFORM_APPLE
+    description: >
+      The Nimbus is primarily an iOS/macOS MFi gamepad. Windows PC use is
+      community-supported. Axis mapping and button layout may differ from
+      native Apple platform behaviour.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SteelSeries Nimbus MFi wireless controller. VID 0x1038 confirmed; PID 0x1420
+    community estimate. Primary iOS/macOS platform; Windows via Bluetooth HID.
+    Last reviewed: 2026-06.

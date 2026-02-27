@@ -1,0 +1,59 @@
+# Razer Naga X Gaming Mouse — 0x1532 / 0x0053
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x1532 (Razer Inc.), PID 0x0053.
+# The Razer Naga X is a lightweight MMO gaming mouse with a 16-button
+# thumb grid. In flight simulation it serves as a macro input device for
+# system panel interactions, comms, and checklists.
+# PID 0x0053 confirmed from linux-hardware.org and SDL2 HID database.
+schema_version: "1"
+
+device:
+  name: "Razer Naga X"
+  vendor: "Razer"
+  type: mouse
+  usb:
+    vendor_id: 0x1532       # Razer Inc. (confirmed)
+    product_id: 0x0053      # Naga X — linux-hardware.org / SDL2 database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x02             # Mouse
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 19
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: THUMB_GRID_16
+    description: >
+      The 16-button thumb grid is the primary feature of interest for flight sim.
+      Each thumb button generates a distinct HID button event and can be bound
+      to cockpit actions (radio, transponder, autopilot) via OpenFlight macros.
+  - id: SYNAPSE_REQUIRED_FULL_FEATURES
+    description: >
+      Razer Synapse 3 is required to configure button remapping and DPI profiles.
+      OpenFlight receives raw HID button events regardless of Synapse configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Naga X (0x1532/0x0053) — 16-button MMO mouse used as macro pad.
+    PID confirmed. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

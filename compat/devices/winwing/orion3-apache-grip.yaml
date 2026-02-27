@@ -1,0 +1,55 @@
+# WinWing Orion 3 Apache AH-64 Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing).
+# PID is unconfirmed — the Orion 3 Apache grip is WinWing's AH-64E-style
+# cyclic grip for the Orion 3 base, intended for DCS AH-64D/E helicopter
+# simulation. Distinct from the F-15EX (0xBD38) and F-18C (see orion3-f18ex-stick.yaml)
+# grips on the Orion 3 base platform.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 Apache AH-64 Grip"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD50      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 18               # Trigger, 4-way hat, weapons release, and collective-trim buttons
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD50 is a community estimate. WinWing Orion 3 grips use the
+      0xBD30–0xBD60 range; F-15EX is 0xBD38, F-16EX is 0xBD20. Confirm
+      with lsusb when hardware is available.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis deadzone and curve are configurable in WinWing SimAppPro software.
+      OpenFlight reads raw HID reports; apply axis config in profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 3 Apache AH-64E cyclic grip. PID 0xBD50 unconfirmed.
+    Intended for DCS World AH-64D. Pairs with Orion 3 Base (see orion3-base.yaml).
+    Last reviewed: 2026-06.

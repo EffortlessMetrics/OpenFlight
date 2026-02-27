@@ -1,0 +1,44 @@
+# WinWing HOTAS Orion 2 F-16EX Throttle (PID 0xBED5)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing), PID 0xBED5 — estimated.
+# Distinct from orion2-f16ex-throttle.yaml (PID 0xBE6A). This variant
+# corresponds to later production runs of the Orion 2 F-16EX throttle.
+# Confirm with SimAppPro device scan or lsusb.
+schema_version: "1"
+device:
+  name: "WinWing HOTAS Orion 2 F-16EX Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing Space Simulation Technology (confirmed)
+    product_id: 0xBED5      # Community estimate — later production variant; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, x, y, rz, slider]
+    resolution_bits: 12
+  buttons: 16
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBED5 is a community estimate for this production variant.
+      Primary variant is 0xBE6A (orion2-f16ex-throttle.yaml).
+      Confirm with SimAppPro device scan or lsusb before production deployment.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 F-16EX Throttle — wave-55 alternate PID variant (est. 0xBED5).
+    F-16 Block 70+ throttle layout. Pairs with Orion 2 F-16EX stick.
+    Last reviewed: 2026-07.

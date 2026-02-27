@@ -1,0 +1,51 @@
+# Skalarki Electronics ATSU Airbus Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki ATSU (Air Traffic Service Unit) panel replicates the Airbus A320/A330
+# ATSU overhead selector block, including ACARS print, ATC data-link selector,
+# and SATCOM routing switches.
+# VID 0x16C0 / PID 0x05E2: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Electronics ATSU Airbus Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x16C0
+    product_id: 0x05E2      # Community estimate — Skalarki ATSU
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x05E2 is a community estimate. Confirm with Skalarki Panel Config.
+  - id: SKALARKI_HID_PROTOCOL
+    description: >
+      Uses Skalarki proprietary HID output reports for annunciator LEDs.
+      The FAULT and AVAIL lights require ACARS-state telemetry from the sim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki ATSU Airbus overhead panel. VID 0x16C0 / PID 0x05E2 est.
+    Last reviewed: 2026-06.

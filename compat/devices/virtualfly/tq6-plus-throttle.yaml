@@ -1,0 +1,58 @@
+# VirtualFly TQ6+ Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly TQ6+ is a six-lever throttle quadrant for airliner cockpit
+# replica builds. Supports twin and quad engine configurations with
+# separate throttle, condition, and propeller levers per engine.
+# VID 0x2B67 / PID 0x0010: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly TQ6+ Throttle Quadrant"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2B67
+    product_id: 0x0010      # Community estimate — TQ6+
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_1, throttle_2, prop_1, prop_2, condition_1, condition_2]
+    resolution_bits: 12
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 / PID 0x0010 are community estimates. Confirm with lsusb.
+  - id: SIX_INDEPENDENT_LEVERS
+    description: >
+      All six levers are fully independent axes. For twin-engine jets, bind
+      only throttle_1 and throttle_2; the remaining four levers are free for
+      prop/condition use in turboprop aircraft.
+  - id: TRIM_WHEELS_OPTIONAL
+    description: >
+      The TQ6+ may include optional elevator trim wheel add-on. When present,
+      trim wheel reports as an additional encoder input (not counted in axes
+      above).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly TQ6+ throttle quadrant — 6 levers. VID 0x2B67 / PID 0x0010 est.
+    For yoke see yoko-xl-yoke.yaml; for pedals see ruddo-plus-pedals.yaml.
+    Last reviewed: 2026-06.

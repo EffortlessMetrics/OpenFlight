@@ -1,0 +1,60 @@
+# 8BitDo Zero 2 (Mini Wireless Gamepad)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x9018 sourced from SDL2 gamecontrollerdb: "8Bitdo Zero 2 gamepad"
+# (MAKE_VIDPID(0x2dc8, 0x9018)). The Zero 2 is an ultra-compact Bluetooth
+# gamepad with 6 face buttons, D-pad, and shoulder buttons but no analog sticks.
+# Occasionally used in sim setups as a secondary button box for cockpit functions.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Zero 2"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x9018  # Zero 2 — confirmed from SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 10             # A, B, X, Y, L, R, Select, Start, L2, R2
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: NO_ANALOG_STICKS
+    description: >
+      The Zero 2 has no analog sticks — digital buttons and D-pad only.
+      Not suitable as a primary flight control input; use as a secondary
+      button box for cockpit system control.
+  - id: BLUETOOTH_MODES
+    description: >
+      The Zero 2 supports multiple Bluetooth profiles (Android, iOS, MacOS,
+      Windows). Windows mode is required for standard HID gamepad enumeration
+      at the reported VID/PID.
+  - id: COMPACT_FORM
+    description: >
+      Ultra-compact 62mm form factor. Popular for secondary cockpit inputs
+      (autopilot modes, view control, radio tuning) mounted in a pit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    8BitDo Zero 2 — ultra-compact Bluetooth gamepad. VID 0x2DC8 confirmed;
+    PID 0x9018 confirmed from SDL2 gamecontrollerdb. No analog sticks.
+    Last reviewed: 2026-06.

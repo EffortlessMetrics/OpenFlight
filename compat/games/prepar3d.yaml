@@ -1,0 +1,65 @@
+# Prepar3D v5/v6 — SimConnect Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Prepar3D v5/v6"
+  id: prepar3d
+  developer: "Lockheed Martin"
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+  sdk_version: ">=5.0"       # Minimum tested SimConnect SDK version (5.x for P3Dv5, 6.x for P3Dv6)
+
+supported_versions:
+  - "v5.x (5.1+)"
+  - "v6.x (all)"
+
+version_notes:
+  p3d_v5:
+    simconnect_sdk: "5.x"
+    notes: >
+      SimConnect API is broadly compatible with MSFS 2020 (SDK 0.22.x). Standard SimVars
+      and client events are fully supported. PDK (Plugin Development Kit) provides
+      additional hooks not available via SimConnect alone; OpenFlight does not currently
+      use PDK. Some advanced weather and terrain SimVars introduced in P3Dv5 are not
+      present in MSFS.
+  p3d_v6:
+    simconnect_sdk: "6.x"
+    notes: >
+      P3Dv6 introduced Vulkan rendering and updated SimConnect headers. API surface is
+      largely unchanged from v5; the primary difference is in graphical SimVars related
+      to the new renderer. OpenFlight uses only flight-dynamics and systems SimVars,
+      which are stable across v5 and v6.
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false        # PDK-only; not exposed via SimConnect
+  force_feedback_translation: false   # P3D exposes FFB via PDK, not SimConnect
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: false
+  hil: false
+
+support_tier: 2
+
+known_issues:
+  - id: SIMCONNECT_VERSION_MISMATCH
+    description: >
+      The vendored flight-simconnect-sys crate targets MSFS 2020/2024 SimConnect headers.
+      P3Dv5/v6 ship their own SimConnect.dll with matching headers. If the DLL version
+      mismatches the compiled import library, SimConnect_Open will fail at runtime.
+    workaround: "Build against the P3D SDK headers and distribute the matching SimConnect.dll."
+  - id: NO_FFB_SIMCONNECT
+    description: >
+      Prepar3D exposes force-feedback control only through the PDK (Plugin Development Kit),
+      not through the standard SimConnect API. flight-simconnect therefore cannot drive
+      FFB on P3D; force_feedback_translation is disabled.

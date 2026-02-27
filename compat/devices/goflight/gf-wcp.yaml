@@ -1,0 +1,53 @@
+# GoFlight GF-WCP Weather / Communications Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0120 — community estimate. The GF-WCP
+# (Weather / Communications Panel) combines weather radar mode controls with
+# a COM radio stack. Distinct from the GF-WX (weather-only) entry.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-WCP Weather/COM Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F    # GoFlight Inc.
+    product_id: 0x0120   # Community estimate — GF-WCP
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 22
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0120 is a community estimate. The GF-WCP may share a PID with
+      the GF-WX (gf-wx.yaml) on some hardware revisions. Confirm before
+      enabling production matching.
+  - id: WEATHER_RADAR_CONTROLS
+    description: >
+      Includes weather radar mode selector (OFF/TEST/WX/WX+T/MAP) and range
+      rotary. Radar display output is sim-driven; OpenFlight forwards mode
+      switch state to the sim adapter.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-WCP weather/COM panel. PID 0x0120 community estimate. Distinct
+    from gf-wx.yaml (weather only). Used in GA and airliner home cockpit builds.
+    Last reviewed: 2026-06.

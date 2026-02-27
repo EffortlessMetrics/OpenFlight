@@ -274,8 +274,7 @@ impl TrimController {
         //
         // This prevents the classic overshoot that occurs when the controller
         // only responds to error/dt (which only kicks in at the last step).
-        let braking_limit =
-            (2.0 * self.limits.max_jerk_nm_per_s2 * error.abs()).sqrt();
+        let braking_limit = (2.0 * self.limits.max_jerk_nm_per_s2 * error.abs()).sqrt();
         let desired_rate = if error > 0.0 {
             self.limits.max_rate_nm_per_s.min(braking_limit)
         } else {
@@ -290,8 +289,7 @@ impl TrimController {
         self.current_rate_nm_per_s += rate_change;
         // Clamp setpoint to [min(current, target), max(current, target)] to
         // prevent floating-point creep past the target in the final step.
-        self.current_setpoint_nm = (self.current_setpoint_nm
-            + self.current_rate_nm_per_s * dt)
+        self.current_setpoint_nm = (self.current_setpoint_nm + self.current_rate_nm_per_s * dt)
             .clamp(
                 self.current_setpoint_nm.min(self.target_setpoint_nm),
                 self.current_setpoint_nm.max(self.target_setpoint_nm),

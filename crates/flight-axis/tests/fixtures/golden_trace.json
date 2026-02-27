@@ -1,0 +1,154 @@
+{
+  "samples": [
+    {
+      "timestamp_ns": 4000000,
+      "axis_id": 0,
+      "raw_input": 0.0,
+      "output": 0.0
+    },
+    {
+      "timestamp_ns": 8000000,
+      "axis_id": 0,
+      "raw_input": 0.10442095,
+      "output": 0.10442095
+    },
+    {
+      "timestamp_ns": 12000000,
+      "axis_id": 0,
+      "raw_input": 0.20705524,
+      "output": 0.20705524
+    },
+    {
+      "timestamp_ns": 16000000,
+      "axis_id": 0,
+      "raw_input": 0.30614675,
+      "output": 0.30614675
+    },
+    {
+      "timestamp_ns": 20000000,
+      "axis_id": 0,
+      "raw_input": 0.4,
+      "output": 0.4
+    },
+    {
+      "timestamp_ns": 24000000,
+      "axis_id": 0,
+      "raw_input": 0.48700914,
+      "output": 0.48700914
+    },
+    {
+      "timestamp_ns": 28000000,
+      "axis_id": 0,
+      "raw_input": 0.56568542,
+      "output": 0.56568542
+    },
+    {
+      "timestamp_ns": 32000000,
+      "axis_id": 0,
+      "raw_input": 0.63468267,
+      "output": 0.63468267
+    },
+    {
+      "timestamp_ns": 36000000,
+      "axis_id": 0,
+      "raw_input": 0.69282032,
+      "output": 0.69282032
+    },
+    {
+      "timestamp_ns": 40000000,
+      "axis_id": 0,
+      "raw_input": 0.73910363,
+      "output": 0.73910363
+    },
+    {
+      "timestamp_ns": 44000000,
+      "axis_id": 0,
+      "raw_input": 0.77274066,
+      "output": 0.77274066
+    },
+    {
+      "timestamp_ns": 48000000,
+      "axis_id": 0,
+      "raw_input": 0.79315589,
+      "output": 0.79315589
+    },
+    {
+      "timestamp_ns": 52000000,
+      "axis_id": 0,
+      "raw_input": 0.8,
+      "output": 0.8
+    },
+    {
+      "timestamp_ns": 56000000,
+      "axis_id": 0,
+      "raw_input": 0.79315589,
+      "output": 0.79315589
+    },
+    {
+      "timestamp_ns": 60000000,
+      "axis_id": 0,
+      "raw_input": 0.77274066,
+      "output": 0.77274066
+    },
+    {
+      "timestamp_ns": 64000000,
+      "axis_id": 0,
+      "raw_input": 0.73910363,
+      "output": 0.73910363
+    },
+    {
+      "timestamp_ns": 68000000,
+      "axis_id": 0,
+      "raw_input": 0.69282032,
+      "output": 0.69282032
+    },
+    {
+      "timestamp_ns": 72000000,
+      "axis_id": 0,
+      "raw_input": 0.63468267,
+      "output": 0.63468267
+    },
+    {
+      "timestamp_ns": 76000000,
+      "axis_id": 0,
+      "raw_input": 0.56568542,
+      "output": 0.56568542
+    },
+    {
+      "timestamp_ns": 80000000,
+      "axis_id": 0,
+      "raw_input": 0.48700914,
+      "output": 0.48700914
+    },
+    {
+      "timestamp_ns": 84000000,
+      "axis_id": 0,
+      "raw_input": 0.4,
+      "output": 0.4
+    },
+    {
+      "timestamp_ns": 88000000,
+      "axis_id": 0,
+      "raw_input": 0.30614675,
+      "output": 0.30614675
+    },
+    {
+      "timestamp_ns": 92000000,
+      "axis_id": 0,
+      "raw_input": 0.20705524,
+      "output": 0.20705524
+    },
+    {
+      "timestamp_ns": 96000000,
+      "axis_id": 0,
+      "raw_input": 0.10442095,
+      "output": 0.10442095
+    },
+    {
+      "timestamp_ns": 100000000,
+      "axis_id": 0,
+      "raw_input": 0.0,
+      "output": 0.0
+    }
+  ]
+}

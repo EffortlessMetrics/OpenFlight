@@ -1,0 +1,58 @@
+# VIRPIL VPC Alpha Prime Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x0150 is a community estimate for the VPC Alpha Prime stick.
+# The Alpha Prime is a premium centre-stick with Hall-effect sensors,
+# adjustable cams, and an extended button layout compared to the standard
+# VPC Alpha. Not to be confused with the Constellation Alpha Prime grips
+# (constellation-alpha-prime-left/right.yaml).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Alpha Prime Joystick"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x0150      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0150 is a community estimate for the VPC Alpha Prime. Confirm
+      with lsusb on real hardware and update when a confirmed PID is available.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      X/Y/Z axes use contactless Hall-effect sensors. Adjustable cams allow
+      custom force curves without springs; calibrate axis range in the profile.
+  - id: Z_AXIS_TWIST
+    description: >
+      Z axis is a twist/rudder axis on the stick base. Apply a deadzone if
+      twist is sensitive at centre.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Alpha Prime Joystick. PID 0x0150 is a community estimate.
+    Premium centre-stick with Hall-effect sensors and adjustable cams.
+    14-bit X/Y/Z, 32 buttons, 2 POV hats. Last reviewed: 2026-06.

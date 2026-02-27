@@ -1,0 +1,55 @@
+# WinWing Skywalker Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing.
+# PID 0xBE48 is a community estimate for the WinWing Skywalker Collective,
+# a helicopter collective controller in WinWing's Skywalker product line.
+# WinWing announced helicopter-focused products in the Skywalker family
+# (alongside the Skywalker Stick and Skywalker Rudder). The Collective adds
+# a vertical collective lever with throttle twist and optional friction control.
+schema_version: "1"
+
+device:
+  name: "WinWing Skywalker Collective"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098    # WinWing
+    product_id: 0xBE48   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, throttle_twist, friction]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE48 is a community estimate for the Skywalker Collective.
+      Confirm with lsusb before enabling production device matching.
+  - id: COLLECTIVE_AXIS_UNIPOLAR
+    description: >
+      The collective lever is a full-range non-return axis (0 = full down,
+      max = full up). Map to engine collective axis in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Skywalker Collective (helicopter collective controller).
+    PID 0xBE48 unconfirmed. VID 0x4098 = WinWing. Pairs with the Skywalker
+    Stick and Skywalker Rudder for helicopter sim setups.
+    Last reviewed: 2026-06.

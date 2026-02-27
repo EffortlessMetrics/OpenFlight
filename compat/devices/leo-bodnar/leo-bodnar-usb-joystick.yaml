@@ -1,0 +1,57 @@
+# Leo Bodnar USB Joystick Interface (PID 0x0003)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd — confirmed). PID 0x0003 — community-reported
+# Leo Bodnar generic USB joystick / axis interface. Leo Bodnar produces a range
+# of USB input boards; PID 0x0003 is cited in community sources for an older
+# USB joystick interface board predating the BBI series.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar USB Joystick Interface"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x0003      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the Leo Bodnar USB joystick
+      interface. Verify with lsusb on real hardware.
+  - id: HIGH_POLL_RATE
+    description: >
+      Leo Bodnar boards typically report at 1000 Hz USB poll rate, providing
+      sub-millisecond input latency suitable for precision flight controls.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar generic USB joystick interface board. Community-reported PID 0x0003.
+    Verify with lsusb. For the BBI series, see bbi-32.yaml, bbi-64.yaml.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

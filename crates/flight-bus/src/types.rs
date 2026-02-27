@@ -258,6 +258,7 @@ pub enum SimId {
     EliteDangerous,
     Ksp,
     Wingman,
+    Il2,
     Unknown,
 }
 
@@ -273,6 +274,7 @@ impl fmt::Display for SimId {
             SimId::EliteDangerous => write!(f, "Elite: Dangerous"),
             SimId::Ksp => write!(f, "Kerbal Space Program"),
             SimId::Wingman => write!(f, "Project Wingman"),
+            SimId::Il2 => write!(f, "IL-2 Great Battles"),
             SimId::Unknown => write!(f, "Unknown"),
         }
     }
@@ -446,5 +448,61 @@ mod tests {
 
         let aircraft = AircraftId::with_variant("A320", "NEO");
         assert_eq!(aircraft.to_string(), "A320-NEO");
+    }
+
+    proptest::proptest! {
+        #[test]
+        fn prop_percentage_valid_range_accepted(v in 0.0f32..=100.0) {
+            proptest::prop_assert!(Percentage::new(v).is_ok());
+        }
+
+        #[test]
+        fn prop_percentage_out_of_range_rejected(v in 100.001f32..10000.0) {
+            proptest::prop_assert!(Percentage::new(v).is_err());
+        }
+
+        #[test]
+        fn prop_percentage_normalized_round_trip(v in 0.0f32..=1.0) {
+            let p = Percentage::from_normalized(v).unwrap();
+            let diff = (p.normalized() - v).abs();
+            proptest::prop_assert!(diff < 0.001, "normalized round-trip error {diff}");
+        }
+
+        #[test]
+        fn prop_gforce_valid_range_accepted(v in -20.0f32..=20.0) {
+            proptest::prop_assert!(GForce::new(v).is_ok());
+        }
+
+        #[test]
+        fn prop_gforce_out_of_range_rejected(v in 20.001f32..1000.0) {
+            proptest::prop_assert!(GForce::new(v).is_err());
+        }
+
+        #[test]
+        fn prop_mach_valid_range_accepted(v in 0.0f32..=5.0) {
+            proptest::prop_assert!(Mach::new(v).is_ok());
+        }
+
+        #[test]
+        fn prop_validated_speed_knots_valid_range(v in 0.0f32..=1000.0) {
+            proptest::prop_assert!(ValidatedSpeed::new_knots(v).is_ok());
+        }
+
+        #[test]
+        fn prop_validated_speed_knots_invalid_range(v in 1000.001f32..100000.0) {
+            proptest::prop_assert!(ValidatedSpeed::new_knots(v).is_err());
+        }
+
+        #[test]
+        fn prop_validated_angle_degrees_valid_range(v in -180.0f32..=180.0) {
+            proptest::prop_assert!(ValidatedAngle::new_degrees(v).is_ok());
+        }
+
+        #[test]
+        fn prop_validated_angle_degrees_value_preserved(v in -180.0f32..=180.0) {
+            let angle = ValidatedAngle::new_degrees(v).unwrap();
+            let diff = (angle.to_degrees() - v).abs();
+            proptest::prop_assert!(diff < 0.001, "angle value not preserved: {diff}");
+        }
     }
 }

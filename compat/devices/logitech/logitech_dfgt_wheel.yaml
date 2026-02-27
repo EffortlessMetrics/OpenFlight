@@ -1,0 +1,59 @@
+# Logitech Driving Force GT (DFGT)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech.
+# PID 0xC25B confirmed from Linux kernel drivers/hid/hid-ids.h:
+#   USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_DFGT_WHEEL)
+# The DFGT is a belt-drive FFB wheel with 10 buttons and paddle shifters.
+# Gear-drive predecessor line; discontinued. PID distinct from Driving Force GP
+# (0xC294) and Driving Force Pro (0xC298).
+
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force GT"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC25B   # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_DFGT_WHEEL)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 14   # 900° wheel rotation
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 2.5
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      Wheel X axis spans 900° of physical rotation. For flight sim use, apply
+      axis scaling in the profile to restrict effective range.
+  - id: LEGACY_LOGITECH_FFB
+    description: >
+      DFGT uses Logitech's classic proprietary FFB protocol, compatible with
+      the hid-lg-ff kernel driver shared by G25/G27/G29.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force GT. VID 0x046D / PID 0xC25B confirmed from Linux
+    kernel hid-ids.h. 900° belt-drive FFB wheel, 10 buttons, paddle shifters.
+    Discontinued. Last reviewed: 2026-06.

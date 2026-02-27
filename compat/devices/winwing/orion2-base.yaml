@@ -1,0 +1,57 @@
+# WinWing Orion 2 Base (Standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing.
+# PID 0xBE50 is a community estimate for the Orion 2 Base purchased as a
+# standalone unit (i.e., the gimbal base without any specific grip attached).
+# The Orion 2 Base provides the 2-axis gimbal mechanism; grips (F-16, F-18,
+# generic) are sold separately and enumerate as separate USB HID devices.
+# The base itself may enumerate with a minimal HID descriptor when no grip
+# is installed. Confirm PID via lsusb before production deployment.
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 Base"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098    # WinWing
+    product_id: 0xBE50   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]        # X/Y gimbal axes; grip provides additional axes/buttons
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE50 is a community estimate. Confirm with lsusb. When a specific
+      grip is attached (e.g., F/A-18C, F-16EX), that grip enumerates as a
+      separate USB HID device with its own PID.
+  - id: BASE_ONLY_AXES
+    description: >
+      The Orion 2 Base alone provides only X/Y gimbal axes. Buttons, hat
+      switches, and additional axes come from the attached grip, which
+      enumerates as a separate USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 2 Base (gimbal base without grip). PID 0xBE50 unconfirmed.
+    VID 0x4098 = WinWing. Grips enumerate separately. See orion2-*.yaml for
+    specific grip manifests. Last reviewed: 2026-06.

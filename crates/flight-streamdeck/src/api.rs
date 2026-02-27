@@ -191,7 +191,7 @@ impl StreamDeckApi {
             .route("/api/v1/version/check", post(version_check))
             .route("/api/v1/telemetry", get(get_telemetry))
             .route("/api/v1/profiles", get(list_profiles))
-            .route("/api/v1/profiles/:aircraft_type", get(get_profile))
+            .route("/api/v1/profiles/{aircraft_type}", get(get_profile))
             .route("/api/v1/events/subscribe", post(subscribe_events))
             .route("/api/v1/health", get(health_check))
             .route("/api/v1/status", get(get_status))

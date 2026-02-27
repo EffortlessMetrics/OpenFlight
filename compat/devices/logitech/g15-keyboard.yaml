@@ -1,0 +1,62 @@
+# Logitech G15 Gaming Keyboard (with GamePanel LCD)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Logitech G15 gaming keyboard featuring 18 programmable G-keys, a 160×43
+# monochrome GamePanel LCD, and a media/volume control cluster.
+# VID 0x046D (Logitech), PID 0xC223 — community-reported for G15 v1 keyboard.
+# Used in flight simulation for custom LCD panel data and G-key macros.
+schema_version: "1"
+
+device:
+  name: "Logitech G15 Gaming Keyboard"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (confirmed VID)
+    product_id: 0xC223  # G15 gaming keyboard — community-reported PID
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18           # G-keys (G1–G18 programmable macro buttons)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LCD_PANEL_OUTPUT
+    description: >
+      The G15 includes a 160×43 pixel monochrome GamePanel LCD accessible via
+      Logitech's LCD SDK (lgLcd). In a flight sim context, third-party tools
+      (e.g., Helios, Sim Display) can render MFD/EFIS pages to the LCD display.
+      OpenFlight does not natively drive the LCD but can route display data
+      via the LCD SDK integration layer.
+  - id: G_KEYS_AS_HID_BUTTONS
+    description: >
+      G1–G18 keys enumerate as HID buttons when the keyboard is in HID-
+      compatible mode. Some G-key events may require Logitech Gaming Software
+      or GHUB to be registered as standard HID buttons.
+  - id: MULTI_INTERFACE_DEVICE
+    description: >
+      The G15 enumerates as multiple USB HID interfaces: keyboard, G-key
+      controller, and LCD controller. Only the G-key interface is relevant
+      for flight sim input; the LCD is an output-only device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G15 Gaming Keyboard (v1). G-keys used for flight sim macros;
+    GamePanel LCD usable for custom instrument display via LCD SDK.
+    PID 0xC223 community-reported — confirm with lsusb on G15 v1 hardware.
+    Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Microsoft SideWinder Force Feedback Joystick (Original)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The original SideWinder Force Feedback Joystick (1997) — predecessor to the
+# Force Feedback Pro (sidewinder-ffb-pro.yaml, PID 0x001D) and FFB 2
+# (sidewinder-ffb2.yaml, PID 0x001C). This original FFB unit used a different
+# internal mechanism and was sold under the plain "Force Feedback" branding.
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x001A is a community estimate from usb.ids for the original FFB Joystick.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x001A   # Community estimate — original FFB Joystick; FFB Pro=0x001D
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001A is a community estimate for the original SideWinder FFB Joystick.
+      FFB Pro uses 0x001D, FFB 2 uses 0x001C. Update when confirmed from usb.ids
+      or vintage hardware community sources.
+  - id: LEGACY_FFB_PROTOCOL
+    description: >
+      Uses Microsoft's older DirectInput FFB protocol, distinct from the FFB Pro
+      and FFB 2. Windows DirectInput handles the FFB communication; OpenFlight
+      enumerates button/axis inputs only.
+  - id: OS_MEDIATED_HID
+    description: >
+      Windows may mediate this device through a legacy HID compatibility layer.
+      Test axis enumeration on Windows 10/11 before deployment.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Force Feedback Joystick (original 1997 model).
+    PID 0x001A is a community estimate. VID 0x045E confirmed.
+    Distinct from the Force Feedback Pro (0x001D) and FFB 2 (0x001C).
+    Last reviewed: 2026-02.

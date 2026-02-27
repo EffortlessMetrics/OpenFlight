@@ -1,0 +1,60 @@
+# NaturalPoint SmartNav 4 Head Mouse
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# NaturalPoint SmartNav 4 is an infrared camera-based head mouse that tracks
+# a reflective dot or hat clip. Primarily used as an assistive technology device
+# but also used in flight simulation for head-free look-around control.
+# VID 0x0C10 / PID 0x0002: community estimate.
+# Note: NaturalPoint TrackIR devices use VID 0x131D; SmartNav may differ.
+
+schema_version: "1"
+
+device:
+  name: "NaturalPoint SmartNav 4"
+  vendor: "NaturalPoint"
+  usb:
+    vendor_id: 0x0C10       # PID estimated — confirm with lsusb; TrackIR VID is 0x131D
+    product_id: 0x0002      # Community estimate — SmartNav 4
+  hid:
+    usage_page: 0x01
+    usage: 0x02
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0C10 / PID 0x0002 are community estimates. NaturalPoint TrackIR
+      devices use VID 0x131D. SmartNav 4 may use a different VID family.
+      Verify with lsusb or Windows Device Manager on real hardware.
+  - id: MOUSE_EMULATION
+    description: >
+      SmartNav 4 operates primarily as a USB HID mouse. For flight sim use,
+      bind the X/Y axes to look-around controls via raw HID or mouse emulation
+      mode depending on the simulator input method.
+  - id: DWELL_CLICK
+    description: >
+      SmartNav supports dwell-time click (pause cursor to click). In sim use,
+      disable dwell click to avoid unintended button presses during head movement.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint SmartNav 4 head mouse tracker. VID 0x0C10 / PID 0x0002 est.
+    IR camera-based; not to be confused with TrackIR (VID 0x131D).
+    Used for head-look in flight simulation. Last reviewed: 2026-06.

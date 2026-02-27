@@ -1,0 +1,62 @@
+# Nintendo GameCube USB Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x057E (Nintendo Co., Ltd.). PID 0x0337 confirmed via multiple USB ID
+# databases and community captures. The official Nintendo GameCube Controller
+# Adapter exposes four GameCube controller ports as a single USB HID device.
+# Each port is mapped to a separate axis/button group in a single large HID
+# report.
+schema_version: "1"
+
+device:
+  name: "Nintendo GameCube Controller Adapter"
+  vendor: "Nintendo"
+  usb:
+    vendor_id: 0x057E       # Nintendo Co., Ltd.
+    product_id: 0x0337      # Confirmed via usb.ids community database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8                # 2 sticks × 2 axes × 4 ports compressed; typical OS exposes 8
+    names: [stick_x1, stick_y1, substick_x1, substick_y1, trig_l1, trig_r1, stick_x2, stick_y2]
+    resolution_bits: 8
+  buttons: 32               # 8 buttons × 4 ports
+  hats: 4                   # 1 D-pad per port × 4 ports
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: FOUR_PORT_COMPOSITE
+    description: >
+      The adapter exposes all four GameCube ports in a single HID report.
+      Only ports with a connected controller report valid data; disconnected
+      ports may report zeroed or undefined values. Check port presence before
+      binding axes.
+  - id: ANALOG_TRIGGERS
+    description: >
+      L and R triggers are analog (0–255 range) as well as digital buttons.
+      Both the analog axis and the digital button event fire when the trigger
+      is pressed fully. Map analog trigger axes for gradual braking/throttle.
+  - id: DRIVER_DEPENDENT
+    description: >
+      Some operating systems require a custom driver (e.g., Zadig/WinUSB on
+      Windows) to expose the adapter as a standard HID gamepad rather than a
+      vendor-specific bulk device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nintendo GameCube Controller Adapter — four-port USB adapter, VID 0x057E /
+    PID 0x0337 confirmed. Analog triggers and sticks on each port. Primarily
+    used in general gaming; tracked for sim-rig accessory compatibility.
+    Last reviewed: 2026-06.

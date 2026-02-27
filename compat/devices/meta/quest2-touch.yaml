@@ -1,0 +1,60 @@
+# Meta / Oculus Quest 2 Touch Controllers
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2833 confirmed: Meta Platforms / Oculus VR (registered USB vendor ID).
+# PID 0x0082 is a community estimate for the Quest 2 Touch Controller USB
+# interface (used during firmware update / USB tethering via Link cable).
+# The Quest 2 Touch Controllers communicate via Oculus Air Link or Link cable
+# (Oculus protocol), not standard USB HID. This manifest covers the USB HID
+# interface exposed when controllers are connected in PC VR (Link) mode.
+# Used in flight sim via SteamVR/OpenXR for 6-DOF hand controller input.
+schema_version: "1"
+
+device:
+  name: "Meta Quest 2 Touch Controllers"
+  vendor: "Meta Platforms"
+  type: vr_controller
+  usb:
+    vendor_id: 0x2833    # Meta Platforms / Oculus VR (confirmed)
+    product_id: 0x0082   # Quest 2 Touch — community estimate; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_stick_x, left_stick_y, right_stick_x, right_stick_y,
+            left_trigger, right_trigger]
+    resolution_bits: 16
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 72
+  max_jitter_ms: 14
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0082 is a community estimate for the Quest 2 Touch Controller
+      USB interface. Verify with lsusb while connected via Oculus Link cable.
+      Air Link mode does not expose a USB HID device.
+  - id: VR_PCVR_LINK_ONLY
+    description: >
+      Touch controllers are only accessible as HID when using Oculus Link
+      (USB-C cable). In wireless Air Link mode the controllers are managed
+      by the Oculus runtime and do not enumerate as USB HID joysticks.
+      OpenFlight accesses them via SteamVR OpenXR input binding.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meta Quest 2 Touch Controllers — 6-DOF VR hand controllers.
+    VID 0x2833 confirmed; PID 0x0082 is a community estimate (verify with lsusb).
+    Accessed via SteamVR/OpenXR in Link mode. Last reviewed: 2026-06.

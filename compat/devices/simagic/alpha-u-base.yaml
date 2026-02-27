@@ -1,0 +1,57 @@
+# Simagic Alpha Ultimate Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EBC (Simagic Technology, community-reported). PID 0x1020 is a
+# community estimate for the Alpha Ultimate base. The Alpha Ultimate provides
+# 20 Nm peak torque via a servo motor with direct-drive design, commonly used
+# for combined sim racing and flight simulation with a grip adapter.
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Ultimate Direct Drive Wheel Base"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0EBC    # Simagic Technology (community-reported)
+    product_id: 0x1020   # Community estimate -- Alpha Ultimate base
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x08          # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 20.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1020 is a community estimate. Confirm with lsusb on Simagic Alpha
+      Ultimate hardware before enabling production device matching.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      A flight grip adapter is required for flight sim use. The Alpha Ultimate
+      base exposes only the rotation axis; buttons and additional axes are
+      provided by the grip adapter which enumerates as a separate USB device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Ultimate direct drive wheel base (20 Nm peak). VID 0x0EBC
+    community-reported; PID 0x1020 is a community estimate. Requires flight
+    grip adapter for flight sim use. Last reviewed: 2026-06.

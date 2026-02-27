@@ -1,0 +1,56 @@
+# GoFlight GF-TFRP Rudder Pedals (VID 0x0E6A variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E6A (GoFlight Inc. — community-reported alternate VID), PID 0x0201 (est).
+# The GF-TFRP is a set of twin-float rudder pedals with toe-brake axes for
+# general aviation simulation. Three analogue axes: rudder, left toe brake,
+# right toe brake.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-TFRP Rudder Pedals"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E6A       # GoFlight Inc. — community-reported alternate VID
+    product_id: 0x0201      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0E6A / PID 0x0201 are community estimates. Confirm with lsusb or
+      Windows Device Manager on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve and deadzone profiles for each axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-TFRP Rudder Pedals — VID 0x0E6A / PID 0x0201 (est). 3 axes:
+    rudder and dual toe brakes. PID estimated from community sources.
+    Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

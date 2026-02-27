@@ -1,0 +1,56 @@
+# Logitech G Saitek Pro Flight Multi Panel (Alt PID 0xD06D)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x06A3 (Saitek / Logitech PLC).
+# PID 0xD06D is a community-reported alternate PID for the Pro Flight Multi
+# Panel. The confirmed primary PID is 0x0D06 (g-flight-multi-panel.yaml,
+# confirmed from Saitek SDK). PID 0xD06D may represent an early production
+# run or alternate firmware revision.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Pro Flight Multi Panel (Alt PID)"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0xD06D      # Community-reported alt PID — primary confirmed is 0x0D06
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+  buttons: 17
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xD06D is a community-reported alternate. The confirmed primary PID
+      is 0x0D06 (g-flight-multi-panel.yaml). Verify with lsusb.
+  - id: ROTARY_ENCODER_AS_BUTTONS
+    description: >
+      The central selector knob reports rotate-up and rotate-down as paired
+      momentary button events, not as an analog axis.
+  - id: SAITEK_ALIAS
+    description: >
+      VID 0x06A3 was originally released under Saitek branding. Logitech
+      re-released with identical VID after the 2016 acquisition.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Saitek Pro Flight Multi Panel alternate PID 0xD06D.
+    Primary confirmed PID is 0x0D06 (g-flight-multi-panel.yaml).
+    Wave-41 addition. Last reviewed: 2026-07.

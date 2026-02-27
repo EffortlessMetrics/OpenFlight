@@ -1,0 +1,54 @@
+# VKB BRD-4 Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VKB BRD-4 (Brake/Rudder Device 4) is VKB's entry-level compact rudder
+# pedal set. Features independent toe-brake axes and a full rudder travel axis.
+# Distinct from the VKB T-Rudder Mk.IV/V series (t-rudder-mk4.yaml, t-rudder-mk5.yaml).
+# VID 0x231D confirmed: VKB-Sim.
+# PID 0x020C is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VKB BRD-4 Rudder Pedals"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x020C   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x020C is a community estimate for the BRD-4. VKB's BRD line uses
+      sequential PIDs in the 0x020x range; confirm with lsusb on hardware.
+  - id: DISTINCT_FROM_T_RUDDER
+    description: >
+      The BRD-4 is a separate product from the VKB T-Rudder Mk.IV/V
+      (t-rudder-mk4.yaml / t-rudder-mk5.yaml). The T-Rudder has a different
+      mechanism and PID range. BRD-4 is the compact desk-mounted option.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB BRD-4 Rudder Pedals — compact entry-level rudder set.
+    PID 0x020C unconfirmed. See also t-rudder-mk4.yaml and t-rudder-mk5.yaml.
+    Last reviewed: 2026-06.

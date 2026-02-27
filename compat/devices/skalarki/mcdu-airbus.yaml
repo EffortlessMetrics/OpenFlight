@@ -1,0 +1,47 @@
+# Skalarki Electronics A320 MCDU (Multifunction Control and Display Unit)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics A320 MCDU replica — full keyboard and display unit
+# for FMS entry in Airbus home cockpit builds. Separate from WinWing MCDU
+# (mcdu-capt.yaml). VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki A320 MCDU"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x0483   # STMicroelectronics (placeholder — VID_UNCONFIRMED)
+    product_id: 0x5742  # MCDU — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 80
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against Skalarki hardware documentation."
+  - id: PANEL_DEVICE
+    description: "MCDU keyboard with 80 keys including alpha/numeric and line-select keys."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki A320 MCDU keyboard and display. VID/PID unconfirmed.
+    See mcdu-capt.yaml (WinWing) for an alternative. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# Fanatec BMW M4 GT3 Wheel (BME)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0038 is a community estimate for the Fanatec BME (BMW M4 GT3) wheel.
+# The Fanatec BMW M4 GT3 (also referred to as "BME" in some community
+# databases) is the official BMW M Motorsport licensed GT3 wheel. Features
+# a carbon fibre construction, integrated display, and FunkySwitch encoders.
+# Requires a Fanatec wheel base with QR1/QR2 connection.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec BMW M4 GT3 (BME) Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0038   # Community estimate — BME / BMW M4 GT3 wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20             # Paddles (×4), FunkySwitches, face buttons, mode, display nav
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0038 is a community estimate for the BME / BMW M4 GT3 wheel rim.
+      Confirm with lsusb or Fanatec software. Inputs relay through the base.
+  - id: RIM_ADDON
+    description: >
+      Requires a Fanatec wheel base (CSL DD, DD Pro, or Podium series).
+      QR1 or QR2 connection required. All inputs relay through the base HID.
+  - id: INTEGRATED_DISPLAY
+    description: >
+      The BMW M4 GT3 wheel includes an integrated LED display for lap data
+      and telemetry. Driven via Fanatec vendor-specific HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec BMW M4 GT3 (BME) wheel rim. VID 0x0EB7 confirmed; PID 0x0038
+    community estimate. Requires Fanatec base. Last reviewed: 2026-06.

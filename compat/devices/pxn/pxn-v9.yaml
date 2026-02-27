@@ -1,0 +1,60 @@
+# PXN V9 Wireless Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3416 (PXN / Shenzhen JMD Technology). The PXN V9 is a racing wheel
+# with 900° rotation, 3-pedal set, and optional gear shifter. Occasionally
+# used in flight sim for rudder axis input. PID is a community estimate
+# from USB captures; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "PXN V9 Racing Wheel"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416       # PXN / Shenzhen JMD Technology (confirmed)
+    product_id: 0x0200      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, rumble]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0200 is a community estimate. Multiple PXN V9 variants exist
+      (V9, V9 Special Edition). Verify exact PID with lsusb.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (900° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar); Rx = clutch (unipolar).
+  - id: FFB_RUMBLE_ONLY
+    description: >
+      FFB is implemented as vibration motors (rumble), not a servo or belt
+      drive. DirectInput constant-force and spring effects are approximated
+      via rumble intensity. Not suitable for force-feedback flight sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN V9 racing wheel. VID 0x3416 confirmed; PID 0x0200 is a community
+    estimate. Rumble-only FFB. Occasionally used in flight sim for rudder
+    axis. Last reviewed: 2026-06.

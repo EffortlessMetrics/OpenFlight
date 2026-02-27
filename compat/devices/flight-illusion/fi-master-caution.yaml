@@ -1,0 +1,57 @@
+# Flight Illusion Master Caution / Warning Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Flight Illusion Master Caution / Warning (MCW) panel provides illuminated
+# MASTER CAUTION and MASTER WARNING pushbutton resets for generic cockpit builds.
+# Driven by USB HID output reports; pushbutton presses report as input events.
+# VID 0x1F4D / PID 0x0058: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Flight Illusion Master Caution/Warning Panel"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x1F4D
+    product_id: 0x0058      # Community estimate — MCW panel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0058 is a community estimate. Confirm with Flight Illusion utility.
+  - id: LED_RESET_BUTTONS
+    description: >
+      MASTER CAUTION and MASTER WARNING LEDs are driven by HID output reports.
+      Each button press (reset) both reports the input event and should cause
+      the sim adapter to clear the corresponding alert state.
+  - id: BRIGHTNESS_CONTROL
+    description: >
+      LED brightness is adjustable via a dedicated HID output report byte.
+      Use the panel brightness profile key to set intensity at startup.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion Master Caution/Warning panel. VID 0x1F4D / PID 0x0058 est.
+    LED output + button input. Pairs with fi-gau57.yaml for generic cockpit build.
+    Last reviewed: 2026-06.

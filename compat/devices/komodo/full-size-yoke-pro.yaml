@@ -1,0 +1,44 @@
+# Komodo Full Size Yoke Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF690 estimated for Komodo Yoke Pro.
+schema_version: "1"
+
+device:
+  name: "Komodo Full Size Yoke Pro"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF690
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 14
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: FULL_SIZE_YOKE_PRO
+    description: >
+      Professional full-size yoke with higher resolution sensors
+      and integrated trim wheel axis. Metal shaft construction.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Full Size Yoke Pro. PID 0xF690 estimated.
+    VID 0x04D8 (Microchip). Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# Fanatec ClubSport Pedals V3 Inverted
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The ClubSport Pedals V3 Inverted is the inverted-mount variant of the V3,
+# designed for users who mount pedals upside-down under a sim rig. Functionally
+# identical to the V3 (clubsport-pedals-v3.yaml) with identical USB HID output.
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0021 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V3 Inverted"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: 0x0021   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0021 is a community estimate for the V3 Inverted. The standard V3
+      uses PID 0x0020 (clubsport-pedals-v3.yaml). Inverted variant may share the
+      same PID. Confirm with lsusb.
+  - id: BRAKE_LOAD_CELL
+    description: >
+      Brake axis uses a load cell for pressure-based input; response curve
+      is non-linear by default. Apply a pressure curve in the OpenFlight profile.
+  - id: INVERTED_MOUNT
+    description: >
+      Identical HID output to standard V3. The "Inverted" designation refers
+      to the physical mounting orientation only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V3 Inverted. VID 0x0EB7 = Fanatec GmbH.
+    PID 0x0021 unconfirmed; may share PID with standard V3 (0x0020).
+    Last reviewed: 2026-06.

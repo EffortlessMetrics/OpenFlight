@@ -1,0 +1,52 @@
+# Simagic GT4 Steering Wheel (Accessory / Flight-Sim Variant Entry)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EBC (Simagic Technology, community-reported). PID 0x3041 is a
+# community estimate for the GT4 wheel rim in flight-sim accessory mode.
+# This entry covers the GT4 marketed specifically as a steering wheel accessory
+# for combined race/flight sim rigs (distinct from gt4-wheel.yaml which covers
+# the primary product name). Some firmware builds expose a different PID.
+schema_version: "1"
+
+device:
+  name: "Simagic GT4 Steering Wheel Accessory"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0EBC    # Simagic Technology (community-reported)
+    product_id: 0x3041   # Community estimate -- GT4 accessory variant
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3041 is a community estimate. May enumerate under PID 0x3040 (see
+      gt4-wheel.yaml). Confirm with lsusb on hardware.
+  - id: WHEEL_ACCESSORY
+    description: >
+      Requires a Simagic direct-drive base; does not connect to USB
+      independently. Force feedback is provided entirely by the base unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic GT4 steering wheel accessory variant (13 buttons, 1 hat). See also
+    gt4-wheel.yaml. VID 0x0EBC community-reported. Last reviewed: 2026-06.

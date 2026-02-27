@@ -1,0 +1,56 @@
+# Desktop Aviator Boeing 737 MCP Replica
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC / community USB HID VID), PID 0x0480 — community estimate.
+# Desktop Aviator produces high-quality Boeing 737 cockpit panel replicas for
+# home sim use. The 737 MCP (Mode Control Panel) is the autopilot control panel
+# on the forward glareshield, including speed, heading, altitude, V/S, and
+# autopilot mode selectors. Enumerates as a USB HID device with buttons and
+# analogue rotary encoder axes for the selector knobs.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator Boeing 737 MCP Replica"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x16C0       # PJRC / community HID VID (est — varies by unit)
+    product_id: 0x0480      # Community estimate — Desktop Aviator 737 MCP
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [speed_knob, heading_knob, altitude_knob, vs_knob, course_knob]
+    resolution_bits: 10
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x0480 are community estimates. Desktop Aviator panels
+      may use different VID/PID combinations depending on the MCU and firmware
+      version. Verify with lsusb or Windows Device Manager.
+  - id: ENCODER_AXES
+    description: >
+      Selector knobs are implemented as relative rotary encoders presented
+      as analogue axes. Host software should treat axis values as delta
+      increments rather than absolute positions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator 737 MCP replica — 5 encoder axes, 24 buttons.
+    VID 0x16C0 / PID 0x0480 (est). High-fidelity panel for 737 home sim builds.
+    Wave-40 addition. Last reviewed: 2026-07.

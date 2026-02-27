@@ -1,0 +1,45 @@
+# Mayflash F500 Elite Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (Mayflash / GreenAsia Inc.), PID 0x0A8F — estimated.
+# Premium version of the F500 with improved internal components and lever/button
+# compatibility with Sanwa/Seimitsu parts.
+schema_version: "1"
+device:
+  name: "Mayflash F500 Elite"
+  vendor: "Mayflash"
+  usb:
+    vendor_id: 0x0E8F       # Mayflash / GreenAsia Inc.
+    product_id: 0x0A8F      # Community estimate — F500 Elite; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A8F is a community estimate for the F500 Elite.
+      Standard F500 uses 0x0003. Confirm with lsusb.
+  - id: UNIVERSAL_COMPATIBILITY
+    description: >
+      Has a hardware mode switch for PS3/PS4/PC/Switch. Ensure PC mode
+      for standard HID. Different modes may enumerate with different PIDs.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mayflash F500 Elite — VID 0x0E8F / PID 0x0A8F (est). Premium arcade stick.
+    Wave-55 addition. Last reviewed: 2026-07.

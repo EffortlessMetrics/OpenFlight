@@ -1,0 +1,55 @@
+# Thrustmaster T.16000M FCS Flight Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T.16000M FCS Flight Pack is a retail bundle containing three physically
+# independent USB devices, each with its own VID/PID:
+#   - T.16000M FCS Joystick  (VID 0x044F, PID 0xB10A — see t16000m.yaml)
+#   - TWCS Throttle           (VID 0x044F, PID 0xB687 — see twcs-throttle.yaml)
+#   - TFRP Rudder Pedals      (VID 0x044F, PID 0xB679 — see tfrp-rudder-pedals.yaml)
+#
+# This manifest is a VIRTUAL BUNDLE descriptor; it has no USB device of its own.
+# It exists to document the recommended combined profile for the pack.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.16000M FCS Flight Pack (Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0000      # Virtual bundle — no real USB device
+  hid:
+    usage_page: 0x00
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      No physical USB device exists for the bundle itself. Each component
+      enumerates independently. See t16000m.yaml, twcs-throttle.yaml, and
+      tfrp-rudder-pedals.yaml for per-device manifests. This manifest exists
+      only to document the recommended combined profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle manifest for the T.16000M FCS Flight Pack. References
+    t16000m.yaml + twcs-throttle.yaml + tfrp-rudder-pedals.yaml.
+    Last reviewed: 2026-06.

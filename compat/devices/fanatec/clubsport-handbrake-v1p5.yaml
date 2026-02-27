@@ -1,0 +1,54 @@
+# Fanatec ClubSport Handbrake V1.5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH. PID 0x0011 is a community estimate
+# based on Fanatec USB PID sequencing. The ClubSport Handbrake V1.5 is a
+# hall-effect handbrake for sim racing; in flight sim setups it is mapped to
+# mixture lever, condition lever, or thrust reverser axis.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Handbrake V1.5"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0011   # Community estimate — ClubSport Handbrake; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [z]                # Handbrake pull axis (unipolar)
+    resolution_bits: 12
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate following the Fanatec PID sequence.
+      Confirm from lsusb or Fanatec driver logs on actual hardware.
+  - id: HALL_EFFECT_SENSOR
+    description: >
+      The V1.5 uses a hall-effect position sensor. Calibrate the axis in
+      OpenFlight before use. The axis rests at full-pull when mounted
+      vertically with no hand pressure.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Handbrake V1.5. VID 0x0EB7 confirmed; PID 0x0011
+    community estimate. Single-axis handbrake; usable as mixture or condition
+    lever in flight sim. Last reviewed: 2026-06.

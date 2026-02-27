@@ -1,0 +1,55 @@
+# OctaneVR Throttle Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Affordable VR-compatible throttle controller from OctaneVR.
+# Designed for use with VR headsets; compact form factor with magnetic
+# detents. VID/PID unconfirmed — likely uses a standard MCU USB stack.
+schema_version: "1"
+
+device:
+  name: "OctaneVR Throttle Controller"
+  vendor: "OctaneVR"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — Microchip Technology USB MCU (VID_UNCONFIRMED)
+    product_id: 0xF503  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, mixture, prop_pitch]
+    resolution_bits: 12
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 / PID 0xF503 are placeholders; verify with lsusb on physical hardware."
+  - id: MAGNETIC_DETENTS
+    description: >
+      Throttle lever uses magnetic detents for IDLE, CLIMB, and MAX positions.
+      Detent positions are not electrically signalled; they appear as distinct
+      regions in the analog range. Calibration with small deadzones around
+      detent positions is recommended.
+  - id: VR_COMPACT_FORM
+    description: >
+      Designed for desktop VR use; shorter lever travel than full-size throttles.
+      May require recalibration when switching between VR and 2D simulator use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OctaneVR compact throttle for VR flight simulation. VID/PID require field
+    verification. Limited community documentation available.
+    Last reviewed: 2026-02.

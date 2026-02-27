@@ -88,4 +88,32 @@ mod tests {
         let parsed = LedReport::parse(&bytes).unwrap();
         assert_eq!(cmd, parsed);
     }
+
+    #[test]
+    fn test_wrong_report_id_returns_none() {
+        let mut bytes = LedReport::all_off().to_bytes();
+        bytes[0] = 0xFF;
+        assert!(LedReport::parse(&bytes).is_none());
+    }
+
+    #[test]
+    fn test_too_short_returns_none() {
+        assert!(LedReport::parse(&[LED_REPORT_ID, 0]).is_none());
+    }
+
+    #[test]
+    fn test_reserved_byte_is_zero() {
+        let bytes = LedReport {
+            leds: 0xFF,
+            brightness: 0xFF,
+        }
+        .to_bytes();
+        assert_eq!(bytes[3], 0, "reserved byte must be zero");
+    }
+
+    #[test]
+    fn test_led_flags_constants() {
+        assert_eq!(led_flags::POWER, 0b0000_0001);
+        assert_eq!(led_flags::PC_MODE, 0b0000_0010);
+    }
 }

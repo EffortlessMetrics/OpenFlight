@@ -1,0 +1,45 @@
+# DIY STM32 Cyclic Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0x5740 (STM32 Virtual COM / HID).
+# DIY helicopter cyclic stick built on STM32 microcontroller.
+schema_version: "1"
+
+device:
+  name: "DIY STM32 Cyclic Controller"
+  vendor: "STMicroelectronics"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0x5740
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, twist]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIY_CYCLIC
+    description: >
+      STM32-based DIY cyclic controller. Hall-effect sensors typical
+      for pitch and roll axes. Higher resolution than Arduino-based builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY STM32 Cyclic Controller. VID/PID are STM32 defaults;
+    actual values may vary by firmware. Last reviewed: 2026-06.

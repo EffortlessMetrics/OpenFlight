@@ -1,0 +1,42 @@
+# VIRPIL VPC SharKa-50 Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 (VIRPIL Controls), PID 0x01D0 — community estimate.
+# VIRPIL VPC SharKa-50 standalone grip controller.
+schema_version: "1"
+device:
+  name: "VIRPIL VPC SharKa-50 Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls (confirmed)
+    product_id: 0x01D0      # Community estimate — SharKa-50 Grip; confirm with VPC Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 14
+  buttons: 28
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x01D0 is a community estimate for the VPC SharKa-50 Grip.
+      Confirm with VPC Configurator or lsusb. May differ when paired with
+      a specific VIRPIL base unit.
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC SharKa-50 Grip — VID 0x3344 / PID 0x01D0 (est).
+    Shark/fighter-style grip for WarBRD or T-50CM3 bases.
+    Wave-59 addition. Last reviewed: 2026-07.

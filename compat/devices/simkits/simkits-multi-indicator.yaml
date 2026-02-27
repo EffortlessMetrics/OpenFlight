@@ -1,0 +1,57 @@
+# Simkits Multi Indicator Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimKits Multi Indicator is a USB HID panel providing multiple LED indicators
+# and pushbutton controls for cockpit replica builds. Based on the Cypress FX2LP
+# USB interface (VID 0x04B4). PID 0xF234 is a community estimate for this specific
+# panel variant. See also simkits/usb-panel.yaml (PID 0xF233).
+
+schema_version: "1"
+
+device:
+  name: "Simkits Multi Indicator Panel"
+  vendor: "Simkits"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate for Simkits
+    product_id: 0xF234      # Community estimate — Simkits Multi Indicator
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF234 are community estimates. See simkits/usb-panel.yaml
+      (PID 0xF233) for the adjacent panel variant. Verify with lsusb on real hardware.
+  - id: LED_OUTPUT_REPORTS
+    description: >
+      LED indicator states are set via HID output reports. Bind sim telemetry
+      (gear, flaps, autopilot annunciators) to LED outputs in the OpenFlight profile.
+  - id: SIMKITS_PROTOCOL
+    description: >
+      Uses the SimKits HID panel protocol shared across the SimKits product line.
+      Compatible with SIOC, FSUIPC, and OpenFlight output binding.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simkits Multi Indicator panel. VID 0x04B4 / PID 0xF234 est.
+    See also simkits/usb-panel.yaml (PID 0xF233). LED indicator panel.
+    Last reviewed: 2026-06.

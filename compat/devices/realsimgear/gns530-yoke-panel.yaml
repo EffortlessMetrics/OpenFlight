@@ -1,0 +1,45 @@
+# RealSimGear GNS530 Yoke Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino-based). PID 0xEF75 estimated for GNS530 Yoke Panel.
+# Larger GNS530 panel with full-size display for yoke mounting.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS530 Yoke Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0xEF75
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: GNS530_YOKE_PANEL
+    description: >
+      Full-size GNS530 panel for yoke-column mounting. Larger display
+      and additional buttons compared to GNS430 variant.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNS530 Yoke Panel. PID 0xEF75 estimated.
+    Last reviewed: 2026-06.

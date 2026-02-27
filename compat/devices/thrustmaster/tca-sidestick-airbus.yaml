@@ -1,0 +1,50 @@
+# Thrustmaster TCA Sidestick Airbus Edition (Pilot)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PIDs confirmed: VID 0x044F:0x0405 (Pilot) — linux-hardware.org (24 probes, "T.A320 Pilot").
+# Copilot (right-hand) variant uses PID 0x0406; see tca-sidestick-airbus-copilot.yaml.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Sidestick Airbus Edition (Pilot)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0x0405  # T.A320 Pilot — confirmed via linux-hardware.org (24 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: AIRBUS_SIDESTICK_DETENT
+    description: >
+      The sidestick has a centre detent. Hardware deadzone near centre is
+      minimal; a small software deadzone (~2%) is still recommended.
+  - id: AIRBUS_SOLD_SEPARATELY
+    description: >
+      TCA Sidestick and TCA Quadrant are separate USB HID devices that must
+      each be enumerated independently for full axis coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0405 confirmed from linux-hardware.org (24 probes, USB string "T.A320 Pilot").
+    Capabilities based on Thrustmaster product specification and community reports.
+    Copilot (right-hand, mirrored) variant uses PID 0x0406; see tca-sidestick-airbus-copilot.yaml.

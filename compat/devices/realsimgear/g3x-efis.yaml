@@ -1,0 +1,61 @@
+# RealSimGear G3X EFIS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear). The RealSimGear G3X EFIS
+# Panel provides the physical bezel controls for the Garmin G3X EFIS display
+# found in experimental GA aircraft. It exposes the EFIS/EIS display mode
+# buttons, course/heading/altitude knobs, and direct-entry keypad.
+# PID is a community estimate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3X EFIS Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF242      # Community estimate — G3X EFIS; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF242 is a community estimate. RealSimGear G3X-series products
+      use PIDs in the 0xF24x range (G3X PFD = 0xF240, G3X MFD = 0xF241).
+      Verify with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      The course, heading, and altitude knobs are rotary encoders reporting
+      increment/decrement button pairs. Map to G3X/EFIS display control
+      bindings in MSFS Experimental Aircraft profiles.
+  - id: EFIS_MODE_BUTTONS
+    description: >
+      18 buttons include: PFD/MFD display mode selectors, HSI/PFD page,
+      menu navigation (up/down/left/right/enter), and direct ENT/CLR keys.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G3X EFIS Panel. VID 0x04D8 confirmed; PID 0xF242 is a
+    community estimate. 18 buttons + 3 encoders for G3X EFIS avionics.
+    Designed for experimental GA aircraft in MSFS/X-Plane.
+    Last reviewed: 2026-06.

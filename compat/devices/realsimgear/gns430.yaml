@@ -1,0 +1,58 @@
+# RealSimGear GNS430W Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed (Microchip Technology Inc. — used by RealSimGear).
+# PID is a community estimate; verify with lsusb on real hardware.
+# The RealSimGear GNS430W is a replica bezel for the Garmin GNS 430W GPS/Nav/Com.
+# It exposes physical buttons and the concentric inner/outer knobs as HID events.
+# Pairs with the GNS530W (gns530.yaml) for realistic cockpit avionics control.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS430W Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology Inc. (used by RealSimGear firmware)
+    product_id: 0xF230      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 24               # COM/NAV/VLOC knob positions + direct buttons
+  hats: 0
+  encoders: 4               # Outer/inner COM tuning + outer/inner NAV tuning knobs
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF230 is a community estimate for the GNS430W. RealSimGear uses
+      the Microchip VID (0x04D8) for HID enumeration. Confirm with lsusb on
+      real hardware. See gns530.yaml (PID 0xF238 estimate) for the 530W.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary knobs (outer/inner COM and NAV tuning) are encoded as
+      button-press events (increment/decrement) rather than as analogue axes.
+      Map each encoder step to the corresponding MSFS/X-Plane frequency binding.
+  - id: PAIRS_WITH_GNS530
+    description: >
+      The GNS430W is often used alongside the GNS530W (gns530.yaml) as a
+      dual-stack avionics panel. Both units enumerate as separate USB HID devices.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNS430W Garmin replica bezel. PID 0xF230 is unconfirmed.
+    All controls (knobs, buttons) are HID buttons/encoders; no analogue axes.
+    Companion to gns530.yaml. Last reviewed: 2026-02.

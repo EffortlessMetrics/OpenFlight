@@ -1,0 +1,61 @@
+# VIRPIL VPC ACE-2 Torque Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x0201 — VPC ACE-2 Torque Rudder Pedals.
+# Source: community-inferred from the ACE-1 product family (PID 0x0200).
+# Not confirmed from a lsusb hardware probe or official VIRPIL docs;
+# verify against real hardware before deploying.
+#
+# The ACE-2 Torque is VIRPIL's full-featured rudder pedal set with
+# independent differential toe brakes. It extends the ACE-1 with two
+# additional analog toe-brake axes.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-2 Torque Rudder Pedals"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x0201   # community-inferred; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [left_pedal, right_pedal, rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: RUDDER_COMBINED
+    description: >
+      The rudder axis is the combined differential of left_pedal and
+      right_pedal. Bind to rudder for standard flight controls.
+  - id: TOE_BRAKE_AXES
+    description: >
+      left_toe_brake and right_toe_brake are independent analog axes for
+      differential braking. They rest at 0 and travel to 16383 (14-bit max).
+      Bind each independently for differential braking in fixed-wing aircraft.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0201 is community-inferred from the ACE-1 (PID 0x0200) family
+    numbering. Not confirmed from lsusb probe or official VIRPIL docs.
+    Axis count (5) and layout assumed from product description (toe brakes).
+    Verify all fields against real hardware before relying on them.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

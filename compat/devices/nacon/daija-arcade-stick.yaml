@@ -1,0 +1,58 @@
+# Nacon Daija Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x146B (Nacon / Bigben Interactive — confirmed). PID 0x0D10 — community
+# estimate for the Nacon Daija PS4/PC arcade fight stick. Although primarily
+# a fighting game controller, the Daija's 8-way joystick and 16 face buttons
+# are occasionally used in flight sim setups as a panel controller or for
+# unconventional low-fidelity setups.
+schema_version: "1"
+
+device:
+  name: "Nacon Daija Arcade Stick"
+  vendor: "Nacon"
+  usb:
+    vendor_id: 0x146B       # Nacon / Bigben Interactive (confirmed)
+    product_id: 0x0D10      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D10 is a community estimate for the Nacon Daija.
+      Verify with lsusb or Windows Device Manager.
+  - id: NOT_FLIGHT_OPTIMISED
+    description: >
+      The Daija is a fighting game controller; its 8-way joystick provides
+      only 8-direction input. Analogue axis resolution is limited.
+      Not recommended for precision flight simulation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nacon Daija PS4/PC arcade fight stick. Limited use in flight simulation;
+    suitable for low-fidelity setups or panel button inputs.
+    PID 0x0D10 is a community estimate. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane

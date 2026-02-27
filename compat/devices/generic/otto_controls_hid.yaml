@@ -1,0 +1,61 @@
+# Otto Controls OttoSwitch Mil-Spec Button Panel (HID Mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x03EB (Atmel / Microchip Technology), PID 0x2402 — community estimate.
+# Otto Controls manufactures mil-spec illuminated toggle and pushbutton switches
+# used in real aircraft and high-fidelity cockpit simulators. The OttoSwitch
+# HID panel adapts these switches for USB HID use via a Microchip MCU.
+# VID 0x03EB is the Atmel/Microchip embedded USB VID; PID 0x2402 is a
+# community estimate for the Otto Controls HID interface firmware.
+schema_version: "1"
+
+device:
+  name: "Otto Controls OttoSwitch Mil-Spec HID Panel"
+  vendor: "Otto Controls"
+  type: other
+  usb:
+    vendor_id: 0x03EB       # Atmel / Microchip Technology (embedded MCU VID est)
+    product_id: 0x2402      # Community estimate — Otto Controls HID interface
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (button panel)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x03EB / PID 0x2402 are community estimates. Otto Controls does not
+      publish USB descriptor data publicly. Verify with lsusb or Windows Device
+      Manager on target hardware.
+  - id: MIL_SPEC_SWITCH_QUALITY
+    description: >
+      Switches are Otto Controls P-series mil-spec illuminated toggles and
+      pushbuttons rated for aerospace qualification. Higher actuation force
+      and longer service life than consumer-grade sim hardware.
+  - id: ILLUMINATED_OUTPUTS
+    description: >
+      Switches include integrated illumination (LED or incandescent) that may
+      be controllable via USB HID output reports depending on firmware variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Otto Controls OttoSwitch mil-spec HID panel — 24 buttons.
+    VID 0x03EB / PID 0x2402 (est). Aerospace-grade switches in USB HID interface.
+    Wave-40 addition. Last reviewed: 2026-07.

@@ -1,0 +1,53 @@
+# Saitek AV8R-02 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). The AV8R-02 is an updated variant of
+# the AV8R-01 helicopter/VTOL joystick with a revised grip and minor hardware
+# changes. PID is community-estimated; distinct from the AV8R-01 (PID 0x0460).
+schema_version: "1"
+
+device:
+  name: "Saitek AV8R-02 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3     # Saitek / Logitech PLC
+    product_id: 0x0462    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0462 is a community estimate. Distinct from the AV8R-01 (PID 0x0460).
+      Confirm from lsusb or USB descriptor capture before deployment.
+  - id: ROTOR_COLLECTIVE_AXIS
+    description: >
+      The Z axis is a twist-grip style axis suited to rotor collective input
+      in helicopter simulation. Identical grip layout to AV8R-01 with revised
+      button placement.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek AV8R-02: revised helicopter/VTOL joystick variant. Updated from
+    AV8R-01 with minor grip and button layout changes. PID 0x0462 community-
+    estimated — confirm with lsusb. See also av8r-01.yaml (PID 0x0460).
+    Last reviewed: 2026-02.

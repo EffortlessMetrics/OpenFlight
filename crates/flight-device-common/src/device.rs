@@ -73,4 +73,26 @@ mod tests {
         assert_eq!(id.device_path, "virtual://VIRT001");
         assert_eq!(id.serial_number.as_deref(), Some("VIRT001"));
     }
+
+    #[test]
+    fn test_display_with_serial() {
+        let id = DeviceId::new(0x231d, 0x0136, Some("SN1".to_string()), "/dev/hidraw0");
+        let s = id.to_string();
+        assert!(s.contains("231d:0136"), "expected vid:pid in: {s}");
+        assert!(s.contains("SN1"), "expected serial in: {s}");
+    }
+
+    #[test]
+    fn test_display_without_serial() {
+        let id = DeviceId::new(0x044f, 0xb679, None, "\\\\?\\HID");
+        let s = id.to_string();
+        assert!(s.contains("044f:b679"), "expected vid:pid in: {s}");
+    }
+
+    #[test]
+    fn test_ordering() {
+        let a = DeviceId::new(0x0001, 0x0001, None, "a");
+        let b = DeviceId::new(0x0001, 0x0002, None, "a");
+        assert!(a < b, "expected a < b");
+    }
 }

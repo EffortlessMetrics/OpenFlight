@@ -409,6 +409,7 @@ pub enum IntegrationDocsError {
 mod tests {
     use super::*;
     use std::fs;
+    use std::path::PathBuf;
     use tempfile::TempDir;
 
     #[test]
@@ -454,5 +455,209 @@ This is a test simulator integration.
         // We mainly want to test that the manager can load and parse documents
         println!("Validation errors: {}", result.errors.len());
         assert!(result.errors.len() < 10); // Allow missing sections in minimal test doc
+    }
+
+    #[test]
+    fn validation_result_starts_valid() {
+        let result = ValidationResult::new();
+        assert!(result.is_valid());
+        assert!(result.errors.is_empty());
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn validation_result_error_marks_invalid() {
+        let mut result = ValidationResult::new();
+        result.add_error("missing section".to_string());
+        assert!(!result.is_valid());
+        assert_eq!(result.errors.len(), 1);
+    }
+
+    #[test]
+    fn validation_result_warning_stays_valid() {
+        let mut result = ValidationResult::new();
+        result.add_warning("deprecated field".to_string());
+        assert!(result.is_valid());
+        assert_eq!(result.warnings.len(), 1);
+    }
+
+    #[test]
+    fn installer_summary_add_simulator_deduplicates_ports() {
+        let mut summary = InstallerSummary::new();
+        let files = vec![];
+        let connections = vec![
+            NetworkConnection {
+                port: Some(49000),
+                protocol: "UDP".to_string(),
+                purpose: "test".to_string(),
+                direction: "in".to_string(),
+            },
+            NetworkConnection {
+                port: Some(49000), // duplicate
+                protocol: "UDP".to_string(),
+                purpose: "test2".to_string(),
+                direction: "out".to_string(),
+            },
+        ];
+        summary.add_simulator("xplane", &files, &connections);
+        // Port 49000 should appear only once
+        assert_eq!(summary.network_ports_used.len(), 1);
+        assert_eq!(summary.simulators_supported, vec!["xplane"]);
+    }
+
+    #[test]
+    fn installer_summary_counts_files_across_simulators() {
+        let mut summary = InstallerSummary::new();
+        let files = vec![
+            FileModification {
+                path: "/cfg/a.txt".to_string(),
+                purpose: "config".to_string(),
+                changes: vec![],
+                backup_created: true,
+            },
+            FileModification {
+                path: "/cfg/b.txt".to_string(),
+                purpose: "config".to_string(),
+                changes: vec![],
+                backup_created: false,
+            },
+        ];
+        summary.add_simulator("msfs", &files, &[]);
+        summary.add_simulator("dcs", &files, &[]);
+        assert_eq!(summary.total_files_modified, 4);
+        assert_eq!(summary.simulators_supported.len(), 2);
+    }
+
+    #[test]
+    fn integration_docs_manager_not_found_returns_error() {
+        let mut manager = IntegrationDocsManager::new();
+        let result = manager.get_simulator_doc("nonexistent_sim_xyz");
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("nonexistent_sim_xyz")
+                || msg.contains("not found")
+                || msg.contains("IO")
+                || msg.contains("directory"),
+            "Unexpected error message: {msg}"
+        );
+    }
+
+    #[test]
+    fn parse_simulator_doc_extracts_revert_steps() {
+        let temp_dir = TempDir::new().unwrap();
+        let docs_path = temp_dir.path().join("integration");
+        fs::create_dir_all(&docs_path).unwrap();
+
+        let content = "## Overview\nMSFS overview.\n\n## Files Modified\n**Location**: /cfg.ini\n\
+            \n## Network Connections\n\n## Revert Steps\n1. Remove config file\n2. Restore backup\n\
+            3. Restart MSFS\n\n## What Flight Hub Does NOT Touch\n- System registry\n";
+        fs::write(docs_path.join("msfs.md"), content).unwrap();
+
+        let mut manager = IntegrationDocsManager::new();
+        manager.docs_path = docs_path;
+
+        let doc = manager.get_simulator_doc("msfs").unwrap();
+        assert_eq!(doc.revert_steps.len(), 3);
+        assert_eq!(doc.revert_steps[0].step_number, 1);
+        assert_eq!(doc.revert_steps[2].step_number, 3);
+    }
+
+    #[test]
+    fn list_available_docs_empty_dir_returns_empty_vec() {
+        let temp_dir = TempDir::new().unwrap();
+        let docs_path = temp_dir.path().join("integration");
+        fs::create_dir_all(&docs_path).unwrap();
+
+        let mut manager = IntegrationDocsManager::new();
+        manager.docs_path = docs_path;
+
+        let list = manager.list_available_docs().unwrap();
+        assert!(list.is_empty());
+    }
+
+    #[test]
+    fn list_available_docs_skips_readme_md() {
+        let temp_dir = TempDir::new().unwrap();
+        let docs_path = temp_dir.path().join("integration");
+        fs::create_dir_all(&docs_path).unwrap();
+
+        fs::write(docs_path.join("README.md"), "# README").unwrap();
+        fs::write(docs_path.join("msfs.md"), "# MSFS").unwrap();
+
+        let mut manager = IntegrationDocsManager::new();
+        manager.docs_path = docs_path;
+
+        let list = manager.list_available_docs().unwrap();
+        assert_eq!(list, vec!["msfs"], "README.md must be filtered out");
+    }
+
+    #[test]
+    fn list_available_docs_missing_dir_returns_error() {
+        let mut manager = IntegrationDocsManager::new();
+        manager.docs_path = PathBuf::from("/nonexistent/path/xyz/integration");
+
+        let result = manager.list_available_docs();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn installer_summary_starts_empty() {
+        let summary = InstallerSummary::new();
+        assert!(summary.simulators_supported.is_empty());
+        assert_eq!(summary.total_files_modified, 0);
+        assert!(summary.network_ports_used.is_empty());
+    }
+
+    #[test]
+    fn network_connection_without_port_not_added_to_summary() {
+        let mut summary = InstallerSummary::new();
+        let connections = vec![NetworkConnection {
+            port: None,
+            protocol: "UDP".to_string(),
+            purpose: "heartbeat".to_string(),
+            direction: "out".to_string(),
+        }];
+        summary.add_simulator("xplane", &[], &connections);
+        assert!(
+            summary.network_ports_used.is_empty(),
+            "None port must not be tracked"
+        );
+    }
+
+    #[test]
+    fn validation_result_multiple_errors_all_recorded() {
+        let mut result = ValidationResult::new();
+        result.add_error("missing overview".to_string());
+        result.add_error("missing revert steps".to_string());
+        result.add_error("missing files section".to_string());
+        assert!(!result.is_valid());
+        assert_eq!(result.errors.len(), 3);
+    }
+
+    #[test]
+    fn revert_step_fields_are_accessible() {
+        let step = RevertStep {
+            step_number: 2,
+            description: "Restore backup".to_string(),
+            command: Some("cp backup.cfg original.cfg".to_string()),
+            is_automatic: true,
+        };
+        assert_eq!(step.step_number, 2);
+        assert!(step.is_automatic);
+        assert!(step.command.is_some());
+    }
+
+    #[test]
+    fn file_modification_fields_are_accessible() {
+        let fm = FileModification {
+            path: "/sim/plugins/flighthub.dll".to_string(),
+            purpose: "Plugin injection".to_string(),
+            changes: vec!["installed plugin".to_string()],
+            backup_created: true,
+        };
+        assert!(fm.backup_created);
+        assert_eq!(fm.changes.len(), 1);
     }
 }

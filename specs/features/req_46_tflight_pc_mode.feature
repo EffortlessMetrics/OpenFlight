@@ -29,6 +29,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.2 PC Mode Detection — confirmation hysteresis ────────────────────
 
   @unit @pc-mode
+  @AC-46.1
   Scenario: Detector requires confirm_count consecutive reports before committing
     Given a PcModeDetector with confirm_count = 3
     When two 8-byte reports are processed
@@ -37,6 +38,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
     Then the status SHALL be PcMode
 
   @unit @pc-mode
+  @AC-46.2
   Scenario: A different-length report resets the run counter
     Given a PcModeDetector with confirm_count = 3
     When two 8-byte reports are processed
@@ -46,6 +48,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.3 PC Mode Detection — console mode guidance ──────────────────────
 
   @unit @pc-mode
+  @AC-46.3
   Scenario: Console mode guidance is returned when in console mode
     Given a PcModeDetector with confirm_count = 1
     When a 5-byte report is processed
@@ -53,6 +56,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
     And the guidance SHALL mention "Share" and "throttle"
 
   @unit @pc-mode
+  @AC-46.3
   Scenario: No guidance returned when in PC mode
     Given a PcModeDetector with confirm_count = 1
     When an 8-byte report is processed
@@ -61,6 +65,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.4 PC Mode Detection — reset ──────────────────────────────────────
 
   @unit @pc-mode
+  @AC-46.4
   Scenario: Reset clears committed status back to Unknown
     Given a PcModeDetector with confirm_count = 1
     When an 8-byte report is processed
@@ -71,6 +76,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.5 Throttle Detent — Entered event on zone entry ──────────────────
 
   @unit @detents
+  @AC-46.5
   Scenario: Entered event fires when throttle moves into detent zone
     Given a ThrottleDetentTracker with the default HOTAS 4 idle detent
     And the throttle is currently at 0.20 (outside zone)
@@ -80,6 +86,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.6 Throttle Detent — Exited event on zone exit ───────────────────
 
   @unit @detents
+  @AC-46.6
   Scenario: Exited event fires when throttle leaves detent zone
     Given a ThrottleDetentTracker with the default HOTAS 4 idle detent
     And the throttle has entered the detent zone at 0.05
@@ -89,6 +96,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.7 Throttle Detent — hysteresis prevents chatter ─────────────────
 
   @unit @detents
+  @AC-46.7
   Scenario: No duplicate Entered events while throttle stays inside zone
     Given a ThrottleDetentTracker with the default HOTAS 4 idle detent
     And the throttle has entered the detent zone
@@ -98,6 +106,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.8 Throttle Detent — Entered fires again after exit/re-enter ──────
 
   @unit @detents
+  @AC-46.8
   Scenario: Entered fires again after a complete exit and re-entry cycle
     Given a ThrottleDetentTracker with the default HOTAS 4 idle detent
     When the throttle enters the zone at 0.05
@@ -108,6 +117,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.9 Throttle Detent — reset ────────────────────────────────────────
 
   @unit @detents
+  @AC-46.9
   Scenario: Reset allows Entered to fire again from inside state
     Given a ThrottleDetentTracker with the default HOTAS 4 idle detent
     And the throttle is inside the detent zone
@@ -118,6 +128,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.10 Throttle Detent — default HOTAS 4 config ─────────────────────
 
   @unit @detents
+  @AC-46.9
   Scenario: Default HOTAS 4 detent is at 5% with ±2% half-width
     When ThrottleDetentConfig::hotas4_idle() is created
     Then position SHALL be 0.05
@@ -127,6 +138,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
   # ── AC-17.11 Fixture integrity ─────────────────────────────────────────────
 
   @integration @fixtures
+  @AC-46.7
   Scenario: Synthetic merged fixture parses correctly
     Given the receipt fixture "merged_centered.bin"
     When parsed as a merged-mode report
@@ -135,6 +147,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
     And buttons SHALL equal 0
 
   @integration @fixtures
+  @AC-46.8
   Scenario: Synthetic separate fixture parses correctly
     Given the receipt fixture "separate_centered.bin"
     When parsed as a separate-mode report
@@ -143,6 +156,7 @@ Feature: REQ-46 T.Flight HOTAS PC Mode Detection and Throttle Detents
     And hat SHALL equal 0
 
   @integration @fixtures
+  @AC-46.9
   Scenario: Console mode fixture triggers PC mode warning
     Given the receipt fixture "console_mode.bin" (5 bytes)
     And a PcModeDetector with confirm_count = 1

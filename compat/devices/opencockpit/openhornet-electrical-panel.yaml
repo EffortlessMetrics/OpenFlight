@@ -1,0 +1,55 @@
+# OpenHornet F/A-18C Electrical Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY F/A-18C cockpit module — Electrical Panel. Controls aircraft electrical
+# system switches (BATTERY, GEN 1/2, EXTERNAL POWER, BUS TIE, etc.) in the
+# left console overhead area.
+# VID 0x2341 (Arduino), PID 0x803F: estimated.
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet Electrical Panel"
+  vendor: "OpenHornet"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC
+    product_id: 0x803F      # Estimated — electrical panel module
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID estimated. Verify against OpenHornet firmware release.
+  - id: DIY_FIRMWARE
+    description: >
+      Community builds may vary in button assignment order.
+  - id: GENERATOR_FAULT_LIGHTS
+    description: >
+      GEN1/GEN2 fault lights require electrical system telemetry from DCS
+      to illuminate. Driven by USB HID output reports from the DCS adapter.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet electrical panel. PID estimated. Community DIY build.
+    See openhornet-master-arm-panel.yaml and openhornet-caution-panel.yaml for related modules.
+    Last reviewed: 2026-06.

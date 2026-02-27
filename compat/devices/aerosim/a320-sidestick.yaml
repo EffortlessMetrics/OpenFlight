@@ -1,0 +1,50 @@
+# AeroSim A320 Sidestick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# AeroSim (Aerobask/AeroSim Controls) Airbus A320-style sidestick replica
+# for home cockpit use. VID 0x04D8 (Microchip Technology shared VID).
+# PID 0xEF91 is a community estimate adjacent to the B737 Yoke (0xEF90).
+schema_version: "1"
+
+device:
+  name: "AeroSim A320 Sidestick"
+  vendor: "AeroSim Controls"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology shared VID (community estimate)
+    product_id: 0xEF91      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [roll, pitch, twist]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF91 is a community estimate adjacent to the AeroSim B737 Yoke
+      (0xEF90). Verify with lsusb on real hardware.
+  - id: VID_SHARED
+    description: >
+      VID 0x04D8 (Microchip Technology) is shared by many boutique manufacturers.
+      Match on both VID and PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    AeroSim A320 Sidestick — Airbus A320-style replica sidestick for home cockpit.
+    PID 0xEF91 community estimate. Last reviewed: 2026-06.

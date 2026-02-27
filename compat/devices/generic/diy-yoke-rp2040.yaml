@@ -1,0 +1,45 @@
+# DIY RP2040 USB Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A (Raspberry Pi). PID 0x000A (RP2040 HID).
+# DIY yoke controller built on RP2040 microcontroller platform.
+schema_version: "1"
+
+device:
+  name: "DIY RP2040 USB Yoke"
+  vendor: "Raspberry Pi"
+  usb:
+    vendor_id: 0x2E8A
+    product_id: 0x000A
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DIY_RP2040_YOKE
+    description: >
+      DIY yoke using RP2040 with TinyUSB HID stack. Potentiometer
+      or Hall-effect sensor inputs for pitch and roll axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY RP2040 USB Yoke. VID/PID are RP2040 defaults;
+    actual values may vary by firmware. Last reviewed: 2026-06.

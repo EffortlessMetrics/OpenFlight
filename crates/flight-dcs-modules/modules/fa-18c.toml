@@ -1,0 +1,5 @@
+aircraft = "F/A-18C"
+axis_count = 6
+throttle_range = [0.0, 1.0]
+stick_throw = 45.0
+quirks = ["twin-throttle", "catapult-bar"]

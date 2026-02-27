@@ -1,0 +1,60 @@
+# WinWing MFSSB Magnetic Force Sensing Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing Space Equipment Co., Ltd.).
+# PID 0xBD91 is a community estimate for the standalone MFSSB joystick.
+# The MFSSB-MCTR (PID 0xBD90) is the force feedback motion controller base
+# (mfssb-mctr.yaml); the standalone MFSSB joystick is a separate product
+# without the active motion base. Both use magnetic force sensing technology.
+schema_version: "1"
+
+device:
+  name: "WinWing MFSSB Magnetic Force Sensing Joystick"
+  vendor: "WinWing Space Equipment Co., Ltd."
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD91    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 16
+  buttons: 20
+  hats: 2
+  force_feedback: false   # Passive MFS — no active FFB on this variant
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD91 is a community estimate. The MFSSB MCTR (active motion base)
+      uses PID 0xBD90. The standalone joystick may use 0xBD91 or another value.
+      Confirm with lsusb or the WinWing SimApp Pro software on real hardware.
+  - id: MAGNETIC_FORCE_SENSING
+    description: >
+      The MFSSB uses magnetic force sensing instead of a traditional spring and
+      potentiometer. This provides a pressure-sensitive centre zone (isometric
+      input) and very long service life with no wear on potentiometers.
+  - id: ISOMETRIC_CENTRE_MODE
+    description: >
+      In isometric mode the stick does not deflect; it senses applied force.
+      The HID report maps force magnitude to axis position. Apply a 2–3%
+      software deadzone to avoid drift at rest.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing MFSSB magnetic force sensing joystick. Distinct from the MFSSB-MCTR
+    (active motion controller, mfssb-mctr.yaml). VID 0x4098 confirmed for WinWing.
+    PID 0xBD91 is a community estimate. Last reviewed: 2026-02.

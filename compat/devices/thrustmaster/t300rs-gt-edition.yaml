@@ -1,0 +1,66 @@
+# Thrustmaster T300 RS GT Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T300 RS GT Edition is the T300 RS base wheel bundled with the
+# T300 Ferrari GTE Wheel (leather rim) and the T3PA 3-pedal set.
+# PID 0xB66F is a community estimate adjacent to the base T300 RS (0xB66E);
+# confirm with lsusb. Same servo belt-drive FFB motor as the base T300 RS.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 RS GT Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB66F      # Community estimate — adjacent to T300 RS (0xB66E)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB66F is a community estimate. The base T300 RS uses 0xB66E.
+      This bundle may share the same PID if the firmware is identical.
+      Verify with lsusb on real hardware.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (900° range); Z = accelerator; Rz = brake (T3PA).
+      T3PA third pedal (clutch) appears on Rx when present.
+  - id: FFB_SERVO_BELT
+    description: >
+      Same servo-motor + belt-drive FFB system as the base T300 RS.
+      GT Edition ships with a leather GT rim instead of the standard rubber rim.
+  - id: BUNDLE_VARIANT
+    description: >
+      GT Edition is a bundle SKU. The wheel base is electrically identical to
+      t300rs.yaml; the only hardware differences are the rim and pedal set.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T300 RS GT Edition — belt-drive FFB bundle with GT rim and
+    T3PA pedals. PID 0xB66F is a community estimate; may share PID with
+    the base T300 RS (0xB66E). See t300rs.yaml for the base variant.
+    Last reviewed: 2026-06.

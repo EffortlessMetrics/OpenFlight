@@ -1,0 +1,68 @@
+# VIRPIL VPC SharKa-50 Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x8205 — VPC SharKa-50 Collective.
+# Community estimate; VPC Helicopter Collective uses 0x8204 (see vpc-collective.yaml).
+# The SharKa-50 is a dedicated Ka-50/Ka-52 helicopter collective with a
+# distinctive grip design. Not confirmed from lsusb hardware probe.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC SharKa-50 Helicopter Collective"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8205   # Community estimate; verify against hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, friction, scx, scy]
+    resolution_bits: 14
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8205 is a community estimate adjacent to the VPC Helicopter
+      Collective (0x8204). Not confirmed from lsusb probe or official VIRPIL
+      docs. Update this manifest when a confirmed PID becomes available.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return thumb-stick axes; they center at raw 8192.
+      The collective, twist, and friction axes are non-return (full-range).
+  - id: KA50_GRIP_LAYOUT
+    description: >
+      The SharKa-50 grip replicates the Ka-50/Ka-52 collective control grip.
+      Grip buttons and hat positions match the DCS Ka-50 Black Shark default
+      binding layout. Differs from the generic VPC Collective grip
+      (vpc-collective.yaml) in button arrangement and twist axis travel.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings can be changed via the VIRPIL
+      Configurator software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VPC SharKa-50 helicopter collective with Ka-50/Ka-52 replica grip.
+    Distinct from the generic VPC Helicopter Collective (PID 0x8204).
+    PID 0x8205 is a community estimate — confirm with lsusb or VIRPIL
+    Configurator before deployment.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

@@ -1,0 +1,54 @@
+# Logitech G Pro X Superlight Gaming Mouse
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Logitech G Pro X Superlight — ultra-lightweight gaming mouse.
+# VID 0x046D confirmed: Logitech International SA.
+# PID 0xC094 is a community estimate; the Superlight 2 uses PID 0xC09E.
+# Occasionally mapped to view/camera axes in flight simulators.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Pro X Superlight"
+  vendor: "Logitech International"
+  usb:
+    vendor_id: 0x046D       # Logitech International SA — confirmed
+    product_id: 0xC094      # Community estimate — G Pro X Superlight
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x02             # Mouse
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, scroll]
+    resolution_bits: 16
+  buttons: 5
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC094 is a community estimate. The G Pro X Superlight 2 uses
+      PID 0xC09E. Verify with linux-hardware.org probes for this specific
+      revision before deploying in production profiles.
+  - id: MOUSE_AS_AUX_INPUT
+    description: >
+      High-precision 25600 DPI sensor; map X/Y to view/camera axes in
+      flight sim profiles for smooth free-look control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Pro X Superlight — VID 0x046D / PID 0xC094 (est).
+    Ultra-lightweight gaming mouse used as auxiliary view axis input.
+    Wave-46 addition. Last reviewed: 2026-07.

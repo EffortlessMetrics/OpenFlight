@@ -1,0 +1,59 @@
+# Microsoft Xbox One Controller (Wired, PID 0x02FF variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Xbox One wired controller variant identified by PID 0x02FF.
+# Known Xbox One wired PIDs: 0x02D1 (Gen 1), 0x02DD (Xbox One S).
+# PID 0x02FF is community-reported and may correspond to a firmware or
+# regional variant. See also: xbox-one-controller.yaml (0x02D1),
+# xbox-one-s-controller.yaml (0x02DD).
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox One Controller (Wired)"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation (confirmed)
+    product_id: 0x02FF  # Wired variant — community-reported; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x02FF is community-reported for this wired variant. Standard Xbox
+      One controller PIDs are 0x02D1 (Gen 1) and 0x02DD (Xbox One S). Verify
+      with lsusb; this manifest may describe a firmware or OEM sub-variant.
+  - id: XINPUT_PRIMARY
+    description: >
+      Xbox One wired controllers enumerate as XInput devices on Windows.
+      Standard HID path requires XInput-to-HID shim (e.g., x360ce, ViGEmBus)
+      for non-XInput applications.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft Xbox One Controller wired variant, PID 0x02FF (community-reported).
+    XInput primary on Windows; HID shim required for non-XInput sims.
+    See xbox-one-controller.yaml (0x02D1) and xbox-one-s-controller.yaml (0x02DD)
+    for confirmed variants. Last reviewed: 2026-06.

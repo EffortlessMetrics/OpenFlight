@@ -1,0 +1,56 @@
+# OpenHornet MIP Center Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC Teensy / community HID VID) — community estimate; actual
+# VID varies by builder firmware configuration.
+# PID 0x0485 — community estimate / placeholder following OpenHornet Teensy
+# PID allocation conventions.
+# The OpenHornet MIP Center Panel is an open-source replica of the F/A-18C
+# Hornet Master Instrument Panel center section, including UFC integration
+# points, master caution, fire warnings, and ADC/caution selectors.
+schema_version: "1"
+
+device:
+  name: "OpenHornet MIP Center Panel"
+  vendor: "OpenHornet (community)"
+  usb:
+    vendor_id: 0x16C0       # PJRC Teensy / community HID VID (varies by builder)
+    product_id: 0x0485      # Community estimate — OpenHornet MIP center placeholder
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (panel buttons)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 30
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0485 is a community estimate. Actual PID depends on individual
+      builder's firmware configuration. Check openhornet-comms-panel.yaml
+      (PID 0x0486) and openhornet-caution-panel.yaml for related assignments.
+  - id: BUILDER_SPECIFIC_FIRMWARE
+    description: >
+      OpenHornet panels use builder-configurable Teensy / Arduino HID firmware.
+      USB descriptors (PID, button count, usage) may differ between builds.
+      Treat this manifest as a reference configuration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet MIP Center Panel — F/A-18C cockpit replica. VID 0x16C0 / PID 0x0485 (est).
+    30 buttons; builder-specific firmware. Wave-40 addition. Last reviewed: 2026-07.

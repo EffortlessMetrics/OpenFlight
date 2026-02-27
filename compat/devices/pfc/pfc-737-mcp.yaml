@@ -1,0 +1,54 @@
+# Precision Flight Controls Boeing 737 MCP
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Precision Flight Controls (PFC) manufactures high-fidelity sim hardware.
+# VID 0x2B67 is a community estimate shared with VirtualFly and some other
+# sim vendors. PID 0x0040 is a community estimate for the 737 MCP USB interface.
+schema_version: "1"
+
+device:
+  name: "Precision Flight Controls 737 MCP"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x2B67    # Community estimate — shared VID range; primary PFC VID is 0x04D8
+    product_id: 0x0040   # Community estimate — PID from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [hdg, alt, vs, spd]
+    resolution_bits: 12
+  buttons: 48
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 and PID 0x0040 are community estimates. The primary PFC VID
+      is 0x04D8 (see pfc-yoke-system.yaml and related files). Verify with
+      Windows Device Manager or lsusb on real PFC 737 MCP hardware.
+  - id: ENCODER_AXES
+    description: >
+      MCP heading, altitude, vertical speed, and airspeed selectors are
+      rotary encoders reported as axis position values. OpenFlight converts
+      encoder steps to sim autopilot parameter changes via the rules engine.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Boeing 737 MCP USB panel. VID 0x2B67 and PID 0x0040 are community
+    estimates. Primary PFC VID is 0x04D8. See pfc/ directory for confirmed
+    PFC manifests. Last reviewed: 2026-06.

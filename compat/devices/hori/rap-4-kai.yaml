@@ -1,0 +1,57 @@
+# HORI Real Arcade Pro 4 Kai
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x0076 is a community-reported PID for the HORI RAP4 Kai.
+# The Real Arcade Pro 4 Kai is a premium arcade fightstick for PS3/PS4/PC
+# featuring a Hayabusa joystick and Kuro buttons. Used in sim cockpit builds
+# as a large-format button panel for MFD, FCR, and CDU assignments.
+schema_version: "1"
+
+device:
+  name: "HORI Real Arcade Pro 4 Kai"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0076      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0076 is a community estimate for the RAP4 Kai. Confirm with lsusb.
+      The RAP V Kai uses 0x0063 (real-arcade-pro-v-kai.yaml).
+  - id: ARCADE_STICK_AXES
+    description: >
+      The Hayabusa joystick reports as digital X/Y axes (8-direction).
+      Values are -1, 0, or +1 per direction. Not suitable for analog flight
+      control; use for discrete button panel assignments.
+  - id: PS3_PS4_SWITCH
+    description: >
+      A physical PS3/PS4 mode switch affects the HID report descriptor.
+      Use PS4 mode for best PC compatibility.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI RAP4 Kai — premium arcade stick for PS3/PS4/PC. Used as button panel
+    in cockpit builds. PID 0x0076 is a community estimate. Last reviewed: 2026-06.

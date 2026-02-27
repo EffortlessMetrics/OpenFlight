@@ -1,0 +1,54 @@
+# VKB S-TECS Modern Throttle Mini Plus (2023 generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x231D (VKB), PID 0x012C — linux-hardware.org (1 probe,
+# USB string "S-TECS MODERN THROTTLE MINI PLUS", vendor "VKB-Sim (C) Alex Oz 2023").
+# Expanded-button variant of the Modern Throttle Mini (PID 0x012B).
+device:
+  name: "VKB S-TECS Modern Throttle Mini Plus"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x012C
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [rx, ry, x, y, z]
+    resolution_bits: 12
+  buttons: 48
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKBDevCfg. OpenFlight reads whatever the
+      device reports; user must align VKB config with OpenFlight axis assignments.
+  - id: MULTI_VIRTUAL_CONTROLLER
+    description: >
+      Like other VKB STECS devices, the Modern Throttle Mini Plus may expose
+      multiple virtual HID controllers. OpenFlight merges button state from all
+      active VCs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    2023-generation compact standalone throttle, expanded-button variant of the
+    Modern Throttle Mini (PID 0x012B). Features more buttons than the base Mini.
+    See stecs-modern-throttle-mini.yaml for the base Mini and
+    stecs-modern-throttle-standard-stem.yaml for the Standard Stem (PID 0x012D).

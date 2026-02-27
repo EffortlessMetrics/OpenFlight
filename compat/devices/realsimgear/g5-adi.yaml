@@ -1,0 +1,56 @@
+# RealSimGear Garmin G5 ADI Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0xEB80 (est) / PID 0x0008 (est): community estimate for the G5 ADI bezel.
+# The Garmin G5 ADI (attitude indicator) bezel is distinct from the G5 HSI bezel
+# (see g5-hsi.yaml). The ADI variant provides attitude/pitch/bank display controls
+# for GA aircraft retrofit installations.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear Garmin G5 ADI Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0xEB80       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0008      # Community estimate — G5 ADI bezel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 4
+  hats: 0
+  encoders: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0xEB80 / PID 0x0008 are community estimates. The confirmed RealSimGear
+      VID on most units is 0x04D8 (Microchip Technology). Verify with lsusb or
+      Windows Device Manager before deployment. See also g5-hsi.yaml.
+  - id: ADI_DISTINCT_FROM_HSI
+    description: >
+      The G5 ADI and G5 HSI are physically distinct bezels. ADI variant provides
+      attitude indicator controls; HSI provides course/heading selector controls.
+      Do not mix profiles between the two variants.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Garmin G5 ADI bezel. VID 0xEB80 / PID 0x0008 estimated.
+    Distinct from g5-hsi.yaml (horizontal situation indicator variant).
+    Used in GA retrofit cockpit builds. Last reviewed: 2026-06.

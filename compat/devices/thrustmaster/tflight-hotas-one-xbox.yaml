@@ -1,0 +1,61 @@
+# Thrustmaster T.Flight HOTAS One (Xbox Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster / Guillemot Corp.).
+# PID 0xB330 — community estimate for the Xbox/PC-switchable version.
+# The T.Flight HOTAS One Xbox Edition is physically identical to the
+# standard T.Flight HOTAS One but supports Xbox One connectivity in
+# addition to PC/USB HID mode. In PC mode it enumerates under a
+# different PID from the PC-only model (tflight-hotas-one.yaml).
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS One (Xbox)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB330    # Community estimate — PC-mode PID on Xbox edition
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 15
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB330 is a community estimate for the Xbox edition in PC mode.
+      The standard T.Flight HOTAS One (PC) uses a different PID
+      (tflight-hotas-one.yaml). The Xbox edition may present the same PID
+      as the PC edition depending on the PC/Xbox switch position.
+      Confirm with lsusb on real hardware.
+  - id: XBOX_PC_SWITCH
+    description: >
+      The Xbox Edition has a physical Xbox/PC mode switch on the base.
+      In Xbox mode the device uses the Xbox HID protocol and will NOT be
+      recognised as a standard HID joystick. Ensure the switch is in PC
+      mode for use with OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight HOTAS One Xbox Edition. Identical hardware to the
+    PC model but dual Xbox/PC mode. PID 0xB330 is a community estimate for
+    PC mode. In Xbox mode, the device uses Xbox protocol (not HID joystick).
+    Last reviewed: 2026-02.

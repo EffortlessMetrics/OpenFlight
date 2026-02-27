@@ -1,0 +1,48 @@
+# Virtual Avionics MCP
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1553, PID 0x0001 — community estimates for Virtual Avionics.
+# Virtual Avionics produces software-driven USB HID cockpit panels for
+# Boeing and Airbus simulation. The MCP replicates the B737/A320 autopilot
+# mode control panel with encoders, switches, and annunciators.
+
+schema_version: "1"
+
+device:
+  name: "Virtual Avionics MCP"
+  vendor: "Virtual Avionics"
+  usb:
+    vendor_id: 0x1553       # VID_UNCONFIRMED — community estimate for Virtual Avionics
+    product_id: 0x0001      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 3
+    names: [hdg_knob, alt_knob, spd_knob]
+    resolution_bits: 8
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1553 and PID 0x0001 are community estimates for Virtual Avionics.
+      Confirm with lsusb or USBDeview on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual Avionics MCP — software-driven USB HID mode control panel replica.
+    VID/PID unconfirmed. Supports MSFS and X-Plane. Last reviewed: 2026-06.

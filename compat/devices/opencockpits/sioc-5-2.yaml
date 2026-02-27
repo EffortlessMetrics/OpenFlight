@@ -1,0 +1,46 @@
+# Opencockpits SIOC 5.2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0407 (Opencockpits alt VID), PID 0xC002 — estimated.
+# Opencockpits SIOC 5.2 USB interface card for cockpit builder I/O control.
+schema_version: "1"
+device:
+  name: "Opencockpits SIOC 5.2"
+  vendor: "Opencockpits"
+  usb:
+    vendor_id: 0x0407       # Community estimate — Opencockpits alt VID; primary is 0x0BCA
+    product_id: 0xC002      # Community estimate — SIOC 5.2; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Undefined — panel device
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0407 and PID 0xC002 are community estimates for the SIOC 5.2 card.
+      Opencockpits uses VID 0x0BCA as primary; 0x0407 may be an alternate or
+      revision. See also sioc-io-0407.yaml (PID 0xC001). Confirm with lsusb.
+  - id: PANEL_DEVICE
+    description: >
+      SIOC (Simulator Input/Output Controller) card. Provides digital I/O for
+      cockpit switches, LEDs, and displays. Used with Opencockpits SIOC software.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits SIOC 5.2 — VID 0x0407 / PID 0xC002 (est).
+    SIOC v5.2 USB interface card for cockpit builder I/O. Adjacent to
+    sioc-io-0407.yaml (PID 0xC001). Wave-59 addition. Last reviewed: 2026-07.

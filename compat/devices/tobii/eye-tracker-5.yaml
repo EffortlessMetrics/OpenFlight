@@ -1,0 +1,61 @@
+# Tobii Eye Tracker 5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2104 confirmed: Tobii Technology AB. PID for the Eye Tracker 5 is
+# unconfirmed — the ET5 enumerates as a composite USB device and the HID
+# PID varies by firmware revision. Tobii ET5 is used in flight sim for eye-
+# tracking-based view control via Tobii Gaming software or opentrack.
+
+schema_version: "1"
+
+device:
+  name: "Tobii Eye Tracker 5"
+  vendor: "Tobii Technology AB"
+  usb:
+    vendor_id: 0x2104    # Tobii Technology AB (confirmed)
+    product_id: 0x0408   # Community estimate — ET5; confirm from lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]     # Normalised gaze position on screen
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0408 is a community estimate. The Tobii ET5 enumerates as a
+      composite USB device; the HID component PID varies by firmware. Verify
+      from lsusb on real hardware. The Tobii software exposes gaze data via
+      its own SDK, not raw HID.
+  - id: EYE_TRACKING_SDK
+    description: >
+      Gaze data is not exposed as standard HID axes. OpenFlight reads eye
+      position via the Tobii Gaming SDK or via opentrack eye-tracking plugin.
+      This manifest covers device detection and capability cataloguing only.
+  - id: COMBINED_WITH_HEAD_TRACKING
+    description: >
+      The Tobii ET5 provides both eye-gaze and head-pose data. In flight sim,
+      head-pose is typically used for view control; gaze is used for sensor
+      zoom or cockpit interaction in compatible titles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii Eye Tracker 5. VID 0x2104 confirmed; PID 0x0408 community estimate.
+    Eye-gaze and head-pose tracking device for flight sim view control.
+    Integration via Tobii Gaming SDK or opentrack. Last reviewed: 2026-06.

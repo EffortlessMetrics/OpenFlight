@@ -1,0 +1,53 @@
+# VKB T-Rudder MK5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim USB ID (VKBcontroller).
+# PID 0x0132 is a community estimate for the T-Rudder MK5. The MK4 version
+# is covered by t-rudder-mk4.yaml. The MK5 introduced refined toe-brake
+# geometry and updated firmware. No hardware probe has confirmed 0x0132.
+schema_version: "1"
+
+device:
+  name: "VKB T-Rudder MK5"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0132      # Community estimate; MK4 PID is nearby. Confirm with lsusb.
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 14     # 14-bit precision on MK5
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0132 is a community estimate for the T-Rudder MK5. The MK4 version
+      (t-rudder-mk4.yaml) uses a different PID. No hardware probe has confirmed
+      0x0132. Update when verified with lsusb on real hardware.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve/deadzone profiles for each axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB T-Rudder MK5 — successor to the T-Rudder MK4 (t-rudder-mk4.yaml).
+    Refined toe-brake geometry and higher resolution 14-bit axes. PID 0x0132
+    is a community estimate; confirm with lsusb. Last reviewed: 2026-02.

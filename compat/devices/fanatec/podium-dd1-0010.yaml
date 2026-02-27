@@ -1,0 +1,65 @@
+# Fanatec Podium DD1 Direct Drive Base (PID 0x0010 community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH (registered USB vendor).
+# PID 0x0010 is a community estimate for the Fanatec Podium DD1.
+# The primary known Podium DD1 manifest is podium-dd1.yaml (PID 0x0040);
+# PID 0x0010 has been reported by community members for some firmware
+# revisions or production variants. Both PIDs should be monitored.
+# The Podium DD1 is Fanatec's 20Nm direct-drive base for PC/PS5.
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium DD1 Direct Drive Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7       # Fanatec GmbH — confirmed
+    product_id: 0x0010      # Community estimate — DD1 alternate PID; see also podium-dd1.yaml (0x0040)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 20.0   # Podium DD1 peak torque
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0010 is a community estimate for the Podium DD1. The primary
+      known PID is 0x0040 (podium-dd1.yaml). Confirm PID with lsusb or
+      Fanatec driver USB descriptor capture. Both PIDs are tracked to
+      handle firmware variation across production runs.
+  - id: TORQUE_ONLY_FFB
+    description: >
+      The Podium DD1 accepts torque-command HID output reports via the Fanatec
+      vendor protocol. Standard DirectInput effects are translated by the
+      Fanatec driver; OpenFlight uses native torque commands where possible.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The DD1 base exposes only the rotation axis. A flight grip adapter
+      mounts on the shaft and enumerates as a separate USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium DD1 — 20Nm DD base. VID 0x0EB7 confirmed; PID 0x0010
+    community estimate (alternate firmware variant). See podium-dd1.yaml for
+    PID 0x0040. Wave-49 addition. Last reviewed: 2026-07.

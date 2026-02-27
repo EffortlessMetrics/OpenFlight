@@ -1,0 +1,53 @@
+# Logitech Driving Force EX Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC29A confirmed from the usb.ids community
+# database and referenced in the Linux kernel ff-lg force-feedback driver table.
+# The Driving Force EX (2007) was a budget racing wheel with 270° rotation,
+# rubber-grip rim, and passive spring centering (no FFB motor).
+
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force EX"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC29A      # Driving Force EX — usb.ids community database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SPRING_CENTERING_ONLY
+    description: >
+      The Driving Force EX uses passive spring centering; no FFB motor is
+      present. OpenFlight will silently no-op any FFB requests for this device.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (270°, 10-bit); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Map X to rudder in flight profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force EX (2007). Budget 270° spring-centering wheel.
+    PID 0xC29A from usb.ids community database. No FFB; 10-bit steering.
+    Used as rudder input in budget flight sim setups. Last reviewed: 2026-06.

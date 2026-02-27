@@ -1,0 +1,57 @@
+# Honeycomb XPC Expansion Connector (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Honeycomb XPC is a Bravo Throttle Quadrant expansion PCB that provides
+# additional output connectors for external panel integration (e.g., annunciator
+# lights and indicator outputs driven by the Bravo's HID output reports).
+# It is not a standalone USB device; it shares the Bravo USB descriptor.
+# This manifest is a virtual bundle entry for installer and profile tracking.
+schema_version: "1"
+
+device:
+  name: "Honeycomb XPC Expansion Connector"
+  vendor: "Honeycomb Aeronautical"
+  type: virtual_bundle
+  usb:
+    vendor_id: 0x294B       # Honeycomb Aeronautical (confirmed)
+    product_id: ~           # Virtual bundle — shares Bravo PID; no separate PID
+  hid:
+    usage_page: ~
+    usage: ~
+
+capabilities:
+  axes:
+    count: 7
+    names: [throttle1, throttle2, throttle3, throttle4, throttle5, flap_lever, spoiler]
+    resolution_bits: 12
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VIRTUAL_BUNDLE_NO_SEPARATE_PID
+    description: >
+      The XPC expansion PCB is an accessory for the Bravo Throttle Quadrant
+      and does not enumerate as a separate USB device. OpenFlight treats this
+      as an alias of bravo-throttle.yaml for device matching purposes.
+  - id: EXPANSION_OUTPUT_ONLY
+    description: >
+      The XPC connector exposes external output pins driven by the Bravo's
+      HID output reports (annunciator LEDs and indicator outputs). No
+      additional HID input capabilities are added beyond those of the Bravo.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb XPC Bravo expansion connector — virtual bundle entry.
+    Functionally identical to bravo-throttle.yaml (VID 0x294B / PID 0x1901).
+    Tracked for installer and rig-configuration documentation.
+    Last reviewed: 2026-06.

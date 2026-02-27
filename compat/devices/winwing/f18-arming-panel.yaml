@@ -1,0 +1,51 @@
+# WinWing F/A-18 Arming Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F/A-18 Arming Panel — replica of the F/A-18C/D Master Arm and
+# weapon station arming panel. Panel-only device with toggle switches and
+# guard-covered switches. VID 0x4098 confirmed; PID community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 Arming Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing (confirmed)
+    product_id: 0xBE10  # F/A-18 Arming Panel — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0xBE10 is a placeholder. Verify against real WinWing arming panel hardware."
+  - id: PANEL_DEVICE
+    description: "Panel controller with toggle switches and guard switches only."
+  - id: GUARDED_SWITCHES
+    description: >
+      Several switches have protective covers that must be opened before
+      actuation. Both the cover and switch report as separate button events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 Master Arm and arming panel. Toggle and guarded switches.
+    VID 0x4098 confirmed; PID unconfirmed. Last reviewed: 2026-06.

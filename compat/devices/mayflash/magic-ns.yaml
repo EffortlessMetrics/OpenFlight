@@ -1,0 +1,51 @@
+# Mayflash Magic-NS Wireless Controller Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (Mayflash / GreenAsia Inc.), PID 0x1688 — estimated.
+# USB adapter allowing Nintendo Switch Pro Controllers and other wireless
+# controllers to be used on PC as standard HID gamepad.
+schema_version: "1"
+device:
+  name: "Mayflash Magic-NS"
+  vendor: "Mayflash"
+  usb:
+    vendor_id: 0x0E8F       # Mayflash / GreenAsia Inc.
+    product_id: 0x1688      # Community estimate — Magic-NS adapter; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1688 is a community estimate for the Magic-NS adapter.
+      Confirm with lsusb — PID may vary by firmware version.
+  - id: ADAPTER_DEVICE
+    description: >
+      This is a controller adapter. The HID descriptor represents the
+      translated controller input, not the adapter hardware directly.
+      Actual capabilities depend on the connected controller.
+  - id: WIRELESS_LATENCY
+    description: >
+      Wireless Bluetooth relay introduces 8–15 ms additional latency
+      over direct USB connection. Not recommended for RT-critical paths.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Mayflash Magic-NS — VID 0x0E8F / PID 0x1688 (est). Wireless controller
+    adapter for Switch Pro, DualShock 4, and other Bluetooth gamepads on PC.
+    Wave-55 addition. Last reviewed: 2026-07.

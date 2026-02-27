@@ -1,0 +1,48 @@
+# DIY 3-Axis Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0x4F01 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "DIY 3-Axis Throttle Quadrant"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209       # pid.codes open VID
+    product_id: 0x4F01      # Community estimate — DIY 3-axis throttle
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, prop, mixture]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. Generic DIY 3-axis throttle using pid.codes VID. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic DIY 3-axis throttle quadrant. PID 0x4F01 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

@@ -1,0 +1,47 @@
+# WinWing TQS A-10 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBE74 — community estimate.
+# Wave-71 addition.
+schema_version: "1"
+
+device:
+  name: "WinWing TQS A-10 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing
+    product_id: 0xBE74      # Community estimate — TQS A-10 throttle
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, friction, idle_cutoff]
+    resolution_bits: 16
+  buttons: 48
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a community estimate. WinWing TQS A-10 Warthog-replica dual throttle. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    WinWing TQS A-10 Throttle — Warthog-replica dual throttle. PID 0xBE74 community estimate. Wave-71. Last reviewed: 2026-07.
+
+tested_games:
+  - dcs
+  - msfs

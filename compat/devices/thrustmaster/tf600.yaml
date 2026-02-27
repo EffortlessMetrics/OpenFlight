@@ -1,0 +1,61 @@
+# Thrustmaster TF600 Racing Wheel (Force Feedback)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (ThrustMaster Inc.). PID 0xB651 is a community estimate for the
+# TF600 force feedback wheel (circa 2005). Legacy device — exact PID should be
+# confirmed with lsusb. Thrustmaster discontinued the TF600 line; drivers may
+# require Thrustmaster legacy driver package on Windows 10/11.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TF600 Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # ThrustMaster Inc.
+    product_id: 0xB651    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB651 is a community estimate for the TF600. Thrustmaster assigned
+      PIDs sequentially in the 0xB6xx range for this product era. Confirm with
+      lsusb or the Thrustmaster legacy driver INF file.
+  - id: LEGACY_DEVICE
+    description: >
+      Legacy device (circa 2005). Requires Thrustmaster legacy driver package
+      on Windows 10/11. DirectInput FFB is limited to spring and constant-force
+      effects. The wheel has a 270° rotation range.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering; Z = accelerator (unipolar); Rz = brake (unipolar).
+      Maps to rudder and toe-brake axes in flight sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TF600 legacy force feedback wheel. VID 0x044F confirmed;
+    PID 0xB651 is a community estimate. Legacy drivers required on modern Windows.
+    Useful as rudder/toe-brake input in flight sim. Last reviewed: 2026-06.

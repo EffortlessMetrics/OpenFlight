@@ -1,0 +1,61 @@
+# Sismo Soluciones Boeing 737 MCP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Sismo Soluciones is a Spanish manufacturer specialising in Boeing 737 NG
+# replica cockpit hardware. The Sismo B737 MCP (Mode Control Panel) is a
+# full-width 737 NG autopilot panel with LED 7-segment displays and
+# rotary selectors for speed, heading, altitude, and V/S.
+# VID 0x04D8 (Microchip Technology) / PID 0xF5D0: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones Boeing 737 MCP"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (common for custom USB HID)
+    product_id: 0xF5D0      # Community estimate — Sismo MCP
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4
+    names: [speed, heading, altitude, vs]
+    resolution_bits: 8
+  buttons: 30
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 / PID 0xF5D0 are community estimates. Sismo uses Microchip PIC
+      USB controllers; actual PIDs should be verified with Sismo's SIOC output
+      driver documentation.
+  - id: DISPLAY_OUTPUTS
+    description: >
+      LED 7-segment displays for IAS/MACH, HDG, ALT, and V/S require USB HID
+      output reports. Typically integrated via SIOC or FSUIPC offset mapping.
+  - id: SISMO_SIOC_PROTOCOL
+    description: >
+      Sismo hardware is typically driven via SIOC (Sismo Input/Output Controller)
+      software. OpenFlight can interoperate via the generic HID path or via
+      SIOC's FSUIPC bridge.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo Soluciones Boeing 737 MCP. VID 0x04D8 / PID 0xF5D0 est.
+    Typically used with SIOC or FSUIPC for display driving.
+    See sismo-efis-capt.yaml and sismo-efis-fo.yaml for companion panels.
+    Last reviewed: 2026-06.

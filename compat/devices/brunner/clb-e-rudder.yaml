@@ -1,0 +1,60 @@
+# Brunner CLB-E Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLB-E is a force feedback rudder pedal system designed to pair with
+# the CLS-E yoke in a full force feedback cockpit setup. Active force feedback
+# on the rudder axis provides realistic aerodynamic and trim feedback.
+# VID 0x1294 / PID 0x1295: community estimate.
+# Note: confirmed Brunner VID on other units is 0x25BB (Brunner Elektronik AG).
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLB-E Rudder Pedals"
+  vendor: "Brunner Elektronik"
+  usb:
+    vendor_id: 0x1294       # PID estimated — confirmed Brunner VID is 0x25BB
+    product_id: 0x1295      # Community estimate — CLB-E Rudder
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x1294 / PID 0x1295 are community estimates. Confirmed Brunner VID
+      on other units is 0x25BB (see cls-e-rudder.yaml). Verify with lsusb on
+      real hardware.
+  - id: ACTIVE_FFB_RUDDER
+    description: >
+      CLB-E provides active force feedback on the rudder axis via Brunner's
+      proprietary FFB protocol. Standard HID FFB reports are not used; a
+      Brunner SDK or CLS2SIM integration is required.
+  - id: PAIRS_WITH_CLS_E
+    description: >
+      Designed to pair with the CLS-E yoke for a full force feedback cockpit.
+      Shared FFB calibration and force envelope settings apply to both devices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLB-E active FFB rudder pedals. VID 0x1294 / PID 0x1295 est.
+    Confirmed Brunner VID is 0x25BB on other units. See cls-e-rudder.yaml.
+    Requires Brunner SDK or CLS2SIM for FFB functionality. Last reviewed: 2026-06.

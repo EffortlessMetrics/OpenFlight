@@ -1,0 +1,58 @@
+# WinWing SimApp Pro Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing SimApp Pro Trim Panel provides elevator, aileron, and rudder
+# trim wheels/switches for the Airbus A320 family centre-pedestal build.
+# Pairs with the SimApp Pro FCU and FSB panels for a complete lower pedestal.
+# VID 0x4098: WinWing — community-confirmed.
+# PID 0xB613 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimApp Pro Trim Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB613      # Community estimate — Trim panel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder_trim]
+    resolution_bits: 10
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB613 is a community estimate. Confirm via lsusb or WinWing SimApp
+      Desktop Device Manager.
+  - id: TRIM_WHEELS_AS_ENCODERS
+    description: >
+      Elevator and aileron trim wheels encode rotation as button-pair increments.
+      Rudder trim is a potentiometer axis. Use encoder_step binding for trim wheels.
+  - id: YELLOW_HYDRAULIC_GUARD
+    description: >
+      The panel includes a guarded switch for the yellow hydraulic pump;
+      guard open/close sends discrete button events before the switch state.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro Trim Panel — Airbus A320 trim controls. VID 0x4098 confirmed;
+    PID 0xB613 est. Pairs with simapp-pro-fsb-panel.yaml for lower pedestal build.
+    Last reviewed: 2026-06.

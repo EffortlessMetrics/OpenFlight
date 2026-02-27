@@ -1,0 +1,50 @@
+# PFC Cessna-Style Trim Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC trim wheel panel — replicates the elevator trim wheel found in
+# Cessna 172/182 training aircraft. Typically used alongside the PFC yoke
+# and throttle quadrant in a complete GA cockpit setup.
+# VID/PID unconfirmed; see pfc-yoke-system.yaml for vendor context.
+
+schema_version: "1"
+
+device:
+  name: "PFC Cessna Trim Wheel"
+  vendor: "Professional Flight Controls"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0104  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for PFC; field verification required."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0104 is a placeholder; must be verified against real hardware."
+  - id: ENCODER_AS_AXIS
+    description: >
+      The trim wheel may report as an encoder (button pair) or as a continuous
+      axis depending on firmware variant. Check HID descriptor on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "PFC Cessna trim wheel. VID/PID unconfirmed. Last reviewed: 2026-02."

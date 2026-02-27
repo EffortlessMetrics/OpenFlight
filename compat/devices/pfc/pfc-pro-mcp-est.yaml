@@ -1,0 +1,47 @@
+# Precision Flight Controls (PFC) Pro MCP
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1551, PID 0x0010 — community estimates. PFC's primary VID is 0x04D8
+# (Microchip Technology). The Pro MCP is a professional-grade Mode Control
+# Panel replica used in commercial flight training environments.
+
+schema_version: "1"
+
+device:
+  name: "PFC Pro MCP (Mode Control Panel)"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x1551       # VID_UNCONFIRMED — PFC alt; primary VID is 0x04D8
+    product_id: 0x0010      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 3
+    names: [hdg_knob, alt_knob, spd_knob]
+    resolution_bits: 10
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1551 and PID 0x0010 are community estimates for the PFC Pro MCP.
+      PFC's confirmed VID is 0x04D8 (Microchip Technology).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Pro MCP — professional flight training Mode Control Panel.
+    VID 0x1551 and PID 0x0010 are community estimates. Last reviewed: 2026-06.

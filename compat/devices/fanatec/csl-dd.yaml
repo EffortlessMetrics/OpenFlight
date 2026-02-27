@@ -1,0 +1,68 @@
+# Fanatec CSL DD Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH (registered USB vendor).
+# PID 0x0030 is a community estimate for the Fanatec CSL DD.
+# The CSL DD is Fanatec's entry-level direct-drive wheel base (5–8 Nm).
+# Used in combined sim setups where a DD base doubles as a force-feedback
+# cyclic input device with a custom flight sim grip adapter.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL DD"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0030   # Community estimate — CSL DD base
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]           # Single rotation axis (steering/cyclic)
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 8.0  # CSL DD peak with Boost Kit
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate. Confirm with lsusb or Fanatec
+      CSL DD software capture before enabling production device matching.
+  - id: TORQUE_ONLY_FFB
+    description: >
+      The CSL DD accepts torque-command HID output reports via the Fanatec
+      vendor protocol. Standard DirectInput effect types are translated by
+      the Fanatec driver; OpenFlight uses native torque commands where available.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The CSL DD exposes only the rotation axis. A flight grip adapter (third-party)
+      mounts on the shaft and enumerates as a separate USB HID device for buttons.
+  - id: BOOST_KIT
+    description: >
+      The optional Boost Kit 180 increases peak torque from 5 Nm to 8 Nm.
+      The ffb.torque_limit_nm value above reflects the Boost Kit configuration.
+      Without Boost Kit, maximum torque is 5 Nm.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL DD — entry-level direct-drive base (5–8 Nm with Boost Kit).
+    VID 0x0EB7 confirmed; PID 0x0030 is a community estimate.
+    Used in combined race+flight setups with grip adapters. Last reviewed: 2026-06.

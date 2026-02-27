@@ -1,0 +1,44 @@
+[package]
+name = "flight-hotas-logitech-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-logitech]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_logitech_parsers"
+path = "fuzz_targets/fuzz_logitech_parsers.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_extreme3dpro"
+path = "fuzz_targets/fuzz_extreme3dpro.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_g_flight_yoke"
+path = "fuzz_targets/fuzz_g_flight_yoke.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_g940_joystick"
+path = "fuzz_targets/fuzz_g940_joystick.rs"
+test = false
+doc = false

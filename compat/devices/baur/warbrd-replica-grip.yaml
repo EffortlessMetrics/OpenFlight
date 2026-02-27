@@ -1,0 +1,45 @@
+# BAUR WarBRD Replica Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes shared VID), PID 0x2093 — estimated.
+# Baur replica grip designed for use with VIRPIL WarBRD base.
+schema_version: "1"
+device:
+  name: "BAUR WarBRD Replica Grip"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x1209       # pid.codes shared open-source hardware VID
+    product_id: 0x2093      # Community estimate — BAUR WarBRD replica grip; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2093 is a community estimate for the BAUR WarBRD Replica Grip.
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: WARBRD_BASE_COMPATIBLE
+    description: >
+      Designed as an aftermarket grip for VIRPIL WarBRD and WarBRD-D bases.
+      Axes reported may depend on the base unit rather than this grip alone.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BAUR WarBRD Replica Grip — VID 0x1209 / PID 0x2093 (est).
+    Compatible with VIRPIL WarBRD base. Axis/button mapping via base firmware.
+    Wave-59 addition. Last reviewed: 2026-07.

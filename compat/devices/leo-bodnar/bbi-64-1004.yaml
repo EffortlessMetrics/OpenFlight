@@ -1,0 +1,59 @@
+# Leo Bodnar BBI-64 USB Button Box Interface — 0x1DD2 / 0x1004
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-51 addition. VID 0x1DD2 (Leo Bodnar Ltd), PID 0x1004.
+# Leo Bodnar BBI-64 — 64-input USB HID button/encoder interface. This PID
+# variant is reported by community members. The primary BBI-64 entry
+# (bbi-64.yaml) uses PID 0x000F from the USB ID database.
+# PID 0x1004 is a community estimate — confirm with lsusb on target hardware.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BBI-64"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x1004      # Community estimate — BBI-64 variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1004 is a community estimate. The primary BBI-64 entry (bbi-64.yaml)
+      uses PID 0x000F. Both may represent the same hardware with different firmware.
+      Verify with lsusb on target hardware.
+  - id: BUTTON_BOX_ONLY
+    description: >
+      The BBI-64 is a pure button/encoder interface with no analog axes.
+      Rotary encoders generate button-up/button-down events; map to trim or
+      frequency step inputs via OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BBI-64 (0x1DD2/0x1004). PID community estimate.
+    64-button USB interface board. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs

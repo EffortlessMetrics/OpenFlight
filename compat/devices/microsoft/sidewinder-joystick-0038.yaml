@@ -1,0 +1,53 @@
+# Microsoft SideWinder Joystick (Alt PID 0x0038)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x0038 is a community-reported alternate PID for the SideWinder joystick.
+# The primary standard joystick PID is 0x0034 (sidewinder-joystick.yaml).
+# This variant may correspond to a specific hardware revision or the
+# SideWinder Standard USB released circa 1998–2000.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Joystick (Alt PID)"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E       # Microsoft Corporation
+    product_id: 0x0038      # Community-reported alt PID; primary is 0x0034
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0038 is community-reported for a SideWinder Joystick hardware revision.
+      Confirm with lsusb. The primary PID is 0x0034 (sidewinder-joystick.yaml).
+  - id: LEGACY_WINDOWS_DRIVER
+    description: >
+      Handled by the Windows built-in HID joystick driver on Windows 10/11.
+      No SideWinder-specific driver installation is required.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Joystick alternate PID (0x0038). Legacy USB joystick
+    circa 1998–2000. See sidewinder-joystick.yaml for primary variant.
+    Last reviewed: 2026-06.

@@ -1,0 +1,54 @@
+# RealSimGear TFRP3G Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed: Microchip Technology (used across RealSimGear product line).
+# PID 0xEF60 is a community estimate for the TFRP3G; confirm with lsusb.
+# The TFRP3G is RealSimGear's third-generation rudder pedal set, featuring
+# toe-brake braking and a carbon-fiber feel, designed for GA and airliner sims.
+schema_version: "1"
+
+device:
+  name: "RealSimGear TFRP3G Rudder Pedals"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xEF60  # Community estimate — TFRP3G; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEF60 is a community estimate for the TFRP3G rudder pedals.
+      RealSimGear uses VID 0x04D8 (Microchip Technology). Confirm with
+      lsusb on real hardware.
+  - id: TOE_BRAKE_AXES
+    description: >
+      Left and right toe-brake axes are reported independently as unipolar
+      axes. Rudder axis is bipolar (centred). Apply separate deadzone/curve
+      profiles for toe brakes vs rudder in the OpenFlight profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear TFRP3G — third-generation GA/airliner rudder pedals.
+    VID 0x04D8 / PID 0xEF60 are community estimates. Axis layout matches
+    the TFRP3G family: rudder + independent toe brakes. Last reviewed: 2026-06.

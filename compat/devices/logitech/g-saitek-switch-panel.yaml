@@ -1,0 +1,41 @@
+# Logitech G Saitek Pro Flight Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC2AD — Logitech-branded Saitek switch panel.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Pro Flight Switch Panel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC2AD
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech-branded Pro Flight switch panel. Landing gear, magnetos, etc.
+    Last reviewed: 2026-06.

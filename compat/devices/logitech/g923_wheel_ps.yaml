@@ -1,0 +1,62 @@
+# Logitech G923 Racing Wheel (PS4 / PS5 Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech International.
+# PID 0xC266: G923 PS4/PS5 variant (TrueForce). Distinct from:
+#   0xC267 — G923 Xbox/PC variant
+#   0xC29B — G923 generic variant
+# Source: linux kernel hid-logitech-hidpp.c, SimHub device database.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G923 Racing Wheel (PS4/PS5)"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech International (confirmed)
+    product_id: 0xC266   # G923 PS4/PS5 — confirmed from Linux kernel hid-logitech-hidpp.c
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, throttle, brake, clutch, ry, rz]
+    resolution_bits: 14
+  buttons: 20
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: TRUEFORCE_FFB_PATH
+    description: >
+      PS4/PS5 variant supports TrueForce via the Logitech G HUB SDK on PC.
+      Standard DirectInput FFB effects available without additional software.
+  - id: PS_CONSOLE_MODE
+    description: >
+      When connected to a PS4/PS5, the wheel uses a Sony-licenced protocol.
+      On PC, it presents as a standard HID wheel; console-specific features
+      not accessible from the PC HID stack.
+  - id: RACING_WHEEL_IN_FLIGHT_SIM
+    description: >
+      Wheel rotation axis used for roll/rudder; pedal axes for throttle and
+      brakes. Pair with a HOTAS or yoke for full flight-sim coverage.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G923 TrueForce — PS4/PS5 variant. VID 0x046D / PID 0xC266 confirmed.
+    Distinct PID from G923 Xbox/PC variant (0xC267). Full HID axis set available
+    on PC. Last reviewed: 2026-06.

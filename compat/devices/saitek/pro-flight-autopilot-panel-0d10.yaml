@@ -1,0 +1,62 @@
+# Saitek Pro Flight Autopilot Panel (Alt PID 0x0D10)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech), PID 0x0D10 — community estimate.
+# Alternate PID enumeration for the Saitek Pro Flight Autopilot Panel, distinct
+# from the 0x0C2F variant in pro-flight-autopilot-panel.yaml. The 0x0D10 PID is
+# reported in community USB databases for some hardware revisions.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Autopilot Panel"
+  vendor: "Saitek / Logitech"
+  type: panel
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D10      # Community estimate — alternate PID; primary is 0x0C2F
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel, not joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 30
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D10 is a community estimate for an alternate hardware revision of the
+      Saitek Pro Flight Autopilot Panel. The primary PID 0x0C2F is covered in
+      pro-flight-autopilot-panel.yaml. Confirm with lsusb on real hardware.
+  - id: ROTARY_ENCODERS
+    description: >
+      Altitude, heading, vertical speed, course, and IAS knobs are rotary encoders
+      reporting relative delta values, not absolute axis values.
+  - id: SAITEK_PANEL_PROTOCOL
+    description: >
+      Uses Saitek's proprietary HID panel protocol. Compatible with the same
+      open-source drivers used for the Multi Panel and Radio Panel.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Autopilot Panel — VID 0x06A3 / PID 0x0D10 (est). Alternate
+    PID variant; primary 0x0C2F is in pro-flight-autopilot-panel.yaml. PID estimated
+    from community sources. Wave-62 addition. Last reviewed: 2026-07.
+
+tested_games:
+  - msfs
+  - xplane

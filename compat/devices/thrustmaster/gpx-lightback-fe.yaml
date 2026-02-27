@@ -1,0 +1,47 @@
+# Thrustmaster GPX LightBack FE
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Thrustmaster GPX LightBack Ferrari Edition gamepad — limited-edition variant
+# of the GPX LightBack with Ferrari livery. VID 0x044F (Thrustmaster confirmed).
+# PID 0xD003 community estimate. See also gpx-gamepad.yaml (PID 0xB313).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster GPX LightBack FE"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed registered VID)
+    product_id: 0xD003      # Community estimate — see gpx-gamepad.yaml (0xB313)
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xD003 is a community estimate for the Ferrari Edition variant.
+      The standard GPX LightBack uses PID 0xB313 (gpx-gamepad.yaml).
+      Verify with USBView or lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster GPX LightBack FE (Ferrari Edition). PID 0xD003 community estimate.
+    Standard GPX uses 0xB313. VID 0x044F confirmed. Last reviewed: 2026-06.

@@ -1,0 +1,57 @@
+# STM32 Nucleo USB HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# STM32 Nucleo development board running USB HID joystick firmware.
+# VID 0x0483 confirmed: STMicroelectronics.
+# PID 0x5711 is a community estimate for a Nucleo-specific HID joystick
+# PID variant (distinct from 0x5710 used by stm32-hid-joystick.yaml and
+# 0x5720 used by stm32-hid-panel.yaml). Common in DIY flight sim builds
+# using Nucleo-64 or Nucleo-144 boards with STM32F4 / STM32H7 MCUs.
+
+schema_version: "1"
+
+device:
+  name: "STM32 Nucleo USB HID Joystick (DIY)"
+  vendor: "STMicroelectronics (DIY)"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics — confirmed
+    product_id: 0x5711      # Community estimate — Nucleo HID joystick variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider_1, slider_2]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5711 is a community estimate for a Nucleo HID joystick variant.
+      Distinct from 0x5710 (stm32-hid-joystick.yaml) and 0x5720 (stm32-hid-panel.yaml).
+      Actual PID depends on CubeMX USB configuration in the firmware project.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis count and resolution are configurable in STM32CubeMX USB HID
+      descriptor. The 8-axis / 32-button / 2-hat layout is a common baseline
+      for Nucleo-based HOTAS builds.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    STM32 Nucleo USB HID Joystick — VID 0x0483 / PID 0x5711 (est).
+    Nucleo board variant; see stm32-hid-joystick.yaml for 0x5710.
+    Wave-46 addition. Last reviewed: 2026-07.

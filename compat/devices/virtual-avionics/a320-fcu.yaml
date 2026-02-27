@@ -1,0 +1,47 @@
+# Virtual Avionics A320 FCU
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1553, PID 0x0002 — community estimates for Virtual Avionics.
+# The A320 FCU (Flight Control Unit) replicates the Airbus A320 autopilot
+# panel with speed/heading/altitude/vertical speed selectors and AP/AT buttons.
+
+schema_version: "1"
+
+device:
+  name: "Virtual Avionics A320 FCU"
+  vendor: "Virtual Avionics"
+  usb:
+    vendor_id: 0x1553       # VID_UNCONFIRMED — community estimate for Virtual Avionics
+    product_id: 0x0002      # Community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 4
+    names: [spd_knob, hdg_knob, alt_knob, vs_knob]
+    resolution_bits: 8
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 25
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1553 and PID 0x0002 are community estimates for Virtual Avionics.
+      Confirm with lsusb or USBDeview on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual Avionics A320 FCU — Airbus A320 Flight Control Unit replica.
+    VID/PID unconfirmed. Supports MSFS and X-Plane. Last reviewed: 2026-06.

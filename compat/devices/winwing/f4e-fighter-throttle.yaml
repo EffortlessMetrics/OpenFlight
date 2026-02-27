@@ -1,0 +1,63 @@
+# WinWing F-4E Phantom Fighter Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed (WinWing). PID is community-estimated for the F-4E
+# Phantom throttle released as part of the WinWing F-4E product line in 2024.
+# Replicates the dual-engine throttle quadrant of the F-4E Phantom II.
+schema_version: "1"
+
+device:
+  name: "WinWing F-4E Phantom Fighter Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD50   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 3
+    names: [left_throttle, right_throttle, slider]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD50 is a community estimate. Confirm from lsusb or USB descriptor
+      capture when hardware is available.
+  - id: DUAL_ENGINE_THROTTLE
+    description: >
+      Left and right throttle levers replicate the F-4E dual-engine throttle
+      quadrant. Map each lever independently for the two J79 engines in DCS.
+  - id: F4E_THROTTLE_LAYOUT
+    description: >
+      Throttle layout replicates the F-4E Phantom II throttle quadrant.
+      Button assignments match DCS F-4E Phantom II default bindings.
+      Typically paired with the WinWing F-4E stick (see f4e-fighter-stick.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-4E Phantom throttle (2024 release). Dual-engine throttle quadrant
+    for DCS F-4E Phantom II. PID 0xBD50 community-estimated.
+    VID 0x4098 = WinWing. Last reviewed: 2026-02.
+
+driver: standard_hid
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Designed for DCS F-4E Phantom II; dual throttle axes for J79 engines."

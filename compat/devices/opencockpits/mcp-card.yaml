@@ -1,0 +1,62 @@
+# Opencockpits MCP Boeing 737 Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1000 is associated with Engravity/Opencockpits USB cards in community
+# documentation; not independently confirmed from a registered USB vendor list.
+# PID varies by card type; 0x0001 is a community estimate for the MCP card.
+# Opencockpits (Engravity, Spain) produces USB HID interface cards for
+# Boeing 737 cockpit builders. The MCP card interfaces with encoder and button
+# inputs from 737-style autopilot panels.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits MCP Boeing 737 Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x1000       # Opencockpits/Engravity — VID_UNCONFIRMED (community)
+    product_id: 0x0001      # MCP card — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48               # MCP button matrix (encoder push + direct buttons)
+  hats: 0
+  encoders: 8               # SPD, HDG, ALT, VS, CRS L, CRS R + 2 spares
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1000 and PID 0x0001 are community estimates. Opencockpits uses a
+      proprietary USB HID protocol (SIOC — Simulator Interface OpeControl).
+      The actual PID depends on the card firmware version; consult the SIOC
+      documentation or use USBView on real hardware.
+  - id: SIOC_PROTOCOL
+    description: >
+      Opencockpits cards communicate via the SIOC (Simulator Interface
+      OpeControl) protocol over USB HID. OpenFlight maps SIOC variables to
+      axis/button bindings via the Opencockpits SIOC adapter module.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      Rotary encoders report as button pairs. SIOC driver accumulates deltas.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits MCP card for Boeing 737 cockpit builds. VID/PID unconfirmed.
+    Requires SIOC protocol adapter. Common in high-fidelity 737 home cockpits.
+    Last reviewed: 2026-06.

@@ -1,0 +1,9 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+schema: flight.profile/1
+sim: ~
+aircraft: ~
+axes: {}
+pof_overrides: ~

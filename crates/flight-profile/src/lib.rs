@@ -481,6 +481,11 @@ impl Profile {
 
         Ok(())
     }
+
+    /// Export the profile to a pretty-printed JSON string.
+    pub fn export_json(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| ProfileError::Validation(e.to_string()))
+    }
 }
 
 impl CapabilityContext {
@@ -705,9 +710,302 @@ mod tests {
             let kid_context = CapabilityContext::for_mode(CapabilityMode::Kid);
             prop_assert!(profile.validate_with_capabilities(&kid_context).is_err());
         }
+
+        // Prop: merging a profile with itself is idempotent (result equals the original)
+        #[test]
+        fn prop_merge_with_self_is_idempotent(
+            deadzone in 0.0f32..0.5f32,
+            expo in 0.0f32..1.0f32,
+            axis_name in "[a-z]+",
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                axis_name,
+                AxisConfig {
+                    deadzone: Some(deadzone),
+                    expo: Some(expo),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: Some("msfs".to_string()),
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            let merged = profile.merge_with(&profile).unwrap();
+            prop_assert_eq!(profile, merged);
+        }
+
+        // Prop: any normal f32 deadzone that passes validation is within [0.0, 0.5]
+        #[test]
+        fn prop_deadzone_clamped_by_validation(d in proptest::num::f32::NORMAL) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                "test".to_string(),
+                AxisConfig {
+                    deadzone: Some(d),
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None,
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            if profile.validate().is_ok() {
+                prop_assert!(d >= 0.0 && d <= MAX_DEADZONE,
+                    "validation passed but deadzone {} is outside [0.0, {}]", d, MAX_DEADZONE);
+            }
+        }
+
+        // Prop: any normal f32 expo that passes validation is within [0.0, 1.0]
+        #[test]
+        fn prop_expo_clamped_by_validation(e in proptest::num::f32::NORMAL) {
+            let mut axes = HashMap::new();
+            axes.insert(
+                "test".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: Some(e),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None,
+                aircraft: None,
+                axes,
+                pof_overrides: None,
+            };
+            if profile.validate().is_ok() {
+                prop_assert!(e >= 0.0 && e <= MAX_EXPO,
+                    "validation passed but expo {} is outside [0.0, {}]", e, MAX_EXPO);
+            }
+        }
     }
 
-    // ── snapshot tests ────────────────────────────────────────────────────────
+    // ── validation edge cases ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_deadzone_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().deadzone = Some(0.6); // > MAX_DEADZONE (0.5)
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_negative_deadzone_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().deadzone = Some(-0.01);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_negative_slew_rate_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().slew_rate = Some(-1.0);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_too_few_points_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![CurvePoint {
+            input: 0.0,
+            output: 0.0,
+        }]);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_non_monotonic_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 0.5,
+                output: 0.5,
+            },
+            CurvePoint {
+                input: 0.3,
+                output: 0.8,
+            }, // non-monotonic input
+        ]);
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_curve_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().curve = Some(vec![
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 0.5,
+                output: 0.4,
+            },
+            CurvePoint {
+                input: 1.0,
+                output: 1.0,
+            },
+        ]);
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_detent_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 1.5, // > 1.0
+            width: 0.1,
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_detent_zero_width_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 0.0,
+            width: 0.0, // must be > 0
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_detent_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().detents = vec![DetentZone {
+            position: 0.0,
+            width: 0.1,
+            role: "idle".to_string(),
+        }];
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_filter_alpha_out_of_range_rejected() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().filter = Some(FilterConfig {
+            alpha: 1.5, // > 1.0
+            spike_threshold: None,
+            max_spike_count: None,
+        });
+        assert!(profile.validate().is_err());
+    }
+
+    #[test]
+    fn test_filter_valid_accepted() {
+        let mut profile = create_valid_profile();
+        profile.axes.get_mut("pitch").unwrap().filter = Some(FilterConfig {
+            alpha: 0.3,
+            spike_threshold: Some(0.05),
+            max_spike_count: Some(3),
+        });
+        assert!(profile.validate().is_ok());
+    }
+
+    #[test]
+    fn test_effective_hash_deterministic() {
+        let profile = create_valid_profile();
+        let hash1 = profile.effective_hash();
+        let hash2 = profile.effective_hash();
+        assert_eq!(hash1, hash2, "hash must be deterministic");
+        assert_eq!(hash1.len(), 64, "SHA-256 hex string must be 64 chars");
+    }
+
+    #[test]
+    fn test_different_profiles_different_hashes() {
+        let profile1 = create_valid_profile();
+        let mut profile2 = create_valid_profile();
+        profile2.axes.get_mut("pitch").unwrap().expo = Some(0.9);
+        assert_ne!(profile1.effective_hash(), profile2.effective_hash());
+    }
+
+    #[test]
+    fn test_pof_override_merged_on_merge() {
+        let base = create_valid_profile();
+        let mut overr = create_valid_profile();
+
+        let phase_axes = {
+            let mut m = HashMap::new();
+            m.insert(
+                "pitch".to_string(),
+                AxisConfig {
+                    deadzone: Some(0.05),
+                    expo: Some(0.1),
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            );
+            m
+        };
+        overr.pof_overrides = Some({
+            let mut pof = HashMap::new();
+            pof.insert(
+                "climb".to_string(),
+                PofOverrides {
+                    axes: Some(phase_axes),
+                    hysteresis: None,
+                },
+            );
+            pof
+        });
+
+        let merged = base.merge_with(&overr).unwrap();
+        assert!(
+            merged.pof_overrides.is_some(),
+            "PoF overrides should be present after merge"
+        );
+        assert!(merged.pof_overrides.as_ref().unwrap().contains_key("climb"));
+    }
+
+    #[test]
+    fn test_merge_axis_configs_direct() {
+        let base = AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.2),
+            slew_rate: Some(1.0),
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        let overr = AxisConfig {
+            deadzone: None,  // should keep base
+            expo: Some(0.5), // should override
+            slew_rate: None, // should keep base
+            detents: vec![],
+            curve: None,
+            filter: None,
+        };
+        let merged = merge_axis_configs(&base, &overr);
+        assert_eq!(merged.deadzone, Some(0.03), "base deadzone preserved");
+        assert_eq!(merged.expo, Some(0.5), "override expo applied");
+        assert_eq!(merged.slew_rate, Some(1.0), "base slew_rate preserved");
+    }
 
     #[test]
     fn snapshot_canonical_form() {
@@ -729,5 +1027,124 @@ mod tests {
         profile.schema = "flight.profile/99".to_string();
         let err = profile.validate().unwrap_err();
         insta::assert_debug_snapshot!("profile_validation_error_schema", err);
+    }
+
+    /// Snapshot a Profile deserialized from minimal valid YAML.
+    #[test]
+    fn snapshot_profile_debug_from_yaml() {
+        let yaml = "schema: \"flight.profile/1\"\nsim: msfs\naxes:\n  pitch:\n    deadzone: 0.05\n    expo: 0.3\n    slew_rate: 2.0\n    detents: []\n";
+        let profile: Profile = serde_yaml::from_str(yaml).expect("YAML should deserialize");
+        insta::assert_debug_snapshot!("profile_debug_from_yaml", profile);
+    }
+
+    /// Snapshot the deserialization error when the required `schema` field is absent.
+    #[test]
+    fn snapshot_validation_error_missing_schema_field() {
+        let yaml = "sim: msfs\naxes: {}\n";
+        let err = serde_yaml::from_str::<Profile>(yaml).unwrap_err();
+        insta::assert_snapshot!("validation_error_missing_schema_field", err.to_string());
+    }
+
+    /// YAML round-trip snapshot: Profile → YAML output shape.
+    /// Catches regressions in field names and serialization format.
+    #[test]
+    fn snapshot_profile_yaml_round_trip() {
+        let profile = create_valid_profile();
+        insta::assert_yaml_snapshot!("profile_yaml_round_trip", profile);
+    }
+
+    /// YAML snapshot of a Profile with all optional fields populated.
+    #[test]
+    fn snapshot_profile_full_fields_yaml() {
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.2),
+                slew_rate: Some(1.2),
+                detents: vec![DetentZone {
+                    position: 0.0,
+                    width: 0.05,
+                    role: "center".to_string(),
+                }],
+                curve: Some(vec![
+                    CurvePoint {
+                        input: 0.0,
+                        output: 0.0,
+                    },
+                    CurvePoint {
+                        input: 0.5,
+                        output: 0.35,
+                    },
+                    CurvePoint {
+                        input: 1.0,
+                        output: 1.0,
+                    },
+                ]),
+                filter: Some(FilterConfig {
+                    alpha: 0.3,
+                    spike_threshold: Some(0.05),
+                    max_spike_count: Some(3),
+                }),
+            },
+        );
+        let profile = Profile {
+            schema: PROFILE_SCHEMA_VERSION.to_string(),
+            sim: Some("msfs".to_string()),
+            aircraft: Some(AircraftId {
+                icao: "A320".to_string(),
+            }),
+            axes,
+            pof_overrides: None,
+        };
+        insta::assert_yaml_snapshot!("profile_full_fields_yaml", profile);
+    }
+
+    /// JSON snapshot of the capability manifest for each mode.
+    /// Catches regressions in limit values and field structure.
+    #[test]
+    fn snapshot_capability_manifest_full() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Full);
+        insta::assert_json_snapshot!("capability_manifest_full", ctx);
+    }
+
+    #[test]
+    fn snapshot_capability_manifest_demo() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Demo);
+        insta::assert_json_snapshot!("capability_manifest_demo", ctx);
+    }
+
+    #[test]
+    fn snapshot_capability_manifest_kid() {
+        let ctx = CapabilityContext::for_mode(CapabilityMode::Kid);
+        insta::assert_json_snapshot!("capability_manifest_kid", ctx);
+    }
+
+    // ── export_json tests ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_profile_export_produces_valid_json() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("exported JSON must be valid");
+        assert!(parsed.is_object());
+    }
+
+    #[test]
+    fn test_profile_export_roundtrip() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        let restored: Profile =
+            serde_json::from_str(&json).expect("should deserialize back to Profile");
+        assert_eq!(profile, restored);
+    }
+
+    #[test]
+    fn test_profile_export_snapshot() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        insta::assert_snapshot!("profile_export_snapshot", json);
     }
 }

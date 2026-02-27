@@ -1,0 +1,46 @@
+# HORI Racing Wheel Apex (PS5/PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: HORI Co., Ltd. (registered USB vendor).
+# PID 0x0150: confirmed from linux-hardware.org for HORI Racing Wheel Apex
+# PS5/PC edition. Entry-level wheel occasionally used for helicopter
+# cyclic control in some sim setups. Includes pedal unit.
+
+schema_version: "1"
+
+device:
+  name: "HORI Racing Wheel Apex (PS5/PC)"
+  vendor: "HORI Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D   # HORI Co., Ltd. (confirmed)
+    product_id: 0x0150  # Racing Wheel Apex PS5 — confirmed from linux-hardware.org
+  hid:
+    usage_page: 0x01
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 4
+    names: [steering, accelerator, brake, clutch]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: WHEEL_CENTERING
+    description: "Steering axis is centered at 0x200 (10-bit). Full lock-to-lock is ±512 counts."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    HORI Racing Wheel Apex PS5/PC. VID 0x0F0D, PID 0x0150 confirmed.
+    Entry-level wheel. Last reviewed: 2026-06.

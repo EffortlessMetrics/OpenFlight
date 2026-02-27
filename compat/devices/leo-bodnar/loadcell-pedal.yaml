@@ -1,0 +1,58 @@
+# Leo Bodnar Load Cell Pedal Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd) / PID 0x1380 — community estimate. Leo Bodnar
+# produces USB load cell amplifier boards used to convert strain-gauge load
+# cell sensors into USB HID axis signals. Used in DIY sim pedals and brake
+# upgrades to provide force-sensitive non-linear brake inputs.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar Load Cell Pedal Interface"
+  vendor: "Leo Bodnar"
+  type: pedals
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd (confirmed)
+    product_id: 0x1380      # Load Cell Interface — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1380 is a community estimate. Leo Bodnar VID 0x1DD2 confirmed.
+      Verify exact PID with lsusb on the physical board.
+  - id: LOAD_CELL_NONLINEAR
+    description: >
+      Load cell force-to-position mapping is inherently non-linear. A custom
+      response curve should be configured in OpenFlight to achieve a linear
+      effective brake feel. The raw axis data represents applied force, not
+      pedal travel distance.
+  - id: HIGH_RESOLUTION_SINGLE_AXIS
+    description: >
+      Single high-resolution axis (12-bit) reporting brake force. Well suited
+      as a standalone brake upgrade for existing rudder pedal sets.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar Load Cell Pedal Interface. VID 0x1DD2 confirmed; PID 0x1380 estimated.
+    Single-axis load cell amplifier for DIY brake upgrades. Wave-42 addition. Last reviewed: 2026-07.

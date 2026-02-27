@@ -1,0 +1,48 @@
+# Moza R2 Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Moza), PID 0x0001 — estimated entry-level base PID.
+schema_version: "1"
+
+device:
+  name: "Moza R2 Direct Drive Wheel Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E
+    product_id: 0x0001
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0001 is estimated. Confirm with Moza Pit House or lsusb.
+  - id: FORCE_FEEDBACK_PROPRIETARY
+    description: >
+      Moza uses a proprietary FFB protocol over USB. Standard DirectInput FFB
+      effects may have limited fidelity without the Moza Pit House driver.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R2 entry-level direct drive wheel base. 4 Nm peak torque. Designed for
+    sim racing. Requires Moza Pit House software for full FFB configuration.
+    Tier 2. Last reviewed: 2026-02.

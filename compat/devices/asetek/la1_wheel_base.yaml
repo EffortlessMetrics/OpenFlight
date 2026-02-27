@@ -1,0 +1,62 @@
+# Asetek SimSports LA-1 Wheel Base (Direct Drive)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Asetek SimSports LA-1 is a 20Nm direct-drive servo wheel base.
+# It provides high-torque FFB for sim racing and sim flight rudder use.
+# Asetek SimSports products use a custom USB VID; exact VID/PID may vary by
+# production batch. VID 0x2735 and PID 0x0001 are community estimates.
+# Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Asetek SimSports LA-1 Wheel Base"
+  vendor: "Asetek SimSports"
+  usb:
+    vendor_id: 0x2735       # Community estimate — Asetek SimSports; confirm with lsusb
+    product_id: 0x0001      # Community estimate — LA-1; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      Both VID 0x2735 and PID 0x0001 are community estimates for the LA-1.
+      Asetek SimSports may use a different VID. Confirm with lsusb or
+      Asetek SimSports software before mapping this device.
+  - id: DIRECT_DRIVE_20NM
+    description: >
+      The LA-1 delivers up to 20Nm peak torque via direct-drive motor. Ensure
+      FFB strength limits are configured appropriately to avoid hardware stress.
+  - id: ASETEK_SOFTWARE_REQUIRED
+    description: >
+      Full FFB profile configuration requires the Asetek SimSports Racing
+      software. Basic DirectInput effects are available without it.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Asetek SimSports LA-1 — 20Nm direct-drive wheel base. VID/PID unconfirmed.
+    High-torque FFB; suitable as rudder axis device in flight sim rigs.
+    Last reviewed: 2026-06.

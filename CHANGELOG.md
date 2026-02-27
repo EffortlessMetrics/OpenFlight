@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Logitech HOTAS Support**:
+    - G Flight Yoke parser (`flight-hotas-logitech`): USB HID report parsing for the Logitech G Flight Yoke System (VID `0x046D`); axes, buttons, and hat decoded from 11-byte HID report.
+    - G Flight Throttle Quadrant parser: three independent throttle lever axes and six button inputs for the Logitech G Flight Throttle Quadrant (VID `0x046D`).
+    - G940 FFB HOTAS: parser and force-feedback control for the Logitech G940 FFB joystick (VID `0x046D`); Spring and ConstantForce effects through the G940's built-in FFB actuator.
+- **Property-Based Testing**:
+    - Proptest suites added to all major HOTAS crates: VIRPIL, VKB, Honeycomb, Thrustmaster, Logitech, and CH Products — report roundtrip invariants, axis range, button mask stability.
+    - Axis calibration proptest suite covering deadzone symmetry, curve monotonicity, and clamp/range invariants across all curve presets.
+- **Fuzz Testing**:
+    - LibFuzzer fuzz targets for the Thrustmaster HID report parser (PC-mode frame, button mask, axis decoding) and the VIRPIL report parser; integrated into CI via `cargo fuzz`.
+- **Device Compatibility**:
+    - 178 device compatibility YAML manifests covering joysticks, throttles, rudder pedals, and panels across VIRPIL, VKB, Honeycomb, Thrustmaster, Logitech, CH Products, WinWing, and additional vendors; regenerated `COMPATIBILITY.md`.
+- **Sim Integration**:
+    - X-Plane adapter bus publishing: `BusSnapshot` fields (airspeed, altitude, heading, pitch, roll, angle of attack, gear state, flap position) now populated from live X-Plane 11/12 UDP data — the adapter is no longer a stub.
 - **macOS HID Layer** (REQ-50):
     - `flight-macos-hid`: platform-guarded IOKit/HID scaffold — `HidManager` (device enumeration with usage/VID-PID matching criteria), `HidDevice` (report I/O), `MacosClock` (mach_absolute_time wrapper, std::time::Instant fallback on non-macOS); all IOKit paths behind `#[cfg(target_os = "macos")]` so the crate compiles on Windows and Linux without IOKit libraries.
 - **Open Hardware Reference Protocol** (REQ-51):
@@ -81,6 +94,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Refactored profile switching logic with metric counters.
 
 ### Fixed
+- **Phase 1 plumbing**:
+    - Rules DSL validation: schema errors now emit structured diagnostics with rule name and field path instead of panicking.
+    - Safe mode profile: the daemon now activates a built-in fallback profile on unrecoverable configuration parse errors, preventing a service crash loop.
+    - Capability clamp: axis capability values are clamped to the declared HID report range before being written, preventing out-of-range values from reaching the sim.
 - Fixed `flight-virtual` stability issues (abnormal thread exits).
 - Resolved `flight-hid` private interface leakage.
 - Corrected unit test assertions to be meaningful for unsigned types.

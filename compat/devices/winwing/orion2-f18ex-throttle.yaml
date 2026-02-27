@@ -1,0 +1,55 @@
+# WinWing HOTAS Orion 2 F-18EX Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing. PID 0xBED3 is a community estimate for the
+# Orion 2 F-18EX throttle variant, distinct from the F/A-18C (0xBE6A).
+# The F-18EX grip represents the upgraded HOTAS configuration with additional
+# thumb controls matching the F/A-18E/F Super Hornet layout.
+schema_version: "1"
+
+device:
+  name: "WinWing HOTAS Orion 2 F-18EX Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBED3      # Community estimate — Orion 2 F-18EX; confirm with SimAppPro
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, z, rx, ry]
+    resolution_bits: 12
+  buttons: 44
+  hats: 1
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBED3 is a community estimate for the Orion 2 F-18EX throttle.
+      Related PIDs: F/A-18C Orion 2 throttle = 0xBE6A, F-16EX = 0xBE6A.
+      Confirm with SimAppPro or lsusb. The F-18EX grip adds additional
+      thumb controls over the standard F/A-18C grip.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders emit HID button events (increment/decrement).
+      Map encoder steps to axis positions or discrete sim commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing HOTAS Orion 2 F-18EX Throttle — Orion 2 base with F/A-18E/F
+    Super Hornet grip. PID 0xBED3 is a community estimate; confirm with
+    SimAppPro or lsusb. Last reviewed: 2026-06.

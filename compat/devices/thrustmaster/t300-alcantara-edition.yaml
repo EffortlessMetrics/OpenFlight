@@ -1,0 +1,62 @@
+# Thrustmaster T300 Ferrari Integral Racing Wheel Alcantara Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T300 Ferrari Integral Racing Wheel Alcantara Edition is a bundle
+# featuring the T300 RS base with the Ferrari SF600 Alcantara rim and
+# T3PA pedals. The alcantara leather rim is the key differentiator.
+# PID 0xB670 is a community estimate; may share PID with other T300 variants.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 Ferrari Integral Racing Wheel Alcantara Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB670      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB670 is a community estimate. Alcantara Edition likely shares the
+      wheel base firmware with the base T300 RS (0xB66E) and GT Edition (0xB66F).
+      Verify with lsusb — all T300 base variants may use the same PID.
+  - id: BUNDLE_VARIANT
+    description: >
+      Alcantara Edition is a bundle variant with Ferrari SF600 Alcantara rim.
+      Electrically identical to t300rs.yaml and t300rs-gt-edition.yaml.
+  - id: FFB_SERVO_BELT
+    description: >
+      Uses the same T300 servo belt-drive FFB system; supports full DirectInput
+      FFB effect set including constant force, spring, and damper.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T300 Ferrari Alcantara Edition bundle. PID 0xB670 is a
+    community estimate; this variant may share the T300 RS PID (0xB66E).
+    See t300rs.yaml and t300rs-gt-edition.yaml for other T300 variants.
+    Last reviewed: 2026-06.

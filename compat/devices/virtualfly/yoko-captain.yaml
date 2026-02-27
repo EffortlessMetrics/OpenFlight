@@ -1,0 +1,46 @@
+# Virtual Fly Yoko Captain
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress). PID 0x2746 estimated for Yoko Captain.
+# Professional-grade Yoko yoke for captain-side installation.
+schema_version: "1"
+
+device:
+  name: "Virtual Fly Yoko Captain"
+  vendor: "Virtual Fly"
+  usb:
+    vendor_id: 0x04B4
+    product_id: 0x2746
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 14
+  buttons: 22
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: CAPTAIN_SIDE_YOKE
+    description: >
+      Captain-side installation yoke with premium materials.
+      Asymmetric yoke horn for left-seat ergonomics. Integrated
+      trim wheel with its own axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual Fly Yoko Captain yoke. PID 0x2746 estimated.
+    VID 0x04B4 (Cypress-based). Last reviewed: 2026-06.

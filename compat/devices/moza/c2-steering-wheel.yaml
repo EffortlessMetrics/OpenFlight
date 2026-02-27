@@ -1,0 +1,51 @@
+# MOZA C2 Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Gudsen Technology / MOZA Racing, confirmed). PID 0x0021 is a
+# community estimate for the MOZA C2 steering wheel rim accessory. Mid-range
+# rim with more buttons than the C1; compatible with MOZA DD bases.
+schema_version: "1"
+
+device:
+  name: "MOZA C2 Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E    # Moza (Gudsen Technology)
+    product_id: 0x0021   # Community estimate -- MOZA C2 rim
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0021 is a community estimate. Confirm with lsusb when MOZA C2
+      is attached to a base before enabling production device matching.
+  - id: WHEEL_ACCESSORY
+    description: >
+      MOZA C2 is a steering wheel rim -- it requires a MOZA DD base; it
+      connects via MOZA's DIN connector, not directly via USB.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA C2 Steering Wheel rim -- mid-range, 12 buttons, 1 hat. VID 0x346E
+    confirmed (Gudsen Technology); PID 0x0021 is a community estimate. Requires
+    a MOZA DD base. Last reviewed: 2026-06.

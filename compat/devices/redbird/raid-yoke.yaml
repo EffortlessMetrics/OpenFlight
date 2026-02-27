@@ -1,0 +1,54 @@
+# Redbird RAID USB Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Redbird Flight Simulations manufactures FAA-approved flight training devices.
+# VID 0x2B67 is a community estimate shared across several sim hardware vendors
+# (also seen in VirtualFly and some PFC products). PID 0x0035 is a community
+# estimate for the Redbird RAID USB yoke interface. Not confirmed via lsusb.
+schema_version: "1"
+
+device:
+  name: "Redbird RAID Yoke"
+  vendor: "Redbird Flight Simulations"
+  usb:
+    vendor_id: 0x2B67    # Community estimate — shared VID range; verify with lsusb
+    product_id: 0x0035   # Community estimate — PID from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [roll, pitch, rudder]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Both VID 0x2B67 and PID 0x0035 are community estimates. The 0x2B67 VID
+      is shared among multiple sim hardware vendors. Verify with Windows Device
+      Manager or lsusb on real Redbird RAID hardware.
+  - id: FTD_HARDWARE
+    description: >
+      Redbird RAID is used in FAA-approved flight training devices (FTDs).
+      USB HID interface is simplified; advanced flight model data may come
+      from a separate proprietary interface.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Redbird RAID USB Yoke. VID 0x2B67 and PID 0x0035 are community estimates.
+    Used in Redbird FTD flight training devices. Confirm VID/PID on real hardware
+    before production use. Last reviewed: 2026-06.

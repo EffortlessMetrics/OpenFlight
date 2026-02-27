@@ -1,0 +1,62 @@
+# Generic USB Helicopter Collective Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes — open allocation namespace for DIY/custom USB devices).
+# PID 0x5740 is a common STM32 USB HID PID used by Arduino/STM32-based
+# DIY helicopter collective builds. Many community-built USB collectives use
+# this VID/PID combination via the STM32 USB HID firmware template.
+# This manifest describes the generic DIY collective pattern; actual
+# capabilities vary by build. Confirm with lsusb on the specific device.
+schema_version: "1"
+
+device:
+  name: "Generic USB Helicopter Collective"
+  vendor: "DIY / Community Build"
+  usb:
+    vendor_id: 0x1209    # pid.codes — DIY/open USB VID
+    product_id: 0x5740   # STM32 USB HID (common DIY collective build PID)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, throttle_twist, mixture]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8       # DIY builds may have higher jitter
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5740 is the STM32 default USB HID PID, shared by many DIY builds.
+      Actual device capabilities vary. Confirm with lsusb and check axis count
+      against the specific firmware used by the build.
+  - id: COLLECTIVE_AXIS_ONLY
+    description: >
+      Primary axis is the collective lever. Throttle twist and mixture axes
+      are optional; some builds expose only the collective. Validate axis
+      assignments against the specific build before deploying a profile.
+  - id: DIY_BUILD_VARIANCE
+    description: >
+      DIY collective builds vary widely in axis count, resolution, and button
+      layout. This manifest describes a common 3-axis / 8-button configuration.
+      Adjust the profile for the specific build in use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB helicopter collective pattern for DIY STM32-based builds.
+    VID 0x1209 (pid.codes open namespace), PID 0x5740 (STM32 HID default).
+    Capabilities are representative; real builds vary. Used in DCS and
+    X-Plane helicopter setups. Last reviewed: 2026-06.

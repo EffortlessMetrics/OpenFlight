@@ -1,0 +1,59 @@
+# GoFlight GF-P8 Avionics Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0001 (estimated from USB device registry).
+# 8-encoder avionics radio management panel for COM/NAV frequency control.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-P8 Avionics Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0001      # Estimated — GF-P8 (lowest PID in GoFlight product sequence)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel, not joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: ROTARY_ENCODERS
+    description: >
+      Eight rotary encoders map to relative-delta button events rather than
+      absolute axis values. Outer and inner rings on dual-concentric knobs
+      generate separate delta streams. Driver must accumulate deltas to track
+      absolute frequency state.
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      Panel includes a 7-segment display for active/standby frequency readout.
+      Display updates require USB HID output reports; the host must push
+      frequency data from sim telemetry.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the GF
+      avionics panel family. Community reverse-engineering documentation is
+      available via the FSUIPC GoFlight plugin source.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0001 is an estimate based on GoFlight USB device registry ordering.
+    Panel widely used in home cockpit radio stacks for MSFS and X-Plane.
+    Supported via FSUIPC GoFlight plugin and community HID drivers.
+    Last reviewed: 2026-02.

@@ -1,0 +1,61 @@
+# RealSimGear G3X Touch Avionics Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xF237 (approximate).
+# G3X Touch avionics panel bezel replica. Provides the button/knob complement for
+# the Garmin G3X Touch suite used in experimental and light sport aircraft.
+# Includes the outer/inner range/FMS knob, softkeys, direct-to, menu, and back buttons.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3X Touch Avionics Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF237      # G3X Touch — approximate; varies by firmware revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40               # Softkeys, knob clicks, direct-to/menu/back/enter/clear
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: ROTARY_ENCODERS_G3X
+    description: >
+      Outer/inner FMS knob and volume/squelch knobs are incremental rotary encoders
+      that produce per-detent button events (CW/CCW). OpenFlight maps these as
+      encoder-delta inputs via the rules engine.
+  - id: PID_VARIES_BY_FIRMWARE
+    description: >
+      RealSimGear ships G3X Touch panels with different USB PIDs depending on
+      firmware version and hardware revision. PID 0xF237 is approximate; verify
+      with lsusb or Windows Device Manager on the target unit.
+  - id: EXPERIMENTAL_AIRCRAFT_FOCUS
+    description: >
+      G3X Touch is designed for experimental and light sport aircraft (RV-series,
+      Sling, Zenith, etc.). Sim profiles require aircraft-specific button binding
+      for meaningful integration with MSFS or X-Plane G3X simulations.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x04D8 (Microchip Technology) confirmed as RealSimGear's USB vendor.
+    PID 0xF237 is approximate — verify with Device Manager on individual units.
+    Targeted at experimental aircraft simmers; less common than the G1000 panels.
+    Primarily used with X-Plane and MSFS with appropriate G3X aircraft addons.
+    Last reviewed: 2026-02.

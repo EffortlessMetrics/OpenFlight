@@ -1,0 +1,44 @@
+# Saitek P2500 Rumble Force Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed: Saitek plc (registered USB vendor).
+# PID 0xF51A: confirmed from kernel HID table for Saitek P2500 Rumble Force.
+# Wired gamepad with dual rumble motors. Used by some sim pilots as
+# secondary cockpit controller.
+
+schema_version: "1"
+
+device:
+  name: "Saitek P2500 Rumble Force Gamepad"
+  vendor: "Saitek plc"
+  usb:
+    vendor_id: 0x06A3   # Saitek plc (confirmed)
+    product_id: 0xF51A  # P2500 — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks: []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Saitek P2500 Rumble Force gamepad. VID 0x06A3, PID 0xF51A confirmed from
+    kernel HID tables. Dual rumble. Last reviewed: 2026-06.

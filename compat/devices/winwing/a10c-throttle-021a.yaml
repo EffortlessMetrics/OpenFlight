@@ -1,0 +1,54 @@
+# WinWing A-10C Throttle (PID 0x021A variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (SimFlight Technology).
+# PID 0x021A is a community estimate for this A-10C throttle variant.
+# The existing a10c-throttle.yaml uses 0xBE63 (Orion 2 F/A-18C stick share).
+# 0x021A is in the WinWing low-range PID block alongside 0x0215–0x021C.
+schema_version: "1"
+
+device:
+  name: "WinWing A-10C Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x021A   # Community estimate — verify with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 5
+    names: [left_throttle, right_throttle, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 42
+  hats: 1
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x021A is a community estimate. The primary A-10C throttle file
+      (a10c-throttle.yaml) uses 0xBE63. Verify 0x021A with SimAppPro USB info
+      or lsusb before enabling production device matching.
+  - id: SPEED_BRAKE_AXIS
+    description: >
+      A-10C throttle includes a speed-brake lever reported as a separate axis.
+      Map to sim speed-brake control via profile rules.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing A-10C Throttle, PID 0x021A community estimate. VID 0x4098 confirmed.
+    See also a10c-throttle.yaml (0xBE63) for the primary confirmed variant.
+    Last reviewed: 2026-06.

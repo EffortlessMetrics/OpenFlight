@@ -10,6 +10,9 @@ use flight_hid_support::ghost_filter::GhostInputFilter;
 use flight_hid_support::ghost_filter::presets;
 use flight_hid_support::saitek_hotas::SaitekHotasType;
 
+use crate::x52_pro;
+use crate::x65f;
+
 /// Axis values normalized to -1.0..1.0 range.
 #[derive(Debug, Clone, Default)]
 pub struct HotasAxes {
@@ -97,6 +100,7 @@ impl HotasInputHandler {
         // This is a placeholder that should be refined based on captured descriptors
         let state = match self.device_type {
             SaitekHotasType::X52 | SaitekHotasType::X52Pro => self.parse_x52_report(report),
+            SaitekHotasType::X65F => self.parse_x65f_report(report),
             SaitekHotasType::X55Stick | SaitekHotasType::X56Stick => {
                 self.parse_x55_x56_stick_report(report)
             }
@@ -120,36 +124,20 @@ impl HotasInputHandler {
     }
 
     fn parse_x52_report(&mut self, report: &[u8]) -> HotasInputState {
-        let mut state = HotasInputState::default();
+        let Some(mut state) = x52_pro::parse_x52_pro_report(report) else {
+            tracing::warn!("X52/X52 Pro report too short: {} bytes", report.len());
+            return HotasInputState::default();
+        };
+        state.buttons.primary = self.ghost_filter.filter(state.buttons.primary);
+        state
+    }
 
-        if report.len() < 14 {
-            tracing::warn!("X52 report too short: {} bytes", report.len());
-            return state;
-        }
-
-        // X52/X52 Pro report format (hypothesis - needs verification):
-        // Bytes 0-1: X axis (11-bit)
-        // Bytes 2-3: Y axis (11-bit)
-        // Bytes 4-5: Twist (10-bit)
-        // Byte 6: Throttle (8-bit)
-        // Bytes 7-10: Buttons
-        // Remaining: Rotaries, slider, etc.
-
-        // Parse axes with normalization
-        // NOTE: Bit depth is UNVERIFIED - may be 10 or 11 bit
-        let x_raw = u16::from_le_bytes([report[0], report[1] & 0x07]) & 0x7FF;
-        let y_raw = u16::from_le_bytes([report[2], report[3] & 0x07]) & 0x7FF;
-
-        state.axes.stick_x = normalize_axis_11bit(x_raw);
-        state.axes.stick_y = normalize_axis_11bit(y_raw);
-
-        // Throttle is typically 8-bit
-        state.axes.throttle = normalize_axis_8bit(report[6]);
-
-        // Parse buttons with ghost filtering
-        let raw_buttons = u32::from_le_bytes([report[7], report[8], report[9], report[10]]);
-        state.buttons.primary = self.ghost_filter.filter(raw_buttons);
-
+    fn parse_x65f_report(&mut self, report: &[u8]) -> HotasInputState {
+        let Some(mut state) = x65f::parse_x65f_report(report) else {
+            tracing::warn!("X65F report too short: {} bytes", report.len());
+            return HotasInputState::default();
+        };
+        state.buttons.primary = self.ghost_filter.filter(state.buttons.primary);
         state
     }
 
@@ -206,16 +194,6 @@ impl HotasInputHandler {
     }
 }
 
-/// Normalize an 8-bit axis value to -1.0..1.0 range.
-fn normalize_axis_8bit(raw: u8) -> f32 {
-    (raw as f32 / 127.5) - 1.0
-}
-
-/// Normalize an 11-bit axis value to -1.0..1.0 range.
-fn normalize_axis_11bit(raw: u16) -> f32 {
-    (raw as f32 / 1023.5) - 1.0
-}
-
 /// Normalize a 16-bit axis value to -1.0..1.0 range.
 fn normalize_axis_16bit(raw: u16) -> f32 {
     (raw as f32 / 32767.5) - 1.0
@@ -224,13 +202,6 @@ fn normalize_axis_16bit(raw: u16) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_normalize_8bit() {
-        assert!((normalize_axis_8bit(0) - (-1.0)).abs() < 0.01);
-        assert!((normalize_axis_8bit(127) - 0.0).abs() < 0.01);
-        assert!((normalize_axis_8bit(255) - 1.0).abs() < 0.01);
-    }
 
     #[test]
     fn test_normalize_16bit() {
@@ -244,5 +215,78 @@ mod tests {
         let handler = HotasInputHandler::new(SaitekHotasType::X52Pro);
         assert_eq!(handler.device_type(), SaitekHotasType::X52Pro);
         assert_eq!(handler.ghost_rate(), 0.0);
+    }
+
+    #[test]
+    fn x52_report_too_short_returns_default() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
+        let state = handler.parse_report(&[0u8; 10]); // needs 14
+        assert_eq!(state.axes.stick_x, 0.0);
+        assert_eq!(state.axes.throttle, 0.0);
+        assert_eq!(state.buttons.primary, 0);
+    }
+
+    #[test]
+    fn x52_report_parses_max_throttle() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
+        let mut report = [0u8; 14];
+        report[6] = 255u8; // max 8-bit throttle
+        let state = handler.parse_report(&report);
+        assert!(
+            state.axes.throttle > 0.9,
+            "max throttle should be near 1.0, got {}",
+            state.axes.throttle
+        );
+    }
+
+    #[test]
+    fn x55_stick_report_too_short_returns_default() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X55Stick);
+        let state = handler.parse_report(&[0u8; 5]); // needs 8
+        assert_eq!(state.axes.stick_x, 0.0);
+    }
+
+    #[test]
+    fn x56_throttle_dual_axes_parsed() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X56Throttle);
+        let mut report = [0u8; 12];
+        // Max throttle1 = 0xFFFF, max throttle2 = 0xFFFF
+        report[0] = 0xFF;
+        report[1] = 0xFF;
+        report[2] = 0x00;
+        report[3] = 0x00; // min throttle2
+        let state = handler.parse_report(&report);
+        assert!(
+            state.axes.throttle > 0.9,
+            "throttle1 should be near 1.0, got {}",
+            state.axes.throttle
+        );
+        assert!(
+            state.axes.throttle2 < -0.9,
+            "throttle2 should be near -1.0 at 0x0000, got {}",
+            state.axes.throttle2
+        );
+    }
+
+    #[test]
+    fn x65f_report_too_short_returns_default() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X65F);
+        let state = handler.parse_report(&[0u8; 10]); // needs 16
+        assert_eq!(state.axes.stick_x, 0.0);
+        assert_eq!(state.axes.throttle, 0.0);
+        assert_eq!(state.buttons.primary, 0);
+    }
+
+    #[test]
+    fn x65f_report_parses_max_throttle() {
+        let mut handler = HotasInputHandler::new(SaitekHotasType::X65F);
+        let mut report = [0u8; 16];
+        report[6] = 255u8;
+        let state = handler.parse_report(&report);
+        assert!(
+            state.axes.throttle > 0.99,
+            "max throttle should be near 1.0, got {}",
+            state.axes.throttle
+        );
     }
 }

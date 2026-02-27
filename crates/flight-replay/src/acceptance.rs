@@ -282,10 +282,10 @@ impl AcceptanceTestRunner {
         // Run validation if we have replay results
         if !replay_results.is_empty() {
             let validation_config = self.config.clone();
-            let validator_suite = ValidationSuite::new(validation_config);
+            let _validator_suite = ValidationSuite::new(validation_config);
 
             // Create a validation test case
-            let test_case = ValidationTestCase {
+            let _test_case = ValidationTestCase {
                 name: test.id.clone(),
                 description: test.description.clone(),
                 file_path: test.blackbox_file.to_string_lossy().to_string(),
@@ -365,7 +365,7 @@ impl AcceptanceTestRunner {
 
         // Create mock validation details based on replay result
         let output_accuracy = OutputAccuracyResult {
-            within_tolerance: replay_result.comparison.as_ref().map_or(true, |c| c.passed),
+            within_tolerance: replay_result.comparison.as_ref().is_none_or(|c| c.passed),
             axis_accuracy_score: 0.95,
             ffb_accuracy_score: 0.93,
             total_mismatches: replay_result
@@ -583,8 +583,8 @@ impl AcceptanceTestRunner {
     /// Evaluate a custom validation rule
     fn evaluate_custom_rule(
         &self,
-        rule: &CustomValidationRule,
-        replay_result: &ReplayResult,
+        _rule: &CustomValidationRule,
+        _replay_result: &ReplayResult,
     ) -> bool {
         // In a full implementation, this would extract the metric value from replay_result
         // and compare it using the specified operator and expected value

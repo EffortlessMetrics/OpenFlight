@@ -1,0 +1,46 @@
+# Logitech G Cloud Gaming Handheld
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech), PID 0xC295 — estimated.
+# Android-based handheld gaming device with Xbox-layout gamepad input.
+# Enumerates as standard HID gamepad when connected via USB to PC.
+schema_version: "1"
+device:
+  name: "Logitech G Cloud Gaming Handheld"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed VID)
+    product_id: 0xC295      # Community estimate — G Cloud handheld; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05             # Gamepad
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rx, ry, z, rz]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC295 is a community estimate for the G Cloud gaming handheld.
+      Confirm with lsusb on real hardware before production deployment.
+  - id: TRIGGER_AXES
+    description: >
+      Analog trigger axes z and rz are unipolar (0 = released, max = full press).
+      Map to throttle or brake in profiles as needed.
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Cloud Gaming Handheld — VID 0x046D / PID 0xC295 (est).
+    Android handheld with Xbox-layout gamepad. Usable for lightweight sim
+    control via USB. Wave-55 addition. Last reviewed: 2026-07.

@@ -1,0 +1,49 @@
+# Thrustmaster T.128 Flight Stick (PC/Xbox Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB697 is a community estimate for the T.128 (released ~2023).
+# The T.128 is an entry/mid-range HOTAS stick for PC and Xbox, featuring
+# a two-stage trigger and 12-bit resolution on all axes.
+# VID 0x044F confirmed: Thrustmaster / ThrustMaster of Texas, Inc.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.128 Flight Stick"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB697   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB697 is a community estimate for the T.128. Thrustmaster has not
+      published an official USB descriptor list. Confirm with lsusb before
+      production deployment.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.128 — entry/mid-range HOTAS stick for PC and Xbox (~2023).
+    PID 0xB697 unconfirmed. VID 0x044F = Thrustmaster.
+    Last reviewed: 2026-06.

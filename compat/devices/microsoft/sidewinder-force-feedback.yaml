@@ -1,0 +1,62 @@
+# Microsoft SideWinder Force Feedback Joystick (original)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x001E is a community estimate for the original SideWinder Force Feedback.
+# The original SideWinder Force Feedback Joystick (1997) predates the FFB Pro.
+# It used a proprietary Windows-specific FFB protocol. Distinct from the
+# FFB Pro (sidewinder-ffb-pro.yaml) and FFB2 (sidewinder-ffb2.yaml).
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Force Feedback Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x001E  # Community estimate — original FFB; confirm with lsusb
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001E is a community estimate for the original SideWinder FFB. The
+      FFB Pro uses a different PID (see sidewinder-ffb-pro.yaml). Confirm with
+      lsusb or USBView on real hardware.
+  - id: LEGACY_FFB_PROTOCOL
+    description: >
+      The original SideWinder FFB used a proprietary Microsoft FFB protocol.
+      It may not expose standard DirectInput FFB effects; a legacy Microsoft
+      driver may be required on modern Windows versions.
+  - id: WINDOWS_DRIVER_REQUIRED
+    description: >
+      Microsoft's SideWinder drivers were discontinued for Windows Vista and later.
+      The device may function as a basic HID joystick on modern Windows with
+      no FFB support.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Original Microsoft SideWinder Force Feedback Joystick (1997). PID 0x001E is
+    unconfirmed. Legacy FFB protocol; limited modern driver support. Predates the
+    SideWinder FFB Pro (sidewinder-ffb-pro.yaml). Last reviewed: 2026-02.

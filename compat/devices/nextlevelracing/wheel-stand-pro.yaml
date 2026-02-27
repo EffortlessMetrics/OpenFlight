@@ -1,0 +1,44 @@
+# Next Level Racing Wheel Stand Pro (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Next Level Racing Wheel Stand Pro is a physical adjustable stand for
+# mounting a wheel base and pedals. It does not enumerate as a USB/HID device.
+# It is modelled here as a virtual_bundle to document physical rig configurations
+# pairing NLR stands with sim hardware in OpenFlight device profiles.
+schema_version: "1"
+
+device:
+  name: "Next Level Racing Wheel Stand Pro"
+  vendor: "Next Level Racing"
+  is_virtual: true
+  usb:
+    vendor_id: ~    # Not a USB device — physical stand
+    product_id: ~
+  type: virtual_bundle
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+quirks:
+  - id: NOT_A_HID_DEVICE
+    description: >
+      The Wheel Stand Pro is a purely mechanical adjustable stand. No USB
+      enumeration occurs. OpenFlight models this as a virtual_bundle entry
+      to represent the physical rig configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle entry for the Next Level Racing Wheel Stand Pro physical rig.
+    No USB interface. Use in OpenFlight rig configuration profiles to document
+    which wheel base and pedals are mounted. Last reviewed: 2026-06.

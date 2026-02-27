@@ -1,0 +1,54 @@
+# Baur IL-2 Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Baur (community manufacturer) produces IL-2 Sturmovik-specific cockpit
+# switch panels for dedicated Eastern-Front combat flight sim setups.
+# VID 0x0BCA (Baur / Engravity shared VID range — est).
+# PID 0x0060 is a community estimate. Confirm with lsusb or Windows Device Manager.
+
+schema_version: "1"
+
+device:
+  name: "Baur IL-2 Switch Panel"
+  vendor: "Baur"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Baur / Engravity VID range
+    product_id: 0x0060      # Community estimate — IL-2 Switch Panel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0060 are community estimates for this Baur panel.
+      Verify with lsusb or Windows Device Manager on real hardware before
+      deploying in production profiles.
+  - id: PANEL_DEVICE
+    description: >
+      Pure panel input device with switches and toggles mapped as buttons.
+      Designed for IL-2 Sturmovik Battle of Stalingrad/Moscow cockpit setups.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Baur IL-2 Switch Panel — VID 0x0BCA / PID 0x0060 (est).
+    Community-sourced; designed for IL-2 Sturmovik Eastern Front combat sim.
+    Wave-46 addition. Last reviewed: 2026-07.

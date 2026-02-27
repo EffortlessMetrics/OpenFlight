@@ -1,0 +1,53 @@
+# WinWing Ursa Minor Fighter Throttle (PID 0xBEC9)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing. PID 0xBEC9 is a community estimate for the
+# Ursa Minor Fighter Throttle variant. Related variants include the F/A-18
+# throttle (0xBE12), the F-16 throttle (0xBD20), and Ursa Minor L (0xBE18).
+schema_version: "1"
+
+device:
+  name: "WinWing Ursa Minor Fighter Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEC9      # Community estimate — Ursa Minor Fighter; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, z, rx, ry]
+    resolution_bits: 12
+  buttons: 40
+  hats: 1
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEC9 is a community estimate. WinWing Ursa Minor throttles have
+      multiple PIDs across variants (0xBE12, 0xBD20, 0xBE18). Confirm the
+      exact PID for your hardware revision with lsusb or SimAppPro.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders emit HID button events. Map encoder steps to axis
+      positions or discrete commands in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Ursa Minor Fighter Throttle — compact single-handle fighter
+    throttle. PID 0xBEC9 is a community estimate; confirm with lsusb or
+    SimAppPro. Related variants: 0xBE12 (F/A-18), 0xBD20 (F-16). Last reviewed: 2026-06.

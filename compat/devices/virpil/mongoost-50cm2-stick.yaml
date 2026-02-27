@@ -1,0 +1,59 @@
+# VIRPIL VPC MongoosT-50CM2 Stick (left-hand, CM2 base)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB)
+#
+# PID 0x4138 — MongoosT-50CM2 stick (left-hand variant).
+# Source: RavenX8/open-vpc Linux kernel driver
+#   (driver/vpcdevice.h, `USB_DEVICE_ID_VIRPIL_STICK_MT_50CM2 0x4138`).
+#
+# Note: The right-hand MongoosT-50CM3 stick and Alpha grips use PID 0x4130;
+# see mongoost-stick.yaml. This PID is specifically for the CM2 base's left stick.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM2 Stick"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4138
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; all other values = center.
+      Encoding matches MongoosT-50CM3 (PID 0x4130) family.
+  - id: SHARED_REPORT_FORMAT_CM3
+    description: >
+      Report format is assumed to match the MongoosT-50CM3 stick (PID 0x4130):
+      report_id(1) + axes_u16le(10) + buttons_lsb(4), 15 bytes total.
+      Verify against hardware before relying on byte offsets.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0x4138 confirmed from RavenX8/open-vpc Linux kernel driver
+    (driver/vpcdevice.h USB_DEVICE_ID_VIRPIL_STICK_MT_50CM2).
+    HID report format assumed to match CM3/WarBRD family (same VIRPIL firmware).
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

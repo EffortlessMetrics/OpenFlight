@@ -1,0 +1,58 @@
+# WinWing SimApp Pro FCU (Airbus Flight Control Unit — standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Confirmed: VID 0x4098, PID 0xBB10 — schenlap/winwing_fcu (two independent
+# repositories: schenlap/winwing_fcu and schenlap/XSchenFly), both listing
+# PID 0xBB10 as the standalone FCU variant.
+# The SimApp Pro FCU replicates the Airbus A320/A330 FCU panel (autopilot
+# modes, speed/heading/altitude/VS management) with a 7-segment LCD display.
+device:
+  name: "WinWing SimApp Pro FCU"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBB10
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      The FCU features a 7-segment LCD display for speed, heading, altitude,
+      and vertical speed. Display updates are driven by HID output reports.
+      OpenFlight can write sim values to the display when the panel is active.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders (speed, heading, altitude, VS knobs) generate HID button
+      events (increment/decrement). OpenFlight maps encoder steps to axis
+      positions or discrete sim commands based on the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro Airbus FCU panel, standalone unit (no EFIS panels).
+    PID 0xBB10 confirmed from schenlap/winwing_fcu and schenlap/XSchenFly
+    open-source projects (both list this as the FCU-only variant).
+    Designed for Airbus A320/A330 cockpit simulation in X-Plane and MSFS.
+    Combined variants: FCU+EFIS-L (0xBC1D), FCU+EFIS-R (0xBC1E),
+    FCU+EFIS-L+R (0xBA01). MCDU panel is a separate device (0xBB36).

@@ -1,0 +1,58 @@
+# Thrustmaster T-Pendular Rudder (TPR)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PIDs confirmed via linux-hardware.org:
+#   0xB68F — standard variant, "T-Pendular-Rudder" (7 probes)
+#   0xB68E — bulk-channel variant, "TPR Rudder Bulk"
+# The Bulk variant uses a different USB endpoint class but exposes the same axes.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-Pendular Rudder (TPR)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F   # Thrustmaster (ThrustMaster of Texas, Inc.)
+    product_id: 0xB68F  # T-Pendular-Rudder — confirmed via linux-hardware.org (7 probes)
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rz, z, rx]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+hid_report:
+  format: "Rz(u16le) + Z(u16le) + Rx(u16le)"
+  total_bytes: 6
+  note: "Same axis layout as TFRP (0xB678) and T-Rudder (0xB679). Rz=combined rudder, Z=right pedal, Rx=left pedal."
+
+quirks:
+  - id: PENDULAR_MECHANISM
+    description: >
+      The TPR uses a pendular (swinging) mechanism for pedal travel, providing a
+      more realistic feel than the TFRP's linear slide. The axis resolution is the
+      same as the TFRP but the feel and travel distance differ significantly.
+  - id: INDEPENDENT_TOE_BRAKES
+    description: >
+      Z and Rx axes are independent toe-brake axes for differential braking.
+      Rz is the combined differential rudder output.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xB68F confirmed from linux-hardware.org (7 probes, USB string "T-Pendular-Rudder").
+    Shares HID report layout with TFRP (0xB678) and T-Rudder (0xB679).
+    A Bulk-channel variant exists at PID 0xB68E ("TPR Rudder Bulk") with the same axis layout.
