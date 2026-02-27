@@ -7,6 +7,9 @@
 //! and system components with automatic quarantine of failed components.
 //! Provides synthetic fault injection for testing and validation.
 
+pub mod health_check;
+pub mod recovery;
+
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 use thiserror::Error;

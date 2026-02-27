@@ -4,13 +4,20 @@
 //! Reusable testing helpers across OpenFlight crates.
 
 pub mod assertions;
+pub mod deterministic_clock;
+pub mod fake_device;
+pub mod fake_sim;
 pub mod fixtures;
 pub mod integration;
 pub mod utils;
 
 pub use assertions::{
-    assert_adapter_state_transition, assert_device_connected, assert_snapshot_valid,
+    assert_adapter_state_transition, assert_approx_eq, assert_bounded_rate, assert_device_connected,
+    assert_in_range, assert_monotonic, assert_snapshot_valid,
 };
+pub use deterministic_clock::DeterministicClock;
+pub use fake_device::{FakeDevice, FakeInput};
+pub use fake_sim::{FakeSim, FakeSnapshot};
 pub use fixtures::{TestConfig, TestConfigBuilder, TestDeviceBuilder};
 pub use integration::TestHarness;
 pub use utils::{create_temp_dir, setup_test_logger, wait_for_condition};
