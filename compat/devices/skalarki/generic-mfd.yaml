@@ -1,0 +1,62 @@
+# Skalarki Electronics Generic MFD Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics (UK) produces USB-based cockpit panel replicas for
+# home simulator builders. This manifest covers the generic MFD (Multi-Function
+# Display) control panel — a bezel/selector controller with buttons and
+# rotary inputs, not tied to a specific aircraft type.
+# VID/PID: Skalarki uses a custom USB HID firmware; specific IDs unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Generic MFD Control Panel"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x20A0       # Community estimate for Skalarki (openmoko VID range)
+    product_id: 0x416D      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24               # Soft-key buttons around display bezel + mode selectors
+  hats: 0
+  encoders: 4               # Outer/inner range knobs, zoom, format selector
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x20A0 and PID 0x416D are community estimates for Skalarki panels.
+      Skalarki uses a custom HID firmware. Verify with USBView on real hardware
+      and check the Skalarki product documentation for confirmed USB IDs.
+  - id: SKALARKI_HID_PROTOCOL
+    description: >
+      Skalarki panels use a USB HID protocol with custom report descriptors.
+      Button and encoder events are normalised by the OpenFlight Skalarki
+      adapter layer to standard axis/button events.
+  - id: SOFT_KEY_LAYOUT
+    description: >
+      MFD soft keys are arranged around the bezel in rows of 5 or 6 per side.
+      The exact button layout depends on the aircraft-specific MFD product;
+      this generic entry covers panels with undefined bezel layouts.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki generic MFD panel — USB HID display bezel controller for cockpit
+    builders. VID/PID unconfirmed; community estimates only. See aircraft-specific
+    Skalarki panels for confirmed MFD variants. Last reviewed: 2026-06.

@@ -82,6 +82,9 @@ pub mod engine;
 pub mod frame;
 pub mod nodes;
 pub mod pipeline;
+pub mod rate_limit;
+pub mod smoothing;
+pub mod trim;
 
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
 pub use combine::{combine_average, combine_differential, split_bipolar};
@@ -101,3 +104,6 @@ pub use nodes::{
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
 pub use pipeline::{Pipeline, PipelineState};
+pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
+pub use smoothing::{EmaFilter, EmaFilterBank};
+pub use trim::{AxisTrim, AxisTrimBank};

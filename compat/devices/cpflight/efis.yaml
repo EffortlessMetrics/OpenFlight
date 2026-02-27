@@ -1,0 +1,67 @@
+# CPFlight EFIS Control Panel (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight EFIS (Electronic Flight Instrument System) selector panel — a
+# generic/standalone model distinct from the captain-seat (efis-captain.yaml)
+# and first-officer-seat (efis-fo.yaml) variants. Provides BARO selector,
+# ND range, ND mode, and display toggle buttons for general cockpit builder use.
+# VID 0x0DC3 is a community estimate for CPFlight USB VID.
+# PID 0x0802 is a community estimate; confirm with USBView on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight EFIS Control Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0DC3       # Placeholder — community estimate for CPFlight USB VID
+    product_id: 0x0802      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16               # ND mode/range, BARO, VOR/ADF, WX, TERR, ARPT, STA, WPT
+  hats: 0
+  encoders: 2               # BARO (rotary), optional ND range encoder
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0DC3 and PID 0x0802 are community estimates for CPFlight. Some
+      CPFlight panels use virtual COM port (VCP) serial over USB rather than
+      native HID. Verify with USBView on real hardware.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels may use a proprietary serial-over-USB protocol rather
+      than standard HID reports. OpenFlight's CPFlight adapter translates
+      panel events to standard axis/button events.
+  - id: DISTINCT_FROM_SEAT_SPECIFIC_EFIS
+    description: >
+      This generic EFIS entry covers CPFlight EFIS panels not tied to a
+      specific crew seat. See efis-captain.yaml and efis-fo.yaml for the
+      captain and first-officer seat variants respectively.
+  - id: SEVEN_SEG_BARO
+    description: >
+      BARO readout may use a 4-digit 7-segment display driven via HID output
+      reports from the sim telemetry pipeline.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight EFIS generic panel — BARO/ND mode/range selector for cockpit
+    builders. VID/PID unconfirmed; may use VCP serial. See efis-captain.yaml
+    and efis-fo.yaml for seat-specific variants. Last reviewed: 2026-06.

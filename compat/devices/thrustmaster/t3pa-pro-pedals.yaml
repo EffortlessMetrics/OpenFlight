@@ -1,0 +1,65 @@
+# Thrustmaster T3PA-Pro Add-On Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The T3PA-Pro is Thrustmaster's 3-pedal upgrade set for the T300RS/T-GT/TX
+# family. Features conical brake mod, adjustable pedal faces, and a rubber
+# clutch-cone brake mod. Connects via RJ12 to the wheel base; appears as
+# additional axes on the wheel base HID device.
+# VID 0x044F (Thrustmaster), PID 0xB677 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T3PA-Pro Add-On Pedals"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster
+    product_id: 0xB677      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB677 is a community estimate. T3PA-Pro pedals connect via RJ12 to
+      the wheel base and typically appear as axes of the wheel base device
+      rather than as a separate HID endpoint. Confirm with lsusb.
+  - id: CONNECTED_VIA_WHEEL_BASE
+    description: >
+      T3PA-Pro communicates through the Thrustmaster wheel base (T300RS/T-GT/TX)
+      via an RJ12 cable. When standalone use is attempted, the VID/PID above
+      applies; otherwise axes appear merged into the wheel base HID report.
+  - id: CONICAL_BRAKE_MOD
+    description: >
+      The T3PA-Pro ships with a conical rubber cone under the brake pedal
+      that can be installed for a progressive brake feel. The axis data is
+      identical; the physical response curve changes with the mod.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      Throttle axis → throttle/collective; brake axis → left toe brake;
+      clutch axis → right toe brake in typical flight sim mappings.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T3PA-Pro pedals — RJ12-connected 3-pedal upgrade for T300RS
+    family. PID 0xB677 is a community estimate; axes may surface through the
+    wheel base device. Last reviewed: 2026-06.

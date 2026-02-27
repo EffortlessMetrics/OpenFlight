@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1196 |
-| ACs with tests | 1196 |
+| Total AC | 1268 |
+| ACs with tests | 1268 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 599 |
+| Draft | 671 |
 | Incomplete | 0 |
 | Microcrates | 78 |
 | Microcrates with tests | 65 (83.3%) |
 | Microcrates with Gherkin | 65 (83.3%) |
 | Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 72.7% |
-| Test + Gherkin coverage | 72.7% |
+| Gherkin coverage | 68.5% |
+| Test + Gherkin coverage | 68.5% |
 
 ## BDD Microcrate Matrix
 
@@ -1314,3 +1314,75 @@
 | REQ-200 | AC-200.4 | A smoke test SHALL trigger a watchdog restart and verify the service recovers and resumes normal operation | - | 1 | ⚪ Draft |
 | REQ-200 | AC-200.5 | The full smoke test suite SHALL complete in less than 60 seconds on a standard CI runner | - | 1 | ⚪ Draft |
 | REQ-200 | AC-200.6 | A failing smoke test SHALL block PR merge in the CI pipeline | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.1 | Up to 16 simultaneous FFB effects SHALL be queued without dropping | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.2 | The FFB effect scheduler SHALL run off the RT spine in a dedicated thread | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.3 | A new FFB effect SHALL begin playing within 20 milliseconds of queue submission | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.4 | Effect cancellation SHALL remove the effect from the queue within one scheduler tick | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.5 | Effect priority ordering SHALL be: emergency > tactile > ambiance | - | 1 | ⚪ Draft |
+| REQ-201 | AC-201.6 | The scheduler SHALL gracefully degrade and discard effects when the FFB device is disconnected | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.1 | Trim SHALL be applied as an additive offset after pilot input normalization | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.2 | Trim range SHALL be configurable per axis with a default of plus or minus 0.3 | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.3 | Trim increment and decrement SHALL be triggered by button events at a configurable step size | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.4 | Trim state SHALL persist across profile reloads | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.5 | A trim reset command SHALL zero all axis trims | - | 1 | ⚪ Draft |
+| REQ-202 | AC-202.6 | Trim SHALL be visualized in the live telemetry dashboard | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.1 | A calibration wizard SHALL guide the user through axis min and max detection | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.2 | Calibration data SHALL be stored keyed by device serial number or USB port identifier | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.3 | An uncalibrated device SHALL use conservative defaults of center 0 and range plus or minus 0.9 | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.4 | Calibration data SHALL survive a service restart | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.5 | Per-axis calibration SHALL be clearable individually without affecting other axes | - | 1 | ⚪ Draft |
+| REQ-203 | AC-203.6 | The CLI command flightctl calibrate SHALL run an interactive calibration wizard | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.1 | Profile changes SHALL be logged with timestamp and source (user/API/cloud) | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.2 | Service start and stop events SHALL be logged with process ID | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.3 | Device connect and disconnect events SHALL be logged with USB VID and PID | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.4 | Audit log SHALL be stored separately from application logs | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.5 | Audit log entries SHALL be append-only; no delete API SHALL exist | - | 1 | ⚪ Draft |
+| REQ-204 | AC-204.6 | Audit log SHALL be viewable via the flightctl audit tail command | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.1 | WASM plugins SHALL be sandboxed, capability-declared, and run at 20 to 120 Hz | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.2 | Native fast-path plugins SHALL run in an isolated helper process via shared-memory SPSC | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.3 | Service plugins SHALL run in a managed thread with user consent | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.4 | A plugin capability manifest SHALL declare all required axes, buttons, and FFB access | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.5 | A misbehaving plugin SHALL be terminated without affecting the RT spine | - | 1 | ⚪ Draft |
+| REQ-205 | AC-205.6 | Plugins compiled against an older API version SHALL be rejected gracefully on API break | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.1 | Profile comment fields SHALL accept UTF-8 strings | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.2 | Non-ASCII characters in comments SHALL be preserved through a save and load cycle | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.3 | Japanese, Arabic, and Cyrillic scripts SHALL survive a profile round-trip unchanged | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.4 | Cloud sync SHALL preserve non-ASCII profile comments | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.5 | The CLI SHALL display non-ASCII profile comments correctly in the terminal | - | 1 | ⚪ Draft |
+| REQ-206 | AC-206.6 | Malformed UTF-8 in a profile comment SHALL be rejected at load with a descriptive error | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.1 | Rate limit specified as maximum change per tick (e.g. 0.05 = 5% per tick at 250Hz) | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.2 | Rate limiter applied after deadzone, before output | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.3 | Removing rate limit (limit=0.0) passes input unchanged | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.4 | Rate limiter state is per-axis (does not bleed between axes) | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.5 | Rate limit configuration hot-reloaded from profile without service restart | - | 1 | ⚪ Draft |
+| REQ-207 | AC-207.6 | Axis rate limit visualized in telemetry as slew rate | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.1 | MFD protocol supports page navigation, soft-key, and rotary encoder events | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.2 | Display content updated via structured command from profile/rules engine | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.3 | MFD pages defined in profile as named states with transitions | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.4 | MFD panel reports button press and encoder delta events | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.5 | Multiple MFD panels on same USB hub handled independently | - | 1 | ⚪ Draft |
+| REQ-208 | AC-208.6 | MFD protocol version negotiated at connect time | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.1 | WinWing FCU panel axes detected and normalized | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.2 | WinWing TECS throttle dual throttle axes processed independently | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.3 | WinWing UFC panel soft-key matrix events routed to rules engine | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.4 | WinWing Ursa Minor F-16 throttle parseable with correct PIDs | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.5 | WinWing panel LEDs controllable via profile LED state machine | - | 1 | ⚪ Draft |
+| REQ-209 | AC-209.6 | WinWing USB enumeration resilient to hub resets | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.1 | All VIRPIL VPC axes decoded at 14-bit resolution (0-16383) | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.2 | VIRPIL Center of Gravity stick mode handled (different HID layout) | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.3 | Stick mode configuration bit read from device descriptor at connect | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.4 | VIRPIL button matrix (including encoder modes) fully decoded | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.5 | Multiple VIRPIL devices (stick + throttle + pedals) assigned to correct roles | - | 1 | ⚪ Draft |
+| REQ-210 | AC-210.6 | VIRPIL firmware upgrade event handled gracefully (disconnect/reconnect) | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.1 | Simucube 2 encoder position (22-bit) normalized to [-1.0, 1.0] steering axis | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.2 | FFB pipeline delivers torque commands via IONI protocol | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.3 | Emergency stop (ESTOP) signal from Simucube 2 propagates immediately to service | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.4 | Multiple Simucube models (Sport/Pro/Ultimate) detected by PID | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.5 | Granity firmware version read and logged at startup | - | 1 | ⚪ Draft |
+| REQ-211 | AC-211.6 | Thermal shutdown from Simucube handled gracefully without service crash | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.1 | Left stick X/Y mapped to roll/pitch by default in gamepad profile | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.2 | Triggers (L2/R2) mapped to throttle (combined or split) | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.3 | Gamepad profile specifies axis response curves for analog precision | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.4 | Gamepad works without FFB hardware (gracefully degrades) | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.5 | Button hold mapped to repeated trim increment/decrement | - | 1 | ⚪ Draft |
+| REQ-212 | AC-212.6 | Profile supports multiple gamepad models without manual rebinding | - | 1 | ⚪ Draft |

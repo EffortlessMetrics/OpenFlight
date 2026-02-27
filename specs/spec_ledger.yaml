@@ -6801,3 +6801,532 @@ requirements:
         description: "A failing smoke test SHALL block PR merge in the CI pipeline"
         tests:
           - feature:specs/features/req_200_e2e_smoke_test_suite.feature
+
+  - id: REQ-201
+    name: FFB effect scheduler queues and plays effects without RT spine blocking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-201.1
+        description: "Up to 16 simultaneous FFB effects SHALL be queued without dropping"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+      - id: AC-201.2
+        description: "The FFB effect scheduler SHALL run off the RT spine in a dedicated thread"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+      - id: AC-201.3
+        description: "A new FFB effect SHALL begin playing within 20 milliseconds of queue submission"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+      - id: AC-201.4
+        description: "Effect cancellation SHALL remove the effect from the queue within one scheduler tick"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+      - id: AC-201.5
+        description: "Effect priority ordering SHALL be: emergency > tactile > ambiance"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+      - id: AC-201.6
+        description: "The scheduler SHALL gracefully degrade and discard effects when the FFB device is disconnected"
+        tests:
+          - feature:specs/features/req_201_ffb_effect_scheduler.feature
+
+  - id: REQ-202
+    name: Axis trim offsets axes independently from pilot input
+    kind: product
+    status: draft
+    ac:
+      - id: AC-202.1
+        description: "Trim SHALL be applied as an additive offset after pilot input normalization"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+      - id: AC-202.2
+        description: "Trim range SHALL be configurable per axis with a default of plus or minus 0.3"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+      - id: AC-202.3
+        description: "Trim increment and decrement SHALL be triggered by button events at a configurable step size"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+      - id: AC-202.4
+        description: "Trim state SHALL persist across profile reloads"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+      - id: AC-202.5
+        description: "A trim reset command SHALL zero all axis trims"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+      - id: AC-202.6
+        description: "Trim SHALL be visualized in the live telemetry dashboard"
+        tests:
+          - feature:specs/features/req_202_axis_trim_system.feature
+
+  - id: REQ-203
+    name: Devices undergo calibration to map raw hardware range to normalized output
+    kind: product
+    status: draft
+    ac:
+      - id: AC-203.1
+        description: "A calibration wizard SHALL guide the user through axis min and max detection"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+      - id: AC-203.2
+        description: "Calibration data SHALL be stored keyed by device serial number or USB port identifier"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+      - id: AC-203.3
+        description: "An uncalibrated device SHALL use conservative defaults of center 0 and range plus or minus 0.9"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+      - id: AC-203.4
+        description: "Calibration data SHALL survive a service restart"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+      - id: AC-203.5
+        description: "Per-axis calibration SHALL be clearable individually without affecting other axes"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+      - id: AC-203.6
+        description: "The CLI command flightctl calibrate SHALL run an interactive calibration wizard"
+        tests:
+          - feature:specs/features/req_203_device_calibration.feature
+
+  - id: REQ-204
+    name: Security-relevant events written to tamper-evident audit log
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-204.1
+        description: "Profile changes SHALL be logged with timestamp and source (user/API/cloud)"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+      - id: AC-204.2
+        description: "Service start and stop events SHALL be logged with process ID"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+      - id: AC-204.3
+        description: "Device connect and disconnect events SHALL be logged with USB VID and PID"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+      - id: AC-204.4
+        description: "Audit log SHALL be stored separately from application logs"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+      - id: AC-204.5
+        description: "Audit log entries SHALL be append-only; no delete API SHALL exist"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+      - id: AC-204.6
+        description: "Audit log SHALL be viewable via the flightctl audit tail command"
+        tests:
+          - feature:specs/features/req_204_audit_log.feature
+
+  - id: REQ-205
+    name: Third-party plugins extend OpenFlight via defined plugin tiers
+    kind: product
+    status: draft
+    ac:
+      - id: AC-205.1
+        description: "WASM plugins SHALL be sandboxed, capability-declared, and run at 20 to 120 Hz"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+      - id: AC-205.2
+        description: "Native fast-path plugins SHALL run in an isolated helper process via shared-memory SPSC"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+      - id: AC-205.3
+        description: "Service plugins SHALL run in a managed thread with user consent"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+      - id: AC-205.4
+        description: "A plugin capability manifest SHALL declare all required axes, buttons, and FFB access"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+      - id: AC-205.5
+        description: "A misbehaving plugin SHALL be terminated without affecting the RT spine"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+      - id: AC-205.6
+        description: "Plugins compiled against an older API version SHALL be rejected gracefully on API break"
+        tests:
+          - feature:specs/features/req_205_plugin_architecture.feature
+
+  - id: REQ-206
+    name: Profile TOML supports Unicode comments for internationalization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-206.1
+        description: "Profile comment fields SHALL accept UTF-8 strings"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+      - id: AC-206.2
+        description: "Non-ASCII characters in comments SHALL be preserved through a save and load cycle"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+      - id: AC-206.3
+        description: "Japanese, Arabic, and Cyrillic scripts SHALL survive a profile round-trip unchanged"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+      - id: AC-206.4
+        description: "Cloud sync SHALL preserve non-ASCII profile comments"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+      - id: AC-206.5
+        description: "The CLI SHALL display non-ASCII profile comments correctly in the terminal"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+      - id: AC-206.6
+        description: "Malformed UTF-8 in a profile comment SHALL be rejected at load with a descriptive error"
+        tests:
+          - feature:specs/features/req_206_unicode_profile_comments.feature
+
+  - id: REQ-207
+    name: Axis rate limiter prevents instantaneous large axis jumps
+    kind: product
+    status: draft
+    ac:
+      - id: AC-207.1
+        description: "Rate limit specified as maximum change per tick (e.g. 0.05 = 5% per tick at 250Hz)"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+      - id: AC-207.2
+        description: "Rate limiter applied after deadzone, before output"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+      - id: AC-207.3
+        description: "Removing rate limit (limit=0.0) passes input unchanged"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+      - id: AC-207.4
+        description: "Rate limiter state is per-axis (does not bleed between axes)"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+      - id: AC-207.5
+        description: "Rate limit configuration hot-reloaded from profile without service restart"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+      - id: AC-207.6
+        description: "Axis rate limit visualized in telemetry as slew rate"
+        tests:
+          - feature:specs/features/req_207_axis_rate_limiter.feature
+  - id: REQ-208
+    name: Multi-Function Display panels communicate via structured MFD protocol
+    kind: product
+    status: draft
+    ac:
+      - id: AC-208.1
+        description: "MFD protocol supports page navigation, soft-key, and rotary encoder events"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+      - id: AC-208.2
+        description: "Display content updated via structured command from profile/rules engine"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+      - id: AC-208.3
+        description: "MFD pages defined in profile as named states with transitions"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+      - id: AC-208.4
+        description: "MFD panel reports button press and encoder delta events"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+      - id: AC-208.5
+        description: "Multiple MFD panels on same USB hub handled independently"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+      - id: AC-208.6
+        description: "MFD protocol version negotiated at connect time"
+        tests:
+          - feature:specs/features/req_208_mfd_protocol.feature
+  - id: REQ-209
+    name: WinWing devices fully integrated with correct axes, buttons, and MFD protocol
+    kind: product
+    status: draft
+    ac:
+      - id: AC-209.1
+        description: "WinWing FCU panel axes detected and normalized"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+      - id: AC-209.2
+        description: "WinWing TECS throttle dual throttle axes processed independently"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+      - id: AC-209.3
+        description: "WinWing UFC panel soft-key matrix events routed to rules engine"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+      - id: AC-209.4
+        description: "WinWing Ursa Minor F-16 throttle parseable with correct PIDs"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+      - id: AC-209.5
+        description: "WinWing panel LEDs controllable via profile LED state machine"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+      - id: AC-209.6
+        description: "WinWing USB enumeration resilient to hub resets"
+        tests:
+          - feature:specs/features/req_209_winwing_integration.feature
+  - id: REQ-210
+    name: VIRPIL VPC devices fully integrated with 14-bit precision and all features
+    kind: product
+    status: draft
+    ac:
+      - id: AC-210.1
+        description: "All VIRPIL VPC axes decoded at 14-bit resolution (0-16383)"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+      - id: AC-210.2
+        description: "VIRPIL Center of Gravity stick mode handled (different HID layout)"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+      - id: AC-210.3
+        description: "Stick mode configuration bit read from device descriptor at connect"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+      - id: AC-210.4
+        description: "VIRPIL button matrix (including encoder modes) fully decoded"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+      - id: AC-210.5
+        description: "Multiple VIRPIL devices (stick + throttle + pedals) assigned to correct roles"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+      - id: AC-210.6
+        description: "VIRPIL firmware upgrade event handled gracefully (disconnect/reconnect)"
+        tests:
+          - feature:specs/features/req_210_virpil_integration.feature
+  - id: REQ-211
+    name: Simucube 2 direct drive base integrates with OpenFlight axis and FFB engine
+    kind: product
+    status: draft
+    ac:
+      - id: AC-211.1
+        description: "Simucube 2 encoder position (22-bit) normalized to [-1.0, 1.0] steering axis"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+      - id: AC-211.2
+        description: "FFB pipeline delivers torque commands via IONI protocol"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+      - id: AC-211.3
+        description: "Emergency stop (ESTOP) signal from Simucube 2 propagates immediately to service"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+      - id: AC-211.4
+        description: "Multiple Simucube models (Sport/Pro/Ultimate) detected by PID"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+      - id: AC-211.5
+        description: "Granity firmware version read and logged at startup"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+      - id: AC-211.6
+        description: "Thermal shutdown from Simucube handled gracefully without service crash"
+        tests:
+          - feature:specs/features/req_211_simucube_integration.feature
+  - id: REQ-212
+    name: Standard gamepads mapped to flight control axes via profile
+    kind: product
+    status: draft
+    ac:
+      - id: AC-212.1
+        description: "Left stick X/Y mapped to roll/pitch by default in gamepad profile"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+      - id: AC-212.2
+        description: "Triggers (L2/R2) mapped to throttle (combined or split)"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+      - id: AC-212.3
+        description: "Gamepad profile specifies axis response curves for analog precision"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+      - id: AC-212.4
+        description: "Gamepad works without FFB hardware (gracefully degrades)"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+      - id: AC-212.5
+        description: "Button hold mapped to repeated trim increment/decrement"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+      - id: AC-212.6
+        description: "Profile supports multiple gamepad models without manual rebinding"
+        tests:
+          - feature:specs/features/req_212_gamepad_flight_controller.feature
+  - id: REQ-213
+    name: Input smoothing filters reduce jitter without adding perceptible latency
+    kind: product
+    status: draft
+    ac:
+      - id: AC-213.1
+        description: "Exponential moving average (EMA) filter configurable per axis with alpha in [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+      - id: AC-213.2
+        description: "Alpha=1.0 produces no smoothing (passthrough); Alpha=0.1 is heavy smoothing"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+      - id: AC-213.3
+        description: "EMA filter state preserved across ticks (stateful filter)"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+      - id: AC-213.4
+        description: "Filter latency measurable as 1/(1-alpha) ticks at 250Hz"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+      - id: AC-213.5
+        description: "Smoothing can be enabled/disabled via profile without service restart"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+      - id: AC-213.6
+        description: "Combined deadzone + smoothing + rate-limit chain produces stable output"
+        tests:
+          - feature:specs/features/req_213_input_smoothing.feature
+  - id: REQ-214
+    name: Profile selection automatically switches based on active simulator and aircraft
+    kind: product
+    status: draft
+    ac:
+      - id: AC-214.1
+        description: "Profile auto-selected when new aircraft detected from any connected sim"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+      - id: AC-214.2
+        description: "Profile hierarchy: aircraft-specific > sim-specific > global default"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+      - id: AC-214.3
+        description: "Auto-switch event logged with aircraft ICAO, sim, and profile applied"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+      - id: AC-214.4
+        description: "User-locked profile prevents auto-switch until unlocked"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+      - id: AC-214.5
+        description: "No-match falls back to global default profile cleanly"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+      - id: AC-214.6
+        description: "Auto-switch latency < 500ms from aircraft detection to profile active"
+        tests:
+          - feature:specs/features/req_214_auto_profile_selection.feature
+  - id: REQ-215
+    name: Service exposes structured metrics for operational monitoring
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-215.1
+        description: "Prometheus-format metrics at /metrics endpoint"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+      - id: AC-215.2
+        description: "Metric: openflight_tick_rate_hz gauge"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+      - id: AC-215.3
+        description: "Metric: openflight_tick_jitter_us histogram (p50, p95, p99)"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+      - id: AC-215.4
+        description: "Metric: openflight_device_connected counter per VID/PID"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+      - id: AC-215.5
+        description: "Metric: openflight_axis_clamp_total counter per axis"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+      - id: AC-215.6
+        description: "Metrics reset on service restart; monotonic counters labeled as such"
+        tests:
+          - feature:specs/features/req_215_service_metrics_api.feature
+  - id: REQ-216
+    name: Windows MSI installer passes end-to-end installation verification
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-216.1
+        description: "MSI installs flightd service and flightctl CLI to correct paths"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+      - id: AC-216.2
+        description: "Installer creates Windows service with DEMAND_START"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+      - id: AC-216.3
+        description: "SimConnect integration optionally installed (checkbox)"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+      - id: AC-216.4
+        description: "Uninstall removes all installed files but preserves user config"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+      - id: AC-216.5
+        description: "Installer signed with code signing certificate"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+      - id: AC-216.6
+        description: "Installation log captures all installed files for audit"
+        tests:
+          - feature:specs/features/req_216_windows_installer.feature
+  - id: REQ-217
+    name: Linux deb/rpm package installs and configures service correctly
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-217.1
+        description: "Deb package installs binaries to /usr/bin and udev rules to /etc/udev/rules.d"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+      - id: AC-217.2
+        description: "Postinst adds current user to 'input' group and reloads udev rules"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+      - id: AC-217.3
+        description: "Systemd user unit installed and user can enable without root"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+      - id: AC-217.4
+        description: "Prerm script stops service before uninstall"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+      - id: AC-217.5
+        description: "Postrm cleans up udev rules and systemd unit on purge"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+      - id: AC-217.6
+        description: "Package metadata includes correct SPDX license identifier"
+        tests:
+          - feature:specs/features/req_217_linux_package.feature
+  - id: REQ-218
+    name: Portable ZIP distribution runs without installation on Windows/Linux
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-218.1
+        description: "ZIP contains flightd, flightctl, default config, and README"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature
+      - id: AC-218.2
+        description: "Service starts from extracted directory without PATH modification"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature
+      - id: AC-218.3
+        description: "Config directory defaults to user home on first run if not found"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature
+      - id: AC-218.4
+        description: "Portable mode does not write to system paths"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature
+      - id: AC-218.5
+        description: "Checksum file included for artifact integrity verification"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature
+      - id: AC-218.6
+        description: "Portable build produced as CI artifact on every release tag"
+        tests:
+          - feature:specs/features/req_218_portable_distribution.feature

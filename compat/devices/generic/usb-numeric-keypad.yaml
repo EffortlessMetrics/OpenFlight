@@ -1,0 +1,68 @@
+# Generic USB Numeric Keypad (Repurposed Button Box)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# A standard USB HID numeric keypad repurposed as a button box in flight
+# simulation setups. These devices appear as USB keyboard HID devices and
+# are commonly used for autopilot heading/altitude entry, radio frequency
+# input, or as a 17-21 button macro pad for panel functions.
+# VID/PID vary by manufacturer — this manifest covers the generic HID class
+# keyboard profile for repurposed numeric keypads.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB Numeric Keypad (Button Box)"
+  vendor: "Generic"
+  usb:
+    vendor_id: null         # Varies by manufacturer — wildcard match
+    product_id: null        # Varies by manufacturer — wildcard match
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 21               # 0–9, +, -, *, /, Enter, ., NumLock, Tab, Backspace, Del, Ins
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 10
+
+quirks:
+  - id: WILDCARD_VID_PID
+    description: >
+      Numeric keypads have no standardized VID/PID; any USB keyboard class
+      device (Usage Page 0x01, Usage 0x06) reporting from numpad key codes
+      should match this profile. VID/PID must be specified in the user profile
+      if a specific keypad model is targeted.
+  - id: KEYBOARD_HID_CLASS
+    description: >
+      Numeric keypads present as USB keyboard (HID Usage 0x06) devices.
+      OpenFlight maps numpad keycodes to virtual button IDs for use in profile
+      rules and macro bindings.
+  - id: NUMLOCK_STATE_DEPENDENCY
+    description: >
+      Key output depends on NumLock state. With NumLock off, arrow cluster
+      keys generate navigation keycodes. OpenFlight normalises both states
+      to consistent virtual button IDs.
+  - id: COMMON_SIM_USE
+    description: >
+      Commonly repurposed for: ATC frequency entry, transponder code input,
+      autopilot target altitude/heading entry, or general macro button box.
+
+support:
+  tier: 5
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic USB numeric keypad used as button box. No confirmed VID/PID —
+    applies to any USB keyboard class device with numpad keycodes. NumLock
+    state is normalised by the OpenFlight keyboard input adapter.
+    Last reviewed: 2026-06.

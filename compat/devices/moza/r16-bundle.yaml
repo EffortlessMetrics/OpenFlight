@@ -1,0 +1,67 @@
+# Moza R16 Direct Drive Bundle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Moza R16 Bundle packages the R16 direct drive base (r16-base.yaml)
+# with the CS (Carbon Sport) steering wheel and CRP (Carbon Racing Pedals)
+# into a single SKU. The bundle components appear as separate HID devices
+# on the USB bus; this manifest documents the bundle relationship.
+# VID 0x346E confirmed: Gudsen Technology / Moza.
+# PID 0x0011 is a community estimate for the R16 bundle configuration.
+
+schema_version: "1"
+
+device:
+  name: "Moza R16 Direct Drive Bundle"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Gudsen Technology / Moza (confirmed)
+    product_id: 0x0011      # Community estimate — R16 bundle
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4                # Steering wheel + 3 pedal axes (from CRP pedals)
+    names: [x, throttle, brake, clutch]
+    resolution_bits: 17     # 17-bit steering axis; pedals 12-bit
+  buttons: 16               # CS wheel buttons + paddle shifters
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 16.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate for the R16 bundle. Individual
+      components (r16-base.yaml, crp-pedals.yaml) may enumerate separately
+      with their own PIDs. Verify with lsusb on real hardware.
+  - id: BUNDLE_MULTI_DEVICE
+    description: >
+      The R16 bundle components (base, wheel, pedals) may enumerate as
+      separate HID devices rather than a single composite device. In that
+      case, use r16-base.yaml + crp-pedals.yaml + cs-steering-wheel.yaml
+      individually.
+  - id: GRIP_ADAPTER_FOR_FLIGHT
+    description: >
+      For flight sim use, a flight grip adapter is required to convert the
+      DD base rotation to a meaningful yoke/stick axis. The steering wheel
+      rim provides buttons used for cockpit controls.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R16 Bundle — R16 DD base + CS wheel + CRP pedals. PID 0x0011 is a
+    community estimate; components may enumerate separately. See r16-base.yaml,
+    crp-pedals.yaml, and cs-steering-wheel.yaml. Last reviewed: 2026-06.

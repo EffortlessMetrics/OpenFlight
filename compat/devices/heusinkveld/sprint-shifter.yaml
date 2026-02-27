@@ -1,0 +1,64 @@
+# Heusinkveld Sprint Shifter (H-Pattern)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Heusinkveld Sprint Shifter is a 6+R H-pattern shifter from Heusinkveld's
+# Sprint peripheral lineup. It is distinct from the Sim Shifter Sequential
+# (sim-shifter-sequential.yaml), which is a push-pull sequential unit.
+# VID 0x04D8 is a community estimate (Microchip Technology licensed VID shared
+# by several Heusinkveld products). PID 0xF6D6 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sprint Shifter H-Pattern"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (Heusinkveld community estimate)
+    product_id: 0xF6D6      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]           # Lateral (gear lane) + longitudinal (engagement)
+    resolution_bits: 12
+  buttons: 7                # 6 gears + reverse (inferred from Hall sensor state)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D6 is a community estimate. VID 0x04D8 is used across several
+      Heusinkveld Sprint peripherals; confirm PID with lsusb on real hardware.
+  - id: DISTINCT_FROM_SEQUENTIAL
+    description: >
+      The Sprint Shifter is an H-pattern (6+R) device. It differs from the
+      Sim Shifter Sequential (sim-shifter-sequential.yaml) which is a push-pull
+      sequential unit. Both may share the same VID; PID distinguishes them.
+  - id: HALL_SENSOR_BASED
+    description: >
+      Uses Hall-effect sensors for gear position detection. Two analog axes
+      (X = lane select, Y = gear engage depth) are exposed, with gear buttons
+      derived from the XY position combination in firmware.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim, H-pattern positions are commonly mapped to flap detents,
+      cowl flap positions, or propeller pitch lever detents.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sprint Shifter — H-pattern 6+R shifter with Hall sensors.
+    PID 0xF6D6 community estimate. Distinct from sim-shifter-sequential.yaml.
+    Last reviewed: 2026-06.

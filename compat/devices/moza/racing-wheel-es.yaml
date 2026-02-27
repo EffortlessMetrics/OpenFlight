@@ -1,0 +1,62 @@
+# Moza ES Steering Wheel (Add-On Rim)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Moza ES (Entry Sport) steering wheel is an add-on rim for compatible
+# Moza direct drive bases (R3, R5, R9, R16, R21). It provides a budget-friendly
+# entry-level rim with basic button set and D-shaped profile.
+# VID 0x346E confirmed: Gudsen Technology / Moza.
+# PID 0x0030 is a community estimate for the ES wheel.
+
+schema_version: "1"
+
+device:
+  name: "Moza ES Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Gudsen Technology / Moza (confirmed)
+    product_id: 0x0030      # Community estimate — ES wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []               # Rotation axis is from the base, not the rim
+    resolution_bits: 0
+  buttons: 12               # Face buttons + paddle shifters
+  hats: 1
+  force_feedback: false     # FFB is in the base unit
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate for the Moza ES wheel rim.
+      Moza wheel rims enumerate through the base's USB connection and may
+      share the base's PID rather than exposing their own. Verify with lsusb.
+  - id: RIM_ADDON_ONLY
+    description: >
+      The ES wheel rim provides only button and hat inputs; steering axis and
+      FFB are handled by the connected Moza base (r3-base.yaml, r5-base.yaml,
+      etc.). Combine with the appropriate base manifest for full device profile.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      ES wheel buttons are suitable for cockpit panel functions: flap
+      detents (paddles), autopilot engage, gear up/down, or PTT when used
+      with a flight grip in a DD base simulation setup.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza ES Steering Wheel rim — buttons + paddles add-on for Moza DD bases.
+    PID 0x0030 community estimate. Steering and FFB are from the base unit;
+    see r3-base.yaml through r21-base.yaml for base manifests.
+    Last reviewed: 2026-06.

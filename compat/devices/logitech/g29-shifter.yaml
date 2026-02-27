@@ -1,0 +1,66 @@
+# Logitech G29/G920 Driving Force Shifter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Logitech Driving Force Shifter is a 7-speed H-pattern + reverse USB HID
+# shifter compatible with the G29 (PC/PS) and G920 (PC/Xbox) racing wheels.
+# It connects directly to the wheel base via a 2.5mm audio jack and also
+# exposes itself as a USB HID device.
+# VID 0x046D (Logitech), PID 0xC261 is the reported USB HID product ID.
+
+schema_version: "1"
+
+device:
+  name: "Logitech Driving Force Shifter"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech
+    product_id: 0xC261      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8                # 6 forward gears + reverse + neutral (button events)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC261 is reported in community sources for the Driving Force Shifter.
+      Verify with lsusb — some hardware revisions may use a different PID.
+  - id: BUTTON_ONLY_SHIFTER
+    description: >
+      The Driving Force Shifter reports gear engagement as discrete button
+      presses rather than an axis. Each gear position (1–6, R) generates a
+      unique button-down event when engaged. No axis output.
+  - id: DUAL_CONNECT
+    description: >
+      The shifter has both a USB port (direct HID) and a 2.5mm jack for
+      connection to the G29/G920 base. When connected via jack only, gear
+      data surfaces through the wheel base HID report. When USB is used,
+      it appears as a separate HID device with this VID/PID.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      Used in flight sim as a lever-detent selector for flap positions,
+      landing gear handle, or mixture control by mapping gear buttons to
+      stepped axis commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Driving Force Shifter — 7-speed H-pattern USB HID shifter for
+    G29/G920. PID 0xC261 is a community estimate. Button-only output (no axis).
+    Last reviewed: 2026-06.
