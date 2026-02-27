@@ -223,4 +223,48 @@ mod tests {
         let events = reader.read_new_events().unwrap();
         assert!(events.is_empty());
     }
+
+    #[test]
+    fn large_journal_file_reads_all_events_without_oom() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("Journal.20250101120000.01.log");
+        {
+            let mut f = std::fs::File::create(&path).unwrap();
+            for i in 0..1000u32 {
+                writeln!(
+                    f,
+                    r#"{{"timestamp":"2025-01-01T{:02}:{:02}:00Z","event":"FsdJump","StarSystem":"System{}","StarPos":[0.0,0.0,0.0]}}"#,
+                    i / 60 % 24,
+                    i % 60,
+                    i
+                )
+                .unwrap();
+            }
+        }
+        let mut reader = JournalReader::new(dir.path());
+        let events = reader.read_new_events().unwrap();
+        assert_eq!(events.len(), 1000, "should read all 1000 FsdJump events");
+        assert!(events.iter().all(|e| matches!(e, JournalEvent::FsdJump { .. })));
+    }
+
+    #[test]
+    fn non_elite_json_lines_produce_no_events() {
+        let dir = TempDir::new().unwrap();
+        write_journal(
+            &dir,
+            "Journal.20250101120000.01.log",
+            "{\"hello\": \"world\"}\n\
+             {\"foo\": 42}\n\
+             null\n\
+             \"just a string\"\n\
+             not valid json at all\n",
+        );
+        let mut reader = JournalReader::new(dir.path());
+        let events = reader.read_new_events().unwrap();
+        assert!(
+            events.is_empty(),
+            "non-Elite JSON lines should not produce events, got {}",
+            events.len()
+        );
+    }
 }
