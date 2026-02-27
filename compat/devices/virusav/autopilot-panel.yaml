@@ -1,0 +1,53 @@
+# VirusAV USB Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirusAV produces cockpit builder hardware for flight simulation.
+# VID 0x04D8 is Microchip Technology Inc (PIC USB), commonly used for
+# custom sim hardware implementations. PID 0x0E20 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "VirusAV Autopilot Panel"
+  vendor: "VirusAV"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (PIC USB) — common sim hardware VID
+    product_id: 0x0E20   # Community estimate — PID from community sources
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [hdg, alt]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 (Microchip PIC USB) is shared by many custom sim hardware
+      vendors. PID 0x0E20 is a community estimate. Verify with lsusb or
+      Windows Device Manager on real VirusAV hardware.
+  - id: SHARED_VID
+    description: >
+      VID 0x04D8 is Microchip Technology and is used by many independent
+      cockpit hardware builders. Device matching must rely on both VID and PID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirusAV USB Autopilot Panel. VID 0x04D8 (Microchip PIC USB) and PID 0x0E20
+    are community estimates. Autopilot panel with encoder and button inputs.
+    Last reviewed: 2026-06.

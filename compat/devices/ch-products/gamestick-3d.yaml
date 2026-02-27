@@ -1,0 +1,48 @@
+# CH Products USB GameStick 3D
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CH Products VID 0x068E confirmed (standard CH Products USB devices).
+# PID 0x00F7 is a community estimate for the USB GameStick 3D.
+# Other CH Products joysticks use PIDs in the 0x00F0–0x00F5 range.
+schema_version: "1"
+
+device:
+  name: "CH Products USB GameStick 3D"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00F7   # Community estimate — verify with lsusb on real hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F7 is a community estimate in the CH Products PID range
+      (0x00F0–0x00F5 known, 0x00F7 estimated). Verify with lsusb or Windows
+      Device Manager on real GameStick 3D hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products USB GameStick 3D. VID 0x068E confirmed; PID 0x00F7 community
+    estimate. 4-axis entry-level joystick in the CH Products USB range.
+    Last reviewed: 2026-06.

@@ -1,0 +1,53 @@
+# Honey Bee King 3 USB Collective (Helicopter Sim)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Honey Bee King 3 collective is used in desktop helicopter simulation rigs.
+# VID 0x04B4 is Cypress Semiconductor, frequently used for custom USB HID
+# implementations via CY7C63xxx/EZ-USB chips. PID 0xF280 is a community
+# estimate from heli-sim community USB capture logs.
+schema_version: "1"
+
+device:
+  name: "Honey Bee King 3 Collective"
+  vendor: "Honey Bee"
+  usb:
+    vendor_id: 0x04B4    # Cypress Semiconductor — common custom HID VID
+    product_id: 0xF280   # Community estimate — heli-sim community sources; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, twist]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 (Cypress) is commonly used for custom USB HID devices.
+      PID 0xF280 is a community estimate from helicopter sim community sources.
+      Verify with lsusb or Windows Device Manager on real hardware.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      Collective axis is unipolar (0 = full down, max = full up). Designed
+      for helicopter simulation; pair with rudder pedals for anti-torque control.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honey Bee King 3 USB collective for helicopter simulation. VID 0x04B4
+    (Cypress Semiconductor); PID 0xF280 community estimate.
+    Last reviewed: 2026-06.

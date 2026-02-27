@@ -35,7 +35,10 @@
 
 use flight_bus::{
     adapters::SimAdapter,
-    snapshot::{AircraftConfig, BusSnapshot, EngineData, Environment, Navigation},
+    snapshot::{
+        AircraftConfig, BusSnapshot, ControlInputs, EngineData, Environment, Kinematics,
+        ValidityFlags,
+    },
     types::{
         AircraftId, GearPosition, GearState as BusGearState, Percentage, SimId, ValidatedAngle,
         ValidatedSpeed,
@@ -385,9 +388,6 @@ pub fn convert_frame_to_snapshot(
         left: gear_pos,
         right: gear_pos,
     };
-
-    use flight_bus::snapshot::{AngularRates, ControlInputs, Kinematics, TrimState};
-    use flight_bus::types::{AutopilotState, GForce, LightsConfig, Mach, ValidityFlags};
 
     let snapshot = BusSnapshot {
         sim: SimId::Il2,

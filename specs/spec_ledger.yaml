@@ -15084,7 +15084,9 @@ requirements:
       - id: AC-498.4
         description: "Trim values are included in diagnostic bundle"
         tests:
-          - feature:specs/features/req_498_axis_trim_persistence.feature  - id: REQ-499
+          - feature:specs/features/req_498_axis_trim_persistence.feature
+
+  - id: REQ-499
     name: Axis Output Clamping
     kind: product
     status: draft
@@ -15336,3 +15338,506 @@ requirements:
         description: "Update system verifies signatures before applying updates"
         tests:
           - feature:specs/features/req_510_release_artifact_signing.feature
+  - id: REQ-511
+    name: FFB Bump and Vibration Effects
+    kind: product
+    status: draft
+    ac:
+      - id: AC-511.1
+        description: "Bump effect generates a short directional impulse force"
+        tests:
+          - feature:specs/features/req_511_ffb_bump_vibration.feature
+      - id: AC-511.2
+        description: "Vibration effect generates symmetric oscillating force"
+        tests:
+          - feature:specs/features/req_511_ffb_bump_vibration.feature
+      - id: AC-511.3
+        description: "Bump and vibration parameters include intensity and duration"
+        tests:
+          - feature:specs/features/req_511_ffb_bump_vibration.feature
+      - id: AC-511.4
+        description: "Both effects can be triggered by sim events like turbulence"
+        tests:
+          - feature:specs/features/req_511_ffb_bump_vibration.feature
+  - id: REQ-512
+    name: Device Firmware Version Tracking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-512.1
+        description: "HID device firmware version is read from USB descriptor if present"
+        tests:
+          - feature:specs/features/req_512_device_firmware_version.feature
+      - id: AC-512.2
+        description: "Known firmware versions are compared against compat manifest"
+        tests:
+          - feature:specs/features/req_512_device_firmware_version.feature
+      - id: AC-512.3
+        description: "Outdated firmware triggers a warning in service log"
+        tests:
+          - feature:specs/features/req_512_device_firmware_version.feature
+      - id: AC-512.4
+        description: "Firmware version is included in diagnostic bundle"
+        tests:
+          - feature:specs/features/req_512_device_firmware_version.feature
+  - id: REQ-513
+    name: Axis Sensitivity Curve Presets
+    kind: product
+    status: draft
+    ac:
+      - id: AC-513.1
+        description: "Presets include linear, mild, standard, aggressive, and inverted"
+        tests:
+          - feature:specs/features/req_513_axis_sensitivity_presets.feature
+      - id: AC-513.2
+        description: "Preset selection replaces curve config atomically"
+        tests:
+          - feature:specs/features/req_513_axis_sensitivity_presets.feature
+      - id: AC-513.3
+        description: "Custom curves are preserved as user-defined presets"
+        tests:
+          - feature:specs/features/req_513_axis_sensitivity_presets.feature
+      - id: AC-513.4
+        description: "Active preset is shown in flightctl axis status output"
+        tests:
+          - feature:specs/features/req_513_axis_sensitivity_presets.feature
+  - id: REQ-514
+    name: IPC Stream Subscription
+    kind: product
+    status: draft
+    ac:
+      - id: AC-514.1
+        description: "Clients can subscribe to axis value stream via SubscribeAxisValues RPC"
+        tests:
+          - feature:specs/features/req_514_ipc_stream_subscription.feature
+      - id: AC-514.2
+        description: "Stream delivers updates at configured max rate"
+        tests:
+          - feature:specs/features/req_514_ipc_stream_subscription.feature
+      - id: AC-514.3
+        description: "Client disconnect cancels the subscription cleanly"
+        tests:
+          - feature:specs/features/req_514_ipc_stream_subscription.feature
+      - id: AC-514.4
+        description: "Multiple concurrent subscribers are supported"
+        tests:
+          - feature:specs/features/req_514_ipc_stream_subscription.feature
+  - id: REQ-515
+    name: HID Descriptor Caching
+    kind: product
+    status: draft
+    ac:
+      - id: AC-515.1
+        description: "Device HID descriptors are cached to disk after first enumeration"
+        tests:
+          - feature:specs/features/req_515_hid_descriptor_caching.feature
+      - id: AC-515.2
+        description: "Cached descriptors are validated against device serial number"
+        tests:
+          - feature:specs/features/req_515_hid_descriptor_caching.feature
+      - id: AC-515.3
+        description: "Cache is invalidated when firmware version changes"
+        tests:
+          - feature:specs/features/req_515_hid_descriptor_caching.feature
+      - id: AC-515.4
+        description: "Cache miss falls back to live descriptor read"
+        tests:
+          - feature:specs/features/req_515_hid_descriptor_caching.feature
+  - id: REQ-516
+    name: Flight Controller Mode Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-516.1
+        description: "Controller mode includes standard, helicopter, spaceflight, and racing"
+        tests:
+          - feature:specs/features/req_516_flight_controller_mode.feature
+      - id: AC-516.2
+        description: "Mode is detected from active profile and connected devices"
+        tests:
+          - feature:specs/features/req_516_flight_controller_mode.feature
+      - id: AC-516.3
+        description: "Mode change triggers a profile phase transition"
+        tests:
+          - feature:specs/features/req_516_flight_controller_mode.feature
+      - id: AC-516.4
+        description: "Mode is reported in service status and IPC"
+        tests:
+          - feature:specs/features/req_516_flight_controller_mode.feature
+  - id: REQ-517
+    name: Rudder Pedal Anti-Toe-Brake Mixing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-517.1
+        description: "Anti-toe-brake mixes toe brake axes out of rudder when braking"
+        tests:
+          - feature:specs/features/req_517_rudder_pedal_anti_toe_brake.feature
+      - id: AC-517.2
+        description: "Mixing is configurable with a blending coefficient"
+        tests:
+          - feature:specs/features/req_517_rudder_pedal_anti_toe_brake.feature
+      - id: AC-517.3
+        description: "Differential braking mode preserves differential toe brake input"
+        tests:
+          - feature:specs/features/req_517_rudder_pedal_anti_toe_brake.feature
+      - id: AC-517.4
+        description: "Anti-toe-brake mixing is disabled by default"
+        tests:
+          - feature:specs/features/req_517_rudder_pedal_anti_toe_brake.feature
+  - id: REQ-518
+    name: Profile Merge From Base
+    kind: product
+    status: draft
+    ac:
+      - id: AC-518.1
+        description: "Profile files can reference a base profile to inherit from"
+        tests:
+          - feature:specs/features/req_518_profile_merge_from_base.feature
+      - id: AC-518.2
+        description: "Overriding fields in derived profile replace base values"
+        tests:
+          - feature:specs/features/req_518_profile_merge_from_base.feature
+      - id: AC-518.3
+        description: "Merge chain supports up to 3 levels of inheritance"
+        tests:
+          - feature:specs/features/req_518_profile_merge_from_base.feature
+      - id: AC-518.4
+        description: "Circular base references are detected and rejected"
+        tests:
+          - feature:specs/features/req_518_profile_merge_from_base.feature
+  - id: REQ-519
+    name: Device Connection Timeout Config
+    kind: product
+    status: draft
+    ac:
+      - id: AC-519.1
+        description: "Device acquisition timeout is configurable per device in profile"
+        tests:
+          - feature:specs/features/req_519_device_connection_timeout.feature
+      - id: AC-519.2
+        description: "Timeout triggers reconnect retry with backoff"
+        tests:
+          - feature:specs/features/req_519_device_connection_timeout.feature
+      - id: AC-519.3
+        description: "Maximum retry count is configurable"
+        tests:
+          - feature:specs/features/req_519_device_connection_timeout.feature
+      - id: AC-519.4
+        description: "Persistent connection failure logs device info and disables polling"
+        tests:
+          - feature:specs/features/req_519_device_connection_timeout.feature
+  - id: REQ-520
+    name: Simulator Version Compatibility Check
+    kind: product
+    status: draft
+    ac:
+      - id: AC-520.1
+        description: "Service reads simulator version from connection handshake"
+        tests:
+          - feature:specs/features/req_520_sim_version_compat_check.feature
+      - id: AC-520.2
+        description: "Compat manifest specifies supported version ranges per simulator"
+        tests:
+          - feature:specs/features/req_520_sim_version_compat_check.feature
+      - id: AC-520.3
+        description: "Unsupported simulator version logs warning but does not block"
+        tests:
+          - feature:specs/features/req_520_sim_version_compat_check.feature
+      - id: AC-520.4
+        description: "Version check result is reported in flightctl sim status"
+        tests:
+          - feature:specs/features/req_520_sim_version_compat_check.feature
+  - id: REQ-521
+    name: Axis Group Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-521.1
+        description: "Axes can be assigned to a named group"
+        tests:
+          - feature:specs/features/req_521_axis_group_config.feature
+      - id: AC-521.2
+        description: "Group enables synchronized deadzone and curve application"
+        tests:
+          - feature:specs/features/req_521_axis_group_config.feature
+      - id: AC-521.3
+        description: "Group master-slave mode allows one axis to lead scaling"
+        tests:
+          - feature:specs/features/req_521_axis_group_config.feature
+      - id: AC-521.4
+        description: "Group configuration is stored in profile"
+        tests:
+          - feature:specs/features/req_521_axis_group_config.feature
+  - id: REQ-522
+    name: Installer Rollback Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-522.1
+        description: "Installer preserves previous installation files before upgrade"
+        tests:
+          - feature:specs/features/req_522_installer_rollback.feature
+      - id: AC-522.2
+        description: "flightctl update rollback restores previous version"
+        tests:
+          - feature:specs/features/req_522_installer_rollback.feature
+      - id: AC-522.3
+        description: "Rollback preserves user configuration"
+        tests:
+          - feature:specs/features/req_522_installer_rollback.feature
+      - id: AC-522.4
+        description: "Rollback is available for 7 days after successful upgrade"
+        tests:
+          - feature:specs/features/req_522_installer_rollback.feature  - id: REQ-523
+    name: Axis Motor Trend Analysis
+    kind: product
+    status: draft
+    ac:
+      - id: AC-523.1
+        description: "AC1: Trend detector identifies rapid input changes vs slow drift"
+        tests:
+          - feature:specs/features/req_523_axis_motor_trend_analysis.feature
+      - id: AC-523.2
+        description: "AC2: Adaptive smoothing applies higher filtering during slow drift"
+        tests:
+          - feature:specs/features/req_523_axis_motor_trend_analysis.feature
+      - id: AC-523.3
+        description: "AC3: Trend analysis uses configurable window size"
+        tests:
+          - feature:specs/features/req_523_axis_motor_trend_analysis.feature
+      - id: AC-523.4
+        description: "AC4: Trend state is included in axis diagnostics"
+        tests:
+          - feature:specs/features/req_523_axis_motor_trend_analysis.feature
+  - id: REQ-524
+    name: Multi-Adapter Fallback
+    kind: product
+    status: draft
+    ac:
+      - id: AC-524.1
+        description: "AC1: Primary adapter failure triggers fallback to secondary adapter"
+        tests:
+          - feature:specs/features/req_524_multi_adapter_fallback.feature
+      - id: AC-524.2
+        description: "AC2: Fallback order is configurable in service config"
+        tests:
+          - feature:specs/features/req_524_multi_adapter_fallback.feature
+      - id: AC-524.3
+        description: "AC3: Fallback event is published on flight-bus"
+        tests:
+          - feature:specs/features/req_524_multi_adapter_fallback.feature
+      - id: AC-524.4
+        description: "AC4: Service recovers primary adapter when it becomes available again"
+        tests:
+          - feature:specs/features/req_524_multi_adapter_fallback.feature
+  - id: REQ-525
+    name: CLI Tab Completion
+    kind: product
+    status: draft
+    ac:
+      - id: AC-525.1
+        description: "AC1: flightctl generates shell completion scripts for bash, zsh, fish"
+        tests:
+          - feature:specs/features/req_525_cli_tab_completion.feature
+      - id: AC-525.2
+        description: "AC2: Tab completion suggests valid axis names and device IDs"
+        tests:
+          - feature:specs/features/req_525_cli_tab_completion.feature
+      - id: AC-525.3
+        description: "AC3: Completion is generated at install time"
+        tests:
+          - feature:specs/features/req_525_cli_tab_completion.feature
+      - id: AC-525.4
+        description: "AC4: flightctl completions install command installs completion scripts"
+        tests:
+          - feature:specs/features/req_525_cli_tab_completion.feature
+  - id: REQ-526
+    name: Axis Input Combination Blend
+    kind: product
+    status: draft
+    ac:
+      - id: AC-526.1
+        description: "AC1: Blend combines two axes using configurable blend factor 0.0 to 1.0"
+        tests:
+          - feature:specs/features/req_526_axis_input_blend.feature
+      - id: AC-526.2
+        description: "AC2: Factor 0.0 uses only first axis, 1.0 uses only second"
+        tests:
+          - feature:specs/features/req_526_axis_input_blend.feature
+      - id: AC-526.3
+        description: "AC3: Blend factor can be mapped to a third axis for dynamic control"
+        tests:
+          - feature:specs/features/req_526_axis_input_blend.feature
+      - id: AC-526.4
+        description: "AC4: Blend result is clamped to valid output range"
+        tests:
+          - feature:specs/features/req_526_axis_input_blend.feature
+  - id: REQ-527
+    name: Service PID File
+    kind: product
+    status: draft
+    ac:
+      - id: AC-527.1
+        description: "AC1: Service writes PID to /run/user/UID/openflight.pid on Linux"
+        tests:
+          - feature:specs/features/req_527_service_pid_file.feature
+      - id: AC-527.2
+        description: "AC2: Service writes PID to %TEMP%\openflight.pid on Windows"
+        tests:
+          - feature:specs/features/req_527_service_pid_file.feature
+      - id: AC-527.3
+        description: "AC3: PID file is removed on clean shutdown"
+        tests:
+          - feature:specs/features/req_527_service_pid_file.feature
+      - id: AC-527.4
+        description: "AC4: flightctl status reads PID file to determine if service is running"
+        tests:
+          - feature:specs/features/req_527_service_pid_file.feature
+  - id: REQ-528
+    name: Bus Event Replay for Testing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-528.1
+        description: "AC1: Bus events can be serialized to a structured replay file"
+        tests:
+          - feature:specs/features/req_528_bus_event_replay.feature
+      - id: AC-528.2
+        description: "AC2: Replay file can be played back as bus events in test mode"
+        tests:
+          - feature:specs/features/req_528_bus_event_replay.feature
+      - id: AC-528.3
+        description: "AC3: Replay preserves event timing with configurable speed"
+        tests:
+          - feature:specs/features/req_528_bus_event_replay.feature
+      - id: AC-528.4
+        description: "AC4: Replay is triggered via CLI or test fixture"
+        tests:
+          - feature:specs/features/req_528_bus_event_replay.feature
+  - id: REQ-529
+    name: Axis Calibration Auto-Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-529.1
+        description: "AC1: Auto-calibration mode monitors axis values over time"
+        tests:
+          - feature:specs/features/req_529_axis_auto_calibration.feature
+      - id: AC-529.2
+        description: "AC2: Detected min, max, and center are stored as calibration"
+        tests:
+          - feature:specs/features/req_529_axis_auto_calibration.feature
+      - id: AC-529.3
+        description: "AC3: Auto-calibration runs for configured duration then completes"
+        tests:
+          - feature:specs/features/req_529_axis_auto_calibration.feature
+      - id: AC-529.4
+        description: "AC4: Auto-calibration can be triggered via CLI command"
+        tests:
+          - feature:specs/features/req_529_axis_auto_calibration.feature
+  - id: REQ-530
+    name: OpenXR Interaction Profile Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-530.1
+        description: "AC1: Service queries available OpenXR interaction profiles on session start"
+        tests:
+          - feature:specs/features/req_530_openxr_interaction_profiles.feature
+      - id: AC-530.2
+        description: "AC2: Preferred interaction profile is configurable"
+        tests:
+          - feature:specs/features/req_530_openxr_interaction_profiles.feature
+      - id: AC-530.3
+        description: "AC3: Action bindings are configured per interaction profile"
+        tests:
+          - feature:specs/features/req_530_openxr_interaction_profiles.feature
+      - id: AC-530.4
+        description: "AC4: Profile selection is reported in OpenXR adapter diagnostics"
+        tests:
+          - feature:specs/features/req_530_openxr_interaction_profiles.feature
+  - id: REQ-531
+    name: Sim Variable Rate Override
+    kind: product
+    status: draft
+    ac:
+      - id: AC-531.1
+        description: "AC1: Per-variable update rate can be configured in profile"
+        tests:
+          - feature:specs/features/req_531_sim_variable_rate_override.feature
+      - id: AC-531.2
+        description: "AC2: High-frequency variables can run at sim frame rate"
+        tests:
+          - feature:specs/features/req_531_sim_variable_rate_override.feature
+      - id: AC-531.3
+        description: "AC3: Low-frequency variables use polling at reduced rate"
+        tests:
+          - feature:specs/features/req_531_sim_variable_rate_override.feature
+      - id: AC-531.4
+        description: "AC4: Rate configuration applies at adapter initialization"
+        tests:
+          - feature:specs/features/req_531_sim_variable_rate_override.feature
+  - id: REQ-532
+    name: Zero-Latency Passthrough Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-532.1
+        description: "AC1: Zero-latency mode disables smoothing and rate limiting"
+        tests:
+          - feature:specs/features/req_532_zero_latency_passthrough.feature
+      - id: AC-532.2
+        description: "AC2: Mode is activatable via profile flag or CLI command"
+        tests:
+          - feature:specs/features/req_532_zero_latency_passthrough.feature
+      - id: AC-532.3
+        description: "AC3: Zero-latency mode maintains only essential safety processing"
+        tests:
+          - feature:specs/features/req_532_zero_latency_passthrough.feature
+      - id: AC-532.4
+        description: "AC4: Latency in zero-latency mode is measurably lower than standard mode"
+        tests:
+          - feature:specs/features/req_532_zero_latency_passthrough.feature
+  - id: REQ-533
+    name: Device Axis Calibration Persistence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-533.1
+        description: "AC1: Calibration is keyed by device VID/PID and serial number"
+        tests:
+          - feature:specs/features/req_533_device_axis_calibration_persistence.feature
+      - id: AC-533.2
+        description: "AC2: Calibration survives firmware version changes if hardware is unchanged"
+        tests:
+          - feature:specs/features/req_533_device_axis_calibration_persistence.feature
+      - id: AC-533.3
+        description: "AC3: Calibration is invalidated when device axis count changes"
+        tests:
+          - feature:specs/features/req_533_device_axis_calibration_persistence.feature
+      - id: AC-533.4
+        description: "AC4: Stale calibration triggers recalibration prompt in CLI"
+        tests:
+          - feature:specs/features/req_533_device_axis_calibration_persistence.feature
+  - id: REQ-534
+    name: VIRPIL Device Protocol Support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-534.1
+        description: "AC1: VIRPIL VPC devices are identified by 0x3344 VID"
+        tests:
+          - feature:specs/features/req_534_virpil_protocol_support.feature
+      - id: AC-534.2
+        description: "AC2: VIRPIL 14-bit axis resolution is correctly normalized"
+        tests:
+          - feature:specs/features/req_534_virpil_protocol_support.feature
+      - id: AC-534.3
+        description: "AC3: VIRPIL device configuration via HID reports is documented"
+        tests:
+          - feature:specs/features/req_534_virpil_protocol_support.feature
+      - id: AC-534.4
+        description: "AC4: VIRPIL compatibility manifest includes all known PIDs"
+        tests:
+          - feature:specs/features/req_534_virpil_protocol_support.feature

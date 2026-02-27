@@ -1,0 +1,57 @@
+# FlyEngravity A320 EFIS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FlyEngravity (Engravity) produces A320-style cockpit panels for flight sim.
+# VID 0x0BCA is used across multiple OpenCockpits/Engravity-family products.
+# PID 0x0080 is a community estimate for the A320 EFIS panel USB interface.
+schema_version: "1"
+
+device:
+  name: "FlyEngravity A320 EFIS"
+  vendor: "FlyEngravity"
+  usb:
+    vendor_id: 0x0BCA    # OpenCockpits/Engravity family VID (community estimate)
+    product_id: 0x0080   # Community estimate — A320 EFIS panel; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro_left, baro_right]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA is a community estimate used across the OpenCockpits/Engravity
+      family (see opencockpits/ and opencockpit/ directories). PID 0x0080 is a
+      community estimate. Verify with lsusb on real FlyEngravity A320 EFIS hardware.
+  - id: SHARED_VID_FAMILY
+    description: >
+      VID 0x0BCA is shared across multiple OpenCockpits/Engravity-family products.
+      See opencockpits/, opencockpit/, and skalarki/ directories for related devices.
+  - id: A320_EFIS_LAYOUT
+    description: >
+      A320 EFIS panel includes baro knobs, FD/ILS/LOC/ADF/VOR selector switches,
+      and ND mode/range selectors. Map via rules engine to sim EFIS variables.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FlyEngravity A320 EFIS panel. VID 0x0BCA and PID 0x0080 are community
+    estimates within the OpenCockpits/Engravity VID family.
+    Last reviewed: 2026-06.

@@ -15,6 +15,7 @@ members = [
     "crates/flight-hid",
     "crates/flight-hid-support",
     "crates/flight-hid-types",
+    "crates/flight-headless",
     "crates/flight-metrics",
     "crates/flight-metrics-http",
     "crates/flight-bus",

@@ -14,27 +14,27 @@
 
 ## Summary
 
-- **Total Checks:** 15
-- **Passed:** 15
-- **Failed:** 0
+- **Total Checks:** 13
+- **Passed:** 7
+- **Failed:** 6
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 2012, tests: 2012 (100.0%), gherkin: 941 (46.8%), microcrates fully covered: 65 / 81 (80.2%), complete: 597, needs_gherkin: 0, needs_tests: 0, draft: 1415, incomplete: 0 |
-| Schema Validation | ✅ Pass | - |
-| Cross-Reference Validation | ✅ Pass | - |
-| Formatting | ✅ Pass | - |
-| Clippy | ✅ Pass | - |
-| Unit Tests | ✅ Pass | - |
+| BDD Feature Status | ❌ Fail | Failed to parse spec ledger YAML |
+| Schema Validation | ❌ Fail | Schema validation failed with 1 error(s) |
+| Cross-Reference Validation | ❌ Fail | Failed to parse spec ledger |
+| Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
 | QG-SANITY-GATE | ✅ Pass | - |
 | QG-FFB-SAFETY | ✅ Pass | - |
 | QG-BDD-COVERAGE | ✅ Pass | - |
 | QG-BDD-UNMAPPED-MICROCRATE | ✅ Pass | - |
-| QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
-| QG-CRATE-METADATA | ✅ Pass | - |
+| QG-BDD-MATRIX-COMPLETE | ❌ Fail | BDD matrix completeness check failed:
+- Missing from docs/bdd_metrics.json: flight-dcs-modules, flight-metrics-http, flight-openxr, flight-prepar3d |
+| QG-CRATE-METADATA | ❌ Fail | 1 crate(s) failed metadata compatibility:
+- flight-metrics-http (missing: license, repository, homepage, readme, keywords, categories) |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |
 

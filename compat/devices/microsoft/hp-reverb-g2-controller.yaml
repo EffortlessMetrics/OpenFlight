@@ -1,0 +1,63 @@
+# HP Reverb G2 VR Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The HP Reverb G2 is a Windows Mixed Reality (WMR) headset with paired
+# motion controllers. VID 0x045E is Microsoft Corporation (WMR devices use
+# Microsoft's USB VID for the WMR USB receiver dongle).
+# PID 0x0B21 is a community estimate for the Reverb G2 WMR USB endpoint.
+schema_version: "1"
+
+device:
+  name: "HP Reverb G2 Controller"
+  vendor: "HP / Microsoft WMR"
+  type: vr_controller
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation — WMR USB receiver
+    product_id: 0x0B21   # Community estimate — HP Reverb G2 WMR endpoint; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [stick_x, stick_y, trigger, grip]
+    resolution_bits: 16
+  buttons: 6
+  hats: 0
+  gyro: true
+  force_feedback: true
+  ffb:
+    effects: [haptic_pulse]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 90
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x045E (Microsoft) and PID 0x0B21 are community estimates for the
+      HP Reverb G2 WMR USB receiver. Verify with lsusb on real Reverb G2 hardware.
+  - id: WMR_ONLY
+    description: >
+      HP Reverb G2 controllers operate over WMR Bluetooth with the USB dongle
+      as receiver. OpenFlight accesses these via the OpenXR/WMR Input API,
+      not raw HID.
+  - id: OPENXR_PRIMARY_INTERFACE
+    description: >
+      Primary controller input is via OpenXR or Windows Mixed Reality Portal.
+      Raw HID access is limited to the USB receiver descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HP Reverb G2 WMR motion controller. VID 0x045E / PID 0x0B21 community
+    estimates for the WMR USB receiver. Primary interface is OpenXR/WMR.
+    Last reviewed: 2026-06.

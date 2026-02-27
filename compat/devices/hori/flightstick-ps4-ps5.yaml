@@ -1,0 +1,57 @@
+# HORI FLIGHTSTICK for PS4/PS5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# HORI is a Japanese licensed peripheral manufacturer (VID 0x0F0D confirmed).
+# The FLIGHTSTICK for PS4/PS5 is a console-oriented flight joystick.
+# PID 0x00FA is a community estimate; the PS5 Flight Stick Alpha uses 0x0171.
+schema_version: "1"
+
+device:
+  name: "HORI FLIGHTSTICK for PS4/PS5"
+  vendor: "HORI"
+  usb:
+    vendor_id: 0x0F0D
+    product_id: 0x00FA   # Community estimate — verify with lsusb on real hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00FA is a community estimate. The HORI Flight Stick Alpha for PS5
+      uses 0x0171 (see flight-stick-alpha-ps5.yaml). Verify 0x00FA with lsusb
+      on real PS4/PS5 FLIGHTSTICK hardware.
+  - id: CONSOLE_HID_MODE
+    description: >
+      Console-oriented device may require a mode switch for PC DirectInput
+      compatibility. Check HORI documentation for PC mode activation.
+  - id: LOW_RESOLUTION_AXES
+    description: >
+      8-bit axis resolution is lower than PC-native joysticks. Apply curve
+      smoothing profiles to reduce quantisation artifacts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI FLIGHTSTICK for PS4/PS5. VID 0x0F0D confirmed; PID 0x00FA is a
+    community estimate. Console-targeted device with PS4/PS5 HID report.
+    See flight-stick-alpha-ps5.yaml (0x0171) for related device.
+    Last reviewed: 2026-06.

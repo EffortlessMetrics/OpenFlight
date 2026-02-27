@@ -1,0 +1,14 @@
+[package]
+name = "flight-headless"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Headless and batch operation mode for OpenFlight"
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]

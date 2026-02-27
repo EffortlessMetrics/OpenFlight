@@ -1,0 +1,62 @@
+# ASUS ROG Ally Handheld (Gamepad Mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The ASUS ROG Ally is a Windows handheld gaming PC with integrated gamepad
+# controls. In gamepad mode it exposes an XInput-compatible HID device.
+# VID 0x0B05 confirmed: ASUSTeK Computer Inc.
+# PID 0x1ABE is a community estimate for the ROG Ally gamepad USB descriptor.
+schema_version: "1"
+
+device:
+  name: "ASUS ROG Ally (Gamepad Mode)"
+  vendor: "ASUSTeK Computer"
+  usb:
+    vendor_id: 0x0B05
+    product_id: 0x1ABE   # Community estimate — ROG Ally gamepad; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 16
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1ABE is a community estimate for the ROG Ally gamepad descriptor.
+      ASUS uses multiple PIDs for different ROG Ally operational modes.
+      Verify with lsusb or Windows Device Manager on real ROG Ally hardware.
+  - id: XINPUT_GAMEPAD
+    description: >
+      The ROG Ally gamepad uses XInput-compatible HID reporting. For flight sim
+      use, axis and button mapping profiles are required to translate gamepad
+      inputs to HOTAS-style controls.
+  - id: DUAL_STICK_LIMITATION
+    description: >
+      Dual analogue sticks have limited throw range compared to dedicated flight
+      controllers. Apply aggressive curve scaling for precise flight control use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ASUS ROG Ally handheld in gamepad mode. VID 0x0B05 confirmed (ASUSTeK);
+    PID 0x1ABE community estimate. XInput-compatible; requires axis mapping
+    profiles for flight sim use. Last reviewed: 2026-06.

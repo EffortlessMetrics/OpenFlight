@@ -88,6 +88,7 @@ pub mod detent;
 pub mod engine;
 pub mod frame;
 pub mod hat;
+pub mod histogram;
 pub mod history;
 pub mod invert;
 pub mod nodes;
@@ -125,6 +126,7 @@ pub use engine::{
 };
 pub use frame::{AxisFrame, FrameError};
 pub use hat::{HatBank, HatDecoder, HatError, HatOutput, HatResolution};
+pub use histogram::{AxisHistogram, HISTOGRAM_BUCKETS};
 pub use history::{
     AxisHistory, AxisHistory64, AxisHistory256, AxisHistory1024, HistorySample, HistoryStats,
 };

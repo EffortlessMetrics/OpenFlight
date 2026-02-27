@@ -1,0 +1,68 @@
+# Valve Index Controller (USB PID 0x2012)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x28DE confirmed: Valve Corporation.
+# PID 0x2012 is a community estimate for the Valve Index Controller USB
+# descriptor. Existing manifests use 0x2300 (left) and 0x2301 (right) as
+# alternative estimates. The Index Controllers communicate via SteamVR
+# Lighthouse radio; USB is only for charging and firmware updates.
+schema_version: "1"
+
+device:
+  name: "Valve Index Controller"
+  vendor: "Valve Corporation"
+  type: vr_controller
+  usb:
+    vendor_id: 0x28DE
+    product_id: 0x2012   # Community estimate — alternative to 0x2300/0x2301; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [stick_x, stick_y, trigger, grip_force, trackpad_x]
+    resolution_bits: 16
+  buttons: 5
+  hats: 0
+  gyro: true
+  force_feedback: true
+  ffb:
+    effects: [haptic_pulse]
+    max_update_rate_hz: 250
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2012 is a community estimate. Alternative estimates 0x2300 and
+      0x2301 are documented in index-controller-left.yaml and -right.yaml.
+      Verify with lsusb on real Index hardware.
+  - id: ALTERNATE_PID_EXISTS
+    description: >
+      See index-controller-left.yaml (0x2300) and index-controller-right.yaml
+      (0x2301) for alternative PID estimates.
+  - id: STEAMVR_ONLY
+    description: >
+      Index Controllers use SteamVR Lighthouse radio for operation. USB
+      enumeration is charging/firmware only. OpenFlight accesses these via
+      the SteamVR Input API, not raw HID.
+  - id: FINGER_TRACKING
+    description: >
+      Capacitive finger sensors accessible only through SteamVR SDK.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Valve Index Controller, PID 0x2012 community estimate. VID 0x28DE confirmed.
+    SteamVR-only device. See index-controller-left.yaml (0x2300) and -right.yaml
+    (0x2301) for alternative estimates. Last reviewed: 2026-06.

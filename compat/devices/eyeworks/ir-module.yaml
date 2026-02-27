@@ -1,0 +1,59 @@
+# EyeWorks IR Head Tracking Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# EyeWorks IR modules are passive IR illuminator clips used with webcam-based
+# head trackers. VID 0x0479 and PID 0x0100 are community estimates; the IR
+# clip itself typically does not enumerate as a USB HID device — it is powered
+# via USB but the tracking is done by the webcam software (e.g. OpenTrack).
+schema_version: "1"
+
+device:
+  name: "EyeWorks IR Module"
+  vendor: "EyeWorks"
+  type: tracker
+  usb:
+    vendor_id: 0x0479    # Community estimate — EyeWorks/generic IR device; verify with lsusb
+    product_id: 0x0100   # Community estimate — IR illuminator USB endpoint
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0    # Passive device — no polling
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0479 and PID 0x0100 are community estimates. The IR illuminator
+      module is a passive USB-powered device; it may not enumerate as a HID
+      device at all. Verify with lsusb when connected to real hardware.
+  - id: PASSIVE_USB_POWER
+    description: >
+      The IR module uses USB only for power delivery (5V). No HID data is
+      exchanged. Actual head tracking is performed by webcam software using
+      the IR illumination from this clip.
+  - id: NO_HID_DATA
+    description: >
+      No HID input data from this device. Tracking is handled by the host
+      software (OpenTrack, FaceTrackNoIR, etc.) interpreting the IR-illuminated
+      image from a connected webcam.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    EyeWorks IR illuminator module. VID 0x0479 / PID 0x0100 are community
+    estimates. Passive USB-powered device; no HID data. Paired with webcam
+    and OpenTrack for head tracking. Last reviewed: 2026-06.

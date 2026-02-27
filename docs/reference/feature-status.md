@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 2012 |
-| ACs with tests | 2012 |
-| ACs with Gherkin | 941 |
-| ACs with both tests + Gherkin | 941 |
+| Total AC | 2936 |
+| ACs with tests | 2935 |
+| ACs with Gherkin | 1421 |
+| ACs with both tests + Gherkin | 1420 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 1415 |
+| Draft | 2339 |
 | Incomplete | 0 |
-| Microcrates | 81 |
-| Microcrates with tests | 65 (80.2%) |
-| Microcrates with Gherkin | 65 (80.2%) |
-| Microcrates fully covered | 65 (80.2%) |
+| Microcrates | 87 |
+| Microcrates with tests | 65 (74.7%) |
+| Microcrates with Gherkin | 66 (75.9%) |
+| Microcrates fully covered | 65 (74.7%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 46.8% |
-| Test + Gherkin coverage | 46.8% |
+| Gherkin coverage | 48.4% |
+| Test + Gherkin coverage | 48.4% |
 
 ## BDD Microcrate Matrix
 
@@ -50,12 +50,14 @@
 | flight-cloud-profiles | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-core | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
+| flight-dcs-modules | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-device-common | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-falcon-bms | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-moza | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-headless | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hid-support | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
@@ -80,14 +82,17 @@
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 19 | 19 | 19 | 19 | 19 | 100.0% | 100.0% | 100.0% |
+| flight-metrics-http | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-open-hardware | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
 | flight-opentrack | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-openxr | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-goflight | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
+| flight-prepar3d | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-psx | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -118,6 +123,7 @@
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| unmapped | 1 | 0 | 1 | 0 | 0 | 0.0% | 100.0% | 0.0% |
 
 | REQ ID | AC ID | Description | Gherkin (file:line) | Tests (count) | Status |
 |--------|-------|-------------|---------------------|---------------|--------|
@@ -2133,3 +2139,927 @@
 | REQ-336 | AC-336.4 | Rate mismatch is logged once on connect | - | 1 | ⚪ Draft |
 | REQ-336 | AC-336.5 | Adaptation is per-simulator (different adapters have different rates) | - | 1 | ⚪ Draft |
 | REQ-336 | AC-336.6 | Zero-rate (disconnected) clears to idle state | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.1 | Each profile save creates a versioned backup (.v1, .v2, etc.) | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.2 | Last 5 versions are kept, older ones are deleted automatically | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.3 | CLI can list versions: flightctl profile versions <name> | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.4 | CLI can restore a previous version: flightctl profile restore <name> v3 | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.5 | Restore operation validates the target version before applying | - | 1 | ⚪ Draft |
+| REQ-337 | AC-337.6 | Version metadata includes timestamp and optional description | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.1 | Service can relay SimConnect FFB forces directly to HID FFB device | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.2 | Force translation preserves stick shake and G-force feel effects | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.3 | Multiple simultaneous FFB effects are blended correctly | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.4 | FFB passthrough can be enabled/disabled per profile | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.5 | FFB passthrough respects safety envelope (max force limits) | - | 1 | ⚪ Draft |
+| REQ-338 | AC-338.6 | FFB force values are logged at debug level (not info) | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.1 | Service can read analog inputs from dedicated panel devices (ADC) | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.2 | Analog panel axes are treated as configurable axis sources | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.3 | Panel VID/PID is listed in the compatibility matrix | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.4 | Analog resolution is configurable (8-bit, 10-bit, 12-bit) | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.5 | Panel calibration follows the same flow as joystick calibration | - | 1 | ⚪ Draft |
+| REQ-339 | AC-339.6 | Panel disconnect is handled without axis spike | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.1 | Each axis can have logging enabled independently | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.2 | Log level is configurable (trace/debug/info) | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.3 | Axis log includes: raw, post-deadzone, post-curve, final values | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.4 | Axis logging can be toggled via CLI without restart | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.5 | Log output is structured JSON for machine parsing | - | 1 | ⚪ Draft |
+| REQ-340 | AC-340.6 | High-frequency logging (> 10Hz per axis) requires explicit opt-in | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.1 | WASM plugins cannot access host filesystem | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.2 | WASM plugins cannot make network calls | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.3 | WASM plugins are killed if they exceed their CPU budget | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.4 | WASM plugin crash is isolated (no host process crash) | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.5 | Plugin capabilities are declared at install time | - | 1 | ⚪ Draft |
+| REQ-341 | AC-341.6 | Plugin manifest is signed by the developer | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.1 | Service scans profile directory on startup | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.2 | New profile files are picked up without restart (file watcher) | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.3 | Profile file syntax errors are logged and the file is skipped | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.4 | Profile names are derived from filenames (without extension) | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.5 | Profile discovery results are available via CLI list | - | 1 | ⚪ Draft |
+| REQ-342 | AC-342.6 | Profile directory path is configurable (default: ~/.config/openflight/profiles/) | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.1 | Service detects ground roll phase (gear down, speed < takeoff threshold) | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.2 | During ground roll, rudder axis is automatically scaled for better control | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.3 | Takeoff speed threshold is configurable per aircraft profile | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.4 | Ground roll mode is reflected in active profile slot | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.5 | Mode changes are emitted on the bus | - | 1 | ⚪ Draft |
+| REQ-343 | AC-343.6 | Ground roll scaling reverts to default when airborne | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.1 | Button mapping can trigger in-game gear cycle action | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.2 | Gear state is tracked via sim telemetry (up/down/in-transit) | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.3 | Gear state drives an axis indicator (0.0=up, 1.0=down) | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.4 | Gear transition plays a haptic/FFB cue if configured | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.5 | Gear toggle is blocked during certain flight phases (e.g., overspeed) | - | 1 | ⚪ Draft |
+| REQ-344 | AC-344.6 | Gear state is shown in CLI diagnostics | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.1 | Service can display pit strategy data on StreamDeck panel | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.2 | Lap count and current position drive panel button colors | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.3 | Pit limiter button maps to in-game pit limiter toggle | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.4 | DRS button maps to in-game DRS if telemetry shows available | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.5 | Race mode profiles are auto-loaded when racing sim is detected | - | 1 | ⚪ Draft |
+| REQ-345 | AC-345.6 | Race data is cleared when sim disconnects | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.1 | Service exposes HTTP /health endpoint (default port 8080) | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.2 | /health returns JSON with status, uptime, device count, sim name | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.3 | /health/ready returns 200 only when at least one device is connected | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.4 | /health/live returns 200 if service is not in panic state | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.5 | Health endpoint respects --health-port flag | - | 1 | ⚪ Draft |
+| REQ-346 | AC-346.6 | Health check is included in systemd service unit watchdog | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.1 | gRPC service version is included in every response | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.2 | Client must send its version in request metadata | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.3 | Version mismatch produces a clear error, not a silent failure | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.4 | Major version bump requires explicit client upgrade | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.5 | Minor version differences are backward compatible | - | 1 | ⚪ Draft |
+| REQ-347 | AC-347.6 | Version info is visible via `flightctl version` | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.1 | Profile can be locked to prevent accidental changes | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.2 | Locked profile shows read-only indicator in CLI | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.3 | Lock/unlock requires explicit confirmation | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.4 | Locked profile cannot be overwritten by auto-save | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.5 | Lock state is persisted in profile metadata | - | 1 | ⚪ Draft |
+| REQ-348 | AC-348.6 | Admin unlock bypasses user lock (for managed deployments) | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.1 | IL-2 telemetry packets are parsed from UDP port 29373 (default) | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.2 | Flight state (position, velocity, attitude) is published to the bus | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.3 | Aircraft type is detected from IL-2 telemetry headers | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.4 | Reconnection is automatic after IL-2 restart within 10 seconds | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.5 | IL-2 game manifest lists supported versions (1.9+) | - | 1 | ⚪ Draft |
+| REQ-361 | AC-361.6 | Telemetry parser handles partial/malformed packets without panic | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.1 | Pitch/roll/yaw trim positions are exported to MSFS L-Vars if available | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.2 | Trim export happens within one RT tick of trim input change | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.3 | Export can be enabled/disabled per simulator | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.4 | Missing L-Var target is logged once and silently skipped thereafter | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.5 | Trim range is calibrated to the sim's expected scale | - | 1 | ⚪ Draft |
+| REQ-362 | AC-362.6 | Trim export is covered by an integration test with a mock sim | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.1 | AeroFly UDP telemetry packets are parsed correctly | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.2 | Attitude data (pitch, roll, yaw) is extracted and published to bus | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.3 | Connected/disconnected state is tracked per adapter lifecycle | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.4 | AeroFly game manifest lists support tier and tested version | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.5 | Parser handles extended telemetry packets without overflow | - | 1 | ⚪ Draft |
+| REQ-363 | AC-363.6 | Fuzz target exists for the AeroFly UDP packet parser | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.1 | Profiles with schema version < current are detected on load | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.2 | Migration is applied step-by-step through each schema version | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.3 | Migration failures produce a specific error with source version and failure location | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.4 | Migrated profile is re-validated against the current schema | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.5 | Original profile file is backed up before migration | - | 1 | ⚪ Draft |
+| REQ-364 | AC-364.6 | Golden file tests cover migrations from version 1 through current | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.1 | Changes smaller than jitter_threshold are ignored (no output change) | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.2 | Jitter threshold is configurable per axis (default 0.001) | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.3 | Suppression does not introduce non-monotonic behavior at threshold crossings | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.4 | Property test: suppressed output never changes by less than threshold | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.5 | Jitter counter is incremented per suppressed sample | - | 1 | ⚪ Draft |
+| REQ-365 | AC-365.6 | Zero threshold disables suppression (backward-compatible) | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.1 | Global profile provides baseline values for all unspecified fields | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.2 | Sim profile overrides global; aircraft overrides sim; phase overrides aircraft | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.3 | Merge produces a single flat compiled profile snapshot | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.4 | Layer priority is: phase > aircraft > sim > global | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.5 | Missing intermediate layers are skipped without error | - | 1 | ⚪ Draft |
+| REQ-366 | AC-366.6 | Profile merge is deterministic - same inputs always produce same output | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.1 | OpenXR runtime is discovered and initialized on startup | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.2 | Head pose (x, y, z, yaw, pitch, roll) is read at 90+ Hz | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.3 | Head pose is published to the bus as HeadTrackingSnapshot | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.4 | Loss of HMD connection triggers safe fallback to last known pose | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.5 | Head tracking data can be used to drive camera axis outputs | - | 1 | ⚪ Draft |
+| REQ-349 | AC-349.6 | OpenXR session lifecycle (create/begin/end) is managed correctly | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.1 | Two physical axes can be mapped to the same logical axis | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.2 | Merge mode (sum/max/priority) is configurable per logical axis | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.3 | Priority merge uses the device with highest absolute value | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.4 | Sum merge clamps output to [-1.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.5 | Disconnection of one physical device does not break the merged axis | - | 1 | ⚪ Draft |
+| REQ-350 | AC-350.6 | Each merge source has an independent deadzone configuration | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.1 | Window size (2-64 samples) is configurable per axis | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.2 | Windowed average reduces impulse noise compared to raw input | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.3 | Window size of 1 is equivalent to no smoothing | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.4 | Buffer is pre-allocated; no heap allocation during processing | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.5 | Smoothing latency is proportional to window size | - | 1 | ⚪ Draft |
+| REQ-351 | AC-351.6 | Property test: output stays within input bounds | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.1 | USB connect events are detected within 500 ms on Windows (via SetupAPI/WM_DEVICECHANGE) | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.2 | USB connect events are detected within 500 ms on Linux (via udev monitor) | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.3 | Re-connection restores the prior device configuration automatically | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.4 | Profile re-applies to the reconnected device | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.5 | Hot-plug events are logged with timestamp and device identity | - | 1 | ⚪ Draft |
+| REQ-352 | AC-352.6 | Multiple simultaneous hot-plug events are handled without data races | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.1 | Once axis enters deadzone, output remains zero until threshold + hysteresis is exceeded | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.2 | Hysteresis amount is configurable (0.0 to 0.1) | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.3 | Zero hysteresis produces standard deadzone behavior (backward-compatible) | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.4 | Property test: with hysteresis > 0, output never oscillates around zero | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.5 | Hysteresis state is correctly reset on calibration reset | - | 1 | ⚪ Draft |
+| REQ-353 | AC-353.6 | Bipolar axes apply hysteresis symmetrically around center | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.1 | Axis values are logged at the configured blackbox sample rate | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.2 | Each log entry includes: tick count, axis ID, raw value, processed value | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.3 | Logging overhead is under 5 us per tick (100 axes) | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.4 | Log entries are written to the ring buffer without allocation | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.5 | Blackbox replay can reconstruct axis history from log | - | 1 | ⚪ Draft |
+| REQ-354 | AC-354.6 | Logging can be disabled per-axis without recompilation | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.1 | A child profile specifying inherits: parent_id merges parent defaults | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.2 | Inheritance is resolved depth-first up to 5 levels deep | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.3 | Circular inheritance is detected and returns a compile error | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.4 | Child values override parent values (not merge/append by default) | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.5 | Arrays in child profiles replace parent arrays entirely | - | 1 | ⚪ Draft |
+| REQ-355 | AC-355.6 | Resolved profile snapshot is cached and invalidated on source change | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.1 | Each sim adapter reports: connected, last_rx_at, packets_per_second, error_count | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.2 | Health metrics are accessible via /metrics HTTP endpoint | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.3 | Stale metrics (>5s since last update) are flagged as stale: true | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.4 | Dashboard shows connection state transitions with timestamps | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.5 | Disconnect events increment a sim_disconnects_total counter | - | 1 | ⚪ Draft |
+| REQ-356 | AC-356.6 | Health data is updated at minimum every 1 second | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.1 | Falcon BMS shared memory (FlightData, FlightData2, OSBData) is opened on sim start | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.2 | Axis positions (pitch, roll, yaw, throttle) are read from shared memory | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.3 | Data is read at 30 Hz minimum | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.4 | Shared memory handle is closed cleanly on shutdown | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.5 | Missing shared memory (BMS not running) produces graceful degradation | - | 1 | ⚪ Draft |
+| REQ-357 | AC-357.6 | BMS version is detected and logged at startup | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.1 | Two bindings targeting the same logical output are flagged as conflicts | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.2 | Conflicts are reported with source device, axis/button ID, and conflicting profile path | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.3 | Profile load fails with a descriptive error if strict_conflicts is enabled | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.4 | Conflict report is available via flightctl bindings check | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.5 | Shadowed bindings (same source, different priority layers) are warned but allowed | - | 1 | ⚪ Draft |
+| REQ-358 | AC-358.6 | Property test: no false positives for non-conflicting binding sets | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.1 | Axis output is clamped to configured min/max (default: [-1.0, 1.0]) | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.2 | A ClampEvent is emitted when output would exceed bounds | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.3 | ClampEvent includes: axis_id, unclamped_value, clamped_value, timestamp | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.4 | Clamp event count is tracked per-axis and exposed via metrics | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.5 | Clamping can be disabled per-axis (pass-through mode) | - | 1 | ⚪ Draft |
+| REQ-359 | AC-359.6 | Clamp events do not allocate on the RT thread | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.1 | On device connect, capabilities (axes, buttons, hats, FFB) are enumerated | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.2 | Capabilities are cached in a device registry | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.3 | Capability data is available via flightctl devices list --verbose | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.4 | Axis count and button count match the USB HID descriptor | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.5 | FFB capability flag is set only if the device actually supports force feedback | - | 1 | ⚪ Draft |
+| REQ-360 | AC-360.6 | Capability cache is invalidated when device firmware version changes | - | 1 | ⚪ Draft |
+| REQ-367 | AC-367.1 | Window size is configurable per axis (2–64 samples) | specs/features/req_367_axis_smoothing_window.feature:5 | 1 | ⚪ Draft |
+| REQ-367 | AC-367.2 | A window of 1 passes input unchanged | specs/features/req_367_axis_smoothing_window.feature:11 | 1 | ⚪ Draft |
+| REQ-367 | AC-367.3 | Buffer is fully pre-allocated (zero allocation on process) | specs/features/req_367_axis_smoothing_window.feature:17 | 1 | ⚪ Draft |
+| REQ-367 | AC-367.4 | Output is always bounded by the min/max of the window contents | specs/features/req_367_axis_smoothing_window.feature:23 | 1 | ⚪ Draft |
+| REQ-367 | AC-367.5 | Latency introduced is reported as window_size/2 samples | specs/features/req_367_axis_smoothing_window.feature:29 | 1 | ⚪ Draft |
+| REQ-367 | AC-367.6 | Property test: output never exceeds bounds of inputs seen in window | specs/features/req_367_axis_smoothing_window.feature:35 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.1 | Device reconnect event triggers profile re-application within 500 ms | specs/features/req_368_device_reconnect_policy.feature:5 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.2 | Calibration data from the last session is restored on reconnect | specs/features/req_368_device_reconnect_policy.feature:11 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.3 | If device firmware changed, a warning is logged but profile still applies | specs/features/req_368_device_reconnect_policy.feature:17 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.4 | Maximum 3 reconnect retries before marking device as failed | specs/features/req_368_device_reconnect_policy.feature:23 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.5 | Reconnect attempts are logged with device ID and attempt number | specs/features/req_368_device_reconnect_policy.feature:29 | 1 | ⚪ Draft |
+| REQ-368 | AC-368.6 | BDD scenario: device disconnects mid-flight, profile is restored on reconnect | specs/features/req_368_device_reconnect_policy.feature:35 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.1 | Processed axis values can be sent back to MSFS via SimConnect events | specs/features/req_369_simconnect_axis_injection.feature:5 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.2 | Injection uses SIMCONNECT_INPUT_EVENT or axis-specific events | specs/features/req_369_simconnect_axis_injection.feature:11 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.3 | Injection can be enabled/disabled per axis | specs/features/req_369_simconnect_axis_injection.feature:17 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.4 | Injection rate is limited to 250 Hz maximum (RT spine rate) | specs/features/req_369_simconnect_axis_injection.feature:23 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.5 | Injection errors are counted and exposed via metrics | specs/features/req_369_simconnect_axis_injection.feature:29 | 1 | ⚪ Draft |
+| REQ-369 | AC-369.6 | Integration test with mock SimConnect verifies injected values | specs/features/req_369_simconnect_axis_injection.feature:35 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.1 | Processed axis values can be written to X-Plane datarefs via UDP | specs/features/req_370_xplane_dataref_write.feature:5 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.2 | Target dataref paths are configurable per axis in the profile | specs/features/req_370_xplane_dataref_write.feature:11 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.3 | Write rate is configurable (default: match telemetry read rate) | specs/features/req_370_xplane_dataref_write.feature:17 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.4 | Unknown datarefs are logged once and silently ignored | specs/features/req_370_xplane_dataref_write.feature:23 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.5 | Dataref write errors are counted per dataref | specs/features/req_370_xplane_dataref_write.feature:29 | 1 | ⚪ Draft |
+| REQ-370 | AC-370.6 | Integration test with mock X-Plane socket verifies written values | specs/features/req_370_xplane_dataref_write.feature:35 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.1 | Output range [out_min, out_max] is configurable per axis | specs/features/req_371_axis_output_range_mapping.feature:5 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.2 | Default output range is [-1.0, 1.0] | specs/features/req_371_axis_output_range_mapping.feature:11 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.3 | Mapping is linear between input [-1.0, 1.0] and output range | specs/features/req_371_axis_output_range_mapping.feature:17 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.4 | Property test: output always stays within [out_min, out_max] | specs/features/req_371_axis_output_range_mapping.feature:25 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.5 | out_min == out_max produces constant output equal to out_min | specs/features/req_371_axis_output_range_mapping.feature:31 | 1 | ⚪ Draft |
+| REQ-371 | AC-371.6 | No allocation on the RT thread | specs/features/req_371_axis_output_range_mapping.feature:37 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.1 | `flightctl profile export --format json` produces valid JSON | specs/features/req_372_profile_export_json.feature:5 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.2 | Exported JSON includes all resolved axes with all configured parameters | specs/features/req_372_profile_export_json.feature:11 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.3 | JSON schema matches the documented profile JSON schema | specs/features/req_372_profile_export_json.feature:17 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.4 | Re-importing the exported JSON produces the identical compiled profile | specs/features/req_372_profile_export_json.feature:23 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.5 | Export handles missing optional fields gracefully (null or omitted) | specs/features/req_372_profile_export_json.feature:29 | 1 | ⚪ Draft |
+| REQ-372 | AC-372.6 | Snapshot test: known profile produces known JSON output | specs/features/req_372_profile_export_json.feature:35 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.1 | Service can start with `--headless` flag, disabling IPC and UI | specs/features/req_373_headless_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.2 | Headless mode still processes all axis data at full RT rate | specs/features/req_373_headless_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.3 | Headless mode logs to stderr only (no file rotation) | specs/features/req_373_headless_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.4 | `flightctl` returns a clear error if the service is in headless mode | specs/features/req_373_headless_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.5 | Headless mode reduces startup time by 200 ms (no IPC socket setup) | specs/features/req_373_headless_mode.feature:29 | 1 | ⚪ Draft |
+| REQ-373 | AC-373.6 | Config file path is still respected in headless mode | specs/features/req_373_headless_mode.feature:35 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.1 | Multiple filter stages (EMA, jitter, window average) can be chained | specs/features/req_374_axis_filter_cascade.feature:5 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.2 | Filter order is specified in the profile configuration | specs/features/req_374_axis_filter_cascade.feature:11 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.3 | Cascade produces the same result as manually chaining filter calls | specs/features/req_374_axis_filter_cascade.feature:17 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.4 | Empty cascade (no filters) is a pass-through | specs/features/req_374_axis_filter_cascade.feature:23 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.5 | Each filter stage contributes its latency to the cascade latency report | specs/features/req_374_axis_filter_cascade.feature:29 | 1 | ⚪ Draft |
+| REQ-374 | AC-374.6 | Property test: cascade output remains in [-1, 1] for inputs in [-1, 1] | specs/features/req_374_axis_filter_cascade.feature:35 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.1 | Processed axis values can be sent to DCS via LoSetCommand UDP | specs/features/req_375_dcs_axis_injection.feature:5 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.2 | Axis-to-command mapping is configurable in the DCS export profile | specs/features/req_375_dcs_axis_injection.feature:11 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.3 | Injection rate does not exceed 50 Hz (DCS export limitation) | specs/features/req_375_dcs_axis_injection.feature:17 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.4 | DCS UDP injection can coexist with DCS telemetry read | specs/features/req_375_dcs_axis_injection.feature:23 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.5 | Injection errors are logged with command name and error code | specs/features/req_375_dcs_axis_injection.feature:29 | 1 | ⚪ Draft |
+| REQ-375 | AC-375.6 | Integration test with mock DCS UDP socket verifies injected commands | specs/features/req_375_dcs_axis_injection.feature:35 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.1 | A blend factor (0.0 = raw, 1.0 = fully smoothed) controls the mix | specs/features/req_376_axis_smoothing_blend.feature:5 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.2 | Blend factor is configurable per axis in the profile | specs/features/req_376_axis_smoothing_blend.feature:11 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.3 | Blend factor of 0.0 passes raw input unchanged | specs/features/req_376_axis_smoothing_blend.feature:17 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.4 | Blend factor of 1.0 produces fully smoothed output | specs/features/req_376_axis_smoothing_blend.feature:23 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.5 | Property test: blended output is always within [min(raw, smooth), max(raw, smooth)] | specs/features/req_376_axis_smoothing_blend.feature:29 | 1 | ⚪ Draft |
+| REQ-376 | AC-376.6 | No allocation on RT thread | specs/features/req_376_axis_smoothing_blend.feature:35 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.1 | Profile schema version is a semver string stored in the root `schema` field | specs/features/req_377_profile_schema_versioning.feature:5 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.2 | Breaking changes require a major version increment | specs/features/req_377_profile_schema_versioning.feature:11 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.3 | Minor additions (new optional fields) increment the minor version | specs/features/req_377_profile_schema_versioning.feature:17 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.4 | `cargo xtask validate` checks that the schema version is consistent with CHANGELOG | specs/features/req_377_profile_schema_versioning.feature:23 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.5 | Migration paths exist for all version pairs since version 1.0 | specs/features/req_377_profile_schema_versioning.feature:29 | 1 | ⚪ Draft |
+| REQ-377 | AC-377.6 | Snapshot tests cover serialization/deserialization of each schema version | specs/features/req_377_profile_schema_versioning.feature:35 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.1 | Diagnostic mode can be enabled per axis via `flightctl axis diag --enable <axis>` | specs/features/req_378_axis_diagnostic_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.2 | In diagnostic mode, per-tick data is published to the diagnostics bus channel | specs/features/req_378_axis_diagnostic_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.3 | Diagnostic data includes: tick, raw, post-calibration, post-deadzone, post-curve, final | specs/features/req_378_axis_diagnostic_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.4 | Diagnostic mode does not impact RT performance when disabled | specs/features/req_378_axis_diagnostic_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.5 | Diagnostic subscribers can connect/disconnect without interrupting RT loop | specs/features/req_378_axis_diagnostic_mode.feature:29 | 1 | ⚪ Draft |
+| REQ-378 | AC-378.6 | Diagnostic mode automatically disables after 60 seconds to prevent log flooding | specs/features/req_378_axis_diagnostic_mode.feature:35 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.1 | Axis pipeline enforces output is always in [-1.0, 1.0] after final stage | specs/features/req_391_axis_normalization_validation.feature:5 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.2 | NaN or Inf input is replaced with 0.0 and a warning is logged | specs/features/req_391_axis_normalization_validation.feature:11 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.3 | Validation happens on the RT thread with zero allocation | specs/features/req_391_axis_normalization_validation.feature:17 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.4 | Validation error count is tracked per-axis and available via metrics | specs/features/req_391_axis_normalization_validation.feature:23 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.5 | Property test: for all finite f32 inputs, output is in [-1.0, 1.0] | specs/features/req_391_axis_normalization_validation.feature:29 | 1 | ⚪ Draft |
+| REQ-391 | AC-391.6 | Validation can be disabled per-axis for pass-through use cases | specs/features/req_391_axis_normalization_validation.feature:35 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.1 | Recording captures axis ID, value, and monotonic timestamp (nanoseconds) | specs/features/req_392_axis_timeline_recording.feature:5 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.2 | Recording buffer is a lock-free ring buffer with configurable capacity | specs/features/req_392_axis_timeline_recording.feature:11 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.3 | Recording can be started and stopped without stopping the RT loop | specs/features/req_392_axis_timeline_recording.feature:17 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.4 | Recorded data is exported as CSV via `flightctl axis export --format csv` | specs/features/req_392_axis_timeline_recording.feature:23 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.5 | CSV output includes header row: axis_id, timestamp_ns, raw, processed | specs/features/req_392_axis_timeline_recording.feature:29 | 1 | ⚪ Draft |
+| REQ-392 | AC-392.6 | Recording overhead is under 1 µs per tick when active | specs/features/req_392_axis_timeline_recording.feature:35 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.1 | Migration hook is a Rust function registered for a specific version pair (from, to) | specs/features/req_393_profile_version_migration_hooks.feature:5 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.2 | Custom hook is called before the default field-rename migration | specs/features/req_393_profile_version_migration_hooks.feature:11 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.3 | Hook can abort migration by returning `Err`, leaving the profile unchanged | specs/features/req_393_profile_version_migration_hooks.feature:17 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.4 | Hook has access to the raw TOML/JSON AST for custom transformations | specs/features/req_393_profile_version_migration_hooks.feature:23 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.5 | Hook infrastructure is tested with a migration from schema v1 to v2 | specs/features/req_393_profile_version_migration_hooks.feature:29 | 1 | ⚪ Draft |
+| REQ-393 | AC-393.6 | Missing hook for a version pair falls through to default identity migration | specs/features/req_393_profile_version_migration_hooks.feature:35 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.1 | DCS module directory is scanned for supported aircraft modules at startup | specs/features/req_394_dcs_module_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.2 | Per-aircraft axis maps (stick throw, throttle range) are loaded from module files | specs/features/req_394_dcs_module_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.3 | Module files use TOML format with axis range and quirk fields | specs/features/req_394_dcs_module_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.4 | Unknown DCS aircraft fall back to generic axis mapping | specs/features/req_394_dcs_module_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.5 | Module scan is non-blocking (runs on startup thread, not RT thread) | specs/features/req_394_dcs_module_integration.feature:29 | 1 | ⚪ Draft |
+| REQ-394 | AC-394.6 | Module scan results are logged with count and any load errors | specs/features/req_394_dcs_module_integration.feature:35 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.1 | If axis output reaches max/min for more than 500 ms, saturation state is entered | specs/features/req_395_axis_saturation_protection.feature:5 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.2 | In saturation state, integrating effects (trim, PID integral) are clamped | specs/features/req_395_axis_saturation_protection.feature:11 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.3 | Saturation state clears when axis returns from extremes | specs/features/req_395_axis_saturation_protection.feature:17 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.4 | Saturation events are counted per-axis and exposed via metrics | specs/features/req_395_axis_saturation_protection.feature:23 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.5 | Saturation threshold and duration are configurable per axis | specs/features/req_395_axis_saturation_protection.feature:29 | 1 | ⚪ Draft |
+| REQ-395 | AC-395.6 | Property test: saturation protection never causes output to leave [-1, 1] | specs/features/req_395_axis_saturation_protection.feature:35 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.1 | On connection failure, retry with exponential backoff (1s, 2s, 4s, 8s, 16s, 32s) | specs/features/req_396_simconnect_retry_backoff.feature:5 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.2 | Maximum retry interval is capped at 60 seconds | specs/features/req_396_simconnect_retry_backoff.feature:11 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.3 | Backoff state is reset on successful connection | specs/features/req_396_simconnect_retry_backoff.feature:17 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.4 | Retry count and next retry time are available via adapter metrics | specs/features/req_396_simconnect_retry_backoff.feature:23 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.5 | Retry can be interrupted immediately via `flightctl simconnect reconnect` | specs/features/req_396_simconnect_retry_backoff.feature:29 | 1 | ⚪ Draft |
+| REQ-396 | AC-396.6 | Integration test verifies backoff timing with mock connection failures | specs/features/req_396_simconnect_retry_backoff.feature:35 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.1 | XP12 plugin uses XPLM3 SDK APIs (vs XP11 XPLM2) | specs/features/req_397_xplane12_plugin_protocol.feature:5 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.2 | Plugin communicates via a named pipe or shared memory (not UDP) | specs/features/req_397_xplane12_plugin_protocol.feature:11 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.3 | Plugin is versioned with the OpenFlight plugin API version | specs/features/req_397_xplane12_plugin_protocol.feature:17 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.4 | Fallback to UDP mode is automatic when named pipe is unavailable | specs/features/req_397_xplane12_plugin_protocol.feature:23 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.5 | XP12 game manifest notes the plugin requirement and API version | specs/features/req_397_xplane12_plugin_protocol.feature:29 | 1 | ⚪ Draft |
+| REQ-397 | AC-397.6 | Plugin upgrade procedure is documented in docs/how-to/ | specs/features/req_397_xplane12_plugin_protocol.feature:35 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.1 | Playback speed is configurable (0.1× to 10×) | specs/features/req_398_recorder_playback_speed.feature:5 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.2 | 1× playback matches original timing (within 1 ms per second) | specs/features/req_398_recorder_playback_speed.feature:11 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.3 | 10× playback completes 10× faster than real time | specs/features/req_398_recorder_playback_speed.feature:17 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.4 | Playback speed change takes effect within one playback tick | specs/features/req_398_recorder_playback_speed.feature:23 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.5 | Speed > 1 skips intermediate samples to maintain sync | specs/features/req_398_recorder_playback_speed.feature:29 | 1 | ⚪ Draft |
+| REQ-398 | AC-398.6 | Speed < 1 inserts interpolated samples for smooth slow motion | specs/features/req_398_recorder_playback_speed.feature:35 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.1 | HID descriptor is parsed to extract axis count, button count, hat count | specs/features/req_399_hid_descriptor_capability_query.feature:5 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.2 | Logical minimum/maximum are read per axis from the descriptor | specs/features/req_399_hid_descriptor_capability_query.feature:11 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.3 | Descriptor parse is non-blocking and completes in < 5 ms | specs/features/req_399_hid_descriptor_capability_query.feature:17 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.4 | Parse errors log the raw descriptor bytes and return a safe fallback | specs/features/req_399_hid_descriptor_capability_query.feature:23 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.5 | Descriptor-derived axis range is used for calibration baseline | specs/features/req_399_hid_descriptor_capability_query.feature:29 | 1 | ⚪ Draft |
+| REQ-399 | AC-399.6 | Property test: descriptor parser handles any byte sequence without panic | specs/features/req_399_hid_descriptor_capability_query.feature:35 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.1 | 400+ requirements are defined in the spec ledger | specs/features/req_400_milestone_400.feature:5 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.2 | Each requirement has exactly 6 acceptance criteria | specs/features/req_400_milestone_400.feature:11 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.3 | Each requirement has a corresponding BDD feature file | specs/features/req_400_milestone_400.feature:17 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.4 | All feature files are valid Gherkin syntax | specs/features/req_400_milestone_400.feature:23 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.5 | Spec ledger passes automated schema validation | specs/features/req_400_milestone_400.feature:29 | 1 | ⚪ Draft |
+| REQ-400 | AC-400.6 | Requirements coverage matrix is generated and available in docs/ | specs/features/req_400_milestone_400.feature:35 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.1 | Axis normalization maps any [min, max] integer range to [-1.0, 1.0] | specs/features/req_401_axis_nonstandard_range_normalization.feature:5 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.2 | Center detection uses the logical center from the HID descriptor | specs/features/req_401_axis_nonstandard_range_normalization.feature:11 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.3 | Non-symmetric ranges (center != (max-min)/2) are handled correctly | specs/features/req_401_axis_nonstandard_range_normalization.feature:17 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.4 | 10-bit (0-1023), 12-bit (0-4095), 14-bit (0-16383), 16-bit (0-65535) ranges are supported | specs/features/req_401_axis_nonstandard_range_normalization.feature:23 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.5 | Range mismatch (out-of-range value) is clamped and counted | specs/features/req_401_axis_nonstandard_range_normalization.feature:29 | 1 | ⚪ Draft |
+| REQ-401 | AC-401.6 | Property test: any value in [0, 65535] produces output in [-1.0, 1.0] | specs/features/req_401_axis_nonstandard_range_normalization.feature:35 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.1 | On startup, service checks: HID subsystem, network interfaces, config file | specs/features/req_402_service_dependency_health_check.feature:5 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.2 | Missing critical dependencies abort startup with a descriptive error | specs/features/req_402_service_dependency_health_check.feature:11 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.3 | Optional dependencies (sim adapters) log warnings but don't block startup | specs/features/req_402_service_dependency_health_check.feature:17 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.4 | Health check results are written to the log and available via `flightctl health` | specs/features/req_402_service_dependency_health_check.feature:23 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.5 | Health check completes within 2 seconds | specs/features/req_402_service_dependency_health_check.feature:29 | 1 | ⚪ Draft |
+| REQ-402 | AC-402.6 | Each dependency check has an individual timeout of 500 ms | specs/features/req_402_service_dependency_health_check.feature:35 | 0 | ⚪ Draft |
+| REQ-403 | AC-403.1 | Blend factor (0.0=raw, 1.0=filtered) is configurable per axis | specs/features/req_403_axis_blend_smoothing.feature:5 | 1 | ⚪ Draft |
+| REQ-403 | AC-403.2 | Blend is applied as the last step after all other filters | specs/features/req_403_axis_blend_smoothing.feature:11 | 1 | ⚪ Draft |
+| REQ-403 | AC-403.3 | Property test: blend output is always between raw and filtered | specs/features/req_403_axis_blend_smoothing.feature:17 | 1 | ⚪ Draft |
+| REQ-403 | AC-403.4 | Blend of 0.5 produces geometric mean of raw and filtered | specs/features/req_403_axis_blend_smoothing.feature:24 | 1 | ⚪ Draft |
+| REQ-403 | AC-403.5 | Blend factor is validated to be in [0.0, 1.0] | specs/features/req_403_axis_blend_smoothing.feature:31 | 1 | ⚪ Draft |
+| REQ-403 | AC-403.6 | Zero allocation on RT thread | specs/features/req_403_axis_blend_smoothing.feature:37 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.1 | Optional histogram tracks value frequency in 100 equal-width buckets | specs/features/req_404_axis_histogram_recording.feature:5 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.2 | Histogram updates on the RT thread without allocation | specs/features/req_404_axis_histogram_recording.feature:11 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.3 | Histogram is readable via `flightctl axis histogram <axis_id>` | specs/features/req_404_axis_histogram_recording.feature:17 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.4 | Histogram resets when calibration is reset | specs/features/req_404_axis_histogram_recording.feature:23 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.5 | Histogram allows detection of axis dead zones and saturation zones | specs/features/req_404_axis_histogram_recording.feature:29 | 1 | ⚪ Draft |
+| REQ-404 | AC-404.6 | Histogram is exported as a human-readable ASCII bar chart | specs/features/req_404_axis_histogram_recording.feature:35 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.1 | A synchronized capture captures all active axis values in a single atomic snapshot | specs/features/req_405_multi_axis_synchronized_capture.feature:5 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.2 | Snapshot timestamp is the same for all axes in the same capture | specs/features/req_405_multi_axis_synchronized_capture.feature:11 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.3 | Snapshot is taken at the start of each RT tick | specs/features/req_405_multi_axis_synchronized_capture.feature:17 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.4 | Snapshot is accessible to non-RT threads via a lock-free slot | specs/features/req_405_multi_axis_synchronized_capture.feature:23 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.5 | Snapshot includes: tick_id, timestamp_ns, values per axis | specs/features/req_405_multi_axis_synchronized_capture.feature:29 | 1 | ⚪ Draft |
+| REQ-405 | AC-405.6 | Property test: snapshot values are always within [-1.0, 1.0] | specs/features/req_405_multi_axis_synchronized_capture.feature:35 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.1 | `flightctl service start` starts the service daemon | specs/features/req_406_service_start_stop_command.feature:5 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.2 | `flightctl service stop` gracefully shuts down the service | specs/features/req_406_service_start_stop_command.feature:11 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.3 | `flightctl service restart` stops and then starts | specs/features/req_406_service_start_stop_command.feature:17 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.4 | `flightctl service status` shows running/stopped and PID | specs/features/req_406_service_start_stop_command.feature:23 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.5 | Stop command waits up to 5 seconds for graceful shutdown, then kills | specs/features/req_406_service_start_stop_command.feature:29 | 1 | ⚪ Draft |
+| REQ-406 | AC-406.6 | All commands return exit code 0 on success, non-zero on failure | specs/features/req_406_service_start_stop_command.feature:35 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.1 | Every IPC message includes a protocol version field | specs/features/req_407_ipc_message_versioning.feature:5 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.2 | Version mismatch between client and server returns VersionMismatch error | specs/features/req_407_ipc_message_versioning.feature:11 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.3 | Client includes its supported version range (min, max) | specs/features/req_407_ipc_message_versioning.feature:17 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.4 | Server responds with its current version if within client's range | specs/features/req_407_ipc_message_versioning.feature:23 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.5 | Version negotiation happens on first connection | specs/features/req_407_ipc_message_versioning.feature:29 | 1 | ⚪ Draft |
+| REQ-407 | AC-407.6 | Integration test verifies behavior when client is one version ahead of server | specs/features/req_407_ipc_message_versioning.feature:35 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.1 | Profile can specify per-game overrides (e.g., `[overrides.msfs.pitch]`) | specs/features/req_408_profile_per_game_override.feature:5 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.2 | Game-specific values take precedence over base profile values | specs/features/req_408_profile_per_game_override.feature:11 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.3 | Overrides are applied after profile merging, before RT compilation | specs/features/req_408_profile_per_game_override.feature:17 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.4 | Unknown game names in overrides are logged and ignored | specs/features/req_408_profile_per_game_override.feature:23 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.5 | `flightctl profile show --game msfs` displays the merged profile for MSFS | specs/features/req_408_profile_per_game_override.feature:29 | 1 | ⚪ Draft |
+| REQ-408 | AC-408.6 | Property test: applying same override twice produces same result | specs/features/req_408_profile_per_game_override.feature:35 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.1 | Bypass mode passes raw HID value directly to output (normalized only) | specs/features/req_409_axis_filter_bypass_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.2 | Bypass mode can be toggled per-axis without service restart | specs/features/req_409_axis_filter_bypass_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.3 | Bypass mode is indicated in `flightctl axis status` output | specs/features/req_409_axis_filter_bypass_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.4 | Bypass mode is useful for debugging and calibration | specs/features/req_409_axis_filter_bypass_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.5 | Entering bypass mode does not cause an output discontinuity larger than 0.1 | specs/features/req_409_axis_filter_bypass_mode.feature:29 | 1 | ⚪ Draft |
+| REQ-409 | AC-409.6 | Bypass state persists across profile hot-reloads (until explicitly cleared) | specs/features/req_409_axis_filter_bypass_mode.feature:35 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.1 | `flightctl axis set-all --deadzone 0.05` applies to all active axes | specs/features/req_410_batch_axis_configuration.feature:5 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.2 | Batch command supports: deadzone, expo, invert, scale parameters | specs/features/req_410_batch_axis_configuration.feature:11 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.3 | Batch operation is atomic — either all axes update or none | specs/features/req_410_batch_axis_configuration.feature:17 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.4 | Individual per-axis overrides survive batch updates | specs/features/req_410_batch_axis_configuration.feature:23 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.5 | Batch changes are persisted to the profile file | specs/features/req_410_batch_axis_configuration.feature:29 | 1 | ⚪ Draft |
+| REQ-410 | AC-410.6 | Dry-run mode (--dry-run) shows what would change without applying | specs/features/req_410_batch_axis_configuration.feature:35 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.1 | Rate limiter caps the change in axis value per tick (slew rate) | specs/features/req_411_axis_output_rate_limiting.feature:5 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.2 | Maximum slew rate is configurable in units/tick | specs/features/req_411_axis_output_rate_limiting.feature:11 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.3 | Rate limiter is applied after curve and deadzone processing | specs/features/req_411_axis_output_rate_limiting.feature:17 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.4 | Property test: absolute change between ticks never exceeds max_rate | specs/features/req_411_axis_output_rate_limiting.feature:23 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.5 | Rate limiter state resets when axis value is out of valid range | specs/features/req_411_axis_output_rate_limiting.feature:29 | 1 | ⚪ Draft |
+| REQ-411 | AC-411.6 | Zero rate limit disables the limiter (backward compatible) | specs/features/req_411_axis_output_rate_limiting.feature:35 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.1 | GET /metrics returns Prometheus-formatted text with all counter/gauge metrics | specs/features/req_412_service_metrics_http_endpoint.feature:5 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.2 | Metrics include: axis_count, sim_connected, device_count, tick_rate_hz | specs/features/req_412_service_metrics_http_endpoint.feature:11 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.3 | HTTP server binds to 127.0.0.1:9090 by default (configurable) | specs/features/req_412_service_metrics_http_endpoint.feature:17 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.4 | /metrics endpoint responds within 50 ms | specs/features/req_412_service_metrics_http_endpoint.feature:23 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.5 | Metrics are updated atomically — no partial reads | specs/features/req_412_service_metrics_http_endpoint.feature:29 | 1 | ⚪ Draft |
+| REQ-412 | AC-412.6 | Integration test: start service, poll /metrics, verify axis_count > 0 | specs/features/req_412_service_metrics_http_endpoint.feature:35 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.1 | Priority-based merge selects the axis from the highest-priority active device | specs/features/req_413_multi_device_axis_merge_priority.feature:5 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.2 | Priority is numeric (lower = higher priority) | specs/features/req_413_multi_device_axis_merge_priority.feature:11 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.3 | If highest-priority device disconnects, next device in priority order is used | specs/features/req_413_multi_device_axis_merge_priority.feature:17 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.4 | Priority order is configurable in the profile | specs/features/req_413_multi_device_axis_merge_priority.feature:23 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.5 | Priority change takes effect within one RT tick | specs/features/req_413_multi_device_axis_merge_priority.feature:29 | 1 | ⚪ Draft |
+| REQ-413 | AC-413.6 | Property test: output is always from exactly one device (no averaging) | specs/features/req_413_multi_device_axis_merge_priority.feature:35 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.1 | BusSnapshot struct includes at minimum: tick_id, timestamp_ns, axes, buttons | specs/features/req_414_telemetry_bus_schema.feature:5 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.2 | BusSnapshot is versioned with a schema_version field | specs/features/req_414_telemetry_bus_schema.feature:11 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.3 | BusSnapshot serialization is zero-copy using bytemuck or similar | specs/features/req_414_telemetry_bus_schema.feature:17 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.4 | BusSnapshot size is fixed (no variable-length fields on RT path) | specs/features/req_414_telemetry_bus_schema.feature:23 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.5 | BusSnapshot schema is documented in docs/reference/bus-schema.md | specs/features/req_414_telemetry_bus_schema.feature:29 | 1 | ⚪ Draft |
+| REQ-414 | AC-414.6 | Property test: BusSnapshot serialization round-trips correctly | specs/features/req_414_telemetry_bus_schema.feature:35 | 2 | ⚪ Draft |
+| REQ-379 | AC-379.1 | Prepar3D v5/v6 SimConnect DLL is loaded dynamically at runtime | - | 1 | ⚪ Draft |
+| REQ-379 | AC-379.2 | Flight state data (position, attitude, engine) is extracted and published to bus | - | 1 | ⚪ Draft |
+| REQ-379 | AC-379.3 | P3D adapter shares 80% code with MSFS SimConnect adapter via adapter-common | - | 1 | ⚪ Draft |
+| REQ-379 | AC-379.4 | P3D game manifest lists supported versions (v4, v5, v6) | - | 1 | ⚪ Draft |
+| REQ-379 | AC-379.5 | Adapter handles P3D-specific weather/time queries gracefully | - | 1 | ⚪ Draft |
+| REQ-379 | AC-379.6 | Disconnect and reconnect cycles are covered by integration tests | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.1 | Per-tick statistics: min, max, mean, std_dev of all axis outputs | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.2 | Statistics are computed without heap allocation | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.3 | Statistics are published to the metrics bus every 1 second | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.4 | Statistics are accessible via flightctl stats axes | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.5 | Zeroed axes (not moving) are excluded from statistics computation | - | 1 | ⚪ Draft |
+| REQ-380 | AC-380.6 | Statistics reset to zero on profile change | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.1 | Axis macro can be configured to trigger when axis value exceeds a threshold | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.2 | Rising edge (cross up), falling edge (cross down), and both are configurable | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.3 | Threshold hysteresis prevents re-triggering on noise | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.4 | Macro trigger emits a MacroTriggerEvent on the bus | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.5 | Multiple macros can be bound to the same axis with different thresholds | - | 1 | ⚪ Draft |
+| REQ-381 | AC-381.6 | Property test: with hysteresis, same trigger does not fire twice in succession | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.1 | flightctl axis snapshot writes a YAML/JSON file with current axis states | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.2 | Snapshot includes: axis ID, raw value, processed value, deadzone, curve config | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.3 | Snapshot file is human-readable and loadable for debugging | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.4 | Snapshot command exits within 100 ms | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.5 | Snapshot handles axes with no active input (shows zeros) | - | 1 | ⚪ Draft |
+| REQ-382 | AC-382.6 | Snapshot file has a timestamp in the filename | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.1 | Axis calibration (min/max/center) is written to a platform-appropriate config dir | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.2 | On startup, saved calibration is loaded and applied automatically | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.3 | Calibration store uses TOML format with device VID/PID as key | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.4 | Missing calibration file is handled gracefully (defaults apply) | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.5 | flightctl calibrate reset removes saved calibration for a device | - | 1 | ⚪ Draft |
+| REQ-383 | AC-383.6 | Calibration data survives service restart without re-calibrating | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.1 | flightctl bundle produces a ZIP file with logs, config, metrics, and device list | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.2 | Bundle includes: system info (OS, RAM, CPU), connected devices, active profile | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.3 | Bundle does not include private user data beyond flight configuration | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.4 | Bundle generation completes within 5 seconds | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.5 | Bundle is named openflight-bundle-<timestamp>.zip | - | 1 | ⚪ Draft |
+| REQ-384 | AC-384.6 | Bundle file is written to the user home directory by default | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.1 | Axis split mode divides one axis into two logical axes: positive and negative halves | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.2 | Positive half maps [0, 1] from [center, max] of the source axis | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.3 | Negative half maps [0, 1] from [center, min] of the source axis | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.4 | Split mode is invertible - combine restores the original axis value | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.5 | Property test: split then combine is identity (within float epsilon) | - | 1 | ⚪ Draft |
+| REQ-385 | AC-385.6 | Split is useful for e.g. combined brake pedal axis to left and right brakes | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.1 | A file watcher detects changes to the active profile file | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.2 | Changed profile is parsed and validated before applying | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.3 | If validation fails, the old profile remains active and an error is logged | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.4 | Profile hot-reload triggers within 500 ms of file change | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.5 | Hot-reload is atomic - axes see either old or new profile, never a mix | - | 1 | ⚪ Draft |
+| REQ-386 | AC-386.6 | flightctl profile reload forces immediate reload without file change | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.1 | flightctl xplane install-plugin copies the plugin to X-Plane Resources/plugins | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.2 | Plugin provides shared memory or UDP-based telemetry richer than UDP datarefs | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.3 | Plugin version is checked on connect; mismatch produces a warning | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.4 | Plugin install is reversible via flightctl xplane remove-plugin | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.5 | Plugin install fails gracefully if X-Plane path is not configured | - | 1 | ⚪ Draft |
+| REQ-387 | AC-387.6 | Plugin compatibility matrix lists supported X-Plane versions (11, 12) | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.1 | Each axis maintains a ring buffer of the last 256 processed values | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.2 | Ring buffer is fully pre-allocated - no heap allocation on push | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.3 | Buffer can be read without blocking the RT thread (lock-free) | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.4 | History is accessible via flightctl axis history <axis_id> | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.5 | History buffer is separate from the blackbox recording system | - | 1 | ⚪ Draft |
+| REQ-388 | AC-388.6 | Property test: after 300 pushes to a 256-element buffer, only the last 256 are readable | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.1 | Service acquires a platform file lock on startup | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.2 | A second service instance exits immediately with a clear error message | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.3 | Lock is released automatically when the service exits (including crash) | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.4 | Lock file path is documented and configurable | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.5 | flightctl status shows whether the service is running | - | 1 | ⚪ Draft |
+| REQ-389 | AC-389.6 | Multi-instance check is tested in an integration test with two service instances | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.1 | Adaptive EMA reduces alpha (more smoothing) when axis velocity is low | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.2 | Adaptive EMA increases alpha (less smoothing) when axis velocity is high | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.3 | Transition between alpha values is smooth (no discontinuities) | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.4 | Config specifies: alpha_slow, alpha_fast, and velocity_threshold | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.5 | Property test: adaptive EMA never produces output outside [-1, 1] for valid inputs | - | 1 | ⚪ Draft |
+| REQ-390 | AC-390.6 | No heap allocation; state fits in a fixed-size struct | - | 1 | ⚪ Draft |
+| REQ-415 | AC-415.1 | `flightctl axis histogram <axis_id>` outputs ASCII bar chart to stdout | specs/features/req_415_axis_value_histogram_output.feature:5 | 1 | ⚪ Draft |
+| REQ-415 | AC-415.2 | Bar chart shows 20 buckets covering [-1.0, 1.0] | specs/features/req_415_axis_value_histogram_output.feature:11 | 1 | ⚪ Draft |
+| REQ-415 | AC-415.3 | Each bar shows relative frequency as percentage | specs/features/req_415_axis_value_histogram_output.feature:17 | 1 | ⚪ Draft |
+| REQ-415 | AC-415.4 | Output is human-readable without external tools | specs/features/req_415_axis_value_histogram_output.feature:23 | 1 | ⚪ Draft |
+| REQ-415 | AC-415.5 | Histogram command works even when service is stopped (reads saved data) | specs/features/req_415_axis_value_histogram_output.feature:29 | 1 | ⚪ Draft |
+| REQ-415 | AC-415.6 | Histogram export includes total sample count in header | specs/features/req_415_axis_value_histogram_output.feature:35 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.1 | Trim integrator is clamped when axis is saturated for > 500 ms | specs/features/req_416_axis_saturation_protection.feature:5 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.2 | PID integral term is zeroed when saturation is detected | specs/features/req_416_axis_saturation_protection.feature:11 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.3 | Saturation is defined as output reaching 0.95 or above \|1.0\| | specs/features/req_416_axis_saturation_protection.feature:17 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.4 | Saturation recovery resets within one tick when axis moves off the limit | specs/features/req_416_axis_saturation_protection.feature:23 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.5 | Saturation events are logged at WARN level with axis ID and duration | specs/features/req_416_axis_saturation_protection.feature:29 | 1 | ⚪ Draft |
+| REQ-416 | AC-416.6 | Property test: saturation state never causes output oscillation at ±1.0 | specs/features/req_416_axis_saturation_protection.feature:35 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.1 | Watchdog detects service process exit within 2 seconds | specs/features/req_417_service_auto_restart.feature:5 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.2 | Watchdog restarts service up to 5 times before giving up | specs/features/req_417_service_auto_restart.feature:11 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.3 | Restart attempts use exponential backoff (1s, 2s, 4s, 8s, 16s) | specs/features/req_417_service_auto_restart.feature:17 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.4 | After 5 failures, watchdog enters failed state and logs a critical alert | specs/features/req_417_service_auto_restart.feature:23 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.5 | Watchdog state is visible via `flightctl watchdog status` | specs/features/req_417_service_auto_restart.feature:29 | 1 | ⚪ Draft |
+| REQ-417 | AC-417.6 | Successful restart increments a restart_count metric | specs/features/req_417_service_auto_restart.feature:35 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.1 | Blend factor 0.0 produces raw output only | specs/features/req_418_axis_output_blend_smoothing.feature:5 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.2 | Blend factor 1.0 produces fully filtered output only | specs/features/req_418_axis_output_blend_smoothing.feature:11 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.3 | Blend factor 0.5 averages raw and filtered | specs/features/req_418_axis_output_blend_smoothing.feature:17 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.4 | Property test: blend output is always between raw and filtered values | specs/features/req_418_axis_output_blend_smoothing.feature:23 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.5 | Blend is applied as a final post-processing step | specs/features/req_418_axis_output_blend_smoothing.feature:29 | 1 | ⚪ Draft |
+| REQ-418 | AC-418.6 | Blend factor is configurable per axis in the profile | specs/features/req_418_axis_output_blend_smoothing.feature:35 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.1 | Service IPC server supports up to 10 simultaneous client connections | specs/features/req_419_ipc_connection_pool.feature:5 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.2 | Connections beyond the limit are rejected with a BusyError | specs/features/req_419_ipc_connection_pool.feature:11 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.3 | Connection pool is cleaned up when clients disconnect | specs/features/req_419_ipc_connection_pool.feature:17 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.4 | Pool size is configurable in service configuration | specs/features/req_419_ipc_connection_pool.feature:23 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.5 | Current connection count is exposed via metrics | specs/features/req_419_ipc_connection_pool.feature:29 | 1 | ⚪ Draft |
+| REQ-419 | AC-419.6 | Connection pool is covered by an integration test with multiple clients | specs/features/req_419_ipc_connection_pool.feature:35 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.1 | Devices with multiple report IDs are parsed per-report-ID | specs/features/req_420_hid_report_id_filtering.feature:5 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.2 | Report ID 0x00 (no report IDs) is treated as a single-report device | specs/features/req_420_hid_report_id_filtering.feature:11 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.3 | Unknown report IDs are logged and skipped without error | specs/features/req_420_hid_report_id_filtering.feature:17 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.4 | Report ID is stored in parsed axis data for downstream processing | specs/features/req_420_hid_report_id_filtering.feature:23 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.5 | Property test: parser handles any report ID value (0x00-0xFF) without panic | specs/features/req_420_hid_report_id_filtering.feature:29 | 1 | ⚪ Draft |
+| REQ-420 | AC-420.6 | Report ID filtering is covered by unit tests with real HID descriptor samples | specs/features/req_420_hid_report_id_filtering.feature:35 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.1 | Compiled profile is cached with a hash of the source profile | specs/features/req_421_profile_compile_cache.feature:5 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.2 | Cache hit returns the pre-compiled profile without re-parsing | specs/features/req_421_profile_compile_cache.feature:11 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.3 | Cache miss triggers a full parse+compile cycle | specs/features/req_421_profile_compile_cache.feature:17 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.4 | Cache is invalidated when the source profile file changes | specs/features/req_421_profile_compile_cache.feature:23 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.5 | Cache size is bounded (max 5 profiles) | specs/features/req_421_profile_compile_cache.feature:29 | 1 | ⚪ Draft |
+| REQ-421 | AC-421.6 | Cache metrics (hits, misses, evictions) are exposed via the metrics endpoint | specs/features/req_421_profile_compile_cache.feature:35 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.1 | Config allows specifying an allow-list of VID/PID pairs | specs/features/req_422_device_vid_pid_allowlist.feature:5 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.2 | Devices not on the allow-list are excluded from HID enumeration | specs/features/req_422_device_vid_pid_allowlist.feature:11 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.3 | Empty allow-list means all devices are allowed (default behavior) | specs/features/req_422_device_vid_pid_allowlist.feature:17 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.4 | Blocked devices are logged at DEBUG level | specs/features/req_422_device_vid_pid_allowlist.feature:23 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.5 | `flightctl devices list --all` shows blocked devices with a 🚫 indicator | specs/features/req_422_device_vid_pid_allowlist.feature:29 | 1 | ⚪ Draft |
+| REQ-422 | AC-422.6 | Allow-list changes take effect on next service restart | specs/features/req_422_device_vid_pid_allowlist.feature:35 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.1 | Center deadzone eliminates jitter around axis center | specs/features/req_423_input_dead_band_center.feature:5 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.2 | Edge deadzone eliminates false full-deflection signals at extremes | specs/features/req_423_input_dead_band_center.feature:11 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.3 | Center and edge deadzones are independently configurable | specs/features/req_423_input_dead_band_center.feature:17 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.4 | Property test: center deadzone output is 0 for inputs within [-cd, cd] | specs/features/req_423_input_dead_band_center.feature:23 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.5 | Property test: edge deadzone output is ±1 for inputs beyond [1-ed, 1] | specs/features/req_423_input_dead_band_center.feature:29 | 1 | ⚪ Draft |
+| REQ-423 | AC-423.6 | Zero deadzone values disable the respective deadzone (backward compatible) | specs/features/req_423_input_dead_band_center.feature:35 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.1 | Maximum rate of change per tick is configurable in axis units/tick | specs/features/req_424_axis_output_rate_of_change_limit.feature:5 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.2 | Rate limiter is applied after all other processing stages | specs/features/req_424_axis_output_rate_of_change_limit.feature:11 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.3 | Rate limit of 0 disables the limiter | specs/features/req_424_axis_output_rate_of_change_limit.feature:17 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.4 | Property test: output never changes by more than max_rate per tick | specs/features/req_424_axis_output_rate_of_change_limit.feature:23 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.5 | Rate limiter tracks a slew_limited event count per axis | specs/features/req_424_axis_output_rate_of_change_limit.feature:29 | 1 | ⚪ Draft |
+| REQ-424 | AC-424.6 | Slew limit events are included in axis diagnostic output | specs/features/req_424_axis_output_rate_of_change_limit.feature:35 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.1 | `flightctl sim status` shows connection state for all sim adapters | specs/features/req_425_sim_adapter_status_polling.feature:5 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.2 | Status includes: connected, last_packet_at, packets_per_second | specs/features/req_425_sim_adapter_status_polling.feature:11 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.3 | Status polling refreshes every 1 second when `--watch` flag is used | specs/features/req_425_sim_adapter_status_polling.feature:17 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.4 | Disconnected adapters show last disconnection time | specs/features/req_425_sim_adapter_status_polling.feature:23 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.5 | Status output is available in JSON format with `--json` flag | specs/features/req_425_sim_adapter_status_polling.feature:29 | 1 | ⚪ Draft |
+| REQ-425 | AC-425.6 | Exit code is 0 if any adapter is connected, 1 if none are connected | specs/features/req_425_sim_adapter_status_polling.feature:35 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.1 | Profile transition blends axis configs over a configurable duration | specs/features/req_426_axis_profile_interpolation.feature:5 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.2 | Transition duration is configurable per-axis (default: 0 = instant) | specs/features/req_426_axis_profile_interpolation.feature:11 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.3 | During transition, axis deadzone and curve are linearly interpolated | specs/features/req_426_axis_profile_interpolation.feature:17 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.4 | Transition completes within the specified duration (measured in RT ticks) | specs/features/req_426_axis_profile_interpolation.feature:23 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.5 | If a new profile is applied during transition, it becomes the new target | specs/features/req_426_axis_profile_interpolation.feature:29 | 1 | ⚪ Draft |
+| REQ-426 | AC-426.6 | Transition state is reset on service restart | specs/features/req_426_axis_profile_interpolation.feature:35 | 1 | ⚪ Draft |
+| REQ-427 | AC-427.1 | Service exposes HTTP endpoint /metrics when metrics_http feature enabled | specs/features/req_427_service_metrics_http.feature:5 | 1 | ⚪ Draft |
+| REQ-427 | AC-427.2 | Endpoint returns valid Prometheus text format with correct Content-Type | specs/features/req_427_service_metrics_http.feature:11 | 1 | ⚪ Draft |
+| REQ-427 | AC-427.3 | Axis processing rate counter included in output | specs/features/req_427_service_metrics_http.feature:18 | 1 | ⚪ Draft |
+| REQ-427 | AC-427.4 | Metrics server bind address and port configurable | specs/features/req_427_service_metrics_http.feature:24 | 1 | ⚪ Draft |
+| REQ-428 | AC-428.1 | Service acquires exclusive file lock on startup | specs/features/req_428_multi_instance_prevention.feature:5 | 1 | ⚪ Draft |
+| REQ-428 | AC-428.2 | Second service instance fails to start with clear error message | specs/features/req_428_multi_instance_prevention.feature:11 | 1 | ⚪ Draft |
+| REQ-428 | AC-428.3 | Lock is released on clean shutdown | specs/features/req_428_multi_instance_prevention.feature:17 | 1 | ⚪ Draft |
+| REQ-428 | AC-428.4 | Stale lock from crashed instance is detected and cleared on restart | specs/features/req_428_multi_instance_prevention.feature:23 | 1 | ⚪ Draft |
+| REQ-429 | AC-429.1 | Diagnostic bundle includes current logs, config, and metrics snapshot | specs/features/req_429_diagnostic_bundle_generation.feature:5 | 1 | ⚪ Draft |
+| REQ-429 | AC-429.2 | Bundle is written to user-specified or default output path | specs/features/req_429_diagnostic_bundle_generation.feature:11 | 1 | ⚪ Draft |
+| REQ-429 | AC-429.3 | Bundle includes system info: OS, OpenFlight version, connected devices | specs/features/req_429_diagnostic_bundle_generation.feature:18 | 1 | ⚪ Draft |
+| REQ-429 | AC-429.4 | Bundle generation is triggered via CLI diagnostic command | specs/features/req_429_diagnostic_bundle_generation.feature:24 | 1 | ⚪ Draft |
+| REQ-430 | AC-430.1 | Adapter maps processed axis values to X-Plane writable datarefs | specs/features/req_430_xplane_dataref_write.feature:5 | 1 | ⚪ Draft |
+| REQ-430 | AC-430.2 | Dataref write uses UDP commands on X-Plane 11+ writable interface | specs/features/req_430_xplane_dataref_write.feature:11 | 1 | ⚪ Draft |
+| REQ-430 | AC-430.3 | Write rate is configurable and defaults to 50 Hz | specs/features/req_430_xplane_dataref_write.feature:17 | 1 | ⚪ Draft |
+| REQ-430 | AC-430.4 | Failed writes are logged and counted in adapter metrics | specs/features/req_430_xplane_dataref_write.feature:24 | 1 | ⚪ Draft |
+| REQ-431 | AC-431.1 | SimConnect adapter sends processed axis values via TransmitClientEvent or SetDataOnSimObject | specs/features/req_431_simconnect_axis_injection.feature:5 | 1 | ⚪ Draft |
+| REQ-431 | AC-431.2 | Injection is gated by user-configured enable_injection flag | specs/features/req_431_simconnect_axis_injection.feature:11 | 1 | ⚪ Draft |
+| REQ-431 | AC-431.3 | Injection rate does not exceed sim frame rate | specs/features/req_431_simconnect_axis_injection.feature:17 | 1 | ⚪ Draft |
+| REQ-431 | AC-431.4 | Failed injection calls are logged with SimConnect error codes | specs/features/req_431_simconnect_axis_injection.feature:23 | 1 | ⚪ Draft |
+| REQ-432 | AC-432.1 | Service watches profile directory for file modification events | specs/features/req_432_profile_hot_reload.feature:5 | 1 | ⚪ Draft |
+| REQ-432 | AC-432.2 | Modified profile is parsed and compiled off the RT thread | specs/features/req_432_profile_hot_reload.feature:11 | 1 | ⚪ Draft |
+| REQ-432 | AC-432.3 | New compiled profile is atomically swapped into the RT spine at tick boundary | specs/features/req_432_profile_hot_reload.feature:17 | 1 | ⚪ Draft |
+| REQ-432 | AC-432.4 | Hot-reload failures log an error and retain the previous profile | specs/features/req_432_profile_hot_reload.feature:23 | 1 | ⚪ Draft |
+| REQ-433 | AC-433.1 | Timeline records axis value at each pipeline stage with timestamps | specs/features/req_433_axis_timeline_recording.feature:5 | 1 | ⚪ Draft |
+| REQ-433 | AC-433.2 | Timeline buffer is fixed-size ring buffer with configurable capacity | specs/features/req_433_axis_timeline_recording.feature:11 | 1 | ⚪ Draft |
+| REQ-433 | AC-433.3 | Timeline can be exported as JSON or CSV for analysis | specs/features/req_433_axis_timeline_recording.feature:17 | 1 | ⚪ Draft |
+| REQ-433 | AC-433.4 | Recording is enabled/disabled at runtime without pipeline restart | specs/features/req_433_axis_timeline_recording.feature:23 | 1 | ⚪ Draft |
+| REQ-434 | AC-434.1 | Adapter reads TFR armed status from DCS export telemetry | specs/features/req_434_dcs_terrain_following_detection.feature:5 | 1 | ⚪ Draft |
+| REQ-434 | AC-434.2 | TFR activation triggers profile phase transition to low-level | specs/features/req_434_dcs_terrain_following_detection.feature:11 | 1 | ⚪ Draft |
+| REQ-434 | AC-434.3 | Phase transition event is published on flight-bus within 20ms | specs/features/req_434_dcs_terrain_following_detection.feature:17 | 1 | ⚪ Draft |
+| REQ-434 | AC-434.4 | TFR status is included in adapter health metrics | specs/features/req_434_dcs_terrain_following_detection.feature:23 | 1 | ⚪ Draft |
+| REQ-435 | AC-435.1 | History buffer stores last N axis values (N configurable 64-1024) | specs/features/req_435_axis_history_buffer.feature:5 | 1 | ⚪ Draft |
+| REQ-435 | AC-435.2 | Buffer is allocated once at startup and never reallocates | specs/features/req_435_axis_history_buffer.feature:11 | 1 | ⚪ Draft |
+| REQ-435 | AC-435.3 | Buffer can be read from non-RT context via snapshot | specs/features/req_435_axis_history_buffer.feature:17 | 1 | ⚪ Draft |
+| REQ-435 | AC-435.4 | History snapshot includes timestamps for latency analysis | specs/features/req_435_axis_history_buffer.feature:23 | 1 | ⚪ Draft |
+| REQ-436 | AC-436.1 | flightctl start launches service daemon and waits for ready signal | specs/features/req_436_service_start_stop_cli.feature:5 | 1 | ⚪ Draft |
+| REQ-436 | AC-436.2 | flightctl stop sends graceful shutdown and waits for exit | specs/features/req_436_service_start_stop_cli.feature:11 | 1 | ⚪ Draft |
+| REQ-436 | AC-436.3 | flightctl status returns service health, uptime, and version | specs/features/req_436_service_start_stop_cli.feature:17 | 1 | ⚪ Draft |
+| REQ-436 | AC-436.4 | flightctl restart performs stop then start with config reload | specs/features/req_436_service_start_stop_cli.feature:23 | 1 | ⚪ Draft |
+| REQ-437 | AC-437.1 | Blend modes include max, min, add, average, and first-active | specs/features/req_437_axis_blend_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-437 | AC-437.2 | Blend mode is configurable per axis in profile | specs/features/req_437_axis_blend_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-437 | AC-437.3 | Blend applies when multiple physical inputs map to same virtual axis | specs/features/req_437_axis_blend_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-437 | AC-437.4 | Blend mode change takes effect at next RT tick without glitches | specs/features/req_437_axis_blend_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-438 | AC-438.1 | Server announces supported IPC protocol versions on connect | specs/features/req_438_ipc_version_negotiation.feature:5 | 1 | ⚪ Draft |
+| REQ-438 | AC-438.2 | Client selects highest mutually supported version | specs/features/req_438_ipc_version_negotiation.feature:11 | 1 | ⚪ Draft |
+| REQ-438 | AC-438.3 | Connection is rejected with clear error if no compatible version exists | specs/features/req_438_ipc_version_negotiation.feature:17 | 1 | ⚪ Draft |
+| REQ-438 | AC-438.4 | Version negotiation completes within 100ms or connection times out | specs/features/req_438_ipc_version_negotiation.feature:23 | 1 | ⚪ Draft |
+| REQ-439 | AC-439.1 | Global FFB gain is configurable from 0.0 to 1.0 | specs/features/req_439_ffb_gain_control.feature:5 | 1 | ⚪ Draft |
+| REQ-439 | AC-439.2 | Gain change takes effect within one FFB update cycle | specs/features/req_439_ffb_gain_control.feature:11 | 1 | ⚪ Draft |
+| REQ-439 | AC-439.3 | Zero gain disables all effects immediately | specs/features/req_439_ffb_gain_control.feature:17 | 1 | ⚪ Draft |
+| REQ-439 | AC-439.4 | Gain is persisted in user profile and restored on service restart | specs/features/req_439_ffb_gain_control.feature:23 | 1 | ⚪ Draft |
+| REQ-440 | AC-440.1 | Adapter subscribes to aircraft state variables on connect | specs/features/req_440_msfs_simconnect_data_subscribe.feature:5 | 1 | ⚪ Draft |
+| REQ-440 | AC-440.2 | Variable updates are converted to BusSnapshot and published at sim rate | specs/features/req_440_msfs_simconnect_data_subscribe.feature:11 | 1 | ⚪ Draft |
+| REQ-440 | AC-440.3 | Subscription handles missing variables gracefully with default values | specs/features/req_440_msfs_simconnect_data_subscribe.feature:17 | 1 | ⚪ Draft |
+| REQ-440 | AC-440.4 | Adapter re-subscribes after SimConnect reconnection | specs/features/req_440_msfs_simconnect_data_subscribe.feature:23 | 1 | ⚪ Draft |
+| REQ-441 | AC-441.1 | Profile parser detects schema version field and runs migration chain | specs/features/req_441_profile_schema_migration.feature:5 | 1 | ⚪ Draft |
+| REQ-441 | AC-441.2 | V1 profiles are automatically upgraded to V2 on load | specs/features/req_441_profile_schema_migration.feature:11 | 1 | ⚪ Draft |
+| REQ-441 | AC-441.3 | Migration preserves user axis configurations | specs/features/req_441_profile_schema_migration.feature:17 | 1 | ⚪ Draft |
+| REQ-441 | AC-441.4 | Migration is logged and original profile is backed up | specs/features/req_441_profile_schema_migration.feature:23 | 1 | ⚪ Draft |
+| REQ-442 | AC-442.1 | Bypass mode sends raw hardware values without any processing | specs/features/req_442_axis_bypass_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-442 | AC-442.2 | Bypass is configurable per axis | specs/features/req_442_axis_bypass_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-442 | AC-442.3 | Switching to bypass does not cause value jumps | specs/features/req_442_axis_bypass_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-442 | AC-442.4 | Bypass state is reported in axis health metrics | specs/features/req_442_axis_bypass_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-443 | AC-443.1 | Replay mode loads a recorded trace file and plays it back | specs/features/req_443_telemetry_replay_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-443 | AC-443.2 | Replay speed is configurable (0.1x to 10x) | specs/features/req_443_telemetry_replay_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-443 | AC-443.3 | Replay publishes snapshots to the bus identically to live data | specs/features/req_443_telemetry_replay_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-443 | AC-443.4 | Replay loops or stops at end of trace according to configuration | specs/features/req_443_telemetry_replay_mode.feature:23 | 1 | ⚪ Draft |
+| REQ-444 | AC-444.1 | Compat manifest directory provides VID/PID to device info mapping | specs/features/req_444_usb_vid_pid_database.feature:5 | 1 | ⚪ Draft |
+| REQ-444 | AC-444.2 | Lookup by VID/PID returns vendor, product name, and capabilities | specs/features/req_444_usb_vid_pid_database.feature:11 | 1 | ⚪ Draft |
+| REQ-444 | AC-444.3 | Unknown VID/PID returns a generic device info with logging | specs/features/req_444_usb_vid_pid_database.feature:17 | 1 | ⚪ Draft |
+| REQ-444 | AC-444.4 | Database is compiled into a static lookup table at build time | specs/features/req_444_usb_vid_pid_database.feature:23 | 1 | ⚪ Draft |
+| REQ-445 | AC-445.1 | Service can deploy Export.lua to DCS user scripts directory | specs/features/req_445_dcs_export_script_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-445 | AC-445.2 | Service verifies Export.lua hash matches expected version | specs/features/req_445_dcs_export_script_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-445 | AC-445.3 | Service detects conflicting Export.lua from other applications | specs/features/req_445_dcs_export_script_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-445 | AC-445.4 | Deployment can be triggered via flightctl dcs install-export-script | specs/features/req_445_dcs_export_script_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-446 | AC-446.1 | Calibration wizard prompts user to move axis to minimum then maximum | specs/features/req_446_axis_calibration_wizard.feature:5 | 1 | ⚪ Draft |
+| REQ-446 | AC-446.2 | Wizard records min/max and center values and saves to calibration store | specs/features/req_446_axis_calibration_wizard.feature:11 | 1 | ⚪ Draft |
+| REQ-446 | AC-446.3 | Calibration results are applied immediately without service restart | specs/features/req_446_axis_calibration_wizard.feature:17 | 1 | ⚪ Draft |
+| REQ-446 | AC-446.4 | Wizard can be cancelled without overwriting existing calibration | specs/features/req_446_axis_calibration_wizard.feature:23 | 1 | ⚪ Draft |
+| REQ-447 | AC-447.1 | Service can be installed as a Windows service via flightctl service install | specs/features/req_447_windows_service_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-447 | AC-447.2 | Windows service starts automatically on user login | specs/features/req_447_windows_service_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-447 | AC-447.3 | Service gracefully handles Windows service stop events | specs/features/req_447_windows_service_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-447 | AC-447.4 | Service event log entries are written for start, stop, and errors | specs/features/req_447_windows_service_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-448 | AC-448.1 | Package installs a systemd user unit file | specs/features/req_448_linux_systemd_user_service.feature:5 | 1 | ⚪ Draft |
+| REQ-448 | AC-448.2 | Service can be enabled with systemctl --user enable openflight | specs/features/req_448_linux_systemd_user_service.feature:11 | 1 | ⚪ Draft |
+| REQ-448 | AC-448.3 | Service starts after graphical login and stops on logout | specs/features/req_448_linux_systemd_user_service.feature:17 | 1 | ⚪ Draft |
+| REQ-448 | AC-448.4 | udev rules are installed to grant device access without root | specs/features/req_448_linux_systemd_user_service.feature:23 | 1 | ⚪ Draft |
+| REQ-449 | AC-449.1 | FFB output force is clamped to configured maximum force percentage | specs/features/req_449_ffb_envelope_safety_clamp.feature:5 | 1 | ⚪ Draft |
+| REQ-449 | AC-449.2 | Force clamp is applied after all effect composition | specs/features/req_449_ffb_envelope_safety_clamp.feature:11 | 1 | ⚪ Draft |
+| REQ-449 | AC-449.3 | Clamp activations are counted and logged | specs/features/req_449_ffb_envelope_safety_clamp.feature:17 | 1 | ⚪ Draft |
+| REQ-449 | AC-449.4 | Emergency stop clamps to zero and logs a warning immediately | specs/features/req_449_ffb_envelope_safety_clamp.feature:23 | 1 | ⚪ Draft |
+| REQ-450 | AC-450.1 | Service sends watchdog keep-alive pings at configured interval | specs/features/req_450_service_watchdog_integration.feature:5 | 1 | ⚪ Draft |
+| REQ-450 | AC-450.2 | Watchdog timeout triggers automatic service restart | specs/features/req_450_service_watchdog_integration.feature:11 | 1 | ⚪ Draft |
+| REQ-450 | AC-450.3 | Repeated crashes within window escalate to error state | specs/features/req_450_service_watchdog_integration.feature:17 | 1 | ⚪ Draft |
+| REQ-450 | AC-450.4 | Watchdog health is reported in service status output | specs/features/req_450_service_watchdog_integration.feature:23 | 1 | ⚪ Draft |
+| REQ-451 | AC-451.1 | Rate limiter constrains maximum change per tick in configured units per second | specs/features/req_451_axis_rate_limiter.feature:5 | 1 | ⚪ Draft |
+| REQ-451 | AC-451.2 | Rate limit is configurable per axis from 0.01 to unlimited | specs/features/req_451_axis_rate_limiter.feature:11 | 1 | ⚪ Draft |
+| REQ-451 | AC-451.3 | Rate limiting is applied before output and after curves | specs/features/req_451_axis_rate_limiter.feature:17 | 1 | ⚪ Draft |
+| REQ-451 | AC-451.4 | Rate limiter state resets when axis is released to center | specs/features/req_451_axis_rate_limiter.feature:23 | 1 | ⚪ Draft |
+| REQ-452 | AC-452.1 | Raw hardware values are mapped from device min/max range to -1.0 to 1.0 | specs/features/req_452_stick_axis_normalization.feature:5 | 1 | ⚪ Draft |
+| REQ-452 | AC-452.2 | Center position maps to exactly 0.0 | specs/features/req_452_stick_axis_normalization.feature:12 | 1 | ⚪ Draft |
+| REQ-452 | AC-452.3 | NaN and Inf inputs are rejected and logged | specs/features/req_452_stick_axis_normalization.feature:18 | 1 | ⚪ Draft |
+| REQ-452 | AC-452.4 | Normalization parameters are loaded from calibration store | specs/features/req_452_stick_axis_normalization.feature:24 | 1 | ⚪ Draft |
+| REQ-453 | AC-453.1 | Spring effect creates restoring force proportional to displacement | specs/features/req_453_ffb_condition_effect.feature:5 | 1 | ⚪ Draft |
+| REQ-453 | AC-453.2 | Damper effect resists velocity proportional to speed | specs/features/req_453_ffb_condition_effect.feature:11 | 1 | ⚪ Draft |
+| REQ-453 | AC-453.3 | Friction effect provides constant opposing force above threshold | specs/features/req_453_ffb_condition_effect.feature:17 | 1 | ⚪ Draft |
+| REQ-453 | AC-453.4 | Condition effects can be combined with periodic effects | specs/features/req_453_ffb_condition_effect.feature:23 | 1 | ⚪ Draft |
+| REQ-454 | AC-454.1 | IPC DeviceInfo response includes axis count, button count, and FFB support | specs/features/req_454_device_capability_query.feature:5 | 1 | ⚪ Draft |
+| REQ-454 | AC-454.2 | Capability query returns results within 50ms | specs/features/req_454_device_capability_query.feature:11 | 1 | ⚪ Draft |
+| REQ-454 | AC-454.3 | Disconnected devices are reported with last-known capabilities | specs/features/req_454_device_capability_query.feature:17 | 1 | ⚪ Draft |
+| REQ-454 | AC-454.4 | New device connections trigger capability update notification | specs/features/req_454_device_capability_query.feature:23 | 1 | ⚪ Draft |
+| REQ-455 | AC-455.1 | Trim value shifts the axis center position | specs/features/req_455_axis_trim_system.feature:5 | 1 | ⚪ Draft |
+| REQ-455 | AC-455.2 | Trim is adjustable via CLI command and persisted in profile | specs/features/req_455_axis_trim_system.feature:11 | 1 | ⚪ Draft |
+| REQ-455 | AC-455.3 | Trim adjustment is clamped to configured maximum offset | specs/features/req_455_axis_trim_system.feature:17 | 1 | ⚪ Draft |
+| REQ-455 | AC-455.4 | Trim reset command returns trim to zero | specs/features/req_455_axis_trim_system.feature:23 | 1 | ⚪ Draft |
+| REQ-456 | AC-456.1 | Service publishes SimConnected event when adapter connects | specs/features/req_456_sim_connection_status.feature:5 | 1 | ⚪ Draft |
+| REQ-456 | AC-456.2 | Service publishes SimDisconnected event when adapter disconnects | specs/features/req_456_sim_connection_status.feature:11 | 1 | ⚪ Draft |
+| REQ-456 | AC-456.3 | Connection status includes simulator type and version | specs/features/req_456_sim_connection_status.feature:17 | 1 | ⚪ Draft |
+| REQ-456 | AC-456.4 | Status is queryable via IPC at any time | specs/features/req_456_sim_connection_status.feature:23 | 1 | ⚪ Draft |
+| REQ-457 | AC-457.1 | Invalid YAML/TOML config files are reported with filename and error location | specs/features/req_457_config_validation_on_load.feature:5 | 1 | ⚪ Draft |
+| REQ-457 | AC-457.2 | Unknown config keys are logged as warnings | specs/features/req_457_config_validation_on_load.feature:11 | 1 | ⚪ Draft |
+| REQ-457 | AC-457.3 | Missing required fields cause startup failure with clear error message | specs/features/req_457_config_validation_on_load.feature:17 | 1 | ⚪ Draft |
+| REQ-457 | AC-457.4 | Config validation summary is included in diagnostic bundle | specs/features/req_457_config_validation_on_load.feature:23 | 1 | ⚪ Draft |
+| REQ-458 | AC-458.1 | Phases include: parked, taxiing, takeoff, climb, cruise, descent, approach, landing | specs/features/req_458_flight_phase_detection.feature:5 | 1 | ⚪ Draft |
+| REQ-458 | AC-458.2 | Phase is determined from simulator telemetry variables | specs/features/req_458_flight_phase_detection.feature:11 | 1 | ⚪ Draft |
+| REQ-458 | AC-458.3 | Phase transition triggers profile phase activation | specs/features/req_458_flight_phase_detection.feature:17 | 1 | ⚪ Draft |
+| REQ-458 | AC-458.4 | Phase detection hysteresis prevents rapid oscillation | specs/features/req_458_flight_phase_detection.feature:23 | 1 | ⚪ Draft |
+| REQ-459 | AC-459.1 | Deadzone supports separate positive and negative deadzone widths | specs/features/req_459_axis_deadzone_symmetry.feature:5 | 1 | ⚪ Draft |
+| REQ-459 | AC-459.2 | Symmetric deadzone is a special case with equal positive and negative values | specs/features/req_459_axis_deadzone_symmetry.feature:11 | 1 | ⚪ Draft |
+| REQ-459 | AC-459.3 | Asymmetric deadzone is useful for brake pedals with different travel | specs/features/req_459_axis_deadzone_symmetry.feature:17 | 1 | ⚪ Draft |
+| REQ-459 | AC-459.4 | Deadzone values are validated to be in 0.0 to 1.0 range | specs/features/req_459_axis_deadzone_symmetry.feature:23 | 1 | ⚪ Draft |
+| REQ-460 | AC-460.1 | flightctl macro record starts recording button/axis events | specs/features/req_460_input_macro_recording.feature:5 | 1 | ⚪ Draft |
+| REQ-460 | AC-460.2 | flightctl macro stop ends recording and saves to named macro file | specs/features/req_460_input_macro_recording.feature:11 | 1 | ⚪ Draft |
+| REQ-460 | AC-460.3 | flightctl macro play replays recorded events in configured loop mode | specs/features/req_460_input_macro_recording.feature:17 | 1 | ⚪ Draft |
+| REQ-460 | AC-460.4 | Macros can be assigned to hardware buttons in profile | specs/features/req_460_input_macro_recording.feature:23 | 1 | ⚪ Draft |
+| REQ-461 | AC-461.1 | Device is identified by stable ID based on VID/PID and serial number | specs/features/req_461_device_persistence_reconnect.feature:5 | 1 | ⚪ Draft |
+| REQ-461 | AC-461.2 | Calibration and axis config are restored on device reconnect | specs/features/req_461_device_persistence_reconnect.feature:11 | 1 | ⚪ Draft |
+| REQ-461 | AC-461.3 | Reconnection is detected within 500ms via hotplug events | specs/features/req_461_device_persistence_reconnect.feature:17 | 1 | ⚪ Draft |
+| REQ-461 | AC-461.4 | Reconnection is logged with device info and timing | specs/features/req_461_device_persistence_reconnect.feature:23 | 1 | ⚪ Draft |
+| REQ-462 | AC-462.1 | IPC server can require an auth token for connections | specs/features/req_462_ipc_authentication.feature:5 | 1 | ⚪ Draft |
+| REQ-462 | AC-462.2 | Auth token is configurable in service config | specs/features/req_462_ipc_authentication.feature:11 | 1 | ⚪ Draft |
+| REQ-462 | AC-462.3 | Unauthenticated connections receive UNAUTHENTICATED gRPC status | specs/features/req_462_ipc_authentication.feature:17 | 1 | ⚪ Draft |
+| REQ-462 | AC-462.4 | Auth requirement is disabled by default for local connections | specs/features/req_462_ipc_authentication.feature:23 | 1 | ⚪ Draft |
+| REQ-463 | AC-463.1 | D-pad buttons are enumerated as hat switch or directional buttons | - | 1 | ⚪ Draft |
+| REQ-463 | AC-463.2 | D-pad can be mapped to virtual pitch and roll axes | - | 1 | ⚪ Draft |
+| REQ-463 | AC-463.3 | D-pad axis sensitivity is configurable | - | 1 | ⚪ Draft |
+| REQ-463 | AC-463.4 | D-pad mapping supports 8-way diagonal input | - | 1 | ⚪ Draft |
+| REQ-464 | AC-464.1 | Presets include default, minimal, medium, aggressive, and custom | - | 1 | ⚪ Draft |
+| REQ-464 | AC-464.2 | Preset selection applies appropriate filter parameters automatically | - | 1 | ⚪ Draft |
+| REQ-464 | AC-464.3 | Custom preset allows full parameter override | - | 1 | ⚪ Draft |
+| REQ-464 | AC-464.4 | Active preset name is reported in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-465 | AC-465.1 | Adapter connects to War Thunder localhost telemetry port 8111 | - | 1 | ⚪ Draft |
+| REQ-465 | AC-465.2 | Telemetry JSON is parsed and converted to BusSnapshot | - | 1 | ⚪ Draft |
+| REQ-465 | AC-465.3 | Aircraft type from telemetry triggers profile selection | - | 1 | ⚪ Draft |
+| REQ-465 | AC-465.4 | Parse errors are counted and logged without crashing | - | 1 | ⚪ Draft |
+| REQ-466 | AC-466.1 | Auto-switch only applies profile when detection confidence exceeds threshold | - | 1 | ⚪ Draft |
+| REQ-466 | AC-466.2 | Confidence threshold is configurable per simulator in profile | - | 1 | ⚪ Draft |
+| REQ-466 | AC-466.3 | Low-confidence detections are logged as warnings | - | 1 | ⚪ Draft |
+| REQ-466 | AC-466.4 | Manual override bypasses confidence check | - | 1 | ⚪ Draft |
+| REQ-467 | AC-467.1 | Expo curve parameter ranges from -1.0 (linear) to 1.0 (maximum expo) | - | 1 | ⚪ Draft |
+| REQ-467 | AC-467.2 | Positive expo increases sensitivity at center | - | 1 | ⚪ Draft |
+| REQ-467 | AC-467.3 | Negative expo decreases sensitivity at center | - | 1 | ⚪ Draft |
+| REQ-467 | AC-467.4 | Expo curve is applied after deadzone and before output | - | 1 | ⚪ Draft |
+| REQ-468 | AC-468.1 | Adapter connects to P3D SimConnect with same API as MSFS | - | 1 | ⚪ Draft |
+| REQ-468 | AC-468.2 | Aircraft state variables are subscribed and published as BusSnapshot | - | 1 | ⚪ Draft |
+| REQ-468 | AC-468.3 | P3D-specific add-ons directory is supported for panel configs | - | 1 | ⚪ Draft |
+| REQ-468 | AC-468.4 | P3D version 4.x and 5.x are both supported | - | 1 | ⚪ Draft |
+| REQ-469 | AC-469.1 | GetAxisSnapshot RPC returns current processed value for all axes | - | 1 | ⚪ Draft |
+| REQ-469 | AC-469.2 | Snapshot includes pipeline stage values for diagnostics | - | 1 | ⚪ Draft |
+| REQ-469 | AC-469.3 | Response time is under 10ms from request | - | 1 | ⚪ Draft |
+| REQ-469 | AC-469.4 | Snapshot includes device ID and axis name for each value | - | 1 | ⚪ Draft |
+| REQ-470 | AC-470.1 | Service detects config file changes within 2 seconds | - | 1 | ⚪ Draft |
+| REQ-470 | AC-470.2 | Valid config changes are applied atomically | - | 1 | ⚪ Draft |
+| REQ-470 | AC-470.3 | Invalid config changes are rejected with error log and original retained | - | 1 | ⚪ Draft |
+| REQ-470 | AC-470.4 | Hot-reload events are broadcast on the flight-bus | - | 1 | ⚪ Draft |
+| REQ-471 | AC-471.1 | Priority order is configurable per virtual axis | - | 1 | ⚪ Draft |
+| REQ-471 | AC-471.2 | Highest-priority active device value is used by default | - | 1 | ⚪ Draft |
+| REQ-471 | AC-471.3 | Device priority can be set to override, blend, or sum mode | - | 1 | ⚪ Draft |
+| REQ-471 | AC-471.4 | Priority order changes take effect without service restart | - | 1 | ⚪ Draft |
+| REQ-472 | AC-472.1 | flightctl profile apply accepts a JSON or YAML patch document | - | 1 | ⚪ Draft |
+| REQ-472 | AC-472.2 | Batch apply is atomic: all changes succeed or none are applied | - | 1 | ⚪ Draft |
+| REQ-472 | AC-472.3 | Dry-run mode shows what would change without applying | - | 1 | ⚪ Draft |
+| REQ-472 | AC-472.4 | Applied changes are reported as a diff summary | - | 1 | ⚪ Draft |
+| REQ-473 | AC-473.1 | Statistics include axis update rate, error rate, and latency percentiles | - | 1 | ⚪ Draft |
+| REQ-473 | AC-473.2 | Statistics are exported to a configurable log file | - | 1 | ⚪ Draft |
+| REQ-473 | AC-473.3 | Statistics export interval is configurable | - | 1 | ⚪ Draft |
+| REQ-473 | AC-473.4 | Statistics are also accessible via flightctl stats command | - | 1 | ⚪ Draft |
+| REQ-474 | AC-474.1 | Service connects to OpenXR runtime when openxr feature is enabled | - | 1 | ⚪ Draft |
+| REQ-474 | AC-474.2 | Head pose data is published as 6DOF values on flight-bus | - | 1 | ⚪ Draft |
+| REQ-474 | AC-474.3 | Head tracking maps to configurable virtual axes | - | 1 | ⚪ Draft |
+| REQ-474 | AC-474.4 | OpenXR session lifecycle follows runtime state machine correctly | - | 1 | ⚪ Draft |
+| REQ-475 | AC-475.1 | Histogram records value distribution across 100 equal-width buckets | - | 1 | ⚪ Draft |
+| REQ-475 | AC-475.2 | Histogram is accessible via flightctl axis histogram command | - | 1 | ⚪ Draft |
+| REQ-475 | AC-475.3 | ASCII histogram is displayed in terminal with frequency bars | - | 1 | ⚪ Draft |
+| REQ-475 | AC-475.4 | Histogram data can be exported as JSON for further analysis | - | 1 | ⚪ Draft |
+| REQ-476 | AC-476.1 | Adapter reads from BMS FlightData shared memory mapping | - | 1 | ⚪ Draft |
+| REQ-476 | AC-476.2 | Shared memory fields are converted to BusSnapshot values | - | 1 | ⚪ Draft |
+| REQ-476 | AC-476.3 | BMS disconnection is detected within 500ms | - | 1 | ⚪ Draft |
+| REQ-476 | AC-476.4 | Adapter is only available on Windows where shared memory is supported | - | 1 | ⚪ Draft |
+| REQ-477 | AC-477.1 | Adapter binds to configurable UDP port (default 29373) | - | 1 | ⚪ Draft |
+| REQ-477 | AC-477.2 | Telemetry frames are parsed and converted to BusSnapshot | - | 1 | ⚪ Draft |
+| REQ-477 | AC-477.3 | Missing or partial frames use last-known values with stale flag | - | 1 | ⚪ Draft |
+| REQ-477 | AC-477.4 | Parse error rate is tracked in adapter metrics | - | 1 | ⚪ Draft |
+| REQ-478 | AC-478.1 | Adapter connects to AeroFly FS UDP data stream | - | 1 | ⚪ Draft |
+| REQ-478 | AC-478.2 | Aircraft state data is converted to BusSnapshot | - | 1 | ⚪ Draft |
+| REQ-478 | AC-478.3 | Aircraft type detection triggers appropriate profile selection | - | 1 | ⚪ Draft |
+| REQ-478 | AC-478.4 | Adapter handles AeroFly FS2 and AeroFly FS4 protocol variants | - | 1 | ⚪ Draft |
+| REQ-479 | AC-479.1 | Ramp effect increases force linearly over configured duration | - | 1 | ⚪ Draft |
+| REQ-479 | AC-479.2 | Ramp can be configured with start force, end force, and duration | - | 1 | ⚪ Draft |
+| REQ-479 | AC-479.3 | Ramp loops or stops at completion according to configuration | - | 1 | ⚪ Draft |
+| REQ-479 | AC-479.4 | Ramp is composable with other effects | - | 1 | ⚪ Draft |
+| REQ-480 | AC-480.1 | Connect response includes service version string | - | 1 | ⚪ Draft |
+| REQ-480 | AC-480.2 | Connect response includes supported API capabilities | - | 1 | ⚪ Draft |
+| REQ-480 | AC-480.3 | Client can detect version mismatch and warn user | - | 1 | ⚪ Draft |
+| REQ-480 | AC-480.4 | Version is also accessible via flightctl version command | - | 1 | ⚪ Draft |
+| REQ-481 | AC-481.1 | Statistics include min, max, mean, and standard deviation of values | - | 1 | ⚪ Draft |
+| REQ-481 | AC-481.2 | Statistics are computed over configurable sliding window | - | 1 | ⚪ Draft |
+| REQ-481 | AC-481.3 | Statistics are accessible via IPC without impacting RT performance | - | 1 | ⚪ Draft |
+| REQ-481 | AC-481.4 | Statistics reset is triggerable via CLI command | - | 1 | ⚪ Draft |
+| REQ-482 | AC-482.1 | On startup service logs all connected HID devices with VID/PID | - | 1 | ⚪ Draft |
+| REQ-482 | AC-482.2 | Known devices are identified by name from compat manifests | - | 1 | ⚪ Draft |
+| REQ-482 | AC-482.3 | Unknown devices are logged with VID/PID and capabilities | - | 1 | ⚪ Draft |
+| REQ-482 | AC-482.4 | Enumeration results are included in diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-483 | AC-483.1 | flightctl profile validate checks YAML schema and field values | - | 1 | ⚪ Draft |
+| REQ-483 | AC-483.2 | Validation reports all errors not just the first | - | 1 | ⚪ Draft |
+| REQ-483 | AC-483.3 | Valid profiles exit 0, invalid exit 1 with error summary | - | 1 | ⚪ Draft |
+| REQ-483 | AC-483.4 | Validation includes checking referenced device manifests exist | - | 1 | ⚪ Draft |
+| REQ-484 | AC-484.1 | flightctl axis invert command toggles inversion for specified axis | - | 1 | ⚪ Draft |
+| REQ-484 | AC-484.2 | Inversion state persists across service restarts | - | 1 | ⚪ Draft |
+| REQ-484 | AC-484.3 | Inversion toggle takes effect on next axis tick | - | 1 | ⚪ Draft |
+| REQ-484 | AC-484.4 | Current inversion state is shown in flightctl axis status | - | 1 | ⚪ Draft |
+| REQ-485 | AC-485.1 | Startup check lists required devices from active profile | - | 1 | ⚪ Draft |
+| REQ-485 | AC-485.2 | Missing required devices are logged as warnings | - | 1 | ⚪ Draft |
+| REQ-485 | AC-485.3 | Service continues with reduced functionality if optional devices absent | - | 1 | ⚪ Draft |
+| REQ-485 | AC-485.4 | Boot check results are included in flightctl status output | - | 1 | ⚪ Draft |
+| REQ-486 | AC-486.1 | flightctl profile export outputs profile as valid JSON | - | 1 | ⚪ Draft |
+| REQ-486 | AC-486.2 | Exported JSON can be reimported without data loss | - | 1 | ⚪ Draft |
+| REQ-486 | AC-486.3 | JSON export includes all axis configs, curves, and metadata | - | 1 | ⚪ Draft |
+| REQ-486 | AC-486.4 | Export format is versioned for future migrations | - | 1 | ⚪ Draft |
+| REQ-487 | AC-487.1 | All flightctl commands support --json flag | - | 1 | ⚪ Draft |
+| REQ-487 | AC-487.2 | JSON output includes all human-readable fields in structured form | - | 1 | ⚪ Draft |
+| REQ-487 | AC-487.3 | Exit codes are consistent: 0 for success, non-zero for errors | - | 1 | ⚪ Draft |
+| REQ-487 | AC-487.4 | JSON format is stable and versioned | - | 1 | ⚪ Draft |
+| REQ-488 | AC-488.1 | FFB backend uses DirectInput8 on Windows when devices are present | - | 1 | ⚪ Draft |
+| REQ-488 | AC-488.2 | DirectInput effects map to FFB engine effect types | - | 1 | ⚪ Draft |
+| REQ-488 | AC-488.3 | Gain and envelope parameters are applied via DirectInput | - | 1 | ⚪ Draft |
+| REQ-488 | AC-488.4 | Fallback to stub backend when no FFB devices are connected | - | 1 | ⚪ Draft |
+| REQ-489 | AC-489.1 | Config schema is defined as a JSON Schema document | - | 1 | ⚪ Draft |
+| REQ-489 | AC-489.2 | Unknown config keys produce warnings not errors | - | 1 | ⚪ Draft |
+| REQ-489 | AC-489.3 | Schema is versioned and migration path is documented | - | 1 | ⚪ Draft |
+| REQ-489 | AC-489.4 | flightctl config validate uses the schema | - | 1 | ⚪ Draft |
+| REQ-490 | AC-490.1 | flightctl axis show displays deadzone as ASCII range indicator | - | 1 | ⚪ Draft |
+| REQ-490 | AC-490.2 | Visualization shows current value position relative to deadzone | - | 1 | ⚪ Draft |
+| REQ-490 | AC-490.3 | Both symmetric and asymmetric deadzones are visualized correctly | - | 1 | ⚪ Draft |
+| REQ-490 | AC-490.4 | Color coding distinguishes in-deadzone vs active range | - | 1 | ⚪ Draft |
+| REQ-491 | AC-491.1 | Adapter detects parking brake state to trigger parked profile | - | 1 | ⚪ Draft |
+| REQ-491 | AC-491.2 | Adapter detects gear retraction to trigger climb profile | - | 1 | ⚪ Draft |
+| REQ-491 | AC-491.3 | Phase events are published on flight-bus within one update cycle | - | 1 | ⚪ Draft |
+| REQ-491 | AC-491.4 | Phase detection thresholds are configurable in profile | - | 1 | ⚪ Draft |
+| REQ-492 | AC-492.1 | Adapter sends axis values to DCS via export socket commands | - | 1 | ⚪ Draft |
+| REQ-492 | AC-492.2 | Injection supports rudder, throttle, aileron, elevator axes | - | 1 | ⚪ Draft |
+| REQ-492 | AC-492.3 | Injection is gated by enable_injection config flag | - | 1 | ⚪ Draft |
+| REQ-492 | AC-492.4 | Failed injections are counted and logged per axis | - | 1 | ⚪ Draft |
+| REQ-493 | AC-493.1 | flightctl profile diff shows axis-level changes between profiles | - | 1 | ⚪ Draft |
+| REQ-493 | AC-493.2 | Added, removed, and modified axes are clearly indicated | - | 1 | ⚪ Draft |
+| REQ-493 | AC-493.3 | Diff can compare active profile against a file | - | 1 | ⚪ Draft |
+| REQ-493 | AC-493.4 | Diff output supports --json flag | - | 1 | ⚪ Draft |
+| REQ-494 | AC-494.1 | Service checks configured update channel on startup | - | 1 | ⚪ Draft |
+| REQ-494 | AC-494.2 | Available updates are logged and reported in flightctl status | - | 1 | ⚪ Draft |
+| REQ-494 | AC-494.3 | Automatic update download is opt-in and disabled by default | - | 1 | ⚪ Draft |
+| REQ-494 | AC-494.4 | Update check interval is configurable | - | 1 | ⚪ Draft |
+| REQ-495 | AC-495.1 | Left and right triggers are exposed as separate axes in 0.0 to 1.0 range | - | 1 | ⚪ Draft |
+| REQ-495 | AC-495.2 | Triggers can be mapped to throttle or brake axes | - | 1 | ⚪ Draft |
+| REQ-495 | AC-495.3 | Trigger dead zone is configurable | - | 1 | ⚪ Draft |
+| REQ-495 | AC-495.4 | Dual trigger combo maps to split axis | - | 1 | ⚪ Draft |
+| REQ-496 | AC-496.1 | flightctl dashboard shows live axis values, adapter status, and metrics | - | 1 | ⚪ Draft |
+| REQ-496 | AC-496.2 | Dashboard refreshes at configurable rate | - | 1 | ⚪ Draft |
+| REQ-496 | AC-496.3 | Dashboard can be launched in both color and monochrome modes | - | 1 | ⚪ Draft |
+| REQ-496 | AC-496.4 | Dashboard exits cleanly on Ctrl+C | - | 1 | ⚪ Draft |
+| REQ-497 | AC-497.1 | flightctl monitor shows real-time device plug/unplug events | - | 1 | ⚪ Draft |
+| REQ-497 | AC-497.2 | Events include device name, VID/PID, and timestamp | - | 1 | ⚪ Draft |
+| REQ-497 | AC-497.3 | Known devices are identified by name from compat manifests | - | 1 | ⚪ Draft |
+| REQ-497 | AC-497.4 | Hotplug events are also published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-498 | AC-498.1 | Trim values are saved to calibration store on change | - | 1 | ⚪ Draft |
+| REQ-498 | AC-498.2 | Trim values are loaded from calibration store on service start | - | 1 | ⚪ Draft |
+| REQ-498 | AC-498.3 | Trim reset clears both in-memory and stored values | - | 1 | ⚪ Draft |
+| REQ-498 | AC-498.4 | Trim values are included in diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-499 | AC-499.1 | Output clamp range is configurable per axis (default -1.0 to 1.0) | - | 1 | ⚪ Draft |
+| REQ-499 | AC-499.2 | Clamp events are counted and included in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-499 | AC-499.3 | Clamp is applied as the final processing stage | - | 1 | ⚪ Draft |
+| REQ-499 | AC-499.4 | Asymmetric clamp supports different positive and negative limits | - | 1 | ⚪ Draft |
+| REQ-500 | AC-500.1 | Specification ledger contains at least 500 unique requirements | - | 1 | ⚪ Draft |
+| REQ-500 | AC-500.2 | All requirements have at least three acceptance criteria | - | 1 | ⚪ Draft |
+| REQ-500 | AC-500.3 | All requirements have associated BDD feature files | - | 1 | ⚪ Draft |
+| REQ-500 | AC-500.4 | Requirements span all major system components | - | 1 | ⚪ Draft |
+| REQ-501 | AC-501.1 | Each pipeline stage output is recorded in ChainStageValues struct | - | 1 | ⚪ Draft |
+| REQ-501 | AC-501.2 | Stage values are accessible via IPC diagnostic query | - | 1 | ⚪ Draft |
+| REQ-501 | AC-501.3 | Stage diagnostics include input, post-deadzone, post-curve, and output values | - | 1 | ⚪ Draft |
+| REQ-501 | AC-501.4 | Diagnostics collection has near-zero overhead when disabled | - | 1 | ⚪ Draft |
+| REQ-502 | AC-502.1 | Profile backup is created automatically before any modification | - | 1 | ⚪ Draft |
+| REQ-502 | AC-502.2 | Backup is stored in a versioned backup directory | - | 1 | ⚪ Draft |
+| REQ-502 | AC-502.3 | flightctl profile restore lists available backups and restores selected | - | 1 | ⚪ Draft |
+| REQ-502 | AC-502.4 | Maximum backup count is configurable | - | 1 | ⚪ Draft |
+| REQ-503 | AC-503.1 | Tactile mode generates rumble patterns without directional force | - | 1 | ⚪ Draft |
+| REQ-503 | AC-503.2 | Tactile intensity and frequency are configurable | - | 1 | ⚪ Draft |
+| REQ-503 | AC-503.3 | Tactile can be triggered by events: engine start, gear down, weapons | - | 1 | ⚪ Draft |
+| REQ-503 | AC-503.4 | Tactile mode works on both FFB joysticks and tactile transducers | - | 1 | ⚪ Draft |
+| REQ-504 | AC-504.1 | Data rate is measured as packets per second for each adapter | - | 1 | ⚪ Draft |
+| REQ-504 | AC-504.2 | Rate below threshold triggers a degraded-mode warning | - | 1 | ⚪ Draft |
+| REQ-504 | AC-504.3 | Rate history is maintained for the last 60 seconds | - | 1 | ⚪ Draft |
+| REQ-504 | AC-504.4 | Data rate is included in flightctl status output | - | 1 | ⚪ Draft |
+| REQ-505 | AC-505.1 | cargo xtask gen-docs generates reference documentation for config options | - | 1 | ⚪ Draft |
+| REQ-505 | AC-505.2 | Documentation includes field names, types, defaults, and descriptions | - | 1 | ⚪ Draft |
+| REQ-505 | AC-505.3 | Documentation is published as Markdown in docs/reference/ | - | 1 | ⚪ Draft |
+| REQ-505 | AC-505.4 | Documentation is regenerated as part of CI validate step | - | 1 | ⚪ Draft |
+| REQ-506 | AC-506.1 | HID polling rate is configurable from 60 Hz to 1000 Hz | - | 1 | ⚪ Draft |
+| REQ-506 | AC-506.2 | Polling rate is applied per device where OS permits | - | 1 | ⚪ Draft |
+| REQ-506 | AC-506.3 | Actual polling rate is measured and reported in metrics | - | 1 | ⚪ Draft |
+| REQ-506 | AC-506.4 | Polling rate mismatch with RT spine rate is logged as warning | - | 1 | ⚪ Draft |
+| REQ-507 | AC-507.1 | Each startup phase is logged with timestamp and duration | - | 1 | ⚪ Draft |
+| REQ-507 | AC-507.2 | Startup log includes device enumeration results | - | 1 | ⚪ Draft |
+| REQ-507 | AC-507.3 | Startup failures identify the failing component and reason | - | 1 | ⚪ Draft |
+| REQ-507 | AC-507.4 | Total startup time is logged and compared to previous run | - | 1 | ⚪ Draft |
+| REQ-508 | AC-508.1 | Position hold mode freezes axis output at current value | - | 1 | ⚪ Draft |
+| REQ-508 | AC-508.2 | Hold is activatable via IPC command or hardware button | - | 1 | ⚪ Draft |
+| REQ-508 | AC-508.3 | Hold is automatically released when physical axis moves beyond threshold | - | 1 | ⚪ Draft |
+| REQ-508 | AC-508.4 | Hold state is visible in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-509 | AC-509.1 | CI runs core crate tests on both Windows and Linux runners | - | 1 | ⚪ Draft |
+| REQ-509 | AC-509.2 | Platform-specific code is properly gated with cfg attributes | - | 1 | ⚪ Draft |
+| REQ-509 | AC-509.3 | Hardware-specific tests skip gracefully on platforms without hardware | - | 1 | ⚪ Draft |
+| REQ-509 | AC-509.4 | Cross-platform test coverage is tracked in CI | - | 1 | ⚪ Draft |
+| REQ-510 | AC-510.1 | Release binaries are signed with project key in CI pipeline | - | 1 | ⚪ Draft |
+| REQ-510 | AC-510.2 | Signature files are published alongside binaries | - | 1 | ⚪ Draft |
+| REQ-510 | AC-510.3 | flightctl verify command checks artifact signatures | - | 1 | ⚪ Draft |
+| REQ-510 | AC-510.4 | Update system verifies signatures before applying updates | - | 1 | ⚪ Draft |
+| REQ-511 | AC-511.1 | Bump effect generates a short directional impulse force | specs/features/req_511_ffb_bump_vibration.feature:5 | 1 | ⚪ Draft |
+| REQ-511 | AC-511.2 | Vibration effect generates symmetric oscillating force | specs/features/req_511_ffb_bump_vibration.feature:11 | 1 | ⚪ Draft |
+| REQ-511 | AC-511.3 | Bump and vibration parameters include intensity and duration | specs/features/req_511_ffb_bump_vibration.feature:17 | 1 | ⚪ Draft |
+| REQ-511 | AC-511.4 | Both effects can be triggered by sim events like turbulence | specs/features/req_511_ffb_bump_vibration.feature:17 | 1 | ⚪ Draft |
+| REQ-512 | AC-512.1 | HID device firmware version is read from USB descriptor if present | specs/features/req_512_device_firmware_version.feature:5 | 1 | ⚪ Draft |
+| REQ-512 | AC-512.2 | Known firmware versions are compared against compat manifest | specs/features/req_512_device_firmware_version.feature:11 | 1 | ⚪ Draft |
+| REQ-512 | AC-512.3 | Outdated firmware triggers a warning in service log | specs/features/req_512_device_firmware_version.feature:11 | 1 | ⚪ Draft |
+| REQ-512 | AC-512.4 | Firmware version is included in diagnostic bundle | specs/features/req_512_device_firmware_version.feature:17 | 1 | ⚪ Draft |
+| REQ-513 | AC-513.1 | Presets include linear, mild, standard, aggressive, and inverted | specs/features/req_513_axis_sensitivity_presets.feature:5 | 1 | ⚪ Draft |
+| REQ-513 | AC-513.2 | Preset selection replaces curve config atomically | specs/features/req_513_axis_sensitivity_presets.feature:5 | 1 | ⚪ Draft |
+| REQ-513 | AC-513.3 | Custom curves are preserved as user-defined presets | specs/features/req_513_axis_sensitivity_presets.feature:12 | 1 | ⚪ Draft |
+| REQ-513 | AC-513.4 | Active preset is shown in flightctl axis status output | specs/features/req_513_axis_sensitivity_presets.feature:18 | 1 | ⚪ Draft |
+| REQ-514 | AC-514.1 | Clients can subscribe to axis value stream via SubscribeAxisValues RPC | specs/features/req_514_ipc_stream_subscription.feature:5 | 1 | ⚪ Draft |
+| REQ-514 | AC-514.2 | Stream delivers updates at configured max rate | specs/features/req_514_ipc_stream_subscription.feature:5 | 1 | ⚪ Draft |
+| REQ-514 | AC-514.3 | Client disconnect cancels the subscription cleanly | specs/features/req_514_ipc_stream_subscription.feature:11 | 1 | ⚪ Draft |
+| REQ-514 | AC-514.4 | Multiple concurrent subscribers are supported | specs/features/req_514_ipc_stream_subscription.feature:17 | 1 | ⚪ Draft |
+| REQ-515 | AC-515.1 | Device HID descriptors are cached to disk after first enumeration | specs/features/req_515_hid_descriptor_caching.feature:5 | 1 | ⚪ Draft |
+| REQ-515 | AC-515.2 | Cached descriptors are validated against device serial number | specs/features/req_515_hid_descriptor_caching.feature:5 | 1 | ⚪ Draft |
+| REQ-515 | AC-515.3 | Cache is invalidated when firmware version changes | specs/features/req_515_hid_descriptor_caching.feature:11 | 1 | ⚪ Draft |
+| REQ-515 | AC-515.4 | Cache miss falls back to live descriptor read | specs/features/req_515_hid_descriptor_caching.feature:17 | 1 | ⚪ Draft |
+| REQ-516 | AC-516.1 | Controller mode includes standard, helicopter, spaceflight, and racing | specs/features/req_516_flight_controller_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-516 | AC-516.2 | Mode is detected from active profile and connected devices | specs/features/req_516_flight_controller_mode.feature:5 | 1 | ⚪ Draft |
+| REQ-516 | AC-516.3 | Mode change triggers a profile phase transition | specs/features/req_516_flight_controller_mode.feature:11 | 1 | ⚪ Draft |
+| REQ-516 | AC-516.4 | Mode is reported in service status and IPC | specs/features/req_516_flight_controller_mode.feature:17 | 1 | ⚪ Draft |
+| REQ-517 | AC-517.1 | Anti-toe-brake mixes toe brake axes out of rudder when braking | specs/features/req_517_rudder_pedal_anti_toe_brake.feature:5 | 1 | ⚪ Draft |
+| REQ-517 | AC-517.2 | Mixing is configurable with a blending coefficient | specs/features/req_517_rudder_pedal_anti_toe_brake.feature:5 | 1 | ⚪ Draft |
+| REQ-517 | AC-517.3 | Differential braking mode preserves differential toe brake input | specs/features/req_517_rudder_pedal_anti_toe_brake.feature:11 | 1 | ⚪ Draft |
+| REQ-517 | AC-517.4 | Anti-toe-brake mixing is disabled by default | specs/features/req_517_rudder_pedal_anti_toe_brake.feature:17 | 1 | ⚪ Draft |
+| REQ-518 | AC-518.1 | Profile files can reference a base profile to inherit from | specs/features/req_518_profile_merge_from_base.feature:5 | 1 | ⚪ Draft |
+| REQ-518 | AC-518.2 | Overriding fields in derived profile replace base values | specs/features/req_518_profile_merge_from_base.feature:5 | 1 | ⚪ Draft |
+| REQ-518 | AC-518.3 | Merge chain supports up to 3 levels of inheritance | specs/features/req_518_profile_merge_from_base.feature:12 | 1 | ⚪ Draft |
+| REQ-518 | AC-518.4 | Circular base references are detected and rejected | specs/features/req_518_profile_merge_from_base.feature:18 | 1 | ⚪ Draft |
+| REQ-519 | AC-519.1 | Device acquisition timeout is configurable per device in profile | specs/features/req_519_device_connection_timeout.feature:5 | 1 | ⚪ Draft |
+| REQ-519 | AC-519.2 | Timeout triggers reconnect retry with backoff | specs/features/req_519_device_connection_timeout.feature:5 | 1 | ⚪ Draft |
+| REQ-519 | AC-519.3 | Maximum retry count is configurable | specs/features/req_519_device_connection_timeout.feature:11 | 1 | ⚪ Draft |
+| REQ-519 | AC-519.4 | Persistent connection failure logs device info and disables polling | specs/features/req_519_device_connection_timeout.feature:17 | 1 | ⚪ Draft |
+| REQ-520 | AC-520.1 | Service reads simulator version from connection handshake | specs/features/req_520_sim_version_compat_check.feature:5 | 1 | ⚪ Draft |
+| REQ-520 | AC-520.2 | Compat manifest specifies supported version ranges per simulator | specs/features/req_520_sim_version_compat_check.feature:5 | 1 | ⚪ Draft |
+| REQ-520 | AC-520.3 | Unsupported simulator version logs warning but does not block | specs/features/req_520_sim_version_compat_check.feature:11 | 1 | ⚪ Draft |
+| REQ-520 | AC-520.4 | Version check result is reported in flightctl sim status | specs/features/req_520_sim_version_compat_check.feature:17 | 1 | ⚪ Draft |
+| REQ-521 | AC-521.1 | Axes can be assigned to a named group | specs/features/req_521_axis_group_config.feature:5 | 1 | ⚪ Draft |
+| REQ-521 | AC-521.2 | Group enables synchronized deadzone and curve application | specs/features/req_521_axis_group_config.feature:5 | 1 | ⚪ Draft |
+| REQ-521 | AC-521.3 | Group master-slave mode allows one axis to lead scaling | specs/features/req_521_axis_group_config.feature:11 | 1 | ⚪ Draft |
+| REQ-521 | AC-521.4 | Group configuration is stored in profile | specs/features/req_521_axis_group_config.feature:17 | 1 | ⚪ Draft |
+| REQ-522 | AC-522.1 | Installer preserves previous installation files before upgrade | specs/features/req_522_installer_rollback.feature:5 | 1 | ⚪ Draft |
+| REQ-522 | AC-522.2 | flightctl update rollback restores previous version | specs/features/req_522_installer_rollback.feature:5 | 1 | ⚪ Draft |
+| REQ-522 | AC-522.3 | Rollback preserves user configuration | specs/features/req_522_installer_rollback.feature:11 | 1 | ⚪ Draft |
+| REQ-522 | AC-522.4 | Rollback is available for 7 days after successful upgrade | specs/features/req_522_installer_rollback.feature:17 | 1 | ⚪ Draft |
