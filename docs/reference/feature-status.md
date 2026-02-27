@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 524 |
-| ACs with tests | 524 |
-| ACs with Gherkin | 524 |
-| ACs with both tests + Gherkin | 524 |
-| Complete | 524 |
+| Total AC | 542 |
+| ACs with tests | 542 |
+| ACs with Gherkin | 542 |
+| ACs with both tests + Gherkin | 542 |
+| Complete | 542 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -77,7 +77,7 @@
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-panels-saitek | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
+| flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -94,7 +94,7 @@
 | flight-tracing | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-ui | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-updater | 11 | 11 | 11 | 11 | 11 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-vr-overlay | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -631,3 +631,21 @@
 | REQ-94 | AC-94.2 | WHEN the eight led_bits constants are inspected THEN each SHALL be a distinct power of two and their bitwise OR SHALL equal 0xFF; MultiPanelLedMask::NONE SHALL be 0x00 and ALL SHALL be 0xFF; the set builder SHALL correctly set and clear individual bits | specs/features/req_94_saitek_multi_panel.feature:36<br>specs/features/req_94_saitek_multi_panel.feature:43<br>specs/features/req_94_saitek_multi_panel.feature:50 | 4 | ✅ Complete |
 | REQ-94 | AC-94.3 | WHEN a 3-byte HID input report is parsed by parse_multi_panel_input THEN byte 1 selector and encoder bits SHALL map to the correct sel_*/enc_* accessors and byte 2 SHALL map to the correct btn_* accessors | specs/features/req_94_saitek_multi_panel.feature:59<br>specs/features/req_94_saitek_multi_panel.feature:69 | 4 | ✅ Complete |
 | REQ-94 | AC-94.4 | WHEN parse_multi_panel_input is called with a buffer shorter than MULTI_PANEL_INPUT_MIN_BYTES (3) THEN the result SHALL be None for every such buffer | specs/features/req_94_saitek_multi_panel.feature:82 | 1 | ✅ Complete |
+| REQ-95 | AC-95.1 | WHEN PanelType::from_product_id is called with 0x0D67 THEN the result SHALL be Some(PanelType::SwitchPanel) with name 'Switch Panel'; unknown PIDs SHALL return None | specs/features/req_95_saitek_switch_panel.feature:8<br>specs/features/req_95_saitek_switch_panel.feature:15 | 2 | ✅ Complete |
+| REQ-95 | AC-95.2 | WHEN SwitchPanel.led_mapping() is called THEN the slice SHALL contain GEAR, MASTER_BAT, MASTER_ALT, AVIONICS, FUEL_PUMP, DEICE, PITOT_HEAT, and COWL; all five panel type mappings SHALL be non-empty with unique names | specs/features/req_95_saitek_switch_panel.feature:21<br>specs/features/req_95_saitek_switch_panel.feature:34 | 2 | ✅ Complete |
+| REQ-95 | AC-95.3 | WHEN SwitchPanel.verify_pattern() is called THEN the step sequence SHALL begin with LedOn(GEAR), proceed through MASTER_BAT and AVIONICS, and end with AllOff | specs/features/req_95_saitek_switch_panel.feature:41 | 1 | ✅ Complete |
+| REQ-95 | AC-95.4 | WHEN each Switch Panel LED index 0-7 is individually set to on THEN each SHALL set exactly one unique bit in the HID report; all LEDs off SHALL produce a zero-bit LED-mask byte | specs/features/req_95_saitek_switch_panel.feature:50<br>specs/features/req_95_saitek_switch_panel.feature:57 | 2 | ✅ Complete |
+| REQ-96 | AC-96.1 | WHEN PanelType::from_product_id is called with 0x0D05 THEN the result SHALL be Some(PanelType::RadioPanel) with name 'Radio Panel' | specs/features/req_96_saitek_radio_panel.feature:8 | 2 | ✅ Complete |
+| REQ-96 | AC-96.2 | WHEN RadioPanel.led_mapping() is called THEN the slice SHALL contain COM1, COM2, NAV1, NAV2, ADF, DME, and XPDR; registering the panel SHALL initialise LED state for every mapped channel | specs/features/req_96_saitek_radio_panel.feature:15<br>specs/features/req_96_saitek_radio_panel.feature:27 | 2 | ✅ Complete |
+| REQ-96 | AC-96.3 | WHEN RadioPanel.verify_pattern() is called THEN the sequence SHALL start with LedOn(COM1), proceed through LedOff(COM1) and LedOn(NAV1), and end with AllOff; LED updates exceeding min_write_interval SHALL be rate-limited to one write per interval | specs/features/req_96_saitek_radio_panel.feature:34<br>specs/features/req_96_saitek_radio_panel.feature:43 | 3 | ✅ Complete |
+| REQ-97 | AC-97.1 | WHEN PanelType::from_product_id is called with 0x0A2F THEN the result SHALL be Some(PanelType::FIP) with name 'Flight Instrument Panel' | specs/features/req_97_saitek_fip.feature:8 | 2 | ✅ Complete |
+| REQ-97 | AC-97.2 | WHEN FIP.led_mapping() is called THEN the slice SHALL contain ATTITUDE, AIRSPEED, ALTITUDE, HSI, TURN_COORD, VOR1, VOR2, and ADF | specs/features/req_97_saitek_fip.feature:15 | 2 | ✅ Complete |
+| REQ-97 | AC-97.3 | WHEN FIP.verify_pattern() is called THEN the first three steps SHALL be LedOn(ATTITUDE), LedOn(AIRSPEED), LedOn(ALTITUDE) followed by a Delay and AllOff; registering a FIP alongside a RadioPanel SHALL produce independent LED state maps with no cross-panel interference | specs/features/req_97_saitek_fip.feature:28<br>specs/features/req_97_saitek_fip.feature:38 | 2 | ✅ Complete |
+| REQ-98 | AC-98.1 | WHEN ChannelManager is created THEN stable, beta, and canary channels SHALL all be available; the default ChannelConfig SHALL select Channel::Stable | specs/features/req_98_updater_channels.feature:8<br>specs/features/req_98_updater_channels.feature:16 | 4 | ✅ Complete |
+| REQ-98 | AC-98.2 | WHEN set_channel is called with a valid channel THEN current_channel SHALL reflect the new selection; WHEN from_str is called with an unrecognised name THEN the result SHALL be Err(ChannelNotFound) | specs/features/req_98_updater_channels.feature:22<br>specs/features/req_98_updater_channels.feature:28 | 3 | ✅ Complete |
+| REQ-98 | AC-98.3 | WHEN a manifest is signed with a valid Ed25519 key and verified with the matching public key THEN verification SHALL succeed; WHEN content is tampered THEN verification SHALL fail | specs/features/req_98_updater_channels.feature:34<br>specs/features/req_98_updater_channels.feature:40 | 3 | ✅ Complete |
+| REQ-98 | AC-98.4 | WHEN an UpdateSignature carries an unsupported algorithm name THEN verify SHALL return Err; WHEN the signature field contains invalid hex THEN verify SHALL return Err with an invalid-signature description | specs/features/req_98_updater_channels.feature:46<br>specs/features/req_98_updater_channels.feature:52 | 2 | ✅ Complete |
+| REQ-99 | AC-99.1 | WHEN a version was installed within the startup timeout window and mark_startup_success was never called THEN check_startup_crash SHALL indicate a potential crash; WHEN mark_startup_success is called THEN subsequent checks SHALL not indicate a crash | specs/features/req_99_updater_rollback.feature:8<br>specs/features/req_99_updater_rollback.feature:15 | 3 | ✅ Complete |
+| REQ-99 | AC-99.2 | WHEN rollback_to_previous is called with two or more versions recorded THEN the result SHALL be the immediately preceding VersionInfo and current_version SHALL be updated; WHEN only one version exists THEN rollback SHALL return Err | specs/features/req_99_updater_rollback.feature:21<br>specs/features/req_99_updater_rollback.feature:28 | 3 | ✅ Complete |
+| REQ-99 | AC-99.3 | WHEN a delta patch is applied to matching source content THEN the output SHALL equal the target content exactly; WHEN the source file hash does not match the patch manifest THEN the result SHALL be Err(DeltaPatch source hash mismatch) | specs/features/req_99_updater_rollback.feature:34<br>specs/features/req_99_updater_rollback.feature:40 | 3 | ✅ Complete |
+| REQ-99 | AC-99.4 | WHEN an update fails mid-installation THEN the running version SHALL remain unchanged; WHEN automatic rollback executes after a startup crash THEN the installed version SHALL revert to the pre-update version and the failed version SHALL be recorded | specs/features/req_99_updater_rollback.feature:47<br>specs/features/req_99_updater_rollback.feature:54 | 3 | ✅ Complete |

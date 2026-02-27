@@ -3448,3 +3448,126 @@ requirements:
         description: "WHEN parse_multi_panel_input is called with a buffer shorter than MULTI_PANEL_INPUT_MIN_BYTES (3) THEN the result SHALL be None for every such buffer"
         tests:
           - flight_panels_saitek::multi_panel::tests::test_parse_input_too_short_returns_none
+  - id: REQ-95
+    name: Saitek Pro Flight Switch Panel LED Control and HID Report Bit-Packing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-95.1
+        description: "WHEN PanelType::from_product_id is called with 0x0D67 THEN the result SHALL be Some(PanelType::SwitchPanel) with name 'Switch Panel'; unknown PIDs SHALL return None"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_type_detection
+          - flight_panels_saitek::saitek::tests::test_panel_type_names
+      - id: AC-95.2
+        description: "WHEN SwitchPanel.led_mapping() is called THEN the slice SHALL contain GEAR, MASTER_BAT, MASTER_ALT, AVIONICS, FUEL_PUMP, DEICE, PITOT_HEAT, and COWL; all five panel type mappings SHALL be non-empty with unique names"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_led_mappings
+          - flight_panels_saitek::saitek::tests::test_all_panel_types_led_mapping_counts_and_names
+      - id: AC-95.3
+        description: "WHEN SwitchPanel.verify_pattern() is called THEN the step sequence SHALL begin with LedOn(GEAR), proceed through MASTER_BAT and AVIONICS, and end with AllOff"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_verify_pattern_generation
+      - id: AC-95.4
+        description: "WHEN each Switch Panel LED index 0-7 is individually set to on THEN each SHALL set exactly one unique bit in the HID report; all LEDs off SHALL produce a zero-bit LED-mask byte"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_switch_panel_bit_packing_all_indices
+          - flight_panels_saitek::saitek::tests::test_switch_panel_led_off_no_bits_set
+  - id: REQ-96
+    name: Saitek Pro Flight Radio Panel COM/NAV Channel LED Management
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-96.1
+        description: "WHEN PanelType::from_product_id is called with 0x0D05 THEN the result SHALL be Some(PanelType::RadioPanel) with name 'Radio Panel'"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_type_detection
+          - flight_panels_saitek::saitek::tests::test_panel_type_names
+      - id: AC-96.2
+        description: "WHEN RadioPanel.led_mapping() is called THEN the slice SHALL contain COM1, COM2, NAV1, NAV2, ADF, DME, and XPDR; registering the panel SHALL initialise LED state for every mapped channel"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_led_mappings
+          - flight_panels_saitek::saitek::tests::test_panel_registration
+      - id: AC-96.3
+        description: "WHEN RadioPanel.verify_pattern() is called THEN the sequence SHALL start with LedOn(COM1), proceed through LedOff(COM1) and LedOn(NAV1), and end with AllOff; LED updates exceeding min_write_interval SHALL be rate-limited to one write per interval"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_verify_pattern_generation
+          - flight_panels_saitek::saitek::tests::test_rate_limiting
+          - flight_panels_saitek::saitek::tests::test_min_interval_enforcement
+  - id: REQ-97
+    name: Saitek Pro Flight Instrument Panel (FIP) Instrument Channel Identification
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-97.1
+        description: "WHEN PanelType::from_product_id is called with 0x0A2F THEN the result SHALL be Some(PanelType::FIP) with name 'Flight Instrument Panel'"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_type_detection
+          - flight_panels_saitek::saitek::tests::test_panel_type_names
+      - id: AC-97.2
+        description: "WHEN FIP.led_mapping() is called THEN the slice SHALL contain ATTITUDE, AIRSPEED, ALTITUDE, HSI, TURN_COORD, VOR1, VOR2, and ADF"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_panel_led_mappings
+          - flight_panels_saitek::saitek::tests::test_all_panel_types_led_mapping_counts_and_names
+      - id: AC-97.3
+        description: "WHEN FIP.verify_pattern() is called THEN the first three steps SHALL be LedOn(ATTITUDE), LedOn(AIRSPEED), LedOn(ALTITUDE) followed by a Delay and AllOff; registering a FIP alongside a RadioPanel SHALL produce independent LED state maps with no cross-panel interference"
+        tests:
+          - flight_panels_saitek::saitek::tests::test_verify_pattern_generation
+          - flight_panels_saitek::saitek::tests::test_independent_led_states
+  - id: REQ-98
+    name: Software Update Channel Selection and Cryptographic Manifest Verification
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-98.1
+        description: "WHEN ChannelManager is created THEN stable, beta, and canary channels SHALL all be available; the default ChannelConfig SHALL select Channel::Stable"
+        tests:
+          - flight_updater::channels::tests::test_channel_manager_creation
+          - flight_updater::channels::tests::test_stable_channel_has_correct_url_and_metadata
+          - flight_updater::channels::tests::test_beta_channel_has_correct_url_and_metadata
+          - flight_updater::channels::tests::test_canary_channel_has_correct_url_and_metadata
+      - id: AC-98.2
+        description: "WHEN set_channel is called with a valid channel THEN current_channel SHALL reflect the new selection; WHEN from_str is called with an unrecognised name THEN the result SHALL be Err(ChannelNotFound)"
+        tests:
+          - flight_updater::channels::tests::test_channel_switching
+          - flight_updater::channels::tests::test_unknown_channel_name_returns_channel_not_found_error
+          - flight_updater::channels::tests::test_channel_from_str
+      - id: AC-98.3
+        description: "WHEN a manifest is signed with a valid Ed25519 key and verified with the matching public key THEN verification SHALL succeed; WHEN content is tampered THEN verification SHALL fail"
+        tests:
+          - flight_updater::signature::tests::test_signature_verification
+          - flight_updater::signature::tests::test_tampered_content_fails_verification
+          - flight_updater::signature::tests::test_tampered_signature_bytes_fails_verification
+      - id: AC-98.4
+        description: "WHEN an UpdateSignature carries an unsupported algorithm name THEN verify SHALL return Err; WHEN the signature field contains invalid hex THEN verify SHALL return Err with an invalid-signature description"
+        tests:
+          - flight_updater::signature::tests::test_unsupported_algorithm_returns_error
+          - flight_updater::signature::tests::test_invalid_hex_signature_returns_error
+  - id: REQ-99
+    name: Software Update Rollback, Startup Crash Detection, and Delta Patch Application
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-99.1
+        description: "WHEN a version was installed within the startup timeout window and mark_startup_success was never called THEN check_startup_crash SHALL indicate a potential crash; WHEN mark_startup_success is called THEN subsequent checks SHALL not indicate a crash"
+        tests:
+          - flight_updater::rollback::tests::test_startup_crash_detector
+          - flight_updater::updater::tests::test_startup_crash_detection
+          - flight_updater::rollback::tests::test_startup_crash_detector_detects_stale_startup_file
+      - id: AC-99.2
+        description: "WHEN rollback_to_previous is called with two or more versions recorded THEN the result SHALL be the immediately preceding VersionInfo and current_version SHALL be updated; WHEN only one version exists THEN rollback SHALL return Err"
+        tests:
+          - flight_updater::rollback::tests::test_rollback_to_previous_selects_correct_version
+          - flight_updater::rollback::tests::test_rollback_with_single_version_returns_error
+          - flight_updater::rollback::tests::test_rollback_with_no_versions_returns_error
+      - id: AC-99.3
+        description: "WHEN a delta patch is applied to matching source content THEN the output SHALL equal the target content exactly; WHEN the source file hash does not match the patch manifest THEN the result SHALL be Err(DeltaPatch source hash mismatch)"
+        tests:
+          - flight_updater::delta::tests::test_generate_patch_and_apply_round_trips_binary_content
+          - flight_updater::delta::tests::test_apply_patch_copy_operation_extracts_correct_bytes
+          - flight_updater::delta::tests::test_apply_patch_source_hash_mismatch_returns_error
+      - id: AC-99.4
+        description: "WHEN an update fails mid-installation THEN the running version SHALL remain unchanged; WHEN automatic rollback executes after a startup crash THEN the installed version SHALL revert to the pre-update version and the failed version SHALL be recorded"
+        tests:
+          - flight_updater::rollback::tests::test_crash_count_threshold_respected
+          - cmd:cargo test -p flight-updater update_simulator::test_update_rollback_cycle
+          - cmd:cargo test -p flight-updater update_simulator::test_rollback_error_handling
