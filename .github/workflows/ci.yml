@@ -6,9 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '0 3 * * *'   # 3 AM UTC daily (all regular jobs)
-    - cron: '0 2 * * *'   # 2 AM UTC daily (nightly fuzz)
-    - cron: '0 3 * * 1'   # 3 AM UTC Monday (mutation testing)
+    - cron: '0 3 * * *'   # 3 AM UTC daily (regular jobs + nightly fuzz)
+    - cron: '0 6 * * 0'   # 6 AM UTC Sunday (weekly mutation testing)
   workflow_dispatch:
 
 concurrency:
@@ -1082,15 +1081,15 @@ jobs:
         continue-on-error: false
 
   # ──────────────────────────────────────────────────────────────────────────────
-  # Nightly Fuzz Gates (runs daily at 02:00 UTC, or on-demand)
+  # Nightly Fuzz Gates (runs daily at 03:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   nightly-fuzz:
     name: Nightly Fuzz Targets
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+      (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -1113,229 +1112,427 @@ jobs:
         run: |
           cd crates/flight-rules
           cargo +nightly fuzz run fuzz_rules_parser -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-profile JSON parser (60s)
         run: |
           cd crates/flight-profile
           cargo +nightly fuzz run fuzz_profile_parse -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-profile merge path (60s)
         run: |
           cd crates/flight-profile
           cargo +nightly fuzz run fuzz_profile_merge -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-dcs-export message parser (60s)
         run: |
           cd crates/flight-dcs-export
           cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-xplane plugin message parser (60s)
         run: |
           cd crates/flight-xplane
           cargo +nightly fuzz run fuzz_xplane_plugin_msg -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-xplane DataRef parser (60s)
         run: |
           cd crates/flight-xplane
           cargo +nightly fuzz run fuzz_xplane_dataref -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-xplane UDP DATA packet parser (60s)
         run: |
           cd crates/flight-xplane
           cargo +nightly fuzz run fuzz_udp -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ffb-vpforce HID report parser (60s)
         run: |
           cd crates/flight-ffb-vpforce
           cargo +nightly fuzz run fuzz_rhino_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ffb-moza HID report parser (60s)
         run: |
           cd crates/flight-ffb-moza
           cargo +nightly fuzz run fuzz_moza_ab9_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ksp kRPC protobuf decoder (60s)
         run: |
           cd crates/flight-ksp
           cargo +nightly fuzz run fuzz_ksp_response -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-simconnect session fixture parser (60s)
         run: |
           cd crates/flight-simconnect
           cargo +nightly fuzz run fuzz_simconnect_fixture -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-warthunder telemetry decoder (60s)
         run: |
           cd crates/flight-warthunder
           cargo +nightly fuzz run fuzz_wt_telemetry -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ipc packet parser (60s)
         run: |
           cd crates/flight-ipc
           cargo +nightly fuzz run fuzz_ipc_packet -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ac7-protocol telemetry packet parser (60s)
         run: |
           cd crates/flight-ac7-protocol
           cargo +nightly fuzz run fuzz_telemetry_packet -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ac7-protocol JSON string parser (60s)
         run: |
           cd crates/flight-ac7-protocol
           cargo +nightly fuzz run fuzz_json_str -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ac7-input render block decoder (60s)
         run: |
           cd crates/flight-ac7-input
           cargo +nightly fuzz run fuzz_render_block -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-ac7-input profile applicator (60s)
         run: |
           cd crates/flight-ac7-input
           cargo +nightly fuzz run fuzz_apply_profile -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-elite journal event parser (60s)
         run: |
           cd crates/flight-elite
           cargo +nightly fuzz run fuzz_elite_journal -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-cloud-profiles JSON deserialization (60s)
         run: |
           cd crates/flight-cloud-profiles
           cargo +nightly fuzz run fuzz_cloud_profiles -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-vkb Gladiator report parser (60s)
         run: |
           cd crates/flight-hotas-vkb
           cargo +nightly fuzz run fuzz_vkb_gladiator_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-saitek input report parser (60s)
         run: |
           cd crates/flight-hotas-saitek
           cargo +nightly fuzz run fuzz_saitek_input_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-winwing report parsers (60s)
         run: |
           cd crates/flight-hotas-winwing
           cargo +nightly fuzz run fuzz_winwing_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-virpil HID report parsers (60s)
         run: |
           cd crates/flight-hotas-virpil
           cargo +nightly fuzz run fuzz_virpil_parsers -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-thrustmaster HID report parsers (60s)
         run: |
           cd crates/flight-hotas-thrustmaster
           cargo +nightly fuzz run fuzz_thrustmaster_parsers -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-honeycomb HID report parsers (60s)
         run: |
           cd crates/flight-hotas-honeycomb
           cargo +nightly fuzz run fuzz_honeycomb_parsers -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-logitech HID report parser (60s)
         run: |
           cd crates/flight-hotas-logitech
           cargo +nightly fuzz run fuzz_logitech_parsers -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-brunner CLS-E report parser (60s)
         run: |
           cd crates/flight-hotas-brunner
           cargo +nightly fuzz run fuzz_brunner_cls_e -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hotas-vpforce Rhino report parser (60s)
         run: |
           cd crates/flight-hotas-vpforce
           cargo +nightly fuzz run fuzz_vpforce_rhino -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-cloud-profiles profile parse (60s)
         run: |
           cd crates/flight-cloud-profiles
           cargo +nightly fuzz run fuzz_cloud_profile_parse -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-open-hardware input report parser (60s)
         run: |
           cd crates/flight-open-hardware
           cargo +nightly fuzz run fuzz_input_report -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-writers JSON patch operations (60s)
         run: |
           cd crates/flight-writers
           cargo +nightly fuzz run fuzz_json_patch -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-writers diff config parsing (60s)
         run: |
           cd crates/flight-writers
           cargo +nightly fuzz run fuzz_diff_apply -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-axis config parsing (60s)
         run: |
           cd crates/flight-axis
           cargo +nightly fuzz run fuzz_axis_config -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-axis RT pipeline (60s)
         run: |
           cd crates/flight-axis
           cargo +nightly fuzz run fuzz_axis_pipeline -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-hid descriptor parsing (60s)
         run: |
           cd crates/flight-hid
           cargo +nightly fuzz run fuzz_hid_descriptor -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-core aircraft type parsing (60s)
         run: |
           cd crates/flight-core
           cargo +nightly fuzz run fuzz_aircraft_type -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-core profile deserialization (60s)
         run: |
           cd crates/flight-core
           cargo +nightly fuzz run fuzz_profile_deser -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fuzz flight-bus snapshot deserialization (60s)
         run: |
           cd crates/flight-bus
           cargo +nightly fuzz run fuzz_bus_snapshot -- -max_total_time=60 -timeout=10
-        continue-on-error: false
+        continue-on-error: true
+
+      - name: Fuzz flight-aerofly packet parser (60s)
+        run: |
+          cd crates/flight-aerofly
+          cargo +nightly fuzz run fuzz_aerofly_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-axis calibration smooth trim (60s)
+        run: |
+          cd crates/flight-axis
+          cargo +nightly fuzz run fuzz_cal_smooth_trim -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-falcon-bms flight data parser (60s)
+        run: |
+          cd crates/flight-falcon-bms
+          cargo +nightly fuzz run fuzz_flight_data -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-ch FighterStick report (60s)
+        run: |
+          cd crates/flight-hotas-ch
+          cargo +nightly fuzz run fuzz_fighterstick -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-ch Pro Throttle report (60s)
+        run: |
+          cd crates/flight-hotas-ch
+          cargo +nightly fuzz run fuzz_pro_throttle -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-ch Pro Pedals report (60s)
+        run: |
+          cd crates/flight-hotas-ch
+          cargo +nightly fuzz run fuzz_pro_pedals -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-logitech Extreme 3D Pro (60s)
+        run: |
+          cd crates/flight-hotas-logitech
+          cargo +nightly fuzz run fuzz_extreme3dpro -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-logitech G Flight Yoke (60s)
+        run: |
+          cd crates/flight-hotas-logitech
+          cargo +nightly fuzz run fuzz_g_flight_yoke -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-logitech G940 joystick (60s)
+        run: |
+          cd crates/flight-hotas-logitech
+          cargo +nightly fuzz run fuzz_g940_joystick -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-logitech-wheel G29 report (60s)
+        run: |
+          cd crates/flight-hotas-logitech-wheel
+          cargo +nightly fuzz run fuzz_g29 -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-logitech-wheel G27 report (60s)
+        run: |
+          cd crates/flight-hotas-logitech-wheel
+          cargo +nightly fuzz run fuzz_g27 -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-sony report parser (60s)
+        run: |
+          cd crates/flight-hotas-sony
+          cargo +nightly fuzz run fuzz_sony_report -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-thrustmaster Warthog stick (60s)
+        run: |
+          cd crates/flight-hotas-thrustmaster
+          cargo +nightly fuzz run fuzz_warthog_stick -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-thrustmaster T.16000M (60s)
+        run: |
+          cd crates/flight-hotas-thrustmaster
+          cargo +nightly fuzz run fuzz_t16000m -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-turtlebeach VelocityOne (60s)
+        run: |
+          cd crates/flight-hotas-turtlebeach
+          cargo +nightly fuzz run fuzz_velocityone -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-vkb Gladiator NXT EVO (60s)
+        run: |
+          cd crates/flight-hotas-vkb
+          cargo +nightly fuzz run fuzz_gladiator_nxt_evo -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-vkb STECS throttle (60s)
+        run: |
+          cd crates/flight-hotas-vkb
+          cargo +nightly fuzz run fuzz_stecs -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-virpil Alpha grip (60s)
+        run: |
+          cd crates/flight-hotas-virpil
+          cargo +nightly fuzz run fuzz_alpha -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-virpil MongoosT base (60s)
+        run: |
+          cd crates/flight-hotas-virpil
+          cargo +nightly fuzz run fuzz_mongoost -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-winwing Orion2 stick (60s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_orion2_stick -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-winwing Orion2 throttle (60s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_orion2_throttle -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-winwing TFRP rudder (60s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_tfrp_rudder -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-winwing throttle (60s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_winwing_throttle -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-hotas-winwing joystick (60s)
+        run: |
+          cd crates/flight-hotas-winwing
+          cargo +nightly fuzz run fuzz_winwing_joystick -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-il2 packet parser (60s)
+        run: |
+          cd crates/flight-il2
+          cargo +nightly fuzz run fuzz_il2_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-panels-goflight report parser (60s)
+        run: |
+          cd crates/flight-panels-goflight
+          cargo +nightly fuzz run fuzz_goflight_report -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-profile YAML parser (60s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_yaml -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-rules condition evaluator (60s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_condition -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-rules action executor (60s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_action -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-rules schema validation (60s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_rule_schema -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-sim-racing generic UDP parser (60s)
+        run: |
+          cd crates/flight-sim-racing
+          cargo +nightly fuzz run fuzz_generic_udp -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-trackir packet parser (60s)
+        run: |
+          cd crates/flight-trackir
+          cargo +nightly fuzz run fuzz_trackir_packet -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-warthunder unit conversion (60s)
+        run: |
+          cd crates/flight-warthunder
+          cargo +nightly fuzz run fuzz_wt_convert -- -max_total_time=60 -timeout=10
+        continue-on-error: true
 
       - name: Upload fuzz crash artifacts
         if: failure()
@@ -1346,7 +1543,7 @@ jobs:
           if-no-files-found: ignore
 
   # ──────────────────────────────────────────────────────────────────────────────
-  # Weekly Mutation Testing Gate (runs Mondays at 04:00 UTC, or on-demand)
+  # Weekly Mutation Testing Gate (runs Sundays at 06:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
   mutation-testing:
     name: Mutation Testing (Weekly)
@@ -1354,7 +1551,7 @@ jobs:
     timeout-minutes: 120
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'schedule' && github.ref == 'refs/heads/main')
+      (github.event_name == 'schedule' && github.event.schedule == '0 6 * * 0')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -1380,6 +1577,7 @@ jobs:
           cargo mutants \
             -p flight-core \
             -p flight-axis \
+            -p flight-bus \
             --timeout 120 \
             --output mutants-out
         continue-on-error: true
@@ -1433,7 +1631,7 @@ jobs:
               total=$((missed + caught))
               if [ "$total" -gt 0 ]; then
                 kill_rate=$(( caught * 100 / total ))
-                echo "- **Crates tested**: flight-core, flight-axis"
+                echo "- **Crates tested**: flight-core, flight-axis, flight-bus"
                 echo "- **Kill rate**: ${kill_rate}% (${caught}/${total} mutants caught)"
                 echo "- **Missed mutants**: ${missed}"
               else

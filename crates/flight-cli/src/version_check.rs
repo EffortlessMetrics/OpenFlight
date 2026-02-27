@@ -8,8 +8,11 @@ use serde::Serialize;
 /// Parsed semantic version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SemVer {
+    /// Major version — incremented on breaking changes.
     pub major: u32,
+    /// Minor version — incremented on backwards-compatible additions.
     pub minor: u32,
+    /// Patch version — incremented on backwards-compatible fixes.
     pub patch: u32,
 }
 
@@ -37,7 +40,9 @@ impl std::fmt::Display for SemVer {
 /// Version check input.
 #[derive(Debug, Clone)]
 pub struct VersionCheck {
+    /// Semantic version of the CLI binary.
     pub cli_version: String,
+    /// Semantic version reported by the running service.
     pub service_version: String,
 }
 

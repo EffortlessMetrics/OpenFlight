@@ -8,29 +8,42 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
+/// JSON response body returned by the `/health` endpoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthResponse {
+    /// Current health status of the service.
     pub status: HealthStatus,
+    /// Service version string.
     pub version: String,
+    /// Seconds elapsed since the service started.
     pub uptime_secs: u64,
 }
 
+/// Possible health states reported by the service.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum HealthStatus {
+    /// All subsystems operational.
     Ok,
+    /// One or more subsystems are impaired but the service is functional.
     Degraded,
+    /// The service cannot fulfil requests.
     Unavailable,
 }
 
+/// Shared mutable state backing the health endpoint.
 #[derive(Debug, Clone)]
 pub struct HealthEndpointState {
+    /// Current health status (updated by subsystem monitors).
     pub status: HealthStatus,
+    /// Service version string.
     pub version: String,
+    /// Instant the service was started, used to compute uptime.
     pub started_at: std::time::Instant,
 }
 
 impl HealthEndpointState {
+    /// Creates a new state with [`HealthStatus::Ok`] and the given version.
     pub fn new(version: impl Into<String>) -> Self {
         Self {
             status: HealthStatus::Ok,
@@ -39,6 +52,7 @@ impl HealthEndpointState {
         }
     }
 
+    /// Snapshot the current state into a serialisable [`HealthResponse`].
     pub fn to_response(&self) -> HealthResponse {
         HealthResponse {
             status: self.status.clone(),
@@ -57,12 +71,14 @@ async fn health_handler(
     Json(state.to_response())
 }
 
+/// Build an axum [`Router`] with the `/health` GET endpoint.
 pub fn health_router(state: Arc<tokio::sync::RwLock<HealthEndpointState>>) -> Router {
     Router::new()
         .route("/health", get(health_handler))
         .with_state(state)
 }
 
+/// Bind to `127.0.0.1:{port}` and serve the health endpoint until cancelled.
 pub async fn serve_health(
     port: u16,
     state: Arc<tokio::sync::RwLock<HealthEndpointState>>,

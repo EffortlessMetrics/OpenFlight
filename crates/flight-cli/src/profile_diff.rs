@@ -11,12 +11,19 @@ use std::path::Path;
 /// A diffable field category within a profile.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
 pub enum ProfileField {
+    /// Axis configuration (deadzones, expo, response curves).
     AxisConfig,
+    /// Button-to-action mappings.
     ButtonMapping,
+    /// Response curve parameters.
     CurveSettings,
+    /// Deadzone sizes and shapes.
     DeadzoneSettings,
+    /// Force feedback strength and effect tuning.
     FfbSettings,
+    /// Profile name, description, and schema version.
     Metadata,
+    /// Any field not covered by the predefined categories.
     Other(String),
 }
 
@@ -34,6 +41,7 @@ impl std::fmt::Display for ProfileField {
     }
 }
 
+/// A single difference between two profiles.
 /// A single difference between two profiles.
 #[derive(Debug, Clone, Serialize, serde::Deserialize)]
 pub struct DiffEntry {

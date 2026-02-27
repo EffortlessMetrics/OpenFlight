@@ -9,9 +9,13 @@ use std::io;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub enum Shell {
+    /// GNU Bash.
     Bash,
+    /// Z shell.
     Zsh,
+    /// Friendly Interactive Shell.
     Fish,
+    /// PowerShell (Windows / cross-platform).
     PowerShell,
 }
 
