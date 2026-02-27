@@ -33,6 +33,7 @@ mod tracepoints;
 
 pub mod counters;
 pub mod events;
+pub mod log_rotation;
 pub mod regression;
 pub mod structured_log;
 

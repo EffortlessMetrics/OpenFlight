@@ -72,6 +72,7 @@
 
 pub mod hot_reload;
 pub mod profile_compare;
+pub mod profile_linter;
 pub mod profile_migration;
 
 use serde::{Deserialize, Serialize};

@@ -22,6 +22,7 @@ pub mod calibration;
 pub mod health_monitor;
 pub mod hid_writer;
 pub mod hotplug;
+pub mod input_viz;
 pub mod ofp1;
 pub use hotplug::{
     HotplugEvent, HotplugMonitor, MockHotplugMonitor, ReconnectManager, ReconnectState,
