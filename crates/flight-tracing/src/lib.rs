@@ -34,6 +34,7 @@ mod tracepoints;
 pub mod counters;
 pub mod events;
 pub mod regression;
+pub mod structured_log;
 
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;

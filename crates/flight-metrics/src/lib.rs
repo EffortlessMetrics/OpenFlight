@@ -6,6 +6,7 @@
 pub mod collector;
 pub mod common;
 pub mod dashboard;
+pub mod prometheus_export;
 pub mod registry;
 pub mod types;
 

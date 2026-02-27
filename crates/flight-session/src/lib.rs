@@ -7,6 +7,8 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
+pub mod state_persistence;
+
 use flight_profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;

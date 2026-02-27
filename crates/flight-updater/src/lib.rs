@@ -23,6 +23,7 @@ pub mod integration_docs;
 pub mod packaging;
 pub mod rollback;
 pub mod signature;
+pub mod update_manifest;
 pub mod updater;
 
 pub use channels::{Channel, ChannelConfig};
@@ -31,6 +32,9 @@ pub use integration_docs::{IntegrationDocsManager, SimIntegrationDocs, Validatio
 pub use packaging::{MsiPackageBuilder, PackageConfig, SystemdPackageBuilder};
 pub use rollback::{RollbackManager, VersionInfo};
 pub use signature::{SignatureVerifier, UpdateSignature};
+pub use update_manifest::{
+    ManifestUpdateManager, UpdateChannel, UpdateManifest, UpdateRecord, VersionEntry,
+};
 pub use updater::{UpdateConfig, UpdateManager, UpdateResult};
 
 use thiserror::Error;
