@@ -9595,3 +9595,306 @@ requirements:
         description: "Log can be exported to CSV for analysis"
         tests:
           - feature:specs/features/req_296_streaming_telemetry_log.feature
+
+  - id: REQ-297
+    name: Telemetry Normalization Pipeline
+    kind: product
+    status: draft
+    ac:
+      - id: AC-297.1
+        description: "Raw telemetry values from all simulators are normalized to a common schema"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+      - id: AC-297.2
+        description: "Altitude is always in meters in the internal representation"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+      - id: AC-297.3
+        description: "Speed is always in m/s internally (display units configurable)"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+      - id: AC-297.4
+        description: "Normalized telemetry is available to all consumers without conversion"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+      - id: AC-297.5
+        description: "Normalization failures produce a logged warning, not a crash"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+      - id: AC-297.6
+        description: "Unit conversion factors are externally configurable (not hardcoded)"
+        tests:
+          - feature:specs/features/req_297_telemetry_normalization.feature
+  - id: REQ-298
+    name: OpenFlight Plugin API (WASM)
+    kind: product
+    status: draft
+    ac:
+      - id: AC-298.1
+        description: "Plugins are WASM modules loaded at runtime"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+      - id: AC-298.2
+        description: "Plugin API exposes axis read/write, button read, event subscription"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+      - id: AC-298.3
+        description: "Plugin execution is sandboxed (no host filesystem access)"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+      - id: AC-298.4
+        description: "Plugin panic does not crash the host service"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+      - id: AC-298.5
+        description: "Plugin is rate-limited to declared Hz (max 120 Hz)"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+      - id: AC-298.6
+        description: "Plugin metadata includes name, version, capability declarations"
+        tests:
+          - feature:specs/features/req_298_wasm_plugin_api.feature
+  - id: REQ-299
+    name: Audit Log
+    kind: product
+    status: draft
+    ac:
+      - id: AC-299.1
+        description: "All profile changes are recorded in an audit log"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+      - id: AC-299.2
+        description: "Audit log includes timestamp, user, and change description"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+      - id: AC-299.3
+        description: "Log survives service restarts (persistent storage)"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+      - id: AC-299.4
+        description: "CLI can display audit log via `flightctl log --audit`"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+      - id: AC-299.5
+        description: "Audit log max size is configurable (default 10MB, rolling)"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+      - id: AC-299.6
+        description: "Sensitive data (passwords, tokens) is never written to audit log"
+        tests:
+          - feature:specs/features/req_299_audit_log.feature
+  - id: REQ-300
+    name: Full Integration Test Suite
+    kind: product
+    status: draft
+    ac:
+      - id: AC-300.1
+        description: "CI runs an integration test that exercises the full axis pipeline end-to-end"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+      - id: AC-300.2
+        description: "Test includes: device simulator -> axis pipeline -> bus publish -> subscriber verify"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+      - id: AC-300.3
+        description: "Test validates axis values at each pipeline stage"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+      - id: AC-300.4
+        description: "Test runs in < 30 seconds"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+      - id: AC-300.5
+        description: "Test uses deterministic timing (mock clock)"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+      - id: AC-300.6
+        description: "Test failure produces a readable diff of expected vs actual axis values"
+        tests:
+          - feature:specs/features/req_300_full_integration_test_suite.feature
+
+  # Product Requirement: Axis Deadzone Visualization
+  - id: REQ-301
+    name: Axis Deadzone Visualization
+    kind: product
+    status: draft
+    ac:
+      - id: AC-301.1
+        description: "CLI can display current deadzone settings for each axis"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+      - id: AC-301.2
+        description: "Display shows center deadzone and edge deadzone percentages"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+      - id: AC-301.3
+        description: "Display shows effective output range after deadzone"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+      - id: AC-301.4
+        description: "Visualization updates in real-time when axis is moved"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+      - id: AC-301.5
+        description: "Deadzone can be adjusted interactively via CLI"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+      - id: AC-301.6
+        description: "Changes are reflected immediately in axis processing"
+        tests:
+          - feature:specs/features/req_301_axis_deadzone_visualization.feature
+
+  # Product Requirement: SimConnect Variable Subscription
+  - id: REQ-302
+    name: SimConnect Variable Subscription
+    kind: product
+    status: draft
+    ac:
+      - id: AC-302.1
+        description: "Service subscribes to SimConnect variables defined in profile"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+      - id: AC-302.2
+        description: "Variable subscription uses efficient SimConnect event-based API"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+      - id: AC-302.3
+        description: "New variable subscriptions are added without restart"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+      - id: AC-302.4
+        description: "Subscriptions survive MSFS sim reset (airplane change)"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+      - id: AC-302.5
+        description: "Variable access latency is < 2ms from SimConnect notification"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+      - id: AC-302.6
+        description: "Unsupported variable names produce a logged warning, not an error"
+        tests:
+          - feature:specs/features/req_302_simconnect_variable_subscription.feature
+
+  # Product Requirement: X-Plane DataRef Binding
+  - id: REQ-303
+    name: X-Plane DataRef Binding
+    kind: product
+    status: draft
+    ac:
+      - id: AC-303.1
+        description: "Service can read X-Plane DataRefs specified in profile"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+      - id: AC-303.2
+        description: "DataRef binding uses UDP extplane or native X-Plane UDP"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+      - id: AC-303.3
+        description: "DataRefs are polled at configurable rate (1-50Hz)"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+      - id: AC-303.4
+        description: "Invalid DataRef name produces a warning in logs"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+      - id: AC-303.5
+        description: "DataRef values are normalized to [-1.0, 1.0] for axis use"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+      - id: AC-303.6
+        description: "Multiple DataRefs can be combined into a virtual axis"
+        tests:
+          - feature:specs/features/req_303_xplane_dataref_binding.feature
+
+  # Product Requirement: DCS Export Script Integration
+  - id: REQ-304
+    name: DCS Export Script Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-304.1
+        description: "DCS integration uses Lua export script (Export.lua hooks)"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+      - id: AC-304.2
+        description: "Export.lua is generated from profile configuration"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+      - id: AC-304.3
+        description: "Script sends aircraft data via UDP on port 27101"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+      - id: AC-304.4
+        description: "Service receives and parses DCS telemetry packets"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+      - id: AC-304.5
+        description: "Connection loss is detected within 1 second"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+      - id: AC-304.6
+        description: "Re-connection happens automatically when DCS reconnects"
+        tests:
+          - feature:specs/features/req_304_dcs_export_script.feature
+
+  # Product Requirement: War Thunder Telemetry Binding
+  - id: REQ-305
+    name: War Thunder Telemetry Binding
+    kind: product
+    status: draft
+    ac:
+      - id: AC-305.1
+        description: "Service reads War Thunder state via HTTP telemetry endpoint"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+      - id: AC-305.2
+        description: "Telemetry endpoint (localhost:8111/state.json) is polled at 20Hz"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+      - id: AC-305.3
+        description: "Aircraft type triggers profile switch"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+      - id: AC-305.4
+        description: "Connected/disconnected state is tracked"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+      - id: AC-305.5
+        description: "Ground vehicle telemetry is also supported (separate profile)"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+      - id: AC-305.6
+        description: "Telemetry failure triggers fallback to idle profile"
+        tests:
+          - feature:specs/features/req_305_war_thunder_telemetry.feature
+
+  # Product Requirement: IL-2 Sturmovik Integration
+  - id: REQ-306
+    name: IL-2 Sturmovik Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-306.1
+        description: "Service connects to IL-2 via UDP export (port 21001)"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature
+      - id: AC-306.2
+        description: "IL-2 export protocol sends airspeed, altitude, heading, pitch, roll"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature
+      - id: AC-306.3
+        description: "Protocol magic bytes are validated on every packet"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature
+      - id: AC-306.4
+        description: "Connection loss triggers stale snapshot after 1 second"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature
+      - id: AC-306.5
+        description: "Aircraft type from IL-2 triggers profile matching"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature
+      - id: AC-306.6
+        description: "Integration tests replay captured IL-2 UDP packets"
+        tests:
+          - feature:specs/features/req_306_il2_integration.feature

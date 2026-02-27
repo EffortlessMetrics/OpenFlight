@@ -655,7 +655,10 @@
 | Thrustmaster T500 RS Racing Wheel | 0x044F | 0xB65D | 5 | 24 | ✓ | 3 |
 | Thrustmaster T.A320 Pack (Virtual Bundle) | 0x044F | ? | 8 | 36 | ✗ | 3 |
 | Thrustmaster T.A.R.G.E.T Virtual Device | 0x044F | 0x0402 | 8 | 120 | ✗ | 3 |
+| Thrustmaster TCA Boeing Pack (Virtual Bundle) | 0x044F | ? | 6 | 24 | ✗ | 2 |
 | Thrustmaster TCA Boeing Throttle | 0x044F | 0xB68C | 4 | 16 | ✗ | 3 |
+| Thrustmaster TCA Captain Pack Airbus (Virtual Bundle) | 0x044F | ? | 8 | 32 | ✗ | 2 |
+| Thrustmaster TCA Copilot Pack Airbus (Virtual Bundle) | 0x044F | ? | 6 | 28 | ✗ | 2 |
 | Thrustmaster TCA Jetspeed Pack (Bundle) | 0x044F | 0x0000 | 0 | 0 | ✗ | 3 |
 | Thrustmaster TCA Officer Pack Airbus (Virtual) | 0x044F | ? | 6 | 28 | ✗ | 3 |
 | Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4) | 0x044F | 0x0408 | 4 | 12 | ✗ | 2 |
@@ -759,8 +762,10 @@
 | VIRPIL VPC Control Panel #3 | 0x3344 | 0x025C | 2 | 48 | ✗ | 3 |
 | VIRPIL VPC Control Panel #4 | 0x3344 | 0x025D | 2 | 48 | ✗ | 3 |
 | VIRPIL VPC Control Panel #5 | 0x3344 | 0x025E | 2 | 56 | ✗ | 3 |
+| VIRPIL VPC Control Panel 6 | 0x3344 | 0x0260 | 0 | 30 | ✗ | 2 |
 | VIRPIL VPC Delta L Panel | 0x3344 | 0x025D | 0 | 48 | ✗ | 3 |
 | VIRPIL VPC Delta R Panel | 0x3344 | 0x025C | 0 | 48 | ✗ | 3 |
+| VIRPIL VPC Delta R Right-Hand Throttle | 0x3344 | 0x0210 | 4 | 42 | ✗ | 2 |
 | VIRPIL VPC FlightAssistant | 0x3344 | 0x0052 | 2 | 32 | ✗ | 3 |
 | VIRPIL VPC Hawk-60 Throttle | 0x3344 | 0x019C | 6 | 60 | ✗ | 3 |
 | VIRPIL VPC MongoosT-50CM2 (Left) | 0x3344 | 0x0162 | 5 | 24 | ✗ | 3 |
@@ -830,6 +835,9 @@
 | VKB Gunfighter Mk.IV MCG Ultimate | 0x231D | 0x0220 | 8 | 48 | ✗ | 3 |
 | VKB Gunfighter Mk.IV | 0x231D | 0x0129 | 6 | 32 | ✗ | 3 |
 | VKB Gunfighter Modern Combat Pro | 0x231D | 0x0125 | 8 | 32 | ✗ | 3 |
+| VKB Kosmosima Helicopter Grip | 0x231D | 0x0140 | 2 | 16 | ✗ | 3 |
+| VKB MCG Pro Grip Module | 0x231D | 0x0129 | 2 | 20 | ✗ | 2 |
+| VKB MCG Standard Grip Module | 0x231D | 0x0127 | 2 | 14 | ✗ | 3 |
 | VKB MCG Ultimate Grip | 0x231D | 0x0221 | 8 | 32 | ✗ | 2 |
 | VKB NXT SEM THQ (Throttle Hat Quadrant) | 0x231D | 0x2214 | 1 | 20 | ✗ | 3 |
 | VKB Sim Pedals Pro | 0x231D | 0x0060 | 3 | 0 | ✗ | 3 |
@@ -937,10 +945,13 @@
 | WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-R | 0x4098 | 0xBC1E | 0 | 64 | ✗ | 3 |
 | WinWing SimApp Pro FCU | 0x4098 | 0xBB10 | 0 | 32 | ✗ | 3 |
+| WinWing SimApp Pro Flaps & Speed Brake Panel | 0x4098 | 0xB611 | 2 | 4 | ✗ | 2 |
+| WinWing SimApp Pro Landing Gear Panel | 0x4098 | 0xB612 | 0 | 8 | ✗ | 2 |
 | WinWing SimAppPro LDU Panel | 0x4098 | 0xBE50 | 0 | 8 | ✗ | 2 |
 | WinWing SIMAPP Pro NAV Panel | 0x4098 | 0xBE90 | 2 | 24 | ✗ | 3 |
 | WinWing SimAppPro Overhead Panel (Left) | 0x4098 | 0xBF30 | 0 | 36 | ✗ | 3 |
 | WinWing SimAppPro Overhead Panel (Right) | 0x4098 | 0xBF31 | 0 | 36 | ✗ | 3 |
+| WinWing SimApp Pro Trim Panel | 0x4098 | 0xB613 | 1 | 10 | ✗ | 2 |
 | WinWing SimApp Pro VSD Panel | 0x4098 | 0xBC40 | 0 | 16 | ✗ | 3 |
 | WinWing SimApp Pro WSO Panel | 0x4098 | 0xBD14 | 0 | 32 | ✗ | 3 |
 | WinWing Skywalker Collective | 0x4098 | 0xBE48 | 3 | 12 | ✗ | 3 |
@@ -959,6 +970,8 @@
 | WinWing URSA MINOR Fighter Flight Stick (Left) | 0x4098 | 0xBC29 | 2 | 16 | ✗ | 3 |
 | WinWing URSA MINOR Fighter Flight Stick (Right) | 0x4098 | 0xBC2A | 2 | 16 | ✗ | 3 |
 | WinWing Ursa Minor L Throttle | 0x4098 | 0xBE18 | 2 | 16 | ✗ | 3 |
+| WinWing PCA FCU (Airbus Flight Control Unit) | 0x4098 | 0xB610 | 4 | 28 | ✗ | 2 |
+| WinWing Boeing TOTO Throttle Quadrant | 0x4098 | 0xB700 | 6 | 22 | ✗ | 2 |
 | WinWing CDP (Control Display Panel) | 0x4098 | 0xBE90 | 0 | 32 | ✗ | 2 |
 | WinWing MIP (Mission Interface Panel) | 0x4098 | 0xBE80 | 0 | 82 | ✗ | 2 |
 | Yawman Arrow | 0x054C | 0x0CE6 | 5 | 20 | ✗ | 2 |

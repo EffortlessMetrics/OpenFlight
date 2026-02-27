@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1772 |
-| ACs with tests | 1772 |
+| Total AC | 1832 |
+| ACs with tests | 1832 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 1175 |
+| Draft | 1235 |
 | Incomplete | 0 |
-| Microcrates | 79 |
-| Microcrates with tests | 65 (82.3%) |
-| Microcrates with Gherkin | 65 (82.3%) |
-| Microcrates fully covered | 65 (82.3%) |
+| Microcrates | 80 |
+| Microcrates with tests | 65 (81.2%) |
+| Microcrates with Gherkin | 65 (81.2%) |
+| Microcrates fully covered | 65 (81.2%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 49.0% |
-| Test + Gherkin coverage | 49.0% |
+| Gherkin coverage | 47.4% |
+| Test + Gherkin coverage | 47.4% |
 
 ## BDD Microcrate Matrix
 
@@ -63,6 +63,7 @@
 | flight-hotas-ch | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-logitech | 26 | 26 | 26 | 26 | 26 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-logitech-wheel | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-microsoft | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-simucube | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -1891,3 +1892,63 @@
 | REQ-296 | AC-296.4 | CLI can tail the log in real-time (like flightctl log -f) | - | 1 | ⚪ Draft |
 | REQ-296 | AC-296.5 | Log retention is configurable (default: 5 minutes rolling) | - | 1 | ⚪ Draft |
 | REQ-296 | AC-296.6 | Log can be exported to CSV for analysis | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.1 | Raw telemetry values from all simulators are normalized to a common schema | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.2 | Altitude is always in meters in the internal representation | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.3 | Speed is always in m/s internally (display units configurable) | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.4 | Normalized telemetry is available to all consumers without conversion | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.5 | Normalization failures produce a logged warning, not a crash | - | 1 | ⚪ Draft |
+| REQ-297 | AC-297.6 | Unit conversion factors are externally configurable (not hardcoded) | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.1 | Plugins are WASM modules loaded at runtime | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.2 | Plugin API exposes axis read/write, button read, event subscription | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.3 | Plugin execution is sandboxed (no host filesystem access) | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.4 | Plugin panic does not crash the host service | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.5 | Plugin is rate-limited to declared Hz (max 120 Hz) | - | 1 | ⚪ Draft |
+| REQ-298 | AC-298.6 | Plugin metadata includes name, version, capability declarations | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.1 | All profile changes are recorded in an audit log | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.2 | Audit log includes timestamp, user, and change description | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.3 | Log survives service restarts (persistent storage) | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.4 | CLI can display audit log via `flightctl log --audit` | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.5 | Audit log max size is configurable (default 10MB, rolling) | - | 1 | ⚪ Draft |
+| REQ-299 | AC-299.6 | Sensitive data (passwords, tokens) is never written to audit log | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.1 | CI runs an integration test that exercises the full axis pipeline end-to-end | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.2 | Test includes: device simulator -> axis pipeline -> bus publish -> subscriber verify | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.3 | Test validates axis values at each pipeline stage | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.4 | Test runs in < 30 seconds | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.5 | Test uses deterministic timing (mock clock) | - | 1 | ⚪ Draft |
+| REQ-300 | AC-300.6 | Test failure produces a readable diff of expected vs actual axis values | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.1 | CLI can display current deadzone settings for each axis | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.2 | Display shows center deadzone and edge deadzone percentages | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.3 | Display shows effective output range after deadzone | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.4 | Visualization updates in real-time when axis is moved | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.5 | Deadzone can be adjusted interactively via CLI | - | 1 | ⚪ Draft |
+| REQ-301 | AC-301.6 | Changes are reflected immediately in axis processing | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.1 | Service subscribes to SimConnect variables defined in profile | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.2 | Variable subscription uses efficient SimConnect event-based API | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.3 | New variable subscriptions are added without restart | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.4 | Subscriptions survive MSFS sim reset (airplane change) | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.5 | Variable access latency is < 2ms from SimConnect notification | - | 1 | ⚪ Draft |
+| REQ-302 | AC-302.6 | Unsupported variable names produce a logged warning, not an error | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.1 | Service can read X-Plane DataRefs specified in profile | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.2 | DataRef binding uses UDP extplane or native X-Plane UDP | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.3 | DataRefs are polled at configurable rate (1-50Hz) | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.4 | Invalid DataRef name produces a warning in logs | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.5 | DataRef values are normalized to [-1.0, 1.0] for axis use | - | 1 | ⚪ Draft |
+| REQ-303 | AC-303.6 | Multiple DataRefs can be combined into a virtual axis | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.1 | DCS integration uses Lua export script (Export.lua hooks) | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.2 | Export.lua is generated from profile configuration | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.3 | Script sends aircraft data via UDP on port 27101 | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.4 | Service receives and parses DCS telemetry packets | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.5 | Connection loss is detected within 1 second | - | 1 | ⚪ Draft |
+| REQ-304 | AC-304.6 | Re-connection happens automatically when DCS reconnects | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.1 | Service reads War Thunder state via HTTP telemetry endpoint | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.2 | Telemetry endpoint (localhost:8111/state.json) is polled at 20Hz | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.3 | Aircraft type triggers profile switch | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.4 | Connected/disconnected state is tracked | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.5 | Ground vehicle telemetry is also supported (separate profile) | - | 1 | ⚪ Draft |
+| REQ-305 | AC-305.6 | Telemetry failure triggers fallback to idle profile | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.1 | Service connects to IL-2 via UDP export (port 21001) | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.2 | IL-2 export protocol sends airspeed, altitude, heading, pitch, roll | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.3 | Protocol magic bytes are validated on every packet | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.4 | Connection loss triggers stale snapshot after 1 second | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.5 | Aircraft type from IL-2 triggers profile matching | - | 1 | ⚪ Draft |
+| REQ-306 | AC-306.6 | Integration tests replay captured IL-2 UDP packets | - | 1 | ⚪ Draft |

@@ -1,0 +1,61 @@
+# WinWing SimApp Pro Landing Gear Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing SimApp Pro Landing Gear Panel replicates the Airbus A320/A330
+# landing gear lever, inhibit pushbutton, and gear indication lights.
+# Includes a solenoid-driven gear lever lock mechanism (LGCIU inhibit logic).
+# VID 0x4098: WinWing — community-confirmed.
+# PID 0xB612 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimApp Pro Landing Gear Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB612      # Community estimate — Landing Gear panel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB612 is a community estimate. Confirm via lsusb or WinWing SimApp
+      Desktop Device Manager.
+  - id: SOLENOID_LOCK
+    description: >
+      The gear lever has a solenoid inhibit that prevents UP movement when
+      the aircraft is on the ground (LGCIU logic). The host must release the
+      lock via a USB HID output report when WoW (weight-on-wheels) clears.
+  - id: LED_GEAR_INDICATORS
+    description: >
+      Three gear-indication LEDs (nose/left/right) show locked-down (green),
+      in-transit (amber blink), and locked-up (off). LED state is driven by
+      HID output reports from the sim adapter.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro Landing Gear Panel. VID 0x4098 confirmed; PID 0xB612 est.
+    LGCIU solenoid requires WoW telemetry feedback from sim adapter.
+    See simapp-pro-fcu.yaml and simapp-pro-fsb-panel.yaml for related panels.
+    Last reviewed: 2026-06.

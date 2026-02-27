@@ -76,6 +76,7 @@ mod proptest_tests;
 pub mod blackbox;
 pub mod buttons;
 pub mod calibration;
+pub mod chain;
 pub mod combine;
 pub mod compiler;
 pub mod conflict;
@@ -91,6 +92,7 @@ pub mod nodes;
 pub mod pid;
 pub mod pipeline;
 pub mod rate_limit;
+pub mod recording;
 pub mod scale;
 pub mod smoothing;
 pub mod throttle_zone;
@@ -101,6 +103,7 @@ pub use buttons::{
     ButtonChord, ButtonError, ButtonMacro, ButtonProcessor, MacroAction, MacroTrigger,
 };
 pub use calibration::{AxisCalibration, CalibrationBank};
+pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
 pub use conflict::{
@@ -125,6 +128,7 @@ pub use nodes::{
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
+pub use recording::{AxisPlayback, AxisRecording, AxisSample};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
 pub use throttle_zone::{

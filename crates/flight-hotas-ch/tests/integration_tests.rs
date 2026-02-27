@@ -202,7 +202,10 @@ fn test_fighterstick_center_position() {
     assert_eq!(state.z, 32768);
     assert_eq!(state.buttons, 0);
     assert_eq!(state.hats, [0, 0, 0, 0]);
-    assert!(normalize_axis(state.x).abs() < 0.01, "center should normalize near 0.0");
+    assert!(
+        normalize_axis(state.x).abs() < 0.01,
+        "center should normalize near 0.0"
+    );
 }
 
 #[test]
@@ -222,7 +225,10 @@ fn test_fighterstick_buttons_all_set() {
     let report = make_fighterstick_report(0, 0, 0, 0xFF, 0x0F);
     let state = parse_fighterstick(&report).unwrap();
     assert_eq!(state.buttons, 0x0FFF, "all available buttons should be set");
-    assert_eq!(state.hats[0], 0, "hat should be center when high nibble is 0");
+    assert_eq!(
+        state.hats[0], 0,
+        "hat should be center when high nibble is 0"
+    );
 }
 
 #[test]
@@ -298,11 +304,20 @@ fn test_pro_pedals_toe_brake() {
 #[test]
 fn test_normalize_axis_midpoint() {
     let mid = normalize_axis(32768);
-    assert!(mid.abs() < 0.001, "midpoint should normalize near 0.0, got {mid}");
+    assert!(
+        mid.abs() < 0.001,
+        "midpoint should normalize near 0.0, got {mid}"
+    );
 }
 
 #[test]
 fn test_normalize_throttle_max() {
-    assert!((normalize_throttle(65535) - 1.0).abs() < 1e-4, "max throttle should normalize to 1.0");
-    assert!((normalize_throttle(0) - 0.0).abs() < 1e-4, "zero throttle should normalize to 0.0");
+    assert!(
+        (normalize_throttle(65535) - 1.0).abs() < 1e-4,
+        "max throttle should normalize to 1.0"
+    );
+    assert!(
+        (normalize_throttle(0) - 0.0).abs() < 1e-4,
+        "zero throttle should normalize to 0.0"
+    );
 }

@@ -1,0 +1,60 @@
+# WinWing SimApp Pro Flaps & Speed Brake (FSB) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing SimApp Pro FSB Panel replicates the Airbus A320/A330/A340
+# flap lever gate and speed brake lever assembly. Typically mounted below
+# the TCA Quadrant or SimApp Pro FCU for a complete centre-pedestal layout.
+# VID 0x4098: WinWing — community-confirmed.
+# PID 0xB611 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SimApp Pro Flaps & Speed Brake Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB611      # Community estimate — FSB panel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [flap_lever, speed_brake]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB611 is a community estimate. Confirm via lsusb or WinWing SimApp
+      Desktop Device Manager.
+  - id: FLAP_DETENTS
+    description: >
+      The flap lever has mechanical detents at 0/1/2/3/FULL positions matching
+      the Airbus ECAM flap settings. Use detent_map binding to translate raw
+      axis to discrete flap setting.
+  - id: SPEEDBRAKE_ARMED_GATE
+    description: >
+      The speed brake lever has a forward ARMED gate (spring-loaded detent)
+      and manual positions from ARMED to FULL. The ARMED detent sends a
+      discrete button event when crossed.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SimApp Pro FSB Panel — Airbus flap/speed brake levers. VID 0x4098 confirmed;
+    PID 0xB611 est. Pairs with simapp-pro-fcu.yaml for centre-pedestal build.
+    Last reviewed: 2026-06.

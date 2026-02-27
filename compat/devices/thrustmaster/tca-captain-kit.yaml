@@ -1,0 +1,61 @@
+# Thrustmaster TCA Captain Pack Airbus (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual combined-device entry for the TCA Captain Pack Airbus.
+# Includes the TCA Sidestick Airbus X (captain's side), TCA Quadrant Airbus
+# (throttle/flaps/spoiler levers), and T.Rudder Pedals. The three devices
+# enumerate independently on the USB bus.
+# Component manifests:
+#   - tca-sidestick-x.yaml      (TCA Sidestick Airbus X, captain)
+#   - tca-quadrant-airbus.yaml  (throttle quadrant with flap/spoiler)
+#   - t-rudder.yaml             (optional T.Rudder Pedals add-on)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Captain Pack Airbus (Virtual Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~    # Virtual bundle — see component manifests
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8          # Combined: sidestick (2) + quadrant (4) + rudder/brakes (2)
+    names: [x, y, throttle, flap, spoiler, toga, rudder, brake_diff]
+    resolution_bits: 12
+  buttons: 32         # Approx. 14 sidestick + 14 quadrant + 4 pedal
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      The TCA Captain Pack Airbus bundles the TCA Sidestick Airbus X,
+      TCA Quadrant Airbus, and optionally the T.Rudder Pedals. Each device
+      enumerates as a separate USB HID device. OpenFlight merges the axis
+      and button namespaces using the combined-device profile binding.
+  - id: CAPTAIN_SIDE
+    description: >
+      The Sidestick Airbus X is the captain (left-hand) configuration.
+      The copilot pack uses the TCA Sidestick Airbus Copilot variant
+      (tca-sidestick-airbus-copilot.yaml). Both share the same PCB.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle for the Thrustmaster TCA Captain Pack Airbus.
+    Components: tca-sidestick-x.yaml, tca-quadrant-airbus.yaml, t-rudder.yaml.
+    Step up from Officer Pack; includes T.Rudder pedals in the box.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# VKB Kosmosima Helicopter Grip Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VKB Kosmosima is a helicopter collective/cyclic grip designed for
+# rotary-wing simulation. Features a symmetrical layout suitable for both
+# left-hand collective and right-hand cyclic positions.
+# Compatible with Gunfighter Mk3/Mk4 bases and VKB's collective kit.
+# VID 0x231D confirmed: VKB-Sim.
+# PID 0x0140 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "VKB Kosmosima Helicopter Grip"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D       # VKB-Sim
+    product_id: 0x0140      # Community estimate — Kosmosima variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2                # Thumb hat/ministick axes; base provides main axes
+    names: [ministick_x, ministick_y]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0140 is a community estimate. Confirm with VKB Joystick Device
+      Config utility when connected to real hardware.
+  - id: HELICOPTER_LAYOUT
+    description: >
+      The Kosmosima grip features a helicopter-specific button layout with
+      paddle switches and a collective friction thumb wheel. Axis bindings
+      should map X/Y to cyclic and Z (base) to collective.
+  - id: DUAL_HAND_COMPATIBLE
+    description: >
+      Ambidextrous grip design; can be mounted on either left (collective)
+      or right (cyclic) side. Profile binding should reflect mount position.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Kosmosima helicopter grip. VID 0x231D confirmed; PID 0x0140 est.
+    Designed for rotary-wing (helicopter) simulation; pairs with Gunfighter
+    Mk3/Mk4 base or VKB collective kit.
+    Last reviewed: 2026-06.

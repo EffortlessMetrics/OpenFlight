@@ -1,0 +1,32 @@
+[package]
+name = "flight-hotas-logitech-wheel-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-hotas-logitech-wheel]
+path = ".."
+
+# Cargo automatically adds this profile for fuzz targets
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_g29"
+path = "fuzz_targets/fuzz_g29.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_g27"
+path = "fuzz_targets/fuzz_g27.rs"
+test = false
+doc = false
