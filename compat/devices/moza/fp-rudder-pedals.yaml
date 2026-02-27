@@ -1,0 +1,63 @@
+# Moza FP Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology / Moza, shared by all Moza products).
+# PID 0x000D community-reported for the FP rudder pedals; not yet confirmed via
+# linux-hardware.org or a primary USB descriptor capture. Verify with lsusb /
+# USBView on real hardware before enabling device matching.
+schema_version: "1"
+
+device:
+  name: "Moza FP Rudder Pedals"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E       # Moza (Gudsen Technology)
+    product_id: 0x000D      # FP Rudder Pedals — community-reported; verify with lsusb on hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: FP_PID_COMMUNITY_REPORTED
+    description: >
+      The FP Rudder Pedals PID (0x000D) is community-reported and has not been
+      independently confirmed via linux-hardware.org or a captured USB descriptor.
+      Do not use for production device matching until verified. Submit confirmed
+      PID via PR.
+  - id: RUDDER_CENTRED
+    description: >
+      The rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve and deadzone profiles for the
+      rudder versus the brake axes.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      Moza FP pedals use contactless Hall effect sensors on all three axes,
+      providing high resolution (16-bit reported) with no mechanical wear.
+      No rudder curve is applied in firmware; curve shaping should be done in
+      OpenFlight or the simulator.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID confirmed (0x346E, shared Moza/Gudsen vendor ID).
+    PID 0x000D community-reported; not hardware-confirmed. Do not use for
+    production device matching until verified with lsusb / USBView.
+    Hall effect sensors on all three axes; 16-bit resolution; 250 Hz polling.
+    Last reviewed: 2026-02.

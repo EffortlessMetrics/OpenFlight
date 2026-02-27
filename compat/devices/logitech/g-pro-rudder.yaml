@@ -1,0 +1,60 @@
+# Logitech G Pro Flight Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC263 — documented in linux-hardware.org
+# and the OpenHorizon/FSUIPC community USB ID tables. One of the most popular
+# rudder pedal sets for general aviation simulation.
+schema_version: "1"
+
+device:
+  name: "Logitech G Pro Flight Rudder Pedals"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (Logitech Inc.)
+    product_id: 0xC263  # G Pro Flight Rudder Pedals — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_left, toe_brake_right]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RUDDER_CENTRED
+    description: >
+      The rudder axis is centred (bipolar). Toe brakes are unipolar (0 = released,
+      max = fully depressed). Apply separate curve and deadzone profiles for the
+      rudder versus the brake axes.
+  - id: HARDWARE_TENSION_ADJUST
+    description: >
+      The rudder axis spring tension is adjustable via a physical screw on the
+      pedal baseplate. No software tension control is available. Set the hardware
+      tension before calibrating curves in OpenFlight.
+  - id: DIFFERENTIAL_TOE_BRAKES
+    description: >
+      Left and right toe brakes report independently on separate axes. Both must
+      be mapped separately in the simulator; they are not summed or linked in
+      the firmware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC263 confirmed from linux-hardware.org and community USB ID tables.
+    One of the most popular rudder pedal sets for GA simulation; bundled with the
+    Logitech G Pro Flight yoke as part of a complete cockpit setup.
+    12-bit axis resolution provides smooth differential braking.
+    Last validated: 2026-02.

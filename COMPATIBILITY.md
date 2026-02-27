@@ -31,6 +31,7 @@
 | Leo Bodnar USB Joystick | 0x1DD2 | 0x0009 | 2 | 8 | ✗ | 3 |
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | Logitech Force 3D Pro | 0x046D | 0xC286 | 6 | 12 | ✓ | 2 |
+| Logitech G Pro Flight Rudder Pedals | 0x046D | 0xC263 | 3 | 0 | ✗ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
 | Logitech X52 Pro Flight Control System | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |
 | Logitech X52 Flight Control System | 0x06A3 | 0x0255 | 7 | 28 | ✗ | 2 |
@@ -38,8 +39,13 @@
 | MFG Crosswind V1 Rudder Pedals | 0x1551 | 0x0001 | 3 | 0 | ✗ | 3 |
 | MFG Crosswind V2 Rudder Pedals | 0x1551 | 0x0002 | 3 | 0 | ✗ | 3 |
 | MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 |
+| Microsoft Sidewinder Force Feedback 2 | 0x045E | 0x001C | 3 | 8 | ✓ | 2 |
+| Microsoft Sidewinder Precision 2 | 0x045E | 0x0038 | 4 | 8 | ✗ | 2 |
 | Moza AB12 Force Feedback Base | 0x346E | 0x0006 | 4 | 16 | ✓ | 2 |
+| Moza AB9 Pro Force Feedback Base | 0x346E | 0x0008 | 4 | 16 | ✓ | 2 |
 | Moza AB9 Force Feedback Base | 0x346E | 0x0005 | 4 | 16 | ✓ | 2 |
+| Moza FC4 Flight Controller | 0x346E | 0x000C | 4 | 16 | ✓ | 2 |
+| Moza FP Rudder Pedals | 0x346E | 0x000D | 3 | 0 | ✗ | 2 |
 | RealSimGear G1000 MFD Bezel | 0x04D8 | 0xF235 | 0 | 60 | ✗ | 2 |
 | RealSimGear G1000 PFD Bezel | 0x04D8 | 0xF236 | 0 | 55 | ✗ | 2 |
 | RealSimGear G3X Touch Avionics Panel | 0x04D8 | 0xF237 | 0 | 40 | ✗ | 3 |
@@ -48,6 +54,7 @@
 | Saitek Pro Flight Cessna Rudder Pedals | 0x06A3 | 0x0765 | 3 | 0 | ✗ | 2 |
 | Saitek Pro Flight Cessna Trim Wheel | 0x06A3 | 0x0BD4 | 1 | 0 | ✗ | 2 |
 | Saitek Pro Flight Cessna Yoke | 0x06A3 | 0x0BD3 | 3 | 8 | ✗ | 2 |
+| Saitek Flight Instrument Panel | 0x06A3 | 0xA2AE | 0 | 7 | ✗ | 2 |
 | Saitek Flight Pro Combat Rudder | 0x06A3 | 0x0764 | 3 | 15 | ✗ | 2 |
 | Saitek Pro Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 32 | ✗ | 2 |
 | Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 |
@@ -143,13 +150,16 @@
 | WinWing Orion 2 F-16EX Stick | 0x4098 | 0xBEA8 | 2 | 20 | ✗ | 3 |
 | WinWing Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 | 2 | 20 | ✗ | 2 |
 | WinWing Orion 2 F/A-18C Throttle | 0x4098 | 0xBE62 | 6 | 50 | ✗ | 2 |
+| WinWing Orion 3 F-16EX Throttle | 0x4098 | 0xBD48 | 4 | 32 | ✗ | 2 |
 | WinWing SimApp Pro FCU + EFIS-L + EFIS-R | 0x4098 | 0xBA01 | 0 | 96 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-R | 0x4098 | 0xBC1E | 0 | 64 | ✗ | 3 |
 | WinWing SimApp Pro FCU | 0x4098 | 0xBB10 | 0 | 32 | ✗ | 3 |
 | WinWing SKYWALKER Metal Rudder Pedals | 0x4098 | 0xBEF0 | 3 | 0 | ✗ | 3 |
+| WinWing SKYWALKER Stick | 0x4098 | 0xBEF2 | 3 | 15 | ✗ | 2 |
 | WinWing SuperTaurus F-15EX Throttle | 0x4098 | 0xBD64 | 6 | 50 | ✗ | 3 |
 | WinWing TFRP Rudder Pedals | 0x4098 | 0xBE64 | 3 | 0 | ✗ | 2 |
+| WinWing TFRP-T Rudder Pedals | 0x4098 | 0xBE66 | 3 | 0 | ✗ | 2 |
 | WinWing UFC1 + HUD1 Panel | 0x4098 | 0xBEDE | 0 | 32 | ✗ | 3 |
 | WinWing URSA MINOR Fighter Flight Stick (Left) | 0x4098 | 0xBC29 | 2 | 16 | ✗ | 3 |
 | WinWing URSA MINOR Fighter Flight Stick (Right) | 0x4098 | 0xBC2A | 2 | 16 | ✗ | 3 |
