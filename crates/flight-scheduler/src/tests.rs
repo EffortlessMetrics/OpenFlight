@@ -293,6 +293,141 @@ fn test_250hz_interval_precision() {
     );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// New coverage tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Missed-tick counter increments when a tick arrives more than half a period late.
+///
+/// Setup: 1000 Hz scheduler (1 ms period).  Sleeping 3 ms between ticks guarantees
+/// `tick_start ≥ next_tick + period_ns/2`, which flips the `missed` flag.
+#[test]
+fn test_scheduler_missed_tick_increments_counter() {
+    let config = SchedulerConfig {
+        frequency_hz: 1000,
+        busy_spin_us: 0, // no busy-spin so the test finishes quickly
+        pll_gain: 0.001,
+        measure_jitter: false,
+    };
+    let mut scheduler = Scheduler::new(config);
+
+    // Warm-up: first tick against the freshly-initialised next_tick.
+    scheduler.wait_for_tick();
+
+    // Sleep well past next_tick + period_ns/2 (0.5 ms).
+    thread::sleep(Duration::from_millis(3));
+
+    // This tick arrives late – the scheduler must flag it as missed.
+    let result = scheduler.wait_for_tick();
+
+    let stats = scheduler.get_stats();
+    assert!(
+        result.missed,
+        "wait_for_tick should return missed=true for a late tick"
+    );
+    assert!(
+        stats.missed_ticks > 0,
+        "missed_tick counter should be at least 1, got {}",
+        stats.missed_ticks
+    );
+}
+
+/// Constructing schedulers at common RT frequencies completes without panic and
+/// produces sane initial statistics (zero ticks, zero misses).
+#[test]
+fn test_scheduler_config_at_common_frequencies() {
+    for &freq in &[50u32, 100, 250, 500, 1000] {
+        let config = SchedulerConfig {
+            frequency_hz: freq,
+            busy_spin_us: 0,
+            pll_gain: 0.001,
+            measure_jitter: false,
+        };
+        let scheduler = Scheduler::new(config);
+        let stats = scheduler.get_stats();
+        assert_eq!(
+            stats.total_ticks, 0,
+            "new scheduler at {freq} Hz should have 0 ticks"
+        );
+        assert_eq!(
+            stats.missed_ticks, 0,
+            "new scheduler at {freq} Hz should have 0 misses"
+        );
+    }
+}
+
+/// `reset_stats` zeroes tick and miss counters without affecting configuration.
+#[test]
+fn test_scheduler_reset_stats_clears_counters() {
+    let config = SchedulerConfig {
+        frequency_hz: 1000,
+        busy_spin_us: 0,
+        pll_gain: 0.001,
+        measure_jitter: false,
+    };
+    let mut scheduler = Scheduler::new(config);
+
+    // Run a few ticks to populate counters.
+    for _ in 0..5 {
+        scheduler.wait_for_tick();
+    }
+    let before = scheduler.get_stats();
+    assert!(before.total_ticks > 0, "should have ticks before reset");
+
+    scheduler.reset_stats();
+
+    let after = scheduler.get_stats();
+    assert_eq!(after.total_ticks, 0, "total_ticks must be zero after reset");
+    assert_eq!(after.missed_ticks, 0, "missed_ticks must be zero after reset");
+    assert_eq!(after.miss_rate, 0.0, "miss_rate must be 0.0 after reset");
+}
+
+/// Dropping a `Scheduler` instance does not panic (RAII cleanup).
+#[test]
+fn test_scheduler_drop_no_panic() {
+    let config = SchedulerConfig::default();
+    let scheduler = Scheduler::new(config);
+    drop(scheduler); // must not panic
+}
+
+/// PLL state resets to nominal period when a zero error is applied repeatedly.
+#[test]
+fn test_pll_zero_error_holds_nominal_period() {
+    let nominal = 4_000_000.0f64; // 4 ms (250 Hz)
+    let mut pll = Pll::new(0.001, nominal);
+
+    for _ in 0..100 {
+        let corrected = pll.update(0.0);
+        assert!(
+            (corrected - nominal).abs() < 1e-3,
+            "PLL should hold nominal period under zero error, got {corrected}"
+        );
+    }
+    assert!(
+        pll.period_correction().abs() < 1e-3,
+        "phase correction should be near zero under zero error"
+    );
+}
+
+/// `WindowsRtThread::new` does not panic on Windows (MMCSS may or may not succeed –
+/// graceful degradation is explicitly required by the implementation).
+#[test]
+#[cfg(windows)]
+fn test_windows_rt_thread_setup_no_panic() {
+    use crate::windows::WindowsRtThread;
+    // Construction must succeed regardless of whether MMCSS registration works.
+    let result = WindowsRtThread::new("Games");
+    assert!(
+        result.is_ok(),
+        "WindowsRtThread should succeed (with graceful degradation): {:?}",
+        result.err()
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Extended / ignored tests
+// ─────────────────────────────────────────────────────────────────────────────
+
 /// Integration test that runs scheduler for extended period
 #[test]
 #[ignore] // Ignore by default as it takes time
