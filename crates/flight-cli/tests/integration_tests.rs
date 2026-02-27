@@ -232,3 +232,182 @@ fn test_verbose_flag() {
     let json_result: Result<serde_json::Value, _> = serde_json::from_str(json_line);
     assert!(json_result.is_ok());
 }
+
+#[test]
+fn test_version_command() {
+    let output = run_cli_command(&["--version"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let version_str = stdout.trim();
+
+    // Verify the output contains a semver X.Y.Z pattern
+    let has_semver = version_str.split_whitespace().any(|word| {
+        let parts: Vec<&str> = word.split('.').collect();
+        parts.len() == 3 && parts.iter().all(|p| p.parse::<u32>().is_ok())
+    });
+    assert!(
+        has_semver,
+        "Version output should contain semver X.Y.Z pattern: {}",
+        version_str
+    );
+}
+
+#[test]
+fn test_status_command_no_daemon() {
+    let output = run_cli_command(&["status"]);
+
+    // Should fail gracefully when daemon is not running — not panic
+    assert!(
+        !output.status.success(),
+        "status should fail when daemon is not running"
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!stderr.is_empty(), "stderr should contain an error message");
+    // Exit code 101 would indicate a Rust panic
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "status should not panic: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_devices_list_no_daemon() {
+    let output = run_cli_command(&["devices", "list"]);
+
+    // Should fail gracefully when daemon is not running — not panic
+    assert!(
+        !output.status.success(),
+        "devices list should fail when daemon is not running"
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!stderr.is_empty(), "stderr should contain an error message");
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "devices list should not panic: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_profile_list_no_daemon() {
+    // "profile list" is not a recognized subcommand; verify clap rejects it gracefully (no panic)
+    let output = run_cli_command(&["profile", "list"]);
+
+    assert!(
+        !output.status.success(),
+        "unrecognized profile subcommand should fail"
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!stderr.is_empty(), "stderr should contain an error message");
+    // Exit code 101 would indicate a Rust panic
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "profile list should not panic: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_json_flag_help() {
+    // --output json combined with --help should still show help normally
+    let output = run_cli_command(&["--output", "json", "--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("Flight Hub command line interface"));
+}
+
+#[test]
+fn test_info_command() {
+    // info requires daemon; verify it fails gracefully with a human-readable error
+    let output = run_cli_command(&["info"]);
+
+    assert!(
+        !output.status.success(),
+        "info should fail when daemon is not running"
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    // Human-format error should contain "Error:" prefix
+    assert!(
+        stderr.lines().any(|l| l.starts_with("Error:")),
+        "stderr should contain an 'Error:' line: {}",
+        stderr
+    );
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "info should not panic: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_diag_command_help() {
+    // Test that the record subcommand help shows the expected flags
+    let output = run_cli_command(&["diag", "record", "--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("Start recording diagnostics"));
+    assert!(stdout.contains("--output"));
+    assert!(stdout.contains("--duration"));
+}
+
+#[test]
+fn test_status_json_error_format() {
+    // Verify that status with JSON output returns well-formed JSON when daemon is unavailable
+    let output = run_cli_command(&["--output", "json", "status"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+
+    let json: serde_json::Value = serde_json::from_str(json_line)
+        .unwrap_or_else(|e| panic!("Invalid JSON in stderr: {} — {}", e, json_line));
+
+    assert_eq!(json["success"], false);
+    assert!(
+        json["error"].is_string(),
+        "JSON error field should be a string"
+    );
+    assert!(
+        json["error_code"].is_string(),
+        "JSON error_code field should be a string"
+    );
+}
+
+#[test]
+fn test_devices_list_json_error_format() {
+    // Verify that devices list with JSON output returns well-formed JSON when daemon is unavailable
+    let output = run_cli_command(&["--output", "json", "devices", "list"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+
+    let json: serde_json::Value = serde_json::from_str(json_line)
+        .unwrap_or_else(|e| panic!("Invalid JSON in stderr: {} — {}", e, json_line));
+
+    assert_eq!(json["success"], false);
+    assert!(
+        json["error"].is_string(),
+        "JSON error field should be a string"
+    );
+    assert!(
+        json["error_code"].is_string(),
+        "JSON error_code field should be a string"
+    );
+}
