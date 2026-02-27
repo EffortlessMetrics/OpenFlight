@@ -65,6 +65,7 @@ pub mod trim_hil_tests;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
+pub mod ramp;
 pub mod xinput_rumble;
 
 #[cfg(test)]
@@ -94,6 +95,7 @@ pub use trim_hil_tests::*;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
+pub use ramp::*;
 pub use xinput_rumble::*;
 
 // Re-export EmergencyStopReason from blackbox module

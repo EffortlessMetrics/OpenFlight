@@ -23,6 +23,7 @@ pub mod e2e_test;
 pub mod fixtures;
 pub mod integration_test;
 pub mod publisher;
+pub mod replay;
 pub mod snapshot;
 pub mod types;
 
@@ -49,3 +50,4 @@ pub use types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearPosition, GearState, Mach, Percentage,
     SimId, ValidatedAngle, ValidatedSpeed,
 };
+pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
