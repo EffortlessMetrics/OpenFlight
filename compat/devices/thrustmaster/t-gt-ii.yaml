@@ -1,0 +1,63 @@
+# Thrustmaster T-GT II Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster) confirmed.
+# PID 0xB679 sourced from community USB captures; distinct from the original
+# T-GT (PID 0xB66F, see t-gt.yaml). The T-GT II is the second-generation
+# Gran Turismo licensed brushless-servo wheel with improved FFB resolution
+# and updated electronics. Functionally identical to the T300 RS GT in
+# DirectInput mode. Includes T3PA-GT3 pedal set.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T-GT II Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB679      # Community-reported PID; confirm with SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 25
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB679 is from community USB captures. Confirm via SDL2 gamecontrollerdb
+      or linux-hardware.org before deployment.
+  - id: DISTINCT_FROM_T_GT
+    description: >
+      The T-GT II (PID 0xB679) is distinct from the original T-GT (PID 0xB66F,
+      see t-gt.yaml). T-GT II uses updated firmware and electronics; the
+      DirectInput FFB effect set is identical.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (1080° rotation); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Same axis layout as the T-GT.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T-GT II — second-gen GT licensed brushless-servo wheel.
+    VID 0x044F confirmed; PID 0xB679 community-reported. See t-gt.yaml for
+    the first-generation T-GT. Last reviewed: 2026-06.

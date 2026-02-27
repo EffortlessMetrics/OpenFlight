@@ -10,8 +10,14 @@
 //! - axis inversion via `AxisFrame::transform(-1.0, 0.0)`
 //! - output is always clamped to [-1.0, 1.0] via `AxisFrame::clamp`
 //! - combined deadzone → curve pipeline: order of operations and sign preservation
+//! - axis combining: differential and average
+//! - axis splitting: bipolar → two unipolar channels
 
-use flight_axis::{AxisFrame, CurveNode, DeadzoneNode, Node, PipelineBuilder};
+use flight_axis::{
+    AxisFrame, CurveNode, DeadzoneNode, Node, PipelineBuilder, combine_average,
+    combine_differential, split_bipolar,
+};
+use proptest::prelude::*;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Curve shape
@@ -258,4 +264,108 @@ fn test_combined_deadzone_expo_sign_preservation() {
         neg_frame.out < 0.0,
         "negative input must give negative output"
     );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Axis combining
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// combine_differential: full left, no right → positive full deflection.
+#[test]
+fn test_combine_differential_full_left() {
+    assert_eq!(combine_differential(1.0, 0.0), 1.0);
+}
+
+/// combine_differential: no left, full right → negative full deflection.
+#[test]
+fn test_combine_differential_full_right() {
+    assert_eq!(combine_differential(0.0, 1.0), -1.0);
+}
+
+/// combine_differential: equal pedals → centred output.
+#[test]
+fn test_combine_differential_equal_is_zero() {
+    assert_eq!(combine_differential(0.5, 0.5), 0.0);
+    assert_eq!(combine_differential(0.0, 0.0), 0.0);
+    assert_eq!(combine_differential(1.0, 1.0), 0.0);
+}
+
+/// combine_differential: out-of-range inputs are clamped to [-1.0, 1.0].
+#[test]
+fn test_combine_differential_clamped() {
+    assert_eq!(combine_differential(2.0, 0.0), 1.0);
+    assert_eq!(combine_differential(0.0, 2.0), -1.0);
+}
+
+/// combine_average: two equal axes → same value.
+#[test]
+fn test_combine_average_equal_inputs() {
+    assert!((combine_average(0.6, 0.6) - 0.6).abs() < 1e-6);
+    assert!((combine_average(-0.4, -0.4) - (-0.4)).abs() < 1e-6);
+}
+
+/// combine_average: max + min → zero.
+#[test]
+fn test_combine_average_max_min_is_zero() {
+    assert_eq!(combine_average(1.0, -1.0), 0.0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Axis splitting
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// split_bipolar: full positive → positive channel full, negative channel zero.
+#[test]
+fn test_split_bipolar_positive_one() {
+    assert_eq!(split_bipolar(1.0), (1.0, 0.0));
+}
+
+/// split_bipolar: full negative → positive channel zero, negative channel full.
+#[test]
+fn test_split_bipolar_negative_one() {
+    assert_eq!(split_bipolar(-1.0), (0.0, 1.0));
+}
+
+/// split_bipolar: centre → both channels zero.
+#[test]
+fn test_split_bipolar_zero() {
+    assert_eq!(split_bipolar(0.0), (0.0, 0.0));
+}
+
+/// split_bipolar: half positive → positive channel half, negative channel zero.
+#[test]
+fn test_split_bipolar_half_positive() {
+    let (pos, neg) = split_bipolar(0.5);
+    assert!((pos - 0.5).abs() < 1e-6, "pos={pos}");
+    assert_eq!(neg, 0.0);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+proptest! {
+    /// combine_differential output is always in [-1.0, 1.0] for any unipolar inputs.
+    #[test]
+    fn prop_combine_differential_bounded(
+        left  in 0.0f32..=1.0f32,
+        right in 0.0f32..=1.0f32,
+    ) {
+        let out = combine_differential(left, right);
+        prop_assert!(
+            out >= -1.0 && out <= 1.0,
+            "combine_differential({left}, {right}) = {out} out of [-1, 1]"
+        );
+    }
+
+    /// split_bipolar: sum of both channels equals |axis| for any bipolar input.
+    #[test]
+    fn prop_split_bipolar_sum_equals_abs(axis in -1.0f32..=1.0f32) {
+        let (pos, neg) = split_bipolar(axis);
+        let sum = pos + neg;
+        prop_assert!(
+            (sum - axis.abs()).abs() < 1e-6,
+            "split_bipolar({axis}): pos={pos} + neg={neg} = {sum} ≠ |axis|={}", axis.abs()
+        );
+    }
 }

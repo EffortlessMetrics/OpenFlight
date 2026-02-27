@@ -1,0 +1,59 @@
+# Fanatec Podium Hub
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0050 is a community estimate for the Fanatec Podium Hub.
+# The Podium Hub is a universal wheel rim adapter/hub that connects non-
+# Fanatec steering wheel rims (e.g. real Momo, ORECORSE, or aftermarket rims)
+# to Fanatec Podium DD series wheel bases via the QR1 Quick Release system.
+# Includes a 6-button integrated button plate; no steering axis (from the base).
+
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Hub"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0050   # Community estimate — Podium Hub
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6              # Integrated hub button plate
+  hats: 0
+  force_feedback: false   # FFB from the Podium DD base
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0050 is a community estimate for the Podium Hub adapter. The hub
+      inputs relay through the Fanatec Podium DD1/DD2 base. Confirm with lsusb.
+  - id: THIRD_PARTY_WHEEL_ADAPTER
+    description: >
+      The Podium Hub allows mounting of third-party or real racing steering
+      wheel rims. Only the hub's own 6-button plate reports via HID; the
+      attached rim's buttons (if any) are not electrically connected.
+  - id: PODIUM_BASE_REQUIRED
+    description: >
+      Designed for Podium DD1 (podium-dd1.yaml) and DD2 (podium-dd2.yaml).
+      Not compatible with CSL DD or lower-tier bases.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium Hub — universal wheel rim adapter for Podium DD series.
+    VID 0x0EB7 confirmed; PID 0x0050 community estimate. Last reviewed: 2026-06.

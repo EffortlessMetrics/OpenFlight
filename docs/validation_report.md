@@ -14,20 +14,18 @@
 
 ## Summary
 
-- **Total Checks:** 15
-- **Passed:** 15
-- **Failed:** 0
+- **Total Checks:** 13
+- **Passed:** 9
+- **Failed:** 4
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 971, tests: 971 (100.0%), gherkin: 752 (77.4%), microcrates fully covered: 65 / 73 (89.0%), complete: 597, needs_gherkin: 0, needs_tests: 0, draft: 374, incomplete: 0 |
-| Schema Validation | ✅ Pass | - |
-| Cross-Reference Validation | ✅ Pass | - |
-| Formatting | ✅ Pass | - |
-| Clippy | ✅ Pass | - |
-| Unit Tests | ✅ Pass | - |
+| BDD Feature Status | ❌ Fail | Failed to parse spec ledger YAML |
+| Schema Validation | ❌ Fail | Schema validation failed with 1 error(s) |
+| Cross-Reference Validation | ❌ Fail | Failed to parse spec ledger |
+| Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
 | QG-SANITY-GATE | ✅ Pass | - |

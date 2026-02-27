@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 971 |
-| ACs with tests | 971 |
-| ACs with Gherkin | 752 |
-| ACs with both tests + Gherkin | 752 |
+| Total AC | 1014 |
+| ACs with tests | 1014 |
+| ACs with Gherkin | 795 |
+| ACs with both tests + Gherkin | 795 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 374 |
+| Draft | 417 |
 | Incomplete | 0 |
 | Microcrates | 73 |
 | Microcrates with tests | 65 (89.0%) |
 | Microcrates with Gherkin | 65 (89.0%) |
 | Microcrates fully covered | 65 (89.0%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 77.4% |
-| Test + Gherkin coverage | 77.4% |
+| Gherkin coverage | 78.4% |
+| Test + Gherkin coverage | 78.4% |
 
 ## BDD Microcrate Matrix
 
@@ -1084,3 +1084,46 @@
 | REQ-164 | AC-164.4 | The health report SHALL indicate Tier 3 community support for OpenHornet devices when a health report is requested | specs/features/req_164_openhornet_diy.feature:23 | 1 | ⚪ Draft |
 | REQ-164 | AC-164.5 | A device with the OpenHornet VID but an unrecognised PID SHALL fall back to generic HID parsing without a fatal error | specs/features/req_164_openhornet_diy.feature:29 | 1 | ⚪ Draft |
 | REQ-164 | AC-164.6 | OpenHornet panel button events SHALL be forwarded to the DCS export adapter when the DCS export adapter is active | specs/features/req_164_openhornet_diy.feature:35 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.1 | Throttle 1 SHALL map to axis 0, throttle 2 to axis 1, throttle 3 to axis 2, and throttle 4 to axis 3 when a multi-engine profile defining four throttle axes is loaded | specs/features/req_165_multi_engine_profiles.feature:5 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.2 | The engine start sequence event SHALL be fired for each engine in the defined order when the engine start sequence button mapping is triggered | specs/features/req_165_multi_engine_profiles.feature:11 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.3 | Only the targeted engine mixture SHALL change while other engines remain unaffected when a single per-engine mixture lever is adjusted in a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:17 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.4 | Only the targeted engine RPM SHALL change while other engines remain unaffected when a single prop RPM lever is adjusted in a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:23 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.5 | The idle detent event SHALL be fired for a throttle lever when it reaches the idle detent position in a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:29 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.6 | The TOGA mode event SHALL be activated when all throttle levers are pushed to the full forward detent in a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:35 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.7 | The axis output SHALL represent reverse thrust in the defined reverse range when a throttle lever is moved below the idle detent in a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:41 | 1 | ⚪ Draft |
+| REQ-165 | AC-165.8 | Profile validation SHALL fail with a missing-axis error when any of the four required engine axes is absent from a multi-engine profile | specs/features/req_165_multi_engine_profiles.feature:47 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.1 | The combined rudder axis SHALL output the differential value of two pedal axes when a profile maps two physical pedal axes to a combined differential rudder | specs/features/req_166_axis_combine_split.feature:5 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.2 | Both virtual engine lever axes SHALL track the physical axis position independently when a profile splits one physical throttle axis into two virtual engine levers | specs/features/req_166_axis_combine_split.feature:11 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.3 | The combined axis output SHALL equal (L - R) / 2 when a combine operation is applied to two pedal axes with positions L and R | specs/features/req_166_axis_combine_split.feature:17 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.4 | The combined axis output SHALL be zero within the deadzone when both pedals are at their hardware neutral positions | specs/features/req_166_axis_combine_split.feature:23 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.5 | Axis combine and split mappings SHALL be applied without requiring a code change or restart when defined in a profile YAML | specs/features/req_166_axis_combine_split.feature:29 | 1 | ⚪ Draft |
+| REQ-166 | AC-166.6 | The combined axis output SHALL be clamped to the range [-1.0, 1.0] when either pedal is at its physical extreme | specs/features/req_166_axis_combine_split.feature:35 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.1 | The corresponding aircraft profile SHALL be loaded and active within 100 ms when a new aircraft is detected | specs/features/req_167_profile_hot_swap.feature:5 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.2 | No RT tick SHALL be missed and no axis output glitch SHALL occur during a profile swap while the RT spine is running at 250 Hz | specs/features/req_167_profile_hot_swap.feature:11 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.3 | The old profile SHALL be discarded from memory after a profile swap has completed successfully and the new profile is confirmed active | specs/features/req_167_profile_hot_swap.feature:17 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.4 | The system SHALL fall back to the default profile and emit a validation-failure event when a new profile that fails validation is loaded | specs/features/req_167_profile_hot_swap.feature:23 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.5 | A profile-changed event SHALL be published to the event bus with the new profile identifier when a profile swap completes | specs/features/req_167_profile_hot_swap.feature:29 | 1 | ⚪ Draft |
+| REQ-167 | AC-167.6 | The UI SHALL receive a profile-changed notification over IPC when a profile swap completes | specs/features/req_167_profile_hot_swap.feature:35 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.1 | A connected joystick SHALL be detected and enumerated within 2 seconds when connected via USB while the HID subsystem is running | specs/features/req_168_device_hot_plug.feature:5 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.2 | The matching device profile SHALL be automatically assigned when a device with a known VID/PID is connected | specs/features/req_168_device_hot_plug.feature:11 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.3 | The device SHALL be removed from the active device list without error when an active device is unplugged | specs/features/req_168_device_hot_plug.feature:17 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.4 | The axis output SHALL transition to the neutral value immediately when the source device is unplugged | specs/features/req_168_device_hot_plug.feature:23 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.5 | A previously unplugged device SHALL be re-initialized and become active without requiring a service restart when plugged back in | specs/features/req_168_device_hot_plug.feature:29 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.6 | A re-connected device SHALL be re-associated with its last active profile when plugged back in after a prior session | specs/features/req_168_device_hot_plug.feature:35 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.7 | The system SHALL remain stable with no memory leaks or errors after five successive plug and unplug cycles of the same device | specs/features/req_168_device_hot_plug.feature:41 | 1 | ⚪ Draft |
+| REQ-168 | AC-168.8 | A hot-plug event SHALL be published to all connected IPC clients when a device is connected or disconnected | specs/features/req_168_device_hot_plug.feature:47 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.1 | The output force magnitude SHALL be clamped to the configured maximum when a force effect requests a magnitude above the limit | specs/features/req_169_ffb_envelope.feature:5 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.2 | The force change rate SHALL be clamped to the configured safe slew rate limit when a force effect requests a change exceeding the maximum slew rate | specs/features/req_169_ffb_envelope.feature:11 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.3 | The maximum allowable force magnitude SHALL be reduced according to the thermal derating curve when the device temperature exceeds the configured thermal threshold | specs/features/req_169_ffb_envelope.feature:17 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.4 | Envelope limits SHALL be enforced correctly at each of the four axis extreme corner positions when force effects are applied | specs/features/req_169_ffb_envelope.feature:23 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.5 | The force output SHALL immediately drop to zero when an FFB device is disconnected while outputting force | specs/features/req_169_ffb_envelope.feature:29 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.6 | Force effects SHALL be re-enabled and envelope limits re-applied when an FFB device is re-initialized after reconnection | specs/features/req_169_ffb_envelope.feature:35 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.7 | An envelope-violation event SHALL be logged with the requested and clamped values when a force effect violates the configured envelope limits | specs/features/req_169_ffb_envelope.feature:41 | 1 | ⚪ Draft |
+| REQ-169 | AC-169.8 | All force effects SHALL be cancelled and the output force SHALL be zero within one RT tick when the emergency stop command is issued | specs/features/req_169_ffb_envelope.feature:47 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.1 | A diagnostic bundle SHALL contain a snapshot of the currently active profile when exported | specs/features/req_170_diagnostic_bundle.feature:5 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.2 | A diagnostic bundle SHALL contain the list of all connected devices with their identifiers and status when exported | specs/features/req_170_diagnostic_bundle.feature:11 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.3 | A diagnostic bundle SHALL contain at most the last 1000 trace events in chronological order when exported | specs/features/req_170_diagnostic_bundle.feature:17 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.4 | A diagnostic bundle SHALL contain the results of the most recent health checks for all subsystems when exported | specs/features/req_170_diagnostic_bundle.feature:23 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.5 | A diagnostic bundle SHALL be written as a valid ZIP archive to the specified output path when export is requested | specs/features/req_170_diagnostic_bundle.feature:29 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.6 | The bundle timestamp SHALL be formatted as a valid ISO 8601 date-time string when the bundle metadata is inspected | specs/features/req_170_diagnostic_bundle.feature:35 | 1 | ⚪ Draft |
+| REQ-170 | AC-170.7 | A diagnostic bundle SHALL be automatically exported before safe-mode isolation takes effect when the system enters safe mode due to a fault | specs/features/req_170_diagnostic_bundle.feature:41 | 1 | ⚪ Draft |

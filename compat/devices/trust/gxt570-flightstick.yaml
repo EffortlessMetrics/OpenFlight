@@ -1,0 +1,56 @@
+# Trust GXT 570 Vigil Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Trust GXT 570 Vigil is a budget USB flight stick designed for entry-level
+# flight simulation. Features a twist-rudder axis, throttle slider, and
+# illuminated buttons. Part of Trust's GXT gaming peripheral line.
+# VID 0x145F confirmed: Trust International B.V.
+# PID 0x0238 is a community estimate — confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Trust GXT 570 Vigil Flight Stick"
+  vendor: "Trust International B.V."
+  usb:
+    vendor_id: 0x145F       # Trust International B.V. (confirmed)
+    product_id: 0x0238      # Community estimate — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, z]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0238 is a community estimate for the GXT 570. Trust's GXT product
+      line uses VID 0x145F (confirmed). Verify PID with lsusb on real hardware.
+  - id: TWIST_RUDDER
+    description: "Twist grip provides Rz (rudder) axis. Z axis is the throttle slider."
+  - id: ENTRY_LEVEL
+    description: >
+      Budget entry-level flight stick. Axis linearity and precision are limited.
+      Apply dead-zone and smoothing corrections in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Trust GXT 570 Vigil budget flight stick. VID 0x145F (Trust) confirmed;
+    PID 0x0238 community estimate. See gxt540-flightstick.yaml for related model.
+    Last reviewed: 2026-06.

@@ -1,0 +1,60 @@
+# Thrustmaster Ferrari 458 Italia Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster) confirmed.
+# PID 0xB65D confirmed from SDL2 gamecontrollerdb community entry.
+# The Ferrari 458 Italia Racing Wheel is the PC/Xbox 360 variant of the
+# Ferrari 458 family. Distinct from the Ferrari 458 Spider (Xbox One edition,
+# PID 0xB660, see ferrari-458-spider.yaml). The Italia uses a different
+# PCB revision with a 270° steering range. No force feedback.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Ferrari 458 Italia Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB65D      # Ferrari 458 Italia — confirmed from SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 11
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DISTINCT_FROM_SPIDER
+    description: >
+      The Ferrari 458 Italia (PID 0xB65D) is the Xbox 360 / PC edition.
+      The Ferrari 458 Spider (PID 0xB660, ferrari-458-spider.yaml) is the
+      Xbox One edition. Both have no force feedback; elastomer centering only.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (270° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). No FFB motor; passive elastomer centering.
+  - id: XBOX360_COMPATIBILITY
+    description: >
+      Designed for Xbox 360 / PC. Presents as a standard HID joystick in
+      DirectInput mode on PC.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Ferrari 458 Italia. VID 0x044F / PID 0xB65D confirmed from
+    SDL2 gamecontrollerdb. Xbox 360 / PC edition. Distinct from the Spider
+    (xbox-one, PID 0xB660). Last reviewed: 2026-06.

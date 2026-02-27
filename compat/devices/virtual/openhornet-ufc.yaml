@@ -1,0 +1,63 @@
+# OpenHornet UFC (Up-Front Controller) — DIY F/A-18C Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenHornet is a community open-source F/A-18C full-scale cockpit project.
+# The UFC (Up-Front Controller) is the central comms/navigation entry panel
+# on the glareshield, providing 20 keypads, 5 option selectors (OSBs),
+# scratchpad display, and IP/IFF/TACAN/ILS controls via custom Arduino firmware.
+# VID/PID board-dependent (Arduino SA VID 0x2341 is common).
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet UFC (Up-Front Controller)"
+  vendor: "OpenHornet Project (DIY)"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder — board-dependent)
+    product_id: 0x8041  # OpenHornet UFC firmware — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28             # 20 keypad + 5 OSB + IFF/TACAN/ILS mode selectors
+  hats: 0
+  encoders: 3             # COM1/COM2 volume, backup IFF code
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 12            # Scratchpad + option display windows
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      OpenHornet UFC uses various Arduino-compatible boards. VID 0x2341
+      (Arduino SA) is a common placeholder. Actual VID/PID depends on
+      firmware build. Match by USB string descriptor "OpenHornet UFC".
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      The UFC includes 7-segment scratchpad and option windows. Display
+      state is driven by HID output reports from DCS-BIOS or OpenFlight.
+  - id: MULTI_PANEL_SYSTEM
+    description: >
+      A full OpenHornet pit includes 10–20 separate USB panels. Each panel
+      enumerates independently. See openhornet-console.yaml for the console panel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet UFC open-source F/A-18C DIY panel. Board/firmware dependent VID/PID.
+    See github.com/OpenHornet. Companion: openhornet-console.yaml, openhornet-ifei.yaml.
+    Last reviewed: 2026-06.

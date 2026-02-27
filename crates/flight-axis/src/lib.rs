@@ -74,6 +74,7 @@
 mod proptest_tests;
 
 pub mod blackbox;
+pub mod combine;
 pub mod compiler;
 pub mod conflict;
 pub mod counters;
@@ -83,6 +84,7 @@ pub mod nodes;
 pub mod pipeline;
 
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
+pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
 pub use conflict::{
     ConflictDetectorConfig, ConflictMetadata, ConflictResolution, ConflictSeverity, ConflictType,

@@ -1,0 +1,62 @@
+# VKB Gladiator EVO Space Combat Grip Premium
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKB-Sim (VKB Game Controllers LLC).
+# PID 0x0208 is a community estimate for the EVO SCG Premium variant.
+# The Gladiator EVO SCG Premium is an enhanced Space Combat Grip version
+# with additional hat switches, a scroll wheel, and a side-mounted
+# mode-select lever compared to the base SCG (gladiator-evo-scg.yaml).
+# Designed for space combat games but popular for DCS and IL-2.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO Space Combat Grip Premium"
+  vendor: "VKB-Sim"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0208   # Community estimate — EVO SCG Premium
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0208 is a community estimate. Confirm with lsusb or VKBDevCfg.
+  - id: DISTINCT_FROM_SCG_BASE
+    description: >
+      The EVO SCG Premium adds a scroll wheel encoder and side mode-select
+      lever over the base EVO SCG (gladiator-evo-scg.yaml). Hat count is
+      higher (3 vs 1 on the base). Total button count increases accordingly.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping is configurable via VKBDevCfg. Align with OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator EVO SCG Premium. VID 0x231D confirmed; PID 0x0208 community
+    estimate. See gladiator-evo-scg.yaml (base) and gladiator-evo-scg-left.yaml.
+    Last reviewed: 2026-06.
+
+driver:
+  type: vkb_devcfg
+  notes: VKBDevCfg software recommended for calibration and axis configuration.

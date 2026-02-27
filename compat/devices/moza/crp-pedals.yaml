@@ -1,0 +1,58 @@
+# Moza CRP Pedal Set
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology / Moza).
+# PID 0x0022 is a community estimate for the Moza CRP Pedals — confirm with lsusb.
+# The Moza CRP (Compact Racing Pedal) set is a 3-pedal sim racing unit
+# with adjustable brake resistance (elastomer spring). Hall-effect sensors
+# on all three pedals. In flight sim setups, the three pedals are occasionally
+# mapped to rudder/left-toe-brake/right-toe-brake or throttle/pitch trim/rudder.
+
+schema_version: "1"
+
+device:
+  name: "Moza CRP Pedal Set"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology) (confirmed)
+    product_id: 0x0022    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0022 is a community estimate for the CRP pedal set.
+      Confirm from lsusb or Moza Pit House software capture.
+  - id: HALL_EFFECT_PEDALS
+    description: >
+      All three pedals use hall-effect magnetic sensors. Provides contactless
+      operation with repeatable linearity.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      For flight sim use: throttle axis → rudder (left), brake axis → rudder (right),
+      clutch axis → differential rudder. Alternatively map to toe brakes + pedal input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza CRP compact pedal set. VID 0x346E confirmed; PID 0x0022 community
+    estimate. Hall-effect sensors. Last reviewed: 2026-06.

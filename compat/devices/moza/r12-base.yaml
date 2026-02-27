@@ -1,0 +1,60 @@
+# Moza R12 Direct Drive Racing Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology, shared by all Moza products).
+# PID 0x0008 is a community estimate for the Moza R12 — confirm with lsusb.
+# The Moza R12 is a direct-drive sim racing wheel base with 12 Nm of peak
+# torque, positioned between the R9 (9 Nm) and R16 (16 Nm) in Moza's lineup.
+# Uses Moza's proprietary raw torque command protocol identical to the R9.
+
+schema_version: "1"
+
+device:
+  name: "Moza R12 Direct Drive Base"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology) (confirmed)
+    product_id: 0x0008    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 12.0   # R12 rated peak (Nm)
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0008 is a community estimate. Confirm from lsusb capture.
+  - id: TORQUE_ONLY
+    description: >
+      Moza R12 accepts raw torque commands (report ID 0x20) rather than
+      standard DirectInput effect types. Same protocol as the R9 and R16.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The R12 base exposes only the rotation axis. A wheel rim with Moza
+      Quick Release adds button inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza R12: 12 Nm direct-drive base. Between R9 (9 Nm) and R16 (16 Nm).
+    VID 0x346E = Moza. PID 0x0008 community-estimated. Last reviewed: 2026-06.

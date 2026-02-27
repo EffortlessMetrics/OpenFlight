@@ -1,0 +1,65 @@
+# VIRPIL VPC WarBRD-S Joystick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x44CC is a community estimate for the WarBRD-S variant.
+# The WarBRD-S is an extended/special edition of the VIRPIL WarBRD gimbal
+# base with updated internals and improved spring centering. Distinct from
+# the original WarBRD (vpc-warbrd-original.yaml, PID 0x40CC) and WarBRD-D
+# (warbrd-base.yaml, PID 0x43F5). HID report format is expected to match
+# the WarBRD family 15-byte layout.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC WarBRD-S Joystick Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x44CC   # Community estimate — WarBRD-S variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x44CC is a community estimate for the WarBRD-S. Confirm with lsusb
+      or VIRPIL VPC Configurator on real hardware.
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; others = center.
+  - id: SHARED_REPORT_FORMAT_WARBRD
+    description: >
+      Expected to share the 15-byte HID report format with the original WarBRD
+      (0x40CC) and WarBRD-D (0x43F5). The same parser handles all WarBRD variants.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-S. VID 0x3344 confirmed; PID 0x44CC community estimate.
+    See vpc-warbrd-original.yaml (original) and warbrd-base.yaml (WarBRD-D).
+    Last reviewed: 2026-06.

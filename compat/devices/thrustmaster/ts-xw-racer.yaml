@@ -1,0 +1,60 @@
+# Thrustmaster TS-XW Racer Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster) confirmed.
+# PID 0xB676 sourced from SDL2 community gamecontrollerdb and USB captures.
+# The TS-XW Racer is Thrustmaster's sim-focused servo-belt drive wheel
+# (Xbox One/PC), positioned above the T300 RS. Uses a brushless servo
+# for sharper FFB response. Compatible with the T-LCM and T3PA-Pro pedal sets.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TS-XW Racer Racing Wheel"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB676      # SDL2 community-confirmed — TS-XW Racer
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 25
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper, inertia, friction]
+    max_update_rate_hz: 500
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB676 sourced from SDL2 community gamecontrollerdb. Confirm with
+      lsusb on real hardware before deployment.
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering wheel (1080° range); Z = accelerator (unipolar);
+      Rz = brake (unipolar). Rx and Ry come from T-LCM/T3PA pedal set.
+  - id: XBOX_PC_COMPATIBILITY
+    description: >
+      Designed for Xbox One and PC. Presents as a standard HID joystick in
+      DirectInput mode on PC; Xbox mode requires GIP protocol support.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TS-XW Racer — servo-belt drive racing wheel. VID 0x044F
+    confirmed; PID 0xB676 SDL2 community-reported. Last reviewed: 2026-06.

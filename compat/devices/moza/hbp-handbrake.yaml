@@ -1,0 +1,57 @@
+# Moza HBP Handbrake
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed (Gudsen Technology / Moza).
+# PID 0x0020 is a community estimate for the Moza HBP Handbrake — confirm with lsusb.
+# The Moza HBP is a hydraulic simulation handbrake for sim racing setups.
+# Uses a magnetic (hall-effect) sensor for smooth, wear-free analog input.
+# In flight sim context, occasionally used as a flap lever or speedbrake input.
+
+schema_version: "1"
+
+device:
+  name: "Moza HBP Handbrake"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology) (confirmed)
+    product_id: 0x0020    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [handbrake]
+    resolution_bits: 12
+  buttons: 1              # Handbrake top button
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate for the HBP handbrake.
+      Confirm from lsusb or Moza Pit House software.
+  - id: HALL_EFFECT_SENSOR
+    description: >
+      Uses a hall-effect magnetic sensor for axis input. Provides smooth,
+      contactless operation with excellent long-term durability.
+  - id: FLIGHT_USE
+    description: >
+      In flight sim context: map handbrake axis to flap lever, speedbrake,
+      or thrust reverser in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza HBP hydraulic handbrake. VID 0x346E confirmed; PID 0x0020 community
+    estimate. Hall-effect sensor. Last reviewed: 2026-06.

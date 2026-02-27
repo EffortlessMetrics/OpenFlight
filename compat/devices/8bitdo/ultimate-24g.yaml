@@ -1,0 +1,60 @@
+# 8BitDo Ultimate Controller 2.4G (Wireless)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x6002 sourced from SDL2 gamecontrollerdb and community captures for
+# the 8BitDo Ultimate 2.4G wireless variant. Distinct from the USB wired
+# Ultimate (PID 0x6001, see ultimate.yaml). The 2.4G version uses the
+# included USB dongle and reports at the same PID whether wired or wireless.
+# Same hall-effect sticks and back paddle layout as the wired variant.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate Controller 2.4G"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6002  # Ultimate 2.4G — community-reported (SDL2 db)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 12
+  buttons: 19
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6002 sourced from SDL2 community gamecontrollerdb and USB captures.
+      Confirm with lsusb on real hardware. Distinct from the wired USB Ultimate
+      (PID 0x6001, ultimate.yaml).
+  - id: HALL_EFFECT_STICKS
+    description: >
+      Uses hall-effect sensors for all sticks and triggers. 12-bit resolution
+      with no drift at center.
+  - id: WIRELESS_DONGLE
+    description: >
+      The 2.4G wireless dongle enumerates as a USB HID device on the host PC.
+      Polling rate matches the wired variant via the dongle's USB connection.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Ultimate 2.4G gamepad. VID 0x2DC8 confirmed; PID 0x6002
+    community-reported from SDL2. Hall-effect sticks. Wireless via USB dongle.
+    See ultimate.yaml for wired variant (PID 0x6001). Last reviewed: 2026-06.

@@ -5714,3 +5714,211 @@ requirements:
         description: "OpenHornet panel button events SHALL be forwarded to the DCS export adapter when the DCS export adapter is active"
         tests:
           - feature:specs/features/req_164_openhornet_diy.feature
+
+  - id: REQ-165
+    name: Multi-engine aircraft profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-165.1
+        description: "Throttle 1 SHALL map to axis 0, throttle 2 to axis 1, throttle 3 to axis 2, and throttle 4 to axis 3 when a multi-engine profile defining four throttle axes is loaded"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.2
+        description: "The engine start sequence event SHALL be fired for each engine in the defined order when the engine start sequence button mapping is triggered"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.3
+        description: "Only the targeted engine mixture SHALL change while other engines remain unaffected when a single per-engine mixture lever is adjusted in a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.4
+        description: "Only the targeted engine RPM SHALL change while other engines remain unaffected when a single prop RPM lever is adjusted in a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.5
+        description: "The idle detent event SHALL be fired for a throttle lever when it reaches the idle detent position in a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.6
+        description: "The TOGA mode event SHALL be activated when all throttle levers are pushed to the full forward detent in a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.7
+        description: "The axis output SHALL represent reverse thrust in the defined reverse range when a throttle lever is moved below the idle detent in a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+      - id: AC-165.8
+        description: "Profile validation SHALL fail with a missing-axis error when any of the four required engine axes is absent from a multi-engine profile"
+        tests:
+          - feature:specs/features/req_165_multi_engine_profiles.feature
+
+  - id: REQ-166
+    name: Axis combining and splitting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-166.1
+        description: "The combined rudder axis SHALL output the differential value of two pedal axes when a profile maps two physical pedal axes to a combined differential rudder"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+      - id: AC-166.2
+        description: "Both virtual engine lever axes SHALL track the physical axis position independently when a profile splits one physical throttle axis into two virtual engine levers"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+      - id: AC-166.3
+        description: "The combined axis output SHALL equal (L - R) / 2 when a combine operation is applied to two pedal axes with positions L and R"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+      - id: AC-166.4
+        description: "The combined axis output SHALL be zero within the deadzone when both pedals are at their hardware neutral positions"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+      - id: AC-166.5
+        description: "Axis combine and split mappings SHALL be applied without requiring a code change or restart when defined in a profile YAML"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+      - id: AC-166.6
+        description: "The combined axis output SHALL be clamped to the range [-1.0, 1.0] when either pedal is at its physical extreme"
+        tests:
+          - feature:specs/features/req_166_axis_combine_split.feature
+
+  - id: REQ-167
+    name: Profile hot-swap
+    kind: product
+    status: draft
+    ac:
+      - id: AC-167.1
+        description: "The corresponding aircraft profile SHALL be loaded and active within 100 ms when a new aircraft is detected"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+      - id: AC-167.2
+        description: "No RT tick SHALL be missed and no axis output glitch SHALL occur during a profile swap while the RT spine is running at 250 Hz"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+      - id: AC-167.3
+        description: "The old profile SHALL be discarded from memory after a profile swap has completed successfully and the new profile is confirmed active"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+      - id: AC-167.4
+        description: "The system SHALL fall back to the default profile and emit a validation-failure event when a new profile that fails validation is loaded"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+      - id: AC-167.5
+        description: "A profile-changed event SHALL be published to the event bus with the new profile identifier when a profile swap completes"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+      - id: AC-167.6
+        description: "The UI SHALL receive a profile-changed notification over IPC when a profile swap completes"
+        tests:
+          - feature:specs/features/req_167_profile_hot_swap.feature
+
+  - id: REQ-168
+    name: Device hot-plug
+    kind: product
+    status: draft
+    ac:
+      - id: AC-168.1
+        description: "A connected joystick SHALL be detected and enumerated within 2 seconds when connected via USB while the HID subsystem is running"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.2
+        description: "The matching device profile SHALL be automatically assigned when a device with a known VID/PID is connected"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.3
+        description: "The device SHALL be removed from the active device list without error when an active device is unplugged"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.4
+        description: "The axis output SHALL transition to the neutral value immediately when the source device is unplugged"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.5
+        description: "A previously unplugged device SHALL be re-initialized and become active without requiring a service restart when plugged back in"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.6
+        description: "A re-connected device SHALL be re-associated with its last active profile when plugged back in after a prior session"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.7
+        description: "The system SHALL remain stable with no memory leaks or errors after five successive plug and unplug cycles of the same device"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+      - id: AC-168.8
+        description: "A hot-plug event SHALL be published to all connected IPC clients when a device is connected or disconnected"
+        tests:
+          - feature:specs/features/req_168_device_hot_plug.feature
+
+  - id: REQ-169
+    name: FFB envelope limits
+    kind: product
+    status: draft
+    ac:
+      - id: AC-169.1
+        description: "The output force magnitude SHALL be clamped to the configured maximum when a force effect requests a magnitude above the limit"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.2
+        description: "The force change rate SHALL be clamped to the configured safe slew rate limit when a force effect requests a change exceeding the maximum slew rate"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.3
+        description: "The maximum allowable force magnitude SHALL be reduced according to the thermal derating curve when the device temperature exceeds the configured thermal threshold"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.4
+        description: "Envelope limits SHALL be enforced correctly at each of the four axis extreme corner positions when force effects are applied"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.5
+        description: "The force output SHALL immediately drop to zero when an FFB device is disconnected while outputting force"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.6
+        description: "Force effects SHALL be re-enabled and envelope limits re-applied when an FFB device is re-initialized after reconnection"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.7
+        description: "An envelope-violation event SHALL be logged with the requested and clamped values when a force effect violates the configured envelope limits"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+      - id: AC-169.8
+        description: "All force effects SHALL be cancelled and the output force SHALL be zero within one RT tick when the emergency stop command is issued"
+        tests:
+          - feature:specs/features/req_169_ffb_envelope.feature
+
+  - id: REQ-170
+    name: Diagnostic bundle export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-170.1
+        description: "A diagnostic bundle SHALL contain a snapshot of the currently active profile when exported"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.2
+        description: "A diagnostic bundle SHALL contain the list of all connected devices with their identifiers and status when exported"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.3
+        description: "A diagnostic bundle SHALL contain at most the last 1000 trace events in chronological order when exported"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.4
+        description: "A diagnostic bundle SHALL contain the results of the most recent health checks for all subsystems when exported"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.5
+        description: "A diagnostic bundle SHALL be written as a valid ZIP archive to the specified output path when export is requested"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.6
+        description: "The bundle timestamp SHALL be formatted as a valid ISO 8601 date-time string when the bundle metadata is inspected"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature
+      - id: AC-170.7
+        description: "A diagnostic bundle SHALL be automatically exported before safe-mode isolation takes effect when the system enters safe mode due to a fault"
+        tests:
+          - feature:specs/features/req_170_diagnostic_bundle.feature

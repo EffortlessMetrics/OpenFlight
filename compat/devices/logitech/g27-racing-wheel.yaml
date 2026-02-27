@@ -1,0 +1,64 @@
+# Logitech G27 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech.
+# PID 0xC29B confirmed from Linux kernel drivers/hid/hid-ids.h:
+#   USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_G27_WHEEL)
+# The G27 succeeded the G25 with an updated LED shift indicator strip,
+# improved pedal quality, and a revised H-pattern/sequential shifter.
+# Discontinued; widely used in legacy sim racing and occasionally flight sim.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G27 Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC29B   # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_G27_WHEEL)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 14   # 900° wheel rotation
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 2.5
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      900° of physical steering rotation mapped to full HID axis range.
+      Apply axis scaling in the OpenFlight profile for flight yoke use.
+  - id: LED_SHIFT_INDICATOR
+    description: >
+      G27 includes a 5-LED shift indicator strip driven by Logitech's
+      proprietary HID output report. Not available via standard DirectInput;
+      requires Logitech SDK or hid-lg-ff kernel driver.
+  - id: LEGACY_LOGITECH_FFB
+    description: >
+      G27 uses Logitech's classic FFB protocol (same as G25/G29) via the
+      hid-lg-ff kernel driver. DirectInput FFB effects are available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G27 Racing Wheel. VID 0x046D / PID 0xC29B confirmed from Linux
+    kernel hid-ids.h. Discontinued; successor to G25. 900° rotation, helical
+    gear drive, LED shift indicator. Last reviewed: 2026-06.

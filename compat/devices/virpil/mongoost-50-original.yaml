@@ -1,0 +1,67 @@
+# VIRPIL VPC MongoosT-50 Stick (Original, pre-CM2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4100 is a community estimate for the original MongoosT-50 released
+# circa 2018 (prior to the CM2 revision). The CM2 (mongoost-50cm2-stick.yaml)
+# and CM3 (vpc-mongoost-50cm3-stick.yaml) are later hardware revisions with
+# updated internals. The original MongoosT-50 may share its report format
+# with the CM2/CM3 family but uses a distinct PID.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50 Stick (Original)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4100   # Community estimate — original pre-CM2 MongoosT-50
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, sz, sl]
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(10) + buttons_lsb(4)"
+  total_bytes: 15
+  axis_max_raw: 16384
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4100 is a community estimate for the original pre-CM2 MongoosT-50
+      (released 2018). The CM2 (mongoost-50cm2-stick.yaml) and CM3 (vpc-mongoost-
+      50cm3-stick.yaml) are later revisions with different PIDs. Confirm with
+      lsusb on original hardware.
+  - id: HAT_IN_BUTTON_BYTE
+    description: >
+      Hat switch is encoded in the high nibble (bits 4–7) of button byte 4.
+      Values 0–7 = N/NE/E/SE/S/SW/W/NW; others = center. Same encoding
+      as CM2/CM3 variants.
+  - id: SHARED_REPORT_FORMAT
+    description: >
+      The original MongoosT-50 likely shares its 15-byte HID report format
+      with the CM2/CM3 family. The same parser should handle all variants.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50 original (pre-CM2, circa 2018). VID 0x3344 confirmed;
+    PID 0x4100 community estimate. See mongoost-50cm2-stick.yaml (CM2) and
+    vpc-mongoost-50cm3-stick.yaml (CM3). Last reviewed: 2026-06.

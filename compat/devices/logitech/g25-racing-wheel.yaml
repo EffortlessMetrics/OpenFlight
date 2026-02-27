@@ -1,0 +1,65 @@
+# Logitech G25 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech.
+# PID 0xC299 confirmed from Linux kernel drivers/hid/hid-ids.h:
+#   USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_G25_WHEEL)
+# The G25 was Logitech's first dual-clutch helical-gear drive wheel with
+# sequential/H-pattern shifter and clutch pedal. Discontinued; still popular
+# for legacy sim racing setups. Occasionally used with flight sim yoke profiles.
+
+schema_version: "1"
+
+device:
+  name: "Logitech G25 Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC299   # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_G25_WHEEL)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 14   # 900° wheel rotation
+  buttons: 18
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 2.5
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      Wheel X axis spans 900° of physical rotation. For flight sim use, apply
+      axis scaling to restrict effective range to ±60° or ±90° in the profile.
+  - id: SHIFTER_AXES
+    description: >
+      The H-pattern shifter reports as slider axes (Y, Z). Sequential mode
+      maps to button inputs. The clutch pedal is the slider axis (Rx or Rz,
+      depending on firmware revision).
+  - id: LEGACY_LOGITECH_FFB
+    description: >
+      G25 uses Logitech's classic proprietary FFB protocol, compatible with
+      the same kernel driver as G27/G29 (hid-lg-ff). DirectInput FFB effects
+      are available via the kernel driver.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G25 Racing Wheel. VID 0x046D / PID 0xC299 confirmed from Linux
+    kernel hid-ids.h. Discontinued; predecessor to G27/G29. 900° rotation,
+    helical gear drive. Last reviewed: 2026-06.
